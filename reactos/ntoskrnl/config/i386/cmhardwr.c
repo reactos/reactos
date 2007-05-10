@@ -28,7 +28,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG HavePae;
     NTSTATUS Status;
-    HANDLE KeyHandle, BiosHandle, SystemHandle;
+    HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle;
     ULONG Disposition;
     CONFIGURATION_COMPONENT_DATA ConfigData;
     CHAR Buffer[128];
@@ -129,7 +129,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             ConfigData.ComponentEntry.Class = ProcessorClass;
             ConfigData.ComponentEntry.Type = CentralProcessor;
             ConfigData.ComponentEntry.Key = i;
-            ConfigData.ComponentEntry.AffinityMask = 1 << i;
+            ConfigData.ComponentEntry.AffinityMask = AFFINITY_MASK(i);
             ConfigData.ComponentEntry.Identifier = Buffer;
 
             /* Check if the CPU doesn't support CPUID */
@@ -163,6 +163,41 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                                0xFFFFFFFF,
                                                IndexTable);
             if (!NT_SUCCESS(Status)) return(Status);
+
+            /* Check if we have an FPU */
+            if (KeI386NpxPresent)
+            {
+                /* Setup the Configuration Entry for the FPU */
+                RtlZeroMemory(&ConfigData, sizeof(ConfigData));
+                ConfigData.ComponentEntry.Class = ProcessorClass;
+                ConfigData.ComponentEntry.Type = FloatingPointProcessor;
+                ConfigData.ComponentEntry.Key = i;
+                ConfigData.ComponentEntry.AffinityMask = AFFINITY_MASK(i);
+                ConfigData.ComponentEntry.Identifier = Buffer;
+
+                /* For 386 cpus, the CPU String is the identifier */
+                if (Prcb->CpuType == 3) strcpy(Buffer, "80387");
+
+                /* Save the ID string length now that we've created it */
+                ConfigData.ComponentEntry.IdentifierLength = strlen(Buffer) + 1;
+
+                /* Initialize the registry configuration node for it */
+                Status = CmpInitializeRegistryNode(&ConfigData,
+                                                   SystemHandle,
+                                                   &FpuHandle,
+                                                   InterfaceTypeUndefined,
+                                                   0xFFFFFFFF,
+                                                   IndexTable);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Failed, close the CPU handle and return */
+                    NtClose(KeyHandle);
+                    return Status;
+                }
+
+                /* Close this new handle */
+                NtClose(FpuHandle);
+            }
         }
 
         /* Free the configuration data */
