@@ -646,55 +646,55 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
             /* Close the bios information handle */
             NtClose(BiosHandle);
+        }
 
-            /* Get the BIOS Version */
-            if (CmpGetBiosVersion(BaseAddress, 16* PAGE_SIZE, Buffer))
+        /* Get the BIOS Version */
+        if (CmpGetBiosVersion(BaseAddress, 16* PAGE_SIZE, Buffer))
+        {
+            /* Start at the beginning of our buffer */
+            CurrentVersion = BiosVersion;
+            do
             {
-                /* Start at the beginning of our buffer */
-                CurrentVersion = BiosVersion;
-                do
+                /* Convert to Unicode */
+                RtlInitAnsiString(&TempString, Buffer);
+                RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+
+                /* Calculate the length of this string and copy it in */
+                Length = Data.Length + sizeof(UNICODE_NULL);
+                RtlMoveMemory(CurrentVersion, Data.Buffer, Length);
+
+                /* Free the unicode string */
+                RtlFreeUnicodeString(&Data);
+
+                /* Update the total length and see if we're out of space */
+                TotalLength += Length;
+                if (TotalLength + 256 + sizeof(UNICODE_NULL) > PAGE_SIZE)
                 {
-                    /* Convert to Unicode */
-                    RtlInitAnsiString(&TempString, Buffer);
-                    RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
-
-                    /* Calculate the length of this string and copy it in */
-                    Length = Data.Length + sizeof(UNICODE_NULL);
-                    RtlMoveMemory(CurrentVersion, Data.Buffer, Length);
-
-                    /* Free the unicode string */
-                    RtlFreeUnicodeString(&Data);
-
-                    /* Update the total length and see if we're out of space */
-                    TotalLength += Length;
-                    if (TotalLength + 256 + sizeof(UNICODE_NULL) > PAGE_SIZE)
-                    {
-                        /* One more string would push us out, so stop here */
-                        break;
-                    }
-
-                    /* Go to the next string inside the multi-string buffer */
-                    CurrentVersion += Length;
-
-                    /* Query the next BIOS Version */
-                } while (CmpGetBiosVersion(NULL, 0, Buffer));
-
-                /* Check if we found any strings at all */
-                if (TotalLength)
-                {
-                    /* Add the final null-terminator */
-                    *(PWSTR)CurrentVersion = UNICODE_NULL;
-                    TotalLength += sizeof(UNICODE_NULL);
-
-                    /* Write the BIOS Version to the registry */
-                    RtlInitUnicodeString(&ValueName, L"SystemBiosVersion");
-                    Status = NtSetValueKey(SystemHandle,
-                                           &ValueName,
-                                           0,
-                                           REG_MULTI_SZ,
-                                           BiosVersion,
-                                           TotalLength);
+                    /* One more string would push us out, so stop here */
+                    break;
                 }
+
+                /* Go to the next string inside the multi-string buffer */
+                CurrentVersion += Length;
+
+                /* Query the next BIOS Version */
+            } while (CmpGetBiosVersion(NULL, 0, Buffer));
+
+            /* Check if we found any strings at all */
+            if (TotalLength)
+            {
+                /* Add the final null-terminator */
+                *(PWSTR)CurrentVersion = UNICODE_NULL;
+                TotalLength += sizeof(UNICODE_NULL);
+
+                /* Write the BIOS Version to the registry */
+                RtlInitUnicodeString(&ValueName, L"SystemBiosVersion");
+                Status = NtSetValueKey(SystemHandle,
+                                       &ValueName,
+                                       0,
+                                       REG_MULTI_SZ,
+                                       BiosVersion,
+                                       TotalLength);
             }
         }
 
@@ -739,6 +739,56 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
             /* Free the string */
             RtlFreeUnicodeString(&Data);
+        }
+
+        /* Get the Video BIOS Version */
+        if (CmpGetBiosVersion(BaseAddress, 8* PAGE_SIZE, Buffer))
+        {
+            /* Start at the beginning of our buffer */
+            CurrentVersion = BiosVersion;
+            do
+            {
+                /* Convert to Unicode */
+                RtlInitAnsiString(&TempString, Buffer);
+                RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+
+                /* Calculate the length of this string and copy it in */
+                Length = Data.Length + sizeof(UNICODE_NULL);
+                RtlMoveMemory(CurrentVersion, Data.Buffer, Length);
+
+                /* Free the unicode string */
+                RtlFreeUnicodeString(&Data);
+
+                /* Update the total length and see if we're out of space */
+                TotalLength += Length;
+                if (TotalLength + 256 + sizeof(UNICODE_NULL) > PAGE_SIZE)
+                {
+                    /* One more string would push us out, so stop here */
+                    break;
+                }
+
+                /* Go to the next string inside the multi-string buffer */
+                CurrentVersion += Length;
+
+                /* Query the next BIOS Version */
+            } while (CmpGetBiosVersion(NULL, 0, Buffer));
+
+            /* Check if we found any strings at all */
+            if (TotalLength)
+            {
+                /* Add the final null-terminator */
+                *(PWSTR)CurrentVersion = UNICODE_NULL;
+                TotalLength += sizeof(UNICODE_NULL);
+
+                /* Write the BIOS Version to the registry */
+                RtlInitUnicodeString(&ValueName, L"VideoBiosVersion");
+                Status = NtSetValueKey(SystemHandle,
+                                       &ValueName,
+                                       0,
+                                       REG_MULTI_SZ,
+                                       BiosVersion,
+                                       TotalLength);
+            }
         }
 
         /* Unmap the section */
