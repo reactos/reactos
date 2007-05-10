@@ -101,7 +101,7 @@ ScServiceMainStub(LPVOID Context)
     lpPtr = lpService->Arguments;
     while (*lpPtr)
     {
-        DPRINT("arg: %S\n", *lpPtr);
+        DPRINT("arg: %S\n", lpPtr);
         dwLen = wcslen(lpPtr) + 1;
         dwArgCount++;
         dwLength += dwLen;
@@ -153,9 +153,15 @@ ScServiceMainStub(LPVOID Context)
                                          0,
                                          NULL,
                                          NULL);
+        if (AnsiLength == 0)
+            return ERROR_INVALID_PARAMETER; /* ? */
+
         AnsiString = HeapAlloc(GetProcessHeap(),
                                0,
-                               AnsiLength);
+                               AnsiLength + 1);
+        if (AnsiString == NULL)
+            return ERROR_OUTOFMEMORY;
+
         WideCharToMultiByte(CP_ACP,
                             0,
                             lpService->Arguments,
@@ -165,9 +171,13 @@ ScServiceMainStub(LPVOID Context)
                             NULL,
                             NULL);
 
+        AnsiString[AnsiLength] = ANSI_NULL;
+
         lpArgVector = HeapAlloc(GetProcessHeap(),
                                 0,
                                 (dwArgCount + 1) * sizeof(LPSTR));
+        if (lpArgVector == NULL)
+            return ERROR_OUTOFMEMORY;
 
         dwArgCount = 0;
         Ptr = AnsiString;
