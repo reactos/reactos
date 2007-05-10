@@ -17,6 +17,17 @@
 
 PCHAR CmpID1 = "80%u86-%c%x";
 PCHAR CmpID2 = "x86 Family %u Model %u Stepping %u";
+PCHAR CmpBiosStrings[] =
+{
+    "Ver",
+    "Rev",
+    "Rel",
+    "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9",
+    "v 0", "v 1", "v 2", "v 3", "v 4", "v 5", "v 6", "v 7", "v 8", "v 9",
+    NULL
+};
+
+PCHAR CmpBiosBegin, CmpBiosSearchStart, CmpBiosSearchEnd;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -117,30 +128,126 @@ CmpGetBiosDate(IN PCHAR BiosStart,
     return FALSE;
 }
 
+BOOLEAN
+NTAPI
+CmpGetBiosVersion(IN PCHAR BiosStart,
+                  IN ULONG BiosLength,
+                  IN PCHAR BiosVersion)
+{
+    CHAR Buffer[128];
+    PCHAR p, pp;
+    USHORT i;
+
+    /* Check if we were given intitial data for the search */
+    if (BiosStart)
+    {
+        /* Save it for later use */
+        CmpBiosBegin = BiosStart;
+        CmpBiosSearchStart = BiosStart + 1;
+        CmpBiosSearchEnd = BiosStart + BiosLength - 2;
+    }
+
+    /* Now loop the BIOS area */
+    for (;;)
+    {
+        /* Start an initial search looking for numbers and periods */
+        pp = NULL;
+        while (CmpBiosSearchStart <= CmpBiosSearchEnd)
+        {
+            /* Check if we have an "x.y" version string */
+            if ((*CmpBiosSearchStart == '.') &&
+                (*(CmpBiosSearchStart + 1) >= '0') &&
+                (*(CmpBiosSearchStart + 1) <= '9') &&
+                (*(CmpBiosSearchStart - 1) >= '0') &&
+                (*(CmpBiosSearchStart - 1) <= '9'))
+            {
+                /* Start looking in this area for the actual BIOS Version */
+                pp = CmpBiosSearchStart;
+                break;
+            }
+            else
+            {
+                /* Keep searching */
+                CmpBiosSearchStart++;
+            }
+        }
+
+        /* Break out if we're went past the BIOS area */
+        if (CmpBiosSearchStart > CmpBiosSearchEnd) return FALSE;
+
+        /* Move to the next 2 bytes */
+        CmpBiosSearchStart += 2;
+
+        /* Null-terminate our scratch buffer and start the string here */
+        Buffer[127] = ANSI_NULL;
+        p = &Buffer[127];
+
+        /* Go back one character since we're doing this backwards */
+        pp--;
+
+        /* Loop the identifier we found as long as it's valid */
+        i = 0;
+        while ((i++ < 127) &&
+               (pp >= CmpBiosBegin) &&
+               (*pp >= ' ') &&
+               (*pp != '$'))
+        {
+            /* Copy the character */
+            *--p = *pp--;
+        }
+
+        /* Go past the last character since we went backwards */
+        pp++;
+
+        /* Loop the strings we recognize */
+        for (i = 0; CmpBiosStrings[i]; i++)
+        {
+            /* Check if a match was found */
+            if (strstr(p, CmpBiosStrings[i])) goto Match;
+        }
+    }
+
+Match:
+    /* Skip until we find a space */
+    for (; *pp == ' '; pp++);
+
+    /* Loop the final string */
+    i = 0;
+    do
+    {
+        /* Copy the character into the final string */
+        BiosVersion[i] = *pp++;
+    } while ((++i < 127) &&
+             (pp <= (CmpBiosSearchEnd + 1)) &&
+             (*pp >= ' ') &&
+             (*pp != '$'));
+
+    /* Null-terminate the version string */
+    BiosVersion[i] = ANSI_NULL;
+    return TRUE;
+}
+
 NTSTATUS
 NTAPI
 CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     UNICODE_STRING KeyName, ValueName, Data, SectionName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG HavePae;
+    ULONG HavePae, CacheSize, ViewSize, Length, TotalLength = 0, i, Disposition;
     NTSTATUS Status;
     HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle, SectionHandle;
-    ULONG Disposition;
     CONFIGURATION_COMPONENT_DATA ConfigData;
     CHAR Buffer[128];
-    ULONG i, ExtendedId, Dummy;
+    ULONG ExtendedId, Dummy;
     PKPRCB Prcb;
     USHORT IndexTable[MaximumType + 1] = {0};
     ANSI_STRING TempString;
-    PCHAR PartialString = NULL;
+    PCHAR PartialString = NULL, BiosVersion;
     CHAR CpuString[48];
-    ULONG CacheSize;
     PVOID BaseAddress = NULL;
     LARGE_INTEGER ViewBase = {{0}};
     ULONG_PTR VideoRomBase;
-    ULONG ViewSize;
-    PCHAR BiosVersion;
+    PCHAR CurrentVersion;
 
     /* Open the SMSS Memory Management key */
     RtlInitUnicodeString(&KeyName,
@@ -281,7 +388,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                 ConfigData.ComponentEntry.AffinityMask = AFFINITY_MASK(i);
                 ConfigData.ComponentEntry.Identifier = Buffer;
 
-                /* For 386 cpus, the CPU String is the identifier */
+                /* For 386 cpus, the CPU pp is the identifier */
                 if (Prcb->CpuType == 3) strcpy(Buffer, "80387");
 
                 /* Save the ID string length now that we've created it */
@@ -475,7 +582,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
     }
 
-    /* Allocate BIOS Version String Buffer */
+    /* Allocate BIOS Version pp Buffer */
     BiosVersion = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_CM);
 
     /* Setup settings to map the 64K BIOS ROM */
@@ -539,6 +646,56 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
             /* Close the bios information handle */
             NtClose(BiosHandle);
+
+            /* Get the BIOS Version */
+            if (CmpGetBiosVersion(BaseAddress, 16* PAGE_SIZE, Buffer))
+            {
+                /* Start at the beginning of our buffer */
+                CurrentVersion = BiosVersion;
+                do
+                {
+                    /* Convert to Unicode */
+                    RtlInitAnsiString(&TempString, Buffer);
+                    RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+
+                    /* Calculate the length of this string and copy it in */
+                    Length = Data.Length + sizeof(UNICODE_NULL);
+                    RtlMoveMemory(CurrentVersion, Data.Buffer, Length);
+
+                    /* Free the unicode string */
+                    RtlFreeUnicodeString(&Data);
+
+                    /* Update the total length and see if we're out of space */
+                    TotalLength += Length;
+                    if (TotalLength + 256 + sizeof(UNICODE_NULL) > PAGE_SIZE)
+                    {
+                        /* One more string would push us out, so stop here */
+                        break;
+                    }
+
+                    /* Go to the next string inside the multi-string buffer */
+                    CurrentVersion += Length;
+
+                    /* Query the next BIOS Version */
+                } while (CmpGetBiosVersion(NULL, 0, Buffer));
+
+                /* Check if we found any strings at all */
+                if (TotalLength)
+                {
+                    /* Add the final null-terminator */
+                    *(PWSTR)CurrentVersion = UNICODE_NULL;
+                    TotalLength += sizeof(UNICODE_NULL);
+
+                    /* Write the BIOS Version to the registry */
+                    RtlInitUnicodeString(&ValueName, L"SystemBiosVersion");
+                    Status = NtSetValueKey(SystemHandle,
+                                           &ValueName,
+                                           0,
+                                           REG_MULTI_SZ,
+                                           BiosVersion,
+                                           TotalLength);
+                }
+            }
         }
 
         /* Unmap the section */
