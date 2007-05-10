@@ -496,6 +496,7 @@ MmInitSystem(IN ULONG Phase,
         SectionsReady = TRUE;
         MmInitPagingFile();
         PagingReady = TRUE;
+        MmCreatePhysicalMemorySection();
 
         /* Setup shared user data settings that NT does as well */
         ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
@@ -510,7 +511,6 @@ MmInitSystem(IN ULONG Phase,
         /*
         * Unmap low memory
         */
-        MmCreatePhysicalMemorySection();
         MiInitBalancerThread();
 
         /*

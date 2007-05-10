@@ -20,15 +20,112 @@ PCHAR CmpID2 = "x86 Family %u Model %u Stepping %u";
 
 /* FUNCTIONS *****************************************************************/
 
+BOOLEAN
+NTAPI
+CmpGetBiosDate(IN PCHAR BiosStart,
+               IN ULONG BiosLength,
+               IN PCHAR BiosDate,
+               IN BOOLEAN FromBios)
+{
+    CHAR LastDate[11] = {0}, CurrentDate[11];
+    PCHAR p, pp;
+
+    /* Skip the signature and the magic, and loop the BIOS ROM */
+    p = BiosStart + 2;
+    pp = BiosStart + BiosLength - 5;
+    while (p < pp)
+    {
+        /* Check for xx/yy/zz which we assume to be a date */
+        if ((p[0] == '/') &&
+            (p[3] == '/') &&
+            (isdigit(p[-1])) &&
+            (isdigit(p[1])) &&
+            (isdigit(p[2])) &&
+            (isdigit(p[4])) &&
+            (isdigit(p[5])))
+        {
+            /* Copy the string proper */
+            RtlMoveMemory(&CurrentDate[5], p - 2, 5);
+
+            /* Add a 0 if the month only has one digit */
+            if (!isdigit(CurrentDate[5])) CurrentDate[5] = '0';
+
+            /* Now copy the year */
+            CurrentDate[2] = p[4];
+            CurrentDate[3] = p[5];
+            CurrentDate[4] = CurrentDate[7] = CurrentDate[10] = ANSI_NULL;
+
+            /* If the date comes from the BIOS, check if it's a 4-digit year */
+            if ((FromBios) &&
+                (isdigit(p[6])) &&
+                (isdigit(p[7])) &&
+                ((RtlEqualMemory(&p[4], "19", 2)) ||
+                 (RtlEqualMemory(&p[4], "20", 2))))
+            {
+                /* Copy the year proper */
+                CurrentDate[0] = p[4];
+                CurrentDate[1] = p[5];
+                CurrentDate[2] = p[6];
+                CurrentDate[3] = p[7];
+            }
+            else
+            {
+                /* Otherwise, we'll just assume anything under 80 is 2000 */
+                if (strtoul(&CurrentDate[2], NULL, 10) < 80)
+                {
+                    /* Hopefully your BIOS wasn't made in 1979 */
+                    CurrentDate[0] = '2';
+                    CurrentDate[1] = '0';
+                }
+                else
+                {
+                    /* Anything over 80, was probably made in the 1900s... */
+                    CurrentDate[0] = '1';
+                    CurrentDate[1] = '9';
+                }
+            }
+
+            /* Add slashes were we previously had NULLs */
+            CurrentDate[4] = CurrentDate[7] = '/';
+
+            /* Check which date is newer */
+            if (memcmp(LastDate, CurrentDate, 10) < 0)
+            {
+                /* Found a newer date, select it */
+                RtlMoveMemory(LastDate, CurrentDate, 10);
+            }
+
+            p += 2;
+        }
+        p++;
+    }
+
+    /* Make sure we found a date */
+    if (LastDate[0])
+    {
+        /* Copy the year at the pp, and keep only the last two digits */
+        RtlMoveMemory(BiosDate, &LastDate[5], 5);
+        BiosDate[5] = '/';
+        BiosDate[6] = LastDate[2];
+        BiosDate[7] = LastDate[3];
+        BiosDate[8] = ANSI_NULL;
+        return TRUE;
+    }
+
+    /* No date found, return empty string */
+    BiosDate[0] = ANSI_NULL;
+    return FALSE;
+}
+
 NTSTATUS
 NTAPI
 CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    UNICODE_STRING KeyName, ValueName, Data;
+    UNICODE_STRING KeyName, ValueName, Data, SectionName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG HavePae;
     NTSTATUS Status;
-    HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle;
+    HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle, SectionHandle;
     ULONG Disposition;
     CONFIGURATION_COMPONENT_DATA ConfigData;
     CHAR Buffer[128];
@@ -38,6 +135,12 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     ANSI_STRING TempString;
     PCHAR PartialString = NULL;
     CHAR CpuString[48];
+    ULONG CacheSize;
+    PVOID BaseAddress = NULL;
+    LARGE_INTEGER ViewBase = {{0}};
+    ULONG_PTR VideoRomBase;
+    ULONG ViewSize;
+    PCHAR BiosVersion;
 
     /* Open the SMSS Memory Management key */
     RtlInitUnicodeString(&KeyName,
@@ -233,6 +336,9 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                     }
                 }
 
+                /* Get the cache size while we're still localized */
+                CacheSize = ((PKIPCR)KeGetPcr())->SecondLevelCacheSize;
+
                 /* Go back to user affinity */
                 KeRevertToUserAffinityThread();
 
@@ -317,6 +423,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                 /* Close the processor handle */
                 NtClose(KeyHandle);
+
+                /* FIXME: Detect CPU mismatches */
             }
         }
 
@@ -324,6 +432,118 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         ExFreePool(CmpConfigurationData);
     }
 
-    /* All done*/
+    /* Open physical memory */
+    RtlInitUnicodeString(&SectionName, L"\\Device\\PhysicalMemory");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SectionName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSection(&SectionHandle,
+                           SECTION_ALL_ACCESS,
+                           &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Map the first 1KB of memory to get the IVT */
+    ViewSize = PAGE_SIZE;
+    Status = ZwMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0,
+                                ViewSize,
+                                &ViewBase,
+                                &ViewSize,
+                                ViewUnmap,
+                                MEM_DOS_LIM,
+                                PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Assume default */
+        VideoRomBase = 0xC0000;
+    }
+    else
+    {
+        /* Calculate the base address from the vector */
+        VideoRomBase = (*((PULONG)BaseAddress + 0x10) >> 12) & 0xFFFF0;
+        VideoRomBase += *((PULONG)BaseAddress + 0x10) & 0xFFF0;
+
+        /* Now get to the actual ROM Start and make sure it's not invalid*/
+        VideoRomBase &= 0xFFFF8000;
+        if (VideoRomBase < 0xC0000) VideoRomBase = 0xC0000;
+
+        /* And unmap the section */
+        ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    }
+
+    /* Allocate BIOS Version String Buffer */
+    BiosVersion = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_CM);
+
+    /* Setup settings to map the 64K BIOS ROM */
+    BaseAddress = 0;
+    ViewSize = 16 * PAGE_SIZE;
+    ViewBase.LowPart = 0xF0000;
+    ViewBase.HighPart = 0;
+
+    /* Map it */
+    Status = ZwMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0,
+                                ViewSize,
+                                &ViewBase,
+                                &ViewSize,
+                                ViewUnmap,
+                                MEM_DOS_LIM,
+                                PAGE_READWRITE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Scan the ROM to get the BIOS Date */
+        if (CmpGetBiosDate(BaseAddress, 16 * PAGE_SIZE, Buffer, TRUE))
+        {
+            /* Convert it to Unicode */
+            RtlInitAnsiString(&TempString, Buffer);
+            RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+
+            /* Write the date into the registry */
+            RtlInitUnicodeString(&ValueName, L"SystemBiosDate");
+            Status = NtSetValueKey(SystemHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   Data.Buffer,
+                                   Data.Length + sizeof(UNICODE_NULL));
+
+            /* Free the string */
+            RtlFreeUnicodeString(&Data);
+
+            /* Get the BIOS Date Identifier */
+            RtlCopyMemory(Buffer, (PCHAR)BaseAddress + (16*PAGE_SIZE - 11), 8);
+            Buffer[8] = ANSI_NULL;
+
+            /* Convert it to unicode */
+            RtlInitAnsiString(&TempString, Buffer);
+            Status = RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+            if (NT_SUCCESS(Status))
+            {
+                /* Save it to the registry */
+                Status = NtSetValueKey(BiosHandle,
+                                       &ValueName,
+                                       0,
+                                       REG_SZ,
+                                       Data.Buffer,
+                                       Data.Length + sizeof(UNICODE_NULL));
+
+                /* Free the string */
+                RtlFreeUnicodeString(&Data);
+            }
+
+            /* Close the bios information handle */
+            NtClose(BiosHandle);
+        }
+    }
+
+Quickie:
+    /* Close the procesor handle */
+    NtClose(KeyHandle);
     return STATUS_SUCCESS;
 }
