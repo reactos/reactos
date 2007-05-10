@@ -22,8 +22,6 @@
 
 /* GLOBALS ******************************************************************/
 
-static BOOLEAN CmiHardwareHiveImported = FALSE;
-
 /* FUNCTIONS ****************************************************************/
 
 static BOOLEAN
@@ -85,14 +83,13 @@ CmImportBinaryHive (PCHAR ChunkBase,
 }
 
 
-BOOLEAN INIT_FUNCTION
+BOOLEAN
+INIT_FUNCTION
 CmImportSystemHive(PCHAR ChunkBase,
-		   ULONG ChunkSize)
+                   ULONG ChunkSize,
+                   OUT PEREGISTRY_HIVE *RegistryHive)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  PEREGISTRY_HIVE RegistryHive;
-  UNICODE_STRING KeyName;
-  NTSTATUS Status;
+  *RegistryHive = NULL;
 
   DPRINT ("CmImportSystemHive() called\n");
 
@@ -105,55 +102,37 @@ CmImportSystemHive(PCHAR ChunkBase,
   DPRINT ("Found '%.*s' magic\n", 4, ChunkBase);
 
   /* Import the binary system hive (non-volatile, offset-based, permanent) */
-  if (!CmImportBinaryHive (ChunkBase, ChunkSize, 0, &RegistryHive))
+  if (!CmImportBinaryHive (ChunkBase, ChunkSize, 0, RegistryHive))
     {
       DPRINT1 ("CmiImportBinaryHive() failed\n");
       return FALSE;
     }
 
-  /* Attach it to the machine key */
-  RtlInitUnicodeString (&KeyName,
-			REG_SYSTEM_KEY_NAME);
-  InitializeObjectAttributes (&ObjectAttributes,
-			      &KeyName,
-			      OBJ_CASE_INSENSITIVE,
-			      NULL,
-			      NULL);
-  Status = CmiConnectHive (&ObjectAttributes,
-			   RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiConnectHive(%wZ) failed (Status %lx)\n", &KeyName, Status);
-      return FALSE;
-    }
-
   /* Set the hive filename */
-  RtlCreateUnicodeString (&RegistryHive->HiveFileName,
+  RtlCreateUnicodeString (&(*RegistryHive)->HiveFileName,
                           SYSTEM_REG_FILE);
 
   /* Set the log filename */
-  RtlCreateUnicodeString (&RegistryHive->LogFileName,
+  RtlCreateUnicodeString (&(*RegistryHive)->LogFileName,
                           SYSTEM_LOG_FILE);
 
   return TRUE;
 }
 
-
-BOOLEAN INIT_FUNCTION
+BOOLEAN
+INIT_FUNCTION
 CmImportHardwareHive(PCHAR ChunkBase,
-		     ULONG ChunkSize)
+                     ULONG ChunkSize,
+                     OUT PEREGISTRY_HIVE *RegistryHive)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  PEREGISTRY_HIVE RegistryHive;
   UNICODE_STRING KeyName;
   HANDLE HardwareKey;
   ULONG Disposition;
   NTSTATUS Status;
+  *RegistryHive = NULL;
 
   DPRINT ("CmImportHardwareHive() called\n");
-
-  if (CmiHardwareHiveImported == TRUE)
-    return TRUE;
 
   if (ChunkBase == NULL &&
       ChunkSize == 0)
@@ -260,38 +239,19 @@ CmImportHardwareHive(PCHAR ChunkBase,
   DPRINT ("ChunkBase %lx  ChunkSize %lu\n", ChunkBase, ChunkSize);
 
   /* Import the binary system hive (volatile, offset-based, permanent) */
-  if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_NO_FILE, &RegistryHive))
+  if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_NO_FILE, RegistryHive))
     {
       DPRINT1 ("CmiImportBinaryHive() failed\n");
       return FALSE;
     }
 
-  /* Attach it to the machine key */
-  RtlInitUnicodeString (&KeyName,
-			REG_HARDWARE_KEY_NAME);
-  InitializeObjectAttributes (&ObjectAttributes,
-			      &KeyName,
-			      OBJ_CASE_INSENSITIVE,
-			      NULL,
-			      NULL);
-  Status = CmiConnectHive (&ObjectAttributes,
-			   RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiConnectHive(%wZ) failed (Status %lx)\n", &KeyName, Status);
-//      CmiRemoveRegistryHive(RegistryHive);
-      return FALSE;
-    }
-
   /* Set the hive filename */
-  RtlInitUnicodeString (&RegistryHive->HiveFileName,
+  RtlInitUnicodeString (&(*RegistryHive)->HiveFileName,
 			NULL);
 
   /* Set the log filename */
-  RtlInitUnicodeString (&RegistryHive->LogFileName,
+  RtlInitUnicodeString (&(*RegistryHive)->LogFileName,
 			NULL);
-
-  CmiHardwareHiveImported = TRUE;
 
   return TRUE;
 }

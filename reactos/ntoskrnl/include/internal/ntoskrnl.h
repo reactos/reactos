@@ -73,8 +73,8 @@ typedef struct __DESCRIPTOR
 BOOLEAN NTAPI ObInit(VOID);
 BOOLEAN NTAPI CmInitSystem1(VOID);
 VOID CmShutdownRegistry(VOID);
-BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
-BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
+//BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
+//BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN NTAPI KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 /* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
