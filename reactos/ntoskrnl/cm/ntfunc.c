@@ -29,9 +29,6 @@ extern LIST_ENTRY CmiKeyObjectListHead;
 
 static BOOLEAN CmiRegistryInitialized = FALSE;
 
-LIST_ENTRY CmiCallbackHead;
-FAST_MUTEX CmiCallbackLock;
-
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
@@ -130,151 +127,6 @@ CmpCreateHandle(PVOID ObjectBody,
 
     return STATUS_UNSUCCESSFUL;
 }
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
-                   IN PVOID Context,
-                   IN OUT PLARGE_INTEGER Cookie)
-{
-  PREGISTRY_CALLBACK Callback;
-
-  PAGED_CODE();
-
-  ASSERT(Function && Cookie);
-
-  Callback = ExAllocatePoolWithTag(PagedPool,
-                                   sizeof(REGISTRY_CALLBACK),
-                                   TAG('C', 'M', 'c', 'b'));
-  if(Callback != NULL)
-  {
-    /* initialize the callback */
-    ExInitializeRundownProtection(&Callback->RundownRef);
-    Callback->Function = Function;
-    Callback->Context = Context;
-    Callback->PendingDelete = FALSE;
-
-    /* add it to the callback list and receive a cookie for the callback */
-    ExAcquireFastMutex(&CmiCallbackLock);
-    /* FIXME - to receive a unique cookie we'll just return the pointer to the
-       callback object */
-    Callback->Cookie.QuadPart = (ULONG_PTR)Callback;
-    InsertTailList(&CmiCallbackHead, &Callback->ListEntry);
-
-    ExReleaseFastMutex(&CmiCallbackLock);
-
-    *Cookie = Callback->Cookie;
-    return STATUS_SUCCESS;
-  }
-
-  return STATUS_INSUFFICIENT_RESOURCES;
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
-{
-  PLIST_ENTRY CurrentEntry;
-
-  PAGED_CODE();
-
-  ExAcquireFastMutex(&CmiCallbackLock);
-
-  for(CurrentEntry = CmiCallbackHead.Flink;
-      CurrentEntry != &CmiCallbackHead;
-      CurrentEntry = CurrentEntry->Flink)
-  {
-    PREGISTRY_CALLBACK CurrentCallback;
-
-    CurrentCallback = CONTAINING_RECORD(CurrentEntry, REGISTRY_CALLBACK, ListEntry);
-    if(CurrentCallback->Cookie.QuadPart == Cookie.QuadPart)
-    {
-      if(!CurrentCallback->PendingDelete)
-      {
-        /* found the callback, don't unlink it from the list yet so we don't screw
-           the calling loop */
-        CurrentCallback->PendingDelete = TRUE;
-        ExReleaseFastMutex(&CmiCallbackLock);
-
-        /* if the callback is currently executing, wait until it finished */
-        ExWaitForRundownProtectionRelease(&CurrentCallback->RundownRef);
-
-        /* time to unlink it. It's now safe because every attempt to acquire a
-           runtime protection on this callback will fail */
-        ExAcquireFastMutex(&CmiCallbackLock);
-        RemoveEntryList(&CurrentCallback->ListEntry);
-        ExReleaseFastMutex(&CmiCallbackLock);
-
-        /* free the callback */
-        ExFreePool(CurrentCallback);
-        return STATUS_SUCCESS;
-      }
-      else
-      {
-        /* pending delete, pretend like it already is deleted */
-        ExReleaseFastMutex(&CmiCallbackLock);
-        return STATUS_UNSUCCESSFUL;
-      }
-    }
-  }
-
-  ExReleaseFastMutex(&CmiCallbackLock);
-
-  return STATUS_UNSUCCESSFUL;
-}
-
-
-NTSTATUS
-CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
-                           IN PVOID Argument2)
-{
-  PLIST_ENTRY CurrentEntry;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  PAGED_CODE();
-
-  ExAcquireFastMutex(&CmiCallbackLock);
-
-  for(CurrentEntry = CmiCallbackHead.Flink;
-      CurrentEntry != &CmiCallbackHead;
-      CurrentEntry = CurrentEntry->Flink)
-  {
-    PREGISTRY_CALLBACK CurrentCallback;
-
-    CurrentCallback = CONTAINING_RECORD(CurrentEntry, REGISTRY_CALLBACK, ListEntry);
-    if(!CurrentCallback->PendingDelete &&
-       ExAcquireRundownProtection(&CurrentCallback->RundownRef))
-    {
-      /* don't hold locks during the callbacks! */
-      ExReleaseFastMutex(&CmiCallbackLock);
-
-      Status = CurrentCallback->Function(CurrentCallback->Context,
-                                         (PVOID)Argument1,
-                                         Argument2);
-
-      ExAcquireFastMutex(&CmiCallbackLock);
-      /* don't release the rundown protection before holding the callback lock
-         so the pointer to the next callback isn't cleared in case this callback
-         get's deleted */
-      ExReleaseRundownProtection(&CurrentCallback->RundownRef);
-      if(!NT_SUCCESS(Status))
-      {
-        /* one callback returned failure, don't call any more callbacks */
-        break;
-      }
-    }
-  }
-
-  ExReleaseFastMutex(&CmiCallbackLock);
-
-  return Status;
-}
-
 
 NTSTATUS STDCALL
 NtCreateKey(OUT PHANDLE KeyHandle,
@@ -2219,22 +2071,6 @@ Fail:
   return Status;
 }
 
-
-/*
- * NOTE:
- * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
- * KeyObjectAttributes->Name specifies the name of the key to load.
- */
-NTSTATUS STDCALL
-NtLoadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-	   IN POBJECT_ATTRIBUTES FileObjectAttributes)
-{
-  return NtLoadKey2 (KeyObjectAttributes,
-		     FileObjectAttributes,
-		     0);
-}
-
-
 /*
  * NOTE:
  * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
@@ -2356,52 +2192,6 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   return Status;
 }
-
-
-NTSTATUS STDCALL
-NtNotifyChangeKey (IN HANDLE KeyHandle,
-		   IN HANDLE Event,
-		   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-		   IN PVOID ApcContext OPTIONAL,
-		   OUT PIO_STATUS_BLOCK IoStatusBlock,
-		   IN ULONG CompletionFilter,
-		   IN BOOLEAN WatchSubtree,
-		   OUT PVOID Buffer,
-		   IN ULONG Length,
-		   IN BOOLEAN Asynchronous)
-{
-	UNIMPLEMENTED;
-	return(STATUS_NOT_IMPLEMENTED);
-}
-
-#if 0
-NTSTATUS STDCALL
-NtNotifyChangeKey (IN HANDLE KeyHandle,
-		   IN HANDLE Event,
-		   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-		   IN PVOID ApcContext OPTIONAL,
-		   OUT PIO_STATUS_BLOCK IoStatusBlock,
-		   IN ULONG CompletionFilter,
-		   IN BOOLEAN WatchSubtree,
-		   OUT PVOID Buffer,
-		   IN ULONG Length,
-		   IN BOOLEAN Asynchronous)
-{
-     return NtNotifyChangeMultipleKeys(KeyHandle,
-                                       0,
-                                       NULL,
-                                       Event,
-                                       ApcRoutine,
-                                       ApcContext,
-                                       IoStatusBlock,
-                                       CompletionFilter,
-                                       WatchTree,
-                                       Buffer,
-                                       Length,
-                                       Asynchronous);
-}
-
-#endif
 
 NTSTATUS STDCALL
 NtQueryMultipleValueKey (IN HANDLE KeyHandle,
@@ -2542,269 +2332,6 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   return Status;
 }
 
-
-NTSTATUS STDCALL
-NtReplaceKey (IN POBJECT_ATTRIBUTES ObjectAttributes,
-	      IN HANDLE Key,
-	      IN POBJECT_ATTRIBUTES ReplacedObjectAttributes)
-{
-	UNIMPLEMENTED;
-	return(STATUS_NOT_IMPLEMENTED);
-}
-
-
-NTSTATUS STDCALL
-NtRestoreKey (IN HANDLE KeyHandle,
-	      IN HANDLE FileHandle,
-	      IN ULONG RestoreFlags)
-{
-	UNIMPLEMENTED;
-	return(STATUS_NOT_IMPLEMENTED);
-}
-
-
-NTSTATUS STDCALL
-NtSaveKey (IN HANDLE KeyHandle,
-	   IN HANDLE FileHandle)
-{
-  PEREGISTRY_HIVE TempHive;
-  PKEY_OBJECT KeyObject;
-  NTSTATUS Status;
-
-  PAGED_CODE();
-
-  DPRINT ("NtSaveKey() called\n");
-
-#if 0
-  if (!SeSinglePrivilegeCheck (SeBackupPrivilege, ExGetPreviousMode ()))
-    return STATUS_PRIVILEGE_NOT_HELD;
-#endif
-
-  Status = ObReferenceObjectByHandle (KeyHandle,
-				      0,
-				      CmiKeyType,
-				      ExGetPreviousMode(),
-				      (PVOID *)&KeyObject,
-				      NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
-      return Status;
-    }
-
-  /* Acquire hive lock exclucively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
-
-  /* Refuse to save a volatile key */
-  if (KeyObject->KeyCell->Flags & REG_KEY_VOLATILE_CELL)
-    {
-      DPRINT1 ("Cannot save a volatile key\n");
-      ExReleaseResourceLite(&CmiRegistryLock);
-      KeLeaveCriticalRegion();
-      ObDereferenceObject (KeyObject);
-      return STATUS_ACCESS_DENIED;
-    }
-
-  Status = CmiCreateTempHive(&TempHive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiCreateTempHive() failed (Status %lx)\n", Status);
-      ExReleaseResourceLite(&CmiRegistryLock);
-      KeLeaveCriticalRegion();
-      ObDereferenceObject (KeyObject);
-      return(Status);
-    }
-
-  Status = CmiCopyKey (TempHive,
-		       NULL,
-		       KeyObject->RegistryHive,
-		       KeyObject->KeyCell);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiCopyKey() failed (Status %lx)\n", Status);
-      CmiRemoveRegistryHive (TempHive);
-      ExReleaseResourceLite(&CmiRegistryLock);
-      KeLeaveCriticalRegion();
-      ObDereferenceObject (KeyObject);
-      return(Status);
-    }
-
-  Status = CmiSaveTempHive (TempHive,
-			    FileHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiSaveTempHive() failed (Status %lx)\n", Status);
-    }
-
-  CmiRemoveRegistryHive (TempHive);
-
-  /* Release hive lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
-  KeLeaveCriticalRegion();
-
-  ObDereferenceObject (KeyObject);
-
-  DPRINT ("NtSaveKey() done\n");
-
-  return STATUS_SUCCESS;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-NtSaveKeyEx(
-	IN HANDLE KeyHandle,
-	IN HANDLE FileHandle,
-	IN ULONG Flags // REG_STANDARD_FORMAT, etc..
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-
-NTSTATUS STDCALL
-NtSetInformationKey (IN HANDLE KeyHandle,
-		     IN KEY_SET_INFORMATION_CLASS KeyInformationClass,
-		     IN PVOID KeyInformation,
-		     IN ULONG KeyInformationLength)
-{
-  PKEY_OBJECT KeyObject;
-  NTSTATUS Status;
-  REG_SET_INFORMATION_KEY_INFORMATION SetInformationKeyInfo;
-  REG_POST_OPERATION_INFORMATION PostOperationInfo;
-
-  PAGED_CODE();
-
-  /* Verify that the handle is valid and is a registry key */
-  Status = ObReferenceObjectByHandle (KeyHandle,
-				      KEY_SET_VALUE,
-				      CmiKeyType,
-				      ExGetPreviousMode(),
-				      (PVOID *)&KeyObject,
-				      NULL);
-  if (!NT_SUCCESS (Status))
-    {
-      DPRINT ("ObReferenceObjectByHandle() failed with status %x\n", Status);
-      return Status;
-    }
-
-  PostOperationInfo.Object = (PVOID)KeyObject;
-  SetInformationKeyInfo.Object = (PVOID)KeyObject;
-  SetInformationKeyInfo.KeySetInformationClass = KeyInformationClass;
-  SetInformationKeyInfo.KeySetInformation = KeyInformation;
-  SetInformationKeyInfo.KeySetInformationLength = KeyInformationLength;
-
-  Status = CmiCallRegisteredCallbacks(RegNtPreSetInformationKey, &SetInformationKeyInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostSetInformationKey, &PostOperationInfo);
-      ObDereferenceObject (KeyObject);
-      return Status;
-    }
-
-  if (KeyInformationClass != KeyWriteTimeInformation)
-    {
-      Status = STATUS_INVALID_INFO_CLASS;
-    }
-
-  else if (KeyInformationLength != sizeof (KEY_WRITE_TIME_INFORMATION))
-    {
-      Status = STATUS_INFO_LENGTH_MISMATCH;
-    }
-  else
-    {
-      /* Acquire hive lock */
-      KeEnterCriticalRegion();
-      ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
-
-      VERIFY_KEY_OBJECT(KeyObject);
-
-      KeyObject->KeyCell->LastWriteTime.QuadPart =
-        ((PKEY_WRITE_TIME_INFORMATION)KeyInformation)->LastWriteTime.QuadPart;
-
-      HvMarkCellDirty (&KeyObject->RegistryHive->Hive,
-		       KeyObject->KeyCellOffset);
-
-      /* Release hive lock */
-      ExReleaseResourceLite(&CmiRegistryLock);
-      KeLeaveCriticalRegion();
-    }
-
-  PostOperationInfo.Status = Status;
-  CmiCallRegisteredCallbacks(RegNtPostSetInformationKey, &PostOperationInfo);
-
-  ObDereferenceObject (KeyObject);
-
-  if (NT_SUCCESS(Status))
-    {
-      CmiSyncHives ();
-    }
-
-  DPRINT ("NtSaveKey() done\n");
-
-  return STATUS_SUCCESS;
-}
-
-
-/*
- * NOTE:
- * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
- * KeyObjectAttributes->Name specifies the name of the key to unload.
- */
-NTSTATUS STDCALL
-NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
-{
-  PEREGISTRY_HIVE RegistryHive;
-  NTSTATUS Status;
-
-  PAGED_CODE();
-
-  DPRINT ("NtUnloadKey() called\n");
-
-#if 0
-  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
-    return STATUS_PRIVILEGE_NOT_HELD;
-#endif
-
-  /* Acquire registry lock exclusively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
-
-  Status = CmiDisconnectHive (KeyObjectAttributes,
-			      &RegistryHive);
-  if (!NT_SUCCESS (Status))
-    {
-      DPRINT1 ("CmiDisconnectHive() failed (Status %lx)\n", Status);
-      ExReleaseResourceLite (&CmiRegistryLock);
-      KeLeaveCriticalRegion();
-      return Status;
-    }
-
-  DPRINT ("RegistryHive %p\n", RegistryHive);
-
-#if 0
-  /* Flush hive */
-  if (!IsNoFileHive (RegistryHive))
-    CmiFlushRegistryHive (RegistryHive);
-#endif
-
-  CmiRemoveRegistryHive (RegistryHive);
-
-  /* Release registry lock */
-  ExReleaseResourceLite (&CmiRegistryLock);
-  KeLeaveCriticalRegion();
-
-  DPRINT ("NtUnloadKey() done\n");
-
-  return STATUS_SUCCESS;
-}
-
-
 NTSTATUS STDCALL
 NtInitializeRegistry (IN BOOLEAN SetUpBoot)
 {
@@ -2840,6 +2367,14 @@ NtCompressKey(IN HANDLE Key)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtLoadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+          IN POBJECT_ATTRIBUTES FileObjectAttributes)
+{
+    return NtLoadKey2(KeyObjectAttributes, FileObjectAttributes, 0);
 }
 
 NTSTATUS
@@ -2894,6 +2429,33 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 
 NTSTATUS
 NTAPI
+NtNotifyChangeKey(IN HANDLE KeyHandle,
+                  IN HANDLE Event,
+                  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+                  IN PVOID ApcContext OPTIONAL,
+                  OUT PIO_STATUS_BLOCK IoStatusBlock,
+                  IN ULONG CompletionFilter,
+                  IN BOOLEAN WatchTree,
+                  OUT PVOID Buffer,
+                  IN ULONG Length,
+                  IN BOOLEAN Asynchronous)
+{
+     return NtNotifyChangeMultipleKeys(KeyHandle,
+                                       0,
+                                       NULL,
+                                       Event,
+                                       ApcRoutine,
+                                       ApcContext,
+                                       IoStatusBlock,
+                                       CompletionFilter,
+                                       WatchTree,
+                                       Buffer,
+                                       Length,
+                                       Asynchronous);
+}
+
+NTSTATUS
+NTAPI
 NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
                    IN ULONG HandleCount)
 {
@@ -2914,9 +2476,67 @@ NtQueryOpenSubKeysEx(IN POBJECT_ATTRIBUTES TargetKey,
 
 NTSTATUS
 NTAPI
+NtReplaceKey(IN POBJECT_ATTRIBUTES ObjectAttributes,
+             IN HANDLE Key,
+             IN POBJECT_ATTRIBUTES ReplacedObjectAttributes)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtRestoreKey(IN HANDLE KeyHandle,
+             IN HANDLE FileHandle,
+             IN ULONG RestoreFlags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSaveKey(IN HANDLE KeyHandle,
+          IN HANDLE FileHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSaveKeyEx(IN HANDLE KeyHandle,
+            IN HANDLE FileHandle,
+            IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
 NtSaveMergedKeys(IN HANDLE HighPrecedenceKeyHandle,
                  IN HANDLE LowPrecedenceKeyHandle,
                  IN HANDLE FileHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSetInformationKey(IN HANDLE KeyHandle,
+                    IN KEY_SET_INFORMATION_CLASS KeyInformationClass,
+                    IN PVOID KeyInformation,
+                    IN ULONG KeyInformationLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtUnloadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

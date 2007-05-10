@@ -497,13 +497,6 @@ CmInitSystem1(VOID)
     BaseAddress = CmpRosGetHardwareHive(&Length);
     if (!CmImportHardwareHive(BaseAddress, Length, &HardwareHive))
     {
-        /* Create dummy keys if no hardware hive was found */
-        if (!CmImportHardwareHive (NULL, 0, &HardwareHive))
-        {
-            /* Bugcheck */
-            KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
-        }
-
         /* Don't actually link anything below */
         Allocate = TRUE;
     }
@@ -686,108 +679,6 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
     return STATUS_SUCCESS;
 }
-
-
-NTSTATUS
-CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-		   OUT PEREGISTRY_HIVE *RegistryHive)
-{
-  PKEY_OBJECT KeyObject;
-  PEREGISTRY_HIVE Hive;
-  HANDLE KeyHandle;
-  NTSTATUS Status = STATUS_OBJECT_NAME_NOT_FOUND;
-  PLIST_ENTRY CurrentEntry;
-  PKEY_OBJECT CurrentKey;
-
-  DPRINT("CmiDisconnectHive() called\n");
-
-  *RegistryHive = NULL;
-
-  Status = ObOpenObjectByName (KeyObjectAttributes,
-			       CmiKeyType,
-			       KernelMode,
-			       NULL,
-			       STANDARD_RIGHTS_REQUIRED,
-			       NULL,
-			       &KeyHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ObOpenObjectByName() failed (Status %lx)\n", Status);
-      return Status;
-    }
-
-  Status = ObReferenceObjectByHandle (KeyHandle,
-				      STANDARD_RIGHTS_REQUIRED,
-				      CmiKeyType,
-				      KernelMode,
-				      (PVOID*)&KeyObject,
-				      NULL);
-  ZwClose (KeyHandle);
-
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ObReferenceObjectByName() failed (Status %lx)\n", Status);
-      return Status;
-    }
-  DPRINT ("KeyObject %p  Hive %p\n", KeyObject, KeyObject->RegistryHive);
-
-  /* Acquire registry lock exclusively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
-
-  Hive = KeyObject->RegistryHive;
-
-  CurrentEntry = CmiKeyObjectListHead.Flink;
-  while (CurrentEntry != &CmiKeyObjectListHead)
-  {
-     CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, ListEntry);
-     if (CurrentKey->RegistryHive == Hive &&
-         1 == ObGetObjectPointerCount(CurrentKey) &&
-	 !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
-     {
-        ObDereferenceObject(CurrentKey);
-        CurrentEntry = CmiKeyObjectListHead.Flink;
-     }
-     else
-     {
-        CurrentEntry = CurrentEntry->Flink;
-     }
-  }
-
-  /* FN1 */
-  ObDereferenceObject (KeyObject);
-
-  if (ObGetObjectHandleCount (KeyObject) != 0 ||
-      ObGetObjectPointerCount (KeyObject) != 2)
-    {
-      DPRINT1 ("Hive is still in use (hc %d, rc %d)\n", ObGetObjectHandleCount (KeyObject), ObGetObjectPointerCount (KeyObject));
-      ObDereferenceObject (KeyObject);
-
-      /* Release registry lock */
-      ExReleaseResourceLite (&CmiRegistryLock);
-      KeLeaveCriticalRegion();
-
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  /* Dereference KeyObject twice to delete it */
-  ObDereferenceObject (KeyObject);
-  ObDereferenceObject (KeyObject);
-
-  *RegistryHive = Hive;
-
-  /* Release registry lock */
-  ExReleaseResourceLite (&CmiRegistryLock);
-  KeLeaveCriticalRegion();
-
-  /* Release reference above */
-  ObDereferenceObject (KeyObject);
-
-  DPRINT ("CmiDisconnectHive() done\n");
-
-  return Status;
-}
-
 
 static NTSTATUS
 CmiInitControlSetLink (VOID)

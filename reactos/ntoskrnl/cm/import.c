@@ -91,20 +91,9 @@ CmImportSystemHive(PCHAR ChunkBase,
 {
   *RegistryHive = NULL;
 
-  DPRINT ("CmImportSystemHive() called\n");
-
-  if (strncmp (ChunkBase, "regf", 4))
-    {
-      DPRINT1 ("Found invalid '%.*s' magic\n", 4, ChunkBase);
-      return FALSE;
-    }
-
-  DPRINT ("Found '%.*s' magic\n", 4, ChunkBase);
-
   /* Import the binary system hive (non-volatile, offset-based, permanent) */
   if (!CmImportBinaryHive (ChunkBase, ChunkSize, 0, RegistryHive))
     {
-      DPRINT1 ("CmiImportBinaryHive() failed\n");
       return FALSE;
     }
 
@@ -125,123 +114,11 @@ CmImportHardwareHive(PCHAR ChunkBase,
                      ULONG ChunkSize,
                      OUT PEREGISTRY_HIVE *RegistryHive)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  HANDLE HardwareKey;
-  ULONG Disposition;
-  NTSTATUS Status;
   *RegistryHive = NULL;
-
-  DPRINT ("CmImportHardwareHive() called\n");
-
-  if (ChunkBase == NULL &&
-      ChunkSize == 0)
-    {
-      /* Create '\Registry\Machine\HARDWARE' key. */
-      RtlInitUnicodeString (&KeyName,
-			    REG_HARDWARE_KEY_NAME);
-      InitializeObjectAttributes (&ObjectAttributes,
-				  &KeyName,
-				  OBJ_CASE_INSENSITIVE,
-				  NULL,
-				  NULL);
-      Status = ZwCreateKey (&HardwareKey,
-			    KEY_ALL_ACCESS,
-			    &ObjectAttributes,
-			    0,
-			    NULL,
-			    REG_OPTION_VOLATILE,
-			    &Disposition);
-      if (!NT_SUCCESS(Status))
-	{
-          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
-          return FALSE;
-	}
-      ZwClose (HardwareKey);
-
-      /* Create '\Registry\Machine\HARDWARE\DESCRIPTION' key. */
-      RtlInitUnicodeString(&KeyName,
-			   REG_DESCRIPTION_KEY_NAME);
-      InitializeObjectAttributes (&ObjectAttributes,
-				  &KeyName,
-				  OBJ_CASE_INSENSITIVE,
-				  NULL,
-				  NULL);
-      Status = ZwCreateKey (&HardwareKey,
-			    KEY_ALL_ACCESS,
-			    &ObjectAttributes,
-			    0,
-			    NULL,
-			    REG_OPTION_VOLATILE,
-			    &Disposition);
-      if (!NT_SUCCESS(Status))
-	{
-          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
-          return FALSE;
-	}
-      ZwClose (HardwareKey);
-
-      /* Create '\Registry\Machine\HARDWARE\DEVICEMAP' key. */
-      RtlInitUnicodeString (&KeyName,
-			    REG_DEVICEMAP_KEY_NAME);
-      InitializeObjectAttributes (&ObjectAttributes,
-				  &KeyName,
-				  OBJ_CASE_INSENSITIVE,
-				  NULL,
-				  NULL);
-      Status = ZwCreateKey (&HardwareKey,
-			    KEY_ALL_ACCESS,
-			    &ObjectAttributes,
-			    0,
-			    NULL,
-			    REG_OPTION_VOLATILE,
-			    &Disposition);
-      if (!NT_SUCCESS(Status))
-	{
-          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
-          return FALSE;
-	}
-      ZwClose (HardwareKey);
-
-      /* Create '\Registry\Machine\HARDWARE\RESOURCEMAP' key. */
-      RtlInitUnicodeString(&KeyName,
-			   REG_RESOURCEMAP_KEY_NAME);
-      InitializeObjectAttributes (&ObjectAttributes,
-				  &KeyName,
-				  OBJ_CASE_INSENSITIVE,
-				  NULL,
-				  NULL);
-      Status = ZwCreateKey (&HardwareKey,
-			    KEY_ALL_ACCESS,
-			    &ObjectAttributes,
-			    0,
-			    NULL,
-			    REG_OPTION_VOLATILE,
-			    &Disposition);
-      if (!NT_SUCCESS(Status))
-	{
-          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
-          return FALSE;
-	}
-      ZwClose (HardwareKey);
-
-      return TRUE;
-    }
-
-  /* Check the hive magic */
-  if (strncmp (ChunkBase, "regf", 4))
-    {
-      DPRINT1 ("Found invalid '%.*s' magic\n", 4, ChunkBase);
-      return FALSE;
-    }
-
-  DPRINT ("Found '%.*s' magic\n", 4, ChunkBase);
-  DPRINT ("ChunkBase %lx  ChunkSize %lu\n", ChunkBase, ChunkSize);
 
   /* Import the binary system hive (volatile, offset-based, permanent) */
   if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_NO_FILE, RegistryHive))
     {
-      DPRINT1 ("CmiImportBinaryHive() failed\n");
       return FALSE;
     }
 
