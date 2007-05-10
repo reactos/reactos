@@ -540,7 +540,59 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             /* Close the bios information handle */
             NtClose(BiosHandle);
         }
+
+        /* Unmap the section */
+        ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
     }
+
+    /* Now prepare for Video BIOS Mapping of 32KB */
+    BaseAddress = 0;
+    ViewSize = 8 * PAGE_SIZE;
+    ViewBase.LowPart = VideoRomBase;
+    ViewBase.HighPart = 0;
+
+    /* Map it */
+    Status = ZwMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0,
+                                ViewSize,
+                                &ViewBase,
+                                &ViewSize,
+                                ViewUnmap,
+                                MEM_DOS_LIM,
+                                PAGE_READWRITE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Scan the ROM to get the BIOS Date */
+        if (CmpGetBiosDate(BaseAddress, 8 * PAGE_SIZE, Buffer, FALSE))
+        {
+            /* Convert it to Unicode */
+            RtlInitAnsiString(&TempString, Buffer);
+            RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+
+            /* Write the date into the registry */
+            RtlInitUnicodeString(&ValueName, L"VideoBiosDate");
+            Status = NtSetValueKey(SystemHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   Data.Buffer,
+                                   Data.Length + sizeof(UNICODE_NULL));
+
+            /* Free the string */
+            RtlFreeUnicodeString(&Data);
+        }
+
+        /* Unmap the section */
+        ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    }
+
+    /* Close the section */
+    ZwClose(SectionHandle);
+
+    /* Free the BIOS version string buffer */
+    if (BiosVersion) ExFreePool(BiosVersion);
 
 Quickie:
     /* Close the procesor handle */
