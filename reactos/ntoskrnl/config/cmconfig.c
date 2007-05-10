@@ -87,9 +87,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
         /* Fail if the key couldn't be created, and make sure it's a new key */
         if (!NT_SUCCESS(Status)) return Status;
-
-        /* These keys should -not- exist, but FreeLDR creates them :( */
-        //ASSERT(Disposition == REG_CREATED_NEW_KEY);
+        ASSERT(Disposition == REG_CREATED_NEW_KEY);
     }
 
     /* Sstup the compnent information key */

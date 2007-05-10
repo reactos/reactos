@@ -215,8 +215,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                          &Disposition);
     NtClose(KeyHandle);
 
-    /* This key -never- exists on x86 machines, except in ReactOS! */
-    //if (Disposition == REG_CREATED_NEW_KEY)
+    /* The key shouldn't already exist */
+    if (Disposition == REG_CREATED_NEW_KEY)
     {
         /* Allocate the configuration data for cmconfig.c */
         CmpConfigurationData = ExAllocatePoolWithTag(PagedPool,

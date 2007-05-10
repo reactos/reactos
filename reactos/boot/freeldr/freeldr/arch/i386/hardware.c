@@ -2284,11 +2284,6 @@ PcHwDetect(VOID)
       return;
     }
 
-#if 0
-  DetectSystemData();
-#endif
-  DetectCPUs(SystemKey);
-
   /* Detect buses */
   DetectPciBios(SystemKey, &BusNumber);
   DetectApmBios(SystemKey, &BusNumber);

@@ -17,7 +17,6 @@
 				<file>hardware.c</file>
 				<file>hwacpi.c</file>
 				<file>hwapm.c</file>
-				<file>hwcpu.c</file>
 				<file>hwpci.c</file>
 				<file>i386disk.c</file>
 				<file>i386rtl.c</file>
