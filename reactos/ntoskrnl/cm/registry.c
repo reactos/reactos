@@ -66,8 +66,13 @@ CmImportHardwareHive(PCHAR ChunkBase,
                      ULONG ChunkSize,
                      OUT PEREGISTRY_HIVE *RegistryHive);
 
-static NTSTATUS
-CmiCreateCurrentControlSetLink(VOID);
+NTSTATUS
+NTAPI
+CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+NTSTATUS
+NTAPI
+CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 static VOID STDCALL
 CmiHiveSyncDpcRoutine(PKDPC Dpc,
@@ -78,8 +83,8 @@ CmiHiveSyncDpcRoutine(PKDPC Dpc,
 extern LIST_ENTRY CmiCallbackHead;
 extern FAST_MUTEX CmiCallbackLock;
 
-UNICODE_STRING CmpSystemStartOptions;
-UNICODE_STRING CmpLoadOptions;
+extern UNICODE_STRING CmpSystemStartOptions;
+extern UNICODE_STRING CmpLoadOptions;
 /* FUNCTIONS ****************************************************************/
 
 VOID STDCALL
@@ -204,63 +209,6 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
 
     /* Connect the hive */
     return CmiConnectHive(&ObjectAttributes, RegistryHive);
-}
-
-NTSTATUS
-NTAPI
-CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName, ValueName;
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-    ASSERT(LoaderBlock != NULL);
-    if (ExpInTextModeSetup) return STATUS_SUCCESS;
-
-    /* Setup attributes for loader options */
-    RtlInitUnicodeString(&KeyName,
-                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\"
-                         L"Control");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenKey(&KeyHandle, KEY_WRITE, &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) goto Quickie;
-
-    /* Key opened, now write to the key */
-    RtlInitUnicodeString(&KeyName, L"SystemStartOptions");
-    Status = NtSetValueKey(KeyHandle,
-                           &KeyName,
-                           0,
-                           REG_SZ,
-                           CmpSystemStartOptions.Buffer,
-                           CmpSystemStartOptions.Length);
-    if (!NT_SUCCESS(Status)) goto Quickie;
-
-    /* Free the options now */
-    ExFreePool(CmpSystemStartOptions.Buffer);
-
-    /* Setup value name for system boot device */
-    RtlInitUnicodeString(&KeyName, L"SystemBootDevice");
-    RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->NtBootPathName);
-    Status = NtSetValueKey(KeyHandle,
-                           &KeyName,
-                           0,
-                           REG_SZ,
-                           ValueName.Buffer,
-                           ValueName.Length);
-
-Quickie:
-    /* Free the buffers */
-    RtlFreeUnicodeString(&ValueName);
-
-    /* Close the key and return */
-    NtClose(KeyHandle);
-
-    /* Return the status */
-    return Status;
 }
 
 BOOLEAN
@@ -538,7 +486,7 @@ CmInitSystem1(VOID)
     }
 
     /* Create the 'CurrentControlSet' link. */
-    Status = CmiCreateCurrentControlSetLink();
+    Status = CmpCreateControlSet(KeLoaderBlock);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
@@ -582,97 +530,6 @@ CmInitSystem1(VOID)
 
     /* If we got here, all went well */
     return TRUE;
-}
-
-static NTSTATUS
-CmiCreateCurrentControlSetLink(VOID)
-{
-  RTL_QUERY_REGISTRY_TABLE QueryTable[5];
-  WCHAR TargetNameBuffer[80];
-  ULONG TargetNameLength;
-  UNICODE_STRING LinkName = RTL_CONSTANT_STRING(
-                            L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
-  UNICODE_STRING LinkValue = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
-  ULONG CurrentSet;
-  ULONG DefaultSet;
-  ULONG Failed;
-  ULONG LastKnownGood;
-  NTSTATUS Status;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  HANDLE KeyHandle;
-  if (ExpInTextModeSetup) return STATUS_SUCCESS;
-
-  DPRINT("CmiCreateCurrentControlSetLink() called\n");
-
-  RtlZeroMemory(&QueryTable, sizeof(QueryTable));
-
-  QueryTable[0].Name = L"Current";
-  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[0].EntryContext = &CurrentSet;
-
-  QueryTable[1].Name = L"Default";
-  QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[1].EntryContext = &DefaultSet;
-
-  QueryTable[2].Name = L"Failed";
-  QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[2].EntryContext = &Failed;
-
-  QueryTable[3].Name = L"LastKnownGood";
-  QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[3].EntryContext = &LastKnownGood;
-
-  Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-				  L"\\Registry\\Machine\\SYSTEM\\Select",
-				  QueryTable,
-				  NULL,
-				  NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-
-  DPRINT("Current %ld  Default %ld\n", CurrentSet, DefaultSet);
-
-  swprintf(TargetNameBuffer,
-	   L"\\Registry\\Machine\\SYSTEM\\ControlSet%03lu",
-	   CurrentSet);
-  TargetNameLength = wcslen(TargetNameBuffer) * sizeof(WCHAR);
-
-  DPRINT("Link target '%S'\n", TargetNameBuffer);
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &LinkName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
-			     NULL,
-			     NULL);
-  Status = ZwCreateKey(&KeyHandle,
-		       KEY_ALL_ACCESS | KEY_CREATE_LINK,
-		       &ObjectAttributes,
-		       0,
-		       NULL,
-		       REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
-		       NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("ZwCreateKey() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-
-  Status = ZwSetValueKey(KeyHandle,
-			 &LinkValue,
-			 0,
-			 REG_LINK,
-			 (PVOID)TargetNameBuffer,
-			 TargetNameLength);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
-    }
-
-  ZwClose(KeyHandle);
-
-  return Status;
 }
 
 NTSTATUS
