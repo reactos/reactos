@@ -197,6 +197,48 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                 /* Close this new handle */
                 NtClose(FpuHandle);
+
+                /* Check if we have features bits */
+                if (Prcb->FeatureBits)
+                {
+                    /* Add them to the registry */
+                    RtlInitUnicodeString(&ValueName, L"FeatureSet");
+                    Status = NtSetValueKey(KeyHandle,
+                                           &ValueName,
+                                           0,
+                                           REG_DWORD,
+                                           &Prcb->FeatureBits,
+                                           sizeof(Prcb->FeatureBits));
+                }
+
+                /* Check if we detected the CPU Speed */
+                if (Prcb->MHz)
+                {
+                    /* Add it to the registry */
+                    RtlInitUnicodeString(&ValueName, L"~MHz");
+                    Status = NtSetValueKey(KeyHandle,
+                                           &ValueName,
+                                           0,
+                                           REG_DWORD,
+                                           &Prcb->MHz,
+                                           sizeof(Prcb->MHz));
+                }
+
+                /* Check if we have an update signature */
+                if (Prcb->UpdateSignature.QuadPart)
+                {
+                    /* Add it to the registry */
+                    RtlInitUnicodeString(&ValueName, L"Update Signature");
+                    Status = NtSetValueKey(KeyHandle,
+                                           &ValueName,
+                                           0,
+                                           REG_BINARY,
+                                           &Prcb->UpdateSignature,
+                                           sizeof(Prcb->UpdateSignature));
+                }
+
+                /* Close the processor handle */
+                NtClose(KeyHandle);
             }
         }
 
