@@ -84,6 +84,11 @@
             <file>view.c</file>
     </directory>
     <directory name="config">
+            <if property="ARCH" value="i386">
+                <directory name="i386">
+                    <file>cmhardwr.c</file>
+                </directory>
+            </if>
             <file>cmboot.c</file>
             <file>cmcontrl.c</file>
             <file>cmdata.c</file>

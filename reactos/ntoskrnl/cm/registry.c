@@ -74,6 +74,10 @@ NTSTATUS
 NTAPI
 CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
+NTSTATUS
+NTAPI
+CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
 static VOID STDCALL
 CmiHiveSyncDpcRoutine(PKDPC Dpc,
 		      PVOID DeferredContext,
@@ -508,6 +512,14 @@ CmInitSystem1(VOID)
     {
         /* Bugcheck */
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
+    }
+
+    /* Initialize machine-dependent information into the registry */
+    Status = CmpInitializeMachineDependentConfiguration(KeLoaderBlock);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bugcheck */
+        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 14, Status, 0);
     }
 
     /* Initialize volatile registry settings */
