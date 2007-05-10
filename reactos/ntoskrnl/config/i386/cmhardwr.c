@@ -24,7 +24,7 @@ NTSTATUS
 NTAPI
 CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    UNICODE_STRING KeyName, ValueName;
+    UNICODE_STRING KeyName, ValueName, Data;
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG HavePae;
     NTSTATUS Status;
@@ -32,9 +32,12 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     ULONG Disposition;
     CONFIGURATION_COMPONENT_DATA ConfigData;
     CHAR Buffer[128];
-    ULONG i;
+    ULONG i, ExtendedId, Dummy;
     PKPRCB Prcb;
     USHORT IndexTable[MaximumType + 1] = {0};
+    ANSI_STRING TempString;
+    PCHAR PartialString = NULL;
+    CHAR CpuString[48];
 
     /* Open the SMSS Memory Management key */
     RtlInitUnicodeString(&KeyName,
@@ -197,6 +200,81 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                 /* Close this new handle */
                 NtClose(FpuHandle);
+
+                /* Stay on this CPU only */
+                KeSetSystemAffinityThread(Prcb->SetMember);
+                if (!Prcb->CpuID)
+                {
+                    /* Uh oh, no CPUID! */
+                }
+                else
+                {
+                    /* Check if we have extended CPUID that supports name ID */
+                    Ki386Cpuid(0x80000000, &ExtendedId, &Dummy, &Dummy, &Dummy);
+                    if (ExtendedId >= 0x80000004)
+                    {
+                        /* Do all the CPUIDs requred to get the full name */
+                        PartialString = CpuString;
+                        for (ExtendedId = 2; ExtendedId <= 4; ExtendedId++)
+                        {
+                            /* Do the CPUID and save the name string */
+                            Ki386Cpuid(0x80000000 | ExtendedId,
+                                       (PULONG)PartialString,
+                                       (PULONG)PartialString + 1,
+                                       (PULONG)PartialString + 2,
+                                       (PULONG)PartialString + 3);
+
+                            /* Go to the next name string */
+                            PartialString += 16;
+                        }
+
+                        /* Null-terminate it */
+                        CpuString[48] = ANSI_NULL;
+                    }
+                }
+
+                /* Go back to user affinity */
+                KeRevertToUserAffinityThread();
+
+                /* Check if we have a CPU Name */
+                if (PartialString)
+                {
+                    /* Convert it to Unicode */
+                    RtlInitAnsiString(&TempString, CpuString);
+                    RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+
+                    /* Add it to the registry */
+                    RtlInitUnicodeString(&ValueName, L"ProcessorNameString");
+                    Status = NtSetValueKey(KeyHandle,
+                                           &ValueName,
+                                           0,
+                                           REG_SZ,
+                                           Data.Buffer,
+                                           Data.Length + sizeof(UNICODE_NULL));
+
+                    /* Free the temporary buffer */
+                    RtlFreeUnicodeString(&Data);
+                }
+
+                /* Check if we had a Vendor ID */
+                if (Prcb->VendorString)
+                {
+                    /* Convert it to Unicode */
+                    RtlInitAnsiString(&TempString, Prcb->VendorString);
+                    RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+
+                    /* Add it to the registry */
+                    RtlInitUnicodeString(&ValueName, L"VendorIdentifier");
+                    Status = NtSetValueKey(KeyHandle,
+                                           &ValueName,
+                                           0,
+                                           REG_SZ,
+                                           Data.Buffer,
+                                           Data.Length + sizeof(UNICODE_NULL));
+
+                    /* Free the temporary buffer */
+                    RtlFreeUnicodeString(&Data);
+                }
 
                 /* Check if we have features bits */
                 if (Prcb->FeatureBits)
