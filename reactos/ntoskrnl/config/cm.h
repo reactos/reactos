@@ -940,6 +940,20 @@ CmpFindControlSet(
 );
 
 //
+// Hardware Configuration Routines
+//
+NTSTATUS
+NTAPI
+CmpInitializeRegistryNode(
+    IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
+    IN HANDLE NodeHandle,
+    OUT PHANDLE NewHandle,
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN PUSHORT DeviceIndexTable
+);
+
+//
 // Global variables accessible from all of Cm
 //
 extern BOOLEAN CmpSpecialBootCondition;
@@ -961,6 +975,10 @@ extern ULONG CmInstallUILanguageIdType;
 extern LANGID PsInstallUILanguageId;
 extern LANGID PsDefaultUILanguageId;
 extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
+extern ULONG CmpConfigurationAreaSize;
+extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
+extern UNICODE_STRING CmTypeName[];
+extern BOOLEAN ExpInTextModeSetup;
 
 //
 // Inlined functions

@@ -33,6 +33,55 @@ ULONG CmSuiteBufferType;
 
 CMHIVE CmControlHive;
 
+ULONG CmpConfigurationAreaSize = PAGE_SIZE * 4;
+PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
+
+UNICODE_STRING CmTypeName[MaximumType + 1] =
+{
+    RTL_CONSTANT_STRING(L"System"),
+    RTL_CONSTANT_STRING(L"CentralProcessor"),
+    RTL_CONSTANT_STRING(L"FloatingPointProcessor"),
+    RTL_CONSTANT_STRING(L"PrimaryICache"),
+    RTL_CONSTANT_STRING(L"PrimaryDCache"),
+    RTL_CONSTANT_STRING(L"SecondaryICache"),
+    RTL_CONSTANT_STRING(L"SecondaryDCache"),
+    RTL_CONSTANT_STRING(L"SecondaryCache"),
+    RTL_CONSTANT_STRING(L"EisaAdapter"),
+    RTL_CONSTANT_STRING(L"TcAdapter"),
+    RTL_CONSTANT_STRING(L"ScsiAdapter"),
+    RTL_CONSTANT_STRING(L"DtiAdapter"),
+    RTL_CONSTANT_STRING(L"MultifunctionAdapter"),
+    RTL_CONSTANT_STRING(L"DiskController"),
+    RTL_CONSTANT_STRING(L"TapeController"),
+    RTL_CONSTANT_STRING(L"CdRomController"),
+    RTL_CONSTANT_STRING(L"WormController"),
+    RTL_CONSTANT_STRING(L"SerialController"),
+    RTL_CONSTANT_STRING(L"NetworkController"),
+    RTL_CONSTANT_STRING(L"DisplayController"),
+    RTL_CONSTANT_STRING(L"ParallelController"),
+    RTL_CONSTANT_STRING(L"PointerController"),
+    RTL_CONSTANT_STRING(L"KeyboardController"),
+    RTL_CONSTANT_STRING(L"AudioController"),
+    RTL_CONSTANT_STRING(L"OtherController"),
+    RTL_CONSTANT_STRING(L"DiskPeripheral"),
+    RTL_CONSTANT_STRING(L"FloppyDiskPeripheral"),
+    RTL_CONSTANT_STRING(L"TapePeripheral"),
+    RTL_CONSTANT_STRING(L"ModemPeripheral"),
+    RTL_CONSTANT_STRING(L"MonitorPeripheral"),
+    RTL_CONSTANT_STRING(L"PrinterPeripheral"),
+    RTL_CONSTANT_STRING(L"PointerPeripheral"),
+    RTL_CONSTANT_STRING(L"KeyboardPeripheral"),
+    RTL_CONSTANT_STRING(L"TerminalPeripheral"),
+    RTL_CONSTANT_STRING(L"OtherPeripheral"),
+    RTL_CONSTANT_STRING(L"LinePeripheral"),
+    RTL_CONSTANT_STRING(L"NetworkPeripheral"),
+    RTL_CONSTANT_STRING(L"SystemMemory"),
+    RTL_CONSTANT_STRING(L"DockingInformation"),
+    RTL_CONSTANT_STRING(L"RealModeIrqRoutingTable"),
+    RTL_CONSTANT_STRING(L"RealModePCIEnumeration"),
+    RTL_CONSTANT_STRING(L"Undefined")
+};
+
 CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
 {
     {

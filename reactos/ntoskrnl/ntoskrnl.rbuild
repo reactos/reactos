@@ -91,6 +91,7 @@
             </if>
             <file>cmboot.c</file>
             <file>cmcontrl.c</file>
+            <file>cmconfig.c</file>
             <file>cmdata.c</file>
             <file>cmindex.c</file>
             <file>cmhook.c</file>

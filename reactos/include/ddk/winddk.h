@@ -4592,6 +4592,7 @@ typedef enum _CONFIGURATION_TYPE {
   SystemMemory,
   DockingInformation,
   RealModeIrqRoutingTable,
+  RealModePCIEnumeration,
   MaximumType
 } CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
 
