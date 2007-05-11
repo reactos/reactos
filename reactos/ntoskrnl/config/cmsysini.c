@@ -13,25 +13,6 @@
 #define NDEBUG
 #include "debug.h"
 
-/* GLOBALS *******************************************************************/
-
-HIVE_LIST_ENTRY CmpMachineHiveList[5];
-
-UNICODE_STRING CmSymbolicLinkValueName =
-    RTL_CONSTANT_STRING(L"SymbolicLinkValue");
-
-UNICODE_STRING CmpSystemStartOptions;
-UNICODE_STRING CmpLoadOptions;
-
-BOOLEAN CmpShareSystemHives;
-BOOLEAN CmSelfHeal = TRUE;
-BOOLEAN CmpSelfHeal = TRUE;
-ULONG CmpBootType;
-
-HANDLE CmpRegistryRootHandle;
-
-extern BOOLEAN ExpInTextModeSetup;
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS

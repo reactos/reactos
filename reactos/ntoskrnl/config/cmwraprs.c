@@ -15,6 +15,41 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+CmpCreateEvent(IN EVENT_TYPE EventType,
+               OUT PHANDLE EventHandle,
+               OUT PKEVENT *Event)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    /* Create the event */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateEvent(EventHandle,
+                           EVENT_ALL_ACCESS,
+                           &ObjectAttributes,
+                           EventType,
+                           FALSE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get a pointer to the object itself */
+    Status = ObReferenceObjectByHandle(*EventHandle,
+                                       EVENT_ALL_ACCESS,
+                                       NULL,
+                                       KernelMode,
+                                       (PVOID*)Event,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) ZwClose(*EventHandle);
+
+    /* Return status */
+    return Status;
+}
+
 PVOID
 NTAPI
 CmpAllocate(IN ULONG Size,

@@ -283,63 +283,6 @@ CmiRemoveRegistryHive(PEREGISTRY_HIVE RegistryHive)
   return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-CmOpenHiveFiles(PEREGISTRY_HIVE RegistryHive)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->HiveFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&RegistryHive->HiveHandle,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OPEN,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->LogFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&RegistryHive->LogHandle,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_SUPERSEDE,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
-    {
-      ZwClose(RegistryHive->HiveHandle);
-      return(Status);
-    }
-
-  return STATUS_SUCCESS;
-}
-
-
 VOID
 CmCloseHiveFiles(PEREGISTRY_HIVE RegistryHive)
 {
@@ -353,6 +296,7 @@ CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
 {
   BOOLEAN Success;
   NTSTATUS Status;
+  ULONG Disposition;
 
   ASSERT(!IsNoFileHive(RegistryHive));
 
@@ -361,7 +305,16 @@ CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
       return(STATUS_SUCCESS);
     }
 
-  Status = CmOpenHiveFiles(RegistryHive);
+  Status = CmpOpenHiveFiles(&RegistryHive->HiveFileName,
+                            L".LOG",
+                            &RegistryHive->HiveHandle,
+                            &RegistryHive->LogHandle,
+                            &Disposition,
+                            &Disposition,
+                            FALSE,
+                            FALSE,
+                            TRUE,
+                            NULL);
   if (!NT_SUCCESS(Status))
     {
       return Status;

@@ -38,6 +38,22 @@ PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 
 EX_PUSH_LOCK CmpHiveListHeadLock;
 
+HIVE_LIST_ENTRY CmpMachineHiveList[5];
+
+UNICODE_STRING CmSymbolicLinkValueName =
+    RTL_CONSTANT_STRING(L"SymbolicLinkValue");
+
+UNICODE_STRING CmpSystemStartOptions;
+UNICODE_STRING CmpLoadOptions;
+
+BOOLEAN CmpShareSystemHives;
+BOOLEAN CmSelfHeal = TRUE;
+BOOLEAN CmpSelfHeal = TRUE;
+BOOLEAN CmpMiniNTBoot;
+ULONG CmpBootType;
+
+HANDLE CmpRegistryRootHandle;
+
 UNICODE_STRING CmTypeName[MaximumType + 1] =
 {
     RTL_CONSTANT_STRING(L"System"),

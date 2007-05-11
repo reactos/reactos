@@ -496,6 +496,19 @@ BOOLEAN
 NTAPI
 CmpCreateRegistryRoot(VOID);
 
+NTSTATUS
+NTAPI
+CmpOpenHiveFiles(IN PUNICODE_STRING BaseName,
+                 IN PWCHAR Extension OPTIONAL,
+                 IN PHANDLE Primary,
+                 IN PHANDLE Log,
+                 IN PULONG PrimaryDisposition,
+                 IN PULONG LogDisposition,
+                 IN BOOLEAN CreateAllowed,
+                 IN BOOLEAN MarkAsSystemHive,
+                 IN BOOLEAN NoBuffering,
+                 OUT PULONG ClusterSize OPTIONAL);
+
 #if 0
 static __inline PVOID xHvGetCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
 {

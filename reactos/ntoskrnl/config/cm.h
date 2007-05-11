@@ -1007,6 +1007,14 @@ CmpInitializeRegistryNode(
 //
 // Wrapper Routines
 //
+NTSTATUS
+NTAPI
+CmpCreateEvent(
+    IN EVENT_TYPE EventType,
+    OUT PHANDLE EventHandle,
+    OUT PKEVENT *Event
+);
+
 PVOID
 NTAPI
 CmpAllocate(
@@ -1060,6 +1068,8 @@ CmpFileFlush(
 //
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
+extern BOOLEAN CmpShareSystemHives;
+extern BOOLEAN CmpMiniNTBoot;
 extern EX_PUSH_LOCK CmpHiveListHeadLock;
 extern LIST_ENTRY CmpHiveListHead;
 extern POBJECT_TYPE CmpKeyObjectType;
@@ -1080,6 +1090,14 @@ extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
 extern ULONG CmpConfigurationAreaSize;
 extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 extern UNICODE_STRING CmTypeName[];
+extern HIVE_LIST_ENTRY CmpMachineHiveList[5];
+extern UNICODE_STRING CmSymbolicLinkValueName;
+extern UNICODE_STRING CmpSystemStartOptions;
+extern UNICODE_STRING CmpLoadOptions;
+extern BOOLEAN CmSelfHeal;
+extern BOOLEAN CmpSelfHeal;
+extern ULONG CmpBootType;
+extern HANDLE CmpRegistryRootHandle;
 extern BOOLEAN ExpInTextModeSetup;
 
 //
