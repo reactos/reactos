@@ -1724,6 +1724,41 @@ typedef struct _ACE_HEADER
     USHORT AceSize;
 } ACE_HEADER, *PACE_HEADER;
 
+typedef struct _ACCESS_ALLOWED_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG SidStart;
+} ACCESS_ALLOWED_ACE, *PACCESS_ALLOWED_ACE;
+
+typedef struct _ACCESS_DENIED_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG SidStart;
+} ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
+
+typedef struct _SYSTEM_AUDIT_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG SidStart;
+} SYSTEM_AUDIT_ACE, *PSYSTEM_AUDIT_ACE;
+
+typedef struct _SYSTEM_ALARM_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG SidStart;
+} SYSTEM_ALARM_ACE, *PSYSTEM_ALARM_ACE;
+
+typedef struct _SYSTEM_MANDATORY_LABEL_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG SidStart;
+} SYSTEM_MANDATORY_LABEL_ACE, *PSYSTEM_MANDATORY_LABEL_ACE;
+
 typedef struct _TUNNEL {
     FAST_MUTEX          Mutex;
     PRTL_SPLAY_LINKS    Cache;
@@ -4305,6 +4340,10 @@ SeCreateClientSecurityFromSubjectContext (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
+
+
+#define SeLengthSid( Sid ) \
+    (8 + (4 * ((SID *)Sid)->SubAuthorityCount))
 
 #define SeDeleteClientSecurity(C)  {                                           \
             if (SeTokenType((C)->ClientToken) == TokenPrimary) {               \

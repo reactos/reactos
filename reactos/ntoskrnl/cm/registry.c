@@ -49,60 +49,6 @@ KTIMER CmiHiveSyncTimer;
 static GENERIC_MAPPING CmiKeyMapping =
 	{KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS};
 
-
-
-VOID
-CmiCheckKey(BOOLEAN Verbose,
-  HANDLE Key);
-
-BOOLEAN
-INIT_FUNCTION
-CmImportSystemHive(PCHAR ChunkBase,
-                   ULONG ChunkSize,
-                   OUT PEREGISTRY_HIVE *RegistryHive);
-
-BOOLEAN
-INIT_FUNCTION
-CmImportHardwareHive(PCHAR ChunkBase,
-                     ULONG ChunkSize,
-                     OUT PEREGISTRY_HIVE *RegistryHive);
-
-NTSTATUS
-NTAPI
-CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-NTSTATUS
-NTAPI
-CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-NTSTATUS
-NTAPI
-CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-NTSTATUS
-NTAPI
-CmpInitializeHive(PEREGISTRY_HIVE *RegistryHive,
-                  ULONG OperationType,
-                  ULONG HiveFlags,
-                  ULONG FileType,
-                  PVOID HiveData OPTIONAL,
-                  HANDLE Primary,
-                  HANDLE Log,
-                  HANDLE External,
-                  PUNICODE_STRING FileName OPTIONAL,
-                  ULONG CheckFlags);
-
-USHORT
-NTAPI
-CmpCopyName(IN PHHIVE Hive,
-            IN PWCHAR Destination,
-            IN PUNICODE_STRING Source);
-
-USHORT
-NTAPI
-CmpNameSize(IN PHHIVE Hive,
-            IN PUNICODE_STRING Name);
-
 static VOID STDCALL
 CmiHiveSyncDpcRoutine(PKDPC Dpc,
 		      PVOID DeferredContext,
@@ -253,6 +199,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     UNICODE_STRING KeyName;
     PEREGISTRY_HIVE SystemHive;
     UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
     /* Setup the ansi string */
@@ -309,9 +256,16 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         Allocate = TRUE;
     }
 
+    /* Create the default security descriptor */
+    SecurityDescriptor = CmpHiveRootSecurityDescriptor();
+
     /* Attach it to the system key */
     RtlInitUnicodeString(&KeyName, REG_SYSTEM_KEY_NAME);
-    Status = CmpLinkHiveToMaster(&KeyName, NULL, SystemHive, Allocate, NULL);
+    Status = CmpLinkHiveToMaster(&KeyName,
+                                 NULL,
+                                 SystemHive,
+                                 Allocate,
+                                 SecurityDescriptor);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Success! */
@@ -495,6 +449,7 @@ CmInitSystem1(VOID)
     PEREGISTRY_HIVE HardwareHive;
     PVOID BaseAddress;
     ULONG Length;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
     /* Initialize the hive list */
@@ -559,13 +514,16 @@ CmInitSystem1(VOID)
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 3, 0, 0);
     }
 
+    /* Create the default security descriptor */
+    SecurityDescriptor = CmpHiveRootSecurityDescriptor();
+
     /* Create '\Registry\Machine' key. */
     RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
-                               NULL);
+                               SecurityDescriptor);
     Status = NtCreateKey(&KeyHandle,
                          KEY_READ | KEY_WRITE,
                          &ObjectAttributes,
@@ -588,7 +546,7 @@ CmInitSystem1(VOID)
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
-                               NULL);
+                               SecurityDescriptor);
     Status = NtCreateKey(&KeyHandle,
                          KEY_READ | KEY_WRITE,
                          &ObjectAttributes,
@@ -642,11 +600,23 @@ CmInitSystem1(VOID)
 
     /* Attach it to the machine key */
     RtlInitUnicodeString(&KeyName, REG_HARDWARE_KEY_NAME);
-    Status = CmpLinkHiveToMaster(&KeyName, NULL, HardwareHive, FALSE, NULL);
+    Status = CmpLinkHiveToMaster(&KeyName,
+                                 NULL,
+                                 HardwareHive,
+                                 FALSE,
+                                 SecurityDescriptor);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
+    }
+
+    /* Fill out the Hardware key with the ARC Data from the Loader */
+    Status = CmpInitializeHardwareConfiguration(KeLoaderBlock);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bugcheck */
+        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 13, Status, 0);
     }
 
     /* Initialize machine-dependent information into the registry */

@@ -98,6 +98,7 @@
             <file>cmmapvw.c</file>
             <file>cmname.c</file>
             <file>cmparse.c</file>
+            <file>cmse.c</file>
             <file>cmsecach.c</file>
             <file>cmsysini.c</file>
             <file>cmvalue.c</file>

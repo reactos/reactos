@@ -418,6 +418,66 @@ CmpFileFlush(
    PHHIVE RegistryHive,
    ULONG FileType);
 
+VOID
+CmiCheckKey(BOOLEAN Verbose,
+  HANDLE Key);
+
+BOOLEAN
+INIT_FUNCTION
+CmImportSystemHive(PCHAR ChunkBase,
+                   ULONG ChunkSize,
+                   OUT PEREGISTRY_HIVE *RegistryHive);
+
+BOOLEAN
+INIT_FUNCTION
+CmImportHardwareHive(PCHAR ChunkBase,
+                     ULONG ChunkSize,
+                     OUT PEREGISTRY_HIVE *RegistryHive);
+
+NTSTATUS
+NTAPI
+CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+NTSTATUS
+NTAPI
+CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+NTSTATUS
+NTAPI
+CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+NTSTATUS
+NTAPI
+CmpInitializeHive(PEREGISTRY_HIVE *RegistryHive,
+                  ULONG OperationType,
+                  ULONG HiveFlags,
+                  ULONG FileType,
+                  PVOID HiveData OPTIONAL,
+                  HANDLE Primary,
+                  HANDLE Log,
+                  HANDLE External,
+                  PUNICODE_STRING FileName OPTIONAL,
+                  ULONG CheckFlags);
+
+USHORT
+NTAPI
+CmpCopyName(IN PHHIVE Hive,
+            IN PWCHAR Destination,
+            IN PUNICODE_STRING Source);
+
+USHORT
+NTAPI
+CmpNameSize(IN PHHIVE Hive,
+            IN PUNICODE_STRING Name);
+
+NTSTATUS
+NTAPI
+CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+PSECURITY_DESCRIPTOR
+NTAPI
+CmpHiveRootSecurityDescriptor(VOID);
+
 #if 0
 static __inline PVOID xHvGetCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
 {

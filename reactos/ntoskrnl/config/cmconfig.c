@@ -194,3 +194,81 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle;
+    ULONG Disposition;
+    UNICODE_STRING KeyName;
+
+    /* Setup the key name */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\Machine\\Hardware\\DeviceMap");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Create the device map key */
+    Status = NtCreateKey(&KeyHandle,
+                         KEY_READ | KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+    if (!NT_SUCCESS(Status)) return Status;
+    NtClose(KeyHandle);
+
+    /* Nobody should've created this key yet! */
+    //ASSERT(Disposition == REG_CREATED_NEW_KEY);
+
+    /* Setup the key name */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\Machine\\Hardware\\Description");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Create the description key */
+    Status = NtCreateKey(&KeyHandle,
+                          KEY_READ | KEY_WRITE,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          0,
+                          &Disposition);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Nobody should've created this key yet! */
+    //ASSERT(Disposition == REG_CREATED_NEW_KEY);
+
+    /* Allocate the configuration data buffer */
+    CmpConfigurationData = ExAllocatePoolWithTag(PagedPool,
+                                                 CmpConfigurationAreaSize,
+                                                 TAG_CM);
+    if (!CmpConfigurationData) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Check if we got anything from NTLDR */
+    if (LoaderBlock->ConfigurationRoot)
+    {
+        ASSERTMSG("NTLDR ARC Hardware Tree Not Supported!\n", FALSE);
+    }
+    else
+    {
+        /* Nothing else to do */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Close our handle, free the buffer and return status */
+    ExFreePool(CmpConfigurationData);
+    NtClose(KeyHandle);
+    return Status;
+}
+
