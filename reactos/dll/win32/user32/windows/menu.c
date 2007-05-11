@@ -200,6 +200,7 @@ MenuGetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
           ItemInfo->fType = 0;
           return FALSE;
         }
+      ItemInfo->dwTypeData[ItemInfo->cch - 1] = UNICODE_NULL;
     }
   ItemInfo->fMask =  Save_Mask;
   return TRUE;
@@ -251,7 +252,7 @@ MenuGetAllRosMenuItemInfo(HMENU Menu, PROSMENUITEMINFO *ItemInfo)
   DWORD BufSize;
 
   BufSize = NtUserBuildMenuItemList(Menu, (VOID *) 1, 0, 0);
-  if (BufSize <= 0)
+  if (BufSize == (DWORD) -1 || BufSize == 0)
     {
       return -1;
     }
