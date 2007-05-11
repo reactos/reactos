@@ -145,7 +145,7 @@
 #define CMP_HASH_PRIME                                  1000000007
 
 //
-// CmpCreateKcb Flags
+// CmpCreateKeyControlBlock Flags
 //
 #define CMP_CREATE_FAKE_KCB                             0x1
 #define CMP_LOCK_HASHES_FOR_KCB                         0x2
@@ -468,7 +468,7 @@ typedef struct _CHILD_LIST
 
 typedef struct _CM_KEY_NODE
 {
-    USHORT Id;
+    USHORT Signature;
     USHORT Flags;
     LARGE_INTEGER LastWriteTime;
     ULONG Spare;
@@ -476,15 +476,15 @@ typedef struct _CM_KEY_NODE
     ULONG SubKeyCounts[HvMaxStorageType];
     HCELL_INDEX SubKeyLists[HvMaxStorageType];
     CHILD_LIST ValueList;
-    HCELL_INDEX SecurityKeyOffset;
-    HCELL_INDEX ClassNameOffset;
+    HCELL_INDEX Security;
+    HCELL_INDEX Class;
     ULONG MaxNameLen;
     ULONG MaxClassLen;
     ULONG MaxValueNameLen;
     ULONG MaxValueDataLen;
     ULONG WorkVar;
     USHORT NameLength;
-    USHORT ClassSize;
+    USHORT ClassLength;
     WCHAR Name[0];
 } CM_KEY_NODE, *PCM_KEY_NODE;
 
@@ -636,6 +636,44 @@ typedef struct _CM_SYSTEM_CONTROL_VECTOR
     PULONG BufferLength;
     PULONG Type;
 } CM_SYSTEM_CONTROL_VECTOR, *PCM_SYSTEM_CONTROL_VECTOR;
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// BUGBUG Old Hive Stuff for Temporary Support
+//
+#define SYSTEM_REG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM"
+#define SYSTEM_LOG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
+#define REG_SYSTEM_KEY_NAME L"\\Registry\\Machine\\SYSTEM"
+typedef struct _EREGISTRY_HIVE
+{
+    HHIVE Hive;
+    LIST_ENTRY HiveList;
+    UNICODE_STRING HiveFileName;
+    UNICODE_STRING LogFileName;
+    PCM_KEY_SECURITY RootSecurityCell;
+    ULONG Flags;
+    HANDLE HiveHandle;
+    HANDLE LogHandle;
+} EREGISTRY_HIVE, *PEREGISTRY_HIVE;
+typedef struct _KEY_OBJECT
+{
+    CSHORT Type;
+    CSHORT Size;
+    ULONG Flags;
+    UNICODE_STRING Name;
+    PEREGISTRY_HIVE RegistryHive;
+    HCELL_INDEX KeyCellOffset;
+    PCM_KEY_NODE KeyCell;
+    struct _KEY_OBJECT *ParentKey;
+    LIST_ENTRY ListEntry;
+    ULONG SubKeyCounts;
+    ULONG SizeOfSubKeys;
+    struct _KEY_OBJECT **SubKeys;
+    ULONG TimeStamp;
+    LIST_ENTRY HiveList;
+} KEY_OBJECT, *PKEY_OBJECT;
+extern PEREGISTRY_HIVE CmiVolatileHive;
+///////////////////////////////////////////////////////////////////////////////
 
 //
 // Mapped View Hive Functions
@@ -827,7 +865,7 @@ CmpFreeDelayItem(
 //
 PCM_KEY_CONTROL_BLOCK
 NTAPI
-CmpCreateKcb(
+CmpCreateKeyControlBlock(
     IN PHHIVE Hive,
     IN HCELL_INDEX Index,
     IN PCM_KEY_NODE Node,
@@ -841,6 +879,17 @@ NTAPI
 CmpDereferenceKcbWithLock(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN BOOLEAN LockHeldExclusively
+);
+
+VOID
+NTAPI
+EnlistKeyBodyWithKCB(
+#if 0
+    IN PCM_KEY_BODY KeyObject,
+#else
+    IN PKEY_OBJECT KeyObject,
+#endif
+    IN ULONG Flags
 );
 
 //
@@ -981,24 +1030,6 @@ extern ULONG CmpConfigurationAreaSize;
 extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 extern UNICODE_STRING CmTypeName[];
 extern BOOLEAN ExpInTextModeSetup;
-
-//
-// BUGBUG Old Hive Stuff for Temporary Support
-//
-#define SYSTEM_REG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM"
-#define SYSTEM_LOG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
-#define REG_SYSTEM_KEY_NAME L"\\Registry\\Machine\\SYSTEM"
-typedef struct _EREGISTRY_HIVE
-{
-    HHIVE Hive;
-    LIST_ENTRY HiveList;
-    UNICODE_STRING HiveFileName;
-    UNICODE_STRING LogFileName;
-    PCM_KEY_SECURITY RootSecurityCell;
-    ULONG Flags;
-    HANDLE HiveHandle;
-    HANDLE LogHandle;
-} EREGISTRY_HIVE, *PEREGISTRY_HIVE;
 
 //
 // Inlined functions

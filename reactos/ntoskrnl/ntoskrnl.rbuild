@@ -95,6 +95,7 @@
             <file>cmdata.c</file>
             <file>cmindex.c</file>
             <file>cmhook.c</file>
+            <file>cmkcbncb.c</file>
             <file>cmmapvw.c</file>
             <file>cmname.c</file>
             <file>cmparse.c</file>

@@ -28,6 +28,8 @@ BOOLEAN CmSelfHeal = TRUE;
 BOOLEAN CmpSelfHeal = TRUE;
 ULONG CmpBootType;
 
+HANDLE CmpRegistryRootHandle;
+
 extern BOOLEAN ExpInTextModeSetup;
 
 /* FUNCTIONS *****************************************************************/
@@ -480,3 +482,164 @@ CmpCreateObjectTypes(VOID)
     return ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmpKeyObjectType);
 }
 
+BOOLEAN
+NTAPI
+CmpCreateRootNode(IN PHHIVE Hive,
+                  IN PCWSTR Name,
+                  OUT PHCELL_INDEX Index)
+{
+    UNICODE_STRING KeyName;
+    PCM_KEY_NODE KeyCell;
+    LARGE_INTEGER SystemTime;
+    PAGED_CODE();
+
+    /* Initialize the node name and allocate it */
+    RtlInitUnicodeString(&KeyName, Name);
+    *Index = HvAllocateCell(Hive,
+                            FIELD_OFFSET(CM_KEY_NODE, Name) +
+                            CmpNameSize(Hive, &KeyName),
+                            HvStable); // FIXME: , HCELL_NIL);
+    if (*Index == HCELL_NIL) return FALSE;
+
+    /* Set the cell index and get the data */
+    Hive->HiveHeader->RootCell = *Index;
+    KeyCell = (PCM_KEY_NODE)HvGetCell(Hive, *Index);
+    if (!KeyCell) return FALSE;
+
+    /* Setup the cell */
+    KeyCell->Signature = (USHORT)CM_KEY_NODE_SIGNATURE;;
+    KeyCell->Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
+    KeQuerySystemTime(&SystemTime);
+    KeyCell->LastWriteTime = SystemTime;
+    KeyCell->Parent = HCELL_NIL;
+    KeyCell->SubKeyCounts[HvStable] = 0;
+    KeyCell->SubKeyCounts[HvVolatile] = 0;
+    KeyCell->SubKeyLists[HvStable] = HCELL_NIL;
+    KeyCell->SubKeyLists[HvVolatile] = HCELL_NIL;
+    KeyCell->ValueList.Count = 0;
+    KeyCell->ValueList.List = HCELL_NIL;
+    KeyCell->Security = HCELL_NIL;
+    KeyCell->Class = HCELL_NIL;
+    KeyCell->ClassLength = 0;
+    KeyCell->MaxNameLen = 0;
+    KeyCell->MaxClassLen = 0;
+    KeyCell->MaxValueNameLen = 0;
+    KeyCell->MaxValueDataLen = 0;
+
+    /* Copy the name (this will also set the length) */
+    KeyCell->NameLength = CmpCopyName(Hive, (PWCHAR)KeyCell->Name, &KeyName);
+
+    /* Check if the name was compressed */
+    if (KeyCell->NameLength < KeyName.Length)
+    {
+        /* Set the flag */
+        KeyCell->Flags |= KEY_COMP_NAME;
+    }
+
+    /* Return success */
+    HvReleaseCell(Hive, *Index);
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+CmpCreateRegistryRoot(VOID)
+{
+    UNICODE_STRING KeyName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+#if 0
+    PCM_KEY_BODY RootKey;
+#else
+    PKEY_OBJECT RootKey;
+#endif
+    HCELL_INDEX RootIndex;
+    NTSTATUS Status;
+    PCM_KEY_NODE KeyCell;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PCM_KEY_CONTROL_BLOCK Kcb;
+    PAGED_CODE();
+
+    /* Setup the root node */
+    if (!CmpCreateRootNode(&CmiVolatileHive->Hive, L"REGISTRY", &RootIndex))
+    {
+        /* We failed */
+        return FALSE;
+    }
+
+    /* Create '\Registry' key. */
+    RtlInitUnicodeString(&KeyName, L"\\Registry");
+    SecurityDescriptor = CmpHiveRootSecurityDescriptor();
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ObCreateObject(KernelMode,
+                            CmpKeyObjectType,
+                            &ObjectAttributes,
+                            KernelMode,
+                            NULL,
+                            sizeof(KEY_OBJECT),
+                            0,
+                            0,
+                            (PVOID*)&RootKey);
+    ExFreePool(SecurityDescriptor);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Sanity check, and get the key cell */
+    ASSERT((&CmiVolatileHive->Hive)->ReleaseCellRoutine == NULL);
+    KeyCell = (PCM_KEY_NODE)HvGetCell(&CmiVolatileHive->Hive, RootIndex);
+    if (!KeyCell) return FALSE;
+
+    /* Create the KCB */
+    RtlInitUnicodeString(&KeyName, L"Registry");
+    Kcb = CmpCreateKeyControlBlock(&CmiVolatileHive->Hive,
+                                   RootIndex,
+                                   KeyCell,
+                                   NULL,
+                                   0,
+                                   &KeyName);
+    if (!Kcb) return FALSE;
+
+    /* Initialize the object */
+#if 0
+    RootKey->Type = TAG('k', 'v', '0', '2';
+    RootKey->KeyControlBlock = Kcb;
+    RootKey->NotifyBlock = NULL;
+    RootKey->ProcessID = PsGetCurrentProcessId();
+#else
+    RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
+    RootKey->RegistryHive = CmiVolatileHive;
+    RootKey->KeyCellOffset = RootIndex;
+    RootKey->KeyCell = KeyCell;
+    RootKey->ParentKey = RootKey;
+    RootKey->Flags = 0;
+    RootKey->SubKeyCounts = 0;
+    RootKey->SubKeys = NULL;
+    RootKey->SizeOfSubKeys = 0;
+#endif
+
+    /* Insert it into the object list head */
+    EnlistKeyBodyWithKCB(RootKey, 0);
+
+    /* Insert the key into the namespace */
+    Status = ObInsertObject(RootKey,
+                            NULL,
+                            KEY_ALL_ACCESS,
+                            0,
+                            NULL,
+                            &CmpRegistryRootHandle);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Reference the key again so that we never lose it */
+    Status = ObReferenceObjectByHandle(CmpRegistryRootHandle,
+                                       KEY_READ,
+                                       NULL,
+                                       KernelMode,
+                                       (PVOID*)&RootKey,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Completely sucessful */
+    return TRUE;
+}

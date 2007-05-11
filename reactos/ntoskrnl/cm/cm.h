@@ -486,6 +486,16 @@ NTSTATUS
 NTAPI
 CmpCreateObjectTypes(VOID);
 
+BOOLEAN
+NTAPI
+CmpCreateRootNode(IN PHHIVE Hive,
+                  IN PCWSTR Name,
+                  OUT PHCELL_INDEX Index);
+
+BOOLEAN
+NTAPI
+CmpCreateRegistryRoot(VOID);
+
 #if 0
 static __inline PVOID xHvGetCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
 {
