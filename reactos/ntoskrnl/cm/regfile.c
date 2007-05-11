@@ -15,9 +15,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-
-/* uncomment to enable hive checks (incomplete and probably buggy) */
-//#define HIVE_CHECK
+#include "..\config\cm.h"
 
 /* LOCAL MACROS *************************************************************/
 
@@ -165,276 +163,6 @@ CmiCreateNewRegFile(HANDLE FileHandle)
   return(Status);
 }
 
-
-#ifdef HIVE_CHECK
-
-static ULONG
-CmiCalcChecksum(PULONG Buffer)
-{
-  ULONG Sum = 0;
-  ULONG i;
-
-  for (i = 0; i < 127; i++)
-    Sum ^= Buffer[i];
-  if (Sum == (ULONG)-1)
-    Sum = (ULONG)-2;
-  if (Sum == 0)
-    Sum = 1;
-
-  return(Sum);
-}
-
-static NTSTATUS
-CmiCheckAndFixHive(PEREGISTRY_HIVE RegistryHive)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  FILE_STANDARD_INFORMATION fsi;
-  IO_STATUS_BLOCK IoStatusBlock;
-  HANDLE HiveHandle = INVALID_HANDLE_VALUE;
-  HANDLE LogHandle = INVALID_HANDLE_VALUE;
-  PHBASE_BLOCK HiveHeader = NULL;
-  PHBASE_BLOCK LogHeader = NULL;
-  LARGE_INTEGER FileOffset;
-  ULONG FileSize;
-  ULONG BufferSize;
-  ULONG BitmapSize;
-  RTL_BITMAP BlockBitMap;
-  NTSTATUS Status;
-
-  DPRINT("CmiCheckAndFixHive() called\n");
-
-  /* Try to open the hive file */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->HiveFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&HiveHandle,
-			FILE_READ_DATA | FILE_READ_ATTRIBUTES,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OPEN,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-      return(STATUS_SUCCESS);
-    }
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-
-  /* Try to open the log file */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->LogFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&LogHandle,
-			FILE_READ_DATA | FILE_READ_ATTRIBUTES,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OPEN,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-      LogHandle = INVALID_HANDLE_VALUE;
-    }
-  else if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      ZwClose(HiveHandle);
-      return(Status);
-    }
-
-  /* Allocate hive header */
-  HiveHeader = ExAllocatePool(PagedPool,
-			      sizeof(HBASE_BLOCK));
-  if (HiveHeader == NULL)
-    {
-      DPRINT("ExAllocatePool() failed\n");
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-      goto ByeBye;
-    }
-
-  /* Read hive base block */
-  FileOffset.QuadPart = 0ULL;
-  Status = ZwReadFile(HiveHandle,
-		      0,
-		      0,
-		      0,
-		      &IoStatusBlock,
-		      HiveHeader,
-		      sizeof(HBASE_BLOCK),
-		      &FileOffset,
-		      0);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwReadFile() failed (Status %lx)\n", Status);
-      goto ByeBye;
-    }
-
-  if (LogHandle == INVALID_HANDLE_VALUE)
-    {
-      if (HiveHeader->Checksum != CmiCalcChecksum((PULONG)HiveHeader) ||
-	  HiveHeader->Sequence1 != HiveHeader->Sequence2)
-	{
-	  /* There is no way to fix the hive without log file - BSOD! */
-	  DPRINT("Hive header inconsistent and no log file available!\n");
-	  KEBUGCHECK(CONFIG_LIST_FAILED);
-	}
-
-      Status = STATUS_SUCCESS;
-      goto ByeBye;
-    }
-  else
-    {
-      /* Allocate hive header */
-      LogHeader = ExAllocatePool(PagedPool,
-				 HV_LOG_HEADER_SIZE);
-      if (LogHeader == NULL)
-	{
-	  DPRINT("ExAllocatePool() failed\n");
-	  Status = STATUS_INSUFFICIENT_RESOURCES;
-	  goto ByeBye;
-	}
-
-      /* Read log file header */
-      FileOffset.QuadPart = 0ULL;
-      Status = ZwReadFile(LogHandle,
-			  0,
-			  0,
-			  0,
-			  &IoStatusBlock,
-			  LogHeader,
-			  HV_LOG_HEADER_SIZE,
-			  &FileOffset,
-			  0);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT("ZwReadFile() failed (Status %lx)\n", Status);
-	  goto ByeBye;
-	}
-
-      /* Check log file header integrity */
-      if (LogHeader->Checksum != CmiCalcChecksum((PULONG)LogHeader) ||
-          LogHeader->Sequence1 != LogHeader->Sequence2)
-	{
-	  if (HiveHeader->Checksum != CmiCalcChecksum((PULONG)HiveHeader) ||
-	      HiveHeader->Sequence1 != HiveHeader->Sequence2)
-	    {
-	      DPRINT("Hive file and log file are inconsistent!\n");
-	      KEBUGCHECK(CONFIG_LIST_FAILED);
-	    }
-
-	  /* Log file damaged but hive is okay */
-	  Status = STATUS_SUCCESS;
-	  goto ByeBye;
-	}
-
-      if (HiveHeader->Sequence1 == HiveHeader->Sequence2 &&
-	  HiveHeader->Sequence1 == LogHeader->Sequence1)
-	{
-	  /* Hive and log file are up-to-date */
-	  Status = STATUS_SUCCESS;
-	  goto ByeBye;
-	}
-
-      /*
-       * Hive needs an update!
-       */
-
-      /* Get file size */
-      Status = ZwQueryInformationFile(LogHandle,
-				      &IoStatusBlock,
-				      &fsi,
-				      sizeof(fsi),
-				      FileStandardInformation);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT("ZwQueryInformationFile() failed (Status %lx)\n", Status);
-	  goto ByeBye;
-	}
-      FileSize = fsi.EndOfFile.u.LowPart;
-
-      /* Calculate bitmap and block size */
-      BitmapSize = ROUND_UP((FileSize / HV_BLOCK_SIZE) - 1, sizeof(ULONG) * 8) / 8;
-      BufferSize = HV_LOG_HEADER_SIZE + sizeof(ULONG) + BitmapSize;
-      BufferSize = ROUND_UP(BufferSize, HV_BLOCK_SIZE);
-
-      /* Reallocate log header block */
-      ExFreePool(LogHeader);
-      LogHeader = ExAllocatePool(PagedPool,
-				 BufferSize);
-      if (LogHeader == NULL)
-	{
-	  DPRINT("ExAllocatePool() failed\n");
-	  Status = STATUS_INSUFFICIENT_RESOURCES;
-	  goto ByeBye;
-	}
-
-      /* Read log file header */
-      FileOffset.QuadPart = 0ULL;
-      Status = ZwReadFile(LogHandle,
-			  0,
-			  0,
-			  0,
-			  &IoStatusBlock,
-			  LogHeader,
-			  BufferSize,
-			  &FileOffset,
-			  0);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT("ZwReadFile() failed (Status %lx)\n", Status);
-	  goto ByeBye;
-	}
-
-      /* Initialize bitmap */
-      RtlInitializeBitMap(&BlockBitMap,
-			  (PVOID)((ULONG_PTR)LogHeader + HV_BLOCK_SIZE + sizeof(ULONG)),
-			  BitmapSize * 8);
-
-      /* FIXME: Update dirty blocks */
-
-
-      /* FIXME: Update hive header */
-
-
-      Status = STATUS_SUCCESS;
-    }
-
-
-  /* Clean up the mess */
-ByeBye:
-  if (HiveHeader != NULL)
-    ExFreePool(HiveHeader);
-
-  if (LogHeader != NULL)
-    ExFreePool(LogHeader);
-
-  if (LogHandle != INVALID_HANDLE_VALUE)
-    ZwClose(LogHandle);
-
-  ZwClose(HiveHandle);
-
-  return(Status);
-}
-#endif
-
 static NTSTATUS
 CmiInitNonVolatileRegistryHive (PEREGISTRY_HIVE RegistryHive,
 				PWSTR Filename)
@@ -476,18 +204,6 @@ CmiInitNonVolatileRegistryHive (PEREGISTRY_HIVE RegistryHive,
 	 Filename);
   wcscat(RegistryHive->LogFileName.Buffer,
 	 L".log");
-
-#ifdef HIVE_CHECK
-  /* Check and eventually fix a hive */
-  Status = CmiCheckAndFixHive(RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT1("CmiCheckAndFixHive() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-#endif
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->HiveFileName,
@@ -603,71 +319,143 @@ CmiInitNonVolatileRegistryHive (PEREGISTRY_HIVE RegistryHive,
   return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-CmiCreateTempHive(PEREGISTRY_HIVE *RegistryHive)
+ULONG
+NTAPI
+CmCheckRegistry(IN PEREGISTRY_HIVE RegistryHive,
+                IN ULONG Flags)
 {
-  PEREGISTRY_HIVE Hive;
-  NTSTATUS Status;
-
-  *RegistryHive = NULL;
-
-  Hive = ExAllocatePool (NonPagedPool,
-			 sizeof(EREGISTRY_HIVE));
-  if (Hive == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  RtlZeroMemory (Hive,
-		 sizeof(EREGISTRY_HIVE));
-
-  DPRINT("Hive 0x%p\n", Hive);
-
-  Status = HvInitialize(&Hive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0, 0, 0,
-                        CmpAllocate, CmpFree,
-                        CmpFileRead, CmpFileWrite, CmpFileSetSize,
-                        CmpFileFlush, NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      ExFreePool (Hive);
-      return Status;
-    }
-
-  if (!CmCreateRootNode (&Hive->Hive, L""))
-    {
-      HvFree (&Hive->Hive);
-      ExFreePool (Hive);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  Hive->Flags = HIVE_NO_FILE;
-
-  /* Acquire hive list lock exclusively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite (&CmiRegistryLock, TRUE);
-
-  /* Add the new hive to the hive list */
-  InsertTailList (&CmiHiveListHead,
-		  &Hive->HiveList);
-
-  /* Release hive list lock */
-  ExReleaseResourceLite (&CmiRegistryLock);
-  KeLeaveCriticalRegion();
-
-  VERIFY_REGISTRY_HIVE (Hive);
-
-  *RegistryHive = Hive;
-
-  return STATUS_SUCCESS;
+    /* FIXME: HACK! */
+    return 0;
 }
 
-
 NTSTATUS
-CmiCreateVolatileHive(PEREGISTRY_HIVE *RegistryHive)
+NTAPI
+CmpInitializeHive(OUT PEREGISTRY_HIVE *RegistryHive,
+                  IN ULONG OperationType,
+                  IN ULONG HiveFlags,
+                  IN ULONG FileType,
+                  IN PVOID HiveData OPTIONAL,
+                  IN HANDLE Primary,
+                  IN HANDLE Log,
+                  IN HANDLE External,
+                  IN PUNICODE_STRING FileName OPTIONAL,
+                  IN ULONG CheckFlags)
 {
-  DPRINT ("CmiCreateVolatileHive() called\n");
-  return CmiCreateTempHive(RegistryHive);
-}
+    PEREGISTRY_HIVE Hive;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_FS_SIZE_INFORMATION FileSizeInformation;
+    NTSTATUS Status;
+    ULONG Cluster;
 
+    /* Assume failure */
+    *RegistryHive = NULL;
+
+    /*
+     * The following are invalid:
+     * An external hive that is also internal.
+     * A log hive that's not a primary hive too.
+     * A volatile hive that's linked to permanent storage.
+     * An in-memory initialization without hive data.
+     * A log hive that's not linked to a correct file type.
+     */
+    if (((External) && ((Primary) || (Log))) ||
+        ((Log) && !(Primary)) ||
+        ((HiveFlags & HIVE_VOLATILE) && ((Primary) || (External) || (Log))) ||
+        ((OperationType == HINIT_MEMORY) && (!HiveData)) ||
+        ((Log) && (FileType != HFILE_TYPE_LOG)))
+    {
+        /* Fail the request */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if this is a primary hive */
+    if (Primary)
+    {
+        /* Get the cluster size */
+        Status = ZwQueryVolumeInformationFile(Primary,
+                                              &IoStatusBlock,
+                                              &FileSizeInformation,
+                                              sizeof(FILE_FS_SIZE_INFORMATION),
+                                              FileFsSizeInformation);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Make sure it's not larger then the block size */
+        if (FileSizeInformation.BytesPerSector > HBLOCK_SIZE)
+        {
+            /* Fail */
+            return STATUS_REGISTRY_IO_FAILED;
+        }
+
+        /* Otherwise, calculate the cluster */
+        Cluster = FileSizeInformation.BytesPerSector / HSECTOR_SIZE;
+        Cluster = max(1, Cluster);
+    }
+    else
+    {
+        /* Otherwise use cluster 1 */
+        Cluster = 1;
+    }
+
+    /* Allocate and clear the hive */
+    Hive = ExAllocatePoolWithTag(NonPagedPool, sizeof(EREGISTRY_HIVE), TAG_CM);
+    if (!Hive) return STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(Hive, sizeof(EREGISTRY_HIVE));
+
+    /* Initialize it */
+    Status = HvInitialize(&Hive->Hive,
+                          OperationType,
+                          HiveFlags,
+                          FileType,
+                          (ULONG_PTR)HiveData,
+                          Cluster,
+                          CmpAllocate,
+                          CmpFree,
+                          CmpFileRead,
+                          CmpFileWrite,
+                          CmpFileSetSize,
+                          CmpFileFlush,
+                          FileName);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Clear allocations and fail */
+        ExFreePool(Hive);
+        return Status;
+    }
+
+    /* Set flag */
+    Hive->Flags = HIVE_NO_FILE;
+
+    /* Check if we should verify the registry */
+    if ((OperationType == HINIT_FILE) ||
+        (OperationType == HINIT_MEMORY) ||
+        (OperationType == HINIT_MEMORY_INPLACE) ||
+        (OperationType == HINIT_MAPFILE))
+    {
+        /* Verify integrity */
+        if (CmCheckRegistry(Hive, TRUE))
+        {
+            /* Free all alocations */
+            ExFreePool(Hive);
+            return STATUS_REGISTRY_CORRUPT;
+        }
+    }
+
+    /* Acquire hive list lock exclusively */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+
+    /* Add the new hive to the hive list */
+    InsertTailList(&CmiHiveListHead, &Hive->HiveList);
+
+    /* Release hive list lock */
+    ExReleaseResourceLite(&CmiRegistryLock);
+    KeLeaveCriticalRegion();
+
+    /* Return the hive and success */
+    VERIFY_REGISTRY_HIVE(Hive);
+    *RegistryHive = Hive;
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,

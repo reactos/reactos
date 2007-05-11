@@ -84,7 +84,7 @@
 //
 // Cell Masks
 //
-#define HCELL_NIL                                       0
+#define HCELL_NIL                                       -1
 #define HCELL_CACHED                                    1
 
 //
@@ -157,6 +157,8 @@
     PAGE_SIZE / sizeof(CM_KEY_CONTROL_BLOCK)
 #define CM_DELAYS_PER_PAGE                       \
     PAGE_SIZE / sizeof(CM_DELAYED_CLOSE_ENTRY)
+
+#ifndef __INCLUDE_CM_H
 
 //
 // Key Hash
@@ -984,3 +986,5 @@ extern BOOLEAN ExpInTextModeSetup;
 // Inlined functions
 //
 #include "cm_x.h"
+
+#endif

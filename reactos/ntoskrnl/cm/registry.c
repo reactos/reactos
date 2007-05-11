@@ -19,6 +19,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
+#include "..\config\cm.h"
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, CmInitSystem1)
@@ -77,6 +78,30 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 NTSTATUS
 NTAPI
 CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+NTSTATUS
+NTAPI
+CmpInitializeHive(PEREGISTRY_HIVE *RegistryHive,
+                  ULONG OperationType,
+                  ULONG HiveFlags,
+                  ULONG FileType,
+                  PVOID HiveData OPTIONAL,
+                  HANDLE Primary,
+                  HANDLE Log,
+                  HANDLE External,
+                  PUNICODE_STRING FileName OPTIONAL,
+                  ULONG CheckFlags);
+
+USHORT
+NTAPI
+CmpCopyName(IN PHHIVE Hive,
+            IN PWCHAR Destination,
+            IN PUNICODE_STRING Source);
+
+USHORT
+NTAPI
+CmpNameSize(IN PHHIVE Hive,
+            IN PUNICODE_STRING Name);
 
 static VOID STDCALL
 CmiHiveSyncDpcRoutine(PKDPC Dpc,
@@ -305,13 +330,77 @@ CmpCreateObjectTypes(VOID)
 
 BOOLEAN
 NTAPI
+CmpCreateRootNode(IN PHHIVE Hive,
+                  IN PCWSTR Name,
+                  OUT PHCELL_INDEX Index)
+{
+    UNICODE_STRING KeyName;
+    PCM_KEY_NODE KeyCell;
+    LARGE_INTEGER SystemTime;
+    PAGED_CODE();
+
+    /* Initialize the node name and allocate it */
+    RtlInitUnicodeString(&KeyName, Name);
+    *Index = HvAllocateCell(Hive,
+                            FIELD_OFFSET(CM_KEY_NODE, Name) +
+                            CmpNameSize(Hive, &KeyName),
+                            HvStable); // FIXME: , HCELL_NIL);
+    if (*Index == HCELL_NIL) return FALSE;
+
+    /* Set the cell index and get the data */
+    Hive->HiveHeader->RootCell = *Index;
+    KeyCell = (PCM_KEY_NODE)HvGetCell(Hive, *Index);
+    if (!KeyCell) return FALSE;
+
+    /* Setup the cell */
+    KeyCell->Id = (USHORT)CM_KEY_NODE_SIGNATURE;;
+    KeyCell->Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
+    KeQuerySystemTime(&SystemTime);
+    KeyCell->LastWriteTime = SystemTime;
+    KeyCell->Parent = HCELL_NIL;
+    KeyCell->SubKeyCounts[HvStable] = 0;
+    KeyCell->SubKeyCounts[HvVolatile] = 0;
+    KeyCell->SubKeyLists[HvStable] = HCELL_NIL;
+    KeyCell->SubKeyLists[HvVolatile] = HCELL_NIL;
+    KeyCell->ValueList.Count = 0;
+    KeyCell->ValueList.List = HCELL_NIL;
+    KeyCell->SecurityKeyOffset = HCELL_NIL;
+    KeyCell->ClassNameOffset = HCELL_NIL;
+    KeyCell->ClassSize = 0;
+
+    /* Copy the name (this will also set the length) */
+    KeyCell->NameSize = CmpCopyName(Hive, (PWCHAR)KeyCell->Name, &KeyName);
+
+    /* Check if the name was compressed */
+    if (KeyCell->NameSize < KeyName.Length)
+    {
+        /* Set the flag */
+        KeyCell->Flags |= KEY_COMP_NAME;
+    }
+
+    /* Return success */
+    HvReleaseCell(Hive, *Index);
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
 CmpCreateRegistryRoot(VOID)
 {
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_OBJECT RootKey;
     HANDLE RootKeyHandle;
+    HCELL_INDEX RootIndex;
     NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Setup the root node */
+    if (!CmpCreateRootNode(&CmiVolatileHive->Hive, L"REGISTRY", &RootIndex))
+    {
+        /* We failed */
+        return FALSE;
+    }
 
     /* Create '\Registry' key. */
     RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);
@@ -333,8 +422,8 @@ CmpCreateRegistryRoot(VOID)
 
     /* Setup the root key */
     RootKey->RegistryHive = CmiVolatileHive;
-    RootKey->KeyCellOffset = CmiVolatileHive->Hive.HiveHeader->RootCell;
-    RootKey->KeyCell = HvGetCell(&CmiVolatileHive->Hive, RootKey->KeyCellOffset);
+    RootKey->KeyCellOffset = RootIndex;
+    RootKey->KeyCell = HvGetCell(&CmiVolatileHive->Hive, RootIndex);
     RootKey->ParentKey = RootKey;
     RootKey->Flags = 0;
     RootKey->SubKeyCounts = 0;
@@ -421,8 +510,17 @@ CmInitSystem1(VOID)
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 1, Status, 0);
     }
 
-    /* Build volatile registry store */
-    Status = CmiCreateVolatileHive(&CmiVolatileHive);
+    /* Build the master hive */
+    Status = CmpInitializeHive(&CmiVolatileHive,
+                               HINIT_CREATE,
+                               HIVE_VOLATILE,
+                               HFILE_TYPE_PRIMARY,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               0);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
@@ -433,7 +531,7 @@ CmInitSystem1(VOID)
     if (!CmpCreateRegistryRoot())
     {
         /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 4, 0, 0);
+        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 3, 0, 0);
     }
 
     /* Create '\Registry\Machine' key. */
