@@ -588,7 +588,8 @@ CreateSidCacheMgr(IN HANDLE Heap,
     {
         /* zero the static part of the structure */
         ZeroMemory(scm,
-                   sizeof(SIDCACHEMGR));
+                   FIELD_OFFSET(SIDCACHEMGR,
+                                SystemName));
 
         scm->RefCount = 1;
         scm->Heap = Heap;
