@@ -19,7 +19,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#include "..\config\cm.h"
+#include "../config/cm.h"
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, CmInitSystem1)

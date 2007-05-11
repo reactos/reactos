@@ -15,7 +15,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#include "..\config\cm.h"
+#include "../config/cm.h"
 
 /* LOCAL MACROS *************************************************************/
 
