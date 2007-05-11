@@ -5,7 +5,7 @@
 -= At a Glance =-
 
 Owner:  Alex Ionescu (alex.ionescu@reactos.org)
-ETC:    1st October 2006
+ETC:    1st October 2007
 Purose: Rewriting the Configuration Manager nearly from scratch.
 
 -= Design Goals =-
@@ -24,7 +24,7 @@ will be highly prioritized:
                form and delayed close and private allocations, which allow 
                re-using pool memory and delaying deletion for better paralel-
                lism.
-               
+
    - Scalability and Thread Safety/MP: The NT Configuration Manager is also
                extremly scalable and has over 8 highly-scalable locks (based on
                the pushlock implementation, and also guarded mutex) which also
@@ -33,14 +33,14 @@ will be highly prioritized:
                nously on a hive, while still maintaining full thread safety,
                due to the fact that key structures are separated and have their
                own locks.
-               
+
    - Reliability: The NT Configuration Manager offers a variety of complex
                algorithms which continously check the state of a loaded hive or
                a hive that is being loaded, as well as per-key node damage.
                Furthermore, upon detection of a damaged node, the Configuration
                Manager is often able to repair the Registry and bring it back
                to a usable state, through a process called self healing.
-               
+
    - Object-Oriented: Like many other core structures in NT, the Configuration
                Manager exposes its interfaces to drivers and user-mode through
                the Key Object, which is an abstraction and interface that is
@@ -52,7 +52,7 @@ will be highly prioritized:
                access to the Key Object and allowing the optimization of look-
                ups and respect of complex semantics such as those of security
                or registry symbolic linking.
-               
+
 -= Sources =-
 
 The reimplementation of the NT Configuration Manager benefits from an extensive
@@ -72,7 +72,7 @@ or public symbol database (PDB file).
 As far as references go, Mark Russinovich has written one or two interesting
 papers on the topic, which also deal with some internals, as well as chapter
 4, section 1, in the Windows Internals 4th Edition book, which explains some of
-the internals behind KCBs, NCBs and Key OBjects. Chapter 9 of Windows Intenrals
+the internals behind KCBs, NCBs and Key Objects. Chapter 9 of Windows Internals
 II also has some high-level information on the Registry.
 
 Finally, the KD Extension DLL that comes with WinDBG has an extensive array of
@@ -96,11 +96,30 @@ and definitions for a compatible internal implementation.
   ~90% of the KCB/NCB code is complete.
   ~70% of Initialization code is complete.
 
+**As of 11/5/2007
+  Significant parts of the rewrite have been merged in and bugfixed with
+  existing cm code into the main tree, in the /config directory.
+  ~100% of the Initialization code is now complete, including reading the
+  System Control Vector.
+  ~80% of the ARC Hardware Configuration Node/Tree code has been written.
+  It has been decided to stick with internal NT names since this simplifies
+  PDB and Internet lookups, even though some of these names aren't fully to my
+  taste.
+
   TODOs:
-    Complete KCB implementation with CmpEnlistKeyWithKcb.
-    Re-write some parts of CmInitSystem1 to handle NTLDR-style Hardware Hive.
-    The idea is that, by the time this branch is ready, this will be compatible
-    with ROS. Otherwise, I'll work with Hervé, Filip and Aleksey to make it happen.
+    Write Driver-list APIs directly into main branch since they should be low-
+    level enough to bypass the Object Manager interface (just like the System
+    Vector code).
+    Fix Cm Wrapper routines to read/write in chunks of 64K to avoid issues when
+    working with a large set of data (this is what NT does as well).
+    Try to make more code in trunk to use CmpOpenHiveFiles instead of the code
+    being used now.
+    Modify FreeLDR to actually send an ARC Configuration Root Tree instead of
+    writing to the hardware hive itself.
+    Once the above is done, modify current hacks to handle proper hardware hive
+    creation and initialization.
+    Once the above is done, merge trunk back into the Cm Rewrite branch, and
+    resume work on rewrite when will/time is available.
 
 -= Structure =-
 
