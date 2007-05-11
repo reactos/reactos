@@ -103,7 +103,6 @@
             <file>cmvalue.c</file>
     </directory>
     <directory name="cm">
-            <file>import.c</file>
             <file>ntfunc.c</file>
             <file>regfile.c</file>
             <file>registry.c</file>

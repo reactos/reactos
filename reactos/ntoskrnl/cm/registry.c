@@ -252,6 +252,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     BOOLEAN Allocate;
     UNICODE_STRING KeyName;
     PEREGISTRY_HIVE SystemHive;
+    UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
     PAGED_CODE();
 
     /* Setup the ansi string */
@@ -279,10 +280,25 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (HiveBase)
     {
         /* Import it */
-        Status = CmImportSystemHive(HiveBase,
-                                    LoaderBlock->RegistryLength,
-                                    &SystemHive);
+        ((PHBASE_BLOCK)HiveBase)->Length = LoaderBlock->RegistryLength;
+        Status = CmpInitializeHive(&SystemHive,
+                                   HINIT_MEMORY,
+                                   0, //HIVE_NOLAZYFLUSH,
+                                   HFILE_TYPE_LOG,
+                                   HiveBase,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &HiveName,
+                                   2);
         if (!NT_SUCCESS(Status)) return FALSE;
+        CmPrepareHive(&SystemHive->Hive);
+
+        /* Set the hive filename */
+        RtlCreateUnicodeString(&SystemHive->HiveFileName, SYSTEM_REG_FILE);
+
+        /* Set the log filename */
+        RtlCreateUnicodeString(&SystemHive->LogFileName, SYSTEM_LOG_FILE);
 
         /* We imported, no need to create a new hive */
         Allocate = FALSE;
@@ -393,6 +409,7 @@ CmpCreateRegistryRoot(VOID)
     HANDLE RootKeyHandle;
     HCELL_INDEX RootIndex;
     NTSTATUS Status;
+    PCM_KEY_NODE KeyCell;
     PAGED_CODE();
 
     /* Setup the root node */
@@ -420,17 +437,26 @@ CmpCreateRegistryRoot(VOID)
                             (PVOID*)&RootKey);
     if (!NT_SUCCESS(Status)) return FALSE;
 
+    /* Sanity check, and get the key cell */
+    ASSERT((&CmiVolatileHive->Hive)->ReleaseCellRoutine == NULL);
+    KeyCell = (PCM_KEY_NODE)HvGetCell(&CmiVolatileHive->Hive, RootIndex);
+    if (!KeyCell) return FALSE;
+
     /* Setup the root key */
     RootKey->RegistryHive = CmiVolatileHive;
     RootKey->KeyCellOffset = RootIndex;
-    RootKey->KeyCell = HvGetCell(&CmiVolatileHive->Hive, RootIndex);
+    RootKey->KeyCell = KeyCell;
     RootKey->ParentKey = RootKey;
     RootKey->Flags = 0;
     RootKey->SubKeyCounts = 0;
     RootKey->SubKeys = NULL;
     RootKey->SizeOfSubKeys = 0;
+
+    /* Insert it into the object list head */
     InsertTailList(&CmiKeyObjectListHead, &RootKey->ListEntry);
-    Status = RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
+
+    /* Setup the name */
+    RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
 
     /* Insert the key into the namespace */
     Status = ObInsertObject(RootKey,
@@ -467,7 +493,6 @@ CmInitSystem1(VOID)
     HANDLE ThreadHandle;
     CLIENT_ID ThreadId;
     PEREGISTRY_HIVE HardwareHive;
-    BOOLEAN Allocate = FALSE;
     PVOID BaseAddress;
     ULONG Length;
     PAGED_CODE();
@@ -513,7 +538,7 @@ CmInitSystem1(VOID)
     /* Build the master hive */
     Status = CmpInitializeHive(&CmiVolatileHive,
                                HINIT_CREATE,
-                               HIVE_VOLATILE,
+                               HIVE_VOLATILE | HIVE_NO_FILE,
                                HFILE_TYPE_PRIMARY,
                                NULL,
                                NULL,
@@ -595,12 +620,24 @@ CmInitSystem1(VOID)
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 8, Status, 0);
     }
 
-    /* Initialize the hardware hive */
+    /* Import the hardware hive (FIXME: We should create it from scratch) */
     BaseAddress = CmpRosGetHardwareHive(&Length);
-    if (!CmImportHardwareHive(BaseAddress, Length, &HardwareHive))
+    ((PHBASE_BLOCK)BaseAddress)->Length = Length;
+    Status = CmpInitializeHive(&HardwareHive,
+                               HINIT_MEMORY, //HINIT_CREATE,
+                               HIVE_NO_FILE, //HIVE_VOLATILE,
+                               HFILE_TYPE_PRIMARY,
+                               BaseAddress, // NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               0);
+    CmPrepareHive(&HardwareHive->Hive);
+    if (!NT_SUCCESS(Status))
     {
-        /* Don't actually link anything below */
-        Allocate = TRUE;
+        /* Bugcheck */
+        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
     }
 
     /* Attach it to the machine key */

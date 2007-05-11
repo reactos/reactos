@@ -422,8 +422,8 @@ CmpInitializeHive(OUT PEREGISTRY_HIVE *RegistryHive,
         return Status;
     }
 
-    /* Set flag */
-    Hive->Flags = HIVE_NO_FILE;
+    /* Set flags */
+    Hive->Flags = HiveFlags;
 
     /* Check if we should verify the registry */
     if ((OperationType == HINIT_FILE) ||
