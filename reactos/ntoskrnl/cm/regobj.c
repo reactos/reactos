@@ -403,7 +403,7 @@ CmpParseKey(IN PVOID ParsedObject,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   Status = CmiScanKeyList(ParsedKey,
 			  &KeyName,
@@ -411,7 +411,7 @@ CmpParseKey(IN PVOID ParsedObject,
 			  &FoundObject);
   if (!NT_SUCCESS(Status))
   {
-     ExReleaseResourceLite(&CmiRegistryLock);
+     ExReleaseResourceLite(&CmpRegistryLock);
      KeLeaveCriticalRegion();
      RtlFreeUnicodeString(&KeyName);
      return Status;
@@ -427,7 +427,7 @@ CmpParseKey(IN PVOID ParsedObject,
                                 Attributes);
       if (!NT_SUCCESS(Status))
         {
-          ExReleaseResourceLite(&CmiRegistryLock);
+          ExReleaseResourceLite(&CmpRegistryLock);
           KeLeaveCriticalRegion();
           RtlFreeUnicodeString(&KeyName);
           return(STATUS_UNSUCCESSFUL);
@@ -442,7 +442,7 @@ CmpParseKey(IN PVOID ParsedObject,
                                     &LinkPath);
           if (NT_SUCCESS(Status))
             {
-              ExReleaseResourceLite(&CmiRegistryLock);
+              ExReleaseResourceLite(&CmpRegistryLock);
               KeLeaveCriticalRegion();
 
               DPRINT("LinkPath '%wZ'\n", &LinkPath);
@@ -493,7 +493,7 @@ CmpParseKey(IN PVOID ParsedObject,
                               (PVOID*)&FoundObject);
       if (!NT_SUCCESS(Status))
         {
-          ExReleaseResourceLite(&CmiRegistryLock);
+          ExReleaseResourceLite(&CmpRegistryLock);
           KeLeaveCriticalRegion();
           RtlFreeUnicodeString(&KeyName);
           return(Status);
@@ -540,7 +540,7 @@ OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo = NULL;
 	    {
 	      DPRINT("LinkPath '%wZ'\n", &LinkPath);
 
-              ExReleaseResourceLite(&CmiRegistryLock);
+              ExReleaseResourceLite(&CmpRegistryLock);
               KeLeaveCriticalRegion();
 
 	      ObDereferenceObject(FoundObject);
@@ -583,7 +583,7 @@ OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo = NULL;
   InsertHeadList(&CmiKeyObjectListHead, &FoundObject->ListEntry);
   FoundObject->TimeStamp = CmiTimer;
 
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   DPRINT("CmpParseKey: %wZ\n", &FoundObject->Name);
@@ -628,7 +628,7 @@ CmpDeleteKeyObject(PVOID DeletedObject)
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
     {
@@ -669,7 +669,7 @@ CmpDeleteKeyObject(PVOID DeletedObject)
       ExFreePool(KeyObject->SubKeys);
     }
 
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
   PostOperationInfo.Status = STATUS_SUCCESS;
   CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);

@@ -112,7 +112,7 @@ extern KSPIN_LOCK CmiKeyListLock;
 
 extern LIST_ENTRY CmpHiveListHead;
 
-extern ERESOURCE CmiRegistryLock;
+extern ERESOURCE CmpRegistryLock;
 extern EX_PUSH_LOCK CmpHiveListHeadLock;
 
 /* Registry Callback Function */
@@ -421,80 +421,6 @@ CmpFileFlush(
 VOID
 CmiCheckKey(BOOLEAN Verbose,
   HANDLE Key);
-
-BOOLEAN
-INIT_FUNCTION
-CmImportSystemHive(PCHAR ChunkBase,
-                   ULONG ChunkSize,
-                   OUT PEREGISTRY_HIVE *RegistryHive);
-
-BOOLEAN
-INIT_FUNCTION
-CmImportHardwareHive(PCHAR ChunkBase,
-                     ULONG ChunkSize,
-                     OUT PEREGISTRY_HIVE *RegistryHive);
-
-NTSTATUS
-NTAPI
-CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-NTSTATUS
-NTAPI
-CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-NTSTATUS
-NTAPI
-CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-NTSTATUS
-NTAPI
-CmpInitializeHive(PEREGISTRY_HIVE *RegistryHive,
-                  ULONG OperationType,
-                  ULONG HiveFlags,
-                  ULONG FileType,
-                  PVOID HiveData OPTIONAL,
-                  HANDLE Primary,
-                  HANDLE Log,
-                  HANDLE External,
-                  PUNICODE_STRING FileName OPTIONAL,
-                  ULONG CheckFlags);
-
-USHORT
-NTAPI
-CmpCopyName(IN PHHIVE Hive,
-            IN PWCHAR Destination,
-            IN PUNICODE_STRING Source);
-
-USHORT
-NTAPI
-CmpNameSize(IN PHHIVE Hive,
-            IN PUNICODE_STRING Name);
-
-NTSTATUS
-NTAPI
-CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-PSECURITY_DESCRIPTOR
-NTAPI
-CmpHiveRootSecurityDescriptor(VOID);
-
-BOOLEAN
-NTAPI
-CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-NTSTATUS
-NTAPI
-CmpCreateObjectTypes(VOID);
-
-BOOLEAN
-NTAPI
-CmpCreateRootNode(IN PHHIVE Hive,
-                  IN PCWSTR Name,
-                  OUT PHCELL_INDEX Index);
-
-BOOLEAN
-NTAPI
-CmpCreateRegistryRoot(VOID);
 
 NTSTATUS
 NTAPI

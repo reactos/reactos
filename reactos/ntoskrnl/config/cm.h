@@ -641,9 +641,10 @@ typedef struct _CM_SYSTEM_CONTROL_VECTOR
 //
 // BUGBUG Old Hive Stuff for Temporary Support
 //
-#define SYSTEM_REG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM"
-#define SYSTEM_LOG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
-#define REG_SYSTEM_KEY_NAME L"\\Registry\\Machine\\SYSTEM"
+#define SYSTEM_REG_FILE         L"\\SystemRoot\\System32\\Config\\SYSTEM"
+#define SYSTEM_LOG_FILE         L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
+#define REG_SYSTEM_KEY_NAME     L"\\Registry\\Machine\\SYSTEM"
+#define REG_HARDWARE_KEY_NAME   L"\\Registry\\Machine\\HARDWARE"
 typedef struct _EREGISTRY_HIVE
 {
     HHIVE Hive;
@@ -673,6 +674,11 @@ typedef struct _KEY_OBJECT
     LIST_ENTRY HiveList;
 } KEY_OBJECT, *PKEY_OBJECT;
 extern PEREGISTRY_HIVE CmiVolatileHive;
+extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;
+extern KTIMER CmiWorkerTimer;
+VOID NTAPI CmiWorkerThread(IN PVOID Param);
+PVOID NTAPI CmpRosGetHardwareHive(OUT PULONG Length);
+#define HIVE_NO_FILE    0x00000002
 ///////////////////////////////////////////////////////////////////////////////
 
 //
@@ -707,11 +713,18 @@ CmCheckRegistry(
 // Notification Routines
 //
 VOID
+NTAPI
 CmpReportNotify(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
     IN ULONG Filter
+);
+
+VOID
+NTAPI
+CmpInitCallback(
+    VOID
 );
 
 //
@@ -725,13 +738,19 @@ CmpInitializeCache(
 
 VOID
 NTAPI
-CmpInitializeCmAllocations(
+CmpInitCmPrivateDelayAlloc(
     VOID
 );
 
 VOID
 NTAPI
-CmpInitializeKcbDelayedDeref(
+CmpInitCmPrivateAlloc(
+    VOID
+);
+
+VOID
+NTAPI
+CmpInitDelayDerefKCBEngine(
     VOID
 );
 
@@ -1004,6 +1023,18 @@ CmpInitializeRegistryNode(
     IN PUSHORT DeviceIndexTable
 );
 
+NTSTATUS
+NTAPI
+CmpInitializeMachineDependentConfiguration(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+NTSTATUS
+NTAPI
+CmpInitializeHardwareConfiguration(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 //
 // Wrapper Routines
 //
@@ -1070,7 +1101,7 @@ extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
 extern BOOLEAN CmpShareSystemHives;
 extern BOOLEAN CmpMiniNTBoot;
-extern EX_PUSH_LOCK CmpHiveListHeadLock;
+extern EX_PUSH_LOCK CmpHiveListHeadLock, CmpLoadHiveLock;
 extern LIST_ENTRY CmpHiveListHead;
 extern POBJECT_TYPE CmpKeyObjectType;
 extern ERESOURCE CmpRegistryLock;
@@ -1099,6 +1130,7 @@ extern BOOLEAN CmpSelfHeal;
 extern ULONG CmpBootType;
 extern HANDLE CmpRegistryRootHandle;
 extern BOOLEAN ExpInTextModeSetup;
+extern BOOLEAN InitIsWinPEMode;
 
 //
 // Inlined functions

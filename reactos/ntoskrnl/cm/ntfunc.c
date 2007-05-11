@@ -345,7 +345,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   InsertTailList(&CmiKeyObjectListHead, &KeyObject->ListEntry);
 
@@ -361,7 +361,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     {
       DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
       /* Release hive lock */
-      ExReleaseResourceLite(&CmiRegistryLock);
+      ExReleaseResourceLite(&CmpRegistryLock);
       KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
 
@@ -393,7 +393,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   VERIFY_KEY_OBJECT(KeyObject);
 
   /* Release hive lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   PostCreateKeyInfo.Object = KeyObject;
@@ -475,7 +475,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -493,7 +493,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
     }
 
   /* Release hive lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
@@ -591,7 +591,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -603,7 +603,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   if (Index >= KeyCell->SubKeyCounts[HvStable] +
                KeyCell->SubKeyCounts[HvVolatile])
     {
-      ExReleaseResourceLite(&CmiRegistryLock);
+      ExReleaseResourceLite(&CmpRegistryLock);
       KeLeaveCriticalRegion();
       PostOperationInfo.Status = STATUS_NO_MORE_ENTRIES;
       CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
@@ -626,7 +626,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
   if (KeyCell->SubKeyLists[Storage] == HCELL_NULL)
     {
-      ExReleaseResourceLite(&CmiRegistryLock);
+      ExReleaseResourceLite(&CmpRegistryLock);
       KeLeaveCriticalRegion();
       PostOperationInfo.Status = STATUS_NO_MORE_ENTRIES;
       CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
@@ -815,7 +815,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	break;
     }
 
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   PostOperationInfo.Status = Status;
@@ -892,7 +892,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -908,7 +908,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 
   if (!NT_SUCCESS(Status))
     {
-      ExReleaseResourceLite(&CmiRegistryLock);
+      ExReleaseResourceLite(&CmpRegistryLock);
       KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       PostOperationInfo.Status = Status;
@@ -1089,7 +1089,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
       Status = STATUS_UNSUCCESSFUL;
     }
 
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
   ObDereferenceObject(KeyObject);
   PostOperationInfo.Status = Status;
@@ -1131,7 +1131,7 @@ NtFlushKey(IN HANDLE KeyHandle)
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   if (IsNoFileHive(RegistryHive))
     {
@@ -1143,7 +1143,7 @@ NtFlushKey(IN HANDLE KeyHandle)
       Status = CmiFlushRegistryHive(RegistryHive);
     }
 
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   ObDereferenceObject(KeyObject);
@@ -1367,7 +1367,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -1525,7 +1525,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 	break;
     }
 
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   PostOperationInfo.Status = Status;
@@ -1595,7 +1595,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -1789,7 +1789,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     }
 
 ByeBye:;
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   PostOperationInfo.Status = Status;
@@ -1855,7 +1855,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
   /* Acquire hive lock exclucively */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -1882,7 +1882,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     {
       DPRINT("Cannot add value. Status 0x%X\n", Status);
 
-      ExReleaseResourceLite(&CmiRegistryLock);
+      ExReleaseResourceLite(&CmpRegistryLock);
       KeLeaveCriticalRegion();
       PostOperationInfo.Status = Status;
       CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
@@ -1938,7 +1938,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	    {
 	      DPRINT("CmiAllocateBlock() failed (Status %lx)\n", Status);
 
-	      ExReleaseResourceLite(&CmiRegistryLock);
+	      ExReleaseResourceLite(&CmpRegistryLock);
 	      KeLeaveCriticalRegion();
               PostOperationInfo.Status = Status;
               CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
@@ -1973,7 +1973,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   KeQuerySystemTime (&KeyCell->LastWriteTime);
   HvMarkCellDirty (&RegistryHive->Hive, KeyObject->KeyCellOffset);
 
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
   PostOperationInfo.Status = Status;
   CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
@@ -2040,7 +2040,7 @@ Fail:
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -2053,7 +2053,7 @@ Fail:
   HvMarkCellDirty (&KeyObject->RegistryHive->Hive, KeyObject->KeyCellOffset);
 
   /* Release hive lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   ReleaseCapturedUnicodeString(&CapturedValueName,
@@ -2173,7 +2173,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   Status = CmiLoadHive (KeyObjectAttributes,
 			NamePointer,
@@ -2184,7 +2184,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     }
 
   /* Release hive lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   if (Buffer != NULL)
@@ -2247,7 +2247,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmiRegistryLock, TRUE);
+  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -2319,7 +2319,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   *ReturnLength = BufferLength;
 
   /* Release hive lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
+  ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
 
   PostOperationInfo.Status = Status;

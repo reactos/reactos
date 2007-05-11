@@ -34,7 +34,7 @@ PEREGISTRY_HIVE  CmiVolatileHive = NULL;
 
 LIST_ENTRY CmpHiveListHead;
 
-ERESOURCE CmiRegistryLock;
+ERESOURCE CmpRegistryLock;
 
 KTIMER CmiWorkerTimer;
 LIST_ENTRY CmiKeyObjectListHead;
@@ -81,7 +81,7 @@ CmiWorkerThread(PVOID Param)
 
       /* Acquire hive lock */
       KeEnterCriticalRegion();
-      ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+      ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
       CmiTimer++;
 
@@ -107,7 +107,7 @@ CmiWorkerThread(PVOID Param)
 	    CurrentEntry = CurrentEntry->Blink;
 	 }
       }
-      ExReleaseResourceLite(&CmiRegistryLock);
+      ExReleaseResourceLite(&CmpRegistryLock);
       KeLeaveCriticalRegion();
 
       DPRINT("Removed %d key objects\n", Count);
@@ -190,215 +190,6 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
 
     /* Connect the hive */
     return CmiConnectHive(&ObjectAttributes, RegistryHive);
-}
-
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-CmInitSystem1(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-    LARGE_INTEGER DueTime;
-    HANDLE ThreadHandle;
-    CLIENT_ID ThreadId;
-    PEREGISTRY_HIVE HardwareHive;
-    PVOID BaseAddress;
-    ULONG Length;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
-    PAGED_CODE();
-
-    /* Initialize the hive list and lock */
-    InitializeListHead(&CmpHiveListHead);
-    ExInitializePushLock((PVOID)&CmpHiveListHeadLock);
-
-    /* Initialize registry lock */
-    ExInitializeResourceLite(&CmiRegistryLock);
-
-    /* Initialize the key object list */
-    InitializeListHead(&CmiKeyObjectListHead);
-    InitializeListHead(&CmiConnectedHiveList);
-
-    /* Initialize the worker timer */
-    KeInitializeTimerEx(&CmiWorkerTimer, SynchronizationTimer);
-
-    /* Initialize the worker thread */
-    Status = PsCreateSystemThread(&ThreadHandle,
-                                  THREAD_ALL_ACCESS,
-                                  NULL,
-                                  NULL,
-                                  &ThreadId,
-                                  CmiWorkerThread,
-                                  NULL);
-    if (!NT_SUCCESS(Status)) return FALSE;
-
-    /* Start the timer */
-    DueTime.QuadPart = -1;
-    KeSetTimerEx(&CmiWorkerTimer, DueTime, 5000, NULL); /* 5sec */
-
-    InitializeListHead(&CmiCallbackHead);
-    ExInitializeFastMutex(&CmiCallbackLock);
-
-    /* Create the key object types */
-    Status = CmpCreateObjectTypes();
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 1, Status, 0);
-    }
-
-    /* Build the master hive */
-    Status = CmpInitializeHive(&CmiVolatileHive,
-                               HINIT_CREATE,
-                               HIVE_VOLATILE | HIVE_NO_FILE,
-                               HFILE_TYPE_PRIMARY,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               0);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 2, Status, 0);
-    }
-
-    /* Create the \REGISTRY key node */
-    if (!CmpCreateRegistryRoot())
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 3, 0, 0);
-    }
-
-    /* Create the default security descriptor */
-    SecurityDescriptor = CmpHiveRootSecurityDescriptor();
-
-    /* Create '\Registry\Machine' key. */
-    RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               SecurityDescriptor);
-    Status = NtCreateKey(&KeyHandle,
-                         KEY_READ | KEY_WRITE,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 5, Status, 0);
-    }
-
-    /* Close the handle */
-    NtClose(KeyHandle);
-
-    /* Create '\Registry\User' key. */
-    RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\USER");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               SecurityDescriptor);
-    Status = NtCreateKey(&KeyHandle,
-                         KEY_READ | KEY_WRITE,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 6, Status, 0);
-    }
-
-    /* Close the handle */
-    NtClose(KeyHandle);
-
-    /* Initialize the system hive */
-    if (!CmpInitializeSystemHive(KeLoaderBlock))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 7, 0, 0);
-    }
-
-    /* Create the 'CurrentControlSet' link. */
-    Status = CmpCreateControlSet(KeLoaderBlock);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 8, Status, 0);
-    }
-
-    /* Import the hardware hive (FIXME: We should create it from scratch) */
-    BaseAddress = CmpRosGetHardwareHive(&Length);
-    ((PHBASE_BLOCK)BaseAddress)->Length = Length;
-    Status = CmpInitializeHive(&HardwareHive,
-                               HINIT_MEMORY, //HINIT_CREATE,
-                               HIVE_NO_FILE, //HIVE_VOLATILE,
-                               HFILE_TYPE_PRIMARY,
-                               BaseAddress, // NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               0);
-    CmPrepareHive(&HardwareHive->Hive);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
-    }
-
-    /* Attach it to the machine key */
-    RtlInitUnicodeString(&KeyName, REG_HARDWARE_KEY_NAME);
-    Status = CmpLinkHiveToMaster(&KeyName,
-                                 NULL,
-                                 HardwareHive,
-                                 FALSE,
-                                 SecurityDescriptor);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
-    }
-
-    /* Fill out the Hardware key with the ARC Data from the Loader */
-    Status = CmpInitializeHardwareConfiguration(KeLoaderBlock);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 13, Status, 0);
-    }
-
-    /* Initialize machine-dependent information into the registry */
-    Status = CmpInitializeMachineDependentConfiguration(KeLoaderBlock);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 14, Status, 0);
-    }
-
-    /* Initialize volatile registry settings */
-    Status = CmpSetSystemValues(KeLoaderBlock);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Bugcheck */
-        KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 15, Status, 0);
-    }
-
-    /* Free the load options */
-    ExFreePool(CmpLoadOptions.Buffer);
-
-    /* If we got here, all went well */
-    return TRUE;
 }
 
 NTSTATUS

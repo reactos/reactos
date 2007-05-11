@@ -36,7 +36,7 @@ CMHIVE CmControlHive;
 ULONG CmpConfigurationAreaSize = PAGE_SIZE * 4;
 PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 
-EX_PUSH_LOCK CmpHiveListHeadLock;
+EX_PUSH_LOCK CmpHiveListHeadLock, CmpLoadHiveLock;
 
 HIVE_LIST_ENTRY CmpMachineHiveList[5];
 
