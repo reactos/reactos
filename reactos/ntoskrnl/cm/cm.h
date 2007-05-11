@@ -107,7 +107,7 @@ typedef struct _KEY_OBJECT
 
 
 extern PEREGISTRY_HIVE CmiVolatileHive;
-extern POBJECT_TYPE CmiKeyType;
+extern POBJECT_TYPE CmpKeyObjectType;
 extern KSPIN_LOCK CmiKeyListLock;
 
 extern LIST_ENTRY CmiHiveListHead;
@@ -148,7 +148,7 @@ NTSTATUS STDCALL
 CmUnRegisterCallback(IN LARGE_INTEGER    Cookie);
 
 NTSTATUS STDCALL
-CmiObjectParse(IN PVOID ParsedObject,
+CmpParseKey(IN PVOID ParsedObject,
                IN PVOID ObjectType,
                IN OUT PACCESS_STATE AccessState,
                IN KPROCESSOR_MODE AccessMode,
@@ -160,10 +160,10 @@ CmiObjectParse(IN PVOID ParsedObject,
                OUT PVOID *NextObject);
 
 VOID STDCALL
-CmiObjectDelete(PVOID  DeletedObject);
+CmpDeleteKeyObject(PVOID  DeletedObject);
 
 NTSTATUS STDCALL
-CmiObjectSecurity(PVOID ObjectBody,
+CmpSecurityMethod(PVOID ObjectBody,
 		  SECURITY_OPERATION_CODE OperationCode,
 		  PSECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -173,7 +173,7 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  PGENERIC_MAPPING GenericMapping);
 
 NTSTATUS STDCALL
-CmiObjectQueryName (PVOID ObjectBody,
+CmpQueryKeyName (PVOID ObjectBody,
                     IN BOOLEAN HasObjectName,
 		    POBJECT_NAME_INFORMATION ObjectNameInfo,
 		    ULONG Length,
@@ -477,6 +477,14 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 PSECURITY_DESCRIPTOR
 NTAPI
 CmpHiveRootSecurityDescriptor(VOID);
+
+BOOLEAN
+NTAPI
+CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+NTSTATUS
+NTAPI
+CmpCreateObjectTypes(VOID);
 
 #if 0
 static __inline PVOID xHvGetCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)

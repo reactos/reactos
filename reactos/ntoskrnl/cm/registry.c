@@ -29,7 +29,7 @@
 
 extern BOOLEAN ExpInTextModeSetup;
 
-POBJECT_TYPE  CmiKeyType = NULL;
+POBJECT_TYPE  CmpKeyObjectType = NULL;
 PEREGISTRY_HIVE  CmiVolatileHive = NULL;
 
 LIST_ENTRY CmiHiveListHead;
@@ -45,9 +45,6 @@ volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
 volatile BOOLEAN CmiHiveSyncPending = FALSE;
 KDPC CmiHiveSyncDpc;
 KTIMER CmiHiveSyncTimer;
-
-static GENERIC_MAPPING CmiKeyMapping =
-	{KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS};
 
 static VOID STDCALL
 CmiHiveSyncDpcRoutine(PKDPC Dpc,
@@ -188,118 +185,6 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
 
 BOOLEAN
 NTAPI
-CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PVOID HiveBase;
-    ANSI_STRING LoadString;
-    PVOID Buffer;
-    ULONG Length;
-    NTSTATUS Status;
-    BOOLEAN Allocate;
-    UNICODE_STRING KeyName;
-    PEREGISTRY_HIVE SystemHive;
-    UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
-    PAGED_CODE();
-
-    /* Setup the ansi string */
-    RtlInitAnsiString(&LoadString, LoaderBlock->LoadOptions);
-
-    /* Allocate the unicode buffer */
-    Length = LoadString.Length * sizeof(WCHAR) + sizeof(UNICODE_NULL);
-    Buffer = ExAllocatePoolWithTag(PagedPool, Length, 0);
-    if (!Buffer)
-    {
-        /* Fail */
-        KEBUGCHECKEX(BAD_SYSTEM_CONFIG_INFO, 3, 1, (ULONG_PTR)LoaderBlock, 0);
-    }
-
-    /* Setup the unicode string */
-    RtlInitEmptyUnicodeString(&CmpLoadOptions, Buffer, Length);
-
-    /* Add the load options and null-terminate */
-    RtlAnsiStringToUnicodeString(&CmpLoadOptions, &LoadString, FALSE);
-    CmpLoadOptions.Buffer[LoadString.Length] = UNICODE_NULL;
-    CmpLoadOptions.Length += sizeof(WCHAR);
-
-    /* Get the System Hive base address */
-    HiveBase = LoaderBlock->RegistryBase;
-    if (HiveBase)
-    {
-        /* Import it */
-        ((PHBASE_BLOCK)HiveBase)->Length = LoaderBlock->RegistryLength;
-        Status = CmpInitializeHive(&SystemHive,
-                                   HINIT_MEMORY,
-                                   0, //HIVE_NOLAZYFLUSH,
-                                   HFILE_TYPE_LOG,
-                                   HiveBase,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &HiveName,
-                                   2);
-        if (!NT_SUCCESS(Status)) return FALSE;
-        CmPrepareHive(&SystemHive->Hive);
-
-        /* Set the hive filename */
-        RtlCreateUnicodeString(&SystemHive->HiveFileName, SYSTEM_REG_FILE);
-
-        /* Set the log filename */
-        RtlCreateUnicodeString(&SystemHive->LogFileName, SYSTEM_LOG_FILE);
-
-        /* We imported, no need to create a new hive */
-        Allocate = FALSE;
-    }
-    else
-    {
-        /* FIXME: Create an empty hive */
-        Allocate = TRUE;
-    }
-
-    /* Create the default security descriptor */
-    SecurityDescriptor = CmpHiveRootSecurityDescriptor();
-
-    /* Attach it to the system key */
-    RtlInitUnicodeString(&KeyName, REG_SYSTEM_KEY_NAME);
-    Status = CmpLinkHiveToMaster(&KeyName,
-                                 NULL,
-                                 SystemHive,
-                                 Allocate,
-                                 SecurityDescriptor);
-    if (!NT_SUCCESS(Status)) return FALSE;
-
-    /* Success! */
-    return TRUE;
-}
-
-NTSTATUS
-NTAPI
-CmpCreateObjectTypes(VOID)
-{
-    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-    UNICODE_STRING Name;
-    PAGED_CODE();
-
-    /* Initialize the Key object type */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"Key");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(KEY_OBJECT);
-    ObjectTypeInitializer.GenericMapping = CmiKeyMapping;
-    ObjectTypeInitializer.PoolType = PagedPool;
-    ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObjectTypeInitializer.DeleteProcedure = CmiObjectDelete;
-    ObjectTypeInitializer.ParseProcedure = CmiObjectParse;
-    ObjectTypeInitializer.SecurityProcedure = CmiObjectSecurity;
-    ObjectTypeInitializer.QueryNameProcedure = CmiObjectQueryName;
-
-    /* Create it */
-    return ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmiKeyType);
-}
-
-BOOLEAN
-NTAPI
 CmpCreateRootNode(IN PHHIVE Hive,
                   IN PCWSTR Name,
                   OUT PHCELL_INDEX Index)
@@ -381,7 +266,7 @@ CmpCreateRegistryRoot(VOID)
                                NULL,
                                NULL);
     Status = ObCreateObject(KernelMode,
-                            CmiKeyType,
+                            CmpKeyObjectType,
                             &ObjectAttributes,
                             KernelMode,
                             NULL,
@@ -675,7 +560,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 			  &ObjectName,
 			  (PVOID*)&ParentKey,
 			  &RemainingPath,
-			  CmiKeyType,
+			  CmpKeyObjectType,
 			  NULL,
 			  NULL);
     /* Yields a new reference */
@@ -714,7 +599,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	   &RemainingPath, ParentKey);
 
     Status = ObCreateObject(KernelMode,
-			    CmiKeyType,
+			    CmpKeyObjectType,
 			    NULL,
 			    KernelMode,
 			    NULL,

@@ -44,7 +44,7 @@ CmpHiveRootSecurityDescriptor(VOID)
     if (!(Sid[0]) || !(Sid[1]) || !(Sid[2]) || !(Sid[3]))
     {
         /* Bugcheck */
-        KEBUGCHECKEX(REGISTRY_ERROR, 2, 1, 0, 0);
+        KEBUGCHECKEX(REGISTRY_ERROR, 11, 1, 0, 0);
     }
 
     /* Phase 2: Initialize all SIDs */
@@ -52,7 +52,7 @@ CmpHiveRootSecurityDescriptor(VOID)
     Status |= RtlInitializeSid(Sid[1], &NtAuthority, 1);
     Status |= RtlInitializeSid(Sid[2], &NtAuthority, 1);
     Status |= RtlInitializeSid(Sid[3], &NtAuthority, 2);
-    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 2, 2, 0, 0);
+    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 11, 2, 0, 0);
 
     /* Phase 2: Setup SID Sub Authorities */
     *RtlSubAuthoritySid(Sid[0], 0) = SECURITY_WORLD_RID;
@@ -79,18 +79,18 @@ CmpHiveRootSecurityDescriptor(VOID)
 
     /* Phase 3: Allocate the ACL */
     Acl = ExAllocatePoolWithTag(PagedPool, AclLength, TAG_CM);
-    if (!Acl) KEBUGCHECKEX(REGISTRY_ERROR, 2, 3, 0, 0);
+    if (!Acl) KEBUGCHECKEX(REGISTRY_ERROR, 11, 3, 0, 0);
 
     /* Phase 4: Create the ACL */
     Status = RtlCreateAcl(Acl, AclLength, ACL_REVISION);
-    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 2, 4, Status, 0);
+    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 11, 4, Status, 0);
 
     /* Phase 5: Build the ACL */
     Status = RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_ALL_ACCESS, Sid[0]);
     Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_ALL_ACCESS, Sid[1]);
     Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_READ, Sid[2]);
     Status |= RtlAddAccessAllowedAce(Acl, ACL_REVISION, KEY_READ, Sid[3]);
-    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 2, 5, Status, 0);
+    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 11, 5, Status, 0);
 
     /* Phase 5: Make the ACEs inheritable */
     Status = RtlGetAce(Acl, 0,( PVOID*)&AceHeader);
@@ -111,7 +111,7 @@ CmpHiveRootSecurityDescriptor(VOID)
                                                sizeof(SECURITY_DESCRIPTOR) + 
                                                AclLength,
                                                TAG_CM);
-    if (!SecurityDescriptor) KEBUGCHECKEX(REGISTRY_ERROR, 2, 6, 0, 0);
+    if (!SecurityDescriptor) KEBUGCHECKEX(REGISTRY_ERROR, 11, 6, 0, 0);
 
     /* Phase 6: Make a copy of the ACL */
     AclCopy = (PACL)((PISECURITY_DESCRIPTOR)SecurityDescriptor + 1);
@@ -120,14 +120,14 @@ CmpHiveRootSecurityDescriptor(VOID)
     /* Phase 7: Create the security descriptor */
     Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
                                          SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 2, 7, Status, 0);
+    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 11, 7, Status, 0);
 
     /* Phase 8: Set the ACL as a DACL */
     Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor,
                                           TRUE,
                                           AclCopy,
                                           FALSE);
-    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 2, 8, Status, 0);
+    if (!NT_SUCCESS(Status)) KEBUGCHECKEX(REGISTRY_ERROR, 11, 8, Status, 0);
 
     /* Free the SIDs and original ACL */
     for (i = 0; i < 4; i++) ExFreePool(Sid[i]);

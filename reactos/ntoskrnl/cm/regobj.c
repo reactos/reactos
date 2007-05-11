@@ -174,7 +174,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     {
         ObReferenceObjectByPointer(ObpRootDirectoryObject,
             DIRECTORY_TRAVERSE,
-            CmiKeyType,
+            CmpKeyObjectType,
             ObjectCreateInfo->ProbeMode);
         CurrentObject = ObpRootDirectoryObject;
     }
@@ -267,7 +267,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
             ObReferenceObjectByPointer(FoundObject,
                 STANDARD_RIGHTS_REQUIRED,
-                CmiKeyType,
+                CmpKeyObjectType,
                 KernelMode);
             if (End != NULL)
             {
@@ -317,7 +317,7 @@ Next:
 
             ObReferenceObjectByPointer(NextObject,
                 DIRECTORY_TRAVERSE,
-                CmiKeyType,
+                CmpKeyObjectType,
                 ObjectCreateInfo->ProbeMode);
         }
 
@@ -342,7 +342,7 @@ Next:
 }
 
 NTSTATUS STDCALL
-CmiObjectParse(IN PVOID ParsedObject,
+CmpParseKey(IN PVOID ParsedObject,
                IN PVOID ObjectType,
                IN OUT PACCESS_STATE AccessState,
                IN KPROCESSOR_MODE AccessMode,
@@ -481,9 +481,9 @@ CmiObjectParse(IN PVOID ParsedObject,
         }
 
       /* Create new key object and put into linked list */
-      DPRINT("CmiObjectParse: %S\n", *Path);
+      DPRINT("CmpParseKey: %S\n", *Path);
       Status = ObCreateObject(KernelMode,
-                              CmiKeyType,
+                              CmpKeyObjectType,
                               NULL,
                               KernelMode,
                               NULL,
@@ -586,7 +586,7 @@ OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo = NULL;
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  DPRINT("CmiObjectParse: %wZ\n", &FoundObject->Name);
+  DPRINT("CmpParseKey: %wZ\n", &FoundObject->Name);
 
   *Path = EndPtr;
 
@@ -600,7 +600,7 @@ OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo = NULL;
 }
 
 VOID STDCALL
-CmiObjectDelete(PVOID DeletedObject)
+CmpDeleteKeyObject(PVOID DeletedObject)
 {
   PKEY_OBJECT ParentKeyObject;
   PKEY_OBJECT KeyObject;
@@ -789,7 +789,7 @@ CmiAssignSecurityDescriptor(PKEY_OBJECT KeyObject,
 
 
 NTSTATUS STDCALL
-CmiObjectSecurity(PVOID ObjectBody,
+CmpSecurityMethod(PVOID ObjectBody,
 		  SECURITY_OPERATION_CODE OperationCode,
 		  PSECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -798,7 +798,7 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  POOL_TYPE PoolType,
 		  PGENERIC_MAPPING GenericMapping)
 {
-  DPRINT("CmiObjectSecurity() called\n");
+  DPRINT("CmpSecurityMethod() called\n");
 
   switch (OperationCode)
     {
@@ -828,7 +828,7 @@ CmiObjectSecurity(PVOID ObjectBody,
 
 
 NTSTATUS STDCALL
-CmiObjectQueryName (PVOID ObjectBody,
+CmpQueryKeyName (PVOID ObjectBody,
             IN BOOLEAN HasName,
 		    POBJECT_NAME_INFORMATION ObjectNameInfo,
 		    ULONG Length,
@@ -838,7 +838,7 @@ CmiObjectQueryName (PVOID ObjectBody,
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
 
-  DPRINT ("CmiObjectQueryName() called\n");
+  DPRINT ("CmpQueryKeyName() called\n");
 
   KeyObject = (PKEY_OBJECT)ObjectBody;
 
@@ -931,7 +931,7 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
 
   ObReferenceObjectByPointer(ParentKey,
 		STANDARD_RIGHTS_REQUIRED,
-		CmiKeyType,
+		CmpKeyObjectType,
 		KernelMode);
   NewKey->ParentKey = ParentKey;
 }

@@ -24,7 +24,7 @@
 
 /* GLOBALS ******************************************************************/
 
-extern POBJECT_TYPE  CmiKeyType;
+extern POBJECT_TYPE  CmpKeyObjectType;
 extern LIST_ENTRY CmiKeyObjectListHead;
 
 static BOOLEAN CmiRegistryInitialized = FALSE;
@@ -218,7 +218,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                         &ObjectName,
                         (PVOID*)&Object,
                         &RemainingPath,
-                        CmiKeyType,
+                        CmpKeyObjectType,
                         NULL,
                         NULL);
   if (!NT_SUCCESS(Status))
@@ -300,7 +300,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   DPRINT("RemainingPath %S  ParentObject 0x%p\n", RemainingPath.Buffer, Object);
 
   Status = ObCreateObject(PreviousMode,
-			  CmiKeyType,
+			  CmpKeyObjectType,
 			  NULL,
 			  PreviousMode,
 			  NULL,
@@ -452,7 +452,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     DELETE,
-				     CmiKeyType,
+				     CmpKeyObjectType,
 				     PreviousMode,
 				     (PVOID *)&KeyObject,
 				     NULL);
@@ -516,7 +516,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
   /*
    * Note:
    * Hive-Synchronization will not be triggered here. This is done in
-   * CmiObjectDelete() (in regobj.c) after all key-related structures
+   * CmpDeleteKeyObject() (in regobj.c) after all key-related structures
    * have been released.
    */
 
@@ -563,7 +563,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_ENUMERATE_SUB_KEYS,
-		CmiKeyType,
+		CmpKeyObjectType,
 		PreviousMode,
 		(PVOID *) &KeyObject,
 		NULL);
@@ -863,7 +863,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   /*  Verify that the handle is valid and is a registry key  */
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_QUERY_VALUE,
-		CmiKeyType,
+		CmpKeyObjectType,
 		ExGetPreviousMode(),
 		(PVOID *) &KeyObject,
 		NULL);
@@ -1116,7 +1116,7 @@ NtFlushKey(IN HANDLE KeyHandle)
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     0,
-				     CmiKeyType,
+				     CmpKeyObjectType,
 				     PreviousMode,
 				     (PVOID *)&KeyObject,
 				     NULL);
@@ -1244,7 +1244,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
                         &ObjectName,
 	                (PVOID*)&Object,
                         &RemainingPath,
-                        CmiKeyType,
+                        CmpKeyObjectType,
                         NULL,
                         NULL);
   if (!NT_SUCCESS(Status))
@@ -1340,7 +1340,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 		(KeyInformationClass != KeyNameInformation ? KEY_QUERY_VALUE : 0),
-		CmiKeyType,
+		CmpKeyObjectType,
 		ExGetPreviousMode(),
 		(PVOID *) &KeyObject,
 		NULL);
@@ -1566,7 +1566,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_QUERY_VALUE,
-		CmiKeyType,
+		CmpKeyObjectType,
 		ExGetPreviousMode(),
 		(PVOID *)&KeyObject,
 		NULL);
@@ -1830,7 +1830,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     DesiredAccess,
-				     CmiKeyType,
+				     CmpKeyObjectType,
 				     ExGetPreviousMode(),
 				     (PVOID *)&KeyObject,
 				     NULL);
@@ -2005,7 +2005,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_SET_VALUE,
-		CmiKeyType,
+		CmpKeyObjectType,
 		PreviousMode,
 		(PVOID *)&KeyObject,
 		NULL);
@@ -2218,7 +2218,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     KEY_QUERY_VALUE,
-				     CmiKeyType,
+				     CmpKeyObjectType,
 				     ExGetPreviousMode(),
 				     (PVOID *) &KeyObject,
 				     NULL);

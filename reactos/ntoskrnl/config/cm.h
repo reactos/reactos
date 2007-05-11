@@ -767,10 +767,10 @@ CmpInitializeHive(
     IN ULONG FileType,
     IN PVOID HiveData,
     IN HANDLE Primary,
-    IN HANDLE Alternate,
     IN HANDLE Log,
     IN HANDLE External,
-    IN PUNICODE_STRING FileName
+    IN PUNICODE_STRING FileName,
+    IN ULONG CheckFlags
 );
 
 PSECURITY_DESCRIPTOR
@@ -981,6 +981,24 @@ extern ULONG CmpConfigurationAreaSize;
 extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 extern UNICODE_STRING CmTypeName[];
 extern BOOLEAN ExpInTextModeSetup;
+
+//
+// BUGBUG Old Hive Stuff for Temporary Support
+//
+#define SYSTEM_REG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM"
+#define SYSTEM_LOG_FILE     L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
+#define REG_SYSTEM_KEY_NAME L"\\Registry\\Machine\\SYSTEM"
+typedef struct _EREGISTRY_HIVE
+{
+    HHIVE Hive;
+    LIST_ENTRY HiveList;
+    UNICODE_STRING HiveFileName;
+    UNICODE_STRING LogFileName;
+    PCM_KEY_SECURITY RootSecurityCell;
+    ULONG Flags;
+    HANDLE HiveHandle;
+    HANDLE LogHandle;
+} EREGISTRY_HIVE, *PEREGISTRY_HIVE;
 
 //
 // Inlined functions
