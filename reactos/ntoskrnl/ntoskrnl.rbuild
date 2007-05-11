@@ -90,10 +90,12 @@
                 </directory>
             </if>
             <file>cmboot.c</file>
+            <file>cmcheck.c</file>
             <file>cmcontrl.c</file>
             <file>cmconfig.c</file>
             <file>cmdata.c</file>
             <file>cmindex.c</file>
+            <file>cminit.c</file>
             <file>cmhook.c</file>
             <file>cmkcbncb.c</file>
             <file>cmmapvw.c</file>
@@ -103,6 +105,7 @@
             <file>cmsecach.c</file>
             <file>cmsysini.c</file>
             <file>cmvalue.c</file>
+            <file>cmwraprs.c</file>
     </directory>
     <directory name="cm">
             <file>ntfunc.c</file>

@@ -696,11 +696,11 @@ CmpInitSecurityCache(
 //
 // Registry Validation Functions
 //
-BOOLEAN
+ULONG
 NTAPI
 CmCheckRegistry(
     IN PCMHIVE Hive,
-    IN BOOLEAN CleanFlag
+    IN ULONG Flags
 );
 
 //
@@ -1002,6 +1002,57 @@ CmpInitializeRegistryNode(
     IN INTERFACE_TYPE InterfaceType,
     IN ULONG BusNumber,
     IN PUSHORT DeviceIndexTable
+);
+
+//
+// Wrapper Routines
+//
+PVOID
+NTAPI
+CmpAllocate(
+    IN ULONG Size,
+    IN BOOLEAN Paged
+);
+
+VOID
+NTAPI
+CmpFree(
+    IN PVOID Ptr
+);
+
+BOOLEAN
+NTAPI
+CmpFileRead(
+    IN PHHIVE RegistryHive,
+    IN ULONG FileType,
+    IN ULONGLONG FileOffset,
+    OUT PVOID Buffer,
+    IN SIZE_T BufferLength
+);
+
+BOOLEAN
+NTAPI
+CmpFileWrite(
+    IN PHHIVE RegistryHive,
+    IN ULONG FileType,
+    IN ULONGLONG FileOffset,
+    IN PVOID Buffer,
+    IN SIZE_T BufferLength
+);
+
+BOOLEAN
+NTAPI
+CmpFileSetSize(
+    IN PHHIVE RegistryHive,
+    IN ULONG FileType,
+    IN ULONGLONG FileSize
+);
+
+BOOLEAN
+NTAPI
+CmpFileFlush(
+   IN PHHIVE RegistryHive,
+   IN ULONG FileType
 );
 
 //

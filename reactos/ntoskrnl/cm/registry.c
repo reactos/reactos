@@ -32,7 +32,7 @@ extern BOOLEAN ExpInTextModeSetup;
 POBJECT_TYPE  CmpKeyObjectType = NULL;
 PEREGISTRY_HIVE  CmiVolatileHive = NULL;
 
-LIST_ENTRY CmiHiveListHead;
+LIST_ENTRY CmpHiveListHead;
 
 ERESOURCE CmiRegistryLock;
 
@@ -210,8 +210,9 @@ CmInitSystem1(VOID)
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
-    /* Initialize the hive list */
-    InitializeListHead(&CmiHiveListHead);
+    /* Initialize the hive list and lock */
+    InitializeListHead(&CmpHiveListHead);
+    ExInitializePushLock((PVOID)&CmpHiveListHeadLock);
 
     /* Initialize registry lock */
     ExInitializeResourceLite(&CmiRegistryLock);
@@ -854,12 +855,11 @@ CmShutdownRegistry(VOID)
       CmiHiveSyncPending = FALSE;
     }
 
-  /* Acquire hive list lock exclusively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+      /* Lock the hive list */
+    ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
 
-  Entry = CmiHiveListHead.Flink;
-  while (Entry != &CmiHiveListHead)
+  Entry = CmpHiveListHead.Flink;
+  while (Entry != &CmpHiveListHead)
     {
       Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
 
@@ -872,9 +872,8 @@ CmShutdownRegistry(VOID)
       Entry = Entry->Flink;
     }
 
-  /* Release hive list lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
-  KeLeaveCriticalRegion();
+    /* Release the lock */
+    ExReleasePushLock(&CmpHiveListHeadLock);
 
   DPRINT("CmShutdownRegistry() done\n");
 }
@@ -890,12 +889,11 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
 
   CmiHiveSyncPending = FALSE;
 
-  /* Acquire hive list lock exclusively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+      /* Lock the hive list */
+    ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
 
-  Entry = CmiHiveListHead.Flink;
-  while (Entry != &CmiHiveListHead)
+  Entry = CmpHiveListHead.Flink;
+  while (Entry != &CmpHiveListHead)
     {
       Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
 
@@ -908,9 +906,8 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
       Entry = Entry->Flink;
     }
 
-  /* Release hive list lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
-  KeLeaveCriticalRegion();
+    /* Release the lock */
+    ExReleasePushLock(&CmpHiveListHeadLock);
 
   DPRINT("DeferredContext 0x%p\n", DeferredContext);
   ExFreePool(DeferredContext);

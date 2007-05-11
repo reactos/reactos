@@ -36,6 +36,8 @@ CMHIVE CmControlHive;
 ULONG CmpConfigurationAreaSize = PAGE_SIZE * 4;
 PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 
+EX_PUSH_LOCK CmpHiveListHeadLock;
+
 UNICODE_STRING CmTypeName[MaximumType + 1] =
 {
     RTL_CONSTANT_STRING(L"System"),

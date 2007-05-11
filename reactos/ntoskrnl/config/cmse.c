@@ -136,3 +136,18 @@ CmpHiveRootSecurityDescriptor(VOID)
     /* Return the security descriptor */
     return SecurityDescriptor;
 }
+
+NTSTATUS
+NTAPI
+CmpSecurityMethod(IN PVOID ObjectBody,
+                  IN SECURITY_OPERATION_CODE OperationCode,
+                  IN PSECURITY_INFORMATION SecurityInformation,
+                  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+                  IN OUT PULONG BufferLength,
+                  IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+                  IN POOL_TYPE PoolType,
+                  IN PGENERIC_MAPPING GenericMapping)
+{
+    /* HACK */
+    return STATUS_SUCCESS;
+}

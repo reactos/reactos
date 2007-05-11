@@ -110,10 +110,10 @@ extern PEREGISTRY_HIVE CmiVolatileHive;
 extern POBJECT_TYPE CmpKeyObjectType;
 extern KSPIN_LOCK CmiKeyListLock;
 
-extern LIST_ENTRY CmiHiveListHead;
+extern LIST_ENTRY CmpHiveListHead;
 
 extern ERESOURCE CmiRegistryLock;
-
+extern EX_PUSH_LOCK CmpHiveListHeadLock;
 
 /* Registry Callback Function */
 typedef struct _REGISTRY_CALLBACK
