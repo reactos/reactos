@@ -285,11 +285,26 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     else
     {
         /* No callback, just copy the message */
-        LpcpMoveMessage(&Message->Request,
-                        LpcRequest,
-                        LpcRequest + 1,
-                        MessageType,
-                        &Thread->Cid);
+        _SEH_TRY
+        {
+            LpcpMoveMessage(&Message->Request,
+                            LpcRequest,
+                            LpcRequest + 1,
+                            MessageType,
+                            &Thread->Cid);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            LpcpFreeToPortZone(Message, 0);
+            ObDereferenceObject(Port);
+            return Status;
+        }
 
         /* Acquire the LPC lock */
         KeAcquireGuardedMutex(&LpcpLock);
