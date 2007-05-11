@@ -79,8 +79,8 @@ int main(int argc, char* argv[]) {
 
 	rdtscll(timeStart);
 
-	randfile = fopen(argv[1],"r");
-	sortfile = fopen(argv[2],"w");
+	randfile = (argc < 2) ? stdin : fopen(argv[1],"r");
+	sortfile = (argc < 3) ? stdout : fopen(argv[2],"w");
 	if (randfile == NULL || sortfile == NULL) {
 		fprintf(stderr,"Could not open all files.\n");
 		return 1;
