@@ -645,7 +645,11 @@ static	BOOL	MMDRV_Install(LPCSTR drvRegName, LPCSTR drvFileName, BOOL bIsMapper)
 	return FALSE;
     }
 
-    d = DRIVER_FindFromHDrvr(lpDrv->hDriver);
+    if (!(d = DRIVER_FindFromHDrvr(lpDrv->hDriver))) {
+	CloseDriver(lpDrv->hDriver, 0, 0);
+	WARN("Couldn't get the WINE internal structure for driver '%s'\n", drvFileName);
+	return FALSE;
+    }
     lpDrv->bIs32 = (d->dwFlags & WINE_GDF_16BIT) ? FALSE : TRUE;
 
     /* Then look for xxxMessage functions */
