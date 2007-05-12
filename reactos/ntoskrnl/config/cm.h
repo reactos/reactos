@@ -846,6 +846,21 @@ CmpLinkHiveToMaster(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+NTSTATUS
+NTAPI
+CmpOpenHiveFiles(
+    IN PUNICODE_STRING BaseName,
+    IN PWCHAR Extension OPTIONAL,
+    IN PHANDLE Primary,
+    IN PHANDLE Log,
+    IN PULONG PrimaryDisposition,
+    IN PULONG LogDisposition,
+    IN BOOLEAN CreateAllowed,
+    IN BOOLEAN MarkAsSystemHive,
+    IN BOOLEAN NoBuffering,
+    OUT PULONG ClusterSize OPTIONAL
+);
+
 //
 // Registry Utility Functions
 //

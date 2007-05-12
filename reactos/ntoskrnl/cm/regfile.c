@@ -24,153 +24,44 @@
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-NTAPI
-CmpInitializeHive(OUT PEREGISTRY_HIVE *RegistryHive,
-                  IN ULONG OperationType,
-                  IN ULONG HiveFlags,
-                  IN ULONG FileType,
-                  IN PVOID HiveData OPTIONAL,
-                  IN HANDLE Primary,
-                  IN HANDLE Log,
-                  IN HANDLE External,
-                  IN PUNICODE_STRING FileName OPTIONAL,
-                  IN ULONG CheckFlags);
-
-static NTSTATUS
-CmiCreateNewRegFile(HANDLE FileHandle)
+CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+            IN PUNICODE_STRING FileName,
+            IN ULONG Flags)
 {
-  PEREGISTRY_HIVE CmHive;
-  PHHIVE Hive;
-  NTSTATUS Status;
-
-  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
-  CmHive->HiveHandle = FileHandle;
-  Status = HvInitialize(&CmHive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0, 0, 0,
-                        CmpAllocate, CmpFree,
-                        CmpFileRead, CmpFileWrite, CmpFileSetSize,
-                        CmpFileFlush, NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return FALSE;
-    }
-
-  /* Init root key cell */
-  Hive = &CmHive->Hive;
-  if (!CmCreateRootNode(Hive, L""))
-    {
-      HvFree (Hive);
-      return FALSE;
-    }
-
-  Status = HvWriteHive(Hive) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-
-  HvFree (Hive);
-
-  return(Status);
-}
-
-static NTSTATUS
-CmiInitNonVolatileRegistryHive (IN ULONG HiveFlags,
-                                IN PUNICODE_STRING HiveName,
-                                OUT PEREGISTRY_HIVE *Hive)
-{
-    ULONG CreateDisposition, LogDisposition;
-    HANDLE FileHandle, LogHandle;
+    PEREGISTRY_HIVE Hive;
     NTSTATUS Status;
-    //ULONG Operation;
-    PEREGISTRY_HIVE NewHive;
+    BOOLEAN Allocate = TRUE;
 
-    *Hive = NULL;
+    DPRINT ("CmiLoadHive(Filename %wZ)\n", FileName);
 
-    Status = CmpOpenHiveFiles(HiveName,
-                              NULL, //L".LOG",
-                              &FileHandle,
-                              &LogHandle,
-                              &CreateDisposition,
-                              &LogDisposition,
-                              TRUE,
-                              FALSE,
-                              TRUE,
-                              NULL);
-    if (CreateDisposition == FILE_CREATED)
-    {
-        Status = CmiCreateNewRegFile(FileHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("CmiCreateNewRegFile() failed (Status %lx)\n", Status);
-            ZwClose(FileHandle);
-            return(Status);
-        }
-    }
+    if (Flags & ~REG_NO_LAZY_FLUSH) return STATUS_INVALID_PARAMETER;
 
-    Status = CmpInitializeHive(&NewHive,
-                               HINIT_FILE,
-                               HiveFlags,
-                               HFILE_TYPE_PRIMARY,
-                               NULL,
-                               FileHandle,
-                               NULL,
-                               NULL,
-                               HiveName,
-                               0);
+    Status = CmpInitHiveFromFile(FileName,
+                                 (Flags & REG_NO_LAZY_FLUSH) ? HIVE_NO_SYNCH : 0,
+                                 &Hive,
+                                 &Allocate,
+                                 0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open hive\n");
-        ZwClose(FileHandle);
+        DPRINT1("CmpInitHiveFromFile() failed (Status %lx)\n", Status);
+        ExFreePool(Hive);
         return Status;
     }
 
-    CmPrepareHive(&NewHive->Hive);
-    NewHive->Flags = HiveFlags;
+    Status = CmiConnectHive(KeyObjectAttributes, Hive);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
+        //      CmiRemoveRegistryHive (Hive);
+    }
 
-    RtlCreateUnicodeString(&NewHive->HiveFileName, HiveName->Buffer);
-
-    /* Close the hive file */
-    ZwClose(FileHandle);
-
-    *Hive = NewHive;
+    DPRINT ("CmiLoadHive() done\n");
     return Status;
 }
 
-NTSTATUS
-CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-	    IN PUNICODE_STRING FileName,
-	    IN ULONG Flags)
-{
-  PEREGISTRY_HIVE Hive;
-  NTSTATUS Status;
-
-  DPRINT ("CmiLoadHive(Filename %wZ)\n", FileName);
-
-  if (Flags & ~REG_NO_LAZY_FLUSH)
-    return STATUS_INVALID_PARAMETER;
-
-  Status = CmiInitNonVolatileRegistryHive ((Flags & REG_NO_LAZY_FLUSH) ? HIVE_NO_SYNCH : 0,
-					   FileName,
-                       &Hive);
-  if (!NT_SUCCESS (Status))
-    {
-      DPRINT1 ("CmiInitNonVolatileRegistryHive() failed (Status %lx)\n", Status);
-      ExFreePool (Hive);
-      return Status;
-    }
-
-  Status = CmiConnectHive (KeyObjectAttributes,
-			   Hive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
-//      CmiRemoveRegistryHive (Hive);
-    }
-
-  DPRINT ("CmiLoadHive() done\n");
-
-  return Status;
-}
-
 
 NTSTATUS
-CmiRemoveRegistryHive(PEREGISTRY_HIVE RegistryHive)
+CmiRemoveRegistaryHive(PEREGISTRY_HIVE RegistryHive)
 {
   /* Remove hive from hive list */
   RemoveEntryList (&RegistryHive->HiveList);

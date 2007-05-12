@@ -169,6 +169,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     /* Set flags */
     Hive->Flags = HiveFlags;
     Hive->HiveHandle = Primary;
+    Hive->LogHandle = Log;
 
     /* Check how large the file is */
     ZwQueryInformationFile(Primary,

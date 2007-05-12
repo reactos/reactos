@@ -16,8 +16,127 @@
 KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
 PEPROCESS CmpSystemProcess;
+BOOLEAN HvShutdownComplete;
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+CmpInitHiveFromFile(IN PUNICODE_STRING HiveName,
+                    IN ULONG HiveFlags,
+                    OUT PCMHIVE *Hive,
+                    IN OUT PBOOLEAN New,
+                    IN ULONG CheckFlags)
+{
+    ULONG HiveDisposition, LogDisposition;
+    HANDLE FileHandle = NULL, LogHandle = NULL;
+    NTSTATUS Status;
+    ULONG Operation, FileType;
+    PEREGISTRY_HIVE NewHive;
+    PAGED_CODE();
+
+    /* Assume failure */
+    *Hive = NULL;
+
+    /* Open or create the hive files */
+    Status = CmpOpenHiveFiles(HiveName,
+                              L".LOG",
+                              &FileHandle,
+                              &LogHandle,
+                              &HiveDisposition,
+                              &LogDisposition,
+                              *New,
+                              FALSE,
+                              TRUE,
+                              NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if we have a log handle */
+    FileType = (LogHandle) ? HFILE_TYPE_LOG : HFILE_TYPE_PRIMARY;
+
+    /* Check if we created or opened the hive */
+    if (HiveDisposition == FILE_CREATED)
+    {
+        /* Do a create operation */
+        Operation = HINIT_CREATE;
+        *New = TRUE;
+    }
+    else
+    {
+        /* Open it as a file */
+        Operation = HINIT_FILE;
+        *New = FALSE;
+    }
+
+    /* Check if we're sharing hives */
+    if (CmpShareSystemHives)
+    {
+        /* Then force using the primary hive */
+        FileType = HFILE_TYPE_PRIMARY;
+        if (LogHandle)
+        {
+            /* Get rid of the log handle */
+            ZwClose(LogHandle);
+            LogHandle = NULL;
+        }
+    }
+
+    /* Check if we're too late */
+    if (HvShutdownComplete)
+    {
+        /* Fail */
+        ZwClose(FileHandle);
+        if (LogHandle) ZwClose(LogHandle);
+        return STATUS_TOO_LATE;
+    }
+
+    /* Initialize the hive */
+    Status = CmpInitializeHive((PCMHIVE*)&NewHive,
+                               Operation,
+                               HiveFlags,
+                               FileType,
+                               NULL,
+                               FileHandle,
+                               LogHandle,
+                               NULL,
+                               HiveName,
+                               0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        ZwClose(FileHandle);
+        if (LogHandle) ZwClose(LogHandle);
+        return Status;
+    }
+
+    /* Success, return hive */
+    *Hive = (PCMHIVE)NewHive;
+
+    /* ROS: Init root key cell and prepare the hive */
+    if (Operation == HINIT_CREATE) CmCreateRootNode(&NewHive->Hive, L"");
+    CmPrepareHive(&NewHive->Hive);
+
+    /* Duplicate the hive name */
+    NewHive->HiveFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                         HiveName->Length,
+                                                         TAG_CM);
+    if (NewHive->HiveFileName.Buffer)
+    {
+        /* Copy the string */
+        RtlCopyMemory(NewHive->HiveFileName.Buffer,
+                      HiveName->Buffer,
+                      HiveName->Length);
+        NewHive->HiveFileName.Length = HiveName->Length;
+        NewHive->HiveFileName.MaximumLength = HiveName->MaximumLength;
+    }
+
+    /* ROS: Close the hive files */
+    ZwClose(FileHandle);
+    if (LogHandle) ZwClose(LogHandle);
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 NTAPI

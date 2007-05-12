@@ -445,6 +445,14 @@ CmpOpenHiveFiles(IN PUNICODE_STRING BaseName,
                  IN BOOLEAN NoBuffering,
                  OUT PULONG ClusterSize OPTIONAL);
 
+NTSTATUS
+NTAPI
+CmpInitHiveFromFile(IN PUNICODE_STRING HiveName,
+                    IN ULONG HiveFlags,
+                    OUT PEREGISTRY_HIVE *Hive,
+                    IN OUT PBOOLEAN New,
+                    IN ULONG CheckFlags);
+
 #if 0
 static __inline PVOID xHvGetCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
 {
