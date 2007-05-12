@@ -364,9 +364,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Set the hive filename */
         RtlCreateUnicodeString(&SystemHive->HiveFileName, SYSTEM_REG_FILE);
 
-        /* Set the log filename */
-        RtlCreateUnicodeString(&SystemHive->LogFileName, SYSTEM_LOG_FILE);
-
         /* We imported, no need to create a new hive */
         Allocate = FALSE;
 

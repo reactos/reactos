@@ -391,6 +391,7 @@ CmpFindSubKeyInLeaf(IN PHHIVE Hive,
         /* Check if we got lucky and found it */
         if (!Result) return i;
 
+#ifdef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
         /* Check if the result is below us */
         if (Result < 0)
         {
@@ -405,7 +406,6 @@ CmpFindSubKeyInLeaf(IN PHHIVE Hive,
             Low = i;
         }
 
-#ifdef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
         /* Check if this is the last entry, if so, break out and handle it */
         if ((High - Low) <= 1) break;
 

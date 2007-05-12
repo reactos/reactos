@@ -332,6 +332,22 @@ CmiComparePackedNames(IN PUNICODE_STRING Name,
 		      IN USHORT NameBufferSize,
 		      IN BOOLEAN NamePacked);
 
+HCELL_INDEX
+NTAPI
+CmpFindValueByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE KeyNode,
+    IN PUNICODE_STRING Name
+);
+
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Parent,
+    IN PUNICODE_STRING SearchName
+);
+
 VOID
 CmiCopyPackedName(PWCHAR NameBuffer,
 		  PUCHAR PackedNameBuffer,
@@ -360,12 +376,6 @@ CmiSyncHives(VOID);
 
 NTSTATUS
 CmiCreateTempHive(PEREGISTRY_HIVE *RegistryHive);
-
-NTSTATUS
-CmiCopyKey (PEREGISTRY_HIVE DstHive,
-	    PCM_KEY_NODE DstKeyCell,
-	    PEREGISTRY_HIVE SrcHive,
-	    PCM_KEY_NODE SrcKeyCell);
 
 NTSTATUS
 CmiSaveTempHive (PEREGISTRY_HIVE Hive,

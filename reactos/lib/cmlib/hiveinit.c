@@ -271,6 +271,130 @@ HvpInitializeMemoryInplaceHive(
    return STATUS_SUCCESS;
 }
 
+typedef enum _RESULT
+{
+    NotHive,
+    Fail,
+    NoMemory,
+    HiveSuccess,
+    RecoverHeader,
+    RecoverData,
+    SelfHeal
+} RESULT;
+
+RESULT CMAPI
+HvpGetHiveHeader(IN PHHIVE Hive,
+                 IN PHBASE_BLOCK *BaseBlock,
+                 IN PLARGE_INTEGER TimeStamp)
+{
+    PHBASE_BLOCK HiveHeader;
+    ULONG Alignment;
+    ULONG Result;
+    ULONGLONG Offset = 0;
+    ASSERT(sizeof(HBASE_BLOCK) >= (HV_BLOCK_SIZE * Hive->Cluster));
+
+    /* Assume failure and allocate the buffer */
+    *BaseBlock = 0;
+    HiveHeader = Hive->Allocate(sizeof(HBASE_BLOCK), TRUE);
+    if (!HiveHeader) return NoMemory;
+
+    /* Check for, and enforce, alignment */
+    Alignment = Hive->Cluster * HV_BLOCK_SIZE -1;
+    if ((ULONG_PTR)HiveHeader & Alignment)
+    {
+        /* Free the old header */
+        Hive->Free(HiveHeader);
+        HiveHeader = Hive->Allocate(PAGE_SIZE, TRUE);
+        if (!HiveHeader) return NoMemory;
+
+        //HiveHeader->Length = PAGE_SIZE; ??
+    }
+
+    /* Clear it */
+    RtlZeroMemory(HiveHeader, sizeof(HBASE_BLOCK));
+
+    /* Now read it from disk */
+    Result = Hive->FileRead(Hive,
+                            HV_TYPE_PRIMARY,
+                            Offset,
+                            HiveHeader,
+                            Hive->Cluster * HV_BLOCK_SIZE);
+
+    /* Couldn't read: assume it's not a hive */
+    if (!Result) return NotHive;
+
+    /* Do validation */
+    if (!HvpVerifyHiveHeader(HiveHeader)) return NotHive;
+
+    /* Return information */
+    *BaseBlock = HiveHeader;
+    *TimeStamp = HiveHeader->TimeStamp;
+    return HiveSuccess;
+}
+
+NTSTATUS CMAPI
+HvLoadHive(IN PHHIVE Hive,
+           IN ULONG FileSize)
+{
+    PHBASE_BLOCK BaseBlock = NULL;
+    ULONG Result;
+    LARGE_INTEGER TimeStamp;
+    ULONGLONG Offset = 0;
+    PVOID HiveData;
+
+    /* Get the hive header */
+    Result = HvpGetHiveHeader(Hive, &BaseBlock, &TimeStamp);
+    switch (Result)
+    {
+        /* Out of memory */
+        case NoMemory:
+
+            /* Fail */
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Not a hive */
+        case NotHive:
+
+            /* Fail */
+            return STATUS_NOT_REGISTRY_FILE;
+
+        /* Has recovery data */
+        case RecoverData:
+        case RecoverHeader:
+
+            /* Fail */
+            return STATUS_REGISTRY_CORRUPT;
+    }
+
+    /* Set default boot type */
+    BaseBlock->BootType = 0;
+
+    /* Setup hive data */
+    Hive->HiveHeader = BaseBlock;
+    Hive->Version = Hive->HiveHeader->Minor;
+
+    /* Allocate a buffer large enough to hold the hive */
+    HiveData = Hive->Allocate(FileSize, TRUE);
+    if (!HiveData) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Now read the whole hive */
+    Result = Hive->FileRead(Hive,
+                            HV_TYPE_PRIMARY,
+                            Offset,
+                            HiveData,
+                            FileSize);
+    if (!Result) return STATUS_NOT_REGISTRY_FILE;
+
+    /* Apply "US National Debt" hack */
+    ((PHBASE_BLOCK)HiveData)->Length = FileSize;
+
+    /* Free our base block... it's usless in this implementation */
+    Hive->Free(BaseBlock);
+
+    /* Initialize the hive directly from memory */
+    return HvpInitializeMemoryHive(Hive, (ULONG_PTR)HiveData);
+}
+
 /**
  * @name HvInitialize
  *
@@ -334,6 +458,7 @@ HvInitialize(
    Hive->FileSetSize = FileSetSize;
    Hive->FileFlush = FileFlush;
    Hive->StorageTypeCount = 2;
+   Hive->Cluster = 1;
 
    switch (Operation)
    {
@@ -347,6 +472,21 @@ HvInitialize(
 
       case HV_OPERATION_MEMORY_INPLACE:
          Status = HvpInitializeMemoryInplaceHive(Hive, HiveData);
+         break;
+
+      case 2:
+
+         /* Hack of doom: Cluster is actually the file size. */
+         Status = HvLoadHive(Hive, Cluster);
+         if ((Status != STATUS_SUCCESS) &&
+             (Status != STATUS_REGISTRY_RECOVERED))
+         {
+             /* Unrecoverable failure */
+             return Status;
+         }
+
+         /* Check for previous damage */
+         if (Status == STATUS_REGISTRY_RECOVERED) ASSERT(FALSE);
          break;
 
       default:
