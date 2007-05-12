@@ -122,15 +122,54 @@ Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
                                             LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
+   HRESULT ret;
+   DDSURFACEDESC2 dd_desc_v2;
+   LPDDRAWI_DIRECTDRAW_INT dd_int;
+   LPDDRAWI_DIRECTDRAW_LCL dd_lcl;
+   LPDDRAWI_DIRECTDRAW_GBL dd_gbl;
 
-  DX_WINDBG_trace();
-  EnterCriticalSection(&ddcs);
+   DX_WINDBG_trace();
 
-  /* code here */
+   /* FIXME vaildate input pointers or warp everthing with SEH */
+
+   EnterCriticalSection(&ddcs);
+
+   ret = DDERR_GENERIC;
+
+   dd_int = (LPDDRAWI_DIRECTDRAW_INT)iface;
+   dd_lcl = dd_int->lpLcl;
+   dd_gbl = dd_lcl->lpGbl;
+
+   if (dd_lcl->dwLocalFlags == 0)
+   {
+       LeaveCriticalSection(&ddcs);
+       /* FIXME send back right return code */
+       return  DDERR_GENERIC;
+   }
+
+   if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
+   {
+       
+       RtlZeroMemory(&dd_desc_v2,sizeof(DDSURFACEDESC2));
+       /* FIXME implement CopyDDSurfDescToDDSurfDesc2
+          CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2,pDDSD);
+       */
+   }
+   else if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
+   {
+       RtlCopyMemory(&dd_desc_v2,pDDSD,sizeof(DDSURFACEDESC2));
+   }
+   else
+   {
+       LeaveCriticalSection(&ddcs);
+       return  DDERR_INVALIDPARAMS;
+   }
+
+   /* FIXME add one gbl check with one pDDSD check */
+  // ret = internal_CreateSurface(iface,dd_desc_v2,ppSurf,pUnkOuter);
 
   LeaveCriticalSection(&ddcs);
-
-  DX_STUB;
+  return ret;
 }
 
 /*
