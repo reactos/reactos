@@ -133,9 +133,9 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
     HWND window;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
-#if 0 // this check is totally invalid if you ask me - mbosma
    /* Get the old window */
     window = (HWND) This->lpLcl->hWnd;
+#if 0 // this check is totally invalid if you ask me - mbosma
     if(!window)
     {
         return DDERR_NOHWND;
