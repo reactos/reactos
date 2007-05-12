@@ -10,11 +10,19 @@
 #include "rosdraw.h"
 
 HRESULT 
-Internal_CreateSurface(LPDDRAWI_DIRECTDRAW_INT pDDraw, 
-              LPDDRAWI_DDRAWSURFACE_LCL *lpLcl,
-              LPDDSURFACEDESC2 pDDSD)
+Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
+                        LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
-	return DDERR_GENERIC;
+    if (!pDDraw->lpLcl->dwLocalFlags & DDRAWILCL_DIRECTDRAW7)
+    {
+        /* it is directdraw 1-6 so no DirectD3D support */
+    }
+    else
+    {
+        /* directdraw 7 support */
+    }
+
+    return DDERR_GENERIC;
 }
 
 void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc)

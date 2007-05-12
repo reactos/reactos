@@ -29,6 +29,7 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
     {
         /* DirectDraw7 Vtable */
         This->lpVtbl = &DirectDraw7_Vtable;
+        This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags + DDRAWILCL_DIRECTDRAW7;
         *obj = &This->lpVtbl;
     }
     else
@@ -155,11 +156,11 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
    if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
    {
-       CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2,pDDSD);
+       CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2, (LPDDSURFACEDESC)pDDSD);
    }
    else if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
    {
-       RtlCopyMemory(&dd_desc_v2,pDDSD,sizeof(DDSURFACEDESC2));
+       RtlCopyMemory(&dd_desc_v2, pDDSD,sizeof(DDSURFACEDESC2));
    }
    else
    {
@@ -168,13 +169,13 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
    }
 
    /* check if this process belong to this ddraw */
-   if ( dd_int->lcl->dwProcessId != GetCurrentProcessId() )
+   if ( dd_int->lpLcl->dwProcessId != GetCurrentProcessId() )
    {
        /* FIXME send back right return code */
         return  DDERR_GENERIC;
    }
 
-  ret = internal_CreateSurface(dd_int,dd_desc_v2,ppSurf,pUnkOuter);
+  ret = Internal_CreateSurface(dd_int,&dd_desc_v2, ppSurf,pUnkOuter);
 
   LeaveCriticalSection(&ddcs);
   return ret;

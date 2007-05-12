@@ -24,6 +24,8 @@ HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable);
 HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable);
 HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
 HRESULT WINAPI ReCreateDirectDraw(LPDIRECTDRAW* iface);
+HRESULT Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
+                        LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter);
 
 /* convert DDSURFACEDESC to DDSURFACEDESC2 */
 void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc);
