@@ -36,19 +36,7 @@ HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
 }
 
 
-/*
- * stub
- * Status not done
- */
-HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
-                                            LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
-{
 
-  DX_WINDBG_trace();
-
-   DX_STUB;
-
-}
 
 
 /*

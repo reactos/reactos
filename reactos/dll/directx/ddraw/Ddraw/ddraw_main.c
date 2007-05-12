@@ -119,6 +119,22 @@ Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 
 /*
  */
+HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
+                                            LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+{
+
+  DX_WINDBG_trace();
+  EnterCriticalSection(&ddcs);
+
+  /* code here */
+
+  LeaveCriticalSection(&ddcs);
+
+  DX_STUB;
+}
+
+/*
+ */
 HRESULT WINAPI
 Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
 {
