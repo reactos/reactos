@@ -1,3 +1,4 @@
+<!--
 <module name="ddraw" type="win32dll" entrypoint="0" installbase="system32" installname="ddraw.dll" allowwarnings ="true">
   <importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>	
@@ -30,13 +31,12 @@
 	<file>iface_videoport.c</file>
 	<file>iface_kernel.c</file>
 
-      <file>callbacks_hel.c</file>
-      <file>callbacks_surf_hel.c</file>
+    <file>callbacks_hel.c</file>
+    <file>callbacks_surf_hel.c</file>
 
 	<directory name="main">
 		<file>ddraw_main.c</file>
 		<file>surface_main.c</file>				
 	</directory>	
-
-	
 </module>
+-->
