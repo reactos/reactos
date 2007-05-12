@@ -1,6 +1,5 @@
-<!--
 <module name="ddraw" type="win32dll" entrypoint="0" installbase="system32" installname="ddraw.dll" allowwarnings ="true">
-  <importlibrary definition="ddraw.def" />
+	<importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>	
 	<define name="UNICODE" />
 	<define name="__USE_W32API" />
@@ -22,21 +21,33 @@
 	<file>main.c</file>
 	<file>startup.c</file>
 	<file>cleanup.c</file>
-	<file>createsurface.c</file>
 
-	<file>iface_clipper.c</file>
-	<file>iface_color.c</file>
-	<file>iface_gamma.c</file>
-	<file>iface_palette.c</file>
-	<file>iface_videoport.c</file>
-	<file>iface_kernel.c</file>
-
-    <file>callbacks_hel.c</file>
-    <file>callbacks_surf_hel.c</file>
-
-	<directory name="main">
-		<file>ddraw_main.c</file>
-		<file>surface_main.c</file>				
+	<directory name="Ddraw">	
+		<file>ddraw_stubs.c</file>	
+		<file>ddraw_main.c</file>	
+		<file>callbacks_dd_hel.c</file>
 	</directory>	
+	<directory name="Surface">	
+		<file>surface_stubs.c</file>    
+		<file>callbacks_surf_hel.c</file>
+ 		<file>createsurface.c</file>
+	</directory>	
+	<directory name="clipper">	
+		<file>clipper_stubs.c</file>		
+	</directory>	
+	<directory name="Color">
+		<file>color_stubs.c</file>			
+	</directory>	
+	<directory name="Gamma">	
+		<file>gamma_stubs.c</file>		
+	</directory>	
+	<directory name="Kernel">	
+		<file>kernel_stubs.c</file>		
+	</directory>	
+	<directory name="Palette">	
+		<file>palette_stubs.c</file>		
+	</directory>	
+	<directory name="videoport">	
+		<file>videoport_stubs.c</file>		
+	</directory>
 </module>
--->

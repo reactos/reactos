@@ -73,7 +73,9 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7, HWND, DWORD);
 HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD);
 HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW7 iface);
 HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface);
-
+HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID);
+HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes, DWORD dwNumModes, DWORD dwFlags);
+HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b);
 
 ULONG   WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7);
 ULONG   WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7);
