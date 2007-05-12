@@ -24,6 +24,7 @@
 
 	<directory name="Ddraw">	
 		<file>ddraw_stubs.c</file>	
+		<file>ddraw_setcooperativelevel.c</file>
 		<file>ddraw_main.c</file>	
 		<file>callbacks_dd_hel.c</file>
 	</directory>	

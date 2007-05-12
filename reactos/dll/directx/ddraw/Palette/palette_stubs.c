@@ -1,8 +1,8 @@
 /* $Id: palette.c 24690 2006-11-05 21:19:53Z greatlrd $
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
- * FILE:                 lib/ddraw/main/palette.c
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/palette/palette_stubs.c
  * PURPOSE:              IDirectDrawPalette Implementation 
  * PROGRAMMER:           Maarten Bosma
  *

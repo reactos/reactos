@@ -1,4 +1,12 @@
-
+/* $Id$
+ *
+ * COPYRIGHT:            See COPYING in the top level directory
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/surface/createsurface.c
+ * PURPOSE:              IDirectDrawSurface7 Creation 
+ * PROGRAMMER:           Magnus Olsen
+ *
+ */
 #include "rosdraw.h"
 
 

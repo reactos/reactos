@@ -1,8 +1,8 @@
 /* $Id: kernel.c 24690 2006-11-05 21:19:53Z greatlrd $
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
- * FILE:                 lib/ddraw/main/kernel.c
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/kernel/kernel_stubs.c
  * PURPOSE:              IDirectDrawKernel and IDirectDrawSurfaceKernel Implementation 
  * PROGRAMMER:           Maarten Bosma
  *

@@ -1,8 +1,8 @@
 /* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
- * FILE:                 lib/ddraw/
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/surface/surface_main.c
  * PURPOSE:              IDirectDrawSurface7 Implementation 
  * PROGRAMMER:           Magnus Olsen, Maarten Bosma
  *

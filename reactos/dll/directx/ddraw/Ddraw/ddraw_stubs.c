@@ -1,8 +1,8 @@
 /* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
- * FILE:                 ddraw\ddraw\ddraw_stubs.c
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/ddraw/ddraw_stubs.c
  * PURPOSE:              IDirectDraw7 Implementation
  * PROGRAMMER:           Magnus Olsen, Maarten Bosma
  *

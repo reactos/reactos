@@ -1,9 +1,9 @@
-/* $Id: surface_hel.c 21519 2006-04-08 21:05:49Z greatlrd $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
- * FILE:                 lib/ddraw/soft/surface.c
- * PURPOSE:              DirectDraw Software Implementation 
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/ddraw/callbacks_dd_hel.c
+ * PURPOSE:              HEL Callbacks for Direct Draw
  * PROGRAMMER:           Magnus Olsen
  *
  */

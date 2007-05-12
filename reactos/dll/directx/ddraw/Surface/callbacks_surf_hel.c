@@ -1,10 +1,10 @@
-/* $Id: main.c 21434 2006-04-01 19:12:56Z greatlrd $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
- * FILE:                 lib/ddraw/ddraw.c
- * PURPOSE:              DirectDraw Library 
- * PROGRAMMER:           Magnus Olsen (greatlrd)
+ * PROJECT:              ReactOS DirectX
+ * FILE:                 ddraw/surface/callbacks_surf_hel.c
+ * PURPOSE:              HEL Callbacks For Surface APIs
+ * PROGRAMMER:           Magnus Olsen
  *
  */
 
