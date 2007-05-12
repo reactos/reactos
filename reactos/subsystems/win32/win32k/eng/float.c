@@ -74,4 +74,254 @@ EngSaveFloatingPointState(OUT VOID  *Buffer,
   return TRUE;
 }
 
+VOID
+STDCALL
+FLOATOBJ_Add (
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ      pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_2i3r.htm
+  UNIMPLEMENTED;
+}
 
+VOID
+STDCALL
+FLOATOBJ_AddFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0ip3.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_AddLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_12jr.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Div(
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_3ndz.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_DivFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0gfb.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_DivLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6jdz.htm
+  UNIMPLEMENTED;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_Equal(
+	IN PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6ysn.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_EqualLong(
+	IN PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1pgn.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+LONG
+STDCALL
+FLOATOBJ_GetFloat ( IN PFLOATOBJ pf )
+{
+  // www.osr.com/ddk/graphics/gdifncs_4d5z.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+LONG
+STDCALL
+FLOATOBJ_GetLong ( IN PFLOATOBJ pf )
+{
+  // www.osr.com/ddk/graphics/gdifncs_0tgn.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_GreaterThan(
+	IN PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_8n53.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_GreaterThanLong(
+	IN PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6gx3.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_LessThan(
+	IN PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1ynb.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
+FLOATOBJ_LessThanLong(
+	IN PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_9nzb.htm
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Mul(
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_8ppj.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_MulFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_3puv.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_MulLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_56lj.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Neg ( IN OUT PFLOATOBJ pf )
+{
+  // www.osr.com/ddk/graphics/gdifncs_14pz.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SetFloat(
+	OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1prb.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SetLong(
+	OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0gpz.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_Sub(
+	IN OUT PFLOATOBJ  pf,
+	IN PFLOATOBJ  pf1
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_6lyf.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SubFloat(
+	IN OUT PFLOATOBJ  pf,
+	IN FLOATL  f
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_2zvr.htm
+  UNIMPLEMENTED;
+}
+
+VOID
+STDCALL
+FLOATOBJ_SubLong(
+	IN OUT PFLOATOBJ  pf,
+	IN LONG  l
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_852f.htm
+  UNIMPLEMENTED;
+}
