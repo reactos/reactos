@@ -32,6 +32,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     PCMHIVE Hive;
 #else
     PEREGISTRY_HIVE Hive;
+    FILE_STANDARD_INFORMATION FileInformation;
 #endif
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_FS_SIZE_INFORMATION FileSizeInformation;
@@ -167,6 +168,15 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
 
     /* Set flags */
     Hive->Flags = HiveFlags;
+    Hive->HiveHandle = Primary;
+
+    /* Check how large the file is */
+    ZwQueryInformationFile(Primary,
+                           &IoStatusBlock,
+                           &FileInformation,
+                           sizeof(FileInformation),
+                           FileStandardInformation);
+    Cluster = FileInformation.EndOfFile.LowPart;
 #endif
 
     /* Initialize it */
