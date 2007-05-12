@@ -28,7 +28,8 @@
 		<file>callbacks_dd_hel.c</file>
 	</directory>	
 	<directory name="Surface">	
-		<file>surface_stubs.c</file>    
+		<file>surface_stubs.c</file>   
+		<file>surface_main.c</file>     
 		<file>callbacks_surf_hel.c</file>
  		<file>createsurface.c</file>
 	</directory>	

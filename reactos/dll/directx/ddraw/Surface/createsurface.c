@@ -21,7 +21,7 @@ CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This,
 
     That[0]->lpLcl->lpSurfMore->slist = lpLcl;
 
-    //That[0]->lpVtbl = &DirectDrawSurface7_Vtable; // FixMe !
+    That[0]->lpVtbl = &DirectDrawSurface7_Vtable;
     That[0]->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
     That[0]->lpLcl->lpSurfMore->lpDD_int = This;
     That[0]->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;
@@ -113,7 +113,7 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
 
     That[t]->lpLcl->lpSurfMore->slist = lpLcl;
 
-    //That[t]->lpVtbl = &DirectDrawSurface7_Vtable; // FixMe !
+    That[t]->lpVtbl = &DirectDrawSurface7_Vtable; 
     That[t]->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
     That[t]->lpLcl->lpSurfMore->lpDD_int = This;
     That[t]->lpLcl->lpSurfMore->lpDD_lcl = This->lpLcl;

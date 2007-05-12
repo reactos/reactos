@@ -58,17 +58,6 @@ ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
     return This->dwIntRefCnt;
 }
 
-HRESULT WINAPI
-Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
-				      LPVOID* ppObj)
-{
-    DX_WINDBG_trace();
-
-	DX_STUB_str("Unimplement\n");
-
-	return E_NOINTERFACE;
-}
-
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {     
