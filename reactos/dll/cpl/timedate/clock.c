@@ -1,31 +1,42 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/timedate/clock.c
+ * FILE:        dll/cpl/timedate/clock.c
  * PURPOSE:     Draws the analog clock
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
- *
+ *              Copyright 2007 Eric Kohl
  */
 
 /* Code based on clock.c from Programming Windows, Charles Petzold */
 
 #include <timedate.h>
 
+typedef struct _CLOCKDATA
+{
+    HBRUSH hGreyBrush;
+    HPEN hGreyPen;
+    INT cxClient;
+    INT cyClient;
+    SYSTEMTIME stCurrent;
+    SYSTEMTIME stPrevious;
+    BOOL bTimer;
+} CLOCKDATA, *PCLOCKDATA;
+
+
 #define TWOPI (2 * 3.14159)
 
 static const TCHAR szClockWndClass[] = TEXT("ClockWndClass");
 
-static HBRUSH hGreyBrush = NULL;
-static HPEN hGreyPen = NULL;
 
 static VOID
-SetIsotropic(HDC hdc, INT cxClient, INT cyClient)
+SetIsotropic(HDC hdc, PCLOCKDATA pClockData)
 {
     /* set isotropic mode */
      SetMapMode(hdc, MM_ISOTROPIC);
      /* position axis in centre of window */
-     SetViewportOrgEx(hdc, cxClient / 2,  cyClient / 2, NULL);
+     SetViewportOrgEx(hdc, pClockData->cxClient / 2, pClockData->cyClient / 2, NULL);
 }
+
 
 static VOID
 RotatePoint(POINT pt[], INT iNum, INT iAngle)
@@ -45,20 +56,21 @@ RotatePoint(POINT pt[], INT iNum, INT iAngle)
      }
 }
 
+
 static VOID
-DrawClock(HDC hdc)
+DrawClock(HDC hdc, PCLOCKDATA pClockData)
 {
-     INT   iAngle;
+     INT iAngle;
      POINT pt[3];
      HBRUSH hBrushOld;
      HPEN hPenOld = NULL;
 
      /* grey brush to fill the dots */
-     hBrushOld = SelectObject(hdc, hGreyBrush);
+     hBrushOld = SelectObject(hdc, pClockData->hGreyBrush);
 
      hPenOld = GetCurrentObject(hdc, OBJ_PEN);
 
-     for(iAngle = 0; iAngle < 360; iAngle += 6)
+     for (iAngle = 0; iAngle < 360; iAngle += 6)
      {
           /* starting coords */
           pt[0].x = 0;
@@ -72,7 +84,7 @@ DrawClock(HDC hdc)
           if (iAngle % 5)
           {
                 pt[2].x = pt[2].y = 7;
-                SelectObject(hdc, hGreyPen);
+                SelectObject(hdc, pClockData->hGreyPen);
           }
           else
           {
@@ -87,12 +99,12 @@ DrawClock(HDC hdc)
           pt[1].y  = pt[0].y + pt[2].y;
 
           Ellipse(hdc, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
-
      }
 
      SelectObject(hdc, hBrushOld);
      SelectObject(hdc, hPenOld);
 }
+
 
 static VOID
 DrawHands(HDC hdc, SYSTEMTIME * pst, BOOL fChange)
@@ -108,12 +120,12 @@ DrawHands(HDC hdc, SYSTEMTIME * pst, BOOL fChange)
      SelectObject(hdc, GetStockObject(WHITE_BRUSH));
 
      iAngle[0] = (pst->wHour * 30) % 360 + pst->wMinute / 2;
-     iAngle[1] =  pst->wMinute  *  6;
-     iAngle[2] =  pst->wSecond  *  6;
+     iAngle[1] = pst->wMinute * 6;
+     iAngle[2] = pst->wSecond * 6;
 
      CopyMemory(ptTemp, pt, sizeof(pt));
 
-     for(i = fChange ? 0 : 2; i < 3; i++)
+     for (i = fChange ? 0 : 2; i < 3; i++)
      {
           RotatePoint(ptTemp[i], 5, iAngle[i]);
 
@@ -128,62 +140,70 @@ ClockWndProc(HWND hwnd,
              WPARAM wParam,
              LPARAM lParam)
 {
-
-    static INT cxClient, cyClient;
-    static SYSTEMTIME stPrevious;
+    PCLOCKDATA pClockData;
     HDC hdc;
     PAINTSTRUCT ps;
-    SYSTEMTIME st;
+
+    pClockData = (PCLOCKDATA)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_CREATE:
-        {
-            hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
-            hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
+            pClockData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CLOCKDATA));
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pClockData);
+
+            pClockData->hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
+            pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
+
             SetTimer(hwnd, ID_TIMER, 1000, NULL);
-            GetLocalTime(&st);
-            stPrevious = st;
-        }
-        break;
+            pClockData->bTimer = TRUE;
+            GetLocalTime(&pClockData->stCurrent);
+            pClockData->stPrevious = pClockData->stCurrent;
+            break;
 
         case WM_SIZE:
-        {
-            cxClient = LOWORD(lParam);
-            cyClient = HIWORD(lParam);
-        }
-        break;
+            pClockData->cxClient = LOWORD(lParam);
+            pClockData->cyClient = HIWORD(lParam);
+            break;
 
         case WM_TIMER:
-        {
-            GetLocalTime(&st);
-
+            GetLocalTime(&pClockData->stCurrent);
             InvalidateRect(hwnd, NULL, TRUE);
-
-            stPrevious = st;
-        }
-        break;
+            pClockData->stPrevious = pClockData->stCurrent;
+            break;
 
         case WM_PAINT:
-        {
             hdc = BeginPaint(hwnd, &ps);
-
-            SetIsotropic(hdc, cxClient, cyClient);
-
-            DrawClock(hdc);
-            DrawHands(hdc, &stPrevious, TRUE);
-
+            SetIsotropic(hdc, pClockData);
+            DrawClock(hdc, pClockData);
+            DrawHands(hdc, &pClockData->stPrevious, TRUE);
             EndPaint(hwnd, &ps);
-        }
-        break;
+            break;
 
         case WM_DESTROY:
-        {
-            DeleteObject(hGreyPen);
-            DeleteObject(hGreyBrush);
-            KillTimer(hwnd, ID_TIMER);
-        }
-        break;
+            DeleteObject(pClockData->hGreyPen);
+            DeleteObject(pClockData->hGreyBrush);
+
+            if (pClockData->bTimer)
+                KillTimer(hwnd, ID_TIMER);
+
+            HeapFree(GetProcessHeap(), 0, pClockData);
+            break;
+
+        case CLM_SETTIME:
+            /* Stop the timer if it is still running */
+            if (pClockData->bTimer)
+            {
+                KillTimer(hwnd, ID_TIMER);
+                pClockData->bTimer = FALSE;
+            }
+
+            /* Set the current time */
+            CopyMemory(&pClockData->stPrevious, (LPSYSTEMTIME)lParam, sizeof(SYSTEMTIME));
+
+            /* Redraw the clock */
+            InvalidateRect(hwnd, NULL, TRUE);
+            break;
 
         default:
             DefWindowProc(hwnd,

@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/cpl/timedate/dateandtime.c
+ * FILE:        dll/cpl/timedate/dateandtime.c
  * PURPOSE:     Date & Time property page
- * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
+ * COPYRIGHT:   Copyright 2004-2007 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *              Copyright 2006 Thomas Weidenmueller <w3seek@reactos.com>
  *
@@ -361,8 +361,14 @@ DateTimePageProc(HWND hwndDlg,
                     {
                         case DTN_DATETIMECHANGE:
                         {
-                            /* Enable the 'Apply' button */
+                            /* Stop the timer */
                             KillTimer(hwndDlg, ID_TIMER);
+
+                            /* Tell the clock to stop ticking */
+                            SendDlgItemMessage(hwndDlg, IDC_CLOCKWND, CLM_SETTIME,
+                                               0, (LPARAM)&((LPNMDATETIMECHANGE)lpnm)->st);
+
+                            /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                         }
                         break;
