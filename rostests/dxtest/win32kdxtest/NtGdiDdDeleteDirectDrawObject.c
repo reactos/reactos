@@ -26,3 +26,4 @@ test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
 
     show_status(fails, "NtGdiDdDeleteDirectDrawObject\0");
 }
+

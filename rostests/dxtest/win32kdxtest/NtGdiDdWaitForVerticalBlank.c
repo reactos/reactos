@@ -5,6 +5,8 @@
 #include <winddi.h>
 #include <d3dnthal.h>
 #include <dll/directx/d3d8thk.h>
+
+#include <ddrawi.h>
 #include "test.h"
 
 /*

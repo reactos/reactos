@@ -16,18 +16,18 @@
             { \
                 printf("| "); \
             } \
-            dwflag = dwflag - dwvalue; \
+            dwflag = (ULONG)dwflag - (ULONG)dwvalue; \
             printf("%s ",text); \
             count++; \
         }
 
 #define endcheckflag(dwflag,text) \
     if (count==0) \
-        printf("0x%08lx\n",dwflag);\
+        printf("0x%08lx\n", (ULONG) dwflag);\
     else \
         printf("\n");\
     if (flag != 0) \
-        printf("undoc value in %s flags value %04lx\n",text,dwflag);
+        printf("undoc value in %s flags value %08lx\n",text, (ULONG) dwflag);
 
 
 
@@ -191,7 +191,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         int t;
         UINT flag;
         INT count=0;
-        LPD3DNTHAL_GLOBALDRIVERDATA lpD3DGlobalDriverData = pHalInfo->lpD3DGlobalDriverData;
+        // LPD3DNTHAL_GLOBALDRIVERDATA lpD3DGlobalDriverData = pHalInfo->lpD3DGlobalDriverData;
 
         printf("DD_HALINFO Version NT 2000/XP/2003 found \n");
         printf(" pHalInfo->dwSize                                  : 0x%08lx\n",(long)pHalInfo->dwSize);
@@ -438,8 +438,9 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
 
         flag = pHalInfo->dwFlags;
         count = 0;
-        checkflag(flag,DDHALINFO_ISPRIMARYDISPLAY,"DDHALINFO_ISPRIMARYDISPLAY");
-        checkflag(flag,DDHALINFO_MODEXILLEGAL,"DDHALINFO_MODEXILLEGAL");
+        // FIXME missing DDHALINFO_ISPRIMARYDISPLAY and DDHALINFO_MODEXILLEGAL in currrent headers
+        // checkflag(flag,DDHALINFO_ISPRIMARYDISPLAY,"DDHALINFO_ISPRIMARYDISPLAY");
+        // checkflag(flag,DDHALINFO_MODEXILLEGAL,"DDHALINFO_MODEXILLEGAL");
         checkflag(flag,DDHALINFO_GETDRIVERINFOSET,"DDHALINFO_GETDRIVERINFOSET");
         checkflag(flag,DDHALINFO_GETDRIVERINFO2,"DDHALINFO_GETDRIVERINFO2");
         endcheckflag(flag,"pHalInfo->dwFlags");
@@ -456,7 +457,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         }
         else
         {
-            printf("none pHalInfo from the driver\n",pHalInfo->dwSize);
+            printf("none pHalInfo from the driver 0x%08lx\n",pHalInfo->dwSize);
         }
     }
 }
