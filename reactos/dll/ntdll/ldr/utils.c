@@ -1329,12 +1329,18 @@ LdrpGetOrLoadModule(PWCHAR SerachPath,
                     PLDR_DATA_TABLE_ENTRY* Module,
                     BOOLEAN Load)
 {
+   ANSI_STRING AnsiDllName;
    UNICODE_STRING DllName;
    NTSTATUS Status;
 
    DPRINT("LdrpGetOrLoadModule() called for %s\n", Name);
 
-   RtlCreateUnicodeStringFromAsciiz (&DllName, Name);
+   RtlInitAnsiString(&AnsiDllName, Name);
+   Status = RtlAnsiStringToUnicodeString(&DllName, &AnsiDllName, TRUE);
+   if (!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
 
    Status = LdrFindEntryForName (&DllName, Module, Load);
    if (Load && !NT_SUCCESS(Status))
