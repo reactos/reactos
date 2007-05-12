@@ -130,6 +130,9 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
    DX_WINDBG_trace();
 
+   if (pUnkOuter)
+	   return DDERR_GENERIC;
+
    /* FIXME vaildate input pointers or warp everthing with SEH */
 
    EnterCriticalSection(&ddcs);
@@ -162,7 +165,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
    }
 
    /* FIXME add one gbl check with one pDDSD check */
-  // ret = internal_CreateSurface(iface,dd_desc_v2,ppSurf,pUnkOuter);
+  ret = Internal_CreateSurface(dd_int,ppSurf,&dd_desc_v2);
 
   LeaveCriticalSection(&ddcs);
   return ret;

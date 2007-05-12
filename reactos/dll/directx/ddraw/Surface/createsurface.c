@@ -9,6 +9,13 @@
  */
 #include "rosdraw.h"
 
+HRESULT 
+Internal_CreateSurface(LPDDRAWI_DIRECTDRAW_INT pDDraw, 
+              LPDDRAWI_DDRAWSURFACE_LCL *lpLcl,
+              LPDDSURFACEDESC2 pDDSD)
+{
+	return DDERR_GENERIC;
+}
 
 void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc)
 {
