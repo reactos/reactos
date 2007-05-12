@@ -12,5 +12,8 @@
 	<file>NtGdiDdCreateDirectDrawObject.c</file>
 	<file>NtGdiDdDeleteDirectDrawObject.c</file>
 	<file>NtGdiDdQueryDirectDrawObject.c</file>
+	<file>NtGdiDdGetScanLine.c</file>
+	<file>NtGdiDdWaitForVerticalBlank.c</file>
+	<file>NtGdiDdCanCreateSurface.c</file>
 	<file>dump.c</file>	
 </module>

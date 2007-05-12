@@ -3,14 +3,13 @@
 HANDLE test_NtGdiDdCreateDirectDrawObject();
 void test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal);
 void test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal);
+void test_NtGdiDdGetScanLine(HANDLE hDirectDrawLocal);
+void test_NtGdiDdWaitForVerticalBlank(HANDLE hDirectDrawLocal);
+void test_NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal);
+
 
 void dump_halinfo(DD_HALINFO *pHalInfo, char *text);
 void dump_CallBackFlags(DWORD *pCallBackFlags, char *text);
-
-
-
-
-
 
 
 

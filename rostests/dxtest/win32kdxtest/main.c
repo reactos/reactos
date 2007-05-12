@@ -38,6 +38,12 @@ int main(int argc, char **argv)
 
     test_NtGdiDdQueryDirectDrawObject(hDirectDrawLocal);
 
+    test_NtGdiDdGetScanLine(hDirectDrawLocal);
+
+    test_NtGdiDdWaitForVerticalBlank(hDirectDrawLocal);
+
+    test_NtGdiDdCanCreateSurface(hDirectDrawLocal);
+
     test_NtGdiDdDeleteDirectDrawObject(hDirectDrawLocal);
     return 0;
 }
