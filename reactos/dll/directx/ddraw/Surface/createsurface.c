@@ -21,6 +21,7 @@ void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src
 {
     RtlZeroMemory(dst_pDesc,sizeof(DDSURFACEDESC2));
     RtlCopyMemory(dst_pDesc,src_pDesc,sizeof(DDSURFACEDESC));
+    dst_pDesc->dwSize =  sizeof(DDSURFACEDESC2);
 }
 
 
