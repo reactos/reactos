@@ -55,6 +55,9 @@
 <directory name="taskmgr">
 	<xi:include href="taskmgr/taskmgr.rbuild" />
 </directory>
+<directory name="winhelp">
+	<xi:include href="winhelp/winhelp.rbuild" />
+</directory>
 <directory name="wordpad">
 	<xi:include href="wordpad/wordpad.rbuild" />
 </directory>

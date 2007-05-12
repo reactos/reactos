@@ -1,0 +1,70 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+{
+ POPUP "&File" {
+  MENUITEM "&Open", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Print", MNID_FILE_PRINT
+  MENUITEM "Printer &setup...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "E&xit", MNID_FILE_EXIT
+ }
+ POPUP "&Edit" {
+   MENUITEM "&Copy...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Bookmark" {
+   MENUITEM "&Define...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Help" {
+   MENUITEM "Help &on help", MNID_HELP_HELPON
+   MENUITEM "Always on &top", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Info...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&About WINE", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"WINE Help"
+STID_WHERROR, 		"ERROR"
+STID_WARNING,  		"WARNING"
+STID_INFO,  		"Information"
+STID_NOT_IMPLEMENTED, 	"Not implemented"
+STID_HLPFILE_ERROR_s, 	"Error while reading the help file `%s'"
+STID_CONTENTS, 		"&Contents"
+STID_SEARCH, 		"&Search"
+STID_BACK, 		"&Back"
+STID_HISTORY, 		"&History"
+STID_TOPICS,		"&Topics"
+STID_ALL_FILES, 	"All files (*.*)"
+STID_HELP_FILES_HLP, 	"Help files (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+}

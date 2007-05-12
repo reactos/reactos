@@ -1,0 +1,69 @@
+/*
+ * Help Viewer Bulgarian resource
+ *
+ * Copyright 2005 Milko Krachounov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+{
+ POPUP "&Файл" {
+  MENUITEM "&Отвори", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Печат", MNID_FILE_PRINT
+  MENUITEM "&Настройка на принтера...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "&Изход", MNID_FILE_EXIT
+ }
+ POPUP "&Редактиране" {
+   MENUITEM "&Копирай...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Анотирай...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Отметки" {
+   MENUITEM "&Задай...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Помощ" {
+   MENUITEM "Помощ &за помощта", MNID_HELP_HELPON
+   MENUITEM "Винаги от&горе", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Информация...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&Относно WINE", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"WINE Помощ"
+STID_WHERROR, 		"ГРЕШКА"
+STID_WARNING,  		"ПРЕДУПРЕЖДЕНИЕ"
+STID_INFO,  		"Информация"
+STID_NOT_IMPLEMENTED, 	"Не е реализирано"
+STID_HLPFILE_ERROR_s, 	"Грешка при четене на помощния файл `%s'"
+STID_CONTENTS, 		"&Съдържание"
+STID_SEARCH, 		"&Търси"
+STID_BACK, 		"&Назад"
+STID_HISTORY, 		"&История"
+STID_TOPICS,		"&Теми"
+STID_ALL_FILES, 	"Всички файлове (*.*)"
+STID_HELP_FILES_HLP, 	"Помощни файлове (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+}

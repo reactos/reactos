@@ -1,0 +1,66 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+MAIN_MENU MENU LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+{
+ POPUP "&S˙bor" {
+   MENUITEM "&Otvoriù...", MNID_FILE_OPEN
+   MENUITEM SEPARATOR
+   MENUITEM "&TlaËiù", MNID_FILE_PRINT
+   MENUITEM "&Nastavenie tlaËe...", MNID_FILE_SETUP
+   MENUITEM "U&konËiù", MNID_FILE_EXIT
+ }
+ POPUP "&Upraviù" {
+   MENUITEM "KopÌ&rovaù...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Skomentovaù...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Z·loûka" {
+   MENUITEM "&Definovaù...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Pomoc" {
+   MENUITEM "Pomoc &na pomoci", MNID_HELP_HELPON
+   MENUITEM "Vûdy na &vrchu", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Info...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "O& WINE", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+{
+STID_WINE_HELP,             "WINE Pomoc"
+STID_WHERROR,               "CHYBA"
+STID_WARNING,               "VAROVANIE"
+STID_INFO,                  "Inform·cie"
+STID_NOT_IMPLEMENTED,       "NeimplementovanÈ"
+STID_HLPFILE_ERROR_s,       "Chyba poËas ËÌtania s˙boru `%s'"
+STID_CONTENTS,              "&Obsah"
+STID_SEARCH,                "&Hæadaù"
+STID_BACK,                  "&Sp‰ù"
+STID_HISTORY,               "&HistÛria"
+STID_TOPICS,		    "&Topics"
+STID_ALL_FILES,             "Vöetky s˙bory (*.*)"
+STID_HELP_FILES_HLP,        "S˙bory pomoci (*.hlp)"
+STID_FILE_NOT_FOUND_s       "Cannot find '%s'. Do you want to find this file yourself?"
+}

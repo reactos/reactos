@@ -1,0 +1,71 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
+{
+ POPUP "파일(&F)" {
+  MENUITEM "열기(&O)...", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "인쇄(&P)", MNID_FILE_PRINT
+  MENUITEM "프린터 설정(&S)...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "종료(&E)", MNID_FILE_EXIT
+ }
+ POPUP "편집(&E)" {
+   MENUITEM "복사(&C)...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "주석(&A)...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "책갈피(&B)" {
+   MENUITEM "정의(&D)...", MNID_BKMK_DEFINE
+ }
+ POPUP "도움말(&H)" {
+   MENUITEM "도움말 사용법(&O)", MNID_HELP_HELPON
+   MENUITEM "항상 위(&T)", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "정보(&I)...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "Wine에 관하여(&A)", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+
+STRINGTABLE DISCARDABLE LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
+{
+STID_WINE_HELP, 	"Wine 도움말"
+STID_WHERROR, 		"오류"
+STID_WARNING,  		"경고"
+STID_INFO,  		"정보"
+STID_NOT_IMPLEMENTED, 	"구현되지 않았음"
+STID_HLPFILE_ERROR_s, 	"도움말 파일 `%s'를 읽는 도중 오류 발생"
+STID_CONTENTS, 		"목차(&C)"
+STID_SEARCH, 		"찾기(&S)"
+STID_BACK, 		"뒤로(&B)"
+STID_HISTORY, 		"히스토리(&H)"
+STID_TOPICS,		"목차(&T)"
+STID_ALL_FILES, 	"모든 파일 (*.*)"
+STID_HELP_FILES_HLP, 	"도움말 파일 (*.hlp)"
+STID_FILE_NOT_FOUND_s	"%s을 찾을 수 없습니다'. 이 파일을 스스로 찾겠습니까?"
+}

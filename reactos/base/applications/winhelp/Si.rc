@@ -1,0 +1,69 @@
+/*
+ * Help Viewer (Slovenian Resources)
+ *
+ * Copyright 2002-2003 Rok Mandeljc <rok.mandeljc@gimb.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+{
+ POPUP "&Datoteka" {
+  MENUITEM "&Odpri ...", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "Na&tisni temo ...", MNID_FILE_PRINT
+  MENUITEM "&Priprava tiskalnika", MNID_FILE_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "Iz&hod", MNID_FILE_EXIT
+ }
+ POPUP "&Urejanje" {
+   MENUITEM "&Kopiraj", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Pripombe ...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Zaznamek" {
+   MENUITEM "&Doloèi ...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Pomoè" {
+   MENUITEM "&O pomoèi", MNID_HELP_HELPON
+   MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Informacije ...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&O WINE", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 		"WINE Pomoè"
+STID_WHERROR, 		"NAPAKA"
+STID_WARNING,  		"OPOZORILO"
+STID_INFO,  			"Informacija"
+STID_NOT_IMPLEMENTED, 	"Ni (še) na voljo"
+STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke `%s'"
+STID_CONTENTS, 		"&Teme pomoèi"
+STID_SEARCH, 		"&Iskanje"
+STID_BACK, 			"&Nazaj"
+STID_HISTORY, 		"&Zgodovina"
+STID_TOPICS,		"&Vsebina"
+STID_ALL_FILES, 		"Vse datiteke (*.*)"
+STID_HELP_FILES_HLP, 	"Datoteke s pomoèjo (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+}

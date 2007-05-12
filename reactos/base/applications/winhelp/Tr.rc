@@ -1,0 +1,69 @@
+/*
+ * Turkish Resources for Help Viewer
+ *
+ * Copyright 2006 Fatih Aþýcý <fasici@linux-sevenler.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+{
+ POPUP "&Dosya" {
+  MENUITEM "&Aç", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "Ya&zdýr", MNID_FILE_PRINT
+  MENUITEM "&Yazýcý ayarlarý...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "&Çýkýþ", MNID_FILE_EXIT
+ }
+ POPUP "Dü&zen" {
+   MENUITEM "K&opyala...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "Yer Ý&mleri" {
+   MENUITEM "&Tanýmla...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Yardým" {
+   MENUITEM "&Yardým Kullanýmý", MNID_HELP_HELPON
+   MENUITEM "&Her Zaman Üstte", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Bilgi...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "WINE &Hakkýnda", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"WINE Yardým"
+STID_WHERROR, 		"HATA"
+STID_WARNING,  		"UYARI"
+STID_INFO,  		"Bilgi"
+STID_NOT_IMPLEMENTED, 	"Henüz tamamlanmadý"
+STID_HLPFILE_ERROR_s, 	"'%s' yardým dosyasý açýlýrken hata"
+STID_CONTENTS, 		"&Ýçindekiler"
+STID_SEARCH, 		"&Ara"
+STID_BACK, 		"&Geri"
+STID_HISTORY, 		"Ge&çmiþ"
+STID_TOPICS,		"&Konular"
+STID_ALL_FILES, 	"Tüm dosyalar (*.*)"
+STID_HELP_FILES_HLP, 	"Yardým dosyalarý (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+}

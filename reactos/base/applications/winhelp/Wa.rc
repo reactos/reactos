@@ -1,0 +1,76 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 1999 Pablo Saratxaga
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifdef LANG_WALON
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_WALON, SUBLANG_DEFAULT
+{
+ POPUP "&Fitchî" {
+  MENUITEM "&Drovî...", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Rexhe", MNID_FILE_PRINT
+  MENUITEM "&Apontiaedje del scrirece...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "Moussî &Foû", MNID_FILE_EXIT
+ }
+ POPUP "&Candjî" {
+   MENUITEM "&Copyî...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Sicrîre...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Rimårkes" {
+   MENUITEM "&Defini...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Aide" {
+   MENUITEM "&Aide so l' Aide", MNID_HELP_HELPON
+   MENUITEM "Todi &Visibe", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Informåcion...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "Å &dfait di WINEE", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+
+STRINGTABLE DISCARDABLE LANGUAGE LANG_WALON, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"Aidance di WINE"
+STID_WHERROR, 		"AROKE"
+STID_WARNING,  		"ADVERTIXHMINT"
+STID_INFO,  		"Informåcion"
+STID_NOT_IMPLEMENTED, 	"Nén co possibe"
+STID_HLPFILE_ERROR_s, 	"Yåk n' a nén stî å moumint di lere li fitchî d' aide `%s'"
+STID_CONTENTS, 		"Å&dvins"
+STID_SEARCH, 		"C&werî"
+STID_BACK, 		"Èn &Erî"
+STID_HISTORY, 		"&Istwere"
+STID_TOPICS,		"&Topics"
+STID_ALL_FILES, 	"Tos les fitchîs (*.*)"
+STID_HELP_FILES_HLP, 	"Fitchîs d' aide (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+}
+
+#endif  /* LANG_WALON */

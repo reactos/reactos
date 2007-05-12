@@ -1,0 +1,76 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Rumantsch Ladin (Vallader) by mbaur@g26.ethz.ch
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* Menu */
+
+/*
+*  language : switzerland romanch
+*  not supported today
+*/
+MAIN_MENU MENU LANGUAGE LANG_, SUBLANG_DEFAULT
+{
+ POPUP "&Datoteca" {
+  MENUITEM "&Rivir", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Stampar tema", MNID_FILE_PRINT
+  MENUITEM "&Installaziun dal stampader...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "&Finir", MNID_FILE_EXIT
+ }
+ POPUP "&Lavurar" {
+   MENUITEM "Capchar", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Annotaziun...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Marca" {
+   MENUITEM "&Definir...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Agüd" {
+   MENUITEM "&Douvrar l'agüd", MNID_HELP_HELPON
+   MENUITEM "Adüna da&vant", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "I&nfuormaziuns", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "Davart &WINE", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+
+STRINGTABLE DISCARDABLE LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
+{
+WINE_HELP, 		"WINE agüd"
+WHERROR, 		"SBAGL"
+WARNING,  		"ATTENZIUN"
+INFO,  			"INFUORMAZIUN"
+NOT_IMPLEMENTED, 	"Na implementa"
+HLPFILE_ERROR_s, 	"Sbagl cun leger la datoteca d'agüd `%s'"
+CONTENTS, 		"&Cuntgnü"
+SEARCH, 		"&Tscherchar"
+BACK, 			"&Inavo"
+HISTORY, 		"&Fin qua"
+TOPICS,			"T&opics"
+ALL_FILES, 		"Tuot las datotecas (*.*)"
+HELP_FILES_HLP, 	"Datotecas d'agüd (*.hlp)"
+STID_FILE_NOT_FOUND_s   "Cannot find '%s'. Do you want to find this file yourself?"
+}
