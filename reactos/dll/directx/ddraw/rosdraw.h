@@ -25,6 +25,9 @@ HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable);
 HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
 HRESULT WINAPI ReCreateDirectDraw(LPDIRECTDRAW* iface);
 
+/* convert DDSURFACEDESC to DDSURFACEDESC2 */
+void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc);
+
 /* DirectDraw Cleanup code only internal use */
 VOID Cleanup(LPDIRECTDRAW7 iface);
 

@@ -10,6 +10,13 @@
 #include "rosdraw.h"
 
 
+void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc)
+{
+    RtlZeroMemory(dst_pDesc,sizeof(DDSURFACEDESC2));
+    RtlCopyMemory(dst_pDesc,src_pDesc,sizeof(DDSURFACEDESC));
+}
+
+
 HRESULT 
 CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This, 
               LPDDRAWI_DDRAWSURFACE_INT *That,

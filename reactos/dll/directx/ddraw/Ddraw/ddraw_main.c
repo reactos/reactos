@@ -149,11 +149,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
    if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
    {
-       
-       RtlZeroMemory(&dd_desc_v2,sizeof(DDSURFACEDESC2));
-       /* FIXME implement CopyDDSurfDescToDDSurfDesc2
-          CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2,pDDSD);
-       */
+       CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2,pDDSD);
    }
    else if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
    {
