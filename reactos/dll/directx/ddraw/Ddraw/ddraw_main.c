@@ -139,6 +139,12 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         return DDERR_GENERIC;
    }
 
+   if (pDDSD)
+   {
+        /* FIXME send back right return code */
+        return DDERR_GENERIC;
+   }
+
    EnterCriticalSection(&ddcs);
 
    ret = DDERR_GENERIC;

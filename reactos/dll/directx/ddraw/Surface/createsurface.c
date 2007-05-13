@@ -9,17 +9,27 @@
  */
 #include "rosdraw.h"
 
+/*
+ * all param have been checked if they are vaild before they are call to 
+ * Internal_CreateSurface, if not please fix the code in the functions 
+ * call to Internal_CreateSurface, ppSurf are being vaildate in 
+ * Internal_CreateSurface
+ */
+
 HRESULT 
 Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
                         LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
-    if (!pDDraw->lpLcl->dwLocalFlags & DDRAWILCL_DIRECTDRAW7)
+
+    /* 
+     * pDDSD->dwCaps can not contain both DDSCAPS_SYSTEMMEMORY and DDSCAPS_VIDEOMEMORY
+     * if both are define ddraw.dll will return error code 0x88760064
+     */
+    if ( (pDDSD->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY) && 
+         (pDDSD->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
     {
-        /* it is directdraw 1-6 so no DirectD3D support */
-    }
-    else
-    {
-        /* directdraw 7 support */
+        /* translate the error code I got back to a name */
+        return 0x88760064;
     }
 
     return DDERR_GENERIC;
