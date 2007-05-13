@@ -1799,193 +1799,60 @@ ByeBye:;
   return Status;
 }
 
-
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtSetValueKey(IN HANDLE KeyHandle,
-	      IN PUNICODE_STRING ValueName,
-	      IN ULONG TitleIndex,
-	      IN ULONG Type,
-	      IN PVOID Data,
-	      IN ULONG DataSize)
+              IN PUNICODE_STRING ValueName,
+              IN ULONG TitleIndex,
+              IN ULONG Type,
+              IN PVOID Data,
+              IN ULONG DataSize)
 {
-  NTSTATUS  Status;
-  PKEY_OBJECT  KeyObject;
-  PEREGISTRY_HIVE  RegistryHive;
-  PCM_KEY_NODE  KeyCell;
-  PCM_KEY_VALUE  ValueCell;
-  HCELL_INDEX ValueCellOffset;
-  PVOID DataCell;
-  ULONG DesiredAccess;
-  REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
-  REG_POST_OPERATION_INFORMATION PostOperationInfo;
-  ULONG DataCellSize;
+    NTSTATUS Status;
+    PKEY_OBJECT KeyObject;
+    REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       KEY_SET_VALUE,
+                                       CmpKeyObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID *)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return(Status);
 
-  DPRINT("NtSetValueKey(KeyHandle 0x%p  ValueName '%wZ'  Type %d)\n",
-	 KeyHandle, ValueName, Type);
+    /* Setup callback */
+    PostOperationInfo.Object = (PVOID)KeyObject;
+    SetValueKeyInfo.Object = (PVOID)KeyObject;
+    SetValueKeyInfo.ValueName = ValueName;
+    SetValueKeyInfo.TitleIndex = TitleIndex;
+    SetValueKeyInfo.Type = Type;
+    SetValueKeyInfo.Data = Data;
+    SetValueKeyInfo.DataSize = DataSize;
 
-  DesiredAccess = KEY_SET_VALUE;
-
-  /* Verify that the handle is valid and is a registry key */
-  Status = ObReferenceObjectByHandle(KeyHandle,
-				     DesiredAccess,
-				     CmpKeyObjectType,
-				     ExGetPreviousMode(),
-				     (PVOID *)&KeyObject,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  PostOperationInfo.Object = (PVOID)KeyObject;
-  SetValueKeyInfo.Object = (PVOID)KeyObject;
-  SetValueKeyInfo.ValueName = ValueName;
-  SetValueKeyInfo.TitleIndex = TitleIndex;
-  SetValueKeyInfo.Type = Type;
-  SetValueKeyInfo.Data = Data;
-  SetValueKeyInfo.DataSize = DataSize;
-  Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &SetValueKeyInfo);
-  if (!NT_SUCCESS(Status))
+    /* Do the callback */
+    Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &SetValueKeyInfo);
+    if (NT_SUCCESS(Status))
     {
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
-      ObDereferenceObject(KeyObject);
-      return Status;
+        /* Call the internal API */
+        Status = CmSetValueKey(KeyObject,
+                               ValueName,
+                               Type,
+                               Data,
+                               DataSize);
     }
 
-  /* Acquire hive lock exclucively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+    /* Do the post-callback and de-reference the key object */
+    PostOperationInfo.Status = Status;
+    CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
+    ObDereferenceObject(KeyObject);
 
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  /* Get pointer to key cell */
-  KeyCell = KeyObject->KeyCell;
-  RegistryHive = KeyObject->RegistryHive;
-  Status = CmiScanKeyForValue(RegistryHive,
-			      KeyCell,
-			      ValueName,
-			      &ValueCell,
-			      &ValueCellOffset);
-  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-      DPRINT("Allocate new value cell\n");
-      Status = CmiAddValueToKey(RegistryHive,
-				KeyCell,
-				KeyObject->KeyCellOffset,
-				ValueName,
-				&ValueCell,
-				&ValueCellOffset);
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Cannot add value. Status 0x%X\n", Status);
-
-      ExReleaseResourceLite(&CmpRegistryLock);
-      KeLeaveCriticalRegion();
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
-      ObDereferenceObject(KeyObject);
-      return Status;
-    }
-
-  DPRINT("DataSize %lu\n", DataSize);
-  DPRINT("ValueCell %p\n", ValueCell);
-  DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-
-  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-      (ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
-    {
-      DataCell = HvGetCell (&RegistryHive->Hive, ValueCell->DataOffset);
-      DataCellSize = -HvGetCellSize (&RegistryHive->Hive, DataCell);
-    }
-  else
-    {
-      DataCell = NULL;
-      DataCellSize = 0;
-    }
-
-
-  if (DataSize <= sizeof(HCELL_INDEX))
-    {
-      /* If data size <= sizeof(HCELL_INDEX) then store data in the data offset */
-      DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-      if (DataCell)
-	{
-	  HvFreeCell(&RegistryHive->Hive, ValueCell->DataOffset);
-	}
-
-      RtlCopyMemory(&ValueCell->DataOffset, Data, DataSize);
-      ValueCell->DataSize = DataSize | REG_DATA_IN_OFFSET;
-      ValueCell->DataType = Type;
-      HvMarkCellDirty(&RegistryHive->Hive, ValueCellOffset);
-    }
-  else 
-    {
-      if (DataSize > DataCellSize)
-        {
-         /*
-          * New data size is larger than the current, destroy current
-          * data block and allocate a new one.
-          */
-          HCELL_INDEX NewOffset;
-
-          DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
-
-          NewOffset = HvAllocateCell (&RegistryHive->Hive, DataSize, HvStable);
-          if (NewOffset == HCELL_NULL)
-	    {
-	      DPRINT("CmiAllocateBlock() failed (Status %lx)\n", Status);
-
-	      ExReleaseResourceLite(&CmpRegistryLock);
-	      KeLeaveCriticalRegion();
-              PostOperationInfo.Status = Status;
-              CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
-	      ObDereferenceObject(KeyObject);
-
-	      return Status;
-	    }
-
-          if (DataCell)
-	    {
-	      HvFreeCell(&RegistryHive->Hive, ValueCell->DataOffset);
-	    }
-
-          ValueCell->DataOffset = NewOffset;
-          DataCell = HvGetCell(&RegistryHive->Hive, NewOffset);
-        }
-
-      RtlCopyMemory(DataCell, Data, DataSize);
-      ValueCell->DataSize = DataSize & REG_DATA_SIZE_MASK;
-      ValueCell->DataType = Type;
-      HvMarkCellDirty(&RegistryHive->Hive, ValueCell->DataOffset);
-      HvMarkCellDirty(&RegistryHive->Hive, ValueCellOffset);
-    }
-
-  /* Mark link key */
-  if ((Type == REG_LINK) &&
-      (_wcsicmp(ValueName->Buffer, L"SymbolicLinkValue") == 0))
-    {
-      KeyCell->Flags |= REG_KEY_LINK_CELL;
-    }
-
-  KeQuerySystemTime (&KeyCell->LastWriteTime);
-  HvMarkCellDirty (&RegistryHive->Hive, KeyObject->KeyCellOffset);
-
-  ExReleaseResourceLite(&CmpRegistryLock);
-  KeLeaveCriticalRegion();
-  PostOperationInfo.Status = Status;
-  CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
-  ObDereferenceObject(KeyObject);
-
-  CmiSyncHives();
-
-  DPRINT("Return Status 0x%X\n", Status);
-
-  return Status;
+    /* Synchronize the hives and return */
+    CmiSyncHives();
+    return Status;
 }
-
 
 NTSTATUS STDCALL
 NtDeleteValueKey (IN HANDLE KeyHandle,

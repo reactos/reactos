@@ -59,22 +59,6 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     return Status;
 }
 
-
-NTSTATUS
-CmiRemoveRegistaryHive(PEREGISTRY_HIVE RegistryHive)
-{
-  /* Remove hive from hive list */
-  RemoveEntryList (&RegistryHive->HiveList);
-
-  /* Release file names */
-  RtlFreeUnicodeString (&RegistryHive->HiveFileName);
-
-  /* Release hive */
-  HvFree (&RegistryHive->Hive);
-
-  return STATUS_SUCCESS;
-}
-
 VOID
 CmCloseHiveFiles(PEREGISTRY_HIVE RegistryHive)
 {
@@ -680,93 +664,6 @@ CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
   return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-CmiAddValueToKey(IN PEREGISTRY_HIVE RegistryHive,
-		 IN PCM_KEY_NODE KeyCell,
-		 IN HCELL_INDEX KeyCellOffset,
-		 IN PUNICODE_STRING ValueName,
-		 OUT PCM_KEY_VALUE *pValueCell,
-		 OUT HCELL_INDEX *pValueCellOffset)
-{
-  PVALUE_LIST_CELL ValueListCell;
-  PCM_KEY_VALUE NewValueCell;
-  HCELL_INDEX ValueListCellOffset;
-  HCELL_INDEX NewValueCellOffset;
-  ULONG CellSize;
-  HV_STORAGE_TYPE Storage;
-  NTSTATUS Status;
-
-  DPRINT("KeyCell->ValuesOffset %lu\n", (ULONG)KeyCell->ValueList.List);
-
-  Storage = (KeyCell->Flags & REG_KEY_VOLATILE_CELL) ? HvVolatile : HvStable;
-  if (KeyCell->ValueList.List == HCELL_NULL)
-    {
-      CellSize = sizeof(VALUE_LIST_CELL) +
-		 (3 * sizeof(HCELL_INDEX));
-      ValueListCellOffset = HvAllocateCell (&RegistryHive->Hive, CellSize, Storage);
-      if (ValueListCellOffset == HCELL_NULL)
-	{
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-      ValueListCell = HvGetCell (&RegistryHive->Hive, ValueListCellOffset);
-      KeyCell->ValueList.List = ValueListCellOffset;
-      HvMarkCellDirty(&RegistryHive->Hive, KeyCellOffset);
-    }
-  else
-    {
-      ValueListCell = (PVALUE_LIST_CELL) HvGetCell (&RegistryHive->Hive, KeyCell->ValueList.List);
-      CellSize = ABS_VALUE(HvGetCellSize(&RegistryHive->Hive, ValueListCell));
-
-      if (KeyCell->ValueList.Count >=
-	   (CellSize / sizeof(HCELL_INDEX)))
-        {
-          CellSize *= 2;
-          ValueListCellOffset = HvReallocateCell (&RegistryHive->Hive, KeyCell->ValueList.List, CellSize);
-          if (ValueListCellOffset == HCELL_NULL)
-            {
-              return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-          ValueListCell = HvGetCell (&RegistryHive->Hive, ValueListCellOffset);
-          KeyCell->ValueList.List = ValueListCellOffset;
-          HvMarkCellDirty (&RegistryHive->Hive, KeyCellOffset);
-        }
-    }
-
-#if 0
-  DPRINT("KeyCell->ValueList.Count %lu, ValueListCell->Size %lu (%lu %lx)\n",
-	 KeyCell->ValueList.Count,
-	 (ULONG)ABS_VALUE(ValueListCell->Size),
-	 ((ULONG)ABS_VALUE(ValueListCell->Size) - sizeof(HCELL)) / sizeof(HCELL_INDEX),
-	 ((ULONG)ABS_VALUE(ValueListCell->Size) - sizeof(HCELL)) / sizeof(HCELL_INDEX));
-#endif
-
-  Status = CmiAllocateValueCell(RegistryHive,
-				&NewValueCell,
-				&NewValueCellOffset,
-				ValueName,
-				Storage);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-  ValueListCell->ValueOffset[KeyCell->ValueList.Count] = NewValueCellOffset;
-  KeyCell->ValueList.Count++;
-
-  HvMarkCellDirty(&RegistryHive->Hive, KeyCellOffset);
-  HvMarkCellDirty(&RegistryHive->Hive, KeyCell->ValueList.List);
-  HvMarkCellDirty(&RegistryHive->Hive, NewValueCellOffset);
-
-  *pValueCell = NewValueCell;
-  *pValueCellOffset = NewValueCellOffset;
-
-  return STATUS_SUCCESS;
-}
-
-
 NTSTATUS
 CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
 		      IN PCM_KEY_NODE KeyCell,
@@ -933,63 +830,6 @@ CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
 
   return STATUS_UNSUCCESSFUL;
 }
-
-
-NTSTATUS
-CmiAllocateValueCell(PEREGISTRY_HIVE RegistryHive,
-		     PCM_KEY_VALUE *ValueCell,
-		     HCELL_INDEX *VBOffset,
-		     IN PUNICODE_STRING ValueName,
-		     IN HV_STORAGE_TYPE Storage)
-{
-  PCM_KEY_VALUE NewValueCell;
-  NTSTATUS Status;
-  BOOLEAN Packable;
-  ULONG NameSize;
-  ULONG i;
-
-  Status = STATUS_SUCCESS;
-
-  NameSize = CmiGetPackedNameLength(ValueName,
-				    &Packable);
-
-  DPRINT("ValueName->Length %lu  NameSize %lu\n", ValueName->Length, NameSize);
-
-  *VBOffset = HvAllocateCell (&RegistryHive->Hive, sizeof(CM_KEY_VALUE) + NameSize, Storage);
-  if (*VBOffset == HCELL_NULL)
-    {
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-  else
-    {
-      ASSERT(NameSize <= 0xffff); /* should really be USHORT_MAX or similar */
-      NewValueCell = HvGetCell (&RegistryHive->Hive, *VBOffset);
-      NewValueCell->Id = REG_VALUE_CELL_ID;
-      NewValueCell->NameSize = (USHORT)NameSize;
-      if (Packable)
-	{
-	  /* Pack the value name */
-	  for (i = 0; i < NameSize; i++)
-	    NewValueCell->Name[i] = (CHAR)ValueName->Buffer[i];
-	  NewValueCell->Flags |= REG_VALUE_NAME_PACKED;
-	}
-      else
-	{
-	  /* Copy the value name */
-	  RtlCopyMemory(NewValueCell->Name,
-			ValueName->Buffer,
-			NameSize);
-	  NewValueCell->Flags = 0;
-	}
-      NewValueCell->DataType = 0;
-      NewValueCell->DataSize = 0;
-      NewValueCell->DataOffset = (HCELL_INDEX)-1;
-      *ValueCell = NewValueCell;
-    }
-
-  return Status;
-}
-
 
 NTSTATUS
 CmiDestroyValueCell(PEREGISTRY_HIVE RegistryHive,

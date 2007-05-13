@@ -261,14 +261,6 @@ CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
 			  OUT PCM_KEY_VALUE *ValueCell);
 
 NTSTATUS
-CmiAddValueToKey(IN PEREGISTRY_HIVE RegistryHive,
-		 IN PCM_KEY_NODE KeyCell,
-		 IN HCELL_INDEX KeyCellOffset,
-		 IN PUNICODE_STRING ValueName,
-		 OUT PCM_KEY_VALUE *pValueCell,
-		 OUT HCELL_INDEX *pValueCellOffset);
-
-NTSTATUS
 CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
 		      IN PCM_KEY_NODE KeyCell,
 		      IN HCELL_INDEX KeyCellOffset,
@@ -295,16 +287,17 @@ CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
 		     HCELL_INDEX NKBOffset);
 
 NTSTATUS
+NTAPI
+CmSetValueKey(IN PKEY_OBJECT KeyObject,
+              IN PUNICODE_STRING ValueName,
+              IN ULONG Type,
+              IN PVOID Data,
+              IN ULONG DataSize);
+
+NTSTATUS
 CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
 			  PHASH_TABLE_CELL HashBlock,
 			  HCELL_INDEX NKBOffset);
-
-NTSTATUS
-CmiAllocateValueCell(IN PEREGISTRY_HIVE RegistryHive,
-		     OUT PCM_KEY_VALUE *ValueCell,
-		     OUT HCELL_INDEX *VBOffset,
-		     IN PUNICODE_STRING ValueName,
-		     IN HV_STORAGE_TYPE Storage);
 
 NTSTATUS
 CmiDestroyValueCell(PEREGISTRY_HIVE RegistryHive,

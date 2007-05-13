@@ -56,7 +56,7 @@ CmpFreeValueData(IN PHHIVE Hive,
         if (DataCell == HCELL_NIL) return TRUE;
 
         /* Make sure the data cell is allocated */
-        ASSERT(HvIsCellAllocated(Hive, DataCell));
+        //ASSERT(HvIsCellAllocated(Hive, DataCell));
 
         /* Unsupported value type */
         ASSERT_VALUE_BIG(Hive, KeySize);

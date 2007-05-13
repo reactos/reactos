@@ -82,17 +82,16 @@ HvpGetCellFullSize(
 }
 
 LONG CMAPI
-HvGetCellSize(
-   PHHIVE RegistryHive,
-   PVOID Cell)
+HvGetCellSize(IN PHHIVE Hive,
+              IN PVOID Address)
 {
-   PHCELL CellHeader;
+    PHCELL CellHeader;
+    LONG Size;
 
-   CellHeader = (PHCELL)Cell - 1;
-   if (CellHeader->Size < 0)
-      return CellHeader->Size + sizeof(HCELL);
-   else
-      return CellHeader->Size - sizeof(HCELL);
+    CellHeader = (PHCELL)Address - 1;
+    Size = CellHeader->Size * -1;
+    Size -= sizeof(HCELL);
+    return Size;
 }
 
 VOID CMAPI
@@ -375,8 +374,8 @@ HvReallocateCell(
 
    OldCell = HvGetCell(RegistryHive, CellIndex);
    OldCellSize = HvGetCellSize(RegistryHive, OldCell);
-   ASSERT(OldCellSize < 0);
-  
+   ASSERT(OldCellSize > 0);
+
    /*
     * If new data size is larger than the current, destroy current
     * data block and allocate a new one.
@@ -384,14 +383,14 @@ HvReallocateCell(
     * FIXME: Merge with adjacent free cell if possible.
     * FIXME: Implement shrinking.
     */
-   if (Size > (ULONG)-OldCellSize)
+   if (Size > OldCellSize)
    {
       NewCellIndex = HvAllocateCell(RegistryHive, Size, Storage);
       if (NewCellIndex == HCELL_NULL)
          return HCELL_NULL;
 
       NewCell = HvGetCell(RegistryHive, NewCellIndex);
-      RtlCopyMemory(NewCell, OldCell, (SIZE_T)-OldCellSize);
+      RtlCopyMemory(NewCell, OldCell, (SIZE_T)OldCellSize);
       
       HvFreeCell(RegistryHive, CellIndex);
 

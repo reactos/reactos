@@ -89,6 +89,7 @@
                     <file>cmhardwr.c</file>
                 </directory>
             </if>
+            <file>cmapi.c</file>
             <file>cmboot.c</file>
             <file>cmcheck.c</file>
             <file>cmcontrl.c</file>

@@ -1049,6 +1049,21 @@ CmpFreeValue(
     IN HCELL_INDEX Cell
 );
 
+BOOLEAN
+NTAPI
+CmpMarkValueDataDirty(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValueData(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX DataCell,
+    IN ULONG DataLength
+);
+
 //
 // Boot Routines
 //
