@@ -34,11 +34,19 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     /* check if pDDSD.dwFlags DDSD_LPSURFACE is set or not */
     if (pDDSD->dwFlags & DDSD_LPSURFACE)
     {
+
+        if (pDDSD->ddsCaps.dwCaps & ( DDSCAPS_COMPLEX | DDSCAPS_RESERVED2 | DDSCAPS_RESERVED3 |
+                                       DDSCAPS_VIDEOPORT | DDSCAPS_PRIMARYSURFACE | DDSCAPS_OVERLAY ))
+        {
+            return DDERR_INVALIDCAPS;
+        }
+
         /*
          *  DDSD_LPSURFACE flag is set now we start vaildate see if
          *  pDDSD->lpSurface are a pointer or not 
          */
-        if (IsBadReadPtr(pDDSD->lpSurface,sizeof(LPVOID)))
+        if (IsBadReadPtr(pDDSD->lpSurface,sizeof(LPVOID)) ||
+            (pDDSD->dwFlags - (pDDSD->dwFlags & DDSD_ALL)))
         {
             return DDERR_INVALIDPARAMS;
         }
