@@ -19,7 +19,7 @@
 		printf("Test failed in %s:%d (%s)\n", __FILE__, __LINE__, #x);\
 	};
 
-#define GDI_HANDLE_INDEX_MASK 0x00003fff // (GDI_HANDLE_COUNT - 1)
+#define GDI_HANDLE_INDEX_MASK 0x0000ffff // (GDI_HANDLE_COUNT - 1)
 #define GDI_HANDLE_TYPE_MASK  0x007f0000
 #define GDI_HANDLE_STOCK_MASK 0x00800000
 #define GDI_HANDLE_REUSE_MASK 0xff000000
