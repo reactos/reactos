@@ -1043,8 +1043,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
             /* Remove trailing newline */
             while ((CsdString.Length > 0) &&
-                   ((CsdString.Buffer[CsdString.Length] == '\r') ||
-                    (CsdString.Buffer[CsdString.Length] == '\n')))
+                   ((CsdString.Buffer[CsdString.Length - 1] == '\r') ||
+                    (CsdString.Buffer[CsdString.Length - 1] == '\n')))
             {
                 /* Skip the trailing character */
                 CsdString.Length--;
@@ -1466,8 +1466,8 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Make sure to remove the \r\n if we actually have a string */
     while ((TempString.Length > 0) &&
-           ((TempString.Buffer[TempString.Length] == '\r') ||
-            (TempString.Buffer[TempString.Length] == '\n')))
+           ((TempString.Buffer[TempString.Length - 1] == '\r') ||
+            (TempString.Buffer[TempString.Length - 1] == '\n')))
     {
         /* Skip the trailing character */
         TempString.Length--;
