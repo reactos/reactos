@@ -505,11 +505,11 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	    memcpy(&symbol, SymbolSection + (ELF32_R_SYM(reloc.r_info) * sizeof(symbol)), sizeof(symbol));
 
 	    /* Compute addends */
-	    S = symbol.st_value + KernelAddr;
+	    S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr + KernelAddr;
 	    A = reloc.r_addend;
 	    P = reloc.r_offset + ELF_SECTION(targetSection)->sh_addr;
 	    
-	    Target32 = (ULONG*)((PCHAR)KernelMemory) + P;
+	    Target32 = (ULONG*)(((PCHAR)KernelMemory) + P);
 	    Target16 = (USHORT *)Target32;
 	    x = *Target32;
 	    
@@ -539,14 +539,19 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 		*Target16 = (S + A + 0x8000) >> 16;
 		break;
 	    default:
-		printf("reloc[%d]: (type %x sym %d val %d) off %x add %x\n", 
-		       j,
-		       ELF32_R_TYPE(reloc.r_info),
-		       ELF32_R_SYM(reloc.r_info), 
-		       symbol.st_value,
-		       reloc.r_offset, reloc.r_addend);	    
 		break;
 	    }
+	    
+#if 0
+	    printf("reloc[%d:%x]: (type %x sym %d val %d) off %x add %x (old %x new %x)\n", 
+		   j,
+		   ((ULONG)Target32) - ((ULONG)KernelMemory),
+		   ELF32_R_TYPE(reloc.r_info),
+		   ELF32_R_SYM(reloc.r_info), 
+		   symbol.st_value,
+		   reloc.r_offset, reloc.r_addend,
+		   x, *Target32);	    
+#endif
 	}
 
 	MmFreeMemory(SymbolSection);
