@@ -42,6 +42,8 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 	TEST ( DirectDraw->SetDisplayMode (800, 600, 0, 0, 0) == DD_OK ); 
 	TEST ( DirectDraw->SetDisplayMode (0, 0, 16, 0, 0) == DD_OK );
 
+	// does this change the display mode to DDSCL_EXCLUSIVE ?
+
 	// Now try getting vaild modes from driver
 	TEST (DirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES, NULL, (PVOID)&Context, NULL) == DDERR_INVALIDPARAMS);
 	TEST (DirectDraw->EnumDisplayModes(0, NULL, (PVOID)&Context, (LPDDENUMMODESCALLBACK2)DummyEnumDisplayModes) == DD_OK );

@@ -7,13 +7,15 @@
 /* include the tests */
 #include "tests/CreateDDraw.cpp"
 #include "tests/DisplayModes.cpp"
+#include "tests/CreateSurface.cpp"
 
 /* The List of tests */
 TEST TestList[] =
 {
 	{ "DirectDrawCreate(Ex)", Test_CreateDDraw },
 	{ "IDirectDraw::SetCooperativeLevel", Test_SetCooperativeLevel },
-	// { "IDirectDraw::EnumDisplayModes/SetDisplayMode", Test_DisplayModes } // uncomment this test if you have enough time and patience
+	// { "IDirectDraw::EnumDisplayModes/SetDisplayMode", Test_DisplayModes }, // uncomment this test if you have enough time and patience
+	{ "IDirectDraw::CreateSurface", Test_CreateSurface }
 };
 
 /* The function that gives us the number of tests */
