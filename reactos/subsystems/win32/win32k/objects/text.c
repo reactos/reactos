@@ -3923,15 +3923,22 @@ GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
     {
       Score += 25;
     }
-  if (LogFont->lfWeight < Otm->otmTextMetrics.tmWeight)
+  if (LogFont->lfWeight != FW_DONTCARE)
+  {
+    if (LogFont->lfWeight < Otm->otmTextMetrics.tmWeight)
     {
       WeightDiff = Otm->otmTextMetrics.tmWeight - LogFont->lfWeight;
     }
-  else
+    else
     {
       WeightDiff = LogFont->lfWeight - Otm->otmTextMetrics.tmWeight;
     }
-  Score += (1000 - WeightDiff) / (1000 / 25);
+    Score += (1000 - WeightDiff) / (1000 / 25);
+  }
+  else
+  {
+    Score += 25;
+  }
 
   ExFreePool(Otm);
 
