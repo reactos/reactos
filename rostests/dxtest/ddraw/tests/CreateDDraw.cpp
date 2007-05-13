@@ -4,8 +4,8 @@ HWND CreateBasicWindow (VOID);
 
 BOOL Test_CreateDDraw (INT* passed, INT* failed)
 {
-	LPDIRECTDRAW7 DirectDraw;
-	IDirectDraw* DirectDraw2;
+	LPDIRECTDRAW7 DirectDraw = NULL;
+	IDirectDraw* DirectDraw2 = NULL;
 
 	/*** FIXME: Test first parameter using EnumDisplayDrivers  ***/
 
@@ -13,16 +13,19 @@ BOOL Test_CreateDDraw (INT* passed, INT* failed)
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw4, NULL) == DDERR_INVALIDPARAMS);
 	TEST (DirectDrawCreateEx(NULL, NULL, IID_IDirectDraw7, NULL) == DDERR_INVALIDPARAMS); 
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) == DD_OK);
+	TEST (DirectDraw && DirectDraw->Release());
 	TEST (DirectDrawCreate(NULL ,&DirectDraw2, NULL) == DD_OK);
+	TEST (DirectDraw2 && DirectDraw2->Release());
+
 
 	return TRUE;
 }
 
 BOOL Test_SetCooperativeLevel (INT* passed, INT* failed)
 {
-	HWND hwnd; 
+	HWND hwnd;
 	LPDIRECTDRAW7 DirectDraw;
-	
+
 	/* Preparations */
 	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
 	{
@@ -36,9 +39,10 @@ BOOL Test_SetCooperativeLevel (INT* passed, INT* failed)
 		DirectDraw->Release();
 		return FALSE;
 	}
-	
+
 	/* The Test */
 	TEST ( DirectDraw->SetCooperativeLevel (NULL, DDSCL_FULLSCREEN) == DDERR_INVALIDPARAMS );
+	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN) == DDERR_INVALIDPARAMS );
 	TEST ( DirectDraw->SetCooperativeLevel (NULL, DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE) == DDERR_INVALIDPARAMS );
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN) == DDERR_INVALIDPARAMS);
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_NORMAL | DDSCL_ALLOWMODEX) == DDERR_INVALIDPARAMS );
@@ -54,27 +58,27 @@ BOOL Test_SetCooperativeLevel (INT* passed, INT* failed)
 	return TRUE;
 }
 
-LONG WINAPI BasicWindowProc (HWND hwnd, UINT message, UINT wParam, LONG lParam) 
-{ 
+LONG WINAPI BasicWindowProc (HWND hwnd, UINT message, UINT wParam, LONG lParam)
+{
 	switch (message)
 	{
 		case WM_DESTROY:
 		{
-			PostQuitMessage (0); 
+			PostQuitMessage (0);
 			return 0;
 		} break;
 	}
 
 	return DefWindowProc (hwnd, message, wParam, lParam);
-} 
+}
 
 HWND CreateBasicWindow (VOID)
 {
 	WNDCLASS wndclass = {0};
 	wndclass.lpfnWndProc   = BasicWindowProc;
 	wndclass.hInstance     = GetModuleHandle(NULL);
-	wndclass.lpszClassName = "DDrawTest"; 
-	RegisterClass(&wndclass);    
+	wndclass.lpszClassName = "DDrawTest";
+	RegisterClass(&wndclass);
 
 	return CreateWindow("DDrawTest", "ReactOS DirectDraw Test", WS_POPUP, 0, 0, 10, 10, NULL, NULL, GetModuleHandle(NULL), NULL);
 }

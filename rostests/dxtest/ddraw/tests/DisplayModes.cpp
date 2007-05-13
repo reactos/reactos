@@ -22,7 +22,7 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 {
 	/*** FIXME: Also test with surface as parameter; try busy/locked surface as well ***/
 	LPDIRECTDRAW7 DirectDraw;
-	
+
 	/* Preparations */
 	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
 	{
@@ -34,12 +34,12 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 
 	/* The Test */
 
-	// First try with some generic display modes 
+	// First try with some generic display modes
 	TEST ( DirectDraw->SetDisplayMode (1586, 895, 0, 0, 0) == DDERR_UNSUPPORTED );
 	TEST ( DirectDraw->SetDisplayMode (0, 0, 0, 0, 0x123) == DDERR_INVALIDPARAMS );
 
 	TEST ( DirectDraw->SetDisplayMode (0, 0, 0, 0, 0) == DD_OK );
-	TEST ( DirectDraw->SetDisplayMode (800, 600, 0, 0, 0) == DD_OK ); 
+	TEST ( DirectDraw->SetDisplayMode (800, 600, 0, 0, 0) == DD_OK );
 	TEST ( DirectDraw->SetDisplayMode (0, 0, 16, 0, 0) == DD_OK );
 
 	// does this change the display mode to DDSCL_EXCLUSIVE ?
@@ -52,6 +52,34 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 	TEST (DirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES|DDEDM_REFRESHRATES, NULL, (PVOID)&Context, (LPDDENUMMODESCALLBACK2)EnumDisplayModes) == DD_OK);
 
 	DirectDraw->Release();
+
+	return TRUE;
+}
+
+BOOL Test_GetMonitorFrequency (INT* passed, INT* failed)
+{
+	HWND hwnd;
+	DWORD lpdwFrequency; 
+	LPDIRECTDRAW7 DirectDraw;
+
+	/* Preparations */
+	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
+	{
+		printf("ERROR: Failed to set up ddraw\n");
+		return FALSE;
+	}
+
+	if(!( hwnd = CreateBasicWindow() ))
+	{
+		printf("ERROR: Failed to create window\n");
+		DirectDraw->Release();
+		return FALSE;
+	}
+
+	/* The Test */
+	TEST ( DirectDraw->GetMonitorFrequency (NULL) == DDERR_INVALIDPARAMS );
+	TEST ( DirectDraw->GetMonitorFrequency (&lpdwFrequency) == DD_OK );
+	TEST ( lpdwFrequency != 0 );
 
 	return TRUE;
 }

@@ -15,7 +15,8 @@ TEST TestList[] =
 	{ "DirectDrawCreate(Ex)", Test_CreateDDraw },
 	{ "IDirectDraw::SetCooperativeLevel", Test_SetCooperativeLevel },
 	// { "IDirectDraw::EnumDisplayModes/SetDisplayMode", Test_DisplayModes }, // uncomment this test if you have enough time and patience
-	{ "IDirectDraw::CreateSurface", Test_CreateSurface }
+	{ "IDirectDraw::CreateSurface", Test_CreateSurface },
+	{ "IDirectDraw::GetMonitorFrequency", Test_GetMonitorFrequency },
 };
 
 /* The function that gives us the number of tests */

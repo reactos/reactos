@@ -4,7 +4,7 @@ HWND CreateBasicWindow (VOID);
 BOOL Test_CreateSurface (INT* passed, INT* failed)
 {
 	LPDIRECTDRAW7 DirectDraw;
-	LPDIRECTDRAWSURFACE7 DirectDrawSurface;
+	LPDIRECTDRAWSURFACE7 DirectDrawSurface = NULL;
 	HWND hwnd;
 
 	/* Preparations */
@@ -39,6 +39,16 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 
 	Desc.dwSize = sizeof (DDSURFACEDESC2);
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS );
+
+	Desc.dwFlags = DDSD_CAPS;
+	Desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+
+	DirectDrawSurface = NULL;
+	Desc.ddsCaps.dwCaps = DDSCAPS_BACKBUFFER;
+	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
 
 	DirectDraw->Release();
 

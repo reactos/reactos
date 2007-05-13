@@ -5,7 +5,7 @@ PCHAR DDErrorString (HRESULT hResult)
 {
 	switch (hResult)
 	{
-		case DD_OK:								 return "DD_OK";
+		case DD_OK:                              return "DD_OK";
 		case DDERR_ALREADYINITIALIZED:           return "DDERR_ALREADYINITIALIZED";
 		case DDERR_CANNOTATTACHSURFACE:          return "DDERR_CANNOTATTACHSURFACE";
 		case DDERR_CANNOTDETACHSURFACE:          return "DDERR_CANNOTDETACHSURFACE";
