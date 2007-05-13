@@ -9,7 +9,8 @@
 /* The List of tests */
 TEST TestList[] =
 {
-	{ "CreateDDraw", Test_CreateDDraw }
+	{ "DirectDrawCreate(Ex)", Test_CreateDDraw },
+	{ "IDirectDraw::SetCooperativeLevel", Test_SetCooperativeLevel }
 };
 
 /* The function that gives us the number of tests */
