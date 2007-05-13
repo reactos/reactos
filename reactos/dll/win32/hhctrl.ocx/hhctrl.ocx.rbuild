@@ -8,6 +8,7 @@
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
+	<dependency>wineheaders</dependency>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>kernel32</library>
@@ -27,7 +28,6 @@
 	<file>hhctrl.c</file>
 	<file>regsvr.c</file>
 	<file>webbrowser.c</file>
-	<file>itss.idl</file>
 	<file>hhctrl.rc</file>
 	<file>hhctrl.ocx.spec</file>
 </module>
