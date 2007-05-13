@@ -1040,7 +1040,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         {
             /* Setup the string */
             RtlInitAnsiString(&CsdString, MsgEntry->Text);
-            CsdString.Length -= sizeof(UNICODE_NULL);
+            CsdString.Length -= 2;
             Status = RtlStringCbPrintfA(Buffer,
                                         sizeof(Buffer),
                                         "%Z %u%c",
@@ -1455,7 +1455,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     RtlInitAnsiString(&TempString, MpString);
 
     /* Make sure to remove the \r\n if we actually have a string */
-    if (TempString.Length >= 2) TempString.Length -= sizeof(UNICODE_NULL);
+    if (TempString.Length >= 2) TempString.Length -= sizeof(2);
 
     /* Get the information string from our resource file */
     MsgStatus = RtlFindMessage(NtosEntry->DllBase,
