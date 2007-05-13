@@ -12,7 +12,7 @@
 /*
  * all param have been checked if they are vaild before they are call to 
  * Internal_CreateSurface, if not please fix the code in the functions 
- * call to Internal_CreateSurface, ppSurf are being vaildate in 
+ * call to Internal_CreateSurface, ppSurf,pDDSD,pDDraw  are being vaildate in 
  * Internal_CreateSurface
  */
 
@@ -20,47 +20,69 @@ HRESULT
 Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
                         LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
+    DDSURFACEDESC2 desc;
+
+    /* Test se if the pointers are vaild */
+    if ((IsBadReadPtr(pDDraw,sizeof(LPDDRAWI_DIRECTDRAW_INT))) ||
+       (IsBadReadPtr(pDDSD,sizeof(LPDDSURFACEDESC2))) ||
+       (IsBadWritePtr(ppSurf,sizeof(LPDIRECTDRAWSURFACE7))) ||
+       (IsBadReadPtr(ppSurf,sizeof(LPDIRECTDRAWSURFACE7))))
+    {
+        return DDERR_INVALIDPARAMS;
+    }
+
+    /* make local backup of DDSURFACEDESC2 */
+    RtlCopyMemory(&desc, pDDSD, sizeof(DDSURFACEDESC2));
 
     /* 
      * pDDSD->dwCaps can not contain both DDSCAPS_SYSTEMMEMORY and DDSCAPS_VIDEOMEMORY
      * if both are define ddraw.dll will return error code 0x88760064
      */
-    if ( (pDDSD->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY) && 
-         (pDDSD->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    if ( (desc.ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY) && 
+         (desc.ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
     {
         return DDERR_INVALIDCAPS;
     }
 
     /* check if pDDSD.dwFlags DDSD_LPSURFACE is set or not */
-    if (pDDSD->dwFlags & DDSD_LPSURFACE)
+    if (desc.dwFlags & DDSD_LPSURFACE)
     {
-
-        if (pDDSD->ddsCaps.dwCaps & ( DDSCAPS_COMPLEX | DDSCAPS_RESERVED2 | DDSCAPS_RESERVED3 |
-                                       DDSCAPS_VIDEOPORT | DDSCAPS_PRIMARYSURFACE | DDSCAPS_OVERLAY ))
-        {
-            return DDERR_INVALIDCAPS;
-        }
-
         /*
          *  DDSD_LPSURFACE flag is set now we start vaildate see if
          *  pDDSD->lpSurface are a pointer or not 
          */
-        if (IsBadReadPtr(pDDSD->lpSurface,sizeof(LPVOID)) ||
-            (pDDSD->dwFlags - (pDDSD->dwFlags & DDSD_ALL)))
+        if (IsBadReadPtr(desc.lpSurface,sizeof(LPVOID)) ||
+            (desc.dwFlags - (desc.dwFlags & DDSD_ALL)))
         {
             return DDERR_INVALIDPARAMS;
+        }
+
+        /* only support dx7 interface for DDSD_LPSURFACE older interface do not support it */
+        if (pDDraw->lpVtbl != &DirectDraw7_Vtable)
+        {
+            return DDERR_INVALIDPARAMS;
+        }
+
+        /* vaildate the caps */
+        if (desc.ddsCaps.dwCaps & ( DDSCAPS_COMPLEX | DDSCAPS_RESERVED2 | DDSCAPS_RESERVED3 |
+                                       DDSCAPS_VIDEOPORT | DDSCAPS_PRIMARYSURFACE | DDSCAPS_OVERLAY ))
+        {
+            return DDERR_INVALIDCAPS;
         }
 
         /* more code will follow */
     }
     else
     {
-        /*
-         *  DDSD_LPSURFACE flag is not set we do not handler this case yet
-         */
+       /*
+        *  DDSD_LPSURFACE flag are not set
+        *  remove all wrong flags are being set
+        */
 
-        /* more code will follow */
+        desc.dwFlags = desc.dwFlags & DDSD_ALL;
     }
+
+
 
     return DDERR_GENERIC;
 }

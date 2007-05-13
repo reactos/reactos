@@ -18,6 +18,7 @@ extern DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
 extern WCHAR classname[128];
 extern WNDCLASSW wnd_class;
 extern CRITICAL_SECTION ddcs;
+extern IDirectDraw7Vtbl DirectDraw7_Vtable;
 
 HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface, LPGUID pGUID, BOOL reenable);
 HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable);
