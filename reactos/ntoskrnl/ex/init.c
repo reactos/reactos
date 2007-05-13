@@ -1040,7 +1040,17 @@ ExpInitializeExecutive(IN ULONG Cpu,
         {
             /* Setup the string */
             RtlInitAnsiString(&CsdString, MsgEntry->Text);
-            CsdString.Length -= 2;
+
+            /* Remove trailing newline */
+            while ((CsdString.Length > 0) &&
+                   ((CsdString.Buffer[CsdString.Length] == '\r') ||
+                    (CsdString.Buffer[CsdString.Length] == '\n')))
+            {
+                /* Skip the trailing character */
+                CsdString.Length--;
+            }
+
+            /* Fill the buffer with version information */
             Status = RtlStringCbPrintfA(Buffer,
                                         sizeof(Buffer),
                                         "%Z %u%c",
@@ -1455,7 +1465,13 @@ Phase1InitializationDiscard(IN PVOID Context)
     RtlInitAnsiString(&TempString, MpString);
 
     /* Make sure to remove the \r\n if we actually have a string */
-    if (TempString.Length >= 2) TempString.Length -= sizeof(2);
+    while ((TempString.Length > 0) &&
+           ((TempString.Buffer[TempString.Length] == '\r') ||
+            (TempString.Buffer[TempString.Length] == '\n')))
+    {
+        /* Skip the trailing character */
+        TempString.Length--;
+    }
 
     /* Get the information string from our resource file */
     MsgStatus = RtlFindMessage(NtosEntry->DllBase,
