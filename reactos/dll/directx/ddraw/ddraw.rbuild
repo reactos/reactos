@@ -34,7 +34,7 @@
 		<file>callbacks_surf_hel.c</file>
  		<file>createsurface.c</file>
 	</directory>	
-	<directory name="clipper">	
+	<directory name="Clipper">	
 		<file>clipper_stubs.c</file>		
 	</directory>	
 	<directory name="Color">
@@ -49,7 +49,7 @@
 	<directory name="Palette">	
 		<file>palette_stubs.c</file>		
 	</directory>	
-	<directory name="videoport">	
+	<directory name="Videoport">	
 		<file>videoport_stubs.c</file>		
 	</directory>
 </module>
