@@ -70,8 +70,8 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 {
     // xxx fixme
     BiosMemoryMap[0].Type = 1;
-    BiosMemoryMap[0].BaseAddress = 0;
-    BiosMemoryMap[0].Length = 64 * 1024 * 1024;
+    BiosMemoryMap[0].BaseAddress = 0xe80000;
+    BiosMemoryMap[0].Length = (64 * 1024 * 1024) - BiosMemoryMap[0].BaseAddress;
     return 1;
 }
 

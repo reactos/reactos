@@ -49,6 +49,7 @@
 		<if property="ARCH" value="powerpc">
 			<module name="freeldr_arch" type="objectlibrary">
 				<include base="ReactOS">include/psdk</include>
+				<include base="ReactOS">include/reactos/ppcmmu</include>
 				<include base="freeldr_base">include</include>
 				<include base="freeldr_base">cache</include>
 				<include base="ntoskrnl">include</include>
@@ -61,18 +62,19 @@
 				<compilerflag>-fno-builtin</compilerflag>
 				<compilerflag>-fno-inline</compilerflag>
 				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-				<compilerflag>-Os</compilerflag>
+				<compilerflag>-O0</compilerflag>
 				<compilerflag>-fPIC</compilerflag>
-				<compilerflag>-mno-toc</compilerflag>
-				<compilerflag>-meabi</compilerflag>
+<!--				<compilerflag>-mno-toc</compilerflag>
+				<compilerflag>-meabi</compilerflag> -->
 				<file>boot.s</file>
 				<file>ofw_calls.s</file>
 				<file>ofw_util.s</file>
 				<file>ofw.c</file>
-				<file>mmu.c</file>
 				<file>mach.c</file>
 				<file>prep.c</file>
 				<file>prep_ide.c</file>
+				<file>prep_pci.c</file>
+				<file>prep_vga.c</file>
 				<file>mboot.c</file>
 			</module>
 		</if>

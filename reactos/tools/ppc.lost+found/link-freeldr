@@ -1,8 +1,9 @@
 #!/bin/sh -v
 
 export PATH=$PATH:/usr/local/pkg/reactos-powerpc/bin
+make -C lib/mmu
 powerpc-unknown-linux-gnu-ld \
-	-g -nostartfiles -nostdlib -N -Ttext=0xe17000 \
+	-g -nostartfiles -nostdlib -N -Ttext=0xe00000 \
 	-o freeldr.elf \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/boot.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/ofw_util.o \
@@ -51,7 +52,6 @@ powerpc-unknown-linux-gnu-ld \
 	obj-ppc/boot/freeldr/freeldr/windows/wlregistry.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/mach.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/ofw.o \
-	obj-ppc/boot/freeldr/freeldr/arch/powerpc/mmu.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/mboot.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/prep.o \
 	obj-ppc/boot/freeldr/freeldr/arch/powerpc/prep_ide.o \
@@ -68,4 +68,6 @@ powerpc-unknown-linux-gnu-ld \
 	obj-ppc/lib/cmlib/cmlib.a \
 	obj-ppc/lib/string/string.a \
 	obj-ppc/lib/rtl/rtl.a \
+	obj-ppc/lib/mmu/libmmu.a \
+	obj-ppc/lib/mmu/libmmu_code.a \
 	/usr/local/pkg/reactos-powerpc/lib/libgcc.a

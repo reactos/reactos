@@ -1,7 +1,0 @@
-#!/bin/sh
-
-DIR=@PREFIX@
-BPREFIX=@BPREFIX@
-TARGET=@TARGET@
-
-${BPREFIX}dlltool -S $DIR/bin/${TARGET}as -L $DIR/bin/${TARGET}ld $*

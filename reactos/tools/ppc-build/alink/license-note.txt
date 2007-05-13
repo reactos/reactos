@@ -1,8 +1,0 @@
-I received permission from Anthony Williams to use alink as the basis for
-the elf to coff conversion stage in reactos-powerpc.  Thanks to Anthony
-for writing alink in a way that made it possible to produce binaries for
-reactos-powerpc, and for giving me permission to modify it despite the
-license.
-
-This version of alink has been modified heavily, mostly for the benefit
-of producing pe-coff powerpc executables.

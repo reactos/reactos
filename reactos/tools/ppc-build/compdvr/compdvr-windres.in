@@ -1,7 +1,0 @@
-#!/bin/sh
-
-DIR=@PREFIX@
-BPREFIX=@BPREFIX@
-TARGET=@TARGET@
-
-exec ${BPREFIX}windres -F elf32-powerpcle $*

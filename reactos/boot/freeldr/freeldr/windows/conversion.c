@@ -11,8 +11,8 @@
 #include <freeldr.h>
 
 #ifdef _M_PPC
+#include <ppcmmu/mmu.h>
 #include <of.h>
-#include <mmu.h>
 #endif
 //#include <ndk/ldrtypes.h>
 

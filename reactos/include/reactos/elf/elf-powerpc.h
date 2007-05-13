@@ -116,38 +116,43 @@ __ElfType(Auxinfo);
  * Relocation types.
  */
 
-#define	R_386_NONE	0	/* No relocation. */
-#define	R_386_32	1	/* Add symbol value. */
-#define	R_386_PC32	2	/* Add PC-relative symbol value. */
-#define	R_386_GOT32	3	/* Add PC-relative GOT offset. */
-#define	R_386_PLT32	4	/* Add PC-relative PLT offset. */
-#define	R_386_COPY	5	/* Copy data from shared object. */
-#define	R_386_GLOB_DAT	6	/* Set GOT entry to data address. */
-#define	R_386_JMP_SLOT	7	/* Set GOT entry to code address. */
-#define	R_386_RELATIVE	8	/* Add load address of shared object. */
-#define	R_386_GOTOFF	9	/* Add GOT-relative symbol address. */
-#define	R_386_GOTPC	10	/* Add PC-relative GOT table address. */
-#define	R_386_TLS_TPOFF	14	/* Negative offset in static TLS block */
-#define	R_386_TLS_IE	15	/* Absolute address of GOT for -ve static TLS */
-#define	R_386_TLS_GOTIE	16	/* GOT entry for negative static TLS block */
-#define	R_386_TLS_LE	17	/* Negative offset relative to static TLS */
-#define	R_386_TLS_GD	18	/* 32 bit offset to GOT (index,off) pair */
-#define	R_386_TLS_LDM	19	/* 32 bit offset to GOT (index,zero) pair */
-#define	R_386_TLS_GD_32	24	/* 32 bit offset to GOT (index,off) pair */
-#define	R_386_TLS_GD_PUSH 25	/* pushl instruction for Sun ABI GD sequence */
-#define	R_386_TLS_GD_CALL 26	/* call instruction for Sun ABI GD sequence */
-#define	R_386_TLS_GD_POP 27	/* popl instruction for Sun ABI GD sequence */
-#define	R_386_TLS_LDM_32 28	/* 32 bit offset to GOT (index,zero) pair */
-#define	R_386_TLS_LDM_PUSH 29	/* pushl instruction for Sun ABI LD sequence */
-#define	R_386_TLS_LDM_CALL 30	/* call instruction for Sun ABI LD sequence */
-#define	R_386_TLS_LDM_POP 31	/* popl instruction for Sun ABI LD sequence */
-#define	R_386_TLS_LDO_32 32	/* 32 bit offset from start of TLS block */
-#define	R_386_TLS_IE_32	33	/* 32 bit offset to GOT static TLS offset entry */
-#define	R_386_TLS_LE_32	34	/* 32 bit offset within static TLS block */
-#define	R_386_TLS_DTPMOD32 35	/* GOT entry containing TLS index */
-#define	R_386_TLS_DTPOFF32 36	/* GOT entry containing TLS offset */
-#define	R_386_TLS_TPOFF32 37	/* GOT entry of -ve static TLS offset */
-
-#define	R_386_COUNT	38	/* Count of defined relocation types. */
+#define R_PPC_NONE            0
+#define R_PPC_ADDR32          1
+#define R_PPC_ADDR24          2
+#define R_PPC_ADDR16          3
+#define R_PPC_ADDR16_LO       4
+#define R_PPC_ADDR16_HI       5
+#define R_PPC_ADDR16_HA       6
+#define R_PPC_ADDR14          7
+#define R_PPC_ADDR14_BRTAKEN  8
+#define R_PPC_ADDR14_BRNTAKEN 9
+#define R_PPC_REL24           10
+#define R_PPC_REL14           11
+#define R_PPC_REL14_BRTAKEN   12
+#define R_PPC_REL14_BRNTAKEN  13
+#define R_PPC_GOT16           14
+#define R_PPC_GOT16_LO        15
+#define R_PPC_GOT16_HI        16
+#define R_PPC_GOT16_HA        17
+#define R_PPC_PLTREL24        18
+#define R_PPC_COPY            19
+#define R_PPC_GLOB_DAT        20
+#define R_PPC_JMP_SLOT        21
+#define R_PPC_RELATIVE        22
+#define R_PPC_LOCAL24PC       23
+#define R_PPC_UADDR32         24
+#define R_PPC_UADDR16         25
+#define R_PPC_REL32           26
+#define R_PPC_PLT32           27
+#define R_PPC_PLTREL32        28
+#define R_PPC_PLT16_LO        29
+#define R_PPC_PLT16_HI        30
+#define R_PPC_PLT16_HA        31
+#define R_PPC_SDAREL16        32
+#define R_PPC_SECTOFF         33
+#define R_PPC_SECTOFF_LO      34
+#define R_PPC_SECTOFF_HI      35
+#define R_PPC_SECTOFF_HA      36
+#define	R_PPC_COUNT	      37
 
 #endif /* !_MACHINE_ELF_H_ */

@@ -12,7 +12,6 @@
 
 #ifdef _M_PPC
 #include <of.h>
-#include <mmu.h>
 #endif
 
 #define NDEBUG

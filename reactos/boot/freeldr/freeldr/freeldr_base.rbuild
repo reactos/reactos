@@ -5,9 +5,7 @@
 	<include base="ntoskrnl">include</include>
 	<include base="cmlib">.</include>
 	<define name="__USE_W32API" />
-<!--	
 	<define name="DEBUG" />
--->
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
 	<compilerflag>-ffreestanding</compilerflag>

@@ -138,8 +138,10 @@ uint32_t ElfPeHeader::getSectionRvas(std::vector<section_mapping_t> &rvas) const
 	    if((sect.getType() == SHT_PROGBITS) && 
 	       (sect.getFlags() & SHF_ALLOC)) {
 		limit = roundup(start + sect.logicalSize(), sectionalign);
+#if 0
 		fprintf(stderr, "rva[%02d:%s] = (%x %x %d)\n",
 			rvas.size(), sect.getName().c_str(), &sect, start, i);
+#endif
 		rvas.push_back(section_mapping_t(&sect, start, i));
 	    }
 	}

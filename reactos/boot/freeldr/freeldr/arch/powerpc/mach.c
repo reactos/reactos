@@ -18,8 +18,8 @@
  */
 #include "freeldr.h"
 #include "machine.h"
-#include "of.h"
 #include "mmu.h"
+#include "of.h"
 #include "ppcboot.h"
 #include "prep.h"
 #include "compat.h"
@@ -494,8 +494,6 @@ typedef unsigned int uint32_t;
 
 void PpcOfwInit()
 {
-    //SetPhys(0x900, (19 << 26) | (50 << 1));
-    
     chosen_package = ofw_finddevice( "/chosen" );
 
     ofw_getprop(chosen_package, "bootargs",
