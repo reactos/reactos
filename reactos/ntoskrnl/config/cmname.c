@@ -45,7 +45,7 @@ CmpCopyName(IN PHHIVE Hive,
         }
 
         /* Copy this character */
-        Destination[i] = Source->Buffer[i];
+        ((PCHAR)Destination)[i] = (CHAR)(Source->Buffer[i]);
     }
 
     /* Compressed name, return length */

@@ -13,9 +13,87 @@
 #define NDEBUG
 #include "debug.h"
 
-/* GLOBALS *******************************************************************/
-
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+NTAPI
+CmpMarkValueDataDirty(IN PHHIVE Hive,
+                      IN PCM_KEY_VALUE Value)
+{
+    ULONG KeySize;
+    PAGED_CODE();
+
+    /* Make sure there's actually any data */
+    if (Value->Data != HCELL_NIL)
+    {
+        /* If this is a small key, there's no need to have it dirty */
+        if (CmpIsKeyValueSmall(&KeySize, Value->DataLength)) return TRUE;
+
+        /* Check if this is a big key */
+        ASSERT_VALUE_BIG(Hive, KeySize);
+
+        /* Normal value, just mark it dirty */
+        HvMarkCellDirty(Hive, Value->Data);
+    }
+
+    /* Operation complete */
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+CmpFreeValueData(IN PHHIVE Hive,
+                 IN HCELL_INDEX DataCell,
+                 IN ULONG DataLength)
+{
+    ULONG KeySize;
+    PAGED_CODE();
+
+    /* If this is a small key, the data is built-in */
+    if (!CmpIsKeyValueSmall(&KeySize, DataLength))
+    {
+        /* If there's no data cell, there's nothing to do */
+        if (DataCell == HCELL_NIL) return TRUE;
+
+        /* Make sure the data cell is allocated */
+        ASSERT(HvIsCellAllocated(Hive, DataCell));
+
+        /* Unsupported value type */
+        ASSERT_VALUE_BIG(Hive, KeySize);
+
+        /* Normal value, just free the data cell */
+        HvFreeCell(Hive, DataCell);
+    }
+
+    /* Operation complete */
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+CmpFreeValue(IN PHHIVE Hive,
+             IN HCELL_INDEX Cell)
+{
+    PCM_KEY_VALUE Value;
+    PAGED_CODE();
+
+    /* Get the cell data */
+    Value = (PCM_KEY_VALUE)HvGetCell(Hive, Cell);
+    if (!Value) ASSERT(FALSE);
+
+    /* Free it */
+    if (!CmpFreeValueData(Hive, Value->Data, Value->DataLength))
+    {
+        /* We failed to free the data, return failure */
+        HvReleaseCell(Hive, Cell);
+        return FALSE;
+    }
+
+    /* Release the cell and free it */
+    HvReleaseCell(Hive, Cell);
+    HvFreeCell(Hive, Cell);
+    return TRUE;
+}
 
 HCELL_INDEX
 NTAPI
@@ -67,13 +145,8 @@ CmpGetValueData(IN PHHIVE Hive,
         return TRUE;
     }
 
-    /* Check if this is a big cell */
-    if (CmpIsKeyValueBig(Hive, *Length))
-    {
-        /* FIXME: We don't support big cells */
-        DPRINT1("Unsupported cell type!\n");
-        while (TRUE);
-    }
+    /* Unsupported */
+    ASSERT_VALUE_BIG(Hive, *Length);
 
     /* Get the data from the cell */
     *Buffer = HvGetCell(Hive, Value->Data);
@@ -123,3 +196,114 @@ CmpValueToData(IN PHHIVE Hive,
     /* Otherwise, return the cell data */
     return Buffer;
 }
+
+NTSTATUS
+NTAPI
+CmpAddValueToList(IN PHHIVE Hive,
+                  IN HCELL_INDEX ValueCell,
+                  IN ULONG Index,
+                  IN ULONG Type,
+                  IN OUT PCHILD_LIST ChildList)
+{
+    HCELL_INDEX ListCell;
+    ULONG ChildCount, Length, i;
+    PCELL_DATA CellData;
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT((((LONG)Index) >= 0) && (Index <= ChildList->Count));
+
+    /* Get the number of entries in the child list */
+    ChildCount = ChildList->Count;
+    ChildCount++;
+    if (ChildCount > 1)
+    {
+        /* The cell should be dirty at this point */
+        ASSERT(HvIsCellDirty(Hive, ChildList->List));
+
+        /* Check if we have less then 100 children */
+        if (ChildCount < 100)
+        {
+            /* Allocate just enough as requested */
+            Length = ChildCount * sizeof(HCELL_INDEX);
+        }
+        else
+        {
+            /* Otherwise, we have quite a few, so allocate a batch */
+            Length = ROUND_UP(ChildCount, 100) * sizeof(HCELL_INDEX);
+            if (Length > HBLOCK_SIZE)
+            {
+                /* But make sure we don't allocate beyond our block size */
+                Length = ROUND_UP(Length, HBLOCK_SIZE);
+            }
+        }
+
+        /* Perform the allocation */
+        ListCell = HvReallocateCell(Hive, ChildList->List, Length);
+    }
+    else
+    {
+        /* This is our first child, so allocate a single cell */
+        ListCell = HvAllocateCell(Hive, sizeof(HCELL_INDEX), Type);
+    }
+
+    /* Fail if we couldn't get a cell */
+    if (!ListCell) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set this cell as the child list's list cell */
+    ChildList->List = ListCell;
+
+    /* Get the actual key list memory */
+    CellData = HvGetCell(Hive, ListCell);
+    if (!CellData) ASSERT(FALSE);
+
+    /* Loop all the children */
+    for (i = ChildCount - 1; i > Index; i--)
+    {
+        /* Move them all down */
+        CellData->u.KeyList[i] = CellData->u.KeyList[i - 1];
+    }
+
+    /* Insert us on top now */
+    CellData->u.KeyList[Index] = ValueCell;
+    ChildList->Count = ChildCount;
+
+    /* Release the list cell and make sure the value cell is dirty */
+    HvReleaseCell(Hive, ListCell);
+    ASSERT(HvIsCellDirty(Hive, ValueCell));
+
+    /* We're done here */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+CmpSetValueDataNew(IN PHHIVE Hive,
+                   IN PVOID Data,
+                   IN ULONG DataSize,
+                   IN ULONG StorageType,
+                   IN HCELL_INDEX ValueCell,
+                   OUT PHCELL_INDEX DataCell)
+{
+    PCELL_DATA CellData;
+    PAGED_CODE();
+    ASSERT(DataSize > CM_KEY_VALUE_SMALL);
+
+    /* Check if this is a big key */
+    ASSERT_VALUE_BIG(Hive, DataSize);
+
+    /* Allocate a data cell */
+    *DataCell = HvAllocateCell(Hive, DataSize, StorageType);
+    if (*DataCell == HCELL_NIL) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the actual data */
+    CellData = HvGetCell(Hive, *DataCell);
+    if (!CellData) ASSERT(FALSE);
+
+    /* Copy our buffer into it */
+    RtlCopyMemory(CellData, Data, DataSize);
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+

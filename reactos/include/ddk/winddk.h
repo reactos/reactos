@@ -4277,6 +4277,8 @@ typedef struct _RTL_BITMAP {
   PULONG  Buffer;
 } RTL_BITMAP, *PRTL_BITMAP;
 
+#define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
+
 typedef struct _RTL_BITMAP_RUN {
     ULONG  StartingIndex;
     ULONG  NumberOfBits;
@@ -5806,12 +5808,14 @@ RtlCharToInteger(
   IN ULONG  Base  OPTIONAL,
   IN OUT PULONG  Value);
 
+#if 0
 NTSYSAPI
 ULONG
 NTAPI
 RtlCheckBit(
   IN PRTL_BITMAP  BitMapHeader,
   IN ULONG  BitPosition);
+#endif
 
 NTSYSAPI
 NTSTATUS

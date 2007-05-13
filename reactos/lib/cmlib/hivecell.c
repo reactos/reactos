@@ -39,6 +39,32 @@ HvpGetCellHeader(
    }
 }
 
+BOOLEAN CMAPI
+HvIsCellAllocated(IN PHHIVE RegistryHive,
+                  IN HCELL_INDEX CellIndex)
+{
+    ULONG Type, Block;
+
+    /* If it's a flat hive, the cell is always allocated */
+    if (RegistryHive->Flat) return TRUE;
+
+    /* Otherwise, get the type and make sure it's valid */
+    Type = HvGetCellType(CellIndex);
+    if (((CellIndex % ~HCELL_TYPE_MASK) > RegistryHive->Storage[Type].Length) ||
+        (CellIndex % (RegistryHive->Version >= 2 ? 8 : 16)))
+    {
+        /* Invalid cell index */
+        return FALSE;
+    }
+
+    /* Try to get the cell block */
+    Block = (CellIndex & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
+    if (RegistryHive->Storage[Type].BlockList[Block].Block) return TRUE;
+
+    /* No valid block, fail */
+    return FALSE;
+}
+
 PVOID CMAPI
 HvGetCell(
    PHHIVE RegistryHive,
@@ -92,6 +118,20 @@ HvMarkCellDirty(
 
    RtlSetBits(&RegistryHive->DirtyVector,
               CellBlock, CellLastBlock - CellBlock);
+}
+
+BOOLEAN CMAPI
+HvIsCellDirty(IN PHHIVE Hive,
+              IN HCELL_INDEX Cell)
+{
+    /* Sanity checks */
+    ASSERT(Hive->ReadOnly == FALSE);
+
+    /* Volatile cells are always "dirty" */
+    if (HvGetCellType(Cell) == HvVolatile) return TRUE;
+
+    /* Check if the dirty bit is set */
+    return RtlCheckBit(&Hive->DirtyVector, Cell / HV_BLOCK_SIZE);
 }
 
 static ULONG __inline CMAPI

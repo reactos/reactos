@@ -40,6 +40,9 @@ typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 #define HCELL_BLOCK_SHIFT              12
 #define HCELL_OFFSET_SHIFT             0
 
+#define HvGetCellType(Cell)             \
+    ((ULONG)((Cell & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT))
+
 #include <pshpack1.h>
 
 /**

@@ -183,6 +183,12 @@ HvAllocateCell(
    SIZE_T Size,
    HV_STORAGE_TYPE Storage);
 
+BOOLEAN CMAPI
+HvIsCellAllocated(
+    IN PHHIVE RegistryHive,
+    IN HCELL_INDEX CellIndex
+);
+
 HCELL_INDEX CMAPI
 HvReallocateCell(
    PHHIVE RegistryHive,
@@ -198,6 +204,12 @@ VOID CMAPI
 HvMarkCellDirty(
    PHHIVE RegistryHive,
    HCELL_INDEX CellOffset);
+
+BOOLEAN CMAPI
+HvIsCellDirty(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
+);
 
 BOOLEAN CMAPI
 HvSyncHive(

@@ -36,6 +36,13 @@
 #define CMTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
+
+//
+// Hack since bigkeys are not yet supported
+//
+#define ASSERT_VALUE_BIG(h, s)                          \
+    ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
+
 //
 // Tag for all registry allocations
 //
@@ -678,6 +685,8 @@ extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;
 extern KTIMER CmiWorkerTimer;
 VOID NTAPI CmiWorkerThread(IN PVOID Param);
 PVOID NTAPI CmpRosGetHardwareHive(OUT PULONG Length);
+NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
+VOID CmiSyncHives(VOID);
 #define HIVE_NO_FILE    0x00000002
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1010,6 +1019,34 @@ CmpValueToData(
     IN PHHIVE Hive,
     IN PCM_KEY_VALUE Value,
     OUT PULONG Length
+);
+
+NTSTATUS
+NTAPI
+CmpSetValueDataNew(
+    IN PHHIVE Hive,
+    IN PVOID Data,
+    IN ULONG DataSize,
+    IN ULONG StorageType,
+    IN HCELL_INDEX ValueCell,
+    OUT PHCELL_INDEX DataCell
+);
+
+NTSTATUS
+NTAPI
+CmpAddValueToList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ValueCell,
+    IN ULONG Index,
+    IN ULONG Type,
+    IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValue(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
 );
 
 //
