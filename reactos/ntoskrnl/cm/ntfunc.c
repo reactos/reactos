@@ -1949,15 +1949,8 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    IN POBJECT_ATTRIBUTES FileObjectAttributes,
 	    IN ULONG Flags)
 {
-  POBJECT_NAME_INFORMATION NameInfo;
-  PUNICODE_STRING NamePointer;
-  PUCHAR Buffer;
-  ULONG BufferSize;
-  ULONG Length;
   NTSTATUS Status;
-
   PAGED_CODE();
-
   DPRINT ("NtLoadKey2() called\n");
 
 #if 0
@@ -1965,85 +1958,12 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     return STATUS_PRIVILEGE_NOT_HELD;
 #endif
 
-  if (FileObjectAttributes->RootDirectory != NULL)
-    {
-      BufferSize =
-	sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
-      Buffer = ExAllocatePool (NonPagedPool,
-			       BufferSize);
-      if (Buffer == NULL)
-	return STATUS_INSUFFICIENT_RESOURCES;
-
-      Status = ZwQueryObject (FileObjectAttributes->RootDirectory,
-			      ObjectNameInformation,
-			      Buffer,
-			      BufferSize,
-			      &Length);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1 ("NtQueryObject() failed (Status %lx)\n", Status);
-	  ExFreePool (Buffer);
-	  return Status;
-	}
-
-      NameInfo = (POBJECT_NAME_INFORMATION)Buffer;
-      DPRINT ("ObjectPath: '%wZ'  Length %hu\n",
-	      &NameInfo->Name, NameInfo->Name.Length);
-
-      NameInfo->Name.MaximumLength = MAX_PATH * sizeof(WCHAR);
-      if (FileObjectAttributes->ObjectName->Buffer[0] != L'\\')
-	{
-	  RtlAppendUnicodeToString (&NameInfo->Name,
-				    L"\\");
-	  DPRINT ("ObjectPath: '%wZ'  Length %hu\n",
-		  &NameInfo->Name, NameInfo->Name.Length);
-	}
-      RtlAppendUnicodeStringToString (&NameInfo->Name,
-				      FileObjectAttributes->ObjectName);
-
-      DPRINT ("ObjectPath: '%wZ'  Length %hu\n",
-	      &NameInfo->Name, NameInfo->Name.Length);
-      NamePointer = &NameInfo->Name;
-    }
-  else
-    {
-      if (FileObjectAttributes->ObjectName->Buffer[0] == L'\\')
-	{
-	  Buffer = NULL;
-	  NamePointer = FileObjectAttributes->ObjectName;
-	}
-      else
-	{
-	  BufferSize =
-	    sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
-	  Buffer = ExAllocatePool (NonPagedPool,
-				   BufferSize);
-	  if (Buffer == NULL)
-	    return STATUS_INSUFFICIENT_RESOURCES;
-
-	  NameInfo = (POBJECT_NAME_INFORMATION)Buffer;
-	  NameInfo->Name.MaximumLength = MAX_PATH * sizeof(WCHAR);
-	  NameInfo->Name.Length = 0;
-	  NameInfo->Name.Buffer = (PWSTR)((ULONG_PTR)Buffer + sizeof(OBJECT_NAME_INFORMATION));
-	  NameInfo->Name.Buffer[0] = 0;
-
-	  RtlAppendUnicodeToString (&NameInfo->Name,
-				    L"\\");
-	  RtlAppendUnicodeStringToString (&NameInfo->Name,
-					  FileObjectAttributes->ObjectName);
-
-	  NamePointer = &NameInfo->Name;
-	}
-    }
-
-  DPRINT ("Full name: '%wZ'\n", NamePointer);
-
   /* Acquire hive lock */
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
   Status = CmiLoadHive (KeyObjectAttributes,
-			NamePointer,
+			FileObjectAttributes->ObjectName,
 			Flags);
   if (!NT_SUCCESS (Status))
     {
@@ -2053,148 +1973,6 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   /* Release hive lock */
   ExReleaseResourceLite(&CmpRegistryLock);
   KeLeaveCriticalRegion();
-
-  if (Buffer != NULL)
-    ExFreePool (Buffer);
-
-  return Status;
-}
-
-NTSTATUS STDCALL
-NtQueryMultipleValueKey (IN HANDLE KeyHandle,
-			 IN OUT PKEY_VALUE_ENTRY ValueList,
-			 IN ULONG NumberOfValues,
-			 OUT PVOID Buffer,
-			 IN OUT PULONG Length,
-			 OUT PULONG ReturnLength)
-{
-  PEREGISTRY_HIVE RegistryHive;
-  PCM_KEY_VALUE ValueCell;
-  PKEY_OBJECT KeyObject;
-  PVOID DataCell;
-  ULONG BufferLength = 0;
-  PCM_KEY_NODE KeyCell;
-  NTSTATUS Status;
-  PUCHAR DataPtr;
-  ULONG i;
-  REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION QueryMultipleValueKeyInfo;
-  REG_POST_OPERATION_INFORMATION PostOperationInfo;
-
-  PAGED_CODE();
-
-  /* Verify that the handle is valid and is a registry key */
-  Status = ObReferenceObjectByHandle(KeyHandle,
-				     KEY_QUERY_VALUE,
-				     CmpKeyObjectType,
-				     ExGetPreviousMode(),
-				     (PVOID *) &KeyObject,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
-      return(Status);
-    }
-
-  PostOperationInfo.Object = (PVOID)KeyObject;
-  QueryMultipleValueKeyInfo.Object = (PVOID)KeyObject;
-  QueryMultipleValueKeyInfo.ValueEntries = ValueList;
-  QueryMultipleValueKeyInfo.EntryCount = NumberOfValues;
-  QueryMultipleValueKeyInfo.ValueBuffer = Buffer;
-  QueryMultipleValueKeyInfo.BufferLength = Length;
-  QueryMultipleValueKeyInfo.RequiredBufferLength = ReturnLength;
-
-  Status = CmiCallRegisteredCallbacks(RegNtPreQueryMultipleValueKey, &QueryMultipleValueKeyInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostQueryMultipleValueKey, &PostOperationInfo);
-      ObDereferenceObject(KeyObject);
-      return Status;
-    }
-
-  /* Acquire hive lock */
-  KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  /* Get pointer to KeyCell */
-  KeyCell = KeyObject->KeyCell;
-  RegistryHive = KeyObject->RegistryHive;
-
-  DataPtr = (PUCHAR) Buffer;
-
-  for (i = 0; i < NumberOfValues; i++)
-    {
-      DPRINT("ValueName: '%wZ'\n", ValueList[i].ValueName);
-
-      /* Get Value block of interest */
-      Status = CmiScanKeyForValue(RegistryHive,
-			  KeyCell,
-			  ValueList[i].ValueName,
-			  &ValueCell,
-			  NULL);
-
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT("CmiScanKeyForValue() failed with status %x\n", Status);
-	  break;
-	}
-      else if (ValueCell == NULL)
-	{
-	  Status = STATUS_OBJECT_NAME_NOT_FOUND;
-	  break;
-	}
-
-      BufferLength = ROUND_UP(BufferLength, sizeof(PVOID));
-
-      if (BufferLength + (ValueCell->DataSize & REG_DATA_SIZE_MASK) <= *Length)
-	{
-	  DataPtr = (PUCHAR)ROUND_UP((ULONG_PTR)DataPtr, sizeof(PVOID));
-
-	  ValueList[i].Type = ValueCell->DataType;
-	  ValueList[i].DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
-	  ValueList[i].DataOffset = (ULONG_PTR)DataPtr - (ULONG_PTR)Buffer;
-
-	  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
-	    {
-	      DataCell = HvGetCell (&RegistryHive->Hive,
-	                            ValueCell->DataOffset);
-	      RtlCopyMemory(DataPtr, DataCell,
-			    ValueCell->DataSize & REG_DATA_SIZE_MASK);
-	    }
-	  else
-	    {
-	      RtlCopyMemory(DataPtr,
-			    &ValueCell->DataOffset,
-			    ValueCell->DataSize & REG_DATA_SIZE_MASK);
-	    }
-
-	  DataPtr += ValueCell->DataSize & REG_DATA_SIZE_MASK;
-	}
-      else
-	{
-	  Status = STATUS_BUFFER_TOO_SMALL;
-	}
-
-      BufferLength +=  ValueCell->DataSize & REG_DATA_SIZE_MASK;
-    }
-
-  if (NT_SUCCESS(Status))
-    *Length = BufferLength;
-
-  *ReturnLength = BufferLength;
-
-  /* Release hive lock */
-  ExReleaseResourceLite(&CmpRegistryLock);
-  KeLeaveCriticalRegion();
-
-  PostOperationInfo.Status = Status;
-  CmiCallRegisteredCallbacks(RegNtPostQueryMultipleValueKey, &PostOperationInfo);
-
-  ObDereferenceObject(KeyObject);
-
-  DPRINT("Return Status 0x%X\n", Status);
 
   return Status;
 }
@@ -2319,6 +2097,19 @@ NtNotifyChangeKey(IN HANDLE KeyHandle,
                                        Buffer,
                                        Length,
                                        Asynchronous);
+}
+
+NTSTATUS
+NTAPI
+NtQueryMultipleValueKey(IN HANDLE KeyHandle,
+                        IN OUT PKEY_VALUE_ENTRY ValueList,
+                        IN ULONG NumberOfValues,
+                        OUT PVOID Buffer,
+                        IN OUT PULONG Length,
+                        OUT PULONG ReturnLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
