@@ -9,8 +9,8 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
-#include "Ddraw\ddraw.h"
-#include "Surface\surface.h"
+#include "Ddraw/ddraw.h"
+#include "Surface/surface.h"
 
 /* DirectDraw startup code only internal use  */
 extern DDRAWI_DIRECTDRAW_GBL ddgbl;
