@@ -22,6 +22,7 @@ HvpWriteLog(
    ULONG LastIndex;
    PVOID BlockPtr;
    BOOLEAN Success;
+       return TRUE;
    
    ASSERT(RegistryHive->ReadOnly == FALSE);
    
