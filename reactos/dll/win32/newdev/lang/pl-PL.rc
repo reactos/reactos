@@ -1,5 +1,6 @@
 /*
  *         translated by TestamenT
+ *           corrected by Caemyr
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
  *
@@ -18,7 +19,7 @@ BEGIN
                     IDC_STATIC,120,21,195,16
     LTEXT           "Naciúnij dalej aby kontynuowaÊ.",IDC_STATIC,120,169,195,17
     LTEXT           "NIEZNANE URZ•DZENIE",IDC_DEVICE,134,36,164,11
-    LTEXT           "UWAGA! ISNTALACJA WYBRANEGO UØ•DZENIA  MOØE ZAWIEåI∆ TW”J KONPUTER B•C UNIEMOØLIWI∆ PONOWNE W£•CZENIE!",IDC_STATIC,120,59,195,16
+    LTEXT           "UWAGA! NIEODPOWIEDNI STEROWNIK MOøE ZDESTABILIZOWA∆ B•Dè NAWET ZAWIESI∆ SYSTEM!",IDC_STATIC,120,59,195,16
     CONTROL         "Zainstaluj sterownik automatycznie",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
     CONTROL         "Zainstaluj sterownik z okreúlonego miejsca",IDC_RADIO_MANUAL,
@@ -31,10 +32,10 @@ STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION |
 CAPTION "Instalacja urzπdzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Nie udana instalacj",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Urzπdzenie nie mog≥o zostaÊ zainstalowane, poniewaø sterownik nie zosta≥ znaleziony.",
+    LTEXT           "Instalacja nieudana",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Instalacja zakoÒczona niepowodzeniem, sterownik dla tego urzπdzenia nie zosta≥ znaleziony.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Naciúnij wstecz jeøeli masz sterownik na dysku lub úcieøkÍ do sterownika.",
+    LTEXT           "Naciúnij wstecz jeøeli chcesz podaÊ úcieøkÍ do sterownika.",
                     IDC_STATIC,120,98,181,24
     CONTROL         "Nie pokazuj wiÍcej tej wiadomoúci",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
@@ -46,8 +47,8 @@ STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION |
 CAPTION "Instalacja urzπdzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Nie udana instalacj",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Urzπdzenie nie mog≥o zostaÊ zainstalowane, poniewaø pojawi≥ siÍ nie spodziewany b≥πd.",
+    LTEXT           "Instalacja nieudana",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Instalacja zakoÒczona niepowodzeniem, z powodu wystπpienia nieoczekiwanego b≥πdu.",
                     IDC_STATIC,120,40,195,19
     LTEXT           "NIEZNANE URZ•DZENIE",IDC_DEVICE,134,55,164,11
 END
@@ -63,7 +64,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,27,98,171,12
     CONTROL         "Szukaj w noúnikach wymiennych",IDC_CHECK_MEDIA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
-    CONTROL         "UwzglÍdnij tπ úcieøkÍ",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "UwzglÍdnij podanπ úcieøkÍ",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,47,54,162,10
     PUSHBUTTON      "Przejrzyj",IDC_BROWSE,248,69,50,14
     COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
@@ -93,9 +94,9 @@ CAPTION "Instalacja urzπdzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Instalacja zakoÒczona",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Potrzebujesz zrestartowaÊ, by skoÒczyÊ instalacje z:",
+    LTEXT           "Naleøy zrestartowaÊ komputer, zakanczanie instalacji:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Naciúnij zakoÒcz aby zamknπÊ kreatora.",IDC_STATIC,120,174,
+    LTEXT           "Naciúnij zakoÒcz aby zamknπÊ kreator.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "NIEZNANE URZ•DZENIE",IDC_DEVICE,148,53,147,12
 END
@@ -109,7 +110,7 @@ BEGIN
     LTEXT           "Instalacja zakoÒczona",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "Kreator zakoÒczy≥ instalacje sterownika dla:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Naciúnij zakoÒcz aby zamknπÊ kreatora.",IDC_STATIC,120,174,
+    LTEXT           "Naciúnij zakoÒcz aby zamknπÊ kreator.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "NIEZNANE URZ•DZENIE",IDC_DEVICE,148,53,147,12
 END
