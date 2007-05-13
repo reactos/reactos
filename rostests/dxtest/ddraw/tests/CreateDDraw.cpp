@@ -13,10 +13,9 @@ BOOL Test_CreateDDraw (INT* passed, INT* failed)
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw4, NULL) == DDERR_INVALIDPARAMS);
 	TEST (DirectDrawCreateEx(NULL, NULL, IID_IDirectDraw7, NULL) == DDERR_INVALIDPARAMS); 
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) == DD_OK);
-	TEST (DirectDraw && DirectDraw->Release());
+	//TEST (DirectDraw && DirectDraw->Release());
 	TEST (DirectDrawCreate(NULL ,&DirectDraw2, NULL) == DD_OK);
-	TEST (DirectDraw2 && DirectDraw2->Release());
-
+	//TEST (DirectDraw2 && DirectDraw2->Release());
 
 	return TRUE;
 }
