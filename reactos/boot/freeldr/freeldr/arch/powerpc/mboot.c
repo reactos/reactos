@@ -406,9 +406,9 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	if (shdr->sh_type == TYPE_PEHEADER)
 	{
 	    FsSetFilePointer(KernelImage, shdr->sh_offset);
-	    FsReadFile(KernelImage, shdr->sh_size, NULL, KernelMemory);
-	    ImageHeader = (PIMAGE_DOS_HEADER)KernelMemory;
-	    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)KernelMemory + SWAPD(ImageHeader->e_lfanew));
+	    FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr);
+	    ImageHeader = (PIMAGE_DOS_HEADER)MemLoadAddr;
+	    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)MemLoadAddr + SWAPD(ImageHeader->e_lfanew));
 	    printf("NtHeader at %x\n", SWAPD(ImageHeader->e_lfanew));
 	    printf("SectionAlignment %x\n", 
 		   SWAPD(NtHeader->OptionalHeader.SectionAlignment));
@@ -449,15 +449,15 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	if (shdr->sh_type != SHT_NOBITS)
 	{
 	    /* Content area */
-	    printf("Loading section %d at %x (real: %x:%d)\n", i, KernelAddr + SectionAddr, KernelMemory+SectionAddr, shdr->sh_size);
+	    printf("Loading section %d at %x (real: %x:%d)\n", i, KernelAddr + SectionAddr, MemLoadAddr+SectionAddr, shdr->sh_size);
 	    FsSetFilePointer(KernelImage, shdr->sh_offset);
-	    FsReadFile(KernelImage, shdr->sh_size, NULL, KernelMemory + SectionAddr);
+	    FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr + SectionAddr);
 	} 
 	else
 	{
 	    /* Zero it out */
 	    printf("BSS section %d at %x\n", i, KernelAddr + SectionAddr);
-	    memset(KernelMemory + SectionAddr, 0, 
+	    memset(MemLoadAddr + SectionAddr, 0, 
 		   ROUND_UP(shdr->sh_size, 
 			    SWAPD(NtHeader->OptionalHeader.SectionAlignment)));
         }
@@ -517,7 +517,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	    A = reloc.r_addend;
 	    P = reloc.r_offset + ELF_SECTION(targetSection)->sh_addr;
 	    
-	    Target32 = (ULONG*)(((PCHAR)KernelMemory) + P);
+	    Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + P);
 	    Target16 = (USHORT *)Target32;
 	    x = *Target32;
 	    
@@ -553,7 +553,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 #if 0
 	    printf("reloc[%d:%x]: (type %x sym %d val %d) off %x add %x (old %x new %x)\n", 
 		   j,
-		   ((ULONG)Target32) - ((ULONG)KernelMemory),
+		   ((ULONG)Target32) - ((ULONG)MemLoadAddr),
 		   ELF32_R_TYPE(reloc.r_info),
 		   ELF32_R_SYM(reloc.r_info), 
 		   symbol.st_value,
@@ -568,7 +568,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
     MmFreeMemory(sptr);
 
-    ModuleData->ModStart = (ULONG)KernelMemory;
+    ModuleData->ModStart = (ULONG)MemLoadAddr;
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP((ULONG)MemLoadAddr + ImageSize, PAGE_SIZE);
     ModuleData->ModEnd = NextModuleBase;
