@@ -570,7 +570,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
     ModuleData->ModStart = (ULONG)KernelMemory;
     /* Increase the next Load Base */
-    NextModuleBase = ROUND_UP((ULONG)KernelMemory + ImageSize, PAGE_SIZE);
+    NextModuleBase = ROUND_UP((ULONG)MemLoadAddr + ImageSize, PAGE_SIZE);
     ModuleData->ModEnd = NextModuleBase;
     ModuleData->String = (ULONG)MmAllocateMemory(strlen(ImageName)+1);
     strcpy((PCHAR)ModuleData->String, ImageName);
@@ -621,6 +621,8 @@ FrLdrLoadModule(FILE *ModuleImage,
     PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;
     LPSTR TempName;
+
+    printf("Load module %s at %x\n", ModuleName, (ULONG)NextModuleBase - (ULONG)KernelMemory + KernelBase);
 
     /* Get current module data structure and module name string array */
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];
