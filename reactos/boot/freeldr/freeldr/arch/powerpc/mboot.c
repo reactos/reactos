@@ -357,6 +357,12 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr;
 
+    if(!KernelAddr)
+	KernelAddr = (ULONG)NextModuleBase - (ULONG)KernelMemory + KernelBase;
+    if(!MemLoadAddr)
+	MemLoadAddr = (PCHAR)NextModuleBase;
+
+    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
     printf("Loading file (elf at %x)\n", KernelAddr);
 
     /* Load the first 1024 bytes of the kernel image so we can read the PE header */
@@ -438,6 +444,8 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	printf("Section %d (NT Header) is elf section %d\n",
 	       i, SWAPD(Section->PointerToRawData));
 	
+	Section->PointerToRawData = SWAPD((Section->VirtualAddress - KernelAddr));
+
 	if (shdr->sh_type != SHT_NOBITS)
 	{
 	    /* Content area */
@@ -560,7 +568,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
     MmFreeMemory(sptr);
 
-    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
     ModuleData->ModStart = (ULONG)KernelMemory;
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP((ULONG)KernelMemory + ImageSize, PAGE_SIZE);

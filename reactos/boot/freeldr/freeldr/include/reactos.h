@@ -62,6 +62,7 @@ VOID FASTCALL FrLdrGetPaeMode(VOID);
 BOOLEAN NTAPI FrLdrMapKernel(FILE *KernelImage);
 ULONG_PTR NTAPI FrLdrCreateModule(LPCSTR ModuleName);
 ULONG_PTR NTAPI FrLdrLoadModule(FILE *ModuleImage, LPCSTR ModuleName, PULONG ModuleSize);
+BOOLEAN NTAPI FrLdrMapModule(FILE *ModuleImage, PCHAR ModuleName, PCHAR MemLoadAddr, ULONG KernelAddr);
 BOOLEAN NTAPI FrLdrCloseModule(ULONG_PTR ModuleBase, ULONG dwModuleSize);
 VOID NTAPI FrLdrStartup(ULONG Magic);
 typedef VOID (FASTCALL *ASMCODE)(ULONG Magic, PROS_LOADER_PARAMETER_BLOCK LoaderBlock);

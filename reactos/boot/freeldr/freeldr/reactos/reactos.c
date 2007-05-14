@@ -308,6 +308,8 @@ FrLdrLoadDriver(PCHAR szFileName,
     CHAR value[256];
     LPSTR p;
 
+    printf("Loading driver %s\n", szFileName);
+
     /* Open the Driver */
     FilePointer = FsOpenFile(szFileName);
 
@@ -336,7 +338,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     UiDrawStatusText(value);
 
     /* Load the driver */
-    FrLdrLoadModule(FilePointer, szFileName, NULL);
+    FrLdrMapModule(FilePointer, szFileName, 0, 0);
 
     /* Update status and return */
     UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
