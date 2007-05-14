@@ -307,3 +307,58 @@ CmpSetValueDataNew(IN PHHIVE Hive,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+CmpRemoveValueFromList(IN PHHIVE Hive,
+                       IN ULONG Index,
+                       IN OUT PCHILD_LIST ChildList)
+{
+    ULONG Count;
+    PCELL_DATA CellData;
+    HCELL_INDEX NewCell;
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT((((LONG)Index) >= 0) && (Index <= ChildList->Count));
+
+    /* Get the new count after removal */
+    Count = ChildList->Count - 1;
+    if (Count > 0)
+    {
+        /* Get the actual list array */
+        CellData = HvGetCell(Hive, ChildList->List);
+        if (!CellData) return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Make sure cells data have been made dirty */
+        ASSERT(HvIsCellDirty(Hive, ChildList->List));
+        ASSERT(HvIsCellDirty(Hive, CellData->u.KeyList[Index]));
+
+        /* Loop the list */
+        while (Index < Count)
+        {
+            /* Move everything up */
+            CellData->u.KeyList[Index] = CellData->u.KeyList[Index + 1];
+            Index++;
+        }
+
+        /* Re-allocate the cell for the list by decreasing the count */
+        NewCell = HvReallocateCell(Hive,
+                                   ChildList->List,
+                                   Count * sizeof(HCELL_INDEX));
+        ASSERT(NewCell != HCELL_NIL);
+        HvReleaseCell(Hive,ChildList->List);
+
+        /* Update the list cell */
+        ChildList->List = NewCell;
+    }
+    else
+    {
+        /* Otherwise, we were the last entry, so free the list entirely */
+        HvFreeCell(Hive, ChildList->List);
+        ChildList->List = HCELL_NIL;
+    }
+
+    /* Update the child list with the new count */
+    ChildList->Count = Count;
+    return STATUS_SUCCESS;
+}

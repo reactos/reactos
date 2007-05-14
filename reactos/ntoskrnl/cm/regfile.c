@@ -665,79 +665,6 @@ CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
 }
 
 NTSTATUS
-CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
-		      IN PCM_KEY_NODE KeyCell,
-		      IN HCELL_INDEX KeyCellOffset,
-		      IN PUNICODE_STRING ValueName)
-{
-  PVALUE_LIST_CELL ValueListCell;
-  PCM_KEY_VALUE CurValueCell;
-  ULONG i;
-  NTSTATUS Status;
-
-  if (KeyCell->ValueList.List == -1)
-    {
-      return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-  ValueListCell = HvGetCell (&RegistryHive->Hive, KeyCell->ValueList.List);
-
-  VERIFY_VALUE_LIST_CELL(ValueListCell);
-
-  for (i = 0; i < KeyCell->ValueList.Count; i++)
-    {
-      CurValueCell = HvGetCell (&RegistryHive->Hive, ValueListCell->ValueOffset[i]);
-
-      if (CmiComparePackedNames(ValueName,
-				CurValueCell->Name,
-				CurValueCell->NameSize,
-				(BOOLEAN)((CurValueCell->Flags & REG_VALUE_NAME_PACKED) ? TRUE : FALSE)))
-	{
-	  Status = CmiDestroyValueCell(RegistryHive,
-				       CurValueCell,
-				       ValueListCell->ValueOffset[i]);
-	  if (CurValueCell == NULL)
-	    {
-	      DPRINT1("CmiDestroyValueCell() failed\n");
-	      return Status;
-	    }
-
-	  if (i < (KeyCell->ValueList.Count - 1))
-	    {
-	      RtlMoveMemory(&ValueListCell->ValueOffset[i],
-			    &ValueListCell->ValueOffset[i + 1],
-			    sizeof(HCELL_INDEX) * (KeyCell->ValueList.Count - 1 - i));
-	    }
-	  ValueListCell->ValueOffset[KeyCell->ValueList.Count - 1] = 0;
-
-
-	  KeyCell->ValueList.Count--;
-
-	  if (KeyCell->ValueList.Count == 0)
-	    {
-	      HvFreeCell(&RegistryHive->Hive, KeyCell->ValueList.List);
-	      KeyCell->ValueList.List = -1;
-	    }
-	  else
-	    {
-	      HvMarkCellDirty(&RegistryHive->Hive,
-		              KeyCell->ValueList.List);
-	    }
-
-	  HvMarkCellDirty(&RegistryHive->Hive,
-			  KeyCellOffset);
-
-	  return STATUS_SUCCESS;
-	}
-    }
-
-  DPRINT("Couldn't find the desired value\n");
-
-  return STATUS_OBJECT_NAME_NOT_FOUND;
-}
-
-
-NTSTATUS
 CmiAllocateHashTableCell (IN PEREGISTRY_HIVE RegistryHive,
 	OUT PHASH_TABLE_CELL *HashBlock,
 	OUT HCELL_INDEX *HBOffset,
@@ -830,31 +757,6 @@ CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
 
   return STATUS_UNSUCCESSFUL;
 }
-
-NTSTATUS
-CmiDestroyValueCell(PEREGISTRY_HIVE RegistryHive,
-		    PCM_KEY_VALUE ValueCell,
-		    HCELL_INDEX ValueCellOffset)
-{
-  DPRINT("CmiDestroyValueCell(Cell %p  Offset %lx)\n",
-	 ValueCell, ValueCellOffset);
-
-  VERIFY_VALUE_CELL(ValueCell);
-
-  /* Destroy the data cell */
-  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET)
-      && ValueCell->DataSize > sizeof(HCELL_INDEX)
-      && ValueCell->DataOffset != HCELL_NULL)
-    {
-      HvFreeCell (&RegistryHive->Hive, ValueCell->DataOffset);
-    }
-
-  /* Destroy the value cell */
-  HvFreeCell (&RegistryHive->Hive, ValueCellOffset);
-
-  return STATUS_SUCCESS;
-}
-
 
 ULONG
 CmiGetPackedNameLength(IN PUNICODE_STRING Name,

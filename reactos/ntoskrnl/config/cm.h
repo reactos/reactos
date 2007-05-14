@@ -1064,6 +1064,14 @@ CmpFreeValueData(
     IN ULONG DataLength
 );
 
+NTSTATUS
+NTAPI
+CmpRemoveValueFromList(
+    IN PHHIVE Hive,
+    IN ULONG Index,
+    IN OUT PCHILD_LIST ChildList
+);
+
 //
 // Boot Routines
 //

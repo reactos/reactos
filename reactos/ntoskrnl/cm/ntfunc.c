@@ -1854,88 +1854,48 @@ NtSetValueKey(IN HANDLE KeyHandle,
     return Status;
 }
 
-NTSTATUS STDCALL
-NtDeleteValueKey (IN HANDLE KeyHandle,
-		  IN PUNICODE_STRING ValueName)
+NTSTATUS
+NTAPI
+NtDeleteValueKey(IN HANDLE KeyHandle,
+                 IN PUNICODE_STRING ValueName)
 {
-  PKEY_OBJECT KeyObject;
-  NTSTATUS Status;
-  REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
-  REG_POST_OPERATION_INFORMATION PostOperationInfo;
-  KPROCESSOR_MODE PreviousMode;
-  UNICODE_STRING CapturedValueName;
+    PKEY_OBJECT KeyObject;
+    NTSTATUS Status;
+    REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PAGED_CODE();
 
-  PAGED_CODE();
-  
-  PreviousMode = ExGetPreviousMode();
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       KEY_SET_VALUE,
+                                       CmpKeyObjectType,
+                                       PreviousMode,
+                                       (PVOID *)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  /* Verify that the handle is valid and is a registry key */
-  Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_SET_VALUE,
-		CmpKeyObjectType,
-		PreviousMode,
-		(PVOID *)&KeyObject,
-		NULL);
-  if (!NT_SUCCESS(Status))
+    /* Do the callback */
+    DeleteValueKeyInfo.Object = (PVOID)KeyObject;
+    DeleteValueKeyInfo.ValueName = ValueName;
+    Status = CmiCallRegisteredCallbacks(RegNtPreDeleteValueKey,
+                                        &DeleteValueKeyInfo);
+    if (NT_SUCCESS(Status))
     {
-      return Status;
+        /* Call the internal API */
+        Status = CmDeleteValueKey(KeyObject, *ValueName);
+
+        /* Do the post callback */
+        PostOperationInfo.Object = (PVOID)KeyObject;
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostDeleteValueKey,
+                                   &PostOperationInfo);
     }
 
-  Status = ProbeAndCaptureUnicodeString(&CapturedValueName,
-                                        PreviousMode,
-                                        ValueName);
-  if (!NT_SUCCESS(Status))
-    {
-      goto Fail;
-    }
-  DeleteValueKeyInfo.Object = (PVOID)KeyObject;
-  DeleteValueKeyInfo.ValueName = &CapturedValueName;
-
-  /* FIXME - check if value exists before calling the callbacks? */
-  Status = CmiCallRegisteredCallbacks(RegNtPreDeleteValueKey, &DeleteValueKeyInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      PostOperationInfo.Object = (PVOID)KeyObject;
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostDeleteValueKey, &PostOperationInfo); 
-      ReleaseCapturedUnicodeString(&CapturedValueName,
-                                   PreviousMode);
-Fail:
-      ObDereferenceObject(KeyObject);
-      return Status;
-    }
-
-  /* Acquire hive lock */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  Status = CmiDeleteValueFromKey(KeyObject->RegistryHive,
-				 KeyObject->KeyCell,
-				 KeyObject->KeyCellOffset,
-				 ValueName);
-
-  KeQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
-  HvMarkCellDirty (&KeyObject->RegistryHive->Hive, KeyObject->KeyCellOffset);
-
-  /* Release hive lock */
-  ExReleaseResourceLite(&CmpRegistryLock);
-  KeLeaveCriticalRegion();
-
-  ReleaseCapturedUnicodeString(&CapturedValueName,
-                               PreviousMode);
-
-  PostOperationInfo.Object = (PVOID)KeyObject;
-  PostOperationInfo.Status = Status;
-
-  CmiCallRegisteredCallbacks(RegNtPostDeleteValueKey, &PostOperationInfo);
-
-  ObDereferenceObject (KeyObject);
-
-  CmiSyncHives ();
-
-  return Status;
+    /* Dereference the key body and synchronize the hives */
+    ObDereferenceObject(KeyObject);
+    CmiSyncHives();
+    return Status;
 }
 
 /*

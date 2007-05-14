@@ -86,7 +86,7 @@ CmpSetValueKeyNew(IN PHHIVE Hive,
 
         /* Otherwise, set the data length, and make sure the data is dirty */
         CellData->u.KeyValue.DataLength = DataSize;
-        ASSERT(HvIsCellDirty(Hive,CellData->u.KeyValue.Data));
+        ASSERT(HvIsCellDirty(Hive, CellData->u.KeyValue.Data));
     }
     else
     {
@@ -105,7 +105,7 @@ CmpSetValueKeyNew(IN PHHIVE Hive,
     /* If we failed, free the entire cell, including the data */
     if (!NT_SUCCESS(Status)) CmpFreeValue(Hive, ValueCell);
 
-    /* Return status */
+    /* Return Status */
     return Status;
 }
 
@@ -340,3 +340,117 @@ Quickie:
     return Status;
 }
 
+NTSTATUS
+NTAPI
+CmDeleteValueKey(IN PKEY_OBJECT KeyObject,
+                 IN UNICODE_STRING ValueName)
+{
+    NTSTATUS Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    PHHIVE Hive;
+    PCM_KEY_NODE Parent;
+    HCELL_INDEX ChildCell, Cell;
+    PCHILD_LIST ChildList;
+    PCM_KEY_VALUE Value = NULL;
+    ULONG ChildIndex;
+    BOOLEAN Result;
+
+    /* Acquire hive lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+
+    /* Get the hive and the cell index */
+    Hive = &KeyObject->RegistryHive->Hive;
+    Cell = KeyObject->KeyCellOffset;
+
+    /* Get the parent key node */
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+    if (!Parent)
+    {
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Get the value list and check if it has any entries */
+    ChildList = &Parent->ValueList;
+    if (ChildList->Count)
+    {
+        /* Try to find this value */
+        Result = CmpFindNameInList(Hive,
+                                   ChildList,
+                                   &ValueName,
+                                   &ChildIndex,
+                                   &ChildCell);
+        if (!Result)
+        {
+            /* Fail */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Quickie;
+        }
+
+        /* Value not found, return error */
+        if (ChildCell == HCELL_NIL) goto Quickie;
+
+        /* We found the value, mark all relevant cells dirty */
+        HvMarkCellDirty(Hive, Cell);
+        HvMarkCellDirty(Hive, Parent->ValueList.List);
+        HvMarkCellDirty(Hive, ChildCell);
+
+        /* Get the key value */
+        Value = (PCM_KEY_VALUE)HvGetCell(Hive,ChildCell);
+        if (!Value) ASSERT(FALSE);
+
+        /* Mark it and all related data as dirty */
+        CmpMarkValueDataDirty(Hive, Value);
+
+        /* Ssanity checks */
+        ASSERT(HvIsCellDirty(Hive, Parent->ValueList.List));
+        ASSERT(HvIsCellDirty(Hive, ChildCell));
+
+        /* Remove the value from the child list */
+        Status = CmpRemoveValueFromList(Hive, ChildIndex, ChildList);
+        if(!NT_SUCCESS(Status)) goto Quickie;
+
+        /* Remove the value and its data itself */
+        if (!CmpFreeValue(Hive, ChildCell))
+        {
+            /* Failed to free the value, fail */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Quickie;
+        }
+
+        /* Set the last write time */
+        KeQuerySystemTime(&Parent->LastWriteTime);
+
+        /* Sanity check */
+        ASSERT(HvIsCellDirty(Hive, Cell));
+
+        /* Check if the value list is empty now */
+        if (!Parent->ValueList.Count)
+        {
+            /* Then clear key node data */
+            Parent->MaxValueNameLen = 0;
+            Parent->MaxValueDataLen = 0;
+        }
+
+        /* Change default status to success */
+        Status = STATUS_SUCCESS;
+    }
+
+Quickie:
+    /* Release the parent cell, if any */
+    if (Parent) HvReleaseCell(Hive, Cell);
+
+    /* Check if we had a value */
+    if (Value)
+    {
+        /* Release the child cell */
+        ASSERT(ChildCell != HCELL_NIL);
+        HvReleaseCell(Hive, ChildCell);
+    }
+
+    /* Release hive lock */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+    return Status;
+}

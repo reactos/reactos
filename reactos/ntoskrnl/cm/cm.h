@@ -261,10 +261,9 @@ CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
 			  OUT PCM_KEY_VALUE *ValueCell);
 
 NTSTATUS
-CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
-		      IN PCM_KEY_NODE KeyCell,
-		      IN HCELL_INDEX KeyCellOffset,
-		      IN PUNICODE_STRING ValueName);
+NTAPI
+CmDeleteValueKey(IN PKEY_OBJECT KeyControlBlock,
+                 IN UNICODE_STRING ValueName);
 
 NTSTATUS
 CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
@@ -307,10 +306,6 @@ CmiDestroyValueCell(PEREGISTRY_HIVE RegistryHive,
 NTSTATUS
 CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 	       PEREGISTRY_HIVE RegistryHive);
-
-NTSTATUS
-CmiDisconnectHive (POBJECT_ATTRIBUTES KeyObjectAttributes,
-		   PEREGISTRY_HIVE *RegistryHive);
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot);
