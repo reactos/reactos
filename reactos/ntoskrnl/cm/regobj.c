@@ -630,32 +630,16 @@ CmpDeleteKeyObject(PVOID DeletedObject)
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
-  if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
-    {
-      DPRINT1("Key not found in parent list ???\n");
-    }
-
   RemoveEntryList(&KeyObject->ListEntry);
   RtlFreeUnicodeString(&KeyObject->Name);
 
-  if (KeyObject->Flags & KO_MARKED_FOR_DELETE)
-    {
-      DPRINT("delete really key\n");
+        if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
+        {
+            DPRINT1("Key not found in parent list ???\n");
+        }
 
-      CmiRemoveSubKey(KeyObject->RegistryHive,
-		      ParentKeyObject,
-		      KeyObject);
 
-      KeQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
-      HvMarkCellDirty (&ParentKeyObject->RegistryHive->Hive,
-                       ParentKeyObject->KeyCellOffset);
-
-      if (!IsNoFileHive (KeyObject->RegistryHive) ||
-	  !IsNoFileHive (ParentKeyObject->RegistryHive))
-	{
-	  CmiSyncHives ();
-	}
-    }
+    ASSERT((KeyObject->Flags & KO_MARKED_FOR_DELETE) == FALSE);
 
   ObDereferenceObject (ParentKeyObject);
 

@@ -489,9 +489,28 @@ NtDeleteKey(IN HANDLE KeyHandle)
     }
   else
     {
-      /* Set the marked for delete bit in the key object */
-      KeyObject->Flags |= KO_MARKED_FOR_DELETE;
-      Status = STATUS_SUCCESS;
+        PKEY_OBJECT ParentKeyObject = KeyObject->ParentKey;
+
+        if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
+        {
+            DPRINT1("Key not found in parent list ???\n");
+        }
+
+        CmiRemoveSubKey(KeyObject->RegistryHive,
+                        ParentKeyObject,
+                        KeyObject);
+
+        KeQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
+        HvMarkCellDirty(&ParentKeyObject->RegistryHive->Hive,
+                        ParentKeyObject->KeyCellOffset);
+
+        if (!IsNoFileHive (KeyObject->RegistryHive) ||
+            !IsNoFileHive (ParentKeyObject->RegistryHive))
+        {
+            CmiSyncHives ();
+        }
+
+        Status = STATUS_SUCCESS;
     }
 
   /* Release hive lock */
@@ -523,117 +542,6 @@ NtDeleteKey(IN HANDLE KeyHandle)
    */
 
   return Status;
-}
-
-NTSTATUS
-NTAPI
-NtEnumerateKey(IN HANDLE KeyHandle,
-               IN ULONG Index,
-               IN KEY_INFORMATION_CLASS KeyInformationClass,
-               OUT PVOID KeyInformation,
-               IN ULONG Length,
-               OUT PULONG ResultLength)
-{
-    NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
-    REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
-    REG_POST_OPERATION_INFORMATION PostOperationInfo;
-    PAGED_CODE();
-
-    /* Verify that the handle is valid and is a registry key */
-    Status = ObReferenceObjectByHandle(KeyHandle,
-                                       (KeyInformationClass !=
-                                        KeyNameInformation) ?
-                                       KEY_QUERY_VALUE : 0,
-                                       CmpKeyObjectType,
-                                       ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* Setup the callback */
-    PostOperationInfo.Object = (PVOID)KeyObject;
-    EnumerateKeyInfo.Object = (PVOID)KeyObject;
-    EnumerateKeyInfo.Index = Index;
-    EnumerateKeyInfo.KeyInformationClass = KeyInformationClass;
-    EnumerateKeyInfo.Length = Length;
-    EnumerateKeyInfo.ResultLength = ResultLength;
-
-    /* Do the callback */
-    Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateKey, &EnumerateKeyInfo);
-    if (NT_SUCCESS(Status))
-    {
-        /* Call the internal API */
-        Status = CmEnumerateKey(KeyObject,
-                                Index,
-                                KeyInformationClass,
-                                KeyInformation,
-                                Length,
-                                ResultLength);
-
-        /* Do the post callback */
-        PostOperationInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
-    }
-
-    /* Dereference and return status */
-    ObDereferenceObject(KeyObject);
-    return Status;
-}
-
-NTSTATUS
-NTAPI
-NtEnumerateValueKey(IN HANDLE KeyHandle,
-                    IN ULONG Index,
-                    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-                    OUT PVOID KeyValueInformation,
-                    IN ULONG Length,
-                    OUT PULONG ResultLength)
-{
-    NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
-    REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
-    REG_POST_OPERATION_INFORMATION PostOperationInfo;
-    PAGED_CODE();
-
-    /* Verify that the handle is valid and is a registry key */
-    Status = ObReferenceObjectByHandle(KeyHandle,
-                                       KEY_QUERY_VALUE,
-                                       CmpKeyObjectType,
-                                       ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* Setup the callback */
-    PostOperationInfo.Object = (PVOID)KeyObject;
-    EnumerateValueKeyInfo.Object = (PVOID)KeyObject;
-    EnumerateValueKeyInfo.Index = Index;
-    EnumerateValueKeyInfo.KeyValueInformationClass = KeyValueInformationClass;
-    EnumerateValueKeyInfo.KeyValueInformation = KeyValueInformation;
-    EnumerateValueKeyInfo.Length = Length;
-    EnumerateValueKeyInfo.ResultLength = ResultLength;
-
-    /* Do the callback */
-    Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateValueKey,
-                                        &EnumerateValueKeyInfo);
-    if (NT_SUCCESS(Status))
-    {
-        /* Call the internal API */
-        Status = CmEnumerateValueKey(KeyObject,
-                                     Index,
-                                     KeyValueInformationClass,
-                                     KeyValueInformation,
-                                     Length,
-                                     ResultLength);
-
-        /* Do the post callback */
-        PostOperationInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
-    }
-
-    ObDereferenceObject(KeyObject);
-    return Status;
 }
 
 NTSTATUS STDCALL
@@ -845,6 +753,176 @@ openkey_cleanup:
   return Status;
 }
 
+/*
+ * NOTE:
+ * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
+ * KeyObjectAttributes->Name specifies the name of the key to load.
+ * Flags can be 0 or REG_NO_LAZY_FLUSH.
+ */
+NTSTATUS STDCALL
+NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+	    IN POBJECT_ATTRIBUTES FileObjectAttributes,
+	    IN ULONG Flags)
+{
+  NTSTATUS Status;
+  PAGED_CODE();
+  DPRINT ("NtLoadKey2() called\n");
+
+#if 0
+  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
+    return STATUS_PRIVILEGE_NOT_HELD;
+#endif
+
+  /* Acquire hive lock */
+  KeEnterCriticalRegion();
+  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+
+  Status = CmiLoadHive (KeyObjectAttributes,
+			FileObjectAttributes->ObjectName,
+			Flags);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
+    }
+
+  /* Release hive lock */
+  ExReleaseResourceLite(&CmpRegistryLock);
+  KeLeaveCriticalRegion();
+
+  return Status;
+}
+
+NTSTATUS STDCALL
+NtInitializeRegistry (IN BOOLEAN SetUpBoot)
+{
+  NTSTATUS Status;
+
+  PAGED_CODE();
+
+  if (CmiRegistryInitialized == TRUE)
+    return STATUS_ACCESS_DENIED;
+
+  /* Save boot log file */
+  IopSaveBootLogToFile();
+
+  Status = CmiInitHives (SetUpBoot);
+
+  CmiRegistryInitialized = TRUE;
+
+  return Status;
+}
+
+NTSTATUS
+NTAPI
+NtEnumerateKey(IN HANDLE KeyHandle,
+               IN ULONG Index,
+               IN KEY_INFORMATION_CLASS KeyInformationClass,
+               OUT PVOID KeyInformation,
+               IN ULONG Length,
+               OUT PULONG ResultLength)
+{
+    NTSTATUS Status;
+    PKEY_OBJECT KeyObject;
+    REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    PAGED_CODE();
+
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       (KeyInformationClass !=
+                                        KeyNameInformation) ?
+                                       KEY_QUERY_VALUE : 0,
+                                       CmpKeyObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID *)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Setup the callback */
+    PostOperationInfo.Object = (PVOID)KeyObject;
+    EnumerateKeyInfo.Object = (PVOID)KeyObject;
+    EnumerateKeyInfo.Index = Index;
+    EnumerateKeyInfo.KeyInformationClass = KeyInformationClass;
+    EnumerateKeyInfo.Length = Length;
+    EnumerateKeyInfo.ResultLength = ResultLength;
+
+    /* Do the callback */
+    Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateKey, &EnumerateKeyInfo);
+    if (NT_SUCCESS(Status))
+    {
+        /* Call the internal API */
+        Status = CmEnumerateKey(KeyObject,
+                                Index,
+                                KeyInformationClass,
+                                KeyInformation,
+                                Length,
+                                ResultLength);
+
+        /* Do the post callback */
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
+    }
+
+    /* Dereference and return status */
+    ObDereferenceObject(KeyObject);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtEnumerateValueKey(IN HANDLE KeyHandle,
+                    IN ULONG Index,
+                    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+                    OUT PVOID KeyValueInformation,
+                    IN ULONG Length,
+                    OUT PULONG ResultLength)
+{
+    NTSTATUS Status;
+    PKEY_OBJECT KeyObject;
+    REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    PAGED_CODE();
+
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       KEY_QUERY_VALUE,
+                                       CmpKeyObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID *)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Setup the callback */
+    PostOperationInfo.Object = (PVOID)KeyObject;
+    EnumerateValueKeyInfo.Object = (PVOID)KeyObject;
+    EnumerateValueKeyInfo.Index = Index;
+    EnumerateValueKeyInfo.KeyValueInformationClass = KeyValueInformationClass;
+    EnumerateValueKeyInfo.KeyValueInformation = KeyValueInformation;
+    EnumerateValueKeyInfo.Length = Length;
+    EnumerateValueKeyInfo.ResultLength = ResultLength;
+
+    /* Do the callback */
+    Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateValueKey,
+                                        &EnumerateValueKeyInfo);
+    if (NT_SUCCESS(Status))
+    {
+        /* Call the internal API */
+        Status = CmEnumerateValueKey(KeyObject,
+                                     Index,
+                                     KeyValueInformationClass,
+                                     KeyValueInformation,
+                                     Length,
+                                     ResultLength);
+
+        /* Do the post callback */
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
+    }
+
+    ObDereferenceObject(KeyObject);
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 NtQueryKey(IN HANDLE KeyHandle,
@@ -1050,65 +1128,6 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
     ObDereferenceObject(KeyObject);
     CmiSyncHives();
     return Status;
-}
-
-/*
- * NOTE:
- * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
- * KeyObjectAttributes->Name specifies the name of the key to load.
- * Flags can be 0 or REG_NO_LAZY_FLUSH.
- */
-NTSTATUS STDCALL
-NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-	    IN POBJECT_ATTRIBUTES FileObjectAttributes,
-	    IN ULONG Flags)
-{
-  NTSTATUS Status;
-  PAGED_CODE();
-  DPRINT ("NtLoadKey2() called\n");
-
-#if 0
-  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
-    return STATUS_PRIVILEGE_NOT_HELD;
-#endif
-
-  /* Acquire hive lock */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-
-  Status = CmiLoadHive (KeyObjectAttributes,
-			FileObjectAttributes->ObjectName,
-			Flags);
-  if (!NT_SUCCESS (Status))
-    {
-      DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
-    }
-
-  /* Release hive lock */
-  ExReleaseResourceLite(&CmpRegistryLock);
-  KeLeaveCriticalRegion();
-
-  return Status;
-}
-
-NTSTATUS STDCALL
-NtInitializeRegistry (IN BOOLEAN SetUpBoot)
-{
-  NTSTATUS Status;
-
-  PAGED_CODE();
-
-  if (CmiRegistryInitialized == TRUE)
-    return STATUS_ACCESS_DENIED;
-
-  /* Save boot log file */
-  IopSaveBootLogToFile();
-
-  Status = CmiInitHives (SetUpBoot);
-
-  CmiRegistryInitialized = TRUE;
-
-  return Status;
 }
 
 NTSTATUS
