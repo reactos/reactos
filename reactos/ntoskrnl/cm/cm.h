@@ -210,15 +210,9 @@ CmiScanKeyList(IN PKEY_OBJECT Parent,
 	       PKEY_OBJECT* ReturnedObject);
 
 NTSTATUS
-CmiCreateVolatileHive(PEREGISTRY_HIVE *RegistryHive);
-
-NTSTATUS
 CmiLoadHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    PUNICODE_STRING FileName,
 	    ULONG Flags);
-
-NTSTATUS
-CmiRemoveRegistryHive(PEREGISTRY_HIVE RegistryHive);
 
 NTSTATUS
 CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive);
@@ -335,16 +329,6 @@ CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot);
 
-ULONG
-CmiGetPackedNameLength(IN PUNICODE_STRING Name,
-		       OUT PBOOLEAN Packable);
-
-BOOLEAN
-CmiComparePackedNames(IN PUNICODE_STRING Name,
-		      IN PUCHAR NameBuffer,
-		      IN USHORT NameBufferSize,
-		      IN BOOLEAN NamePacked);
-
 HCELL_INDEX
 NTAPI
 CmpFindValueByName(
@@ -365,23 +349,6 @@ VOID
 CmiCopyPackedName(PWCHAR NameBuffer,
 		  PUCHAR PackedNameBuffer,
 		  ULONG PackedNameSize);
-
-BOOLEAN
-CmiCompareHash(PUNICODE_STRING KeyName,
-	       PCHAR HashString);
-
-BOOLEAN
-CmiCompareHashI(PUNICODE_STRING KeyName,
-		PCHAR HashString);
-
-BOOLEAN
-CmiCompareKeyNames(PUNICODE_STRING KeyName,
-		   PCM_KEY_NODE KeyCell);
-
-BOOLEAN
-CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
-		    PCM_KEY_NODE KeyCell);
-
 
 VOID
 CmiSyncHives(VOID);

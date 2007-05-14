@@ -527,7 +527,6 @@ CmiAddSubKey(PEREGISTRY_HIVE RegistryHive,
   return(Status);
 }
 
-
 NTSTATUS
 CmiRemoveSubKey(PEREGISTRY_HIVE RegistryHive,
 		PKEY_OBJECT ParentKey,
@@ -697,7 +696,6 @@ CmiAllocateHashTableCell (IN PEREGISTRY_HIVE RegistryHive,
   return Status;
 }
 
-
 PCM_KEY_NODE
 CmiGetKeyFromHashByIndex(PEREGISTRY_HIVE RegistryHive,
 			 PHASH_TABLE_CELL HashBlock,
@@ -711,7 +709,6 @@ CmiGetKeyFromHashByIndex(PEREGISTRY_HIVE RegistryHive,
 
   return KeyCell;
 }
-
 
 NTSTATUS
 CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
@@ -735,7 +732,6 @@ CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
   return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
 			  PHASH_TABLE_CELL HashBlock,
@@ -758,67 +754,6 @@ CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
   return STATUS_UNSUCCESSFUL;
 }
 
-ULONG
-CmiGetPackedNameLength(IN PUNICODE_STRING Name,
-		       OUT PBOOLEAN Packable)
-{
-  ULONG i;
-
-  if (Packable != NULL)
-    *Packable = TRUE;
-
-  for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
-    {
-      if (Name->Buffer[i] & 0xFF00)
-	{
-	  if (Packable != NULL)
-	    *Packable = FALSE;
-	  return Name->Length;
-	}
-    }
-
-  return (Name->Length / sizeof(WCHAR));
-}
-
-
-BOOLEAN
-CmiComparePackedNames(IN PUNICODE_STRING Name,
-		      IN PUCHAR NameBuffer,
-		      IN USHORT NameBufferSize,
-		      IN BOOLEAN NamePacked)
-{
-  PWCHAR UNameBuffer;
-  ULONG i;
-
-  if (NamePacked == TRUE)
-    {
-      if (Name->Length != NameBufferSize * sizeof(WCHAR))
-	return(FALSE);
-
-      for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
-	{
-	  if (RtlUpcaseUnicodeChar(Name->Buffer[i]) != RtlUpcaseUnicodeChar((WCHAR)NameBuffer[i]))
-	    return(FALSE);
-	}
-    }
-  else
-    {
-      if (Name->Length != NameBufferSize)
-	return(FALSE);
-
-      UNameBuffer = (PWCHAR)NameBuffer;
-
-      for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
-	{
-	  if (RtlUpcaseUnicodeChar(Name->Buffer[i]) != RtlUpcaseUnicodeChar(UNameBuffer[i]))
-	    return(FALSE);
-	}
-    }
-
-  return(TRUE);
-}
-
-
 VOID
 CmiCopyPackedName(PWCHAR NameBuffer,
 		  PUCHAR PackedNameBuffer,
@@ -829,113 +764,6 @@ CmiCopyPackedName(PWCHAR NameBuffer,
   for (i = 0; i < PackedNameSize; i++)
     NameBuffer[i] = (WCHAR)PackedNameBuffer[i];
 }
-
-
-BOOLEAN
-CmiCompareHash(PUNICODE_STRING KeyName,
-	       PCHAR HashString)
-{
-  CHAR Buffer[4];
-
-  Buffer[0] = (KeyName->Length >= 2) ? (CHAR)KeyName->Buffer[0] : 0;
-  Buffer[1] = (KeyName->Length >= 4) ? (CHAR)KeyName->Buffer[1] : 0;
-  Buffer[2] = (KeyName->Length >= 6) ? (CHAR)KeyName->Buffer[2] : 0;
-  Buffer[3] = (KeyName->Length >= 8) ? (CHAR)KeyName->Buffer[3] : 0;
-
-  return (strncmp(Buffer, HashString, 4) == 0);
-}
-
-
-BOOLEAN
-CmiCompareHashI(PUNICODE_STRING KeyName,
-	        PCHAR HashString)
-{
-  CHAR Buffer[4];
-
-  Buffer[0] = (KeyName->Length >= 2) ? (CHAR)KeyName->Buffer[0] : 0;
-  Buffer[1] = (KeyName->Length >= 4) ? (CHAR)KeyName->Buffer[1] : 0;
-  Buffer[2] = (KeyName->Length >= 6) ? (CHAR)KeyName->Buffer[2] : 0;
-  Buffer[3] = (KeyName->Length >= 8) ? (CHAR)KeyName->Buffer[3] : 0;
-
-  return (_strnicmp(Buffer, HashString, 4) == 0);
-}
-
-
-BOOLEAN
-CmiCompareKeyNames(PUNICODE_STRING KeyName,
-		   PCM_KEY_NODE KeyCell)
-{
-  PWCHAR UnicodeName;
-  USHORT i;
-
-  DPRINT("Flags: %hx\n", KeyCell->Flags);
-
-  if (KeyCell->Flags & REG_KEY_NAME_PACKED)
-    {
-      if (KeyName->Length != KeyCell->NameSize * sizeof(WCHAR))
-	return FALSE;
-
-      for (i = 0; i < KeyCell->NameSize; i++)
-	{
-	  if (KeyName->Buffer[i] != (WCHAR)KeyCell->Name[i])
-	    return FALSE;
-	}
-    }
-  else
-    {
-      if (KeyName->Length != KeyCell->NameSize)
-	return FALSE;
-
-      UnicodeName = (PWCHAR)KeyCell->Name;
-      for (i = 0; i < KeyCell->NameSize / sizeof(WCHAR); i++)
-	{
-	  if (KeyName->Buffer[i] != UnicodeName[i])
-	    return FALSE;
-	}
-    }
-
-  return TRUE;
-}
-
-
-BOOLEAN
-CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
-		    PCM_KEY_NODE KeyCell)
-{
-  PWCHAR UnicodeName;
-  USHORT i;
-
-  DPRINT("Flags: %hx\n", KeyCell->Flags);
-
-  if (KeyCell->Flags & REG_KEY_NAME_PACKED)
-    {
-      if (KeyName->Length != KeyCell->NameSize * sizeof(WCHAR))
-	return FALSE;
-
-      for (i = 0; i < KeyCell->NameSize; i++)
-	{
-	  if (RtlUpcaseUnicodeChar(KeyName->Buffer[i]) !=
-	      RtlUpcaseUnicodeChar((WCHAR)KeyCell->Name[i]))
-	    return FALSE;
-	}
-    }
-  else
-    {
-      if (KeyName->Length != KeyCell->NameSize)
-	return FALSE;
-
-      UnicodeName = (PWCHAR)KeyCell->Name;
-      for (i = 0; i < KeyCell->NameSize / sizeof(WCHAR); i++)
-	{
-	  if (RtlUpcaseUnicodeChar(KeyName->Buffer[i]) !=
-	      RtlUpcaseUnicodeChar(UnicodeName[i]))
-	    return FALSE;
-	}
-    }
-
-  return TRUE;
-}
-
 
 NTSTATUS
 CmiSaveTempHive (PEREGISTRY_HIVE Hive,
