@@ -158,6 +158,11 @@
 #define CMP_LOCK_HASHES_FOR_KCB                         0x2
 
 //
+// Maximum size of Value Cache
+//
+#define MAXIMUM_CACHED_DATA                             2 * PAGE_SIZE
+
+//
 // Number of items that can fit inside an Allocation Page
 //
 #define CM_KCBS_PER_PAGE                                \
@@ -166,6 +171,16 @@
     PAGE_SIZE / sizeof(CM_DELAYED_CLOSE_ENTRY)
 
 #ifndef __INCLUDE_CM_H
+
+//
+// Value Search Results
+//
+typedef enum _VALUE_SEARCH_RETURN_TYPE
+{
+    SearchSuccess,
+    SearchNeedExclusiveLock,
+    SearchFail
+} VALUE_SEARCH_RETURN_TYPE;
 
 //
 // Key Hash
@@ -238,7 +253,8 @@ typedef struct _CACHED_CHILD_LIST
     union
     {
         ULONG ValueList;
-        struct _CM_KEY_CONTROL_BLOCK *RealKcb;
+        //struct _CM_KEY_CONTROL_BLOCK *RealKcb;
+        struct _KEY_OBJECT *RealKcb;
     };
 } CACHED_CHILD_LIST, *PCACHED_CHILD_LIST;
 
@@ -595,6 +611,7 @@ typedef struct _CM_CACHED_VALUE
 {
     USHORT DataCacheType;
     USHORT ValueKeySize;
+    ULONG HashKey;
     CM_KEY_VALUE KeyValue;
 } CM_CACHED_VALUE, *PCM_CACHED_VALUE;
 
@@ -644,6 +661,20 @@ typedef struct _CM_SYSTEM_CONTROL_VECTOR
     PULONG Type;
 } CM_SYSTEM_CONTROL_VECTOR, *PCM_SYSTEM_CONTROL_VECTOR;
 
+//
+// Structure for CmpQueryValueDataFromCache
+//
+typedef struct _KEY_VALUE_INFORMATION
+{
+    union
+    {
+        KEY_VALUE_BASIC_INFORMATION KeyValueBasicInformation;
+        KEY_VALUE_FULL_INFORMATION KeyValueFullInformation;
+        KEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInformation;
+        KEY_VALUE_PARTIAL_INFORMATION_ALIGN64 KeyValuePartialInformationAlign64;
+    };
+} KEY_VALUE_INFORMATION, *PKEY_VALUE_INFORMATION;
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // BUGBUG Old Hive Stuff for Temporary Support
@@ -679,6 +710,7 @@ typedef struct _KEY_OBJECT
     struct _KEY_OBJECT **SubKeys;
     ULONG TimeStamp;
     LIST_ENTRY HiveList;
+    CACHED_CHILD_LIST ValueCache;
 } KEY_OBJECT, *PKEY_OBJECT;
 extern PEREGISTRY_HIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;
@@ -706,6 +738,35 @@ VOID
 NTAPI
 CmpInitSecurityCache(
     IN PCMHIVE Hive
+);
+
+//
+// Value Cache Functions
+//
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpFindValueByNameFromCache(
+    IN PKEY_OBJECT KeyObject,
+    IN PUNICODE_STRING Name,
+    OUT PCM_CACHED_VALUE **CachedValue,
+    OUT ULONG *Index,
+    OUT PCM_KEY_VALUE *Value,
+    OUT BOOLEAN *ValueIsCached,
+    OUT PHCELL_INDEX CellToRelease
+);
+
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpQueryKeyValueData(
+    IN PKEY_OBJECT KeyObject,
+    IN PCM_CACHED_VALUE *CachedValue,
+    IN PCM_KEY_VALUE ValueKey,
+    IN BOOLEAN ValueIsCached,
+    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    IN PVOID KeyValueInformation,
+    IN ULONG Length,
+    OUT PULONG ResultLength,
+    OUT PNTSTATUS Status
 );
 
 //
@@ -955,6 +1016,22 @@ CmpNameSize(
 
 USHORT
 NTAPI
+CmpCompressedNameSize(
+    IN PWCHAR Name,
+    IN ULONG Length
+);
+
+VOID
+NTAPI
+CmpCopyCompressedName(
+    IN PWCHAR Destination,
+    IN ULONG DestinationLength,
+    IN PWCHAR Source,
+    IN ULONG SourceLength
+);
+
+USHORT
+NTAPI
 CmpCopyName(
     IN PHHIVE Hive,
     IN PWCHAR Destination,
@@ -1000,6 +1077,14 @@ CmpFindSubKeyByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE Parent,
     IN PUNICODE_STRING SearchName
+);
+
+ULONG
+NTAPI
+CmpComputeHashKey(
+    IN ULONG Hash,
+    IN PUNICODE_STRING Name,
+    IN BOOLEAN AllowSeparators
 );
 
 //
@@ -1070,6 +1155,17 @@ CmpRemoveValueFromList(
     IN PHHIVE Hive,
     IN ULONG Index,
     IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpGetValueData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    IN PULONG Length,
+    OUT PVOID *Buffer,
+    OUT PBOOLEAN BufferAllocated,
+    OUT PHCELL_INDEX CellToRelease
 );
 
 //

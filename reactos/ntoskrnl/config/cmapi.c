@@ -433,7 +433,7 @@ CmDeleteValueKey(IN PKEY_OBJECT KeyObject,
             Parent->MaxValueDataLen = 0;
         }
 
-        /* Change default status to success */
+        /* Change default Status to success */
         Status = STATUS_SUCCESS;
     }
 
@@ -448,6 +448,71 @@ Quickie:
         ASSERT(ChildCell != HCELL_NIL);
         HvReleaseCell(Hive, ChildCell);
     }
+
+    /* Release hive lock */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmQueryValueKey(IN PKEY_OBJECT KeyObject,
+                IN UNICODE_STRING ValueName,
+                IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+                IN PVOID KeyValueInformation,
+                IN ULONG Length,
+                IN PULONG ResultLength)
+{
+    NTSTATUS Status;
+    PCM_KEY_VALUE ValueData;
+    ULONG Index;
+    BOOLEAN ValueCached = FALSE;
+    PCM_CACHED_VALUE *CachedValue;
+    HCELL_INDEX CellToRelease;
+    VALUE_SEARCH_RETURN_TYPE Result;
+    PHHIVE Hive;
+    PAGED_CODE();
+
+    /* Acquire hive lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+
+    /* Get the hive */
+    Hive = &KeyObject->RegistryHive->Hive;
+
+    /* Find the key value */
+    Result = CmpFindValueByNameFromCache(KeyObject,
+                                         &ValueName,
+                                         &CachedValue,
+                                         &Index,
+                                         &ValueData,
+                                         &ValueCached,
+                                         &CellToRelease);
+    if (Result == SearchSuccess)
+    {
+        /* Sanity check */
+        ASSERT(ValueData != NULL);
+
+        /* Query the information requested */
+        Result = CmpQueryKeyValueData(KeyObject,
+                                      CachedValue,
+                                      ValueData,
+                                      ValueCached,
+                                      KeyValueInformationClass,
+                                      KeyValueInformation,
+                                      Length,
+                                      ResultLength,
+                                      &Status);
+    }
+    else
+    {
+        /* Failed to find the value */
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    /* If we have a cell to release, do so */
+    if (CellToRelease != HCELL_NIL) HvReleaseCell(Hive, CellToRelease);
 
     /* Release hive lock */
     ExReleaseResourceLite(&CmpRegistryLock);

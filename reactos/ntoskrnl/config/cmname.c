@@ -52,6 +52,24 @@ CmpCopyName(IN PHHIVE Hive,
     return Source->Length / sizeof(WCHAR);
 }
 
+VOID
+NTAPI
+CmpCopyCompressedName(IN PWCHAR Destination,
+                      IN ULONG DestinationLength,
+                      IN PWCHAR Source,
+                      IN ULONG SourceLength)
+{
+    ULONG i, Length;
+
+    /* Get the actual length to copy */
+    Length = min(DestinationLength / sizeof(WCHAR), SourceLength);
+    for (i = 0; i < Length; i++)
+    {
+        /* Copy each character */
+        Destination[i] = (WCHAR)((PCHAR)Source)[i];
+    }
+}
+
 USHORT
 NTAPI
 CmpNameSize(IN PHHIVE Hive,
@@ -71,6 +89,20 @@ CmpNameSize(IN PHHIVE Hive,
 
     /* Compressed name, return length */
     return Name->Length / sizeof(WCHAR);
+}
+
+USHORT
+NTAPI
+CmpCompressedNameSize(IN PWCHAR Name,
+                      IN ULONG Length)
+{
+    /*
+     * Don't remove this: compressed names are "opaque" and just because
+     * the current implementation turns them into ansi-names doesn't mean
+     * that it will remain that way forever, so -never- assume this code
+     * below internally!
+     */
+    return Length * sizeof(WCHAR);
 }
 
 LONG

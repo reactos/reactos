@@ -48,6 +48,20 @@
 #define IsNoFileHive(Hive)  ((Hive)->Flags & HIVE_NO_FILE)
 #define IsNoSynchHive(Hive)  ((Hive)->Flags & HIVE_NO_SYNCH)
 
+//
+// Cached Child List
+//
+typedef struct _CACHED_CHILD_LIST
+{
+    ULONG Count;
+    union
+    {
+        ULONG ValueList;
+        //struct _CM_KEY_CONTROL_BLOCK *RealKcb;
+        struct _KEY_OBJECT *RealKcb;
+    };
+} CACHED_CHILD_LIST, *PCACHED_CHILD_LIST;
+
 /* KEY_OBJECT.Flags */
 
 /* When set, the key is scheduled for deletion, and all
@@ -96,6 +110,8 @@ typedef struct _KEY_OBJECT
 
   /* List entry for connected hives */
   LIST_ENTRY HiveList;
+
+  CACHED_CHILD_LIST ValueCache;
 } KEY_OBJECT, *PKEY_OBJECT;
 
 /* Bits 31-22 (top 10 bits) of the cell index is the directory index */
@@ -264,6 +280,15 @@ NTSTATUS
 NTAPI
 CmDeleteValueKey(IN PKEY_OBJECT KeyControlBlock,
                  IN UNICODE_STRING ValueName);
+
+NTSTATUS
+NTAPI
+CmQueryValueKey(IN PKEY_OBJECT KeyObject,
+                IN UNICODE_STRING ValueName,
+                IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+                IN PVOID KeyValueInformation,
+                IN ULONG Length,
+                IN PULONG ResultLength);
 
 NTSTATUS
 CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,

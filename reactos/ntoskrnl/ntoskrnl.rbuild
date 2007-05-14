@@ -106,6 +106,7 @@
             <file>cmsecach.c</file>
             <file>cmsysini.c</file>
             <file>cmvalue.c</file>
+            <file>cmvalche.c</file>
             <file>cmwraprs.c</file>
     </directory>
     <directory name="cm">
