@@ -22,9 +22,9 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifdef DBG
 ULONG			AllocationCount = 0;
 
+#ifdef DBG
 VOID		VerifyHeap(VOID);
 VOID		DumpMemoryAllocMap(VOID);
 VOID		IncrementAllocationCount(VOID);
