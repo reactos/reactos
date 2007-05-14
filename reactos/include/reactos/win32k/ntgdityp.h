@@ -143,4 +143,12 @@ typedef struct _MATRIX_S
     FLONG flAccel;
 } MATRIX_S;
 
+/* Gdi XForm storage union */
+typedef union
+{
+  FLOAT f;
+  ULONG l;
+} gxf_long;
+
+
 #endif
