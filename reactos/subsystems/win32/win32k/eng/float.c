@@ -26,10 +26,33 @@
  * REVISION HISTORY:
  */
 
+/* INCLUDES *****************************************************************/
+
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
+
+/* DEFINES *****************************************************************/
+
+#ifdef __GNUC__
+#define FLOAT_TO_INT(in,out)  \
+           __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st");
+#else
+#define FLOAT_TO_INT(in,out) \
+          __asm fld in \
+          __asm fistp out
+#endif
+
+/* the following deal with IEEE single-precision numbers */
+#define EXCESS          126L
+#define SIGNBIT         0x80000000L
+#define SIGN(fp)        ((fp) & SIGNBIT)
+#define EXP(fp)         (((fp) >> 23L) & 0xFF)
+#define MANT(fp)        ((fp) & 0x7FFFFFL)
+#define PACK(s,e,m)     ((s) | ((e) << 23L) | (m))
+ 
+/* FUNCTIONS *****************************************************************/
 
 BOOL
 STDCALL
@@ -72,6 +95,59 @@ EngSaveFloatingPointState(OUT VOID  *Buffer,
       return FALSE;
     }
   return TRUE;
+}
+
+VOID
+FASTCALL
+EF_Negate(EFLOAT_S * efp)
+{
+// Do it this way since ReactOS uses real FP.
+  if (SIGN(efp->lMant)) efp->lMant = efp->lMant & ~SIGNBIT;
+  else efp->lMant = efp->lMant | SIGNBIT;  
+}
+
+LONG
+FASTCALL
+EFtoF( EFLOAT_S * efp)
+{
+ long Mant, Exp, Sign = 0;
+
+ if (!efp->lMant) return 0;
+
+ Mant = efp->lMant;
+ Exp = efp->lExp;
+ Sign = SIGN(Mant);
+
+//// M$ storage emulation
+ Mant = ((Mant & 0x3fffffff)>>7);
+ Exp += (1 - EXCESS);
+////
+ Mant = MANT(Mant);
+ return PACK(Sign, Exp, Mant);
+}
+
+VOID
+FASTCALL
+FtoEF( EFLOAT_S * efp, FLOATL f)
+{
+ long Mant, Exp;
+ gxf_long worker;
+
+#ifdef _X86_
+ worker.l = f; // It's a float stored in a long.
+#else
+ worker.f = f;
+#endif
+
+ Exp = EXP(worker.l);
+ Mant = MANT(worker.l); 
+
+//// M$ storage emulation
+ Mant = ((Mant << 7) | 0x40000000 | SIGN(worker.l));
+ Exp -= (1 - EXCESS);
+//// 
+ efp->lMant = Mant;
+ efp->lExp = Exp;
 }
 
 VOID
@@ -169,8 +245,8 @@ STDCALL
 FLOATOBJ_GetFloat ( IN PFLOATOBJ pf )
 {
   // www.osr.com/ddk/graphics/gdifncs_4d5z.htm
-  UNIMPLEMENTED;
-  return 0;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  return EFtoF(efp);
 }
 
 LONG
@@ -178,8 +254,14 @@ STDCALL
 FLOATOBJ_GetLong ( IN PFLOATOBJ pf )
 {
   // www.osr.com/ddk/graphics/gdifncs_0tgn.htm
-  UNIMPLEMENTED;
-  return 0;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  long l;
+   
+  f.l = EFtoF( efp );
+  FLOAT_TO_INT(f.f, l); // Let FPP handle it the fasty haxy way.
+     
+  return l;
 }
 
 BOOL
@@ -268,7 +350,8 @@ STDCALL
 FLOATOBJ_Neg ( IN OUT PFLOATOBJ pf )
 {
   // www.osr.com/ddk/graphics/gdifncs_14pz.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EF_Negate(efp);
 }
 
 VOID
@@ -279,7 +362,8 @@ FLOATOBJ_SetFloat(
 	)
 {
   // www.osr.com/ddk/graphics/gdifncs_1prb.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  FtoEF( efp, f);
 }
 
 VOID
@@ -290,7 +374,14 @@ FLOATOBJ_SetLong(
 	)
 {
   // www.osr.com/ddk/graphics/gdifncs_0gpz.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.f = (float) l; // Convert it now.
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif       
 }
 
 VOID
