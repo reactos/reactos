@@ -45,7 +45,7 @@ BEGIN
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "ReactOS ist unter der GPL veröffentlicht, wenn Sie also (Teile von) ReactOS wiederverwenden "\
                     "oder wiederveröffentlichen wollen, müssen Sie die GPL respektieren.",
-                    IDC_STATIC,15,110,227,19
+                    IDC_STATIC,15,110,227,24
     PUSHBUTTON      "&GPL &ansehen...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "Klicken Sie auf Weiter, um mit dem Setup fortzufahren.",IDC_STATIC,15,136,
                     195,17
