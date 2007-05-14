@@ -285,6 +285,23 @@ CmQueryValueKey(IN PKEY_OBJECT KeyObject,
                 IN PULONG ResultLength);
 
 NTSTATUS
+NTAPI
+CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
+                    IN ULONG Index,
+                    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+                    IN PVOID KeyValueInformation,
+                    IN ULONG Length,
+                    IN PULONG ResultLength);
+
+NTSTATUS
+NTAPI
+CmSetValueKey(IN PKEY_OBJECT KeyObject,
+              IN PUNICODE_STRING ValueName,
+              IN ULONG Type,
+              IN PVOID Data,
+              IN ULONG DataSize);
+
+NTSTATUS
 CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
 			 OUT PHASH_TABLE_CELL *HashBlock,
 			 OUT HCELL_INDEX *HBOffset,
@@ -303,14 +320,6 @@ CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
 		     HV_STORAGE_TYPE StorageType,
 		     PCM_KEY_NODE NewKeyCell,
 		     HCELL_INDEX NKBOffset);
-
-NTSTATUS
-NTAPI
-CmSetValueKey(IN PKEY_OBJECT KeyObject,
-              IN PUNICODE_STRING ValueName,
-              IN ULONG Type,
-              IN PVOID Data,
-              IN ULONG DataSize);
 
 NTSTATUS
 CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,

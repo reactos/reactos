@@ -519,3 +519,108 @@ CmQueryValueKey(IN PKEY_OBJECT KeyObject,
     KeLeaveCriticalRegion();
     return Status;
 }
+
+NTSTATUS
+NTAPI
+CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
+                    IN ULONG Index,
+                    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+                    IN PVOID KeyValueInformation,
+                    IN ULONG Length,
+                    IN PULONG ResultLength)
+{
+    NTSTATUS Status;
+    PHHIVE Hive;
+    PCM_KEY_NODE Parent;
+    HCELL_INDEX CellToRelease = HCELL_NIL, CellToRelease2 = HCELL_NIL;
+    VALUE_SEARCH_RETURN_TYPE Result;
+    BOOLEAN IndexIsCached, ValueIsCached = FALSE;
+    PCELL_DATA CellData;
+    PCM_CACHED_VALUE *CachedValue;
+    PCM_KEY_VALUE ValueData;
+    PAGED_CODE();
+
+    /* Acquire hive lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+
+    /* Get the hive and parent */
+    Hive = &KeyObject->RegistryHive->Hive;
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, KeyObject->KeyCellOffset);
+    if (!Parent)
+    {
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Make sure the index is valid */
+    //if (Index >= KeyObject->ValueCache.Count)
+    if (Index >= KeyObject->KeyCell->ValueList.Count)
+    {
+        /* Release the cell and fail */
+        HvReleaseCell(Hive, KeyObject->KeyCellOffset);
+        Status = STATUS_NO_MORE_ENTRIES;
+        goto Quickie;
+    }
+
+    /* Find the value list */
+    Result = CmpGetValueListFromCache(KeyObject,
+                                      &CellData,
+                                      &IndexIsCached,
+                                      &CellToRelease);
+    if (Result != SearchSuccess)
+    {
+        /* Sanity check */
+        ASSERT(CellData == NULL);
+
+        /* Release the cell and fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Now get the key value */
+    Result = CmpGetValueKeyFromCache(KeyObject,
+                                     CellData,
+                                     Index,
+                                     &CachedValue,
+                                     &ValueData,
+                                     IndexIsCached,
+                                     &ValueIsCached,
+                                     &CellToRelease2);
+    if (Result != SearchSuccess)
+    {
+        /* Sanity check */
+        ASSERT(CellToRelease2 == HCELL_NIL);
+
+        /* Release the cells and fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Query the information requested */
+    Result = CmpQueryKeyValueData(KeyObject,
+                                  CachedValue,
+                                  ValueData,
+                                  ValueIsCached,
+                                  KeyValueInformationClass,
+                                  KeyValueInformation,
+                                  Length,
+                                  ResultLength,
+                                  &Status);
+
+Quickie:
+    /* If we have a cell to release, do so */
+    if (CellToRelease != HCELL_NIL) HvReleaseCell(Hive, CellToRelease);
+
+    /* Release the parent cell */
+    HvReleaseCell(Hive, KeyObject->KeyCellOffset);
+
+    /* If we have a cell to release, do so */
+    if (CellToRelease2 != HCELL_NIL) HvReleaseCell(Hive, CellToRelease2);
+
+    /* Release hive lock */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+    return Status;
+}

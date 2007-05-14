@@ -830,276 +830,60 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   return(Status);
 }
 
-
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtEnumerateValueKey(IN HANDLE KeyHandle,
-	IN ULONG Index,
-	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-	OUT PVOID KeyValueInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength)
+                    IN ULONG Index,
+                    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+                    OUT PVOID KeyValueInformation,
+                    IN ULONG Length,
+                    OUT PULONG ResultLength)
 {
-  NTSTATUS  Status;
-  PKEY_OBJECT  KeyObject;
-  PEREGISTRY_HIVE  RegistryHive;
-  PCM_KEY_NODE  KeyCell;
-  PCM_KEY_VALUE  ValueCell;
-  PVOID  DataCell;
-  ULONG NameSize, DataSize;
-  REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
-  REG_POST_OPERATION_INFORMATION PostOperationInfo;
-  PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
-  PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
-  PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
+    NTSTATUS Status;
+    PKEY_OBJECT KeyObject;
+    REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       KEY_QUERY_VALUE,
+                                       CmpKeyObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID *)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  DPRINT("KH 0x%p  I %d  KVIC %x  KVI 0x%p  L %d  RL 0x%p\n",
-	 KeyHandle,
-	 Index,
-	 KeyValueInformationClass,
-	 KeyValueInformation,
-	 Length,
-	 ResultLength);
+    /* Setup the callback */
+    PostOperationInfo.Object = (PVOID)KeyObject;
+    EnumerateValueKeyInfo.Object = (PVOID)KeyObject;
+    EnumerateValueKeyInfo.Index = Index;
+    EnumerateValueKeyInfo.KeyValueInformationClass = KeyValueInformationClass;
+    EnumerateValueKeyInfo.KeyValueInformation = KeyValueInformation;
+    EnumerateValueKeyInfo.Length = Length;
+    EnumerateValueKeyInfo.ResultLength = ResultLength;
 
-  /*  Verify that the handle is valid and is a registry key  */
-  Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_QUERY_VALUE,
-		CmpKeyObjectType,
-		ExGetPreviousMode(),
-		(PVOID *) &KeyObject,
-		NULL);
-
-  if (!NT_SUCCESS(Status))
+    /* Do the callback */
+    Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateValueKey,
+                                        &EnumerateValueKeyInfo);
+    if (NT_SUCCESS(Status))
     {
-      return Status;
+        /* Call the internal API */
+        Status = CmEnumerateValueKey(KeyObject,
+                                     Index,
+                                     KeyValueInformationClass,
+                                     KeyValueInformation,
+                                     Length,
+                                     ResultLength);
+
+        /* Do the post callback */
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
     }
 
-  PostOperationInfo.Object = (PVOID)KeyObject;
-  EnumerateValueKeyInfo.Object = (PVOID)KeyObject;
-  EnumerateValueKeyInfo.Index = Index;
-  EnumerateValueKeyInfo.KeyValueInformationClass = KeyValueInformationClass;
-  EnumerateValueKeyInfo.KeyValueInformation = KeyValueInformation;
-  EnumerateValueKeyInfo.Length = Length;
-  EnumerateValueKeyInfo.ResultLength = ResultLength;
-
-  Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateValueKey, &EnumerateValueKeyInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
-      ObDereferenceObject(KeyObject);
-      return Status;
-    }
-
-  /* Acquire hive lock */
-  KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  /* Get pointer to KeyCell */
-  KeyCell = KeyObject->KeyCell;
-  RegistryHive = KeyObject->RegistryHive;
-
-  /* Get Value block of interest */
-  Status = CmiGetValueFromKeyByIndex(RegistryHive,
-		KeyCell,
-		Index,
-		&ValueCell);
-
-  if (!NT_SUCCESS(Status))
-    {
-      ExReleaseResourceLite(&CmpRegistryLock);
-      KeLeaveCriticalRegion();
-      ObDereferenceObject(KeyObject);
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
-      return Status;
-    }
-
-  if (ValueCell != NULL)
-    {
-      switch (KeyValueInformationClass)
-        {
-        case KeyValueBasicInformation:
-	  NameSize = ValueCell->NameSize;
-	  if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
-	    {
-	      NameSize *= sizeof(WCHAR);
-	    }
-
-          *ResultLength = FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]) + NameSize;
-
-          if (Length < FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]))
-            {
-              Status = STATUS_BUFFER_TOO_SMALL;
-            }
-          else
-            {
-              ValueBasicInformation = (PKEY_VALUE_BASIC_INFORMATION)
-                KeyValueInformation;
-              ValueBasicInformation->TitleIndex = 0;
-              ValueBasicInformation->Type = ValueCell->DataType;
-	      ValueBasicInformation->NameLength = NameSize;
-
-	      if (Length - FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]) <
-	          NameSize)
-	        {
-	          NameSize = Length - FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name[0]);
-	          Status = STATUS_BUFFER_OVERFLOW;
-	          CHECKPOINT;
-	        }
-
-              if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
-                {
-                  CmiCopyPackedName(ValueBasicInformation->Name,
-                                    ValueCell->Name,
-                                    NameSize / sizeof(WCHAR));
-                }
-              else
-                {
-                  RtlCopyMemory(ValueBasicInformation->Name,
-                                ValueCell->Name,
-                                NameSize);
-                }
-            }
-          break;
-
-        case KeyValuePartialInformation:
-          DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
-
-          *ResultLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) +
-            DataSize;
-
-          if (Length < FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]))
-            {
-              Status = STATUS_BUFFER_TOO_SMALL;
-            }
-          else
-            {
-              ValuePartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)
-                KeyValueInformation;
-              ValuePartialInformation->TitleIndex = 0;
-              ValuePartialInformation->Type = ValueCell->DataType;
-              ValuePartialInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
-
-              if (Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) <
-                  DataSize)
-                {
-                  DataSize = Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
-                  Status = STATUS_BUFFER_OVERFLOW;
-                  CHECKPOINT;
-                }
-
-              if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
-              {
-                DataCell = HvGetCell (&RegistryHive->Hive, ValueCell->DataOffset);
-                RtlCopyMemory(ValuePartialInformation->Data,
-                  DataCell,
-                  DataSize);
-              }
-              else
-              {
-                RtlCopyMemory(ValuePartialInformation->Data,
-                  &ValueCell->DataOffset,
-                  DataSize);
-              }
-            }
-          break;
-
-        case KeyValueFullInformation:
-	  NameSize = ValueCell->NameSize;
-          if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
-            {
-	      NameSize *= sizeof(WCHAR);
-	    }
-	  DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
-
-          *ResultLength = ROUND_UP(FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION,
-                          Name[0]) + NameSize, sizeof(PVOID)) + DataSize;
-
-          if (Length < FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]))
-            {
-              Status = STATUS_BUFFER_TOO_SMALL;
-            }
-          else
-            {
-              ValueFullInformation = (PKEY_VALUE_FULL_INFORMATION)
-                KeyValueInformation;
-              ValueFullInformation->TitleIndex = 0;
-              ValueFullInformation->Type = ValueCell->DataType;
-              ValueFullInformation->NameLength = NameSize;
-              ValueFullInformation->DataOffset =
-                (ULONG_PTR)ValueFullInformation->Name -
-                (ULONG_PTR)ValueFullInformation +
-                ValueFullInformation->NameLength;
-              ValueFullInformation->DataOffset =
-                  ROUND_UP(ValueFullInformation->DataOffset, sizeof(PVOID));
-              ValueFullInformation->DataLength = ValueCell->DataSize & REG_DATA_SIZE_MASK;
-
-              if (Length < ValueFullInformation->DataOffset)
-	        {
-	          NameSize = Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name[0]);
-	          DataSize = 0;
-	          Status = STATUS_BUFFER_OVERFLOW;
-	          CHECKPOINT;
-	        }
-              else if (Length - ValueFullInformation->DataOffset < DataSize) 
-	        {
-	          DataSize = Length - ValueFullInformation->DataOffset;
-	          Status = STATUS_BUFFER_OVERFLOW;
-	          CHECKPOINT;
-	        }
-
-              if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
-                {
-                  CmiCopyPackedName(ValueFullInformation->Name,
-				    ValueCell->Name,
-				    NameSize / sizeof(WCHAR));
-                }
-              else
-                {
-                  RtlCopyMemory(ValueFullInformation->Name,
-				ValueCell->Name,
-				NameSize);
-                }
-
-              if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET))
-                {
-                  DataCell = HvGetCell (&RegistryHive->Hive, ValueCell->DataOffset);
-                  RtlCopyMemory((PCHAR) ValueFullInformation
-                    + ValueFullInformation->DataOffset,
-                    DataCell, DataSize);
-                }
-              else
-                {
-                  RtlCopyMemory((PCHAR) ValueFullInformation
-                    + ValueFullInformation->DataOffset,
-                    &ValueCell->DataOffset, DataSize);
-                }
-            }
-          break;
-
-          default:
-            DPRINT1("Not handling 0x%x\n", KeyValueInformationClass);
-        	break;
-        }
-    }
-  else
-    {
-      Status = STATUS_UNSUCCESSFUL;
-    }
-
-  ExReleaseResourceLite(&CmpRegistryLock);
-  KeLeaveCriticalRegion();
-  ObDereferenceObject(KeyObject);
-  PostOperationInfo.Status = Status;
-  CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
-
-  return Status;
+    ObDereferenceObject(KeyObject);
+    return Status;
 }
-
 
 NTSTATUS STDCALL
 NtFlushKey(IN HANDLE KeyHandle)

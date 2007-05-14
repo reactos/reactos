@@ -769,6 +769,28 @@ CmpQueryKeyValueData(
     OUT PNTSTATUS Status
 );
 
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpGetValueListFromCache(
+    IN PKEY_OBJECT KeyObject,
+    OUT PCELL_DATA *CellData,
+    OUT BOOLEAN *IndexIsCached,
+    OUT PHCELL_INDEX ValueListToRelease
+);
+
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpGetValueKeyFromCache(
+    IN PKEY_OBJECT KeyObject,
+    IN PCELL_DATA CellData,
+    IN ULONG Index,
+    OUT PCM_CACHED_VALUE **CachedValue,
+    OUT PCM_KEY_VALUE *Value,
+    IN BOOLEAN IndexIsCached,
+    OUT BOOLEAN *ValueIsCached,
+    OUT PHCELL_INDEX CellToRelease
+);
+
 //
 // Registry Validation Functions
 //
