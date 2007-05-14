@@ -6,7 +6,7 @@ CAPTION "Instalace ovladaèe obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "ReactOS zjistil, že bìží pod VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Pokud chcete nainstalovat VMware(r) SVGA ovladaè klepnìte na 'Další', pokud ovladaè instalovat nechcete, klepnìte na 'Storno'.", -1, 100, 140, 160, 17
+  LTEXT "Pokud chcete nainstalovat VMware(r) SVGA ovladaè klepnìte na 'Další', pokud ovladaè instalovat nechcete, klepnìte na 'Storno'.", -1, 100, 140, 160, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -64,7 +64,7 @@ BEGIN
   PUSHBUTTON "Upravit nastavení obrazovky", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Použít jiný grafický ovladaè", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Odebrat ovladaè VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Klepnìte na 'Další' pro pokraèování nebo na 'Storno' pro ukonèení prùvodce.", -1, 25, 93, 225, 12
+  LTEXT "Klepnìte na 'Další' pro pokraèování nebo na 'Storno' pro ukonèení prùvodce.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

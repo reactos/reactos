@@ -8,7 +8,7 @@ CAPTION "Instalación del Controlador de Video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "El instalador de ReactOS ha detectado que husted está ejecutando ReactOS sobre el emulador VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Si husted desea instalar el controlador SVGA VMware(r), haga click en 'Siguiente', de lo contrario haga click en 'Cancelar'.", -1, 100, 140, 160, 17
+  LTEXT "Si husted desea instalar el controlador SVGA VMware(r), haga click en 'Siguiente', de lo contrario haga click en 'Cancelar'.", -1, 100, 140, 160, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -66,7 +66,7 @@ BEGIN
   PUSHBUTTON "Configurar las opciones de pantalla", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Usar un controlador gráfico distinto", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Desinstalar el controlador SVGA VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Haga Click en 'Siguiente' para continuar o 'Cancelar' para salir del asistente.", -1, 25, 93, 225, 12
+  LTEXT "Haga Click en 'Siguiente' para continuar o 'Cancelar' para salir del asistente.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

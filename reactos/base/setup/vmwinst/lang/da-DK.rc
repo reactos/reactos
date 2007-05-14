@@ -6,7 +6,7 @@ CAPTION "Driver til Grafikkort Installation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "ReactOS Installation har opdaget at du køre ReactOS under VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Hvis du ønsker at installere VMware(r) SVGA driveren Klik 'Næste', Ellers klik på 'Fortryd' for at afbryde.", -1, 100, 140, 160, 17
+  LTEXT "Hvis du ønsker at installere VMware(r) SVGA driveren Klik 'Næste', Ellers klik på 'Fortryd' for at afbryde.", -1, 100, 140, 160, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -64,7 +64,7 @@ BEGIN
   PUSHBUTTON "Konfigurer Skærm indstillinger", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Benyt en anden Grafikkort Driver", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Afinstallere WMware(r) SVGA driver", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Klik på 'Næste' for at forsætte eller klik på 'Fortryd' for at afslutte guiden.", -1, 25, 93, 225, 12
+  LTEXT "Klik på 'Næste' for at forsætte eller klik på 'Fortryd' for at afslutte guiden.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
