@@ -675,6 +675,16 @@ typedef struct _KEY_VALUE_INFORMATION
     };
 } KEY_VALUE_INFORMATION, *PKEY_VALUE_INFORMATION;
 
+typedef struct _KEY_INFORMATION
+{
+    union
+    {
+        KEY_BASIC_INFORMATION KeyBasicInformation;
+        KEY_FULL_INFORMATION KeyFullInformation;
+        KEY_NODE_INFORMATION KeyNodeInformation;
+    };
+} KEY_INFORMATION, *PKEY_INFORMATION;
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // BUGBUG Old Hive Stuff for Temporary Support
@@ -718,6 +728,10 @@ extern KTIMER CmiWorkerTimer;
 VOID NTAPI CmiWorkerThread(IN PVOID Param);
 PVOID NTAPI CmpRosGetHardwareHive(OUT PULONG Length);
 NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
+ULONG CmiGetMaxNameLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
+ULONG CmiGetMaxClassLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
+ULONG CmiGetMaxValueNameLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
+ULONG CmiGetMaxValueDataLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
 VOID CmiSyncHives(VOID);
 #define HIVE_NO_FILE    0x00000002
 ///////////////////////////////////////////////////////////////////////////////

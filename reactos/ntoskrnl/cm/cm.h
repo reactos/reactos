@@ -221,17 +221,17 @@ ULONG
 CmiGetNumberOfSubKeys(PKEY_OBJECT KeyObject);
 
 ULONG
-CmiGetMaxNameLength(IN PKEY_OBJECT KeyObject);
+CmiGetMaxNameLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
 
 ULONG
-CmiGetMaxClassLength(IN PKEY_OBJECT KeyObject);
+CmiGetMaxClassLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
 
 ULONG
-CmiGetMaxValueNameLength(IN PEREGISTRY_HIVE RegistryHive,
+CmiGetMaxValueNameLength(IN PHHIVE RegistryHive,
 			 IN PCM_KEY_NODE KeyCell);
 
 ULONG
-CmiGetMaxValueDataLength(IN PEREGISTRY_HIVE RegistryHive,
+CmiGetMaxValueDataLength(IN PHHIVE RegistryHive,
 			 IN PCM_KEY_NODE KeyCell);
 
 NTSTATUS
@@ -300,6 +300,14 @@ CmSetValueKey(IN PKEY_OBJECT KeyObject,
               IN ULONG Type,
               IN PVOID Data,
               IN ULONG DataSize);
+
+NTSTATUS
+NTAPI
+CmQueryKey(IN PKEY_OBJECT KeyObject,
+           IN KEY_INFORMATION_CLASS KeyInformationClass,
+           IN PVOID KeyInformation,
+           IN ULONG Length,
+           IN PULONG ResultLength);
 
 NTSTATUS
 CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,

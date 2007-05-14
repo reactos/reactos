@@ -624,3 +624,296 @@ Quickie:
     KeLeaveCriticalRegion();
     return Status;
 }
+
+NTSTATUS
+NTAPI
+CmpQueryKeyData(IN PHHIVE Hive,
+                IN PCM_KEY_NODE Node,
+                IN KEY_INFORMATION_CLASS KeyInformationClass,
+                IN OUT PVOID KeyInformation,
+                IN ULONG Length,
+                IN OUT PULONG ResultLength)
+{
+    NTSTATUS Status;
+    ULONG Size, SizeLeft, MinimumSize;
+    PKEY_INFORMATION Info = (PKEY_INFORMATION)KeyInformation;
+    USHORT NameLength;
+
+    /* Check if the value is compressed */
+    if (Node->Flags & VALUE_COMP_NAME)
+    {
+        /* Get the compressed name size */
+        NameLength = CmpCompressedNameSize(Node->Name, Node->NameLength);
+    }
+    else
+    {
+        /* Get the real size */
+        NameLength = Node->NameLength;
+    }
+
+    /* Check what kind of information is being requested */
+    switch (KeyInformationClass)
+    {
+        /* Basic information */
+        case KeyBasicInformation:
+
+            /* This is the size we need */
+            Size = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name) + NameLength;
+
+            /* And this is the minimum we can work with */
+            MinimumSize = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name);
+
+            /* Let the caller know and assume success */
+            *ResultLength = Size;
+            Status = STATUS_SUCCESS;
+
+            /* Check if the bufer we got is too small */
+            if (Length < MinimumSize)
+            {
+                /* Let the caller know and fail */
+                Status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+
+            /* Copy the basic information */
+            Info->KeyBasicInformation.LastWriteTime = Node->LastWriteTime;
+            Info->KeyBasicInformation.TitleIndex = 0;
+            Info->KeyBasicInformation.NameLength = NameLength;
+
+            /* Only the name is left */
+            SizeLeft = Length - MinimumSize;
+            Size = NameLength;
+
+            /* Check if we don't have enough space for the name */
+            if (SizeLeft < Size)
+            {
+                /* Truncate the name we'll return, and tell the caller */
+                Size = SizeLeft;
+                Status = STATUS_BUFFER_OVERFLOW;
+            }
+
+            /* Check if this is a compressed key */
+            if (Node->Flags & KEY_COMP_NAME)
+            {
+                /* Copy the compressed name */
+                CmpCopyCompressedName(Info->KeyBasicInformation.Name,
+                                      SizeLeft,
+                                      Node->Name,
+                                      Node->NameLength);
+            }
+            else
+            {
+                /* Otherwise, copy the raw name */
+                RtlCopyMemory(Info->KeyBasicInformation.Name,
+                              Node->Name,
+                              Size);
+            }
+            break;
+
+        /* Node information */
+        case KeyNodeInformation:
+
+            /* Calculate the size we need */
+            Size = FIELD_OFFSET(KEY_NODE_INFORMATION, Name) +
+                   NameLength +
+                   Node->ClassLength;
+
+            /* And the minimum size we can support */
+            MinimumSize = FIELD_OFFSET(KEY_NODE_INFORMATION, Name);
+
+            /* Return the size to the caller and assume succes */
+            *ResultLength = Size;
+            Status = STATUS_SUCCESS;
+
+            /* Check if the caller's buffer is too small */
+            if (Length < MinimumSize)
+            {
+                /* Let them know, and fail */
+                Status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+
+            /* Copy the basic information */
+            Info->KeyNodeInformation.LastWriteTime = Node->LastWriteTime;
+            Info->KeyNodeInformation.TitleIndex = 0;
+            Info->KeyNodeInformation.ClassLength = Node->ClassLength;
+            Info->KeyNodeInformation.NameLength = NameLength;
+
+            /* Now the name is left */
+            SizeLeft = Length - MinimumSize;
+            Size = NameLength;
+
+            /* Check if the name can fit entirely */
+            if (SizeLeft < Size)
+            {
+                /* It can't, we'll have to truncate. Tell the caller */
+                Size = SizeLeft;
+                Status = STATUS_BUFFER_OVERFLOW;
+            }
+
+            /* Check if the key node name is compressed */
+            if (Node->Flags & KEY_COMP_NAME)
+            {
+                /* Copy the compressed name */
+                CmpCopyCompressedName(Info->KeyNodeInformation.Name,
+                                      SizeLeft,
+                                      Node->Name,
+                                      Node->NameLength);
+            }
+            else
+            {
+                /* It isn't, so copy the raw name */
+                RtlCopyMemory(Info->KeyNodeInformation.Name,
+                              Node->Name,
+                              Size);
+            }
+
+            /* Check if the node has a class */
+            if (Node->ClassLength > 0)
+            {
+                /* It does. We don't support these yet */
+                ASSERTMSG("Classes not supported\n", FALSE);
+            }
+            else
+            {
+                /* It doesn't, so set offset to -1, not 0! */
+                Info->KeyNodeInformation.ClassOffset = 0xFFFFFFFF;
+            }
+            break;
+
+        /* Full information requsted */
+        case KeyFullInformation:
+
+            /* This is the size we need */
+            Size = FIELD_OFFSET(KEY_FULL_INFORMATION, Class) +
+                   Node->ClassLength;
+
+            /* This is what we can work with */
+            MinimumSize = FIELD_OFFSET(KEY_FULL_INFORMATION, Class);
+
+            /* Return it to caller and assume success */
+            *ResultLength = Size;
+            Status = STATUS_SUCCESS;
+
+            /* Check if the caller's buffer is to small */
+            if (Length < MinimumSize)
+            {
+                /* Let them know and fail */
+                Status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+
+            /* Now copy all the basic information */
+            Info->KeyFullInformation.LastWriteTime = Node->LastWriteTime;
+            Info->KeyFullInformation.TitleIndex = 0;
+            Info->KeyFullInformation.ClassLength = Node->ClassLength;
+            Info->KeyFullInformation.SubKeys = Node->SubKeyCounts[HvStable] +
+                                               Node->SubKeyCounts[HvVolatile];
+            Info->KeyFullInformation.Values = Node->ValueList.Count;
+            Info->KeyFullInformation.MaxNameLen = CmiGetMaxNameLength(Hive, Node);
+            Info->KeyFullInformation.MaxClassLen = CmiGetMaxClassLength(Hive, Node);
+            Info->KeyFullInformation.MaxValueNameLen = CmiGetMaxValueNameLength(Hive, Node);
+            Info->KeyFullInformation.MaxValueDataLen = CmiGetMaxValueDataLength(Hive, Node);
+            DPRINT("%d %d %d %d\n",
+                   CmiGetMaxNameLength(Hive, Node),
+                   CmiGetMaxValueDataLength(Hive, Node),
+                   CmiGetMaxValueNameLength(Hive, Node),
+                   CmiGetMaxClassLength(Hive, Node));
+            //Info->KeyFullInformation.MaxNameLen = Node->MaxNameLen;
+            //Info->KeyFullInformation.MaxClassLen = Node->MaxClassLen;
+            //Info->KeyFullInformation.MaxValueNameLen = Node->MaxValueNameLen;
+            //Info->KeyFullInformation.MaxValueDataLen = Node->MaxValueDataLen;
+
+            /* Check if we have a class */
+            if (Node->ClassLength > 0)
+            {
+                /* We do, but we currently don't support this */
+                ASSERTMSG("Classes not supported\n", FALSE);
+            }
+            else
+            {
+                /* We don't have a class, so set offset to -1, not 0! */
+                Info->KeyNodeInformation.ClassOffset = 0xFFFFFFFF;
+            }
+            break;
+
+        /* Any other class that got sent here is invalid! */
+        default:
+
+            /* Set failure code */
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
+
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmQueryKey(IN PKEY_OBJECT KeyObject,
+           IN KEY_INFORMATION_CLASS KeyInformationClass,
+           IN PVOID KeyInformation,
+           IN ULONG Length,
+           IN PULONG ResultLength)
+{
+    NTSTATUS Status;
+    PHHIVE Hive;
+    PCM_KEY_NODE Parent;
+
+    /* Acquire hive lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+
+    /* Get the hive and parent */
+    Hive = &KeyObject->RegistryHive->Hive;
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, KeyObject->KeyCellOffset);
+    if (!Parent)
+    {
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Check what class we got */
+    switch (KeyInformationClass)
+    {
+        /* Typical information */
+        case KeyFullInformation:
+        case KeyBasicInformation:
+        case KeyNodeInformation:
+
+            /* Call the internal API */
+            Status = CmpQueryKeyData(Hive,
+                                     Parent,
+                                     KeyInformationClass,
+                                     KeyInformation,
+                                     Length,
+                                     ResultLength);
+            break;
+
+        /* Unsupported classes for now */
+        case KeyNameInformation:
+        case KeyCachedInformation:
+        case KeyFlagsInformation:
+
+            /* Print message and fail */
+            DPRINT1("Unsupported class: %d!\n", KeyInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        /* Illegal classes */
+        default:
+
+            /* Print message and fail */
+            DPRINT1("Unsupported class: %d!\n", KeyInformationClass);
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+Quickie:
+    /* Release hive lock */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+    return Status;
+}

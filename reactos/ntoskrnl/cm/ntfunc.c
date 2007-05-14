@@ -786,13 +786,13 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	      sizeof(WCHAR);
 	    FullInformation->ClassLength = SubKeyCell->ClassSize;
 	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //SubKeyCell->SubKeyCounts;
-	    FullInformation->MaxNameLen = CmiGetMaxNameLength(KeyObject);
-	    FullInformation->MaxClassLen = CmiGetMaxClassLength(KeyObject);
+	    FullInformation->MaxNameLen = CmiGetMaxNameLength(&RegistryHive->Hive, SubKeyCell);
+	    FullInformation->MaxClassLen = CmiGetMaxClassLength(&RegistryHive->Hive, SubKeyCell);
 	    FullInformation->Values = SubKeyCell->ValueList.Count;
 	    FullInformation->MaxValueNameLen =
-	      CmiGetMaxValueNameLength(RegistryHive, SubKeyCell);
+	      CmiGetMaxValueNameLength(&RegistryHive->Hive, SubKeyCell);
 	    FullInformation->MaxValueDataLen =
-	      CmiGetMaxValueDataLength(RegistryHive, SubKeyCell);
+	      CmiGetMaxValueDataLength(&RegistryHive->Hive, SubKeyCell);
 
 	    if (Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]) < ClassSize)
 	      {
@@ -1094,232 +1094,58 @@ openkey_cleanup:
   return Status;
 }
 
-
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtQueryKey(IN HANDLE KeyHandle,
-	   IN KEY_INFORMATION_CLASS KeyInformationClass,
-	   OUT PVOID KeyInformation,
-	   IN ULONG Length,
-	   OUT PULONG ResultLength)
+           IN KEY_INFORMATION_CLASS KeyInformationClass,
+           OUT PVOID KeyInformation,
+           IN ULONG Length,
+           OUT PULONG ResultLength)
 {
-  PKEY_BASIC_INFORMATION BasicInformation;
-  PKEY_NODE_INFORMATION NodeInformation;
-  PKEY_FULL_INFORMATION FullInformation;
-  PEREGISTRY_HIVE RegistryHive;
-  PVOID ClassCell;
-  PKEY_OBJECT KeyObject;
-  PCM_KEY_NODE KeyCell;
-  ULONG NameSize, ClassSize;
-  NTSTATUS Status;
-  REG_QUERY_KEY_INFORMATION QueryKeyInfo;
-  REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    NTSTATUS Status;
+    PKEY_OBJECT KeyObject;
+    REG_QUERY_KEY_INFORMATION QueryKeyInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       (KeyInformationClass !=
+                                        KeyNameInformation) ?
+                                       KEY_QUERY_VALUE : 0,
+                                       CmpKeyObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID *)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  DPRINT("NtQueryKey(KH 0x%p  KIC %x  KI 0x%p  L %d  RL 0x%p)\n",
-	 KeyHandle,
-	 KeyInformationClass,
-	 KeyInformation,
-	 Length,
-	 ResultLength);
+    /* Setup the callback */
+    PostOperationInfo.Object = (PVOID)KeyObject;
+    QueryKeyInfo.Object = (PVOID)KeyObject;
+    QueryKeyInfo.KeyInformationClass = KeyInformationClass;
+    QueryKeyInfo.KeyInformation = KeyInformation;
+    QueryKeyInfo.Length = Length;
+    QueryKeyInfo.ResultLength = ResultLength;
 
-  /* Verify that the handle is valid and is a registry key */
-  Status = ObReferenceObjectByHandle(KeyHandle,
-		(KeyInformationClass != KeyNameInformation ? KEY_QUERY_VALUE : 0),
-		CmpKeyObjectType,
-		ExGetPreviousMode(),
-		(PVOID *) &KeyObject,
-		NULL);
-  if (!NT_SUCCESS(Status))
+    /* Do the callback */
+    Status = CmiCallRegisteredCallbacks(RegNtPreQueryKey, &QueryKeyInfo);
+    if (NT_SUCCESS(Status))
     {
-      return Status;
+        /* Call the internal API */
+        Status = CmQueryKey(KeyObject,
+                            KeyInformationClass,
+                            KeyInformation,
+                            Length,
+                            ResultLength);
+
+        /* Do the post callback */
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostQueryKey, &PostOperationInfo);
     }
 
-  PostOperationInfo.Object = (PVOID)KeyObject;
-  QueryKeyInfo.Object = (PVOID)KeyObject;
-  QueryKeyInfo.KeyInformationClass = KeyInformationClass;
-  QueryKeyInfo.KeyInformation = KeyInformation;
-  QueryKeyInfo.Length = Length;
-  QueryKeyInfo.ResultLength = ResultLength;
-  
-  Status = CmiCallRegisteredCallbacks(RegNtPreQueryKey, &QueryKeyInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostQueryKey, &PostOperationInfo);
-      ObDereferenceObject(KeyObject);
-      return Status;
-    }
-
-  /* Acquire hive lock */
-  KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  /* Get pointer to KeyCell */
-  KeyCell = KeyObject->KeyCell;
-  RegistryHive = KeyObject->RegistryHive;
-
-  Status = STATUS_SUCCESS;
-  switch (KeyInformationClass)
-    {
-      case KeyBasicInformation:
-        NameSize = KeyObject->Name.Length;
-
-	*ResultLength = FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]);
-
-	/* Check size of buffer */
-	if (Length < FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]))
-	  {
-	    Status = STATUS_BUFFER_TOO_SMALL;
-	  }
-	else
-	  {
-	    /* Fill buffer with requested info */
-	    BasicInformation = (PKEY_BASIC_INFORMATION) KeyInformation;
-	    BasicInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.u.LowPart;
-	    BasicInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.u.HighPart;
-	    BasicInformation->TitleIndex = 0;
-	    BasicInformation->NameLength = KeyObject->Name.Length;
-
-	    if (Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]) <
-	        NameSize)
-	      {
-	        NameSize = Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name[0]);
-	        Status = STATUS_BUFFER_OVERFLOW;
-	        CHECKPOINT;
-	      }
-
-	    RtlCopyMemory(BasicInformation->Name,
-			  KeyObject->Name.Buffer,
-			  NameSize);
-	  }
-	break;
-
-      case KeyNodeInformation:
-        NameSize = KeyObject->Name.Length;
-        ClassSize = KeyCell->ClassSize;
-
-	*ResultLength = FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) +
-	  NameSize + ClassSize;
-
-	/* Check size of buffer */
-	if (Length < *ResultLength)
-	  {
-	    Status = STATUS_BUFFER_TOO_SMALL;
-	  }
-	else
-	  {
-	    /* Fill buffer with requested info */
-	    NodeInformation = (PKEY_NODE_INFORMATION) KeyInformation;
-	    NodeInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.u.LowPart;
-	    NodeInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.u.HighPart;
-	    NodeInformation->TitleIndex = 0;
-	    NodeInformation->ClassOffset = sizeof(KEY_NODE_INFORMATION) +
-	      KeyObject->Name.Length;
-	    NodeInformation->ClassLength = KeyCell->ClassSize;
-	    NodeInformation->NameLength = KeyObject->Name.Length;
-
-	    if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) < NameSize)
-	      {
-	        NameSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]);
-	        ClassSize = 0;
-	        Status = STATUS_BUFFER_OVERFLOW;
-	        CHECKPOINT;
-	      }
-	    else if (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) -
-	             NameSize < ClassSize)
-	      {
-	        ClassSize = Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name[0]) -
-	                    NameSize;
-	        Status = STATUS_BUFFER_OVERFLOW;
-	        CHECKPOINT;
-	      }
-
-	    RtlCopyMemory(NodeInformation->Name,
-			  KeyObject->Name.Buffer,
-			  NameSize);
-
-	    if (ClassSize != 0)
-	      {
-		ClassCell = HvGetCell (&KeyObject->RegistryHive->Hive,
-		                       KeyCell->ClassNameOffset);
-		RtlCopyMemory (NodeInformation->Name + KeyObject->Name.Length,
-			       ClassCell,
-			       ClassSize);
-	      }
-	  }
-	break;
-
-      case KeyFullInformation:
-        ClassSize = KeyCell->ClassSize;
-
-	*ResultLength = FIELD_OFFSET(KEY_FULL_INFORMATION, Class) +
-	  ClassSize;
-
-	/* Check size of buffer */
-	if (Length < FIELD_OFFSET(KEY_FULL_INFORMATION, Class))
-	  {
-	    Status = STATUS_BUFFER_TOO_SMALL;
-	  }
-	else
-	  {
-	    /* Fill buffer with requested info */
-	    FullInformation = (PKEY_FULL_INFORMATION) KeyInformation;
-	    FullInformation->LastWriteTime.u.LowPart = KeyCell->LastWriteTime.u.LowPart;
-	    FullInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.u.HighPart;
-	    FullInformation->TitleIndex = 0;
-	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - sizeof(WCHAR);
-	    FullInformation->ClassLength = KeyCell->ClassSize;
-	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //KeyCell->SubKeyCounts;
-	    FullInformation->MaxNameLen = CmiGetMaxNameLength(KeyObject);
-	    FullInformation->MaxClassLen = CmiGetMaxClassLength(KeyObject);
-	    FullInformation->Values = KeyCell->ValueList.Count;
-	    FullInformation->MaxValueNameLen =
-	      CmiGetMaxValueNameLength(RegistryHive, KeyCell);
-	    FullInformation->MaxValueDataLen =
-	      CmiGetMaxValueDataLength(RegistryHive, KeyCell);
-
-	    if (Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]) < ClassSize)
-	      {
-	        ClassSize = Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class[0]);
-	        Status = STATUS_BUFFER_OVERFLOW;
-	        CHECKPOINT;
-	      }
-
-	    if (ClassSize)
-	      {
-		ClassCell = HvGetCell (&KeyObject->RegistryHive->Hive,
-		                       KeyCell->ClassNameOffset);
-		RtlCopyMemory (FullInformation->Class,
-			       ClassCell, ClassSize);
-	      }
-	  }
-	break;
-
-      case KeyNameInformation:
-      case KeyCachedInformation:
-      case KeyFlagsInformation:
-        DPRINT1("Key information class 0x%x not yet implemented!\n", KeyInformationClass);
-        Status = STATUS_NOT_IMPLEMENTED;
-        break;
-
-      default:
-	DPRINT1("Not handling 0x%x\n", KeyInformationClass);
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
-    }
-
-  ExReleaseResourceLite(&CmpRegistryLock);
-  KeLeaveCriticalRegion();
-
-  PostOperationInfo.Status = Status;
-  CmiCallRegisteredCallbacks(RegNtPostQueryKey, &PostOperationInfo);
-
-  ObDereferenceObject(KeyObject);
-
-  return(Status);
+    /* Dereference and return status */
+    ObDereferenceObject(KeyObject);
+    return Status;
 }
 
 NTSTATUS
@@ -1371,6 +1197,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
         CmiCallRegisteredCallbacks(RegNtPostQueryValueKey, &PostOperationInfo);
     }
 
+    /* Dereference and return status */
     ObDereferenceObject(KeyObject);
     return Status;
 }

@@ -124,32 +124,27 @@ CmiGetNumberOfSubKeys(PKEY_OBJECT KeyObject)
 
 
 ULONG
-CmiGetMaxNameLength(PKEY_OBJECT KeyObject)
+CmiGetMaxNameLength(PHHIVE Hive,
+                    PCM_KEY_NODE KeyCell)
 {
   PHASH_TABLE_CELL HashBlock;
   PCM_KEY_NODE CurSubKeyCell;
-  PCM_KEY_NODE KeyCell;
   ULONG MaxName;
   ULONG NameSize;
   ULONG i;
   ULONG Storage;
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  KeyCell = KeyObject->KeyCell;
-  VERIFY_KEY_CELL(KeyCell);
 
   MaxName = 0;
   for (Storage = HvStable; Storage < HvMaxStorageType; Storage++)
     {
       if (KeyCell->SubKeyLists[Storage] != HCELL_NULL)
         {
-          HashBlock = HvGetCell (&KeyObject->RegistryHive->Hive, KeyCell->SubKeyLists[Storage]);
+          HashBlock = HvGetCell (Hive, KeyCell->SubKeyLists[Storage]);
           ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
 
           for (i = 0; i < KeyCell->SubKeyCounts[Storage]; i++)
             {
-              CurSubKeyCell = HvGetCell (&KeyObject->RegistryHive->Hive,
+              CurSubKeyCell = HvGetCell (Hive,
                                          HashBlock->Table[i].KeyOffset);
               NameSize = CurSubKeyCell->NameSize;
               if (CurSubKeyCell->Flags & REG_KEY_NAME_PACKED)
@@ -167,32 +162,27 @@ CmiGetMaxNameLength(PKEY_OBJECT KeyObject)
 
 
 ULONG
-CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
+CmiGetMaxClassLength(PHHIVE Hive,
+                     PCM_KEY_NODE KeyCell)
 {
   PHASH_TABLE_CELL HashBlock;
   PCM_KEY_NODE CurSubKeyCell;
-  PCM_KEY_NODE KeyCell;
   ULONG MaxClass;
   ULONG i;
   ULONG Storage;
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  KeyCell = KeyObject->KeyCell;
-  VERIFY_KEY_CELL(KeyCell);
 
   MaxClass = 0;
   for (Storage = HvStable; Storage < HvMaxStorageType; Storage++)
     {
       if (KeyCell->SubKeyLists[Storage] != HCELL_NULL)
         {
-          HashBlock = HvGetCell (&KeyObject->RegistryHive->Hive,
+          HashBlock = HvGetCell (Hive,
                                  KeyCell->SubKeyLists[Storage]);
           ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
 
           for (i = 0; i < KeyCell->SubKeyCounts[Storage]; i++)
             {
-              CurSubKeyCell = HvGetCell (&KeyObject->RegistryHive->Hive,
+              CurSubKeyCell = HvGetCell (Hive,
                                          HashBlock->Table[i].KeyOffset);
 
               if (MaxClass < CurSubKeyCell->ClassSize)
@@ -208,7 +198,7 @@ CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
 
 
 ULONG
-CmiGetMaxValueNameLength(PEREGISTRY_HIVE RegistryHive,
+CmiGetMaxValueNameLength(PHHIVE Hive,
 			 PCM_KEY_NODE KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
@@ -225,12 +215,12 @@ CmiGetMaxValueNameLength(PEREGISTRY_HIVE RegistryHive,
     }
 
   MaxValueName = 0;
-  ValueListCell = HvGetCell (&RegistryHive->Hive,
+  ValueListCell = HvGetCell (Hive,
 			     KeyCell->ValueList.List);
 
   for (i = 0; i < KeyCell->ValueList.Count; i++)
     {
-      CurValueCell = HvGetCell (&RegistryHive->Hive,
+      CurValueCell = HvGetCell (Hive,
 				ValueListCell->ValueOffset[i]);
       if (CurValueCell == NULL)
 	{
@@ -256,7 +246,7 @@ CmiGetMaxValueNameLength(PEREGISTRY_HIVE RegistryHive,
 
 
 ULONG
-CmiGetMaxValueDataLength(PEREGISTRY_HIVE RegistryHive,
+CmiGetMaxValueDataLength(PHHIVE Hive,
 			 PCM_KEY_NODE KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
@@ -272,11 +262,11 @@ CmiGetMaxValueDataLength(PEREGISTRY_HIVE RegistryHive,
     }
 
   MaxValueData = 0;
-  ValueListCell = HvGetCell (&RegistryHive->Hive, KeyCell->ValueList.List);
+  ValueListCell = HvGetCell (Hive, KeyCell->ValueList.List);
 
   for (i = 0; i < KeyCell->ValueList.Count; i++)
     {
-      CurValueCell = HvGetCell (&RegistryHive->Hive,
+      CurValueCell = HvGetCell (Hive,
                                 ValueListCell->ValueOffset[i]);
       if ((MaxValueData < (LONG)(CurValueCell->DataSize & REG_DATA_SIZE_MASK)))
         {
