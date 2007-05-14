@@ -1115,6 +1115,14 @@ CmpFindSubKeyByName(
     IN PUNICODE_STRING SearchName
 );
 
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByNumber(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Node,
+    IN ULONG Number
+);
+
 ULONG
 NTAPI
 CmpComputeHashKey(

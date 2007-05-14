@@ -163,39 +163,6 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
 NTSTATUS STDCALL
 CmUnRegisterCallback(IN LARGE_INTEGER    Cookie);
 
-NTSTATUS STDCALL
-CmpParseKey(IN PVOID ParsedObject,
-               IN PVOID ObjectType,
-               IN OUT PACCESS_STATE AccessState,
-               IN KPROCESSOR_MODE AccessMode,
-               IN ULONG Attributes,
-               IN OUT PUNICODE_STRING FullPath,
-               IN OUT PUNICODE_STRING RemainingName,
-               IN OUT PVOID Context OPTIONAL,
-               IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-               OUT PVOID *NextObject);
-
-VOID STDCALL
-CmpDeleteKeyObject(PVOID  DeletedObject);
-
-NTSTATUS STDCALL
-CmpSecurityMethod(PVOID ObjectBody,
-		  SECURITY_OPERATION_CODE OperationCode,
-		  PSECURITY_INFORMATION SecurityInformation,
-		  PSECURITY_DESCRIPTOR SecurityDescriptor,
-		  PULONG BufferLength,
-		  PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
-		  POOL_TYPE PoolType,
-		  PGENERIC_MAPPING GenericMapping);
-
-NTSTATUS STDCALL
-CmpQueryKeyName (PVOID ObjectBody,
-                    IN BOOLEAN HasObjectName,
-		    POBJECT_NAME_INFORMATION ObjectNameInfo,
-		    ULONG Length,
-		    PULONG ReturnLength,
-            IN KPROCESSOR_MODE PreviousMode);
-
 VOID
 CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
 		IN PKEY_OBJECT NewKey);
@@ -265,12 +232,6 @@ CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
 		   OUT HCELL_INDEX *VBOffset);
 
 NTSTATUS
-CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
-			  IN PCM_KEY_NODE KeyCell,
-			  IN ULONG Index,
-			  OUT PCM_KEY_VALUE *ValueCell);
-
-NTSTATUS
 NTAPI
 CmDeleteValueKey(IN PKEY_OBJECT KeyControlBlock,
                  IN UNICODE_STRING ValueName);
@@ -310,16 +271,20 @@ CmQueryKey(IN PKEY_OBJECT KeyObject,
            IN PULONG ResultLength);
 
 NTSTATUS
+NTAPI
+CmEnumerateKey(IN PKEY_OBJECT KeyObject,
+               IN ULONG Index,
+               IN KEY_INFORMATION_CLASS KeyInformationClass,
+               IN PVOID KeyInformation,
+               IN ULONG Length,
+               IN PULONG ResultLength);
+
+NTSTATUS
 CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
 			 OUT PHASH_TABLE_CELL *HashBlock,
 			 OUT HCELL_INDEX *HBOffset,
 			 IN ULONG HashTableSize,
 			 IN HV_STORAGE_TYPE Storage);
-
-PCM_KEY_NODE
-CmiGetKeyFromHashByIndex(PEREGISTRY_HIVE RegistryHive,
-			 PHASH_TABLE_CELL HashBlock,
-			 ULONG Index);
 
 NTSTATUS
 CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
@@ -363,16 +328,7 @@ CmpFindSubKeyByName(
 );
 
 VOID
-CmiCopyPackedName(PWCHAR NameBuffer,
-		  PUCHAR PackedNameBuffer,
-		  ULONG PackedNameSize);
-
-VOID
 CmiSyncHives(VOID);
-
-
-NTSTATUS
-CmiCreateTempHive(PEREGISTRY_HIVE *RegistryHive);
 
 NTSTATUS
 CmiSaveTempHive (PEREGISTRY_HIVE Hive,
@@ -389,45 +345,6 @@ CmFindObject(
     IN PACCESS_STATE AccessState,
     IN PVOID ParseContext
 );
-PVOID CMAPI
-CmpAllocate(
-   ULONG Size,
-   BOOLEAN Paged);
-
-VOID CMAPI
-CmpFree(
-   PVOID Ptr);
-
-BOOLEAN CMAPI
-CmpFileRead(
-   PHHIVE RegistryHive,
-   ULONG FileType,
-   ULONGLONG FileOffset,
-   PVOID Buffer,
-   SIZE_T BufferLength);
-
-BOOLEAN CMAPI
-CmpFileWrite(
-   PHHIVE RegistryHive,
-   ULONG FileType,
-   ULONGLONG FileOffset,
-   PVOID Buffer,
-   SIZE_T BufferLength);
-
-BOOLEAN CMAPI
-CmpFileSetSize(
-   PHHIVE RegistryHive,
-   ULONG FileType,
-   ULONGLONG FileSize);
-
-BOOLEAN CMAPI
-CmpFileFlush(
-   PHHIVE RegistryHive,
-   ULONG FileType);
-
-VOID
-CmiCheckKey(BOOLEAN Verbose,
-  HANDLE Key);
 
 NTSTATUS
 NTAPI
@@ -449,31 +366,6 @@ CmpInitHiveFromFile(IN PUNICODE_STRING HiveName,
                     OUT PEREGISTRY_HIVE *Hive,
                     IN OUT PBOOLEAN New,
                     IN ULONG CheckFlags);
-
-#if 0
-static __inline PVOID xHvGetCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
-{
-   DPRINT1("xHvGetCell @ %s:%d %x @ %x\n", file, line, Cell, Hive);
-   return HvGetCell(Hive, Cell);
-}
-
-static __inline VOID xHvFreeCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
-{
-   DPRINT1("xHvFreeCell @ %s:%d %x @ %x\n", file, line, Cell, Hive);
-   HvFreeCell(Hive, Cell);
-}
-
-static __inline HCELL_INDEX xHvAllocateCell(char *file, int line, PHHIVE Hive, SIZE_T Size)
-{
-   HCELL_INDEX Offset = HvAllocateCell(Hive, Size);
-   DPRINT1("xHvAllocateCell @ %s:%d (%x) %x @ %x\n", file, line, Size, Offset, Hive);
-   return Offset;
-}
-
-#define HvGetCell(hive, cell) xHvGetCell(__FILE__, __LINE__, hive, cell)
-#define HvFreeCell(hive, cell) xHvFreeCell(__FILE__, __LINE__, hive, cell)
-#define HvAllocateCell(hive, size) xHvAllocateCell(__FILE__, __LINE__, hive, size)
-#endif
 
 // Some Ob definitions for debug messages in Cm
 #define ObGetObjectPointerCount(x) OBJECT_TO_OBJECT_HEADER(x)->PointerCount

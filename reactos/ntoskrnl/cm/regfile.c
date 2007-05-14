@@ -621,39 +621,6 @@ CmiRemoveSubKey(PEREGISTRY_HIVE RegistryHive,
 }
 
 NTSTATUS
-CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
-			  IN PCM_KEY_NODE KeyCell,
-			  IN ULONG Index,
-			  OUT PCM_KEY_VALUE *ValueCell)
-{
-  PVALUE_LIST_CELL ValueListCell;
-  PCM_KEY_VALUE CurValueCell;
-
-  *ValueCell = NULL;
-
-  if (KeyCell->ValueList.List == (HCELL_INDEX)-1)
-    {
-      return STATUS_NO_MORE_ENTRIES;
-    }
-
-  if (Index >= KeyCell->ValueList.Count)
-    {
-      return STATUS_NO_MORE_ENTRIES;
-    }
-
-
-  ValueListCell = HvGetCell (&RegistryHive->Hive, KeyCell->ValueList.List);
-
-  VERIFY_VALUE_LIST_CELL(ValueListCell);
-
-  CurValueCell = HvGetCell (&RegistryHive->Hive, ValueListCell->ValueOffset[Index]);
-
-  *ValueCell = CurValueCell;
-
-  return STATUS_SUCCESS;
-}
-
-NTSTATUS
 CmiAllocateHashTableCell (IN PEREGISTRY_HIVE RegistryHive,
 	OUT PHASH_TABLE_CELL *HashBlock,
 	OUT HCELL_INDEX *HBOffset,
@@ -684,20 +651,6 @@ CmiAllocateHashTableCell (IN PEREGISTRY_HIVE RegistryHive,
     }
 
   return Status;
-}
-
-PCM_KEY_NODE
-CmiGetKeyFromHashByIndex(PEREGISTRY_HIVE RegistryHive,
-			 PHASH_TABLE_CELL HashBlock,
-			 ULONG Index)
-{
-  HCELL_INDEX KeyOffset;
-  PCM_KEY_NODE KeyCell;
-
-  KeyOffset =  HashBlock->Table[Index].KeyOffset;
-  KeyCell = HvGetCell (&RegistryHive->Hive, KeyOffset);
-
-  return KeyCell;
 }
 
 NTSTATUS
@@ -742,17 +695,6 @@ CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
     }
 
   return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-CmiCopyPackedName(PWCHAR NameBuffer,
-		  PUCHAR PackedNameBuffer,
-		  ULONG PackedNameSize)
-{
-  ULONG i;
-
-  for (i = 0; i < PackedNameSize; i++)
-    NameBuffer[i] = (WCHAR)PackedNameBuffer[i];
 }
 
 NTSTATUS

@@ -516,6 +516,139 @@ CmpComputeHashKey(IN ULONG Hash,
 
 HCELL_INDEX
 NTAPI
+CmpDoFindSubKeyByNumber(IN PHHIVE Hive,
+                        IN PCM_KEY_INDEX Index,
+                        IN ULONG Number)
+{
+    ULONG i;
+    HCELL_INDEX LeafCell = 0;
+    PCM_KEY_INDEX Leaf = NULL;
+    PCM_KEY_FAST_INDEX FastIndex;
+    HCELL_INDEX Result;
+
+    /* Check if this is a root */
+    if (Index->Signature == CM_KEY_INDEX_ROOT)
+    {
+        /* Loop the index */
+        for (i = 0; i < Index->Count; i++)
+        {
+            /* Check if this isn't the first iteration */
+            if (i)
+            {
+                /* Make sure we had something valid, and release it */
+                ASSERT(Leaf != NULL );
+                ASSERT(LeafCell == Index->List[i - 1]);
+                HvReleaseCell(Hive, LeafCell);
+            }
+
+            /* Get the leaf cell and the leaf for this index */
+            LeafCell = Index->List[i];
+            Leaf = (PCM_KEY_INDEX)HvGetCell(Hive, LeafCell);
+            if (!Leaf) return HCELL_NIL;
+
+            /* Check if the index may be inside it */
+            if (Number < Leaf->Count)
+            {
+                /* Check if this is a fast or hash leaf */
+                if ((Leaf->Signature == CM_KEY_FAST_LEAF) ||
+                    (Leaf->Signature == CM_KEY_HASH_LEAF))
+                {
+                    /* Get the fast index */
+                    FastIndex = (PCM_KEY_FAST_INDEX)Leaf;
+
+                    /* Look inside the list to get our actual cell */
+                    Result = FastIndex->List[Number].Cell;
+                    HvReleaseCell(Hive, LeafCell);
+                    return Result;
+                }
+                else
+                {
+                    /* Regular leaf, so just use the index directly */
+                    Result = Leaf->List[Number];
+
+                    /*  Release and return it */
+                    HvReleaseCell(Hive,LeafCell);
+                    return Result;
+                }
+            }
+            else
+            {
+                /* Otherwise, skip this leaf */
+                Number = Number - Leaf->Count;
+            }
+        }
+
+        /* Should never get here */
+        ASSERT(FALSE);
+    }
+
+    /* If we got here, then the cell is in this index */
+    ASSERT(Number < Index->Count);
+
+    /* Check if we're a fast or hash leaf */
+    if ((Index->Signature == CM_KEY_FAST_LEAF) ||
+        (Index->Signature == CM_KEY_HASH_LEAF))
+    {
+        /* We are, get the fast index and get the cell from the list */
+        FastIndex = (PCM_KEY_FAST_INDEX)Index;
+        return FastIndex->List[Number].Cell;
+    }
+    else
+    {
+        /* We aren't, so use the index directly to grab the cell */
+        return Index->List[Number];
+    }
+}
+
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByNumber(IN PHHIVE Hive,
+                      IN PCM_KEY_NODE Node,
+                      IN ULONG Number)
+{
+    PCM_KEY_INDEX Index;
+    HCELL_INDEX Result = HCELL_NIL;
+
+    /* Check if it's in the stable list */
+    if (Number < Node->SubKeyCounts[HvStable])
+    {
+        /* Get the actual key index */
+        Index = (PCM_KEY_INDEX)HvGetCell(Hive, Node->SubKeyLists[HvStable]);
+        if (!Index) return HCELL_NIL;
+
+        /* Do a search inside it */
+        Result = CmpDoFindSubKeyByNumber(Hive, Index, Number);
+
+        /* Release the cell and return the result */
+        HvReleaseCell(Hive, Node->SubKeyLists[HvStable]);
+        return Result;
+    }
+    else if (Hive->StorageTypeCount > HvVolatile)
+    {
+        /* It's in the volatile list */
+        Number = Number - Node->SubKeyCounts[HvStable];
+        if (Number < Node->SubKeyCounts[HvVolatile])
+        {
+            /* Get the actual key index */
+            Index = (PCM_KEY_INDEX)HvGetCell(Hive,
+                                             Node->SubKeyLists[HvVolatile]);
+            if (!Index) return HCELL_NIL;
+
+            /* Do a search inside it */
+            Result = CmpDoFindSubKeyByNumber(Hive, Index, Number);
+
+            /* Release the cell and return the result */
+            HvReleaseCell(Hive, Node->SubKeyLists[HvVolatile]);
+            return Result;
+        }
+    }
+
+    /* Nothing was found */
+    return HCELL_NIL;
+}
+
+HCELL_INDEX
+NTAPI
 CmpFindSubKeyByHash(IN PHHIVE Hive,
                     IN PCM_KEY_FAST_INDEX FastIndex,
                     IN PUNICODE_STRING SearchName)

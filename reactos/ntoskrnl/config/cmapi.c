@@ -640,7 +640,7 @@ CmpQueryKeyData(IN PHHIVE Hive,
     USHORT NameLength;
 
     /* Check if the value is compressed */
-    if (Node->Flags & VALUE_COMP_NAME)
+    if (Node->Flags & KEY_COMP_NAME)
     {
         /* Get the compressed name size */
         NameLength = CmpCompressedNameSize(Node->Name, Node->NameLength);
@@ -910,6 +910,72 @@ CmQueryKey(IN PKEY_OBJECT KeyObject,
             Status = STATUS_INVALID_INFO_CLASS;
             break;
     }
+
+Quickie:
+    /* Release hive lock */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmEnumerateKey(IN PKEY_OBJECT KeyObject,
+               IN ULONG Index,
+               IN KEY_INFORMATION_CLASS KeyInformationClass,
+               IN PVOID KeyInformation,
+               IN ULONG Length,
+               IN PULONG ResultLength)
+{
+    NTSTATUS Status;
+    PHHIVE Hive;
+    PCM_KEY_NODE Parent, Child;
+    HCELL_INDEX ChildCell;
+
+    /* Acquire hive lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+
+    /* Get the hive and parent */
+    Hive = &KeyObject->RegistryHive->Hive;
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, KeyObject->KeyCellOffset);
+    if (!Parent)
+    {
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Get the child cell */
+    ChildCell = CmpFindSubKeyByNumber(Hive, Parent, Index);
+
+    /* Release the parent cell */
+    HvReleaseCell(Hive, KeyObject->KeyCellOffset);
+
+    /* Check if we found the child */
+    if (ChildCell == HCELL_NIL)
+    {
+        /* We didn't, fail */
+        Status = STATUS_NO_MORE_ENTRIES;
+        goto Quickie;
+    }
+
+    /* Now get the actual child node */
+    Child = (PCM_KEY_NODE)HvGetCell(Hive, ChildCell);
+    if (!Child)
+    {
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Query the data requested */
+    Status = CmpQueryKeyData(Hive,
+                             Child,
+                             KeyInformationClass,
+                             KeyInformation,
+                             Length,
+                             ResultLength);
 
 Quickie:
     /* Release hive lock */
