@@ -1,15 +1,66 @@
 #include "precomp.h"
 
+/* the following deal with IEEE single-precision numbers */
+#define EXCESS          126L
+#define SIGNBIT         0x80000000L
+#define SIGN(fp)        ((fp) & SIGNBIT)
+#define EXP(fp)         (((fp) >> 23L) & 0xFF)
+#define MANT(fp)        ((fp) & 0x7FFFFFL)
+#define PACK(s,e,m)     ((s) | ((e) << 23L) | (m))
 
-typedef union
+// Sames as lrintf.
+#ifdef __GNUC__
+#define FLOAT_TO_INT(in,out)  \
+           __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st");
+#else
+#define FLOAT_TO_INT(in,out) \
+          __asm fld in \
+          __asm fistp out
+#endif
+
+LONG
+FASTCALL
+EFtoF( EFLOAT_S * efp)
 {
-  FLOAT f;
-  ULONG l;
-} gxf_long;
+ long Mant, Exp, Sign = 0;
 
-#define XFPMANT(fp)    ((fp.l) & 0x7fffff)
-#define XFPEXP(fp)     ((fp.l) >> 23) & 0xff)
-#define XFPBUILD(e, m) (((e << 23) & 0x7f800000) | (m & 0x7fffff))
+ if (!efp->lMant) return 0;
+
+ Mant = efp->lMant;
+ Exp = efp->lExp;
+ Sign = SIGN(Mant);
+
+//// M$ storage emulation
+ Mant = ((Mant & 0x3fffffff) >> 7);
+ Exp += (1 - EXCESS);
+////
+ Mant = MANT(Mant);
+ return PACK(Sign, Exp, Mant);
+}
+
+VOID
+FASTCALL
+FtoEF( EFLOAT_S * efp, FLOATL f)
+{
+ long Mant, Exp;
+ gxf_long worker;
+
+#ifdef _X86_
+ worker.l = f; // It's a float stored in a long.
+#else
+ worker.f = f;
+#endif
+
+ Exp = EXP(worker.l);
+ Mant = MANT(worker.l); 
+
+//// M$ storage emulation
+ Mant = ((Mant << 7) | 0x40000000 | SIGN(worker.l));
+ Exp -= (1 - EXCESS);
+//// 
+ efp->lMant = Mant;
+ efp->lExp = Exp;
+}
 
 
 VOID FASTCALL
@@ -21,15 +72,16 @@ CoordCnvP(MATRIX_S * mx, LPPOINT Point)
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
 
-  a.l = XFPBUILD( mx->efM11.lExp, mx->efM11.lMant);
-  b.l = XFPBUILD( mx->efM21.lExp, mx->efM21.lMant);
+  a.l = EFtoF( &mx->efM11 );
+  b.l = EFtoF( &mx->efM21 );
+  x = x * a.f + y * b.f + mx->fxDx;
 
-  Point->x = x * a.f + y * b.f + mx->fxDx;
+  a.l = EFtoF( &mx->efM12 );
+  b.l = EFtoF( &mx->efM22 );
+  y = x * a.f + y * b.f + mx->fxDy;
 
-  a.l = XFPBUILD( mx->efM12.lExp, mx->efM12.lMant);
-  b.l = XFPBUILD( mx->efM22.lExp, mx->efM22.lMant);
-
-  Point->y = x * a.f + y * b.f + mx->fxDy;
+  FLOAT_TO_INT(x, Point->x );
+  FLOAT_TO_INT(y, Point->y );
 }
 
 
