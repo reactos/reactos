@@ -157,8 +157,7 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
     DevMode.dmBitsPerPel = dwBPP;
     DevMode.dmDisplayFrequency = dwRefreshRate;
 
-    LONG retval = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN /* | CDS_SET_PRIMARY ? */);
-    DbgPrint("%d\n", retval);
+    LONG retval = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN); /* FIXME: Are we supposed to set CDS_SET_PRIMARY as well ? */
 
     if(retval == DISP_CHANGE_BADMODE)
     {
@@ -172,7 +171,7 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
     // Update Interals
     BOOL ModeChanged;
     DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
-    StartDirectDraw((LPDIRECTDRAW)iface, 0, TRUE);
+    StartDirectDraw((LPDIRECTDRAW*)iface, 0, TRUE);
 
     return DD_OK;
 }
