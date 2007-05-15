@@ -17,10 +17,10 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Benvenuti alla configurazione guidata di ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Questa procedura guidata installa ReactOS su questo computer. La procedura "\
+    LTEXT "Questa procedura guidata installa ReactOS su questo computer.\nLa procedura "\
           "deve raccogliere alcune informazioni sull'utente e sul computer "\
           "per configurare ReactOS adeguatamente.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Selezionare Continua per proseguire con la configurazione.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Selezionare Avanti per proseguire con la configurazione.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -38,7 +38,7 @@ BEGIN
                     "(in tutto o in parte) è necessario rispettare la GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Mostra la GPL...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "Selezionare Continua per proseguire con la configurazione.",IDC_STATIC,15,136,
+    LTEXT           "Selezionare Avanti per proseguire con la configurazione.",IDC_STATIC,15,136,
                     195,17
 END
 
@@ -49,10 +49,10 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Scrivere il proprio nome completo e il nome della propria ditta o organizzazione.",
-          IDC_STATIC, 54, 7, 242, 21
-    LTEXT "No&me:", IDC_STATIC, 54, 37, 44, 8
+          IDC_STATIC, 44, 7, 242, 21
+    LTEXT "No&me:", IDC_STATIC, 44, 37, 120, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizzazione:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "&Organizzazione:", IDC_STATIC, 44, 57, 120, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -62,19 +62,19 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 63 caratteri. "\
+    LTEXT "Scrivere un nome per il computer che sia lungo al massimo 63 caratteri.\n"\
           "Se si è in rete, il nome del computer deve essere univoco.",
-          IDC_STATIC, 54, 7, 250, 24
-    LTEXT "Nome del &computer:", IDC_STATIC, 54, 38, 75, 8
+          IDC_STATIC, 44, 7, 250, 24
+    LTEXT "Nome del &computer:", IDC_STATIC, 44, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. "\
           "Si potrà usare questo account se si necessita l'accesso completo al computer.",
-          IDC_STATIC, 54, 57, 250, 25
+          IDC_STATIC, 44, 57, 250, 25
     LTEXT "Scrivere una password per Administrator che sia lunga al massimo 14 caratteri.",
-          IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Password per &Administrator:", IDC_STATIC, 54, 104, 75, 8
+          IDC_STATIC, 44, 87, 250, 8
+    LTEXT "Password per &Administrator:", IDC_STATIC, 44, 104, 95, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfermare la password:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "C&onfermare la password:", IDC_STATIC, 44, 123, 95, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -89,14 +89,14 @@ BEGIN
           "i numeri, i valori monetari e le date.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Per cambiare le impostazioni linguistiche del sistema o dell'utente, selezionare Personalizza.",
-          IDC_STATIC, 53, 60, 184, 8
-    PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+          IDC_STATIC, 53, 50, 184, 8
+    PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 245, 47, 50, 14
     LTEXT "Il formato della tastiera stabilisce i caratteri che appaiono quando si preme un tasto.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Per cambiare il formato della tastiera, selezionare Personalizza.",
-          IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "P&ersonalizza...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+          IDC_STATIC, 53, 106, 184, 8
+    PUSHBUTTON "P&ersonalizza...", IDC_CUSTOMLAYOUT, 245, 102, 50, 14
 END
 
 
@@ -193,21 +193,21 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Giochi"
+    IDS_GAMES		"Giochi"
     IDS_CMT_SOLITAIRE	"Solitario"
     IDS_CMT_WINEMINE	"Campo minato"
 END
 
 STRINGTABLE
 BEGIN
-IDS_REACTOS_SETUP		    "Installazione di ReactOS"
+IDS_REACTOS_SETUP		"Installazione di ReactOS"
     IDS_UNKNOWN_ERROR           "Errore sconosciuto"
     IDS_REGISTERING_COMPONENTS  "Registrazione dei componenti..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary fallito: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr fallito: "
+    IDS_LOADLIBRARY_FAILED	"LoadLibrary fallito: "
+    IDS_GETPROCADDR_FAILED	"GetProcAddr fallito: "
     IDS_REGSVR_FAILED           "DllRegisterServer fallito: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall fallito: "
-    IDS_TIMEOUT			        "Tempo scaduto durante la registrazione"
+    IDS_DLLINSTALL_FAILED	"DllInstall fallito: "
+    IDS_TIMEOUT	                "Tempo scaduto durante la registrazione"
     IDS_REASON_UNKNOWN          ""
 END
 
