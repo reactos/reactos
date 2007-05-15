@@ -70,7 +70,7 @@ EngRestoreFloatingPointState ( IN VOID *Buffer )
 ULONG
 STDCALL
 EngSaveFloatingPointState(OUT VOID  *Buffer,
-			  IN ULONG  BufferSize)
+     IN ULONG  BufferSize)
 {
   KFLOATING_SAVE TempBuffer;
   NTSTATUS Status;
@@ -79,9 +79,9 @@ EngSaveFloatingPointState(OUT VOID  *Buffer,
       /* Check for floating point support. */
       Status = KeSaveFloatingPointState(&TempBuffer);
       if (Status != STATUS_SUCCESS)
-	{
-	  return(0);
-	}
+ {
+   return(0);
+ }
       KeRestoreFloatingPointState(&TempBuffer);
       return(sizeof(KFLOATING_SAVE));
     }
@@ -153,90 +153,165 @@ FtoEF( EFLOAT_S * efp, FLOATL f)
 VOID
 STDCALL
 FLOATOBJ_Add (
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ      pf1
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN PFLOATOBJ      pf1
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_2i3r.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EFLOAT_S * efp1 = (EFLOAT_S *)pf1;
+  gxf_long f;
+  gxf_long f1;
+  f.l = EFtoF(efp);
+  f1.l = EFtoF(efp1);
+  f.f = f.f + f1.f;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif 
 }
 
 VOID
 STDCALL
 FLOATOBJ_AddFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN FLOATL  f
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_0ip3.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long fe;
+  gxf_long f1;
+  fe.l = EFtoF(efp);
+#ifdef _X86_
+  f1.l = f;
+#else
+  f1.f = f;
+#endif
+  fe.f = fe.f + f1.f;
+#ifdef _X86_
+  FtoEF( efp, fe.l );
+#else
+  FtoEF( efp, fe.f );
+#endif
 }
 
 VOID
 STDCALL
 FLOATOBJ_AddLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_12jr.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.l = EFtoF(efp);
+  f.f = f.f + l;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif
 }
 
 VOID
 STDCALL
 FLOATOBJ_Div(
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN PFLOATOBJ  pf1
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_3ndz.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EFLOAT_S * efp1 = (EFLOAT_S *)pf1;
+  gxf_long f;
+  gxf_long f1;
+  f.l = EFtoF(efp);
+  f1.l = EFtoF(efp1);
+  f.f = f.f / f1.f;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif 
 }
 
 VOID
 STDCALL
 FLOATOBJ_DivFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN FLOATL  f
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_0gfb.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long fe;
+  gxf_long f1;
+  fe.l = EFtoF(efp);
+#ifdef _X86_
+  f1.l = f;
+#else
+  f1.f = f;
+#endif
+  fe.f = fe.f / f1.f;
+#ifdef _X86_
+  FtoEF( efp, fe.l );
+#else
+  FtoEF( efp, fe.f );
+#endif
 }
 
 VOID
 STDCALL
 FLOATOBJ_DivLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_6jdz.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.l = EFtoF(efp);
+  f.f = f.f / l;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif
 }
 
 BOOL
 STDCALL
 FLOATOBJ_Equal(
-	IN PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
+ IN PFLOATOBJ  pf,
+ IN PFLOATOBJ  pf1
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_6ysn.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EFLOAT_S * efp1 = (EFLOAT_S *)pf1;
+  gxf_long f;
+  gxf_long f1;
+  f.l = EFtoF(efp);
+  f1.l = EFtoF(efp1);
+  if (f.f == f1.f) return TRUE;            
   return FALSE;
 }
 
 BOOL
 STDCALL
 FLOATOBJ_EqualLong(
-	IN PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ IN PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_1pgn.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.l = EFtoF(efp);
+  if (f.f == l) return TRUE;            
   return FALSE;
 }
 
@@ -267,82 +342,133 @@ FLOATOBJ_GetLong ( IN PFLOATOBJ pf )
 BOOL
 STDCALL
 FLOATOBJ_GreaterThan(
-	IN PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
+ IN PFLOATOBJ  pf,
+ IN PFLOATOBJ  pf1
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_8n53.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EFLOAT_S * efp1 = (EFLOAT_S *)pf1;
+  gxf_long f;
+  gxf_long f1;
+  f.l = EFtoF(efp);
+  f1.l = EFtoF(efp1);
+  if(f.f > f1.f) return TRUE;            
   return FALSE;
 }
 
 BOOL
 STDCALL
 FLOATOBJ_GreaterThanLong(
-	IN PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ IN PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_6gx3.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.l = EFtoF(efp);
+  if (f.f > l) return TRUE;            
   return FALSE;
 }
 
 BOOL
 STDCALL
 FLOATOBJ_LessThan(
-	IN PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
+ IN PFLOATOBJ  pf,
+ IN PFLOATOBJ  pf1
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_1ynb.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EFLOAT_S * efp1 = (EFLOAT_S *)pf1;
+  gxf_long f;
+  gxf_long f1;
+  f.l = EFtoF(efp);
+  f1.l = EFtoF(efp1);
+  if(f.f < f1.f) return TRUE;            
   return FALSE;
 }
 
 BOOL
 STDCALL
 FLOATOBJ_LessThanLong(
-	IN PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ IN PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_9nzb.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.l = EFtoF(efp);
+  if (f.f < l) return TRUE;            
   return FALSE;
 }
 
 VOID
 STDCALL
 FLOATOBJ_Mul(
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN PFLOATOBJ  pf1
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_8ppj.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EFLOAT_S * efp1 = (EFLOAT_S *)pf1;
+  gxf_long f;
+  gxf_long f1;
+  f.l = EFtoF(efp);
+  f1.l = EFtoF(efp1);
+  f.f = f1.f * f.f;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif 
 }
 
 VOID
 STDCALL
 FLOATOBJ_MulFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN FLOATL  f
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_3puv.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long fe;
+  gxf_long f1;
+  fe.l = EFtoF(efp);
+#ifdef _X86_
+  f1.l = f;
+#else
+  f1.f = f;
+#endif
+  fe.f = f1.f * fe.f;
+#ifdef _X86_
+  FtoEF( efp, fe.l );
+#else
+  FtoEF( efp, fe.f );
+#endif
 }
 
 VOID
 STDCALL
 FLOATOBJ_MulLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_56lj.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.l = EFtoF(efp);
+  f.f = f.f * l;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif
 }
 
 VOID
@@ -357,9 +483,9 @@ FLOATOBJ_Neg ( IN OUT PFLOATOBJ pf )
 VOID
 STDCALL
 FLOATOBJ_SetFloat(
-	OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
+ OUT PFLOATOBJ  pf,
+ IN FLOATL  f
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_1prb.htm
   EFLOAT_S * efp = (EFLOAT_S *)pf;
@@ -369,9 +495,9 @@ FLOATOBJ_SetFloat(
 VOID
 STDCALL
 FLOATOBJ_SetLong(
-	OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ OUT PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_0gpz.htm
   EFLOAT_S * efp = (EFLOAT_S *)pf;
@@ -387,32 +513,65 @@ FLOATOBJ_SetLong(
 VOID
 STDCALL
 FLOATOBJ_Sub(
-	IN OUT PFLOATOBJ  pf,
-	IN PFLOATOBJ  pf1
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN PFLOATOBJ  pf1
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_6lyf.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  EFLOAT_S * efp1 = (EFLOAT_S *)pf1;
+  gxf_long f;
+  gxf_long f1;
+  f.l = EFtoF(efp);
+  f1.l = EFtoF(efp1);
+  f.f = f.f - f1.f;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif 
 }
 
 VOID
 STDCALL
 FLOATOBJ_SubFloat(
-	IN OUT PFLOATOBJ  pf,
-	IN FLOATL  f
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN FLOATL  f
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_2zvr.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long fe;
+  gxf_long f1;
+  fe.l = EFtoF(efp);
+#ifdef _X86_
+  f1.l = f;
+#else
+  f1.f = f;
+#endif
+  fe.f = fe.f - f1.f;
+#ifdef _X86_
+  FtoEF( efp, fe.l );
+#else
+  FtoEF( efp, fe.f );
+#endif
 }
 
 VOID
 STDCALL
 FLOATOBJ_SubLong(
-	IN OUT PFLOATOBJ  pf,
-	IN LONG  l
-	)
+ IN OUT PFLOATOBJ  pf,
+ IN LONG  l
+ )
 {
   // www.osr.com/ddk/graphics/gdifncs_852f.htm
-  UNIMPLEMENTED;
+  EFLOAT_S * efp = (EFLOAT_S *)pf;
+  gxf_long f;
+  f.l = EFtoF(efp);
+  f.f = f.f - l;
+#ifdef _X86_
+  FtoEF( efp, f.l );
+#else
+  FtoEF( efp, f.f );
+#endif
 }
