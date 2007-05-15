@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #ifndef __WINE_CPSF_H
@@ -28,6 +28,10 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
 				  LPPSFACTORYBUFFER pPSFactory,
 				  LPRPCPROXYBUFFER *ppProxy,
 				  LPVOID *ppvObj);
+HRESULT WINAPI StdProxy_GetChannel(LPVOID iface,
+				   LPRPCCHANNELBUFFER *ppChannel);
+HRESULT WINAPI StdProxy_GetIID(LPVOID iface,
+			       const IID **piid);
 
 HRESULT WINAPI CStdStubBuffer_Construct(REFIID riid,
 					LPUNKNOWN pUnkServer,
@@ -36,21 +40,8 @@ HRESULT WINAPI CStdStubBuffer_Construct(REFIID riid,
 					LPPSFACTORYBUFFER pPSFactory,
 					LPRPCSTUBBUFFER *ppStub);
 
-HRESULT WINAPI CStdStubBuffer_Delegating_Construct(REFIID riid,
-                                                   LPUNKNOWN pUnkServer,
-                                                   PCInterfaceName name,
-                                                   CInterfaceStubVtbl *vtbl,
-                                                   REFIID delegating_iid,
-                                                   LPPSFACTORYBUFFER pPSFactory,
-                                                   LPRPCSTUBBUFFER *ppStub);
-
 const MIDL_SERVER_INFO *CStdStubBuffer_GetServerInfo(IRpcStubBuffer *iface);
 
 const IRpcStubBufferVtbl CStdStubBuffer_Vtbl;
-const IRpcStubBufferVtbl CStdStubBuffer_Delegating_Vtbl;
-
-void create_delegating_vtbl(DWORD num_methods);
-
-HRESULT create_stub(REFIID iid, IUnknown *pUnk, IRpcStubBuffer **ppstub);
 
 #endif  /* __WINE_CPSF_H */

@@ -15,53 +15,26 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #ifndef __WINE_RPC_SERVER_H
 #define __WINE_RPC_SERVER_H
 
 #include "rpc_binding.h"
-#include "wine/list.h"
-
-struct protseq_ops;
 
 typedef struct _RpcServerProtseq
 {
-  const struct protseq_ops *ops; /* RO */
-  struct list entry; /* CS ::server_cs */
-  LPSTR Protseq; /* RO */
-  UINT MaxCalls; /* RO */
-  /* list of listening connections */
-  RpcConnection* conn; /* CS cs */
-  CRITICAL_SECTION cs;
-
-  /* is the server currently listening? */
-  BOOL is_listening; /* CS ::listen_cs */
-  /* mutex for ensuring only one thread can change state at a time */
-  HANDLE mgr_mutex;
-  /* set when server thread has finished opening connections */
-  HANDLE server_ready_event;
+  struct _RpcServerProtseq* Next;
+  LPSTR Protseq;
+  LPSTR Endpoint;
+  UINT MaxCalls;
+  RpcConnection* conn;
 } RpcServerProtseq;
-
-struct protseq_ops
-{
-    const char *name;
-    RpcServerProtseq *(*alloc)(void);
-    void (*signal_state_changed)(RpcServerProtseq *protseq);
-    /* previous array is passed in to allow reuse of memory */
-    void *(*get_wait_array)(RpcServerProtseq *protseq, void *prev_array, unsigned int *count);
-    void (*free_wait_array)(RpcServerProtseq *protseq, void *array);
-    /* returns -1 for failure, 0 for server state changed and 1 to indicate a
-     * new connection was established */
-    int (*wait_for_new_connection)(RpcServerProtseq *protseq, unsigned int count, void *wait_array);
-    /* opens the endpoint and optionally begins listening */
-    RPC_STATUS (*open_endpoint)(RpcServerProtseq *protseq, LPSTR endpoint);
-};
 
 typedef struct _RpcServerInterface
 {
-  struct list entry;
+  struct _RpcServerInterface* Next;
   RPC_SERVER_INTERFACE* If;
   UUID MgrTypeUuid;
   RPC_MGR_EPV* MgrEpv;
@@ -69,13 +42,6 @@ typedef struct _RpcServerInterface
   UINT MaxCalls;
   UINT MaxRpcSize;
   RPC_IF_CALLBACK_FN* IfCallbackFn;
-  LONG CurrentCalls; /* number of calls currently executing */
-  /* set when unregistering interface to let the caller of
-   * RpcServerUnregisterIf* know that all calls have finished */
-  HANDLE CallsCompletedEvent;
 } RpcServerInterface;
-
-void RPCRT4_new_client(RpcConnection* conn);
-const struct protseq_ops *rpcrt4_get_protseq_ops(const char *protseq);
 
 #endif  /* __WINE_RPC_SERVER_H */
