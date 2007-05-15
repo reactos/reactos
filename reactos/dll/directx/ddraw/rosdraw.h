@@ -20,11 +20,11 @@ extern WNDCLASSW wnd_class;
 extern CRITICAL_SECTION ddcs;
 extern IDirectDraw7Vtbl DirectDraw7_Vtable;
 
-HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface, LPGUID pGUID, BOOL reenable);
-HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable);
-HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable);
+HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW iface, LPGUID pGUID, BOOL reenable);
+HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable);
+HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW iface, BOOL reenable);
 HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
-HRESULT WINAPI ReCreateDirectDraw(LPDIRECTDRAW* iface);
+HRESULT WINAPI ReCreateDirectDraw(LPDIRECTDRAW iface);
 HRESULT Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
                         LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter);
 

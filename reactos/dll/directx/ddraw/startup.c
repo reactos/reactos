@@ -21,12 +21,9 @@ WNDCLASSW wnd_class;
 
 
 
-HRESULT
-WINAPI
-Create_DirectDraw (LPGUID pGUID,
-                   LPDIRECTDRAW* pIface,
-                   REFIID id,
-                   BOOL ex)
+HRESULT WINAPI
+Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
+                   REFIID id, BOOL ex)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
 
@@ -89,7 +86,7 @@ Create_DirectDraw (LPGUID pGUID,
     {
         DX_STUB_str("Got iface");
 
-        if (StartDirectDraw((LPDIRECTDRAW*)This, pGUID, FALSE) == DD_OK);
+        if (StartDirectDraw((LPDIRECTDRAW)This, pGUID, FALSE) == DD_OK);
         {
             DX_STUB_str("here");
 
@@ -123,7 +120,7 @@ Create_DirectDraw (LPGUID pGUID,
 
 
 HRESULT WINAPI
-StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
+StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DWORD hal_ret = DD_FALSE;
@@ -277,7 +274,7 @@ StartDirectDraw(LPDIRECTDRAW* iface, LPGUID lpGuid, BOOL reenable)
 }
 
 HRESULT WINAPI
-StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable)
+StartDirectDrawHel(LPDIRECTDRAW iface, BOOL reenable)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
@@ -355,7 +352,7 @@ StartDirectDrawHel(LPDIRECTDRAW* iface, BOOL reenable)
 
 
 HRESULT WINAPI
-StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable)
+StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 {
 
     LPDWORD mpFourCC;

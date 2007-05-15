@@ -171,7 +171,7 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
     // Update Interals
     BOOL ModeChanged;
     DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
-    StartDirectDraw((LPDIRECTDRAW*)iface, 0, TRUE);
+    StartDirectDraw((LPDIRECTDRAW)iface, 0, TRUE);
 
     return DD_OK;
 }
