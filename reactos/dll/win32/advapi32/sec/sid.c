@@ -19,6 +19,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 #define MAX_GUID_STRING_LEN 39
 
+BOOL STDCALL
+AddAuditAccessAceEx(PACL pAcl,
+		    DWORD dwAceRevision,
+		    DWORD AceFlags,
+		    DWORD dwAccessMask,
+		    PSID pSid,
+		    BOOL bAuditSuccess,
+		    BOOL bAuditFailure);
+
 typedef struct RECORD
 {
 	LPCWSTR key;
