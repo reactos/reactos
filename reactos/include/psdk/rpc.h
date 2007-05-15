@@ -69,6 +69,6 @@ typedef void* I_RPC_HANDLE;
 
 RPC_STATUS RPC_ENTRY RpcImpersonateClient(RPC_BINDING_HANDLE);
 RPC_STATUS RPC_ENTRY RpcRevertToSelf(void);
-long RPC_ENTRY I_RpcMapWin32Status(RPC_STATUS);
+DWORD WINAPI I_RpcMapWin32Status(RPC_STATUS status);
 
 #endif /*__WINE_RPC_H */

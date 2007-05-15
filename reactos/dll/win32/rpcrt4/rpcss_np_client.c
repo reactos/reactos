@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <assert.h>
@@ -32,7 +32,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 HANDLE RPCRT4_RpcssNPConnect(void)
 {
-  HANDLE the_pipe = NULL;
+  HANDLE the_pipe;
   DWORD dwmode, wait_result;
   HANDLE master_mutex = RPCRT4_GetMasterMutex();
   
@@ -69,7 +69,6 @@ HANDLE RPCRT4_RpcssNPConnect(void)
     if (GetLastError() != ERROR_PIPE_BUSY) {
       WARN("Unable to open named pipe %s (assuming unavailable).\n", 
         debugstr_a(NAME_RPCSS_NAMED_PIPE));
-      the_pipe = NULL;
       break;
     }
 
@@ -78,18 +77,17 @@ HANDLE RPCRT4_RpcssNPConnect(void)
     if (!ReleaseMutex(master_mutex))
       ERR("Failed to release master mutex.  Expect deadlock.\n");
 
-    /* wait for the named pipe.  We are only 
-       willing to wait only 5 seconds.  It should be available /very/ soon. */
+    /* wait for the named pipe.  We are only willing to wait for 5 seconds.
+       It should be available /very/ soon. */
     if (! WaitNamedPipeA(NAME_RPCSS_NAMED_PIPE, MASTER_MUTEX_WAITNAMEDPIPE_TIMEOUT))
     {
       ERR("Named pipe unavailable after waiting.  Something is probably wrong.\n");
-      the_pipe = NULL;
       break;
     }
 
   }
 
-  if (the_pipe) {
+  if (the_pipe != INVALID_HANDLE_VALUE) {
     dwmode = PIPE_READMODE_MESSAGE;
     /* SetNamedPipeHandleState not implemented ATM, but still seems to work somehow. */
     if (! SetNamedPipeHandleState(the_pipe, &dwmode, NULL, NULL))
@@ -145,7 +143,7 @@ BOOL RPCRT4_SendReceiveNPMsg(HANDLE np, PRPCSS_NP_MESSAGE msg, char *vardata, PR
   }
 
   if (count != sizeof(RPCSS_NP_REPLY)) {
-    ERR("read count mismatch. got %ld, expected %u.\n", count, sizeof(RPCSS_NP_REPLY));
+    ERR("read count mismatch. got %d.\n", count);
     return FALSE;
   }
 

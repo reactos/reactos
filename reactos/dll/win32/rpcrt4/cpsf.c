@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -110,6 +110,12 @@ static HRESULT WINAPI CStdPSFactory_CreateStub(LPPSFACTORYBUFFER iface,
        pUnkServer,ppStub);
   if (!FindProxyInfo(This->pProxyFileList,riid,&ProxyInfo,&Index))
     return E_NOINTERFACE;
+
+  if(ProxyInfo->pDelegatedIIDs && ProxyInfo->pDelegatedIIDs[Index])
+    return  CStdStubBuffer_Delegating_Construct(riid, pUnkServer, ProxyInfo->pNamesArray[Index],
+                                                ProxyInfo->pStubVtblList[Index], ProxyInfo->pDelegatedIIDs[Index],
+                                                iface, ppStub);
+
   return CStdStubBuffer_Construct(riid, pUnkServer, ProxyInfo->pNamesArray[Index],
                                   ProxyInfo->pStubVtblList[Index], iface, ppStub);
 }
@@ -138,6 +144,7 @@ HRESULT WINAPI NdrDllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv,
   *ppv = NULL;
   if (!pPSFactoryBuffer->lpVtbl) {
     const ProxyFileInfo **pProxyFileList2;
+    int max_delegating_vtbl_size = 0;
     pPSFactoryBuffer->lpVtbl = &CStdPSFactory_Vtbl;
     pPSFactoryBuffer->RefCount = 0;
     pPSFactoryBuffer->pProxyFileList = pProxyFileList;
@@ -150,11 +157,19 @@ HRESULT WINAPI NdrDllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv,
         void **pRpcStubVtbl = (void **)&(*pProxyFileList2)->pStubVtblList[i]->Vtbl;
         int j;
 
+        if ((*pProxyFileList2)->pDelegatedIIDs && (*pProxyFileList2)->pDelegatedIIDs[i]) {
+          pSrcRpcStubVtbl = (void * const *)&CStdStubBuffer_Delegating_Vtbl;
+          if ((*pProxyFileList2)->pStubVtblList[i]->header.DispatchTableCount > max_delegating_vtbl_size)
+            max_delegating_vtbl_size = (*pProxyFileList2)->pStubVtblList[i]->header.DispatchTableCount;
+        }
+
         for (j = 0; j < sizeof(IRpcStubBufferVtbl)/sizeof(void *); j++)
           if (!pRpcStubVtbl[j])
             pRpcStubVtbl[j] = pSrcRpcStubVtbl[j];
       }
     }
+    if(max_delegating_vtbl_size > 0)
+      create_delegating_vtbl(max_delegating_vtbl_size);
   }
   if (IsEqualGUID(rclsid, pclsid))
     return IPSFactoryBuffer_QueryInterface((LPPSFACTORYBUFFER)pPSFactoryBuffer, iid, ppv);
@@ -210,7 +225,7 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
       if (RegCreateKeyExA(HKEY_CLASSES_ROOT, keyname, 0, NULL, 0,
                           KEY_WRITE, NULL, &key, NULL) == ERROR_SUCCESS) {
         if (name)
-          RegSetValueExA(key, NULL, 0, REG_SZ, (LPBYTE)name, strlen(name));
+          RegSetValueExA(key, NULL, 0, REG_SZ, (const BYTE *)name, strlen(name));
         if (RegCreateKeyExA(key, "ProxyStubClsid32", 0, NULL, 0,
                             KEY_WRITE, NULL, &subkey, NULL) == ERROR_SUCCESS) {
           snprintf(module, sizeof(module), "{%s}", clsid);
@@ -230,9 +245,11 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
     TRACE("registering CLSID %s => %s\n", clsid, module);
     if (RegCreateKeyExA(HKEY_CLASSES_ROOT, keyname, 0, NULL, 0,
                         KEY_WRITE, NULL, &key, NULL) == ERROR_SUCCESS) {
+      RegSetValueExA(subkey, NULL, 0, REG_SZ, (const BYTE *)"PSFactoryBuffer", strlen("PSFactoryBuffer"));
       if (RegCreateKeyExA(key, "InProcServer32", 0, NULL, 0,
                           KEY_WRITE, NULL, &subkey, NULL) == ERROR_SUCCESS) {
         RegSetValueExA(subkey, NULL, 0, REG_SZ, (LPBYTE)module, strlen(module));
+        RegSetValueExA(subkey, "ThreadingModel", 0, REG_SZ, (const BYTE *)"Both", strlen("Both"));
         RegCloseKey(subkey);
       }
       RegCloseKey(key);

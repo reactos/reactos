@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  * 
  * WINE RPC TODO's (and a few TODONT's)
  *
@@ -152,6 +152,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         master_mutex = CreateMutexA( NULL, FALSE, RPCSS_MASTER_MUTEX_NAME);
+        if (!master_mutex)
+          ERR("Failed to create master mutex\n");
         break;
 
     case DLL_PROCESS_DETACH:
@@ -172,7 +174,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  *
  *  S_OK if successful.
  */
-RPC_STATUS WINAPI RpcStringFreeA(unsigned char** String)
+RPC_STATUS WINAPI RpcStringFreeA(RPC_CSTR* String)
 {
   HeapFree( GetProcessHeap(), 0, *String);
 
@@ -188,7 +190,7 @@ RPC_STATUS WINAPI RpcStringFreeA(unsigned char** String)
  *
  *  S_OK if successful.
  */
-RPC_STATUS WINAPI RpcStringFreeW(unsigned short** String)
+RPC_STATUS WINAPI RpcStringFreeW(RPC_WSTR* String)
 {
   HeapFree( GetProcessHeap(), 0, *String);
 
@@ -319,8 +321,6 @@ static void RPC_UuidGetSystemTime(ULONGLONG *time)
     *time += TICKS_15_OCT_1582_TO_1601;
 }
 
-typedef DWORD WINAPI (*LPGETADAPTERSINFO)(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen);
-
 /* Assume that a hardware address is at least 6 bytes long */ 
 #define ADDRESS_BYTES_NEEDED 6
 
@@ -331,46 +331,28 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
 
     ULONG buflen = sizeof(IP_ADAPTER_INFO);
     PIP_ADAPTER_INFO adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
-    HANDLE hIpHlpApi;
-    LPGETADAPTERSINFO pGetAdaptersInfo;
-    
-    hIpHlpApi = LoadLibrary("iphlpapi.dll");
-    if (hIpHlpApi)
-    {
-        pGetAdaptersInfo = (LPGETADAPTERSINFO)GetProcAddress(hIpHlpApi, "GetAdaptersInfo");
-        if (pGetAdaptersInfo)
-        {
-            if (pGetAdaptersInfo(adapter, &buflen) == ERROR_BUFFER_OVERFLOW) {
-                HeapFree(GetProcessHeap(), 0, adapter);
-                adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
-            }
 
-            if (pGetAdaptersInfo(adapter, &buflen) == NO_ERROR) {
-                for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
-                    address[i] = adapter->Address[i];
-                }
-            }
-            else
-            {
-                goto local;
-            }   
+    if (GetAdaptersInfo(adapter, &buflen) == ERROR_BUFFER_OVERFLOW) {
+        HeapFree(GetProcessHeap(), 0, adapter);
+        adapter = HeapAlloc(GetProcessHeap(), 0, buflen);
+    }
+
+    if (GetAdaptersInfo(adapter, &buflen) == NO_ERROR) {
+        for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
+            address[i] = adapter->Address[i];
         }
-        
-        /* Free the Library */
-        FreeLibrary(hIpHlpApi);
-        goto exit;
     }
-     
-local:   
     /* We can't get a hardware address, just use random numbers.
-        Set the multicast bit to prevent conflicts with real cards. */
-    for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
-        address[i] = rand() & 0xff;
+       Set the multicast bit to prevent conflicts with real cards. */
+    else {
+        for (i = 0; i < ADDRESS_BYTES_NEEDED; i++) {
+            address[i] = rand() & 0xff;
+        }
+
+        address[0] |= 0x01;
+        status = RPC_S_UUID_LOCAL_ONLY;
     }
-    address[0] |= 0x01;
-    status = RPC_S_UUID_LOCAL_ONLY;
-    
-exit:
+
     HeapFree(GetProcessHeap(), 0, adapter);
     return status;
 }
@@ -525,9 +507,9 @@ unsigned short WINAPI UuidHash(UUID *uuid, RPC_STATUS *Status)
  * RETURNS
  *
  *  S_OK if successful.
- *  S_OUT_OF_MEMORY if unsucessful.
+ *  S_OUT_OF_MEMORY if unsuccessful.
  */
-RPC_STATUS WINAPI UuidToStringA(UUID *Uuid, unsigned char** StringUuid)
+RPC_STATUS WINAPI UuidToStringA(UUID *Uuid, RPC_CSTR* StringUuid)
 {
   *StringUuid = HeapAlloc( GetProcessHeap(), 0, sizeof(char) * 37);
 
@@ -536,7 +518,7 @@ RPC_STATUS WINAPI UuidToStringA(UUID *Uuid, unsigned char** StringUuid)
 
   if (!Uuid) Uuid = &uuid_nil;
 
-  sprintf( (char*)*StringUuid, "%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+  sprintf( (char*)*StringUuid, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
                  Uuid->Data1, Uuid->Data2, Uuid->Data3,
                  Uuid->Data4[0], Uuid->Data4[1], Uuid->Data4[2],
                  Uuid->Data4[3], Uuid->Data4[4], Uuid->Data4[5],
@@ -551,15 +533,15 @@ RPC_STATUS WINAPI UuidToStringA(UUID *Uuid, unsigned char** StringUuid)
  * Converts a UUID to a string.
  *
  *  S_OK if successful.
- *  S_OUT_OF_MEMORY if unsucessful.
+ *  S_OUT_OF_MEMORY if unsuccessful.
  */
-RPC_STATUS WINAPI UuidToStringW(UUID *Uuid, unsigned short** StringUuid)
+RPC_STATUS WINAPI UuidToStringW(UUID *Uuid, RPC_WSTR* StringUuid)
 {
   char buf[37];
 
   if (!Uuid) Uuid = &uuid_nil;
 
-  sprintf(buf, "%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+  sprintf(buf, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
                Uuid->Data1, Uuid->Data2, Uuid->Data3,
                Uuid->Data4[0], Uuid->Data4[1], Uuid->Data4[2],
                Uuid->Data4[3], Uuid->Data4[4], Uuid->Data4[5],
@@ -587,7 +569,7 @@ static const BYTE hex2bin[] =
 /***********************************************************************
  *		UuidFromStringA (RPCRT4.@)
  */
-RPC_STATUS WINAPI UuidFromStringA(unsigned char* s, UUID *uuid)
+RPC_STATUS WINAPI UuidFromStringA(RPC_CSTR s, UUID *uuid)
 {
     int i;
 
@@ -627,7 +609,7 @@ RPC_STATUS WINAPI UuidFromStringA(unsigned char* s, UUID *uuid)
 /***********************************************************************
  *		UuidFromStringW (RPCRT4.@)
  */
-RPC_STATUS WINAPI UuidFromStringW(unsigned short* s, UUID *uuid)
+RPC_STATUS WINAPI UuidFromStringW(RPC_WSTR s, UUID *uuid)
 {
     int i;
 
@@ -673,8 +655,8 @@ HRESULT WINAPI DllRegisterServer( void )
     return S_OK;
 }
 
-BOOL RPCRT4_StartRPCSS(void)
-{ 
+static BOOL RPCRT4_StartRPCSS(void)
+{
     PROCESS_INFORMATION pi;
     STARTUPINFOA si;
     static char cmd[6];
@@ -728,13 +710,14 @@ BOOL RPCRT4_StartRPCSS(void)
 BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPCSS_NP_REPLY reply)
 {
     HANDLE client_handle;
+    BOOL ret;
     int i, j = 0;
 
     TRACE("(msg == %p, vardata_payload == %p, reply == %p)\n", msg, vardata_payload, reply);
 
     client_handle = RPCRT4_RpcssNPConnect();
 
-    while (!client_handle) {
+    while (INVALID_HANDLE_VALUE == client_handle) {
         /* start the RPCSS process */
 	if (!RPCRT4_StartRPCSS()) {
 	    ERR("Unable to start RPCSS process.\n");
@@ -744,13 +727,13 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
         for (i = 0; i < 60; i++) {
             Sleep(200);
             client_handle = RPCRT4_RpcssNPConnect();
-            if (client_handle) break;
+            if (INVALID_HANDLE_VALUE != client_handle) break;
         } 
         /* we are only willing to try twice */
 	if (j++ >= 1) break;
     }
 
-    if (!client_handle) {
+    if (INVALID_HANDLE_VALUE == client_handle) {
         /* no dice! */
         ERR("Unable to connect to RPCSS process!\n");
 	SetLastError(RPC_E_SERVER_DIED_DNE);
@@ -758,12 +741,14 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
     }
 
     /* great, we're connected.  now send the message */
+    ret = TRUE;
     if (!RPCRT4_SendReceiveNPMsg(client_handle, msg, vardata_payload, reply)) {
         ERR("Something is amiss: RPC_SendReceive failed.\n");
-	return FALSE;
+	ret = FALSE;
     }
+    CloseHandle(client_handle);
 
-    return TRUE;
+    return ret;
 }
 
 #define MAX_RPC_ERROR_TEXT 256
@@ -780,7 +765,7 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
  * 4. The MSDN documentation currently declares that the second argument is
  *    unsigned char *, even for the W version.  I don't believe it.
  */
-RPC_STATUS RPC_ENTRY DceErrorInqTextW (RPC_STATUS e, unsigned short *buffer)
+RPC_STATUS RPC_ENTRY DceErrorInqTextW (RPC_STATUS e, RPC_WSTR buffer)
 {
     DWORD count;
     count = FormatMessageW (FORMAT_MESSAGE_FROM_SYSTEM |
@@ -793,7 +778,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextW (RPC_STATUS e, unsigned short *buffer)
                 NULL, RPC_S_NOT_RPC_ERROR, 0, buffer, MAX_RPC_ERROR_TEXT, NULL);
         if (!count)
         {
-            ERR ("Failed to translate error");
+            ERR ("Failed to translate error\n");
             return RPC_S_INVALID_ARG;
         }
     }
@@ -803,7 +788,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextW (RPC_STATUS e, unsigned short *buffer)
 /******************************************************************************
  * DceErrorInqTextA   (rpcrt4.@)
  */
-RPC_STATUS RPC_ENTRY DceErrorInqTextA (RPC_STATUS e, unsigned char *buffer)
+RPC_STATUS RPC_ENTRY DceErrorInqTextA (RPC_STATUS e, RPC_CSTR buffer)
 {
     RPC_STATUS status;
     WCHAR bufferW [MAX_RPC_ERROR_TEXT];
@@ -812,9 +797,34 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextA (RPC_STATUS e, unsigned char *buffer)
         if (!WideCharToMultiByte(CP_ACP, 0, bufferW, -1, (LPSTR)buffer, MAX_RPC_ERROR_TEXT,
                 NULL, NULL))
         {
-            ERR ("Failed to translate error");
+            ERR ("Failed to translate error\n");
             status = RPC_S_INVALID_ARG;
         }
     }
     return status;
+}
+
+/******************************************************************************
+ * I_RpcAllocate   (rpcrt4.@)
+ */
+void * WINAPI I_RpcAllocate(unsigned int Size)
+{
+    return HeapAlloc(GetProcessHeap(), 0, Size);
+}
+
+/******************************************************************************
+ * I_RpcFree   (rpcrt4.@)
+ */
+void WINAPI I_RpcFree(void *Object)
+{
+    HeapFree(GetProcessHeap(), 0, Object);
+}
+
+/******************************************************************************
+ * I_RpcMapWin32Status   (rpcrt4.@)
+ */
+DWORD WINAPI I_RpcMapWin32Status(RPC_STATUS status)
+{
+    FIXME("(%ld): stub\n", status);
+    return 0;
 }

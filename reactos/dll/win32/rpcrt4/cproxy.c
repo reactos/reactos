@@ -15,10 +15,9 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  * 
  * TODO: Handle non-i386 architectures
- *       Get rid of #if 0'ed code.
  */
 
 #include <stdarg.h>
@@ -45,7 +44,7 @@ struct StublessThunk;
 typedef struct {
   const IRpcProxyBufferVtbl *lpVtbl;
   LPVOID *PVtbl;
-  DWORD RefCount;
+  LONG RefCount;
   const MIDL_STUBLESS_PROXY_INFO *stubless;
   const IID* piid;
   LPUNKNOWN pUnkOuter;
@@ -102,7 +101,7 @@ static HRESULT WINAPI ObjectStubless(DWORD index)
 
   PFORMAT_STRING fs = This->stubless->ProcFormatString + This->stubless->FormatStringOffset[index];
   unsigned bytes = *(const WORD*)(fs+8) - STACK_ADJUST;
-  TRACE("(%p)->(%ld)([%d bytes]) ret=%08lx\n", iface, index, bytes, *(DWORD*)(args+bytes));
+  TRACE("(%p)->(%d)([%d bytes]) ret=%08x\n", iface, index, bytes, *(DWORD*)(args+bytes));
 
   return NdrClientCall2(This->stubless->pStubDesc, fs, args);
 }
@@ -223,13 +222,13 @@ static HRESULT WINAPI StdProxy_QueryInterface(LPRPCPROXYBUFFER iface,
   if (IsEqualGUID(&IID_IUnknown,riid) ||
       IsEqualGUID(This->piid,riid)) {
     *obj = &This->PVtbl;
-    This->RefCount++;
+    InterlockedIncrement(&This->RefCount);
     return S_OK;
   }
 
   if (IsEqualGUID(&IID_IRpcProxyBuffer,riid)) {
     *obj = &This->lpVtbl;
-    This->RefCount++;
+    InterlockedIncrement(&This->RefCount);
     return S_OK;
   }
 
@@ -241,19 +240,19 @@ static ULONG WINAPI StdProxy_AddRef(LPRPCPROXYBUFFER iface)
   ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
   TRACE("(%p)->AddRef()\n",This);
 
-  return ++(This->RefCount);
+  return InterlockedIncrement(&This->RefCount);
 }
 
 static ULONG WINAPI StdProxy_Release(LPRPCPROXYBUFFER iface)
 {
+  ULONG refs;
   ICOM_THIS_MULTI(StdProxyImpl,lpVtbl,iface);
   TRACE("(%p)->Release()\n",This);
 
-  if (!--(This->RefCount)) {
+  refs = InterlockedDecrement(&This->RefCount);
+  if (!refs)
     StdProxy_Destruct((LPRPCPROXYBUFFER)&This->lpVtbl);
-    return 0;
-  }
-  return This->RefCount;
+  return refs;
 }
 
 static HRESULT WINAPI StdProxy_Connect(LPRPCPROXYBUFFER iface,
@@ -285,24 +284,22 @@ static const IRpcProxyBufferVtbl StdProxy_Vtbl =
   StdProxy_Disconnect
 };
 
-HRESULT WINAPI StdProxy_GetChannel(LPVOID iface,
-                                  LPRPCCHANNELBUFFER *ppChannel)
+static void StdProxy_GetChannel(LPVOID iface,
+                                   LPRPCCHANNELBUFFER *ppChannel)
 {
   ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
   TRACE("(%p)->GetChannel(%p) %s\n",This,ppChannel,This->name);
 
   *ppChannel = This->pChannel;
-  return S_OK;
 }
 
-HRESULT WINAPI StdProxy_GetIID(LPVOID iface,
-                              const IID **ppiid)
+static void StdProxy_GetIID(LPVOID iface,
+                               const IID **ppiid)
 {
   ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
   TRACE("(%p)->GetIID(%p) %s\n",This,ppiid,This->name);
 
   *ppiid = This->piid;
-  return S_OK;
 }
 
 HRESULT WINAPI IUnknown_QueryInterface_Proxy(LPUNKNOWN iface,
@@ -318,32 +315,136 @@ ULONG WINAPI IUnknown_AddRef_Proxy(LPUNKNOWN iface)
 {
   ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
   TRACE("(%p)->AddRef() %s\n",This,This->name);
-#if 0 /* interface refcounting */
-  return ++(This->RefCount);
-#else /* object refcounting */
   return IUnknown_AddRef(This->pUnkOuter);
-#endif
 }
 
 ULONG WINAPI IUnknown_Release_Proxy(LPUNKNOWN iface)
 {
   ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
   TRACE("(%p)->Release() %s\n",This,This->name);
-#if 0 /* interface refcounting */
-  if (!--(This->RefCount)) {
-    StdProxy_Destruct((LPRPCPROXYBUFFER)&This->lpVtbl);
-    return 0;
-  }
-  return This->RefCount;
-#else /* object refcounting */
   return IUnknown_Release(This->pUnkOuter);
-#endif
+}
+
+/***********************************************************************
+ *           NdrProxyInitialize [RPCRT4.@]
+ */
+void WINAPI NdrProxyInitialize(void *This,
+                              PRPC_MESSAGE pRpcMsg,
+                              PMIDL_STUB_MESSAGE pStubMsg,
+                              PMIDL_STUB_DESC pStubDescriptor,
+                              unsigned int ProcNum)
+{
+  TRACE("(%p,%p,%p,%p,%d)\n", This, pRpcMsg, pStubMsg, pStubDescriptor, ProcNum);
+  NdrClientInitializeNew(pRpcMsg, pStubMsg, pStubDescriptor, ProcNum);
+  StdProxy_GetChannel(This, &pStubMsg->pRpcChannelBuffer);
+  IRpcChannelBuffer_GetDestCtx(pStubMsg->pRpcChannelBuffer,
+                               &pStubMsg->dwDestContext,
+                               &pStubMsg->pvDestContext);
+  TRACE("channel=%p\n", pStubMsg->pRpcChannelBuffer);
+}
+
+/***********************************************************************
+ *           NdrProxyGetBuffer [RPCRT4.@]
+ */
+void WINAPI NdrProxyGetBuffer(void *This,
+                             PMIDL_STUB_MESSAGE pStubMsg)
+{
+  HRESULT hr;
+  const IID *riid = NULL;
+
+  TRACE("(%p,%p)\n", This, pStubMsg);
+  pStubMsg->RpcMsg->BufferLength = pStubMsg->BufferLength;
+  pStubMsg->dwStubPhase = PROXY_GETBUFFER;
+  StdProxy_GetIID(This, &riid);
+  hr = IRpcChannelBuffer_GetBuffer(pStubMsg->pRpcChannelBuffer,
+                                  (RPCOLEMESSAGE*)pStubMsg->RpcMsg,
+                                  riid);
+  if (FAILED(hr))
+  {
+    RpcRaiseException(hr);
+    return;
+  }
+  pStubMsg->BufferStart = pStubMsg->RpcMsg->Buffer;
+  pStubMsg->BufferEnd = pStubMsg->BufferStart + pStubMsg->BufferLength;
+  pStubMsg->Buffer = pStubMsg->BufferStart;
+  pStubMsg->dwStubPhase = PROXY_MARSHAL;
+}
+
+/***********************************************************************
+ *           NdrProxySendReceive [RPCRT4.@]
+ */
+void WINAPI NdrProxySendReceive(void *This,
+                               PMIDL_STUB_MESSAGE pStubMsg)
+{
+  ULONG Status = 0;
+  HRESULT hr;
+
+  TRACE("(%p,%p)\n", This, pStubMsg);
+
+  if (!pStubMsg->pRpcChannelBuffer)
+  {
+    WARN("Trying to use disconnected proxy %p\n", This);
+    RpcRaiseException(RPC_E_DISCONNECTED);
+  }
+
+  pStubMsg->dwStubPhase = PROXY_SENDRECEIVE;
+  hr = IRpcChannelBuffer_SendReceive(pStubMsg->pRpcChannelBuffer,
+                                    (RPCOLEMESSAGE*)pStubMsg->RpcMsg,
+                                    &Status);
+  pStubMsg->dwStubPhase = PROXY_UNMARSHAL;
+  pStubMsg->BufferLength = pStubMsg->RpcMsg->BufferLength;
+  pStubMsg->BufferStart = pStubMsg->RpcMsg->Buffer;
+  pStubMsg->BufferEnd = pStubMsg->BufferStart + pStubMsg->BufferLength;
+  pStubMsg->Buffer = pStubMsg->BufferStart;
+
+  /* raise exception if call failed */
+  if (hr == RPC_S_CALL_FAILED) RpcRaiseException(*(DWORD*)pStubMsg->Buffer);
+  else if (FAILED(hr)) RpcRaiseException(hr);
+}
+
+/***********************************************************************
+ *           NdrProxyFreeBuffer [RPCRT4.@]
+ */
+void WINAPI NdrProxyFreeBuffer(void *This,
+                              PMIDL_STUB_MESSAGE pStubMsg)
+{
+  HRESULT hr;
+
+  TRACE("(%p,%p)\n", This, pStubMsg);
+  hr = IRpcChannelBuffer_FreeBuffer(pStubMsg->pRpcChannelBuffer,
+                                   (RPCOLEMESSAGE*)pStubMsg->RpcMsg);
+}
+
+/***********************************************************************
+ *           NdrProxyErrorHandler [RPCRT4.@]
+ */
+HRESULT WINAPI NdrProxyErrorHandler(DWORD dwExceptionCode)
+{
+  WARN("(0x%08x): a proxy call failed\n", dwExceptionCode);
+
+  if (FAILED(dwExceptionCode))
+    return dwExceptionCode;
+  else
+    return HRESULT_FROM_WIN32(dwExceptionCode);
 }
 
 HRESULT WINAPI
 CreateProxyFromTypeInfo( LPTYPEINFO pTypeInfo, LPUNKNOWN pUnkOuter, REFIID riid,
                          LPRPCPROXYBUFFER *ppProxy, LPVOID *ppv )
 {
+    typedef INT (WINAPI *MessageBoxA)(HWND,LPCSTR,LPCSTR,UINT);
+    HMODULE hUser32 = LoadLibraryA("user32");
+    MessageBoxA pMessageBoxA = GetProcAddress(hUser32, "MessageBoxA");
+
     FIXME("%p %p %s %p %p\n", pTypeInfo, pUnkOuter, debugstr_guid(riid), ppProxy, ppv);
+    if (pMessageBoxA)
+    {
+        pMessageBoxA(NULL,
+            "The native implementation of OLEAUT32.DLL cannot be used "
+            "with Wine's RPCRT4.DLL. Remove OLEAUT32.DLL and try again.\n",
+            "Wine: Unimplemented CreateProxyFromTypeInfo",
+            0x10);
+        ExitProcess(1);
+    }
     return E_NOTIMPL;
 }
