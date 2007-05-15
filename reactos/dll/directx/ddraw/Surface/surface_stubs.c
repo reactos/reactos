@@ -8,7 +8,7 @@
  *
  */
 
-#include "../rosdraw.h"
+#include "rosdraw.h"
 
 HRESULT WINAPI
 Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,

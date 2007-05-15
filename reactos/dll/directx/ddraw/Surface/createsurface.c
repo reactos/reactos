@@ -94,7 +94,6 @@ void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src
     dst_pDesc->dwSize =  sizeof(DDSURFACEDESC2);
 }
 
-
 HRESULT 
 CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This, 
               LPDDRAWI_DDRAWSURFACE_INT *That,

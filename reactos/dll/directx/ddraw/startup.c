@@ -358,7 +358,6 @@ HRESULT WINAPI
 StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable)
 {
 
-
     LPDWORD mpFourCC;
     DDHALINFO mHALInfo;
     BOOL newmode = FALSE;
@@ -367,6 +366,8 @@ StartDirectDrawHal(LPDIRECTDRAW* iface, BOOL reenable)
     D3DHAL_GLOBALDRIVERDATA mD3dDriverData;
     DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+
+    DX_WINDBG_trace();
 
     RtlZeroMemory(&mHALInfo, sizeof(DDHALINFO));
     RtlZeroMemory(&mD3dCallbacks, sizeof(D3DHAL_CALLBACKS));

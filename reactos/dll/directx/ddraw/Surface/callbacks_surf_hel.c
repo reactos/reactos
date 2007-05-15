@@ -8,11 +8,7 @@
  *
  */
 
-#include <windows.h>
 #include "rosdraw.h"
-#include "d3dhal.h"
-#include "ddrawgdi.h"
-
 
 DWORD CALLBACK HelDdSurfAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA lpDestroySurface)
 {

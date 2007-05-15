@@ -8,7 +8,7 @@
  *
  */
 
-#include "../rosdraw.h"
+#include "rosdraw.h"
 
 /*
  * Status: Implentation removed due to rewrite
@@ -139,17 +139,6 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
  */
 HRESULT WINAPI
 Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
-/*
- * Status: Implentation removed due to rewrite
- */
-HRESULT WINAPI
-Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight,
-                                                                DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
 	DX_WINDBG_trace();
 	DX_STUB;

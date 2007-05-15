@@ -9,7 +9,7 @@
  */
 
 
-#include "../rosdraw.h"
+#include "rosdraw.h"
 
 HRESULT
 WINAPI
@@ -117,6 +117,65 @@ Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
     return DD_OK;
 }
 
+HRESULT WINAPI
+Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight,
+                                                                DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
+{
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    DX_WINDBG_trace();
+
+    // FIXME: Check primary if surface is locked / busy etc.
+
+    // Check Parameter
+    if(dwFlags != 0)
+    {
+        return DDERR_INVALIDPARAMS;
+    }
+
+    if ((!dwHeight || This->lpLcl->lpGbl->vmiData.dwDisplayHeight == dwHeight) && 
+        (!dwWidth || This->lpLcl->lpGbl->vmiData.dwDisplayWidth == dwWidth)  && 
+        (!dwBPP || This->lpLcl->lpGbl->vmiData.ddpfDisplay.dwRGBBitCount == dwBPP) &&
+        (!dwRefreshRate || This->lpLcl->lpGbl->dwMonitorFrequency == dwRefreshRate))  
+    {
+        return DD_OK; // nothing to do here for us
+    }
+
+    // Here we go
+    DEVMODE DevMode;
+    DevMode.dmFields = 0;
+    if(dwHeight) 
+        DevMode.dmFields |= DM_PELSHEIGHT;
+    if(dwWidth) 
+        DevMode.dmFields |= DM_PELSWIDTH;
+    if(dwBPP) 
+        DevMode.dmFields |= DM_BITSPERPEL;
+    if(dwRefreshRate) 
+        DevMode.dmFields |= DM_DISPLAYFREQUENCY;
+
+    DevMode.dmPelsHeight = dwHeight;
+    DevMode.dmPelsWidth = dwWidth;
+    DevMode.dmBitsPerPel = dwBPP;
+    DevMode.dmDisplayFrequency = dwRefreshRate;
+
+    LONG retval = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN /* | CDS_SET_PRIMARY ? */);
+    DbgPrint("%d\n", retval);
+
+    if(retval == DISP_CHANGE_BADMODE)
+    {
+        return DDERR_UNSUPPORTED;
+    }
+    else if(retval != DISP_CHANGE_SUCCESSFUL)
+    {
+        return DDERR_GENERIC;
+    }
+
+    // Update Interals
+    BOOL ModeChanged;
+    DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
+    StartDirectDraw((LPDIRECTDRAW)iface, 0, TRUE);
+
+    return DD_OK;
+}
 
 /*
  */
