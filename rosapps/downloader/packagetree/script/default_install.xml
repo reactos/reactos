@@ -1,5 +1,0 @@
-<script>
-	<download url="%location%" file="%TEMP%\%location_file%" />
-	<exec file="%TEMP%\%location_file%" />
-	<del file="%TEMP%\%location_file%" />
-</script>
