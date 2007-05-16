@@ -14,7 +14,12 @@ HRESULT CALLBACK EnumDisplayModes( LPDDSURFACEDESC2 pDDSD, ENUMCONTEXT* Context 
 {
 	INT* passed = Context->passed;
 	INT* failed = Context->failed;
-	TEST ( Context->DirectDraw->SetDisplayMode (pDDSD->dwWidth, pDDSD->dwHeight, pDDSD->ddpfPixelFormat.dwRGBBitCount, pDDSD->dwRefreshRate, 0) == DD_OK);
+	static int setcout = 0;
+	if(setcout < 5)
+	{
+		TEST ( Context->DirectDraw->SetDisplayMode (pDDSD->dwWidth, pDDSD->dwHeight, pDDSD->ddpfPixelFormat.dwRGBBitCount, pDDSD->dwRefreshRate, 0) == DD_OK);
+	}
+	setcout++;
 	return DDENUMRET_OK;
 }
 

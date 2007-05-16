@@ -4,18 +4,35 @@ HWND CreateBasicWindow (VOID);
 
 BOOL Test_CreateDDraw (INT* passed, INT* failed)
 {
-	LPDIRECTDRAW7 DirectDraw = NULL;
-	IDirectDraw* DirectDraw2 = NULL;
+	LPDIRECTDRAW7 DirectDraw;
+	IDirectDraw* DirectDraw2;
 
 	/*** FIXME: Test first parameter using EnumDisplayDrivers  ***/
+	DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL);
 
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, (IUnknown*)0xdeadbeef) == CLASS_E_NOAGGREGATION);
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw4, NULL) == DDERR_INVALIDPARAMS);
 	TEST (DirectDrawCreateEx(NULL, NULL, IID_IDirectDraw7, NULL) == DDERR_INVALIDPARAMS); 
+
+	DirectDraw = NULL;
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) == DD_OK);
-	//TEST (DirectDraw && DirectDraw->Release());
+	if(DirectDraw)
+	{
+		TEST (DirectDraw->Release() == 0);
+	}
+
+	DirectDraw2 = NULL;
 	TEST (DirectDrawCreate(NULL ,&DirectDraw2, NULL) == DD_OK);
-	//TEST (DirectDraw2 && DirectDraw2->Release());
+	if(DirectDraw2)
+	{
+		TEST (DirectDraw2->QueryInterface(IID_IDirectDraw7, (PVOID*)&DirectDraw) == 0);
+		TEST (DirectDraw2->AddRef() == 2);
+		TEST (DirectDraw->AddRef() == 2);
+		TEST (DirectDraw->Release() == 1);
+		TEST (DirectDraw->Release() == 0);
+		TEST (DirectDraw2->Release() == 1);
+		TEST (DirectDraw2->Release() == 0);
+	}
 
 	return TRUE;
 }
