@@ -14,6 +14,7 @@ TEST TestList[] =
 {
 	{ "IDirectDraw: COM Stuff", Test_CreateDDraw },
 	{ "IDirectDraw: Display Modes", Test_DisplayModes },
+	{ "IDirectDraw: Available Video Memory", Test_GetAvailableVidMem },
 	{ "IDirectDraw: Cooperative Levels", Test_SetCooperativeLevel },
 	{ "IDirectDraw: CreateSurface", Test_CreateSurface },
 };

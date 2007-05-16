@@ -79,6 +79,32 @@ BOOL Test_SetCooperativeLevel (INT* passed, INT* failed)
 	return TRUE;
 }
 
+BOOL Test_GetAvailableVidMem (INT* passed, INT* failed)
+{
+	LPDIRECTDRAW7 DirectDraw;
+
+	/* Preparations */
+	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
+	{
+		printf("ERROR: Failed to set up ddraw\n");
+		return FALSE;
+	}
+
+	/* Here we go */
+	DWORD Total, Free;
+	DDSCAPS2 Caps = { 0 };
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, NULL, NULL) == DDERR_INVALIDPARAMS);
+	TEST (DirectDraw->GetAvailableVidMem(NULL, &Total, &Free) == DDERR_INVALIDPARAMS);
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK && Total == 0 && Free == 0 );
+
+	Caps.dwCaps = DDSCAPS_VIDEOMEMORY;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+
+	DirectDraw->Release();
+
+	return TRUE;
+}
+
 LONG WINAPI BasicWindowProc (HWND hwnd, UINT message, UINT wParam, LONG lParam)
 {
 	switch (message)
