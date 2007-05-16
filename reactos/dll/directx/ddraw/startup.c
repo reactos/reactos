@@ -25,12 +25,21 @@ HRESULT WINAPI
 Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
                    REFIID id, BOOL ex)
 {
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
+    LPDDRAWI_DIRECTDRAW_INT This;
 
     DX_WINDBG_trace();
 
-    if (This == NULL)
+    if ((IsBadReadPtr(pIface,sizeof(LPDIRECTDRAW))) ||
+       (IsBadWritePtr(pIface,sizeof(LPDIRECTDRAW))))
     {
+        return DDERR_INVALIDPARAMS;
+    }
+
+    This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
+
+    if (IsBadReadPtr(This,sizeof(LPDIRECTDRAW)))
+    {
+        DX_STUB_str("1. no linking\n");
         /* We do not have a DirectDraw interface, we need alloc it*/
         LPDDRAWI_DIRECTDRAW_INT memThis;
 
@@ -47,6 +56,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     }
     else
     {
+        DX_STUB_str("2.linking\n");
         /* We got the DirectDraw interface alloc and we need create the link */
         LPDDRAWI_DIRECTDRAW_INT  newThis;
         newThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
@@ -269,7 +279,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
     This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
     ddgbl.hDD = This->lpLcl->lpGbl->hDD;
 
-    DX_STUB_str("DD_OK");
+    DX_STUB_str("DD_OK\n");
     return DD_OK;
 }
 
@@ -374,10 +384,13 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     if (reenable == FALSE)
     {
-        ddgbl.lpDDCBtmp = DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
-        if ( ddgbl.lpDDCBtmp == NULL)
+        if (ddgbl.lpDDCBtmp == NULL)
         {
-            return DD_FALSE;
+            ddgbl.lpDDCBtmp = DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
+            if ( ddgbl.lpDDCBtmp == NULL)
+            {
+                return DD_FALSE;
+            }
         }
     }
     else
@@ -425,7 +438,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     /* Alloc mpFourCC */
     mpFourCC = NULL;
-    if (mHALInfo.ddCaps.dwNumFourCCCodes)
+    if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
     {
         mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * mHALInfo.ddCaps.dwNumFourCCCodes);
         if (mpFourCC == NULL)
@@ -438,8 +451,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     /* Alloc mpTextures */
     mpTextures = NULL;
-
-    if (mD3dDriverData.dwNumTextureFormats)
+    if (mD3dDriverData.dwNumTextureFormats > 0)
     {
         mpTextures = (DDSURFACEDESC*) DxHeapMemAlloc(sizeof(DDSURFACEDESC) * mD3dDriverData.dwNumTextureFormats);
         if (mpTextures == NULL)

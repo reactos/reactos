@@ -40,11 +40,6 @@ DirectDrawCreate (LPGUID lpGUID,
     */
     DX_WINDBG_trace();
 
-    /* check the pointer if it vaild to read from */
-    if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
-    {
-        return DDERR_INVALIDPARAMS;
-    }
 
     /* check see if pUnkOuter is null or not */
     if (pUnkOuter)
@@ -74,12 +69,6 @@ DirectDrawCreateEx(LPGUID lpGUID,
         this api is finish and is working as it should
     */
     DX_WINDBG_trace();
-
-    /* check the pointer if it vaild to read from */
-    if (IsBadWritePtr( lplpDD, sizeof( LPVOID )) )
-    {
-        return DDERR_INVALIDPARAMS;
-    }
 
     /* check see if pUnkOuter is null or not */
     if (pUnkOuter)

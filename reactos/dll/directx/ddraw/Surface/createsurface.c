@@ -82,6 +82,8 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         desc.dwFlags = desc.dwFlags & DDSD_ALL;
     }
 
+     /* more code will follow */
+
 
 
     return DDERR_GENERIC;
