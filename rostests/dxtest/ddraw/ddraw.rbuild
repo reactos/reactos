@@ -7,6 +7,6 @@
 	<library>gdi32</library>
 	<library>ddraw</library>
 	<library>dxguid</library>
-	<file>ddraw_test.c</file>
+	<file>ddraw_test.cpp</file>
 	<file>testlist.cpp</file>
 </module>

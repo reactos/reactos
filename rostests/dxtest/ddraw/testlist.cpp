@@ -19,7 +19,7 @@ TEST TestList[] =
 };
 
 /* The function that gives us the number of tests */
-extern "C" INT NumTests(void)
+INT NumTests(void)
 {
 	return sizeof(TestList) / sizeof(TEST);
 }

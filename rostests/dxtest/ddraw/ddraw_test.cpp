@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 		{
 			for (j = 0; j < NumTests(); j++)
 			{
-				if (stricmp(argv[i], TestList[j].Test) == 0)
+				if (_stricmp(argv[i], TestList[j].Test) == 0)
 				{
 					passed = 0;
 					failed = 0;
