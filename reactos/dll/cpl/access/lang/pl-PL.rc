@@ -113,8 +113,8 @@ BEGIN
   IDS_CPLSYSTEMNAME "U³atwienia dostêpu"
   IDS_CPLSYSTEMDESCRIPTION "Personalizuje funkcje u³atwieñ dostêpu na twoim komputerze."
 
-  IDS_SENTRY_NONE "[None]"
-  IDS_SENTRY_TITLE "Flash the titlebar"
-  IDS_SENTRY_WINDOW "Flash the active window"
-  IDS_SENTRY_DISPLAY "Flash the desktop"
+  IDS_SENTRY_NONE "[Brak]"
+  IDS_SENTRY_TITLE "Migaj¹cy pasek tytu³u"
+  IDS_SENTRY_WINDOW "Migaj¹ce okno aktywne"
+  IDS_SENTRY_DISPLAY "Migaj¹cy pulpit"
 END
