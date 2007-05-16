@@ -606,7 +606,7 @@ int main(int argc, char* argv[])
         }
 
         /* Calculate loss percent */
-        Count = (LostCount * 100) / SentCount;
+        Count = SentCount ? (LostCount * 100) / SentCount : 0;
 
         if (!MinRTTSet)
             MinRTT = MaxRTT;
