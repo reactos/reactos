@@ -44,7 +44,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -52,7 +52,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -84,7 +84,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -92,7 +92,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -131,9 +131,11 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	Desc.ddsCaps.dwCaps = DDSCAPS_OVERLAY;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
+#if 0
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
+#endif
  
 	Desc.dwFlags = DDSD_CAPS;
 	Desc.ddsCaps.dwCaps = DDSCAPS_OWNDC;
@@ -146,7 +148,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	Desc.dwFlags = DDSD_CAPS;
 	Desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK );
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -154,7 +156,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -162,7 +164,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	DirectDrawSurface = NULL;
@@ -171,7 +173,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK );
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -179,7 +181,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
@@ -187,7 +189,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DDERR_INVALIDPARAMS);
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
 	TEST ( DirectDraw->CreateSurface(&Desc, &DirectDrawSurface, NULL) == DD_OK);
-	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == DD_OK );
+	TEST ( DirectDrawSurface && DirectDrawSurface->Release() == 0 );
 	DirectDrawSurface = NULL;
  
 	Desc.dwFlags = DDSD_CAPS;
