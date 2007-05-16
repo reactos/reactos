@@ -25,7 +25,7 @@ HRESULT CALLBACK EnumDisplayModes( LPDDSURFACEDESC2 pDDSD, ENUMCONTEXT* Context 
 		TEST ( Context->DirectDraw->SetDisplayMode (pDDSD->dwWidth, pDDSD->dwHeight, pDDSD->ddpfPixelFormat.dwRGBBitCount, pDDSD->dwRefreshRate, 0) == DD_OK);
 		TEST ( Context->DirectDraw->GetMonitorFrequency (&lpdwFrequency) == DD_OK && lpdwFrequency == pDDSD->dwRefreshRate);
 		TEST ( Context->DirectDraw->GetDisplayMode (&DisplayMode) == DD_OK
-			&& pDDSD->dwWidth == DisplayMode.dwHeight 
+			&& pDDSD->dwHeight == DisplayMode.dwHeight 
 			&& pDDSD->dwWidth == DisplayMode.dwWidth 
 			&& pDDSD->dwRefreshRate == DisplayMode.dwRefreshRate
 			&& pDDSD->ddpfPixelFormat.dwRGBBitCount == DisplayMode.ddpfPixelFormat.dwRGBBitCount);
