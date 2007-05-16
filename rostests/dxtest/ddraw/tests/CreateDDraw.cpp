@@ -18,6 +18,7 @@ BOOL Test_CreateDDraw (INT* passed, INT* failed)
 	TEST (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) == DD_OK);
 	if(DirectDraw)
 	{
+		TEST (DirectDraw->Initialize(NULL) == DDERR_ALREADYINITIALIZED);
 		TEST (DirectDraw->Release() == 0);
 	}
 
@@ -65,9 +66,13 @@ BOOL Test_SetCooperativeLevel (INT* passed, INT* failed)
 	TEST ( DirectDraw->SetCooperativeLevel ((HWND)0xdeadbeef, DDSCL_NORMAL) == DDERR_INVALIDPARAMS);
 
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE) == DD_OK);
+	TEST ( DirectDraw->Compact() == DD_OK );
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE | DDSCL_ALLOWMODEX) == DD_OK);
 	TEST ( DirectDraw->SetCooperativeLevel (NULL, DDSCL_NORMAL) == DD_OK );
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_NORMAL) == DD_OK );
+	TEST ( DirectDraw->Compact() == DDERR_NOEXCLUSIVEMODE );
+
+	TEST ( DirectDraw->TestCooperativeLevel() == DD_OK ); // I do not get what this API does it always seems to return DD_OK
 
 	DirectDraw->Release();
 
