@@ -148,7 +148,7 @@
 
 #include "nls/sqi.nls"   /* 0x041c  LANG_ALBANIAN, SUBLANG_NEUTRAL */
 
-#include "nls/sve.nls"   /* 0x041d  LANG_SWEDISH, SUBLANG_SWEDISH */
+#include "nls/sve.nls"   /* 0x041d  LANG_SWEDISH, SUBLANG_NEUTRAL */
 #include "nls/svf.nls"   /* 0x081d  LANG_SWEDISH, SUBLANG_SWEDISH_FINLAND */
 
 #include "nls/tha.nls"   /* 0x041e  LANG_THAI, SUBLANG_NEUTRAL */
