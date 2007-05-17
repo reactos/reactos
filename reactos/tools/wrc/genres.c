@@ -44,7 +44,7 @@
 #include "wine/unicode.h"
 
 /* Fix 64-bit host, re: put_dword */
-#if defined(linux) && defined(__x86_64__)
+#if defined(unix) && defined(__x86_64__)
 typedef unsigned int HOST_DWORD;
 #else
 typedef unsigned long HOST_DWORD;

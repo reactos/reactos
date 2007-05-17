@@ -120,11 +120,14 @@ typedef void* __ptr64 PVOID64;
 
 #ifndef _WCHAR_T_DEFINED
 #define _WCHAR_T_DEFINED
+#ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
+#define _WCHAR_T_DECLARED
 #ifndef _WCHAR_T_
 #define _WCHAR_T_
 #undef __need_wchar_t
 #ifndef __cplusplus
 typedef unsigned short wchar_t;
+#endif
 #endif
 #endif
 #endif
@@ -1841,7 +1844,7 @@ typedef struct _ACL_SIZE_INFORMATION {
 } ACL_SIZE_INFORMATION;
 
 /* FIXME: add more machines */
-#if defined(_X86_) || defined(linux)
+#if defined(_X86_) || defined(unix)
 #define SIZE_OF_80387_REGISTERS	80
 #define CONTEXT_i386	0x10000
 #define CONTEXT_i486	0x10000

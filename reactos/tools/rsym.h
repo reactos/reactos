@@ -14,7 +14,7 @@ typedef unsigned char BYTE;
 typedef unsigned char UCHAR;
 typedef unsigned short WORD;
 typedef unsigned short USHORT;
-#if defined(__x86_64__) && defined(linux)
+#if defined(__x86_64__) && defined(unix)
 typedef signed int LONG;
 typedef unsigned int ULONG;
 typedef unsigned int DWORD;
@@ -26,7 +26,7 @@ typedef unsigned long DWORD;
 #if defined(_WIN64)
 typedef unsigned __int64 ULONG_PTR;
 #else
-#if defined(__x86_64__) && defined(linux)
+#if defined(__x86_64__) && defined(unix)
 typedef  unsigned int  ULONG_PTR;
 #else
 typedef  unsigned long ULONG_PTR;
