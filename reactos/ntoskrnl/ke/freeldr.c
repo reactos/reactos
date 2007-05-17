@@ -323,21 +323,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     PKTSS Tss;
     PKGDTENTRY TssEntry;
 #endif
-#ifdef _M_PPC
-    { 
-	__asm__("ori 0,0,0");
-	char *nk = "ntoskrnl is here";
-	boot_infos_t *XBootInfo = (boot_infos_t *)LoaderBlock->ArchExtra;
-	memcpy(&PpcEarlybootInfo, XBootInfo, sizeof(PpcEarlybootInfo));
-	PpcEarlybootInfo.dispFont = BootDigits;
-	LoaderBlock->ArchExtra = (ULONG)&PpcEarlybootInfo;
-	BootInfo = (struct _boot_infos_t *)&PpcEarlybootInfo;
-	DrawNumber(BootInfo, 0x1234abcd, 10, 100);
-	DrawNumber(BootInfo, (ULONG)nk, 10 , 150);
-	DrawString(BootInfo, nk, 100, 150);
-	__asm__("ori 0,0,0");
-    }
-#endif
 
 #ifdef _M_IX86
     /* Load the GDT and IDT */
@@ -354,9 +339,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
 #endif
-
-    DrawNumber(BootInfo, 0xb0071f03, 190, 90);
-    DrawNumber(BootInfo, (ULONG)BootInfo, 190, 100);
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
     memcpy(&KeRosLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
@@ -424,14 +406,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         }
 
 #ifdef _M_PPC
-	if(i == 0) {
-	    DrawNumber(BootInfo, KeLoaderModules[i].ModStart, 10, 200);
-	    DrawNumber(BootInfo, KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart, 100, 200);
-	    DrawNumber(BootInfo, KeLoaderModules[i].ModEnd, 190, 200);
-	    DrawNumber(BootInfo, KeLoaderModules[i+1].ModStart, 10, 210);
-	    DrawNumber(BootInfo, KeLoaderModules[i+1].ModEnd - KeLoaderModules[i+1].ModStart, 100, 210);
-	    DrawNumber(BootInfo, KeLoaderModules[i+1].ModEnd, 190, 210);
-	}
 	KeLoaderModules[i].ModStart += KSEG0_BASE - StartKernelBase;
 	KeLoaderModules[i].ModEnd   += KSEG0_BASE - StartKernelBase;
 #else
@@ -453,21 +427,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     }
 
     /* Choose last module address as the final kernel address */
-    /* This is a workaround re: high and low adjust.
-     * The ABI we're using doesn't respect HIGHADJ pairing like compilers for NT do, so well be a bit 
-     * lenient.  This can be fixed later.
-     */
-#ifndef _M_PPC
-    MmFreeLdrLastKernelAddress =
-        PAGE_ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd);
-
-    /* Select the HAL Base */
-    HalBase = KeLoaderModules[1].ModStart;
-
-    /* Choose Driver Base */
-    DriverBase = MmFreeLdrLastKernelAddress;
-    LdrHalBase = (ULONG_PTR)DriverBase;
-#else
     MmFreeLdrLastKernelAddress =
         ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd, 0x10000);
 
@@ -476,7 +435,10 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
     /* Choose Driver Base */
     DriverBase = MmFreeLdrLastKernelAddress;
+#ifdef _M_PPC
     LdrHalBase = KeLoaderModules[1].ModStart;
+#else
+    LdrHalBase = (ULONG_PTR)DriverBase;
 #endif
 
     /* Initialize Module Management */

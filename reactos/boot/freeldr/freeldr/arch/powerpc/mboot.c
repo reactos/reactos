@@ -197,6 +197,15 @@ FrLdrStartup(ULONG Magic)
 
     MmuMapPage((void *)KernelBase, info, page);
 
+    /* Map module name strings */
+    for( i = 0; i < LoaderBlock.ModsCount; i++ )
+    {
+	page = ROUND_DOWN(((ULONG)reactos_modules[i].String), (1<<PFN_SHIFT));
+	info[i].flags = MMU_ALL_RW;
+	info[i].phys = page;
+	MmuMapPage((void *)page, info, 1);
+    }
+
     /* Tell them we're booting */
     DrawNumber(LocalBootInfo,(ULONG)&LoaderBlock,10,100);
 
@@ -513,10 +522,20 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	    memcpy(&symbol, SymbolSection + (ELF32_R_SYM(reloc.r_info) * sizeof(symbol)), sizeof(symbol));
 
 	    /* Compute addends */
-	    S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr + KernelAddr;
+	    S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr + KernelAddr + reloc.r_addend;
 	    A = reloc.r_addend;
 	    P = reloc.r_offset + ELF_SECTION(targetSection)->sh_addr;
-	    
+
+#if 0
+	    printf("Symbol %d -> %d(%x:%x) -> %x@%x\n",
+		   ELF32_R_SYM(reloc.r_info), 
+		   symbol.st_shndx, 
+		   ELF_SECTION(symbol.st_shndx)->sh_addr,
+		   symbol.st_value,
+		   S,
+		   P);
+#endif
+
 	    Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + P);
 	    Target16 = (USHORT *)Target32;
 	    x = *Target32;

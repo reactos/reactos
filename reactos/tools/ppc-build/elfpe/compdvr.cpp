@@ -164,6 +164,7 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
     args.insert(args.begin()+1,"-T");
     args.insert(args.begin()+2,ldscript);
     args.insert(args.begin()+1,"-r");
+    args.insert(args.begin()+1,"-dc");
     
     for( size_t i = 0; i < args.size(); i++ ) {
 	if( args[i] == "-o" && i < args.size()-1 ) {
