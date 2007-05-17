@@ -27,7 +27,7 @@
  * https://sourceforge.net/projects/reactospl
  */
 
-LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 {
