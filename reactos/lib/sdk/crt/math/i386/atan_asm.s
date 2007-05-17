@@ -14,9 +14,6 @@
 /* FUNCTIONS ***************************************************************/
 
 _atan:
-        push    ebp
-        mov     ebp,esp            
-        fld     qword ptr [ebp+8]   
-        fpatan                      
-        pop     ebp
+        fld     qword ptr [esp+4]
+        fpatan
         ret
