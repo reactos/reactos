@@ -1,7 +1,7 @@
-/* A Bison parser, made by GNU Bison 1.875b.  */
+/* A Bison parser, made by GNU Bison 2.1.  */
 
 /* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   Foundation, Inc., 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
 /* As a special exception, when this file is copied by Bison into a
    Bison output file, you may use that output file without restriction.
@@ -39,42 +39,42 @@
      tDEFINED = 265,
      tNL = 266,
      tINCLUDE = 267,
-     tINCLUDE_NEXT = 268,
-     tLINE = 269,
-     tGCCLINE = 270,
-     tERROR = 271,
-     tWARNING = 272,
-     tPRAGMA = 273,
-     tPPIDENT = 274,
-     tUNDEF = 275,
-     tMACROEND = 276,
-     tCONCAT = 277,
-     tELIPSIS = 278,
-     tSTRINGIZE = 279,
-     tIDENT = 280,
-     tLITERAL = 281,
-     tMACRO = 282,
-     tDEFINE = 283,
-     tDQSTRING = 284,
-     tSQSTRING = 285,
-     tIQSTRING = 286,
-     tUINT = 287,
-     tSINT = 288,
-     tULONG = 289,
-     tSLONG = 290,
-     tULONGLONG = 291,
-     tSLONGLONG = 292,
-     tRCINCLUDEPATH = 293,
-     tLOGOR = 294,
-     tLOGAND = 295,
-     tNE = 296,
-     tEQ = 297,
-     tGTE = 298,
-     tLTE = 299,
-     tRSHIFT = 300,
-     tLSHIFT = 301
+     tLINE = 268,
+     tGCCLINE = 269,
+     tERROR = 270,
+     tWARNING = 271,
+     tPRAGMA = 272,
+     tPPIDENT = 273,
+     tUNDEF = 274,
+     tMACROEND = 275,
+     tCONCAT = 276,
+     tELIPSIS = 277,
+     tSTRINGIZE = 278,
+     tIDENT = 279,
+     tLITERAL = 280,
+     tMACRO = 281,
+     tDEFINE = 282,
+     tDQSTRING = 283,
+     tSQSTRING = 284,
+     tIQSTRING = 285,
+     tUINT = 286,
+     tSINT = 287,
+     tULONG = 288,
+     tSLONG = 289,
+     tULONGLONG = 290,
+     tSLONGLONG = 291,
+     tRCINCLUDEPATH = 292,
+     tLOGOR = 293,
+     tLOGAND = 294,
+     tNE = 295,
+     tEQ = 296,
+     tGTE = 297,
+     tLTE = 298,
+     tRSHIFT = 299,
+     tLSHIFT = 300
    };
 #endif
+/* Tokens.  */
 #define tRCINCLUDE 258
 #define tIF 259
 #define tIFDEF 260
@@ -85,46 +85,45 @@
 #define tDEFINED 265
 #define tNL 266
 #define tINCLUDE 267
-#define tINCLUDE_NEXT 268
-#define tLINE 269
-#define tGCCLINE 270
-#define tERROR 271
-#define tWARNING 272
-#define tPRAGMA 273
-#define tPPIDENT 274
-#define tUNDEF 275
-#define tMACROEND 276
-#define tCONCAT 277
-#define tELIPSIS 278
-#define tSTRINGIZE 279
-#define tIDENT 280
-#define tLITERAL 281
-#define tMACRO 282
-#define tDEFINE 283
-#define tDQSTRING 284
-#define tSQSTRING 285
-#define tIQSTRING 286
-#define tUINT 287
-#define tSINT 288
-#define tULONG 289
-#define tSLONG 290
-#define tULONGLONG 291
-#define tSLONGLONG 292
-#define tRCINCLUDEPATH 293
-#define tLOGOR 294
-#define tLOGAND 295
-#define tNE 296
-#define tEQ 297
-#define tGTE 298
-#define tLTE 299
-#define tRSHIFT 300
-#define tLSHIFT 301
+#define tLINE 268
+#define tGCCLINE 269
+#define tERROR 270
+#define tWARNING 271
+#define tPRAGMA 272
+#define tPPIDENT 273
+#define tUNDEF 274
+#define tMACROEND 275
+#define tCONCAT 276
+#define tELIPSIS 277
+#define tSTRINGIZE 278
+#define tIDENT 279
+#define tLITERAL 280
+#define tMACRO 281
+#define tDEFINE 282
+#define tDQSTRING 283
+#define tSQSTRING 284
+#define tIQSTRING 285
+#define tUINT 286
+#define tSINT 287
+#define tULONG 288
+#define tSLONG 289
+#define tULONGLONG 290
+#define tSLONGLONG 291
+#define tRCINCLUDEPATH 292
+#define tLOGOR 293
+#define tLOGAND 294
+#define tNE 295
+#define tEQ 296
+#define tGTE 297
+#define tLTE 298
+#define tRSHIFT 299
+#define tLSHIFT 300
 
 
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 126 "wpp/ppy.y"
+#line 126 "tools\\wpp_new\\ppy.y"
 typedef union YYSTYPE {
 	int		sint;
 	unsigned int	uint;
@@ -138,14 +137,14 @@ typedef union YYSTYPE {
 	marg_t		*marg;
 	mtext_t		*mtext;
 } YYSTYPE;
-/* Line 1252 of yacc.c.  */
-#line 143 "wpp/ppy.tab.h"
+/* Line 1447 of yacc.c.  */
+#line 142 "tools\\wpp_new\\ppy.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
 #endif
 
-extern YYSTYPE pplval;
+extern YYSTYPE ppy_lval;
 
 
 

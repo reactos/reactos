@@ -370,7 +370,7 @@ static void read_importlib(importlib_t *importlib)
     INT magic;
     char *file_name;
 
-    file_name = wpp_find_include(importlib->name, NULL, 1);
+    file_name = wpp_find_include(importlib->name, NULL);
     if(file_name) {
         fd = open(file_name, O_RDONLY);
         free(file_name);

@@ -2320,7 +2320,7 @@ static raw_data_t *load_file(string_t *filename, language_t *lang)
 	if (codepage <= 0 && filename->type != str_char)
 		yyerror("Cannot convert filename to ASCII string");
 	name = convert_string( filename, str_char, codepage );
-	if (!(path = wpp_find_include(name->str.cstr, input_name, 1)))
+	if (!(path = wpp_find_include(name->str.cstr, input_name)))
 		yyerror("Cannot open file %s", name->str.cstr);
 	if (!(fp = fopen( path, "rb" )))
 		yyerror("Cannot open file %s", name->str.cstr);

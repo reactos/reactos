@@ -413,7 +413,7 @@ int do_import(char *fname)
 	import->next = first_import;
 	first_import = import;
 
-        if (!(path = wpp_find_include( fname, input_name, 1 )))
+        if (!(path = wpp_find_include( fname, input_name )))
             yyerror("Unable to open include file %s", fname);
 
 	import_stack[ptr].temp_name = temp_name;

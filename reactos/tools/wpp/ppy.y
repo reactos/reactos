@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * History:
  * 24-Apr-2000 BS	Restructured the lot to fit the new scanner
@@ -29,6 +29,7 @@
 
 %{
 #include "config.h"
+#include "wine/port.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -138,7 +139,7 @@ static int	nmacro_args;
 
 %token tRCINCLUDE
 %token tIF tIFDEF tIFNDEF tELSE tELIF tENDIF tDEFINED tNL
-%token tINCLUDE tINCLUDE_NEXT tLINE tGCCLINE tERROR tWARNING tPRAGMA tPPIDENT
+%token tINCLUDE tLINE tGCCLINE tERROR tWARNING tPRAGMA tPPIDENT
 %token tUNDEF tMACROEND tCONCAT tELIPSIS tSTRINGIZE
 %token <cptr> tIDENT tLITERAL tMACRO tDEFINE
 %token <cptr> tDQSTRING tSQSTRING tIQSTRING
@@ -182,10 +183,8 @@ pp_file	: /* Empty */
 	;
 
 preprocessor
-	: tINCLUDE tDQSTRING tNL	{ pp_do_include($2, LOCAL_INCLUDE); }
-	| tINCLUDE tIQSTRING tNL	{ pp_do_include($2, GLOBAL_INCLUDE); }
-	| tINCLUDE_NEXT tDQSTRING tNL	{ pp_do_include($2, INCLUDE_NEXT); }
-	| tINCLUDE_NEXT tIQSTRING tNL	{ pp_do_include($2, INCLUDE_NEXT); }
+	: tINCLUDE tDQSTRING tNL	{ pp_do_include($2, 1); }
+	| tINCLUDE tIQSTRING tNL	{ pp_do_include($2, 0); }
 	| tIF pp_expr tNL	{ pp_next_if_state(boolean(&$2)); }
 	| tIFDEF tIDENT tNL	{ pp_next_if_state(pplookup($2) != NULL); free($2); }
 	| tIFNDEF tIDENT tNL	{
@@ -224,7 +223,7 @@ preprocessor
 			break;
 		case if_elsetrue:
 		case if_elsefalse:
-			pperror("#elif cannot follow #else");
+			ppy_error("#elif cannot follow #else");
 		default:
 			pp_internal_error(__FILE__, __LINE__, "Invalid pp_if_state (%d) in #elif directive", s);
 		}
@@ -247,7 +246,7 @@ preprocessor
 			break;
 		case if_elsetrue:
 		case if_elsefalse:
-			pperror("#else clause already defined");
+			ppy_error("#else clause already defined");
 		default:
 			pp_internal_error(__FILE__, __LINE__, "Invalid pp_if_state (%d) in #else directive", s);
 		}
@@ -272,30 +271,30 @@ preprocessor
 	| tMACRO res_arg allmargs tMACROEND opt_mtexts tNL	{
 		pp_add_macro($1, macro_args, nmacro_args, $5);
 		}
-	| tLINE tSINT tDQSTRING	tNL	{ fprintf(ppout, "# %d %s\n", $2 , $3); free($3); }
-	| tGCCLINE tSINT tDQSTRING tNL	{ fprintf(ppout, "# %d %s\n", $2 , $3); free($3); }
+	| tLINE tSINT tDQSTRING	tNL	{ fprintf(ppy_out, "# %d %s\n", $2 , $3); free($3); }
+	| tGCCLINE tSINT tDQSTRING tNL	{ fprintf(ppy_out, "# %d %s\n", $2 , $3); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tNL
-		{ fprintf(ppout, "# %d %s %d\n", $2, $3, $4); free($3); }
+		{ fprintf(ppy_out, "# %d %s %d\n", $2, $3, $4); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tSINT tNL
-		{ fprintf(ppout, "# %d %s %d %d\n", $2 ,$3, $4, $5); free($3); }
+		{ fprintf(ppy_out, "# %d %s %d %d\n", $2 ,$3, $4, $5); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tSINT tSINT  tNL
-		{ fprintf(ppout, "# %d %s %d %d %d\n", $2 ,$3 ,$4 ,$5, $6); free($3); }
+		{ fprintf(ppy_out, "# %d %s %d %d %d\n", $2 ,$3 ,$4 ,$5, $6); free($3); }
 	| tGCCLINE tSINT tDQSTRING tSINT tSINT tSINT tSINT tNL
-		{ fprintf(ppout, "# %d %s %d %d %d %d\n", $2 ,$3 ,$4 ,$5, $6, $7); free($3); }
+		{ fprintf(ppy_out, "# %d %s %d %d %d %d\n", $2 ,$3 ,$4 ,$5, $6, $7); free($3); }
 	| tGCCLINE tNL		/* The null-token */
-	| tERROR opt_text tNL	{ pperror("#error directive: '%s'", $2); if($2) free($2); }
-	| tWARNING opt_text tNL	{ ppwarning("#warning directive: '%s'", $2); if($2) free($2); }
-	| tPRAGMA opt_text tNL	{ fprintf(ppout, "#pragma %s\n", $2 ? $2 : ""); if ($2) free($2); }
-	| tPPIDENT opt_text tNL	{ if(pp_status.pedantic) ppwarning("#ident ignored (arg: '%s')", $2); if($2) free($2); }
+	| tERROR opt_text tNL	{ ppy_error("#error directive: '%s'", $2); if($2) free($2); }
+	| tWARNING opt_text tNL	{ ppy_warning("#warning directive: '%s'", $2); if($2) free($2); }
+	| tPRAGMA opt_text tNL	{ fprintf(ppy_out, "#pragma %s\n", $2 ? $2 : ""); if ($2) free($2); }
+	| tPPIDENT opt_text tNL	{ if(pp_status.pedantic) ppy_warning("#ident ignored (arg: '%s')", $2); if($2) free($2); }
         | tRCINCLUDE tRCINCLUDEPATH {
                 int nl=strlen($2) +3;
                 char *fn=pp_xmalloc(nl);
                 sprintf(fn,"\"%s\"",$2);
 		free($2);
-		pp_do_include(fn,LOCAL_INCLUDE);
+		pp_do_include(fn,1);
 	}
 	| tRCINCLUDE tDQSTRING {
-		pp_do_include($2,LOCAL_INCLUDE);
+		pp_do_include($2,1);
 	}
 	/*| tNL*/
 	;
@@ -346,7 +345,7 @@ mtext	: tLITERAL	{ $$ = new_mtext($1, 0, exp_text); }
 	| tSTRINGIZE tIDENT	{
 		int mat = marg_index($2);
 		if(mat < 0)
-			pperror("Stringification identifier must be an argument parameter");
+			ppy_error("Stringification identifier must be an argument parameter");
 		$$ = new_mtext(NULL, mat, exp_stringize);
 		}
 	| tIDENT	{
@@ -362,8 +361,8 @@ pp_expr	: tSINT				{ $$.type = cv_sint;  $$.val.si = $1; }
 	| tUINT				{ $$.type = cv_uint;  $$.val.ui = $1; }
 	| tSLONG			{ $$.type = cv_slong; $$.val.sl = $1; }
 	| tULONG			{ $$.type = cv_ulong; $$.val.ul = $1; }
-	| tSLONGLONG			{ $$.type = cv_sll;   $$.val.sl = $1; }
-	| tULONGLONG			{ $$.type = cv_ull;   $$.val.ul = $1; }
+	| tSLONGLONG			{ $$.type = cv_sll;   $$.val.sll = $1; }
+	| tULONGLONG			{ $$.type = cv_ull;   $$.val.ull = $1; }
 	| tDEFINED tIDENT		{ $$.type = cv_sint;  $$.val.si = pplookup($2) != NULL; }
 	| tDEFINED '(' tIDENT ')'	{ $$.type = cv_sint;  $$.val.si = pplookup($3) != NULL; }
 	| tIDENT			{ $$.type = cv_sint;  $$.val.si = 0; }

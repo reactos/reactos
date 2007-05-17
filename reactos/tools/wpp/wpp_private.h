@@ -14,11 +14,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_WPP_PRIVATE_H
 #define __WINE_WPP_PRIVATE_H
+
+#ifndef __WINE_CONFIG_H
+# error You must include config.h to use this header
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -35,10 +39,6 @@ typedef struct includelogicentry {
 	struct pp_entry	*ppp;		/* The define which protects the file */
 	char		*filename;	/* The filename of the include */
 } includelogicentry_t;
-
-#define GLOBAL_INCLUDE	0 /* #include <foo.h> */
-#define LOCAL_INCLUDE	1 /* #include "foo.h" */
-#define INCLUDE_NEXT	2 /* #include_next <foo.h> */
 
 /*
  * The arguments of a macrodefinition
@@ -137,14 +137,16 @@ typedef struct
 
 
 /*
- * I assume that 'long long' exists in the compiler when it has a size
- * of 8 or bigger. If not, then we revert to a simple 'long' for now.
+ * If the configure says we have long long then we can use it.  Presumably
+ * if we have long long then we have strtoull and strtoll too.  If that is
+ * not the case we will need to add to the configure tests.
+ * If we do not have long long , then we revert to a simple 'long' for now.
  * This should prevent most unexpected things with other compilers than
  * gcc and egcs for now.
  * In the future it should be possible to use another way, like a
  * structure, so that we can emulate the MS compiler.
  */
-#if defined(SIZEOF_LONGLONG) && SIZEOF_LONGLONG >= 8
+#ifdef HAVE_LONG_LONG
 typedef long long wrc_sll_t;
 typedef unsigned long long wrc_ull_t;
 #else
@@ -204,7 +206,7 @@ void pp_pop_define_state(void);
 pp_entry_t *pp_add_define(char *def, char *text);
 pp_entry_t *pp_add_macro(char *ident, marg_t *args[], int nargs, mtext_t *exp);
 void pp_del_define(const char *name);
-FILE *pp_open_include(const char *name, const char *parent_name, char **newpath, int type);
+FILE *pp_open_include(const char *name, const char *parent_name, char **newpath);
 void pp_push_if(pp_if_state_t s);
 void pp_next_if_state(int);
 pp_if_state_t pp_pop_if(void);
@@ -215,8 +217,8 @@ int pp_get_if_depth(void);
 #define __attribute__(x)  /*nothing*/
 #endif
 
-int pperror(const char *s, ...) __attribute__((format (printf, 1, 2)));
-int ppwarning(const char *s, ...) __attribute__((format (printf, 1, 2)));
+int ppy_error(const char *s, ...) __attribute__((format (printf, 1, 2)));
+int ppy_warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void pp_internal_error(const char *file, int line, const char *s, ...) __attribute__((format (printf, 3, 4)));
 
 /* current preprocessor state */
@@ -237,11 +239,11 @@ extern includelogicentry_t *pp_includelogiclist;
 /*
  * From ppl.l
  */
-extern FILE *ppin;
-extern FILE *ppout;
-extern char *pptext;
+extern FILE *ppy_in;
+extern FILE *ppy_out;
+extern char *ppy_text;
 extern int pp_flex_debug;
-int pplex(void);
+int ppy_lex(void);
 
 void pp_do_include(char *fname, int type);
 void pp_push_ignore_state(void);
@@ -251,7 +253,7 @@ void pp_pop_ignore_state(void);
 /*
  * From ppy.y
  */
-int ppparse(void);
-extern int ppdebug;
+int ppy_parse(void);
+extern int ppy_debug;
 
 #endif  /* __WINE_WPP_PRIVATE_H */

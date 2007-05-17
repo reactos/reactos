@@ -53,6 +53,16 @@ $(WPP_INT_)ppy.tab.o: $(WPP_BASE_)ppy.tab.c | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
+#
+#$(WPP_BASE_)ppy.tab.c: $(WPP_BASE_)ppy.y
+#	bison -p ppy_ -d -o tools\wpp\ppy.tab.c tools\wpp\ppy.y
+#
+
+#
+#$(WPP_BASE_)lex.yy.c: $(WPP_BASE_)ppl.l
+#	flex -otools\wpp\lex.yy.c tools\wpp\ppl.l
+#
+
 .PHONY: wpp_clean
 wpp_clean:
 	-@$(rm) $(WPP_TARGET) $(WPP_OBJECTS) 2>$(NUL)

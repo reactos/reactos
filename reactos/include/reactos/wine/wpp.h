@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_WPP_H
@@ -29,7 +29,7 @@ extern void wpp_add_cmdline_define( const char *value );
 extern void wpp_set_debug( int lex_debug, int parser_debug, int msg_debug );
 extern void wpp_set_pedantic( int on );
 extern void wpp_add_include_path( const char *path );
-char *wpp_find_include( const char *name, const char *parent_name, int type );
+extern char *wpp_find_include( const char *name, const char *parent_name );
 extern int wpp_parse( const char *input, FILE *output );
 extern int wpp_parse_temp( const char *input, const char *output_base, char **output_name );
 

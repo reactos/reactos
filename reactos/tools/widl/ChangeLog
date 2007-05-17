@@ -1,5 +1,14 @@
 ChangeLog
 
+2007-05-17 ekohl
+
+   tools/widl/lex.yy.c
+   tools/widl/parser.l
+   tools/widl/typelib.c
+
+- Update wpp and fix the wpp_find_include issue!
+
+
 2006-07-30 ekohl
 
 - Synchronized with WINE widl 20060729.

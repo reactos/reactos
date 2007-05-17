@@ -13,10 +13,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -202,7 +203,7 @@ void pp_del_define(const char *name)
 	if((ppp = pplookup(name)) == NULL)
 	{
 		if(pp_status.pedantic)
-			ppwarning("%s was not defined", name);
+			ppy_warning("%s was not defined", name);
 		return;
 	}
 
@@ -222,7 +223,7 @@ pp_entry_t *pp_add_define(char *def, char *text)
 	if((ppp = pplookup(def)) != NULL)
 	{
 		if(pp_status.pedantic)
-			ppwarning("Redefinition of %s\n\tPrevious definition: %s:%d", def, ppp->filename, ppp->linenumber);
+			ppy_warning("Redefinition of %s\n\tPrevious definition: %s:%d", def, ppp->filename, ppp->linenumber);
 		pp_del_define(def);
 	}
 	ppp = pp_xmalloc(sizeof(pp_entry_t));
@@ -264,7 +265,7 @@ pp_entry_t *pp_add_macro(char *id, marg_t *args[], int nargs, mtext_t *exp)
 	if((ppp = pplookup(id)) != NULL)
 	{
 		if(pp_status.pedantic)
-			ppwarning("Redefinition of %s\n\tPrevious definition: %s:%d", id, ppp->filename, ppp->linenumber);
+			ppy_warning("Redefinition of %s\n\tPrevious definition: %s:%d", id, ppp->filename, ppp->linenumber);
 		pp_del_define(id);
 	}
 	ppp = pp_xmalloc(sizeof(pp_entry_t));
@@ -313,7 +314,7 @@ pp_entry_t *pp_add_macro(char *id, marg_t *args[], int nargs, mtext_t *exp)
  * Include management
  *-------------------------------------------------------------------------
  */
-#if defined(_WIN32) || defined(__MSDOS__)
+#if defined(_Windows) || defined(__MSDOS__)
 #define INCLUDESEPARATOR	";"
 #else
 #define INCLUDESEPARATOR	":"
@@ -354,7 +355,7 @@ void wpp_add_include_path(const char *path)
 	free(cpy);
 }
 
-char *wpp_find_include(const char *name, const char *parent_name, int type)
+char *wpp_find_include(const char *name, const char *parent_name)
 {
     char *cpy;
     char *cptr;
@@ -380,7 +381,7 @@ char *wpp_find_include(const char *name, const char *parent_name, int type)
     }
     *cptr = '\0';
 
-    if(type == LOCAL_INCLUDE && parent_name)
+    if(parent_name)
     {
         /* Search directory of parent include and then -I path */
         const char *p;
@@ -399,32 +400,8 @@ char *wpp_find_include(const char *name, const char *parent_name, int type)
         }
         free( path );
     }
-
-    /* Skip all directories till the current include file for #include_next. */
-    if(type == INCLUDE_NEXT)
-    {
-        for(i = 1; i < nincludepath; i++)
-        {
-            char *path;
-            path = pp_xmalloc(strlen(includepath[i]) + strlen(cpy) + 2);
-            strcpy(path, includepath[i - 1]);
-            strcat(path, "/");
-            strcat(path, cpy);
-            if(!strcmp(pp_status.input, path))
-            {
-                free( path );
-                break;
-    	    }
-            free( path );
-        }
-    }
-    else
-    {
-        i = 0;
-    }
-
     /* Search -I path */
-    for(; i < nincludepath; i++)
+    for(i = 0; i < nincludepath; i++)
     {
         path = pp_xmalloc(strlen(includepath[i]) + strlen(cpy) + 2);
         strcpy(path, includepath[i]);
@@ -443,12 +420,12 @@ char *wpp_find_include(const char *name, const char *parent_name, int type)
     return NULL;
 }
 
-FILE *pp_open_include(const char *name, const char *parent_name, char **newpath, int type)
+FILE *pp_open_include(const char *name, const char *parent_name, char **newpath)
 {
     char *path;
     FILE *fp;
 
-    if (!(path = wpp_find_include( name, parent_name, type ))) return NULL;
+    if (!(path = wpp_find_include( name, parent_name ))) return NULL;
     fp = fopen(path, "rt");
 
     if (fp)
@@ -547,7 +524,7 @@ void pp_push_if(pp_if_state_t s)
 pp_if_state_t pp_pop_if(void)
 {
 	if(if_stack_idx <= 0)
-		pperror("#{endif,else,elif} without #{if,ifdef,ifndef} (#if-stack underflow)");
+		ppy_error("#{endif,else,elif} without #{if,ifdef,ifndef} (#if-stack underflow)");
 
 	switch(pp_if_state())
 	{
@@ -629,21 +606,21 @@ static void generic_msg(const char *s, const char *t, const char *n, va_list ap)
 	fprintf(stderr, "\n");
 }
 
-int pperror(const char *s, ...)
+int ppy_error(const char *s, ...)
 {
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(s, "Error", pptext, ap);
+	generic_msg(s, "Error", ppy_text, ap);
 	va_end(ap);
 	exit(1);
 	return 1;
 }
 
-int ppwarning(const char *s, ...)
+int ppy_warning(const char *s, ...)
 {
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(s, "Warning", pptext, ap);
+	generic_msg(s, "Warning", ppy_text, ap);
 	va_end(ap);
 	return 0;
 }
