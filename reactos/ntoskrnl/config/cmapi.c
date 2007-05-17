@@ -983,3 +983,87 @@ Quickie:
     KeLeaveCriticalRegion();
     return Status;
 }
+
+NTSTATUS
+NTAPI
+CmDeleteKey(IN PKEY_OBJECT KeyObject)
+{
+    NTSTATUS Status;
+    PHHIVE Hive;
+    PCM_KEY_NODE Node, Parent;
+    HCELL_INDEX Cell, ParentCell;
+
+    /* Acquire hive lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+
+    /* Get the hive and node */
+    Hive = &KeyObject->RegistryHive->Hive;
+    Cell = KeyObject->KeyCellOffset;
+
+    /* Check if we have no parent */
+    if (!KeyObject->ParentKey)
+    {
+        /* This is an attempt to delete \Registry itself! */
+        Status = STATUS_CANNOT_DELETE;
+        goto Quickie;
+    }
+
+    /* Get the key node */
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+    if (!Node)
+    {
+        /* Fail */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Check if we don't have any children */
+    if (!(Node->SubKeyCounts[HvStable] + Node->SubKeyCounts[HvVolatile]))
+    {
+        /* Get the parent and free the cell */
+        ParentCell = Node->Parent;
+        Status = CmpFreeKeyByCell(Hive, Cell, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the parent node */
+            Parent = (PCM_KEY_NODE)HvGetCell(Hive, ParentCell);
+            if (Parent)
+            {
+                /* Make sure we're dirty */
+                ASSERT(HvIsCellDirty(Hive, ParentCell));
+
+                /* Update the write time */
+                KeQuerySystemTime(&Parent->LastWriteTime);
+
+                /* Release the cell */
+                HvReleaseCell(Hive, ParentCell);
+            }
+
+            /* Clear the cell */
+            KeyObject->KeyCellOffset = HCELL_NIL;
+        }
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_CANNOT_DELETE;
+    }
+
+Quickie:
+    /* Release the cell */
+    HvReleaseCell(Hive, Cell);
+
+    /* Make sure we're file-backed */
+    if (!(IsNoFileHive(KeyObject->RegistryHive)) ||
+        !(IsNoFileHive(KeyObject->ParentKey->RegistryHive)))
+    {
+        /* Sync up the hives */
+        CmiSyncHives();
+    }
+
+    /* Release hive lock */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+    return Status;
+}

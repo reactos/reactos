@@ -693,6 +693,7 @@ typedef struct _KEY_INFORMATION
 #define SYSTEM_LOG_FILE         L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
 #define REG_SYSTEM_KEY_NAME     L"\\Registry\\Machine\\SYSTEM"
 #define REG_HARDWARE_KEY_NAME   L"\\Registry\\Machine\\HARDWARE"
+#define IsNoFileHive(Hive)      ((Hive)->Flags & HIVE_NO_FILE)
 typedef struct _EREGISTRY_HIVE
 {
     HHIVE Hive;
@@ -1032,6 +1033,14 @@ EnlistKeyBodyWithKCB(
     IN ULONG Flags
 );
 
+NTSTATUS
+NTAPI
+CmpFreeKeyByCell(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN BOOLEAN Unlink
+);
+
 //
 // Name Functions
 //
@@ -1129,6 +1138,22 @@ CmpComputeHashKey(
     IN ULONG Hash,
     IN PUNICODE_STRING Name,
     IN BOOLEAN AllowSeparators
+);
+
+BOOLEAN
+NTAPI
+CmpRemoveSubKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ParentKey,
+    IN HCELL_INDEX TargetKey
+);
+
+BOOLEAN
+NTAPI
+CmpMarkIndexDirty(
+    IN PHHIVE Hive,
+    HCELL_INDEX ParentKey,
+    HCELL_INDEX TargetKey
 );
 
 //

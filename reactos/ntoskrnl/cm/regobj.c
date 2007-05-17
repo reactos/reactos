@@ -633,20 +633,9 @@ CmpDeleteKeyObject(PVOID DeletedObject)
   RemoveEntryList(&KeyObject->ListEntry);
   RtlFreeUnicodeString(&KeyObject->Name);
 
-        if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
-        {
-            DPRINT1("Key not found in parent list ???\n");
-        }
-
-
-    ASSERT((KeyObject->Flags & KO_MARKED_FOR_DELETE) == FALSE);
+  ASSERT((KeyObject->Flags & KO_MARKED_FOR_DELETE) == FALSE);
 
   ObDereferenceObject (ParentKeyObject);
-
-  if (KeyObject->SubKeyCounts)
-    {
-      KEBUGCHECK(REGISTRY_ERROR);
-    }
 
   if (KeyObject->SizeOfSubKeys)
     {
@@ -767,36 +756,6 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
 		KernelMode);
   NewKey->ParentKey = ParentKey;
 }
-
-
-NTSTATUS
-CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
-{
-  PKEY_OBJECT ParentKey;
-  ULONG Index;
-
-  ParentKey = KeyToRemove->ParentKey;
-  /* FIXME: If list maintained in alphabetic order, use dichotomic search */
-  for (Index = 0; Index < ParentKey->SubKeyCounts; Index++)
-    {
-      if (ParentKey->SubKeys[Index] == KeyToRemove)
-	{
-	  if (Index < ParentKey->SubKeyCounts-1)
-	    RtlMoveMemory(&ParentKey->SubKeys[Index],
-			  &ParentKey->SubKeys[Index + 1],
-			  (ParentKey->SubKeyCounts - Index - 1) * sizeof(PKEY_OBJECT));
-	  ParentKey->SubKeyCounts--;
-
-	  DPRINT("Dereference parent key: 0x%x\n", ParentKey);
-
-	  ObDereferenceObject(ParentKey);
-	  return STATUS_SUCCESS;
-	}
-    }
-
-  return STATUS_UNSUCCESSFUL;
-}
-
 
 NTSTATUS
 CmiScanKeyList(PKEY_OBJECT Parent,

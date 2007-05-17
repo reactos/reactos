@@ -168,9 +168,6 @@ CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
 		IN PKEY_OBJECT NewKey);
 
 NTSTATUS
-CmiRemoveKeyFromList(IN PKEY_OBJECT NewKey);
-
-NTSTATUS
 CmiScanKeyList(IN PKEY_OBJECT Parent,
 	       IN PUNICODE_STRING KeyName,
 	       IN ULONG Attributes,
@@ -183,9 +180,6 @@ CmiLoadHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 
 NTSTATUS
 CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive);
-
-ULONG
-CmiGetNumberOfSubKeys(PKEY_OBJECT KeyObject);
 
 ULONG
 CmiGetMaxNameLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
@@ -218,11 +212,6 @@ CmiAddSubKey(IN PEREGISTRY_HIVE RegistryHive,
 	     IN ULONG TitleIndex,
 	     IN PUNICODE_STRING Class,
 	     IN ULONG CreateOptions);
-
-NTSTATUS
-CmiRemoveSubKey(IN PEREGISTRY_HIVE RegistryHive,
-		IN PKEY_OBJECT Parent,
-		IN PKEY_OBJECT SubKey);
 
 NTSTATUS
 CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
@@ -280,6 +269,10 @@ CmEnumerateKey(IN PKEY_OBJECT KeyObject,
                IN PULONG ResultLength);
 
 NTSTATUS
+NTAPI
+CmDeleteKey(IN PKEY_OBJECT KeyObject);
+
+NTSTATUS
 CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
 			 OUT PHASH_TABLE_CELL *HashBlock,
 			 OUT HCELL_INDEX *HBOffset,
@@ -293,16 +286,6 @@ CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
 		     HV_STORAGE_TYPE StorageType,
 		     PCM_KEY_NODE NewKeyCell,
 		     HCELL_INDEX NKBOffset);
-
-NTSTATUS
-CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
-			  PHASH_TABLE_CELL HashBlock,
-			  HCELL_INDEX NKBOffset);
-
-NTSTATUS
-CmiDestroyValueCell(PEREGISTRY_HIVE RegistryHive,
-		    PCM_KEY_VALUE ValueCell,
-		    HCELL_INDEX VBOffset);
 
 NTSTATUS
 CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
@@ -329,10 +312,6 @@ CmpFindSubKeyByName(
 
 VOID
 CmiSyncHives(VOID);
-
-NTSTATUS
-CmiSaveTempHive (PEREGISTRY_HIVE Hive,
-		 HANDLE FileHandle);
 
 NTSTATUS
 NTAPI

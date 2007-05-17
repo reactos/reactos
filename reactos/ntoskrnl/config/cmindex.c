@@ -703,12 +703,6 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
         {
             /* Get the Index */
             IndexRoot = (PCM_KEY_INDEX)HvGetCell(Hive, Parent->SubKeyLists[i]);
-#if 0
-            /* Make sure we have one and that the cell is allocated */
-            ASSERT((IndexRoot == NULL) ||
-                   HvIsCellAllocated(Hive, Parent->SubKeyLists[i]));
-#endif
-            /* Fail if we don't actually have an index root */
             if (!IndexRoot) return HCELL_NIL;
 
             /* Get the cell we'll need to release */
@@ -776,4 +770,344 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
 
     /* If we got here, then we failed */
     return HCELL_NIL;
+}
+
+BOOLEAN
+NTAPI
+CmpMarkIndexDirty(IN PHHIVE Hive,
+                  IN HCELL_INDEX ParentKey,
+                  IN HCELL_INDEX TargetKey)
+{
+    PCM_KEY_NODE Node;
+    UNICODE_STRING SearchName;
+    BOOLEAN IsCompressed;
+    ULONG i, Result;
+    PCM_KEY_INDEX Index;
+    HCELL_INDEX IndexCell, Child = HCELL_NIL, CellToRelease = HCELL_NIL;
+
+    /* Get the target key node */
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, TargetKey);
+    if (!Node) return FALSE;
+
+    /* Check if it's compressed */
+    if (Node->Flags & KEY_COMP_NAME)
+    {
+        /* Remember this for later */
+        IsCompressed = TRUE;
+
+        /* Build the search name */
+        SearchName.Length = CmpCompressedNameSize(Node->Name,
+                                                  Node->NameLength);
+        SearchName.MaximumLength = SearchName.Length;
+        SearchName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                  SearchName.Length,
+                                                  TAG_CM);
+        if (!SearchName.Buffer)
+        {
+            /* Fail */
+            HvReleaseCell(Hive, TargetKey);
+            return FALSE;
+        }
+
+        /* Copy it */
+        CmpCopyCompressedName(SearchName.Buffer,
+                              SearchName.MaximumLength,
+                              Node->Name,
+                              Node->NameLength);
+    }
+    else
+    {
+        /* Name isn't compressed, build it directly from the node */
+        IsCompressed = FALSE;
+        SearchName.Length = Node->NameLength;
+        SearchName.MaximumLength = Node->NameLength;
+        SearchName.Buffer = Node->Name;
+    }
+
+    /* We can release the target key now */
+    HvReleaseCell(Hive, TargetKey);
+
+    /* Now get the parent key node */
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, ParentKey);
+    if (!Node) goto Quickie;
+
+    /* Loop all hive storage */
+    for (i = 0; i < Hive->StorageTypeCount; i++)
+    {
+        /* Check if any subkeys are in this index */
+        if (Node->SubKeyCounts[i])
+        {
+            /* Get the cell index */
+            //ASSERT(HvIsCellAllocated(Hive, Node->SubKeyLists[i]));
+            IndexCell = Node->SubKeyLists[i];
+
+            /* Check if we had anything to release from before */
+            if (CellToRelease != HCELL_NIL)
+            {
+                /* Release it now */
+                HvReleaseCell(Hive, CellToRelease);
+                CellToRelease = HCELL_NIL;
+            }
+
+            /* Get the key index for the cell */
+            Index = (PCM_KEY_INDEX)HvGetCell(Hive, IndexCell);
+            if (!Index) goto Quickie;
+
+            /* Release it at the next iteration or below */
+            CellToRelease = IndexCell;
+
+            /* Check if this is a root */
+            if (Index->Signature == CM_KEY_INDEX_ROOT)
+            {
+                /* Get the child inside the root */
+                Result = CmpFindSubKeyInRoot(Hive, Index, &SearchName, &Child);
+                if (Result & 0x80000000) goto Quickie;
+                if (Child == HCELL_NIL) continue;
+
+                /* We found it, mark the cell dirty */
+                HvMarkCellDirty(Hive, IndexCell);
+
+                /* Check if we had anything to release from before */
+                if (CellToRelease != HCELL_NIL)
+                {
+                    /* Release it now */
+                    HvReleaseCell(Hive, CellToRelease);
+                    CellToRelease = HCELL_NIL;
+                }
+
+                /* Now this child is the index, get the actual key index */
+                IndexCell = Child;
+                Index = (PCM_KEY_INDEX)HvGetCell(Hive, Child);
+                if (!Index) goto Quickie;
+
+                /* Release it later */
+                CellToRelease = Child;
+            }
+
+            /* Make sure this is a valid index */
+            ASSERT((Index->Signature == CM_KEY_INDEX_LEAF) ||
+                   (Index->Signature == CM_KEY_FAST_LEAF) ||
+                   (Index->Signature == CM_KEY_HASH_LEAF));
+
+            /* Find the child in the leaf */
+            Result = CmpFindSubKeyInLeaf(Hive, Index, &SearchName, &Child);
+            if (Result & 0x80000000) goto Quickie;
+            if (Child != HCELL_NIL)
+            {
+                /* We found it, free the name now */
+                if (IsCompressed) ExFreePool(SearchName.Buffer);
+
+                /* Release the parent key */
+                HvReleaseCell(Hive, ParentKey);
+
+                /* Check if we had a left over cell to release */
+                if (CellToRelease != HCELL_NIL)
+                {
+                    /* Release it */
+                    HvReleaseCell(Hive, CellToRelease);
+                }
+
+                /* And mark the index cell dirty */
+                HvMarkCellDirty(Hive, IndexCell);
+                return TRUE;
+            }
+        }
+    }
+
+Quickie:
+    /* Release any cells that we still hold */
+    if (Node) HvReleaseCell(Hive, ParentKey);
+    if (CellToRelease != HCELL_NIL) HvReleaseCell(Hive, CellToRelease);
+
+    /* Free the search name and return failure */
+    if (IsCompressed) ExFreePool(SearchName.Buffer);
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+CmpRemoveSubKey(IN PHHIVE Hive,
+                IN HCELL_INDEX ParentKey,
+                IN HCELL_INDEX TargetKey)
+{
+    PCM_KEY_NODE Node;
+    UNICODE_STRING SearchName;
+    BOOLEAN IsCompressed;
+    WCHAR Buffer[50];
+    HCELL_INDEX RootCell = HCELL_NIL, LeafCell, ChildCell;
+    PCM_KEY_INDEX Root = NULL, Leaf;
+    PCM_KEY_FAST_INDEX Child;
+    ULONG Storage, RootIndex = 0x80000000, LeafIndex;
+    BOOLEAN Result = FALSE;
+    HCELL_INDEX CellToRelease1 = HCELL_NIL, CellToRelease2  = HCELL_NIL;
+
+    /* Get the target key node */
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, TargetKey);
+    if (!Node) return FALSE;
+
+    /* Make sure it's dirty, then release it */
+    ASSERT(HvIsCellDirty(Hive, TargetKey));
+    HvReleaseCell(Hive, TargetKey);
+
+    /* Check if the name is compressed */
+    if (Node->Flags & KEY_COMP_NAME)
+    {
+        /* Remember for later */
+        IsCompressed = TRUE;
+
+        /* Build the search name */
+        SearchName.Length = CmpCompressedNameSize(Node->Name,
+                                                  Node->NameLength);
+        SearchName.MaximumLength = SearchName.Length;
+
+        /* Do we need an extra bufer? */
+        if (SearchName.MaximumLength > sizeof(Buffer))
+        {
+            /* Allocate one */
+            SearchName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                      SearchName.Length,
+                                                      TAG_CM);
+            if (!SearchName.Buffer) return FALSE;
+        }
+        else
+        {
+            /* Otherwise, use our local stack buffer */
+            SearchName.Buffer = Buffer;
+        }
+
+        /* Copy the compressed name */
+        CmpCopyCompressedName(SearchName.Buffer,
+                              SearchName.MaximumLength,
+                              Node->Name,
+                              Node->NameLength);
+    }
+    else
+    {
+        /* It's not compressed, build the name directly from the node */
+        IsCompressed = FALSE;
+        SearchName.Length = Node->NameLength;
+        SearchName.MaximumLength = Node->NameLength;
+        SearchName.Buffer = Node->Name;
+    }
+
+    /* Now get the parent node */
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, ParentKey);
+    if (!Node) goto Exit;
+
+    /* Make sure it's dirty, then release it */
+    ASSERT(HvIsCellDirty(Hive, ParentKey));
+    HvReleaseCell(Hive, ParentKey);
+
+    /* Get the storage type and make sure it's not empty */
+    Storage = HvGetCellType(TargetKey);
+    ASSERT(Node->SubKeyCounts[Storage] != 0);
+    //ASSERT(HvIsCellAllocated(Hive, Node->SubKeyLists[Storage]));
+
+    /* Get the leaf cell now */
+    LeafCell = Node->SubKeyLists[Storage];
+    Leaf = (PCM_KEY_INDEX)HvGetCell(Hive, LeafCell);
+    if (!Leaf) goto Exit;
+
+    /* Remember to release it later */
+    CellToRelease1 = LeafCell;
+
+    /* Check if the leaf is a root */
+    if (Leaf->Signature == CM_KEY_INDEX_ROOT)
+    {
+        /* Find the child inside the root */
+        RootIndex = CmpFindSubKeyInRoot(Hive, Leaf, &SearchName, &ChildCell);
+        if (RootIndex & 0x80000000) goto Exit;
+        ASSERT(ChildCell != FALSE);
+
+        /* The root cell is now this leaf */
+        Root = Leaf;
+        RootCell = LeafCell;
+
+        /* And the new leaf is now this child */
+        LeafCell = ChildCell;
+        Leaf = (PCM_KEY_INDEX)HvGetCell(Hive, LeafCell);
+        if (!Leaf) goto Exit;
+
+        /* Remember to release it later */
+        CellToRelease2 = LeafCell;
+    }
+
+    /* Make sure the leaf is valid */
+    ASSERT((Leaf->Signature == CM_KEY_INDEX_LEAF) ||
+           (Leaf->Signature == CM_KEY_FAST_LEAF) ||
+           (Leaf->Signature == CM_KEY_HASH_LEAF));
+
+    /* Now get the child in the leaf */
+    LeafIndex = CmpFindSubKeyInLeaf(Hive, Leaf, &SearchName, &ChildCell);
+    if (LeafIndex & 0x80000000) goto Exit;
+    ASSERT(ChildCell != HCELL_NIL);
+
+    /* Decrement key counts and check if this was the last leaf entry */
+    Node->SubKeyCounts[Storage]--;
+    if (!(--Leaf->Count))
+    {
+        /* Free the leaf */
+        HvFreeCell(Hive, LeafCell);
+
+        /* Check if we were inside a root */
+        if (Root)
+        {
+            /* Decrease the root count too, since the leaf is going away */
+            if (!(--Root->Count))
+            {
+                /* The root is gone too,n ow */
+                HvFreeCell(Hive, RootCell);
+                Node->SubKeyLists[Storage] = HCELL_NIL;
+            }
+            else if (RootIndex < Root->Count)
+            {
+                /* Bring everything up by one */
+                RtlMoveMemory(&Root->List[RootIndex],
+                              &Root->List[RootIndex + 1],
+                              (Root->Count - RootIndex) * sizeof(HCELL_INDEX));
+            }
+        }
+        else
+        {
+            /* Otherwise, just clear the cell */
+            Node->SubKeyLists[Storage] = HCELL_NIL;
+        }
+    }
+    else if (LeafIndex < Leaf->Count)
+    {
+        /* Was the leaf a normal index? */
+        if (Leaf->Signature == CM_KEY_INDEX_LEAF)
+        {
+            /* Bring everything up by one */
+            RtlMoveMemory(&Leaf->List[LeafIndex],
+                          &Leaf->List[LeafIndex + 1],
+                          (Leaf->Count - LeafIndex) * sizeof(HCELL_INDEX));
+        }
+        else
+        {
+            /* This is a fast index, bring everything up by one */
+            Child = (PCM_KEY_FAST_INDEX)Leaf;
+            RtlMoveMemory(&Child->List[LeafIndex],
+                          &Child->List[LeafIndex+1],
+                          (Child->Count - LeafIndex) * sizeof(CM_INDEX));
+        }
+    }
+
+    /* If we got here, now we're done */
+    Result = TRUE;
+
+Exit:
+    /* Release any cells we may have been holding */
+    if (CellToRelease1 != HCELL_NIL) HvReleaseCell(Hive, CellToRelease1);
+    if (CellToRelease2 != HCELL_NIL) HvReleaseCell(Hive, CellToRelease2);
+
+    /* Check if the name was compressed and not inside our local buffer */
+    if ((IsCompressed) && (SearchName.MaximumLength > sizeof(Buffer)))
+    {
+        /* Free the buffer we allocated */
+        ExFreePool(SearchName.Buffer);
+    }
+
+    /* Return the result */
+    return Result;
 }

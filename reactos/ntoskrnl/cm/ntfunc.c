@@ -435,115 +435,6 @@ Cleanup:
   return Status;
 }
 
-
-NTSTATUS STDCALL
-NtDeleteKey(IN HANDLE KeyHandle)
-{
-  KPROCESSOR_MODE PreviousMode;
-  PKEY_OBJECT KeyObject;
-  NTSTATUS Status;
-  REG_DELETE_KEY_INFORMATION DeleteKeyInfo;
-  REG_POST_OPERATION_INFORMATION PostOperationInfo;
-
-  PAGED_CODE();
-
-  DPRINT("NtDeleteKey(KeyHandle 0x%p) called\n", KeyHandle);
-
-  PreviousMode = ExGetPreviousMode();
-
-  /* Verify that the handle is valid and is a registry key */
-  Status = ObReferenceObjectByHandle(KeyHandle,
-				     DELETE,
-				     CmpKeyObjectType,
-				     PreviousMode,
-				     (PVOID *)&KeyObject,
-				     NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
-      return Status;
-    }
-
-  PostOperationInfo.Object = (PVOID)KeyObject;
-  DeleteKeyInfo.Object = (PVOID)KeyObject;
-  Status = CmiCallRegisteredCallbacks(RegNtPreDeleteKey, &DeleteKeyInfo);
-  if (!NT_SUCCESS(Status))
-    {
-      PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtPostDeleteKey, &PostOperationInfo);
-      ObDereferenceObject(KeyObject);
-      return Status;
-    }
-
-  /* Acquire hive lock */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  /* Check for subkeys */
-  if (KeyObject->KeyCell->SubKeyCounts[HvStable] != 0 ||
-      KeyObject->KeyCell->SubKeyCounts[HvVolatile] != 0)
-    {
-      Status = STATUS_CANNOT_DELETE;
-    }
-  else
-    {
-        PKEY_OBJECT ParentKeyObject = KeyObject->ParentKey;
-
-        if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
-        {
-            DPRINT1("Key not found in parent list ???\n");
-        }
-
-        CmiRemoveSubKey(KeyObject->RegistryHive,
-                        ParentKeyObject,
-                        KeyObject);
-
-        KeQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
-        HvMarkCellDirty(&ParentKeyObject->RegistryHive->Hive,
-                        ParentKeyObject->KeyCellOffset);
-
-        if (!IsNoFileHive (KeyObject->RegistryHive) ||
-            !IsNoFileHive (ParentKeyObject->RegistryHive))
-        {
-            CmiSyncHives ();
-        }
-
-        Status = STATUS_SUCCESS;
-    }
-
-  /* Release hive lock */
-  ExReleaseResourceLite(&CmpRegistryLock);
-  KeLeaveCriticalRegion();
-
-  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
-
-  /* Remove the keep-alive reference */
-  ObDereferenceObject(KeyObject);
-
-  if (KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
-    ObDereferenceObject(KeyObject);
-
-  PostOperationInfo.Status = Status;
-  CmiCallRegisteredCallbacks(RegNtPostDeleteKey, &PostOperationInfo);
-
-  /* Dereference the object */
-  ObDereferenceObject(KeyObject);
-
-  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
-  DPRINT("HandleCount %lu\n", ObGetObjectHandleCount((PVOID)KeyObject));
-
-  /*
-   * Note:
-   * Hive-Synchronization will not be triggered here. This is done in
-   * CmpDeleteKeyObject() (in regobj.c) after all key-related structures
-   * have been released.
-   */
-
-  return Status;
-}
-
 NTSTATUS STDCALL
 NtFlushKey(IN HANDLE KeyHandle)
 {
@@ -810,6 +701,52 @@ NtInitializeRegistry (IN BOOLEAN SetUpBoot)
   CmiRegistryInitialized = TRUE;
 
   return Status;
+}
+
+NTSTATUS
+NTAPI
+NtDeleteKey(IN HANDLE KeyHandle)
+{
+    PKEY_OBJECT KeyObject;
+    NTSTATUS Status;
+    REG_DELETE_KEY_INFORMATION DeleteKeyInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    PAGED_CODE();
+
+    /* Verify that the handle is valid and is a registry key */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       DELETE,
+                                       CmpKeyObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID *)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Setup the callback */
+    PostOperationInfo.Object = (PVOID)KeyObject;
+    DeleteKeyInfo.Object = (PVOID)KeyObject;
+    Status = CmiCallRegisteredCallbacks(RegNtPreDeleteKey, &DeleteKeyInfo);
+    if (NT_SUCCESS(Status))
+    {
+        /* Call the internal API */
+        Status = CmDeleteKey(KeyObject);
+
+        /* Remove the keep-alive reference */
+        ObDereferenceObject(KeyObject);
+        if (KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
+        {
+            /* Dereference again */
+            ObDereferenceObject(KeyObject);
+        }
+
+        /* Do post callback */
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostDeleteKey, &PostOperationInfo);
+    }
+
+    /* Dereference the object */
+    ObDereferenceObject(KeyObject);
+    return Status;
 }
 
 NTSTATUS

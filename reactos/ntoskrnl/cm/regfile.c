@@ -66,7 +66,6 @@ CmCloseHiveFiles(PEREGISTRY_HIVE RegistryHive)
   ZwClose(RegistryHive->LogHandle);
 }
 
-
 NTSTATUS
 CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
 {
@@ -102,26 +101,6 @@ CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
 
   return Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
-
-
-ULONG
-CmiGetNumberOfSubKeys(PKEY_OBJECT KeyObject)
-{
-  PCM_KEY_NODE KeyCell;
-  ULONG SubKeyCount;
-
-  VERIFY_KEY_OBJECT(KeyObject);
-
-  KeyCell = KeyObject->KeyCell;
-  VERIFY_KEY_CELL(KeyCell);
-
-  SubKeyCount = (KeyCell == NULL) ? 0 :
-                KeyCell->SubKeyCounts[HvStable] +
-                KeyCell->SubKeyCounts[HvVolatile];
-
-  return SubKeyCount;
-}
-
 
 ULONG
 CmiGetMaxNameLength(PHHIVE Hive,
@@ -160,7 +139,6 @@ CmiGetMaxNameLength(PHHIVE Hive,
   return MaxName;
 }
 
-
 ULONG
 CmiGetMaxClassLength(PHHIVE Hive,
                      PCM_KEY_NODE KeyCell)
@@ -195,7 +173,6 @@ CmiGetMaxClassLength(PHHIVE Hive,
 
   return MaxClass;
 }
-
 
 ULONG
 CmiGetMaxValueNameLength(PHHIVE Hive,
@@ -243,7 +220,6 @@ CmiGetMaxValueNameLength(PHHIVE Hive,
 
   return MaxValueName;
 }
-
 
 ULONG
 CmiGetMaxValueDataLength(PHHIVE Hive,
@@ -518,109 +494,6 @@ CmiAddSubKey(PEREGISTRY_HIVE RegistryHive,
 }
 
 NTSTATUS
-CmiRemoveSubKey(PEREGISTRY_HIVE RegistryHive,
-		PKEY_OBJECT ParentKey,
-		PKEY_OBJECT SubKey)
-{
-  PHASH_TABLE_CELL HashBlock;
-  PVALUE_LIST_CELL ValueList;
-  PCM_KEY_VALUE ValueCell;
-  HV_STORAGE_TYPE Storage;
-  ULONG i;
-
-  DPRINT("CmiRemoveSubKey() called\n");
-
-  Storage = (SubKey->KeyCell->Flags & REG_KEY_VOLATILE_CELL) ? HvVolatile : HvStable;
-
-  /* Remove all values */
-  if (SubKey->KeyCell->ValueList.Count != 0)
-    {
-      /* Get pointer to the value list cell */
-      ValueList = HvGetCell (&RegistryHive->Hive, SubKey->KeyCell->ValueList.List);
-
-      /* Enumerate all values */
-      for (i = 0; i < SubKey->KeyCell->ValueList.Count; i++)
-	{
-	  /* Get pointer to value cell */
-	  ValueCell = HvGetCell(&RegistryHive->Hive,
-				ValueList->ValueOffset[i]);
-
-	  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET)
-              && ValueCell->DataSize > sizeof(HCELL_INDEX)
-              && ValueCell->DataOffset != HCELL_NULL)
-	    {
-	      /* Destroy data cell */
-	      HvFreeCell (&RegistryHive->Hive, ValueCell->DataOffset);
-	    }
-
-	  /* Destroy value cell */
-	  HvFreeCell (&RegistryHive->Hive, ValueList->ValueOffset[i]);
-	}
-
-      /* Destroy value list cell */
-      HvFreeCell (&RegistryHive->Hive, SubKey->KeyCell->ValueList.List);
-
-      SubKey->KeyCell->ValueList.Count = 0;
-      SubKey->KeyCell->ValueList.List = (HCELL_INDEX)-1;
-
-      HvMarkCellDirty(&RegistryHive->Hive, SubKey->KeyCellOffset);
-    }
-
-  /* Remove the key from the parent key's hash block */
-  if (ParentKey->KeyCell->SubKeyLists[Storage] != HCELL_NULL)
-    {
-      DPRINT("ParentKey SubKeyLists %lx\n", ParentKey->KeyCell->SubKeyLists[Storage]);
-      HashBlock = HvGetCell (&ParentKey->RegistryHive->Hive,
-			     ParentKey->KeyCell->SubKeyLists[Storage]);
-      ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
-      DPRINT("ParentKey HashBlock %p\n", HashBlock);
-      CmiRemoveKeyFromHashTable(ParentKey->RegistryHive,
-				HashBlock,
-				SubKey->KeyCellOffset);
-      HvMarkCellDirty(&ParentKey->RegistryHive->Hive,
-                      ParentKey->KeyCell->SubKeyLists[Storage]);
-    }
-
-  /* Remove the key's hash block */
-  if (SubKey->KeyCell->SubKeyLists[Storage] != HCELL_NULL)
-    {
-      DPRINT("SubKey SubKeyLists %lx\n", SubKey->KeyCell->SubKeyLists[Storage]);
-      HvFreeCell (&RegistryHive->Hive, SubKey->KeyCell->SubKeyLists[Storage]);
-      SubKey->KeyCell->SubKeyLists[Storage] = HCELL_NULL;
-    }
-
-  /* Decrement the number of the parent key's sub keys */
-  if (ParentKey != NULL)
-    {
-      DPRINT("ParentKey %p\n", ParentKey);
-      ParentKey->KeyCell->SubKeyCounts[Storage]--;
-
-      /* Remove the parent key's hash table */
-      if (ParentKey->KeyCell->SubKeyCounts[Storage] == 0 &&
-          ParentKey->KeyCell->SubKeyLists[Storage] != HCELL_NULL)
-	{
-	  DPRINT("ParentKey SubKeyLists %lx\n", ParentKey->KeyCell->SubKeyLists);
-	  HvFreeCell (&ParentKey->RegistryHive->Hive,
-		      ParentKey->KeyCell->SubKeyLists[Storage]);
-	  ParentKey->KeyCell->SubKeyLists[Storage] = HCELL_NULL;
-	}
-
-      KeQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
-      HvMarkCellDirty(&ParentKey->RegistryHive->Hive,
-                      ParentKey->KeyCellOffset);
-    }
-
-  /* Destroy key cell */
-  HvFreeCell (&RegistryHive->Hive, SubKey->KeyCellOffset);
-  SubKey->KeyCell = NULL;
-  SubKey->KeyCellOffset = (HCELL_INDEX)-1;
-
-  DPRINT("CmiRemoveSubKey() done\n");
-
-  return STATUS_SUCCESS;
-}
-
-NTSTATUS
 CmiAllocateHashTableCell (IN PEREGISTRY_HIVE RegistryHive,
 	OUT PHASH_TABLE_CELL *HashBlock,
 	OUT HCELL_INDEX *HBOffset,
@@ -673,36 +546,6 @@ CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
     }
   HvMarkCellDirty(&RegistryHive->Hive, KeyCell->SubKeyLists[StorageType]);
   return STATUS_SUCCESS;
-}
-
-NTSTATUS
-CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
-			  PHASH_TABLE_CELL HashBlock,
-			  HCELL_INDEX NKBOffset)
-{
-  ULONG i;
-
-  for (i = 0; i < HashBlock->HashTableSize; i++)
-    {
-      if (HashBlock->Table[i].KeyOffset == NKBOffset)
-	{
-	  RtlMoveMemory(HashBlock->Table + i,
-	                HashBlock->Table + i + 1,
-	                (HashBlock->HashTableSize - i - 1) *
-	                sizeof(HashBlock->Table[0]));
-	  return STATUS_SUCCESS;
-	}
-    }
-
-  return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-CmiSaveTempHive (PEREGISTRY_HIVE Hive,
-		 HANDLE FileHandle)
-{
-  Hive->HiveHandle = FileHandle;
-  return HvWriteHive(&Hive->Hive) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 /* EOF */

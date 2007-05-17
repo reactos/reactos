@@ -221,7 +221,7 @@ HvpRemoveFree(
       pFreeCellOffset = FreeCellData;
    }
 
-   ASSERT(FALSE);
+   //ASSERT(FALSE);
 }
 
 static HCELL_INDEX CMAPI
