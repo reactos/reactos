@@ -90,7 +90,7 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
 
             /* Get the value data and release it */
             ValueData = HvGetCell(Hive, ListData->u.KeyList[i]);
-            if (ValueData) ASSERT(FALSE);
+            ASSERT(ValueData);
             HvReleaseCell(Hive,ListData->u.KeyList[i]);
 
             /* Mark the value data dirty too */
