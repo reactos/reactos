@@ -178,7 +178,7 @@ Display_OnPaint(HWND hwnd)
 
 	BeginPaint(hwnd, &ps);
 
-	/* fill with white */
+	/* Fill with white */
 	FillRect(ps.hdc, &ps.rcPaint, GetStockObject(WHITE_BRUSH));
 
 	/* Draw the text */
@@ -193,17 +193,34 @@ static LRESULT
 Display_OnSize(HWND hwnd)
 {
 	RECT rect;
-	SCROLLINFO si; 
+	SCROLLINFO si;
+	int nOldPos;
 
 	GetClientRect(hwnd, &rect);
 
-	/* Set the new page size */
+	/* Get the old pos */
 	si.cbSize = sizeof(si);
+	si.fMask  = SIF_POS;
+	GetScrollInfo(hwnd, SB_VERT, &si);
+	nOldPos = si.nPos;
+
+	/* Set the new page size */
 	si.fMask  = SIF_PAGE;
 	si.nPage  = rect.bottom;
-	SetScrollInfo(hwnd, SB_VERT, &si, TRUE); 
-// FIXME: handle exceeding of current pos -> redraw entire window
-// if new page size is < curent pos: current pos = maximum whatever and then redraw
+	SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+
+	/* Get the new pos */
+	si.fMask  = SIF_POS;
+	GetScrollInfo(hwnd, SB_VERT, &si);
+
+	/* If the don't match ... */
+	if (nOldPos != si.nPos)
+	{
+		/* ... scroll the window */
+		ScrollWindowEx(hwnd, 0, -(si.nPos - nOldPos), NULL, NULL, NULL, NULL, SW_INVALIDATE);
+		UpdateWindow(hwnd);
+	}
+
 	return 0;
 }
 
@@ -231,7 +248,7 @@ Display_OnVScroll(HWND hwnd, WPARAM wParam)
 		case SB_LINEDOWN:
 			nPos = si.nPos + 10;
 			break;
-//		case SB_THUMBTRACK:
+		case SB_THUMBTRACK:
 		case SB_THUMBPOSITION:
 			nPos = si.nTrackPos;
 			break;
