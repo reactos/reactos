@@ -76,8 +76,6 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #else
 
-	inline VOID	DebugPrint(ULONG Mask, char *format, ...) {}
-
 	#define DebugInit()
 	#define DbgPrint(_x_) { if (0) DebugPrint _x_; }
 	#define DPRINT1(_x_) { if (0) printf _x_; }

@@ -356,4 +356,10 @@ VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 	}
 }
 
+#else
+
+VOID DebugPrint(ULONG Mask, char *format, ...)
+{
+}
+
 #endif // defined DBG
