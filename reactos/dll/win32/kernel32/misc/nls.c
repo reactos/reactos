@@ -399,10 +399,64 @@ IntMultiByteToWideCharCP(UINT CodePage, DWORD Flags,
    /* Different handling for DBCS code pages. */
    if (CodePageTable->MaximumCharacterSize > 1)
    {
-      /* UNIMPLEMENTED */
-      return 0;
+      /* FIXME */
+
+      UCHAR Char;
+      USHORT DBCSOffset;
+      LPCSTR MbsEnd = MultiByteString + MultiByteCount;
+      ULONG Count;
+
+      /* Does caller query for output buffer size? */
+      if (WideCharCount == 0)
+      {
+         for (; MultiByteString < MbsEnd; WideCharCount++)
+         {
+            Char = *MultiByteString++;
+
+            if (Char < 0x80)
+               continue;
+
+            DBCSOffset = CodePageTable->DBCSOffsets[Char];
+
+            if (!DBCSOffset)
+               continue;
+
+            if (MultiByteString < MbsEnd)
+               MultiByteString++;
+         }
+
+         return WideCharCount;
+      }
+
+      for (Count = 0; Count < WideCharCount && MultiByteString < MbsEnd; Count++)
+      {
+         Char = *MultiByteString++;
+
+         if (Char < 0x80)
+         {
+            *WideCharString++ = Char;
+            continue;
+         }
+
+         DBCSOffset = CodePageTable->DBCSOffsets[Char];
+
+         if (!DBCSOffset)
+         {
+            *WideCharString++ = CodePageTable->MultiByteTable[Char];
+            continue;
+         }
+
+         if (MultiByteString < MbsEnd)
+            *WideCharString++ =
+               CodePageTable->DBCSOffsets[DBCSOffset + *(PUCHAR)MultiByteString++];
+      }
+
+      if (MultiByteString < MbsEnd)
+         SetLastError(ERROR_INSUFFICIENT_BUFFER);
+
+      return Count;
    }
-   else
+   else /* Not DBCS code page */
    {
       /* Check for invalid characters. */
       if (Flags & MB_ERR_INVALID_CHARS)
@@ -554,10 +608,81 @@ IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
    /* Different handling for DBCS code pages. */
    if (CodePageTable->MaximumCharacterSize > 1)
    {
-      DPRINT1("WideCharToMultiByte for DBCS codepages is not implemented!\n");
-      return 0;
+      /* FIXME */
+
+      USHORT WideChar;
+      USHORT MbChar;
+
+      /* Does caller query for output buffer size? */
+      if (MultiByteCount == 0)
+      {
+         for (TempLength = 0; WideCharCount; WideCharCount--, TempLength++)
+         {
+            WideChar = *WideCharString++;
+
+            if (WideChar < 0x80)
+               continue;
+
+            MbChar = ((PWCHAR)CodePageTable->WideCharTable)[WideChar];
+
+            if (!(MbChar & 0xff00))
+               continue;
+
+            TempLength++;
+         }
+
+         return TempLength;
+      }
+
+      for (TempLength = MultiByteCount; WideCharCount; WideCharCount--)
+      {
+         WideChar = *WideCharString++;
+
+         if (WideChar < 0x80)
+         {
+            if (!TempLength)
+            {
+               SetLastError(ERROR_INSUFFICIENT_BUFFER);
+               break;
+            }
+            TempLength--;
+
+            *MultiByteString++ = (CHAR)WideChar;
+            continue;
+         }
+
+         MbChar = ((PWCHAR)CodePageTable->WideCharTable)[WideChar];
+
+         if (!(MbChar & 0xff00))
+         {
+            if (!TempLength)
+            {
+               SetLastError(ERROR_INSUFFICIENT_BUFFER);
+               break;
+            }
+            TempLength--;
+
+            *MultiByteString++ = (CHAR)MbChar;
+            continue;;
+         }
+
+         if (TempLength >= 2)
+         {
+            MultiByteString[1] = (CHAR)MbChar; MbChar >>= 8;
+            MultiByteString[0] = (CHAR)MbChar;
+            MultiByteString += 2;
+            TempLength -= 2;
+         }
+         else
+         {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            break;
+         }
+      }
+
+      return MultiByteCount - TempLength;
    }
-   else
+   else /* Not DBCS code page */
    {
       /* Does caller query for output buffer size? */
       if (MultiByteCount == 0)

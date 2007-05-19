@@ -175,7 +175,7 @@
 
 //#include "nls/vit.nls"   /* 0x042a  LANG_VIETNAMESE, SUBLANG_NEUTRAL */
 
-//#include "nls/hye.nls"   /* 0x042b  LANG_ARMENIAN, SUBLANG_NEUTRAL */
+#include "nls/hye.nls"   /* 0x042b  LANG_ARMENIAN, SUBLANG_NEUTRAL */
 
 //#include "nls/azl.nls"   /* 0x042c  LANG_AZERI, SUBLANG_AZERI_LATIN */
 //#include "nls/aze.nls"   /* 0x082c  LANG_AZERI, SUBLANG_AZERI_CYRILLIC */
