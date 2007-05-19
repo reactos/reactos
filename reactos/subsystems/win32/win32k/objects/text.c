@@ -1863,7 +1863,11 @@ NtGdiExtTextOut(
 
       for (i = Start; i < Count; i++)
       {
-         glyph_index = FT_Get_Char_Index(face, *TempText);
+         if (fuOptions & ETO_GLYPH_INDEX)
+           glyph_index = *TempText;
+         else
+           glyph_index = FT_Get_Char_Index(face, *TempText);
+
          if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
          TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
          {
@@ -1913,21 +1917,28 @@ NtGdiExtTextOut(
 
    for (i = 0; i < Count; i++)
    {
-      glyph_index = FT_Get_Char_Index(face, *String);
+      if (fuOptions & ETO_GLYPH_INDEX)
+        glyph_index = *String;
+      else
+        glyph_index = FT_Get_Char_Index(face, *String);
+
       if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index, 
       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
       {
-      error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
-      if (error)
-      {
-         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-         IntUnLockFreeType;
-         goto fail;
-      }
-      glyph = face->glyph;
-         realglyph = NtGdiGlyphCacheSet(face, glyph_index, 
-         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
+        if (error)
+        {
+           DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+           IntUnLockFreeType;
+           goto fail;
+        }
+        glyph = face->glyph;
+        realglyph = NtGdiGlyphCacheSet(face, 
+                                       glyph_index, 
+                                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, 
+                                       glyph, 
+                                       RenderMode);
       }
 //      DbgPrint("realglyph: %x\n", realglyph);
 //      DbgPrint("TextLeft: %d\n", TextLeft);
