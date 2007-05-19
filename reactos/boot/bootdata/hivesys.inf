@@ -94,8 +94,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE1
 
 
 ; NLS Files
-;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","0",0x00000000,"unicode.nls"
-;HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","1",0x00000000,"unicode.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","37",0x00000000,"c_037.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","424",0x00000000,"c_424.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","437",0x00000000,"c_437.nls"
