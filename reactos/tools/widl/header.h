@@ -21,42 +21,55 @@
 #ifndef __WIDL_HEADER_H
 #define __WIDL_HEADER_H
 
-extern int is_attr(const attr_t *a, enum attr_type t);
-extern void *get_attrp(const attr_t *a, enum attr_type t);
-extern unsigned long get_attrv(const attr_t *a, enum attr_type t);
-extern int is_void(const type_t *t, const var_t *v);
+#include "widltypes.h"
+
+extern int is_ptrchain_attr(const var_t *var, enum attr_type t);
+extern int is_attr(const attr_list_t *list, enum attr_type t);
+extern void *get_attrp(const attr_list_t *list, enum attr_type t);
+extern unsigned long get_attrv(const attr_list_t *list, enum attr_type t);
+extern int is_void(const type_t *t);
+extern int is_conformant_array( const array_dims_t *array );
+extern int is_non_void(const expr_list_t *list);
 extern void write_name(FILE *h, const var_t *v);
+extern void write_prefix_name(FILE *h, const char *prefix, const var_t *v);
 extern const char* get_name(const var_t *v);
-extern void write_type(FILE *h, type_t *t, const var_t *v, const char *n);
-extern int is_object(const attr_t *a);
-extern int is_local(const attr_t *a);
-extern const var_t *is_callas(const attr_t *a);
-extern void write_args(FILE *h, var_t *arg, const char *name, int obj, int do_indent);
-extern void write_array(FILE *h, const expr_t *v, int field);
+extern void write_type(FILE *h, type_t *t);
+extern int is_object(const attr_list_t *list);
+extern int is_local(const attr_list_t *list);
+extern const var_t *is_callas(const attr_list_t *list);
+extern void write_args(FILE *h, const var_list_t *arg, const char *name, int obj, int do_indent);
+extern void write_array(FILE *h, array_dims_t *v, int field);
 extern void write_forward(type_t *iface);
 extern void write_interface(type_t *iface);
 extern void write_dispinterface(type_t *iface);
 extern void write_coclass(type_t *cocl);
 extern void write_coclass_forward(type_t *cocl);
-extern void write_typedef(type_t *type, const var_t *names);
+extern void write_typedef(type_t *type);
 extern void write_expr(FILE *h, const expr_t *e, int brackets);
 extern void write_constdef(const var_t *v);
 extern void write_externdef(const var_t *v);
-extern void write_library(const char *name, const attr_t *attr);
+extern void write_library(const char *name, const attr_list_t *attr);
 extern void write_user_types(void);
 extern const var_t* get_explicit_handle_var(const func_t* func);
 extern int has_out_arg_or_return(const func_t *func);
+extern void write_guid(FILE *f, const char *guid_prefix, const char *name,
+                       const UUID *uuid);
 
-static inline int is_string_type(const attr_t *attrs, int ptr_level, const expr_t *array)
+static inline int last_ptr(const type_t *type)
 {
-    return (is_attr(attrs, ATTR_STRING) &&
-            ((ptr_level == 1 && !array) || (ptr_level == 0 && array)));
+    return is_ptr(type) && !is_ptr(type->ref);
 }
 
-static inline int is_array_type(const attr_t *attrs, int ptr_level, const expr_t *array)
+static inline int is_string_type(const attr_list_t *attrs, const type_t *type, const array_dims_t *array)
 {
-    return ((ptr_level == 1 && !array && is_attr(attrs, ATTR_SIZEIS)) ||
-            (ptr_level == 0 && array));
+    return (is_attr(attrs, ATTR_STRING) &&
+            ((last_ptr(type) && !array) || (!is_ptr(type) && array)));
+}
+
+static inline int is_array_type(const attr_list_t *attrs, const type_t *type, const array_dims_t *array)
+{
+    return ((last_ptr(type) && !array && is_attr(attrs, ATTR_SIZEIS)) ||
+            (!is_ptr(type) && array));
 }
 
 #endif

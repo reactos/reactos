@@ -34,6 +34,13 @@ Generate a type library.
 Define the name of the type library to be generated. 
 The default filename is infile.tlb.
 .PP
+.B UUID file options:
+.IP "\fB-u\fR"
+Generate a UUID file.
+.IP "\fB-U \fIfile\fR"
+Define the name of the UUID file to be generated. 
+The default filename is infile_i.c.
+.PP
 .B Proxy/stub generation options:
 .IP "\fB-c\fR"
 Generate client stub.
