@@ -254,7 +254,35 @@ RtlMultiByteToUnicodeN(
    {
       /* multi-byte code page */
       /* FIXME */
-      ASSERT(FALSE);
+
+      UCHAR Char;
+      USHORT LeadByteInfo;
+      PCSTR MbEnd = MbString + MbSize;
+
+      for (i = 0; i < UnicodeSize / sizeof(WCHAR) && MbString < MbEnd; i++)
+      {
+         Char = *(PUCHAR)MbString++;
+
+         if (Char < 0x80)
+         {
+            *UnicodeString++ = Char;
+            continue;
+         }
+
+         LeadByteInfo = NlsLeadByteInfo[Char];
+
+         if (!LeadByteInfo)
+         {
+            *UnicodeString++ = NlsAnsiToUnicodeTable[Char];
+            continue;
+         }
+
+         if (MbString < MbEnd)
+            *UnicodeString++ = NlsLeadByteInfo[LeadByteInfo + *(PUCHAR)MbString++];
+      }
+
+      if (ResultSize != NULL)
+         *ResultSize = i * sizeof(WCHAR);
    }
 
    return(STATUS_SUCCESS);
@@ -281,12 +309,16 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
     else
     {
         /* multi-byte code page */
+        /* FIXME */
+
         while (MbSize--)
         {
-            if (NlsLeadByteInfo[*(PUCHAR)MbString++])
+            UCHAR Char = *(PUCHAR)MbString++;
+
+            if (Char >= 0x80 && NlsLeadByteInfo[Char])
             {
-            	if (MbSize)
-            	{
+                if (MbSize)
+                {
                     /* Move on */
                     MbSize--;
                     MbString++;
@@ -342,7 +374,36 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
    {
       /* multi-byte code page */
       /* FIXME */
-      ASSERT(FALSE);
+
+      UCHAR Char;
+      USHORT OemLeadByteInfo;
+      PCHAR OemEnd = OemString + OemSize;
+
+      for (i = 0; i < UnicodeSize / sizeof(WCHAR) && OemString < OemEnd; i++)
+      {
+         Char = *(PUCHAR)OemString++;
+
+         if (Char < 0x80)
+         {
+            *UnicodeString++ = Char;
+            continue;
+         }
+
+         OemLeadByteInfo = NlsOemLeadByteInfo[Char];
+
+         if (!OemLeadByteInfo)
+         {
+            *UnicodeString++ = NlsOemToUnicodeTable[Char];
+            continue;
+         }
+
+         if (OemString < OemEnd)
+            *UnicodeString++ =
+               NlsOemLeadByteInfo[OemLeadByteInfo + *(PUCHAR)OemString++];
+      }
+
+      if (ResultSize != NULL)
+         *ResultSize = i * sizeof(WCHAR);
    }
 
    return STATUS_SUCCESS;
@@ -461,7 +522,39 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
    {
       /* multi-byte code page */
       /* FIXME */
-      ASSERT(FALSE);
+
+      USHORT WideChar;
+      USHORT MbChar;
+
+      for (i = MbSize, Size = UnicodeSize / sizeof(WCHAR); i && Size; i--, Size--)
+      {
+         WideChar = *UnicodeString++;
+
+         if (WideChar < 0x80)
+         {
+            *MbString++ = LOBYTE(WideChar);
+            continue;
+         }
+
+         MbChar = NlsDbcsUnicodeToAnsiTable[WideChar];
+
+         if (!HIBYTE(MbChar))
+         {
+            *MbString++ = LOBYTE(MbChar);
+            continue;
+         }
+
+         if (i >= 2)
+         {
+            *MbString++ = HIBYTE(MbChar);
+            *MbString++ = LOBYTE(MbChar);
+            i--;
+         }
+         else break;
+      }
+
+      if (ResultSize != NULL)
+         *ResultSize = MbSize - i;
    }
 
    return STATUS_SUCCESS;
@@ -487,9 +580,13 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
     else
     {
         /* multi-byte code page */
+        /* FIXME */
+
         while (UnicodeLength--)
         {
-            if (HIBYTE(NlsUnicodeToAnsiTable[*UnicodeString++]))
+            USHORT WideChar = *UnicodeString++;
+
+            if (WideChar >= 0x80 && HIBYTE(NlsDbcsUnicodeToAnsiTable[WideChar]))
             {
                 MbLength += sizeof(WCHAR);
             }
@@ -498,7 +595,7 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
                 MbLength++;
             }
         }
-    
+
         *MbSize = MbLength;
     }
 
@@ -541,7 +638,39 @@ RtlUnicodeToOemN (PCHAR OemString,
    {
       /* multi-byte code page */
       /* FIXME */
-      ASSERT(FALSE);
+
+      USHORT WideChar;
+      USHORT OemChar;
+
+      for (i = OemSize, Size = UnicodeSize / sizeof(WCHAR); i && Size; i--, Size--)
+      {
+         WideChar = *UnicodeString++;
+
+         if (WideChar < 0x80)
+         {
+            *OemString++ = LOBYTE(WideChar);
+            continue;
+         }
+
+         OemChar = NlsDbcsUnicodeToOemTable[WideChar];
+
+         if (!HIBYTE(OemChar))
+         {
+            *OemString++ = LOBYTE(OemChar);
+            continue;
+         }
+
+         if (i >= 2)
+         {
+            *OemString++ = HIBYTE(OemChar);
+            *OemString++ = LOBYTE(OemChar);
+            i--;
+         }
+         else break;
+      }
+
+      if (ResultSize != NULL)
+         *ResultSize = OemSize - i;
    }
 
    return STATUS_SUCCESS;
@@ -704,7 +833,39 @@ RtlUpcaseUnicodeToOemN (PCHAR OemString,
    {
       /* multi-byte code page */
       /* FIXME */
-      ASSERT(FALSE);
+
+      USHORT WideChar;
+      USHORT OemChar;
+
+      for (i = OemSize, Size = UnicodeSize / sizeof(WCHAR); i && Size; i--, Size--)
+      {
+         WideChar = RtlUpcaseUnicodeChar(*UnicodeString++);
+
+         if (WideChar < 0x80)
+         {
+            *OemString++ = LOBYTE(WideChar);
+            continue;
+         }
+
+         OemChar = NlsDbcsUnicodeToOemTable[WideChar];
+
+         if (!HIBYTE(OemChar))
+         {
+            *OemString++ = LOBYTE(OemChar);
+            continue;
+         }
+
+         if (i >= 2)
+         {
+            *OemString++ = HIBYTE(OemChar);
+            *OemString++ = LOBYTE(OemChar);
+            i--;
+         }
+         else break;
+      }
+
+      if (ResultSize != NULL)
+         *ResultSize = OemSize - i;
    }
 
    return STATUS_SUCCESS;
