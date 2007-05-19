@@ -22,6 +22,10 @@
 	<xi:include href="downloader/downloader.rbuild" />
 </directory>
 
+<directory name="fontview">
+	<xi:include href="fontview/fontview.rbuild" />
+</directory>
+
 <directory name="gettype">
 	<xi:include href="gettype/gettype.rbuild" />
 </directory>
