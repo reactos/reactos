@@ -313,7 +313,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
       {
          Table =
             Segment->PageDirectory.PageTables[DirectoryOffset] =
-               ExAllocatePoolWithTag(PagedPool, sizeof(SECTION_PAGE_TABLE),
+               ExAllocatePoolWithTag(NonPagedPool, sizeof(SECTION_PAGE_TABLE),
                                      TAG_SECTION_PAGE_TABLE);
          if (Table == NULL)
          {
