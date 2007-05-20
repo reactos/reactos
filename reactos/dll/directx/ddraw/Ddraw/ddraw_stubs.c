@@ -155,17 +155,6 @@ Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
 	DX_STUB;
 }
 
-/*
- * Status: Implentation removed due to rewrite
- */
-HRESULT WINAPI
-Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
-                   LPDWORD total, LPDWORD free)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
 HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
                                                 LPDIRECTDRAWSURFACE7 *lpDDS)
 {

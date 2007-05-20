@@ -39,7 +39,6 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
         return E_NOINTERFACE;
     }
 
-
     Main_DirectDraw_AddRef(iface);
     DX_STUB_str("DD_OK");
     return DD_OK;
@@ -104,17 +103,11 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
     return This->dwIntRefCnt;
 }
 
-/*
- * IMPLEMENT
- * Status ok
- */
 HRESULT
 WINAPI
 Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 {
-    /* MSDN say not implement but my question what does it return then */
-    DX_WINDBG_trace();
-    return DD_OK;
+    return DD_OK; // not implemented in ms ddraw
 }
 
 HRESULT WINAPI
@@ -176,8 +169,41 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
     return DD_OK;
 }
 
-/*
- */
+HRESULT WINAPI 
+Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+                   LPDWORD dwTotal, LPDWORD dwFree)
+{
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    DX_WINDBG_trace();
+
+    // There is no HEL implentation of this api
+    if (!(This->lpLcl->lpDDCB->cbDDMiscellaneousCallbacks.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY))
+    {
+        return DDERR_NODIRECTDRAWHW;
+    }
+
+    if ((!dwTotal && !dwFree) || !ddscaps)
+    {
+        return DDERR_INVALIDPARAMS;
+    }
+
+    DDHAL_GETAVAILDRIVERMEMORYDATA  memdata;
+    memdata.lpDD = This->lpLcl->lpGbl;
+    memdata.ddRVal = DDERR_INVALIDPARAMS;
+    memcpy(&memdata.DDSCaps, ddscaps, sizeof(DDSCAPS2));
+
+    if (This->lpLcl->lpDDCB->cbDDMiscellaneousCallbacks.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
+		return DDERR_NODIRECTDRAWHW;
+
+    if (dwTotal)
+       *dwTotal = memdata.dwTotal;
+
+    if (dwFree)
+       *dwFree = memdata.dwFree;
+
+    return memdata.ddRVal;
+}
+
 HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
                                             LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
