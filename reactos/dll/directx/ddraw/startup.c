@@ -497,7 +497,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 	DdGetDriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
 	DdGetDriverInfo.lpvData = (PVOID)&ddgbl.lpDDCBtmp->cbDDMiscellaneousCallbacks;
 	DdGetDriverInfo.dwExpectedSize = sizeof (DDHAL_DDMISCELLANEOUSCALLBACKS);
-	if(mHALInfo.GetDriverInfo (&DdGetDriverInfo) == DDHAL_DRIVER_NOTHANDLED || DdGetDriverInfo.dwExpectedSize)
+	if(mHALInfo.GetDriverInfo (&DdGetDriverInfo) == DDHAL_DRIVER_NOTHANDLED || DdGetDriverInfo.ddRVal != DD_OK)
     {
         DxHeapMemFree(mpFourCC);
         DxHeapMemFree(mpTextures);
