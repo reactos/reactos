@@ -52,16 +52,26 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
             DX_STUB_str("DDERR_OUTOFMEMORY");
             return DDERR_OUTOFMEMORY;
         }
+
+        /* Fixme release memory alloc if we fail */
+        This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        if (This->lpLcl == NULL)
+        {
+            DX_STUB_str("DDERR_OUTOFMEMORY");
+            return DDERR_OUTOFMEMORY;
+        }
+        This->lpLcl->lpGbl = &ddgbl;
     }
     else
     {
         DX_STUB_str("2.linking\n");
         /* We got the DirectDraw interface alloc and we need create the link */
         LPDDRAWI_DIRECTDRAW_INT  newThis;
+
         newThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
         if (newThis == NULL)
         {
-            DX_STUB_str("DDERR_OUTOFMEMORY");
+            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
 
@@ -71,22 +81,26 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
             if (pGUID !=NULL)
             {
                 This = newThis;
-                DX_STUB_str("DDERR_INVALIDDIRECTDRAWGUID");
+                DX_STUB_str("DDERR_INVALIDDIRECTDRAWGUID\n");
                 return DDERR_INVALIDDIRECTDRAWGUID;
             }
         }
         newThis->lpLink = This;
-        This = newThis;
-    }
 
-    /* Fixme release memory alloc if we fail */
-    This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
-    if (This->lpLcl == NULL)
-    {
-        DX_STUB_str("DDERR_OUTOFMEMORY");
-        return DDERR_OUTOFMEMORY;
+        newThis->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        if (newThis->lpLcl == NULL)
+        {
+            This = newThis;
+            DX_STUB_str("DDERR_OUTOFMEMORY");
+            return DDERR_OUTOFMEMORY;
+        }
+        RtlCopyMemory(newThis->lpLcl, This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_LCL));
+
+        This = newThis;
+
+        DX_STUB_str("here\n");
+
     }
-    This->lpLcl->lpGbl = &ddgbl;
 
     *pIface = (LPDIRECTDRAW)This;
 
@@ -451,12 +465,13 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
             DxHeapMemFree(mpFourCC);
             DxHeapMemFree(ddgbl.lpDDCBtmp);
             // FIXME Close DX fristcall and second call
-			return DD_FALSE;
         }
     }
+    
 
     /* Get all basic data from the driver */
-    if (!DdQueryDirectDrawObject(This->lpLcl->lpGbl,
+    if (!DdQueryDirectDrawObject(
+                                 This->lpLcl->lpGbl,
                                  &mHALInfo,
                                  &ddgbl.lpDDCBtmp->HALDD,
                                  &ddgbl.lpDDCBtmp->HALDDSurface,
@@ -476,7 +491,9 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     }
 
     memcpy(&ddgbl.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
-    memcpy(&ddgbl.ddCaps, &mHALInfo.ddCaps,sizeof(DDCORECAPS));
+    
+
+    memcpy(&ddgbl.ddCaps,  &mHALInfo.ddCaps,sizeof(DDCORECAPS));
 
     This->lpLcl->lpGbl->dwNumFourCC = mHALInfo.ddCaps.dwNumFourCCCodes;
     This->lpLcl->lpGbl->lpdwFourCC = mpFourCC;
@@ -485,11 +502,9 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     This->lpLcl->lpGbl->dwModeIndex        = mHALInfo.dwModeIndex;
     This->lpLcl->lpGbl->dwNumModes         = mHALInfo.dwNumModes;
     This->lpLcl->lpGbl->lpModeInfo         = mHALInfo.lpModeInfo;
-    This->lpLcl->lpGbl->hInstance          = mHALInfo.hInstance;
-    This->lpLcl->lpGbl->lp16DD = This->lpLcl->lpGbl;
 
     /* FIXME convert mpTextures to DDHALMODEINFO */
-    DxHeapMemFree(mpTextures);
+    // DxHeapMemFree( mpTextures);
 
     /* FIXME D3D setup mD3dCallbacks and mD3dDriverData */
 	DDHAL_GETDRIVERINFODATA DdGetDriverInfo = { 0 };
