@@ -97,8 +97,35 @@ BOOL Test_GetAvailableVidMem (INT* passed, INT* failed)
 	TEST (DirectDraw->GetAvailableVidMem(NULL, &Total, &Free) == DDERR_INVALIDPARAMS);
 	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK && Total == 0 && Free == 0 );
 
+	// TODO: Try to produce DDERR_INVALIDCAPS
 	Caps.dwCaps = DDSCAPS_VIDEOMEMORY;
 	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+
+	DirectDraw->Release();
+
+	return TRUE;
+}
+
+BOOL Test_GetFourCCCodes (INT* passed, INT* failed)
+{
+	LPDIRECTDRAW7 DirectDraw;
+
+	/* Preparations */
+	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
+	{
+		printf("ERROR: Failed to set up ddraw\n");
+		return FALSE;
+	}
+
+	/* Here we go */
+	DWORD dwNumCodes, *lpCodes;
+	TEST (DirectDraw->GetFourCCCodes(NULL, NULL) == DDERR_INVALIDPARAMS);
+	TEST ( DirectDraw->GetFourCCCodes(NULL, lpCodes) == DDERR_INVALIDPARAMS );
+
+	TEST (DirectDraw->GetFourCCCodes(&dwNumCodes, NULL) == DD_OK && dwNumCodes);
+	lpCodes = (PDWORD)HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD)*dwNumCodes);
+	*lpCodes = 0;
+	TEST (DirectDraw->GetFourCCCodes(&dwNumCodes, lpCodes) == DD_OK && *lpCodes );
 
 	DirectDraw->Release();
 
