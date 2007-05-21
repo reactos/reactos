@@ -61,7 +61,7 @@ extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid,
 
 typedef struct ConnectionPoint ConnectionPoint;
 
-struct WebBrowser {
+typedef struct {
     /* Interfaces available via WebBrowser object */
 
     const IWebBrowser2Vtbl              *lpWebBrowser2Vtbl;
@@ -115,7 +115,7 @@ struct WebBrowser {
     ConnectionPoint *cp_wbe2;
     ConnectionPoint *cp_wbe;
     ConnectionPoint *cp_pns;
-};
+} WebBrowser;
 
 #define WEBBROWSER(x)   ((IWebBrowser*)                 &(x)->lpWebBrowser2Vtbl)
 #define WEBBROWSER2(x)  ((IWebBrowser2*)                &(x)->lpWebBrowser2Vtbl)
