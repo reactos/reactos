@@ -152,13 +152,19 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
     EnterCriticalSection(&ddcs);
 
    if(!lpNumCodes)
+   {
+      LeaveCriticalSection(&ddcs);
       return DDERR_INVALIDPARAMS;
+   }
 
    if(lpCodes)
-      memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)*(*lpNumCodes));
-   else 
+   {
+      memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* MIN(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
+   }
+   else
+   {
       *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
-
+   }
 
     LeaveCriticalSection(&ddcs);
     return DD_OK;
