@@ -146,28 +146,31 @@ HRESULT WINAPI
 Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD lpCodes)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    HRESULT retVal = DD_OK;
+
     DX_WINDBG_trace();
 
     /* FIXME protect with SEH or something else if lpCodes or lpNumCodes for bad user pointers */
     EnterCriticalSection(&ddcs);
 
-   if(!lpNumCodes)
-   {
-      LeaveCriticalSection(&ddcs);
-      return DDERR_INVALIDPARAMS;
-   }
-
-   if(lpCodes)
-   {
-      memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* min(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
-   }
-   else
-   {
-      *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
-   }
+    if(!lpNumCodes)
+    {
+       retVal = DDERR_INVALIDPARAMS;
+    }
+    else
+    {
+       if ((lpCodes) && (*lpCodes))
+       {
+            memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* min(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
+       }
+       else
+       {
+            *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+       }
+    }
 
     LeaveCriticalSection(&ddcs);
-    return DD_OK;
+    return retVal;
 }
 
 HRESULT WINAPI 

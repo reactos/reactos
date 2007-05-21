@@ -188,7 +188,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
 
     if (reenable == FALSE)
     {
-        if (This->lpLink == NULL)
+        if ((!IsBadReadPtr(This->lpLink,sizeof(LPDIRECTDRAW))) && (This->lpLink == NULL))
         {
             RtlZeroMemory(&ddgbl, sizeof(DDRAWI_DIRECTDRAW_GBL));
             This->lpLcl->lpGbl->dwRefCnt++;
@@ -470,6 +470,8 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
+    
+    DX_STUB_str("Here\n");
 
     /* Alloc mpFourCC */
     mpFourCC = NULL;
