@@ -23,9 +23,10 @@
 	<file>cleanup.c</file>
 
 	<directory name="Ddraw">	
-		<file>ddraw_stubs.c</file>	
-		<file>ddraw_setcooperativelevel.c</file>
 		<file>ddraw_main.c</file>	
+		<file>ddraw_displaymode.c</file>
+		<file>ddraw_setcooperativelevel.c</file>
+		<file>ddraw_stubs.c</file>	
 		<file>callbacks_dd_hel.c</file>
 	</directory>	
 	<directory name="Surface">	

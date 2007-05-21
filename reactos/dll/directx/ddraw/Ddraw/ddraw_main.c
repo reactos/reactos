@@ -11,8 +11,7 @@
 
 #include "rosdraw.h"
 
-HRESULT
-WINAPI
+HRESULT WINAPI
 Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                                 REFIID id,
                                 LPVOID *obj)
@@ -21,8 +20,8 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
 
     DX_WINDBG_trace();
 
-    /* fixme
-       the D3D object cab be optain from here
+    /* FIXME
+       the D3D object can be optained from here
        Direct3D7
     */
     if (IsEqualGUID(&IID_IDirectDraw7, id))
@@ -44,12 +43,7 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
     return DD_OK;
 }
 
-/*
- * IMPLEMENT
- * Status ok
- */
-ULONG
-WINAPI
+ULONG WINAPI
 Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
@@ -69,9 +63,7 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
     return This->dwIntRefCnt;
 }
 
-
-ULONG
-WINAPI
+ULONG WINAPI
 Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
@@ -103,70 +95,16 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
     return This->dwIntRefCnt;
 }
 
-HRESULT
-WINAPI
-Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
+HRESULT WINAPI
+Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 {
-    return DD_OK; // not implemented in ms ddraw
+	return DDERR_ALREADYINITIALIZED;
 }
 
 HRESULT WINAPI
-Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight,
-                                                                DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
+Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 {
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-    DX_WINDBG_trace();
-
-    // FIXME: Check primary if surface is locked / busy etc.
-
-    // Check Parameter
-    if(dwFlags != 0)
-    {
-        return DDERR_INVALIDPARAMS;
-    }
-
-    if ((!dwHeight || This->lpLcl->lpGbl->vmiData.dwDisplayHeight == dwHeight) && 
-        (!dwWidth || This->lpLcl->lpGbl->vmiData.dwDisplayWidth == dwWidth)  && 
-        (!dwBPP || This->lpLcl->lpGbl->vmiData.ddpfDisplay.dwRGBBitCount == dwBPP) &&
-        (!dwRefreshRate || This->lpLcl->lpGbl->dwMonitorFrequency == dwRefreshRate))  
-    {
-        return DD_OK; // nothing to do here for us
-    }
-
-    // Here we go
-    DEVMODE DevMode;
-    DevMode.dmFields = 0;
-    if(dwHeight) 
-        DevMode.dmFields |= DM_PELSHEIGHT;
-    if(dwWidth) 
-        DevMode.dmFields |= DM_PELSWIDTH;
-    if(dwBPP) 
-        DevMode.dmFields |= DM_BITSPERPEL;
-    if(dwRefreshRate) 
-        DevMode.dmFields |= DM_DISPLAYFREQUENCY;
-
-    DevMode.dmPelsHeight = dwHeight;
-    DevMode.dmPelsWidth = dwWidth;
-    DevMode.dmBitsPerPel = dwBPP;
-    DevMode.dmDisplayFrequency = dwRefreshRate;
-
-    LONG retval = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN); /* FIXME: Are we supposed to set CDS_SET_PRIMARY as well ? */
-
-    if(retval == DISP_CHANGE_BADMODE)
-    {
-        return DDERR_UNSUPPORTED;
-    }
-    else if(retval != DISP_CHANGE_SUCCESSFUL)
-    {
-        return DDERR_GENERIC;
-    }
-
-    // Update Interals
-    BOOL ModeChanged;
-    DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
-    StartDirectDraw((LPDIRECTDRAW)iface, 0, TRUE);
-
-    return DD_OK;
+    return DD_OK; // not implemented in ms ddraw either
 }
 
 HRESULT WINAPI 
@@ -204,8 +142,9 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     return memdata.ddRVal;
 }
 
-HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
-                                            LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+HRESULT WINAPI 
+Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
+                               LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
    HRESULT ret;
    DDSURFACEDESC2 dd_desc_v2;
@@ -258,7 +197,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
        return  DDERR_INVALIDPARAMS;
    }
 
-   /* check if this process belong to this ddraw */
+   /* Check if this process belongs to this ddraw object */
    if ( dd_int->lpLcl->dwProcessId != GetCurrentProcessId() )
    {
        /* FIXME send back right return code */
@@ -270,7 +209,6 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
   LeaveCriticalSection(&ddcs);
   return ret;
 }
-
 
 
 IDirectDraw7Vtbl DirectDraw7_Vtable =

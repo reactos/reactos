@@ -78,15 +78,6 @@ Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
 	DX_STUB;
 }
 
-/*
- * Status: Implentation removed due to rewrite
- */
-HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
 HRESULT WINAPI
 Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)
 {
@@ -103,13 +94,6 @@ Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface,
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7 iface,LPDWORD freq)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
-HRESULT WINAPI
 Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 {
 	DX_WINDBG_trace();
@@ -118,17 +102,6 @@ Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 
 HRESULT WINAPI
 Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL lpbIsInVB)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
-/*
- * Status: Implentation removed due to rewrite
- */
-HRESULT
-WINAPI
-Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
