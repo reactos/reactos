@@ -50,38 +50,6 @@ int in_typelib = 0;
 
 static typelib_t *typelib;
 
-type_t *duptype(type_t *t, int dupname)
-{
-  type_t *d = xmalloc(sizeof *d);
-
-  *d = *t;
-  if (dupname && t->name)
-    d->name = xstrdup(t->name);
-
-  d->orig = t;
-  return d;
-}
-
-type_t *alias(type_t *t, const char *name)
-{
-  type_t *a = duptype(t, 0);
-
-  a->name = xstrdup(name);
-  a->kind = TKIND_ALIAS;
-  a->attrs = NULL;
-
-  return a;
-}
-
-int is_ptr(const type_t *t)
-{
-  unsigned char c = t->type;
-  return c == RPC_FC_RP
-      || c == RPC_FC_UP
-      || c == RPC_FC_FP
-      || c == RPC_FC_OP;
-}
-
 /* List of oleauto types that should be recognized by name.
  * (most of) these seem to be intrinsic types in mktyplib. */
 
@@ -146,9 +114,6 @@ unsigned short get_type_vt(type_t *t)
     if (vt) return vt;
   }
 
-  if (t->kind == TKIND_ALIAS && t->attrs)
-    return VT_USERDEFINED;
-
   switch (t->type) {
   case RPC_FC_BYTE:
   case RPC_FC_USMALL:
@@ -163,14 +128,14 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_USHORT:
     return VT_UI2;
   case RPC_FC_LONG:
-    if (match(t->name, "int")) return VT_INT;
+    if (t->ref && match(t->ref->name, "int")) return VT_INT;
     return VT_I4;
   case RPC_FC_ULONG:
-    if (match(t->name, "int")) return VT_UINT;
+    if (t->ref && match(t->ref->name, "int")) return VT_UINT;
     return VT_UI4;
   case RPC_FC_HYPER:
     if (t->sign < 0) return VT_UI8;
-    if (match(t->name, "MIDL_uhyper")) return VT_UI8;
+    if (t->ref && match(t->ref->name, "MIDL_uhyper")) return VT_UI8;
     return VT_I8;
   case RPC_FC_FLOAT:
     return VT_R4;
@@ -181,11 +146,7 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_OP:
   case RPC_FC_FP:
     if(t->ref)
-    {
-      if (match(t->ref->name, "SAFEARRAY"))
-        return VT_SAFEARRAY;
       return VT_PTR;
-    }
 
     error("get_type_vt: unknown-deref-type: %d\n", t->ref->type);
     break;
@@ -205,14 +166,29 @@ unsigned short get_type_vt(type_t *t)
   case RPC_FC_BOGUS_STRUCT:
     return VT_USERDEFINED;
   case 0:
-    return t->kind == TKIND_PRIMITIVE ? VT_VOID : VT_USERDEFINED;
+    if(t->attrs)
+        return VT_USERDEFINED;
+    return 0;
   default:
     error("get_type_vt: unknown type: 0x%02x\n", t->type);
   }
   return 0;
 }
 
-void start_typelib(char *name, attr_list_t *attrs)
+unsigned short get_var_vt(var_t *v)
+{
+  unsigned short vt;
+
+  chat("get_var_vt: %p tname %s\n", v, v->tname);
+  if (v->tname) {
+    vt = builtin_vt(v->tname);
+    if (vt) return vt;
+  }
+
+  return get_type_vt(v->type);
+}
+
+void start_typelib(char *name, attr_t *attrs)
 {
     in_typelib++;
     if (!do_typelib) return;
@@ -221,8 +197,6 @@ void start_typelib(char *name, attr_list_t *attrs)
     typelib->name = xstrdup(name);
     typelib->filename = xstrdup(typelib_name);
     typelib->attrs = attrs;
-    list_init( &typelib->entries );
-    list_init( &typelib->importlibs );
 }
 
 void end_typelib(void)
@@ -234,18 +208,90 @@ void end_typelib(void)
     return;
 }
 
-void add_typelib_entry(type_t *t)
+void add_interface(type_t *iface)
 {
     typelib_entry_t *entry;
     if (!typelib) return;
 
-    chat("add kind %i: %s\n", t->kind, t->name);
+    chat("add interface: %s\n", iface->name);
     entry = xmalloc(sizeof(*entry));
-    entry->type = t;
-    list_add_tail( &typelib->entries, &entry->entry );
+    entry->kind = TKIND_INTERFACE;
+    entry->u.interface = iface;
+    LINK(entry, typelib->entry);
+    typelib->entry = entry;
 }
 
-static void tlb_read(int fd, void *buf, int count)
+void add_coclass(type_t *cls)
+{
+    typelib_entry_t *entry;
+
+    if (!typelib) return;
+
+    chat("add coclass: %s\n", cls->name);
+
+    entry = xmalloc(sizeof(*entry));
+    entry->kind = TKIND_COCLASS;
+    entry->u.class = cls;
+    LINK(entry, typelib->entry);
+    typelib->entry = entry;
+}
+
+void add_module(type_t *module)
+{
+    typelib_entry_t *entry;
+    if (!typelib) return;
+
+    chat("add module: %s\n", module->name);
+    entry = xmalloc(sizeof(*entry));
+    entry->kind = TKIND_MODULE;
+    entry->u.module = module;
+    LINK(entry, typelib->entry);
+    typelib->entry = entry;
+}
+
+void add_struct(type_t *structure)
+{
+     typelib_entry_t *entry;
+     if (!typelib) return;
+
+     chat("add struct: %s\n", structure->name);
+     entry = xmalloc(sizeof(*entry));
+     entry->kind = TKIND_RECORD;
+     entry->u.structure = structure;
+     LINK(entry, typelib->entry);
+     typelib->entry = entry;
+}
+
+void add_enum(type_t *enumeration)
+{
+     typelib_entry_t *entry;
+     if (!typelib) return;
+
+     chat("add enum: %s\n", enumeration->name);
+     entry = xmalloc(sizeof(*entry));
+     entry->kind = TKIND_ENUM;
+     entry->u.enumeration = enumeration;
+     LINK(entry, typelib->entry);
+     typelib->entry = entry;
+}
+
+void add_typedef(type_t *tdef, var_t *name)
+{
+     typelib_entry_t *entry;
+     if (!typelib) return;
+
+     chat("add typedef: %s\n", name->name);
+     entry = xmalloc(sizeof(*entry));
+     entry->kind = TKIND_ALIAS;
+     entry->u.tdef = xmalloc(sizeof(*entry->u.tdef));
+     memcpy(entry->u.tdef, name, sizeof(*name));
+     entry->u.tdef->type = tdef;
+     entry->u.tdef->name = xstrdup(name->name);
+     LINK(entry, typelib->entry);
+     typelib->entry = entry;
+}
+
+static void tlb_read(int fd, void *buf, size_t count)
 {
     if(read(fd, buf, count) < count)
         error("error while reading importlib.\n");
@@ -304,7 +350,6 @@ static void read_msft_importlib(importlib_t *importlib, int fd)
             importlib->importinfos[i].flags |= MSFT_IMPINFO_OFFSET_IS_GUID;
             msft_read_guid(fd, &segdir, base.posguid, &importlib->importinfos[i].guid);
         }
-        else memset( &importlib->importinfos[i].guid, 0, sizeof(importlib->importinfos[i].guid));
 
         tlb_lseek(fd, segdir.pNametab.offset + base.NameOffset);
         tlb_read(fd, &nameintro, sizeof(nameintro));
@@ -355,16 +400,18 @@ void add_importlib(const char *name)
 
     if(!typelib) return;
 
-    LIST_FOR_EACH_ENTRY( importlib, &typelib->importlibs, importlib_t, entry )
+    for(importlib = typelib->importlibs; importlib; importlib = NEXT_LINK(importlib)) {
         if(!strcmp(name, importlib->name))
             return;
+    }
 
     chat("add_importlib: %s\n", name);
 
     importlib = xmalloc(sizeof(*importlib));
-    memset( importlib, 0, sizeof(*importlib) );
     importlib->name = xstrdup(name);
 
     read_importlib(importlib);
-    list_add_head( &typelib->importlibs, &importlib->entry );
+
+    LINK(importlib, typelib->importlibs);
+    typelib->importlibs = importlib;
 }

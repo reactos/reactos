@@ -34,9 +34,10 @@
 #include "utils.h"
 #include "parser.h"
 
-static const int want_near_indication = 0;
+/* #define WANT_NEAR_INDICATION */
 
-static void make_print(char *str)
+#ifdef WANT_NEAR_INDICATION
+void make_print(char *str)
 {
 	while(*str)
 	{
@@ -45,13 +46,13 @@ static void make_print(char *str)
 		str++;
 	}
 }
+#endif
 
 static void generic_msg(const char *s, const char *t, const char *n, va_list ap)
 {
 	fprintf(stderr, "%s:%d: %s: ", input_name ? input_name : "stdin", line_number, t);
 	vfprintf(stderr, s, ap);
-
-	if (want_near_indication)
+#ifdef WANT_NEAR_INDICATION
 	{
 		char *cpy;
 		if(n)
@@ -62,26 +63,26 @@ static void generic_msg(const char *s, const char *t, const char *n, va_list ap)
 			free(cpy);
 		}
 	}
-
+#endif
 	fprintf(stderr, "\n");
 }
 
 
-int parser_error(const char *s, ...)
+int yyerror(const char *s, ...)
 {
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(s, "Error", parser_text, ap);
+	generic_msg(s, "Error", yytext, ap);
 	va_end(ap);
 	exit(1);
 	return 1;
 }
 
-int parser_warning(const char *s, ...)
+int yywarning(const char *s, ...)
 {
 	va_list ap;
 	va_start(ap, s);
-	generic_msg(s, "Warning", parser_text, ap);
+	generic_msg(s, "Warning", yytext, ap);
 	va_end(ap);
 	return 0;
 }
@@ -144,7 +145,7 @@ char *dup_basename(const char *name, const char *ext)
 	namelen = strlen(name);
 
 	/* +4 for later extension and +1 for '\0' */
-	base = xmalloc(namelen +4 +1);
+	base = (char *)xmalloc(namelen +4 +1);
 	strcpy(base, name);
 	if(!strcasecmp(name + namelen-extlen, ext))
 	{
@@ -163,7 +164,12 @@ void *xmalloc(size_t size)
     {
 	error("Virtual memory exhausted.\n");
     }
-    memset(res, 0x55, size);
+    /*
+     * We set it to 0.
+     * This is *paramount* because we depend on it
+     * just about everywhere in the rest of the code.
+     */
+    memset(res, 0, size);
     return res;
 }
 
@@ -186,6 +192,6 @@ char *xstrdup(const char *str)
 	char *s;
 
 	assert(str != NULL);
-	s = xmalloc(strlen(str)+1);
+	s = (char *)xmalloc(strlen(str)+1);
 	return strcpy(s, str);
 }

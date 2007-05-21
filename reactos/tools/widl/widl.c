@@ -22,7 +22,6 @@
 #include "config.h"
 #include "wine/port.h"
 
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -47,6 +46,8 @@
 /* A = ACF input filename */
 /* J = do not search standard include path */
 /* O = generate interpreted stubs */
+/* u = UUID file only? */
+/* U = UUID filename */
 /* w = select win16/win32 output (?) */
 
 static char usage[] =
@@ -63,15 +64,10 @@ static char usage[] =
 "   --oldnames  Use old naming conventions\n"
 "   -p          Generate proxy\n"
 "   -P file     Name of proxy file (default is infile_p.c)\n"
-"   --prefix-all=p  Prefix names of client stubs / server functions with 'p'\n"
-"   --prefix-client=p  Prefix names of client stubs with 'p'\n"
-"   --prefix-server=p  Prefix names of server functions with 'p'\n"
 "   -s          Generate server stub\n"
 "   -S file     Name of server stub file (default is infile_s.c)\n"
 "   -t          Generate typelib\n"
 "   -T file     Name of typelib file (default is infile.tlb)\n"
-"   -u          Generate interface identifiers file\n"
-"   -U file     Name of interface identifiers file (default is infile_i.c)\n"
 "   -V          Print version and exit\n"
 "   -W          Enable pedantic warnings\n"
 "Debug level 'n' is a bitmask with following meaning:\n"
@@ -88,17 +84,16 @@ static const char version_string[] = "Wine IDL Compiler version " PACKAGE_VERSIO
 
 int win32 = 1;
 int debuglevel = DEBUGLEVEL_NONE;
-int parser_debug, yy_flex_debug;
+int yy_flex_debug;
 
 int pedantic = 0;
-int do_everything = 1;
+static int do_everything = 1;
 int preprocess_only = 0;
 int do_header = 0;
 int do_typelib = 0;
 int do_proxies = 0;
 int do_client = 0;
 int do_server = 0;
-int do_idfile = 0;
 int no_preprocess = 0;
 int old_names = 0;
 
@@ -112,34 +107,19 @@ char *client_name;
 char *client_token;
 char *server_name;
 char *server_token;
-char *idfile_name;
-char *idfile_token;
 char *temp_name;
-const char *prefix_client = "";
-const char *prefix_server = "";
 
 int line_number = 1;
 
 FILE *header;
 FILE *proxy;
-FILE *idfile;
 
 time_t now;
 
-enum {
-    OLDNAMES_OPTION = CHAR_MAX + 1,
-    PREFIX_ALL_OPTION,
-    PREFIX_CLIENT_OPTION,
-    PREFIX_SERVER_OPTION
-};
-
 static const char *short_options =
-    "cC:d:D:EhH:I:NpP:sS:tT:uU:VW";
+    "cC:d:D:EhH:I:NpP:sS:tT:VW";
 static struct option long_options[] = {
-    { "oldnames", no_argument, 0, OLDNAMES_OPTION },
-    { "prefix-all", required_argument, 0, PREFIX_ALL_OPTION },
-    { "prefix-client", required_argument, 0, PREFIX_CLIENT_OPTION },
-    { "prefix-server", required_argument, 0, PREFIX_SERVER_OPTION },
+    { "oldnames", 0, 0, 1 },
     { 0, 0, 0, 0 }
 };
 
@@ -197,25 +177,15 @@ int main(int argc,char *argv[])
 
   while((optc = getopt_long(argc, argv, short_options, long_options, &opti)) != EOF) {
     switch(optc) {
-    case OLDNAMES_OPTION:
+    case 1:
       old_names = 1;
-      break;
-    case PREFIX_ALL_OPTION:
-      prefix_client = xstrdup(optarg);
-      prefix_server = xstrdup(optarg);
-      break;
-    case PREFIX_CLIENT_OPTION:
-      prefix_client = xstrdup(optarg);
-      break;
-    case PREFIX_SERVER_OPTION:
-      prefix_server = xstrdup(optarg);
       break;
     case 'c':
       do_everything = 0;
       do_client = 1;
       break;
     case 'C':
-      client_name = xstrdup(optarg);
+      client_name = strdup(optarg);
       break;
     case 'd':
       debuglevel = strtol(optarg, NULL, 0);
@@ -232,7 +202,7 @@ int main(int argc,char *argv[])
       do_header = 1;
       break;
     case 'H':
-      header_name = xstrdup(optarg);
+      header_name = strdup(optarg);
       break;
     case 'I':
       wpp_add_include_path(optarg);
@@ -245,28 +215,21 @@ int main(int argc,char *argv[])
       do_proxies = 1;
       break;
     case 'P':
-      proxy_name = xstrdup(optarg);
+      proxy_name = strdup(optarg);
       break;
     case 's':
       do_everything = 0;
       do_server = 1;
       break;
     case 'S':
-      server_name = xstrdup(optarg);
+      server_name = strdup(optarg);
       break;
     case 't':
       do_everything = 0;
       do_typelib = 1;
       break;
     case 'T':
-      typelib_name = xstrdup(optarg);
-      break;
-    case 'u':
-      do_everything = 0;
-      do_idfile = 1;
-      break;
-    case 'U':
-      idfile_name = xstrdup(optarg);
+      typelib_name = strdup(optarg);
       break;
     case 'V':
       printf(version_string);
@@ -281,7 +244,7 @@ int main(int argc,char *argv[])
   }
 
   if(do_everything) {
-      do_header = do_typelib = do_proxies = do_client = do_server = do_idfile = 1;
+      do_header = do_typelib = do_proxies = do_client = do_server = 1;
   }
   if(optind < argc) {
     input_name = xstrdup(argv[optind]);
@@ -297,7 +260,7 @@ int main(int argc,char *argv[])
     setbuf(stderr,0);
   }
 
-  parser_debug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;
+  yydebug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;
   yy_flex_debug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;
 
   wpp_set_debug( (debuglevel & DEBUGLEVEL_PPLEX) != 0,
@@ -329,11 +292,6 @@ int main(int argc,char *argv[])
     strcat(server_name, "_s.c");
   }
 
-  if (!idfile_name && do_idfile) {
-    idfile_name = dup_basename(input_name, ".idl");
-    strcat(idfile_name, "_i.c");
-  }
-
   if (do_proxies) proxy_token = dup_basename_token(proxy_name,"_p.c");
   if (do_client) client_token = dup_basename_token(client_name,"_c.c");
   if (do_server) server_token = dup_basename_token(server_name,"_s.c");
@@ -356,13 +314,13 @@ int main(int argc,char *argv[])
 
     if(ret) exit(1);
     if(preprocess_only) exit(0);
-    if(!(parser_in = fopen(temp_name, "r"))) {
+    if(!(yyin = fopen(temp_name, "r"))) {
       fprintf(stderr, "Could not open %s for input\n", temp_name);
       return 1;
     }
   }
   else {
-    if(!(parser_in = fopen(input_name, "r"))) {
+    if(!(yyin = fopen(input_name, "r"))) {
       fprintf(stderr, "Could not open %s for input\n", input_name);
       return 1;
     }
@@ -385,28 +343,7 @@ int main(int argc,char *argv[])
     fprintf(header, "#endif\n");
   }
 
-  if (do_idfile) {
-    idfile_token = make_token(idfile_name);
-
-    idfile = fopen(idfile_name, "w");
-    if (! idfile) {
-      fprintf(stderr, "Could not open %s for output\n", idfile_name);
-      return 1;
-    }
-
-    fprintf(idfile, "/*** Autogenerated by WIDL %s ", PACKAGE_VERSION);
-    fprintf(idfile, "from %s - Do not edit ***/\n\n", input_name);
-    fprintf(idfile, "#include <rpc.h>\n");
-    fprintf(idfile, "#include <rpcndr.h>\n\n");
-    fprintf(idfile, "#define INITGUID\n");
-    fprintf(idfile, "#include <guiddef.h>\n\n");
-    fprintf(idfile, "#ifdef __cplusplus\n");
-    fprintf(idfile, "extern \"C\" {\n");
-    fprintf(idfile, "#endif\n\n");
-  }
-
-  init_types();
-  ret = parser_parse();
+  ret = yyparse();
 
   if(do_header) {
     fprintf(header, "/* Begin additional prototypes for all interfaces */\n");
@@ -422,16 +359,7 @@ int main(int argc,char *argv[])
     fclose(header);
   }
 
-  if (do_idfile) {
-    fprintf(idfile, "\n");
-    fprintf(idfile, "#ifdef __cplusplus\n");
-    fprintf(idfile, "}\n");
-    fprintf(idfile, "#endif\n");
-
-    fclose(idfile);
-  }
-
-  fclose(parser_in);
+  fclose(yyin);
 
   if(ret) {
     exit(1);
@@ -439,7 +367,6 @@ int main(int argc,char *argv[])
   header_name = NULL;
   client_name = NULL;
   server_name = NULL;
-  idfile_name = NULL;
   return 0;
 }
 

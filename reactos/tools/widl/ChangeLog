@@ -1,10 +1,5 @@
 ChangeLog
 
-2007-05-20 ekohl
-
-- Synchronized with WINE widl 20070519.
-
-
 2007-05-17 ekohl
 
    tools/widl/lex.yy.c
