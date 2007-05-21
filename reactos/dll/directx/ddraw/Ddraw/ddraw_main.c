@@ -159,7 +159,7 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
 
    if(lpCodes)
    {
-      memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* MIN(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
+      memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* min(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
    }
    else
    {
