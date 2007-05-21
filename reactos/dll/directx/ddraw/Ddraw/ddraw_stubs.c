@@ -38,16 +38,6 @@ HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRA
 	DX_STUB;
 }
 
-/*
- * Status: Implentation removed due to rewrite
- */
-HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
-                 LPDDSURFACEDESC2 pDDSD, LPVOID context, LPDDENUMMODESCALLBACK2 callback)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
 HRESULT WINAPI
 Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
                  LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
@@ -102,16 +92,6 @@ Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 
 HRESULT WINAPI
 Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL lpbIsInVB)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
-/*
- * Status: Implentation removed due to rewrite
- */
-HRESULT WINAPI
-Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
