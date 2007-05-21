@@ -60,7 +60,6 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
             DX_STUB_str("DDERR_OUTOFMEMORY");
             return DDERR_OUTOFMEMORY;
         }
-        This->lpLcl->lpGbl = &ddgbl;
     }
     else
     {
@@ -68,6 +67,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         /* We got the DirectDraw interface alloc and we need create the link */
         LPDDRAWI_DIRECTDRAW_INT  newThis;
 
+        /* step 1.Alloc the new  DDRAWI_DIRECTDRAW_INT for the lnking */
         newThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
         if (newThis == NULL)
         {
@@ -75,7 +75,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
             return DDERR_OUTOFMEMORY;
         }
 
-        /* we need check the GUID lpGUID what type it is */
+        /* step 2 check if it not DDCREATE_HARDWAREONLY we got if so we fail */
         if (pGUID != (LPGUID)DDCREATE_HARDWAREONLY)
         {
             if (pGUID !=NULL)
@@ -85,22 +85,23 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
                 return DDERR_INVALIDDIRECTDRAWGUID;
             }
         }
+
+        /* step 3 do the link the old interface are store in the new one */
         newThis->lpLink = This;
 
-        newThis->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        /* step 4 we need create new local directdraw struct for the new linked interface */
+        newThis->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_LCL));
         if (newThis->lpLcl == NULL)
         {
             This = newThis;
             DX_STUB_str("DDERR_OUTOFMEMORY");
             return DDERR_OUTOFMEMORY;
         }
-        RtlCopyMemory(newThis->lpLcl, This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_LCL));
 
         This = newThis;
-
-        DX_STUB_str("here\n");
-
     }
+
+    This->lpLcl->lpGbl = &ddgbl;
 
     *pIface = (LPDIRECTDRAW)This;
 
@@ -111,8 +112,6 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 
         if (StartDirectDraw((LPDIRECTDRAW)This, pGUID, FALSE) == DD_OK);
         {
-            DX_STUB_str("here");
-
             /*
             RtlZeroMemory(&wnd_class, sizeof(wnd_class));
             wnd_class.style = CS_HREDRAW | CS_VREDRAW;
