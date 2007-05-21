@@ -131,7 +131,7 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     memcpy(&memdata.DDSCaps, ddscaps, sizeof(DDSCAPS2));
 
     if (This->lpLcl->lpDDCB->cbDDMiscellaneousCallbacks.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
-		return DDERR_NODIRECTDRAWHW;
+        return DDERR_NODIRECTDRAWHW;
 
     if (dwTotal)
        *dwTotal = memdata.dwTotal;
@@ -148,15 +148,20 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DX_WINDBG_trace();
 
-	if(!lpNumCodes)
-		return DDERR_INVALIDPARAMS;
+    /* FIXME protect with SEH or something else if lpCodes or lpNumCodes for bad user pointers */
+    EnterCriticalSection(&ddcs);
 
-	if(lpCodes)
-		memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)*(*lpNumCodes));
-	else 
-		*lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+   if(!lpNumCodes)
+      return DDERR_INVALIDPARAMS;
 
-	return DD_OK;
+   if(lpCodes)
+      memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)*(*lpNumCodes));
+   else 
+      *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+
+
+    LeaveCriticalSection(&ddcs);
+    return DD_OK;
 }
 
 HRESULT WINAPI 
