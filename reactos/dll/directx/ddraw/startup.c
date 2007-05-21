@@ -36,6 +36,8 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 
     This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
 
+#if 0
+    /* fixme linking too second link when we shall not doing it */
     if (IsBadReadPtr(This,sizeof(LPDIRECTDRAW)))
     {
         DX_STUB_str("1. no linking\n");
@@ -76,7 +78,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         }
 
         /* step 2 check if it not DDCREATE_HARDWAREONLY we got if so we fail */
-        if (pGUID != (LPGUID)DDCREATE_HARDWAREONLY)
+        if ((pGUID) && (pGUID != (LPGUID)DDCREATE_HARDWAREONLY))
         {
             if (pGUID !=NULL)
             {
@@ -100,6 +102,29 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 
         This = newThis;
     }
+#else
+        /* FIXME HACK linking does not working we need figout why */
+        LPDDRAWI_DIRECTDRAW_INT memThis;
+
+        memThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        This = memThis;
+        if (This == NULL)
+        {
+            if (memThis != NULL)
+                DxHeapMemFree(memThis);
+
+            DX_STUB_str("DDERR_OUTOFMEMORY");
+            return DDERR_OUTOFMEMORY;
+        }
+
+        /* Fixme release memory alloc if we fail */
+        This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        if (This->lpLcl == NULL)
+        {
+            DX_STUB_str("DDERR_OUTOFMEMORY");
+            return DDERR_OUTOFMEMORY;
+        }
+#endif
 
     This->lpLcl->lpGbl = &ddgbl;
 
@@ -172,19 +197,20 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
                 ddgbl.lpDDCBtmp = (LPDDHAL_CALLBACKS) DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
                 if (ddgbl.lpDDCBtmp == NULL)
                 {
-                    DX_STUB_str("Out of memmory");
+                    DX_STUB_str("Out of memmory\n");
                     return DD_FALSE;
                 }
             }
         }
     }
 
-    DX_STUB_str("here");
+    DX_STUB_str("here\n");
 
     if (reenable == FALSE)
     {
         if (lpGuid == NULL)
         {
+            DX_STUB_str("lpGuid == NULL\n");
             devicetypes= 1;
 
             /* Create HDC for default, hal and hel driver */
@@ -195,6 +221,8 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
             RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
             RtlCopyMemory(&ddgbl.cDriverName,&"DISPLAY",7);
             dwFlags |= DDRAWI_DISPLAYDRV | DDRAWI_GDIDRV;
+
+
         }
         else if (lpGuid == (LPGUID) DDCREATE_HARDWAREONLY)
         {
@@ -234,7 +262,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
 
         if ( (HDC)This->lpLcl->hDC == NULL)
         {
-            DX_STUB_str("DDERR_OUTOFMEMORY");
+            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY ;
         }
     }
@@ -262,11 +290,13 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
               hel_ret = StartDirectDrawHel(iface, reenable);
     }
 
+    DX_STUB_str("return\n");
+
     if (hal_ret!=DD_OK)
     {
         if (hel_ret!=DD_OK)
         {
-            DX_STUB_str("DDERR_NODIRECTDRAWSUPPORT");
+            DX_STUB_str("DDERR_NODIRECTDRAWSUPPORT\n");
             return DDERR_NODIRECTDRAWSUPPORT;
         }
         dwFlags |= DDRAWI_NOHARDWARE;
@@ -453,8 +483,10 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
             return DD_FALSE;
         }
     }
+      DX_STUB_str("Here\n");
 
     /* Alloc mpTextures */
+#if 0
     mpTextures = NULL;
     if (mD3dDriverData.dwNumTextureFormats > 0)
     {
@@ -466,7 +498,11 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
             // FIXME Close DX fristcall and second call
         }
     }
+#else
+      mpTextures = NULL;
+#endif
     
+      DX_STUB_str("Here\n");
 
     /* Get all basic data from the driver */
     if (!DdQueryDirectDrawObject(
@@ -502,6 +538,8 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     This->lpLcl->lpGbl->dwNumModes         = mHALInfo.dwNumModes;
     This->lpLcl->lpGbl->lpModeInfo         = mHALInfo.lpModeInfo;
 
+    DX_STUB_str("Here\n");
+
     /* FIXME convert mpTextures to DDHALMODEINFO */
     // DxHeapMemFree( mpTextures);
 
@@ -520,5 +558,6 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         return DD_FALSE;
     }
 
+    DX_STUB_str("Return DD_OK\n");
     return DD_OK;
 }
