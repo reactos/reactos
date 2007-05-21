@@ -35,15 +35,16 @@
 #define DPRINT_HWDETECT		0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 #define DPRINT_WINDOWS		0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
 
+VOID	DebugPrint(ULONG Mask, char *format, ...);
+
 #ifdef DBG
 
 	VOID	DebugInit(VOID);
-	VOID	DebugPrint(ULONG Mask, char *format, ...);
 	VOID	DebugPrint1(char *format, ...);
 	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
 
 	#define DbgPrint(_x_)					DebugPrint _x_ ;
-	#define DPRINT1						DebugPrint1
+	#define DPRINT1							DebugPrint1
 	#define BugCheck(_x_)					{ DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }
 	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
 
@@ -77,7 +78,7 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 #else
 
 	#define DebugInit()
-	#define DbgPrint(_x_) { if (0) DebugPrint _x_; }
+    #define DbgPrint(_x_) { if (0) DebugPrint _x_; }
 	#define DPRINT1(_x_) { if (0) printf _x_; }
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
