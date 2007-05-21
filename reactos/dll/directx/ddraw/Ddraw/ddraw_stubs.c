@@ -69,13 +69,6 @@ Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
-
-HRESULT WINAPI
 Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface,
                                              LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface)
 {

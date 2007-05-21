@@ -142,6 +142,23 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     return memdata.ddRVal;
 }
 
+HRESULT WINAPI
+Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD lpCodes)
+{
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    DX_WINDBG_trace();
+
+	if(!lpNumCodes)
+		return DDERR_INVALIDPARAMS;
+
+	if(lpCodes)
+		memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)*(*lpNumCodes));
+	else 
+		*lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+
+	return DD_OK;
+}
+
 HRESULT WINAPI 
 Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
                                LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
