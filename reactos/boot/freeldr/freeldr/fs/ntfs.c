@@ -24,8 +24,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 PNTFS_BOOTSECTOR NtfsBootSector;

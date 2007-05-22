@@ -20,8 +20,6 @@
 
 #define _NTSYSTEM_
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 ROS_LOADER_PARAMETER_BLOCK LoaderBlock;

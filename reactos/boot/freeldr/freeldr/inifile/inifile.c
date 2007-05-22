@@ -18,8 +18,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 BOOLEAN IniOpenSection(PCSTR SectionName, ULONG* SectionId)

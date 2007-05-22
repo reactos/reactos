@@ -9,8 +9,6 @@
 /* INCLUDES ***************************************************************/
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 // The only global var here, used to mark mem pages as NLS in WinLdrTurnOnPaging()

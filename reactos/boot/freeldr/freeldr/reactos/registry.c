@@ -19,8 +19,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 static FRLDRHKEY RootKey;

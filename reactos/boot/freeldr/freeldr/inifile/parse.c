@@ -18,8 +18,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 PINI_SECTION		IniFileSectionListHead = NULL;

@@ -22,8 +22,6 @@
 #include <freeldr.h>
 
 #include <ndk/ldrtypes.h>
-
-//#define NDEBUG
 #include <debug.h>
 
 //FIXME: Do a better way to retrieve Arc disk information
