@@ -33,7 +33,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
     }
 #endif
 
-	if(hwnd && IsWindow(hwnd))
+	if(hwnd && !IsWindow(hwnd))
 		return DDERR_INVALIDPARAMS;
 
     /* Tests suggest that we need one of them: */
