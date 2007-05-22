@@ -14,8 +14,7 @@
 
 #include <advapi32.h>
 
-//#define NDEBUG
-#undef NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
