@@ -16,38 +16,48 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
                                   LPDDSURFACEDESC2 pDDSD, LPVOID pContext, LPDDENUMMODESCALLBACK2 pCallback)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    INT iMode = 0;
+    DEVMODE DevMode;
+
     DX_WINDBG_trace();
 
     if(!pCallback)
         return DDERR_INVALIDPARAMS;
 
-    // FIXME: Process DDEDM_STANDARDVGAMODES flag
+    DevMode.dmSize = sizeof(DEVMODE);
+    DevMode.dmDriverExtra = 0;
 
-    int i;
-    for (i=0; i<This->lpLcl->lpGbl->dwNumModes; i++)
+    while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
     {
         DDSURFACEDESC2 SurfaceDesc; 
 
-        // FIXME: do we need to set/test more sturcture members ?
+        iMode++;
+
         SurfaceDesc.dwSize = sizeof (DDSURFACEDESC2);
         SurfaceDesc.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_REFRESHRATE | DDSD_WIDTH | DDSD_PIXELFORMAT;
-        SurfaceDesc.dwHeight = This->lpLcl->lpGbl->lpModeInfo[i].dwWidth;
-        SurfaceDesc.dwWidth = This->lpLcl->lpGbl->lpModeInfo[i].dwHeight;
-        SurfaceDesc.lPitch = This->lpLcl->lpGbl->lpModeInfo[i].lPitch;
-        SurfaceDesc.dwRefreshRate = This->lpLcl->lpGbl->lpModeInfo[i].wRefreshRate;
+        SurfaceDesc.dwHeight = DevMode.dmPelsHeight;
+        SurfaceDesc.dwWidth = DevMode.dmPelsWidth;
+        SurfaceDesc.lPitch = DevMode.dmPelsWidth * DevMode.dmBitsPerPel / 8;
+        SurfaceDesc.dwRefreshRate = DevMode.dmDisplayFrequency;
 
         SurfaceDesc.ddpfPixelFormat.dwSize = sizeof (DDPIXELFORMAT);
         SurfaceDesc.ddpfPixelFormat.dwFlags = DDPF_RGB;
-        SurfaceDesc.ddpfPixelFormat.dwRBitMask = This->lpLcl->lpGbl->lpModeInfo[i].dwRBitMask;
-        SurfaceDesc.ddpfPixelFormat.dwGBitMask = This->lpLcl->lpGbl->lpModeInfo[i].dwGBitMask;
-        SurfaceDesc.ddpfPixelFormat.dwBBitMask = This->lpLcl->lpGbl->lpModeInfo[i].dwBBitMask;
-        SurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask = This->lpLcl->lpGbl->lpModeInfo[i].dwAlphaBitMask;
-        SurfaceDesc.ddpfPixelFormat.dwRGBBitCount = This->lpLcl->lpGbl->lpModeInfo[i].dwBPP;
+        // FIXME: get these
+/*      
+        SurfaceDesc.ddpfPixelFormat.dwRBitMask = 
+        SurfaceDesc.ddpfPixelFormat.dwGBitMask = 
+        SurfaceDesc.ddpfPixelFormat.dwBBitMask = 
+        SurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask = 
+*/
+        SurfaceDesc.ddpfPixelFormat.dwRGBBitCount = DevMode.dmBitsPerPel;
 
+        // FIXME1: This->lpLcl->lpGbl->dwMonitorFrequency is not set !
         if(dwFlags & DDEDM_REFRESHRATES && SurfaceDesc.dwRefreshRate != This->lpLcl->lpGbl->dwMonitorFrequency)
         {
-            continue;
+            //continue;  // FIXME2: what is SurfaceDesc.dwRefreshRate supposed to be set to ?
         }
+
+        // FIXME: Take case when DDEDM_STANDARDVGAMODES flag is not set in account
 
         if(pDDSD)
         {
@@ -67,7 +77,8 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
                 continue;  // FIXME: test for the other members of ddpfPixelFormat as well
         }
 
-        (*pCallback)(&SurfaceDesc, pContext);
+        if((*pCallback)(&SurfaceDesc, pContext) == DDENUMRET_CANCEL)
+            return DD_OK;
     }
 
     return DD_OK;
