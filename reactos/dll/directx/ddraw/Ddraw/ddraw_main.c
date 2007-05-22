@@ -11,6 +11,9 @@
 
 #include "rosdraw.h"
 
+/* PSEH for SEH Support */
+#include <pseh/pseh.h>
+
 HRESULT WINAPI
 Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                                 REFIID id,
@@ -150,26 +153,33 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
 
     DX_WINDBG_trace();
 
-    /* FIXME protect with SEH or something else if lpCodes or lpNumCodes for bad user pointers */
-    EnterCriticalSection(&ddcs);
+    
+     // EnterCriticalSection(&ddcs);
 
-    if(!lpNumCodes)
+    _SEH_TRY
     {
-       retVal = DDERR_INVALIDPARAMS;
+        if(IsBadWritePtr(lpNumCodes,sizeof(LPDWORD)))
+        {
+            retVal = DDERR_INVALIDPARAMS;
+        }
+        else
+        {
+            if(!IsBadWritePtr(lpCodes,sizeof(LPDWORD)))
+            {
+                memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* min(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
+            }
+            else
+            {
+                *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+            }
+        }
     }
-    else
+    _SEH_HANDLE
     {
-       if ((lpCodes) && (*lpCodes))
-       {
-            memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* min(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
-       }
-       else
-       {
-            *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
-       }
     }
+    _SEH_END;
 
-    LeaveCriticalSection(&ddcs);
+    //LeaveCriticalSection(&ddcs);
     return retVal;
 }
 
