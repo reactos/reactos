@@ -42,6 +42,7 @@ BOOL StartVMwConfigWizard, DriverFilesFound, ActivateVBE = FALSE, UninstallDrive
 
 static WCHAR DestinationDriversPath[MAX_PATH+1];
 static WCHAR CDDrive = L'\0';
+static WCHAR PathToVideoDrivers60[MAX_PATH+1] = L"X:\\program files\\VMWare\\VMWare Tools\\Drivers\\video\\2k\\32bit\\";
 static WCHAR PathToVideoDrivers55[MAX_PATH+1] = L"X:\\program files\\VMware\\VMware Tools\\Drivers\\video\\winnt2k\\32Bit\\";
 static WCHAR PathToVideoDrivers45[MAX_PATH+1] = L"X:\\program files\\VMware\\VMware Tools\\Drivers\\video\\winnt2k\\";
 static WCHAR PathToVideoDrivers40[MAX_PATH+1] = L"X:\\video\\winnt2k\\";
@@ -164,9 +165,12 @@ IsVMwareCDInDrive(WCHAR *Drv)
     if(GetDriveType(Drive) == DRIVE_CDROM)
     {
 #endif
+      PathToVideoDrivers60[0] = Current;
       PathToVideoDrivers55[0] = Current;
       PathToVideoDrivers40[0] = Current;
       PathToVideoDrivers45[0] = Current;
+      if(SetCurrentDirectory(PathToVideoDrivers60))
+        SrcPath = PathToVideoDrivers60;
       if(SetCurrentDirectory(PathToVideoDrivers55))
         SrcPath = PathToVideoDrivers55;
       else if(SetCurrentDirectory(PathToVideoDrivers45))
