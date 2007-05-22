@@ -182,14 +182,14 @@ Main_DirectDraw_GetDisplayMode (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD)
     if (pDDSD == NULL)
         return DDERR_INVALIDPARAMS;
 
-    if (pDDSD->dwSize != sizeof(LPDDSURFACEDESC2))
+    if (pDDSD->dwSize != sizeof(DDSURFACEDESC2))
         return DDERR_INVALIDPARAMS;
 
     // FIXME: More stucture members might need to be filled
 
     pDDSD->dwFlags |= DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH | DDSD_REFRESHRATE;
-    pDDSD->dwHeight = This->lpLcl->lpGbl->vmiData.dwDisplayWidth;
-    pDDSD->dwWidth = This->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+    pDDSD->dwHeight = This->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+    pDDSD->dwWidth = This->lpLcl->lpGbl->vmiData.dwDisplayWidth;
     pDDSD->ddpfPixelFormat = This->lpLcl->lpGbl->vmiData.ddpfDisplay;
     pDDSD->dwRefreshRate = This->lpLcl->lpGbl->dwMonitorFrequency;
     pDDSD->lPitch = This->lpLcl->lpGbl->vmiData.lDisplayPitch;
