@@ -22,7 +22,7 @@ BOOL Test_CreateSurface (INT* passed, INT* failed)
  
 	if (DirectDraw->SetCooperativeLevel (hwnd, DDSCL_NORMAL) != DD_OK)
 	{
-		printf("ERROR: you not set cooperative level\n");
+		printf("ERROR: Could not set cooperative level\n");
 		DirectDraw->Release();
 		return 0;
 	}

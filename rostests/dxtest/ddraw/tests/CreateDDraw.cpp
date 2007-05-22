@@ -119,12 +119,12 @@ BOOL Test_GetFourCCCodes (INT* passed, INT* failed)
 
 	/* Here we go */
 	DWORD dwNumCodes, *lpCodes;
-	TEST (DirectDraw->GetFourCCCodes(NULL, NULL) == DDERR_INVALIDPARAMS);
-	TEST ( DirectDraw->GetFourCCCodes(NULL, lpCodes) == DDERR_INVALIDPARAMS );
+	TEST (DirectDraw->GetFourCCCodes(NULL, (PDWORD)0xdeadbeef) == DDERR_INVALIDPARAMS);
 
 	TEST (DirectDraw->GetFourCCCodes(&dwNumCodes, NULL) == DD_OK && dwNumCodes);
 	lpCodes = (PDWORD)HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD)*dwNumCodes);
 	*lpCodes = 0;
+	TEST ( DirectDraw->GetFourCCCodes(NULL, lpCodes) == DDERR_INVALIDPARAMS );
 	TEST (DirectDraw->GetFourCCCodes(&dwNumCodes, lpCodes) == DD_OK && *lpCodes );
 
 	DirectDraw->Release();
