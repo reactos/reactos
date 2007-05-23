@@ -472,7 +472,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     }
     
     DX_STUB_str("Here\n");
-
+#if 0
     /* Alloc mpFourCC */
     mpFourCC = NULL;
     if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
@@ -486,7 +486,9 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         }
     }
       DX_STUB_str("Here\n");
-
+#else
+    mpFourCC = NULL;
+#endif
     /* Alloc mpTextures */
 #if 0
     mpTextures = NULL;
