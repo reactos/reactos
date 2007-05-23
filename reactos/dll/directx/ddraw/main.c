@@ -33,23 +33,14 @@ WINAPI
 DirectDrawCreate (LPGUID lpGUID, 
                   LPDIRECTDRAW* lplpDD, 
                   LPUNKNOWN pUnkOuter) 
-{
+{    
     /* 
        remove this when UML digram are in place 
        this api is finish and is working as it should
     */
+
     DX_WINDBG_trace();
-
-
-    /* check see if pUnkOuter is null or not */
-    if (pUnkOuter)
-    {
-        /* we are using same error code as MS*/
-        return  CLASS_E_NOAGGREGATION; 
-    }
-
-    /* Create our DirectDraw interface */
-    return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw7, FALSE);
+    return DirectDrawCreateEx(lpGUID, (LPVOID*)lplpDD, &IID_IDirectDraw2, pUnkOuter);
 }
 
 /*
