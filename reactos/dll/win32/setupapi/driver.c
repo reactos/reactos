@@ -138,15 +138,15 @@ AddKnownDriverToList(
     driverInfo->Params.cbSize = sizeof(SP_DRVINSTALL_PARAMS);
     driverInfo->Params.Reserved = (ULONG_PTR)driverInfo;
 
-    driverInfo->Details.cbSize = sizeof(SP_DRVINFO_DETAIL_DATA);
+    driverInfo->Details.cbSize = sizeof(SP_DRVINFO_DETAIL_DATA_W);
     driverInfo->Details.Reserved = (ULONG_PTR)driverInfo;
 
     /* Copy InfFileName field */
-    strncpyW(driverInfo->Details.InfFileName, InfFile, MAX_PATH - 1);
+    lstrcpynW(driverInfo->Details.InfFileName, InfFile, MAX_PATH - 1);
     driverInfo->Details.InfFileName[MAX_PATH - 1] = '\0';
 
     /* Fill InfDate field */
-    hFile = CreateFile(
+    hFile = CreateFileW(
         InfFile,
         GENERIC_READ, FILE_SHARE_READ,
         NULL, OPEN_EXISTING, 0, NULL);
@@ -157,13 +157,13 @@ AddKnownDriverToList(
         goto cleanup;
 
     /* Fill SectionName field */
-    strncpyW(driverInfo->Details.SectionName, SectionName, LINE_LEN);
+    lstrcpynW(driverInfo->Details.SectionName, SectionName, LINE_LEN);
     pDot = strchrW(driverInfo->Details.SectionName, '.');
     if (pDot)
         *pDot = UNICODE_NULL;
 
     /* Fill DrvDescription field */
-    strncpyW(driverInfo->Details.DrvDescription, DriverDescription, LINE_LEN);
+    lstrcpynW(driverInfo->Details.DrvDescription, DriverDescription, LINE_LEN);
 
     /* Copy MatchingId information */
     if (MatchingId)
@@ -188,13 +188,13 @@ AddKnownDriverToList(
     memcpy(&driverInfo->ClassGuid, ClassGuid, sizeof(GUID));
     driverInfo->Info.DriverType = DriverType;
     driverInfo->Info.Reserved = (ULONG_PTR)driverInfo;
-    strncpyW(driverInfo->Info.Description, driverInfo->Details.DrvDescription, LINE_LEN - 1);
+    lstrcpynW(driverInfo->Info.Description, driverInfo->Details.DrvDescription, LINE_LEN - 1);
     driverInfo->Info.Description[LINE_LEN - 1] = '\0';
-    strncpyW(driverInfo->Info.MfgName, ManufacturerName, LINE_LEN - 1);
+    lstrcpynW(driverInfo->Info.MfgName, ManufacturerName, LINE_LEN - 1);
     driverInfo->Info.MfgName[LINE_LEN - 1] = '\0';
     if (ProviderName)
     {
-        strncpyW(driverInfo->Info.ProviderName, ProviderName, LINE_LEN - 1);
+        lstrcpynW(driverInfo->Info.ProviderName, ProviderName, LINE_LEN - 1);
         driverInfo->Info.ProviderName[LINE_LEN - 1] = '\0';
     }
     else
@@ -2152,7 +2152,7 @@ SetupDiInstallDriverFiles(
             Context = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
             if (!Context)
                 goto cleanup;
-            InstallMsgHandler = SetupDefaultQueueCallback;
+            InstallMsgHandler = SetupDefaultQueueCallbackW;
             InstallMsgHandlerContext = Context;
         }
         ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,

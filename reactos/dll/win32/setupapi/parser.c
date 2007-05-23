@@ -25,6 +25,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
+static const WCHAR Class[]  = {'C','l','a','s','s',0};
+static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
 static const WCHAR InfFileSpecification[] = {'*','.','i','n','f',0};
 
@@ -1073,7 +1075,7 @@ HINF WINAPI SetupOpenInfFileA( PCSTR name, PCSTR class, DWORD style, UINT *error
 
 
 static BOOL
-GetInfClassW(
+PARSER_GetInfClassW(
     IN HINF hInf,
     OUT LPGUID ClassGuid,
     OUT PWSTR ClassName,
@@ -1085,14 +1087,14 @@ GetInfClassW(
     BOOL ret = FALSE;
 
     /* Read class Guid */
-    if (!SetupGetLineTextW(NULL, hInf, L"Version", L"ClassGUID", guidW, sizeof(guidW), NULL))
+    if (!SetupGetLineTextW(NULL, hInf, Version, ClassGUID, guidW, sizeof(guidW), NULL))
         goto cleanup;
     guidW[37] = '\0'; /* Replace the } by a NULL character */
     if (UuidFromStringW(&guidW[1], ClassGuid) != RPC_S_OK)
         goto cleanup;
 
     /* Read class name */
-    ret = SetupGetLineTextW(NULL, hInf, L"Version", L"Class", ClassName, ClassNameSize, &requiredSize);
+    ret = SetupGetLineTextW(NULL, hInf, Version, Class, ClassName, ClassNameSize, &requiredSize);
     if (ret && ClassName == NULL && ClassNameSize == 0)
     {
         if (RequiredSize)
@@ -1215,7 +1217,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
             SetupCloseInfFile((HINF)file);
             return NULL;
         }
-        else if (!GetInfClassW((HINF)file, &ClassGuid, ClassName, strlenW(class) + 1, NULL))
+        else if (!PARSER_GetInfClassW((HINF)file, &ClassGuid, ClassName, strlenW(class) + 1, NULL))
         {
             /* Unable to get class name in .inf file */
             HeapFree(GetProcessHeap(), 0, ClassName);
@@ -2197,7 +2199,7 @@ SetupDiGetINFClassW(
     if (hInf == INVALID_HANDLE_VALUE)
         goto cleanup;
 
-    ret = GetInfClassW(hInf, ClassGuid, ClassName, ClassNameSize, RequiredSize);
+    ret = PARSER_GetInfClassW(hInf, ClassGuid, ClassName, ClassNameSize, RequiredSize);
 
 cleanup:
     if (hInf != INVALID_HANDLE_VALUE)

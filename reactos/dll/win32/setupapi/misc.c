@@ -22,6 +22,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
+/* Unicode constants */
+static const WCHAR BackSlash[] = {'\\',0};
+static const WCHAR TranslationRegKey[] = {'\\','V','e','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n',0};
+
 DWORD
 GetFunctionPointer(
     IN PWSTR InstallerName,
@@ -1190,7 +1194,7 @@ GetVersionInfoFromImage(LPWSTR lpFileName,
         return FALSE;
     }
 
-    if (!VerQueryValueW(lpInfo, L"\\",
+    if (!VerQueryValueW(lpInfo, BackSlash,
                         (LPVOID*)&lpFixedInfo, &uSize))
     {
         MyFree(lpInfo);
@@ -1201,7 +1205,7 @@ GetVersionInfoFromImage(LPWSTR lpFileName,
     lpFileVersion->HighPart = lpFixedInfo->dwFileVersionMS;
 
     *lpVersionVarSize = 0;
-    if (!VerQueryValueW(lpInfo, L"\\VerFileInfo\\Translation",
+    if (!VerQueryValueW(lpInfo, TranslationRegKey,
                         (LPVOID*)&lpVarSize, &uSize))
     {
         MyFree(lpInfo);

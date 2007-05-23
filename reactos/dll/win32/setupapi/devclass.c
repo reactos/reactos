@@ -30,6 +30,7 @@ static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
+static const WCHAR SetupapiDll[]  = {'s','e','t','u','p','a','p','i','.','d','l','l',0};
 static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
 
 typedef BOOL
@@ -633,7 +634,7 @@ SetupDiClassNameFromGuidExW(
     if (RequiredSize)
         *RequiredSize = dwLength / sizeof(WCHAR) + 1;
 
-    if (ClassNameSize * sizeof(WCHAR) >= dwLength + sizeof(UNICODE_STRING))
+    if (ClassNameSize * sizeof(WCHAR) >= dwLength + sizeof(UNICODE_NULL))
     {
         if (ClassNameSize > sizeof(UNICODE_NULL))
             ClassName[ClassNameSize / sizeof(WCHAR)] = UNICODE_NULL;
@@ -835,7 +836,7 @@ SetupDiGetClassDescriptionExW(
     if (RequiredSize)
         *RequiredSize = dwLength / sizeof(WCHAR) + 1;
 
-    if (ClassDescriptionSize * sizeof(WCHAR) >= dwLength + sizeof(UNICODE_STRING))
+    if (ClassDescriptionSize * sizeof(WCHAR) >= dwLength + sizeof(UNICODE_NULL))
     {
         if (ClassDescriptionSize > sizeof(UNICODE_NULL))
             ClassDescription[ClassDescriptionSize / sizeof(WCHAR)] = UNICODE_NULL;
@@ -1597,7 +1598,7 @@ SetupDiLoadClassIcon(
         else
         {
             /* Look up icon in setupapi.dll */
-            DllName = L"setupapi.dll";
+            DllName = SetupapiDll;
             iconIndex = -iconIndex;
         }
 

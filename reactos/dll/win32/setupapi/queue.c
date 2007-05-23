@@ -763,7 +763,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
     MyFree(security_key);
     if (ret)
     {
-        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
+        if (!SetupGetLineTextW( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
             return FALSE;
         security_descriptor = MyMalloc( required * sizeof(WCHAR) );
         if (!security_descriptor)
@@ -771,7 +771,7 @@ BOOL WINAPI SetupQueueCopySectionW( HSPFILEQ queue, PCWSTR src_root, HINF hinf, 
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
-        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, security_descriptor, required, NULL ))
+        if (!SetupGetLineTextW( &security_context, NULL, NULL, NULL, security_descriptor, required, NULL ))
         {
             MyFree( security_descriptor );
             return FALSE;

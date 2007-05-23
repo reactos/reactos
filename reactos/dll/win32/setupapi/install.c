@@ -25,7 +25,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
+static const WCHAR GroupOrderListKey[] = {'S','Y','S','T','E','M','\\','C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\','C','o','n','t','r','o','l','\\','G','r','o','u','p','O','r','d','e','r','L','i','s','t',0};
 static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
+static const WCHAR OemFileMask[] = {'o','e','m','*','.','i','n','f',0};
+static const WCHAR OemFileSpecification[] = {'o','e','m','%','l','u','.','i','n','f',0};
+
+static const WCHAR DependenciesKey[] = {'D','e','p','e','n','d','e','n','c','i','e','s',0};
+static const WCHAR DescriptionKey[] = {'D','e','s','c','r','i','p','t','i','o','n',0};
+static const WCHAR DisplayNameKey[] = {'D','i','s','p','l','a','y','N','a','m','e',0};
+static const WCHAR ErrorControlKey[] = {'E','r','r','o','r','C','o','n','t','r','o','l',0};
+static const WCHAR LoadOrderGroupKey[] = {'L','o','a','d','O','r','d','e','r','G','r','o','u','p',0};
+static const WCHAR SecurityKey[] = {'S','e','c','u','r','i','t','y',0};
+static const WCHAR ServiceBinaryKey[] = {'S','e','r','v','i','c','e','B','i','n','a','r','y',0};
+static const WCHAR ServiceTypeKey[] = {'S','e','r','v','i','c','e','T','y','p','e',0};
+static const WCHAR StartTypeKey[] = {'S','t','a','r','t','T','y','p','e',0};
 
 /* info passed to callback functions dealing with files */
 struct files_callback_info
@@ -90,6 +103,9 @@ static const WCHAR ProfileItems[]    = {'P','r','o','f','i','l','e','I','t','e',
 static const WCHAR Include[]         = {'I','n','c','l','u','d','e',0};
 static const WCHAR Needs[]           = {'N','e','e','d','s',0};
 static const WCHAR DotSecurity[]     = {'.','S','e','c','u','r','i','t','y',0};
+#ifdef __WINESRC__
+static const WCHAR WineFakeDlls[]    = {'W','i','n','e','F','a','k','e','D','l','l','s',0};
+#endif
 
 
 /***********************************************************************
@@ -411,7 +427,7 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
     MyFree(security_key);
     if (ok)
     {
-        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
+        if (!SetupGetLineTextW( &security_context, NULL, NULL, NULL, NULL, 0, &required ))
             return FALSE;
         security_descriptor = MyMalloc( required * sizeof(WCHAR) );
         if (!security_descriptor)
@@ -419,7 +435,7 @@ static BOOL registry_callback( HINF hinf, PCWSTR field, void *arg )
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
-        if (!SetupGetLineText( &security_context, NULL, NULL, NULL, security_descriptor, required, NULL ))
+        if (!SetupGetLineTextW( &security_context, NULL, NULL, NULL, security_descriptor, required, NULL ))
             return FALSE;
         ok = ConvertStringSecurityDescriptorToSecurityDescriptorW( security_descriptor, SDDL_REVISION_1, &sd, NULL );
         MyFree( security_descriptor );
@@ -1306,7 +1322,7 @@ static BOOL InstallOneService(
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hService = NULL;
     LPDWORD GroupOrder = NULL;
-    LPQUERY_SERVICE_CONFIG ServiceConfig = NULL;
+    LPQUERY_SERVICE_CONFIGW ServiceConfig = NULL;
     BOOL ret = FALSE;
 
     HKEY hGroupOrderListKey = NULL;
@@ -1322,11 +1338,11 @@ static BOOL InstallOneService(
     DWORD tagId = (DWORD)-1;
     BOOL useTag;
 
-    if (!GetIntField(hInf, ServiceSection, L"ServiceType", &ServiceType))
+    if (!GetIntField(hInf, ServiceSection, ServiceTypeKey, &ServiceType))
         goto cleanup;
-    if (!GetIntField(hInf, ServiceSection, L"StartType", &StartType))
+    if (!GetIntField(hInf, ServiceSection, StartTypeKey, &StartType))
         goto cleanup;
-    if (!GetIntField(hInf, ServiceSection, L"ErrorControl", &ErrorControl))
+    if (!GetIntField(hInf, ServiceSection, ErrorControlKey, &ErrorControl))
         goto cleanup;
     useTag = (ServiceType == SERVICE_BOOT_START || ServiceType == SERVICE_SYSTEM_START);
 
@@ -1334,15 +1350,15 @@ static BOOL InstallOneService(
     if (hSCManager == NULL)
         goto cleanup;
 
-    if (!GetLineText(hInf, ServiceSection, L"ServiceBinary", &ServiceBinary))
+    if (!GetLineText(hInf, ServiceSection, ServiceBinaryKey, &ServiceBinary))
         goto cleanup;
 
     /* Don't check return value, as these fields are optional and
      * GetLineText initialize output parameter even on failure */
-    GetLineText(hInf, ServiceSection, L"LoadOrderGroup", &LoadOrderGroup);
-    GetLineText(hInf, ServiceSection, L"DisplayName", &DisplayName);
-    GetLineText(hInf, ServiceSection, L"Description", &Description);
-    GetLineText(hInf, ServiceSection, L"Dependencies", &Dependencies);
+    GetLineText(hInf, ServiceSection, LoadOrderGroupKey, &LoadOrderGroup);
+    GetLineText(hInf, ServiceSection, DisplayNameKey, &DisplayName);
+    GetLineText(hInf, ServiceSection, DescriptionKey, &Description);
+    GetLineText(hInf, ServiceSection, DependenciesKey, &Dependencies);
 
     hService = OpenServiceW(
         hSCManager,
@@ -1413,7 +1429,7 @@ static BOOL InstallOneService(
     }
 
     /* Set security */
-    if (GetLineText(hInf, ServiceSection, L"Security", &SecurityDescriptor))
+    if (GetLineText(hInf, ServiceSection, SecurityKey, &SecurityDescriptor))
     {
         ret = ConvertStringSecurityDescriptorToSecurityDescriptorW(SecurityDescriptor, SDDL_REVISION_1, &sd, NULL);
         if (!ret)
@@ -1436,9 +1452,9 @@ static BOOL InstallOneService(
         if ((ServiceFlags & SPSVCINST_NOCLOBBER_LOADORDERGROUP) && ServiceConfig && ServiceConfig->lpLoadOrderGroup)
             lpLoadOrderGroup = ServiceConfig->lpLoadOrderGroup;
 
-        rc = RegOpenKey(
+        rc = RegOpenKeyW(
             list ? list->HKLM : HKEY_LOCAL_MACHINE,
-            L"SYSTEM\\CurrentControlSet\\Control\\GroupOrderList",
+            GroupOrderListKey,
             &hGroupOrderListKey);
         if (rc != ERROR_SUCCESS)
         {
@@ -1809,7 +1825,7 @@ BOOL WINAPI SetupCopyOEMInfW(
             strcatW(pFullFileName, BackSlash);
         strcatW(pFullFileName, InfDirectory);
         pFileName = &pFullFileName[strlenW(pFullFileName)];
-        sprintfW(pFileName, L"oem*.inf", NextFreeNumber);
+        sprintfW(pFileName, OemFileMask, NextFreeNumber);
         hSearch = FindFirstFileW(pFullFileName, &FindFileData);
         if (hSearch == INVALID_HANDLE_VALUE)
         {
@@ -1821,12 +1837,12 @@ BOOL WINAPI SetupCopyOEMInfW(
             do
             {
                 DWORD CurrentNumber;
-                if (swscanf(FindFileData.cFileName, L"oem%lu.inf", &CurrentNumber) == 1
+                if (swscanf(FindFileData.cFileName, OemFileSpecification, &CurrentNumber) == 1
                     && CurrentNumber <= 99999)
                 {
                     NextFreeNumber = CurrentNumber + 1;
                 }
-            } while (FindNextFile(hSearch, &FindFileData));
+            } while (FindNextFileW(hSearch, &FindFileData));
         }
 
         if (NextFreeNumber > 99999)
@@ -1837,7 +1853,7 @@ BOOL WINAPI SetupCopyOEMInfW(
         }
 
         /* Create the full path: %WINDIR%\Inf\OEM{XXXXX}.inf */
-        sprintfW(pFileName, L"oem%lu.inf", NextFreeNumber);
+        sprintfW(pFileName, OemFileSpecification, NextFreeNumber);
         TRACE("Next available file is %s\n", debugstr_w(pFileName));
 
         if (RequiredSize)
