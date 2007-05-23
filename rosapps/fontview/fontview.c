@@ -23,7 +23,6 @@
 #include "fontview.h"
 
 HINSTANCE g_hInstance;
-WCHAR g_szTitle[MAX_LOADSTRING];
 WCHAR g_szTypeFaceName[MAX_TYPEFACENAME];
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
@@ -130,7 +129,7 @@ WinMain (HINSTANCE hThisInstance,
 	}
 
 	/* The main window class */
-	wincl.cbSize = sizeof (WNDCLASSEX);
+	wincl.cbSize = sizeof (WNDCLASSEXW);
 	wincl.style = CS_DBLCLKS;
 	wincl.lpfnWndProc = MainWndProc;
 	wincl.cbClsExtra = 0;
@@ -154,7 +153,7 @@ WinMain (HINSTANCE hThisInstance,
 	hMainWnd = CreateWindowExW(
 				0,						/* Extended possibilites for variation */
 				g_szFontViewClassName,	/* Classname */
-				g_szTitle,				/* Title Text */
+				g_szTypeFaceName,		/* Title Text */
 				WS_OVERLAPPEDWINDOW,	/* default window */
 				CW_USEDEFAULT,			/* Windows decides the position */
 				CW_USEDEFAULT,			/* where the window ends up on the screen */
@@ -165,7 +164,7 @@ WinMain (HINSTANCE hThisInstance,
 				hThisInstance,			/* Program Instance handler */
 				NULL					/* No Window Creation data */
 			);
-	ShowWindow (hMainWnd, nCmdShow);
+	ShowWindow(hMainWnd, nCmdShow);
 
 	/* Main message loop */
 	while (GetMessage (&msg, NULL, 0, 0))
@@ -203,11 +202,11 @@ MainWnd_OnCreate(HWND hwnd)
 				NULL					/* Window Creation data */
 			);
 
-	/* Init the display window wit the font name */
+	/* Init the display window with the font name */
 	LoadStringW(g_hInstance, IDS_STRING, szString, MAX_STRING);
-
 	SendMessage(hDisplay, FVM_SETSTRING, 0, (LPARAM)szString);
 	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)g_szTypeFaceName);
+
 	/* Create the quit button */
 	LoadStringW(g_hInstance, IDS_QUIT, szQuit, MAX_BUTTONNAME);
 	hButtonQuit = CreateWindowExW(
@@ -307,7 +306,7 @@ MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         default:					/* for messages that we don't deal with */
-            return DefWindowProc (hwnd, message, wParam, lParam);
+            return DefWindowProcW(hwnd, message, wParam, lParam);
     }
 
     return 0;

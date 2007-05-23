@@ -34,10 +34,17 @@ LRESULT CALLBACK DisplayProc(HWND, UINT, WPARAM, LPARAM);
 /* Internal data storage type */
 typedef struct
 {
-	int nHeight;
+	int nPageHeight;
 	WCHAR szTypeFaceName[MAX_TYPEFACENAME];
 	WCHAR szFormat[MAX_FORMAT];
 	WCHAR szString[MAX_STRING];
+
+	HFONT hCaptionFont;
+	HFONT hCharSetFont;
+	HFONT hSizeFont;
+	HFONT hFonts[MAX_SIZES];
+	int nSizes[MAX_SIZES];
+	int nHeights[MAX_SIZES];
 } DISPLAYDATA;
 
 /* This is the only public function, it registers the class */
@@ -69,9 +76,9 @@ Display_InitClass(HINSTANCE hInstance)
 }
 
 static int
-Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos, BOOL bDraw)
+Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 {
-	HFONT hOldFont, hFont, hFontNums;
+	HFONT hOldFont;
 	TEXTMETRIC tm;
 	int i, y;
 	const int nSizes[7] = {12, 18, 24, 36, 48, 60, 72};
@@ -81,65 +88,61 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos, BOOL bDraw)
 	/* This is the location on the DC where we draw */
 	y = -nYPos;
 
-	/* Draw font name */
-	hFont = CreateFontW(50, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-	                   ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-	                   DEFAULT_PITCH , L"Ms Shell Dlg");
-	hOldFont = SelectObject(hDC, hFont);
-	if (bDraw)
+	hOldFont = SelectObject(hDC, pData->hCaptionFont);
+	GetTextMetrics(hDC, &tm);
+
+	if (*pData->szFormat == 0)
+	{
+		swprintf(szCaption, pData->szTypeFaceName);
+	}
+	else
 	{
 		swprintf(szCaption, L"%s (%s)", pData->szTypeFaceName, pData->szFormat);
-		TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
 	}
-	GetTextMetrics(hDC, &tm);
+	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
 	y += tm.tmHeight + SPACING1;
-	SelectObject(hDC, hOldFont);
-	DeleteObject(hFont);
 
 	/* Draw a seperation Line */
-	if (bDraw)
-	{
-		SelectObject(hDC, GetStockObject(BLACK_PEN));
-		MoveToEx(hDC, 0, y, NULL);
-		LineTo(hDC, 10000, y);
-	}
+	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	MoveToEx(hDC, 0, y, NULL);
+	LineTo(hDC, 10000, y);
 	y += SPACING2;
 
-	/* Output font info */
-	hFont = CreateFontW(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-						ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-						DEFAULT_PITCH , pData->szTypeFaceName);
-	hOldFont = SelectObject(hDC, hFont);
-	SelectObject(hDC, hOldFont);
-	DeleteObject(hFont);
+	/* TODO: Output font info */
 
-	/* Outout the lines for different sizes */
-	hFontNums = CreateFontW(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-						ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-						DEFAULT_PITCH , L"Ms Shell Dlg");
+	/* Output Character set */
+	hOldFont = SelectObject(hDC, pData->hCharSetFont);
+	GetTextMetrics(hDC, &tm);
+	swprintf(szCaption, L"abcdefghijklmnopqrstuvwxyz");
+	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	y += tm.tmHeight + 1;
 
-	for (i = 0; i < 7; i++)
+	swprintf(szCaption, L"ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	y += tm.tmHeight + 1;
+
+	swprintf(szCaption, L"0123456789.:,;(\"~!@#$%^&*')");
+	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	y += tm.tmHeight + 1;
+
+	/* Draw a seperation Line */
+	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	MoveToEx(hDC, 0, y, NULL);
+	LineTo(hDC, 10000, y);
+	y += SPACING2;
+
+	/* Output the strings for different sizes */
+	for (i = 0; i < MAX_SIZES; i++)
 	{
-		hOldFont = SelectObject(hDC, hFontNums);
-		if (bDraw)
-		{
-			swprintf(szSize, L"%d", nSizes[i]);
-			TextOutW(hDC, 0, y, szSize, wcslen(szSize));
-		}
-		hFont = CreateFontW(nSizes[i], 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-						ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-						DEFAULT_PITCH , pData->szTypeFaceName);
-		SelectObject(hDC, hFont);
-		if (bDraw)
-		{
-			TextOutW(hDC, 20, y, pData->szString, wcslen(pData->szString));
-		}
+		SelectObject(hDC, pData->hFonts[i]);
+		TextOutW(hDC, 20, y, pData->szString, wcslen(pData->szString));
 		GetTextMetrics(hDC, &tm);
-		y += tm.tmHeight + 2;
-		SelectObject(hDC, hOldFont);
-		DeleteObject(hFont);
+		y += tm.tmHeight + 1;
+		SelectObject(hDC, pData->hSizeFont);
+		swprintf(szSize, L"%d", nSizes[i]);
+		TextOutW(hDC, 0, y - 13 - tm.tmDescent, szSize, wcslen(szSize));
 	}
-	DeleteObject(hFontNums);
+	SelectObject(hDC, hOldFont);
 
 	return y;
 }
@@ -148,13 +151,28 @@ static LRESULT
 Display_OnCreate(HWND hwnd)
 {
 	DISPLAYDATA* pData;
+	const int nSizes[7] = {12, 18, 24, 36, 48, 60, 72};
+	int i;
 
 	/* Initialize data structure */
 	pData = malloc(sizeof(DISPLAYDATA));
-	pData->nHeight = 0;
+	pData->nPageHeight = 0;
 	swprintf(pData->szTypeFaceName, L"");
 	swprintf(pData->szFormat, L"");
 	swprintf(pData->szString, L"");
+
+	for (i = 0; i < MAX_SIZES; i++)
+	{
+		pData->nSizes[i] = nSizes[i];
+	}
+
+	pData->hCaptionFont = CreateFontW(50, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+	                   ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+	                   DEFAULT_PITCH , L"Ms Shell Dlg");
+
+	pData->hSizeFont = CreateFontW(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+						ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+						DEFAULT_PITCH , L"Ms Shell Dlg");
 
 	/* Set the window's GWLP_USERDATA to our data structure */
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
@@ -182,7 +200,7 @@ Display_OnPaint(HWND hwnd)
 	FillRect(ps.hdc, &ps.rcPaint, GetStockObject(WHITE_BRUSH));
 
 	/* Draw the text */
-	Display_DrawText(ps.hdc, pData, si.nPos, TRUE);
+	Display_DrawText(ps.hdc, pData, si.nPos);
 
 	EndPaint(hwnd, &ps);
 
@@ -267,6 +285,7 @@ Display_OnVScroll(HWND hwnd, WPARAM wParam)
 		SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 		UpdateWindow(hwnd);
 	}
+
 	return 0;
 }
 
@@ -274,17 +293,42 @@ static LRESULT
 Display_SetTypeFace(HWND hwnd, LPARAM lParam)
 {
 	DISPLAYDATA* pData;
+	TEXTMETRIC tm;
 	HDC hDC;
 	RECT rect;
 	SCROLLINFO si;
+	int i;
 
 	/* Set the new type face name */
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	snwprintf(pData->szTypeFaceName, MAX_TYPEFACENAME, (WCHAR*)lParam);
 
-	/* Calculate new page dimensions */
+	/* Create the new fonts */
 	hDC = GetDC(hwnd);
-	pData->nHeight = Display_DrawText(hDC, pData, 0, FALSE);
+	pData->hCharSetFont = CreateFontW(-MulDiv(16, GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+						ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+						DEFAULT_PITCH , pData->szTypeFaceName);
+
+	/* Get font format */
+	SelectObject(hDC, pData->hCharSetFont);
+	GetTextMetrics(hDC, &tm);
+	if ((tm.tmPitchAndFamily & TMPF_TRUETYPE) == TMPF_TRUETYPE)
+	{
+		swprintf(pData->szFormat, L"TrueType");
+	}
+
+	for (i = 0; i < MAX_SIZES; i++)
+	{
+		pData->hFonts[i] = CreateFontW(MulDiv(pData->nSizes[i], GetDeviceCaps(hDC, LOGPIXELSY), 72),
+		                              0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+		                              ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+		                              CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+		                              DEFAULT_PITCH , pData->szTypeFaceName);
+		SelectObject(hDC, pData->hFonts[i]);
+	}
+
+	/* Calculate new page dimensions */
+	pData->nPageHeight = Display_DrawText(hDC, pData, 0);
 	ReleaseDC(hwnd, hDC);
 
 	/* Set the vertical scrolling range and page size */
@@ -292,7 +336,7 @@ Display_SetTypeFace(HWND hwnd, LPARAM lParam)
 	si.cbSize = sizeof(si);
 	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS;
 	si.nMin   = 0;
-	si.nMax   = pData->nHeight;
+	si.nMax   = pData->nPageHeight;
 	si.nPage  = rect.bottom;
 	si.nPos   = 0;
 	si.nTrackPos = 0;
@@ -318,9 +362,21 @@ static LRESULT
 Display_OnDestroy(HWND hwnd)
 {
 	DISPLAYDATA* pData;
+	int i;
+
+	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+	/* Delete the fonts */
+	DeleteObject(pData->hCaptionFont);
+	DeleteObject(pData->hCharSetFont);
+	DeleteObject(pData->hSizeFont);
+
+	for (i = 0; i < MAX_SIZES; i++)
+	{
+		DeleteObject(pData->hFonts[i]);
+	}
 
 	/* Free the data structure */
-	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	free(pData);
 
 	return 0;
@@ -353,7 +409,7 @@ DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return Display_OnDestroy(hwnd);
 
         default:
-            return DefWindowProc (hwnd, message, wParam, lParam);
+            return DefWindowProcW(hwnd, message, wParam, lParam);
     }
 
     return 0;

@@ -10,6 +10,8 @@
 #define MAX_TYPEFACENAME 32
 #define MAX_FORMAT 20
 
+#define MAX_SIZES 7
+
 extern const WCHAR g_szFontDisplayClassName[];
 
 /* Public function */
