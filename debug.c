@@ -38,7 +38,7 @@ ULONG		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY |
+ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | /*DPRINT_FILESYSTEM |*/
 		                 DPRINT_REACTOS | DPRINT_WINDOWS | DPRINT_HWDETECT;
 #else //#elif defined (DEBUG_NONE)
 ULONG		DebugPrintMask = 0;

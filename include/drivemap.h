@@ -20,7 +20,7 @@
 #ifndef __DRIVEMAP_H
 #define __DRIVEMAP_H
 
-
+#ifdef __i386__
 typedef struct
 {
 	UCHAR		DriveMapCount;		// Count of drives currently mapped
@@ -39,5 +39,6 @@ extern PVOID			DriveMapInt13HandlerStart;
 extern PVOID			DriveMapInt13HandlerEnd;
 extern ULONG				DriveMapOldInt13HandlerAddress;
 extern DRIVE_MAP_LIST	DriveMapInt13HandlerMapList;
+#endif /* __i386__ */
 
 #endif // #defined __DRIVEMAP_H

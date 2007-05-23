@@ -22,7 +22,7 @@
 #ifndef __LINUX_H
 #define __LINUX_H
 
-
+#ifdef __i386__
 #define LINUX_LOADER_TYPE_LILO			0x01
 #define LINUX_LOADER_TYPE_LOADLIN		0x11
 #define LINUX_LOADER_TYPE_BOOTSECT		0x21
@@ -135,5 +135,6 @@ BOOLEAN	LinuxReadSetupSector(PFILE LinuxKernelFile);
 BOOLEAN	LinuxReadKernel(PFILE LinuxKernelFile);
 BOOLEAN	LinuxCheckKernelVersion(VOID);
 BOOLEAN	LinuxReadInitrd(PFILE LinuxInitrdFile);
+#endif /* __i386__ */
 
 #endif // defined __LINUX_H
