@@ -726,7 +726,11 @@ NtDeleteKey(IN HANDLE KeyHandle)
                                        ExGetPreviousMode(),
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        return Status;
+    }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -775,14 +779,16 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
-                                       (KeyInformationClass !=
-                                        KeyNameInformation) ?
-                                       KEY_QUERY_VALUE : 0,
+                                       KEY_ENUMERATE_SUB_KEYS,
                                        CmpKeyObjectType,
                                        ExGetPreviousMode(),
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        return Status;
+    }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -839,7 +845,11 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                                        ExGetPreviousMode(),
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        return Status;
+    }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -898,7 +908,11 @@ NtQueryKey(IN HANDLE KeyHandle,
                                        ExGetPreviousMode(),
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        return Status;
+    }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -954,7 +968,11 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                                        ExGetPreviousMode(),
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        return Status;
+    }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -980,6 +998,8 @@ NtQueryValueKey(IN HANDLE KeyHandle,
         PostOperationInfo.Status = Status;
         CmiCallRegisteredCallbacks(RegNtPostQueryValueKey, &PostOperationInfo);
     }
+
+    DPRINT("NtQueryValueKey() returning 0x%08X\n", Status);
 
     /* Dereference and return status */
     ObDereferenceObject(KeyObject);
@@ -1011,7 +1031,11 @@ NtSetValueKey(IN HANDLE KeyHandle,
                                        ExGetPreviousMode(),
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return(Status);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        return Status;
+    }
 
     /* Setup callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -1063,7 +1087,11 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
                                        PreviousMode,
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        return Status;
+    }
 
     /* Do the callback */
     DeleteValueKeyInfo.Object = (PVOID)KeyObject;
