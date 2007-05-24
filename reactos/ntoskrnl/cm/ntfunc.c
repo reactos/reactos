@@ -155,6 +155,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   PAGED_CODE();
 
+  DPRINT("NtCreateKey(TI 0x%x, DA 0x%x, Class '%wZ', OA 0x%p, OA->ON '%wZ'\n",
+    TitleIndex, DesiredAccess, Class, ObjectAttributes,
+    ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
+
   PreviousMode = ExGetPreviousMode();
 
   if (PreviousMode != KernelMode)
@@ -713,6 +717,8 @@ NtDeleteKey(IN HANDLE KeyHandle)
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
 
+    DPRINT("NtDeleteKey(KH 0x%p)\n", KeyHandle);
+
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        DELETE,
@@ -763,6 +769,9 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
+
+    DPRINT("NtEnumerateKey() KH 0x%x, Index 0x%x, KIC %d, Length %d\n",
+        KeyHandle, Index, KeyInformationClass, Length);
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
@@ -820,6 +829,9 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
 
+    DPRINT("NtEnumerateValueKey() KH 0x%x, Index 0x%x, KVIC %d, Length %d\n",
+        KeyHandle, Index, KeyValueInformationClass, Length);
+
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_QUERY_VALUE,
@@ -873,6 +885,9 @@ NtQueryKey(IN HANDLE KeyHandle,
     REG_QUERY_KEY_INFORMATION QueryKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
+
+    DPRINT("NtQueryKey() KH 0x%x, KIC %d, Length %d\n",
+        KeyHandle, KeyInformationClass, Length);
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
@@ -929,6 +944,9 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
 
+    DPRINT("NtQueryValueKey() KH 0x%x, VN '%wZ', KVIC %d, Length %d\n",
+        KeyHandle, ValueName, KeyValueInformationClass, Length);
+
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_QUERY_VALUE,
@@ -982,6 +1000,9 @@ NtSetValueKey(IN HANDLE KeyHandle,
     REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
+
+    DPRINT("NtSetValueKey() KH 0x%x, VN '%wZ', TI %x, T %d, DS %d\n",
+        KeyHandle, ValueName, TitleIndex, Type, DataSize);
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
