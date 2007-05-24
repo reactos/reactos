@@ -101,9 +101,7 @@ VOID
 FASTCALL
 EF_Negate(EFLOAT_S * efp)
 {
-// Do it this way since ReactOS uses real FP.
-  if (SIGN(efp->lMant)) efp->lMant = efp->lMant & ~SIGNBIT;
-  else efp->lMant = efp->lMant | SIGNBIT;  
+ efp->lMant = -efp->lMant;
 }
 
 LONG
@@ -119,8 +117,9 @@ EFtoF( EFLOAT_S * efp)
  Sign = SIGN(Mant);
 
 //// M$ storage emulation
- Mant = ((Mant & 0x3fffffff)>>7);
- Exp += (1 - EXCESS);
+ if( Sign ) Mant = -Mant;
+ Mant = ((Mant & 0x3fffffff) >> 7);
+ Exp += (EXCESS-1);
 ////
  Mant = MANT(Mant);
  return PACK(Sign, Exp, Mant);
@@ -130,7 +129,7 @@ VOID
 FASTCALL
 FtoEF( EFLOAT_S * efp, FLOATL f)
 {
- long Mant, Exp;
+ long Mant, Exp, Sign = 0;
  gxf_long worker;
 
 #ifdef _X86_
@@ -141,10 +140,12 @@ FtoEF( EFLOAT_S * efp, FLOATL f)
 
  Exp = EXP(worker.l);
  Mant = MANT(worker.l); 
-
+ if (SIGN(worker.l)) Sign = -1;
 //// M$ storage emulation
- Mant = ((Mant << 7) | 0x40000000 | SIGN(worker.l));
- Exp -= (1 - EXCESS);
+ Mant = ((Mant << 7) | 0x40000000);
+ Mant ^= Sign; 
+ Mant -= Sign;
+ Exp -= (EXCESS-1);
 //// 
  efp->lMant = Mant;
  efp->lExp = Exp;

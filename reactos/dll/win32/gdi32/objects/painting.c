@@ -31,8 +31,9 @@ EFtoF( EFLOAT_S * efp)
  Sign = SIGN(Mant);
 
 //// M$ storage emulation
+ if( Sign ) Mant = -Mant;
  Mant = ((Mant & 0x3fffffff) >> 7);
- Exp += (1 - EXCESS);
+ Exp += (EXCESS-1);
 ////
  Mant = MANT(Mant);
  return PACK(Sign, Exp, Mant);
@@ -42,7 +43,7 @@ VOID
 FASTCALL
 FtoEF( EFLOAT_S * efp, FLOATL f)
 {
- long Mant, Exp;
+ long Mant, Exp, Sign = 0;
  gxf_long worker;
 
 #ifdef _X86_
@@ -53,10 +54,12 @@ FtoEF( EFLOAT_S * efp, FLOATL f)
 
  Exp = EXP(worker.l);
  Mant = MANT(worker.l); 
-
+ if (SIGN(worker.l)) Sign = -1;
 //// M$ storage emulation
- Mant = ((Mant << 7) | 0x40000000 | SIGN(worker.l));
- Exp -= (1 - EXCESS);
+ Mant = ((Mant << 7) | 0x40000000);
+ Mant ^= Sign; 
+ Mant -= Sign;
+ Exp -= (EXCESS-1);
 //// 
  efp->lMant = Mant;
  efp->lExp = Exp;
