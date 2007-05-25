@@ -121,7 +121,7 @@
 #include "nls/ita.nls"   /* 0x0410  LANG_ITALIAN, SUBLANG_ITALIAN */
 #include "nls/its.nls"   /* 0x0810  LANG_ITALIAN, SUBLANG_ITALIAN_SWISS */
 
-//#include "nls/jpn.nls"   /* 0x0411  LANG_JAPANESE, SUBLANG_NEUTRAL */
+#include "nls/jpn.nls"   /* 0x0411  LANG_JAPANESE, SUBLANG_NEUTRAL */
 
 //#include "nls/kor.nls"   /* 0x0412  LANG_KOREAN, SUBLANG_KOREAN */
 
