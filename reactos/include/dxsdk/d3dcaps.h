@@ -278,7 +278,7 @@ typedef struct _D3DPrimCaps
 typedef struct _D3DDeviceDesc
 {
   DWORD dwSize;
-  DWORD dwFlags
+  DWORD dwFlags;
   D3DCOLORMODEL dcmColorModel;
   DWORD dwDevCaps;
   D3DTRANSFORMCAPS dtcTransformCaps;

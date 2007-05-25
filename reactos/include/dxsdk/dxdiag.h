@@ -14,17 +14,15 @@ DEFINE_GUID(CLSID_DxDiagProvider,    0xA65B8071, 0x3BFE, 0x4213, 0x9A, 0x5B, 0x4
 DEFINE_GUID(IID_IDxDiagProvider,     0x9C6B4CB0, 0x23F8, 0x49CC, 0xA3, 0xED, 0x45, 0xA5, 0x50, 0x00, 0xA6, 0xD2);
 DEFINE_GUID(IID_IDxDiagContainer,    0x7D0F462F, 0x4064, 0x4862, 0xBC, 0x7F, 0x93, 0x3E, 0x50, 0x58, 0xC1, 0x0F);
 
-typedef struct IDxDiagProvider *LPDXDIAGPROVIDER, *PDXDIAGPROVIDER;
-#undef INTERFACE
-#define INTERFACE IDxDiagProvider
-DECLARE_INTERFACE_(IDxDiagProvider,IUnknown)
+typedef struct _DXDIAG_INIT_PARAMS
 {
-  STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID *ppvObj) PURE;
-  STDMETHOD_(ULONG,AddRef) (THIS) PURE;
-  STDMETHOD_(ULONG,Release) (THIS) PURE;
-  STDMETHOD(Initialize) (THIS_ DXDIAG_INIT_PARAMS* pParams) PURE; 
-  STDMETHOD(GetRootContainer) (THIS_ IDxDiagContainer **ppInstance) PURE;
-};
+  DWORD dwSize;
+  DWORD dwDxDiagHeaderVersion;
+  BOOL bAllowWHQLChecks;
+  VOID* pReserved;
+} DXDIAG_INIT_PARAMS;
+
+
 
 typedef struct IDxDiagContainer *LPDXDIAGCONTAINER, *PDXDIAGCONTAINER;
 #undef INTERFACE
@@ -43,13 +41,17 @@ DECLARE_INTERFACE_(IDxDiagContainer,IUnknown)
     STDMETHOD(GetProp) (THIS_ LPCWSTR pwszPropName, VARIANT *pvarProp) PURE;
 };
 
-typedef struct _DXDIAG_INIT_PARAMS
+ typedef struct IDxDiagProvider *LPDXDIAGPROVIDER, *PDXDIAGPROVIDER;
+#undef INTERFACE
+#define INTERFACE IDxDiagProvider
+DECLARE_INTERFACE_(IDxDiagProvider,IUnknown)
 {
-  DWORD dwSize;
-  DWORD dwDxDiagHeaderVersion;
-  BOOL bAllowWHQLChecks;
-  VOID* pReserved;
-} DXDIAG_INIT_PARAMS;
+  STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID *ppvObj) PURE;
+  STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+  STDMETHOD_(ULONG,Release) (THIS) PURE;
+  STDMETHOD(Initialize) (THIS_ DXDIAG_INIT_PARAMS* pParams) PURE; 
+  STDMETHOD(GetRootContainer) (THIS_ IDxDiagContainer **ppInstance) PURE;
+};
 
 #define DXDIAG_E_INSUFFICIENT_BUFFER ((HRESULT)0x8007007AL)
 #if !defined(__cplusplus) || defined(CINTERFACE)
