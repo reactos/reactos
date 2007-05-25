@@ -16,8 +16,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+
+
 #ifndef __WINE_DSOUND_H
 #define __WINE_DSOUND_H
+
+// hack
+#define __DSOUND_INCLUDED__
+
 
 #if __GNUC__ >= 3
 #pragma GCC system_header
