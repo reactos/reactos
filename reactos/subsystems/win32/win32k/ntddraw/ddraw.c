@@ -80,7 +80,6 @@ intEnableDriver(PDD_DIRECTDRAW pDirectDraw)
      */
     if (pDirectDraw->DrvGetDirectDrawInfo)
     {
-        DPRINT1("if u are using vmware driver and see this msg, please repot this\n");
         success = pDirectDraw->DrvGetDirectDrawInfo( pDirectDraw->Global.dhpdev, 
                                                      &HalInfo,
                                                      &pDirectDraw->dwNumHeaps,
