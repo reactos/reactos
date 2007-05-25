@@ -79,12 +79,14 @@ IopDeleteDriver(IN PVOID ObjectBody)
         ExFreePool(DriverObject->DriverName.Buffer);
     }
 
+#if 0 /* See a bit of hack in IopCreateDriver */
     /* Check if it has a service key name */
     if (DriverObject->DriverExtension->ServiceKeyName.Buffer)
     {
         /* Free it */
         ExFreePool(DriverObject->DriverExtension->ServiceKeyName.Buffer);
     }
+#endif
 }
 
 NTSTATUS FASTCALL
