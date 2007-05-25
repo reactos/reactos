@@ -191,7 +191,7 @@ MainWnd_OnCreate(HWND hwnd)
 				0,						/* Extended style */
 				g_szFontDisplayClassName,	/* Classname */
 				L"",				/* Title text */
-				WS_CHILD | WS_VSCROLL| WS_VISIBLE,	/* Window style */
+				WS_CHILD | WS_VSCROLL,	/* Window style */
 				0,						/* X-pos */
 				HEADER_SIZE,			/* Y-Pos */
 				550,					/* Width */
@@ -202,10 +202,12 @@ MainWnd_OnCreate(HWND hwnd)
 				NULL					/* Window Creation data */
 			);
 
-	/* Init the display window with the font name */
 	LoadStringW(g_hInstance, IDS_STRING, szString, MAX_STRING);
 	SendMessage(hDisplay, FVM_SETSTRING, 0, (LPARAM)szString);
+
+	/* Init the display window with the font name */
 	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)g_szTypeFaceName);
+	ShowWindow(hDisplay, SW_SHOWNORMAL);
 
 	/* Create the quit button */
 	LoadStringW(g_hInstance, IDS_QUIT, szQuit, MAX_BUTTONNAME);

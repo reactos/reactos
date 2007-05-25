@@ -91,14 +91,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	hOldFont = SelectObject(hDC, pData->hCaptionFont);
 	GetTextMetrics(hDC, &tm);
 
-	if (*pData->szFormat == 0)
-	{
-		swprintf(szCaption, pData->szTypeFaceName);
-	}
-	else
-	{
-		swprintf(szCaption, L"%s (%s)", pData->szTypeFaceName, pData->szFormat);
-	}
+	swprintf(szCaption, L"%s%s", pData->szTypeFaceName, pData->szFormat);
 	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
 	y += tm.tmHeight + SPACING1;
 
@@ -148,18 +141,91 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 }
 
 static LRESULT
+Display_SetTypeFace(HWND hwnd, LPARAM lParam)
+{
+	DISPLAYDATA* pData;
+	TEXTMETRIC tm;
+	HDC hDC;
+	RECT rect;
+	SCROLLINFO si;
+	int i;
+
+	/* Set the new type face name */
+	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	snwprintf(pData->szTypeFaceName, MAX_TYPEFACENAME, (WCHAR*)lParam);
+
+	/* Create the new fonts */
+	hDC = GetDC(hwnd);
+	DeleteObject(pData->hCharSetFont);
+	pData->hCharSetFont = CreateFontW(-MulDiv(16, GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72),
+	                                  0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+	                                  ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+	                                  CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+	                                  DEFAULT_PITCH , pData->szTypeFaceName);
+
+	/* Get font format */
+	// FIXME: Get the real font format (OpenType?)
+	SelectObject(hDC, pData->hCharSetFont);
+	GetTextMetrics(hDC, &tm);
+	if ((tm.tmPitchAndFamily & TMPF_TRUETYPE) == TMPF_TRUETYPE)
+	{
+		swprintf(pData->szFormat, L" (TrueType)");
+	}
+
+	for (i = 0; i < MAX_SIZES; i++)
+	{
+		DeleteObject(pData->hFonts[i]);
+		pData->hFonts[i] = CreateFontW(-MulDiv(pData->nSizes[i], GetDeviceCaps(hDC, LOGPIXELSY), 72),
+		                               0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+		                               ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+		                               CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+		                               DEFAULT_PITCH , pData->szTypeFaceName);
+	}
+
+	/* Calculate new page dimensions */
+	pData->nPageHeight = Display_DrawText(hDC, pData, 0);
+	ReleaseDC(hwnd, hDC);
+
+	/* Set the vertical scrolling range and page size */
+	GetClientRect(hwnd, &rect);
+	si.cbSize = sizeof(si);
+	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS;
+	si.nMin   = 0;
+	si.nMax   = pData->nPageHeight;
+	si.nPage  = rect.bottom;
+	si.nPos   = 0;
+	si.nTrackPos = 0;
+	SetScrollInfo(hwnd, SB_VERT, &si, TRUE); 
+
+	return 0;
+}
+
+static LRESULT
+Display_SetString(HWND hwnd, LPARAM lParam)
+{
+	DISPLAYDATA* pData;
+
+	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	snwprintf(pData->szString, MAX_STRING, (WCHAR*)lParam);
+
+	// FIXME: redraw the window
+
+	return 0;
+}
+
+static LRESULT
 Display_OnCreate(HWND hwnd)
 {
 	DISPLAYDATA* pData;
 	const int nSizes[7] = {12, 18, 24, 36, 48, 60, 72};
 	int i;
 
-	/* Initialize data structure */
+	/* Create data structure */
 	pData = malloc(sizeof(DISPLAYDATA));
-	pData->nPageHeight = 0;
-	swprintf(pData->szTypeFaceName, L"");
-	swprintf(pData->szFormat, L"");
-	swprintf(pData->szString, L"");
+	ZeroMemory(pData, sizeof(DISPLAYDATA));
+
+	/* Set the window's GWLP_USERDATA to our data structure */
+	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
 
 	for (i = 0; i < MAX_SIZES; i++)
 	{
@@ -167,15 +233,17 @@ Display_OnCreate(HWND hwnd)
 	}
 
 	pData->hCaptionFont = CreateFontW(50, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-	                   ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-	                   DEFAULT_PITCH , L"Ms Shell Dlg");
+	                                  ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+	                                  CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+	                                  DEFAULT_PITCH , L"Ms Shell Dlg");
 
 	pData->hSizeFont = CreateFontW(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-						ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-						DEFAULT_PITCH , L"Ms Shell Dlg");
+	                               ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+	                               CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+	                               DEFAULT_PITCH , L"Ms Shell Dlg");
 
-	/* Set the window's GWLP_USERDATA to our data structure */
-	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pData);
+	Display_SetString(hwnd, (LPARAM)L"Jackdaws love my big sphinx of quartz. 1234567890");
+	Display_SetTypeFace(hwnd, (LPARAM)L"Ms Shell Dlg");
 
 	return 0;
 }
@@ -196,7 +264,7 @@ Display_OnPaint(HWND hwnd)
 
 	BeginPaint(hwnd, &ps);
 
-	/* Fill with white */
+	/* Erase background */
 	FillRect(ps.hdc, &ps.rcPaint, GetStockObject(WHITE_BRUSH));
 
 	/* Draw the text */
@@ -216,7 +284,7 @@ Display_OnSize(HWND hwnd)
 
 	GetClientRect(hwnd, &rect);
 
-	/* Get the old pos */
+	/* Get the old scroll pos */
 	si.cbSize = sizeof(si);
 	si.fMask  = SIF_POS;
 	GetScrollInfo(hwnd, SB_VERT, &si);
@@ -227,15 +295,15 @@ Display_OnSize(HWND hwnd)
 	si.nPage  = rect.bottom;
 	SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 
-	/* Get the new pos */
+	/* Get the new scroll pos */
 	si.fMask  = SIF_POS;
 	GetScrollInfo(hwnd, SB_VERT, &si);
 
-	/* If the don't match ... */
+	/* If they don't match ... */
 	if (nOldPos != si.nPos)
 	{
 		/* ... scroll the window */
-		ScrollWindowEx(hwnd, 0, -(si.nPos - nOldPos), NULL, NULL, NULL, NULL, SW_INVALIDATE);
+		ScrollWindowEx(hwnd, 0, nOldPos - si.nPos, NULL, NULL, NULL, NULL, SW_INVALIDATE);
 		UpdateWindow(hwnd);
 	}
 
@@ -278,82 +346,13 @@ Display_OnVScroll(HWND hwnd, WPARAM wParam)
 	nPos = min(nPos, si.nMax);
 	if (nPos != si.nPos)
 	{
-		ScrollWindowEx(hwnd, 0, -(nPos - si.nPos), NULL, NULL, NULL, NULL, SW_INVALIDATE);
+		ScrollWindowEx(hwnd, 0, si.nPos - nPos, NULL, NULL, NULL, NULL, SW_INVALIDATE);
 		si.cbSize = sizeof(si);
 		si.nPos = nPos;
 		si.fMask  = SIF_POS;
 		SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 		UpdateWindow(hwnd);
 	}
-
-	return 0;
-}
-
-static LRESULT
-Display_SetTypeFace(HWND hwnd, LPARAM lParam)
-{
-	DISPLAYDATA* pData;
-	TEXTMETRIC tm;
-	HDC hDC;
-	RECT rect;
-	SCROLLINFO si;
-	int i;
-
-	/* Set the new type face name */
-	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	snwprintf(pData->szTypeFaceName, MAX_TYPEFACENAME, (WCHAR*)lParam);
-
-	/* Create the new fonts */
-	hDC = GetDC(hwnd);
-	pData->hCharSetFont = CreateFontW(-MulDiv(16, GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-						ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-						DEFAULT_PITCH , pData->szTypeFaceName);
-
-	/* Get font format */
-	SelectObject(hDC, pData->hCharSetFont);
-	GetTextMetrics(hDC, &tm);
-	if ((tm.tmPitchAndFamily & TMPF_TRUETYPE) == TMPF_TRUETYPE)
-	{
-		swprintf(pData->szFormat, L"TrueType");
-	}
-
-	for (i = 0; i < MAX_SIZES; i++)
-	{
-		pData->hFonts[i] = CreateFontW(MulDiv(pData->nSizes[i], GetDeviceCaps(hDC, LOGPIXELSY), 72),
-		                              0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-		                              ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-		                              CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
-		                              DEFAULT_PITCH , pData->szTypeFaceName);
-		SelectObject(hDC, pData->hFonts[i]);
-	}
-
-	/* Calculate new page dimensions */
-	pData->nPageHeight = Display_DrawText(hDC, pData, 0);
-	ReleaseDC(hwnd, hDC);
-
-	/* Set the vertical scrolling range and page size */
-	GetClientRect(hwnd, &rect);
-	si.cbSize = sizeof(si);
-	si.fMask  = SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS;
-	si.nMin   = 0;
-	si.nMax   = pData->nPageHeight;
-	si.nPage  = rect.bottom;
-	si.nPos   = 0;
-	si.nTrackPos = 0;
-	SetScrollInfo(hwnd, SB_VERT, &si, TRUE); 
-
-	return 0;
-}
-
-static LRESULT
-Display_SetString(HWND hwnd, LPARAM lParam)
-{
-	DISPLAYDATA* pData;
-
-	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	snwprintf(pData->szString, MAX_STRING, (WCHAR*)lParam);
-
-	// FIXME: redraw the window
 
 	return 0;
 }
@@ -385,8 +384,8 @@ Display_OnDestroy(HWND hwnd)
 LRESULT CALLBACK
 DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
-    {
+	switch (message)
+	{
 		case WM_CREATE:
 			return Display_OnCreate(hwnd);
 
@@ -405,13 +404,13 @@ DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case FVM_SETSTRING:
 			return Display_SetString(hwnd, lParam);
 
-        case WM_DESTROY:
+		case WM_DESTROY:
 			return Display_OnDestroy(hwnd);
 
-        default:
-            return DefWindowProcW(hwnd, message, wParam, lParam);
-    }
+		default:
+			return DefWindowProcW(hwnd, message, wParam, lParam);
+	}
 
-    return 0;
+	return 0;
 }
 
