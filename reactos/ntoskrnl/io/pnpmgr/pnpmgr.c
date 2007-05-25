@@ -2695,9 +2695,9 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI BIOS");
    UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03\0");
    static ULONG DeviceIndexPci = 0;
-   const UNICODE_STRING IdentifierAcpi = RTL_CONSTANT_STRING(L"ACPI BIOS");
+   /*const UNICODE_STRING IdentifierAcpi = RTL_CONSTANT_STRING(L"ACPI BIOS");
    UNICODE_STRING HardwareIdAcpi = RTL_CONSTANT_STRING(L"*PNP0C08\0");
-   static ULONG DeviceIndexAcpi = 0;
+   static ULONG DeviceIndexAcpi = 0;*/
    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
    static ULONG DeviceIndexSerial = 0;
@@ -2957,11 +2957,11 @@ IopEnumerateDetectedDevices(
             pHardwareId = &HardwareIdPci;
             DeviceIndex = DeviceIndexPci++;
          }
-         else if (RtlCompareUnicodeString(&ValueName, &IdentifierAcpi, FALSE) == 0)
+         /*else if (RtlCompareUnicodeString(&ValueName, &IdentifierAcpi, FALSE) == 0)
          {
             pHardwareId = &HardwareIdAcpi;
             DeviceIndex = DeviceIndexAcpi++;
-         }
+         }*/
          else
          {
             /* Unknown device */
@@ -3083,6 +3083,8 @@ cleanup:
 static BOOLEAN INIT_FUNCTION
 IopIsAcpiComputer(VOID)
 {
+   return FALSE;
+#if 0
    UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
    UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
    UNICODE_STRING AcpiBiosIdentifier = RTL_CONSTANT_STRING(L"ACPI BIOS");
@@ -3214,6 +3216,7 @@ cleanup:
    if (hDeviceKey)
       ZwClose(hDeviceKey);
    return ret;
+#endif
 }
 
 static NTSTATUS INIT_FUNCTION
