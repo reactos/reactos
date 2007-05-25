@@ -83,7 +83,7 @@ IopDeleteDriver(IN PVOID ObjectBody)
     if (DriverObject->DriverExtension->ServiceKeyName.Buffer)
     {
         /* Free it */
-        //ExFreePool(DriverObject->DriverExtension->ServiceKeyName.Buffer);
+        ExFreePool(DriverObject->DriverExtension->ServiceKeyName.Buffer);
     }
 }
 
@@ -443,6 +443,7 @@ IopInitializeDriverModule(
 
    if (!NT_SUCCESS(Status))
    {
+      DPRINT1("DriverEntry() returned Status=0x%08X\n", Status);
       ObMakeTemporaryObject(Driver);
       ObDereferenceObject(Driver);
       return Status;
@@ -1119,8 +1120,9 @@ IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
     PDRIVER_OBJECT DriverObject;
     UNICODE_STRING ServiceKeyName;
     HANDLE hDriver;
-    ULONG i;
+    ULONG i, RetryCount = 0;
 
+try_again:
     /* First, create a unique name for the driver if we don't have one */
     if (!DriverName)
     {
@@ -1201,21 +1203,22 @@ IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                   &ServiceKeyName,
                   sizeof(UNICODE_STRING));
 
-    if (!DriverName)
-    {
-        /* HACK: Something goes wrong in next lines in this case.
-         * Just leave to prevent a freeze */
-        *pDriverObject = DriverObject;
-        return Status;
-    }
-
     /* Add the Object and get its handle */
     Status = ObInsertObject(DriverObject,
                             NULL,
                             FILE_READ_DATA,
-                            0,
+                            OBJ_KERNEL_HANDLE,
                             NULL,
                             &hDriver);
+
+    /* Eliminate small possibility when this function is called more than
+       once in a row, and KeTickCount doesn't get enough time to change */
+    if (!DriverName && (Status == STATUS_OBJECT_NAME_COLLISION) && (RetryCount < 100))
+    {
+        RetryCount++;
+        goto try_again;
+    }
+
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Now reference it */
