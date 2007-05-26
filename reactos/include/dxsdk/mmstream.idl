@@ -24,13 +24,11 @@ cpp_quote("#define MS_E_NOTRUNNING                  MS_ERROR_CODE(10)")
 
 
 // FIXME HACK remove the // for two cpp_quote 
-
-#ifndef DX_IDL_HACK
+cpp_quote("#if 0");
     typedef LPVOID PAPCFUNC;
-#endif
+cpp_quote("#endif");
 
 cpp_quote("#if(_WIN32_WINNT < 0x0400)")
-cpp_quote("#define DX_IDL_HACK")
 cpp_quote("typedef void (__stdcall * PAPCFUNC)(DWORD_PTR dwParam);")
 cpp_quote("#endif")
 
