@@ -1,0 +1,50 @@
+
+import "unknwn.idl";
+import "mmstream.idl";
+
+cpp_quote("#if 0")
+typedef void * LPDDSURFACEDESC;
+typedef struct tDDSURFACEDESC DDSURFACEDESC;
+cpp_quote("#endif")
+cpp_quote("#include <ddraw.h>")
+
+enum
+{
+    DDSFF_PROGRESSIVERENDER = 0x00000001
+};
+
+interface IDirectDraw;
+interface IDirectDrawSurface;
+interface IDirectDrawPalette;
+interface IDirectDrawMediaStream;
+interface IDirectDrawStreamSample;
+
+ [
+object,
+local,
+uuid(F4104FCF-9A70-11d0-8FDE-00C04FD9189D),
+pointer_default(unique)
+]
+interface IDirectDrawStreamSample : IStreamSample
+{
+    HRESULT GetSurface([out]  IDirectDrawSurface ** ppDirectDrawSurface, [out]  RECT * pRect);
+    HRESULT SetRect([in] const RECT * pRect);
+};
+
+[
+object,
+local,
+uuid(F4104FCE-9A70-11d0-8FDE-00C04FD9189D),
+pointer_default(unique)
+]
+interface IDirectDrawMediaStream : IMediaStream
+{
+    HRESULT GetFormat([out]  DDSURFACEDESC *pDDSDCurrent, [out]  IDirectDrawPalette **ppDirectDrawPalette, [out]  DDSURFACEDESC *pDDSDDesired, [out]  DWORD *pdwFlags);
+    HRESULT SetFormat([in] const DDSURFACEDESC *pDDSurfaceDesc, [in]  IDirectDrawPalette *pDirectDrawPalette);
+    HRESULT GetDirectDraw([out] IDirectDraw **ppDirectDraw);
+    HRESULT SetDirectDraw([in] IDirectDraw *pDirectDraw);
+    HRESULT CreateSample([in]  IDirectDrawSurface *pSurface, [in]  const RECT *pRect, [in] DWORD dwFlags, [out]IDirectDrawStreamSample **ppSample);
+    HRESULT GetTimePerFrame([out] STREAM_TIME *pFrameTime);
+};
+
+
