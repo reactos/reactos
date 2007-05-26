@@ -1,0 +1,58 @@
+import "unknwn.idl";
+
+cpp_quote("#if 0")
+
+typedef void*       LPVOID;
+typedef void*       LPGUID;
+typedef void*       LPDIRECTDRAWSURFACE;
+typedef void*       LPDDPIXELFORMAT;
+typedef void*       LPAMVAInternalMemInfo;
+typedef void        AMVAUncompDataInfo;
+typedef void*       LPAMVACompBufferInfo;
+typedef void        AMVABUFFERINFO;
+typedef void        AMVAEndFrameInfo;
+typedef void*       LPAMVAUncompBufferInfo;
+typedef void        AMVABeginFrameInfo;
+typedef IUnknown*   IMediaSample;
+cpp_quote("#endif")
+
+cpp_quote("#include <ddraw.h>")
+cpp_quote("#include <amva.h>")
+
+
+[
+    local,
+    object,
+    uuid(256A6A22-FBAD-11d1-82BF-00A0C9696C8F),
+    pointer_default(unique)
+]
+
+interface IAMVideoAccelerator : IUnknown
+{
+    HRESULT GetVideoAcceleratorGUIDs([in] [out] LPDWORD pdwNumGuidsSupported, [in] [out] LPGUID pGuidsSupported);
+    HRESULT GetUncompFormatsSupported( [in] const GUID *pGuid, [in] [out] LPDWORD pdwNumFormatsSupported, [in] [out] LPDDPIXELFORMAT pFormatsSupported);
+    HRESULT GetInternalMemInfo([in] const GUID *pGuid, [in] const AMVAUncompDataInfo *pamvaUncompDataInfo, [in] [out] LPAMVAInternalMemInfo pamvaInternalMemInfo);
+    HRESULT GetCompBufferInfo([in] const GUID *pGuid, [in] const AMVAUncompDataInfo *pamvaUncompDataInfo, [in] [out] LPDWORD pdwNumTypesCompBuffers, [out] LPAMVACompBufferInfo pamvaCompBufferInfo);
+    HRESULT GetInternalCompBufferInfo([in] [out] LPDWORD pdwNumTypesCompBuffers, [out] LPAMVACompBufferInfo pamvaCompBufferInfo);
+    HRESULT BeginFrame([in] const AMVABeginFrameInfo *amvaBeginFrameInfo);
+    HRESULT EndFrame([in] const AMVAEndFrameInfo *pEndFrameInfo);
+    HRESULT GetBuffer([in] DWORD dwTypeIndex, [in] DWORD dwBufferIndex, [in] BOOL bReadOnly, [out] LPVOID *ppBuffer, [out] LONG *lpStride);
+    HRESULT ReleaseBuffer([in] DWORD dwTypeIndex, [in] DWORD dwBufferIndex);
+    HRESULT Execute([in] DWORD dwFunction, [in] LPVOID lpPrivateInputData, [in] DWORD cbPrivateInputData, [in] LPVOID lpPrivateOutputDat, [in] DWORD cbPrivateOutputData, [in] DWORD dwNumBuffers, [in] const AMVABUFFERINFO *pamvaBufferInfo);
+    HRESULT QueryRenderStatus([in] DWORD dwTypeIndex, [in] DWORD dwBufferIndex, [in] DWORD dwFlags);
+    HRESULT DisplayFrame([in] DWORD dwFlipToIndex, [in] IMediaSample *pMediaSample);
+};
+
+[
+    local,
+    object,
+    uuid(256A6A21-FBAD-11d1-82BF-00A0C9696C8F),
+    pointer_default(unique)
+]
+
+interface IAMVideoAcceleratorNotify : IUnknown
+{
+    HRESULT GetUncompSurfacesInfo([in] const GUID *pGuid, [in] [out] LPAMVAUncompBufferInfo pUncompBufferInfo);
+    HRESULT SetUncompSurfacesInfo([in] DWORD dwActualUncompSurfacesAllocated);
+    HRESULT GetCreateVideoAcceleratorData([in] const GUID *pGuid, [out] LPDWORD pdwSizeMiscData, [out] LPVOID *ppMiscData);
+};
