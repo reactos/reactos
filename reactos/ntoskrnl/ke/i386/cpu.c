@@ -510,13 +510,21 @@ KiGetCacheInformation(VOID)
                     }
                 } while (--CacheRequests);
             }
-        break;
+            break;
 
-    case CPU_AMD:
+        case CPU_AMD:
 
-        /* FIXME */
-        DPRINT1("Not handling AMD caches yet\n");
-        break;
+            /* Check if we support CPUID 0x80000006 */
+            CPUID(Data, 0x80000000);
+            if (Data[0] >= 6)
+            {
+                /* Get 2nd level cache and tlb size */
+                CPUID(Data, 0x80000006);
+
+                /* Set the L2 Cache Size */
+                Pcr->SecondLevelCacheSize = (Data[2] & 0xFFFF0000) >> 6;
+            }
+            break;
     }
 }
 
