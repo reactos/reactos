@@ -1,0 +1,19 @@
+
+cpp_quote("#define CDEF_CLASS_DEFAULT 0x0001")
+cpp_quote("#define CDEF_BYPASS_CLASS_MANAGER 0x0002")
+cpp_quote("#define CDEF_CLASS_LEGACY  0x0004")
+cpp_quote("#define CDEF_MERIT_ABOVE_DO_NOT_USE 0x0008")
+
+[
+    object,
+    uuid(29840822-5B84-11D0-BD3B-00A0C911CE86),
+    pointer_default(unique)
+]
+interface ICreateDevEnum : IUnknown
+{
+    import "oaidl.idl";
+
+    HRESULT CreateClassEnumerator( [in] REFCLSID clsidDeviceClass,
+                                   [out] IEnumMoniker ** ppEnumMoniker,
+                                   [in]  DWORD dwFlags);
+}
