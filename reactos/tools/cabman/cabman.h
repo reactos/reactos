@@ -37,7 +37,7 @@ private:
 	virtual void OnAdd(PCFFILE Entry, char* FileName);
 	/* Configuration */
 	bool ProcessAll;
-	unsigned long Mode;
+	uint32_t Mode;
 	bool PromptOnOverwrite;
 	char Location[MAX_PATH];
 	char FileName[MAX_PATH];

@@ -11,6 +11,7 @@
  *   CSH 21/03-2001 Created
  *   CSH 15/08-2003 Made it portable
  *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
+ *   CF  04/05-2007 Made it compatible with 64-bit operating systems
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,31 +21,31 @@
 
 #if defined(WIN32)
 #define GetSizeOfFile(handle) _GetSizeOfFile(handle)
-static long _GetSizeOfFile(FILEHANDLE handle)
+static int32_t _GetSizeOfFile(FILEHANDLE handle)
 {
-	unsigned long size = GetFileSize(handle, NULL);
+	uint32_t size = GetFileSize(handle, NULL);
 	if (size == INVALID_FILE_SIZE)
 		return -1;
 
 	return size;
 }
 #define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
-static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, unsigned long* bytesread)
+static bool _ReadFileData(FILEHANDLE handle, void* buffer, uint32_t size, uint32_t* bytesread)
 {
-	return ReadFile(handle, buffer, size, bytesread, NULL);
+	return ReadFile(handle, buffer, size, (LPDWORD)bytesread, NULL);
 }
 #else
 #define GetSizeOfFile(handle) _GetSizeOfFile(handle)
-static long _GetSizeOfFile(FILEHANDLE handle)
+static int32_t _GetSizeOfFile(FILEHANDLE handle)
 {
-	long size;
+	int32_t size;
 	fseek(handle, 0, SEEK_END);
 	size = ftell(handle);
 	fseek(handle, 0, SEEK_SET);
 	return size;
 }
 #define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
-static bool _ReadFileData(FILEHANDLE handle, void* buffer, unsigned long size, unsigned long* bytesread)
+static bool _ReadFileData(FILEHANDLE handle, void* buffer, uint32_t size, uint32_t* bytesread)
 {
 	*bytesread = fread(buffer, 1, size, handle);
 	return *bytesread == size;
@@ -127,7 +128,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 	char eolbuf[2];
 	char* destpath;
 #if defined(WIN32)
-	unsigned long BytesWritten;
+	uint32_t BytesWritten;
 #endif
 
 	if (DontGenerateInf)
@@ -173,7 +174,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 	}
 
 #if defined(WIN32)
-	if (!WriteFile(InfFileHandle, InfLine, strlen(InfLine), &BytesWritten, NULL))
+	if (!WriteFile(InfFileHandle, InfLine, (DWORD)strlen(InfLine), (LPDWORD)&BytesWritten, NULL))
 	{
 		DPRINT(MID_TRACE, ("ERROR WRITING '%d'.\n", (unsigned int)GetLastError()));
 		return;
@@ -187,7 +188,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 	eolbuf[1] = 0x0a;
 
 #if defined(WIN32)
-	if (!WriteFile(InfFileHandle, eolbuf, sizeof(eolbuf), &BytesWritten, NULL))
+	if (!WriteFile(InfFileHandle, eolbuf, sizeof(eolbuf), (LPDWORD)&BytesWritten, NULL))
 	{
 		DPRINT(MID_TRACE, ("ERROR WRITING '%d'.\n", (unsigned int)GetLastError()));
 		return;
@@ -199,7 +200,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 }
 
 
-unsigned long CDFParser::Load(char* FileName)
+uint32_t CDFParser::Load(char* FileName)
 /*
  * FUNCTION: Loads a directive file into memory
  * ARGUMENTS:
@@ -208,8 +209,8 @@ unsigned long CDFParser::Load(char* FileName)
  *     Status of operation
  */
 {
-	unsigned long BytesRead;
-	long FileSize;
+	uint32_t BytesRead;
+	int32_t FileSize;
 
 	if (FileLoaded)
 		return CAB_STATUS_SUCCESS;
@@ -238,7 +239,7 @@ unsigned long CDFParser::Load(char* FileName)
 		return CAB_STATUS_CANNOT_OPEN;
 	}
 
-	FileBufferSize = (unsigned long)FileSize;
+	FileBufferSize = (uint32_t)FileSize;
 
 	FileBuffer = (char*)AllocateMemory(FileBufferSize);
 	if (!FileBuffer)
@@ -265,7 +266,7 @@ unsigned long CDFParser::Load(char* FileName)
 }
 
 
-unsigned long CDFParser::Parse()
+uint32_t CDFParser::Parse()
 /*
  * FUNCTION: Parses a loaded directive file
  * RETURNS:
@@ -273,7 +274,7 @@ unsigned long CDFParser::Parse()
  */
 {
 	bool Command;
-	unsigned long Status;
+	uint32_t Status;
 
 	if (!FileLoaded)
 		return CAB_STATUS_NOFILE;
@@ -436,7 +437,7 @@ void CDFParser::SetFileRelativePath(char* Path)
 }
 
 
-bool CDFParser::OnDiskLabel(unsigned long Number, char* Label)
+bool CDFParser::OnDiskLabel(uint32_t Number, char* Label)
 /*
  * FUNCTION: Called when a disk needs a label
  * ARGUMENTS:
@@ -469,7 +470,7 @@ bool CDFParser::OnDiskLabel(unsigned long Number, char* Label)
 			{
 				sprintf(Buffer, "%lu", Number);
 				strcat(Label, Buffer);
-				j += strlen(Buffer);
+				j += (int)strlen(Buffer);
 			}
 			else
 			{
@@ -488,7 +489,7 @@ bool CDFParser::OnDiskLabel(unsigned long Number, char* Label)
 }
 
 
-bool CDFParser::OnCabinetName(unsigned long Number, char* Name)
+bool CDFParser::OnCabinetName(uint32_t Number, char* Name)
 /*
  * FUNCTION: Called when a cabinet needs a name
  * ARGUMENTS:
@@ -517,7 +518,7 @@ bool CDFParser::OnCabinetName(unsigned long Number, char* Name)
 	if (CabinetNameTemplateSet)
 	{
 		strcpy(Name, GetDestinationPath());
-		j = strlen(Name);
+		j = (int)strlen(Name);
 		for (i = 0; i < strlen(CabinetNameTemplate); i++)
 		{
 			ch = CabinetNameTemplate[i];
@@ -525,7 +526,7 @@ bool CDFParser::OnCabinetName(unsigned long Number, char* Name)
 			{
 				sprintf(Buffer, "%lu", Number);
 				strcat(Name, Buffer);
-				j += strlen(Buffer);
+				j += (int)strlen(Buffer);
 			}
 			else
 			{
@@ -543,7 +544,7 @@ bool CDFParser::OnCabinetName(unsigned long Number, char* Name)
 }
 
 
-bool CDFParser::SetDiskName(PCABINET_NAME *List, unsigned long Number, char* String)
+bool CDFParser::SetDiskName(PCABINET_NAME *List, uint32_t Number, char* String)
 /*
  * FUNCTION: Sets an entry in a list
  * ARGUMENTS:
@@ -581,7 +582,7 @@ bool CDFParser::SetDiskName(PCABINET_NAME *List, unsigned long Number, char* Str
 }
 
 
-bool CDFParser::GetDiskName(PCABINET_NAME *List, unsigned long Number, char* String)
+bool CDFParser::GetDiskName(PCABINET_NAME *List, uint32_t Number, char* String)
 /*
  * FUNCTION: Returns an entry in a list
  * ARGUMENTS:
@@ -609,7 +610,7 @@ bool CDFParser::GetDiskName(PCABINET_NAME *List, unsigned long Number, char* Str
 }
 
 
-bool CDFParser::SetDiskNumber(PDISK_NUMBER *List, unsigned long Number, unsigned long Value)
+bool CDFParser::SetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t Value)
 /*
  * FUNCTION: Sets an entry in a list
  * ARGUMENTS:
@@ -647,7 +648,7 @@ bool CDFParser::SetDiskNumber(PDISK_NUMBER *List, unsigned long Number, unsigned
 }
 
 
-bool CDFParser::GetDiskNumber(PDISK_NUMBER *List, unsigned long Number, unsigned long* Value)
+bool CDFParser::GetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t* Value)
 /*
  * FUNCTION: Returns an entry in a list
  * ARGUMENTS:
@@ -675,7 +676,7 @@ bool CDFParser::GetDiskNumber(PDISK_NUMBER *List, unsigned long Number, unsigned
 }
 
 
-bool CDFParser::DoDiskLabel(unsigned long Number, char* Label)
+bool CDFParser::DoDiskLabel(uint32_t Number, char* Label)
 /*
  * FUNCTION: Sets the label of a disk
  * ARGUMENTS:
@@ -705,7 +706,7 @@ void CDFParser::DoDiskLabelTemplate(char* Template)
 }
 
 
-bool CDFParser::DoCabinetName(unsigned long Number, char* Name)
+bool CDFParser::DoCabinetName(uint32_t Number, char* Name)
 /*
  * FUNCTION: Sets the name of a cabinet
  * ARGUMENTS:
@@ -735,7 +736,7 @@ void CDFParser::DoCabinetNameTemplate(char* Template)
 }
 
 
-unsigned long CDFParser::DoMaxDiskSize(bool NumberValid, unsigned long Number)
+uint32_t CDFParser::DoMaxDiskSize(bool NumberValid, uint32_t Number)
 /*
  * FUNCTION: Sets the maximum disk size
  * ARGUMENTS:
@@ -747,7 +748,7 @@ unsigned long CDFParser::DoMaxDiskSize(bool NumberValid, unsigned long Number)
  *     Standard sizes are 2.88M, 1.44M, 1.25M, 1.2M, 720K, 360K, and CDROM
  */
 {
-	unsigned long A, B, Value;
+	uint32_t A, B, Value;
 
 	if (IsNextToken(TokenInteger, true))
 	{
@@ -852,14 +853,14 @@ void CDFParser::DoInfFileName(char* FileName)
 	InfFileNameSet = true;
 }
 
-unsigned long CDFParser::SetupNewDisk()
+uint32_t CDFParser::SetupNewDisk()
 /*
  * FUNCTION: Sets up parameters for a new disk
  * RETURNS:
  *     Status of operation
  */
 {
-	unsigned long Value;
+	uint32_t Value;
 
 	if (!GetDiskNumber(&MaxDiskSize, GetCurrentDiskNumber(), &Value))
 	{
@@ -874,7 +875,7 @@ unsigned long CDFParser::SetupNewDisk()
 }
 
 
-unsigned long CDFParser::PerformSetCommand()
+uint32_t CDFParser::PerformSetCommand()
 /*
  * FUNCTION: Performs a set variable command
  * RETURNS:
@@ -883,7 +884,7 @@ unsigned long CDFParser::PerformSetCommand()
 {
 	SETTYPE SetType;
 	bool NumberValid = false;
-	unsigned long Number = 0;
+	uint32_t Number = 0;
 
 	if (!IsNextToken(TokenIdentifier, true))
 		return CAB_STATUS_FAILURE;
@@ -970,7 +971,7 @@ unsigned long CDFParser::PerformSetCommand()
 }
 
 
-unsigned long CDFParser::PerformNewCommand()
+uint32_t CDFParser::PerformNewCommand()
 /*
  * FUNCTION: Performs a new disk|cabinet|folder command
  * RETURNS:
@@ -978,7 +979,7 @@ unsigned long CDFParser::PerformNewCommand()
  */
 {
 	NEWTYPE NewType;
-	unsigned long Status;
+	uint32_t Status;
 
 	if (!IsNextToken(TokenIdentifier, true))
 		return CAB_STATUS_FAILURE;
@@ -1053,7 +1054,7 @@ unsigned long CDFParser::PerformNewCommand()
 }
 
 
-unsigned long CDFParser::PerformInfBeginCommand()
+uint32_t CDFParser::PerformInfBeginCommand()
 /*
  * FUNCTION: Begins inf mode
  * RETURNS:
@@ -1065,7 +1066,7 @@ unsigned long CDFParser::PerformInfBeginCommand()
 }
 
 
-unsigned long CDFParser::PerformInfEndCommand()
+uint32_t CDFParser::PerformInfEndCommand()
 /*
  * FUNCTION: Begins inf mode
  * RETURNS:
@@ -1077,7 +1078,7 @@ unsigned long CDFParser::PerformInfEndCommand()
 }
 
 
-unsigned long CDFParser::PerformCommand()
+uint32_t CDFParser::PerformCommand()
 /*
  * FUNCTION: Performs a command
  * RETURNS:
@@ -1097,15 +1098,15 @@ unsigned long CDFParser::PerformCommand()
 }
 
 
-unsigned long CDFParser::PerformFileCopy()
+uint32_t CDFParser::PerformFileCopy()
 /*
  * FUNCTION: Performs a file copy
  * RETURNS:
  *     Status of operation
  */
 {
-	unsigned long Status;
-	unsigned long i, j;
+	uint32_t Status;
+	uint32_t i, j;
 	char ch;
 	char SrcName[MAX_PATH];
 	char DstName[MAX_PATH];
@@ -1137,7 +1138,7 @@ unsigned long CDFParser::PerformFileCopy()
 
 	if (CurrentToken != TokenEnd)
 	{
-		j = strlen(CurrentString); i = 0;
+		j = (uint32_t)strlen(CurrentString); i = 0;
 		while ((CurrentChar + i < LineLength) &&
 			((ch = Line[CurrentChar + i]) != ' ') &&
 			 (ch != 0x09) &&
@@ -1157,7 +1158,7 @@ unsigned long CDFParser::PerformFileCopy()
 
 	if (CurrentToken != TokenEnd)
 	{
-		j = strlen(CurrentString); i = 0;
+		j = (uint32_t)strlen(CurrentString); i = 0;
 		while ((CurrentChar + i < LineLength) &&
 			((ch = Line[CurrentChar + i]) != ' ') &&
 			 (ch != 0x09) &&
@@ -1273,7 +1274,7 @@ bool CDFParser::ReadLine()
  *     true if there is a new line, false if not
  */
 {
-	unsigned long i, j;
+	uint32_t i, j;
 	char ch;
 
 	if (CurrentOffset >= FileBufferSize)
@@ -1310,7 +1311,7 @@ void CDFParser::NextToken()
  * FUNCTION: Reads the next token from the current line
  */
 {
-	unsigned long i;
+	uint32_t i;
 	char ch = ' ';
 
 	if (CurrentChar >= LineLength)

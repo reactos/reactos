@@ -9,6 +9,7 @@
  *   CSH 21/03-2001 Created
  *   CSH 15/08-2003 Made it portable
  *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
+ *   CF  04/05-2007 Made it compatible with 64-bit operating systems
  */
 #include <stdlib.h>
 #include <stdarg.h>
@@ -19,9 +20,9 @@
 
 #ifdef DBG
 
-unsigned long DebugTraceLevel = MIN_TRACE;
-//unsigned long DebugTraceLevel = MID_TRACE;
-//unsigned long DebugTraceLevel = MAX_TRACE;
+uint32_t DebugTraceLevel = MIN_TRACE;
+//uint32_t DebugTraceLevel = MID_TRACE;
+//uint32_t DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
@@ -44,7 +45,7 @@ char* Pad(char* Str, char PadChar, unsigned int Length)
 {
 	unsigned int Len;
 
-	Len = strlen(Str);
+	Len = (uint32_t)strlen(Str);
 
 	if (Len < Length)
 	{
@@ -55,7 +56,7 @@ char* Pad(char* Str, char PadChar, unsigned int Length)
 }
 
 
-char* Date2Str(char* Str, unsigned short Date)
+char* Date2Str(char* Str, uint16_t Date)
 /*
  * FUNCTION: Converts a DOS style date to a string
  * ARGUMENTS:
@@ -65,7 +66,7 @@ char* Date2Str(char* Str, unsigned short Date)
  *     Pointer to string
  */
 {
-	unsigned long dw;
+	uint32_t dw;
 
 	/* Month */
 	Str[0] = (char)('0' + ((Date & 0x01E0) >> 5) / 10);
@@ -86,7 +87,7 @@ char* Date2Str(char* Str, unsigned short Date)
 }
 
 
-char* Time2Str(char* Str, unsigned short Time)
+char* Time2Str(char* Str, uint16_t Time)
 /*
  * FUNCTION: Converts a DOS style time to a string
  * ARGUMENTS:
@@ -97,8 +98,8 @@ char* Time2Str(char* Str, unsigned short Time)
  */
 {
 	bool PM;
-	unsigned long Hour;
-	unsigned long dw;
+	uint32_t Hour;
+	uint32_t dw;
 
 	Hour = ((Time & 0xF800) >> 11);
 	PM = (Hour >= 12);
@@ -126,7 +127,7 @@ char* Time2Str(char* Str, unsigned short Time)
 }
 
 
-char* Attr2Str(char* Str, unsigned short Attr)
+char* Attr2Str(char* Str, uint16_t Attr)
 /*
  * FUNCTION: Converts attributes to a string
  * ARGUMENTS:
@@ -364,7 +365,7 @@ bool CCABManager::CreateCabinet()
  * FUNCTION: Create cabinet
  */
 {
-	unsigned long Status;
+	uint32_t Status;
 
 	Status = Load((char*)&FileName);
 	if (Status != CAB_STATUS_SUCCESS)
@@ -384,7 +385,7 @@ bool CCABManager::CreateSimpleCabinet()
  * FUNCTION: Create cabinet
  */
 {
-	unsigned long Status;
+	uint32_t Status;
 
 	Status = NewCabinet();
 	if (Status != CAB_STATUS_SUCCESS)
@@ -422,8 +423,8 @@ bool CCABManager::DisplayCabinet()
 {
 	CAB_SEARCH Search;
 	char Str[20];
-	unsigned long FileCount = 0;
-	unsigned long ByteCount = 0;
+	uint32_t FileCount = 0;
+	uint32_t ByteCount = 0;
 
 	if (Open() == CAB_STATUS_SUCCESS)
 	{
@@ -485,7 +486,7 @@ bool CCABManager::ExtractFromCabinet()
  */
 {
 	CAB_SEARCH Search;
-	unsigned long Status;
+	uint32_t Status;
 
 	if (Open() == CAB_STATUS_SUCCESS)
 	{

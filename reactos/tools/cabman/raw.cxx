@@ -9,6 +9,7 @@
  *   CSH 21/03-2001 Created
  *   CSH 15/08-2003 Made it portable
  *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
+ *   CF  04/05-2007 Made it compatible with 64-bit operating systems
  */
 #include "raw.h"
 
@@ -31,10 +32,10 @@ CRawCodec::~CRawCodec()
 }
 
 
-unsigned long CRawCodec::Compress(void* OutputBuffer,
-                                  void* InputBuffer,
-                                  unsigned long InputLength,
-                                  unsigned long* OutputLength)
+uint32_t CRawCodec::Compress(void* OutputBuffer,
+                             void* InputBuffer,
+                             uint32_t InputLength,
+                             uint32_t* OutputLength)
 /*
  * FUNCTION: Compresses data in a buffer
  * ARGUMENTS:
@@ -49,10 +50,10 @@ unsigned long CRawCodec::Compress(void* OutputBuffer,
 	return CS_SUCCESS;
 }
 
-unsigned long CRawCodec::Uncompress(void* OutputBuffer,
-                                    void* InputBuffer,
-                                    unsigned long InputLength,
-                                    unsigned long* OutputLength)
+uint32_t CRawCodec::Uncompress(void* OutputBuffer,
+                               void* InputBuffer,
+                               uint32_t InputLength,
+                               uint32_t* OutputLength)
 /*
  * FUNCTION: Uncompresses data in a buffer
  * ARGUMENTS:

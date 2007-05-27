@@ -19,6 +19,8 @@
 #define MAX_PATH 260
 #endif
 #endif
+
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -56,7 +58,7 @@
 
 #ifdef DBG
 
-extern unsigned long DebugTraceLevel;
+extern uint32_t DebugTraceLevel;
 
 #ifdef _MSC_VER
 #define __FUNCTION__ ""
@@ -121,59 +123,59 @@ extern unsigned long DebugTraceLevel;
 
 typedef struct _CFHEADER
 {
-	unsigned long Signature;        // File signature 'MSCF' (CAB_SIGNATURE)
-	unsigned long Reserved1;        // Reserved field
-	unsigned long CabinetSize;      // Cabinet file size
-	unsigned long Reserved2;        // Reserved field
-	unsigned long FileTableOffset;  // Offset of first CFFILE
-	unsigned long Reserved3;        // Reserved field
-	unsigned short  Version;          // Cabinet version (CAB_VERSION)
-	unsigned short  FolderCount;      // Number of folders
-	unsigned short  FileCount;        // Number of files
-	unsigned short  Flags;            // Cabinet flags (CAB_FLAG_*)
-	unsigned short  SetID;            // Cabinet set id
-	unsigned short  CabinetNumber;    // Zero-based cabinet number
+	uint32_t Signature;        // File signature 'MSCF' (CAB_SIGNATURE)
+	uint32_t Reserved1;        // Reserved field
+	uint32_t CabinetSize;      // Cabinet file size
+	uint32_t Reserved2;        // Reserved field
+	uint32_t FileTableOffset;  // Offset of first CFFILE
+	uint32_t Reserved3;        // Reserved field
+	uint16_t Version;          // Cabinet version (CAB_VERSION)
+	uint16_t FolderCount;      // Number of folders
+	uint16_t FileCount;        // Number of files
+	uint16_t Flags;            // Cabinet flags (CAB_FLAG_*)
+	uint16_t SetID;            // Cabinet set id
+	uint16_t CabinetNumber;    // Zero-based cabinet number
 /* Optional fields (depends on Flags)
-	unsigned short  CabinetResSize    // Per-cabinet reserved area size
-	char  FolderResSize     // Per-folder reserved area size
-	char  FileResSize       // Per-file reserved area size
-	char  CabinetReserved[] // Per-cabinet reserved area
-	char  CabinetPrev[]     // Name of previous cabinet file
-	char  DiskPrev[]        // Name of previous disk
-	char  CabinetNext[]     // Name of next cabinet file
-	char  DiskNext[]        // Name of next disk
+	uint16_t CabinetResSize    // Per-cabinet reserved area size
+	char     FolderResSize     // Per-folder reserved area size
+	char     FileResSize       // Per-file reserved area size
+	char     CabinetReserved[] // Per-cabinet reserved area
+	char     CabinetPrev[]     // Name of previous cabinet file
+	char     DiskPrev[]        // Name of previous disk
+	char     CabinetNext[]     // Name of next cabinet file
+	char     DiskNext[]        // Name of next disk
  */
 } CFHEADER, *PCFHEADER;
 
 
 typedef struct _CFFOLDER
 {
-	unsigned long  DataOffset;       // Absolute offset of first CFDATA block in this folder
-	unsigned short DataBlockCount;   // Number of CFDATA blocks in this folder in this cabinet
-	unsigned short CompressionType;  // Type of compression used for all CFDATA blocks in this folder
+	uint32_t DataOffset;       // Absolute offset of first CFDATA block in this folder
+	uint16_t DataBlockCount;   // Number of CFDATA blocks in this folder in this cabinet
+	uint16_t CompressionType;  // Type of compression used for all CFDATA blocks in this folder
 /* Optional fields (depends on Flags)
-	char  FolderReserved[]  // Per-folder reserved area
+	char     FolderReserved[]  // Per-folder reserved area
  */
 } CFFOLDER, *PCFFOLDER;
 
 
 typedef struct _CFFILE
 {
-	unsigned long  FileSize;         // Uncompressed file size in bytes
-	unsigned long  FileOffset;       // Uncompressed offset of file in the folder
-	unsigned short FileControlID;    // File control ID (CAB_FILE_*)
-	unsigned short FileDate;         // File date stamp, as used by DOS
-	unsigned short FileTime;         // File time stamp, as used by DOS
-	unsigned short Attributes;       // File attributes (CAB_ATTRIB_*)
+	uint32_t FileSize;         // Uncompressed file size in bytes
+	uint32_t FileOffset;       // Uncompressed offset of file in the folder
+	uint16_t FileControlID;    // File control ID (CAB_FILE_*)
+	uint16_t FileDate;         // File date stamp, as used by DOS
+	uint16_t FileTime;         // File time stamp, as used by DOS
+	uint16_t Attributes;       // File attributes (CAB_ATTRIB_*)
     /* After this is the NULL terminated filename */
 } CFFILE, *PCFFILE;
 
 
 typedef struct _CFDATA
 {
-	unsigned long  Checksum;         // Checksum of CFDATA entry
-	unsigned short CompSize;         // Number of compressed bytes in this block
-	unsigned short UncompSize;       // Number of uncompressed bytes in this block
+	uint32_t Checksum;         // Checksum of CFDATA entry
+	uint16_t CompSize;         // Number of compressed bytes in this block
+	uint16_t UncompSize;       // Number of uncompressed bytes in this block
 /* Optional fields (depends on Flags)
 	char  DataReserved[]    // Per-datablock reserved area
  */
@@ -183,25 +185,25 @@ typedef struct _CFDATA_NODE
 {
 	struct _CFDATA_NODE *Next;
 	struct _CFDATA_NODE *Prev;
-	unsigned long       ScratchFilePosition;    // Absolute offset in scratch file
-	unsigned long       AbsoluteOffset;         // Absolute offset in cabinet
-	unsigned long       UncompOffset;           // Uncompressed offset in folder
-    CFDATA              Data;
+	uint32_t       ScratchFilePosition;    // Absolute offset in scratch file
+	uint32_t       AbsoluteOffset;         // Absolute offset in cabinet
+	uint32_t       UncompOffset;           // Uncompressed offset in folder
+	CFDATA         Data;
 } CFDATA_NODE, *PCFDATA_NODE;
 
 typedef struct _CFFOLDER_NODE
 {
 	struct _CFFOLDER_NODE *Next;
 	struct _CFFOLDER_NODE *Prev;
-	unsigned long         UncompOffset;     // File size accumulator
-	unsigned long         AbsoluteOffset;
-	unsigned long         TotalFolderSize;  // Total size of folder in current disk
-	PCFDATA_NODE          DataListHead;
-	PCFDATA_NODE          DataListTail;
-	unsigned long         Index;
-	bool                  Commit;           // true if the folder should be committed
-	bool                  Delete;           // true if marked for deletion
-    CFFOLDER              Folder;
+	uint32_t         UncompOffset;     // File size accumulator
+	uint32_t         AbsoluteOffset;
+	uint32_t         TotalFolderSize;  // Total size of folder in current disk
+	PCFDATA_NODE     DataListHead;
+	PCFDATA_NODE     DataListTail;
+	uint32_t         Index;
+	bool             Commit;           // true if the folder should be committed
+	bool             Delete;           // true if marked for deletion
+	CFFOLDER         Folder;
 } CFFOLDER_NODE, *PCFFOLDER_NODE;
 
 typedef struct _CFFILE_NODE
@@ -213,7 +215,7 @@ typedef struct _CFFILE_NODE
 	PCFDATA_NODE        DataBlock;      // First data block of file. NULL if not known
 	bool                Commit;         // true if the file data should be committed
 	bool                Delete;         // true if marked for deletion
-	PCFFOLDER_NODE		FolderNode;     // Folder this file belong to
+	PCFFOLDER_NODE      FolderNode;     // Folder this file belong to
 } CFFILE_NODE, *PCFFILE_NODE;
 
 
@@ -252,15 +254,15 @@ public:
 	/* Default destructor */
 	virtual ~CCABCodec() {};
 	/* Compresses a data block */
-	virtual unsigned long Compress(void* OutputBuffer,
-						   void* InputBuffer,
-						   unsigned long InputLength,
-						   unsigned long* OutputLength) = 0;
+	virtual uint32_t Compress(void* OutputBuffer,
+	                          void* InputBuffer,
+	                          uint32_t InputLength,
+	                          uint32_t* OutputLength) = 0;
 	/* Uncompresses a data block */
-	virtual unsigned long Uncompress(void* OutputBuffer,
-							 void* InputBuffer,
-							 unsigned long InputLength,
-							 unsigned long* OutputLength) = 0;
+	virtual uint32_t Uncompress(void* OutputBuffer,
+	                            void* InputBuffer,
+	                            uint32_t InputLength,
+	                            uint32_t* OutputLength) = 0;
 };
 
 
@@ -287,13 +289,13 @@ public:
 	CCFDATAStorage();
 	/* Default destructor */
 	virtual ~CCFDATAStorage();
-	unsigned long Create(char* FileName);
-	unsigned long Destroy();
-	unsigned long Truncate();
-	unsigned long Position();
-	unsigned long Seek(long Position);
-	unsigned long ReadBlock(PCFDATA Data, void* Buffer, unsigned long* BytesRead);
-	unsigned long WriteBlock(PCFDATA Data, void* Buffer, unsigned long* BytesWritten);
+	uint32_t Create(char* FileName);
+	uint32_t Destroy();
+	uint32_t Truncate();
+	uint32_t Position();
+	uint32_t Seek(int32_t Position);
+	uint32_t ReadBlock(PCFDATA Data, void* Buffer, uint32_t* BytesRead);
+	uint32_t WriteBlock(PCFDATA Data, void* Buffer, uint32_t* BytesWritten);
 private:
 	char FullName[MAX_PATH];
 	bool FileCreated;
@@ -317,7 +319,7 @@ public:
 	/* Removes a filename from a fully qualified filename */
 	void RemoveFileName(char* Path);
 	/* Normalizes a path */
-	bool NormalizePath(char* Path, unsigned long Length);
+	bool NormalizePath(char* Path, uint32_t Length);
 	/* Returns name of cabinet file */
 	char* GetCabinetName();
 	/* Sets the name of the cabinet file */
@@ -331,40 +333,40 @@ public:
 	/* Returns destination path */
 	char* GetDestinationPath();
 	/* Returns zero-based current disk number */
-	unsigned long GetCurrentDiskNumber();
+	uint32_t GetCurrentDiskNumber();
 	/* Opens the current cabinet file */
-	unsigned long Open();
+	uint32_t Open();
 	/* Closes the current open cabinet file */
 	void Close();
 	/* Locates the first file in the current cabinet file that matches a search criteria */
-	unsigned long FindFirst(char* FileName, PCAB_SEARCH Search);
+	uint32_t FindFirst(char* FileName, PCAB_SEARCH Search);
 	/* Locates the next file in the current cabinet file */
-	unsigned long FindNext(PCAB_SEARCH Search);
+	uint32_t FindNext(PCAB_SEARCH Search);
 	/* Extracts a file from the current cabinet file */
-	unsigned long ExtractFile(char* FileName);
+	uint32_t ExtractFile(char* FileName);
 	/* Select codec engine to use */
-	void SelectCodec(unsigned long Id);
+	void SelectCodec(uint32_t Id);
 #ifndef CAB_READ_ONLY
 	/* Creates a new cabinet file */
-	unsigned long NewCabinet();
+	uint32_t NewCabinet();
 	/* Forces a new disk to be created */
-	unsigned long NewDisk();
+	uint32_t NewDisk();
 	/* Forces a new folder to be created */
-	unsigned long NewFolder();
+	uint32_t NewFolder();
 	/* Writes a file to scratch storage */
-	unsigned long WriteFileToScratchStorage(PCFFILE_NODE FileNode);
+	uint32_t WriteFileToScratchStorage(PCFFILE_NODE FileNode);
 	/* Forces the current disk to be written */
-	unsigned long WriteDisk(unsigned long MoreDisks);
+	uint32_t WriteDisk(uint32_t MoreDisks);
 	/* Commits the current disk */
-	unsigned long CommitDisk(unsigned long MoreDisks);
+	uint32_t CommitDisk(uint32_t MoreDisks);
 	/* Closes the current disk */
-	unsigned long CloseDisk();
+	uint32_t CloseDisk();
 	/* Closes the current cabinet */
-	unsigned long CloseCabinet();
+	uint32_t CloseCabinet();
 	/* Adds a file to the current disk */
-	unsigned long AddFile(char* FileName);
+	uint32_t AddFile(char* FileName);
 	/* Sets the maximum size of the current disk */
-	void SetMaxDiskSize(unsigned long Size);
+	void SetMaxDiskSize(uint32_t Size);
 #endif /* CAB_READ_ONLY */
 
 	/* Default event handlers */
@@ -379,17 +381,17 @@ public:
 	/* Handler called when a file is about to be added */
 	virtual void OnAdd(PCFFILE Entry, char* FileName);
 	/* Handler called when a cabinet need a name */
-	virtual bool OnCabinetName(unsigned long Number, char* Name);
+	virtual bool OnCabinetName(uint32_t Number, char* Name);
 	/* Handler called when a disk needs a label */
-	virtual bool OnDiskLabel(unsigned long Number, char* Label);
+	virtual bool OnDiskLabel(uint32_t Number, char* Label);
 #endif /* CAB_READ_ONLY */
 private:
-	PCFFOLDER_NODE LocateFolderNode(unsigned long Index);
-	unsigned long GetAbsoluteOffset(PCFFILE_NODE File);
-	unsigned long LocateFile(char* FileName, PCFFILE_NODE *File);
-	unsigned long ReadString(char* String, unsigned long MaxLength);
-	unsigned long ReadFileTable();
-	unsigned long ReadDataBlocks(PCFFOLDER_NODE FolderNode);
+	PCFFOLDER_NODE LocateFolderNode(uint32_t Index);
+	uint32_t GetAbsoluteOffset(PCFFILE_NODE File);
+	uint32_t LocateFile(char* FileName, PCFFILE_NODE *File);
+	uint32_t ReadString(char* String, uint32_t MaxLength);
+	uint32_t ReadFileTable();
+	uint32_t ReadDataBlocks(PCFFOLDER_NODE FolderNode);
 	PCFFOLDER_NODE NewFolderNode();
 	PCFFILE_NODE NewFileNode();
 	PCFDATA_NODE NewDataNode(PCFFOLDER_NODE FolderNode);
@@ -398,45 +400,45 @@ private:
 	void DestroyDeletedFileNodes();
 	void DestroyFolderNodes();
 	void DestroyDeletedFolderNodes();
-	unsigned long ComputeChecksum(void* Buffer, unsigned int Size, unsigned long Seed);
-	unsigned long ReadBlock(void* Buffer, unsigned long Size, unsigned long* BytesRead);
+	uint32_t ComputeChecksum(void* Buffer, unsigned int Size, uint32_t Seed);
+	uint32_t ReadBlock(void* Buffer, uint32_t Size, uint32_t* BytesRead);
 #ifndef CAB_READ_ONLY
-	unsigned long InitCabinetHeader();
-	unsigned long WriteCabinetHeader(bool MoreDisks);
-	unsigned long WriteFolderEntries();
-	unsigned long WriteFileEntries();
-	unsigned long CommitDataBlocks(PCFFOLDER_NODE FolderNode);
-	unsigned long WriteDataBlock();
-	unsigned long GetAttributesOnFile(PCFFILE_NODE File);
-	unsigned long SetAttributesOnFile(PCFFILE_NODE File);
-	unsigned long GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File);
+	uint32_t InitCabinetHeader();
+	uint32_t WriteCabinetHeader(bool MoreDisks);
+	uint32_t WriteFolderEntries();
+	uint32_t WriteFileEntries();
+	uint32_t CommitDataBlocks(PCFFOLDER_NODE FolderNode);
+	uint32_t WriteDataBlock();
+	uint32_t GetAttributesOnFile(PCFFILE_NODE File);
+	uint32_t SetAttributesOnFile(PCFFILE_NODE File);
+	uint32_t GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File);
 #if !defined(WIN32)
-	void ConvertDateAndTime(time_t* Time, unsigned short* DosDate, unsigned short* DosTime);
+	void ConvertDateAndTime(time_t* Time, uint16_t* DosDate, uint16_t* DosTime);
 #endif
 #endif /* CAB_READ_ONLY */
-	unsigned long CurrentDiskNumber;    // Zero based disk number
+	uint32_t CurrentDiskNumber;    // Zero based disk number
 	char CabinetName[256];     // Filename of current cabinet
 	char CabinetPrev[256];     // Filename of previous cabinet
 	char DiskPrev[256];        // Label of cabinet in file CabinetPrev
 	char CabinetNext[256];     // Filename of next cabinet
 	char DiskNext[256];        // Label of cabinet in file CabinetNext
-	unsigned long TotalHeaderSize;      // Size of header and optional fields
-	unsigned long NextFieldsSize;       // Size of next cabinet name and next disk label
-	unsigned long TotalFolderSize;      // Size of all folder entries
-	unsigned long TotalFileSize;        // Size of all file entries
-	unsigned long FolderUncompSize;     // Uncompressed size of folder
-	unsigned long BytesLeftInBlock;     // Number of bytes left in current block
+	uint32_t TotalHeaderSize;      // Size of header and optional fields
+	uint32_t NextFieldsSize;       // Size of next cabinet name and next disk label
+	uint32_t TotalFolderSize;      // Size of all folder entries
+	uint32_t TotalFileSize;        // Size of all file entries
+	uint32_t FolderUncompSize;     // Uncompressed size of folder
+	uint32_t BytesLeftInBlock;     // Number of bytes left in current block
 	bool ReuseBlock;
 	char DestPath[MAX_PATH];
 	char CabinetReservedFile[MAX_PATH];
 	void* CabinetReservedFileBuffer;
-	unsigned long CabinetReservedFileSize;
+	uint32_t CabinetReservedFileSize;
 	FILEHANDLE FileHandle;
 	bool FileOpen;
 	CFHEADER CABHeader;
-	unsigned long CabinetReserved;
-	unsigned long FolderReserved;
-	unsigned long DataReserved;
+	uint32_t CabinetReserved;
+	uint32_t FolderReserved;
+	uint32_t DataReserved;
 	PCFFOLDER_NODE FolderListHead;
 	PCFFOLDER_NODE FolderListTail;
 	PCFFOLDER_NODE CurrentFolderNode;
@@ -444,32 +446,32 @@ private:
 	PCFFILE_NODE FileListHead;
 	PCFFILE_NODE FileListTail;
 	CCABCodec *Codec;
-	unsigned long CodecId;
+	uint32_t CodecId;
 	bool CodecSelected;
 	void* InputBuffer;
 	void* CurrentIBuffer;               // Current offset in input buffer
-	unsigned long CurrentIBufferSize;   // Bytes left in input buffer
+	uint32_t CurrentIBufferSize;   // Bytes left in input buffer
 	void* OutputBuffer;
-	unsigned long TotalCompSize;        // Total size of current CFDATA block
+	uint32_t TotalCompSize;        // Total size of current CFDATA block
 	void* CurrentOBuffer;               // Current offset in output buffer
-	unsigned long CurrentOBufferSize;   // Bytes left in output buffer
-	unsigned long BytesLeftInCabinet;
+	uint32_t CurrentOBufferSize;   // Bytes left in output buffer
+	uint32_t BytesLeftInCabinet;
 	bool RestartSearch;
-	unsigned long LastFileOffset;       // Uncompressed offset of last extracted file
+	uint32_t LastFileOffset;       // Uncompressed offset of last extracted file
 #ifndef CAB_READ_ONLY
-	unsigned long LastBlockStart;       // Uncompressed offset of last block in folder
-	unsigned long MaxDiskSize;
-	unsigned long DiskSize;
-	unsigned long PrevCabinetNumber;    // Previous cabinet number (where split file starts)
+	uint32_t LastBlockStart;       // Uncompressed offset of last block in folder
+	uint32_t MaxDiskSize;
+	uint32_t DiskSize;
+	uint32_t PrevCabinetNumber;    // Previous cabinet number (where split file starts)
 	bool CreateNewDisk;
 	bool CreateNewFolder;
 
 	CCFDATAStorage *ScratchFile;
 	FILEHANDLE SourceFile;
 	bool ContinueFile;
-	unsigned long TotalBytesLeft;
+	uint32_t TotalBytesLeft;
 	bool BlockIsSplit;                  // true if current data block is split
-	unsigned long NextFolderNumber;     // Zero based folder number
+	uint32_t NextFolderNumber;     // Zero based folder number
 #endif /* CAB_READ_ONLY */
 };
 

@@ -11,14 +11,14 @@
 
 typedef struct _CABINET_NAME {
 	struct _CABINET_NAME *Next;
-	unsigned long DiskNumber;
+	uint32_t DiskNumber;
 	char Name[128];
 } CABINET_NAME, *PCABINET_NAME;
 
 typedef struct _DISK_NUMBER {
 	struct _DISK_NUMBER *Next;
-	unsigned long DiskNumber;
-	unsigned long Number;
+	uint32_t DiskNumber;
+	uint32_t Number;
 } DISK_NUMBER, *PDISK_NUMBER;
 
 typedef enum {
@@ -58,35 +58,35 @@ class CDFParser : public CCabinet {
 public:
 	CDFParser();
 	virtual ~CDFParser();
-	unsigned long Load(char* FileName);
-	unsigned long Parse();
+	uint32_t Load(char* FileName);
+	uint32_t Parse();
 	void SetFileRelativePath(char* Path);
 	bool InfFileOnly;
 	bool DontGenerateInf;
 	char FileRelativePath[300];
 private:
 	/* Event handlers */
-	virtual bool OnDiskLabel(unsigned long Number, char* Label);
-	virtual bool OnCabinetName(unsigned long Number, char* Name);
+	virtual bool OnDiskLabel(uint32_t Number, char* Label);
+	virtual bool OnCabinetName(uint32_t Number, char* Name);
 
 	void WriteInfLine(char* InfLine);
-	bool SetDiskName(PCABINET_NAME *List, unsigned long Number, char* String);
-	bool GetDiskName(PCABINET_NAME *List, unsigned long Number, char* String);
-	bool SetDiskNumber(PDISK_NUMBER *List, unsigned long Number, unsigned long Value);
-	bool GetDiskNumber(PDISK_NUMBER *List, unsigned long Number, unsigned long* Value);
-	bool DoDiskLabel(unsigned long Number, char* Label);
+	bool SetDiskName(PCABINET_NAME *List, uint32_t Number, char* String);
+	bool GetDiskName(PCABINET_NAME *List, uint32_t Number, char* String);
+	bool SetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t Value);
+	bool GetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t* Value);
+	bool DoDiskLabel(uint32_t Number, char* Label);
 	void DoDiskLabelTemplate(char* Template);
-	bool DoCabinetName(unsigned long Number, char* Name);
+	bool DoCabinetName(uint32_t Number, char* Name);
 	void DoCabinetNameTemplate(char* Template);
 	void DoInfFileName(char* InfFileName);
-	unsigned long DoMaxDiskSize(bool NumberValid, unsigned long Number);
-	unsigned long SetupNewDisk();
-	unsigned long PerformSetCommand();
-	unsigned long PerformNewCommand();
-	unsigned long PerformInfBeginCommand();
-	unsigned long PerformInfEndCommand();
-	unsigned long PerformCommand();
-	unsigned long PerformFileCopy();
+	uint32_t DoMaxDiskSize(bool NumberValid, uint32_t Number);
+	uint32_t SetupNewDisk();
+	uint32_t PerformSetCommand();
+	uint32_t PerformNewCommand();
+	uint32_t PerformInfBeginCommand();
+	uint32_t PerformInfEndCommand();
+	uint32_t PerformCommand();
+	uint32_t PerformFileCopy();
 	void SkipSpaces();
 	bool IsNextToken(DFP_TOKEN Token, bool NoSpaces);
 	bool ReadLine();
@@ -95,15 +95,15 @@ private:
 	bool FileLoaded;
 	FILEHANDLE FileHandle;
 	char* FileBuffer;
-	unsigned long FileBufferSize;
-	unsigned long CurrentOffset;
+	uint32_t FileBufferSize;
+	uint32_t CurrentOffset;
 	char Line[128];
-	unsigned long LineLength;
-	unsigned long CurrentLine;
-	unsigned long CurrentChar;
+	uint32_t LineLength;
+	uint32_t CurrentLine;
+	uint32_t CurrentChar;
 	/* Token */
 	DFP_TOKEN CurrentToken;
-	unsigned long CurrentInteger;
+	uint32_t CurrentInteger;
 	char CurrentString[256];
 
 	/* State */
@@ -112,27 +112,27 @@ private:
 	bool FolderCreated;
 	/* Standard directive variable */
 	bool Cabinet;
-	unsigned long CabinetFileCountThreshold;
+	uint32_t CabinetFileCountThreshold;
 	PCABINET_NAME CabinetName;
 	bool CabinetNameTemplateSet;
 	char CabinetNameTemplate[128];
 	bool InfFileNameSet;
 	char InfFileName[256];
 	bool Compress;
-	unsigned long CompressionType;
+	uint32_t CompressionType;
 	PCABINET_NAME DiskLabel;
 	bool DiskLabelTemplateSet;
 	char DiskLabelTemplate[128];
-	unsigned long FolderFileCountThreshold;
-	unsigned long FolderSizeThreshold;
-	unsigned long MaxCabinetSize;
-	unsigned long MaxDiskFileCount;
+	uint32_t FolderFileCountThreshold;
+	uint32_t FolderSizeThreshold;
+	uint32_t MaxCabinetSize;
+	uint32_t MaxDiskFileCount;
 	PDISK_NUMBER MaxDiskSize;
 	bool MaxDiskSizeAllSet;
-	unsigned long MaxDiskSizeAll;
-	unsigned long ReservePerCabinetSize;
-	unsigned long ReservePerDataBlockSize;
-	unsigned long ReservePerFolderSize;
+	uint32_t MaxDiskSizeAll;
+	uint32_t ReservePerCabinetSize;
+	uint32_t ReservePerDataBlockSize;
+	uint32_t ReservePerFolderSize;
 	char SourceDir[256];
 	FILEHANDLE InfFileHandle;
 	bool InfModeEnabled;
