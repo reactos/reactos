@@ -3,6 +3,7 @@
 	<file>austream.idl</file>
 	<file>ddstream.idl</file>
 	<file>dmodshow.idl</file>
+	<file>dyngraph.idl</file>
 	<file>mixerocx.idl</file>
 	<file>mediaobj.idl</file>
 	<file>medparam.idl</file>

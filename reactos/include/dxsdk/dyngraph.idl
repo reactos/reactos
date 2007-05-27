@@ -1,0 +1,116 @@
+
+
+ cpp_quote("#if 0")
+import "unknwn.idl";
+typedef int IBaseFilter ;
+typedef int IEnumFilters;
+typedef int IPin;
+typedef int REFERENCE_TIME;
+typedef int AM_MEDIA_TYPE;
+cpp_quote("#endif")
+
+interface IPinConnection;
+interface IPinFlowControl;
+interface IGraphConfig;
+interface IGraphConfigCallback;
+
+enum _AM_PIN_FLOW_CONTROL_BLOCK_FLAGS
+{
+    AM_PIN_FLOW_CONTROL_BLOCK = 0x00000001,
+};
+
+
+typedef enum _AM_GRAPH_CONFIG_RECONNECT_FLAGS
+{
+    AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT = 0x00000001,
+    AM_GRAPH_CONFIG_RECONNECT_CACHE_REMOVED_FILTERS = 0x00000002,
+    AM_GRAPH_CONFIG_RECONNECT_USE_ONLY_CACHED_FILTERS = 0x00000004
+} AM_GRAPH_CONFIG_RECONNECT_FLAGS;
+
+
+enum _REM_FILTER_FLAGS
+{
+    REMFILTERF_LEAVECONNECTED = 0x00000001
+};
+
+typedef enum _AM_FILTER_FLAGS
+{
+     AM_FILTER_FLAGS_REMOVABLE = 0x00000001
+ } AM_FILTER_FLAGS;
+
+
+[
+        local,
+        object,
+        uuid(4a9a62d3-27d4-403d-91e9-89f540e55534),
+        pointer_default(unique)
+]
+interface IPinConnection : IUnknown
+{
+    HRESULT DynamicQueryAccept([in] const AM_MEDIA_TYPE *pmt);
+    HRESULT NotifyEndOfStream([in] HANDLE hNotifyEvent);
+    HRESULT IsEndPin();
+    HRESULT DynamicDisconnect();
+};
+
+[
+        local,
+        object,
+        uuid(c56e9858-dbf3-4f6b-8119-384af2060deb),
+        pointer_default(unique)
+]
+interface IPinFlowControl : IUnknown
+{
+    HRESULT Block([in] DWORD dwBlockFlags, [in] HANDLE hEvent);
+}
+
+
+
+[
+        local,
+        object,
+        uuid(03A1EB8E-32BF-4245-8502-114D08A9CB88),
+        pointer_default(unique)
+]
+interface IGraphConfig : IUnknown
+{
+    HRESULT Reconnect([in] IPin *pOutputPin, [in] IPin *pInputPin, [in] const AM_MEDIA_TYPE *pmtFirstConnection, IBaseFilter *pUsingFilter, [in] HANDLE hAbortEvent, [in] DWORD dwFlags);
+    HRESULT Reconfigure([in] IGraphConfigCallback *pCallback, [in] PVOID pvContext, [in] DWORD dwFlags, [in] HANDLE hAbortEvent);
+    HRESULT AddFilterToCache([in] IBaseFilter *pFilter);
+    HRESULT EnumCacheFilter([out] IEnumFilters **pEnum);
+    HRESULT RemoveFilterFromCache([in]IBaseFilter *pFilter);
+    HRESULT GetStartTime([out] REFERENCE_TIME *prtStart);
+    HRESULT PushThroughData([in] IPin *pOutputPin, [in] IPinConnection *pConnection, [in] HANDLE hEventAbort);
+    HRESULT SetFilterFlags([in] IBaseFilter *pFilter, [in] DWORD dwFlags);
+    HRESULT GetFilterFlags([in] IBaseFilter *pFilter, [out] DWORD *pdwFlags);
+    HRESULT RemoveFilterEx( [in] IBaseFilter *pFilter, DWORD Flags );
+}
+
+[
+        local,
+        object,
+        uuid(ade0fd60-d19d-11d2-abf6-00a0c905f375),
+        pointer_default(unique)
+]
+interface IGraphConfigCallback : IUnknown
+{
+    HRESULT Reconfigure(PVOID pvContext, DWORD dwFlags);
+}
+
+[
+    local,
+    object,
+    uuid(DCFBDCF6-0DC2-45f5-9AB2-7C330EA09C29),
+    pointer_default(unique)
+]
+interface IFilterChain : IUnknown
+{
+    HRESULT StartChain( [in] IBaseFilter *pStartFilter, [in] IBaseFilter *pEndFilter );
+    HRESULT PauseChain( [in] IBaseFilter *pStartFilter, [in] IBaseFilter *pEndFilter );
+    HRESULT StopChain( [in] IBaseFilter *pStartFilter, [in] IBaseFilter *pEndFilter );
+    HRESULT RemoveChain( [in] IBaseFilter *pStartFilter, [in] IBaseFilter *pEndFilter );
+}
+
+
+
+
