@@ -19,11 +19,12 @@
 #define IDC_CAPTUREFILENAME             1002
 #define IDC_BROWSE                      1003
 #define IDC_LICENSE_EDIT                1029
-#define ID_FILE_CONNECT                 32771
-#define ID_FILE_DISCONNECT              32772
-#define ID_FILE_STARTCAPTURE            32773
-#define ID_FILE_STOPCAPTURE             32774
-#define ID_FILE_LOCALECHO               32775
+#define IDM_FILE_CLEARDISPLAY           32770
+#define IDM_FILE_CONNECT                32771
+#define IDM_FILE_DISCONNECT             32772
+#define IDM_FILE_STARTCAPTURE           32773
+#define IDM_FILE_STOPCAPTURE            32774
+#define IDM_FILE_LOCALECHO              32775
 #define IDS_LICENSE                     32815
 #define IDC_STATIC                      -1
 

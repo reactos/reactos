@@ -16,19 +16,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&Fil"
     BEGIN
-        MENUITEM "Koble &til",                    ID_FILE_CONNECT
-        MENUITEM "Koble &fra",                 ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "Koble &til", IDM_FILE_CONNECT
+        MENUITEM "Koble &fra", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Start Opptak",              ID_FILE_STARTCAPTURE
-        MENUITEM "S&topp Opptak",               ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Lokalt Ekko",                 ID_FILE_LOCALECHO
+        MENUITEM "&Start Opptak", IDM_FILE_STARTCAPTURE
+        MENUITEM "S&topp Opptak", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Avslutt",                       IDM_EXIT
+        MENUITEM "&Lokalt Ekko", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "&Avslutt", IDM_EXIT
     END
     POPUP "&Hjelp"
     BEGIN
-        MENUITEM "&Om ...",                  IDM_ABOUT
+        MENUITEM "&Om ...", IDM_ABOUT
     END
 END
 

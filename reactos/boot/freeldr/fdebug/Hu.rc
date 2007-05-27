@@ -16,19 +16,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Csatlakoztatás",                    ID_FILE_CONNECT
-        MENUITEM "Kapcsolat&bontás",                 ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Csatlakoztatás", IDM_FILE_CONNECT
+        MENUITEM "Kapcsolat&bontás", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Start Capture",              ID_FILE_STARTCAPTURE
-        MENUITEM "S&top Capture",               ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "Helyi &visszhang",                 ID_FILE_LOCALECHO
+        MENUITEM "&Start Capture", IDM_FILE_STARTCAPTURE
+        MENUITEM "S&top Capture", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Kilépés",                       IDM_EXIT
+        MENUITEM "Helyi &visszhang", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "&Kilépés", IDM_EXIT
     END
     POPUP "&Súgó"
     BEGIN
-        MENUITEM "&Névjegy ...",                  IDM_ABOUT
+        MENUITEM "&Névjegy ...", IDM_ABOUT
     END
 END
 

@@ -16,19 +16,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&Plik"
     BEGIN
-        MENUITEM "P&o³¹cz",                    ID_FILE_CONNECT
-        MENUITEM "&Roz³¹cz",                 ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "P&o³¹cz", IDM_FILE_CONNECT
+        MENUITEM "&Roz³¹cz", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Ro&zpocznij zrzut",              ID_FILE_STARTCAPTURE
-        MENUITEM "Za&trzymaj zrzut",               ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "Lo&kalne Echo",                 ID_FILE_LOCALECHO
+        MENUITEM "Ro&zpocznij zrzut", IDM_FILE_STARTCAPTURE
+        MENUITEM "Za&trzymaj zrzut", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Wyjœcie",                       IDM_EXIT
+        MENUITEM "Lo&kalne Echo", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "&Wyjœcie", IDM_EXIT
     END
     POPUP "Po&moc"
     BEGIN
-        MENUITEM "&O ...",                  IDM_ABOUT
+        MENUITEM "&O ...", IDM_ABOUT
     END
 END
 

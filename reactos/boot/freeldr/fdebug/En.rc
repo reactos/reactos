@@ -16,19 +16,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Connect",                    ID_FILE_CONNECT
-        MENUITEM "&Disconnect",                 ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Connect", IDM_FILE_CONNECT
+        MENUITEM "&Disconnect", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Start Capture",              ID_FILE_STARTCAPTURE
-        MENUITEM "S&top Capture",               ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Local Echo",                 ID_FILE_LOCALECHO
+        MENUITEM "&Start Capture", IDM_FILE_STARTCAPTURE
+        MENUITEM "S&top Capture", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       IDM_EXIT
+        MENUITEM "&Local Echo", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", IDM_EXIT
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About ...",                  IDM_ABOUT
+        MENUITEM "&About ...", IDM_ABOUT
     END
 END
 

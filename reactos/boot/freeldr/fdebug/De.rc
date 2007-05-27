@@ -16,19 +16,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "&Verbinden",                    ID_FILE_CONNECT
-        MENUITEM "&Trennen",                 ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Verbinden", IDM_FILE_CONNECT
+        MENUITEM "&Trennen", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Aufnahme starten",              ID_FILE_STARTCAPTURE
-        MENUITEM "A&ufnahme stoppen",               ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "A&nzeige löschen", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Local Echo",                 ID_FILE_LOCALECHO
+        MENUITEM "&Aufnahme starten", IDM_FILE_STARTCAPTURE
+        MENUITEM "A&ufnahme stoppen", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "B&eenden",                       IDM_EXIT
+        MENUITEM "&Local Echo", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "B&eenden", IDM_EXIT
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "&Über ...",                  IDM_ABOUT
+        MENUITEM "&Über ...", IDM_ABOUT
     END
 END
 
@@ -116,7 +118,7 @@ END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 259, 210
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About FreeLoader Debugger"
+CAPTION "Über FreeLoader Debugger"
 FONT 8, "Tahoma"
 BEGIN
     CONTROL         "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)",
@@ -135,8 +137,7 @@ FONT 8, "Tahoma"
 BEGIN
     LTEXT           "COM Port angeben (z.B. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Bandbreite angeben (z.B. 115200):",IDC_STATIC,7,38,114,
-                    8
+    LTEXT           "Bandbreite angeben (z.B. 115200):",IDC_STATIC,7,38,114, 8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
     PUSHBUTTON      "Abbrechen",IDCANCEL,100,79,50,14
@@ -144,10 +145,10 @@ END
 
 IDD_CAPTURE DIALOG DISCARDABLE  0, 0, 251, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Capture File"
+CAPTION "Protokolldatei"
 FONT 8, "Tahoma"
 BEGIN
-    LTEXT           "Name der aufgenommenden Datei:",IDC_STATIC,7,17,120,8
+    LTEXT           "Name der Protokolldatei:",IDC_STATIC,7,17,120,8
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
     PUSHBUTTON      "&Durchsuchen",IDC_BROWSE,194,26,50,14
     DEFPUSHBUTTON   "OK",IDOK,139,74,50,14

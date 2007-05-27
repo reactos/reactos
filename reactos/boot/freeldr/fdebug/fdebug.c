@@ -218,7 +218,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_EXIT:
 		   DestroyWindow(hWnd);
 		   break;
-		case ID_FILE_CONNECT:
+		case IDM_FILE_CLEARDISPLAY:
+			SetWindowText(hDisplayWnd, TEXT(""));
+			break;
+		case IDM_FILE_CONNECT:
 			if (bConnected)
 			{
 				MessageBox(hWnd, TEXT("You are already connected!"), TEXT("Error"), MB_OK|MB_ICONSTOP);
@@ -234,7 +237,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			break;
-		case ID_FILE_DISCONNECT:
+		case IDM_FILE_DISCONNECT:
 			if (bConnected)
 			{
 				bConnected = FALSE;
@@ -246,7 +249,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				MessageBox(hWnd, TEXT("You are not currently connected!"), TEXT("Error"), MB_OK|MB_ICONSTOP);
 			}
 			break;
-		case ID_FILE_STARTCAPTURE:
+		case IDM_FILE_STARTCAPTURE:
 			if (DialogBox(hInst, (LPCTSTR)IDD_CAPTURE, hWnd, (DLGPROC)CaptureDialogProc) == IDOK)
 			{
 				bCapturing = TRUE;
@@ -255,7 +258,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				hCaptureFile = CreateFile(strCaptureFileName, FILE_APPEND_DATA, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 			}
 			break;
-		case ID_FILE_STOPCAPTURE:
+		case IDM_FILE_STOPCAPTURE:
 			if (bCapturing)
 			{
 				bCapturing = FALSE;
@@ -265,7 +268,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				hCaptureFile = NULL;
 			}
 			break;
-		case ID_FILE_LOCALECHO:
+		case IDM_FILE_LOCALECHO:
 			if (bLocalEcho)
 			{
 				bLocalEcho = FALSE;
@@ -426,11 +429,11 @@ VOID EnableConnectMenuItem(BOOL Enable)
 
 	if (Enable)
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_CONNECT, MF_BYCOMMAND|MF_ENABLED);
+		EnableMenuItem(hFileMenu, IDM_FILE_CONNECT, MF_BYCOMMAND|MF_ENABLED);
 	}
 	else
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_CONNECT, MF_BYCOMMAND|MF_GRAYED);
+		EnableMenuItem(hFileMenu, IDM_FILE_CONNECT, MF_BYCOMMAND|MF_GRAYED);
 	}
 }
 
@@ -444,11 +447,11 @@ VOID EnableDisconnectMenuItem(BOOL Enable)
 
 	if (Enable)
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_DISCONNECT, MF_BYCOMMAND|MF_ENABLED);
+		EnableMenuItem(hFileMenu, IDM_FILE_DISCONNECT, MF_BYCOMMAND|MF_ENABLED);
 	}
 	else
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_DISCONNECT, MF_BYCOMMAND|MF_GRAYED);
+		EnableMenuItem(hFileMenu, IDM_FILE_DISCONNECT, MF_BYCOMMAND|MF_GRAYED);
 	}
 }
 
@@ -462,11 +465,11 @@ VOID EnableStartCaptureMenuItem(BOOL Enable)
 
 	if (Enable)
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_STARTCAPTURE, MF_BYCOMMAND|MF_ENABLED);
+		EnableMenuItem(hFileMenu, IDM_FILE_STARTCAPTURE, MF_BYCOMMAND|MF_ENABLED);
 	}
 	else
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_STARTCAPTURE, MF_BYCOMMAND|MF_GRAYED);
+		EnableMenuItem(hFileMenu, IDM_FILE_STARTCAPTURE, MF_BYCOMMAND|MF_GRAYED);
 	}
 }
 
@@ -480,11 +483,11 @@ VOID EnableStopCaptureMenuItem(BOOL Enable)
 
 	if (Enable)
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_STOPCAPTURE, MF_BYCOMMAND|MF_ENABLED);
+		EnableMenuItem(hFileMenu, IDM_FILE_STOPCAPTURE, MF_BYCOMMAND|MF_ENABLED);
 	}
 	else
 	{
-		EnableMenuItem(hFileMenu, ID_FILE_STOPCAPTURE, MF_BYCOMMAND|MF_GRAYED);
+		EnableMenuItem(hFileMenu, IDM_FILE_STOPCAPTURE, MF_BYCOMMAND|MF_GRAYED);
 	}
 }
 
@@ -498,11 +501,11 @@ VOID CheckLocalEchoMenuItem(BOOL Checked)
 
 	if (Checked)
 	{
-		CheckMenuItem(hFileMenu, ID_FILE_LOCALECHO, MF_BYCOMMAND|MF_CHECKED);
+		CheckMenuItem(hFileMenu, IDM_FILE_LOCALECHO, MF_BYCOMMAND|MF_CHECKED);
 	}
 	else
 	{
-		CheckMenuItem(hFileMenu, ID_FILE_LOCALECHO, MF_BYCOMMAND|MF_UNCHECKED);
+		CheckMenuItem(hFileMenu, IDM_FILE_LOCALECHO, MF_BYCOMMAND|MF_UNCHECKED);
 	}
 }
 

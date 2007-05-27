@@ -17,19 +17,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Sambung",                    ID_FILE_CONNECT
-        MENUITEM "&Putus",                      ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Sambung", IDM_FILE_CONNECT
+        MENUITEM "&Putus", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Mulai Penangkapan",          ID_FILE_STARTCAPTURE
-        MENUITEM "&Hentikan Penangkapan",       ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "Echo &Lokal",                 ID_FILE_LOCALECHO
+        MENUITEM "&Mulai Penangkapan", IDM_FILE_STARTCAPTURE
+        MENUITEM "&Hentikan Penangkapan", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Keluar",                     IDM_EXIT
+        MENUITEM "Echo &Lokal", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "&Keluar", IDM_EXIT
     END
     POPUP "&Bantuan"
     BEGIN
-        MENUITEM "&Tentang ...",                IDM_ABOUT
+        MENUITEM "&Tentang ...", IDM_ABOUT
     END
 END
 
@@ -170,7 +172,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_LICENSE             "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+    IDS_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 #endif    // Indonesian resources

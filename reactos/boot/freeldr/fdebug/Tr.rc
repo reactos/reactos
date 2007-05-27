@@ -16,19 +16,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&Dosya"
     BEGIN
-        MENUITEM "&Baðlan",                    	ID_FILE_CONNECT
-        MENUITEM "Baðlantýyý &Kes",             ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Baðlan", IDM_FILE_CONNECT
+        MENUITEM "Baðlantýyý &Kes", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Yakalamayý Baþlat",          ID_FILE_STARTCAPTURE
-        MENUITEM "Yakalamayý &Durdur",          ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "Bölgesel &Yanký",             ID_FILE_LOCALECHO
+        MENUITEM "&Yakalamayý Baþlat", IDM_FILE_STARTCAPTURE
+        MENUITEM "Yakalamayý &Durdur", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Çýkýþ",                      IDM_EXIT
+        MENUITEM "Bölgesel &Yanký", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "&Çýkýþ", IDM_EXIT
     END
     POPUP "&Yardým"
     BEGIN
-        MENUITEM "&Hakkýnda ...",               IDM_ABOUT
+        MENUITEM "&Hakkýnda ...", IDM_ABOUT
     END
 END
 

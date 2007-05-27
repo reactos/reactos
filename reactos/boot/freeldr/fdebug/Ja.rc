@@ -16,19 +16,21 @@ IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
-        MENUITEM "接続(&C)",                    ID_FILE_CONNECT
-        MENUITEM "切断(&D)",                    ID_FILE_DISCONNECT, GRAYED
+        MENUITEM "接続(&C)", IDM_FILE_CONNECT
+        MENUITEM "切断(&D)", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "取り込み開始(&S)",            ID_FILE_STARTCAPTURE
-        MENUITEM "取り込み停止(&T)",            ID_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "ローカル エコー(&L)",         ID_FILE_LOCALECHO
+        MENUITEM "取り込み開始(&S)", IDM_FILE_STARTCAPTURE
+        MENUITEM "取り込み停止(&T)", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "終了(&X)",                    IDM_EXIT
+        MENUITEM "ローカル エコー(&L)", IDM_FILE_LOCALECHO
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)", IDM_EXIT
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "バージョン情報(&A)...",                  IDM_ABOUT
+        MENUITEM "バージョン情報(&A)...", IDM_ABOUT
     END
 END
 
