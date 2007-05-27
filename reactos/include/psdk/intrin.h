@@ -75,8 +75,10 @@
 #include "intrin_ppc.h"
 #elif defined(_MIPS_)
 #include "intrin_mips.h"
-#else
+#elif defined(__x86_64__)
 /* TODO: the x64 architecture shares most of the i386 intrinsics. It should be easy to support */
+#include "intrin_x86_64.h"
+#else
 #error Unsupported architecture
 #endif
 
