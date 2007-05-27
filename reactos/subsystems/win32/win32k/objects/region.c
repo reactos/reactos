@@ -2531,16 +2531,18 @@ NtGdiPaintRgn(HDC  hDC,
   if( !dc )
 	return FALSE;
 
-  if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))){
-	DC_UnlockDc( dc );
-  	return FALSE;
+  if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
+  {
+    DC_UnlockDc( dc );
+    return FALSE;
   }
 
 /* ei enable later
   // Transform region into device co-ords
-  if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR) {
+  if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR)
+  {
     NtGdiDeleteObject( tmpVisRgn );
-	DC_UnlockDc( dc );
+    DC_UnlockDc( dc );
     return FALSE;
   }
 */
@@ -2552,12 +2554,14 @@ NtGdiPaintRgn(HDC  hDC,
   visrgn = RGNDATA_LockRgn(hRgn);
   if (visrgn == NULL)
   {
-  	DC_UnlockDc( dc );
+    NtGdiDeleteObject( tmpVisRgn );
+    DC_UnlockDc( dc );
     return FALSE;
   }
 
-  ClipRegion = IntEngCreateClipRegion (
-	  visrgn->rdh.nCount, (PRECTL)visrgn->Buffer, (PRECTL)&visrgn->rdh.rcBound );
+  ClipRegion = IntEngCreateClipRegion(visrgn->rdh.nCount,
+                                      (PRECTL)visrgn->Buffer,
+                                      (PRECTL)&visrgn->rdh.rcBound );
   ASSERT( ClipRegion );
   pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);
@@ -2569,13 +2573,15 @@ NtGdiPaintRgn(HDC  hDC,
   /* FIXME - Handle BitmapObj == NULL !!!! */
 
   bRet = IntEngPaint(&BitmapObj->SurfObj,
-	 ClipRegion,
-	 &BrushInst.BrushObject,
-	 &BrushOrigin,
-	 0xFFFF);//FIXME:don't know what to put here
+                     ClipRegion,
+                     &BrushInst.BrushObject,
+                     &BrushOrigin,
+                     0xFFFF);//FIXME:don't know what to put here
 
   BITMAPOBJ_UnlockBitmap(BitmapObj);
+  BRUSHOBJ_UnlockBrush(pBrush);
   RGNDATA_UnlockRgn( visrgn );
+  NtGdiDeleteObject( tmpVisRgn );
 
   // Fill the region
   DC_UnlockDc( dc );
