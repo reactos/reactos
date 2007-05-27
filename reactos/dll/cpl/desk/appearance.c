@@ -309,17 +309,8 @@ ApplyTheme(GLOBALS* g)
 }
 
 
-/* Draw the preview window, unimplemented */
-#if 0
-static VOID
-DrawPreview(HWND hwndPreview, THEME* pTheme)
-{
-}
-#endif
-
-
-static VOID
-AppearancePage_Init(HWND hwndDlg, GLOBALS *g)
+static INT_PTR
+AppearancePage_OnInit(HWND hwndDlg, GLOBALS *g)
 {
 	HKEY hkNewSchemes, hkScheme, hkSizes, hkSize;
 	FILETIME ftLastWriteTime;
@@ -328,6 +319,14 @@ AppearancePage_Init(HWND hwndDlg, GLOBALS *g)
 	DWORD dwDisposition = 0;
 	INT iStyle, iSize, iTemplateIndex, iListIndex = 0;
 	INT Result;
+
+	g = (GLOBALS*)malloc(sizeof(GLOBALS));
+	if (g == NULL)
+	{
+		return FALSE;
+	}
+
+	SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)g);
 
 	LoadCurrentTheme(g);
 
@@ -395,12 +394,16 @@ AppearancePage_Init(HWND hwndDlg, GLOBALS *g)
 		RegCloseKey(hkNewSchemes);
 	}
 	SendMessage(GetDlgItem(hwndDlg, IDC_APPEARANCE_COLORSCHEME), LB_SETCURSEL, 0, 0);
+
+	return FALSE;
 }
 
 
-static VOID
-AppearancePage_CleanUp(HWND hwndDlg, GLOBALS *g)
+static INT_PTR
+AppearancePage_OnDestroy(HWND hwndDlg, GLOBALS *g)
 {
+	free(g);
+	return TRUE;
 }
 
 
@@ -416,18 +419,10 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
-			g = (GLOBALS*)malloc(sizeof(GLOBALS));
-			if (g == NULL)
-				return FALSE;
-
-			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)g);
-			AppearancePage_Init(hwndDlg, g);
-			break;
+			return AppearancePage_OnInit(hwndDlg, g);
 
 		case WM_DESTROY:
-			AppearancePage_CleanUp(hwndDlg, g);
-			free(g);
-			break;
+			return AppearancePage_OnDestroy(hwndDlg, g);
 
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
