@@ -12,4 +12,5 @@
 	<file>tvratings.idl</file>	
 	<file>vidcap.idl</file>
 	<file>Videoacc.idl</file>	
+	<file>Vmrender.idl</file>	
 </module>
