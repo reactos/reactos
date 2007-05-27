@@ -303,12 +303,12 @@ o call.c: added lines to initialize for pointers.  This fixed the
 o Fixed carrage return output to better match MSDOS with echo on or off.
 
 
-07-Dec-1998 ReactOS CMD version 0.0.1 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+07-Dec-1998 ReactOS CMD version 0.0.1 (Eric Kohl)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o First test release.
 o Added internal ATTRIB command.
 
-11-Dec-1998 ReactOS CMD version 0.0.2 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+11-Dec-1998 ReactOS CMD version 0.0.2 (Eric Kohl)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o Fixed bug in ALIAS. CMD crashed when you tried to remove an alias.
 o Fixed bug in split(). Added freep(). This fixed the DEL command.
@@ -319,7 +319,7 @@ o Fixed DATE and TIME command. Now they accept values when used
   without parameter.
 o Implemented LABEL command.
 
-05-Jan-1999 ReactOS CMD version 0.0.3 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+05-Jan-1999 ReactOS CMD version 0.0.3 (Eric Kohl)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o Added COLOR command and "/t" option.
 o Cursor shows insert/overwrite mode.
@@ -333,7 +333,7 @@ o Added recursion to ATTRIB command.
 o Added locale support for DIR, DATE, TIME and PROMPT.
 o Fixed VERIFY.
 
-10-Feb-1999 ReactOS CMD version 0.0.4 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+10-Feb-1999 ReactOS CMD version 0.0.4 (Eric Kohl)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o "?" lists all available commands.
 o Most commands are unicode and redirection aware now.
@@ -344,7 +344,7 @@ o Added CHCP command.
 o Fixed keyboard input bug.
 o Rewrote DEL and MOVE commands.
 
-28-Dec-1999 ReactOS CMD version 0.1 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+28-Dec-1999 ReactOS CMD version 0.1 (Eric Kohl)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o Cleaned up DIR command.
 o Searching for executables in the right order.
@@ -358,10 +358,10 @@ o Fixed bugs in MD and RD that crashed cmd when no directory was specified.
 o Improved history support.
 o Improved COLOR command.
 
-09-Apr-2000 ReactOS CMD version 0.1 (EricKohl <ekohl@rz-online.de>
+09-Apr-2000 ReactOS CMD version 0.1 (Eric Kohl)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o Fixed bug in COPY command. CMD crashed if source file didn't exist.
 
-13-Jul-2000 ReactOS CMD version 0.1.1 (EricKohl <ekohl@rz-online.de>
+13-Jul-2000 ReactOS CMD version 0.1.1 (Eric Kohl)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 o Implemented 'ECHO.' and 'ECHOERR.' commands.

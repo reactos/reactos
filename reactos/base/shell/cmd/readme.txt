@@ -41,7 +41,7 @@ FreeDOS developers:
    Hans B Pufal <hansp@digiweb.com>
 
 ReactOS developers:
-   Eric Kohl <ekohl@rz-online.de>
+   Eric Kohl
    Emanuele Aliberti <ea@iol.it>
    Paolo Pantaleo <paolopan@freemail.it>
    Brandon Turner <turnerb7@msu.edu>
