@@ -1,0 +1,107 @@
+
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "strmif.idl";
+
+
+typedef float MP_DATA;
+
+typedef enum _MP_Type
+{
+   MPT_INT,
+   MPT_FLOAT,
+   MPT_BOOL,
+   MPT_ENUM,
+   MPT_MAX,
+} MP_TYPE;
+
+cpp_quote("const MP_DATA MPBOOL_TRUE = 1.0;")
+cpp_quote("const MP_DATA MPBOOL_FALSE = 0.0;")
+
+
+typedef enum _MP_CURVE_TYPE
+{
+    MP_CURVE_JUMP      = 0x0001,
+    MP_CURVE_LINEAR    = 0x0002,
+    MP_CURVE_SQUARE    = 0x0004,
+    MP_CURVE_INVSQUARE = 0x0008,
+    MP_CURVE_SINE      = 0x0010,
+} MP_CURVE_TYPE;
+
+
+typedef DWORD MP_CAPS;
+const MP_CAPS MP_CAPS_CURVE_JUMP = MP_CURVE_JUMP;
+const MP_CAPS MP_CAPS_CURVE_LINEAR = MP_CURVE_LINEAR;
+const MP_CAPS MP_CAPS_CURVE_SQUARE = MP_CURVE_SQUARE;
+const MP_CAPS MP_CAPS_CURVE_INVSQUARE = MP_CURVE_INVSQUARE;
+const MP_CAPS MP_CAPS_CURVE_SINE = MP_CURVE_SINE;
+
+typedef struct _MP_PARAMINFO
+{
+   MP_TYPE mpType;
+   MP_CAPS  mopCaps;
+   MP_DATA mpdMinValue;
+   MP_DATA mpdMaxValue;
+   MP_DATA mpdNeutralValue;
+   WCHAR szUnitText[32];
+   WCHAR szLabel[32];
+} MP_PARAMINFO;
+
+typedef DWORD DWORD;
+const DWORD DWORD_ALLPARAMS = -1;
+typedef DWORD MP_TIMEDATA;
+
+cpp_quote("DEFINE_GUID(GUID_TIME_REFERENCE,    0x93ad712b, 0xdaa0, 0x4ffe, 0xbc, 0x81, 0xb0, 0xce, 0x50, 0x0f, 0xcd, 0xd9);")
+cpp_quote("DEFINE_GUID(GUID_TIME_MUSIC,        0x0574c49d, 0x5b04, 0x4b15, 0xa5, 0x42, 0xae, 0x28, 0x20, 0x30, 0x11, 0x7b);")
+cpp_quote("DEFINE_GUID(GUID_TIME_SAMPLES,      0xa8593d05, 0x0c43, 0x4984, 0x9a, 0x63, 0x97, 0xaf, 0x9e, 0x02, 0xc4, 0xc0);")
+
+typedef DWORD MP_FLAGS;
+const MP_FLAGS MPF_ENVLP_STANDARD         = 0x0000;
+const MP_FLAGS MPF_ENVLP_BEGIN_CURRENTVAL = 0x0001;
+const MP_FLAGS MPF_ENVLP_BEGIN_NEUTRALVAL = 0x0002;
+
+typedef struct _MP_ENVELOPE_SEGMENT
+{
+   REFERENCE_TIME rtStart;
+   REFERENCE_TIME rtEnd;
+   MP_DATA valStart;
+   MP_DATA valEnd;
+   MP_CURVE_TYPE iCurve;
+   MP_FLAGS flags;
+} MP_ENVELOPE_SEGMENT;
+
+
+const MP_FLAGS MPF_PUNCHIN_REFTIME = 0;
+const MP_FLAGS MPF_PUNCHIN_NOW = 0x0001;
+const MP_FLAGS MPF_PUNCHIN_STOPPED = 0x0002;
+
+[
+object,
+uuid(6d6cbb60-a223-44aa-842f-a2f06750be6d),
+version(1.0)
+]
+interface IMediaParamInfo : IUnknown
+{
+    HRESULT GetParamCount ([out] DWORD * pdwParams);
+    HRESULT GetParamInfo ([in] DWORD dwParamIndex, [out] MP_PARAMINFO * pInfo);
+    HRESULT GetParamText ([in] DWORD dwParamIndex, [out] WCHAR **ppwchText);
+    HRESULT GetNumTimeFormats ([out] DWORD * pdwNumTimeFormats);
+    HRESULT GetSupportedTimeFormat([in] DWORD dwFormatIndex, [out] GUID *pguidTimeFormat);
+    HRESULT GetCurrentTimeFormat ([out] GUID *pguidTimeFormat, [out] MP_TIMEDATA *pTimeData);
+}
+
+[
+object,
+uuid(6d6cbb61-a223-44aa-842f-a2f06750be6e),
+version(1.0)
+]
+interface IMediaParams : IUnknown
+{
+    HRESULT GetParam ([in] DWORD dwParamIndex, [out] MP_DATA *pValue);
+    HRESULT SetParam ([in] DWORD dwParamIndex, [in] MP_DATA value);
+    HRESULT AddEnvelope ([in] DWORD dwParamIndex, [in] DWORD cSegments, [in]  MP_ENVELOPE_SEGMENT * pEnvelopeSegments);
+    HRESULT FlushEnvelope ([in] DWORD dwParamIndex, [in] REFERENCE_TIME refTimeStart, [in] REFERENCE_TIME refTimeEnd);
+    HRESULT SetTimeFormat ([in] GUID guidTimeFormat, [in] MP_TIMEDATA mpTimeData);
+}
+
