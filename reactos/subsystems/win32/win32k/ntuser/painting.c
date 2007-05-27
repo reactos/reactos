@@ -166,15 +166,20 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
        Window->UpdateRegion != (HRGN)1)
    {
       hRgnNonClient = NtGdiCreateRectRgn(0, 0, 0, 0);
-      hRgnWindow = IntCalcWindowRgn(Window, TRUE);
 
       /*
        * If region creation fails it's safe to fallback to whole
        * window region.
        */
-
       if (hRgnNonClient == NULL)
       {
+         return (HRGN)1;
+      }
+
+      hRgnWindow = IntCalcWindowRgn(Window, TRUE);
+      if (hRgnWindow == NULL)
+      {
+         NtGdiDeleteObject(hRgnNonClient);
          return (HRGN)1;
       }
 
@@ -182,11 +187,13 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
                                 hRgnWindow, RGN_DIFF);
       if (RgnType == ERROR)
       {
+         NtGdiDeleteObject(hRgnWindow);
          NtGdiDeleteObject(hRgnNonClient);
          return (HRGN)1;
       }
       else if (RgnType == NULLREGION)
       {
+         NtGdiDeleteObject(hRgnWindow);
          NtGdiDeleteObject(hRgnNonClient);
          return NULL;
       }
