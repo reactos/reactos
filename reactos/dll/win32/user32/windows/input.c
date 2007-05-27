@@ -298,9 +298,9 @@ HKL STDCALL
 LoadKeyboardLayoutA(LPCSTR pwszKLID,
 		    UINT Flags)
 {
-  return NtUserLoadKeyboardLayoutEx(
+  return NtUserLoadKeyboardLayoutEx( NULL, 0, NULL, NULL,
                strtoul(pwszKLID, NULL, 16),
-               Flags, 0, 0, 0, 0);
+               Flags);
 }
 
 
@@ -312,10 +312,10 @@ LoadKeyboardLayoutW(LPCWSTR pwszKLID,
 		    UINT Flags)
 {
   // Look at revision 25596 to see how it's done in windows.
-  // We will do things our own way.
-  return NtUserLoadKeyboardLayoutEx(
+  // We will do things our own way. Also be compatible too!
+  return NtUserLoadKeyboardLayoutEx( NULL, 0, NULL, NULL,
                wcstoul(pwszKLID, NULL, 16),
-               Flags, 0, 0, 0, 0);
+               Flags);
 }
 
 

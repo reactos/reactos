@@ -1229,12 +1229,12 @@ NtUserKillTimer
 HKL
 STDCALL
 NtUserLoadKeyboardLayoutEx( 
+   IN HANDLE Handle,
+   IN DWORD offTable,
+   IN HKL hKL,
+   IN PUNICODE_STRING puszKLID,
    IN DWORD dwKLID,
-   IN UINT Flags,
-   IN DWORD Unused1,
-   IN DWORD Unused2,
-   IN DWORD Unused3,
-   IN DWORD Unused4);
+   IN UINT Flags);
 
 BOOL
 NTAPI
