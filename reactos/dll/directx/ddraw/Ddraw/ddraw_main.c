@@ -183,75 +183,69 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
     return retVal;
 }
 
+
+
+/* 
+ * We can optain the version of the directdraw object by compare the 
+ * vtl table pointer from iface we do not need pass which version 
+ * we whant to use
+ *
+ * Main_DirectDraw_CreateSurface is dead at moment we do only support
+ * directdraw 7 at moment 
+ */
+
+/* For DirectDraw 1 - 3 */
 HRESULT WINAPI 
-Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
-                               LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+Main_DirectDraw_CreateSurface (LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD,
+                               LPDIRECTDRAWSURFACE *ppSurf, IUnknown *pUnkOuter)
 {
-   HRESULT ret;
+   HRESULT ret = DDERR_GENERIC;
    DDSURFACEDESC2 dd_desc_v2;
-   LPDDRAWI_DIRECTDRAW_INT dd_int;
-   LPDDRAWI_DIRECTDRAW_LCL dd_lcl;
-   LPDDRAWI_DIRECTDRAW_GBL dd_gbl;
 
    DX_WINDBG_trace();
 
-   /* FIXME vaildate input pointers or warp everthing with SEH */
+    // EnterCriticalSection(&ddcs);
+    _SEH_TRY
+    {
+        if (pDDSD->dwSize != sizeof(DDSURFACEDESC))
+        {
+            return DDERR_INVALIDPARAMS;
+        }
 
-   if (pUnkOuter)
-   {
-       /* FIXME send back right return code */
-        return DDERR_GENERIC;
-   }
-
-   if (pDDSD)
-   {
-        /* FIXME send back right return code */
-        return DDERR_GENERIC;
-   }
-
-   EnterCriticalSection(&ddcs);
-
-   ret = DDERR_GENERIC;
-
-   dd_int = (LPDDRAWI_DIRECTDRAW_INT)iface;
-   dd_lcl = dd_int->lpLcl;
-   dd_gbl = dd_lcl->lpGbl;
-
-   if (dd_lcl->dwLocalFlags == 0)
-   {
-       LeaveCriticalSection(&ddcs);
-       /* FIXME send back right return code */
-       return  DDERR_GENERIC;
-   }
-
-   if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
-   {
-       CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2, (LPDDSURFACEDESC)pDDSD);
-   }
-   else if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
-   {
-       RtlCopyMemory(&dd_desc_v2, pDDSD,sizeof(DDSURFACEDESC2));
-   }
-   else
-   {
-       LeaveCriticalSection(&ddcs);
-       return  DDERR_INVALIDPARAMS;
-   }
-
-   /* Check if this process belongs to this ddraw object */
-   if ( dd_int->lpLcl->dwProcessId != GetCurrentProcessId() )
-   {
-       /* FIXME send back right return code */
-        return  DDERR_GENERIC;
-   }
-
-  ret = Internal_CreateSurface(dd_int,&dd_desc_v2, ppSurf,pUnkOuter);
-
-  LeaveCriticalSection(&ddcs);
+        CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2, (LPDDSURFACEDESC)pDDSD);
+        ret = Internal_CreateSurface( (LPDDRAWI_DIRECTDRAW_INT)iface,&dd_desc_v2, (LPDIRECTDRAWSURFACE7 *)ppSurf,pUnkOuter);
+    }
+        _SEH_HANDLE
+    {
+        ret = DDERR_GENERIC;
+    }
+    _SEH_END;
+  // LeaveCriticalSection(&ddcs);
   return ret;
 }
 
 
+/* For DirectDraw 4 - 7 */
+HRESULT WINAPI 
+Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
+                               LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+{
+   HRESULT ret;
+    DX_WINDBG_trace();
+    // EnterCriticalSection(&ddcs);
+    _SEH_TRY
+    {
+        ret = Internal_CreateSurface( (LPDDRAWI_DIRECTDRAW_INT)iface,pDDSD, ppSurf,pUnkOuter);
+      }
+        _SEH_HANDLE
+    {
+        ret = DDERR_GENERIC;
+    }
+    _SEH_END;
+
+    // LeaveCriticalSection(&ddcs);
+    return ret;
+}
 IDirectDraw7Vtbl DirectDraw7_Vtable =
 {
     Main_DirectDraw_QueryInterface,
@@ -260,7 +254,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_Compact,
     Main_DirectDraw_CreateClipper,
     Main_DirectDraw_CreatePalette,
-    Main_DirectDraw_CreateSurface,
+    Main_DirectDraw_CreateSurface4,
     Main_DirectDraw_DuplicateSurface,
     Main_DirectDraw_EnumDisplayModes,
     Main_DirectDraw_EnumSurfaces,
