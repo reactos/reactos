@@ -123,7 +123,7 @@
 
 #include "nls/jpn.nls"   /* 0x0411  LANG_JAPANESE, SUBLANG_NEUTRAL */
 
-//#include "nls/kor.nls"   /* 0x0412  LANG_KOREAN, SUBLANG_KOREAN */
+#include "nls/kor.nls"   /* 0x0412  LANG_KOREAN, SUBLANG_KOREAN */
 
 #include "nls/nld.nls"   /* 0x0413  LANG_DUTCH, SUBLANG_DUTCH */
 #include "nls/nlb.nls"   /* 0x0813  LANG_DUTCH, SUBLANG_DUTCH_BELGIAN */
