@@ -832,6 +832,7 @@ IopInitializeBootDrivers(VOID)
     PDRIVER_OBJECT DriverObject;
     LDR_DATA_TABLE_ENTRY ModuleObject;
     NTSTATUS Status;
+    UNICODE_STRING DriverName;
 
     /* Use IopRootDeviceNode for now */
     Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, NULL, &DeviceNode);
@@ -841,11 +842,12 @@ IopInitializeBootDrivers(VOID)
     ModuleObject.DllBase = NULL;
     ModuleObject.SizeOfImage = 0;
     ModuleObject.EntryPoint = RawFsDriverEntry;
+    RtlInitUnicodeString(&DriverName, L"RAW");
 
     /* Initialize it */
     Status = IopInitializeDriverModule(DeviceNode,
                                        &ModuleObject,
-                                       &DeviceNode->ServiceName,
+                                       &DriverName,
                                        TRUE,
                                        &DriverObject);
     if (!NT_SUCCESS(Status))
@@ -1159,6 +1161,8 @@ try_again:
                             0,
                             (PVOID*)&DriverObject);
     if (!NT_SUCCESS(Status)) return Status;
+
+    DPRINT("IopCreateDriver(): created DO %p\n", DriverObject);
 
     /* Set up the Object */
     RtlZeroMemory(DriverObject, ObjectSize);
