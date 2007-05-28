@@ -98,63 +98,71 @@ int STDCALL LoadStringA
  int nBufferMax
 )
 {
- UNICODE_STRING wstrResStr;
- ANSI_STRING strBuf;
- INT retSize;
+  UNICODE_STRING wstrResStr;
+  ANSI_STRING strBuf;
+  INT retSize;
 
- /* parameter validation */
- if
- (
-  (nBufferMax < 1) ||
-  (IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
- )
- {
-  SetLastError(ERROR_INVALID_PARAMETER);
-  return 0;
- }
+  /* parameter validation */
+  if
+  (
+    (nBufferMax < 1) ||
+    (IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
+  )
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
 
- /* get the UNICODE_STRING descriptor of the in-memory image of the string */
- if(!_InternalLoadString(hInstance, uID, &wstrResStr))
-  /* failure */
-  return 0;
+  /* get the UNICODE_STRING descriptor of the in-memory image of the string */
+  if(!_InternalLoadString(hInstance, uID, &wstrResStr))
+  {
+    /* failure */
+    return 0;
+  }
 
- /*
-  convert the string. The Unicode string may be in UTF-16 (multi-byte), so we
-  don't alter wstrResStr.Length, and let RtlUnicodeStringToAnsiString truncate
-  it, if necessary
- */
- strBuf.Length = 0;
- strBuf.MaximumLength = nBufferMax * sizeof(CHAR);
- strBuf.Buffer = lpBuffer;
+  /*
+   convert the string. The Unicode string may be in UTF-16 (multi-byte), so we
+   don't alter wstrResStr.Length, and let RtlUnicodeStringToAnsiString truncate
+   it, if necessary
+  */
+  strBuf.Length = 0;
+  strBuf.MaximumLength = nBufferMax * sizeof(CHAR);
+  strBuf.Buffer = lpBuffer;
 
- retSize = WideCharToMultiByte(CP_ACP, 0, wstrResStr.Buffer, wstrResStr.Length / sizeof(WCHAR), strBuf.Buffer, strBuf.MaximumLength, NULL, NULL);
+  retSize = WideCharToMultiByte(CP_ACP, 0, wstrResStr.Buffer,
+                                wstrResStr.Length / sizeof(WCHAR),
+                                strBuf.Buffer, strBuf.MaximumLength, NULL, NULL);
 
- if(!retSize)
-  /* failure */
-  return 0;
- else 
-  strBuf.Length = retSize;
+  if(!retSize)
+  {
+    /* failure */
+    return 0;
+  }
+  else
+  {
+    strBuf.Length = retSize;
+  }
 
- /* the ANSI string may not be null-terminated */
- if(strBuf.Length >= strBuf.MaximumLength)
- {
-  /* length greater than the buffer? whatever */
-  int nStringLen = strBuf.MaximumLength / sizeof(CHAR) - 1;
+  /* the ANSI string may not be null-terminated */
+  if(strBuf.Length >= strBuf.MaximumLength)
+  {
+    /* length greater than the buffer? whatever */
+    int nStringLen = strBuf.MaximumLength / sizeof(CHAR) - 1;
 
-  /* zero the last character in the buffer */
-  strBuf.Buffer[nStringLen] = 0;
+    /* zero the last character in the buffer */
+    strBuf.Buffer[nStringLen] = 0;
 
-  /* success */
-  return nStringLen;
- }
- else
- {
-  /* zero the last character in the string */
-  strBuf.Buffer[strBuf.Length / sizeof(CHAR)] = 0;
+    /* success */
+    return nStringLen;
+  }
+  else
+  {
+    /* zero the last character in the string */
+    strBuf.Buffer[strBuf.Length / sizeof(CHAR)] = 0;
 
-  /* success */
-  return strBuf.Length / sizeof(CHAR);
- }
+    /* success */
+    return strBuf.Length / sizeof(CHAR);
+  }
 }
 
 
@@ -169,41 +177,55 @@ int STDCALL LoadStringW
  int nBufferMax
 )
 {
- UNICODE_STRING wstrResStr;
- int nStringLen;
+  UNICODE_STRING wstrResStr;
+  int nStringLen;
 
- /* parameter validation */
- if
- (
-  (nBufferMax < 1) ||
-  (IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
- )
- {
-  SetLastError(ERROR_INVALID_PARAMETER);
-  return 0;
- }
+  /* parameter validation */
+  if
+  (
+    (nBufferMax < 1) ||
+    ((nBufferMax > 0)  && IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0]))) ||
+    /* undocumented: If nBufferMax is 0, LoadStringW will copy a pointer to the 
+       in-memory image of the string to the specified buffer and return the length 
+       of the string in WCHARs */
+    ((nBufferMax == 0) && IsBadWritePtr(lpBuffer, sizeof(lpBuffer)))
+  )
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
 
- /* get the UNICODE_STRING descriptor of the in-memory image of the string */
- if(!_InternalLoadString(hInstance, uID, &wstrResStr))
-  /* failure */
-  return 0;
+  /* get the UNICODE_STRING descriptor of the in-memory image of the string */
+  if(!_InternalLoadString(hInstance, uID, &wstrResStr))
+  {
+    /* failure */
+    return 0;
+  }
 
- /* get the length in characters */
- nStringLen = wstrResStr.Length / sizeof(WCHAR);
+  /* get the length in characters */
+  nStringLen = wstrResStr.Length / sizeof(WCHAR);
 
- /* the buffer must be enough to contain the string and the null terminator */
- if(nBufferMax < (nStringLen + 1))
-  /* otherwise, the string is truncated */
-  nStringLen = nBufferMax - 1;
+  if (nBufferMax > 0)
+  {
+    /* the buffer must be enough to contain the string and the null terminator */
+    if(nBufferMax < (nStringLen + 1))
+    {
+      /* otherwise, the string is truncated */
+      nStringLen = nBufferMax - 1;
+    }
 
- /* copy the string */
- memcpy(lpBuffer, wstrResStr.Buffer, nStringLen * sizeof(WCHAR));
+    /* copy the string */
+    memcpy(lpBuffer, wstrResStr.Buffer, nStringLen * sizeof(WCHAR));
 
- /* null-terminate it */
- lpBuffer[nStringLen] = 0;
-
- /* success */
- return nStringLen;
+    /* null-terminate it */
+    lpBuffer[nStringLen] = 0;
+  }
+  else
+  {
+    *((LPWSTR*)lpBuffer) = wstrResStr.Buffer;
+  }
+  /* success */
+  return nStringLen;
 }
 
 /* EOF */
