@@ -21,6 +21,9 @@ HKR, , EnumPropPages32, 0, "NetCfgx.dll,NetPropPageProvider"
 HKR, , Icon,            0, "-5"
 HKR, , Installer32,     0, "NetCfgx.dll,NetClassInstaller"
 
+; Add a fake network adapter entry in registry (Real adapters start at index 1)
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","",0x00010000,""
+
 [Strings]
 ReactOS = "ReactOS Team"
 DisplayClassName = "Network Adapters"
