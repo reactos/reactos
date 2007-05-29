@@ -1485,10 +1485,10 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
 
   CPLFunc(hWnd, CPL_DBLCLK, (LPARAM)&SharedInfo, Defaults);
 }
-static BOOL FASTCALL
-GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, PGUI_CONSOLE_DATA GuiData)
+static LRESULT FASTCALL
+GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam, PGUI_CONSOLE_DATA GuiData)
 {
-    BOOL Ret = TRUE;
+    LRESULT Ret = TRUE;
 
     switch(wParam)
     {
@@ -1509,10 +1509,9 @@ GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, PGUI_CONSOLE_DATA GuiDa
             break;
 
         default:
-            Ret = FALSE;
+            Ret = DefWindowProcW(hWnd, WM_SYSCOMMAND, wParam, lParam);
             break;
     }
-
     return Ret;
 }
 
@@ -1709,8 +1708,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           GuiConsoleMouseMove(hWnd, wParam, lParam);
         break;
       case WM_SYSCOMMAND:
-          if (!GuiConsoleHandleSysMenuCommand(hWnd, wParam, GuiData))
-              Result = DefWindowProcW(hWnd, msg, wParam, lParam);
+          Result = GuiConsoleHandleSysMenuCommand(hWnd, wParam, lParam, GuiData);
           break;
       case WM_SIZE:
           GuiConsoleResize(hWnd, wParam, lParam);
