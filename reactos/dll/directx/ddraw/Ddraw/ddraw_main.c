@@ -207,15 +207,20 @@ Main_DirectDraw_CreateSurface (LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD,
     // EnterCriticalSection(&ddcs);
     _SEH_TRY
     {
-        if (pDDSD->dwSize != sizeof(DDSURFACEDESC))
+        if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
         {
-            return DDERR_INVALIDPARAMS;
+            CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2, (LPDDSURFACEDESC)pDDSD);
+            ret = Internal_CreateSurface((LPDDRAWI_DIRECTDRAW_INT)iface,
+                                         &dd_desc_v2,
+                                         (LPDIRECTDRAWSURFACE7 *)ppSurf,
+                                         pUnkOuter);
         }
-
-        CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2, (LPDDSURFACEDESC)pDDSD);
-        ret = Internal_CreateSurface( (LPDDRAWI_DIRECTDRAW_INT)iface,&dd_desc_v2, (LPDIRECTDRAWSURFACE7 *)ppSurf,pUnkOuter);
+        else
+        {
+            ret = DDERR_INVALIDPARAMS;
+        }
     }
-        _SEH_HANDLE
+    _SEH_HANDLE
     {
         ret = DDERR_GENERIC;
     }
@@ -236,7 +241,7 @@ Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
     _SEH_TRY
     {
         ret = Internal_CreateSurface( (LPDDRAWI_DIRECTDRAW_INT)iface,pDDSD, ppSurf,pUnkOuter);
-      }
+    }
         _SEH_HANDLE
     {
         ret = DDERR_GENERIC;
