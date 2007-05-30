@@ -49,11 +49,12 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
 ULONG WINAPI
 Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
 {
+    ULONG retValue = 0;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
 
-    if (iface!=NULL)
+    _SEH_TRY
     {
         This->dwIntRefCnt++;
         This->lpLcl->dwLocalRefCnt++;
@@ -63,8 +64,26 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
             This->lpLcl->lpGbl->dwRefCnt++;
         }
     }
-    return This->dwIntRefCnt;
+    _SEH_HANDLE
+    {
+    }
+    _SEH_END;
+
+    _SEH_TRY
+    {
+        retValue = This->dwIntRefCnt;
+    }
+    _SEH_HANDLE
+    {
+        retValue = 0;
+    }
+    _SEH_END;
+
+    return retValue;
 }
+
+
+
 
 ULONG WINAPI
 Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
