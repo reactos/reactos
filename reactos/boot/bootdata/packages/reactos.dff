@@ -118,6 +118,7 @@ dll\directx\d3d9\d3d9.dll                           1
 dll\directx\devenum\devenum.dll                     1
 
 dll\keyboard\kbdbe\kbdbe.dll                        1
+dll\keyboard\kbdbur\kbdbur.dll                      1
 dll\keyboard\kbdda\kbdda.dll                        1
 dll\keyboard\kbddv\kbddv.dll                        1
 dll\keyboard\kbdes\kbdes.dll                        1
