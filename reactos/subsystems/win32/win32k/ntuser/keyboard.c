@@ -248,6 +248,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
    {
       return FALSE;
    }
+
    for (nMod = 0; keyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
    {
       vtwTbl = &keyLayout->pVkToWcharTable[nMod];
@@ -263,13 +264,12 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
 
             if( CapsMod >= keyLayout->pVkToWcharTable[nMod].nModifications )
             {
-               DWORD MaxBit = 1;
-               while( MaxBit <
-                      keyLayout->pVkToWcharTable[nMod].nModifications )
-                  MaxBit <<= 1;
+               return FALSE;
+            }
 
-               CapsMod &= MaxBit - 1; /* Guarantee that CapsMod lies
-                        in bounds. */
+            if( vkPtr->wch[CapsMod] == WCH_NONE )
+            {
+               return FALSE;
             }
 
             *pbDead = vkPtr->wch[CapsMod] == WCH_DEAD;
