@@ -104,10 +104,26 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 	return DDERR_ALREADYINITIALIZED;
 }
 
+/* 
+ * Main_DirectDraw_Compact
+ * ms say this one is not implement but it return  DDERR_NOEXCLUSIVEMODE
+ * when no exclusive owner are set in corpativelevel 
+ */
 HRESULT WINAPI
 Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 {
-    return DD_OK; // not implemented in ms ddraw either
+    HRESULT retVal = DD_OK;
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
+
+    DX_WINDBG_trace();
+    // EnterCriticalSection(&ddcs);
+
+    if (This->lpLcl->lpGbl->lpExclusiveOwner == This->lpLcl)
+    {
+        retVal = DDERR_NOEXCLUSIVEMODE;
+    }
+    // LeaveCriticalSection(&ddcs);
+    return retVal;
 }
 
 HRESULT WINAPI 
