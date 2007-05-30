@@ -53,7 +53,8 @@ typedef struct _TCPIP_PROPERTIES_DATA {
     DWORD OldDns2;
 } TCPIP_PROPERTIES_DATA, *PTCPIP_PROPERTIES_DATA;
 
-void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
+void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam);
+
 DWORD APIENTRY DhcpNotifyConfigChange(LPWSTR ServerName, LPWSTR AdapterName,
                                       BOOL NewIpAddress, DWORD IpIndex,
                                       DWORD IpAddress, DWORD SubnetMask,
@@ -542,8 +543,7 @@ DisplayTCPIPProperties(HWND hParent, IP_ADAPTER_INFO *pInfo)
     psh.ppsp = psp;
     psh.pfnCallback = NULL;
 
-    InitPropSheetPage(&psp[0], IDD_TCPIPPROPERTIES, TCPIPPropertyPageProc);
-    psp[0].lParam = (LPARAM) &DlgData;
+    InitPropSheetPage(&psp[0], IDD_TCPIPPROPERTIES, TCPIPPropertyPageProc, (LPARAM) &DlgData);
 
     if (PropertySheetW(&psh) == -1)
     {
