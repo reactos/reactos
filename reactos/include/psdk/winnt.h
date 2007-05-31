@@ -54,6 +54,7 @@ extern "C" {
 #include <winerror.h>
 #include <stddef.h>
 #include <sdkddkver.h>
+#include <stdint.h>
 
 #ifndef RC_INVOKED
 #include <string.h>
@@ -102,12 +103,12 @@ typedef char CHAR;
 typedef short SHORT;
 #ifndef LONG_DEFINED
 #define LONG_DEFINED
-    typedef long LONG;
-    typedef unsigned long ULONG,*PULONG;
+    typedef int32_t LONG;
+    typedef uint32_t ULONG,*PULONG;
 #endif//LONG_DEFINED
 typedef char CCHAR, *PCCHAR;
-typedef unsigned char UCHAR,*PUCHAR;
-typedef unsigned short USHORT,*PUSHORT;
+typedef uint8_t UCHAR,*PUCHAR;
+typedef uint16_t USHORT,*PUSHORT;
 typedef char *PSZ;
 
 typedef void *PVOID,*LPVOID;
