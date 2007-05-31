@@ -14,6 +14,9 @@
 	<directory name="kbdes">
 		<xi:include href="kbdes/kbdes.rbuild" />
 	</directory>
+	<directory name="kbdfi">
+		<xi:include href="kbdfi/kbdfi.rbuild" />
+	</directory>
 	<directory name="kbdfr">
 		<xi:include href="kbdfr/kbdfr.rbuild" />
 	</directory>
