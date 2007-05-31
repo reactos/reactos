@@ -236,4 +236,15 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_WZD_NAME         "L'installation ne peut pas continuer tant que vous n'avez pas entré votre nom."
+    IDS_WZD_SETCOMPUTERNAME  "L'installation a échoué lors de la définition du nom de votre ordinateur."
+    IDS_WZD_COMPUTERNAME  "L'installation ne peut continuer tant que vous n'avez pas entré le nom de votre ordinateur."
+    IDS_WZD_PASSWORDEMPTY  "Vous devez entrer un mot de passe !"
+    IDS_WZD_PASSWORDMATCH  "Les mots de passe entrés ne correspondent pas. Veuillez saisir une nouvelle fois le mot de passe désiré."
+    IDS_WZD_PASSWORDCHAR  "Le mot de passe entré contient des caractères invalides. Veuillez saisir un mot de passe correct."
+    IDS_WZD_LOCALTIME    "L'installation n'a pas réussi à définir l'heure locale."
+END
 /* EOF */

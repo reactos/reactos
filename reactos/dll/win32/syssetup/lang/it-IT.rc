@@ -227,4 +227,15 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_WZD_NAME         "Setup cannot continue until you enter your name."
+    IDS_WZD_SETCOMPUTERNAME  "Setup failed to set the computer name."
+    IDS_WZD_COMPUTERNAME  "Setup cannot continue until you enter the name of your computer."
+    IDS_WZD_PASSWORDEMPTY  "You must enter a password !"
+    IDS_WZD_PASSWORDMATCH  "The passwords you entered do not match. Please enter the desired password again."
+    IDS_WZD_PASSWORDCHAR  "The password you entered contains invalid characters. Please enter a cleaned password."
+    IDS_WZD_LOCALTIME    "Setup was unable to set the local time."
+END
 /* EOF */

@@ -1,7 +1,10 @@
 /*
- * PROJECT:    System setup
- * LICENSE:    GPL - See COPYING in the top level directory
- * PROGRAMMER: Eric Kohl
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         System setup
+ * FILE:            dll/win32/syssetup/wizard.c
+ * PURPOSE:         GUI controls
+ * PROGRAMMERS:     Eric Kohl
+ *                  Pierre Schweitzer <heis_spiter@hotmail.com>
  */
 
 /* INCLUDES *****************************************************************/
@@ -446,6 +449,8 @@ OwnerPageDlgProc(HWND hwndDlg,
 {
   TCHAR OwnerName[51];
   TCHAR OwnerOrganization[51];
+  WCHAR Title[64];
+  WCHAR ErrorName[256];
   LPNMHDR lpnm;
 
   switch (uMsg)
@@ -486,10 +491,15 @@ OwnerPageDlgProc(HWND hwndDlg,
                 OwnerName[0] = 0;
                 if (GetDlgItemText(hwndDlg, IDC_OWNERNAME, OwnerName, 50) == 0)
                 {
-                  MessageBox(hwndDlg,
-                             _T("Setup cannot continue until you enter your name."),
-                             _T("ReactOS Setup"),
-                             MB_ICONERROR | MB_OK);
+                  if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+                  {
+                    wcscpy(Title, L"ReactOS Setup");
+                  }
+                  if (0 == LoadStringW(hDllInstance, IDS_WZD_NAME, ErrorName, sizeof(ErrorName) / sizeof(ErrorName[0])))
+                  {
+                    wcscpy(ErrorName, L"Setup cannot continue until you enter your name.");
+                  }
+                  MessageBox(hwndDlg, ErrorName, Title, MB_ICONERROR | MB_OK);
 
                   SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
@@ -527,12 +537,20 @@ static
 BOOL
 WriteComputerSettings(TCHAR * ComputerName, HWND hwndDlg)
 {
+  WCHAR Title[64];
+  WCHAR ErrorComputerName[256];
   if (!SetComputerName(ComputerName))
     {
-      MessageBox(hwndDlg,
-                 _T("Setup failed to set the computer name."),
-                 _T("ReactOS Setup"),
-                 MB_ICONERROR | MB_OK);
+      if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+      {
+        wcscpy(Title, L"ReactOS Setup");
+      }
+      if (0 == LoadStringW(hDllInstance, IDS_WZD_SETCOMPUTERNAME, ErrorComputerName,
+                           sizeof(ErrorComputerName) / sizeof(ErrorComputerName[0])))
+      {
+        wcscpy(ErrorComputerName, L"Setup failed to set the computer name.");
+      }
+      MessageBox(hwndDlg, ErrorComputerName, Title, MB_ICONERROR | MB_OK);
 
       return FALSE;
     }
@@ -552,8 +570,16 @@ ComputerPageDlgProc(HWND hwndDlg,
   TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
   TCHAR Password1[15];
   TCHAR Password2[15];
+  PWCHAR Password;
+  WCHAR Title[64];
+  WCHAR EmptyComputerName[256], EmptyPassword[256], NotMatchPassword[256], WrongPassword[256];
   DWORD Length;
   LPNMHDR lpnm;
+
+  if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+  {
+    wcscpy(Title, L"ReactOS Setup");
+  }
 
   switch (uMsg)
     {
@@ -603,10 +629,12 @@ ComputerPageDlgProc(HWND hwndDlg,
               case PSN_WIZNEXT:
                 if (GetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName, 64) == 0)
                 {
-                  MessageBox(hwndDlg,
-                             _T("Setup cannot continue until you enter the name of your computer."),
-                             _T("ReactOS Setup"),
-                             MB_ICONERROR | MB_OK);
+                  if (0 == LoadStringW(hDllInstance, IDS_WZD_COMPUTERNAME, EmptyComputerName,
+                                       sizeof(EmptyComputerName) / sizeof(EmptyComputerName[0])))
+                  {
+                    wcscpy(EmptyComputerName, L"Setup cannot continue until you enter the name of your computer.");
+                  }
+                  MessageBox(hwndDlg, EmptyComputerName, Title, MB_ICONERROR | MB_OK);
                   SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
@@ -622,21 +650,50 @@ ComputerPageDlgProc(HWND hwndDlg,
                     return TRUE;
                   }
 
-                /* Check admin passwords */
-                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
-                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
+                /* Check if admin passwords have been entered */
+                if ((GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15) == 0) ||
+                    (GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15) == 0))
+                {
+                  if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDEMPTY, EmptyPassword,
+                                       sizeof(EmptyPassword) / sizeof(EmptyPassword[0])))
+                  {
+                    wcscpy(EmptyPassword, L"You must enter a password !");
+                  }
+                  MessageBox(hwndDlg, EmptyPassword, Title, MB_ICONERROR | MB_OK);
+                  SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                  return TRUE;
+                }
+                /* Check if passwords match */
                 if (_tcscmp(Password1, Password2))
                 {
-                  MessageBox(hwndDlg,
-                             _T("The passwords you entered do not match. Please enter "\
-                                "the desired password again."),
-                             _T("ReactOS Setup"),
-                             MB_ICONERROR | MB_OK);
+                  if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDMATCH, NotMatchPassword,
+                                       sizeof(NotMatchPassword) / sizeof(NotMatchPassword[0])))
+                  {
+                    wcscpy(NotMatchPassword, L"The passwords you entered do not match. Please enter the desired password again.");
+                  }
+                  MessageBox(hwndDlg, NotMatchPassword, Title, MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
 
-                /* FIXME: check password for invalid characters */
+                /* Check password for invalid characters */
+                Password = (PWCHAR)Password1;
+                while (*Password)
+                {
+                  if (!isprint(*Password))
+                  {
+                    if (0 == LoadStringW(hDllInstance, IDS_WZD_PASSWORDCHAR, WrongPassword,
+                                         sizeof(WrongPassword) / sizeof(WrongPassword[0])))
+                    {
+                      wcscpy(WrongPassword, L"The password you entered contains invalid characters. Please enter a cleaned password.");
+                    }
+                    MessageBox(hwndDlg, WrongPassword, Title, MB_ICONERROR | MB_OK);
+                    SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                    return TRUE;
+                    break;
+                  }
+                  Password++;
+                }
 
                 /* FIXME: Set admin password */
                 break;
@@ -1329,6 +1386,8 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 static BOOL
 WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
 {
+  WCHAR Title[64];
+  WCHAR ErrorLocalTime[256];
   GetLocalSystemTime(hwndDlg, SetupData);
   SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                    SetupData);
@@ -1336,10 +1395,16 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
   SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
   if(!SetSystemLocalTime(hwndDlg, SetupData))
     {
-      MessageBox(hwndDlg,
-                 _T("Setup was unable to set the local time."),
-                 _T("ReactOS Setup"),
-                 MB_ICONWARNING | MB_OK);
+      if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+      {
+        wcscpy(Title, L"ReactOS Setup");
+      }
+      if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
+                           sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
+      {
+        wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
+      }
+      MessageBox(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
       return FALSE;
     }
 
@@ -1353,6 +1418,8 @@ DateTimePageDlgProc(HWND hwndDlg,
                     LPARAM lParam)
 {
   PSETUPDATA SetupData;
+  WCHAR Title[64];
+  WCHAR ErrorLocalTime[256];
 
   /* Retrieve pointer to the global setup data */
   SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -1413,10 +1480,16 @@ DateTimePageDlgProc(HWND hwndDlg,
                   SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
                   if(!SetSystemLocalTime(hwndDlg, SetupData))
                   {
-                    MessageBox(hwndDlg,
-                               _T("Setup was unable to set the local time."),
-                               _T("ReactOS Setup"),
-                               MB_ICONWARNING | MB_OK);
+                    if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
+                    {
+                      wcscpy(Title, L"ReactOS Setup");
+                    }
+                    if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
+                                         sizeof(ErrorLocalTime) / sizeof(ErrorLocalTime[0])))
+                    {
+                      wcscpy(ErrorLocalTime, L"Setup failed to set the computer name.");
+                    }
+                    MessageBox(hwndDlg, ErrorLocalTime, Title, MB_ICONWARNING | MB_OK);
                   }
                 }
                 break;
