@@ -6,6 +6,8 @@
 
 #include <stdarg.h>
 
+void* memset (void*, int, size_t);
+
 int
 atoi(char *s)
 {
@@ -99,7 +101,7 @@ _printf(char *fmt, va_list args)
 			n += printbase(x, 10);
 			break;
 		case 'c':
-			c = va_arg(args, char);
+			c = va_arg(args, /*char*/int);
 			putchar(c);
 			n++;
 			break;

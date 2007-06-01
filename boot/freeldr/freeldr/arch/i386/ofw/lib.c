@@ -64,6 +64,36 @@ parse_homedir(char *progname)
   *q = '\0';
 }
 
+int
+ofw_setup()
+{
+  static char *argv[8];
+  phandle ph;
+  char *argstr;
+  int i;
+
+  if ((ph = OFFinddevice("/chosen")) == -1)
+    abort() ;
+  stdin->id  = get_int_prop(ph, "stdin");
+  stdout->id = get_int_prop(ph, "stdout");
+
+  argv[0] = get_str_prop(ph, "bootpath", ALLOC);
+  argstr  = get_str_prop(ph, "bootargs", ALLOC);
+
+  for (i = 1; i < 8;) {
+    if (*argstr == '\0')
+      break;
+    argv[i++] = argstr;
+    while (*argstr != ' ' && *argstr != '\0')
+      ++argstr;
+    if (*argstr == '\0')
+      break;
+    *argstr++ = '\0';
+  }
+  parse_homedir(argv[0]);
+}
+
+
 FILE *
 fopen (char *name, char *mode)
 {

@@ -2,13 +2,13 @@
 
 #include "types.h"
 
-typedef long phandle;
-typedef long ihandle;
+#include "arch/i386/of_call.h"
 
 typedef struct {
 	long hi, lo;
 	long size;
 } reg;
+
 
 #ifdef	putchar
 # undef	putchar
@@ -16,6 +16,9 @@ typedef struct {
 #ifdef	puts
 # undef	puts
 #endif
+
+VOID
+putchar(char c);
 
 typedef enum {
 	NOALLOC,
