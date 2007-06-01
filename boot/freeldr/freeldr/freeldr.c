@@ -20,8 +20,16 @@
 #include <freeldr.h>
 #include <debug.h>
 
+int
+ofwprintf(char *fmt, ...);
+VOID
+OFExit( VOID );
+
+
 VOID BootMain(LPSTR CmdLine)
 {
+	OFExit();
+	ofwprintf("Hi from the bootloader!\n");
 	CmdLineParse(CmdLine);
 
 	MachInit(CmdLine);

@@ -276,6 +276,14 @@ EXTERN(_DisableA20)
 
 	ret
 
+EXTERN(_call_firmware)
+	movl 4(%esp),%eax
+	push %ebx
+	movl cifentry,%ebx
+	call *%ebx
+	pop %ebx
+	ret
+
 /* Multiboot support
  *
  * Allows freeldr to be loaded as a "multiboot kernel" by
@@ -295,7 +303,7 @@ EXTERN(_DisableA20)
  * ourself to 0x8000
  */
 #define FREELDR_BASE 0x8000
-#define INITIAL_BASE 0x200000
+#define INITIAL_BASE 0x8000
 
 	/* Align 32 bits boundary */
 	.align 4
@@ -328,26 +336,29 @@ MultibootEntry:
 	/* Although the multiboot spec says we should be called with the
 	 * segment registers set to 4GB flat mode, let's be sure and set up
 	 * our own */
-	lgdt	gdtptrhigh + INITIAL_BASE - FREELDR_BASE
+	/* lgdt	gdtptrhigh + INITIAL_BASE - FREELDR_BASE */
 	/* Reload segment selectors */
-	ljmp	$PMODE_CS, $(mb1 + INITIAL_BASE - FREELDR_BASE)
+/*	ljmp	$PMODE_CS, $(mb1 + INITIAL_BASE - FREELDR_BASE)
 mb1:
 	movw	$PMODE_DS,%dx
 	movw	%dx,%ds
-	movw	%dx,%es
+	movw	%dx,%es*/
 
 	/* Check for valid multiboot signature */
 	cmpl	$MULTIBOOT_BOOTLOADER_MAGIC,%eax
 	jne	mbfail
 
+	/* Store pointer to OFW */
+	movl	%esi,cifentry
+
 	/* Store multiboot info in a safe place */
-	movl	%ebx,%esi
-	movl	$(mb_info + INITIAL_BASE - FREELDR_BASE),%edi
-	movl	$MB_INFO_SIZE,%ecx
-	rep movsb
+	//movl	%ebx,%esi
+	//movl	$(mb_info + INITIAL_BASE - FREELDR_BASE),%edi
+	//movl	$MB_INFO_SIZE,%ecx
+	//rep movsb
 
 	/* Save commandline */
-	movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
+	/*movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
 	testl	$MB_INFO_FLAG_COMMAND_LINE,MB_INFO_FLAGS_OFFSET(%ebx)
 	jz	mb3
 	movl	MB_INFO_COMMAND_LINE_OFFSET(%ebx),%esi
@@ -358,57 +369,56 @@ mb2:	lodsb
 	testb	%al,%al
 	jz	mb3
 	dec	%ecx
-	jnz	mb2
+	jnz	mb2*/
 mb3:
 
 	/* Copy to low mem */
-	movl	$INITIAL_BASE,%esi
-	movl	$FREELDR_BASE,%edi
-	movl	$(__bss_end__ - FREELDR_BASE),%ecx
-	addl	$3,%ecx
-	shrl	$2,%ecx
-	rep movsl
+	//movl	$INITIAL_BASE,%esi
+	//movl	$FREELDR_BASE,%edi
+	//movl	$(__bss_end__ - FREELDR_BASE),%ecx
+	//addl	$3,%ecx
+	//shrl	$2,%ecx
+	//rep movsl
 
 	/* Load the GDT and IDT */
-	lgdt	gdtptr
-	lidt	i386idtptr
+	//lgdt	gdtptr
+	//lidt	i386idtptr
 
 	/* Clear prefetch queue & correct CS,
 	 * jump to low mem */
-	ljmp	$PMODE_CS, $mb4
-mb4:
+	//ljmp	$PMODE_CS, $mb4
+//mb4:
 	/* Reload segment selectors */
-	movw	$PMODE_DS,%dx
-	movw	%dx,%ds
-	movw	%dx,%es
-	movw	%dx,%fs
-	movw	%dx,%gs
-	movw	%dx,%ss
-	movl	$STACK32ADDR,%esp
+	//movw	$PMODE_DS,%dx
+	//movw	%dx,%ds
+	//movw	%dx,%es
+	//movw	%dx,%fs
+	//movw	%dx,%gs
+	//movw	%dx,%ss
+	//movl	$STACK32ADDR,%esp
 
-	movl	$mb_info,%ebx
+	//movl	$mb_info,%ebx
 	/* See if the boot device was passed in */
-	movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
-	testl	$MB_INFO_FLAG_BOOT_DEVICE,%edx
-	jz	mb5
+	//movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
+	//testl	$MB_INFO_FLAG_BOOT_DEVICE,%edx
+	//jz	mb5
 	/* Retrieve boot device info */
-	movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
-	shrl	$16,%eax
-	incb	%al
-	movb	%al,_i386BootPartition
-	movb	%ah,_i386BootDrive
-	jmp	mb6
+	//movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
+	//shrl	$16,%eax
+	//incb	%al
+	//movb	%al,_i386BootPartition
+	//movb	%ah,_i386BootDrive
+	//jmp	mb6
 mb5:	/* No boot device known, assume first partition of first harddisk */
 	movb	$0x80,_i386BootDrive
 	movb	$1,_i386BootPartition
 mb6:
 	/* Check for command line */
-	mov	$cmdline,%eax
-	testl	$MB_INFO_FLAG_COMMAND_LINE,MB_INFO_FLAGS_OFFSET(%ebx)
-	jnz	mb7
-	xorl	%eax,%eax
+	//mov	$cmdline,%eax
+	//testl	$MB_INFO_FLAG_COMMAND_LINE,MB_INFO_FLAGS_OFFSET(%ebx)
+	//jnz	mb7
+	//xorl	%eax,%eax
 mb7:
-
 	/* GO! */
 	pushl	%eax	
 	call	_BootMain
@@ -483,6 +493,10 @@ gdtptrhigh:
 rmode_idtptr:
 	.word	0x3ff		/* Limit */
 	.long	0			/* Base Address */
+
+/* Pointer to OFW */
+cifentry:
+	.long	0
 
 EXTERN(_i386BootDrive)
 	.long	0

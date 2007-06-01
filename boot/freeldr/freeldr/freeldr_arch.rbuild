@@ -1,7 +1,7 @@
 <directory name="arch">
 	<directory name="i386">
 		<if property="ARCH" value="i386">
-			<module name="freeldr_arch" type="objectlibrary">
+			<module name="freeldr_arch" type="objectlibrary" allowwarnings="true">
 				<include base="freeldr_base">include</include>
 				<include base="freeldr_base">cache</include>
 				<include base="ntoskrnl">include</include>
@@ -38,6 +38,17 @@
 				<file>xboxmem.c</file>
 				<file>xboxrtc.c</file>
 				<file>xboxvideo.c</file>
+
+				<file>ofw/debug.c</file>
+				<file>ofw/intprop.c</file>
+				<file>ofw/lib.c</file>
+				<file>ofw/main.c</file>
+				<file>ofw/malloc.c</file>
+				<file>ofw/mem.c</file>
+				<file>ofw/printf.c</file>
+				<file>ofw/regprop.c</file>
+				<file>ofw/strprop.c</file>
+				<file>ofw/wrappers.c</file>
 			</module>
 		</if>
 	</directory>
