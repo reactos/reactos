@@ -15,7 +15,9 @@ HWND        hwndMain;
 HWND        hwndStatus;
 HINSTANCE    hInstance;
 
-TCHAR szAppName[] = _T("Solitaire");
+TCHAR szAppName[128];
+TCHAR MsgQuit[128];
+TCHAR MsgAbout[128];
 INT nOptions = 8;
 
 CardWindow SolWnd;
@@ -48,6 +50,12 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
     HACCEL        hAccelTable;
 
     hInstance = hInst;
+
+    // Load application title
+    LoadString(hInst, IDS_SOL_NAME, szAppName, sizeof(szAppName) / sizeof(szAppName[0]));
+    // Load MsgBox() text here to avoid loading it many times later
+    LoadString(hInst, IDS_SOL_ABOUT, MsgAbout, sizeof(MsgAbout) / sizeof(MsgAbout[0]));
+    LoadString(hInst, IDS_SOL_QUIT, MsgQuit, sizeof(MsgQuit) / sizeof(MsgQuit[0]));
 
     //Window class for the main application parent window
     wndclass.cbSize            = sizeof(wndclass);
@@ -232,7 +240,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case IDM_HELP_ABOUT:
-            MessageBox(hwnd, _T("Solitaire by J Brown\r\n\r\nCardLib version 1.0."), szAppName, MB_OK|MB_ICONINFORMATION);
+            MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
             return 0;
 
         case IDM_GAME_EXIT:
@@ -244,12 +252,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_CLOSE:
         
-        ret = IDOK;
-
-        if(fGameStarted)
-        {
-            ret = MessageBox(hwnd, _T("Quit the current game?"), szAppName, MB_OKCANCEL|MB_ICONQUESTION);
-        }
+        ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
 
         if(ret == IDOK)
         {

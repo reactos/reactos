@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by Solitaire.rc
+// Used by rsrc.rc
 //
 #define IDD_DIALOG1                     101
 #define IDR_MENU1                       102
@@ -20,6 +20,10 @@
 #define IDC_OPT_DRAWTHREE               1202
 #define IDC_OPT_SHOWTIME                1203
 #define IDC_OPT_STATUSBAR               1204
+
+#define IDS_SOL_NAME                    1300
+#define IDS_SOL_ABOUT                   1301
+#define IDS_SOL_QUIT                    1302
 
 // Next default values for new objects
 //
