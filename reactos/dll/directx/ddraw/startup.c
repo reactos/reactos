@@ -106,7 +106,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         /* FIXME HACK linking does not working we need figout why */
         LPDDRAWI_DIRECTDRAW_INT memThis;
 
-        memThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        DxHeapMemAlloc(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
         This = memThis;
         if (This == NULL)
         {
@@ -118,7 +118,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         }
 
         /* Fixme release memory alloc if we fail */
-        This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        DxHeapMemAlloc(This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_INT));
         if (This->lpLcl == NULL)
         {
             DX_STUB_str("DDERR_OUTOFMEMORY");
@@ -194,7 +194,8 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
             This->lpLcl->lpGbl->dwRefCnt++;
             if (ddgbl.lpDDCBtmp == NULL)
             {
-                ddgbl.lpDDCBtmp = (LPDDHAL_CALLBACKS) DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
+                // LPDDHAL_CALLBACKS
+                DxHeapMemAlloc( ddgbl.lpDDCBtmp , sizeof(DDHAL_CALLBACKS));
                 if (ddgbl.lpDDCBtmp == NULL)
                 {
                     DX_STUB_str("Out of memmory\n");
@@ -403,7 +404,7 @@ StartDirectDrawHel(LPDIRECTDRAW iface, BOOL reenable)
 HRESULT WINAPI
 StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 {
-    LPDWORD mpFourCC;
+    LPDWORD mpFourCC = NULL;
     DDHALINFO mHALInfo;
     BOOL newmode = FALSE;
     LPDDSURFACEDESC mpTextures;
@@ -411,6 +412,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     D3DHAL_GLOBALDRIVERDATA mD3dDriverData;
     DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    INT count;
 
     DX_WINDBG_trace();
 
@@ -423,7 +425,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     {
         if (ddgbl.lpDDCBtmp == NULL)
         {
-            ddgbl.lpDDCBtmp = DxHeapMemAlloc(sizeof(DDHAL_CALLBACKS));
+            DxHeapMemAlloc(ddgbl.lpDDCBtmp, sizeof(DDHAL_CALLBACKS));
             if ( ddgbl.lpDDCBtmp == NULL)
             {
                 return DD_FALSE;
@@ -462,7 +464,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
                                  &mD3dDriverData,
                                  &mD3dBufferCallbacks,
                                  NULL,
-                                 NULL,
+                                 mpFourCC,
                                  NULL))
     {
       DxHeapMemFree(This->lpLcl->lpGbl->lpModeInfo);
@@ -471,24 +473,44 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
       return DD_FALSE;
     }
     
-    DX_STUB_str("Here\n");
-#if 0
-    /* Alloc mpFourCC */
-    mpFourCC = NULL;
-    if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
+
     {
-        mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * mHALInfo.ddCaps.dwNumFourCCCodes);
+        char buffer[2048];
+        sprintf ( buffer, "test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
+        OutputDebugStringA(buffer);
+    }
+
+    // count = mHALInfo.ddCaps.dwNumFourCCCodes;
+
+    DX_STUB_str("Here\n");
+
+    /* Alloc mpFourCC */
+    
+    //if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
+    {
+        //mpFourCC = (DWORD *) DxHeapMemAlloc( sizeof(DWORD) * 21);
+        // DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
+
+        // mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
+        /*
         if (mpFourCC == NULL)
         {
             DxHeapMemFree(ddgbl.lpDDCBtmp);
             // FIXME Close DX fristcall and second call
             return DD_FALSE;
         }
+        */
     }
-      DX_STUB_str("Here\n");
-#else
-    mpFourCC = NULL;
-#endif
+
+    DX_STUB_str("Here\n");
+
+    {
+        char buffer[2048];
+        sprintf ( buffer, "test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
+        OutputDebugStringA(buffer);
+    }
+
+
     /* Alloc mpTextures */
 #if 0
     mpTextures = NULL;
@@ -527,6 +549,12 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         DxHeapMemFree(ddgbl.lpDDCBtmp);
         // FIXME Close DX fristcall and second call
         return DD_FALSE;
+    }
+
+    {
+        char buffer[2048];
+        sprintf ( buffer, "test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
+        OutputDebugStringA(buffer);
     }
 
     memcpy(&ddgbl.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
