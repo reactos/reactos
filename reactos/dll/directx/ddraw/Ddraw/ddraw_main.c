@@ -164,11 +164,12 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     }
 
     DDHAL_GETAVAILDRIVERMEMORYDATA  memdata;
+    ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
     memdata.lpDD = This->lpLcl->lpGbl;
     memdata.ddRVal = DDERR_INVALIDPARAMS;
     memcpy(&memdata.DDSCaps, ddscaps, sizeof(DDSCAPS2));
 
-    if (This->lpLcl->lpDDCB->cbDDMiscellaneousCallbacks.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
+    if (This->lpLcl->lpDDCB->HALDDMiscellaneous.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
         return DDERR_NODIRECTDRAWHW;
 
     if (dwTotal)

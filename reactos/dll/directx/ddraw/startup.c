@@ -548,12 +548,15 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     // DxHeapMemFree( mpTextures);
 
     /* FIXME D3D setup mD3dCallbacks and mD3dDriverData */
-	DDHAL_GETDRIVERINFODATA DdGetDriverInfo = { 0 };
-	DdGetDriverInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
-	DdGetDriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
-	DdGetDriverInfo.lpvData = (PVOID)&ddgbl.lpDDCBtmp->cbDDMiscellaneousCallbacks;
-	DdGetDriverInfo.dwExpectedSize = sizeof (DDHAL_DDMISCELLANEOUSCALLBACKS);
-	if(mHALInfo.GetDriverInfo (&DdGetDriverInfo) == DDHAL_DRIVER_NOTHANDLED || DdGetDriverInfo.ddRVal != DD_OK)
+    DDHAL_GETDRIVERINFODATA DdGetDriverInfo = { 0 };
+    DdGetDriverInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
+    DdGetDriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
+
+    DdGetDriverInfo.lpvData = (PVOID)&ddgbl.lpDDCBtmp->HALDDMiscellaneous;
+
+    DdGetDriverInfo.dwExpectedSize = sizeof (DDHAL_DDMISCELLANEOUSCALLBACKS);
+
+    if(mHALInfo.GetDriverInfo (&DdGetDriverInfo) == DDHAL_DRIVER_NOTHANDLED || DdGetDriverInfo.ddRVal != DD_OK)
     {
         DxHeapMemFree(mpFourCC);
         DxHeapMemFree(mpTextures);
@@ -561,6 +564,29 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         // FIXME Close DX fristcall and second call
         return DD_FALSE;
     }
+
+    /* try get the memory and show it */
+    if (ddgbl.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory)
+    {
+        DDHAL_GETAVAILDRIVERMEMORYDATA  memdata;
+        char buffer[2048];
+
+        ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
+
+
+        DX_STUB_str("found GetAvailDriverMemory, testing \n");
+        memdata.lpDD = &ddgbl;
+        memdata.ddRVal = DDERR_GENERIC;
+        ddgbl.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&memdata);
+
+        sprintf ( buffer, "GetAvailDriverMemory : retval %ld, Graphice memory free %ld Bytes, memory total %ld Bytes\n",memdata.ddRVal,memdata.dwFree,memdata.dwTotal);
+        OutputDebugStringA(buffer);
+
+
+        
+
+    }
+
 
     DX_STUB_str("Return DD_OK\n");
     return DD_OK;
