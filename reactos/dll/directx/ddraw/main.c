@@ -12,6 +12,9 @@
 
 #include "rosdraw.h"
 
+/* PSEH for SEH Support */
+#include <pseh/pseh.h>
+
 CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
@@ -55,27 +58,38 @@ DirectDrawCreateEx(LPGUID lpGUID,
                    REFIID id, 
                    LPUNKNOWN pUnkOuter)
 {
+    HRESULT retVal = DDERR_GENERIC;
     /* 
         remove this when UML digram are in place 
         this api is finish and is working as it should
     */
     DX_WINDBG_trace();
 
-    /* check see if pUnkOuter is null or not */
-    if (pUnkOuter)
+        _SEH_TRY
     {
-        /* we are using same error code as MS*/
-        return CLASS_E_NOAGGREGATION; 
-    }
+        /* check see if pUnkOuter is null or not */
+        if (pUnkOuter)
+        {
+            /* we are using same error code as MS*/
+            return CLASS_E_NOAGGREGATION; 
+        }
 
-    /* Is it a DirectDraw 7 Request or not */
-    if (!IsEqualGUID(id, &IID_IDirectDraw7)) 
+        /* Is it a DirectDraw 7 Request or not */
+        if (!IsEqualGUID(id, &IID_IDirectDraw7)) 
+        {
+            return DDERR_INVALIDPARAMS;
+        }
+
+        retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
+
+        /* Create our DirectDraw interface */
+    }
+    _SEH_HANDLE
     {
-        return DDERR_INVALIDPARAMS;
     }
+    _SEH_END;
 
-    /* Create our DirectDraw interface */
-    return Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
+    return retVal;
 }
 
 /*
