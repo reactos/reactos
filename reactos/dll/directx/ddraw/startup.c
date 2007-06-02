@@ -486,8 +486,8 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     /* Alloc mpFourCC */
     
-    //if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
-    {
+    // if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
+    // {
         //mpFourCC = (DWORD *) DxHeapMemAlloc( sizeof(DWORD) * 21);
         // DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
 
@@ -500,7 +500,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
             return DD_FALSE;
         }
         */
-    }
+    // }
 
     DX_STUB_str("Here\n");
 
@@ -553,7 +553,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     {
         char buffer[2048];
-        sprintf ( buffer, "test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
+        sprintf ( buffer, "3 test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
         OutputDebugStringA(buffer);
     }
 
