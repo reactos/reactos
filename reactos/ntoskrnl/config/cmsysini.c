@@ -250,17 +250,27 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = NtCreateKey(&KeyHandle,
-                         KEY_CREATE_LINK,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
-                         &Disposition);
-    if (!NT_SUCCESS(Status)) return Status;
 
-    /* Sanity check */
-    ASSERT(Disposition == REG_CREATED_NEW_KEY);
+    /* The key has been created by mkhive */
+    if ((CmpMiniNTBoot) && (CmpShareSystemHives))
+    {
+        Status = NtOpenKey(&KeyHandle, KEY_READ | KEY_WRITE, &ObjectAttributes);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        Status = NtCreateKey(&KeyHandle,
+                             KEY_CREATE_LINK,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
+                             &Disposition);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Sanity check */
+        ASSERT(Disposition == REG_CREATED_NEW_KEY);
+    }
 
     /* Initialize the symbolic link name */
     sprintf(Buffer,

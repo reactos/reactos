@@ -516,7 +516,7 @@ MmInitSystem(IN ULONG Phase,
         /*
         * Initialise the modified page writer.
         */
-        if (!strstr(LoaderBlock->LoadOptions, "MININT")) MmInitMpwThread();
+        MmInitMpwThread();
 
         /* Initialize the balance set manager */
         MmInitBsmThread();
