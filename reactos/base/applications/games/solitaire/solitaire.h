@@ -5,6 +5,10 @@ extern CardWindow SolWnd;
 extern TCHAR szAppName[];
 extern bool	fGameStarted;
 
+#define OPTION_THREE_CARDS   8
+
+extern INT nOptions;
+
 void CreateSol();
 void NewGame(void);
 

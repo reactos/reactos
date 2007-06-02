@@ -319,7 +319,7 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 {
     TRACE("ENTER DeckClickProc()\n");
     CardStack cardstack = stackobj.GetCardStack();
-    CardStack pile         = pPile->GetCardStack();
+    CardStack pile      = pPile->GetCardStack();
 
     fGameStarted = true;
 
@@ -336,8 +336,8 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
     }
     else
     {
-        int numcards = min(3, cardstack.NumCards());
-        
+        int numcards = min((nOptions & OPTION_THREE_CARDS) ? 3 : 1, cardstack.NumCards());
+
         //make a "visible" copy of these cards
         CardStack temp;
         temp = cardstack.Pop(numcards);
