@@ -132,8 +132,9 @@ RegpOpenOrCreateKey(
 		else
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
-		while (ParentKey->DataType == REG_LINK)
-			ParentKey = ParentKey->LinkedKey;
+		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
+		if (!wcsncmp(LocalKeyName, L"CurrentControlSet", 17))
+			RtlInitUnicodeString(&KeyString, L"ControlSet001");
 
 		/* Check subkey in memory structure */
 		Ptr = ParentKey->SubKeyList.Flink;
@@ -667,16 +668,11 @@ RegInitializeRegistry(VOID)
 		&SystemHive,
 		L"Registry\\Machine\\SYSTEM");
 
-	/* Create link 'CurrentControlSet' --> 'ControlSet001' */
+	/* Create 'ControlSet001' key */
 	RegCreateKeyW(
 		NULL,
 		L"Registry\\Machine\\SYSTEM\\ControlSet001",
 		&ControlSetKey);
-	RegCreateKeyW(
-		NULL,
-		L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
-		&LinkKey);
-	RegSetValueExW(LinkKey, NULL, 0, REG_LINK, (PCHAR)&ControlSetKey, sizeof(PVOID));
 }
 
 /* EOF */
