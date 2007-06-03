@@ -64,12 +64,12 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
     wndclass.cbClsExtra        = 0;
     wndclass.cbWndExtra        = 0;
     wndclass.hInstance        = hInst;
-    wndclass.hIcon            = LoadIcon (hInst, MAKEINTRESOURCE(IDI_ICON1));
+    wndclass.hIcon            = LoadIcon (hInst, MAKEINTRESOURCE(IDI_SOLITAIRE));
     wndclass.hCursor        = LoadCursor (NULL, IDC_ARROW);
     wndclass.hbrBackground    = (HBRUSH)NULL;
     wndclass.lpszMenuName    = MAKEINTRESOURCE(IDR_MENU1);
     wndclass.lpszClassName    = szAppName;
-    wndclass.hIconSm        = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, 0);
+    wndclass.hIconSm        = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_SOLITAIRE), IMAGE_ICON, 16, 16, 0);
 
     RegisterClassEx(&wndclass);
 

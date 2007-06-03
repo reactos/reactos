@@ -8,42 +8,16 @@
 
 #include "resource.h"
 
-#define APSTUDIO_READONLY_SYMBOLS
-
-/* winemaker: #include "afxres.h" */
-/* winemaker:warning: 'afxres.h' is an MFC specific header. Replacing it with 'winres.h' */
-#include "winres.h"
-
-/////
-
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////
-// Norwegian resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
-#pragma code_page(1252)
-#endif //_WIN32
 
-/////
-// Dialog
 
-IDD_DIALOG1 DIALOGEX DISCARDABLE  0, 0, 186, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Avbryt",IDCANCEL,129,24,50,14
-END
+/* Dialogs */
 
-IDD_OPTIONS DIALOG DISCARDABLE  0, 0, 186, 118
+IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Options"
 FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
 BEGIN
     GROUPBOX        "Cards", -1, 7, 7, 65, 40
     AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
@@ -53,9 +27,11 @@ BEGIN
     AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "Avbryt", IDCANCEL, 101, 97, 50, 14
 END
 
+
+/* Strings */
 
 STRINGTABLE
 BEGIN
@@ -64,52 +40,10 @@ BEGIN
     IDS_SOL_QUIT    "Quit the current game?"
 END
 
-/////
-// DESIGNINFO
 
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_DIALOG1, DIALOGEX
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 88
-    END
-END
-#endif    // APSTUDIO_INVOKED
+/* Menus */
 
-
-#ifdef APSTUDIO_INVOKED
-
-/////
-// TEXTINCLUDE
-
-1 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#include ""winres.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////
-// Menu
-
-IDR_MENU1 MENU DISCARDABLE 
+IDR_MENU1 MENU DISCARDABLE
 BEGIN
     POPUP "&Spill"
     BEGIN
@@ -127,26 +61,11 @@ BEGIN
     END
 END
 
-/////
-// Accelerator
 
-IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE 
+/* Accelerator */
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE
 BEGIN
     VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
     VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
 END
-
-
-/////
-// Icon
-
-IDI_ICON1               ICON    DISCARDABLE     "solitaire.ico"
-#endif    // Norwegian resource
-
-/////
-
-
-#ifndef APSTUDIO_INVOKED
-
-/////
-#endif    // not APSTUDIO_INVOKED
