@@ -29,6 +29,7 @@
 				<file>pcrtc.c</file>
 				<file>pcvideo.c</file>
 				<file>portio.c</file>
+				<file>macholpc.c</file>
 				<file>machxbox.c</file>
 				<file>xboxcons.c</file>
 				<file>xboxdisk.c</file>

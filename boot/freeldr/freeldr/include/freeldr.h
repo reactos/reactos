@@ -65,6 +65,8 @@
 #include <arch/i386/i386.h>
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
+#include <arch/i386/macholpc.h>
+#include <arch/i386/of_call.h>
 #include <internal/i386/intrin_i.h>
 #include <internal/i386/ke.h>
 #elif _MIPS_

@@ -19,10 +19,13 @@
 
 #include <freeldr.h>
 
+int ofwprintf(char *fmt, ...);
+
 VOID
 MachInit(const char *CmdLine)
 {
   ULONG PciId;
+  ULONG ClId;
 
   memset(&MachVtbl, 0, sizeof(MACHVTBL));
 
@@ -33,9 +36,20 @@ MachInit(const char *CmdLine)
   if (0x02a510de == PciId)
     {
       XboxMachInit(CmdLine);
+      HalpCalibrateStallExecution();
+      return;
+    }
+
+  /* Check for OLPC by reading 0xffff.fffc0, it should be CL1 */
+  ClId = *((ULONG *)0xffffffc0);
+
+  if ((ClId & 0xFFFFFF) == 'C' + ('L' << 8) + ('1' << 16))
+    {
+      OlpcMachInit(CmdLine);
     }
   else
     {
+      /* Ordinary PC arch */
       PcMachInit(CmdLine);
     }
 

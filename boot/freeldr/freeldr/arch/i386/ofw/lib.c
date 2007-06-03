@@ -35,8 +35,8 @@ sleep(ULONG delay)
 
 FILE _stdin  = { -1, 0, 0};
 FILE _stdout = { -1, 0, 0};
-FILE *stdin  = &_stdin;
-FILE *stdout = &_stdout;
+FILE *stdin_handle  = &_stdin;
+FILE *stdout_handle = &_stdout;
 
 char _homedir[128];
 
@@ -74,8 +74,8 @@ ofw_setup()
 
   if ((ph = OFFinddevice("/chosen")) == -1)
     abort() ;
-  stdin->id  = get_int_prop(ph, "stdin");
-  stdout->id = get_int_prop(ph, "stdout");
+  stdin_handle->id  = get_int_prop(ph, "stdin");
+  stdout_handle->id = get_int_prop(ph, "stdout");
 
   argv[0] = get_str_prop(ph, "bootpath", ALLOC);
   argstr  = get_str_prop(ph, "bootargs", ALLOC);
@@ -119,12 +119,12 @@ ferror(FILE *fp)
 void
 fputc(char c, FILE *fp)
 {
-  if (fp == stdout && c == '\n')
+  if (fp == stdout_handle && c == '\n')
     fputc('\r', fp);
 
   fp->buf[fp->bufc++] = c;
 
-  if ((fp->bufc == 127) || (fp == stdout && c == '\n')) {
+  if ((fp->bufc == 127) || (fp == stdout_handle && c == '\n')) {
     OFWrite(fp->id, fp->buf, fp->bufc);
     fp->bufc = 0;
   }
@@ -178,19 +178,19 @@ fclose (FILE *fp)
 int
 getchar()
 {
-  return(fgetc(stdin));
+  return(fgetc(stdin_handle));
 }
 
 VOID
 putchar(char c)
 {
-  fputc(c, stdout);
+  fputc(c, stdout_handle);
 }
 
 int
 puts(char *s)
 {
-  fputs(s, stdout);
+  fputs(s, stdout_handle);
   putchar('\n');
   return(0);
 }

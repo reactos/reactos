@@ -121,3 +121,6 @@ OFEnter( VOID );
 
 VOID
 OFExit( VOID );
+
+int
+ofwprintf(char *fmt, ...);
