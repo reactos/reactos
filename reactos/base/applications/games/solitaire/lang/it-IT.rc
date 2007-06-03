@@ -1,10 +1,11 @@
 /*
  * PROJECT:     Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/it.rc
+ * FILE:        base/applications/games/solitaire/lang/it-IT.rc
  * PURPOSE:     Italian Language File for Solitaire (gabriel ilardi)
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  */
+
 #include "resource.h"
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -18,12 +19,12 @@ CAPTION "Options"
 FONT 8, "MS Shell Dlg"
 EXSTYLE DS_SHELLFONT
 BEGIN
-    GROUPBOX        "Cards", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "Carte", -1, 7, 7, 65, 40
+    AUTORADIOBUTTON "Girane &Una", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Girane &Tre", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Visualizza il tempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
+    AUTOCHECKBOX    "&Barra di stato", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Annulla", IDCANCEL, 101, 97, 50, 14
@@ -34,9 +35,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Quit the current game?"
+    IDS_SOL_NAME    "Solitario"
+    IDS_SOL_ABOUT   "Solitario by J Brown\n\nCardLib versione 1.0."
+    IDS_SOL_QUIT    "Chiudere la partita in corso?"
 END
 
 
