@@ -133,7 +133,9 @@ RegpOpenOrCreateKey(
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
 		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!wcsncmp(LocalKeyName, L"CurrentControlSet", 17))
+		if (!wcsncmp(LocalKeyName, L"CurrentControlSet", 17) &&
+                    ParentKey->NameSize == 12 &&
+                    !memcmp(ParentKey->Name, L"SYSTEM", 12))
 			RtlInitUnicodeString(&KeyString, L"ControlSet001");
 
 		/* Check subkey in memory structure */
