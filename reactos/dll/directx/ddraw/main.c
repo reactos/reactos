@@ -71,16 +71,16 @@ DirectDrawCreateEx(LPGUID lpGUID,
         if (pUnkOuter)
         {
             /* we are using same error code as MS*/
-            return CLASS_E_NOAGGREGATION; 
-        }
-
-        /* Is it a DirectDraw 7 Request or not */
-        if (!IsEqualGUID(id, &IID_IDirectDraw7)) 
+            retVal = CLASS_E_NOAGGREGATION; 
+        }/* Is it a DirectDraw 7 Request or not */
+        else if (!IsEqualGUID(id, &IID_IDirectDraw7)) 
         {
-            return DDERR_INVALIDPARAMS;
+            retVal = DDERR_INVALIDPARAMS;
         }
-
-        retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
+        else
+        {
+            retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
+        }
 
         /* Create our DirectDraw interface */
     }
