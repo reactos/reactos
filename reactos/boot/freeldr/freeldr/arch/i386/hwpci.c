@@ -182,8 +182,8 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 	}
 
       /* Set 'Configuration Data' value */
-      Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
-	     Table->Size;
+      Size = FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors) +
+	     2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->Size;
       FullResourceDescriptor = MmAllocateMemory(Size);
       if (FullResourceDescriptor == NULL)
 	{
@@ -196,14 +196,22 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
       memset(FullResourceDescriptor, 0, Size);
       FullResourceDescriptor->InterfaceType = Isa;
       FullResourceDescriptor->BusNumber = 0;
-      FullResourceDescriptor->PartialResourceList.Count = 1;
+      FullResourceDescriptor->PartialResourceList.Version = 1;
+      FullResourceDescriptor->PartialResourceList.Revision = 1;
+      FullResourceDescriptor->PartialResourceList.Count = 2;
 
       PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+      PartialDescriptor->Type = CmResourceTypeBusNumber;
+      PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+      PartialDescriptor->u.BusNumber.Start = 0;
+      PartialDescriptor->u.BusNumber.Length = 1;
+
+      PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
       PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
       PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
       PartialDescriptor->u.DeviceSpecificData.DataSize = Table->Size;
 
-      memcpy((PVOID)((ULONG_PTR)FullResourceDescriptor + sizeof(CM_FULL_RESOURCE_DESCRIPTOR)),
+      memcpy(&FullResourceDescriptor->PartialResourceList.PartialDescriptors[2],
 	     Table,
 	     Table->Size);
 
