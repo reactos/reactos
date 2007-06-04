@@ -1,5 +1,5 @@
 <module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" allowwarnings="false">
-	<bootstrap base="reactos/system32" nameoncd="smss.exe" />
+	<bootstrap base="$(CDOUTPUT)/system32" nameoncd="smss.exe" />
 	<include base="usetup">.</include>
 	<include base="zlib">.</include>
 	<include base="inflib">.</include>

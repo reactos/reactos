@@ -1,5 +1,5 @@
 <module name="welcome" type="win32gui" installbase="system32" installname="welcome.exe">
-	<bootstrap base="reactos" />
+	<bootstrap base="$(CDOUTPUT)" />
 	<include base="welcome">.</include>
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
