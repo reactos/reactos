@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Keyboard
 ClassGUID  = {4D36E96B-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 09/24/2006,1.03
+DriverVer  = 06/04/2007,1.04
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -44,7 +44,7 @@ AddService = kbdclass, , kbdclass_Service_Inst
 
 [i8042prt_Service_Inst]
 ServiceType   = 1
-StartType     = 3
+StartType     = 1
 ErrorControl  = 1
 ServiceBinary = %12%\i8042prt.sys
 LoadOrderGroup = Keyboard Port
