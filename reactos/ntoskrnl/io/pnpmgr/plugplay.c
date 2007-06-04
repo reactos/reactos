@@ -786,14 +786,11 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING DeviceInstance;
 
-    DPRINT("IopResetDevice() called\n");
-    DPRINT("Device name: %wZ\n", &ResetDeviceData->DeviceInstance);
-
     Status = IopCaptureUnicodeString(&DeviceInstance, &ResetDeviceData->DeviceInstance);
     if (!NT_SUCCESS(Status))
-    {
-	return Status;
-    }
+        return Status;
+
+    DPRINT("IopResetDevice(%wZ)\n", &DeviceInstance);
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);

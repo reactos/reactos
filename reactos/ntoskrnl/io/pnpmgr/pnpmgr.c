@@ -1651,7 +1651,11 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
     * instance path, the following test is required :(
     */
    if (DeviceNode->Parent->InstancePath.Length == 0)
+   {
+      DPRINT1("Parent of %wZ has NULL Instance path, please report!\n",
+          &DeviceNode->InstancePath);
       return STATUS_UNSUCCESSFUL;
+   }
 
    /* 1. Try to retrieve ParentIdPrefix from registry */
    KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
@@ -2205,7 +2209,6 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
    PDEVICE_NODE ParentDeviceNode;
    PUNICODE_STRING Service;
    UNICODE_STRING ClassGUID;
-   UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
    NTSTATUS Status;
 
    DPRINT("IopActionConfigureChildServices(%p, %p)\n", DeviceNode, Context);
@@ -2253,14 +2256,14 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       RtlInitUnicodeString(&ClassGUID, NULL);
 
       QueryTable[0].Name = L"Service";
-      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
       QueryTable[0].EntryContext = Service;
 
       QueryTable[1].Name = L"ClassGUID";
       QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
       QueryTable[1].EntryContext = &ClassGUID;
       QueryTable[1].DefaultType = REG_SZ;
-      QueryTable[1].DefaultData = &NullString;
+      QueryTable[1].DefaultData = L"";
       QueryTable[1].DefaultLength = 0;
 
       RtlAppendUnicodeToString(&RegKey, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
@@ -2271,10 +2274,9 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
 
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
          /* FIXME: Log the error */
-         CPRINT("Could not retrieve configuration for device %S (Status %x)\n",
-            DeviceNode->InstancePath.Buffer, Status);
+         DPRINT1("Could not retrieve configuration for device %wZ (Status 0x%08x)\n",
+            &DeviceNode->InstancePath, Status);
          IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
          return STATUS_SUCCESS;
       }
@@ -2288,14 +2290,14 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
             /* Device has a ClassGUID value, but no Service value.
              * Suppose it is using the NULL driver, so state the
              * device is started */
-            DPRINT("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
+            DPRINT1("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
             IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
             DeviceNode->Flags |= DN_STARTED;
          }
          return STATUS_SUCCESS;
       }
 
-      DPRINT("Got Service %S\n", Service->Buffer);
+      DPRINT1("Got Service %S\n", Service->Buffer);
    }
 
    return STATUS_SUCCESS;
@@ -2418,8 +2420,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    }
    else
    {
-      DPRINT("Service %S is disabled or already initialized\n",
-         DeviceNode->ServiceName.Buffer);
+      DPRINT("Device %wZ is disabled or already initialized\n",
+         &DeviceNode->InstancePath);
    }
 
    return STATUS_SUCCESS;

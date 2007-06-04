@@ -2806,7 +2806,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
             }
 
             /* Lower the IRQL */
-            KeLowerIrql(OldIrql);
+            KfLowerIrql(OldIrql);
         }
     }
 
