@@ -1224,7 +1224,7 @@ UserPostMessage(HWND Wnd,
       IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
                            &KernelModeMsg.pt);
       KeQueryTickCount(&LargeTickCount);
-      KernelModeMsg.time = LargeTickCount.u.LowPart;
+      KernelModeMsg.time = LargeTickCount.u.LowPart * (KeQueryTimeIncrement() / 10000);
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
                      NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
                      QS_POSTMESSAGE);
