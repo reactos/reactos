@@ -77,8 +77,8 @@ CopyFiles = PCI_ISA_CopyFiles.NT
 isapnp.sys
 
 [PCI_ISA_Inst.NT.Services]
-;AddService = isapnp, 0x00000002, isapnp_Service_Inst
-AddService = , 0x00000002
+AddService = isapnp, 0x00000002, isapnp_Service_Inst
+;AddService = , 0x00000002
 
 [isapnp_Service_Inst]
 ServiceType   = 1
