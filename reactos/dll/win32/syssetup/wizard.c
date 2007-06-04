@@ -650,6 +650,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                     return TRUE;
                   }
 
+#if 0
                 /* Check if admin passwords have been entered */
                 if ((GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15) == 0) ||
                     (GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15) == 0))
@@ -663,6 +664,10 @@ ComputerPageDlgProc(HWND hwndDlg,
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
+#else
+                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
+                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
+#endif
                 /* Check if passwords match */
                 if (_tcscmp(Password1, Password2))
                 {
