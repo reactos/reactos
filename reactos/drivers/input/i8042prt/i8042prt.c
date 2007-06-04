@@ -723,6 +723,7 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 	PDEVICE_EXTENSION DevExt;
 	PFDO_DEVICE_EXTENSION FdoDevExt;
 	PDEVICE_OBJECT Fdo;
+	static BOOLEAN AlreadyInitialized = FALSE;
 
 	DPRINT("I8042AddDevice\n");
 
@@ -732,6 +733,10 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 		 * detected the keyboard and mouse at first call */
 		return STATUS_UNSUCCESSFUL;
 	}
+
+	if (AlreadyInitialized)
+		return STATUS_SUCCESS;
+	AlreadyInitialized = TRUE;
 
 	Status = IoCreateDevice(DriverObject,
 	               sizeof(DEVICE_EXTENSION),
@@ -949,6 +954,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 
 	DriverObject->DriverStartIo = I8042StartIo;
 	DriverObject->DriverExtension->AddDevice = I8042AddDevice;
+	I8042AddDevice(DriverObject, NULL);
 
 	return(STATUS_SUCCESS);
 }
