@@ -186,9 +186,12 @@ SermousePnp(
 					PDEVICE_RELATIONS DeviceRelations = NULL;
 					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / TargetDeviceRelation\n");
 
-					DeviceRelations = ExAllocatePool(PagedPool, FIELD_OFFSET(DEVICE_RELATIONS, Objects));
+					DeviceRelations = ExAllocatePoolWithTag(PagedPool, FIELD_OFFSET(DEVICE_RELATIONS, Objects), SERMOUSE_TAG);
 					if (!DeviceRelations)
-						Status = STATUS_INSUFFICIENT_RESOURCES;
+					{
+						DPRINT("ExAllocatePoolWithTag() failed\n");
+						Status = STATUS_NO_MEMORY;
+					}
 					else
 					{
 						DeviceRelations->Count = 0;

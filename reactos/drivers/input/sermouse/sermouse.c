@@ -43,11 +43,11 @@ ReadRegistryEntries(
 
 	ParametersRegistryKey.Length = 0;
 	ParametersRegistryKey.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters") + sizeof(UNICODE_NULL);
-	ParametersRegistryKey.Buffer = ExAllocatePool(PagedPool, ParametersRegistryKey.MaximumLength);
+	ParametersRegistryKey.Buffer = ExAllocatePoolWithTag(PagedPool, ParametersRegistryKey.MaximumLength, SERMOUSE_TAG);
 	if (!ParametersRegistryKey.Buffer)
 	{
-		DPRINT("ExAllocatePool() failed\n");
-		return STATUS_INSUFFICIENT_RESOURCES;
+		DPRINT("ExAllocatePoolWithTag() failed\n");
+		return STATUS_NO_MEMORY;
 	}
 	RtlCopyUnicodeString(&ParametersRegistryKey, RegistryPath);
 	RtlAppendUnicodeToString(&ParametersRegistryKey, L"\\Parameters");
@@ -80,7 +80,7 @@ ReadRegistryEntries(
 		Status = STATUS_SUCCESS;
 	}
 
-	ExFreePool(ParametersRegistryKey.Buffer);
+	ExFreePoolWithTag(ParametersRegistryKey.Buffer, SERMOUSE_TAG);
 	return Status;
 }
 
