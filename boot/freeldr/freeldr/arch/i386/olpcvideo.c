@@ -23,13 +23,50 @@
 
 volatile char *video_mem = 0;
 
+extern int chosen_package;
+extern FILE *stdout_handle;
+
+int get_int_prop(phandle node, char *key);
+int decode_int(UCHAR *p);
+
+char *Framebuffer = NULL;
+int Width, Height, Stride, Depth;
+
+
+VOID
+NTAPI
+HalReadPCIConfig(IN USHORT BusNumber, IN PCI_SLOT_NUMBER Slot, IN PVOID Buffer, IN ULONG Offset, IN ULONG Length);
+
+ULONG
+PciEnableResources(IN USHORT BusNumber,
+                   IN PCI_SLOT_NUMBER Slot,
+                   ULONG Mask);
+
+/*
+ * Access to machine-specific registers (available on 586 and better only)
+ * Note: the rd* operations modify the parameters directly (without using
+ * pointer indirection), this allows gcc to optimize better
+ */
+
+#define rdmsr(msr,val1,val2) \
+	__asm__ __volatile__("rdmsr" \
+			  : "=a" (val1), "=d" (val2) \
+			  : "c" (msr))
+
+#define wrmsr(msr,val1,val2) \
+	__asm__ __volatile__("wrmsr" \
+			  : /* no outputs */ \
+			  : "c" (msr), "a" (val1), "d" (val2))
+
+#define MSR_LX_GLIU0_P2D_RO0 0x10000029
+
+#if 0
 VOID OlpcVideoInit()
 {
     PCI_COMMON_CONFIG PciConfig;
     PCI_SLOT_NUMBER SlotNumber;
     ULONG DeviceNumber;
     ULONG FunctionNumber;
-    ULONG Size;
 
     /* Enumerate devices on the PCI bus */
     SlotNumber.u.AsULONG = 0;
@@ -40,28 +77,18 @@ VOID OlpcVideoInit()
         {
             SlotNumber.u.bits.FunctionNumber = FunctionNumber;
 
-            RtlZeroMemory(&PciConfig,
-                sizeof(PCI_COMMON_CONFIG));
+            RtlZeroMemory(&PciConfig, sizeof(PCI_COMMON_CONFIG));
 
-            /*Size = HalGetBusData(PCIConfiguration,
-                DeviceExtension->BusNumber,
-                SlotNumber.u.AsULONG,
+            HalReadPCIConfig(0,
+                SlotNumber,
                 &PciConfig,
-                PCI_COMMON_HDR_LENGTH);*/
-            ofwprintf("Size %lu\n", Size);
-            if (Size < PCI_COMMON_HDR_LENGTH)
-            {
-                if (FunctionNumber == 0)
-                {
-                    break;
-                }
-                else
-                {
-                    continue;
-                }
-            }
+                0,
+                PCI_COMMON_HDR_LENGTH);
 
-            ofwprintf("Bus %1lu  Device %2lu  Func %1lu  VenID 0x%04hx  DevID 0x%04hx\n",
+            if (PciConfig.VendorID == PCI_INVALID_VENDORID)
+                continue;
+
+            ofwprintf("Bus %d  Device %d  Func %d  VenID 0x%x  DevID 0x%x\n",
                 0,
                 DeviceNumber,
                 FunctionNumber,
@@ -77,6 +104,105 @@ VOID OlpcVideoInit()
         }
     }
 }
+
+VOID OlpcVideoInit()
+{
+    PCI_COMMON_CONFIG PciConfig;
+    PCI_SLOT_NUMBER SlotNumber;
+    ULONG FrameBuffer;
+    ULONG FrameBufferSize;
+    int i;
+
+    /* Geode LX is located at Bus=0 Device=15 Func=0 place */
+    SlotNumber.u.AsULONG = 0;
+    SlotNumber.u.bits.DeviceNumber = 15;
+
+    /* Enable all four memory resources */
+    PciEnableResources(0, SlotNumber, 1 + 2 + 4 + 8);
+
+    RtlZeroMemory(&PciConfig, sizeof(PCI_COMMON_CONFIG));
+
+    HalReadPCIConfig(0,
+                     SlotNumber,
+                     &PciConfig,
+                     0,
+                     PCI_COMMON_HDR_LENGTH);
+
+    /* Check if it's really Geode LX */
+    if (PciConfig.VendorID != 0x1022 && PciConfig.DeviceID != 0x208F)
+        return;
+
+    /* Obtain framebuffer address from it */
+    FrameBuffer = PciConfig.u.type0.BaseAddresses[0];
+    FrameBufferSize = lx_framebuffer_size();
+
+    ofwprintf("Frame buffer found at %x, size %x\n", FrameBuffer, FrameBufferSize);
+    for (i=0; i<PCI_TYPE0_ADDRESSES; i++)
+    {
+        HalReadPCIConfig(0,
+                         SlotNumber,
+                         &FrameBuffer,
+                         0x10 + i*4,
+                         sizeof(ULONG));
+
+        ofwprintf("Addr %x\n", FrameBuffer);
+    }
+}
+#endif
+
+unsigned int lx_framebuffer_size(void)
+{
+    unsigned int val;
+
+    if (/*machine_is_olpc() && !olpc_has_vsa()*/TRUE)
+    {
+        unsigned int hi,lo;
+        rdmsr(MSR_LX_GLIU0_P2D_RO0, lo, hi);
+
+        /* Top page number */
+        val = ((hi & 0xff) << 12) | ((lo & 0xfff00000) >> 20);
+        val -= (lo & 0x000fffff); /* Subtract bottom page number */
+        val += 1; /* Adjust page count */
+        return (val << 12);
+    }
+}
+
+
+VOID OlpcVideoInit()
+{
+    int OutDevice;
+    unsigned int Node;
+    char Type[16];
+    UCHAR Buffer[4];
+
+    /* Get the stdout device's handle */
+    OutDevice = get_int_prop(chosen_package, "stdout");
+    Node = OFInstanceToPackage(OutDevice);
+
+    OFGetprop(Node, "device_type", Type, sizeof(Type));
+
+    if (strcmp(Type, "display") != 0)
+        return;
+
+    OFGetprop(Node, "depth", (char *)&Buffer, sizeof(int));
+    Depth = decode_int(Buffer);
+
+    OFGetprop(Node, "width", (char *)&Buffer, sizeof(int));
+    Width = decode_int(Buffer);
+    OFGetprop(Node, "height", (char *)&Buffer, sizeof(int));
+    Height = decode_int(Buffer);
+    OFGetprop(Node, "linebytes", (char *)&Buffer, sizeof(int));
+    Stride = decode_int(Buffer);
+
+    ofwprintf("W: %d, H: %d, Stride: %d, Depth: %d\n", Width, Height, Stride, Depth);
+
+    OFGetprop(Node, "address", &Buffer, sizeof(int));
+    Framebuffer = decode_int(Buffer);
+
+    ofwprintf("Addr: %x\n", Framebuffer);
+}
+
+
 
 void OlpcVideoClearScreen( UCHAR Attr )
 {

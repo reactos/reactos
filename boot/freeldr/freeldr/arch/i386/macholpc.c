@@ -23,7 +23,8 @@
 FILE *stdin_handle;
 FILE *stdout_handle;
 
-static int chosen_package, part_handle = -1, kernel_mem = 0;
+int chosen_package;
+static int part_handle = -1, kernel_mem = 0;
 
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootprep" };
 

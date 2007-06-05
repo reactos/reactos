@@ -191,6 +191,31 @@ TYPE2_WRITE(HalpPCIWriteUcharType2, UCHAR)
 TYPE2_WRITE(HalpPCIWriteUshortType2, USHORT)
 TYPE2_WRITE(HalpPCIWriteUlongType2, ULONG)
 
+VOID
+NTAPI
+HalpPCISynchronizeType1(IN USHORT BusNumber,
+                        IN PCI_SLOT_NUMBER Slot,
+                        IN PPCI_TYPE1_CFG_BITS PciCfg1)
+{
+    /* Setup the PCI Configuration Register */
+    PciCfg1->u.AsULONG = 0;
+    PciCfg1->u.bits.BusNumber = BusNumber;
+    PciCfg1->u.bits.DeviceNumber = Slot.u.bits.DeviceNumber;
+    PciCfg1->u.bits.FunctionNumber = Slot.u.bits.FunctionNumber;
+    PciCfg1->u.bits.Enable = TRUE;
+}
+
+VOID
+NTAPI
+HalpPCIReleaseSynchronzationType1()
+{
+    PCI_TYPE1_CFG_BITS PciCfg1;
+
+    /* Clear the PCI Configuration Register */
+    PciCfg1.u.AsULONG = 0;
+    WRITE_PORT_ULONG(PCI_TYPE1_ADDRESS_PORT, PciCfg1.u.AsULONG);
+}
+
 
 /* Type 1 PCI Bus */
 PCI_CONFIG_HANDLER PCIConfigHandlerType1 =
@@ -213,7 +238,8 @@ PCI_CONFIG_HANDLER PCIConfigHandlerType1 =
 
 VOID
 NTAPI
-HalpPCIConfig(IN PCI_SLOT_NUMBER Slot,
+HalpPCIConfig(IN USHORT BusNumber,
+              IN PCI_SLOT_NUMBER Slot,
               IN PUCHAR Buffer,
               IN ULONG Offset,
               IN ULONG Length,
@@ -221,6 +247,8 @@ HalpPCIConfig(IN PCI_SLOT_NUMBER Slot,
 {
     ULONG i;
     UCHAR State[20];
+
+    HalpPCISynchronizeType1(BusNumber, Slot, State);
 
     /* Loop every increment */
     while (Length)
@@ -238,20 +266,86 @@ HalpPCIConfig(IN PCI_SLOT_NUMBER Slot,
         Buffer += i;
         Length -= i;
     }
+
+    HalpPCIReleaseSynchronzationType1();
 }
 
 VOID
 NTAPI
-HalReadPCIConfig(IN PCI_SLOT_NUMBER Slot,
+HalReadPCIConfig(IN USHORT BusNumber,
+                 IN PCI_SLOT_NUMBER Slot,
                  IN PVOID Buffer,
                  IN ULONG Offset,
                  IN ULONG Length)
 {
         /* Send the request */
-        HalpPCIConfig(Slot,
+        HalpPCIConfig(BusNumber,
+                      Slot,
                       Buffer,
                       Offset,
                       Length,
                       PCIConfigHandlerType1.ConfigRead);
 }
 
+VOID
+NTAPI
+HalWritePCIConfig(IN USHORT BusNumber,
+                  IN PCI_SLOT_NUMBER Slot,
+                  IN PVOID Buffer,
+                  IN ULONG Offset,
+                  IN ULONG Length)
+{
+        /* Send the request */
+        HalpPCIConfig(BusNumber,
+                      Slot,
+                      Buffer,
+                      Offset,
+                      Length,
+                      PCIConfigHandlerType1.ConfigWrite);
+}
+
+#define PCI_NUM_RESOURCES	11
+
+#define PCI_COMMAND		0x04	/* 16 bits */
+#define  PCI_COMMAND_IO		0x1	/* Enable response in I/O space */
+#define  PCI_COMMAND_MEMORY	0x2	/* Enable response in Memory space */
+
+ULONG
+PciEnableResources(IN USHORT BusNumber,
+                   IN PCI_SLOT_NUMBER Slot,
+                   ULONG Mask)
+{
+    USHORT cmd, old_cmd;
+    ULONG idx;
+    //struct resource *r;
+
+    HalReadPCIConfig(BusNumber, Slot, &cmd, PCI_COMMAND, sizeof(USHORT));
+    old_cmd = cmd;
+    for(idx = 0; idx < PCI_NUM_RESOURCES; idx++)
+    {
+        /* Only set up the requested stuff */
+        if (!(Mask & (1<<idx)))
+            continue;
+
+        //r = &dev->resource[idx];
+        /*if (!r->start && r->end)
+        {
+            printk(KERN_ERR "PCI: Device %s not available because of resource collisions\n", pci_name(dev));
+            return -EINVAL;
+        }*/
+
+        //if (r->flags & IORESOURCE_IO)
+        //    cmd |= PCI_COMMAND_IO;
+        //if (r->flags & IORESOURCE_MEM)
+            cmd |= PCI_COMMAND_MEMORY;
+    }
+    //if (dev->resource[PCI_ROM_RESOURCE].start)
+      //  cmd |= PCI_COMMAND_MEMORY;
+
+    if (cmd != old_cmd)
+    {
+        ofwprintf("PCI: Enabling device (%x -> %x)\n", old_cmd, cmd);
+        HalWritePCIConfig(BusNumber, Slot, &cmd, PCI_COMMAND, sizeof(USHORT));
+    }
+    return 0;
+}
