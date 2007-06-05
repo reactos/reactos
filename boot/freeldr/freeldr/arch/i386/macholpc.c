@@ -27,8 +27,7 @@ static int chosen_package, part_handle = -1, kernel_mem = 0;
 
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootprep" };
 
-volatile char *video_mem = 0;
-
+VOID OlpcVideoInit();
 
 
 VOID
@@ -45,6 +44,9 @@ OlpcMachInit(const char *CmdLine_)
 		CmdLine, sizeof(CmdLine));
 
   CmdLineParse(CmdLine);
+
+  /* Initialize the framebuffer */
+  OlpcVideoInit();
 
   /* Setup vtbl */
   MachVtbl.ConsPutChar = OlpcConsPutChar;
@@ -133,90 +135,6 @@ int OlpcConsGetCh()
 ofwprintf("OlpcConsGetCh\n");
 	OFRead(stdin_handle, &buf, 1);
     return buf;
-}
-
-void OlpcVideoClearScreen( UCHAR Attr )
-{
-}
-
-void OlpcVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
-{
-    *Width = 80;
-    *Height = 25;
-    *Depth = 16;
-}
-
-VIDEODISPLAYMODE OlpcVideoSetDisplayMode( char *DisplayMode, BOOLEAN Init )
-{
-    //printf( "DisplayMode: %s %s\n", DisplayMode, Init ? "true" : "false" );
-    if( Init && !video_mem )
-	{
-	video_mem = MmAllocateMemory( OlpcVideoGetBufferSize() );
-    }
-    return VideoTextMode;
-}
-
-ULONG OlpcVideoGetBufferSize()
-{
-    ULONG Width, Height, Depth;
-    MachVideoGetDisplaySize( &Width, &Height, &Depth );
-    return Width * Height * Depth / 8;
-}
-
-void OlpcVideoHideShowTextCursor( BOOLEAN Show )
-{
-    ofwprintf("HideShowTextCursor(%s)\n", Show ? "true" : "false");
-}
-
-VOID OlpcVideoPutChar( int Ch, UCHAR Attr, unsigned X, unsigned Y )
-{
-    ofwprintf( "\033[%d;%dH%c", Y, X, Ch );
-}
-
-VOID OlpcVideoCopyOffScreenBufferToVRAM( PVOID Buffer )
-{
-	int i,j;
-    ULONG w,h,d;
-    PCHAR ChBuf = Buffer;
-    int offset = 0;
-
-    MachVideoGetDisplaySize( &w, &h, &d );
-
-    for( i = 0; i < h; i++ ) {
-	for( j = 0; j < w; j++ ) {
-	    offset = (j * 2) + (i * w * 2);
-	    if( ChBuf[offset] != video_mem[offset] ) {
-		video_mem[offset] = ChBuf[offset];
-		MachVideoPutChar(ChBuf[offset],0,j+1,i+1);
-	    }
-	}
-    }
-}
-
-BOOLEAN OlpcVideoIsPaletteFixed()
-{
-    return FALSE;
-}
-
-VOID OlpcVideoSetPaletteColor( UCHAR Color, 
-                              UCHAR Red, UCHAR Green, UCHAR Blue )
-{
-    //ofwprintf( "SetPaletteColor(%x,%x,%x,%x)\n", Color, Red, Green, Blue );
-}
-
-VOID OlpcVideoGetPaletteColor( UCHAR Color, 
-                              UCHAR *Red, UCHAR *Green, UCHAR *Blue )
-{
-    //ofwprintf( "GetPaletteColor(%x)\n", Color);
-}
-
-VOID OlpcVideoSync()
-{
-    //ofwprintf( "Sync\n" );
-}
-
-VOID OlpcVideoPrepareForReactOS(IN BOOLEAN Setup)
-{
 }
 
 ULONG OlpcMemGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
