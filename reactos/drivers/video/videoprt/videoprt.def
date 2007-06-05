@@ -8,7 +8,7 @@ VideoPortAcquireSpinLock@12
 VideoPortAcquireSpinLockAtDpcLevel@8
 VideoPortAllocateBuffer@12
 VideoPortAllocateCommonBuffer@24
-;VideoPortAllocateContiguousMemory
+VideoPortAllocateContiguousMemory
 VideoPortAllocatePool@16
 ;VideoPortAssociateEventsWithDmaHandle
 VideoPortCheckForDeviceExistence@28

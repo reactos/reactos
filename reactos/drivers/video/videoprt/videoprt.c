@@ -1342,7 +1342,7 @@ VideoPortAcquireDeviceLock(
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    Status = KeWaitForMutexObject(&DeviceExtension->DeviceLock, Executive,
                                  KernelMode, FALSE, NULL);
-   ASSERT(Status == STATUS_SUCCESS);
+   // ASSERT(Status == STATUS_SUCCESS);
 }
 
 /*
@@ -1360,7 +1360,7 @@ VideoPortReleaseDeviceLock(
    DPRINT("VideoPortReleaseDeviceLock\n");
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    Status = KeReleaseMutex(&DeviceExtension->DeviceLock, FALSE);
-   ASSERT(Status == 0);
+   //ASSERT(Status == 0);
 }
 
 /*
@@ -1372,4 +1372,18 @@ VpNotifyEaData(
    IN PDEVICE_OBJECT DeviceObject,
    IN PVOID Data)
 {
+}
+
+/*
+ * @implemented
+ */
+PVOID NTAPI
+VideoPortAllocateContiguousMemory(
+   IN PVOID HwDeviceExtension,
+   IN ULONG NumberOfBytes,
+   IN PHYSICAL_ADDRESS HighestAcceptableAddress
+    )
+{
+
+    return MmAllocateContiguousMemory(NumberOfBytes, HighestAcceptableAddress);
 }
