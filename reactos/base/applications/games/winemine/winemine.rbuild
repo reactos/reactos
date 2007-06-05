@@ -11,5 +11,5 @@
 	<library>advapi32</library>
 	<file>main.c</file>
 	<file>dialog.c</file>
-	<file>winemine.rc</file>
+	<file>rsrc.rc</file>
 </module>

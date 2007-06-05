@@ -1,5 +1,5 @@
 /*
- *         translated by TestamenT
+ *         translated by TestamenT & xrogers
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
  */
@@ -13,16 +13,16 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Options"
+CAPTION "Opcje"
 FONT 8, "MS Shell Dlg"
 EXSTYLE DS_SHELLFONT
 BEGIN
-    GROUPBOX        "Cards", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "Karty", -1, 7, 7, 65, 40
+    AUTORADIOBUTTON "Rozdaj &jedn¹", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Rozdaj &dwie", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Pokazuj czas gry", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
+    AUTOCHECKBOX    "Pokazuj pa&sek stanu", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Anuluj", IDCANCEL, 101, 97, 50, 14
@@ -33,9 +33,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Solitaire"
+    IDS_SOL_NAME    "Pasjans"
     IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Quit the current game?"
+    IDS_SOL_QUIT    "Zakoñczyæ aktualn¹ grê?"
 END
 
 
