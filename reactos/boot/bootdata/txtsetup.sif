@@ -93,9 +93,9 @@ vbe = "VBE Display"
 Default = "XT-, AT- or extended keyboard (83-105 keys)"
 
 [KeyboardLayout]
-00000813 = "Belgian (point)"
 00000455 = "Burmese"
 00000406 = "Danish (Denmark)"
+00000813 = "Dutch (Belgium)"
 00000809 = "English (United Kingdom)"
 00000409 = "English (USA)"
 00010409 = "English (USA-Dvorak)"
