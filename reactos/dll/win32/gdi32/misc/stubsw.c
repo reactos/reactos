@@ -232,23 +232,6 @@ UpdateICMRegKeyW(
 /*
  * @unimplemented
  */
-DWORD
-STDCALL
-GetFontResourceInfoW(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)

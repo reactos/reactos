@@ -386,7 +386,6 @@ GetEUDCTimeStampExW@4
 GetFontAssocStatus@4
 GetFontData@20=NtGdiGetFontData@20
 GetFontLanguageInfo@4
-GetFontResourceInfo@16
 GetFontResourceInfoW@16
 GetFontUnicodeRanges@8
 GetGlyphIndicesA@20

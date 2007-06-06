@@ -340,4 +340,48 @@ GetTextFaceA( HDC hdc, INT count, LPSTR name )
     return res;
 }
 
+BOOL
+STDCALL
+GetFontResourceInfoW(
+    LPCWSTR lpFileName,
+    DWORD *pdwBufSize,
+    void* lpBuffer,
+    DWORD dwType
+    )
+{
+    BOOL bRet;
+    UNICODE_STRING NtFileName;
 
+    if (!lpFileName || !pdwBufSize || !lpBuffer)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!RtlDosPathNameToNtPathName_U(lpFileName,
+                                      &NtFileName,
+                                      NULL,
+                                      NULL))
+    {
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
+    }
+
+    bRet = NtGdiGetFontResourceInfoInternalW(
+        NtFileName.Buffer,
+        NtFileName.Length,
+        1,
+        *pdwBufSize,
+        pdwBufSize,
+        lpBuffer,
+        dwType);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NtFileName.Buffer);
+
+    if (!bRet)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
