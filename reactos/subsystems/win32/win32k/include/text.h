@@ -1,6 +1,8 @@
 #ifndef _WIN32K_TEXT_H
 #define _WIN32K_TEXT_H
 
+#define TAG_FINF        TAG('F', 'I', 'N', 'F')
+
 /* GDI logical font object */
 typedef struct
 {

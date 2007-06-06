@@ -285,7 +285,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    PSECTION_OBJECT SectionObject;
    ULONG ViewSize = 0;
    FT_Fixed XScale, YScale;
-
+   UNICODE_STRING FileNameCopy;
 
    /* Open the font file */
 
@@ -361,7 +361,8 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
       return 0;
    }
 
-   /* FontGDI->Filename = FileName; perform strcpy */
+   RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, FileName, &FileNameCopy);
+   FontGDI->Filename = FileNameCopy.Buffer;
    FontGDI->face = Face;
 
    /* FIXME: Complete text metrics */
@@ -4157,6 +4158,251 @@ NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set)
   if( Set ) dc->w.charExtra = CharExtra;
   DC_UnlockDc(dc);
   return (Ret);
+}
+
+static BOOL FASTCALL
+IntGetFullFileName(
+    POBJECT_NAME_INFORMATION NameInfo,
+    ULONG Size,
+    PUNICODE_STRING FileName)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hFile;
+    IO_STATUS_BLOCK IoStatusBlock;
+    ULONG Desired;
+    
+    InitializeObjectAttributes(&ObjectAttributes,
+                               FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = ZwOpenFile(
+      &hFile,
+      0, //FILE_READ_ATTRIBUTES,
+      &ObjectAttributes,
+      &IoStatusBlock,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+      0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenFile() failed (Status = 0x%lx)\n", Status);
+        return FALSE;
+    }
+
+    Status = ZwQueryObject(hFile, ObjectNameInformation, NameInfo, Size, &Desired);
+    ZwClose(hFile);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwQueryObject() failed (Status = %lx)\n", Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL FASTCALL
+IntGdiGetFontResourceInfo(
+    IN  PUNICODE_STRING FileName,
+    OUT void *pBuffer,
+    OUT DWORD *pdwBytes,
+    IN  DWORD dwType)
+{
+    UNICODE_STRING EntryFileName;
+    POBJECT_NAME_INFORMATION NameInfo1, NameInfo2;
+    PLIST_ENTRY ListEntry;
+    PFONT_ENTRY FontEntry;
+    FONTFAMILYINFO Info;
+    ULONG Size;
+    BOOL bFound = FALSE;
+
+    /* Create buffer for full path name */
+    Size = sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
+    NameInfo1 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
+    if (!NameInfo1)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    /* Get the full path name */
+    if (!IntGetFullFileName(NameInfo1, Size, FileName))
+    {
+        ExFreePool(NameInfo1);
+        return FALSE;
+    }
+
+    /* Create a buffer for the entries' names */
+    NameInfo2 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
+    if (!NameInfo2)
+    {
+        ExFreePool(NameInfo1);
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    /* Try to find the pathname in the global font list */
+    IntLockGlobalFonts;
+    for (ListEntry = FontListHead.Flink;
+         ListEntry != &FontListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        FontEntry = CONTAINING_RECORD(ListEntry, FONT_ENTRY, ListEntry);
+        if (FontEntry->Font->Filename != NULL)
+        {
+            RtlInitUnicodeString(&EntryFileName , FontEntry->Font->Filename);
+            if (IntGetFullFileName(NameInfo2, Size, &EntryFileName))
+            {
+                if (RtlEqualUnicodeString(&NameInfo1->Name, &NameInfo2->Name, FALSE))
+                {
+                    /* found */
+                    FontFamilyFillInfo(&Info, FontEntry->FaceName.Buffer, FontEntry->Font);
+                    bFound = TRUE;
+                    break;
+                }
+            }
+        }
+    }
+    IntUnLockGlobalFonts;
+
+    /* Free the buffers */
+    ExFreePool(NameInfo1);
+    ExFreePool(NameInfo2);
+
+    if (!bFound && dwType != 5)
+    {
+        /* Font could not be found in system table 
+           dwType == 5 will still handle this */
+        return FALSE;
+    }
+
+    switch(dwType)
+    {
+        case 0: /* FIXME: returns 1 or 2, don't know what this is atm */
+            *(DWORD*)pBuffer = 1;
+            *pdwBytes = sizeof(DWORD);
+            break;
+
+        case 1: /* Copy the full font name */
+            Size = wcslen(Info.EnumLogFontEx.elfFullName) + 1;
+            Size = min(Size , LF_FULLFACESIZE) * sizeof(WCHAR);
+            memcpy(pBuffer, Info.EnumLogFontEx.elfFullName, Size);
+            // FIXME: Do we have to zeroterminate?
+            *pdwBytes = Size;
+            break;
+
+        case 2: /* Copy a LOGFONTW structure */
+            memcpy(pBuffer, &Info.EnumLogFontEx.elfLogFont, sizeof(LOGFONTW));
+            *pdwBytes = sizeof(LOGFONTW);
+            break;
+
+        case 3: /* FIXME: What exactly is copied here? */
+            *(DWORD*)pBuffer = 1;
+            *pdwBytes = sizeof(DWORD*);
+            break;
+
+        case 5: /* Looks like a BOOL that is copied, TRUE, if the font was not found */
+            *(BOOL*)pBuffer = !bFound;
+            *pdwBytes = sizeof(BOOL);
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+W32KAPI BOOL APIENTRY
+NtGdiGetFontResourceInfoInternalW(
+    IN LPWSTR   pwszFiles,
+    IN ULONG    cwc,
+    IN ULONG    cFiles,
+    IN UINT     cjIn,
+    OUT LPDWORD pdwBytes,
+    OUT LPVOID  pvBuf,
+    IN DWORD    dwType)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    DWORD dwBytes;
+    UNICODE_STRING SafeFileNames;
+    BOOL bRet = FALSE;
+
+    union
+    {
+        LOGFONTW logfontw;
+        WCHAR FullName[LF_FULLFACESIZE];
+    } Buffer;
+
+    /* FIXME: handle cFiles > 0 */
+
+    /* Check for valid dwType values 
+       dwType == 4 seems to be handled by gdi32 only */
+    if (dwType == 4 || dwType > 5)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Check buffers and copy pwszFiles */
+    _SEH_TRY
+    {
+        ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), 1);
+        bRet = RtlCreateUnicodeString(&SafeFileNames, pwszFiles);
+        ProbeForWrite(pdwBytes, sizeof(DWORD), 1);
+        ProbeForWrite(pvBuf, cjIn, 1);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END
+
+    if(!bRet)
+    {
+        /* Could not create the unicode string, so return instantly */
+        return FALSE;
+    }
+
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        /* Free the string for the filename */
+        RtlFreeUnicodeString(&SafeFileNames);
+        return FALSE;
+    }
+
+    bRet = IntGdiGetFontResourceInfo(&SafeFileNames, &Buffer, &dwBytes, dwType);
+
+    /* Check if succeeded and the buffer is big enough */
+    if (bRet && cjIn >= dwBytes)
+    {
+        /* Copy the data back to caller */
+        _SEH_TRY
+        {
+            /* Buffers are already probed */
+            RtlCopyMemory(pvBuf, &Buffer, dwBytes);
+            *pdwBytes = dwBytes;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END
+
+        if(!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            bRet = FALSE;
+        }
+    }
+
+    /* Free the string for the filename */
+    RtlFreeUnicodeString(&SafeFileNames);
+
+    return bRet;
 }
 
 /* EOF */

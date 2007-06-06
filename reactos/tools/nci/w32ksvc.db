@@ -121,7 +121,7 @@ NtGdiGetEnhMetaFilePixelFormat		3
 NtGdiGetFontData			5
 NtGdiGetFontFamilyInfo			4
 NtGdiGetFontLanguageInfo		1
-#NtGdiGetFontResourceInfo		?
+NtGdiGetFontResourceInfoInternalW		7
 NtGdiGetGlyphOutline			8
 #NtGdiGetGlyphOutlineWow		?
 NtGdiGetGraphicsMode			1
