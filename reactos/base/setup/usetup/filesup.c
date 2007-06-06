@@ -97,7 +97,7 @@ SetupCopyFile(PWCHAR SourceFileName,
   OBJECT_ATTRIBUTES ObjectAttributes;
   HANDLE FileHandleSource;
   HANDLE FileHandleDest;
-  IO_STATUS_BLOCK IoStatusBlock;
+  PIO_STATUS_BLOCK IoStatusBlock;
   FILE_STANDARD_INFORMATION FileStandard;
   FILE_BASIC_INFORMATION FileBasic;
   PUCHAR Buffer;
@@ -110,6 +110,9 @@ SetupCopyFile(PWCHAR SourceFileName,
   LARGE_INTEGER ByteOffset;
 
   Buffer = NULL;
+
+  IoStatusBlock = RtlAllocateHeap(ProcessHeap, 0, sizeof(IO_STATUS_BLOCK));
+  if (!IoStatusBlock) return STATUS_INSUFFICIENT_RESOURCES;
 
 #ifdef __REACTOS__
   RtlInitUnicodeString(&FileName,
@@ -124,25 +127,25 @@ SetupCopyFile(PWCHAR SourceFileName,
   Status = NtOpenFile(&FileHandleSource,
 		      GENERIC_READ,
 		      &ObjectAttributes,
-		      &IoStatusBlock,
+		      IoStatusBlock,
 		      FILE_SHARE_READ,
 		      FILE_SEQUENTIAL_ONLY);
   if(!NT_SUCCESS(Status))
     {
       DPRINT1("NtOpenFile failed: %x\n", Status);
-      goto done;
+      goto freemem;
     }
 #else
   FileHandleSource = CreateFileW(SourceFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
   if (FileHandleSource == INVALID_HANDLE_VALUE)
   {
     Status = STATUS_UNSUCCESSFUL;
-    goto done;
+    goto freemem;
   }
 #endif
 
   Status = NtQueryInformationFile(FileHandleSource,
-				  &IoStatusBlock,
+				  IoStatusBlock,
 				  &FileStandard,
 				  sizeof(FILE_STANDARD_INFORMATION),
 				  FileStandardInformation);
@@ -152,7 +155,7 @@ SetupCopyFile(PWCHAR SourceFileName,
       goto closesrc;
     }
   Status = NtQueryInformationFile(FileHandleSource,
-				  &IoStatusBlock,&FileBasic,
+				  IoStatusBlock, &FileBasic,
 				  sizeof(FILE_BASIC_INFORMATION),
 				  FileBasicInformation);
   if(!NT_SUCCESS(Status))
@@ -202,7 +205,7 @@ SetupCopyFile(PWCHAR SourceFileName,
   Status = NtCreateFile(&FileHandleDest,
 			GENERIC_WRITE,
 			&ObjectAttributes,
-			&IoStatusBlock,
+			IoStatusBlock,
 			NULL,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
@@ -217,25 +220,25 @@ SetupCopyFile(PWCHAR SourceFileName,
     }
 
   RegionSize = (ULONG)PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
-  IoStatusBlock.Status = 0;
+  IoStatusBlock->Status = 0;
   ByteOffset.QuadPart = 0;
   Status = NtWriteFile(FileHandleDest,
 		       NULL,
 		       NULL,
 		       NULL,
-		       &IoStatusBlock,
+		       IoStatusBlock,
 		       SourceFileMap,
 		       RegionSize,
 		       &ByteOffset,
 		       NULL);
   if(!NT_SUCCESS(Status))
     {
-      DPRINT1("NtWriteFile failed: %x:%x, iosb: %p src: %p, size: %x\n", Status, IoStatusBlock.Status, &IoStatusBlock, SourceFileMap, RegionSize);
+      DPRINT1("NtWriteFile failed: %x:%x, iosb: %p src: %p, size: %x\n", Status, IoStatusBlock->Status, IoStatusBlock, SourceFileMap, RegionSize);
       goto closedest;
     }
   /* Copy file date/time from source file */
   Status = NtSetInformationFile(FileHandleDest,
-				&IoStatusBlock,
+				IoStatusBlock,
 				&FileBasic,
 				sizeof(FILE_BASIC_INFORMATION),
 				FileBasicInformation);
@@ -247,7 +250,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 
   /* shorten the file back to it's real size after completing the write */
   NtSetInformationFile(FileHandleDest,
-		       &IoStatusBlock,
+		       IoStatusBlock,
 		       &FileStandard.EndOfFile,
 		       sizeof(FILE_END_OF_FILE_INFORMATION),
 		       FileEndOfFileInformation);
@@ -259,7 +262,8 @@ SetupCopyFile(PWCHAR SourceFileName,
   NtClose(SourceFileSection);
  closesrc:
   NtClose(FileHandleSource);
- done:
+ freemem:
+  RtlFreeHeap(ProcessHeap, 0, IoStatusBlock);
   return(Status);
 }
 
