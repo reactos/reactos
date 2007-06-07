@@ -485,7 +485,11 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     DX_STUB_str("Here\n");
 
     /* Alloc mpFourCC */
-    
+    if (This->lpLcl->lpGbl->lpdwFourCC != NULL)
+    {
+        DxHeapMemFree(This->lpLcl->lpGbl->lpdwFourCC);
+    }
+
     // if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
     // {
         //mpFourCC = (DWORD *) DxHeapMemAlloc( sizeof(DWORD) * 21);
@@ -513,6 +517,12 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     /* Alloc mpTextures */
 #if 0
+
+    if (This->lpLcl->lpGbl->texture != NULL)
+    {
+        DxHeapMemFree(This->lpLcl->lpGbl->texture;
+    }
+
     mpTextures = NULL;
     if (mD3dDriverData.dwNumTextureFormats > 0)
     {
