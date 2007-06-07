@@ -22,10 +22,10 @@
 
 
 /* just some stuff */
-#define VERSION			"FreeLoader v2.1"
-#define COPYRIGHT		"Copyright (C) 1998-2005 Brian Palmer <brianp@sginet.com>"
-#define AUTHOR_EMAIL	"<brianp@sginet.com>"
-#define BY_AUTHOR		"by Brian Palmer"
+#define VERSION			"FreeLoader v3.1"
+#define COPYRIGHT		"Copyright (C) 1998-2007 ReactOS Team"
+#define AUTHOR_EMAIL	""
+#define BY_AUTHOR		"OLPC port by A. Bragin"
 
 // FreeLoader version defines
 //

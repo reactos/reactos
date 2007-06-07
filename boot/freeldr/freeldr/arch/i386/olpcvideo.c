@@ -21,26 +21,30 @@
 
 #include <freeldr.h>
 
-volatile char *video_mem = 0;
+/* Include for jpg support */
+#include "decode-jpg.h"
+#include "olpc_logo.h"
+
 
 extern int chosen_package;
 extern FILE *stdout_handle;
 
 int get_int_prop(phandle node, char *key);
 int decode_int(UCHAR *p);
+VOID XboxVideoAttrToColors(UCHAR Attr, ULONG *FgColor, ULONG *BgColor);
 
-char *Framebuffer = NULL;
-int Width, Height, Stride, Depth;
+char *FrameBuffer = NULL;
+int ScreenWidth, ScreenHeight, Stride, Depth, BytesPerPixel;
+
+#define CHAR_WIDTH  8
+#define CHAR_HEIGHT 16
+
+#define TOP_BOTTOM_LINES 0
 
 
-VOID
-NTAPI
-HalReadPCIConfig(IN USHORT BusNumber, IN PCI_SLOT_NUMBER Slot, IN PVOID Buffer, IN ULONG Offset, IN ULONG Length);
-
-ULONG
-PciEnableResources(IN USHORT BusNumber,
-                   IN PCI_SLOT_NUMBER Slot,
-                   ULONG Mask);
+// Private functions
+VOID OlpcDisplayLogo();
+WORD Convert888to565(ULONG Pixel);
 
 /*
  * Access to machine-specific registers (available on 586 and better only)
@@ -59,96 +63,6 @@ PciEnableResources(IN USHORT BusNumber,
 			  : "c" (msr), "a" (val1), "d" (val2))
 
 #define MSR_LX_GLIU0_P2D_RO0 0x10000029
-
-#if 0
-VOID OlpcVideoInit()
-{
-    PCI_COMMON_CONFIG PciConfig;
-    PCI_SLOT_NUMBER SlotNumber;
-    ULONG DeviceNumber;
-    ULONG FunctionNumber;
-
-    /* Enumerate devices on the PCI bus */
-    SlotNumber.u.AsULONG = 0;
-    for (DeviceNumber = 0; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
-    {
-        SlotNumber.u.bits.DeviceNumber = DeviceNumber;
-        for (FunctionNumber = 0; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
-        {
-            SlotNumber.u.bits.FunctionNumber = FunctionNumber;
-
-            RtlZeroMemory(&PciConfig, sizeof(PCI_COMMON_CONFIG));
-
-            HalReadPCIConfig(0,
-                SlotNumber,
-                &PciConfig,
-                0,
-                PCI_COMMON_HDR_LENGTH);
-
-            if (PciConfig.VendorID == PCI_INVALID_VENDORID)
-                continue;
-
-            ofwprintf("Bus %d  Device %d  Func %d  VenID 0x%x  DevID 0x%x\n",
-                0,
-                DeviceNumber,
-                FunctionNumber,
-                PciConfig.VendorID,
-                PciConfig.DeviceID);
-
-            /* Skip to next device if the current one is not a multifunction device */
-            if ((FunctionNumber == 0) &&
-                ((PciConfig.HeaderType & 0x80) == 0))
-            {
-                break;
-            }
-        }
-    }
-}
-
-VOID OlpcVideoInit()
-{
-    PCI_COMMON_CONFIG PciConfig;
-    PCI_SLOT_NUMBER SlotNumber;
-    ULONG FrameBuffer;
-    ULONG FrameBufferSize;
-    int i;
-
-    /* Geode LX is located at Bus=0 Device=15 Func=0 place */
-    SlotNumber.u.AsULONG = 0;
-    SlotNumber.u.bits.DeviceNumber = 15;
-
-    /* Enable all four memory resources */
-    PciEnableResources(0, SlotNumber, 1 + 2 + 4 + 8);
-
-    RtlZeroMemory(&PciConfig, sizeof(PCI_COMMON_CONFIG));
-
-    HalReadPCIConfig(0,
-                     SlotNumber,
-                     &PciConfig,
-                     0,
-                     PCI_COMMON_HDR_LENGTH);
-
-    /* Check if it's really Geode LX */
-    if (PciConfig.VendorID != 0x1022 && PciConfig.DeviceID != 0x208F)
-        return;
-
-    /* Obtain framebuffer address from it */
-    FrameBuffer = PciConfig.u.type0.BaseAddresses[0];
-    FrameBufferSize = lx_framebuffer_size();
-
-    ofwprintf("Frame buffer found at %x, size %x\n", FrameBuffer, FrameBufferSize);
-    for (i=0; i<PCI_TYPE0_ADDRESSES; i++)
-    {
-        HalReadPCIConfig(0,
-                         SlotNumber,
-                         &FrameBuffer,
-                         0x10 + i*4,
-                         sizeof(ULONG));
-
-        ofwprintf("Addr %x\n", FrameBuffer);
-    }
-}
-#endif
 
 unsigned int lx_framebuffer_size(void)
 {
@@ -171,7 +85,7 @@ unsigned int lx_framebuffer_size(void)
 VOID OlpcVideoInit()
 {
     int OutDevice;
-    unsigned int Node;
+    unsigned int Node, i;
     char Type[16];
     UCHAR Buffer[4];
 
@@ -188,18 +102,24 @@ VOID OlpcVideoInit()
     Depth = decode_int(Buffer);
 
     OFGetprop(Node, "width", (char *)&Buffer, sizeof(int));
-    Width = decode_int(Buffer);
+    ScreenWidth = decode_int(Buffer);
     OFGetprop(Node, "height", (char *)&Buffer, sizeof(int));
-    Height = decode_int(Buffer);
+    ScreenHeight = decode_int(Buffer);
     OFGetprop(Node, "linebytes", (char *)&Buffer, sizeof(int));
     Stride = decode_int(Buffer);
 
-    ofwprintf("W: %d, H: %d, Stride: %d, Depth: %d\n", Width, Height, Stride, Depth);
+    ofwprintf("W: %d, H: %d, Stride: %d, Depth: %d\n", ScreenWidth, ScreenHeight, Stride, Depth);
 
     OFGetprop(Node, "address", &Buffer, sizeof(int));
-    Framebuffer = decode_int(Buffer);
+    FrameBuffer = decode_int(Buffer);
 
-    ofwprintf("Addr: %x\n", Framebuffer);
+    ofwprintf("Addr: %x\n", FrameBuffer);
+
+    /* Calculate BPP and Delta based on acquired values */
+    BytesPerPixel = Depth / 8;
+
+    //OlpcDisplayLogo();
+    //while (TRUE) {};
 }
 
 
@@ -210,18 +130,14 @@ void OlpcVideoClearScreen( UCHAR Attr )
 
 void OlpcVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
 {
-    *Width = 80;
-    *Height = 25;
-    *Depth = 16;
+  *Width = ScreenWidth / CHAR_WIDTH;
+  *Height = (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT;
+  *Depth = 16;
 }
 
 VIDEODISPLAYMODE OlpcVideoSetDisplayMode( char *DisplayMode, BOOLEAN Init )
 {
     //printf( "DisplayMode: %s %s\n", DisplayMode, Init ? "true" : "false" );
-    if( Init && !video_mem )
-	{
-	video_mem = MmAllocateMemory( OlpcVideoGetBufferSize() );
-    }
     return VideoTextMode;
 }
 
@@ -234,31 +150,52 @@ ULONG OlpcVideoGetBufferSize()
 
 void OlpcVideoHideShowTextCursor( BOOLEAN Show )
 {
-    ofwprintf("HideShowTextCursor(%s)\n", Show ? "true" : "false");
+    //ofwprintf("HideShowTextCursor(%s)\n", Show ? "true" : "false");
+}
+
+VOID OlpcVideoOutputCharInt(UCHAR Char, unsigned X, unsigned Y, WORD FgColor, WORD BgColor)
+{
+    PUCHAR FontPtr;
+    WORD *Pixel;
+    UCHAR Mask;
+    unsigned Line;
+    unsigned Col;
+
+    FontPtr = XboxFont8x16 + Char * 16;
+    Pixel = (WORD *) ((char *) FrameBuffer + (Y * CHAR_HEIGHT + TOP_BOTTOM_LINES) * Stride
+        + X * CHAR_WIDTH * BytesPerPixel);
+    for (Line = 0; Line < CHAR_HEIGHT; Line++)
+    {
+        Mask = 0x80;
+        for (Col = 0; Col < CHAR_WIDTH; Col++)
+        {
+            Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? FgColor : BgColor);
+            Mask = Mask >> 1;
+        }
+        Pixel = (WORD *) ((char *) Pixel + Stride);
+    }
 }
 
 VOID OlpcVideoPutChar( int Ch, UCHAR Attr, unsigned X, unsigned Y )
 {
-    ofwprintf( "\033[%d;%dH%c", Y, X, Ch );
+    ULONG FgColor, BgColor;
+
+    XboxVideoAttrToColors(Attr, &FgColor, &BgColor);
+    OlpcVideoOutputCharInt(Ch, X, Y, Convert888to565(FgColor), Convert888to565(BgColor));
 }
 
 VOID OlpcVideoCopyOffScreenBufferToVRAM( PVOID Buffer )
 {
-	int i,j;
-    ULONG w,h,d;
-    PCHAR ChBuf = Buffer;
-    int offset = 0;
+    PUCHAR OffScreenBuffer = (PUCHAR) Buffer;
+    ULONG Col, Line;
 
-    MachVideoGetDisplaySize( &w, &h, &d );
-
-    for( i = 0; i < h; i++ ) {
-	for( j = 0; j < w; j++ ) {
-	    offset = (j * 2) + (i * w * 2);
-	    if( ChBuf[offset] != video_mem[offset] ) {
-		video_mem[offset] = ChBuf[offset];
-		MachVideoPutChar(ChBuf[offset],0,j+1,i+1);
-	    }
-	}
+    for (Line = 0; Line < (ScreenHeight - 2 * TOP_BOTTOM_LINES) / CHAR_HEIGHT; Line++)
+    {
+        for (Col = 0; Col < ScreenWidth / CHAR_WIDTH; Col++)
+        {
+            OlpcVideoPutChar(OffScreenBuffer[0], OffScreenBuffer[1], Col, Line);
+            OffScreenBuffer += 2;
+        }
     }
 }
 
@@ -286,4 +223,99 @@ VOID OlpcVideoSync()
 
 VOID OlpcVideoPrepareForReactOS(IN BOOLEAN Setup)
 {
+}
+
+int VideoPictureDecode(BYTE *pbaJpegFileImage, int nFileLength,JPEG * pJpeg)
+{
+    struct jpeg_decdata *decdata;
+    int size, width, height, depth=0;
+
+    decdata = (struct jpeg_decdata *)malloc(sizeof(struct jpeg_decdata));
+    memset(decdata, 0x0, sizeof(struct jpeg_decdata));
+
+    jpeg_get_size(pbaJpegFileImage, &width, &height, &depth);
+    size = ((width + 15) & ~15) * ((height + 15) & ~15) * (depth >> 3);
+
+    pJpeg->pData = (unsigned char *)malloc(size);
+    memset(pJpeg->pData, 0x0, size);
+
+    pJpeg->width = ((width + 15) & ~15);
+    pJpeg->height = ((height +15) & ~ 15);
+    pJpeg->bpp = depth >> 3;
+
+    if((jpeg_decode(pbaJpegFileImage, pJpeg->pData, 
+        ((width + 15) & ~15), ((height + 15) & ~15), depth, decdata)) != 0) {
+            ////		!!!!
+            //printk("Error decode picture\n");
+            //while(1);
+            return 1;
+    }
+
+    pJpeg->pBackdrop = pJpeg->pData;
+
+    free(decdata);
+
+    return 0;
+}
+
+WORD Convert888to565(ULONG Pixel)
+{
+    BYTE red, green, blue;
+
+    red = Pixel & 0xFF;
+    green = (Pixel & 0xFF00) >> 8;
+    blue = (Pixel & 0xFF0000) >> 16;
+
+    red = red >> 3; // 5
+    green = green >> 2; // 6
+    blue = blue >> 3; // 5
+
+    return (blue & 0x1F)|
+        ((green << 5) & 0x7E0) |
+        ((red << 11) & 0xF800);
+}
+
+void BootVideoClearScreen(JPEG *pJpeg, int nStartLine, int nEndLine)
+{
+    if(nEndLine>=ScreenHeight) nEndLine=ScreenHeight-1;
+    {
+        if(pJpeg->pData!=NULL)
+        {
+            volatile WORD *pdw=((DWORD *)FrameBuffer)+ScreenWidth*nStartLine;
+            int n1=pJpeg->bpp * pJpeg->width * nStartLine;
+            BYTE *pbJpegBitmapAdjustedDatum=pJpeg->pBackdrop;
+
+            while(nStartLine++<nEndLine)
+            {
+                int n;
+                for(n=0;n<ScreenWidth;n++)
+                {
+                    BYTE red, green, blue;
+
+                    red = pbJpegBitmapAdjustedDatum[n1] >> 3; // 5
+                    green = pbJpegBitmapAdjustedDatum[n1+1] >> 2; // 6
+                    blue = pbJpegBitmapAdjustedDatum[n1+2] >> 3; // 5
+
+                    pdw[n]=  (blue & 0x1F)|
+                            ((green << 5) & 0x7E0) |
+                            ((red << 11) & 0xF800);
+                    n1+=pJpeg->bpp;
+                }
+                n1+=pJpeg->bpp * (pJpeg->width - ScreenWidth);
+                pdw = (WORD*)((UCHAR *)pdw + Stride); // adding DWORD footprints
+            }
+        }
+    }
+}
+
+VOID OlpcDisplayLogo()
+{
+    JPEG *jpegBackdrop;
+
+    jpegBackdrop= (JPEG*) malloc(sizeof(JPEG));
+    memset(jpegBackdrop, 0x0, sizeof(sizeof(JPEG)));
+
+    // decode and malloc backdrop bitmap (Default)
+    VideoPictureDecode(olpc_freeloader_logo, sizeof(olpc_freeloader_logo), jpegBackdrop);
+    BootVideoClearScreen(jpegBackdrop, 0, 0xffff);
 }

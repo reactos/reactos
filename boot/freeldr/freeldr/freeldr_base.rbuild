@@ -64,6 +64,7 @@
 		<file>palette.c</file>
 		<file>pixel.c</file>
 		<file>video.c</file>
+		<file>jpg/decode-jpg.c</file>
 	</directory>
 	<if property="ARCH" value="i386">
 		<directory name="windows">
