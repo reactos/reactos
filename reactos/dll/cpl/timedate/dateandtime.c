@@ -98,7 +98,7 @@ SetLocalSystemTime(HWND hwnd)
                     (WPARAM)&Time,
                     0);
 
-        /* broadcast the time change message */
+        /* Broadcast the time change message */
         SendMessage(HWND_BROADCAST,
                     WM_TIMECHANGE,
                     0,
@@ -110,38 +110,38 @@ SetLocalSystemTime(HWND hwnd)
 static VOID
 SetTimeZoneName(HWND hwnd)
 {
-  TIME_ZONE_INFORMATION TimeZoneInfo;
-  WCHAR TimeZoneString[128];
-  WCHAR TimeZoneText[128];
-  WCHAR TimeZoneName[128];
-  DWORD TimeZoneId;
+    TIME_ZONE_INFORMATION TimeZoneInfo;
+    WCHAR TimeZoneString[128];
+    WCHAR TimeZoneText[128];
+    WCHAR TimeZoneName[128];
+    DWORD TimeZoneId;
 
-  TimeZoneId = GetTimeZoneInformation(&TimeZoneInfo);
+    TimeZoneId = GetTimeZoneInformation(&TimeZoneInfo);
 
-  LoadStringW(hApplet, IDS_TIMEZONETEXT, TimeZoneText, 128);
+    LoadStringW(hApplet, IDS_TIMEZONETEXT, TimeZoneText, 128);
 
-  switch (TimeZoneId)
-  {
-    case TIME_ZONE_ID_STANDARD:
-      wcscpy(TimeZoneName, TimeZoneInfo.StandardName);
-      break;
+    switch (TimeZoneId)
+    {
+        case TIME_ZONE_ID_STANDARD:
+            wcscpy(TimeZoneName, TimeZoneInfo.StandardName);
+            break;
 
-    case TIME_ZONE_ID_DAYLIGHT:
-      wcscpy(TimeZoneName, TimeZoneInfo.DaylightName);
-      break;
+        case TIME_ZONE_ID_DAYLIGHT:
+            wcscpy(TimeZoneName, TimeZoneInfo.DaylightName);
+            break;
 
-    case TIME_ZONE_ID_UNKNOWN:
-      LoadStringW(hApplet, IDS_TIMEZONEUNKNOWN, TimeZoneName, 128);
-      break;
+        case TIME_ZONE_ID_UNKNOWN:
+            LoadStringW(hApplet, IDS_TIMEZONEUNKNOWN, TimeZoneName, 128);
+            break;
 
-    case TIME_ZONE_ID_INVALID:
-    default:
-      LoadStringW(hApplet, IDS_TIMEZONEINVALID, TimeZoneName, 128);
-      break;
-  }
+        case TIME_ZONE_ID_INVALID:
+        default:
+            LoadStringW(hApplet, IDS_TIMEZONEINVALID, TimeZoneName, 128);
+            break;
+    }
 
-  wsprintfW(TimeZoneString, TimeZoneText, TimeZoneName);
-  SendDlgItemMessageW(hwnd, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneString);
+    wsprintfW(TimeZoneString, TimeZoneText, TimeZoneName);
+    SendDlgItemMessageW(hwnd, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneString);
 }
 
 
@@ -254,13 +254,10 @@ DTPProc(HWND hwnd,
     switch (uMsg)
     {
         case WM_KEYDOWN:
-        {
             /* stop the timer when the user is about to change the time */
             if ((wParam != VK_LEFT) & (wParam != VK_RIGHT))
                 KillTimer(GetParent(hwnd), ID_TIMER);
-        }
-        break;
-
+            break;
     }
 
     return CallWindowProc(pOldWndProc, hwnd, uMsg, wParam, lParam);
@@ -279,7 +276,6 @@ DateTimePageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             FillMonthsComboBox(GetDlgItem(hwndDlg,
                                           IDC_MONTHCB));
 
@@ -290,21 +286,16 @@ DateTimePageProc(HWND hwndDlg,
             SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETPOS, 0, MAKELONG( (short) st.wYear, 0));
 
             pOldWndProc = (WNDPROC) SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_TIMEPICKER), GWL_WNDPROC, (INT_PTR) DTPProc);
-        }
-        break;
+            break;
 
         case WM_TIMER:
-        {
             SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPICKER), DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM) &st);
-        }
-        break;
+            break;
 
         case WM_COMMAND:
-        {
             switch (LOWORD(wParam))
             {
                 case IDC_MONTHCB:
-                {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         ChangeMonthCalDate(GetDlgItem(hwndDlg,
@@ -313,19 +304,14 @@ DateTimePageProc(HWND hwndDlg,
                                                       GetCBSelectedMonth((HWND)lParam),
                                                       (WORD) -1);
                     }
-                }
-                break;
+                    break;
             }
-        }
-        break;
+            break;
 
         case WM_CTLCOLORSTATIC:
-        {
-            if ((HWND) lParam == GetDlgItem(hwndDlg, IDC_YEARTEXT))
-                return (INT_PTR) GetSysColorBrush(COLOR_WINDOW);
-
-        }
-        break;
+            if ((HWND)lParam == GetDlgItem(hwndDlg, IDC_YEARTEXT))
+                return (INT_PTR)GetSysColorBrush(COLOR_WINDOW);
+            break;
 
         case WM_NOTIFY:
         {
@@ -334,14 +320,13 @@ DateTimePageProc(HWND hwndDlg,
             switch (lpnm->idFrom)
             {
                 case IDC_YEAR:
-                {
                     switch (lpnm->code)
                     {
                         case UDN_DELTAPOS:
                         {
-                            short wYear;
-                            LPNMUPDOWN updown = (LPNMUPDOWN) lpnm;
-                            wYear = (short) SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
+                            SHORT wYear;
+                            LPNMUPDOWN updown = (LPNMUPDOWN)lpnm;
+                            wYear = (SHORT)SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
                             /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             ChangeMonthCalDate(GetDlgItem(hwndDlg,
@@ -352,15 +337,12 @@ DateTimePageProc(HWND hwndDlg,
                         }
                         break;
                     }
-                }
-                break;
+                    break;
 
                 case IDC_TIMEPICKER:
-                {
                     switch (lpnm->code)
                     {
                         case DTN_DATETIMECHANGE:
-                        {
                             /* Stop the timer */
                             KillTimer(hwndDlg, ID_TIMER);
 
@@ -370,73 +352,54 @@ DateTimePageProc(HWND hwndDlg,
 
                             /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                        }
-                        break;
+                            break;
                     }
-                }
-                break;
+                    break;
 
                 case IDC_MONTHCALENDAR:
-                {
                     switch (lpnm->code)
                     {
                         case MCCN_SELCHANGE:
-                        {
                             /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                        }
-                        break;
+                            break;
 
                         case MCCN_AUTOUPDATE:
-                        {
                             AutoUpdateMonthCal(hwndDlg,
                                                  (PNMMCCAUTOUPDATE)lpnm);
-                        }
-                        break;
+                            break;
                     }
-                }
-                break;
+                    break;
 
                 default:
-                {
                     switch (lpnm->code)
                     {
                         case PSN_SETACTIVE:
-                        {
                             SetTimeZoneName(hwndDlg);
-                        }
-                        break;
+                            break;
 
                         case PSN_APPLY:
-                        {
                             SetLocalSystemTime(hwndDlg);
                             SetTimer(hwndDlg, ID_TIMER, 1000, NULL);
                             return TRUE;
-                        }
                     }
-                }
+                    break;
             }
         }
         break;
 
         case WM_TIMECHANGE:
-        {
             /* FIXME - we don't get this message as we're not a top-level window... */
             SendMessage(GetDlgItem(hwndDlg,
                                    IDC_MONTHCALENDAR),
                         MCCM_RESET,
                         0,
                         0);
-
-        }
-        break;
+            break;
 
         case WM_DESTROY:
-        {
             KillTimer(hwndDlg, ID_TIMER);
-        }
-        break;
-
+            break;
     }
 
     return FALSE;

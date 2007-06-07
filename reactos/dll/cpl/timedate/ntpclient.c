@@ -58,7 +58,7 @@ InitConnection(PINFO pInfo,
 
 
 static VOID
-DestroyConnection()
+DestroyConnection(VOID)
 {
     WSACleanup();
 }
@@ -67,7 +67,6 @@ DestroyConnection()
 static BOOL
 GetTransmitTime(PTIMEPACKET ptp)
 {
-
     return TRUE;
 }
 
@@ -143,7 +142,7 @@ GetServerTime(LPWSTR lpAddress)
     DWORD dwSize = wcslen(lpAddress) + 1;
     ULONG ulTime = 0;
 
-    pInfo = (PINFO)HeapAlloc(GetProcessHeap(), 
+    pInfo = (PINFO)HeapAlloc(GetProcessHeap(),
                              0, 
                              sizeof(INFO));
     lpAddr = (LPSTR)HeapAlloc(GetProcessHeap(),
@@ -179,5 +178,4 @@ GetServerTime(LPWSTR lpAddress)
         HeapFree(GetProcessHeap(), 0, lpAddr);
 
     return ulTime;
-
 }
