@@ -12,6 +12,7 @@
 #include "ddrawgdi.h"
 
 DDRAWI_DIRECTDRAW_GBL ddgbl;
+DDRAWI_DIRECTDRAW_INT primaryDirectDrawInt;
 DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
 
 WCHAR classname[128];
@@ -45,7 +46,9 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 
         DX_STUB_str("here\n");
 
-        DxHeapMemAlloc(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
+        memThis = &primaryDirectDrawInt;
+
+        RtlZeroMemory(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
 
         DX_STUB_str("here\n")
 
