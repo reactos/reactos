@@ -438,7 +438,6 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
       return DD_FALSE;
     }
 
-#if 0
      DX_STUB_str("Trying alloc FourCCC \n");
 
     /* Alloc mpFourCC */
@@ -449,9 +448,8 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
     {
-        DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
-
-        mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
+      
+        DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
 
         if (mpFourCC == NULL)
         {
@@ -462,7 +460,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     }
 
     DX_STUB_str("End Trying alloc FourCCC\n");
-#endif
+
 
 
 
