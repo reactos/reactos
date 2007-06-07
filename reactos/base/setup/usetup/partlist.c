@@ -949,7 +949,7 @@ CreatePartitionList (SHORT Left,
 				  NULL);
 
       Status = NtOpenFile (&FileHandle,
-			   FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+			   FILE_READ_DATA | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
 			   &ObjectAttributes,
 			   &Iosb,
 			   FILE_SHARE_READ,
