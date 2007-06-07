@@ -19,31 +19,38 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                                 REFIID id,
                                 LPVOID *obj)
 {
+    HRESULT retVal = DD_OK;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
 
-    /* FIXME
-       the D3D object can be optained from here
-       Direct3D7
-    */
-    if (IsEqualGUID(&IID_IDirectDraw7, id))
+    _SEH_TRY
     {
-        /* DirectDraw7 Vtable */
-        This->lpVtbl = &DirectDraw7_Vtable;
-        This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags + DDRAWILCL_DIRECTDRAW7;
-        *obj = &This->lpVtbl;
+        /* FIXME
+            the D3D object can be optained from here
+            Direct3D7
+        */
+        if (IsEqualGUID(&IID_IDirectDraw7, id))
+        {
+            /* DirectDraw7 Vtable */
+            This->lpVtbl = &DirectDraw7_Vtable;
+            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags + DDRAWILCL_DIRECTDRAW7;
+            *obj = &This->lpVtbl;
+            Main_DirectDraw_AddRef(iface);
+        }
+        else
+        {
+            *obj = NULL;
+            DX_STUB_str("E_NOINTERFACE");
+            retVal = E_NOINTERFACE;
+        }
     }
-    else
+    _SEH_HANDLE
     {
-        *obj = NULL;
-        DX_STUB_str("E_NOINTERFACE");
-        return E_NOINTERFACE;
     }
+    _SEH_END;
 
-    Main_DirectDraw_AddRef(iface);
-    DX_STUB_str("DD_OK");
-    return DD_OK;
+    return retVal;
 }
 
 ULONG WINAPI
@@ -88,33 +95,46 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
 ULONG WINAPI
 Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 {
+    ULONG Counter = 0;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
-
-    if (iface!=NULL)
+    _SEH_TRY
     {
-        This->lpLcl->dwLocalRefCnt--;
-        This->dwIntRefCnt--;
-
-        if (This->lpLcl->lpGbl != NULL)
+        if (iface!=NULL)
         {
-            This->lpLcl->lpGbl->dwRefCnt--;
-        }
+            This->lpLcl->dwLocalRefCnt--;
+            This->dwIntRefCnt--;
 
-        if ( This->lpLcl->lpGbl->dwRefCnt == 0)
-        {
-            // set resoltion back to the one in registry
-            /*if(This->cooperative_level & DDSCL_EXCLUSIVE)
+            if (This->lpLcl->lpGbl != NULL)
             {
-                ChangeDisplaySettings(NULL, 0);
-            }*/
+                This->lpLcl->lpGbl->dwRefCnt--;
+            }
 
-            Cleanup(iface);
-            return 0;
+            if ( This->lpLcl->lpGbl->dwRefCnt == 0)
+            {
+                // set resoltion back to the one in registry
+                /*if(This->cooperative_level & DDSCL_EXCLUSIVE)
+                {
+                    ChangeDisplaySettings(NULL, 0);
+                }*/
+
+                Cleanup(iface);
+            }
+
+            /* FIXME cleanup being not call why ?? */
+            Counter = This->dwIntRefCnt;
+        }
+        else
+        {
+            Counter = This->dwIntRefCnt;
         }
     }
-    return This->dwIntRefCnt;
+    _SEH_HANDLE
+    {
+    }
+    _SEH_END;
+    return Counter;
 }
 
 HRESULT WINAPI

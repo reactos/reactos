@@ -15,13 +15,18 @@
 VOID 
 Cleanup(LPDIRECTDRAW7 iface) 
 {
-    //LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
 
     if (ddgbl.lpDDCBtmp != NULL)
     {
         DxHeapMemFree(ddgbl.lpDDCBtmp);
+    }
+
+    if (ddgbl.lpdwFourCC != NULL)
+    {
+        DxHeapMemFree(ddgbl.lpdwFourCC);
     }
 
     if (ddgbl.lpModeInfo != NULL)
@@ -50,11 +55,10 @@ Cleanup(LPDIRECTDRAW7 iface)
     //}
 
     /* release unlinked interface */
-    //if (This->lpLcl != NULL)
-    //{
-    //    DeleteDC(This->lpLcl->hDC);
-    //    DxHeapMemFree(This->lpLcl);
-    //}
+    if (This->lpLcl != NULL)
+    {
+        DxHeapMemFree(This->lpLcl);
+    }
     //if (This != NULL)
     //{
     //    DxHeapMemFree(This);

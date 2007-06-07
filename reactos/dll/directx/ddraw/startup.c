@@ -493,7 +493,10 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     // if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
     // {
         //mpFourCC = (DWORD *) DxHeapMemAlloc( sizeof(DWORD) * 21);
-        // DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
+    /* DrFred uncomet line 499 see if u getting werid crash in 
+     * u computer, run the ddraw_test around 3-4 times 
+     */
+        //DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
 
         // mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
         /*
