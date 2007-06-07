@@ -230,11 +230,19 @@ Main_DirectDraw_GetMonitorFrequency (LPDIRECTDRAW7 iface, LPDWORD lpFreq)
         }
         else
         {
-            *lpFreq = This->lpLcl->lpGbl->dwMonitorFrequency;
+            if (This->lpLcl->lpGbl->dwMonitorFrequency)
+            {
+                *lpFreq = This->lpLcl->lpGbl->dwMonitorFrequency;
+            }
+            else
+            {
+                retVal = DDERR_UNSUPPORTED;
+            }
         }
     }
     _SEH_HANDLE
     {
+      retVal = DD_FALSE;
     }
     _SEH_END;
 
