@@ -9,6 +9,9 @@
  */
 #include "rosdraw.h"
 
+/* PSEH for SEH Support */
+#include <pseh/pseh.h>
+
 /*
  * all param have been checked if they are vaild before they are call to 
  * Internal_CreateSurface, if not please fix the code in the functions 

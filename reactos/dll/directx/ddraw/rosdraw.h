@@ -41,13 +41,31 @@ VOID Cleanup(LPDIRECTDRAW7 iface);
 #define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p); \
                            p = NULL;
 */
+//#define DxHeapMemAlloc(p, m)  { \
+//                                p = malloc(m); \
+//                                if (p != NULL) \
+//                                { \
+//                                    ZeroMemory(p,m); \
+//                                } \
+//                              }
+
+/* a stupied bug in GCC it crash when malloc return NULL */
 #define DxHeapMemAlloc(p, m)  { \
-                                p = malloc(m); \
-                                if (p != NULL) \
-                                { \
-                                    ZeroMemory(p,m); \
-                                } \
+                                    _SEH_TRY \
+                                    { \
+                                        p = malloc(m); \
+                                        if (p != NULL) \
+                                        { \
+                                            ZeroMemory(p,m); \
+                                        } \
+                                    } \
+                                    _SEH_HANDLE \
+                                    { \
+                                      p = NULL; \
+                                    } \
+                                    _SEH_END; \
                               }
+
 #define DxHeapMemFree(p)   { \
                              free(p); \
                              p = NULL; \

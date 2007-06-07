@@ -65,7 +65,7 @@ DirectDrawCreateEx(LPGUID lpGUID,
     */
     DX_WINDBG_trace();
 
-        _SEH_TRY
+     _SEH_TRY
     {
         /* check see if pUnkOuter is null or not */
         if (pUnkOuter)
@@ -243,15 +243,15 @@ DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
   switch(ul_reason_for_call)
   {
      case DLL_PROCESS_DETACH:
-           DeleteCriticalSection( &ddcs );
+           //DeleteCriticalSection( &ddcs );
            retStatus = TRUE;
            break;
 
      case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( hModule );
-        InitializeCriticalSection( &ddcs );
-        EnterCriticalSection( &ddcs );
-        LeaveCriticalSection( &ddcs ); 
+        //DisableThreadLibraryCalls( hModule );
+        //InitializeCriticalSection( &ddcs );
+        //EnterCriticalSection( &ddcs );
+        //LeaveCriticalSection( &ddcs ); 
         retStatus = FALSE;
         break;
 

@@ -13,6 +13,9 @@
 #include "d3dhal.h"
 #include "ddrawgdi.h"
 
+/* PSEH for SEH Support */
+#include <pseh/pseh.h>
+
 DDRAWI_DIRECTDRAW_GBL ddgbl;
 DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
 
@@ -33,6 +36,8 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     {
         return DDERR_INVALIDPARAMS;
     }
+
+    DX_STUB_str("1 me\n");
 
     This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
 
@@ -107,24 +112,37 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         LPDDRAWI_DIRECTDRAW_INT memThis;
 
         DxHeapMemAlloc(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
-        This = memThis;
-        if (This == NULL)
-        {
-            if (memThis != NULL)
-                DxHeapMemFree(memThis);
 
+        if (memThis != NULL)
+        {
+            This = memThis;
+            if (This == NULL)
+            {
+                if (memThis != NULL)
+                    DxHeapMemFree(memThis);
+
+                DX_STUB_str("DDERR_OUTOFMEMORY");
+                return DDERR_OUTOFMEMORY;
+            }
+        }
+        else
+        {
             DX_STUB_str("DDERR_OUTOFMEMORY");
             return DDERR_OUTOFMEMORY;
         }
 
         /* Fixme release memory alloc if we fail */
+
         DxHeapMemAlloc(This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_INT));
+
         if (This->lpLcl == NULL)
         {
             DX_STUB_str("DDERR_OUTOFMEMORY");
             return DDERR_OUTOFMEMORY;
         }
 #endif
+
+    DX_STUB_str("6 me\n");
 
     This->lpLcl->lpGbl = &ddgbl;
 
@@ -472,17 +490,6 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
-    
-
-    {
-        char buffer[2048];
-        sprintf ( buffer, "test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
-        OutputDebugStringA(buffer);
-    }
-
-    // count = mHALInfo.ddCaps.dwNumFourCCCodes;
-
-    DX_STUB_str("Here\n");
 
     /* Alloc mpFourCC */
     if (This->lpLcl->lpGbl->lpdwFourCC != NULL)
@@ -490,24 +497,18 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         DxHeapMemFree(This->lpLcl->lpGbl->lpdwFourCC);
     }
 
-    // if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
-    // {
-        //mpFourCC = (DWORD *) DxHeapMemAlloc( sizeof(DWORD) * 21);
-    /* DrFred uncomet line 499 see if u getting werid crash in 
-     * u computer, run the ddraw_test around 3-4 times 
-     */
-        //DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
+    if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
+    {    
+        DxHeapMemAlloc(mpFourCC, (sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes)) + sizeof(DWORD) );
 
-        // mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
-        /*
         if (mpFourCC == NULL)
         {
             DxHeapMemFree(ddgbl.lpDDCBtmp);
             // FIXME Close DX fristcall and second call
             return DD_FALSE;
         }
-        */
-    // }
+
+    }
 
     DX_STUB_str("Here\n");
 
