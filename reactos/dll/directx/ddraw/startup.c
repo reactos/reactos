@@ -32,9 +32,10 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         return DDERR_INVALIDPARAMS;
     }
 
+    DX_STUB_str("here\n");
+
     This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
 
-#if 0
     /* fixme linking too second link when we shall not doing it */
     if (IsBadReadPtr(This,sizeof(LPDIRECTDRAW)))
     {
@@ -42,24 +43,32 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         /* We do not have a DirectDraw interface, we need alloc it*/
         LPDDRAWI_DIRECTDRAW_INT memThis;
 
-        memThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
-        This = memThis;
-        if (This == NULL)
-        {
-            if (memThis != NULL)
-                DxHeapMemFree(memThis);
+        DX_STUB_str("here\n");
 
-            DX_STUB_str("DDERR_OUTOFMEMORY");
+        DxHeapMemAlloc(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
+
+        DX_STUB_str("here\n")
+
+        if (memThis == NULL)
+        {
+            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
+
+        This = memThis;
+
+
+        DX_STUB_str("here\n");
 
         /* Fixme release memory alloc if we fail */
-        This->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        DxHeapMemAlloc(This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_INT));
         if (This->lpLcl == NULL)
         {
-            DX_STUB_str("DDERR_OUTOFMEMORY");
+            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
+
+        DX_STUB_str("here\n");
     }
     else
     {
@@ -67,13 +76,17 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         /* We got the DirectDraw interface alloc and we need create the link */
         LPDDRAWI_DIRECTDRAW_INT  newThis;
 
+        DX_STUB_str("here\n");
+
         /* step 1.Alloc the new  DDRAWI_DIRECTDRAW_INT for the lnking */
-        newThis = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_INT));
+        DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
         if (newThis == NULL)
         {
             DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
+
+        DX_STUB_str("here\n");
 
         /* step 2 check if it not DDCREATE_HARDWAREONLY we got if so we fail */
         if ((pGUID) && (pGUID != (LPGUID)DDCREATE_HARDWAREONLY))
@@ -86,43 +99,25 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
             }
         }
 
+        DX_STUB_str("here\n");
+
         /* step 3 do the link the old interface are store in the new one */
         newThis->lpLink = This;
 
         /* step 4 we need create new local directdraw struct for the new linked interface */
-        newThis->lpLcl = DxHeapMemAlloc(sizeof(DDRAWI_DIRECTDRAW_LCL));
+        DxHeapMemAlloc(newThis->lpLcl, sizeof(DDRAWI_DIRECTDRAW_LCL));
         if (newThis->lpLcl == NULL)
         {
             This = newThis;
-            DX_STUB_str("DDERR_OUTOFMEMORY");
+            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
+
+        DX_STUB_str("here\n");
 
         This = newThis;
     }
-#else
-        /* FIXME HACK linking does not working we need figout why */
-        LPDDRAWI_DIRECTDRAW_INT memThis;
 
-        DxHeapMemAlloc(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
-        This = memThis;
-        if (This == NULL)
-        {
-            if (memThis != NULL)
-                DxHeapMemFree(memThis);
-
-            DX_STUB_str("DDERR_OUTOFMEMORY");
-            return DDERR_OUTOFMEMORY;
-        }
-
-        /* Fixme release memory alloc if we fail */
-        DxHeapMemAlloc(This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_INT));
-        if (This->lpLcl == NULL)
-        {
-            DX_STUB_str("DDERR_OUTOFMEMORY");
-            return DDERR_OUTOFMEMORY;
-        }
-#endif
 
     This->lpLcl->lpGbl = &ddgbl;
 
@@ -131,7 +126,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     /* Get right interface we whant */
     if (Main_DirectDraw_QueryInterface((LPDIRECTDRAW7)This, id, (void**)&pIface) == DD_OK)
     {
-        DX_STUB_str("Got iface");
+        DX_STUB_str("Got iface\n");
 
         if (StartDirectDraw((LPDIRECTDRAW)This, pGUID, FALSE) == DD_OK);
         {
@@ -154,12 +149,12 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
             }
             */
 
-            DX_STUB_str("DD_OK");
+            DX_STUB_str("DD_OK\n");
             return DD_OK;
         }
     }
 
-    DX_STUB_str("DDERR_INVALIDPARAMS");
+    DX_STUB_str("DDERR_INVALIDPARAMS\n");
     return DDERR_INVALIDPARAMS;
 }
 

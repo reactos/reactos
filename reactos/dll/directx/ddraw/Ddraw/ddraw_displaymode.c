@@ -27,6 +27,8 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
 
     _SEH_TRY
     {
+        DX_STUB_str("here\n");
+
         if(!pCallback)
         {
             ret = DDERR_INVALIDPARAMS;
@@ -34,11 +36,15 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
         else
         {
 
+            DX_STUB_str("here\n");
+
             DevMode.dmSize = sizeof(DEVMODE);
             DevMode.dmDriverExtra = 0;
 
             while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
             {
+                DX_STUB_str("here\n");
+
                 DDSURFACEDESC2 SurfaceDesc; 
 
                 iMode++;
@@ -71,6 +77,7 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
 
                 if(pDDSD)
                 {
+                    DX_STUB_str("here\n");
                     if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwHeight != SurfaceDesc.dwHeight)
                         continue;
 
@@ -97,6 +104,9 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
     {
     }
     _SEH_END;
+
+    DX_STUB_str("here\n");
+
     return ret;
 }
 
