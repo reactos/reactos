@@ -137,10 +137,17 @@ Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
     DX_WINDBG_trace();
     // EnterCriticalSection(&ddcs);
 
-    if (This->lpLcl->lpGbl->lpExclusiveOwner == This->lpLcl)
+    _SEH_TRY
     {
-        retVal = DDERR_NOEXCLUSIVEMODE;
+        if (This->lpLcl->lpGbl->lpExclusiveOwner == This->lpLcl)
+        {
+            retVal = DDERR_NOEXCLUSIVEMODE;
+        }
     }
+    _SEH_HANDLE
+    {
+    }
+    _SEH_END;
     // LeaveCriticalSection(&ddcs);
     return retVal;
 }

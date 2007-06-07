@@ -4,84 +4,100 @@
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/ddraw/ddraw_displaymode.c
  * PURPOSE:              IDirectDraw7 Implementation
- * PROGRAMMER:           Maarten Bosma
+ * PROGRAMMER:           Maarten Bosma, Magnus Olsen (add seh support)
  *
  */
 
 
 #include "rosdraw.h"
 
+/* PSEH for SEH Support */
+#include <pseh/pseh.h>
+
 HRESULT WINAPI 
 Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
                                   LPDDSURFACEDESC2 pDDSD, LPVOID pContext, LPDDENUMMODESCALLBACK2 pCallback)
 {
+    HRESULT ret = DD_OK;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     INT iMode = 0;
     DEVMODE DevMode;
 
     DX_WINDBG_trace();
 
-    if(!pCallback)
-        return DDERR_INVALIDPARAMS;
-
-    DevMode.dmSize = sizeof(DEVMODE);
-    DevMode.dmDriverExtra = 0;
-
-    while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
+    _SEH_TRY
     {
-        DDSURFACEDESC2 SurfaceDesc; 
-
-        iMode++;
-
-        SurfaceDesc.dwSize = sizeof (DDSURFACEDESC2);
-        SurfaceDesc.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_REFRESHRATE | DDSD_WIDTH | DDSD_PIXELFORMAT;
-        SurfaceDesc.dwHeight = DevMode.dmPelsHeight;
-        SurfaceDesc.dwWidth = DevMode.dmPelsWidth;
-        SurfaceDesc.lPitch = DevMode.dmPelsWidth * DevMode.dmBitsPerPel / 8;
-        SurfaceDesc.dwRefreshRate = DevMode.dmDisplayFrequency;
-
-        SurfaceDesc.ddpfPixelFormat.dwSize = sizeof (DDPIXELFORMAT);
-        SurfaceDesc.ddpfPixelFormat.dwFlags = DDPF_RGB;
-        // FIXME: get these
-/*      
-        SurfaceDesc.ddpfPixelFormat.dwRBitMask = 
-        SurfaceDesc.ddpfPixelFormat.dwGBitMask = 
-        SurfaceDesc.ddpfPixelFormat.dwBBitMask = 
-        SurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask = 
-*/
-        SurfaceDesc.ddpfPixelFormat.dwRGBBitCount = DevMode.dmBitsPerPel;
-
-        // FIXME1: This->lpLcl->lpGbl->dwMonitorFrequency is not set !
-        if(dwFlags & DDEDM_REFRESHRATES && SurfaceDesc.dwRefreshRate != This->lpLcl->lpGbl->dwMonitorFrequency)
+        if(!pCallback)
         {
-            //continue;  // FIXME2: what is SurfaceDesc.dwRefreshRate supposed to be set to ?
+            ret = DDERR_INVALIDPARAMS;
+        }
+        else
+        {
+
+            DevMode.dmSize = sizeof(DEVMODE);
+            DevMode.dmDriverExtra = 0;
+
+            while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
+            {
+                DDSURFACEDESC2 SurfaceDesc; 
+
+                iMode++;
+
+                SurfaceDesc.dwSize = sizeof (DDSURFACEDESC2);
+                SurfaceDesc.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_REFRESHRATE | DDSD_WIDTH | DDSD_PIXELFORMAT;
+                SurfaceDesc.dwHeight = DevMode.dmPelsHeight;
+                SurfaceDesc.dwWidth = DevMode.dmPelsWidth;
+                SurfaceDesc.lPitch = DevMode.dmPelsWidth * DevMode.dmBitsPerPel / 8;
+                SurfaceDesc.dwRefreshRate = DevMode.dmDisplayFrequency;
+
+                SurfaceDesc.ddpfPixelFormat.dwSize = sizeof (DDPIXELFORMAT);
+                SurfaceDesc.ddpfPixelFormat.dwFlags = DDPF_RGB;
+                // FIXME: get these
+                /*      
+                    SurfaceDesc.ddpfPixelFormat.dwRBitMask = 
+                    SurfaceDesc.ddpfPixelFormat.dwGBitMask = 
+                    SurfaceDesc.ddpfPixelFormat.dwBBitMask = 
+                    SurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask = 
+                */
+                SurfaceDesc.ddpfPixelFormat.dwRGBBitCount = DevMode.dmBitsPerPel;
+
+                // FIXME1: This->lpLcl->lpGbl->dwMonitorFrequency is not set !
+                if(dwFlags & DDEDM_REFRESHRATES && SurfaceDesc.dwRefreshRate != This->lpLcl->lpGbl->dwMonitorFrequency)
+                {
+                    //continue;  // FIXME2: what is SurfaceDesc.dwRefreshRate supposed to be set to ?
+                }
+
+                // FIXME: Take case when DDEDM_STANDARDVGAMODES flag is not set in account
+
+                if(pDDSD)
+                {
+                    if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwHeight != SurfaceDesc.dwHeight)
+                        continue;
+
+                    else if(pDDSD->dwFlags & DDSD_WIDTH && pDDSD->dwWidth != SurfaceDesc.dwWidth)
+                        continue;
+
+                    else if(pDDSD->dwFlags & DDSD_PITCH && pDDSD->lPitch != SurfaceDesc.lPitch)
+                        continue;
+
+                    else if(pDDSD->dwFlags & DDSD_REFRESHRATE && pDDSD->dwRefreshRate != SurfaceDesc.dwRefreshRate)
+                        continue;
+
+                    else if(pDDSD->dwFlags & DDSD_PIXELFORMAT && pDDSD->ddpfPixelFormat.dwRGBBitCount != SurfaceDesc.ddpfPixelFormat.dwRGBBitCount)
+                        continue;  // FIXME: test for the other members of ddpfPixelFormat as well
+                }
+
+                if((*pCallback)(&SurfaceDesc, pContext) == DDENUMRET_CANCEL)
+                    break;
+            }
         }
 
-        // FIXME: Take case when DDEDM_STANDARDVGAMODES flag is not set in account
-
-        if(pDDSD)
-        {
-            if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwHeight != SurfaceDesc.dwHeight)
-                continue;
-
-            else if(pDDSD->dwFlags & DDSD_WIDTH && pDDSD->dwWidth != SurfaceDesc.dwWidth)
-                continue;
-
-            else if(pDDSD->dwFlags & DDSD_PITCH && pDDSD->lPitch != SurfaceDesc.lPitch)
-                continue;
-
-            else if(pDDSD->dwFlags & DDSD_REFRESHRATE && pDDSD->dwRefreshRate != SurfaceDesc.dwRefreshRate)
-                continue;
-
-            else if(pDDSD->dwFlags & DDSD_PIXELFORMAT && pDDSD->ddpfPixelFormat.dwRGBBitCount != SurfaceDesc.ddpfPixelFormat.dwRGBBitCount)
-                continue;  // FIXME: test for the other members of ddpfPixelFormat as well
-        }
-
-        if((*pCallback)(&SurfaceDesc, pContext) == DDENUMRET_CANCEL)
-            return DD_OK;
     }
-
-    return DD_OK;
+    _SEH_HANDLE
+    {
+    }
+    _SEH_END;
+    return ret;
 }
 
 HRESULT WINAPI
