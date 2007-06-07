@@ -222,7 +222,7 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     }
     _SEH_END;
 
-    return memdata.ddRVal;
+    return retVal;
 }
 
 HRESULT WINAPI
