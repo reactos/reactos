@@ -12,7 +12,6 @@
 #include "ddrawgdi.h"
 
 DDRAWI_DIRECTDRAW_GBL ddgbl;
-DDRAWI_DIRECTDRAW_INT primaryDirectDrawInt;
 DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
 
 WCHAR classname[128];
@@ -33,46 +32,31 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         return DDERR_INVALIDPARAMS;
     }
 
-    DX_STUB_str("here\n");
-
     This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
 
     /* fixme linking too second link when we shall not doing it */
     if (IsBadReadPtr(This,sizeof(LPDIRECTDRAW)))
     {
         DX_STUB_str("1. no linking\n");
+
         /* We do not have a DirectDraw interface, we need alloc it*/
         LPDDRAWI_DIRECTDRAW_INT memThis;
 
-        DX_STUB_str("here\n");
-
-        memThis = &primaryDirectDrawInt;
-
-        RtlZeroMemory(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
-
-        DX_STUB_str("here\n")
-
+        DxHeapMemAlloc(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
         if (memThis == NULL)
         {
-            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
 
         This = memThis;
-
-
-        DX_STUB_str("here\n");
 
         /* Fixme release memory alloc if we fail */
 
         DxHeapMemAlloc(This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_LCL));
         if (This->lpLcl == NULL)
         {
-            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
-
-        DX_STUB_str("here\n");
     }
     else
     {
@@ -80,17 +64,12 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         /* We got the DirectDraw interface alloc and we need create the link */
         LPDDRAWI_DIRECTDRAW_INT  newThis;
 
-        DX_STUB_str("here\n");
-
         /* step 1.Alloc the new  DDRAWI_DIRECTDRAW_INT for the lnking */
         DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
         if (newThis == NULL)
         {
-            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
-
-        DX_STUB_str("here\n");
 
         /* step 2 check if it not DDCREATE_HARDWAREONLY we got if so we fail */
         if ((pGUID) && (pGUID != (LPGUID)DDCREATE_HARDWAREONLY))
@@ -98,12 +77,9 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
             if (pGUID !=NULL)
             {
                 This = newThis;
-                DX_STUB_str("DDERR_INVALIDDIRECTDRAWGUID\n");
                 return DDERR_INVALIDDIRECTDRAWGUID;
             }
         }
-
-        DX_STUB_str("here\n");
 
         /* step 3 do the link the old interface are store in the new one */
         newThis->lpLink = This;
@@ -113,15 +89,11 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         if (newThis->lpLcl == NULL)
         {
             This = newThis;
-            DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY;
         }
 
-        DX_STUB_str("here\n");
-
         This = newThis;
     }
-
 
     This->lpLcl->lpGbl = &ddgbl;
 
@@ -152,13 +124,10 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
                 return DDERR_GENERIC;
             }
             */
-
-            DX_STUB_str("DD_OK\n");
             return DD_OK;
         }
     }
 
-    DX_STUB_str("DDERR_INVALIDPARAMS\n");
     return DDERR_INVALIDPARAMS;
 }
 
