@@ -75,7 +75,7 @@ VideoPortPutDmaAdapter(
    IN PVOID HwDeviceExtension,
    IN PVP_DMA_ADAPTER VpDmaAdapter)
 {
-   HalPutDmaAdapter((PADAPTER_OBJECT)VpDmaAdapter);
+   DPRINT1("unimplemented VideoPortPutDmaAdapter\n");
 }
 
 /*
