@@ -27,7 +27,7 @@ VideoPortDisableInterrupt@4
 VideoPortEnableInterrupt@4
 VideoPortEnumerateChildren@8
 ;VideoPortFlushRegistry
-;VideoPortFreeCommonBuffer
+VideoPortFreeCommonBuffer
 VideoPortFreeDeviceBase@8
 VideoPortFreePool@8
 VideoPortGetAccessRanges@32

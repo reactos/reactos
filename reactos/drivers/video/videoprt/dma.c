@@ -75,7 +75,7 @@ VideoPortPutDmaAdapter(
    IN PVOID HwDeviceExtension,
    IN PVP_DMA_ADAPTER VpDmaAdapter)
 {
-   DPRINT("VideoPortPutDmaAdapter: Unimplemented.\n");
+   HalPutDmaAdapter((PADAPTER_OBJECT)VpDmaAdapter);
 }
 
 /*
@@ -116,4 +116,29 @@ VideoPortGetDmaAdapter(
       (PVP_DMA_ADAPTER)HalGetAdapter(&DeviceDescription, &NumberOfMapRegisters);
    DPRINT("Adapter %X\n", Adapter);
    return(Adapter);
+}
+
+/*
+ * @implemented
+ */
+VOID NTAPI
+VideoPortFreeCommonBuffer( IN PVOID HwDeviceExtension,
+                                 IN ULONG  Length,
+                                 IN PVOID  VirtualAddress,
+                                 IN PHYSICAL_ADDRESS  LogicalAddress,
+                                 IN BOOLEAN  CacheEnabled)
+{
+   DEVICE_DESCRIPTION DeviceDescription;
+   PVP_DMA_ADAPTER VpDmaAdapter;
+
+   VpDmaAdapter = VideoPortGetDmaAdapter(
+                    HwDeviceExtension, 
+                    (PVP_DEVICE_DESCRIPTION)&DeviceDescription);
+
+   HalFreeCommonBuffer(
+      (PADAPTER_OBJECT)VpDmaAdapter,
+      Length,
+      LogicalAddress,
+      VirtualAddress,
+      CacheEnabled);
 }
