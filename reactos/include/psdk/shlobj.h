@@ -214,6 +214,17 @@ typedef GUID SHELLVIEWID;
  * IShellIcon interface
  */
 
+#undef  INTERFACE
+#define INTERFACE   IShellFolderViewCB
+DECLARE_INTERFACE_(IShellFolderViewCB, IUnknown)
+{
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD(MessageSFVCB)(THIS_ UINT uMsg, WPARAM wParam, LPARAM lParam) PURE;
+};
+#undef INTERFACE
+
 #define INTERFACE IShellIcon
 DECLARE_INTERFACE_(IShellIcon,IUnknown)
 {
@@ -519,8 +530,19 @@ HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 #define SFVM_GET_WEBVIEW_THEME        86 /* undocumented */
 #define SFVM_GETDEFERREDVIEWSETTINGS  92 /* undocumented */
 
+
+
+
 /* Types and definitions for the SFM_* parameters */
 #include <pshpack8.h>
+typedef struct _SFV_CREATE
+{
+    UINT cbSize;
+    IShellFolder *pshf;
+    IShellView *psvOuter;
+    IShellFolderViewCB *psfvcb;
+} SFV_CREATE;
+
 
 #define QCMINFO_PLACE_BEFORE          0
 #define QCMINFO_PLACE_AFTER           1
