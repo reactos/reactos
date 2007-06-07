@@ -412,7 +412,6 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     D3DHAL_GLOBALDRIVERDATA mD3dDriverData;
     DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-    INT count;
 
     DX_WINDBG_trace();
 
@@ -472,10 +471,9 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
       // FIXME Close DX fristcall and second call
       return DD_FALSE;
     }
-    
 
-
-    DX_STUB_str("Here\n");
+#if 0
+     DX_STUB_str("Trying alloc FourCCC \n");
 
     /* Alloc mpFourCC */
     if (This->lpLcl->lpGbl->lpdwFourCC != NULL)
@@ -483,36 +481,29 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         DxHeapMemFree(This->lpLcl->lpGbl->lpdwFourCC);
     }
 
-    // if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
-    // {
-        //mpFourCC = (DWORD *) DxHeapMemAlloc( sizeof(DWORD) * 21);
-    /* DrFred uncomet line 499 see if u getting werid crash in 
-     * u computer, run the ddraw_test around 3-4 times 
-     */
-        //DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
+    if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
+    {
+        DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * 21);
 
-        // mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
-        /*
+        mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
+
         if (mpFourCC == NULL)
         {
             DxHeapMemFree(ddgbl.lpDDCBtmp);
             // FIXME Close DX fristcall and second call
             return DD_FALSE;
         }
-        */
-    // }
-
-    DX_STUB_str("Here\n");
-
-    {
-        char buffer[2048];
-        sprintf ( buffer, "test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
-        OutputDebugStringA(buffer);
     }
+
+    DX_STUB_str("End Trying alloc FourCCC\n");
+#endif
+
+
 
 
     /* Alloc mpTextures */
 #if 0
+    DX_STUB_str("1 Here\n");
 
     if (This->lpLcl->lpGbl->texture != NULL)
     {
@@ -530,11 +521,13 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
             // FIXME Close DX fristcall and second call
         }
     }
+
+    DX_STUB_str("2 Here\n");
+
 #else
       mpTextures = NULL;
 #endif
-    
-      DX_STUB_str("Here\n");
+
 
     /* Get all basic data from the driver */
     if (!DdQueryDirectDrawObject(
@@ -555,12 +548,6 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         DxHeapMemFree(ddgbl.lpDDCBtmp);
         // FIXME Close DX fristcall and second call
         return DD_FALSE;
-    }
-
-    {
-        char buffer[2048];
-        sprintf ( buffer, "3 test %d %d\n", mpFourCC, mHALInfo.ddCaps.dwNumFourCCCodes);
-        OutputDebugStringA(buffer);
     }
 
     memcpy(&ddgbl.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
@@ -599,29 +586,5 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         return DD_FALSE;
     }
 
-    /* try get the memory and show it */
-    if (ddgbl.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory)
-    {
-        DDHAL_GETAVAILDRIVERMEMORYDATA  memdata;
-        char buffer[2048];
-
-        ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
-
-
-        DX_STUB_str("found GetAvailDriverMemory, testing \n");
-        memdata.lpDD = &ddgbl;
-        memdata.ddRVal = DDERR_GENERIC;
-        ddgbl.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&memdata);
-
-        sprintf ( buffer, "GetAvailDriverMemory : retval %ld, Graphice memory free %ld Bytes, memory total %ld Bytes\n",memdata.ddRVal,memdata.dwFree,memdata.dwTotal);
-        OutputDebugStringA(buffer);
-
-
-        
-
-    }
-
-
-    DX_STUB_str("Return DD_OK\n");
     return DD_OK;
 }
