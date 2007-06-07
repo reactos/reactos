@@ -115,15 +115,6 @@ Main_DDrawSurface_FreePrivateData(LPDIRECTDRAWSURFACE7 iface, REFGUID tag)
 
     DX_STUB;
 }
-
-HRESULT WINAPI
-Main_DDrawSurface_GetClipper(LPDIRECTDRAWSURFACE7 iface,
-				  LPDIRECTDRAWCLIPPER* ppClipper)
-{	
-
-    DX_STUB;
-}
-
 HRESULT WINAPI
 Main_DDrawSurface_GetColorKey(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags,
 				   LPDDCOLORKEY pCKey)
@@ -228,17 +219,6 @@ Main_DDrawSurface_PageUnlock(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
 
     DX_STUB;
 }
-
-
-HRESULT WINAPI
-Main_DDrawSurface_SetClipper (LPDIRECTDRAWSURFACE7 iface,
-				  LPDIRECTDRAWCLIPPER pDDClipper)
-{
-    DX_WINDBG_trace();
-
-    DX_STUB;
-}
-
 
 HRESULT WINAPI
 Main_DDrawSurface_SetPalette (LPDIRECTDRAWSURFACE7 iface,

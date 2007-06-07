@@ -11,6 +11,7 @@
 
 #include "Ddraw/ddraw.h"
 #include "Surface/surface.h"
+#include "Clipper/clipper.h"
 
 /* DirectDraw startup code only internal use  */
 extern DDRAWI_DIRECTDRAW_GBL ddgbl;

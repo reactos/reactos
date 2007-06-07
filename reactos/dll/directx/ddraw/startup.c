@@ -8,9 +8,7 @@
  *
  */
 
-#include <windows.h>
 #include "rosdraw.h"
-#include "d3dhal.h"
 #include "ddrawgdi.h"
 
 DDRAWI_DIRECTDRAW_GBL ddgbl;
@@ -555,9 +553,8 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     memcpy(&ddgbl.ddCaps,  &mHALInfo.ddCaps,sizeof(DDCORECAPS));
 
-    This->lpLcl->lpGbl->dwNumFourCC = mHALInfo.ddCaps.dwNumFourCCCodes;
-    This->lpLcl->lpGbl->lpdwFourCC = mpFourCC;
-
+    This->lpLcl->lpGbl->dwNumFourCC        = mHALInfo.ddCaps.dwNumFourCCCodes;
+    This->lpLcl->lpGbl->lpdwFourCC         = mpFourCC;
     This->lpLcl->lpGbl->dwMonitorFrequency = mHALInfo.dwMonitorFrequency;
     This->lpLcl->lpGbl->dwModeIndex        = mHALInfo.dwModeIndex;
     This->lpLcl->lpGbl->dwNumModes         = mHALInfo.dwNumModes;

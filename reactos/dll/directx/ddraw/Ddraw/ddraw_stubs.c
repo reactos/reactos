@@ -57,9 +57,6 @@ Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
 	DX_STUB;
 }
 
-/*
- * Status: Implentation removed due to rewrite
- */
 HRESULT WINAPI
 Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
             LPDDCAPS pHELCaps)
