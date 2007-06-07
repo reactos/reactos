@@ -30,6 +30,9 @@ char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootp
 
 VOID OlpcVideoInit();
 
+VOID
+XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
+
 
 VOID
 OlpcMachInit(const char *CmdLine_)
@@ -76,7 +79,7 @@ OlpcMachInit(const char *CmdLine_)
   MachVtbl.DiskGetPartitionEntry = OlpcDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = OlpcDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = OlpcDiskGetCacheableBlockCount;
-  MachVtbl.RTCGetCurrentDateTime = OlpcRTCGetCurrentDateTime;
+  MachVtbl.RTCGetCurrentDateTime = XboxRTCGetCurrentDateTime;
   MachVtbl.HwDetect = OlpcHwDetect;
 
   /* Determine boot device */
@@ -261,19 +264,6 @@ ULONG OlpcDiskGetCacheableBlockCount( ULONG DriveNumber )
 {
     ofwprintf("GetCacheableBlockCount\n");
     return 1;
-}
-
-VOID OlpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day, 
-                               PULONG Hour, PULONG Minute, PULONG Second )
-{
-    //ofwprintf("RTCGeturrentDateTime\n");
-	ULONG msecs = OFMilliseconds();
-	*Hear = 22;
-	*Month = 6;
-	*Day = 4;
-	*Second = msecs / 10000;
-	*Minute = *Second / 60;
-	*Hour = *Minute / 60;
 }
 
 VOID OlpcHwDetect()
