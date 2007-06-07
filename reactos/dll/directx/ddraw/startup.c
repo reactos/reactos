@@ -64,7 +64,8 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         DX_STUB_str("here\n");
 
         /* Fixme release memory alloc if we fail */
-        DxHeapMemAlloc(This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_INT));
+
+        DxHeapMemAlloc(This->lpLcl, sizeof(DDRAWI_DIRECTDRAW_LCL));
         if (This->lpLcl == NULL)
         {
             DX_STUB_str("DDERR_OUTOFMEMORY\n");
