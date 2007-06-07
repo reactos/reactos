@@ -149,34 +149,51 @@ HRESULT WINAPI
 Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                    LPDWORD dwTotal, LPDWORD dwFree)
 {
+    HRESULT retVal = DD_OK;
+    DDHAL_GETAVAILDRIVERMEMORYDATA  memdata;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DX_WINDBG_trace();
 
-    // There is no HEL implentation of this api
-    if (!(This->lpLcl->lpDDCB->cbDDMiscellaneousCallbacks.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY))
+    _SEH_TRY
     {
-        return DDERR_NODIRECTDRAWHW;
-    }
+        // There is no HEL implentation of this api
+        if (!(This->lpLcl->lpDDCB->cbDDMiscellaneousCallbacks.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY))
+        {
+            retVal = DDERR_NODIRECTDRAWHW;
+        }
+        else
+        {
+            if ((!dwTotal && !dwFree) || !ddscaps)
+            {
+                retVal = DDERR_INVALIDPARAMS;
+            }
+            else
+            {
+                
+                ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
+                memdata.lpDD = This->lpLcl->lpGbl;
+                memdata.ddRVal = DDERR_INVALIDPARAMS;
+                memcpy(&memdata.DDSCaps, ddscaps, sizeof(DDSCAPS2));
 
-    if ((!dwTotal && !dwFree) || !ddscaps)
+                if (This->lpLcl->lpDDCB->HALDDMiscellaneous.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
+                {
+                    retVal = DDERR_NODIRECTDRAWHW;
+                }
+                else
+                {
+                    if (dwTotal)
+                        *dwTotal = memdata.dwTotal;
+
+                    if (dwFree)
+                        *dwFree = memdata.dwFree;
+                }
+            }
+        }
+    }
+    _SEH_HANDLE
     {
-        return DDERR_INVALIDPARAMS;
     }
-
-    DDHAL_GETAVAILDRIVERMEMORYDATA  memdata;
-    ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
-    memdata.lpDD = This->lpLcl->lpGbl;
-    memdata.ddRVal = DDERR_INVALIDPARAMS;
-    memcpy(&memdata.DDSCaps, ddscaps, sizeof(DDSCAPS2));
-
-    if (This->lpLcl->lpDDCB->HALDDMiscellaneous.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
-        return DDERR_NODIRECTDRAWHW;
-
-    if (dwTotal)
-       *dwTotal = memdata.dwTotal;
-
-    if (dwFree)
-       *dwFree = memdata.dwFree;
+    _SEH_END;
 
     return memdata.ddRVal;
 }
@@ -200,13 +217,25 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
         }
         else
         {
-            if(!IsBadWritePtr(lpCodes,sizeof(LPDWORD)))
+            if(!(IsBadWritePtr(lpNumCodes,sizeof(LPDWORD))))
             {
-                memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, sizeof(DWORD)* min(This->lpLcl->lpGbl->dwNumFourCC, *lpNumCodes));
-            }
-            else
-            {
-                *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+                DWORD size;
+
+                if (*lpNumCodes > This->lpLcl->lpGbl->dwNumFourCC)
+                {
+                    *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+                }
+
+                size =  *lpNumCodes * sizeof(DWORD);
+
+                if(!IsBadWritePtr(lpCodes, size ))
+                {
+                    memcpy(lpCodes, This->lpLcl->lpGbl->lpdwFourCC, size );
+                }
+                else
+                {
+                    *lpNumCodes = This->lpLcl->lpGbl->dwNumFourCC;
+                }
             }
         }
     }
