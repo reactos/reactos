@@ -2025,7 +2025,7 @@ NtGdiExtTextOut(
       if ( !HSourceGlyph )
       {
         DPRINT1("WARNING: EngLockSurface() failed!\n");
-        FT_Done_Glyph(realglyph);
+        // FT_Done_Glyph(realglyph);
         IntUnLockFreeType;
         goto fail;
       }
@@ -2034,7 +2034,7 @@ NtGdiExtTextOut(
       {
         EngDeleteSurface((HSURF)HSourceGlyph);
         DPRINT1("WARNING: EngLockSurface() failed!\n");
-	IntUnLockFreeType;
+        IntUnLockFreeType;
         goto fail;
       }
 
