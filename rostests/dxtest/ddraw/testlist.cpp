@@ -13,6 +13,7 @@
 TEST TestList[] =
 {
 	{ "IDirectDraw: COM Stuff", Test_CreateDDraw },
+    { "IDirectDraw: Display Frequency", Test_GetMonitorFrequency },
 	{ "IDirectDraw: Display Modes", Test_DisplayModes },
 	{ "IDirectDraw: Available Video Memory", Test_GetAvailableVidMem },
 	{ "IDirectDraw: GetFourCC", Test_GetFourCCCodes },

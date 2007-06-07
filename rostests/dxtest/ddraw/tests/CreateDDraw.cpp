@@ -132,6 +132,9 @@ BOOL Test_GetFourCCCodes (INT* passed, INT* failed)
 	return TRUE;
 }
 
+
+
+
 LONG WINAPI BasicWindowProc (HWND hwnd, UINT message, UINT wParam, LONG lParam)
 {
 	switch (message)

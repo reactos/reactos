@@ -81,3 +81,51 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 
 	return TRUE;
 }
+
+
+BOOL Test_GetMonitorFrequency (INT* passed, INT* failed)
+{
+	LPDIRECTDRAW7 DirectDraw;
+	LPDDRAWI_DIRECTDRAW_INT This;
+
+	/* Preparations */
+	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
+	{
+		printf("ERROR: Failed to set up ddraw\n");
+		return FALSE;
+	}
+	This = (LPDDRAWI_DIRECTDRAW_INT)DirectDraw;
+
+	/* Here we go */
+	DWORD lpFreq;
+	DWORD temp;
+	HRESULT retVal;
+	TEST (DirectDraw->GetMonitorFrequency((PDWORD)0xdeadbeef) == DDERR_INVALIDPARAMS);
+	TEST (DirectDraw->GetMonitorFrequency(NULL) == DDERR_INVALIDPARAMS);
+
+	/* This test depns on which graphice card you have */
+	retVal = DirectDraw->GetMonitorFrequency((PDWORD)&lpFreq);
+
+	if ( retVal == DDERR_UNSUPPORTED)
+	{
+		retVal = DD_OK;
+	}
+	TEST ( retVal == DD_OK);
+
+	/* hacking testing */
+
+	/* shall return  DDERR_UNSUPPORTED */
+	This->lpLcl->lpGbl->dwMonitorFrequency = 0;
+	TEST (DirectDraw->GetMonitorFrequency(&temp) == DDERR_UNSUPPORTED);
+
+	/* shall return  DD_OK */
+	This->lpLcl->lpGbl->dwMonitorFrequency = 85;
+	TEST (DirectDraw->GetMonitorFrequency(&temp) == DD_OK);
+
+	/* restore */
+	This->lpLcl->lpGbl->dwMonitorFrequency =  lpFreq;
+
+	DirectDraw->Release();
+
+	return TRUE;
+}
