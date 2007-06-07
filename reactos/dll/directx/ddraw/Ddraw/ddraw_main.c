@@ -213,6 +213,8 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 
                     if (dwFree)
                         *dwFree = memdata.dwFree;
+         
+                    retVal = memdata.ddRVal;
                 }
             }
         }
