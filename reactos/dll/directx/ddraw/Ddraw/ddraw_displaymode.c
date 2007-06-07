@@ -29,7 +29,11 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
     {
         DX_STUB_str("here\n");
 
-        if(!pCallback)
+        if 
+        ((!IsBadReadPtr(pCallback,sizeof(LPDDENUMMODESCALLBACK2)))  ||
+        (!IsBadWritePtr(pCallback,sizeof(LPDDENUMMODESCALLBACK2))) ||
+        (!IsBadReadPtr(pDDSD,sizeof(DDSURFACEDESC2)))  ||
+        (!IsBadWritePtr(pDDSD,sizeof(DDSURFACEDESC2))))
         {
             ret = DDERR_INVALIDPARAMS;
         }
@@ -66,6 +70,8 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
                     SurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask = 
                 */
                 SurfaceDesc.ddpfPixelFormat.dwRGBBitCount = DevMode.dmBitsPerPel;
+
+                DX_STUB_str("here\n");
 
                 // FIXME1: This->lpLcl->lpGbl->dwMonitorFrequency is not set !
                 if(dwFlags & DDEDM_REFRESHRATES && SurfaceDesc.dwRefreshRate != This->lpLcl->lpGbl->dwMonitorFrequency)
