@@ -47,6 +47,7 @@ HalHandleNMI@4
 HalInitSystem@8
 HalInitializeProcessor@8
 HalMakeBeep@4
+HalPutDmaAdapter@4
 HalProcessorIdle@0
 HalQueryDisplayParameters@16
 HalQueryRealTimeClock@4
