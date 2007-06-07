@@ -1,8 +1,6 @@
 #ifndef PPCMMU_H
 #define PPCMMU_H
 
-#include "mmuutil.h"
-
 /* PPC MMU object --
  * Always called from kernel mode, maps the first 16 megabytes and uses 16
  * bytes per page between 0x30000 and 16 megs.  Maximum memory size is 3 gig.
@@ -32,6 +30,7 @@
  *  r4 -- Page addr
  *  r5 -- Address of info struct
  * 06 -- Unit Test
+ * 07 -- Turn on paging
  */
 
 #define MMUCODE 0x10000
@@ -39,7 +38,13 @@
 #define HTABSIZ 0x10000
 #define PAGETAB 0x30000
 
-#define VSID_MASK 0xfffffff
+#define PpcHashedPTE ((ppc_pteg_t*)(HTABORG))
+#define PpcPageTable ((ppc_map_t*)(PAGETAB))
+
+#define PPC_PAGE_ADDR(x) ((x) << 12)
+#define PPC_PAGE_NUMBER(x) ((x) >> 12)
+#define PPC_VSID_MASK 0xffffff
+#define PPC_PAGE_MASK 0xfff
 
 #define MMU_NONE   0
 #define MMU_KR     8
@@ -50,14 +55,28 @@
 
 extern char _binary_mmucode_start[], _binary_mmucode_end[];
 
-typedef struct _ppc_map_t {
+/* thanks geist */
+typedef unsigned long paddr_t;
+typedef unsigned long vaddr_t;
+
+typedef struct _ppc_pte_t {
     unsigned long pteh, ptel;
-    unsigned long proc, addr;
+} ppc_pte_t;
+
+typedef struct _ppc_pteg_t {
+    ppc_pte_t block[8];
+} ppc_pteg_t;
+
+typedef struct _ppc_map_t {
+    ppc_pte_t pte;
+    unsigned long proc;
+    vaddr_t addr;
 } ppc_map_t;
 
 typedef struct _ppc_map_info_t {
-    unsigned long flags, proc, phys;
-    void *aux;
+    unsigned long flags, proc;
+    vaddr_t addr;
+    paddr_t phys;
 } ppc_map_info_t;
 
 typedef struct _ppc_trap_frame_t {
@@ -67,12 +86,14 @@ typedef struct _ppc_trap_frame_t {
 
 typedef int (*MmuPageCallback)(int inst, ppc_trap_frame_t *trap);
 
+#include "mmuutil.h"
+
 static inline int PPCMMU(int action, void *arg1, void *arg2, void *arg3)
 {
     /* Set Bat0 to mmu object address */
     int i, batu, batl, oldbat[8], usebat[2] = { 0, 1 }, gotbat = 0, pc, mask;
     volatile int ret;
-    int (*mmumain)(int action, void *arg1, void *arg2, void *arg3) = (void *)0x10000;
+    int (*mmumain)(int action, void *arg1, void *arg2, void *arg3) = (void *)MMUCODE;
     __asm__("bl 1f\n\t"
 	    "\n1:\n\t"
 	    "mflr 0\n\t"
@@ -109,23 +130,11 @@ static inline int PPCMMU(int action, void *arg1, void *arg2, void *arg3)
 
     ret = mmumain(action, arg1, arg2, arg3);
 
-    if(action == 7)
-    {
-	for(i = 0; i < 4; i++)
-	    if(i != usebat[0] && i != usebat[1])
-	    {
-		SetBat(i, 0, 0, 0);
-		SetBat(i, 1, 0, 0);
-	    }
-    }
-    else 
-    {
-	/* Ok done ... Whatever happened probably worked */
-	SetBat(usebat[0], 0, oldbat[0], oldbat[1]);
-	SetBat(usebat[0], 1, oldbat[2], oldbat[3]);
-	SetBat(usebat[1], 0, oldbat[4], oldbat[5]);
-	SetBat(usebat[1], 1, oldbat[6], oldbat[7]);
-    }
+    /* Ok done ... Whatever happened probably worked */
+    SetBat(usebat[0], 0, oldbat[0], oldbat[1]);
+    SetBat(usebat[0], 1, oldbat[2], oldbat[3]);
+    SetBat(usebat[1], 0, oldbat[4], oldbat[5]);
+    SetBat(usebat[1], 1, oldbat[6], oldbat[7]);
 
     return ret;
 }
@@ -152,14 +161,14 @@ static inline void _MmuInit(void *_start, void *_end)
     PPCMMU(0, 0, 0, 0);
 }
 
-static inline void MmuMapPage(void *va, ppc_map_info_t *info, int count)
+static inline void MmuMapPage(ppc_map_info_t *info, int count)
 {
-    PPCMMU(1, va, info, (void *)count);
+    PPCMMU(1, info, (void *)count, 0);
 }
 
-static inline void MmuUnmapPage(void *va)
+static inline void MmuUnmapPage(ppc_map_info_t *info, int count)
 {
-    PPCMMU(2, va, 0, 0);
+    PPCMMU(2, info, (void *)count, 0);
 }
 
 static inline void MmuSetVsid(int start, int end, int vsid)
@@ -172,9 +181,9 @@ static inline MmuPageCallback MmuSetPageCallback(MmuPageCallback cb)
     return (MmuPageCallback)PPCMMU(4, (void *)cb, 0, 0);
 }
 
-static inline int MmuInqPage(void *va, ppc_map_info_t *info)
+static inline void MmuInqPage(ppc_map_info_t *info, int count)
 {
-    return PPCMMU(5, va, info, 0);
+    PPCMMU(5, info, (void *)count, 0);
 }
 
 static inline int MmuUnitTest()
@@ -182,9 +191,29 @@ static inline int MmuUnitTest()
     return PPCMMU(6, 0, 0, 0);
 }
 
-static inline int MmuTurnOn()
+static inline int MmuTurnOn(void *fun, void *arg)
 {
-    return PPCMMU(7, 0, 0, 0);
+    return PPCMMU(7, fun, arg, 0);
+}
+
+static inline void MmuSetMemorySize(paddr_t size)
+{
+    PPCMMU(8, (void *)size, 0, 0);
+}
+
+static inline paddr_t MmuGetFirstPage()
+{
+    return (paddr_t)PPCMMU(9, 0, 0, 0);
+}
+
+static inline void *MmuAllocVsid(int vsid)
+{
+    return (void *)PPCMMU(10, (void *)vsid, 0, 0);
+}
+
+static inline void MmuRevokeVsid(int vsid)
+{
+    PPCMMU(11, (void *)vsid, 0, 0);
 }
 
 #endif/*PPCMMU_H*/

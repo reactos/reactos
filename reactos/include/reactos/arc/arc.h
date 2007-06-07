@@ -1,6 +1,35 @@
 #ifndef _ARC_
 #define _ARC_
 
+typedef ULONG ARC_STATUS;
+
+typedef enum _ARC_CODES
+{
+    ESUCCESS,
+    E2BIG,
+    EACCES,
+    EAGAIN,
+    EBADF,
+    EBUSY,
+    EFAULT,
+    EINVAL,
+    EIO,
+    EISDIR,
+    EMFILE,
+    EMLINK,
+    ENAMETOOLONG,
+    ENODEV,
+    ENOENT,
+    ENOEXEC,
+    ENOMEM,
+    ENOSPC,
+    ENOTDIR,
+    ENOTTY,
+    ENXIO,
+    EROFS,
+    EMAXIMUM
+} ARC_CODES;
+
 typedef enum _IDENTIFIER_FLAG
 {
     Failed = 0x01,
@@ -289,10 +318,10 @@ typedef struct _I386_LOADER_BLOCK
     ULONG Reserved;
 } I386_LOADER_BLOCK, *PI386_LOADER_BLOCK;
 
-typedef struct _POWERPC_LOADER_BLOCK
+typedef struct _PPC_LOADER_BLOCK
 {
     PVOID BootInfo;
-} POWERPC_LOADER_BLOCK, *PPOWERPC_LOADER_BLOCK;
+} PPC_LOADER_BLOCK, *PPPC_LOADER_BLOCK;
 
 //
 // Loader Parameter Block
@@ -324,7 +353,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
         I386_LOADER_BLOCK I386;
         ALPHA_LOADER_BLOCK Alpha;
         IA64_LOADER_BLOCK Ia64;
-	POWERPC_LOADER_BLOCK PowerPC;
+	PPC_LOADER_BLOCK PowerPC;
     } u;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 

@@ -1,3 +1,4 @@
+#include "mmu.h"
 #include "mmuutil.h"
 
 inline int GetMSR() {
@@ -133,55 +134,55 @@ __asm__("\t.globl SetPhysByte\n"
     );
 
 inline int GetSR(int n) {
-    register int res asm ("r3");
+    register int res;
     switch( n ) {
     case 0:
-	__asm__("mfsr 3,0");
+	__asm__("mfsr %0,0" : "=r" (res));
 	break;
     case 1:
-	__asm__("mfsr 3,1");
+	__asm__("mfsr %0,1" : "=r" (res));
 	break;
     case 2:
-	__asm__("mfsr 3,2");
+	__asm__("mfsr %0,2" : "=r" (res));
 	break;
     case 3:
-	__asm__("mfsr 3,3");
+	__asm__("mfsr %0,3" : "=r" (res));
 	break;
     case 4:
-	__asm__("mfsr 3,4");
+	__asm__("mfsr %0,4" : "=r" (res));
 	break;
     case 5:
-	__asm__("mfsr 3,5");
+	__asm__("mfsr %0,5" : "=r" (res));
 	break;
     case 6:
-	__asm__("mfsr 3,6");
+	__asm__("mfsr %0,6" : "=r" (res));
 	break;
     case 7:
-	__asm__("mfsr 3,7");
+	__asm__("mfsr %0,7" : "=r" (res));
 	break;
     case 8:
-	__asm__("mfsr 3,8");
+	__asm__("mfsr %0,8" : "=r" (res));
 	break;
     case 9:
-	__asm__("mfsr 3,9");
+	__asm__("mfsr %0,9" : "=r" (res));
 	break;
     case 10:
-	__asm__("mfsr 3,10");
+	__asm__("mfsr %0,10" : "=r" (res));
 	break;
     case 11:
-	__asm__("mfsr 3,11");
+	__asm__("mfsr %0,11" : "=r" (res));
 	break;
     case 12:
-	__asm__("mfsr 3,12");
+	__asm__("mfsr %0,12" : "=r" (res));
 	break;
     case 13:
-	__asm__("mfsr 3,13");
+	__asm__("mfsr %0,13" : "=r" (res));
 	break;
     case 14:
-	__asm__("mfsr 3,14");
+	__asm__("mfsr %0,14" : "=r" (res));
 	break;
     case 15:
-	__asm__("mfsr 3,15");
+	__asm__("mfsr %0,15" : "=r" (res));
 	break;
     }
     return res;
@@ -190,57 +191,57 @@ inline int GetSR(int n) {
 inline void SetSR(int n, int val) {
     switch( n ) {
     case 0:
-	__asm__("mtsr 4,0");
+	__asm__("mtsr 0,%0" : : "r" (val));
 	break;
     case 1:
-	__asm__("mtsr 4,1");
+	__asm__("mtsr 1,%0" : : "r" (val));
 	break;
     case 2:
-	__asm__("mtsr 4,2");
+	__asm__("mtsr 2,%0" : : "r" (val));
 	break;
     case 3:
-	__asm__("mtsr 4,3");
+	__asm__("mtsr 3,%0" : : "r" (val));
 	break;
     case 4:
-	__asm__("mtsr 4,4");
+	__asm__("mtsr 4,%0" : : "r" (val));
 	break;
     case 5:
-	__asm__("mtsr 4,5");
+	__asm__("mtsr 5,%0" : : "r" (val));
 	break;
     case 6:
-	__asm__("mtsr 4,6");
+	__asm__("mtsr 6,%0" : : "r" (val));
 	break;
     case 7:
-	__asm__("mtsr 4,7");
+	__asm__("mtsr 7,%0" : : "r" (val));
 	break;
     case 8:
-	__asm__("mtsr 4,8");
+	__asm__("mtsr 8,%0" : : "r" (val));
 	break;
     case 9:
-	__asm__("mtsr 4,9");
+	__asm__("mtsr 9,%0" : : "r" (val));
 	break;
     case 10:
-	__asm__("mtsr 4,10");
+	__asm__("mtsr 10,%0" : : "r" (val));
 	break;
     case 11:
-	__asm__("mtsr 4,11");
+	__asm__("mtsr 11,%0" : : "r" (val));
 	break;
     case 12:
-	__asm__("mtsr 4,12");
+	__asm__("mtsr 12,%0" : : "r" (val));
 	break;
     case 13:
-	__asm__("mtsr 4,13");
+	__asm__("mtsr 13,%0" : : "r" (val));
 	break;
     case 14:
-	__asm__("mtsr 4,14");
+	__asm__("mtsr 14,%0" : : "r" (val));
 	break;
     case 15:
-	__asm__("mtsr 4,15");
+	__asm__("mtsr 15,%0" : : "r" (val));
 	break;
     }
 }
 
-inline void GetBat( int bat, int inst, int *batHi, int *batLo ) {
+void GetBat( int bat, int inst, int *batHi, int *batLo ) {
     register int bh asm("r3"), bl asm("r4");
     if( inst ) {
 	switch( bat ) {
@@ -289,7 +290,7 @@ inline void GetBat( int bat, int inst, int *batHi, int *batLo ) {
  case n: __asm__("mt" #t "batu " #n ",%0\n\tmt" #t "batl " #n ",%1" \
  : : "r" (batHi), "r" (batLo)); break;
 
-inline void SetBat( int bat, int inst, int batHi, int batLo ) {
+void SetBat( int bat, int inst, int batHi, int batLo ) {
     if( inst ) {
 	switch( bat ) {
 	    BATSET(0,i);
@@ -349,7 +350,7 @@ inline int BatHit( int batu, int batl, int virt ) {
 }
 
 /* translate address */
-int PpcVirt2phys( int virt, int inst ) {
+int PpcVirt2phys( vaddr_t virt, int inst ) {
     int msr = GetMSR();
     int txmask = inst ? 0x20 : 0x10;
     int i, bath, batl, sr, sdr1, physbase, vahi, valo;
@@ -402,31 +403,9 @@ int PpcVirt2phys( int virt, int inst ) {
     }
 }
 
-/* Add a new page table entry for the indicated mapping */
-int InsertPageEntry( int virt, int phys, int slot, int _sdr1 ) {
-    int i, ptehi, ptelo;
-    int sdr1 = _sdr1 ? _sdr1 : GetSDR1();
+int PtegNumber(vaddr_t virt, int hfun)
+{
     int sr = GetSR( (virt >> 28) & 0xf );
-    int vsid = sr & 0xfffffff;
-    int physbase = sdr1 & ~0xffff;
-    int hashmask = ((sdr1 & 0x1ff) << 10) | 0x3ff;
-    int valo = (vsid << 28) | (virt & 0xfffffff);
-    int hash = (vsid & 0x7ffff) ^ ((valo >> 12) & 0xffff);
-    int ptegaddr = ((hashmask & hash) * 64) + physbase;
-
-    for( i = 0; i < 8; i++ ) {
-	ptehi = GetPhys( ptegaddr + (i * 8) );
-	
-	if( (slot != i) && (ptehi & 0x80000000) ) continue;
-
-	ptehi = (1 << 31) | (vsid << 7) | ((virt >> 22) & 0x3f);
-	ptelo = phys & ~0xfff;
-
-	SetPhys( ptegaddr + (i * 8), ptehi );
-	SetPhys( ptegaddr + (i * 8) + 4, ptelo );
-
-	return 1;
-    }
-
-    return 0;
+    int vsid = sr & PPC_VSID_MASK;
+    return (((vsid & 0x7ffff) ^ ((virt >> 12) & 0xffff)) ^ (hfun ? -1 : 0)) & ((HTABSIZ - 1) >> 3);
 }
