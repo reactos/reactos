@@ -95,11 +95,88 @@ BOOL Test_GetAvailableVidMem (INT* passed, INT* failed)
 	DDSCAPS2 Caps = { 0 };
 	TEST (DirectDraw->GetAvailableVidMem(&Caps, NULL, NULL) == DDERR_INVALIDPARAMS);
 	TEST (DirectDraw->GetAvailableVidMem(NULL, &Total, &Free) == DDERR_INVALIDPARAMS);
-	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK && Total == 0 && Free == 0 );
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
 
-	// TODO: Try to produce DDERR_INVALIDCAPS
+
+    /* testing caps */
+	Caps.dwCaps = DDSCAPS_RESERVED1;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_ALPHA;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_BACKBUFFER;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_COMPLEX;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_FLIP;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_FRONTBUFFER;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_OVERLAY;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_PALETTE;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_RESERVED3;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_SYSTEMMEMORY;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_TEXTURE;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_3DDEVICE;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
 	Caps.dwCaps = DDSCAPS_VIDEOMEMORY;
 	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_VISIBLE;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_WRITEONLY;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_ZBUFFER;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_OWNDC;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDPARAMS );
+	Caps.dwCaps = DDSCAPS_LIVEVIDEO;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_HWCODEC;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_MODEX;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_MIPMAP;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_RESERVED2;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_ALLOCONLOAD;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_VIDEOPORT;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK );
+	Caps.dwCaps = DDSCAPS_LOCALVIDMEM;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
+	Caps.dwCaps = DDSCAPS_NONLOCALVIDMEM;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
+
+	Caps.dwCaps = 0;
+
+	// FIXME 
+	Caps.dwCaps2 = 0;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
+
+	Caps.dwCaps = 0;
+	Caps.dwCaps2 = 0;
+
+	// FIXME 
+	Caps.dwCaps3 = 0;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
+
+	Caps.dwCaps = 0;
+	Caps.dwCaps2 = 0;
+	Caps.dwCaps3 = 0;
+
+	// FIXME 
+	Caps.dwCaps4 = 0;
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
+
 
 	DirectDraw->Release();
 
