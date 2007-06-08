@@ -202,6 +202,8 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                 memdata.ddRVal = DDERR_INVALIDPARAMS;
                 memcpy(&memdata.DDSCaps, ddscaps, sizeof(DDSCAPS2));
 
+                This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
+
                 if (This->lpLcl->lpDDCB->HALDDMiscellaneous.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
                 {
                     retVal = DDERR_NODIRECTDRAWHW;
