@@ -328,28 +328,7 @@ typedef struct DDRAWI_DDCOLORCONTROL_INT
 
 
 
-Undocument behvoirs 
 
-typedef struct _DDHAL_GETAVAILDRIVERMEMORYDATA
-{
-    LPDDRAWI_DIRECTDRAW_GBL lpDD;
-    DDSCAPS                 DDSCaps;
-    DWORD                   dwTotal;
-    DWORD                   dwFree;
-    HRESULT                 ddRVal;
-    LPDDHAL_GETAVAILDRIVERMEMORY   GetAvailDriverMemory; 		
-    DDSCAPSEX               ddsCapsEx;
-
-} DDHAL_GETAVAILDRIVERMEMORYDATA;
-
-
-DDHAL_GETAVAILDRIVERMEMORYDATA->GetAvailDriverMemory
- in msdn say this is private use for ddraw, I found out 
- this will set current COM object pointer memory address
- and send it down (the Ddraw->iface pointer being set)
-
- but the fun thing this member do not need be set 
- ReactOS ddraw will not copy this behoir. 
 
 
 
