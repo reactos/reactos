@@ -173,7 +173,29 @@ Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 }
 
 HRESULT WINAPI 
-Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW2 iface, LPDDSCAPS ddscaps, LPDWORD dwTotal, LPDWORD dwFree)
+{
+    DDSCAPS2 myddscaps;
+    HRESULT retValue = DD_OK;
+
+    ZeroMemory(&myddscaps, sizeof(DDSCAPS2));
+
+    _SEH_TRY
+    {
+        myddscaps.dwCaps =  ddscaps->dwCaps;
+        retValue = Main_DirectDraw_GetAvailableVidMem4((LPDIRECTDRAW7)iface, &myddscaps, dwTotal, dwFree);
+    }
+    _SEH_HANDLE
+    {
+         retValue = DDERR_INVALIDPARAMS;
+    }
+    _SEH_END;
+
+    return retValue;
+}
+
+HRESULT WINAPI 
+Main_DirectDraw_GetAvailableVidMem4(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                    LPDWORD dwTotal, LPDWORD dwFree)
 {
     HRESULT retVal = DD_OK;
@@ -218,15 +240,14 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                 _SEH_LEAVE;
             }
 
-            /* fixme 
-            if ( ddscaps->dwCaps3 & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP | 
-                                    DDSCAPS_FRONTBUFFER | DDSCAPS_PALETTE   | DDSCAPS_SYSTEMMEMORY |
-                                    DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
+            if ( ddscaps->dwCaps3 & ~( DDSCAPS3_MULTISAMPLE_QUALITY_MASK | DDSCAPS3_MULTISAMPLE_MASK |
+                                       DDSCAPS3_RESERVED1                | DDSCAPS3_RESERVED2        |
+                                       DDSCAPS3_LIGHTWEIGHTMIPMAP        | DDSCAPS3_AUTOGENMIPMAP    |
+                                       DDSCAPS3_DMAP))
             {
-                retVal = DDERR_INVALIDPARAMS;
+                retVal = DDERR_INVALIDCAPS;
                 _SEH_LEAVE;
             }
-            */
 
             if ( ddscaps->dwCaps4)
             {
@@ -246,6 +267,12 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
             if (This->lpLcl->lpDDCB->HALDDMiscellaneous.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
             {
                 retVal = DDERR_NODIRECTDRAWHW;
+
+                if (dwTotal)
+                    *dwTotal = 0;
+
+                if (dwFree)
+                    *dwFree = 0;
             }
             else
             {
@@ -410,7 +437,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_SetCooperativeLevel,
     Main_DirectDraw_SetDisplayMode,
     Main_DirectDraw_WaitForVerticalBlank,
-    Main_DirectDraw_GetAvailableVidMem,
+    Main_DirectDraw_GetAvailableVidMem4,
     Main_DirectDraw_GetSurfaceFromDC,
     Main_DirectDraw_RestoreAllSurfaces,
     Main_DirectDraw_TestCooperativeLevel,
