@@ -412,32 +412,36 @@ Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
     // LeaveCriticalSection(&ddcs);
     return ret;
 }
+
+/* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
+/* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
+
 IDirectDraw7Vtbl DirectDraw7_Vtable =
 {
-    Main_DirectDraw_QueryInterface,
-    Main_DirectDraw_AddRef,
-    Main_DirectDraw_Release,
-    Main_DirectDraw_Compact,
+    Main_DirectDraw_QueryInterface,             /* (QueryInterface testing / devloping) */
+    Main_DirectDraw_AddRef,                     /* (AddRef done) */
+    Main_DirectDraw_Release,                    /* (QueryInterface testing / devloping) */
+    Main_DirectDraw_Compact,                    /* (Compact done) */
     Main_DirectDraw_CreateClipper,
     Main_DirectDraw_CreatePalette,
-    Main_DirectDraw_CreateSurface4,
+    Main_DirectDraw_CreateSurface4,             /* (CreateSurface4 testing / devloping) */
     Main_DirectDraw_DuplicateSurface,
-    Main_DirectDraw_EnumDisplayModes,
+    Main_DirectDraw_EnumDisplayModes,           /* (EnumDisplayModes testing / devloping) */
     Main_DirectDraw_EnumSurfaces,
     Main_DirectDraw_FlipToGDISurface,
     Main_DirectDraw_GetCaps,
-    Main_DirectDraw_GetDisplayMode,
-    Main_DirectDraw_GetFourCCCodes,
+    Main_DirectDraw_GetDisplayMode,             /* (GetDisplayMode testing / devloping) */
+    Main_DirectDraw_GetFourCCCodes,             /* (GetFourCCCodes done) */
     Main_DirectDraw_GetGDISurface,
-    Main_DirectDraw_GetMonitorFrequency,
+    Main_DirectDraw_GetMonitorFrequency,        /* (GetMonitorFrequency done) */
     Main_DirectDraw_GetScanLine,
     Main_DirectDraw_GetVerticalBlankStatus,
     Main_DirectDraw_Initialize,
-    Main_DirectDraw_RestoreDisplayMode,
-    Main_DirectDraw_SetCooperativeLevel,
-    Main_DirectDraw_SetDisplayMode,
+    Main_DirectDraw_RestoreDisplayMode,         /* (RestoreDisplayMode testing / devloping) */
+    Main_DirectDraw_SetCooperativeLevel,        /* (SetCooperativeLevel testing / devloping) */
+    Main_DirectDraw_SetDisplayMode,             /* (SetDisplayMode testing / devloping) */
     Main_DirectDraw_WaitForVerticalBlank,
-    Main_DirectDraw_GetAvailableVidMem4,
+    Main_DirectDraw_GetAvailableVidMem4,        /* (GetAvailableVidMem4 done) */
     Main_DirectDraw_GetSurfaceFromDC,
     Main_DirectDraw_RestoreAllSurfaces,
     Main_DirectDraw_TestCooperativeLevel,
