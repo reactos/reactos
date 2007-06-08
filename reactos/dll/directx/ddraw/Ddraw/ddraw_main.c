@@ -205,15 +205,20 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                 _SEH_LEAVE;
             }
 
-            /* fixme 
-            if ( ddscaps->dwCaps2 & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP | 
-                                    DDSCAPS_FRONTBUFFER | DDSCAPS_PALETTE   | DDSCAPS_SYSTEMMEMORY |
-                                    DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
+            
+            /*   ddscaps->dwCaps2 & 0x01
+                this flag is outdate and are 
+                set to 0 in ms dxsdk  the name of 
+                this flag is DDSCAPS2_HARDWAREDEINTERLACE
+            */
+
+            if ( ddscaps->dwCaps2 & 0x01)
             {
-                retVal = DDERR_INVALIDPARAMS;
+                retVal = DDERR_INVALIDCAPS;
                 _SEH_LEAVE;
             }
 
+            /* fixme 
             if ( ddscaps->dwCaps3 & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP | 
                                     DDSCAPS_FRONTBUFFER | DDSCAPS_PALETTE   | DDSCAPS_SYSTEMMEMORY |
                                     DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
