@@ -184,7 +184,8 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     _SEH_TRY
     {
         // There is no HEL implentation of this api
-        if (!(This->lpLcl->lpDDCB->cbDDMiscellaneousCallbacks.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY))
+        if (!(This->lpLcl->lpDDCB->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) ||
+            (This->lpLcl->lpGbl->dwFlags & DDRAWI_NOHARDWARE) )
         {
             retVal = DDERR_NODIRECTDRAWHW;
         }
@@ -193,31 +194,63 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
             if ((!dwTotal && !dwFree) || !ddscaps)
             {
                 retVal = DDERR_INVALIDPARAMS;
+                _SEH_LEAVE;
+            }
+
+            if ( ddscaps->dwCaps & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP | 
+                                    DDSCAPS_FRONTBUFFER | DDSCAPS_PALETTE   | DDSCAPS_SYSTEMMEMORY |
+                                    DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
+            {
+                retVal = DDERR_INVALIDPARAMS;
+                _SEH_LEAVE;
+            }
+
+            /* fixme 
+            if ( ddscaps->dwCaps2 & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP | 
+                                    DDSCAPS_FRONTBUFFER | DDSCAPS_PALETTE   | DDSCAPS_SYSTEMMEMORY |
+                                    DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
+            {
+                retVal = DDERR_INVALIDPARAMS;
+                _SEH_LEAVE;
+            }
+
+            if ( ddscaps->dwCaps3 & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP | 
+                                    DDSCAPS_FRONTBUFFER | DDSCAPS_PALETTE   | DDSCAPS_SYSTEMMEMORY |
+                                    DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
+            {
+                retVal = DDERR_INVALIDPARAMS;
+                _SEH_LEAVE;
+            }
+            */
+
+            if ( ddscaps->dwCaps4)
+            {
+                retVal = DDERR_INVALIDCAPS;
+                _SEH_LEAVE;
+            }
+
+            ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
+            memdata.lpDD = This->lpLcl->lpGbl;
+            memdata.ddRVal = DDERR_INVALIDPARAMS;
+
+            memdata.ddsCapsEx.dwCaps2 = ddscaps->dwCaps2;
+            memdata.ddsCapsEx.dwCaps3 = ddscaps->dwCaps3;
+
+            This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
+
+            if (This->lpLcl->lpDDCB->HALDDMiscellaneous.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
+            {
+                retVal = DDERR_NODIRECTDRAWHW;
             }
             else
             {
-                
-                ZeroMemory(&memdata, sizeof(DDHAL_GETAVAILDRIVERMEMORYDATA));
-                memdata.lpDD = This->lpLcl->lpGbl;
-                memdata.ddRVal = DDERR_INVALIDPARAMS;
-                memcpy(&memdata.DDSCaps, ddscaps, sizeof(DDSCAPS2));
+                if (dwTotal)
+                    *dwTotal = memdata.dwTotal;
 
-                This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
-
-                if (This->lpLcl->lpDDCB->HALDDMiscellaneous.GetAvailDriverMemory(&memdata) == DDHAL_DRIVER_NOTHANDLED)
-                {
-                    retVal = DDERR_NODIRECTDRAWHW;
-                }
-                else
-                {
-                    if (dwTotal)
-                        *dwTotal = memdata.dwTotal;
-
-                    if (dwFree)
-                        *dwFree = memdata.dwFree;
+                if (dwFree)
+                    *dwFree = memdata.dwFree;
          
-                    retVal = memdata.ddRVal;
-                }
+                retVal = memdata.ddRVal;
             }
         }
     }
