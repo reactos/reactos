@@ -124,6 +124,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
                 return DDERR_GENERIC;
             }
             */
+            This->lpLcl->hDD = ddgbl.hDD;
             return DD_OK;
         }
     }
@@ -282,8 +283,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
     /* Fill some basic info for Surface */
     This->lpLcl->lpGbl->dwFlags = dwFlags | DDRAWI_ATTACHEDTODESKTOP;
     This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;
-    This->lpLcl->hDD = This->lpLcl->lpGbl->hDD;
-    ddgbl.hDD = This->lpLcl->lpGbl->hDD;
+    This->lpLcl->hDD = ddgbl.hDD;
 
     DX_STUB_str("DD_OK\n");
     return DD_OK;
