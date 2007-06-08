@@ -332,21 +332,17 @@ BOOL Test_GetAvailableVidMem (INT* passed, INT* failed)
 	Caps.dwCaps2 = DDSCAPS2_ADDITIONALPRIMARY;
 	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
 
-
-	// FIXME 
 	memset(&Caps,0,sizeof(DDSCAPS2));
-	Caps.dwCaps3 = 0;
-	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
-
-
-	/* dwCaps does not accpect any input param */
+	Caps.dwCaps3 = ~(DDSCAPS3_MULTISAMPLE_QUALITY_MASK | DDSCAPS3_MULTISAMPLE_MASK | DDSCAPS3_RESERVED1 | DDSCAPS3_RESERVED2 | DDSCAPS3_LIGHTWEIGHTMIPMAP | DDSCAPS3_AUTOGENMIPMAP | DDSCAPS3_DMAP);
+	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDCAPS);
+	
 	memset(&Caps,0,sizeof(DDSCAPS2));
+	Caps.dwCaps3 = (DDSCAPS3_MULTISAMPLE_QUALITY_MASK | DDSCAPS3_MULTISAMPLE_MASK | DDSCAPS3_RESERVED1 | DDSCAPS3_RESERVED2 | DDSCAPS3_LIGHTWEIGHTMIPMAP | DDSCAPS3_AUTOGENMIPMAP | DDSCAPS3_DMAP);
 	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DD_OK);
 
 	memset(&Caps,0,sizeof(DDSCAPS2));
 	Caps.dwCaps4 = 1;
 	TEST (DirectDraw->GetAvailableVidMem(&Caps, &Total, &Free) == DDERR_INVALIDCAPS );
-
 
 	DirectDraw->Release();
 
