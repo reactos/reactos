@@ -568,6 +568,21 @@ NET_API_STATUS WINAPI NetLocalGroupAdd(LPCWSTR servername, DWORD level,
 }
 
 /************************************************************
+ *                NetLocalGroupEnum  (NETAPI32.@)
+ */
+NET_API_STATUS WINAPI NetLocalGroupEnum(LPCWSTR servername, DWORD level,
+        LPBYTE *bufptr, DWORD prefmaxlen, PDWORD entriesread,
+        PDWORD totalentries, PDWORD resumehandle)
+{
+    FIXME("(%s %ld %p %u %p %p %p) stub!\n", debugstr_w(servername),
+          level, bufptr, entriesread, totalentries, resumehandle);
+    *entriesread = 0;
+    *totalentries = 0;
+    *resumehandle = 0;
+    return NERR_Success;
+}
+
+/************************************************************
  *                NetLocalGroupSetMember (NETAPI32.@)
  */
 

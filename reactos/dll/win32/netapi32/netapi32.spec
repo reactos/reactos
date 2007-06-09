@@ -107,7 +107,7 @@
 @ stub NetLocalGroupDel
 @ stub NetLocalGroupDelMember
 @ stub NetLocalGroupDelMembers
-@ stub NetLocalGroupEnum
+@ stdcall NetLocalGroupEnum(wstr long ptr long ptr ptr ptr)
 @ stub NetLocalGroupGetInfo
 @ stub NetLocalGroupGetMembers
 @ stub NetLocalGroupSetInfo
