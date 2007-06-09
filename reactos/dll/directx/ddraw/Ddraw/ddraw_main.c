@@ -458,6 +458,9 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
     BOOL found = FALSE;
     DWORD iDevNum = 0;
     DISPLAY_DEVICEA DisplayDeviceA;
+    HKEY hKey;
+    DWORD lpType = 0;
+    DWORD strSize = MAX_DDDEVICEID_STRING;
 
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
 
@@ -506,10 +509,36 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
                 /* we found our driver now we start setup it */
                 strcpy( pDDDI->szDescription, DisplayDeviceA.DeviceString);
 
+                if (!_strnicmp(DisplayDeviceA.DeviceKey,"\\REGISTRY\\Machine\\",18))
+                {
+                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, &DisplayDeviceA.DeviceKey[18], 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS )
+                    {
+                        if (RegQueryValueExA(hKey, "InstalledDisplayDrivers",0, &lpType, (LPBYTE)pDDDI->szDriver, &strSize) == ERROR_SUCCESS)
+                        {
+                            char *pdest;
+                            /* FIXME if the file is name 
+                                ati2dvag.dll.dll  then we are doom
+                                a better code should be use to strip away .dll
+                             */
+                            pdest = strstr(pDDDI->szDriver,".dll");
+                            memset(pdest,0,3);
+                        }
+                        RegCloseKey(hKey);
+                    }
+                    retVal = DD_OK;
+                }
+                //else
+                //{
+                //    /* FIXME ?? */
+                //    DX_STUB_str("Error did not manger cut reg key\n"
+                //    DX_STUB_str(DisplayDeviceA.DeviceKey);
+                //}
+
+
                 /* This api still under devloping now we can get desc of the
                    primary drv 
                  */
-                retVal = DD_OK;
+
                 break;
             }
 
