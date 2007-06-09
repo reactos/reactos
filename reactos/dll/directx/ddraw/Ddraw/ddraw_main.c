@@ -461,6 +461,8 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
     HKEY hKey;
     DWORD lpType = 0;
     DWORD strSize = MAX_DDDEVICEID_STRING;
+    char *pdest;
+    char* pcCnvEnd;
 
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
 
@@ -507,37 +509,39 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
             if (found == TRUE)
             {
                 /* we found our driver now we start setup it */
-                strcpy( pDDDI->szDescription, DisplayDeviceA.DeviceString);
-
                 if (!_strnicmp(DisplayDeviceA.DeviceKey,"\\REGISTRY\\Machine\\",18))
                 {
                     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, &DisplayDeviceA.DeviceKey[18], 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS )
                     {
-                        if (RegQueryValueExA(hKey, "InstalledDisplayDrivers",0, &lpType, (LPBYTE)pDDDI->szDriver, &strSize) == ERROR_SUCCESS)
+
+                        if (RegQueryValueExA(hKey, "InstalledDisplayDrivers",0, &lpType, (LPBYTE)pDDDI->szDriver, &strSize) != ERROR_SUCCESS)
                         {
-                            char *pdest;
-                            /* FIXME if the file is name 
-                                ati2dvag.dll.dll  then we are doom
-                                a better code should be use to strip away .dll
-                             */
-                            pdest = strstr(pDDDI->szDriver,".dll");
-                            memset(pdest,0,3);
+                            ZeroMemory(pDDDI->szDriver,MAX_DDDEVICEID_STRING);
                         }
                         RegCloseKey(hKey);
                     }
+
+                    strcpy( pDDDI->szDescription, DisplayDeviceA.DeviceString);
+                    pDDDI->liDriverVersion.HighPart = 0;
+                    pDDDI->liDriverVersion.LowPart = 0;
+
+                    pdest = strstr(DisplayDeviceA.DeviceID,"REV_");
+                    pDDDI->dwRevision =  strtol ( &pdest[4], &pcCnvEnd, 16);
+
+                    pdest = strstr(DisplayDeviceA.DeviceID,"SUBSYS_");
+                    pDDDI->dwSubSysId =  strtol ( &pdest[7], &pcCnvEnd, 16);
+
+                    pdest = strstr(DisplayDeviceA.DeviceID,"DEV_");
+                    pDDDI->dwDeviceId = strtol ( &pdest[4], &pcCnvEnd, 16);
+
+                    pdest = strstr(DisplayDeviceA.DeviceID,"VEN_");
+                    pDDDI->dwVendorId =strtol ( &pdest[4], &pcCnvEnd, 16);
+
+                    /* FIXME pDDDI->guidDeviceIdentifier, pDDDI->dwWHQLLevel */
+
+                    pDDDI->dwWHQLLevel = 0;
                     retVal = DD_OK;
                 }
-                //else
-                //{
-                //    /* FIXME ?? */
-                //    DX_STUB_str("Error did not manger cut reg key\n"
-                //    DX_STUB_str(DisplayDeviceA.DeviceKey);
-                //}
-
-
-                /* This api still under devloping now we can get desc of the
-                   primary drv 
-                 */
 
                 break;
             }
