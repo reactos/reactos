@@ -655,7 +655,13 @@ FrLdrMapImage(IN FILE *Image,
     if (ImageType == 1) FrLdrLoadImage("hal.dll", 10, FALSE);
 
     /* Perform import fixups */
-    LdrPEFixupImports(LoadBase, Name);
+    if (!NT_SUCCESS(LdrPEFixupImports(LoadBase, Name)))
+    {
+        /* Fixup failed, just don't include it in the list */
+        // NextModuleBase = OldNextModuleBase;
+        LoaderBlock.ModsCount = ImageId;
+        return NULL;
+    }
 
     /* Return the final mapped address */
     return LoadBase;
