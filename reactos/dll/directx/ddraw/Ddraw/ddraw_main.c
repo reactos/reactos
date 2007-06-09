@@ -11,6 +11,8 @@
 
 #include "rosdraw.h"
 
+#include <string.h>
+
 /* PSEH for SEH Support */
 #include <pseh/pseh.h>
 
@@ -451,16 +453,69 @@ HRESULT WINAPI
 Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
                                      LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
 {
-    // HRESULT retVal = DD_OK;
-    HRESULT retVal = DD_FALSE;
+    HRESULT retVal = DDERR_INVALIDPARAMS;
+
+    BOOL found = FALSE;
+    DWORD iDevNum = 0;
+    DISPLAY_DEVICEA DisplayDeviceA;
+
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
+
     DX_WINDBG_trace();
 
     _SEH_TRY
     {
-        if (IsBadWritePtr( pDDDI, sizeof(DDDEVICEIDENTIFIER2) ) )
+        if ( (IsBadWritePtr( pDDDI, sizeof(DDDEVICEIDENTIFIER2) ) ) ||
+             (dwFlags & ~DDGDI_GETHOSTIDENTIFIER))
         {
             retVal = DDERR_INVALIDPARAMS;
+            _SEH_LEAVE;
         }
+
+        /* now we can start getting the driver data */
+
+        while (1)
+        {
+            ZeroMemory(&DisplayDeviceA,sizeof(DISPLAY_DEVICEA));
+
+            DisplayDeviceA.cb = sizeof(DISPLAY_DEVICEA);
+
+            if ( EnumDisplayDevicesA( NULL, iDevNum, &DisplayDeviceA, 0) == 0)
+            {
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+            }
+
+            if (!_stricmp(DisplayDeviceA.DeviceName, This->lpLcl->lpGbl->cDriverName))
+            {
+                // if we got another device like hardware mpeg decoder or video card or another drv
+                found = TRUE;
+            }
+            else if (DisplayDeviceA.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+            {
+                /* double check if it primary driver we just found */
+                if (!_stricmp( This->lpLcl->lpGbl->cDriverName, "DISPLAY"))
+                {
+                    /* yeah we found it */
+                    found = TRUE;
+                }
+            }
+
+            if (found == TRUE)
+            {
+                /* we found our driver now we start setup it */
+                strcpy( pDDDI->szDescription, DisplayDeviceA.DeviceString);
+
+                /* This api still under devloping now we can get desc of the
+                   primary drv 
+                 */
+                retVal = DD_OK;
+                break;
+            }
+
+            iDevNum++;
+         }
+
     }
     _SEH_HANDLE
     {
