@@ -3315,7 +3315,7 @@ PnpInit(VOID)
     * Create root device node
     */
 
-    Status = IopCreateDriver(NULL, PnpDriverInitializeEmpty, &IopRootDriverObject);
+    Status = IopCreateDriver(NULL, PnpDriverInitializeEmpty, NULL, &IopRootDriverObject);
     if (!NT_SUCCESS(Status))
     {
         CPRINT("IoCreateDriverObject() failed\n");

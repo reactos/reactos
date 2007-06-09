@@ -100,7 +100,7 @@ IopGetDriverObject(
    UNICODE_STRING DriverName;
    NTSTATUS Status;
 
-   DPRINT("IopOpenDriverObject(%p '%wZ' %x)\n",
+   DPRINT("IopGetDriverObject(%p '%wZ' %x)\n",
       DriverObject, ServiceName, FileSystem);
 
    *DriverObject = NULL;
@@ -340,13 +340,6 @@ IopLoadServiceModule(
    return Status;
 }
 
-static NTSTATUS
-NTAPI
-IopDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)
-{
-   return STATUS_SUCCESS;
-}
-
 /*
  * IopInitializeDriverModule
  *
@@ -418,38 +411,24 @@ IopInitializeDriverModule(
 
       RtlInitUnicodeString(&DriverName, NameBuffer);
       DPRINT("Driver name: '%wZ'\n", &DriverName);
-      Status = IopCreateDriver(&DriverName, IopDriverInitializeEmpty, &Driver);
+      Status = IopCreateDriver(&DriverName, DriverEntry, &RegistryKey, &Driver);
    }
    else
    {
-      Status = IopCreateDriver(NULL, IopDriverInitializeEmpty, &Driver);
+      Status = IopCreateDriver(NULL, DriverEntry, &RegistryKey, &Driver);
    }
+   RtlFreeUnicodeString(&RegistryKey);
 
    *DriverObject = Driver;
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
+      DPRINT1("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
       return Status;
    }
 
    Driver->HardwareDatabase = &IopHardwareDatabaseKey;
    Driver->DriverStart = ModuleObject->DllBase;
    Driver->DriverSize = ModuleObject->SizeOfImage;
-
-   DPRINT("RegistryKey: %wZ\n", &RegistryKey);
-   DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
-
-   Status = DriverEntry(Driver, &RegistryKey);
-
-   RtlFreeUnicodeString(&RegistryKey);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("DriverEntry() returned Status=0x%08X\n", Status);
-      ObMakeTemporaryObject(Driver);
-      ObDereferenceObject(Driver);
-      return Status;
-   }
 
    /* Set the driver as initialized */
    Driver->Flags |= DRVO_INITIALIZED;
@@ -1113,6 +1092,7 @@ NTSTATUS
 NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
+                IN PUNICODE_STRING RegistryPath,
                 OUT PDRIVER_OBJECT *pDriverObject)
 {
     WCHAR NameBuffer[100];
@@ -1246,7 +1226,9 @@ try_again:
     ZwClose(hDriver);
 
     /* Finally, call its init function */
-    Status = (*InitializationFunction)(DriverObject, NULL);
+    DPRINT("RegistryKey: %wZ\n", RegistryKey);
+    DPRINT("Calling driver entrypoint at %p\n", InitializationFunction);
+    Status = (*InitializationFunction)(DriverObject, RegistryPath);
     if (!NT_SUCCESS(Status))
     {
         /* If it didn't work, then kill the object */
@@ -1274,7 +1256,7 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                IN PDRIVER_INITIALIZE InitializationFunction)
 {
    PDRIVER_OBJECT DriverObject;
-   return IopCreateDriver(DriverName, InitializationFunction, &DriverObject);
+   return IopCreateDriver(DriverName, InitializationFunction, NULL, &DriverObject);
 }
 
 /*
