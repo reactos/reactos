@@ -1,7 +1,8 @@
+<!--
 <directory name="avtest">
 	<xi:include href="avtest/avtest.rbuild" />
 </directory>
-
+-->
 <directory name="cmdutils">
 	<xi:include href="cmdutils/cmdutils.rbuild" />
 </directory>
