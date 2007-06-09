@@ -117,12 +117,6 @@ HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface)
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW7 iface,
-                   LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
 
 HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes,
                   DWORD dwNumModes, DWORD dwFlags)

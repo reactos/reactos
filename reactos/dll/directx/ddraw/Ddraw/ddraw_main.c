@@ -413,6 +413,64 @@ Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
     return ret;
 }
 
+/* For DirectDraw 4 - 6 */
+HRESULT WINAPI
+Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW4 iface,
+                                    LPDDDEVICEIDENTIFIER pDDDI, DWORD dwFlags)
+{
+    HRESULT retVal = DD_OK;
+    DDDEVICEIDENTIFIER2 pDDDI2;
+
+    ZeroMemory(&pDDDI2,sizeof(DDDEVICEIDENTIFIER2));
+
+    _SEH_TRY
+    {
+        memcpy(&pDDDI2 , pDDDI, sizeof(DDDEVICEIDENTIFIER));
+
+        retVal = Main_DirectDraw_GetDeviceIdentifier7((LPDIRECTDRAW7)iface, &pDDDI2, dwFlags);
+
+        if (IsBadWritePtr(pDDDI, sizeof(DDDEVICEIDENTIFIER)))
+        {
+            retVal = DDERR_INVALIDPARAMS;
+        }
+        else
+        {
+            memcpy(pDDDI , &pDDDI2, sizeof(DDDEVICEIDENTIFIER) );
+        }
+    }
+    _SEH_HANDLE
+    {
+        retVal = DD_FALSE;
+    }
+    _SEH_END;
+
+    return retVal;
+}
+
+HRESULT WINAPI
+Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
+                                     LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
+{
+    // HRESULT retVal = DD_OK;
+    HRESULT retVal = DD_FALSE;
+    DX_WINDBG_trace();
+
+    _SEH_TRY
+    {
+        if (IsBadWritePtr( pDDDI, sizeof(DDDEVICEIDENTIFIER2) ) )
+        {
+            retVal = DDERR_INVALIDPARAMS;
+        }
+    }
+    _SEH_HANDLE
+    {
+        retVal = DD_FALSE;
+    }
+    _SEH_END;
+
+    return retVal;
+}
+
 /* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
 /* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
 
@@ -445,7 +503,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_GetSurfaceFromDC,
     Main_DirectDraw_RestoreAllSurfaces,
     Main_DirectDraw_TestCooperativeLevel,
-    Main_DirectDraw_GetDeviceIdentifier,
+    Main_DirectDraw_GetDeviceIdentifier7,
     Main_DirectDraw_StartModeTest,
     Main_DirectDraw_EvaluateMode
 };
