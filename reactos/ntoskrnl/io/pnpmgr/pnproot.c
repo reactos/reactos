@@ -169,7 +169,7 @@ PnpRootCreateDevice(
     Status = STATUS_NO_MEMORY;
     goto cleanup;
   }
-  RtlZeroMemory(Device, sizeof(Device));
+  RtlZeroMemory(Device, sizeof(PNPROOT_DEVICE));
   if (!RtlCreateUnicodeString(&Device->DeviceID, DevicePath))
   {
     Status = STATUS_NO_MEMORY;
