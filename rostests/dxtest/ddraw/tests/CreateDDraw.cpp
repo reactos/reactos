@@ -375,7 +375,21 @@ BOOL Test_GetFourCCCodes (INT* passed, INT* failed)
 	return TRUE;
 }
 
+BOOL Test_GetDeviceIdentifier (INT* passed, INT* failed)
+{
+	LPDIRECTDRAW7 DirectDraw;
 
+	/* Preparations */
+	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
+	{
+		printf("ERROR: Failed to set up ddraw\n");
+		return FALSE;
+	}
+
+	DirectDraw->Release();
+
+	return TRUE;
+}
 
 
 LONG WINAPI BasicWindowProc (HWND hwnd, UINT message, UINT wParam, LONG lParam)
