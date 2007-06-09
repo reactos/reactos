@@ -473,6 +473,13 @@ PciIdeXPdoPnpDispatch(
 			Status = PciIdeXPdoQueryDeviceText(DeviceObject, Irp, &Information);
 			break;
 		}
+		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* 0x0d */
+		{
+			DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+			Information = Irp->IoStatus.Information;
+			Status = Irp->IoStatus.Status;
+			break;
+		}
 		case IRP_MN_QUERY_ID: /* 0x13 */
 		{
 			Status = PciIdeXPdoQueryId(DeviceObject, Irp, &Information);
