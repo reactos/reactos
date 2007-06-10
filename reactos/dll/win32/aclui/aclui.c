@@ -90,6 +90,9 @@ DestroySecurityPage(IN PSECURITY_PAGE sp)
 
     DestroySidCacheMgr(sp->SidCacheMgr);
 
+    if (sp->OwnerSid != NULL)
+        LocalFree((HLOCAL)sp->OwnerSid);
+
     HeapFree(GetProcessHeap(),
              0,
              sp);
@@ -309,34 +312,44 @@ AddPrincipalToList(IN PSECURITY_PAGE sp,
 }
 
 static LPWSTR
+GetDisplayStringFromSidRequestResult(IN PSIDREQRESULT SidReqResult)
+{
+    LPWSTR lpDisplayString = NULL;
+
+    if (SidReqResult->SidNameUse == SidTypeUser ||
+        SidReqResult->SidNameUse == SidTypeGroup)
+    {
+        LoadAndFormatString(hDllInstance,
+                            IDS_USERDOMAINFORMAT,
+                            &lpDisplayString,
+                            SidReqResult->AccountName,
+                            SidReqResult->DomainName,
+                            SidReqResult->AccountName);
+    }
+    else
+    {
+        LoadAndFormatString(hDllInstance,
+                            IDS_USERFORMAT,
+                            &lpDisplayString,
+                            SidReqResult->AccountName);
+    }
+
+    return lpDisplayString;
+}
+
+static LPWSTR
 GetPrincipalDisplayString(IN PPRINCIPAL_LISTITEM PrincipalListItem)
 {
     LPWSTR lpDisplayString = NULL;
 
     if (PrincipalListItem->SidReqResult != NULL)
     {
-        if (PrincipalListItem->SidReqResult->SidNameUse == SidTypeUser ||
-            PrincipalListItem->SidReqResult->SidNameUse == SidTypeGroup)
-        {
-            LoadAndFormatString(hDllInstance,
-                                IDS_USERDOMAINFORMAT,
-                                &lpDisplayString,
-                                PrincipalListItem->SidReqResult->AccountName,
-                                PrincipalListItem->SidReqResult->DomainName,
-                                PrincipalListItem->SidReqResult->AccountName);
-        }
-        else
-        {
-            LoadAndFormatString(hDllInstance,
-                                IDS_USERFORMAT,
-                                &lpDisplayString,
-                                PrincipalListItem->SidReqResult->AccountName);
-        }
+        lpDisplayString = GetDisplayStringFromSidRequestResult(PrincipalListItem->SidReqResult);
     }
     else
     {
-        ConvertSidToStringSid((PSID)(PrincipalListItem + 1),
-                              &lpDisplayString);
+        ConvertSidToStringSidW((PSID)(PrincipalListItem + 1),
+                               &lpDisplayString);
     }
 
     return lpDisplayString;
@@ -491,8 +504,11 @@ static VOID
 ReloadPrincipalsList(IN PSECURITY_PAGE sp)
 {
     PSECURITY_DESCRIPTOR SecurityDescriptor;
-    BOOL DaclPresent, DaclDefaulted;
+    BOOL DaclPresent, DaclDefaulted, OwnerDefaulted;
     PACL Dacl = NULL;
+    PSID OwnerSid = NULL;
+    LPTSTR OwnerSidString;
+    DWORD SidLen;
     HRESULT hRet;
 
     /* delete the cached ACL */
@@ -501,11 +517,67 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
 
     /* query the ACL */
     hRet = sp->psi->lpVtbl->GetSecurity(sp->psi,
-                                        DACL_SECURITY_INFORMATION,
+                                        DACL_SECURITY_INFORMATION | OWNER_SECURITY_INFORMATION,
                                         &SecurityDescriptor,
                                         FALSE);
     if (SUCCEEDED(hRet) && SecurityDescriptor != NULL)
     {
+        if (GetSecurityDescriptorOwner(SecurityDescriptor,
+                                       &OwnerSid,
+                                       &OwnerDefaulted))
+        {
+            sp->OwnerDefaulted = OwnerDefaulted;
+            if (sp->OwnerSid != NULL)
+            {
+                LocalFree((HLOCAL)sp->OwnerSid);
+                sp->OwnerSid = NULL;
+            }
+
+            SidLen = GetLengthSid(OwnerSid);
+            if (SidLen == 0)
+                goto ClearOwner;
+
+            sp->OwnerSid = (PSID)LocalAlloc(LMEM_FIXED,
+                                            SidLen);
+            if (sp->OwnerSid != NULL)
+            {
+                if (CopySid(SidLen,
+                            sp->OwnerSid,
+                            OwnerSid))
+                {
+                    /* Lookup the SID now */
+                    if (!LookupSidCache(sp->SidCacheMgr,
+                                        sp->OwnerSid,
+                                        SidLookupCompletion,
+                                        sp))
+                    {
+                        /* Lookup was deferred */
+                        if (ConvertSidToStringSid(sp->OwnerSid,
+                                                  &OwnerSidString))
+                        {
+                            SetDlgItemText(sp->hWnd,
+                                           IDC_OWNER,
+                                           OwnerSidString);
+                            LocalFree((HLOCAL)OwnerSidString);
+                        }
+                        else
+                            goto ClearOwner;
+                    }
+                }
+                else
+                    goto ClearOwner;
+            }
+            else
+                goto ClearOwner;
+        }
+        else
+        {
+ClearOwner:
+            SetDlgItemText(sp->hWnd,
+                           IDC_OWNER,
+                           NULL);
+        }
+
         if (GetSecurityDescriptorDacl(SecurityDescriptor,
                                       &DaclPresent,
                                       &Dacl,
@@ -605,6 +677,29 @@ UpdatePrincipalInfo(IN PSECURITY_PAGE sp,
                     IN PSIDLOOKUPNOTIFYINFO LookupInfo)
 {
     PPRINCIPAL_LISTITEM CurItem;
+    LPWSTR DisplayName;
+
+    if (sp->OwnerSid != NULL &&
+        EqualSid(sp->OwnerSid,
+                 LookupInfo->Sid))
+    {
+        if (LookupInfo->SidRequestResult != NULL)
+            DisplayName = GetDisplayStringFromSidRequestResult(LookupInfo->SidRequestResult);
+        else if (!ConvertSidToStringSidW(LookupInfo->Sid,
+                                         &DisplayName))
+        {
+            DisplayName = NULL;
+        }
+
+        if (DisplayName != NULL)
+        {
+            SetDlgItemTextW(sp->hWnd,
+                            IDC_OWNER,
+                            DisplayName);
+
+            LocalFree((HLOCAL)DisplayName);
+        }
+    }
 
     for (CurItem = sp->PrincipalsListHead;
          CurItem != NULL;
@@ -1421,6 +1516,9 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
         DPRINT("Not enough memory to allocate a SECURITY_PAGE!\n");
         return NULL;
     }
+
+    ZeroMemory(sPage,
+               sizeof(*sPage));
 
     sPage->psi = psi;
     sPage->ObjectInfo = ObjectInfo;

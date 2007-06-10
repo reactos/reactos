@@ -50,6 +50,9 @@ typedef struct _SECURITY_PAGE
     HWND hWndPrincipalsList;
     PPRINCIPAL_LISTITEM PrincipalsListHead;
 
+    PSID OwnerSid;
+    BOOL OwnerDefaulted;
+
     INT ControlsMargin;
 
     INT SpecialPermCheckIndex;
