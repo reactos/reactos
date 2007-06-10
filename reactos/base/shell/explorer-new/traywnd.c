@@ -2337,15 +2337,12 @@ OnTrayWindowContextMenuCommand(IN HWND hWndOwner,
 
     if (uiCmdId != 0)
     {
-        switch (uiCmdId)
+        if (uiCmdId >= ID_SHELL_CMD_FIRST && uiCmdId <= ID_SHELL_CMD_LAST)
         {
-            case ID_SHELL_CMD_FIRST ... ID_SHELL_CMD_LAST:
+            CMINVOKECOMMANDINFO cmici = {0};
+
+            if (pcm != NULL)
             {
-                CMINVOKECOMMANDINFO cmici = {0};
-
-                if (pcm == NULL)
-                    break;
-
                 /* Setup and invoke the shell command */
                 cmici.cbSize = sizeof(cmici);
                 cmici.hwnd = hWndOwner;
@@ -2354,13 +2351,12 @@ OnTrayWindowContextMenuCommand(IN HWND hWndOwner,
 
                 IContextMenu_InvokeCommand(pcm,
                                            &cmici);
-                break;
             }
-
-            default:
-                ITrayWindow_ExecContextMenuCmd(ITrayWindow_from_impl(This),
-                                               uiCmdId);
-                break;
+        }
+        else
+        {
+            ITrayWindow_ExecContextMenuCmd(ITrayWindow_from_impl(This),
+                                           uiCmdId);
         }
     }
 
