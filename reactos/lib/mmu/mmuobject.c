@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include "mmu.h"
 #include "mmuutil.h"
 #include "mmuobject.h"
@@ -63,6 +64,7 @@ paddr_t RamSize, FirstUsablePage, NextPage;
 MmuVsidTree *NextTreePage = 0;
 MmuFreeTree *FreeTree;
 MmuVsidInfo *Segs[16], *VsidHead = 0;
+extern void fmtout(const char *fmt, ...);
 
 __asm__(".text\n\t"
 	".globl mmumain\n\t"
@@ -122,7 +124,9 @@ __asm__(".text\n\t"
 	"lwz 0,128(1)\n\t"
 	"mtlr 0\n\t"
 	"lwz 0,132(1)\n\t"
-	"mfctr 0\n\t"
+	"mtcr 0\n\t"
+	"lwz 0,136(1)\n\t"
+	"mtctr 0\n\t"
 	"lwz 0,4(1)\n\t"
 	"mfsprg1 1\n\t"
 	"lwz 0,0(1)\n\t"
@@ -175,14 +179,18 @@ __asm__(".text\n\t"
 	"stw 31,124(1)\n\t"
 	"mflr 0\n\t"
 	"stw 0,128(1)\n\t"
-	"mfctr 0\n\t"
+	"mfcr 0\n\t"
 	"stw 0,132(1)\n\t"
-	"mfsrr0 0\n\t"
+	"mfctr 0\n\t"
 	"stw 0,136(1)\n\t"
-	"mfsrr1 0\n\t"
+	"mfsrr0 0\n\t"
 	"stw 0,140(1)\n\t"
-	"mfdsisr 0\n\t"
+	"mfsrr1 0\n\t"
 	"stw 0,144(1)\n\t"
+	"mfdsisr 0\n\t"
+	"stw 0,148(1)\n\t"
+	"mfdar 0\n\t"
+	"stw 0,152(1)\n\t"
 	"li 3,100\n\t"
 	"mr 4,1\n\t"
 	"lis 5,data_miss_finish_start@ha\n\t"
@@ -253,14 +261,14 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
 	freevsid((int)arg1);
 	break;
     case 100:
-	if(!ptegreload(trap_frame))
+	if(!ptegreload(trap_frame, trap_frame->dar))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
 	    callback(0,arg1);
 	}
 	break;
     case 101:
-	if(!ptegreload(trap_frame))
+	if(!ptegreload(trap_frame, trap_frame->srr0))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
 	    callback(1,arg1);
@@ -273,13 +281,70 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
     return ret;
 }
 
+void outchar(char c)
+{
+    SetPhysByte(0x800003f8, c);
+}
+
+void outstr(const char *str)
+{
+    while(*str) outchar(*str);
+}
+
+void outdig(int dig)
+{
+    if(dig < 10) outchar(dig + '0');
+    else outchar(dig - 10 + 'A');
+}
+
+void outnum(unsigned long num)
+{
+    int i;
+    for( i = 0; i < 8; i++ ) 
+    {
+	outdig(num >> 28);
+	num <<= 4;
+    }
+}
+
+void fmtout(const char *str, ...)
+{
+    va_list ap;
+    va_start(ap, str);
+    while(*str)
+    {
+	if(*str == '%')
+	{
+	    if(str[1] == '%')
+	    {
+		outchar('%');
+	    }
+	    else if(str[1] == 's')
+	    {
+		outstr(va_arg(ap, const char *));
+	    }
+	    else
+	    {
+		outnum(va_arg(ap, int));
+	    }
+	    str++;
+	}
+	else
+	{
+	    outchar(*str);
+	}
+	str++;
+    }
+    va_end(ap);
+}
+
 void mmusetramsize(paddr_t ramsize)
 {
     ppc_map_t *last_map = &PpcPageTable[PPC_PAGE_NUMBER(ramsize)];
     if(!RamSize)
     {
 	RamSize = ramsize;
-	FirstUsablePage = ROUND_UP((paddr_t)last_map, PPC_PAGE_ADDR(1));
+	FirstUsablePage = (paddr_t)last_map;
 	NextPage = PPC_PAGE_NUMBER(FirstUsablePage);
     }
 }
@@ -299,7 +364,7 @@ void initme()
 	SetPhys((paddr_t)target, *start);
     }
     
-    (&data_miss_start)[46]++;
+    (&data_miss_start)[50]++;
     
     for(target = (int *)0x400, start = &data_miss_start; start < &data_miss_end; start++, target++)
     {
@@ -339,7 +404,7 @@ MmuVsidTree *allocvsidtree()
     else if(TreeAlloc >= 3 || !NextTreePage)
     {
 	ppc_map_t *map = allocpage();
-	NextTreePage = (MmuVsidTree*)PPC_PAGE_ADDR(map - PpcPageTable);
+	NextTreePage = (MmuVsidTree*)PPC_PAGE_ADDR((map - PpcPageTable));
 	TreeAlloc = 1;
 	return NextTreePage;
     }
@@ -362,7 +427,7 @@ void *allocvsid(int vsid)
     MmuVsidInfo *info;
     if(!map) return 0;
     map->pte.pteh = map->pte.ptel = 0;
-    info = (MmuVsidInfo*)PPC_PAGE_ADDR(map - PpcPageTable);
+    info = (MmuVsidInfo*)PPC_PAGE_ADDR((map - PpcPageTable));
     info->vsid = vsid;
     info->next = VsidHead;
     VsidHead = info;
@@ -423,13 +488,13 @@ int mmuaddpage(ppc_map_info_t *info, int count)
 	    }
 	}
 
-	phys = PPC_PAGE_ADDR(PagePtr - PpcPageTable);
+	phys = PPC_PAGE_ADDR((PagePtr - PpcPageTable));
 	ptelo = phys & ~PPC_PAGE_MASK;
-
+	
 	/* Update page data */
 	PagePtr->pte.pteh = ptehi;
 	PagePtr->pte.ptel = ptelo;
-	PagePtr->proc = info->proc;
+	PagePtr->proc = info[i].proc;
 	PagePtr->addr = virt;
 
 	vsid_table_hi = virt >> 20 & 255;
@@ -531,13 +596,20 @@ void mmusetvsid(int start, int end, int vsid)
     }
 }
 
-int ptegreload(ppc_trap_frame_t *frame)
+int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr)
 {
-    int addr = frame->srr0, ptegnum = PtegNumber(addr, (Clock >> 3) & 1);
+    int hfun = (Clock >> 3) & 1, ptegnum = PtegNumber(addr, hfun);
     int vsid = GetSR((addr >> 28) & 15) & PPC_VSID_MASK;
     ppc_map_t *map = mmuvirtmap(addr, vsid);
     if(!map) return 0;
+    map->pte.pteh |= hfun << 6;
     PpcHashedPTE[ptegnum].block[Clock & 7] = map->pte;
+#if 0
+    fmtout("Reloading addr %x (phys %x) at %x[%x] (%x:%x)\r\n",
+	   addr, PPC_PAGE_ADDR(map - PpcPageTable), ptegnum, Clock & 15,
+	   PpcHashedPTE[ptegnum].block[Clock&7].pteh,
+	   PpcHashedPTE[ptegnum].block[Clock&7].ptel);
+#endif
     Clock++;
     __asm__("tlbie %0\n\tsync\n\tisync" : : "r" (addr));
     return 1;

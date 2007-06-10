@@ -81,7 +81,7 @@ typedef struct _ppc_map_info_t {
 
 typedef struct _ppc_trap_frame_t {
     unsigned long gpr[32];
-    unsigned long lr, ctr, srr0, srr1, dsisr;
+    unsigned long lr, cr, ctr, srr0, srr1, dsisr, dar;
 } ppc_trap_frame_t;
 
 typedef int (*MmuPageCallback)(int inst, ppc_trap_frame_t *trap);
