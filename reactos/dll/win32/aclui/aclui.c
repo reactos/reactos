@@ -1363,13 +1363,28 @@ SecurityPageProc(IN HWND hwndDlg,
                                                               LVS_EX_FULLROWSELECT,
                                                               LVS_EX_FULLROWSELECT);
 
-                    sp->hiPrincipals = ImageList_LoadBitmap(hDllInstance,
-                                                            MAKEINTRESOURCE(IDB_USRGRPIMAGES),
-                                                            16,
-                                                            3,
-                                                            RGB(255,
-                                                                0,
-                                                                255));
+                    sp->hiPrincipals = ImageList_Create(16,
+                                                        16,
+                                                        ILC_COLOR32 | ILC_MASK,
+                                                        0,
+                                                        3);
+                    if (sp->hiPrincipals != NULL)
+                    {
+                        HBITMAP hbmImages;
+
+                        hbmImages = LoadBitmap(hDllInstance,
+                                               MAKEINTRESOURCE(IDB_USRGRPIMAGES));
+                        if (hbmImages != NULL)
+                        {
+                            ImageList_AddMasked(sp->hiPrincipals,
+                                                hbmImages,
+                                                RGB(255,
+                                                    0,
+                                                    255));
+
+                            DeleteObject(hbmImages);
+                        }
+                    }
 
                     /* setup the listview control */
                     if (sp->hiPrincipals != NULL)
