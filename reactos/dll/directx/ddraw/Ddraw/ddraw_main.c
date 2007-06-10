@@ -494,7 +494,7 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
 
             if (!_stricmp(DisplayDeviceA.DeviceName, This->lpLcl->lpGbl->cDriverName))
             {
-                // if we got another device like hardware mpeg decoder or video card or another drv
+                /* if we got another device like hardware mpeg decoder or video card or another drv */
                 found = TRUE;
             }
             else if (DisplayDeviceA.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
@@ -558,7 +558,11 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
                     *lpdata = *lpdata ^ pDDDI->dwRevision;
                     *lpdata = *lpdata ^ pDDDI->liDriverVersion.HighPart;
 
-                    /* FIXME pDDDI->dwWHQLLevel */
+                    /* FIXME pDDDI->dwWHQLLevel
+                     * we leave this with no informations, I do not known 
+                     * if program care for it, I mark this api done, and 
+                     * tested, no bugs was found in it
+                     */
                     pDDDI->dwWHQLLevel = 0;
                     retVal = DD_OK;
                 }
@@ -602,7 +606,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_GetMonitorFrequency,        /* (GetMonitorFrequency done) */
     Main_DirectDraw_GetScanLine,
     Main_DirectDraw_GetVerticalBlankStatus,
-    Main_DirectDraw_Initialize,
+    Main_DirectDraw_Initialize,                 /* (Initialize done) */
     Main_DirectDraw_RestoreDisplayMode,         /* (RestoreDisplayMode testing / devloping) */
     Main_DirectDraw_SetCooperativeLevel,        /* (SetCooperativeLevel testing / devloping) */
     Main_DirectDraw_SetDisplayMode,             /* (SetDisplayMode testing / devloping) */
@@ -611,7 +615,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_GetSurfaceFromDC,
     Main_DirectDraw_RestoreAllSurfaces,
     Main_DirectDraw_TestCooperativeLevel,
-    Main_DirectDraw_GetDeviceIdentifier7,
+    Main_DirectDraw_GetDeviceIdentifier7,       /* (GetDeviceIdentifier done) */
     Main_DirectDraw_StartModeTest,
     Main_DirectDraw_EvaluateMode
 };
