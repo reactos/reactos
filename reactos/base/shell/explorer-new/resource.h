@@ -1,0 +1,47 @@
+#ifndef __RESOURCE_H
+#define __RESOURCE_H
+
+#define IDI_START   101
+
+#define IDS_START   101
+#define IDS_PROPERTIES  102
+#define IDS_OPEN_ALL_USERS  103
+#define IDS_EXPLORE_ALL_USERS   104
+
+#define IDC_STARTBTN    304
+
+#define IDM_TRAYWND 101
+#define IDM_STARTMENU 102
+
+#define IDB_STARTMENU 101
+
+#define ID_SHELL_CMD_FIRST  0xF
+#define ID_SHELL_CMD_LAST   0x7FEF
+#define ID_SHELL_CMD_PROPERTIES (ID_SHELL_CMD_LAST + 1)
+#define ID_SHELL_CMD_OPEN_ALL_USERS (ID_SHELL_CMD_LAST + 2)
+#define ID_SHELL_CMD_EXPLORE_ALL_USERS  (ID_SHELL_CMD_LAST + 3)
+#define ID_LOCKTASKBAR  (ID_SHELL_CMD_LAST + 4)
+
+/* NOTE: The following constants may *NOT* be changed because
+         they're hardcoded and need to be the exact values
+         in order to get the start menu to work! */
+#define IDM_PROGRAMS 504
+#define IDM_FAVORITES 507
+#define IDM_DOCUMENTS 501
+#define IDM_SETTINGS 508
+#define IDM_CONTROLPANEL 505
+#define IDM_SECURITY 5001
+#define IDM_NETWORKCONNECTIONS 557
+#define IDM_PRINTERSANDFAXES 510
+#define IDM_TASKBARANDSTARTMENU 413
+#define IDM_SEARCH 520
+#define IDM_HELPANDSUPPORT 503
+#define IDM_RUN 401
+#define IDM_SYNCHRONIZE 553
+#define IDM_LOGOFF 402
+#define IDM_DISCONNECT 5000
+#define IDM_UNDOCKCOMPUTER 410
+#define IDM_SHUTDOWN 506
+#define IDM_LASTSTARTMENU_SEPARATOR 450
+
+#endif /* __RESOURCE_H */
