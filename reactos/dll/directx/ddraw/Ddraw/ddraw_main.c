@@ -463,6 +463,7 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
     DWORD strSize = MAX_DDDEVICEID_STRING;
     char *pdest;
     char* pcCnvEnd;
+    long data;
 
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
 
@@ -518,6 +519,10 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
                         {
                             ZeroMemory(pDDDI->szDriver,MAX_DDDEVICEID_STRING);
                         }
+                        else
+                        {
+                            strcat(pDDDI->szDriver,".dll");
+                        }
                         RegCloseKey(hKey);
                     }
 
@@ -538,6 +543,16 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
                     pDDDI->dwVendorId =strtol ( &pdest[4], &pcCnvEnd, 16);
 
                     /* FIXME pDDDI->guidDeviceIdentifier, pDDDI->dwWHQLLevel */
+
+                    memcpy(&pDDDI->guidDeviceIdentifier, &CLSID_DirectDraw,sizeof(GUID));
+                   
+                    pDDDI->guidDeviceIdentifier.Data1 = pDDDI->guidDeviceIdentifier.Data1 ^ pDDDI->dwVendorId;
+
+                    data = (pDDDI->guidDeviceIdentifier.Data3 <<16) | pDDDI->guidDeviceIdentifier.Data2;
+                    data = data ^ pDDDI->dwDeviceId;
+                    pDDDI->guidDeviceIdentifier.Data2 = data & 0xFFFF;
+                    pDDDI->guidDeviceIdentifier.Data3 = (data>>16) & 0xFFFF;
+
 
                     pDDDI->dwWHQLLevel = 0;
                     retVal = DD_OK;
