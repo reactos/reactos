@@ -5,6 +5,8 @@ typedef struct
 	LPDIRECTDRAW7 DirectDraw;
 } ENUMCONTEXT;
 
+BOOL Test_GetMonitorFrequency (INT* passed, INT* failed);
+
 HRESULT CALLBACK DummyEnumDisplayModes( LPDDSURFACEDESC2 pDDSD, ENUMCONTEXT* Context )
 {
 	return DDENUMRET_OK;
@@ -53,6 +55,8 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 
 	/* The Test */
 
+    Test_GetMonitorFrequency(passed, failed);
+
 	/* First try with some generic display modes */
 	TEST ( DirectDraw->SetDisplayMode (1586, 895, 0, 0, 0) == DDERR_UNSUPPORTED );
 	TEST ( DirectDraw->SetDisplayMode (0, 0, 0, 0, 0x123) == DDERR_INVALIDPARAMS );
@@ -62,7 +66,6 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 	TEST ( DirectDraw->SetDisplayMode (800, 600, 0, 0, 0) == DD_OK );
 	TEST ( DirectDraw->SetDisplayMode (0, 0, 16, 0, 0) == DD_OK );
 
-	TEST ( DirectDraw->GetMonitorFrequency (NULL) == DDERR_INVALIDPARAMS );
 	TEST ( DirectDraw->GetDisplayMode (NULL) == DDERR_INVALIDPARAMS );
 	DDSURFACEDESC2 DisplayMode = {0};
 	TEST ( DirectDraw->GetDisplayMode (&DisplayMode) == DDERR_INVALIDPARAMS );
@@ -78,10 +81,8 @@ BOOL Test_DisplayModes (INT* passed, INT* failed)
 
 	DirectDraw->Release();
 
-
 	return TRUE;
 }
-
 
 BOOL Test_GetMonitorFrequency (INT* passed, INT* failed)
 {
@@ -103,26 +104,21 @@ BOOL Test_GetMonitorFrequency (INT* passed, INT* failed)
 	TEST (DirectDraw->GetMonitorFrequency((PDWORD)0xdeadbeef) == DDERR_INVALIDPARAMS);
 	TEST (DirectDraw->GetMonitorFrequency(NULL) == DDERR_INVALIDPARAMS);
 
-	/* This test depns on which graphice card you have */
+	// result depends on our graphices card
 	retVal = DirectDraw->GetMonitorFrequency((PDWORD)&lpFreq);
+	TEST ( retVal == DD_OK || retVal == DDERR_UNSUPPORTED);
 
-	if ( retVal == DDERR_UNSUPPORTED)
-	{
-		retVal = DD_OK;
-	}
-	TEST ( retVal == DD_OK);
+	/* Test by hacking interal structures */
 
-	/* hacking testing */
-
-	/* shall return  DDERR_UNSUPPORTED */
+	// should return DDERR_UNSUPPORTED
 	This->lpLcl->lpGbl->dwMonitorFrequency = 0;
 	TEST (DirectDraw->GetMonitorFrequency(&temp) == DDERR_UNSUPPORTED);
 
-	/* shall return  DD_OK */
+	// should return DD_OK
 	This->lpLcl->lpGbl->dwMonitorFrequency = 85;
 	TEST (DirectDraw->GetMonitorFrequency(&temp) == DD_OK);
 
-	/* restore */
+	/* Restore */
 	This->lpLcl->lpGbl->dwMonitorFrequency =  lpFreq;
 
 	DirectDraw->Release();

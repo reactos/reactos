@@ -7,6 +7,7 @@
 /* include the tests */
 #include "DDraw/create.cpp"
 #include "DDraw/display_modes.cpp"
+#include "DDraw/available_mem.cpp"
 #include "Surface/create.cpp"
 #include "Surface/private_data.cpp"
 #include "Surface/misc.cpp"
@@ -16,7 +17,6 @@ TEST TestList[] =
 {
 	{ "IDirectDraw: COM Stuff", Test_CreateDDraw },
 	{ "IDirectDraw: GetDeviceIdentifier", Test_GetDeviceIdentifier },
-	{ "IDirectDraw: Display Frequency", Test_GetMonitorFrequency },
 	{ "IDirectDraw: Display Modes", Test_DisplayModes },
 	{ "IDirectDraw: Available Video Memory", Test_GetAvailableVidMem },
 	{ "IDirectDraw: GetFourCC", Test_GetFourCCCodes },
