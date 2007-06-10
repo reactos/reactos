@@ -1767,7 +1767,7 @@ LoaderScan:
                                    NtHeader->OptionalHeader.AddressOfEntryPoint);
     LdrEntry->SizeOfImage = DriverSize;
     LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
-    LdrEntry->SectionPointer = LdrEntry;
+    LdrEntry->SectionPointer = NULL; // ?
 
     /* Now write the DLL name */
     LdrEntry->BaseDllName.Buffer = (PVOID)(LdrEntry + 1);
