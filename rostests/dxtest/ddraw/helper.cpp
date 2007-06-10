@@ -25,7 +25,6 @@ HWND CreateBasicWindow (VOID)
 	return CreateWindow("DDrawTest", "ReactOS DirectDraw Test", WS_POPUP, 0, 0, 10, 10, NULL, NULL, GetModuleHandle(NULL), NULL);
 }
 
-
 BOOL CreateSurface(LPDIRECTDRAWSURFACE7* pSurface)
 {
 	LPDIRECTDRAW7 DirectDraw;

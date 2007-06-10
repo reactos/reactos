@@ -9,6 +9,7 @@
 #include "DDraw/display_modes.cpp"
 #include "Surface/create.cpp"
 #include "Surface/private_data.cpp"
+#include "Surface/misc.cpp"
 
 /* The List of tests */
 TEST TestList[] =
@@ -20,8 +21,9 @@ TEST TestList[] =
 	{ "IDirectDraw: Available Video Memory", Test_GetAvailableVidMem },
 	{ "IDirectDraw: GetFourCC", Test_GetFourCCCodes },
 	{ "IDirectDraw: Cooperative Levels", Test_SetCooperativeLevel },
-	{ "IDirectDraw: CreateSurface", Test_CreateSurface },
+    { "IDirectDrawSurface: Creation", Test_CreateSurface },
 	{ "IDirectDrawSurface: Private Data", Test_PrivateData },
+	{ "IDirectDrawSurface: Miscellaneous Tests", Test_Misc },
 };
 
 /* The function that gives us the number of tests */
