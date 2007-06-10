@@ -10,6 +10,7 @@
 #include "DDraw/available_mem.cpp"
 #include "Surface/create.cpp"
 #include "Surface/private_data.cpp"
+#include "Surface/blt.cpp"
 #include "Surface/misc.cpp"
 
 /* The List of tests */
@@ -22,6 +23,7 @@ TEST TestList[] =
 	{ "IDirectDraw: GetFourCC", Test_GetFourCCCodes },
 	{ "IDirectDraw: Cooperative Levels", Test_SetCooperativeLevel },
     { "IDirectDrawSurface: Creation", Test_CreateSurface },
+	{ "IDirectDrawSurface: Blting", Test_Blt },
 	{ "IDirectDrawSurface: Private Data", Test_PrivateData },
 	{ "IDirectDrawSurface: Miscellaneous Tests", Test_Misc },
 };
