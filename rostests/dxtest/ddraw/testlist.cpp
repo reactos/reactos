@@ -5,14 +5,14 @@
 #include "debug.cpp"
 
 /* include the tests */
-#include "tests/CreateDDraw.cpp"
-#include "tests/DisplayModes.cpp"
-#include "tests/CreateSurface.cpp"
+#include "DDraw/CreateDDraw.cpp"
+#include "DDraw/DisplayModes.cpp"
+#include "DDraw/CreateSurface.cpp"
+#include "Surface/private_data.cpp"
 
 /* The List of tests */
 TEST TestList[] =
 {
-
 	{ "IDirectDraw: COM Stuff", Test_CreateDDraw },
 	{ "IDirectDraw: GetDeviceIdentifier", Test_GetDeviceIdentifier },
 	{ "IDirectDraw: Display Frequency", Test_GetMonitorFrequency },
@@ -21,6 +21,7 @@ TEST TestList[] =
 	{ "IDirectDraw: GetFourCC", Test_GetFourCCCodes },
 	{ "IDirectDraw: Cooperative Levels", Test_SetCooperativeLevel },
 	{ "IDirectDraw: CreateSurface", Test_CreateSurface },
+	{ "IDirectDrawSurface: Private Data", Test_PrivateData },
 };
 
 /* The function that gives us the number of tests */

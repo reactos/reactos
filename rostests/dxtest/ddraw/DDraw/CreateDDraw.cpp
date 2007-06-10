@@ -421,29 +421,3 @@ BOOL Test_GetDeviceIdentifier (INT* passed, INT* failed)
 
 	return TRUE;
 }
-
-
-LONG WINAPI BasicWindowProc (HWND hwnd, UINT message, UINT wParam, LONG lParam)
-{
-	switch (message)
-	{
-		case WM_DESTROY:
-		{
-			PostQuitMessage (0);
-			return 0;
-		} break;
-	}
-
-	return DefWindowProc (hwnd, message, wParam, lParam);
-}
-
-HWND CreateBasicWindow (VOID)
-{
-	WNDCLASS wndclass = {0};
-	wndclass.lpfnWndProc   = BasicWindowProc;
-	wndclass.hInstance     = GetModuleHandle(NULL);
-	wndclass.lpszClassName = "DDrawTest";
-	RegisterClass(&wndclass);
-
-	return CreateWindow("DDrawTest", "ReactOS DirectDraw Test", WS_POPUP, 0, 0, 10, 10, NULL, NULL, GetModuleHandle(NULL), NULL);
-}
