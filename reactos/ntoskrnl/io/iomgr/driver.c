@@ -411,24 +411,25 @@ IopInitializeDriverModule(
 
       RtlInitUnicodeString(&DriverName, NameBuffer);
       DPRINT("Driver name: '%wZ'\n", &DriverName);
-      Status = IopCreateDriver(&DriverName, DriverEntry, &RegistryKey, &Driver);
    }
    else
-   {
-      Status = IopCreateDriver(NULL, DriverEntry, &RegistryKey, &Driver);
-   }
+      DriverName.Length = 0;
+
+   Status = IopCreateDriver(
+       DriverName.Length > 0 ? &DriverName : NULL,
+       DriverEntry,
+       &RegistryKey,
+       ModuleObject->DllBase,
+       ModuleObject->SizeOfImage,
+       &Driver);
    RtlFreeUnicodeString(&RegistryKey);
 
    *DriverObject = Driver;
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
+      DPRINT("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
       return Status;
    }
-
-   Driver->HardwareDatabase = &IopHardwareDatabaseKey;
-   Driver->DriverStart = ModuleObject->DllBase;
-   Driver->DriverSize = ModuleObject->SizeOfImage;
 
    /* Set the driver as initialized */
    Driver->Flags |= DRVO_INITIALIZED;
@@ -1093,6 +1094,8 @@ NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
                 IN PUNICODE_STRING RegistryPath,
+                IN PVOID DllBase,
+                IN ULONG SizeOfImage,
                 OUT PDRIVER_OBJECT *pDriverObject)
 {
     WCHAR NameBuffer[100];
@@ -1225,6 +1228,10 @@ try_again:
     /* Close the extra handle */
     ZwClose(hDriver);
 
+    DriverObject->HardwareDatabase = &IopHardwareDatabaseKey;
+    DriverObject->DriverStart = DllBase;
+    DriverObject->DriverSize = SizeOfImage;
+
     /* Finally, call its init function */
     DPRINT("RegistryKey: %wZ\n", RegistryKey);
     DPRINT("Calling driver entrypoint at %p\n", InitializationFunction);
@@ -1256,7 +1263,7 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                IN PDRIVER_INITIALIZE InitializationFunction)
 {
    PDRIVER_OBJECT DriverObject;
-   return IopCreateDriver(DriverName, InitializationFunction, NULL, &DriverObject);
+   return IopCreateDriver(DriverName, InitializationFunction, NULL, 0, 0, &DriverObject);
 }
 
 /*

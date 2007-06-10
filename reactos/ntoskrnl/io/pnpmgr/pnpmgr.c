@@ -2022,7 +2022,6 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
    }
 
-
    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
 
    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextDescription;
@@ -2275,7 +2274,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       if (!NT_SUCCESS(Status))
       {
          /* FIXME: Log the error */
-         DPRINT1("Could not retrieve configuration for device %wZ (Status 0x%08x)\n",
+         DPRINT("Could not retrieve configuration for device %wZ (Status 0x%08x)\n",
             &DeviceNode->InstancePath, Status);
          IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
          return STATUS_SUCCESS;
@@ -2297,7 +2296,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
          return STATUS_SUCCESS;
       }
 
-      DPRINT1("Got Service %S\n", Service->Buffer);
+      DPRINT("Got Service %S\n", Service->Buffer);
    }
 
    return STATUS_SUCCESS;
@@ -3315,7 +3314,7 @@ PnpInit(VOID)
     * Create root device node
     */
 
-    Status = IopCreateDriver(NULL, PnpDriverInitializeEmpty, NULL, &IopRootDriverObject);
+    Status = IopCreateDriver(NULL, PnpDriverInitializeEmpty, NULL, 0, 0, &IopRootDriverObject);
     if (!NT_SUCCESS(Status))
     {
         CPRINT("IoCreateDriverObject() failed\n");
