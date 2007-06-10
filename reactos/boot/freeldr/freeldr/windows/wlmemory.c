@@ -104,8 +104,6 @@ extern ULONG_PTR i386GeneralProtectionFault;
 extern ULONG_PTR i386PageFault; // exc 14
 extern ULONG_PTR i386CoprocessorError; // exc 16
 extern ULONG_PTR i386AlignmentCheck; // exc 17
-#else
-typedef unsigned long long HARDWARE_PTE, *PHARDWARE_PTE;
 #endif
 
 /* GLOBALS ***************************************************************/

@@ -159,7 +159,6 @@ VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
-    int x;
     KernelEntryFn KernelEntryAddress = 
 	(KernelEntryFn)(KernelEntry + KernelBase);
     ULONG_PTR i, page;
@@ -168,52 +167,52 @@ FrLdrStartup(ULONG Magic)
     LoaderBlock.ArchExtra = (ULONG)LocalBootInfo;
     ppc_map_info_t *info = MmAllocateMemory(0x80 * sizeof(*info));
 
-    MmuInit();
-    MmuSetPageCallback(MmuPageMiss);
-
-    /* Map freeldr space */
-    for( i = 0xe00000, page = 0; i < 0xe80000; i += (1<<PFN_SHIFT) ) {
-	info[page].flags = MMU_ALL_RW;
-	info[page++].phys = PpcVirt2phys(i, 0);
+    /* We'll use vsid 1 for freeldr (expendable) */
+    for(i = 0; i < 8; i++)
+    {
+	MmuAllocVsid(16 + i);
+	MmuSetVsid(i, i+1, 1);
+    }
+    /* Vsid 0 is reactos kernel */
+    for(i = 8; i < 16; i++)
+    {
+	MmuAllocVsid(i);
+	MmuSetVsid(i, i+1, 0);
     }
 
-    MmuMapPage((void *)0xe00000, info, page);
-    MmFreeMemory(info);
+    MmuSetPageCallback(MmuPageMiss);
 
-    info = MmAllocateMemory((KernelMemorySize >> 12) * sizeof(*info));
-
-    printf("First Kernel Instr (log: %x) %x\n", ((PCHAR)KernelMemory + KernelEntry), *((PINT)(((PCHAR)KernelMemory) + KernelEntry)));
-
-    x = PpcVirt2phys((int)KernelMemory, 1);
-    printf("First Kernel Instr (phys: %x) %x\n", x, GetPhys(x));
+    info = MmAllocateMemory((KernelMemorySize >> PAGE_SHIFT) * sizeof(*info));
 
     /* Map kernel space 0x80000000 ... */
     for( i = (ULONG)KernelMemory, page = 0; 
 	 i < (ULONG)KernelMemory + KernelMemorySize; 
-	 i += (1<<PFN_SHIFT) ) {
+	 i += (1<<PFN_SHIFT), page++ ) {
+	info[page].proc = 0;
+	info[page].addr = KernelBase + (page << PAGE_SHIFT);
+	info[page].phys = i; //PpcVirt2phys(i, 1);
 	info[page].flags = MMU_ALL_RW;
-	info[page++].phys = i;/*PpcVirt2phys(i, 0);*/
     }
 
-    MmuMapPage((void *)KernelBase, info, page);
+    MmuMapPage(info, page);
 
     /* Map module name strings */
     for( i = 0; i < LoaderBlock.ModsCount; i++ )
     {
 	page = ROUND_DOWN(((ULONG)reactos_modules[i].String), (1<<PFN_SHIFT));
 	info[i].flags = MMU_ALL_RW;
-	info[i].phys = page;
-	MmuMapPage((void *)page, info, 1);
+	info[i].proc = 1;
+	info[i].addr = page;
+	info[i].phys = page; // PpcVirt2phys(page, 0);
+	MmuMapPage(info, 1);
     }
 
-    /* Tell them we're booting */
-    DrawNumber(LocalBootInfo,(ULONG)&LoaderBlock,10,100);
+    info[i].addr = (ULONG)&LoaderBlock;
+    info[i].phys = PpcVirt2phys(info[i].addr, 1);
+    MmuMapPage(info, 1);
 
-    MmuTurnOn();
+    MmuTurnOn(KernelEntryAddress, (void*)&LoaderBlock);
 
-    DrawNumber(LocalBootInfo,(ULONG)KernelEntryAddress,100,100);
-    printf("First Kernel Instr (map: %x) %x\n", KernelEntryAddress, *((PINT)(((PCHAR)KernelEntryAddress) + KernelEntry)));
-    KernelEntryAddress( (void*)&LoaderBlock );
     /* Nothing more */
     while(1);
 }
@@ -257,7 +256,7 @@ FrLdrSetupPae(ULONG Magic)
  *     will be used by the Kernel.
  *
  *--*/
-static VOID
+VOID
 FASTCALL
 FrLdrGetKernelBase(VOID)
 {
@@ -382,16 +381,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
         return FALSE;
     }
 
-    printf("Elf header: (%c%c%c type %d machine %d version %d entry %x shoff %x shentsize %d shnum %d)\n", 
-	   ehdr.e_ident[1], ehdr.e_ident[2], ehdr.e_ident[3],
-	   ehdr.e_type,
-	   ehdr.e_machine,
-	   ehdr.e_version,
-	   ehdr.e_entry,
-	   ehdr.e_shoff,
-	   ehdr.e_shentsize,
-	   ehdr.e_shnum);
-
     /* Start by getting elf headers */
     phsize = ehdr.e_phentsize;
     phnum = ehdr.e_phnum;
@@ -441,7 +430,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     Section = COFF_FIRST_SECTION(NtHeader);
     SectionCount = SWAPW(NtHeader->FileHeader.NumberOfSections);
 
-    printf("Section headers at %x\n", ((PCHAR)Section) - ((PCHAR)KernelAddr));
+    printf("Section headers at %x\n", Section);
 
     /* Walk each section */
     for (i=0; i < SectionCount; i++, Section++)
@@ -449,10 +438,8 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	shdr = ELF_SECTION((SWAPD(Section->PointerToRawData)+1));
 
 	shdr->sh_addr = SectionAddr = SWAPD(Section->VirtualAddress);
+	shdr->sh_addr += KernelAddr;
 
-	printf("Section %d (NT Header) is elf section %d\n",
-	       i, SWAPD(Section->PointerToRawData));
-	
 	Section->PointerToRawData = SWAPD((Section->VirtualAddress - KernelAddr));
 
 	if (shdr->sh_type != SHT_NOBITS)
@@ -497,9 +484,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
 	if (!ELF_SECTION(targetSection)->sh_addr) continue;
 
-	printf("Found reloc section %d (symbols %d target %d base %x) with %d relocs\n",
-	       i, shdr->sh_link, shdr->sh_info, ELF_SECTION(targetSection)->sh_addr, numreloc);
-	
 	RelocSection = MmAllocateMemory(shdr->sh_size);
 	FsSetFilePointer(KernelImage, relstart);
 	FsReadFile(KernelImage, shdr->sh_size, NULL, RelocSection);
@@ -522,21 +506,23 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	    memcpy(&symbol, SymbolSection + (ELF32_R_SYM(reloc.r_info) * sizeof(symbol)), sizeof(symbol));
 
 	    /* Compute addends */
-	    S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr + KernelAddr + reloc.r_addend;
+	    S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr;
 	    A = reloc.r_addend;
 	    P = reloc.r_offset + ELF_SECTION(targetSection)->sh_addr;
 
 #if 0
-	    printf("Symbol %d -> %d(%x:%x) -> %x@%x\n",
+	    printf("Symbol[%d] %d -> %d(%x:%x) -> %x(+%x)@%x\n",
+		   ELF32_R_TYPE(reloc.r_info),
 		   ELF32_R_SYM(reloc.r_info), 
 		   symbol.st_shndx, 
 		   ELF_SECTION(symbol.st_shndx)->sh_addr,
 		   symbol.st_value,
 		   S,
+		   A,
 		   P);
 #endif
 
-	    Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + P);
+	    Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + (P - KernelAddr));
 	    Target16 = (USHORT *)Target32;
 	    x = *Target32;
 	    

@@ -65,6 +65,8 @@ void PpcPrepVideoPrepareForReactOS()
     pci_setup(&pci1_desc);
 }
 
+int mmu_initialized = 0;
+
 ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 			   ULONG MaxMemoryMapSize )
 {
@@ -72,6 +74,12 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     BiosMemoryMap[0].Type = 1;
     BiosMemoryMap[0].BaseAddress = 0xe80000;
     BiosMemoryMap[0].Length = (64 * 1024 * 1024) - BiosMemoryMap[0].BaseAddress;
+    if(!mmu_initialized)
+    {
+	MmuInit();
+	mmu_initialized = 1;
+    }
+    MmuSetMemorySize(BiosMemoryMap[0].Length + BiosMemoryMap[0].BaseAddress);
     return 1;
 }
 

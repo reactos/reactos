@@ -25,21 +25,13 @@
 PVOID
 VaToPa(PVOID Va)
 {
-#ifdef _M_IX86
 	return (PVOID)((ULONG_PTR)Va & ~KSEG0_BASE);
-#elif defined(_M_PPC)
-	return (PVOID)PpcVirt2phys((ULONG_PTR)Va,0);
-#endif
 }
 
 PVOID
 PaToVa(PVOID Pa)
 {
-#ifdef _M_IX86
 	return (PVOID)((ULONG_PTR)Pa | KSEG0_BASE);
-#elif defined(_M_PPC)
-	return (PVOID)ofw_phys2virt(mmu_handle,0,(ULONG_PTR)Pa,0);
-#endif
 }
 
 VOID
