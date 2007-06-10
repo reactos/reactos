@@ -545,18 +545,16 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
                     /* Count out the guidDeviceIdentifier */
                     memcpy(&pDDDI->guidDeviceIdentifier, &CLSID_DirectDraw,sizeof(GUID));
                    
-                    pDDDI->guidDeviceIdentifier.Data1 = pDDDI->guidDeviceIdentifier.Data1 ^ pDDDI->dwVendorId;
+                    pDDDI->guidDeviceIdentifier.Data1 ^= pDDDI->dwVendorId;
 
                     lpdata = (long *)&pDDDI->guidDeviceIdentifier.Data2;
-                    *lpdata = *lpdata ^ pDDDI->dwDeviceId;
+                    *lpdata ^= pDDDI->dwDeviceId;
 
                     lpdata = (long *)&pDDDI->guidDeviceIdentifier.Data4;
-                    *lpdata = *lpdata ^ pDDDI->dwSubSysId;
-                    *lpdata = *lpdata ^ pDDDI->liDriverVersion.LowPart;
+                    *lpdata = (*lpdata ^ pDDDI->dwSubSysId) ^ pDDDI->liDriverVersion.LowPart;
 
                     lpdata = (long *)&pDDDI->guidDeviceIdentifier.Data4[4];
-                    *lpdata = *lpdata ^ pDDDI->dwRevision;
-                    *lpdata = *lpdata ^ pDDDI->liDriverVersion.HighPart;
+                    *lpdata = (*lpdata ^ pDDDI->dwRevision) ^ pDDDI->liDriverVersion.HighPart;
 
                     /* FIXME pDDDI->dwWHQLLevel
                      * we leave this with no informations, I do not known 
