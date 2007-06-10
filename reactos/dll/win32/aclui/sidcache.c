@@ -158,7 +158,11 @@ ReferenceSidCacheMgr(IN HANDLE SidCacheMgr)
 static VOID
 DereferenceSidCacheMgr(IN PSIDCACHEMGR scm)
 {
-    InterlockedDecrement(&scm->RefCount);
+    if (InterlockedDecrement(&scm->RefCount) == 0)
+    {
+        /* Signal the lookup thread so it can terminate */
+        SetEvent(scm->LookupEvent);
+    }
 }
 
 
