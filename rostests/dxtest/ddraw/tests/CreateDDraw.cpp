@@ -378,6 +378,10 @@ BOOL Test_GetFourCCCodes (INT* passed, INT* failed)
 BOOL Test_GetDeviceIdentifier (INT* passed, INT* failed)
 {
 	LPDIRECTDRAW7 DirectDraw;
+	DDDEVICEIDENTIFIER2 pDDDI;
+	//OLECHAR GuidStr[100];
+
+
 
 	/* Preparations */
 	if (DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL) != DD_OK)
@@ -385,6 +389,33 @@ BOOL Test_GetDeviceIdentifier (INT* passed, INT* failed)
 		printf("ERROR: Failed to set up ddraw\n");
 		return FALSE;
 	}
+
+	TEST ( DirectDraw->GetDeviceIdentifier(NULL, 0) == DDERR_INVALIDPARAMS );
+	TEST ( DirectDraw->GetDeviceIdentifier(NULL, ~DDGDI_GETHOSTIDENTIFIER) == DDERR_INVALIDPARAMS );
+	TEST ( DirectDraw->GetDeviceIdentifier(NULL, DDGDI_GETHOSTIDENTIFIER) == DDERR_INVALIDPARAMS );
+
+
+	memset(&pDDDI,0,sizeof(DDDEVICEIDENTIFIER2));
+	TEST ( DirectDraw->GetDeviceIdentifier(&pDDDI, 0) == DD_OK );
+
+/*
+    StringFromGUID2(pDDDI.guidDeviceIdentifier, GuidStr, 100);
+    printf("1. \n");
+    printf("szDriver : %s\n",pDDDI.szDriver);
+    printf("szDescription : %s\n",pDDDI.szDescription);
+    printf("liDriverVersion : 0x%08x . 0x%08x\n", pDDDI.liDriverVersion.HighPart, pDDDI.liDriverVersion.LowPart);
+    printf("dwVendorId : 0x%08x\n",pDDDI.dwVendorId);
+    printf("dwDeviceId : 0x%08x\n",pDDDI.dwDeviceId);
+    printf("dwSubSysId : 0x%08x\n",pDDDI.dwSubSysId);
+    printf("dwRevision : 0x%08x\n",pDDDI.dwRevision);
+    printf("guidDeviceIdentifier : %ls\n",GuidStr);
+    printf("dwWHQLLevel : 0x%08x\n",pDDDI.dwWHQLLevel);
+*/
+
+	memset(&pDDDI,0,sizeof(DDDEVICEIDENTIFIER2));
+	TEST ( DirectDraw->GetDeviceIdentifier(&pDDDI, DDGDI_GETHOSTIDENTIFIER) == DD_OK );
+	memset(&pDDDI,0,sizeof(DDDEVICEIDENTIFIER2));
+	TEST ( DirectDraw->GetDeviceIdentifier(&pDDDI, ~DDGDI_GETHOSTIDENTIFIER) == DDERR_INVALIDPARAMS );
 
 	DirectDraw->Release();
 
