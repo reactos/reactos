@@ -89,7 +89,7 @@ __asm__(".text\n\t"
 	".long 0\n\t");
 
 __asm__(".text\n\t"
-	".globl data_miss_finish_start\n\t"
+	".globl data_miss_finish_start\n"
 	"data_miss_finish_start:\n\t"
 	"lwz 2,8(1)\n\t"
 	"lwz 3,12(1)\n\t"
@@ -127,9 +127,8 @@ __asm__(".text\n\t"
 	"mtcr 0\n\t"
 	"lwz 0,136(1)\n\t"
 	"mtctr 0\n\t"
-	"lwz 0,4(1)\n\t"
-	"mfsprg1 1\n\t"
 	"lwz 0,0(1)\n\t"
+	"mfsprg1 1\n\t"
 	"rfi\n\t");
 	
 /*
@@ -602,7 +601,7 @@ int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr)
     int vsid = GetSR((addr >> 28) & 15) & PPC_VSID_MASK;
     ppc_map_t *map = mmuvirtmap(addr, vsid);
     if(!map) return 0;
-    map->pte.pteh |= hfun << 6;
+    map->pte.pteh = (map->pte.pteh & ~64) | (hfun << 6);
     PpcHashedPTE[ptegnum].block[Clock & 7] = map->pte;
 #if 0
     fmtout("Reloading addr %x (phys %x) at %x[%x] (%x:%x)\r\n",
