@@ -5,9 +5,9 @@
 #include "debug.cpp"
 
 /* include the tests */
-#include "DDraw/CreateDDraw.cpp"
-#include "DDraw/DisplayModes.cpp"
-#include "DDraw/CreateSurface.cpp"
+#include "DDraw/create.cpp"
+#include "DDraw/display_modes.cpp"
+#include "Surface/create.cpp"
 #include "Surface/private_data.cpp"
 
 /* The List of tests */
