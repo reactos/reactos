@@ -346,8 +346,16 @@ IopCompleteRequest(IN PKAPC Apc,
                 /* Check if this is an Asynch API */
                 if (!(Irp->Flags & IRP_SYNCHRONOUS_API))
                 {
+                  /* HACK */
+                  if (*((PULONG)(Irp->UserEvent) - 1) != 0x87878787)
+                  {
                     /* Dereference the event */
                     ObDereferenceObject(Irp->UserEvent);
+                  }
+                  else
+                  {
+                    DPRINT1("Not an executive event -- should not be dereferenced\n");
+                  }
                 }
 
                 /*

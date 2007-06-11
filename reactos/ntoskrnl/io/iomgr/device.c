@@ -37,18 +37,9 @@ IopAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
     SourceDeviceExtension = IoGetDevObjExtension(SourceDevice);
     ASSERT(SourceDeviceExtension->AttachedTo == NULL);
 
-    /* FIXME: ROS HACK */
-    if (AttachedDevice->Flags & DO_DEVICE_INITIALIZING)
-    {
-        DPRINT1("Io: CRITICAL: Allowing attach to device which hasn't "
-                "cleared its DO_DEVICE_INITIALIZING flag. Fix the damn "
-                "thing: %p %wZ\n",
-                AttachedDevice,
-                &AttachedDevice->DriverObject->DriverName);
-    }
-
     /* Make sure that it's in a correct state */
-    if ((IoGetDevObjExtension(AttachedDevice)->ExtensionFlags &
+    if ((AttachedDevice->Flags & DO_DEVICE_INITIALIZING) ||
+        (IoGetDevObjExtension(AttachedDevice)->ExtensionFlags &
          (DOE_UNLOAD_PENDING |
           DOE_DELETE_PENDING |
           DOE_REMOVE_PENDING |
