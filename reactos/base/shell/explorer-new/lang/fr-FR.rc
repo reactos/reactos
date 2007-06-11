@@ -44,7 +44,7 @@ BEGIN
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "S&ynchroniser", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "Fermer &la session %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "Déconnecter...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED                             */
+        MENUITEM "Déconnecter...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "Libér&er l'ordinateur de la station", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "Éteindre...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
