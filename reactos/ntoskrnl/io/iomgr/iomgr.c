@@ -497,11 +497,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize PnP manager */
     PnpInit();
 
-    /* Initialize PnP root relations */
-    IoSynchronousInvalidateDeviceRelations(IopRootDeviceNode->
-                                           PhysicalDeviceObject,
-                                           BusRelations);
-
     /* Create the group driver list */
     IoCreateDriverList();
 
@@ -510,6 +505,11 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Call back drivers that asked for */
     IopReinitializeBootDrivers();
+
+    /* Initialize PnP root relations */
+    IoSynchronousInvalidateDeviceRelations(IopRootDeviceNode->
+                                           PhysicalDeviceObject,
+                                           BusRelations);
 
     /* Create ARC names for boot devices */
     IopCreateArcNames(LoaderBlock);

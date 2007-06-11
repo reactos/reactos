@@ -865,6 +865,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       Status = PnpRootCreateDevice(ServiceName, &PhysicalDeviceObject);
       if (!NT_SUCCESS(Status))
       {
+         DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);
          ExFreePool(Node);
          return Status;
       }
@@ -2369,29 +2370,44 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       PLDR_DATA_TABLE_ENTRY ModuleObject;
       PDRIVER_OBJECT DriverObject;
 
+      /* Get existing DriverObject pointer (in case the driver has
+         already been loaded and initialized) */
+      Status = IopGetDriverObject(
+          &DriverObject,
+          &DeviceNode->ServiceName,
+          FALSE);
+
+      if (!NT_SUCCESS(Status))
+      {
+          /* Driver is not initialized, try to load it */
       Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
+
       if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
       {
+              /* STATUS_IMAGE_ALREADY_LOADED means this driver
+                 was loaded by the bootloader */
          if (Status != STATUS_IMAGE_ALREADY_LOADED)
          {
+                  /* Initialize the driver */
             DeviceNode->Flags |= DN_DRIVER_LOADED;
             Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
                &DeviceNode->ServiceName, FALSE, &DriverObject);
          }
          else
          {
-            /* get existing DriverObject pointer */
-            Status = IopGetDriverObject(
-               &DriverObject,
-               &DeviceNode->ServiceName,
-               FALSE);
+                  Status = STATUS_SUCCESS;
          }
+          }
+      }
+
+      /* Driver is loaded and initialized at this point */
          if (NT_SUCCESS(Status))
          {
             /* Attach lower level filter drivers. */
             IopAttachFilterDrivers(DeviceNode, TRUE);
             /* Initialize the function driver for the device node */
             Status = IopInitializeDevice(DeviceNode, DriverObject);
+
             if (NT_SUCCESS(Status))
             {
                /* Attach upper level filter drivers. */
@@ -2401,7 +2417,6 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
                Status = IopStartDevice(DeviceNode);
             }
          }
-      }
       else
       {
          /*

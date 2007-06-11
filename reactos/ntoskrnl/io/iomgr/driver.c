@@ -125,7 +125,7 @@ IopGetDriverObject(
    /* Open driver object */
    Status = ObReferenceObjectByName(
       &DriverName,
-      OBJ_OPENIF | OBJ_KERNEL_HANDLE, /* Attributes */
+      OBJ_OPENIF | OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, /* Attributes */
       NULL, /* PassedAccessState */
       0, /* DesiredAccess */
       IoDriverObjectType,
@@ -134,9 +134,14 @@ IopGetDriverObject(
       (PVOID*)&Object);
 
    if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed to reference driver object, status=0x%08x\n", Status);
       return Status;
+   }
 
    *DriverObject = Object;
+
+   DPRINT("Driver Object: %p\n", Object);
 
    return STATUS_SUCCESS;
 }
@@ -498,7 +503,10 @@ IopAttachFilterDriversCallback(
             &ServiceName,
             FALSE);
          if (!NT_SUCCESS(Status))
+         {
+            DPRINT1("IopGetDriverObject() returned status 0x%08x!\n", Status);
             continue;
+         }
       }
 
       Status = IopInitializeDevice(DeviceNode, DriverObject);
@@ -772,6 +780,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Initialize the driver
     */
+   DeviceNode->Flags |= DN_DRIVER_LOADED;
    Status = IopInitializeDriverModule(DeviceNode, LdrEntry,
       &DeviceNode->ServiceName, FALSE, &DriverObject);
 
@@ -813,6 +822,8 @@ IopInitializeBootDrivers(VOID)
     LDR_DATA_TABLE_ENTRY ModuleObject;
     NTSTATUS Status;
     UNICODE_STRING DriverName;
+
+    DPRINT("IopInitializeBootDrivers()");
 
     /* Use IopRootDeviceNode for now */
     Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, NULL, &DeviceNode);
@@ -874,6 +885,7 @@ IopInitializeBootDrivers(VOID)
             /* Make sure we didn't load this driver already */
             if (!(LdrEntry->Flags & LDRP_ENTRY_INSERTED))
             {
+                DPRINT("Initializing bootdriver %wZ\n", &LdrEntry->BaseDllName);
                 /* Initialize it */
                 IopInitializeBuiltinDriver(LdrEntry);
             }
@@ -1233,7 +1245,7 @@ try_again:
     DriverObject->DriverSize = SizeOfImage;
 
     /* Finally, call its init function */
-    DPRINT("RegistryKey: %wZ\n", RegistryKey);
+    DPRINT("RegistryKey: %wZ\n", RegistryPath);
     DPRINT("Calling driver entrypoint at %p\n", InitializationFunction);
     Status = (*InitializationFunction)(DriverObject, RegistryPath);
     if (!NT_SUCCESS(Status))
@@ -1584,42 +1596,55 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
       goto ReleaseCapturedString;
    }
 
-   /*
-    * Load the driver module
-    */
-
-   Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
-      IopFreeDeviceNode(DeviceNode);
-      goto ReleaseCapturedString;
-   }
-
-   /*
-    * Set a service name for the device node
-    */
-
-   RtlCreateUnicodeString(&DeviceNode->ServiceName, ServiceName.Buffer);
-
-   /*
-    * Initialize the driver module
-    */
-
-   Status = IopInitializeDriverModule(
-      DeviceNode,
-      ModuleObject,
-      &DeviceNode->ServiceName,
-      (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
-       Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
-      &DriverObject);
+   /* Get existing DriverObject pointer (in case the driver has
+      already been loaded and initialized) */
+   Status = IopGetDriverObject(
+       &DriverObject,
+       &ServiceName,
+       (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
+        Type == 8 /* SERVICE_RECOGNIZER_DRIVER */));
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopInitializeDriver() failed (Status %lx)\n", Status);
-      MmUnloadSystemImage(ModuleObject);
-      IopFreeDeviceNode(DeviceNode);
-      goto ReleaseCapturedString;
+       /*
+        * Load the driver module
+        */
+
+       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
+       if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
+       {
+           DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
+           IopFreeDeviceNode(DeviceNode);
+           goto ReleaseCapturedString;
+       }
+
+       /*
+        * Set a service name for the device node
+        */
+
+       RtlCreateUnicodeString(&DeviceNode->ServiceName, ServiceName.Buffer);
+
+       /*
+        * Initialize the driver module if it's loaded for the first time
+        */
+       if (Status != STATUS_IMAGE_ALREADY_LOADED)
+       {
+           Status = IopInitializeDriverModule(
+               DeviceNode,
+               ModuleObject,
+               &DeviceNode->ServiceName,
+               (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
+               Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
+               &DriverObject);
+
+           if (!NT_SUCCESS(Status))
+           {
+               DPRINT("IopInitializeDriver() failed (Status %lx)\n", Status);
+               MmUnloadSystemImage(ModuleObject);
+               IopFreeDeviceNode(DeviceNode);
+               goto ReleaseCapturedString;
+           }
+       }
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);
