@@ -35,7 +35,7 @@ LRESULT CALLBACK DisplayProc(HWND, UINT, WPARAM, LPARAM);
 typedef struct
 {
 	int nPageHeight;
-	WCHAR szTypeFaceName[MAX_TYPEFACENAME];
+	WCHAR szTypeFaceName[LF_FULLFACESIZE];
 	WCHAR szFormat[MAX_FORMAT];
 	WCHAR szString[MAX_STRING];
 
@@ -81,9 +81,8 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	HFONT hOldFont;
 	TEXTMETRIC tm;
 	int i, y;
-	const int nSizes[7] = {12, 18, 24, 36, 48, 60, 72};
 	WCHAR szSize[5];
-	WCHAR szCaption[MAX_TYPEFACENAME + 20];
+	WCHAR szCaption[LF_FULLFACESIZE + 20];
 
 	/* This is the location on the DC where we draw */
 	y = -nYPos;
@@ -132,7 +131,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 		GetTextMetrics(hDC, &tm);
 		y += tm.tmHeight + 1;
 		SelectObject(hDC, pData->hSizeFont);
-		swprintf(szSize, L"%d", nSizes[i]);
+		swprintf(szSize, L"%d", pData->nSizes[i]);
 		TextOutW(hDC, 0, y - 13 - tm.tmDescent, szSize, wcslen(szSize));
 	}
 	SelectObject(hDC, hOldFont);
@@ -152,7 +151,7 @@ Display_SetTypeFace(HWND hwnd, LPARAM lParam)
 
 	/* Set the new type face name */
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	snwprintf(pData->szTypeFaceName, MAX_TYPEFACENAME, (WCHAR*)lParam);
+	snwprintf(pData->szTypeFaceName, LF_FULLFACESIZE, (WCHAR*)lParam);
 
 	/* Create the new fonts */
 	hDC = GetDC(hwnd);
@@ -217,7 +216,7 @@ static LRESULT
 Display_OnCreate(HWND hwnd)
 {
 	DISPLAYDATA* pData;
-	const int nSizes[7] = {12, 18, 24, 36, 48, 60, 72};
+	const int nSizes[MAX_SIZES] = {12, 18, 24, 36, 48, 60, 72};
 	int i;
 
 	/* Create data structure */
