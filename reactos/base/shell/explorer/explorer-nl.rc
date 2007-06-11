@@ -42,7 +42,7 @@ BEGIN
         MENUITEM "&Zijbalk",                  				ID_VIEW_SIDE_BAR
         MENUITEM "&Statusbalk",                 			ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Verversen\tF5",			                ID_REFRESH
+        MENUITEM "&Vernieuwen\tF5",			                ID_REFRESH
         MENUITEM "V&olledig Scherm\tCtrl+Shift+S",  		ID_VIEW_FULLSCREEN
         MENUITEM "SDI",                         			ID_VIEW_SDI
     END
@@ -82,7 +82,7 @@ IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Volumeregelingen Openen",         		ID_TRAY_VOLUME
+        MENUITEM "Volumeregeling openen",         		ID_TRAY_VOLUME
         MENUITEM "Eigenschappen van audio aanpassen",     	ID_VOLUME_PROPERTIES
     END
 END
@@ -90,11 +90,11 @@ END
 IDM_NOTIFYAREA MENU DISCARDABLE 
 BEGIN
     POPUP ""
-    BEGIN
-        MENUITEM "&Verborgen pictogrammen weergeven",       ID_SHOW_HIDDEN_ICONS
+    BEGIN	
+        MENUITEM "&Verborgen Pictogrammen weergeven",       		ID_SHOW_HIDDEN_ICONS
         MENUITEM "Show Icon &Button",           			ID_SHOW_ICON_BUTTON
-        MENUITEM "&Configure Notifications...", 			ID_CONFIG_NOTIFYAREA
-        MENUITEM "Datum/Tijd Aanpassen",        			ID_CONFIG_TIME
+        MENUITEM "&Meldingen aanpassen...", 			ID_CONFIG_NOTIFYAREA
+        MENUITEM "Datum/Tijd aanpassen",        			ID_CONFIG_TIME
         MENUITEM SEPARATOR
         MENUITEM "&Over Explorer...",          				ID_ABOUT_EXPLORER
     END
@@ -114,7 +114,7 @@ BEGIN
         MENUITEM "&Zijbalk",                   				ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "&Statusbalk",                 			ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Verversen\tF5",                			ID_REFRESH
+        MENUITEM "&Vernieuwen\tF5",                			ID_REFRESH
         MENUITEM "V&olledig Scherm\tCtrl+Shift+S",  		ID_VIEW_FULLSCREEN
         MENUITEM "&MDI",                        			ID_VIEW_MDI
     END
@@ -350,7 +350,7 @@ BEGIN
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Volume"
     IDS_ITEMS_CUR           "Huidige items"
-    IDS_ITEMS_CONFIGURED    "configuratie"
+    IDS_ITEMS_CONFIGURED    "Configuratie"
     IDS_ITEMS_VISIBLE       "Zichtbaar"
     IDS_ITEMS_HIDDEN        "Verborgen"
     IDS_NOTIFY_SHOW         "Weergeven"
@@ -370,13 +370,13 @@ BEGIN
     IDS_SETTINGS_MENU       "Instellingen"
     IDS_CONTROL_PANEL       "Configuratiescherm"
     IDS_PRINTERS            "Printers"
-    IDS_BROWSE              "Browse Files"
+    IDS_BROWSE              "Bestanden Verkennen"
     IDS_SEARCH_PRG          "Zoek Programma..."
     IDS_ALL_USERS           "Alle Gebruikers\\"
     IDS_SEARCH              "Zoeken"
-    IDS_ABOUT_EXPLORER      "&About Explorer..."
+    IDS_ABOUT_EXPLORER      "&Over Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS 
-                            "U heeft meer dan één programma geselecteerd.\nWeet u zeker dat u ze allemaal wilt laden?"
+                            "U heeft meer dan één programma geselecteerd.\nWeet u zeker dat u ze allemaal wilt starten?"
     IDS_DESKTOPBAR_SETTINGS "Bureaublad instellingen"
     IDS_DESKTOP             "Bureaublad"
     IDS_TASKBAR             "Taakbalk"
