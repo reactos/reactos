@@ -483,7 +483,7 @@ IntVideoPortDispatchPnp(
          break;
 
       default:
-         return STATUS_NOT_IMPLEMENTED;
+         return Irp->IoStatus.Status;
          break;
    }
 
