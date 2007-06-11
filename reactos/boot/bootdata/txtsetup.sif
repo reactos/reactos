@@ -100,6 +100,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000409 = "English (USA)"
 00010409 = "English (USA-Dvorak)"
 0000040B = "Finnish"
+0000080C = "French (Belgium)"
 0000040C = "French (France)"
 00000407 = "German (Germany)"
 00000807 = "German (Swiss)"
@@ -119,6 +120,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000422 = "Ukrainian"
 
 [Files.KeyboardLayout]
+0000080C = kbdbe.dll
 00000813 = kbdbe.dll
 00000455 = kbdbur.dll
 00000406 = kbdda.dll
