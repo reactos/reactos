@@ -35,11 +35,11 @@
 //
 // Initialization routines
 //
-VOID
+BOOLEAN
 NTAPI
-PoInit(
-    BOOLEAN HaveAcpiTable,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+PoInitSystem(
+    IN ULONG BootPhase,
+    IN BOOLEAN HaveAcpiTable
 );
 
 VOID

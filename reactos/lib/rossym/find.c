@@ -104,11 +104,6 @@ RosSymGetAddressInformation(PROSSYM_INFO RosSymInfo,
   if (RosSymInfo->Symbols == NULL || RosSymInfo->SymbolsCount == 0 ||
       RosSymInfo->Strings == NULL || RosSymInfo->StringsLength == 0)
     {
-#ifdef _X86_
-__asm__("int $3\n");
-#elif defined(_PPC_)
-__asm__("twi 0,0,0\n");
-#endif
       DPRINT1("Uninitialized RosSymInfo\n");
       return FALSE;
     }

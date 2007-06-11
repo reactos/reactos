@@ -24,6 +24,7 @@ Author:
 //
 #include <umtypes.h>
 #include <arch/mmtypes.h>
+#include <extypes.h>
 
 //
 // Page-Rounding Macros
@@ -230,7 +231,6 @@ typedef struct _SECTION_IMAGE_INFORMATION
 //
 // PTE Structures
 //
-#ifndef _M_PPC
 typedef struct _MMPTE
 {
     union
@@ -245,12 +245,6 @@ typedef struct _MMPTE
         MMPTE_LIST List;
     };
 } MMPTE, *PMMPTE;
-#else
-typedef struct _MMPTE
-{
-	ULONG Long;
-} MMPTE, *PMMPTE;
-#endif
 
 //
 // Section Information structure
@@ -583,20 +577,42 @@ typedef struct _MMSUPPORT_FLAGS
 //
 typedef struct _MMSUPPORT
 {
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LIST_ENTRY WorkingSetExpansionLinks;
+    USHORT LastTrimpStamp;
+    USHORT NextPageColor;
+#else
     LARGE_INTEGER LastTrimTime;
+#endif
     MMSUPPORT_FLAGS Flags;
     ULONG PageFaultCount;
     ULONG PeakWorkingSetSize;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG Spare0;
+#else
     ULONG WorkingSetSize;
+#endif
     ULONG MinimumWorkingSetSize;
     ULONG MaximumWorkingSetSize;
     PMMWSL MmWorkingSetList;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     LIST_ENTRY WorkingSetExpansionLinks;
+#endif
     ULONG Claim;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG Spare;
+    ULONG WorkingSetPrivateSize;
+    ULONG WorkingSetSizeOverhead;
+    ULONG WorkingSetSize;
+    PKEVENT ExitEvent;
+    EX_PUSH_LOCK WorkingSetMutex;
+    PVOID AccessLog;
+#else
     ULONG NextEstimationSlot;
     ULONG NextAgingSlot;
     ULONG EstimatedAvailable;
     ULONG GrowthSinceLastEstimate;
+#endif
 } MMSUPPORT, *PMMSUPPORT;
 
 //
@@ -612,6 +628,50 @@ typedef struct _MEMORY_BASIC_INFORMATION
     ULONG Protect;
     ULONG Type;
 } MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
+
+//
+// Driver Verifier Data
+//
+typedef struct _MM_DRIVER_VERIFIER_DATA
+{
+    ULONG Level;
+    ULONG RaiseIrqls;
+    ULONG AcquireSpinLocks;
+    ULONG SynchronizeExecutions;
+    ULONG AllocationsAttempted;
+    ULONG AllocationsSucceeded;
+    ULONG AllocationsSucceededSpecialPool;
+    ULONG AllocationsWithNoTag;
+    ULONG TrimRequests;
+    ULONG Trims;
+    ULONG AllocationsFailed;
+    ULONG AllocationsFailedDeliberately;
+    ULONG Loads;
+    ULONG Unloads;
+    ULONG UnTrackedPool;
+    ULONG UserTrims;
+    ULONG CurrentPagedPoolAllocations;
+    ULONG CurrentNonPagedPoolAllocations;
+    ULONG PeakPagedPoolAllocations;
+    ULONG PeakNonPagedPoolAllocations;
+    ULONG PagedBytes;
+    ULONG NonPagedBytes;
+    ULONG PeakPagedBytes;
+    ULONG PeakNonPagedBytes;
+    ULONG BurstAllocationsFailedDeliberately;
+    ULONG SessionTrims;
+    ULONG Reserved[2];
+} MM_DRIVER_VERIFIER_DATA, *PMM_DRIVER_VERIFIER_DATA;
+
+//
+// Internal Driver Verifier Table Data
+//
+typedef struct _DRIVER_SPECIFIED_VERIFIER_THUNKS
+{
+    LIST_ENTRY ListEntry;
+    struct _LDR_DATA_TABLE_ENTRY *DataTableEntry;
+    ULONG NumberOfThunks;
+} DRIVER_SPECIFIED_VERIFIER_THUNKS, *PDRIVER_SPECIFIED_VERIFIER_THUNKS;
 
 //
 // Default heap size values.  For user mode, these values are copied to a new

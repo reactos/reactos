@@ -18,16 +18,15 @@
 #define DECLSPEC_NOINLINE  __declspec(noinline)
 #endif
 
-#define OBJ_INHERIT          0x00000002
-#define OBJ_PERMANENT        0x00000010
-#define OBJ_EXCLUSIVE        0x00000020
-#define OBJ_CASE_INSENSITIVE 0x00000040
-#define OBJ_OPENIF           0x00000080
-#define OBJ_OPENLINK         0x00000100
-#define OBJ_KERNEL_HANDLE    0x00000200
-#define OBJ_VALID_ATTRIBUTES (OBJ_KERNEL_HANDLE | OBJ_OPENLINK | \
-		OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_EXCLUSIVE | \
-		OBJ_PERMANENT | OBJ_INHERIT)
+#define OBJ_INHERIT             0x00000002
+#define OBJ_PERMANENT           0x00000010
+#define OBJ_EXCLUSIVE           0x00000020
+#define OBJ_CASE_INSENSITIVE    0x00000040
+#define OBJ_OPENIF              0x00000080
+#define OBJ_OPENLINK            0x00000100
+#define OBJ_KERNEL_HANDLE       0x00000200
+#define OBJ_FORCE_ACCESS_CHECK  0x00000400
+#define OBJ_VALID_ATTRIBUTES    0x000007F2
 #define InitializeObjectAttributes(p,n,a,r,s) { \
   (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
   (p)->RootDirectory = (r); \
@@ -54,6 +53,11 @@ typedef struct _STRING {
   USHORT MaximumLength;
   PCHAR  Buffer;
 } STRING, *PSTRING;
+typedef struct _CSTRING {
+  USHORT Length;
+  USHORT MaximumLength;
+  CONST CHAR *Buffer;
+} CSTRING, *PCSTRING;
 #endif
 typedef STRING ANSI_STRING;
 typedef PSTRING PANSI_STRING;
@@ -85,6 +89,21 @@ typedef struct _OBJECT_ATTRIBUTES {
   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 #endif
+
+typedef struct LIST_ENTRY32
+{
+    ULONG Flink;
+    ULONG Blink;
+} LIST_ENTRY32;
+typedef LIST_ENTRY32 *PLIST_ENTRY32;
+
+typedef struct LIST_ENTRY64
+{
+    ULONGLONG Flink;
+    ULONGLONG Blink;
+} LIST_ENTRY64;
+typedef LIST_ENTRY64 *PLIST_ENTRY64;
+
 #define NOTHING
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #define TYPE_ALIGNMENT( t ) FIELD_OFFSET( struct { char x; t test; }, test )
@@ -106,7 +125,7 @@ typedef struct _OBJECT_ATTRIBUTES {
 #define MAXUCHAR  0xff
 #define MAXUSHORT 0xffff
 #define MAXULONG  0xffffffff
-
+#define MAXLONGLONG (0x7fffffffffffffffLL)
 #define C_ASSERT(e) extern char __C_ASSERT__[(e)?1:-1]
 
 #endif /* _NTDEF_H */

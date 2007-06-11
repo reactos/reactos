@@ -131,22 +131,12 @@ __asm__ __volatile__("mfmsr 0\n\t" \
 #define KeArchEraseFlags()
 #define KeArchDisableInterrupts() KePPCDisableInterrupts()
 
-FORCEINLINE struct _KPRCB * KeGetCurrentPrcb(
-  VOID)
-{
-    return (struct _KPRCB *)__readfsdword(0x20);
-}
+#define PPC_MIN_CACHE_LINE_SIZE 32
 
 FORCEINLINE struct _KPCR * NTHALAPI KeGetCurrentKPCR(
     VOID)
 {
     return (struct _KPCR *)__readfsdword(0x1c);
-}
-
-FORCEINLINE KIRQL NTHALAPI KeGetCurrentIrql(
-    VOID)
-{
-    return ((KIPCR *)KeGetCurrentKPCR())->CurrentIrql;
 }
 
 VOID

@@ -20,6 +20,7 @@ PKWIN32_THREAD_CALLOUT PspW32ThreadCallout = NULL;
 extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
+extern struct _TEB *NtCurrentTeb();
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

@@ -23,9 +23,7 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
-#if !defined(_NTIFS_)
-typedef PVOID PFS_FILTER_CALLBACKS;
-#endif
+#include <ifssupp.h>
 
 //
 // I/O Completion Access Rights
@@ -127,6 +125,11 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define FILE_REMOTE_DEVICE                      0x00000010
 
 //
+// File Object Flags
+//
+#define FO_FILE_OBJECT_HAS_EXTENSION            0x00800000
+
+//
 // Device Object Extension Flags
 //
 #define DOE_UNLOAD_PENDING                      0x1
@@ -187,12 +190,17 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DNUF_NOT_DISABLEABLE                    0x0008
 
 //
+// Internal Option Flags
+//
+#define IO_ATTACH_DEVICE_API                    0x80000000
+
+//
 // Undocumented WMI Registration Flags
 //
-#define WMIREG_FLAG_TRACE_PROVIDER          0x00010000
-#define WMIREG_FLAG_TRACE_NOTIFY_MASK       0x00F00000
-#define WMIREG_NOTIFY_DISK_IO               0x00100000
-#define WMIREG_NOTIFY_TDI_IO                0x00200000
+#define WMIREG_FLAG_TRACE_PROVIDER              0x00010000
+#define WMIREG_FLAG_TRACE_NOTIFY_MASK           0x00F00000
+#define WMIREG_NOTIFY_DISK_IO                   0x00100000
+#define WMIREG_NOTIFY_TDI_IO                    0x00200000
 
 //
 // I/O Completion Information Class for NtQueryIoCompletionInformation
@@ -1100,6 +1108,34 @@ typedef struct _BOOT_OPTIONS
     ULONG NextBootEntryId;
     WCHAR HeadlessRedirection[1];
 } BOOT_OPTIONS, *PBOOT_OPTIONS;
+
+//
+// Firmware Boot Entry
+//
+typedef struct _BOOT_ENTRY
+{
+    ULONG Version;
+    ULONG Length;
+    ULONG Id;
+    ULONG Attributes;
+    ULONG FriendlyNameOffset;
+    ULONG BootFilePathOffset;
+    ULONG OsOptionsLength;
+    CHAR OsOptions[1];
+} BOOT_ENTRY, *PBOOT_ENTRY;
+
+//
+// Firmware Driver Entry
+//
+typedef struct _EFI_DRIVER_ENTRY
+{
+    ULONG Version;
+    ULONG Length;
+    ULONG Id;
+    ULONG Attributes;
+    ULONG FriendlyNameOffset;
+    ULONG DriverFilePathOffset;
+} EFI_DRIVER_ENTRY, *PEFI_DRIVER_ENTRY;
 
 //
 // APC Callback for NtCreateFile

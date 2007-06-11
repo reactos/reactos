@@ -14,9 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, PsInitJobManagment)
-#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -206,6 +203,15 @@ NtAssignProcessToJobObject (
     return Status;
 }
 
+NTSTATUS
+NTAPI
+NtCreateJobSet(IN ULONG NumJob,
+               IN PJOB_SET_ARRAY UserJobSet,
+               IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /*
  * @unimplemented

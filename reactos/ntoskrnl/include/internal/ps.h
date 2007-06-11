@@ -1,10 +1,10 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/ps.h
-* PURPOSE:         Internal header for the Process Manager
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/include/ps.h
+ * PURPOSE:         Internal header for the Process Manager
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
 
 //
 // Define this if you want debugging support
@@ -82,7 +82,7 @@ PspShutdownProcessManager(
 BOOLEAN
 NTAPI
 PsInitSystem(
-    VOID
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 //
@@ -175,7 +175,7 @@ NTAPI
 PspSetPrimaryToken(
     IN PEPROCESS Process,
     IN HANDLE TokenHandle OPTIONAL,
-    IN PTOKEN Token OPTIONAL
+    IN PACCESS_TOKEN Token OPTIONAL
 );
 
 NTSTATUS
@@ -235,6 +235,13 @@ NTAPI
 PspExitProcess(
     IN BOOLEAN LastThread,
     IN PEPROCESS Process
+);
+
+NTSTATUS
+NTAPI
+PsTerminateProcess(
+    IN PEPROCESS Process,
+    IN NTSTATUS ExitStatus
 );
 
 VOID
@@ -326,6 +333,23 @@ PspDeleteJob(
 );
 
 //
+// State routines
+//
+NTSTATUS
+NTAPI
+PsResumeThread(
+    IN PETHREAD Thread,
+    OUT PULONG PreviousCount OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+PsSuspendThread(
+    IN PETHREAD Thread,
+    OUT PULONG PreviousCount OPTIONAL
+);
+
+//
 // Global data inside the Process Manager
 //
 extern ULONG PspTraceLevel;
@@ -341,14 +365,12 @@ extern KGUARDED_MUTEX PspActiveProcessMutex;
 extern LARGE_INTEGER ShortPsLockDelay;
 extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 extern PHANDLE_TABLE PspCidTable;
-extern PCREATE_THREAD_NOTIFY_ROUTINE
-PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];
-extern PCREATE_PROCESS_NOTIFY_ROUTINE
-PspProcessNotifyRoutine[PSP_MAX_CREATE_PROCESS_NOTIFY];
-extern PLOAD_IMAGE_NOTIFY_ROUTINE
-PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
+extern EX_CALLBACK PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];
+extern EX_CALLBACK PspProcessNotifyRoutine[PSP_MAX_CREATE_PROCESS_NOTIFY];
+extern EX_CALLBACK PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
 extern PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
-extern ULONG PspThreadNotifyRoutineCount;
+extern ULONG PspThreadNotifyRoutineCount, PspProcessNotifyRoutineCount;
+extern BOOLEAN PsImageNotifyEnabled;
 extern PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout;
 extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;
 extern PVOID PspSystemDllEntryPoint;
@@ -356,12 +378,14 @@ extern PVOID PspSystemDllBase;
 extern BOOLEAN PspUseJobSchedulingClasses;
 extern CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES];
 extern ULONG PsRawPrioritySeparation;
-extern POBJECT_TYPE _PsThreadType;
+extern POBJECT_TYPE _PsThreadType, _PsProcessType;
 extern PTOKEN PspBootAccessToken;
 extern GENERIC_MAPPING PspJobMapping;
 extern POBJECT_TYPE PsJobType;
 extern LARGE_INTEGER ShortPsLockDelay;
-extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
+extern UNICODE_STRING PsNtDllPathName;
+extern LIST_ENTRY PsLoadedModuleList;
+extern ULONG PsNtosImageBase;
 
 //
 // Inlined Functions

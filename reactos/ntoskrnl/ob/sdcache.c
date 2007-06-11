@@ -343,4 +343,68 @@ ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescripto
   DPRINT("ObpDereferenceCachedSecurityDescriptor() done\n");
 }
 
+/*++
+* @name ObLogSecurityDescriptor
+* @unimplemented NT5.2
+*
+*     The ObLogSecurityDescriptor routine <FILLMEIN>
+*
+* @param InputSecurityDescriptor
+*        <FILLMEIN>
+*
+* @param OutputSecurityDescriptor
+*        <FILLMEIN>
+*
+* @param RefBias
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
+                        OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
+                        IN ULONG RefBias)
+{
+    /* HACK: Return the same descriptor back */
+    PISECURITY_DESCRIPTOR SdCopy;
+    ULONG Length;
+    DPRINT("ObLogSecurityDescriptor is not implemented!\n",
+           InputSecurityDescriptor);
+
+    Length = RtlLengthSecurityDescriptor(InputSecurityDescriptor);
+    SdCopy = ExAllocatePool(PagedPool, Length);
+    RtlCopyMemory(SdCopy, InputSecurityDescriptor, Length);
+    *OutputSecurityDescriptor = SdCopy;
+    return STATUS_SUCCESS;
+}
+
+/*++
+* @name ObDereferenceSecurityDescriptor
+* @unimplemented NT5.2
+*
+*     The ObDereferenceSecurityDescriptor routine <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param Count
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+VOID
+NTAPI
+ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                IN ULONG Count)
+{
+    DPRINT1("ObDereferenceSecurityDescriptor is not implemented!\n");
+}
+
 /* EOF */

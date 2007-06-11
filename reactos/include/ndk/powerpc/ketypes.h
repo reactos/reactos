@@ -33,6 +33,11 @@ Author:
 #define IPI_SYNCH_REQUEST       10
 #define MAXIMUM_VECTOR          0x100
 
+#define KSEG0_BASE 0x80000000
+
+#define PRCB_MAJOR_VERSION 1
+#define PRCB_BUILD_DEBUG 1
+
 #ifndef ROUND_UP
 #define ROUND_UP(x,y) (((x) + ((y)-1)) & ~((y)-1))
 #endif
@@ -70,6 +75,12 @@ typedef struct _LDT_ENTRY {
         } Bits;
     } HighWord;
 } LDT_ENTRY;
+
+#ifndef CONFIG_SMP
+#define SYNCH_LEVEL DISPATCH_LEVEL
+#else
+#define SYNCH_LEVEL (IPI_LEVEL - 1)
+#endif
 
 //
 // Trap Frame Definition
@@ -169,25 +180,6 @@ typedef struct _KIDTENTRY
     USHORT Access;
     USHORT ExtendedOffset;
 } KIDTENTRY, *PKIDTENTRY;
-
-//
-// Page Table Entry Definition
-//
-typedef struct _HARDWARE_PTE_PPC
-{
-    ULONG Dirty:2;
-    ULONG Valid:1;
-    ULONG GuardedStorage:1;
-    ULONG MemoryCoherence:1;
-    ULONG CacheDisable:1;
-    ULONG WriteThrough:1;
-    ULONG Change:1;
-    ULONG Reference:1;
-    ULONG Write:1;
-    ULONG CopyOnWrite:1;
-    ULONG rsvd1:1;
-    ULONG PageFrameNumber:20;
-} HARDWARE_PTE_PPC, *PHARDWARE_PTE_PPC;
 
 typedef struct _DESCRIPTOR
 {
@@ -522,7 +514,7 @@ typedef struct _KIPCR
     ULONG SecondLevelDcacheFillSize;
     ULONG SecondLevelIcacheSize;
     ULONG SecondLevelIcacheFillSize;
-    struct _KPRCB *Prcb;
+    struct _KPRCB PrcbData;
     PVOID Teb;
     ULONG DcacheAlignment;
     ULONG DcacheFillSize;
@@ -646,6 +638,11 @@ typedef struct _KEXCEPTION_FRAME
     DOUBLE Fpr31;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
-#define KeGetPreviousMode       ExGetPreviousMode
+FORCEINLINE
+struct _KPRCB *
+KeGetCurrentPrcb(VOID)
+{
+    return (struct _KPRCB *)(ULONG_PTR)__readfsdword(FIELD_OFFSET(KPCR, Prcb));
+}
 
 #endif

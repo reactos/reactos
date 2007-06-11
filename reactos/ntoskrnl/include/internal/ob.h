@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _OB_DEBUG_                                      0x00
+#define _OB_DEBUG_                                      0x01
 
 //
 // These define the Debug Masks Supported
@@ -44,6 +44,16 @@
      GENERIC_ALL)
 
 //
+// Handle Bit Flags
+//
+#define OBJ_PROTECT_CLOSE                               0x01
+//#define OBJ_INHERIT                                   0x02
+#define OBJ_AUDIT_OBJECT_CLOSE                          0x04
+#define OBJ_HANDLE_ATTRIBUTES                           (OBJ_PROTECT_CLOSE |\
+                                                         OBJ_INHERIT |      \
+                                                         OBJ_AUDIT_OBJECT_CLOSE)
+
+//
 // Identifies a Kernel Handle
 //
 #define KERNEL_HANDLE_FLAG                              \
@@ -67,6 +77,12 @@
     ((PHANDLE_TABLE)HandleTable)->HandleCount
 
 //
+// Converts from an EXHANDLE object to a POBJECT_HEADER
+//
+#define ObpGetHandleObject(x)                           \
+    ((POBJECT_HEADER)((ULONG_PTR)x->Object & ~OBJ_HANDLE_ATTRIBUTES))
+
+//
 // Context Structures for Ex*Handle Callbacks
 //
 typedef struct _OBP_SET_HANDLE_ATTRIBUTES_CONTEXT
@@ -79,6 +95,33 @@ typedef struct _OBP_CLOSE_HANDLE_CONTEXT
     PHANDLE_TABLE HandleTable;
     KPROCESSOR_MODE AccessMode;
 } OBP_CLOSE_HANDLE_CONTEXT, *POBP_CLOSE_HANDLE_CONTEXT;
+typedef struct _OBP_FIND_HANDLE_DATA
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    POBJECT_HANDLE_INFORMATION HandleInformation;
+} OBP_FIND_HANDLE_DATA, *POBP_FIND_HANDLE_DATA;
+
+//
+// Structure for quick-compare of a DOS Device path
+//
+typedef union
+{
+    WCHAR Name[sizeof(ULARGE_INTEGER) / sizeof(WCHAR)];
+    ULARGE_INTEGER Alignment;
+} ALIGNEDNAME;
+
+//
+// Private Temporary Buffer for Lookup Routines
+//
+#define TAG_OB_TEMP_STORAGE TAG('O', 'b', 'S', 't')
+typedef struct _OB_TEMP_BUFFER
+{
+    ACCESS_STATE LocalAccessState;
+    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    OBP_LOOKUP_CONTEXT LookupContext;
+    AUX_DATA AuxData;
+} OB_TEMP_BUFFER, *POB_TEMP_BUFFER;
 
 //
 // Directory Namespace Functions
@@ -112,8 +155,8 @@ ObpLookupEntryDirectory(
 //
 VOID
 NTAPI
-ObInitSymbolicLinkImplementation(
-    VOID
+ObpDeleteSymbolicLink(
+    IN PVOID ObjectBody
 );
 
 NTSTATUS
@@ -131,6 +174,18 @@ ObpParseSymbolicLink(
     OUT PVOID *NextObject
 );
 
+VOID
+NTAPI
+ObpCreateSymbolicLinkName(
+    IN POBJECT_SYMBOLIC_LINK SymbolicLink
+);
+
+VOID
+NTAPI
+ObpDeleteSymbolicLinkName(
+    IN POBJECT_SYMBOLIC_LINK SymbolicLink
+);
+
 //
 // Process/Handle Table Init/Rundown
 //
@@ -138,6 +193,18 @@ NTSTATUS
 NTAPI
 ObpCreateHandleTable(
     IN PEPROCESS Parent,
+    IN PEPROCESS Process
+);
+
+PHANDLE_TABLE
+NTAPI
+ObReferenceProcessHandleTable(
+    IN PEPROCESS Process
+);
+
+VOID
+NTAPI
+ObDereferenceProcessHandleTable(
     IN PEPROCESS Process
 );
 
@@ -152,18 +219,18 @@ ObKillProcess(
 //
 NTSTATUS
 NTAPI
-ObFindObject(
+ObpLookupObjectName(
     IN HANDLE RootHandle,
     IN PUNICODE_STRING ObjectName,
     IN ULONG Attributes,
-    IN KPROCESSOR_MODE PreviousMode,
-    IN PVOID *ReturnedObject,
     IN POBJECT_TYPE ObjectType,
-    IN POBP_LOOKUP_CONTEXT Context,
-    IN PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN OUT PVOID ParseContext,
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    IN PVOID ParseContext,
-    IN PVOID Insert
+    IN PVOID InsertObject,
+    IN PACCESS_STATE AccessState,
+    IN POBP_LOOKUP_CONTEXT LookupContext,
+    OUT PVOID *FoundObject
 );
 
 //
@@ -172,9 +239,8 @@ ObFindObject(
 BOOLEAN
 NTAPI
 ObpSetHandleAttributes(
-    IN PHANDLE_TABLE HandleTable,
     IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
-    IN PVOID Context
+    IN ULONG_PTR Context
 );
 
 VOID
@@ -188,23 +254,24 @@ ObQueryDeviceMapInformation(
 // Object Lifetime Functions
 //
 VOID
-FASTCALL
+NTAPI
 ObpDeleteObject(
-    IN PVOID Object
+    IN PVOID Object,
+    IN BOOLEAN CalledFromWorkerThread
 );
 
 LONG
 FASTCALL
 ObDereferenceObjectEx(
     IN PVOID Object,
-    IN ULONG Count
+    IN LONG Count
 );
 
 LONG
 FASTCALL
 ObReferenceObjectEx(
     IN PVOID Object,
-    IN ULONG Count
+    IN LONG Count
 );
 
 BOOLEAN
@@ -217,17 +284,6 @@ VOID
 NTAPI
 ObpReapObject(
     IN PVOID Unused
-);
-
-VOID
-NTAPI
-ObDereferenceDeviceMap(IN PEPROCESS Process);
-
-VOID
-NTAPI
-ObInheritDeviceMap(
-    IN PEPROCESS Parent,
-    IN PEPROCESS Process
 );
 
 VOID
@@ -245,10 +301,66 @@ ObpDeleteNameCheck(
 
 VOID
 NTAPI
-ObClearProcessHandleTable(IN PEPROCESS Process);
+ObClearProcessHandleTable(
+    IN PEPROCESS Process
+);
 
-/* Security descriptor cache functions */
+NTSTATUS
+NTAPI
+ObDuplicateObject(
+    IN PEPROCESS SourceProcess,
+    IN HANDLE SourceHandle,
+    IN PEPROCESS TargetProcess OPTIONAL,
+    IN PHANDLE TargetHandle OPTIONAL,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG HandleAttributes,
+    IN ULONG Options,
+    IN KPROCESSOR_MODE PreviousMode
+);
 
+VOID
+NTAPI
+ObFreeObjectCreateInfoBuffer(
+    IN POBJECT_CREATE_INFORMATION ObjectCreateInfo
+);
+
+VOID
+NTAPI
+ObpFreeObjectNameBuffer(
+    IN PUNICODE_STRING Name
+);
+
+//
+// DOS Devices Functions
+//
+VOID
+NTAPI
+ObDereferenceDeviceMap(
+    IN PEPROCESS Process
+);
+
+VOID
+FASTCALL
+ObfDereferenceDeviceMap(
+    IN PVOID DeviceMap
+);
+
+VOID
+NTAPI
+ObInheritDeviceMap(
+    IN PEPROCESS Parent,
+    IN PEPROCESS Process
+);
+
+NTSTATUS
+NTAPI
+ObpCreateDosDevicesDirectory(
+    VOID
+);
+
+//
+// Security descriptor cache functions
+//
 NTSTATUS
 NTAPI
 ObpInitSdCache(
@@ -280,14 +392,50 @@ ObpDereferenceCachedSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+//
+// Object Security Routines
+//
 BOOLEAN
 NTAPI
 ObCheckObjectAccess(
     IN PVOID Object,
     IN OUT PACCESS_STATE AccessState,
-    IN BOOLEAN Unknown,
+    IN BOOLEAN LockHeld,
     IN KPROCESSOR_MODE AccessMode,
     OUT PNTSTATUS ReturnedStatus
+);
+
+BOOLEAN
+NTAPI
+ObCheckCreateObjectAccess(
+    IN PVOID Object,
+    IN ACCESS_MASK CreateAccess,
+    IN PACCESS_STATE AccessState,
+    IN PUNICODE_STRING ComponentName,
+    IN BOOLEAN LockHeld,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS AccessStatus
+);
+
+BOOLEAN
+NTAPI
+ObpCheckTraverseAccess(
+    IN PVOID Object,
+    IN ACCESS_MASK TraverseAccess,
+    IN PACCESS_STATE AccessState OPTIONAL,
+    IN BOOLEAN LockHeld,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS AccessStatus
+);
+
+BOOLEAN
+NTAPI
+ObpCheckObjectReference(
+    IN PVOID Object,
+    IN OUT PACCESS_STATE AccessState,
+    IN BOOLEAN LockHeld,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS AccessStatus
 );
 
 //
@@ -355,14 +503,17 @@ extern ULONG ObpTraceLevel;
 extern KEVENT ObpDefaultObject;
 extern POBJECT_TYPE ObpTypeObjectType;
 extern POBJECT_TYPE ObSymbolicLinkType;
-extern POBJECT_TYPE ObTypeObjectType;
-extern POBJECT_DIRECTORY NameSpaceRoot;
+extern POBJECT_TYPE ObpTypeObjectType;
+extern POBJECT_DIRECTORY ObpRootDirectoryObject;
 extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
 extern PHANDLE_TABLE ObpKernelHandleTable;
 extern WORK_QUEUE_ITEM ObpReaperWorkItem;
 extern volatile PVOID ObpReaperList;
 extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
 extern BOOLEAN IoCountOperations;
+extern ALIGNEDNAME ObpDosDevicesShortNamePrefix;
+extern ALIGNEDNAME ObpDosDevicesShortNameRoot;
+extern UNICODE_STRING ObpDosDevicesShortName;
 
 //
 // Inlined Functions

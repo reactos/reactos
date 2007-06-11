@@ -28,7 +28,7 @@ IopUnlockFileObject(IN PFILE_OBJECT FileObject)
 }
 
 VOID
-static __inline
+FORCEINLINE
 IopQueueIrpToThread(IN PIRP Irp)
 {
     KIRQL OldIrql;

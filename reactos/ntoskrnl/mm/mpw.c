@@ -123,3 +123,26 @@ MmInitMpwThread(VOID)
 
    return(STATUS_SUCCESS);
 }
+
+NTSTATUS
+NTAPI
+MmInitBsmThread(VOID)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE ThreadHandle;
+
+    /* Create the thread */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    Status = PsCreateSystemThread(&ThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  &ObjectAttributes,
+                                  NULL,
+                                  NULL,
+                                  KeBalanceSetManager,
+                                  NULL);
+
+    /* Close the handle and return status */
+    ZwClose(ThreadHandle);
+    return Status;
+}

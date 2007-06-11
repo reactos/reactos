@@ -1,0 +1,576 @@
+/* This file is generated with wmc version 0.3.0. Do not edit! */
+/* Source : ntoskrnl/ntoskrnl.mc */
+/* Cmdline: wmc -i -H include/reactos/bugcodes.h -o ntoskrnl/bugcodes.rc ntoskrnl/ntoskrnl.mc */
+/* Date   : Wed May 23 04:08:35 2007 */
+
+
+1 MESSAGETABLE
+LANGUAGE 0x9, 0x1
+{
+ /* NBlocks    */ 0x0000001bL,
+ /* Lo,Hi,Offs */ 0x00000000L, 0x00000039L, 0x00000148L,
+ /* Lo,Hi,Offs */ 0x0000003eL, 0x00000042L, 0x00000c74L,
+ /* Lo,Hi,Offs */ 0x00000044L, 0x00000045L, 0x00000e04L,
+ /* Lo,Hi,Offs */ 0x00000048L, 0x00000059L, 0x00000e4cL,
+ /* Lo,Hi,Offs */ 0x0000005cL, 0x0000007bL, 0x00001060L,
+ /* Lo,Hi,Offs */ 0x0000007dL, 0x00000080L, 0x00001588L,
+ /* Lo,Hi,Offs */ 0x0000008eL, 0x0000008eL, 0x000017acL,
+ /* Lo,Hi,Offs */ 0x00000094L, 0x00000094L, 0x000017c8L,
+ /* Lo,Hi,Offs */ 0x00000096L, 0x00000096L, 0x000017ecL,
+ /* Lo,Hi,Offs */ 0x000000a5L, 0x000000a5L, 0x0000180cL,
+ /* Lo,Hi,Offs */ 0x000000beL, 0x000000beL, 0x00001880L,
+ /* Lo,Hi,Offs */ 0x000000c3L, 0x000000c3L, 0x00001918L,
+ /* Lo,Hi,Offs */ 0x000000c5L, 0x000000c5L, 0x00001a84L,
+ /* Lo,Hi,Offs */ 0x000000c8L, 0x000000c8L, 0x00001d04L,
+ /* Lo,Hi,Offs */ 0x000000cbL, 0x000000cbL, 0x00001df4L,
+ /* Lo,Hi,Offs */ 0x000000ceL, 0x000000ceL, 0x00001e20L,
+ /* Lo,Hi,Offs */ 0x000000d0L, 0x000000d1L, 0x00001e5cL,
+ /* Lo,Hi,Offs */ 0x000000d3L, 0x000000d4L, 0x00001ea0L,
+ /* Lo,Hi,Offs */ 0x000000d8L, 0x000000d8L, 0x00001f08L,
+ /* Lo,Hi,Offs */ 0x000000e0L, 0x000000e5L, 0x00001f28L,
+ /* Lo,Hi,Offs */ 0x000000e9L, 0x000000eaL, 0x0000217cL,
+ /* Lo,Hi,Offs */ 0x000000efL, 0x000000efL, 0x0000229cL,
+ /* Lo,Hi,Offs */ 0x000000f4L, 0x000000f4L, 0x000022b8L,
+ /* Lo,Hi,Offs */ 0x000000faL, 0x000000faL, 0x000022dcL,
+ /* Lo,Hi,Offs */ 0x000000fcL, 0x000000fcL, 0x00002300L,
+ /* Lo,Hi,Offs */ 0x4000009aL, 0x4000009fL, 0x0000232cL,
+ /* Lo,Hi,Offs */ 0x8000007fL, 0x80000083L, 0x000024b8L,
+
+ /* Msg 0x00000000 */ 0x0048, 0x0000,
+ "The bug code is undefined. Please use an existing code instead.\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000001 */ 0x0018, 0x0000,
+ "APC_INDEX_MISMATCH\n\x00",
+
+ /* Msg 0x00000002 */ 0x001c, 0x0000,
+ "DEVICE_QUEUE_NOT_BUSY\n\x00\x00",
+
+ /* Msg 0x00000003 */ 0x001c, 0x0000,
+ "INVALID_AFFINITY_SET\n\x00\x00\x00",
+
+ /* Msg 0x00000004 */ 0x0020, 0x0000,
+ "INVALID_DATA_ACCESS_TRAP\n\x00\x00\x00",
+
+ /* Msg 0x00000005 */ 0x0024, 0x0000,
+ "INVALID_PROCESS_ATTACH_ATTEMPT\n\x00",
+
+ /* Msg 0x00000006 */ 0x0024, 0x0000,
+ "INVALID_PROCESS_DETACH_ATTEMPT\n\x00",
+
+ /* Msg 0x00000007 */ 0x0020, 0x0000,
+ "INVALID_SOFTWARE_INTERRUPT\n\x00",
+
+ /* Msg 0x00000008 */ 0x0020, 0x0000,
+ "IRQL_NOT_DISPATCH_LEVEL\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000009 */ 0x0020, 0x0000,
+ "IRQL_NOT_GREATER_OR_EQUAL\n\x00\x00",
+
+ /* Msg 0x0000000a */ 0x001c, 0x0000,
+ "IRQL_NOT_LESS_OR_EQUAL\n\x00",
+
+ /* Msg 0x0000000b */ 0x0024, 0x0000,
+ "NO_EXCEPTION_HANDLING_SUPPORT\n\x00\x00",
+
+ /* Msg 0x0000000c */ 0x0024, 0x0000,
+ "MAXIMUM_WAIT_OBJECTS_EXCEEDED\n\x00\x00",
+
+ /* Msg 0x0000000d */ 0x0024, 0x0000,
+ "MUTEX_LEVEL_NUMBER_VIOLATION\n\x00\x00\x00",
+
+ /* Msg 0x0000000e */ 0x001c, 0x0000,
+ "NO_USER_MODE_CONTEXT\n\x00\x00\x00",
+
+ /* Msg 0x0000000f */ 0x0020, 0x0000,
+ "SPIN_LOCK_ALREADY_OWNED\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000010 */ 0x001c, 0x0000,
+ "SPIN_LOCK_NOT_OWNED\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000011 */ 0x001c, 0x0000,
+ "THREAD_NOT_MUTEX_OWNER\n\x00",
+
+ /* Msg 0x00000012 */ 0x0018, 0x0000,
+ "TRAP_CAUSE_UNKNOWN\n\x00",
+
+ /* Msg 0x00000013 */ 0x0020, 0x0000,
+ "EMPTY_THREAD_REAPER_LIST\n\x00\x00\x00",
+
+ /* Msg 0x00000014 */ 0x0050, 0x0000,
+ "The thread reaper was handed a thread to reap, but the thread's process'",
+ "\n\x00\x00\x00",
+
+ /* Msg 0x00000015 */ 0x0024, 0x0000,
+ "LAST_CHANCE_CALLED_FROM_KMODE\n\x00\x00",
+
+ /* Msg 0x00000016 */ 0x001c, 0x0000,
+ "CID_HANDLE_CREATION\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000017 */ 0x001c, 0x0000,
+ "CID_HANDLE_DELETION\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000018 */ 0x001c, 0x0000,
+ "REFERENCE_BY_POINTER\n\x00\x00\x00",
+
+ /* Msg 0x00000019 */ 0x0018, 0x0000,
+ "BAD_POOL_HEADER\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000001a */ 0x0018, 0x0000,
+ "MEMORY_MANAGEMENT\n\x00\x00",
+
+ /* Msg 0x0000001b */ 0x0018, 0x0000,
+ "PFN_SHARE_COUNT\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000001c */ 0x001c, 0x0000,
+ "PFN_REFERENCE_COUNT\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000001d */ 0x001c, 0x0000,
+ "NO_SPINLOCK_AVAILABLE\n\x00\x00",
+
+ /* Msg 0x0000001e */ 0x01d4, 0x0000,
+ "Check to be sure you have adequate disk space. If a driver is\nidentifie",
+ "d in the Stop message, disable the driver or check\nwith the manufacture",
+ "r for driver updates. Try changing video\nadapters.\n\nCheck with your h",
+ "ardware vendor for any BIOS updates. Disable\nBIOS memory options such a",
+ "s caching or shadowing. If you need\nto use Safe Mode to remove or disab",
+ "le components, restart your\ncomputer, press F8 to select Advanced Start",
+ "up Options, and then\nselect Safe Mode.\n\x00",
+
+ /* Msg 0x0000001f */ 0x0020, 0x0000,
+ "SHARED_RESOURCE_CONV_ERROR\n\x00",
+
+ /* Msg 0x00000020 */ 0x0024, 0x0000,
+ "KERNEL_APC_PENDING_DURING_EXIT\n\x00",
+
+ /* Msg 0x00000021 */ 0x0018, 0x0000,
+ "QUOTA_UNDERFLOW\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000022 */ 0x0014, 0x0000,
+ "FILE_SYSTEM\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000023 */ 0x00f0, 0x0000,
+ "Disable or uninstall any anti-virus, disk defragmentation\nor backup uti",
+ "lities. Check your hard drive configuration,\nand check for any updated ",
+ "drivers. Run CHKDSK /F to check\nfor hard drive corruption, and then res",
+ "tart your computer.\n\x00\x00\x00",
+
+ /* Msg 0x00000024 */ 0x0018, 0x0000,
+ "NTFS_FILE_SYSTEM\n\x00\x00\x00",
+
+ /* Msg 0x00000025 */ 0x0018, 0x0000,
+ "NPFS_FILE_SYSTEM\n\x00\x00\x00",
+
+ /* Msg 0x00000026 */ 0x0018, 0x0000,
+ "CDFS_FILE_SYSTEM\n\x00\x00\x00",
+
+ /* Msg 0x00000027 */ 0x0018, 0x0000,
+ "RDR_FILE_SYSTEM\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000028 */ 0x001c, 0x0000,
+ "CORRUPT_ACCESS_TOKEN\n\x00\x00\x00",
+
+ /* Msg 0x00000029 */ 0x0018, 0x0000,
+ "SECURITY_SYSTEM\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000002a */ 0x0018, 0x0000,
+ "INCONSISTENT_IRP\n\x00\x00\x00",
+
+ /* Msg 0x0000002b */ 0x0018, 0x0000,
+ "PANIC_STACK_SWITCH\n\x00",
+
+ /* Msg 0x0000002c */ 0x001c, 0x0000,
+ "PORT_DRIVER_INTERNAL\n\x00\x00\x00",
+
+ /* Msg 0x0000002d */ 0x0020, 0x0000,
+ "SCSI_DISK_DRIVER_INTERNAL\n\x00\x00",
+
+ /* Msg 0x0000002e */ 0x01c0, 0x0000,
+ "Run system diagnostics supplied by your hardware manufacturer.\nIn parti",
+ "cular, run a memory check, and check for faulty or\nmismatched memory. T",
+ "ry changing video adapters.\n\nCheck with your hardware vendor for any B",
+ "IOS updates. Disable\nBIOS memory options such as caching or shadowing. ",
+ "If you need\nto use Safe Mode to remove or disable components, restart y",
+ "our\ncomputer, press F8 to select Advanced Startup Options, and then\nse",
+ "lect Safe Mode.\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000002f */ 0x001c, 0x0000,
+ "INSTRUCTION_BUS_ERROR\n\x00\x00",
+
+ /* Msg 0x00000030 */ 0x001c, 0x0000,
+ "SET_OF_INVALID_CONTEXT\n\x00",
+
+ /* Msg 0x00000031 */ 0x0024, 0x0000,
+ "PHASE0_INITIALIZATION_FAILED\n\x00\x00\x00",
+
+ /* Msg 0x00000032 */ 0x0024, 0x0000,
+ "PHASE1_INITIALIZATION_FAILED\n\x00\x00\x00",
+
+ /* Msg 0x00000033 */ 0x0024, 0x0000,
+ "UNEXPECTED_INITIALIZATION_CALL\n\x00",
+
+ /* Msg 0x00000034 */ 0x0014, 0x0000,
+ "CACHE_MANAGER\n\x00\x00",
+
+ /* Msg 0x00000035 */ 0x0024, 0x0000,
+ "NO_MORE_IRP_STACK_LOCATIONS\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000036 */ 0x0028, 0x0000,
+ "DEVICE_REFERENCE_COUNT_NOT_ZERO\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000037 */ 0x001c, 0x0000,
+ "FLOPPY_INTERNAL_ERROR\n\x00\x00",
+
+ /* Msg 0x00000038 */ 0x001c, 0x0000,
+ "SERIAL_DRIVER_INTERNAL\n\x00",
+
+ /* Msg 0x00000039 */ 0x0020, 0x0000,
+ "SYSTEM_EXIT_OWNED_MUTEX\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000003e */ 0x0030, 0x0000,
+ "MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED\n\x00",
+
+ /* Msg 0x0000003f */ 0x0108, 0x0000,
+ "Remove any recently installed software including backup\nutilities or di",
+ "sk-intensive applications.\n\nIf you need to use Safe Mode to remove or ",
+ "disable components,\nrestart your computer, press F8 to select Advanced ",
+ "Startup\nOptions, and then select Safe Mode.\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000040 */ 0x001c, 0x0000,
+ "TARGET_MDL_TOO_SMALL\n\x00\x00\x00",
+
+ /* Msg 0x00000041 */ 0x0020, 0x0000,
+ "MUST_SUCCEED_POOL_EMPTY\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000042 */ 0x001c, 0x0000,
+ "ATDISK_DRIVER_INTERNAL\n\x00",
+
+ /* Msg 0x00000044 */ 0x0024, 0x0000,
+ "MULTIPLE_IRP_COMPLETE_REQUESTS\n\x00",
+
+ /* Msg 0x00000045 */ 0x0024, 0x0000,
+ "INSUFFICIENT_SYSTEM_MAP_REGS\n\x00\x00\x00",
+
+ /* Msg 0x00000048 */ 0x0024, 0x0000,
+ "CANCEL_STATE_IN_COMPLETED_IRP\n\x00\x00",
+
+ /* Msg 0x00000049 */ 0x0024, 0x0000,
+ "PAGE_FAULT_WITH_INTERRUPTS_OFF\n\x00",
+
+ /* Msg 0x0000004a */ 0x0024, 0x0000,
+ "IRQL_GT_ZERO_AT_SYSTEM_SERVICE\n\x00",
+
+ /* Msg 0x0000004b */ 0x001c, 0x0000,
+ "STREAMS_INTERNAL_ERROR\n\x00",
+
+ /* Msg 0x0000004c */ 0x0020, 0x0000,
+ "FATAL_UNHANDLED_HARD_ERROR\n\x00",
+
+ /* Msg 0x0000004d */ 0x0018, 0x0000,
+ "NO_PAGES_AVAILABLE\n\x00",
+
+ /* Msg 0x0000004e */ 0x0018, 0x0000,
+ "PFN_LIST_CORRUPT\n\x00\x00\x00",
+
+ /* Msg 0x0000004f */ 0x001c, 0x0000,
+ "NDIS_INTERNAL_ERROR\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000050 */ 0x0024, 0x0000,
+ "PAGE_FAULT_IN_NONPAGED_AREA\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000051 */ 0x0014, 0x0000,
+ "REGISTRY_ERROR\n\x00",
+
+ /* Msg 0x00000052 */ 0x001c, 0x0000,
+ "MAILSLOT_FILE_SYSTEM\n\x00\x00\x00",
+
+ /* Msg 0x00000053 */ 0x0014, 0x0000,
+ "NO_BOOT_DEVICE\n\x00",
+
+ /* Msg 0x00000054 */ 0x0020, 0x0000,
+ "LM_SERVER_INTERNAL_ERROR\n\x00\x00\x00",
+
+ /* Msg 0x00000055 */ 0x0020, 0x0000,
+ "DATA_COHERENCY_EXCEPTION\n\x00\x00\x00",
+
+ /* Msg 0x00000056 */ 0x0028, 0x0000,
+ "INSTRUCTION_COHERENCY_EXCEPTION\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000057 */ 0x0018, 0x0000,
+ "XNS_INTERNAL_ERROR\n\x00",
+
+ /* Msg 0x00000058 */ 0x001c, 0x0000,
+ "FTDISK_INTERNAL_ERROR\n\x00\x00",
+
+ /* Msg 0x00000059 */ 0x001c, 0x0000,
+ "PINBALL_FILE_SYSTEM\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000005c */ 0x0020, 0x0000,
+ "HAL_INITIALIZATION_FAILED\n\x00\x00",
+
+ /* Msg 0x0000005d */ 0x0020, 0x0000,
+ "HEAP_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x0000005e */ 0x0024, 0x0000,
+ "OBJECT_INITIALIZATION_FAILED\n\x00\x00\x00",
+
+ /* Msg 0x0000005f */ 0x0024, 0x0000,
+ "SECURITY_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x00000060 */ 0x0024, 0x0000,
+ "PROCESS_INITIALIZATION_FAILED\n\x00\x00",
+
+ /* Msg 0x00000061 */ 0x0020, 0x0000,
+ "HAL1_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x00000062 */ 0x0024, 0x0000,
+ "OBJECT1_INITIALIZATION_FAILED\n\x00\x00",
+
+ /* Msg 0x00000063 */ 0x0028, 0x0000,
+ "SECURITY1_INITIALIZATION_FAILED\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000064 */ 0x0024, 0x0000,
+ "SYMBOLIC_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x00000065 */ 0x0024, 0x0000,
+ "MEMORY1_INITIALIZATION_FAILED\n\x00\x00",
+
+ /* Msg 0x00000066 */ 0x0024, 0x0000,
+ "CACHE_INITIALIZATION_FAILED\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000067 */ 0x0024, 0x0000,
+ "CONFIG_INITIALIZATION_FAILED\n\x00\x00\x00",
+
+ /* Msg 0x00000068 */ 0x0020, 0x0000,
+ "FILE_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x00000069 */ 0x0020, 0x0000,
+ "IO1_INITIALIZATION_FAILED\n\x00\x00",
+
+ /* Msg 0x0000006a */ 0x0020, 0x0000,
+ "LPC_INITIALIZATION_FAILED\n\x00\x00",
+
+ /* Msg 0x0000006b */ 0x0024, 0x0000,
+ "PROCESS1_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x0000006c */ 0x0024, 0x0000,
+ "REFMON_INITIALIZATION_FAILED\n\x00\x00\x00",
+
+ /* Msg 0x0000006d */ 0x0024, 0x0000,
+ "SESSION1_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x0000006e */ 0x0024, 0x0000,
+ "SESSION2_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x0000006f */ 0x0024, 0x0000,
+ "SESSION3_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x00000070 */ 0x0024, 0x0000,
+ "SESSION4_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x00000071 */ 0x0024, 0x0000,
+ "SESSION5_INITIALIZATION_FAILED\n\x00",
+
+ /* Msg 0x00000072 */ 0x0024, 0x0000,
+ "ASSIGN_DRIVE_LETTERS_FAILED\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000073 */ 0x0018, 0x0000,
+ "CONFIG_LIST_FAILED\n\x00",
+
+ /* Msg 0x00000074 */ 0x001c, 0x0000,
+ "BAD_SYSTEM_CONFIG_INFO\n\x00",
+
+ /* Msg 0x00000075 */ 0x0020, 0x0000,
+ "CANNOT_WRITE_CONFIGURATION\n\x00",
+
+ /* Msg 0x00000076 */ 0x0020, 0x0000,
+ "PROCESS_HAS_LOCKED_PAGES\n\x00\x00\x00",
+
+ /* Msg 0x00000077 */ 0x0020, 0x0000,
+ "KERNEL_STACK_INPAGE_ERROR\n\x00\x00",
+
+ /* Msg 0x00000078 */ 0x0018, 0x0000,
+ "PHASE0_EXCEPTION\n\x00\x00\x00",
+
+ /* Msg 0x00000079 */ 0x0028, 0x0000,
+ "Mismatched Kernel and HAL image\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000007a */ 0x0020, 0x0000,
+ "KERNEL_DATA_INPAGE_ERROR\n\x00\x00\x00",
+
+ /* Msg 0x0000007b */ 0x010c, 0x0000,
+ "Check for viruses on your computer. Remove any newly installed\nhard dri",
+ "ves or hard drive controllers. Check your hard drive\nto make sure it is",
+ " properly configured and terminated.\nRun CHKDSK /F to check for hard dr",
+ "ive corruption, and then\nrestart your computer.\n\x00\x00\x00",
+
+ /* Msg 0x0000007d */ 0x001c, 0x0000,
+ "INSTALL_MORE_MEMORY\n\x00\x00\x00\x00",
+
+ /* Msg 0x0000007e */ 0x01c4, 0x0000,
+ "Run a system diagnostic utility supplied by your hardware manufacturer.\n",
+ "In particular, run a memory check, and check for faulty or mismatched\nm",
+ "emory. Try changing video adapters.\n \nDisable or remove any newly inst",
+ "alled hardware and drivers. Disable or\nremove any newly installed softw",
+ "are. If you need to use Safe Mode to\nremove or disable components, rest",
+ "art your computer, press F8 to select\nAdvanced Startup Options, and the",
+ "n select Safe Mode.\n\x00\x00",
+
+ /* Msg 0x0000007f */ 0x001c, 0x0000,
+ "Hardware malfunction\n\x00\x00\x00",
+
+ /* Msg 0x00000080 */ 0x0028, 0x0000,
+ "KERNEL_MODE_EXCEPTION_NOT_HANDLED\n\x00\x00",
+
+ /* Msg 0x0000008e */ 0x001c, 0x0000,
+ "SPIN_LOCK_INIT_FAILURE\n\x00",
+
+ /* Msg 0x00000094 */ 0x0024, 0x0000,
+ "KERNEL_STACK_LOCKED_AT_EXIT\n\x00\x00\x00\x00",
+
+ /* Msg 0x00000096 */ 0x0020, 0x0000,
+ "INVALID_WORK_QUEUE_ITEM\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000a5 */ 0x0074, 0x0000,
+ "The BIOS in this system is not fully ACPI compliant.  Please contact you",
+ "r\nsystem vendor for an updated BIOS.\n\x00\x00\x00",
+
+ /* Msg 0x000000be */ 0x0098, 0x0000,
+ "ATTEMPTED_WRITE_TO_READONLY_MEMORY\n\nMessageId=0xC2\nSeverity=Success\n",
+ "Facility=System\nSymbolicName=BAD_POOL_CALLER\nLanguage=English\nBAD_POO",
+ "L_CALLER\n\x00\x00",
+
+ /* Msg 0x000000c3 */ 0x016c, 0x0000,
+ "A system file that is owned by ReactOS was replaced by an application\nr",
+ "unning on your system.  The operating system detected this and tried to\n",
+ "verify the validity of the file's signature.  The operating system found",
+ " that\nthe file signature is not valid and put the original, correct fil",
+ "e back\nso that your operating system will continue to function properly",
+ ".\n\x00",
+
+ /* Msg 0x000000c5 */ 0x0280, 0x0000,
+ "A device driver has pool.\n \nCheck to make sure any new hardware or sof",
+ "tware is properly installed.\nIf this is a new installation, ask your ha",
+ "rdware or software manufacturer\nfor any ReactOS updates you might need.",
+ "\n\nRun the driver verifier against any new (or suspect) drivers.\nIf th",
+ "at doesn't reveal the corrupting driver, try enabling special pool.\nBot",
+ "h of these features are intended to catch the corruption at an earlier\n",
+ "point where the offending driver can be identified.\n\nIf you need to us",
+ "e Safe Mode to remove or disable components,\nrestart your computer, pre",
+ "ss F8 to select Advanced Startup Options,\nand then select Safe Mode.\n\x00\x00\x00",
+
+ /* Msg 0x000000c8 */ 0x00f0, 0x0000,
+ "The processor's IRQL is not valid for the currently executing context.\n",
+ "This is a software error condition and is usually caused by a device\ndr",
+ "iver changing IRQL and not restoring it to its previous value when\nit h",
+ "as finished its task.\n\x00",
+
+ /* Msg 0x000000cb */ 0x002c, 0x0000,
+ "DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000ce */ 0x003c, 0x0000,
+ "DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS\n\x00\x00",
+
+ /* Msg 0x000000d0 */ 0x0020, 0x0000,
+ "DRIVER_CORRUPTED_MMPOOL\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000d1 */ 0x0024, 0x0000,
+ "DRIVER_IRQL_NOT_LESS_OR_EQUAL\n\x00\x00",
+
+ /* Msg 0x000000d3 */ 0x0028, 0x0000,
+ "DRIVER_PORTION_MUST_BE_NONPAGED\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000d4 */ 0x0040, 0x0000,
+ "SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD\n\x00\x00\x00",
+
+ /* Msg 0x000000d8 */ 0x0020, 0x0000,
+ "DRIVER_USED_EXCESSIVE_PTES\n\x00",
+
+ /* Msg 0x000000e0 */ 0x01c4, 0x0000,
+ "\nYour computer (BIOS) has reported that a component in your system is f",
+ "aulty and\nhas prevented ReactOS from operating.  You can determine whic",
+ "h component is\nfaulty by running the diagnostic disk or tool that came ",
+ "with your computer.\n\nIf you do not have this tool, you must contact yo",
+ "ur system vendor and report\nthis error message to them.  They will be a",
+ "ble to assist you in correcting this\nhardware problem thereby allowing ",
+ "ReactOS to operate.\n\x00\x00\x00",
+
+ /* Msg 0x000000e1 */ 0x0028, 0x0000,
+ "WORKER_THREAD_RETURNED_AT_BAD_IRQL\n\x00",
+
+ /* Msg 0x000000e2 */ 0x0020, 0x0000,
+ "MANUALLY_INITIATED_CRASH\n\x00\x00\x00",
+
+ /* Msg 0x000000e3 */ 0x0018, 0x0000,
+ "RESOURCE_NOT_OWNED\n\x00",
+
+ /* Msg 0x000000e4 */ 0x0014, 0x0000,
+ "WORKER_INVALID\n\x00",
+
+ /* Msg 0x000000e5 */ 0x001c, 0x0000,
+ "POWER_FAILURE_SIMULATE\n\x00",
+
+ /* Msg 0x000000e9 */ 0x002c, 0x0000,
+ "ACTIVE_EX_WORKER_THREAD_TERMINATION\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000ea */ 0x00f4, 0x0000,
+ "\nThe device driver got stuck in an infinite loop. This usually indicate",
+ "s\nproblem with the device itself or with the device driver programming ",
+ "the\nhardware incorrectly.\n\nPlease check with your hardware device ven",
+ "dor for any driver updates.\n\x00",
+
+ /* Msg 0x000000ef */ 0x001c, 0x0000,
+ "CRITICAL_PROCESS_DIED\n\x00\x00",
+
+ /* Msg 0x000000f4 */ 0x0024, 0x0000,
+ "CRITICAL_OBJECT_TERMINATION\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000fa */ 0x0024, 0x0000,
+ "IMPERSONATING_WORKER_THREAD\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000fc */ 0x002c, 0x0000,
+ "ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY\n\x00\x00",
+
+ /* Msg 0x4000009a */ 0x0024, 0x0000,
+ "ReactOS Version %s (Build %s)\n\x00\x00",
+
+ /* Msg 0x4000009b */ 0x0014, 0x0000,
+ "Service Pack\n\x00\x00\x00",
+
+ /* Msg 0x4000009c */ 0x002c, 0x0000,
+ "%u System Processor [%u MB Memory] %Z\n\x00\x00",
+
+ /* Msg 0x4000009d */ 0x001c, 0x0000,
+ "MulitProcessor Kernel\n\x00\x00",
+
+ /* Msg 0x4000009e */ 0x002c, 0x0000,
+ "%u System Processors [%u MB Memory] %Z\n\x00",
+
+ /* Msg 0x4000009f */ 0x00e0, 0x0000,
+ "\\n\\nReactOS is free software, covered by the GNU General Public Licens",
+ "e,\n and you\\n are welcome to change it and/or distribute copies of it ",
+ "under\n certain\\n conditions. There is absolutely no warranty for React",
+ "OS.\\n\n\x00\x00\x00\x00",
+
+ /* Msg 0x8000007f */ 0x0064, 0x0000,
+ "A problem has been detected and ReactOS has been shut down to prevent da",
+ "mage\nto your computer.\n\x00",
+
+ /* Msg 0x80000080 */ 0x003c, 0x0000,
+ "The problem seems to be caused by the following file:\n\n\x00",
+
+ /* Msg 0x80000081 */ 0x0090, 0x0000,
+ "If this is the first time you've seen this Stop error screen,\nrestart y",
+ "our computer. If this screen appears again, follow\nthese steps:\n\n\x00\x00\x00\x00",
+
+ /* Msg 0x80000082 */ 0x01e8, 0x0000,
+ "Check to make sure any new hardware or software is properly installed.\n",
+ "If this is a new installation, ask your hardware or software manufacture",
+ "r\nfor any ReactOS updates you might need.\n\nIf problems continue, disa",
+ "ble or remove any newly installed hardware\nor software. Disable BIOS me",
+ "mory options such as caching or shadowing.\nIf you need to use Safe Mode",
+ " to remove or disable components, restart\nyour computer, press F8 to se",
+ "lect Advanced Startup Options, and then\nselect Safe Mode.\n\x00",
+
+ /* Msg 0x80000083 */ 0x001c, 0x0000,
+ "Technical information:\n\x00"
+}

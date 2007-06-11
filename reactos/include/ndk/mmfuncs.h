@@ -31,6 +31,19 @@ Author:
 //
 NTSTATUS
 NTAPI
+MmCreateSection(
+    OUT PVOID *SectionObject,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN PLARGE_INTEGER MaximumSize,
+    IN ULONG SectionPageProtection,
+    IN ULONG AllocationAttributes,
+    IN HANDLE FileHandle OPTIONAL,
+    IN PFILE_OBJECT File OPTIONAL
+);
+
+NTSTATUS
+NTAPI
 MmMapViewOfSection(
     IN PVOID SectionObject,
     IN PEPROCESS Process,
@@ -62,6 +75,14 @@ NTAPI
 NtAreMappedFilesTheSame(
     IN PVOID File1MappedAsAnImage,
     IN PVOID File2MappedAsFile
+);
+
+NTSTATUS
+NTAPI
+NtAllocateUserPhysicalPages(
+    IN HANDLE ProcessHandle,
+    IN OUT PULONG NumberOfPages,
+    IN OUT PULONG UserPfnArray
 );
 
 NTSYSCALLAPI
@@ -117,6 +138,14 @@ NtFlushVirtualMemory(
     OUT PULONG NumberOfBytesFlushed OPTIONAL
 );
 
+NTSTATUS
+NTAPI
+NtFreeUserPhysicalPages(
+    IN HANDLE ProcessHandle,
+    IN OUT PULONG NumberOfPages,
+    IN OUT PULONG UserPfnArray
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -127,6 +156,19 @@ NtFreeVirtualMemory(
     IN ULONG FreeType
 );
 
+
+NTSTATUS
+NTAPI
+NtGetWriteWatch(
+    IN HANDLE ProcessHandle,
+    IN ULONG Flags,
+    IN PVOID BaseAddress,
+    IN ULONG RegionSize,
+    IN PVOID *UserAddressArray,
+    OUT PULONG EntriesInUserAddressArray,
+    OUT PULONG Granularity
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -135,6 +177,22 @@ NtLockVirtualMemory(
     PVOID BaseAddress,
     ULONG NumberOfBytesToLock,
     PULONG NumberOfBytesLocked
+);
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPages(
+    IN PVOID *VirtualAddresses,
+    IN ULONG NumberOfPages,
+    IN OUT PULONG UserPfnArray
+);
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPagesScatter(
+    IN PVOID *VirtualAddresses,
+    IN ULONG NumberOfPages,
+    IN OUT PULONG UserPfnArray
 );
 
 NTSYSCALLAPI
@@ -205,6 +263,14 @@ NtReadVirtualMemory(
     OUT PVOID Buffer,
     IN ULONG NumberOfBytesToRead,
     OUT PULONG NumberOfBytesRead
+);
+
+NTSTATUS
+NTAPI
+NtResetWriteWatch(
+    IN HANDLE ProcessHandle,
+    IN PVOID BaseAddress,
+    IN ULONG RegionSize
 );
 
 NTSYSCALLAPI

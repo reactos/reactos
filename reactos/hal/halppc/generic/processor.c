@@ -27,8 +27,6 @@ HalInitializeProcessor(ULONG ProcessorNumber,
                        PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     DPRINT("HalInitializeProcessor(%lu %p)\n", ProcessorNumber, LoaderBlock);
-    /* Do this a bit earlier for the purpose of getting gossip from the kernel */
-    HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)(LoaderBlock->u.PowerPC.BootInfo));
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 }
 
@@ -40,13 +38,39 @@ HalAllProcessorsStarted (VOID)
   return TRUE;
 }
 
-BOOLEAN STDCALL 
-HalStartNextProcessor(ULONG Unknown1,
-		      ULONG ProcessorStack)
+NTHALAPI
+BOOLEAN
+NTAPI 
+HalStartNextProcessor(
+    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN PKPROCESSOR_STATE ProcessorState
+    )
 {
-  DPRINT("HalStartNextProcessor(0x%lx 0x%lx)\n", Unknown1, ProcessorStack);
+  DPRINT("HalStartNextProcessor(0x%lx 0x%lx)\n", LoaderBlock, ProcessorState);
 
   return TRUE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalProcessorIdle(VOID)
+{
+    /* Enable interrupts and halt the processor */
+    _enable();
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalRequestIpi(ULONG Reserved)
+{
+    /* Not implemented on NT */
+    __debugbreak();
 }
 
 /* EOF */

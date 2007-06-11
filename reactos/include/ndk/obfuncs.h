@@ -23,12 +23,24 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
+#include <pstypes.h>
+#include <obtypes.h>
 
 #ifndef NTOS_MODE_USER
 
 //
 // Object Functions
 //
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ObAssignSecurity(
+    IN PACCESS_STATE AccessState,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN PVOID Object,
+    IN POBJECT_TYPE Type
+);
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -52,6 +64,7 @@ ObCreateObject(
     OUT PVOID *Object
 );
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 ObCreateObjectType(
@@ -68,6 +81,7 @@ ObGetObjectPointerCount(
     IN PVOID Object
 );
 
+NTKERNELAPI
 NTSTATUS
 NTAPI
 ObOpenObjectByName(
@@ -95,7 +109,7 @@ ObReferenceObjectByName(
 );
 
 NTKERNELAPI
-NTSTATUS 
+BOOLEAN
 NTAPI
 ObFindHandleForObject(
     IN PEPROCESS Process,
@@ -103,6 +117,12 @@ ObFindHandleForObject(
     IN POBJECT_TYPE ObjectType,
     IN POBJECT_HANDLE_INFORMATION HandleInformation,
     OUT PHANDLE Handle
+);
+
+VOID
+NTAPI
+ObDereferenceObjectDeferDelete(
+    IN PVOID Object
 );
 
 #endif
@@ -290,6 +310,16 @@ NtWaitForMultipleObjects(
     IN WAIT_TYPE WaitType,
     IN BOOLEAN Alertable,
     IN PLARGE_INTEGER Time
+);
+
+NTSTATUS
+NTAPI
+NtWaitForMultipleObjects32(
+    IN ULONG ObjectCount,
+    IN PLONG Handles,
+    IN WAIT_TYPE WaitType,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER TimeOut OPTIONAL
 );
 
 NTSYSCALLAPI

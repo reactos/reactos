@@ -50,8 +50,8 @@ IoGetStackLimits(OUT PULONG LowLimit,
 {
     /* Return the limits from the TEB... this is wrong! */
     DPRINT1("FIXME: IoGetStackLimits returning B*LLSHIT!\n");
-    *LowLimit = (ULONG)NtCurrentTeb()->Tib.StackLimit;
-    *HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
+    //*LowLimit = (ULONG)NtCurrentTeb()->Tib.StackLimit;
+    //*HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
 }
 
 /*

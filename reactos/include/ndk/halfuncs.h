@@ -24,15 +24,41 @@ Author:
 //
 #include <umtypes.h>
 #include <haltypes.h>
+#include <ketypes.h>
 
 #ifndef NTOS_MODE_USER
+
+//
+// Private HAL Callbacks
+//
+#define HalHandlerForBus                HALPRIVATEDISPATCH->HalHandlerForBus
+#define HalHandlerForConfigSpace        HALPRIVATEDISPATCH->HalHandlerForConfigSpace
+#define HalLocateHiberRanges            HALPRIVATEDISPATCH->HalLocateHiberRanges
+#define HalRegisterBusHandler           HALPRIVATEDISPATCH->HalRegisterBusHandler
+#define HalSetWakeEnable                HALPRIVATEDISPATCH->HalSetWakeEnable
+#define HalSetWakeAlarm                 HALPRIVATEDISPATCH->HalSetWakeAlarm
+#define HalPciTranslateBusAddress       HALPRIVATEDISPATCH->HalPciTranslateBusAddress
+#define HalPciAssignSlotResources       HALPRIVATEDISPATCH->HalPciAssignSlotResources
+#define HalHaltSystem                   HALPRIVATEDISPATCH->HalHaltSystem
+#define HalFindBusAddressTranslation    HALPRIVATEDISPATCH->HalFindBusAddressTranslation
+#define HalResetDisplay                 HALPRIVATEDISPATCH->HalResetDisplay
+#define HalAllocateMapRegisters         HALPRIVATEDISPATCH->HalAllocateMapRegisters
+#define KdSetupPciDeviceForDebugging    HALPRIVATEDISPATCH->KdSetupPciDeviceForDebugging
+#define KdReleasePciDeviceforDebugging  HALPRIVATEDISPATCH->KdReleasePciDeviceforDebugging
+#define KdGetAcpiTablePhase0            HALPRIVATEDISPATCH->KdGetAcpiTablePhase0
+#define KdCheckPowerButton              HALPRIVATEDISPATCH->KdCheckPowerButton
+#define HalVectorToIDTEntry             HALPRIVATEDISPATCH->HalVectorToIDTEntry
+#define KdMapPhysicalMemory64           HALPRIVATEDISPATCH->KdMapPhysicalMemory64
+#define KdUnmapVirtualAddress           HALPRIVATEDISPATCH->KdUnmapVirtualAddress
 
 //
 // The DDK steals these away from you.
 //
 #ifdef _MSC_VER
-//#pragma intrinsic(_enable)
-//#pragma intrinsic(_disable)
+//void _enable(void);
+//void _disable(void);
+#pragma intrinsic(_enable)
+#pragma intrinsic(_disable)
 #endif
 
 //
@@ -71,6 +97,15 @@ HalInitSystem(
     ULONG BootPhase,
     struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalStartNextProcessor(
+    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN PKPROCESSOR_STATE ProcessorState
+);
+
 #endif
 
 NTHALAPI
@@ -78,14 +113,6 @@ VOID
 NTAPI
 HalReturnToFirmware(
     FIRMWARE_REENTRY Action
-);
-
-NTHALAPI
-BOOLEAN
-NTAPI
-HalStartNextProcessor(
-    ULONG Unknown1,
-    ULONG Unknown2
 );
 
 //
@@ -136,15 +163,6 @@ HalEndSystemInterrupt(
 );
 
 NTHALAPI
-BOOLEAN
-NTAPI
-HalGetEnvironmentVariable(
-    PCH Variable,
-    USHORT Length,
-    PCH Buffer
-);
-
-NTHALAPI
 VOID
 NTAPI
 HalReportResourceUsage(
@@ -173,30 +191,26 @@ HalHandleNMI(
 );
 
 //
-// I/O Functions
+// Environment Functions
 //
 #ifdef _ARC_
 NTHALAPI
-VOID
-NTAPI
-IoAssignDriveLetters(
-    struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-    PSTRING NtDeviceName,
-    PUCHAR NtSystemPath,
-    PSTRING NtSystemPathString
-);
-#endif
-
-//
-// Environment Functions
-//
-NTHALAPI
-BOOLEAN
+ARC_STATUS
 NTAPI
 HalSetEnvironmentVariable(
     IN PCH Name,
     IN PCH Value
 );
+
+NTHALAPI
+ARC_STATUS
+NTAPI
+HalGetEnvironmentVariable(
+    IN PCH Variable,
+    IN USHORT Length,
+    OUT PCH Buffer
+);
+#endif
 
 //
 // Time Functions
@@ -205,6 +219,13 @@ NTHALAPI
 BOOLEAN
 NTAPI
 HalQueryRealTimeClock(
+    IN PTIME_FIELDS RtcTime
+);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalSetRealTimeClock(
     IN PTIME_FIELDS RtcTime
 );
 

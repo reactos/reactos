@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern ULONG ExpInitializationPhase;
+
 GENERIC_MAPPING PspProcessMapping =
 {
     STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -36,14 +38,8 @@ PVOID PspSystemDllBase;
 PVOID PspSystemDllSection;
 PVOID PspSystemDllEntryPoint;
 
-ANSI_STRING ThunkName = RTL_CONSTANT_STRING("LdrInitializeThunk");
-ANSI_STRING ApcName = RTL_CONSTANT_STRING("KiUserApcDispatcher");
-ANSI_STRING ExceptName = RTL_CONSTANT_STRING("KiUserExceptionDispatcher");
-ANSI_STRING CallbackName = RTL_CONSTANT_STRING("KiUserCallbackDispatcher");
-ANSI_STRING RaiseName = RTL_CONSTANT_STRING("KiRaiseUserExceptionDispatcher");
-ANSI_STRING FastName = RTL_CONSTANT_STRING("KiFastSystemCall");
-ANSI_STRING FastReturnName = RTL_CONSTANT_STRING("KiFastSystemCallRet");
-ANSI_STRING InterruptName = RTL_CONSTANT_STRING("KiIntSystemCall");
+UNICODE_STRING PsNtDllPathName =
+    RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
 
 PHANDLE_TABLE PspCidTable;
 
@@ -62,13 +58,106 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+ULONG
+NTAPI
+NameToOrdinal(IN PCHAR Name,
+              IN PVOID DllBase,
+              IN ULONG NumberOfNames,
+              IN PULONG NameTable,
+              IN PUSHORT OrdinalTable)
+{
+    ULONG Mid;
+    LONG Ret;
+
+    /* Fail if no names */
+    if (!NumberOfNames) return -1;
+
+    /* Do binary search */
+    Mid = NumberOfNames >> 1;
+    Ret = strcmp(Name, (PCHAR)((ULONG_PTR)DllBase + NameTable[Mid]));
+
+    /* Check if we found it */
+    if (!Ret) return OrdinalTable[Mid];
+
+    /* We didn't. Check if we only had one name to check */
+    if (NumberOfNames == 1) return -1;
+
+    /* Check if we should look up or down */
+    if (Ret < 0)
+    {
+        /* Loop down */
+        NumberOfNames = Mid;
+    }
+    else
+    {
+        /* Look up, update tables */
+        NameTable = &NameTable[Mid + 1];
+        OrdinalTable = &OrdinalTable[Mid + 1];
+        NumberOfNames -= (Mid - 1);
+    }
+
+    /* Call us recursively */
+    return NameToOrdinal(Name, DllBase, NumberOfNames, NameTable, OrdinalTable);
+}
+
 NTSTATUS
 NTAPI
-PspLookupSystemDllEntryPoint(IN PANSI_STRING Name,
+LookupEntryPoint(IN PVOID DllBase,
+                 IN PCHAR Name,
+                 OUT PVOID *EntryPoint)
+{
+    PULONG NameTable;
+    PUSHORT OrdinalTable;
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+    ULONG ExportSize;
+    CHAR Buffer[64];
+    USHORT Ordinal;
+    PULONG ExportTable;
+
+    /* Get the export directory */
+    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+                                                   TRUE,
+                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                   &ExportSize);
+
+    /* Validate the name and copy it */
+    if (strlen(Name) > sizeof(Buffer) - 2) return STATUS_INVALID_PARAMETER;
+    strcpy(Buffer, Name);
+
+    /* Setup name tables */
+    NameTable = (PULONG)((ULONG_PTR)DllBase +
+                         ExportDirectory->AddressOfNames);
+    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
+                             ExportDirectory->AddressOfNameOrdinals);
+
+    /* Get the ordinal */
+    Ordinal = NameToOrdinal(Buffer,
+                            DllBase,
+                            ExportDirectory->NumberOfNames,
+                            NameTable,
+                            OrdinalTable);
+
+    /* Make sure the ordinal is valid */
+    if (Ordinal >= ExportDirectory->NumberOfFunctions)
+    {
+        /* It's not, fail */
+        return STATUS_PROCEDURE_NOT_FOUND;
+    }
+
+    /* Resolve the address and write it */
+    ExportTable = (PULONG)((ULONG_PTR)DllBase +
+                           ExportDirectory->AddressOfFunctions);
+    *EntryPoint = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PspLookupSystemDllEntryPoint(IN PCHAR Name,
                              IN PVOID *EntryPoint)
 {
     /* Call the LDR Routine */
-    return LdrGetProcedureAddress(PspSystemDllBase, Name, 0, EntryPoint);
+    return LookupEntryPoint(PspSystemDllBase, Name, EntryPoint);
 }
 
 NTSTATUS
@@ -77,28 +166,23 @@ PspLookupKernelUserEntryPoints(VOID)
 {
     NTSTATUS Status;
 
-    /* Get user-mode startup thunk */
-    Status = PspLookupSystemDllEntryPoint(&ThunkName,
-                                          &PspSystemDllEntryPoint);
-    if (!NT_SUCCESS(Status)) return Status;
-
     /* Get user-mode APC trampoline */
-    Status = PspLookupSystemDllEntryPoint(&ApcName,
+    Status = PspLookupSystemDllEntryPoint("KiUserApcDispatcher",
                                           &KeUserApcDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get user-mode exception dispatcher */
-    Status = PspLookupSystemDllEntryPoint(&ExceptName,
+    Status = PspLookupSystemDllEntryPoint("KiUserExceptionDispatcher",
                                           &KeUserExceptionDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get user-mode callback dispatcher */
-    Status = PspLookupSystemDllEntryPoint(&CallbackName,
+    Status = PspLookupSystemDllEntryPoint("KiUserCallbackDispatcher",
                                           &KeUserCallbackDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get user-mode exception raise trampoline */
-    Status = PspLookupSystemDllEntryPoint(&RaiseName,
+    Status = PspLookupSystemDllEntryPoint("KiRaiseUserExceptionDispatcher",
                                           &KeRaiseUserExceptionDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -106,20 +190,20 @@ PspLookupKernelUserEntryPoints(VOID)
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Get user-mode sysenter stub */
-        Status = PspLookupSystemDllEntryPoint(&FastName,
+        Status = PspLookupSystemDllEntryPoint("KiFastSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);
         if (!NT_SUCCESS(Status)) return Status;
 
         /* Get user-mode sysenter return stub */
-        Status = PspLookupSystemDllEntryPoint(&FastReturnName,
+        Status = PspLookupSystemDllEntryPoint("KiFastSystemCallRet",
                                               (PVOID)&SharedUserData->
                                               SystemCallReturn);
     }
     else
     {
         /* Get the user-mode interrupt stub */
-        Status = PspLookupSystemDllEntryPoint(&InterruptName,
+        Status = PspLookupSystemDllEntryPoint("KiIntSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);
     }
@@ -162,7 +246,6 @@ NTSTATUS
 NTAPI
 PsLocateSystemDll(VOID)
 {
-    UNICODE_STRING DllName = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE FileHandle, SectionHandle;
@@ -171,21 +254,29 @@ PsLocateSystemDll(VOID)
     ULONG HardErrorResponse;
 
     /* Locate and open NTDLL to determine ImageBase and LdrStartup */
-    InitializeObjectAttributes(&ObjectAttributes, &DllName, 0, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PsNtDllPathName,
+                               0,
+                               NULL,
+                               NULL);
     Status = ZwOpenFile(&FileHandle,
                         FILE_READ_ACCESS,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ,
                         0);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 2, 0, 0);
+    }
 
     /* FIXME: Check if the image is valid */
-    Status = STATUS_SUCCESS; //MmCheckSystemImage(FileHandle, TRUE);
+    Status = MmCheckSystemImage(FileHandle, TRUE);
     if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
     {
         /* Raise a hard error */
-        HardErrorParameters = (ULONG_PTR)&DllName;
+        HardErrorParameters = (ULONG_PTR)&PsNtDllPathName;
         NtRaiseHardError(Status,
                          1,
                          1,
@@ -204,7 +295,11 @@ PsLocateSystemDll(VOID)
                              SEC_IMAGE,
                              FileHandle);
     ZwClose(FileHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 3, 0, 0);
+    }
 
     /* Reference the Section */
     Status = ObReferenceObjectByHandle(SectionHandle,
@@ -214,19 +309,63 @@ PsLocateSystemDll(VOID)
                                        (PVOID*)&PspSystemDllSection,
                                        NULL);
     ZwClose(SectionHandle);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 4, 0, 0);
+    }
 
     /* Map it */
     Status = PspMapSystemDll(PsGetCurrentProcess(), &PspSystemDllBase);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 5, 0, 0);
+    }
 
-    /* Now get the Entrypoints */
-    PspLookupKernelUserEntryPoints();
-    return STATUS_SUCCESS;
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PspInitializeSystemDll(VOID)
+{
+    NTSTATUS Status;
+
+    /* Get user-mode startup thunk */
+    Status = PspLookupSystemDllEntryPoint("LdrInitializeThunk",
+                                          &PspSystemDllEntryPoint);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 7, 0, 0);
+    }
+
+    /* Get all the other entrypoints */
+    Status = PspLookupKernelUserEntryPoints();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PROCESS1_INITIALIZATION_FAILED, Status, 8, 0, 0);
+    }
+
+    /* Return status */
+    return Status;
 }
 
 BOOLEAN
 NTAPI
-PspInitPhase0(VOID)
+PspInitPhase1()
+{
+    /* Initialize the System DLL and return status of operation */
+    if (!NT_SUCCESS(PspInitializeSystemDll())) return FALSE;
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -234,11 +373,8 @@ PspInitPhase0(VOID)
     PETHREAD SysThread;
     MM_SYSTEMSIZE SystemSize;
     UNICODE_STRING Name;
-    ULONG i;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-
-    /* FIXME: Initialize Lock Data do it STATIC */
-    ShortPsLockDelay.QuadPart = -100LL;
+    ULONG i;
 
     /* Get the system size */
     SystemSize = MmQuerySystemSize();
@@ -266,10 +402,22 @@ PspInitPhase0(VOID)
             break;
     }
 
+    /* Setup callbacks */
+    for (i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
+    {
+        ExInitializeCallBack(&PspThreadNotifyRoutine[i]);
+    }
+    for (i = 0; i < PSP_MAX_CREATE_PROCESS_NOTIFY; i++)
+    {
+        ExInitializeCallBack(&PspProcessNotifyRoutine[i]);
+    }
+    for (i = 0; i < PSP_MAX_LOAD_IMAGE_NOTIFY; i++)
+    {
+        ExInitializeCallBack(&PspLoadImageNotifyRoutine[i]);
+    }
+
     /* Setup the quantum table */
     PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
-
-    /* Setup callbacks when we implement Generic Callbacks */
 
     /* Set quota settings */
     if (!PspDefaultPagedLimit) PspDefaultPagedLimit = 0;
@@ -307,43 +455,39 @@ PspInitPhase0(VOID)
     /* Clear kernel time */
     PsIdleProcess->Pcb.KernelTime = 0;
 
-    /* Initialize the Process type */
+    /* Initialize Object Initializer */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"Process");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK |
+                                              OBJ_PERMANENT |
+                                              OBJ_EXCLUSIVE |
+                                              OBJ_OPENIF;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.SecurityRequired = TRUE;
+
+    /* Initialize the Process type */
+    RtlInitUnicodeString(&Name, L"Process");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
     ObjectTypeInitializer.GenericMapping = PspProcessMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
 
-    /* Setup ROS Scheduler lists (HACK!) */
-    for (i = 0; i < MAXIMUM_PRIORITY; i++)
-    {
-        InitializeListHead(&PriorityListHead[i]);
-    }
-
     /*  Initialize the Thread type  */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Thread");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(ETHREAD);
     ObjectTypeInitializer.GenericMapping = PspThreadMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
 
     /*  Initialize the Job type  */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Job");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EJOB);
     ObjectTypeInitializer.GenericMapping = PspJobMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteJob;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
 
@@ -356,6 +500,7 @@ PspInitPhase0(VOID)
 
     /* Create the CID Handle table */
     PspCidTable = ExCreateHandleTable(NULL);
+    if (!PspCidTable) return FALSE;
 
     /* FIXME: Initialize LDT/VDM support */
 
@@ -392,27 +537,34 @@ PspInitPhase0(VOID)
                               (PVOID*)&PsInitialSystemProcess,
                               NULL);
 
-    /* The PD we gave it is invalid at this point, do what old ROS did */
-    PsInitialSystemProcess->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
-    PsIdleProcess->Pcb.DirectoryTableBase = PsInitialSystemProcess->Pcb.DirectoryTableBase;
-
     /* Copy the process names */
     strcpy(PsIdleProcess->ImageFileName, "Idle");
     strcpy(PsInitialSystemProcess->ImageFileName, "System");
 
     /* Allocate a structure for the audit name */
-    PsIdleProcess->SeAuditProcessCreationInfo.ImageFileName =
-        ExAllocatePoolWithTag(PagedPool, sizeof(UNICODE_STRING), TAG_SEPA);
-    if (!PsIdleProcess->SeAuditProcessCreationInfo.ImageFileName) KEBUGCHECK(0);
+    PsInitialSystemProcess->SeAuditProcessCreationInfo.ImageFileName =
+        ExAllocatePoolWithTag(PagedPool,
+                              sizeof(OBJECT_NAME_INFORMATION),
+                              TAG_SEPA);
+    if (!PsInitialSystemProcess->SeAuditProcessCreationInfo.ImageFileName)
+    {
+        /* Allocation failed */
+        return FALSE;
+    }
 
-    /* Setup the system initailization thread */
+    /* Zero it */
+    RtlZeroMemory(PsInitialSystemProcess->
+                  SeAuditProcessCreationInfo.ImageFileName,
+                  sizeof(OBJECT_NAME_INFORMATION));
+
+    /* Setup the system initialization thread */
     Status = PsCreateSystemThread(&SysThreadHandle,
                                   THREAD_ALL_ACCESS,
                                   &ObjectAttributes,
                                   0,
                                   NULL,
-                                  ExPhase2Init,
-                                  NULL);
+                                  Phase1Initialization,
+                                  LoaderBlock);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Create a handle to it */
@@ -430,10 +582,31 @@ PspInitPhase0(VOID)
 
 BOOLEAN
 NTAPI
-PsInitSystem(VOID)
+PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* For now, do only Phase 0 */
-    return PspInitPhase0();
+    /* Check the initialization phase */
+    switch (ExpInitializationPhase)
+    {
+    case 0:
+
+        /* Do Phase 0 */
+        return PspInitPhase0(LoaderBlock);
+
+    case 1:
+
+        /* Do Phase 1 */
+        return PspInitPhase1();
+
+    default:
+
+        /* Don't know any other phase! Bugcheck! */
+        KeBugCheckEx(UNEXPECTED_INITIALIZATION_CALL,
+                     1,
+                     ExpInitializationPhase,
+                     0,
+                     0);
+        return FALSE;
+    }
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -466,6 +639,15 @@ PsGetVersion(IN PULONG MajorVersion OPTIONAL,
 
     /* Check the High word */
     return (NtBuildNumber >> 28) == 0xC;
+}
+
+NTSTATUS
+NTAPI
+NtApphelpCacheControl(IN APPHELPCACHESERVICECLASS Service,
+                      IN PVOID ServiceData)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

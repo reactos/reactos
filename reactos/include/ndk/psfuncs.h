@@ -30,24 +30,28 @@ Author:
 //
 // Win32K Process/Thread Functions
 //
+NTKERNELAPI
 struct _W32THREAD*
 NTAPI
 PsGetCurrentThreadWin32Thread(
     VOID
 );
 
+NTKERNELAPI
 struct _W32PROCESS*
 NTAPI
 PsGetCurrentProcessWin32Process(
     VOID
 );
 
+NTKERNELAPI
 PVOID
 NTAPI
 PsGetProcessWin32Process(
     PEPROCESS Process
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 PsSetProcessWin32Process(
@@ -55,6 +59,7 @@ PsSetProcessWin32Process(
     PVOID Win32Process
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 PsSetThreadWin32Thread(
@@ -62,18 +67,21 @@ PsSetThreadWin32Thread(
     PVOID Win32Thread
 );
 
+NTKERNELAPI
 PVOID
 NTAPI
 PsGetThreadWin32Thread(
     PETHREAD Thread
 );
 
+NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetThreadHardErrorsAreDisabled(
     PETHREAD Thread
 );
 
+NTKERNELAPI
 VOID 
 NTAPI
 PsSetThreadHardErrorsAreDisabled(
@@ -81,12 +89,14 @@ PsSetThreadHardErrorsAreDisabled(
     IN BOOLEAN Disabled
 );
 
+NTKERNELAPI
 VOID 
 NTAPI
 PsEstablishWin32Callouts(
     PWIN32_CALLOUTS_FPNS CalloutData
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 PsReturnProcessNonPagedPoolQuota(
@@ -97,6 +107,7 @@ PsReturnProcessNonPagedPoolQuota(
 //
 // Process Impersonation Functions
 //
+NTKERNELAPI
 VOID
 NTAPI
 PsRevertThreadToSelf(
@@ -106,9 +117,25 @@ PsRevertThreadToSelf(
 //
 // Misc. Functions
 //
+NTKERNELAPI
 HANDLE
 NTAPI
 PsGetProcessId(PEPROCESS Process);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsLookupProcessThreadByCid(
+    IN PCLIENT_ID Cid,
+    OUT PEPROCESS *Process OPTIONAL,
+    OUT PETHREAD *Thread
+);
+
+BOOLEAN
+NTAPI
+PsIsProtectedProcess(
+    IN PEPROCESS Process
+);
 
 #endif
 
@@ -121,6 +148,15 @@ NTAPI
 NtAlertResumeThread(
     IN HANDLE ThreadHandle,
     OUT PULONG SuspendCount
+);
+
+typedef ULONG APPHELPCACHESERVICECLASS;
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtApphelpCacheControl(
+    IN APPHELPCACHESERVICECLASS Service,
+    IN PVOID ServiceData
 );
 
 NTSYSCALLAPI
@@ -147,6 +183,14 @@ NtCreateJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSTATUS
+NTAPI
+NtCreateJobSet(
+    IN ULONG NumJob,
+    IN PJOB_SET_ARRAY UserJobSet,
+    IN ULONG Flags
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -164,6 +208,21 @@ NtCreateProcess(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtCreateProcessEx(
+    OUT PHANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN HANDLE ParentProcess,
+    IN ULONG Flags,
+    IN HANDLE SectionHandle OPTIONAL,
+    IN HANDLE DebugPort OPTIONAL,
+    IN HANDLE ExceptionPort OPTIONAL,
+    IN BOOLEAN InJob
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtCreateThread(
     OUT PHANDLE ThreadHandle,
     IN ACCESS_MASK DesiredAccess,
@@ -176,12 +235,36 @@ NtCreateThread(
 );
 
 #ifndef NTOS_MODE_USER
+#if defined(_M_IX86)
 FORCEINLINE
 PTEB
 NtCurrentTeb(VOID)
 {
+#ifndef __GNUC__
     return (PTEB)(ULONG_PTR)__readfsdword(0x18);
+#else
+    struct _TEB *ret;
+
+#if defined(_M_IX86)
+    __asm__ __volatile__ (
+        "movl %%fs:0x18, %0\n"
+        : "=r" (ret)
+        : /* no inputs */
+    );
+#elif defined(_M_PPC)
+    __asm__ __volatile__ (
+        "lwz %0, 0x18(12)\n"
+        : "=r" (ret)
+        : /* no inputs */
+    );
+#endif
+
+    return ret;
+#endif
 }
+#endif
+#else
+struct _TEB * NtCurrentTeb(void);
 #endif
 
 NTSYSCALLAPI

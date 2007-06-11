@@ -18,7 +18,7 @@ extern LIST_ENTRY PspReaperListHead;
 ULONG KiMask32Array[MAXIMUM_PRIORITY] =
 {
     0x1,        0x2,       0x4,       0x8,       0x10,       0x20,
-    0x40,       0x80,      0x100,     0x200,     0x4000,     0x800,
+    0x40,       0x80,      0x100,     0x200,     0x400,      0x800,
     0x1000,     0x2000,    0x4000,    0x8000,    0x10000,    0x20000,
     0x40000,    0x80000,   0x100000,  0x200000,  0x400000,   0x800000,
     0x1000000,  0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000,
@@ -32,7 +32,7 @@ NTAPI
 KeFindNextRightSetAffinity(IN UCHAR Number,
                            IN ULONG Set)
 {
-    ULONG Bit, Result;
+    ULONG Bit, Result = 0;
     ASSERT(Set != 0);
 
     /* Calculate the mask */
@@ -44,6 +44,17 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     /* Now find the right set and return it */
     BitScanReverse(&Result, Bit);
     return (UCHAR)Result;
+}
+
+
+BOOLEAN
+NTAPI
+KeReadStateThread(IN PKTHREAD Thread)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Return signal state */
+    return (BOOLEAN)Thread->DispatcherHeader.SignalState;
 }
 
 KPRIORITY
@@ -78,6 +89,26 @@ KeQueryBasePriorityThread(IN PKTHREAD Thread)
     /* Lower IRQl and return Increment */
     KeLowerIrql(OldIrql);
     return BaseIncrement;
+}
+
+BOOLEAN
+NTAPI
+KeSetDisableBoostThread(IN OUT PKTHREAD Thread,
+                        IN BOOLEAN Disable)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Check if we're enabling or disabling */
+    if (Disable != FALSE)
+    {
+        /* Set the bit */
+        return InterlockedBitTestAndSet(&Thread->ThreadFlags, 1);
+    }
+    else
+    {
+        /* Remove the bit */
+        return InterlockedBitTestAndReset(&Thread->ThreadFlags, 1);
+    }
 }
 
 VOID
@@ -134,7 +165,8 @@ KeAlertResumeThread(IN PKTHREAD Thread)
     if (PreviousCount)
     {
         /* Decrease count. If we are now zero, unwait it completely */
-        if (--Thread->SuspendCount)
+        Thread->SuspendCount--;
+        if (!(Thread->SuspendCount) && !(Thread->FreezeCount))
         {
             /* Signal and satisfy */
             Thread->SuspendSemaphore.Header.SignalState++;
@@ -171,8 +203,8 @@ KeAlertThread(IN PKTHREAD Thread,
     {
         /* Check if the thread is alertable, and blocked in the given mode */
         if ((Thread->State == Waiting) &&
-            ((AlertMode == KernelMode) || (Thread->WaitMode == AlertMode)) &&
-            (Thread->Alertable))
+            (Thread->Alertable) &&
+            (AlertMode <= Thread->WaitMode))
         {
             /* Abort the wait to alert the thread */
             KiUnwaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
@@ -232,16 +264,13 @@ KeForceResumeThread(IN PKTHREAD Thread)
     return PreviousCount;
 }
 
-/*
- * Used by the debugging code to freeze all the process's threads
- * while the debugger is examining their state.
- */
 VOID
 NTAPI
-KeFreezeAllThreads(IN PKPROCESS Process)
+KeFreezeAllThreads(VOID)
 {
     KLOCK_QUEUE_HANDLE LockHandle, ApcLock;
     PKTHREAD Current, CurrentThread = KeGetCurrentThread();
+    PKPROCESS Process = CurrentThread->ApcState.Process;
     PLIST_ENTRY ListHead, NextEntry;
     LONG OldCount;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
@@ -263,7 +292,7 @@ KeFreezeAllThreads(IN PKPROCESS Process)
     /* Loop the Process's Threads */
     ListHead = &Process->ThreadListHead;
     NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
+    do
     {
         /* Get the current thread */
         Current = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
@@ -307,10 +336,13 @@ KeFreezeAllThreads(IN PKPROCESS Process)
 
         /* Release the APC lock */
         KiReleaseApcLockFromDpcLevel(&ApcLock);
-    }
+
+        /* Move to the next thread */
+        NextEntry = NextEntry->Flink;
+    } while (NextEntry != ListHead);
 
     /* Release the process lock and exit the dispatcher */
-    KiReleaseProcessLock(&LockHandle);
+    KiReleaseProcessLockFromDpcLevel(&LockHandle);
     KiExitDispatcher(LockHandle.OldIrql);
 }
 
@@ -364,6 +396,7 @@ KeRundownThread(VOID)
     PKTHREAD Thread = KeGetCurrentThread();
     PLIST_ENTRY NextEntry, ListHead;
     PKMUTANT Mutant;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Optimized path if nothing is on the list at the moment */
     if (IsListEmpty(&Thread->MutantListHead)) return;
@@ -427,7 +460,8 @@ KeStartThread(IN OUT PKTHREAD Thread)
     PKPROCESS Process = Thread->ApcState.Process;
 
     /* Setup static fields from parent */
-#ifdef _M_IX86
+    Thread->DisableBoost = Process->DisableBoost;
+#if defined(_M_IX86)
     Thread->Iopl = Process->Iopl;
 #endif
     Thread->Quantum = Process->QuantumReset;
@@ -519,7 +553,7 @@ KiSuspendThread(IN PVOID NormalContext,
                           NULL);
 }
 
-NTSTATUS
+ULONG
 NTAPI
 KeSuspendThread(PKTHREAD Thread)
 {
@@ -578,6 +612,68 @@ KeSuspendThread(PKTHREAD Thread)
     return PreviousCount;
 }
 
+VOID
+NTAPI
+KeThawAllThreads(VOID)
+{
+    KLOCK_QUEUE_HANDLE LockHandle, ApcLock;
+    PKTHREAD Current, CurrentThread = KeGetCurrentThread();
+    PKPROCESS Process = CurrentThread->ApcState.Process;
+    PLIST_ENTRY ListHead, NextEntry;
+    LONG OldCount;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &LockHandle);
+
+    /* Loop the Process's Threads */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    do
+    {
+        /* Get the current thread */
+        Current = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+        /* Lock it */
+        KiAcquireApcLockAtDpcLevel(Current, &ApcLock);
+
+        /* Make sure we are frozen */
+        OldCount = Current->FreezeCount;
+        if (OldCount)
+        {
+            /* Decrease the freeze count */
+            Current->FreezeCount--;
+
+            /* Check if both counts are zero now */
+            if (!(Current->SuspendCount) && (!Current->FreezeCount))
+            {
+                /* Lock the dispatcher */
+                KiAcquireDispatcherLockAtDpcLevel();
+
+                /* Signal the suspend semaphore and wake it */
+                Current->SuspendSemaphore.Header.SignalState++;
+                KiWaitTest(&Current->SuspendSemaphore, 1);
+
+                /* Unlock the dispatcher */
+                KiReleaseDispatcherLockFromDpcLevel();
+            }
+        }
+
+        /* Release the APC lock */
+        KiReleaseApcLockFromDpcLevel(&ApcLock);
+
+        /* Go to the next one */
+        NextEntry = NextEntry->Flink;
+    } while (NextEntry != ListHead);
+
+    /* Release the process lock and exit the dispatcher */
+    KiReleaseProcessLockFromDpcLevel(&LockHandle);
+    KiExitDispatcher(LockHandle.OldIrql);
+
+    /* Leave the critical region */
+    KeLeaveCriticalRegion();
+}
+
 BOOLEAN
 NTAPI
 KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
@@ -590,7 +686,6 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
 
     /* Lock the Dispatcher Database and the APC Queue */
     KiAcquireApcLock(Thread, &ApcLock);
-    KiAcquireDispatcherLockAtDpcLevel();
 
     /* Save the old State */
     OldState = Thread->Alerted[AlertMode];
@@ -609,9 +704,7 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
     }
 
     /* Release Locks and return the Old State */
-    KiReleaseDispatcherLockFromDpcLevel();
-    KiReleaseApcLockFromDpcLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
+    KiReleaseApcLock(&ApcLock);
     return OldState;
 }
 
@@ -652,7 +745,8 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->EnableStackSwap = FALSE;//TRUE;
     Thread->IdealProcessor = 1;
     Thread->SwapBusy = FALSE;
-    Thread->AdjustReason = 0;
+    Thread->KernelStackResident = TRUE;
+    Thread->AdjustReason = AdjustNone;
 
     /* Initialize the lock */
     KeInitializeSpinLock(&Thread->ThreadLock);
@@ -723,18 +817,17 @@ KeInitThread(IN OUT PKTHREAD Thread,
                     KERNEL_STACK_SIZE);
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 
+#if defined(_M_IX86)
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;
     _SEH_TRY
     {
         /* Initalize the Thread Context */
-#ifdef _M_IX86
         Ke386InitThreadWithContext(Thread,
                                    SystemRoutine,
                                    StartRoutine,
                                    StartContext,
                                    Context);
-#endif
     }
     _SEH_HANDLE
     {
@@ -750,6 +843,9 @@ KeInitThread(IN OUT PKTHREAD Thread,
         }
     }
     _SEH_END;
+#else
+    Status = STATUS_SUCCESS;
+#endif
 
     /* Set the Thread to initalized */
     Thread->State = Initialized;
@@ -817,12 +913,20 @@ PKTHREAD
 NTAPI
 KeGetCurrentThread(VOID)
 {
-#ifdef _M_IX86
     /* Return the current thread on this PCR */
-    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
-#elif defined(_M_PPC)
-    return KeGetCurrentKPCR()->Prcb->CurrentThread;
-#endif
+    return _KeGetCurrentThread();
+}
+
+/*
+ * @implemented
+ */
+#undef KeGetPreviousMode
+UCHAR
+NTAPI
+KeGetPreviousMode(VOID)
+{
+    /* Return the previous mode of this thread */
+    return _KeGetPreviousMode();
 }
 
 /*
@@ -948,10 +1052,10 @@ KeSetIdealProcessorThread(IN PKTHREAD Thread,
     OldIdealProcessor = Thread->UserIdealProcessor;
 
     /* Make sure a valid CPU was given */
-    if (Processor < MAXIMUM_PROCESSORS)
+    if (Processor < KeNumberProcessors)
     {
         /* Check if the user ideal CPU is in the affinity */
-        if (Thread->UserIdealProcessor & AFFINITY_MASK(Processor))
+        if (Thread->Affinity & AFFINITY_MASK(Processor))
         {
             /* Set the ideal processor */
             Thread->IdealProcessor = Processor;
@@ -1059,7 +1163,6 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
     KPRIORITY OldBasePriority, Priority, BasePriority;
     LONG OldIncrement;
     PKPROCESS Process;
-    BOOLEAN Released;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -1125,13 +1228,19 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
         else
         {
             /* Otherwise, calculate the new priority */
-            Priority = KiComputeNewPriority(Thread);
+            Priority = KiComputeNewPriority(Thread, 0);
+            Priority += (BasePriority - OldBasePriority);
 
             /* Check if it entered the real-time range */
             if (Priority >= LOW_REALTIME_PRIORITY)
             {
                 /* Normalize it down to the highest dynamic priority */
                 Priority = LOW_REALTIME_PRIORITY - 1;
+            }
+            else if (Priority <= LOW_PRIORITY)
+            {
+                /* It went too low, normalize it */
+                Priority = 1;
             }
         }
     }
@@ -1147,25 +1256,14 @@ KeSetBasePriorityThread(IN PKTHREAD Thread,
     {
         /* Reset the quantum and do the actual priority modification */
         Thread->Quantum = Thread->QuantumReset;
-        KiSetPriorityThread(Thread, Priority, &Released);
+        KiSetPriorityThread(Thread, Priority);
     }
 
     /* Release thread lock */
     KiReleaseThreadLock(Thread);
 
-    /* Check if lock was released */
-    if (!Released)
-    {
-        /* Release the dispatcher database */
-        KiReleaseDispatcherLock(OldIrql);
-    }
-    else
-    {
-        /* Lower IRQL only */
-        KeLowerIrql(OldIrql);
-    }
-
-    /* Return old increment */
+    /* Release the dispatcher database and return old increment */
+    KiReleaseDispatcherLock(OldIrql);
     return OldIncrement;
 }
 
@@ -1179,7 +1277,6 @@ KeSetAffinityThread(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     KAFFINITY OldAffinity;
-    BOOLEAN Released;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -1187,21 +1284,10 @@ KeSetAffinityThread(IN PKTHREAD Thread,
     OldIrql = KiAcquireDispatcherLock();
 
     /* Call the internal function */
-    OldAffinity = KiSetAffinityThread(Thread, Affinity, &Released);
+    OldAffinity = KiSetAffinityThread(Thread, Affinity);
 
-    /* Check if lock was released */
-    if (!Released)
-    {
-        /* Release the dispatcher database */
-        KiReleaseDispatcherLock(OldIrql);
-    }
-    else
-    {
-        /* Lower IRQL only */
-        KeLowerIrql(OldIrql);
-    }
-
-    /* Return old affinity */
+    /* Release the dispatcher database and return old affinity */
+    KiReleaseDispatcherLock(OldIrql);
     return OldAffinity;
 }
 
@@ -1215,10 +1301,10 @@ KeSetPriorityThread(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     KPRIORITY OldPriority;
-    BOOLEAN Released;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     ASSERT((Priority <= HIGH_PRIORITY) && (Priority >= LOW_PRIORITY));
+    ASSERT(KeIsExecutingDpc() == FALSE);
 
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
@@ -1226,34 +1312,28 @@ KeSetPriorityThread(IN PKTHREAD Thread,
     /* Lock the thread */
     KiAcquireThreadLock(Thread);
 
-    /* Save the old Priority */
+    /* Save the old Priority and reset decrement */
     OldPriority = Thread->Priority;
+    Thread->PriorityDecrement = 0;
 
     /* Make sure that an actual change is being done */
-    if (OldPriority != Priority)
+    if (Priority != Thread->Priority)
     {
-        /* Reset the Quantum and Decrements */
+        /* Reset the quantum */
         Thread->Quantum = Thread->QuantumReset;
-        Thread->PriorityDecrement = 0;
+
+        /* Check if priority is being set too low and normalize if so */
+        if ((Thread->BasePriority != 0) && !(Priority)) Priority = 1;
 
         /* Set the new Priority */
-        KiSetPriorityThread(Thread, Priority, &Released);
+        KiSetPriorityThread(Thread, Priority);
     }
 
     /* Release thread lock */
     KiReleaseThreadLock(Thread);
 
-    /* Check if lock was released */
-    if (!Released)
-    {
-        /* Release the dispatcher database */
-        KiReleaseDispatcherLock(OldIrql);
-    }
-    else
-    {
-        /* Lower IRQL only */
-        KeLowerIrql(OldIrql);
-    }
+    /* Release the dispatcher database */
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return Old Priority */
     return OldPriority;
@@ -1345,7 +1425,7 @@ KeTerminateThread(IN KPRIORITY Increment)
     ASSERT(Process->StackCount != 0);
     ASSERT(Process->State == ProcessInMemory);
     Process->StackCount--;
-    if (!Process->StackCount)
+    if (!(Process->StackCount) && !(IsListEmpty(&Process->ThreadListHead)))
     {
         /* FIXME: Swap stacks */
     }

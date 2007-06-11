@@ -52,34 +52,34 @@ typedef enum _BUS_DATA_TYPE {
 
 #pragma pack(pop)
 
-NTOSAPI
+NTKERNELAPI
 VOID
 DDKAPI
 ExReleaseResourceForThreadLite(
   IN PERESOURCE  Resource,
   IN ERESOURCE_THREAD  ResourceThreadId);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKFASTAPI
+FASTCALL
 IoReadPartitionTable(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN BOOLEAN  ReturnRecognizedPartitions,
   OUT struct _DRIVE_LAYOUT_INFORMATION  **PartitionBuffer);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKFASTAPI
+FASTCALL
 IoSetPartitionInformation(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,
   IN ULONG  PartitionNumber,
   IN ULONG  PartitionType);
 
-NTOSAPI
+NTKERNELAPI
 NTSTATUS
-DDKFASTAPI
+FASTCALL
 IoWritePartitionTable(
   IN PDEVICE_OBJECT  DeviceObject,
   IN ULONG  SectorSize,

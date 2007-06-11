@@ -208,7 +208,7 @@ FrLdrStartup(ULONG Magic)
     }
 
     info[i].addr = (ULONG)&LoaderBlock;
-    info[i].phys = PpcVirt2phys(info[i].addr, 1);
+    info[i].phys = info[i].addr;
     MmuMapPage(info, 1);
 
     MmuTurnOn(KernelEntryAddress, (void*)&LoaderBlock);

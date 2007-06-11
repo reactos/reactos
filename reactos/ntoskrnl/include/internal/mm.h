@@ -191,6 +191,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
     USHORT Machine;
     BOOLEAN Executable;
     ULONG NrSegments;
+    ULONG ImageSize;
     PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
@@ -331,9 +332,6 @@ typedef VOID
     SWAPENTRY SwapEntry,
     BOOLEAN Dirty
 );
-
-
-/* FUNCTIONS */
 
 /* aspace.c ******************************************************************/
 
@@ -543,13 +541,10 @@ MmInit1(
     ULONG MaxMemInMeg
 );
 
-VOID
+BOOLEAN
 NTAPI
-MmInit2(VOID);
-
-VOID
-NTAPI
-MmInit3(VOID);
+MmInitSystem(IN ULONG Phase,
+             IN PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
 NTAPI
@@ -679,17 +674,10 @@ MmPageFault(
 NTSTATUS
 NTAPI
 MmAccessFault(
-    KPROCESSOR_MODE Mode,
-    ULONG_PTR Address,
-    BOOLEAN FromMdl
-);
-
-NTSTATUS
-NTAPI
-MmNotPresentFault(
-    KPROCESSOR_MODE Mode,
-    ULONG_PTR Address,
-    BOOLEAN FromMdl
+    IN BOOLEAN StoreInstruction,
+    IN PVOID Address,
+    IN KPROCESSOR_MODE Mode,
+    IN PVOID TrapInformation
 );
 
 /* anonmem.c *****************************************************************/
@@ -1308,6 +1296,19 @@ NTAPI
 MmGetFileObjectForSection(
     IN PROS_SECTION_OBJECT Section
 );
+NTSTATUS
+NTAPI
+MmGetFileNameForAddress(
+    IN PVOID Address,
+    OUT PUNICODE_STRING ModuleName
+);
+
+NTSTATUS
+NTAPI
+MmGetFileNameForSection(
+    IN PROS_SECTION_OBJECT Section,
+    OUT POBJECT_NAME_INFORMATION *ModuleName
+);
 
 PVOID 
 NTAPI
@@ -1390,6 +1391,10 @@ NTSTATUS
 NTAPI
 MmInitMpwThread(VOID);
 
+NTSTATUS
+NTAPI
+MmInitBsmThread(VOID);
+
 /* pager.c *******************************************************************/
 
 BOOLEAN
@@ -1413,6 +1418,44 @@ MiQueryVirtualMemory(
     OUT PVOID VirtualMemoryInformation,
     IN ULONG Length,
     OUT PULONG ResultLength
+);
+
+/* sysldr.c ******************************************************************/
+
+VOID
+NTAPI
+MiReloadBootLoadedDrivers(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+BOOLEAN
+NTAPI
+MiInitializeLoadedModuleList(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+NTSTATUS
+NTAPI
+MmLoadSystemImage(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING NamePrefix OPTIONAL,
+    IN PUNICODE_STRING LoadedName OPTIONAL,
+    IN ULONG Flags,
+    OUT PVOID *ModuleObject,
+    OUT PVOID *ImageBaseAddress
+);
+
+NTSTATUS
+NTAPI
+MmUnloadSystemImage(
+    IN PVOID ImageHandle
+);
+
+NTSTATUS
+NTAPI
+MmCheckSystemImage(
+    IN HANDLE ImageHandle,
+    IN BOOLEAN PurgeSection
 );
 
 #endif

@@ -16,7 +16,6 @@
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-#if 0
 NTSTATUS
 NTAPI
 DebugPrint(IN PANSI_STRING DebugString,
@@ -28,20 +27,13 @@ DebugPrint(IN PANSI_STRING DebugString,
                         DebugString->Buffer,
                         DebugString->Length,
                         UlongToPtr(ComponentId),
-                        UlongToPtr(Level)); 
+                        UlongToPtr(Level));
 }
-#else
-NTSTATUS
-NTAPI
-DebugPrint(IN PANSI_STRING DebugString,
-           IN ULONG ComponentId,
-           IN ULONG Level);
-#endif
 
 NTSTATUS
 NTAPI
-DebugPrompt(IN PANSI_STRING Output,
-            IN PANSI_STRING Input)
+DebugPrompt(IN PCSTRING Output,
+            IN PSTRING Input)
 {
     /* Call the INT2D Service */
     return DebugService(BREAKPOINT_PROMPT,
@@ -119,7 +111,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     }
 
     /* Update length */
-    DebugString.Length += Length;
+    DebugString.Length += (USHORT)Length;
 
     /* First, let the debugger know as well */
     if (RtlpCheckForActiveDebugger(FALSE))
@@ -150,7 +142,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
         if (Status == STATUS_BREAKPOINT)
         {
             /* Breakpoint */
-            DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+            //DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
             Status = STATUS_SUCCESS;
         }
     }
@@ -270,20 +262,20 @@ DbgPrintReturnControlC(PCH Format,
  */
 ULONG
 NTAPI
-DbgPrompt(PCH OutputString,
-          PCH InputString,
-          ULONG InputSize)
+DbgPrompt(IN PCCH Prompt,
+          OUT PCH Response,
+          IN ULONG MaximumResponseLength)
 {
-    ANSI_STRING Output;
-    ANSI_STRING Input;
+    CSTRING Output;
+    STRING Input;
 
     /* Setup the input string */
-    Input.MaximumLength = InputSize;
-    Input.Buffer = InputString;
+    Input.MaximumLength = (USHORT)MaximumResponseLength;
+    Input.Buffer = Response;
 
     /* Setup the output string */
-    Output.Length = strlen (OutputString);
-    Output.Buffer = OutputString;
+    Output.Length = strlen(Prompt);
+    Output.Buffer = Prompt;
 
     /* Call the system service */
     return DebugPrompt(&Output, &Input);
@@ -292,7 +284,7 @@ DbgPrompt(PCH OutputString,
 /*
  * @implemented
  */
-BOOLEAN
+NTSTATUS
 NTAPI
 DbgQueryDebugFilterState(IN ULONG ComponentId,
                          IN ULONG Level)
@@ -315,15 +307,58 @@ DbgSetDebugFilterState(IN ULONG ComponentId,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-DbgLoadImageSymbols(IN PUNICODE_STRING Name,
-                    IN ULONG Base,
-                    IN ULONG Unknown3)
+DbgLoadImageSymbols(IN PANSI_STRING Name,
+                    IN PVOID Base,
+                    IN ULONG ProcessId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIMAGE_NT_HEADERS NtHeader;
+    KD_SYMBOLS_INFO SymbolInfo;
+
+    /* Setup the symbol data */
+    SymbolInfo.BaseOfDll = Base;
+    SymbolInfo.ProcessId = (ULONG)ProcessId;
+
+    /* Get NT Headers */
+    NtHeader = RtlImageNtHeader(Base);
+    if (NtHeader)
+    {
+        /* Get the rest of the data */
+        SymbolInfo.CheckSum = NtHeader->OptionalHeader.CheckSum;
+        SymbolInfo.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
+    }
+    else
+    {
+        /* No data available */
+        SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
+    }
+
+    /* Load the symbols */
+    DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
+    return STATUS_SUCCESS;
 }
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+DbgUnLoadImageSymbols(IN PANSI_STRING Name,
+                      IN PVOID Base,
+                      IN ULONG_PTR ProcessId)
+{
+    KD_SYMBOLS_INFO SymbolInfo;
+
+    /* Setup the symbol data */
+    SymbolInfo.BaseOfDll = Base;
+    SymbolInfo.ProcessId = (ULONG)ProcessId;
+    SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
+
+    /* Load the symbols */
+    DebugService2(Name, &SymbolInfo, BREAKPOINT_UNLOAD_SYMBOLS);
+}
+
 /* EOF */

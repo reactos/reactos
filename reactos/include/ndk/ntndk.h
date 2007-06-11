@@ -38,6 +38,7 @@ Author:
 #include <excpt.h>          // C Standard Header
 #include <stdarg.h>         // C Standard Header
 #include <umtypes.h>        // General Definitions
+#include <intrin.h>         // Use Inlined Intrinsics
 
 //
 // Type Headers
@@ -81,6 +82,9 @@ Author:
 #include <sefuncs.h>        // Security Subsystem Functions
 #include <umfuncs.h>        // User-Mode NT Library Functions
 
+//
+// Assembly Support
+//
 #include <asm.h>            // Assembly Offsets
 
 #ifdef _MSC_VER

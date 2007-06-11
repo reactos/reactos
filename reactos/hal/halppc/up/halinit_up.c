@@ -1,4 +1,4 @@
-/* $Id: halinit_up.c 23907 2006-09-04 05:52:23Z arty $
+/* $Id: halinit_up.c 24964 2006-11-29 08:28:20Z ion $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -18,18 +18,15 @@
 /* FUNCTIONS ***************************************************************/
 
 VOID
-HalpInitPhase0(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-  HalpInitPICs();
 
-  /* Setup busy waiting */
-  HalpCalibrateStallExecution();
 }
 
 VOID
 HalpInitPhase1(VOID)
 {
-    /* Nothing for now */
+
 }
 
 /* EOF */

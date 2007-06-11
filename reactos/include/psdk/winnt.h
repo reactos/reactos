@@ -472,10 +472,12 @@ typedef DWORD FLONG;
 #define THREAD_DIRECT_IMPERSONATION	0x200
 #endif
 #define THREAD_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3FF)
+#ifndef THREAD_BASE_PRIORITY_MIN
 #define THREAD_BASE_PRIORITY_LOWRT	15
 #define THREAD_BASE_PRIORITY_MAX	2
 #define THREAD_BASE_PRIORITY_MIN	(-2)
 #define THREAD_BASE_PRIORITY_IDLE	(-15)
+#endif
 #define EXCEPTION_NONCONTINUABLE	1
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
@@ -485,7 +487,6 @@ typedef DWORD FLONG;
 #endif
 #define TIMER_QUERY_STATE	0x0001
 #define TIMER_MODIFY_STATE	0x0002
-#define TIMER_ALL_ACCESS	(STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|TIMER_QUERY_STATE|TIMER_MODIFY_STATE)
 /*
  * To prevent gcc compiler warnings, bracket these defines when initialising
  * a  SID_IDENTIFIER_AUTHORITY, eg.
@@ -965,6 +966,7 @@ typedef enum
 #define HEAP_DISABLE_COALESCE_ON_FREE 128
 #define HEAP_CREATE_ALIGN_16 0x10000
 #define HEAP_CREATE_ENABLE_TRACING 0x20000
+#define HEAP_CREATE_ENABLE_EXECUTE 0x00040000
 #define HEAP_MAXIMUM_TAG 0xFFF
 #define HEAP_PSEUDO_TAG_FLAG 0x8000
 #define HEAP_TAG_SHIFT 16
@@ -1132,7 +1134,6 @@ typedef enum
 #define IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR	14
 #define IMAGE_SCN_TYPE_REG 0
 #define IMAGE_SCN_TYPE_DSECT 1
-#define IMAGE_SCN_TYPE_NOLOAD 2
 #define IMAGE_SCN_TYPE_GROUP 4
 #define IMAGE_SCN_TYPE_NO_PAD 8
 #define IMAGE_SCN_CNT_CODE 32
@@ -3265,31 +3266,6 @@ typedef struct _NT_TIB {
 	PVOID ArbitraryUserPointer;
 	struct _NT_TIB *Self;
 } NT_TIB,*PNT_TIB;
-typedef struct _REPARSE_DATA_BUFFER {
-	DWORD  ReparseTag;
-	WORD   ReparseDataLength;
-	WORD   Reserved;
-	_ANONYMOUS_UNION union {
-		struct {
-			WORD   SubstituteNameOffset;
-			WORD   SubstituteNameLength;
-			WORD   PrintNameOffset;
-			WORD   PrintNameLength;
-			ULONG  Flags;
-			WCHAR PathBuffer[1];
-		} SymbolicLinkReparseBuffer;
-		struct {
-			WORD   SubstituteNameOffset;
-			WORD   SubstituteNameLength;
-			WORD   PrintNameOffset;
-			WORD   PrintNameLength;
-			WCHAR PathBuffer[1];
-		} MountPointReparseBuffer;
-		struct {
-			BYTE   DataBuffer[1];
-		} GenericReparseBuffer;
-	} DUMMYUNIONNAME;
-} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 typedef struct _REPARSE_GUID_DATA_BUFFER {
 	DWORD  ReparseTag;
 	WORD   ReparseDataLength;
@@ -3781,10 +3757,12 @@ typedef struct _OBJECT_TYPE_LIST {
 static __inline__ PVOID GetCurrentFiber(void)
 {
     void* ret;
+#ifndef _M_PPC
     __asm__ __volatile__ (
 	"movl	%%fs:0x10,%0"
 	: "=r" (ret) /* allow use of reg eax,ebx,ecx,edx,esi,edi */
 	);
+#endif
     return ret;
 }
 

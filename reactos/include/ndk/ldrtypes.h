@@ -49,7 +49,14 @@ Author:
 #define LDRP_IMAGE_NOT_AT_BASE                  0x00200000
 #define LDRP_COR_IMAGE                          0x00400000
 #define LDR_COR_OWNS_UNMAP                      0x00800000
+#define LDRP_SYSTEM_MAPPED                      0x01000000
+#define LDRP_IMAGE_VERIFYING                    0x02000000
+#define LDRP_DRIVER_DEPENDENT_DLL               0x04000000
+#define LDRP_ENTRY_NATIVE                       0x08800000
 #define LDRP_REDIRECTED                         0x10000000
+#define LDRP_NON_PAGED_DEBUG_INFO               0x20000000
+#define LDRP_MM_LOADED                          0x40000000
+#define LDRP_COMPAT_DATABASE_PROCESSED          0x80000000
 
 //
 // Dll Characteristics for LdrLoadDll
@@ -66,6 +73,11 @@ Author:
 //
 #define LDR_LOCK_LOADER_LOCK_FLAG_RAISE_STATUS  0x00000001
 #define LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY      0x00000002
+
+//
+// FIXME: THIS SHOULD *NOT* BE USED!
+//
+#define IMAGE_SCN_TYPE_NOLOAD                   0x00000002
 
 //
 // Loader Data stored in the PEB
@@ -111,6 +123,15 @@ typedef struct _LDR_DATA_TABLE_ENTRY
     PVOID EntryPointActivationContext;
     PVOID PatchInformation;
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
+
+//
+// Loaded Imports Reference Counting in Kernel
+//
+typedef struct _LOAD_IMPORTS
+{
+    SIZE_T Count;
+    PLDR_DATA_TABLE_ENTRY Entry[1];
+} LOAD_IMPORTS, *PLOAD_IMPORTS;
 
 //
 // Loader Resource Information

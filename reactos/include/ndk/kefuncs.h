@@ -43,6 +43,15 @@ KeInitializeApc(
     IN PVOID Context
 );
 
+BOOLEAN
+NTAPI
+KeInsertQueueApc(
+    IN PKAPC Apc,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2,
+    IN KPRIORITY PriorityBoost
+);
+
 VOID
 NTAPI
 KiDeliverApc(
@@ -183,6 +192,12 @@ KeEnterKernelDebugger(
 BOOLEAN
 NTAPI
 KeIsExecutingDpc(
+    VOID
+);
+
+VOID
+NTAPI
+KeFlushQueuedDpcs(
     VOID
 );
 
@@ -346,6 +361,12 @@ NtFlushInstructionCache(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
     IN ULONG NumberOfBytesToFlush
+);
+
+ULONG
+NTAPI
+NtGetCurrentProcessorNumber(
+    VOID
 );
 
 NTSYSCALLAPI

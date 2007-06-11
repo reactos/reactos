@@ -52,6 +52,7 @@ Author:
 #define BREAKPOINT_PROMPT                   2
 #define BREAKPOINT_LOAD_SYMBOLS             3
 #define BREAKPOINT_UNLOAD_SYMBOLS           4
+#define BREAKPOINT_COMMAND_STRING           5
 
 //
 // Debug Control Codes for NtSystemDebugcontrol
@@ -160,5 +161,16 @@ typedef struct _SYSDBG_TRIAGE_DUMP
     ULONG ThreadHandles;
     PHANDLE Handles;
 } SYSDBG_TRIAGE_DUMP, *PSYSDBG_TRIAGE_DUMP;
+
+//
+// KD Structures
+//
+typedef struct _KD_SYMBOLS_INFO
+{
+    PVOID BaseOfDll;
+    ULONG_PTR ProcessId;
+    ULONG CheckSum;
+    ULONG SizeOfImage;
+} KD_SYMBOLS_INFO, *PKD_SYMBOLS_INFO;
 
 #endif // _KDTYPES_H

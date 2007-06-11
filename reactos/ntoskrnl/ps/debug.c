@@ -109,14 +109,13 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
                                 IN OUT PVOID* SystemArgument1,
                                 IN OUT PVOID* SystemArgument2)
 {
+#if defined(_M_IX86)
     PGET_SET_CTX_CONTEXT GetSetContext;
     PKEVENT Event;
     PCONTEXT Context;
     PKTHREAD Thread;
     KPROCESSOR_MODE Mode;
-#ifdef _M_IX86
     PKTRAP_FRAME TrapFrame;
-#endif
     PAGED_CODE();
 
     /* Get the Context Structure */
@@ -126,8 +125,6 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
     Mode = GetSetContext->Mode;
     Thread = Apc->SystemArgument2;
 
-#ifdef _M_IX86
-    if (TrapFrame->SegCs == KGDT_R0_CODE && Mode != KernelMode)
     /* Get the trap frame */
     TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)KeGetCurrentThread()->InitialStack -
                                sizeof (FX_SAVE_AREA) - sizeof (KTRAP_FRAME));
@@ -151,10 +148,13 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
                              Context->ContextFlags,
                              Mode);
     }
-#endif
 
     /* Notify the Native API that we are done */
     KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+#else
+    DPRINT1("PspGetOrSetContextKernelRoutine() not implemented!");
+    for (;;);
+#endif
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -179,8 +179,7 @@ PsGetContextThread(IN PETHREAD Thread,
         Size = sizeof(CONTEXT);
 
         /* Read the flags */
-        ProbeForReadUlong(&ThreadContext->ContextFlags);
-        Flags = ThreadContext->ContextFlags;
+        Flags = ProbeForReadUlong(&ThreadContext->ContextFlags);
 
         /* Check if the caller wanted extended registers */
         if ((Flags & CONTEXT_EXTENDED_REGISTERS) !=
@@ -261,10 +260,18 @@ PsGetContextThread(IN PETHREAD Thread,
                                            FALSE,
                                            NULL);
         }
-
-        /* Copy the context */
-        RtlMoveMemory(ThreadContext, &GetSetContext.Context, Size);
     }
+
+    _SEH_TRY
+    {
+        /* Copy the context */
+        RtlCopyMemory(ThreadContext, &GetSetContext.Context, Size);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
     /* Return status */
     return Status;
@@ -290,8 +297,7 @@ PsSetContextThread(IN PETHREAD Thread,
         Size = sizeof(CONTEXT);
 
         /* Read the flags */
-        ProbeForReadUlong(&ThreadContext->ContextFlags);
-        Flags = ThreadContext->ContextFlags;
+        Flags = ProbeForReadUlong(&ThreadContext->ContextFlags);
 
         /* Check if the caller wanted extended registers */
         if ((Flags & CONTEXT_EXTENDED_REGISTERS) !=
@@ -309,7 +315,7 @@ PsSetContextThread(IN PETHREAD Thread,
         }
 
         /* Copy the context */
-        RtlMoveMemory(&GetSetContext.Context, ThreadContext, Size);
+        RtlCopyMemory(&GetSetContext.Context, ThreadContext, Size);
     }
     _SEH_HANDLE
     {

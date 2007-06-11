@@ -40,6 +40,14 @@
 			<file>tan_asm.s</file>
 		</directory>
 	</if>
+	<if property="ARCH" value="powerpc">
+		<directory name="powerpc">
+			<file>interlocked.c</file>
+			<file>debug.c</file>
+			<file>thread.c</file>
+			<file>except.c</file>
+		</directory>
+	</if>
 
       <ifnot property="ARCH" value="i386">
              <file>memgen.c</file>

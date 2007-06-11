@@ -141,6 +141,13 @@ typedef struct _STRING
     PCHAR Buffer;
 } STRING, *PSTRING;
 
+typedef struct _CSTRING
+{
+    USHORT Length;
+    USHORT MaximumLength;
+    CONST CHAR *Buffer;
+} CSTRING, *PCSTRING;
+
 #endif
 
 typedef struct _OBJECT_ATTRIBUTES
@@ -152,6 +159,15 @@ typedef struct _OBJECT_ATTRIBUTES
     PVOID SecurityDescriptor;
     PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+
+//
+// ClientID Structure
+//
+typedef struct _CLIENT_ID
+{
+    HANDLE UniqueProcess;
+    HANDLE UniqueThread;
+} CLIENT_ID, *PCLIENT_ID;
 
 typedef const UNICODE_STRING* PCUNICODE_STRING;
 typedef STRING ANSI_STRING;

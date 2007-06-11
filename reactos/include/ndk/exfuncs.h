@@ -93,6 +93,29 @@ ExfUnblockPushLock(
     PVOID CurrentWaitBlock
 );
 
+//
+// Resource Functions
+//
+NTKERNELAPI
+BOOLEAN
+NTAPI
+ExTryToAcquireResourceExclusiveLite(
+    IN PERESOURCE Resource
+);
+
+//
+// Handle Table Functions
+//
+NTKERNELAPI
+BOOLEAN
+NTAPI
+ExEnumHandleTable(
+    IN PHANDLE_TABLE HandleTable,
+    IN PEX_ENUM_HANDLE_CALLBACK EnumHandleProcedure,
+    IN OUT PVOID Context,
+    OUT PHANDLE Handle OPTIONAL
+);
+
 #endif
 
 //
@@ -145,6 +168,16 @@ NtCreateEventPair(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtCreateKeyedEvent(
+    OUT PHANDLE KeyedEventHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ULONG Flags
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtCreateMutant(
     OUT PHANDLE MutantHandle,
     IN ACCESS_MASK DesiredAccess,
@@ -185,6 +218,15 @@ NTSTATUS
 NTAPI
 NtDisplayString(
     IN PUNICODE_STRING DisplayString
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtEnumerateSystemEnvironmentValuesEx(
+    IN ULONG InformationClass,
+    IN PVOID Buffer,
+    IN ULONG BufferLength
 );
 
 NTSYSCALLAPI
@@ -337,6 +379,17 @@ NtQuerySystemEnvironmentValue(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtQuerySystemEnvironmentValueEx(
+    IN PUNICODE_STRING VariableName,
+    IN LPGUID VendorGuid,
+    IN PVOID Value,
+    IN OUT PULONG ReturnLength,
+    IN OUT PULONG Attributes
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtQuerySystemInformation(
     IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     OUT PVOID SystemInformation,
@@ -473,6 +526,14 @@ NTAPI
 NtSetSystemEnvironmentValue(
     IN PUNICODE_STRING VariableName,
     IN PUNICODE_STRING Value
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetSystemEnvironmentValueEx(
+    IN PUNICODE_STRING VariableName,
+    IN LPGUID VendorGuid
 );
 
 NTSYSCALLAPI

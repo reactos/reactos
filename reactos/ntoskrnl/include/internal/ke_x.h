@@ -7,20 +7,102 @@
 */
 
 //
+// Thread Dispatcher Header DebugActive Mask 
+//
+#define DR_MASK(x)                              1 << x
+#define DR_ACTIVE_MASK                          0x10
+#define DR_REG_MASK                             0x4F
+
+#ifdef _M_IX86
+//
+// Sanitizes a selector
+//
+FORCEINLINE
+ULONG
+Ke386SanitizeSeg(IN ULONG Cs,
+                IN KPROCESSOR_MODE Mode)
+{
+    //
+    // Check if we're in kernel-mode, and force CPL 0 if so.
+    // Otherwise, force CPL 3.
+    //
+    return ((Mode == KernelMode) ?
+            (Cs & (0xFFFF & ~RPL_MASK)) :
+            (RPL_MASK | (Cs & 0xFFFF)));
+}
+
+//
+// Sanitizes EFLAGS
+//
+FORCEINLINE
+ULONG
+Ke386SanitizeFlags(IN ULONG Eflags,
+                   IN KPROCESSOR_MODE Mode)
+{
+    //
+    // Check if we're in kernel-mode, and sanitize EFLAGS if so.
+    // Otherwise, also force interrupt mask on.
+    //
+    return ((Mode == KernelMode) ?
+            (Eflags & (EFLAGS_USER_SANITIZE | EFLAGS_INTERRUPT_MASK)) :
+            (EFLAGS_INTERRUPT_MASK | (Eflags & EFLAGS_USER_SANITIZE)));
+}
+
+//
+// Gets a DR register from a CONTEXT structure
+//
+FORCEINLINE
+PVOID
+KiDrFromContext(IN ULONG Dr,
+                IN PCONTEXT Context)
+{
+    return *(PVOID*)((ULONG_PTR)Context + KiDebugRegisterContextOffsets[Dr]);
+}
+
+//
+// Gets a DR register from a KTRAP_FRAME structure
+//
+FORCEINLINE
+PVOID*
+KiDrFromTrapFrame(IN ULONG Dr,
+                  IN PKTRAP_FRAME TrapFrame)
+{
+    return (PVOID*)((ULONG_PTR)TrapFrame + KiDebugRegisterTrapOffsets[Dr]);
+}
+
+//
+//
+//
+FORCEINLINE
+PVOID
+Ke386SanitizeDr(IN PVOID DrAddress,
+                IN KPROCESSOR_MODE Mode)
+{
+    //
+    // Check if we're in kernel-mode, and return the address directly if so.
+    // Otherwise, make sure it's not inside the kernel-mode address space.
+    // If it is, then clear the address.
+    //
+    return ((Mode == KernelMode) ? DrAddress :
+            (DrAddress <= MM_HIGHEST_USER_ADDRESS) ? DrAddress : 0);
+}
+#endif /* _M_IX86 */
+
+//
 // Enters a Guarded Region
 //
 #define KeEnterGuardedRegion()                                              \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
     ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT((Thread->SpecialApcDisable <= 0) &&                              \
-           (Thread->SpecialApcDisable != -32768));                          \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT((_Thread->SpecialApcDisable <= 0) &&                             \
+           (_Thread->SpecialApcDisable != -32768));                         \
                                                                             \
     /* Disable Special APCs */                                              \
-    Thread->SpecialApcDisable--;                                            \
+    _Thread->SpecialApcDisable--;                                           \
 }
 
 //
@@ -28,18 +110,18 @@
 //
 #define KeLeaveGuardedRegion()                                              \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
     ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT(Thread->SpecialApcDisable < 0);                                  \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT(_Thread->SpecialApcDisable < 0);                                 \
                                                                             \
     /* Leave region and check if APCs are OK now */                         \
-    if (!(++Thread->SpecialApcDisable))                                     \
+    if (!(++_Thread->SpecialApcDisable))                                    \
     {                                                                       \
         /* Check for Kernel APCs on the list */                             \
-        if (!IsListEmpty(&Thread->ApcState.                                 \
+        if (!IsListEmpty(&_Thread->ApcState.                                \
                          ApcListHead[KernelMode]))                          \
         {                                                                   \
             /* Check for APC Delivery */                                    \
@@ -57,15 +139,15 @@
 //
 #define KeEnterCriticalRegion()                                             \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT((Thread->KernelApcDisable <= 0) &&                               \
-           (Thread->KernelApcDisable != -32768));                           \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT((_Thread->KernelApcDisable <= 0) &&                              \
+           (_Thread->KernelApcDisable != -32768));                          \
                                                                             \
     /* Disable Kernel APCs */                                               \
-    Thread->KernelApcDisable--;                                             \
+    _Thread->KernelApcDisable--;                                            \
 }
 
 //
@@ -73,437 +155,26 @@
 //
 #define KeLeaveCriticalRegion()                                             \
 {                                                                           \
-    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT(Thread == KeGetCurrentThread());                                 \
-    ASSERT(Thread->KernelApcDisable < 0);                                   \
+    ASSERT(_Thread == KeGetCurrentThread());                                \
+    ASSERT(_Thread->KernelApcDisable < 0);                                  \
                                                                             \
     /* Enable Kernel APCs */                                                \
-    Thread->KernelApcDisable++;                                             \
+    _Thread->KernelApcDisable++;                                            \
                                                                             \
     /* Check if Kernel APCs are now enabled */                              \
-    if (!(Thread->KernelApcDisable))                                        \
+    if (!(_Thread->KernelApcDisable))                                       \
     {                                                                       \
         /* Check if we need to request an APC Delivery */                   \
-        if (!(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) &&    \
-            !(Thread->KernelApcDisable))                                    \
+        if (!(IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) &&   \
+            !(_Thread->SpecialApcDisable))                                  \
         {                                                                   \
             /* Check for the right environment */                           \
             KiCheckForKernelApcDelivery();                                  \
         }                                                                   \
     }                                                                       \
-}
-
-//
-// Satisfies the wait of any dispatcher object
-//
-#define KiSatisfyObjectWait(Object, Thread)                                 \
-{                                                                           \
-    /* Special case for Mutants */                                          \
-    if ((Object)->Header.Type == MutantObject)                              \
-    {                                                                       \
-        /* Decrease the Signal State */                                     \
-        (Object)->Header.SignalState--;                                     \
-                                                                            \
-        /* Check if it's now non-signaled */                                \
-        if (!(Object)->Header.SignalState)                                  \
-        {                                                                   \
-            /* Set the Owner Thread */                                      \
-            (Object)->OwnerThread = Thread;                                 \
-                                                                            \
-            /* Disable APCs if needed */                                    \
-            Thread->KernelApcDisable -= (Object)->ApcDisable;               \
-                                                                            \
-            /* Check if it's abandoned */                                   \
-            if ((Object)->Abandoned)                                        \
-            {                                                               \
-                /* Unabandon it */                                          \
-                (Object)->Abandoned = FALSE;                                \
-                                                                            \
-                /* Return Status */                                         \
-                Thread->WaitStatus = STATUS_ABANDONED;                      \
-            }                                                               \
-                                                                            \
-            /* Insert it into the Mutant List */                            \
-            InsertHeadList(Thread->MutantListHead.Blink,                    \
-                           &(Object)->MutantListEntry);                     \
-        }                                                                   \
-    }                                                                       \
-    else if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==               \
-             EventSynchronizationObject)                                    \
-    {                                                                       \
-        /* Synchronization Timers and Events just get un-signaled */        \
-        (Object)->Header.SignalState = 0;                                   \
-    }                                                                       \
-    else if ((Object)->Header.Type == SemaphoreObject)                      \
-    {                                                                       \
-        /* These ones can have multiple states, so we only decrease it */   \
-        (Object)->Header.SignalState--;                                     \
-    }                                                                       \
-}
-
-//
-// Satisfies the wait of a mutant dispatcher object
-//
-#define KiSatisfyMutantWait(Object, Thread)                                 \
-{                                                                           \
-    /* Decrease the Signal State */                                         \
-    (Object)->Header.SignalState--;                                         \
-                                                                            \
-    /* Check if it's now non-signaled */                                    \
-    if (!(Object)->Header.SignalState)                                      \
-    {                                                                       \
-        /* Set the Owner Thread */                                          \
-        (Object)->OwnerThread = Thread;                                     \
-                                                                            \
-        /* Disable APCs if needed */                                        \
-        Thread->KernelApcDisable -= (Object)->ApcDisable;                   \
-                                                                            \
-        /* Check if it's abandoned */                                       \
-        if ((Object)->Abandoned)                                            \
-        {                                                                   \
-            /* Unabandon it */                                              \
-            (Object)->Abandoned = FALSE;                                    \
-                                                                            \
-            /* Return Status */                                             \
-            Thread->WaitStatus = STATUS_ABANDONED;                          \
-        }                                                                   \
-                                                                            \
-        /* Insert it into the Mutant List */                                \
-        InsertHeadList(Thread->MutantListHead.Blink,                        \
-                       &(Object)->MutantListEntry);                         \
-    }                                                                       \
-}
-
-//
-// Satisfies the wait of any nonmutant dispatcher object
-//
-#define KiSatisfyNonMutantWait(Object, Thread)                              \
-{                                                                           \
-    if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==                    \
-             EventSynchronizationObject)                                    \
-    {                                                                       \
-        /* Synchronization Timers and Events just get un-signaled */        \
-        (Object)->Header.SignalState = 0;                                   \
-    }                                                                       \
-    else if ((Object)->Header.Type == SemaphoreObject)                      \
-    {                                                                       \
-        /* These ones can have multiple states, so we only decrease it */   \
-        (Object)->Header.SignalState--;                                     \
-    }                                                                       \
-}
-
-//
-// Recalculates the due time
-//
-PLARGE_INTEGER
-FORCEINLINE
-KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
-                     IN PLARGE_INTEGER DueTime,
-                     IN OUT PLARGE_INTEGER NewDueTime)
-{
-    /* Don't do anything for absolute waits */
-    if (OriginalDueTime->QuadPart >= 0) return OriginalDueTime;
-
-    /* Otherwise, query the interrupt time and recalculate */
-    NewDueTime->QuadPart = KeQueryInterruptTime();
-    NewDueTime->QuadPart -= DueTime->QuadPart;
-    return NewDueTime;
-}
-
-//
-// Determines wether a thread should be added to the wait list
-//
-FORCEINLINE
-BOOLEAN
-KiCheckThreadStackSwap(IN PKTHREAD Thread,
-                       IN KPROCESSOR_MODE WaitMode)
-{
-    /* Check the required conditions */
-    if ((WaitMode != KernelMode) &&
-        (Thread->EnableStackSwap) &&
-        (Thread->Priority >= (LOW_REALTIME_PRIORITY + 9)))
-    {
-        /* We are go for swap */
-        return TRUE;
-    }
-    else
-    {
-        /* Don't swap the thread */
-        return FALSE;
-    }
-}
-
-//
-// Adds a thread to the wait list
-//
-#define KiAddThreadToWaitList(Thread, Swappable)                            \
-{                                                                           \
-    /* Make sure it's swappable */                                          \
-    if (Swappable)                                                          \
-    {                                                                       \
-        /* Insert it into the PRCB's List */                                \
-        InsertTailList(&KeGetCurrentPrcb()->WaitListHead,                   \
-                       &Thread->WaitListEntry);                             \
-    }                                                                       \
-}
-
-//
-// Checks if a wait in progress should be interrupted by APCs or an alertable
-// state.
-//
-FORCEINLINE
-NTSTATUS
-KiCheckAlertability(IN PKTHREAD Thread,
-                    IN BOOLEAN Alertable,
-                    IN KPROCESSOR_MODE WaitMode)
-{
-    /* Check if the wait is alertable */
-    if (Alertable)
-    {
-        /* It is, first check if the thread is alerted in this mode */
-        if (Thread->Alerted[WaitMode])
-        {
-            /* It is, so bail out of the wait */
-            Thread->Alerted[WaitMode] = FALSE;
-            return STATUS_ALERTED;
-        }
-        else if ((WaitMode != KernelMode) &&
-                (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
-        {
-            /* It's isn't, but this is a user wait with queued user APCs */
-            Thread->ApcState.UserApcPending = TRUE;
-            return STATUS_USER_APC;
-        }
-        else if (Thread->Alerted[KernelMode])
-        {
-            /* It isn't that either, but we're alered in kernel mode */
-            Thread->Alerted[KernelMode] = FALSE;
-            return STATUS_ALERTED;
-        }
-    }
-    else if ((WaitMode != KernelMode) && (Thread->ApcState.UserApcPending))
-    {
-        /* Not alertable, but this is a user wait with pending user APCs */
-        return STATUS_USER_APC;
-    }
-
-    /* Otherwise, we're fine */
-    return STATUS_WAIT_0;
-}
-
-FORCEINLINE
-BOOLEAN
-KxDelayThreadWait(IN PKTHREAD Thread,
-                   IN BOOLEAN Alertable,
-                   IN KPROCESSOR_MODE WaitMode)
-{
-    BOOLEAN Swappable;
-    PKWAIT_BLOCK TimerBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
-
-    /* Setup the Wait Block */
-    Thread->WaitBlockList = TimerBlock;
-    TimerBlock->NextWaitBlock = TimerBlock;
-
-    /* Link the timer to this Wait Block */
-    Thread->Timer.Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;
-    Thread->Timer.Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;
-
-    /* Clear wait status */
-    Thread->WaitStatus = STATUS_WAIT_0;
-
-    /* Setup wait fields */
-    Thread->Alertable = Alertable;
-    Thread->WaitReason = DelayExecution;
-    Thread->WaitMode = WaitMode;
-
-    /* Check if we can swap the thread's stack */
-    Thread->WaitListEntry.Flink = NULL;
-    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
-
-    /* Set the wait time */
-    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-    return Swappable;
-}
-
-FORCEINLINE
-BOOLEAN
-KxMultiThreadWait(IN PKTHREAD Thread,
-                  IN PKWAIT_BLOCK WaitBlock,
-                  IN BOOLEAN Alertable,
-                  IN KWAIT_REASON WaitReason,
-                  IN KPROCESSOR_MODE WaitMode)
-{
-    BOOLEAN Swappable;
-    PKTIMER ThreadTimer = &Thread->Timer;
-
-    /* Set default wait status */
-    Thread->WaitStatus = STATUS_WAIT_0;
-
-    /* Link wait block array to the thread */
-    Thread->WaitBlockList = WaitBlock;
-
-    /* Initialize the timer list */
-    InitializeListHead(&ThreadTimer->Header.WaitListHead);
-
-    /* Set wait settings */
-    Thread->Alertable = Alertable;
-    Thread->WaitMode = WaitMode;
-    Thread->WaitReason = WaitReason;
-
-    /* Check if we can swap the thread's stack */
-    Thread->WaitListEntry.Flink = NULL;
-    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
-
-    /* Set the wait time */
-    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-    return Swappable;
-}
-
-FORCEINLINE
-BOOLEAN
-KxSingleThreadWait(IN PKTHREAD Thread,
-                   IN PKWAIT_BLOCK WaitBlock,
-                   IN PVOID Object,
-                   IN PLARGE_INTEGER Timeout,
-                   IN BOOLEAN Alertable,
-                   IN KWAIT_REASON WaitReason,
-                   IN KPROCESSOR_MODE WaitMode)
-{
-    BOOLEAN Swappable;
-    PKWAIT_BLOCK TimerBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
-
-    /* Setup the Wait Block */
-    Thread->WaitBlockList = WaitBlock;
-    WaitBlock->WaitKey = STATUS_WAIT_0;
-    WaitBlock->Object = Object;
-    WaitBlock->WaitType = WaitAny;
-
-    /* Clear wait status */
-    Thread->WaitStatus = STATUS_WAIT_0;
-
-    /* Check if we have a timer */
-    if (Timeout)
-    {
-        /* Pointer to timer block */
-        WaitBlock->NextWaitBlock = TimerBlock;
-        TimerBlock->NextWaitBlock = WaitBlock;
-
-        /* Link the timer to this Wait Block */
-        Thread->Timer.Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;
-        Thread->Timer.Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;
-    }
-    else
-    {
-        /* No timer block, just ourselves */
-        WaitBlock->NextWaitBlock = WaitBlock;
-    }
-
-    /* Setup wait fields */
-    Thread->Alertable = Alertable;
-    Thread->WaitReason = WaitReason;
-    Thread->WaitMode = WaitMode;
-
-    /* Check if we can swap the thread's stack */
-    Thread->WaitListEntry.Flink = NULL;
-    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
-
-    /* Set the wait time */
-    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-    return Swappable;
-}
-
-//
-// Unwaits a Thread
-//
-FORCEINLINE
-VOID
-KxUnwaitThread(IN DISPATCHER_HEADER *Object,
-               IN KPRIORITY Increment)
-{
-    PLIST_ENTRY WaitEntry, WaitList;
-    PKWAIT_BLOCK CurrentWaitBlock;
-    PKTHREAD WaitThread;
-    ULONG WaitKey;
-
-    /* Loop the Wait Entries */
-    WaitList = &Object->WaitListHead;
-    WaitEntry = WaitList->Flink;
-    do
-    {
-        /* Get the current wait block */
-        CurrentWaitBlock = CONTAINING_RECORD(WaitEntry,
-                                             KWAIT_BLOCK,
-                                             WaitListEntry);
-
-        /* Get the waiting thread */
-        WaitThread = CurrentWaitBlock->Thread;
-
-        /* Check the current Wait Mode */
-        if (CurrentWaitBlock->WaitType == WaitAny)
-        {
-            /* Use the actual wait key */
-            WaitKey = CurrentWaitBlock->WaitKey;
-        }
-        else
-        {
-            /* Otherwise, use STATUS_KERNEL_APC */
-            WaitKey = STATUS_KERNEL_APC;
-        }
-
-        /* Unwait the thread */
-        KiUnwaitThread(WaitThread, WaitKey, Increment);
-
-        /* Next entry */
-        WaitEntry = WaitList->Flink;
-    } while (WaitEntry != WaitList);
-}
-
-//
-// Unwaits a Thread waiting on an event
-//
-FORCEINLINE
-VOID
-KxUnwaitThreadForEvent(IN PKEVENT Event,
-                       IN KPRIORITY Increment)
-{
-    PLIST_ENTRY WaitEntry, WaitList;
-    PKWAIT_BLOCK CurrentWaitBlock;
-    PKTHREAD WaitThread;
-
-    /* Loop the Wait Entries */
-    WaitList = &Event->Header.WaitListHead;
-    WaitEntry = WaitList->Flink;
-    do
-    {
-        /* Get the current wait block */
-        CurrentWaitBlock = CONTAINING_RECORD(WaitEntry,
-                                             KWAIT_BLOCK,
-                                             WaitListEntry);
-
-        /* Get the waiting thread */
-        WaitThread = CurrentWaitBlock->Thread;
-
-        /* Check the current Wait Mode */
-        if (CurrentWaitBlock->WaitType == WaitAny)
-        {
-            /* Un-signal it */
-            Event->Header.SignalState = 0;
-
-            /* Un-signal the event and unwait the thread */
-            KiUnwaitThread(WaitThread, CurrentWaitBlock->WaitKey, Increment);
-            break;
-        }
-        else
-        {
-            /* Unwait the thread with STATUS_KERNEL_APC */
-            KiUnwaitThread(WaitThread, STATUS_KERNEL_APC, Increment);
-        }
-
-        /* Next entry */
-        WaitEntry = WaitList->Flink;
-    } while (WaitEntry != WaitList);
 }
 
 #ifndef _CONFIG_SMP
@@ -685,11 +356,7 @@ KiRundownThread(IN PKTHREAD Thread)
         /* Clear it */
         KeGetCurrentPrcb()->NpxThread = NULL;
 #ifdef _M_IX86
-#ifdef __GNUC__
-        __asm__("fninit\n\t");
-#else
-        __asm fninit;
-#endif
+        Ke386FnInit();
 #endif
     }
 }
@@ -702,6 +369,27 @@ KiRequestApcInterrupt(IN BOOLEAN NeedApc,
     /* We deliver instantly on UP */
     UNREFERENCED_PARAMETER(NeedApc);
     UNREFERENCED_PARAMETER(Processor);
+}
+
+FORCEINLINE
+PKSPIN_LOCK_QUEUE
+KiAcquireTimerLock(IN ULONG Hand)
+{
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Nothing to do on UP */
+    UNREFERENCED_PARAMETER(Hand);
+    return NULL;
+}
+
+FORCEINLINE
+VOID
+KiReleaseTimerLock(IN PKSPIN_LOCK_QUEUE LockQueue)
+{
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Nothing to do on UP */
+    UNREFERENCED_PARAMETER(LockQueue);
 }
 
 #else
@@ -1110,6 +798,579 @@ KiReleaseDeviceQueueLock(IN PKLOCK_QUEUE_HANDLE DeviceLock)
 }
 
 //
+// Satisfies the wait of any dispatcher object
+//
+#define KiSatisfyObjectWait(Object, Thread)                                 \
+{                                                                           \
+    /* Special case for Mutants */                                          \
+    if ((Object)->Header.Type == MutantObject)                              \
+    {                                                                       \
+        /* Decrease the Signal State */                                     \
+        (Object)->Header.SignalState--;                                     \
+                                                                            \
+        /* Check if it's now non-signaled */                                \
+        if (!(Object)->Header.SignalState)                                  \
+        {                                                                   \
+            /* Set the Owner Thread */                                      \
+            (Object)->OwnerThread = Thread;                                 \
+                                                                            \
+            /* Disable APCs if needed */                                    \
+            Thread->KernelApcDisable = Thread->KernelApcDisable -           \
+                                       (Object)->ApcDisable;                \
+                                                                            \
+            /* Check if it's abandoned */                                   \
+            if ((Object)->Abandoned)                                        \
+            {                                                               \
+                /* Unabandon it */                                          \
+                (Object)->Abandoned = FALSE;                                \
+                                                                            \
+                /* Return Status */                                         \
+                Thread->WaitStatus = STATUS_ABANDONED;                      \
+            }                                                               \
+                                                                            \
+            /* Insert it into the Mutant List */                            \
+            InsertHeadList(Thread->MutantListHead.Blink,                    \
+                           &(Object)->MutantListEntry);                     \
+        }                                                                   \
+    }                                                                       \
+    else if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==               \
+             EventSynchronizationObject)                                    \
+    {                                                                       \
+        /* Synchronization Timers and Events just get un-signaled */        \
+        (Object)->Header.SignalState = 0;                                   \
+    }                                                                       \
+    else if ((Object)->Header.Type == SemaphoreObject)                      \
+    {                                                                       \
+        /* These ones can have multiple states, so we only decrease it */   \
+        (Object)->Header.SignalState--;                                     \
+    }                                                                       \
+}
+
+//
+// Satisfies the wait of a mutant dispatcher object
+//
+#define KiSatisfyMutantWait(Object, Thread)                                 \
+{                                                                           \
+    /* Decrease the Signal State */                                         \
+    (Object)->Header.SignalState--;                                         \
+                                                                            \
+    /* Check if it's now non-signaled */                                    \
+    if (!(Object)->Header.SignalState)                                      \
+    {                                                                       \
+        /* Set the Owner Thread */                                          \
+        (Object)->OwnerThread = Thread;                                     \
+                                                                            \
+        /* Disable APCs if needed */                                        \
+        Thread->KernelApcDisable = Thread->KernelApcDisable -               \
+                                   (Object)->ApcDisable;                    \
+                                                                            \
+        /* Check if it's abandoned */                                       \
+        if ((Object)->Abandoned)                                            \
+        {                                                                   \
+            /* Unabandon it */                                              \
+            (Object)->Abandoned = FALSE;                                    \
+                                                                            \
+            /* Return Status */                                             \
+            Thread->WaitStatus = STATUS_ABANDONED;                          \
+        }                                                                   \
+                                                                            \
+        /* Insert it into the Mutant List */                                \
+        InsertHeadList(Thread->MutantListHead.Blink,                        \
+                       &(Object)->MutantListEntry);                         \
+    }                                                                       \
+}
+
+//
+// Satisfies the wait of any nonmutant dispatcher object
+//
+#define KiSatisfyNonMutantWait(Object)                                      \
+{                                                                           \
+    if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==                    \
+             EventSynchronizationObject)                                    \
+    {                                                                       \
+        /* Synchronization Timers and Events just get un-signaled */        \
+        (Object)->Header.SignalState = 0;                                   \
+    }                                                                       \
+    else if ((Object)->Header.Type == SemaphoreObject)                      \
+    {                                                                       \
+        /* These ones can have multiple states, so we only decrease it */   \
+        (Object)->Header.SignalState--;                                     \
+    }                                                                       \
+}
+
+//
+// Recalculates the due time
+//
+PLARGE_INTEGER
+FORCEINLINE
+KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
+                     IN PLARGE_INTEGER DueTime,
+                     IN OUT PLARGE_INTEGER NewDueTime)
+{
+    /* Don't do anything for absolute waits */
+    if (OriginalDueTime->QuadPart >= 0) return OriginalDueTime;
+
+    /* Otherwise, query the interrupt time and recalculate */
+    NewDueTime->QuadPart = KeQueryInterruptTime();
+    NewDueTime->QuadPart -= DueTime->QuadPart;
+    return NewDueTime;
+}
+
+//
+// Determines whether a thread should be added to the wait list
+//
+FORCEINLINE
+BOOLEAN
+KiCheckThreadStackSwap(IN PKTHREAD Thread,
+                       IN KPROCESSOR_MODE WaitMode)
+{
+    /* Check the required conditions */
+    if ((WaitMode != KernelMode) &&
+        (Thread->EnableStackSwap) &&
+        (Thread->Priority >= (LOW_REALTIME_PRIORITY + 9)))
+    {
+        /* We are go for swap */
+        return TRUE;
+    }
+    else
+    {
+        /* Don't swap the thread */
+        return FALSE;
+    }
+}
+
+//
+// Adds a thread to the wait list
+//
+#define KiAddThreadToWaitList(Thread, Swappable)                            \
+{                                                                           \
+    /* Make sure it's swappable */                                          \
+    if (Swappable)                                                          \
+    {                                                                       \
+        /* Insert it into the PRCB's List */                                \
+        InsertTailList(&KeGetCurrentPrcb()->WaitListHead,                   \
+                       &Thread->WaitListEntry);                             \
+    }                                                                       \
+}
+
+//
+// Checks if a wait in progress should be interrupted by APCs or an alertable
+// state.
+//
+FORCEINLINE
+NTSTATUS
+KiCheckAlertability(IN PKTHREAD Thread,
+                    IN BOOLEAN Alertable,
+                    IN KPROCESSOR_MODE WaitMode)
+{
+    /* Check if the wait is alertable */
+    if (Alertable)
+    {
+        /* It is, first check if the thread is alerted in this mode */
+        if (Thread->Alerted[WaitMode])
+        {
+            /* It is, so bail out of the wait */
+            Thread->Alerted[WaitMode] = FALSE;
+            return STATUS_ALERTED;
+        }
+        else if ((WaitMode != KernelMode) &&
+                (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
+        {
+            /* It's isn't, but this is a user wait with queued user APCs */
+            Thread->ApcState.UserApcPending = TRUE;
+            return STATUS_USER_APC;
+        }
+        else if (Thread->Alerted[KernelMode])
+        {
+            /* It isn't that either, but we're alered in kernel mode */
+            Thread->Alerted[KernelMode] = FALSE;
+            return STATUS_ALERTED;
+        }
+    }
+    else if ((WaitMode != KernelMode) && (Thread->ApcState.UserApcPending))
+    {
+        /* Not alertable, but this is a user wait with pending user APCs */
+        return STATUS_USER_APC;
+    }
+
+    /* Otherwise, we're fine */
+    return STATUS_WAIT_0;
+}
+
+//
+// Called by Wait and Queue code to insert a timer for dispatching.
+// Also called by KeSetTimerEx to insert a timer from the caller.
+//
+VOID
+FORCEINLINE
+KxInsertTimer(IN PKTIMER Timer,
+              IN ULONG Hand)
+{
+    PKSPIN_LOCK_QUEUE LockQueue;
+
+    /* Acquire the lock and release the dispatcher lock */
+    LockQueue = KiAcquireTimerLock(Hand);
+    KiReleaseDispatcherLockFromDpcLevel();
+
+    /* Try to insert the timer */
+    if (KiInsertTimerTable(Timer, Hand))
+    {
+        /* Complete it */
+        KiCompleteTimer(Timer, LockQueue);
+    }
+    else
+    {
+        /* Do nothing, just release the lock */
+        KiReleaseTimerLock(LockQueue);
+    }
+}
+
+//
+// Called from Unlink and Queue Insert Code.
+// Also called by timer code when canceling an inserted timer.
+// Removes a timer from it's tree.
+//
+VOID
+FORCEINLINE
+KxRemoveTreeTimer(IN PKTIMER Timer)
+{
+    ULONG Hand = Timer->Header.Hand;
+    PKSPIN_LOCK_QUEUE LockQueue;
+    PKTIMER_TABLE_ENTRY TimerEntry;
+
+    /* Acquire timer lock */
+    LockQueue = KiAcquireTimerLock(Hand);
+
+    /* Set the timer as non-inserted */
+    Timer->Header.Inserted = FALSE;
+
+    /* Remove it from the timer list */
+    if (RemoveEntryList(&Timer->TimerListEntry))
+    {
+        /* Get the entry and check if it's empty */
+        TimerEntry = &KiTimerTableListHead[Hand];
+        if (IsListEmpty(&TimerEntry->Entry))
+        {
+            /* Clear the time then */
+            TimerEntry->Time.HighPart = 0xFFFFFFFF;
+        }
+    }
+
+    /* Release the timer lock */
+    KiReleaseTimerLock(LockQueue);
+}
+
+VOID
+FORCEINLINE
+KxSetTimerForThreadWait(IN PKTIMER Timer,
+                        IN LARGE_INTEGER Interval,
+                        OUT PULONG Hand)
+{
+    ULONGLONG DueTime;
+    LARGE_INTEGER InterruptTime, SystemTime, TimeDifference;
+
+    /* Check the timer's interval to see if it's absolute */
+    Timer->Header.Absolute = FALSE;
+    if (Interval.HighPart >= 0)
+    {
+        /* Get the system time and calculate the relative time */
+        KeQuerySystemTime(&SystemTime);
+        TimeDifference.QuadPart = SystemTime.QuadPart - Interval.QuadPart;
+        Timer->Header.Absolute = TRUE;
+
+        /* Check if we've already expired */
+        if (TimeDifference.HighPart >= 0)
+        {
+            /* Reset everything */
+            Timer->DueTime.QuadPart = 0;
+            *Hand = 0;
+            Timer->Header.Hand = 0;
+            return;
+        }
+        else
+        {
+            /* Update the interval */
+            Interval = TimeDifference;
+        }
+    }
+
+    /* Calculate the due time */
+    InterruptTime.QuadPart = KeQueryInterruptTime();
+    DueTime = InterruptTime.QuadPart - Interval.QuadPart;
+    Timer->DueTime.QuadPart = DueTime;
+
+    /* Calculate the timer handle */
+    *Hand = KiComputeTimerTableIndex(DueTime);
+    Timer->Header.Hand = (UCHAR)*Hand;
+}
+
+#define KxDelayThreadWait()                                                 \
+                                                                            \
+    /* Setup the Wait Block */                                              \
+    Thread->WaitBlockList = TimerBlock;                                     \
+                                                                            \
+    /* Setup the timer */                                                   \
+    KxSetTimerForThreadWait(Timer, *Interval, &Hand);                       \
+                                                                            \
+    /* Save the due time for the caller */                                  \
+    DueTime.QuadPart = Timer->DueTime.QuadPart;                             \
+                                                                            \
+    /* Link the timer to this Wait Block */                                 \
+    TimerBlock->NextWaitBlock = TimerBlock;                                 \
+    Timer->Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;          \
+    Timer->Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;          \
+                                                                            \
+    /* Clear wait status */                                                 \
+    Thread->WaitStatus = STATUS_SUCCESS;                                    \
+                                                                            \
+    /* Setup wait fields */                                                 \
+    Thread->Alertable = Alertable;                                          \
+    Thread->WaitReason = DelayExecution;                                    \
+    Thread->WaitMode = WaitMode;                                            \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
+
+#define KxMultiThreadWait()                                                 \
+    /* Link wait block array to the thread */                               \
+    Thread->WaitBlockList = WaitBlockArray;                                 \
+                                                                            \
+    /* Reset the index */                                                   \
+    Index = 0;                                                              \
+                                                                            \
+    /* Loop wait blocks */                                                  \
+    do                                                                      \
+    {                                                                       \
+        /* Fill out the wait block */                                       \
+        WaitBlock = &WaitBlockArray[Index];                                 \
+        WaitBlock->Object = Object[Index];                                  \
+        WaitBlock->WaitKey = (USHORT)Index;                                 \
+        WaitBlock->WaitType = WaitType;                                     \
+        WaitBlock->Thread = Thread;                                         \
+                                                                            \
+        /* Link to next block */                                            \
+        WaitBlock->NextWaitBlock = &WaitBlockArray[Index + 1];              \
+        Index++;                                                            \
+    } while (Index < Count);                                                \
+                                                                            \
+    /* Link the last block */                                               \
+    WaitBlock->NextWaitBlock = WaitBlockArray;                              \
+                                                                            \
+    /* Set default wait status */                                           \
+    Thread->WaitStatus = STATUS_WAIT_0;                                     \
+                                                                            \
+    /* Check if we have a timer */                                          \
+    if (Timeout)                                                            \
+    {                                                                       \
+        /* Link to the block */                                             \
+        TimerBlock->NextWaitBlock = WaitBlockArray;                         \
+                                                                            \
+        /* Setup the timer */                                               \
+        KxSetTimerForThreadWait(Timer, *Timeout, &Hand);                    \
+                                                                            \
+        /* Save the due time for the caller */                              \
+        DueTime.QuadPart = Timer->DueTime.QuadPart;                         \
+                                                                            \
+        /* Initialize the list */                                           \
+        InitializeListHead(&Timer->Header.WaitListHead);                    \
+    }                                                                       \
+                                                                            \
+    /* Set wait settings */                                                 \
+    Thread->Alertable = Alertable;                                          \
+    Thread->WaitMode = WaitMode;                                            \
+    Thread->WaitReason = WaitReason;                                        \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
+
+#define KxSingleThreadWait()                                                \
+    /* Setup the Wait Block */                                              \
+    Thread->WaitBlockList = WaitBlock;                                      \
+    WaitBlock->WaitKey = STATUS_SUCCESS;                                    \
+    WaitBlock->Object = Object;                                             \
+    WaitBlock->WaitType = WaitAny;                                          \
+                                                                            \
+    /* Clear wait status */                                                 \
+    Thread->WaitStatus = STATUS_SUCCESS;                                    \
+                                                                            \
+    /* Check if we have a timer */                                          \
+    if (Timeout)                                                            \
+    {                                                                       \
+        /* Setup the timer */                                               \
+        KxSetTimerForThreadWait(Timer, *Timeout, &Hand);                    \
+                                                                            \
+        /* Save the due time for the caller */                              \
+        DueTime.QuadPart = Timer->DueTime.QuadPart;                         \
+                                                                            \
+        /* Pointer to timer block */                                        \
+        WaitBlock->NextWaitBlock = TimerBlock;                              \
+        TimerBlock->NextWaitBlock = WaitBlock;                              \
+                                                                            \
+        /* Link the timer to this Wait Block */                             \
+        Timer->Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;      \
+        Timer->Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;      \
+    }                                                                       \
+    else                                                                    \
+    {                                                                       \
+        /* No timer block, just ourselves */                                \
+        WaitBlock->NextWaitBlock = WaitBlock;                               \
+    }                                                                       \
+                                                                            \
+    /* Set wait settings */                                                 \
+    Thread->Alertable = Alertable;                                          \
+    Thread->WaitMode = WaitMode;                                            \
+    Thread->WaitReason = WaitReason;                                        \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
+
+#define KxQueueThreadWait()                                                 \
+    /* Setup the Wait Block */                                              \
+    Thread->WaitBlockList = WaitBlock;                                      \
+    WaitBlock->WaitKey = STATUS_SUCCESS;                                    \
+    WaitBlock->Object = Queue;                                              \
+    WaitBlock->WaitType = WaitAny;                                          \
+    WaitBlock->Thread = Thread;                                             \
+                                                                            \
+    /* Clear wait status */                                                 \
+    Thread->WaitStatus = STATUS_SUCCESS;                                    \
+                                                                            \
+    /* Check if we have a timer */                                          \
+    if (Timeout)                                                            \
+    {                                                                       \
+        /* Setup the timer */                                               \
+        KxSetTimerForThreadWait(Timer, *Timeout, &Hand);                    \
+                                                                            \
+        /* Save the due time for the caller */                              \
+        DueTime.QuadPart = Timer->DueTime.QuadPart;                         \
+                                                                            \
+        /* Pointer to timer block */                                        \
+        WaitBlock->NextWaitBlock = TimerBlock;                              \
+        TimerBlock->NextWaitBlock = WaitBlock;                              \
+                                                                            \
+        /* Link the timer to this Wait Block */                             \
+        Timer->Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;      \
+        Timer->Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;      \
+    }                                                                       \
+    else                                                                    \
+    {                                                                       \
+        /* No timer block, just ourselves */                                \
+        WaitBlock->NextWaitBlock = WaitBlock;                               \
+    }                                                                       \
+                                                                            \
+    /* Set wait settings */                                                 \
+    Thread->Alertable = FALSE;                                              \
+    Thread->WaitMode = WaitMode;                                            \
+    Thread->WaitReason = WrQueue;                                           \
+                                                                            \
+    /* Check if we can swap the thread's stack */                           \
+    Thread->WaitListEntry.Flink = NULL;                                     \
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);                   \
+                                                                            \
+    /* Set the wait time */                                                 \
+    Thread->WaitTime = KeTickCount.LowPart;
+
+//
+// Unwaits a Thread
+//
+FORCEINLINE
+VOID
+KxUnwaitThread(IN DISPATCHER_HEADER *Object,
+               IN KPRIORITY Increment)
+{
+    PLIST_ENTRY WaitEntry, WaitList;
+    PKWAIT_BLOCK WaitBlock;
+    PKTHREAD WaitThread;
+    ULONG WaitKey;
+
+    /* Loop the Wait Entries */
+    WaitList = &Object->WaitListHead;
+    ASSERT(IsListEmpty(&Object->WaitListHead) == FALSE);
+    WaitEntry = WaitList->Flink;
+    do
+    {
+        /* Get the current wait block */
+        WaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
+
+        /* Get the waiting thread */
+        WaitThread = WaitBlock->Thread;
+
+        /* Check the current Wait Mode */
+        if (WaitBlock->WaitType == WaitAny)
+        {
+            /* Use the actual wait key */
+            WaitKey = WaitBlock->WaitKey;
+        }
+        else
+        {
+            /* Otherwise, use STATUS_KERNEL_APC */
+            WaitKey = STATUS_KERNEL_APC;
+        }
+
+        /* Unwait the thread */
+        KiUnwaitThread(WaitThread, WaitKey, Increment);
+
+        /* Next entry */
+        WaitEntry = WaitList->Flink;
+    } while (WaitEntry != WaitList);
+}
+
+//
+// Unwaits a Thread waiting on an event
+//
+FORCEINLINE
+VOID
+KxUnwaitThreadForEvent(IN PKEVENT Event,
+                       IN KPRIORITY Increment)
+{
+    PLIST_ENTRY WaitEntry, WaitList;
+    PKWAIT_BLOCK WaitBlock;
+    PKTHREAD WaitThread;
+
+    /* Loop the Wait Entries */
+    WaitList = &Event->Header.WaitListHead;
+    ASSERT(IsListEmpty(&Event->Header.WaitListHead) == FALSE);
+    WaitEntry = WaitList->Flink;
+    do
+    {
+        /* Get the current wait block */
+        WaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
+
+        /* Get the waiting thread */
+        WaitThread = WaitBlock->Thread;
+
+        /* Check the current Wait Mode */
+        if (WaitBlock->WaitType == WaitAny)
+        {
+            /* Un-signal it */
+            Event->Header.SignalState = 0;
+
+            /* Un-signal the event and unwait the thread */
+            KiUnwaitThread(WaitThread, WaitBlock->WaitKey, Increment);
+            break;
+        }
+
+        /* Unwait the thread with STATUS_KERNEL_APC */
+        KiUnwaitThread(WaitThread, STATUS_KERNEL_APC, Increment);
+
+        /* Next entry */
+        WaitEntry = WaitList->Flink;
+    } while (WaitEntry != WaitList);
+}
+
+//
 // This routine queues a thread that is ready on the PRCB's ready lists.
 // If this thread cannot currently run on this CPU, then the thread is
 // added to the deferred ready list instead.
@@ -1187,25 +1448,24 @@ PKTHREAD
 KiSelectReadyThread(IN KPRIORITY Priority,
                     IN PKPRCB Prcb)
 {
-    LONG PriorityMask, PrioritySet, HighPriority;
+    ULONG PrioritySet, HighPriority;
     PLIST_ENTRY ListEntry;
-    PKTHREAD Thread;
+    PKTHREAD Thread = NULL;
 
     /* Save the current mask and get the priority set for the CPU */
-    PriorityMask = Priority;
-    PrioritySet = Prcb->ReadySummary >> (UCHAR)Priority;
-    if (!PrioritySet) return NULL;
+    PrioritySet = Prcb->ReadySummary >> Priority;
+    if (!PrioritySet) goto Quickie;
 
-    /*  Get the highest priority possible */
+    /* Get the highest priority possible */
     BitScanReverse((PULONG)&HighPriority, PrioritySet);
     ASSERT((PrioritySet & PRIORITY_MASK(HighPriority)) != 0);
-    HighPriority += PriorityMask;
+    HighPriority += Priority;
 
-    /* Make sure the list isn't at highest priority */
+    /* Make sure the list isn't empty at the highest priority */
     ASSERT(IsListEmpty(&Prcb->DispatcherReadyListHead[HighPriority]) == FALSE);
 
     /* Get the first thread on the list */
-    ListEntry = &Prcb->DispatcherReadyListHead[HighPriority];
+    ListEntry = Prcb->DispatcherReadyListHead[HighPriority].Flink;
     Thread = CONTAINING_RECORD(ListEntry, KTHREAD, WaitListEntry);
 
     /* Make sure this thread is here for a reason */
@@ -1214,14 +1474,14 @@ KiSelectReadyThread(IN KPRIORITY Priority,
     ASSERT(Thread->NextProcessor == Prcb->Number);
 
     /* Remove it from the list */
-    RemoveEntryList(&Thread->WaitListEntry);
-    if (IsListEmpty(&Thread->WaitListEntry))
+    if (RemoveEntryList(&Thread->WaitListEntry))
     {
         /* The list is empty now, reset the ready summary */
         Prcb->ReadySummary ^= PRIORITY_MASK(HighPriority);
     }
 
     /* Sanity check and return the thread */
+Quickie:
     ASSERT((Thread == NULL) ||
            (Thread->BasePriority == 0) ||
            (Thread->Priority != 0));
@@ -1234,7 +1494,8 @@ KiSelectReadyThread(IN KPRIORITY Priority,
 //
 SCHAR
 FORCEINLINE
-KiComputeNewPriority(IN PKTHREAD Thread)
+KiComputeNewPriority(IN PKTHREAD Thread,
+                     IN SCHAR Adjustment)
 {
     SCHAR Priority;
 
@@ -1249,7 +1510,7 @@ KiComputeNewPriority(IN PKTHREAD Thread)
     if (Priority < LOW_REALTIME_PRIORITY)
     {
         /* Decrease priority by the priority decrement */
-        Priority -= (Thread->PriorityDecrement + 1);
+        Priority -= (Thread->PriorityDecrement + Adjustment);
 
         /* Don't go out of bounds */
         if (Priority < Thread->BasePriority) Priority = Thread->BasePriority;
@@ -1263,5 +1524,21 @@ KiComputeNewPriority(IN PKTHREAD Thread)
 
     /* Return the new priority */
     return Priority;
+}
+
+PRKTHREAD
+FORCEINLINE
+KeGetCurrentThread(VOID)
+{
+    /* Return the current thread */
+    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+}
+
+UCHAR
+FORCEINLINE
+KeGetPreviousMode(VOID)
+{
+    /* Return the current mode */
+    return KeGetCurrentThread()->PreviousMode;
 }
 

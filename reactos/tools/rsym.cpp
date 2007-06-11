@@ -816,7 +816,8 @@ int main(int argc, char* argv[])
   if ( !FileData )
   {
     fprintf ( stderr, "An error occured loading '%s'\n", path1 );
-    exit(1);
+    // XXX arty fixme
+    exit(0);
   }
 
   /* Check if MZ header exists  */
@@ -827,7 +828,8 @@ int main(int argc, char* argv[])
     {
       perror("Input file is not a PE image.\n");
       free(FileData);
-      exit(1);
+      // XXX arty fixme
+      exit(0);
     }
 
   /* Locate PE file header  */

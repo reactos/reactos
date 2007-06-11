@@ -31,6 +31,9 @@ Author:
 #include <ketypes.h>
 #include <potypes.h>
 #include <lpctypes.h>
+#ifdef NTOS_MODE_USER
+#include <obtypes.h>
+#endif
 
 //
 // GCC compatibility
@@ -104,6 +107,13 @@ extern ULONG NtBuildNumber;
 #define MUTANT_ALL_ACCESS                   (STANDARD_RIGHTS_REQUIRED | \
                                              SYNCHRONIZE | \
                                              MUTANT_QUERY_STATE)
+
+#define TIMER_QUERY_STATE                   0x0001
+#define TIMER_MODIFY_STATE                  0x0002
+#define TIMER_ALL_ACCESS                    (STANDARD_RIGHTS_REQUIRED | \
+                                             SYNCHRONIZE | \
+                                             TIMER_QUERY_STATE | \
+                                             TIMER_MODIFY_STATE)
 #endif
 
 //
@@ -178,7 +188,9 @@ typedef enum _HARDERROR_RESPONSE
     ResponseNo,
     ResponseOk,
     ResponseRetry,
-    ResponseYes
+    ResponseYes,
+    ResponseTryAgain,
+    ResponseContinue
 } HARDERROR_RESPONSE, *PHARDERROR_RESPONSE;
 
 //
@@ -353,6 +365,17 @@ NTSTATUS
 #else
 
 //
+// Handle Enumeration Callback
+//
+struct _HANDLE_TABLE_ENTRY;
+typedef BOOLEAN
+(NTAPI *PEX_ENUM_HANDLE_CALLBACK)(
+    IN struct _HANDLE_TABLE_ENTRY *HandleTableEntry,
+    IN HANDLE Handle,
+    IN PVOID Context
+);
+
+//
 // Compatibility with Windows XP Drivers using ERESOURCE
 //
 typedef struct _ERESOURCE_XP
@@ -479,11 +502,25 @@ typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
 //
 typedef struct _CALLBACK_OBJECT
 {
-    ULONG Name;
+    ULONG Signature;
     KSPIN_LOCK Lock;
     LIST_ENTRY RegisteredCallbacks;
-    ULONG AllowMultipleCallbacks;
-} CALLBACK_OBJECT , *PCALLBACK_OBJECT;
+    BOOLEAN AllowMultipleCallbacks;
+    UCHAR reserved[3];
+} CALLBACK_OBJECT, *PCALLBACK_OBJECT;
+
+//
+// Callback Handle
+//
+typedef struct _CALLBACK_REGISTRATION
+{
+    LIST_ENTRY Link;
+    PCALLBACK_OBJECT CallbackObject;
+    PCALLBACK_FUNCTION CallbackFunction;
+    PVOID CallbackContext;
+    ULONG Busy;
+    BOOLEAN UnregisterWaiting;
+} CALLBACK_REGISTRATION, *PCALLBACK_REGISTRATION;
 
 //
 // Internal Callback Object
@@ -491,7 +528,7 @@ typedef struct _CALLBACK_OBJECT
 typedef struct _EX_CALLBACK_ROUTINE_BLOCK
 {
     EX_RUNDOWN_REF RundownProtect;
-    PVOID Function;
+    PEX_CALLBACK_FUNCTION Function;
     PVOID Context;
 } EX_CALLBACK_ROUTINE_BLOCK, *PEX_CALLBACK_ROUTINE_BLOCK;
 
@@ -569,14 +606,6 @@ typedef struct _HANDLE_TABLE_ENTRY
     };
 } HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
 
-//
-// FIXME
-//
-#ifdef _REACTOS_
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WIN2K
-#endif
-
 typedef struct _HANDLE_TABLE
 {
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -587,7 +616,7 @@ typedef struct _HANDLE_TABLE
     PEPROCESS QuotaProcess;
     PVOID UniqueProcessId;
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-    EX_PUSH_LOCK HandleLock;
+    EX_PUSH_LOCK HandleTableLock[4];
     LIST_ENTRY HandleTableList;
     EX_PUSH_LOCK HandleContentionEvent;
 #else

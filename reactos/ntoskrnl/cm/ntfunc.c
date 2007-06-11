@@ -49,7 +49,8 @@ CmpCreateHandle(PVOID ObjectBody,
                 */
 {
     HANDLE_TABLE_ENTRY NewEntry;
-    PEPROCESS Process, CurrentProcess;
+    PEPROCESS CurrentProcess;
+    PVOID HandleTable;
     POBJECT_HEADER ObjectHeader;
     HANDLE Handle;
     KAPC_STATE ApcState;
@@ -66,7 +67,7 @@ CmpCreateHandle(PVOID ObjectBody,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
 
     /* check that this is a valid kernel pointer */
-    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+    //ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
 
     if (GrantedAccess & MAXIMUM_ALLOWED)
     {
@@ -82,30 +83,28 @@ CmpCreateHandle(PVOID ObjectBody,
 
     NewEntry.Object = ObjectHeader;
     if(HandleAttributes & OBJ_INHERIT)
-        NewEntry.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
+        NewEntry.ObAttributes |= OBJ_INHERIT;
     else
-        NewEntry.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
+        NewEntry.ObAttributes &= ~OBJ_INHERIT;
     NewEntry.GrantedAccess = GrantedAccess;
 
     if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
-        ExGetPreviousMode == KernelMode)
+        ExGetPreviousMode() == KernelMode)
     {
-        Process = PsInitialSystemProcess;
-        if (Process != CurrentProcess)
+        HandleTable = ObpKernelHandleTable;
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
         {
-            KeStackAttachProcess(&Process->Pcb,
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb,
                 &ApcState);
             AttachedToProcess = TRUE;
         }
     }
     else
     {
-        Process = CurrentProcess;
-        /* mask out the OBJ_KERNEL_HANDLE attribute */
-        HandleAttributes &= ~OBJ_KERNEL_HANDLE;
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
     }
 
-    Handle = ExCreateHandle(Process->ObjectTable,
+    Handle = ExCreateHandle(HandleTable,
         &NewEntry);
 
     if (AttachedToProcess)
@@ -121,10 +120,8 @@ CmpCreateHandle(PVOID ObjectBody,
             Handle = ObMarkHandleAsKernelHandle(Handle);
         }
 
-        if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
-        {
-            ObReferenceObject(ObjectBody);
-        }
+        InterlockedIncrement(&ObjectHeader->HandleCount);
+        ObReferenceObject(ObjectBody);
 
         *HandleReturn = Handle;
 
@@ -577,9 +574,9 @@ Cleanup:
     ReleaseCapturedUnicodeString(&CapturedClass,
                                  PreviousMode);
   }
-  if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+  if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
   if (FreeRemainingPath) RtlFreeUnicodeString(&RemainingPath);
-  //if (Object != NULL) ObDereferenceObject(Object);
+  if (Object != NULL) ObDereferenceObject(Object);
 
   return Status;
 }
@@ -1350,29 +1347,30 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     }
   }
 
-    if (ObjectAttributes->ObjectName->Buffer[(ObjectAttributes->ObjectName->Length / sizeof(WCHAR)) - 1] == '\\')
-  {
-    ObjectAttributes->ObjectName->Buffer[(ObjectAttributes->ObjectName->Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
-    ObjectAttributes->ObjectName->Length -= sizeof(WCHAR);
-    ObjectAttributes->ObjectName->MaximumLength -= sizeof(WCHAR);
-  }
-
   /* WINE checks for the length also */
   /*if (ObjectAttributes->ObjectName->Length > MAX_NAME_LENGTH)
 	  return(STATUS_BUFFER_OVERFLOW);*/
 
-      /* Capture all the info */
+   /* Capture all the info */
    DPRINT("Capturing Create Info\n");
    Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                        PreviousMode,
                                        FALSE,
                                        &ObjectCreateInfo,
                                        &ObjectName);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-	return Status;
-     }
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  if (ObjectName.Buffer && 
+      ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] == '\\')
+    {
+      ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+      ObjectName.Length -= sizeof(WCHAR);
+      ObjectName.MaximumLength -= sizeof(WCHAR);
+    }
 
   PostOpenKeyInfo.CompleteName = &ObjectName;
   PreOpenKeyInfo.CompleteName = &ObjectName;
@@ -1383,7 +1381,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       PostOpenKeyInfo.Status = Status;
       CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
       ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-      if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+      if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
       return Status;
     }
 
@@ -1435,7 +1433,7 @@ openkey_cleanup:
   PostOpenKeyInfo.Object = NT_SUCCESS(Status) ? (PVOID)Object : NULL;
   PostOpenKeyInfo.Status = Status;
   CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
-  if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+  if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
 
   if (Object)
     {
@@ -2825,6 +2823,121 @@ NtInitializeRegistry (IN BOOLEAN SetUpBoot)
   CmiRegistryInitialized = TRUE;
 
   return Status;
+}
+
+NTSTATUS
+NTAPI
+NtCompactKeys(IN ULONG Count,
+              IN PHANDLE KeyArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtCompressKey(IN HANDLE Key)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
+            IN POBJECT_ATTRIBUTES SourceFile,
+            IN ULONG Flags,
+            IN HANDLE TrustClassKey,
+            IN HANDLE Event,
+            IN ACCESS_MASK DesiredAccess,
+            OUT PHANDLE RootHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtLockProductActivationKeys(IN PULONG pPrivateVer,
+                            IN PULONG pSafeMode)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtLockRegistryKey(IN HANDLE KeyHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
+                           IN ULONG Count,
+                           IN POBJECT_ATTRIBUTES SlaveObjects,
+                           IN HANDLE Event,
+                           IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+                           IN PVOID ApcContext OPTIONAL,
+                           OUT PIO_STATUS_BLOCK IoStatusBlock,
+                           IN ULONG CompletionFilter,
+                           IN BOOLEAN WatchTree,
+                           OUT PVOID Buffer,
+                           IN ULONG Length,
+                           IN BOOLEAN Asynchronous)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
+                   IN ULONG HandleCount)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtQueryOpenSubKeysEx(IN POBJECT_ATTRIBUTES TargetKey,
+                     IN ULONG BufferLength,
+                     IN PVOID Buffer,
+                     IN PULONG RequiredSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSaveMergedKeys(IN HANDLE HighPrecedenceKeyHandle,
+                 IN HANDLE LowPrecedenceKeyHandle,
+                 IN HANDLE FileHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
+             IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtUnloadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
+              IN HANDLE Event)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

@@ -30,6 +30,7 @@ Author:
 //
 #define DEBUG_OBJECT_WAIT_STATE_CHANGE      0x0001
 #define DEBUG_OBJECT_ADD_REMOVE_PROCESS     0x0002
+#define DEBUG_OBJECT_SET_INFORMATION        0x0004
 #define DEBUG_OBJECT_ALL_ACCESS             (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x0F)
 
 //
@@ -40,6 +41,22 @@ typedef enum _DEBUGOBJECTINFOCLASS
     DebugObjectUnusedInformation,
     DebugObjectKillProcessOnExitInformation
 } DEBUGOBJECTINFOCLASS, *PDEBUGOBJECTINFOCLASS;
+
+//
+// Debug Message API Number
+//
+typedef enum _DBGKM_APINUMBER
+{
+    DbgKmExceptionApi = 0,
+    DbgKmCreateThreadApi = 1,
+    DbgKmCreateProcessApi = 2,
+    DbgKmExitThreadApi = 3,
+    DbgKmExitProcessApi = 4,
+    DbgKmLoadDllApi = 5,
+    DbgKmUnloadDllApi = 6,
+    DbgKmErrorReportApi = 7,
+    DbgKmMaxApiNumber = 8,
+} DBGKM_APINUMBER;
 
 //
 // Debug Object Information Structures
@@ -54,11 +71,11 @@ typedef struct _DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION
 //
 // Debug Object
 //
-typedef struct _DBGK_DEBUG_OBJECT
+typedef struct _DEBUG_OBJECT
 {
-    KEVENT Event;
+    KEVENT EventsPresent;
     FAST_MUTEX Mutex;
-    LIST_ENTRY StateEventListEntry;
+    LIST_ENTRY EventList;
     union
     {
         ULONG Flags;
@@ -68,7 +85,7 @@ typedef struct _DBGK_DEBUG_OBJECT
             UCHAR KillProcessOnExit:1;
         };
     };
-} DBGK_DEBUG_OBJECT, *PDBGK_DEBUG_OBJECT;
+} DEBUG_OBJECT, *PDEBUG_OBJECT;
 
 #endif
 
@@ -131,6 +148,7 @@ typedef struct _DBGKM_LOAD_DLL
     PVOID BaseOfDll;
     ULONG DebugInfoFileOffset;
     ULONG DebugInfoSize;
+    PVOID NamePointer;
 } DBGKM_LOAD_DLL, *PDBGKM_LOAD_DLL;
 
 typedef struct _DBGKM_UNLOAD_DLL
@@ -172,8 +190,8 @@ typedef struct _DBGUI_WAIT_STATE_CHANGE
 typedef struct _DBGKM_MSG
 {
     PORT_MESSAGE h;
-    ULONG Opcode;
-    ULONG Status;
+    DBGKM_APINUMBER ApiNumber;
+    ULONG ReturnedStatus;
     union
     {
         DBGKM_EXCEPTION Exception;
@@ -185,5 +203,26 @@ typedef struct _DBGKM_MSG
         DBGKM_UNLOAD_DLL UnloadDll;
     };
 } DBGKM_MSG, *PDBGKM_MSG;
+
+#ifndef NTOS_MODE_USER
+
+//
+// Debug Event
+//
+typedef struct _DEBUG_EVENT
+{
+    LIST_ENTRY EventList;
+    KEVENT ContinueEvent;
+    CLIENT_ID ClientId;
+    PEPROCESS Process;
+    PETHREAD Thread;
+    NTSTATUS Status;
+    ULONG Flags;
+    PETHREAD BackoutThread;
+    DBGKM_MSG ApiMsg;
+} DEBUG_EVENT, *PDEBUG_EVENT;
+
+
+#endif
 
 #endif

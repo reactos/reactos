@@ -68,8 +68,8 @@
 
 /* GLOBAL VARIABLES *********************************************************/
 
+#define KdComPortInUse _KdComPortInUse
 ULONG KdComPortInUse = 0;
-
 
 /* STATIC VARIABLES *********************************************************/
 

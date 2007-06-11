@@ -21,12 +21,12 @@
 #include "cm.h"
 
 #if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, CmInitHives)
-#pragma alloc_text(INIT, CmInitializeRegistry)
-#pragma alloc_text(INIT, CmInit2)
+#pragma alloc_text(INIT, CmInitSystem1)
 #endif
 
 /* GLOBALS ******************************************************************/
+
+extern BOOLEAN ExpInTextModeSetup;
 
 POBJECT_TYPE  CmiKeyType = NULL;
 PEREGISTRY_HIVE  CmiVolatileHive = NULL;
@@ -129,6 +129,81 @@ CmiWorkerThread(PVOID Param)
   }
 }
 
+VOID INIT_FUNCTION
+CmInit2(PCHAR CommandLine)
+{
+  ULONG PiceStart = 4;
+  BOOLEAN MiniNT = FALSE;
+  NTSTATUS Status;
+  UNICODE_STRING TempString;
+
+  /* Create the 'CurrentControlSet' link. */
+  Status = CmiCreateCurrentControlSetLink();
+  if (!NT_SUCCESS(Status))
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+
+  /*
+   * Write the system boot device to registry.
+   */
+  RtlCreateUnicodeStringFromAsciiz(&TempString, KeLoaderBlock->ArcBootDeviceName);
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
+				 L"SystemBootDevice",
+				 REG_SZ,
+				 TempString.Buffer,
+				 TempString.MaximumLength);
+  RtlFreeUnicodeString(&TempString);
+  if (!NT_SUCCESS(Status))
+  {
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+  }
+
+  /*
+   * Parse the system start options.
+   */
+  if (strstr(KeLoaderBlock->LoadOptions, "DEBUGPORT=PICE") != NULL)
+	PiceStart = 1;
+  MiniNT = strstr(KeLoaderBlock->LoadOptions, "MININT") != NULL;
+
+  /*
+   * Write the system start options to registry.
+   */
+  RtlCreateUnicodeStringFromAsciiz(&TempString, KeLoaderBlock->LoadOptions);
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
+				 L"SystemStartOptions",
+				 REG_SZ,
+				 TempString.Buffer,
+				 TempString.MaximumLength);
+  RtlFreeUnicodeString(&TempString);
+  if (!NT_SUCCESS(Status))
+  {
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+  }
+
+  /*
+   * Create a CurrentControlSet\Control\MiniNT key that is used
+   * to detect WinPE/MiniNT systems.
+   */
+  if (MiniNT)
+    {
+      Status = RtlCreateRegistryKey(RTL_REGISTRY_CONTROL, L"MiniNT");
+      if (!NT_SUCCESS(Status))
+        KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+    }
+
+  /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_SERVICES,
+    L"\\Pice",
+    L"Start",
+    REG_DWORD,
+    &PiceStart,
+    sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+}
+
 
 VOID
 INIT_FUNCTION
@@ -186,9 +261,10 @@ CmInitHives(BOOLEAN SetupBoot)
     if (SetupBoot == FALSE) CmInit2(KeLoaderBlock->LoadOptions);
 }
 
-VOID 
+BOOLEAN
 INIT_FUNCTION
-CmInitializeRegistry(VOID)
+NTAPI
+CmInitSystem1(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
@@ -244,10 +320,7 @@ CmInitializeRegistry(VOID)
 				&ThreadId,
 				CmiWorkerThread,
 				NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    KEBUGCHECK(0);
-  }
+  if (!NT_SUCCESS(Status)) return FALSE;
 
   /* Start the timer */
   DueTime.QuadPart = -1;
@@ -338,117 +411,12 @@ CmInitializeRegistry(VOID)
 		       REG_OPTION_VOLATILE,
 		       NULL);
   ASSERT(NT_SUCCESS(Status));
+
+  /* Import and Load Registry Hives */
+  CmInitHives(ExpInTextModeSetup);
+  return TRUE;
 }
 
-
-VOID INIT_FUNCTION
-CmInit2(PCHAR CommandLine)
-{
-  ULONG PiceStart = 4;
-  BOOLEAN MiniNT = FALSE;
-  PWCHAR SystemBootDevice;
-  PWCHAR SystemStartOptions;
-  ULONG Position;
-  NTSTATUS Status;
-
-  /* Create the 'CurrentControlSet' link. */
-  Status = CmiCreateCurrentControlSetLink();
-  if (!NT_SUCCESS(Status))
-    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-
-  /*
-   * Parse the system boot device.
-   */
-  Position = 0;
-  SystemBootDevice = ExAllocatePool(PagedPool,
-				    (strlen(CommandLine) + 1) * sizeof(WCHAR));
-  if (SystemBootDevice == NULL)
-  {
-    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-  }
-
-  while (*CommandLine != 0 && *CommandLine != ' ')
-    SystemBootDevice[Position++] = *(CommandLine++);
-  SystemBootDevice[Position++] = 0;
-
-  /*
-   * Write the system boot device to registry.
-   */
-  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
-				 L"SystemBootDevice",
-				 REG_SZ,
-				 SystemBootDevice,
-				 Position * sizeof(WCHAR));
-  if (!NT_SUCCESS(Status))
-  {
-    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-  }
-
-  /*
-   * Parse the system start options.
-   */
-  Position = 0;
-  SystemStartOptions = SystemBootDevice;
-  while ((CommandLine = strchr(CommandLine, '/')) != NULL)
-    {
-      /* Skip over the slash */
-      CommandLine++;
-
-      /* Special options */
-      if (!_strnicmp(CommandLine, "MININT", 6))
-        MiniNT = TRUE;
-      else if (!_strnicmp(CommandLine, "DEBUGPORT=PICE", 14))
-        PiceStart = 1;
-
-      /* Add a space between the options */
-      if (Position != 0)
-        SystemStartOptions[Position++] = L' ';
-
-      /* Copy the command */
-      while (*CommandLine != 0 && *CommandLine != ' ')
-        SystemStartOptions[Position++] = *(CommandLine++);
-    }
-  SystemStartOptions[Position++] = 0;
-
-  /*
-   * Write the system start options to registry.
-   */
-  Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
-				 L"SystemStartOptions",
-				 REG_SZ,
-				 SystemStartOptions,
-				 Position * sizeof(WCHAR));
-  if (!NT_SUCCESS(Status))
-  {
-    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-  }
-
-  /*
-   * Create a CurrentControlSet\Control\MiniNT key that is used
-   * to detect WinPE/MiniNT systems.
-   */
-  if (MiniNT)
-    {
-      Status = RtlCreateRegistryKey(RTL_REGISTRY_CONTROL, L"MiniNT");
-      if (!NT_SUCCESS(Status))
-        KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-    }
-
-  /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
-  Status = RtlWriteRegistryValue(
-    RTL_REGISTRY_SERVICES,
-    L"\\Pice",
-    L"Start",
-    REG_DWORD,
-    &PiceStart,
-    sizeof(ULONG));
-  if (!NT_SUCCESS(Status))
-    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-
-  ExFreePool(SystemBootDevice);
-}
 
 
 static NTSTATUS
@@ -580,7 +548,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     /* Yields a new reference */
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
 
-    if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     if (!NT_SUCCESS(Status))
       {
 	return Status;
@@ -629,6 +597,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	RtlFreeUnicodeString(&RemainingPath);
 	return Status;
       }
+#if 0
     DPRINT("Inserting Key into Object Tree\n");
     Status =  ObInsertObject((PVOID)NewKey,
                              NULL,
@@ -637,6 +606,11 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                              NULL,
                              NULL);
   DPRINT("Status %x\n", Status);
+#else
+    /* Free the create information */
+    ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo);
+    OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo = NULL;
+#endif
   NewKey->Flags = 0;
   NewKey->SubKeyCounts = 0;
   NewKey->SubKeys = NULL;

@@ -1,5 +1,5 @@
 /*
- * $Id: halirq.h 23907 2006-09-04 05:52:23Z arty $
+ * $Id: halirq.h 23669 2006-08-23 16:58:43Z ion $
  */
 
 #ifndef __INCLUDE_HAL_HALIRQ

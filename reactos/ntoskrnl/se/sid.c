@@ -105,7 +105,7 @@ SepInitSecurityIDs(VOID)
   SeRestrictedSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
   SeAnonymousLogonSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
  
-  if (SeNullSid == NULL || SeNullSid == NULL || SeWorldSid == NULL ||
+  if (SeNullSid == NULL || SeWorldSid == NULL ||
       SeLocalSid == NULL || SeCreatorOwnerSid == NULL ||
       SeCreatorGroupSid == NULL || SeCreatorOwnerServerSid == NULL ||
       SeCreatorGroupServerSid == NULL || SeNtAuthoritySid == NULL ||
@@ -246,7 +246,8 @@ SepCaptureSid(IN PSID InputSid,
     _SEH_TRY
     {
       ProbeForRead(Sid,
-                   sizeof(*Sid) - sizeof(Sid->SubAuthority),
+                   FIELD_OFFSET(SID,
+                                SubAuthority),
                    sizeof(UCHAR));
       SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
       ProbeForRead(Sid,

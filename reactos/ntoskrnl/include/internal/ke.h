@@ -37,11 +37,32 @@ typedef struct _DISPATCH_INFO
     PKINTERRUPT_ROUTINE *FlatDispatch;
 } DISPATCH_INFO, *PDISPATCH_INFO;
 
+typedef struct _KI_SAMPLE_MAP
+{
+    LARGE_INTEGER PerfStart;
+    LARGE_INTEGER PerfEnd;
+    LONGLONG PerfDelta;
+    LARGE_INTEGER PerfFreq;
+    LONGLONG TSCStart;
+    LONGLONG TSCEnd;
+    LONGLONG TSCDelta;
+    ULONG MHz;
+} KI_SAMPLE_MAP, *PKI_SAMPLE_MAP;
+
 typedef struct _KTIMER_TABLE_ENTRY
 {
     LIST_ENTRY Entry;
     ULARGE_INTEGER Time;
 } KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
+
+#define MAX_TIMER_DPCS                      16
+
+typedef struct _DPC_QUEUE_ENTRY
+{
+    PKDPC Dpc;
+    PKDEFERRED_ROUTINE Routine;
+    PVOID Context;
+} DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
@@ -50,31 +71,23 @@ typedef PCHAR
     IN ULONG Length
 );
 
-struct _KIRQ_TRAPFRAME;
-struct _KPCR;
-struct _KPRCB;
-struct _KEXCEPTION_FRAME;
-
-extern ADDRESS_RANGE KeMemoryMap[64];
-extern ULONG KeMemoryMapRangeCount;
-extern ULONG_PTR FirstKrnlPhysAddr;
-extern ULONG_PTR LastKrnlPhysAddr;
-extern ULONG_PTR LastKernelAddress;
+extern ULONG_PTR MmFreeLdrFirstKrnlPhysAddr;
+extern ULONG_PTR MmFreeLdrLastKrnlPhysAddr;
+extern ULONG_PTR MmFreeLdrLastKernelAddress;
 
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
-extern LARGE_INTEGER SystemBootTime;
-extern ULONG_PTR KERNEL_BASE;
-#ifdef _M_IX86
+extern LARGE_INTEGER KeBootTime;
+extern ULONGLONG KeBootTimeBias;
+extern BOOLEAN ExCmosClockIsSane;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
 extern ULONG KiMXCsrMask;
 extern ULONG KeI386CpuType;
 extern ULONG KeI386CpuStep;
-#endif
 extern ULONG KeProcessorArchitecture;
 extern ULONG KeProcessorLevel;
 extern ULONG KeProcessorRevision;
@@ -115,12 +128,11 @@ extern LARGE_INTEGER KiTimeIncrementReciprocal;
 extern UCHAR KiTimeIncrementShiftCount;
 extern ULONG KiTimeLimitIsrMicroseconds;
 extern ULONG KiServiceLimit;
-extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
+extern LIST_ENTRY KeBugcheckCallbackListHead, KeBugcheckReasonCallbackListHead;
 extern KSPIN_LOCK BugCheckCallbackLock;
-extern KDPC KiExpireTimerDpc;
+extern KDPC KiTimerExpireDpc;
 extern KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
-extern LIST_ENTRY KiTimerListHead;
-extern KMUTEX KiGenericCallDpcMutex;
+extern FAST_MUTEX KiGenericCallDpcMutex;
 extern LIST_ENTRY KiProfileListHead, KiProfileSourceListHead;
 extern KSPIN_LOCK KiProfileLock;
 extern LIST_ENTRY KiProcessListHead;
@@ -130,13 +142,18 @@ extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG KiIdleSummary;
-extern VOID KiTrap8(VOID);
-extern VOID KiTrap2(VOID);
-extern VOID KiFastCallEntry(VOID);
+extern VOID __cdecl KiTrap8(VOID);
+extern VOID __cdecl KiTrap2(VOID);
+extern VOID __cdecl KiFastCallEntry(VOID);
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
+extern UCHAR KiDebugRegisterTrapOffsets[9];
+extern UCHAR KiDebugRegisterContextOffsets[9];
+extern ULONG KeTimeIncrement;
+extern ULONG_PTR KiBugCheckData[5];
+extern ULONG KiFreezeFlag;
 
 /* MACROS *************************************************************************/
 
@@ -176,16 +193,6 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-/* Readies a Thread for Execution. */
-BOOLEAN
-NTAPI
-KiDispatchThreadNoLock(ULONG NewThreadStatus);
-
-/* Readies a Thread for Execution. */
-VOID
-NTAPI
-KiDispatchThread(ULONG NewThreadStatus);
-
 /* Finds a new thread to run */
 NTSTATUS
 FASTCALL
@@ -200,13 +207,28 @@ KeReadyThread(
     IN PKTHREAD Thread
 );
 
+BOOLEAN
+NTAPI
+KeSetDisableBoostThread(
+    IN OUT PKTHREAD Thread,
+    IN BOOLEAN Disable
+);
+
+VOID
+NTAPI
+KeBalanceSetManager(IN PVOID Context);
+
 VOID
 NTAPI
 KiReadyThread(IN PKTHREAD Thread);
 
-NTSTATUS
+ULONG
 NTAPI
 KeSuspendThread(PKTHREAD Thread);
+
+BOOLEAN
+NTAPI
+KeReadStateThread(IN PKTHREAD Thread);
 
 BOOLEAN
 FASTCALL
@@ -228,17 +250,44 @@ NTAPI
 KiDeferredReadyThread(IN PKTHREAD Thread);
 
 KAFFINITY
-NTAPI
+FASTCALL
 KiSetAffinityThread(
     IN PKTHREAD Thread,
-    IN KAFFINITY Affinity,
-    IN PBOOLEAN Released // hack
+    IN KAFFINITY Affinity
 );
 
 PKTHREAD
-NTAPI
+FASTCALL
 KiSelectNextThread(
     IN PKPRCB Prcb
+);
+
+VOID
+NTAPI
+CPUID(
+    OUT ULONG CpuInfo[4],
+    IN ULONG InfoType
+);
+
+BOOLEAN
+FASTCALL
+KiInsertTimerTable(
+    IN PKTIMER Timer,
+    IN ULONG Hand
+);
+
+BOOLEAN
+FASTCALL
+KiInsertTreeTimer(
+    IN PKTIMER Timer,
+    IN LARGE_INTEGER Interval
+);
+
+VOID
+FASTCALL
+KiCompleteTimer(
+    IN PKTIMER Timer,
+    IN PKSPIN_LOCK_QUEUE LockQueue
 );
 
 /* gmutex.c ********************************************************************/
@@ -333,10 +382,6 @@ KeProfileInterruptWithSource(
     IN PKTRAP_FRAME TrapFrame,
     IN KPROFILE_SOURCE Source
 );
-
-BOOLEAN
-NTAPI
-KiRosPrintAddress(PVOID Address);
 
 VOID
 NTAPI
@@ -455,18 +500,10 @@ NTAPI
 KeQueryBasePriorityThread(IN PKTHREAD Thread);
 
 VOID
-NTAPI
+FASTCALL
 KiSetPriorityThread(
     IN PKTHREAD Thread,
-    IN KPRIORITY Priority,
-    IN PBOOLEAN Released // hack
-);
-
-BOOLEAN
-NTAPI
-KiDispatcherObjectWake(
-    DISPATCHER_HEADER* hdr,
-    KPRIORITY increment
+    IN KPRIORITY Priority
 );
 
 VOID
@@ -474,15 +511,6 @@ FASTCALL
 KiUnlinkThread(
     IN PKTHREAD Thread,
     IN NTSTATUS WaitStatus
-);
-
-VOID
-NTAPI
-KeExpireTimers(
-    PKDPC Apc,
-    PVOID Arg1,
-    PVOID Arg2,
-    PVOID Arg3
 );
 
 VOID
@@ -530,16 +558,21 @@ ULONG
 NTAPI
 KeForceResumeThread(IN PKTHREAD Thread);
 
-BOOLEAN
+VOID
 NTAPI
-KeDisableThreadApcQueueing(IN PKTHREAD Thread);
+KeThawAllThreads(
+    VOID
+);
+
+VOID
+NTAPI
+KeFreezeAllThreads(
+    VOID
+);
 
 BOOLEAN
 NTAPI
-KiInsertTimer(
-    PKTIMER Timer,
-    LARGE_INTEGER DueTime
-);
+KeDisableThreadApcQueueing(IN PKTHREAD Thread);
 
 VOID
 FASTCALL
@@ -568,6 +601,21 @@ KiInsertQueue(
     IN PKQUEUE Queue,
     IN PLIST_ENTRY Entry,
     BOOLEAN Head
+);
+
+VOID
+NTAPI
+KiTimerExpiration(
+    IN PKDPC Dpc,
+    IN PVOID DeferredContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2
+);
+
+ULONG
+NTAPI
+KiComputeTimerTableIndex(
+    IN LONGLONG TimeValue
 );
 
 ULONG
@@ -648,10 +696,6 @@ KiInitializeBugCheck(VOID);
 
 VOID
 NTAPI
-KiInitializeSystemClock(VOID);
-
-VOID
-NTAPI
 KiSystemStartup(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
@@ -716,7 +760,12 @@ KeRosDumpStackFrames(
 
 VOID
 NTAPI
-KiSetSystemTime(PLARGE_INTEGER NewSystemTime);
+KeSetSystemTime(
+    IN PLARGE_INTEGER NewSystemTime,
+    OUT PLARGE_INTEGER OldSystemTime,
+    IN BOOLEAN FixInterruptTime,
+    IN PLARGE_INTEGER HalTime
+);
 
 ULONG
 NTAPI
@@ -800,16 +849,6 @@ KiInitSystem(
     VOID
 );
 
-#ifdef _M_IX86
-#define KeHaltProcessor Ke386HaltProcessor
-#define KeEnableInterrupts Ke386EnableInterrupts
-#define KeDisableInterrupts Ke386DisableInterrupts
-#elif defined(_M_PPC)
-#define KeHaltProcessor KePPCHaltProcessor
-#define KeEnableInterrupts KePPCEnableInterrupts
-#define KeDisableInterrupts KePPCDisableInterrupts
-#endif
-
 VOID
 FASTCALL
 KiInsertQueueApc(
@@ -874,6 +913,21 @@ VOID
 WRMSR(
     IN ULONG Register,
     IN LONGLONG Value
+);
+
+BOOLEAN
+NTAPI
+KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
+                  IN PKEXCEPTION_FRAME ExceptionFrame);
+
+VOID
+NTAPI
+KeThawExecution(IN BOOLEAN Enable);
+
+BOOLEAN
+NTAPI
+KeDisableInterrupts(
+    VOID
 );
 
 #include "ke_x.h"

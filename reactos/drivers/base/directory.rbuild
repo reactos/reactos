@@ -13,6 +13,9 @@
 <directory name="debugout">
 	<xi:include href="debugout/debugout.rbuild" />
 </directory>
+<directory name="kdcom">
+	<xi:include href="kdcom/kdcom.rbuild" />
+</directory>
 <directory name="null">
 	<xi:include href="null/null.rbuild" />
 </directory>

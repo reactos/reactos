@@ -61,11 +61,11 @@
 <directory name="strmiids">
 	<xi:include href="strmiids/strmiids.rbuild" />
 </directory>
-<directory name="uuid">
-	<xi:include href="uuid/uuid.rbuild" />
-</directory>
 <directory name="wdmguid">
 	<xi:include href="wdmguid/wdmguid.rbuild" />
+</directory>
+<directory name="sdk">
+	<xi:include href="sdk/sdk.rbuild" />
 </directory>
 </group>
 

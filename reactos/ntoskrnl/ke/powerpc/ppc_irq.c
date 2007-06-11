@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-extern KDPC KiExpireTimerDpc;
+KDPC KiExpireTimerDpc;
 extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
 extern ULONG KiAdjustDpcThreshold;
@@ -31,7 +31,6 @@ extern LONG KiTickOffset;
 extern ULONG KeMaximumIncrement;
 extern ULONG KeMinimumIncrement;
 extern ULONG KeTimeAdjustment;
-extern BOOLEAN KiClockSetupComplete;
 
 /* GLOBALS *****************************************************************/
 
@@ -307,7 +306,6 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     LONG OldOffset;
     LARGE_INTEGER Time;
     ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
-    if (!KiClockSetupComplete) return;
 
     /* Update interrupt time */
     Time.LowPart = SharedUserData->InterruptTime.LowPart;
@@ -734,6 +732,33 @@ VOID KePrintInterruptStatistic(VOID)
          }
       }
    }
+}
+
+BOOLEAN
+NTAPI
+KeDisableInterrupts(VOID)
+{
+    ULONG Flags = 0;
+    BOOLEAN Return;
+
+    Flags = __readmsr();
+    Return = (Flags & 0x8000) ? TRUE: FALSE;
+
+    /* Disable interrupts */
+    _disable();
+    return Return;
+}
+
+VOID
+NTAPI
+KiSystemService()
+{
+    SetPhysByte(0x800003f8, 'S');
+    SetPhysByte(0x800003f8, 'C');
+    SetPhysByte(0x800003f8, '!');
+    SetPhysByte(0x800003f8, '\r');
+    SetPhysByte(0x800003f8, '\n');
+    while(1);
 }
 
 /* EOF */

@@ -26,14 +26,36 @@ Author:
 #include <iotypes.h>
 
 //
+// I/O Functions
+//
+#ifndef NTOS_MODE_USER
+VOID
+FASTCALL
+IoAssignDriveLetters(
+    IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+    IN PSTRING NtDeviceName,
+    OUT PUCHAR NtSystemPath,
+    OUT PSTRING NtSystemPathString
+);
+#endif
+
+//
 // Native calls
 //
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAddBootEntry(
-    IN PUNICODE_STRING EntryName,
-    IN PUNICODE_STRING EntryValue
+    IN PBOOT_ENTRY BootEntry,
+    IN ULONG Id
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAddDriverEntry(
+    IN PEFI_DRIVER_ENTRY BootEntry,
+    IN ULONG Id
 );
 
 NTSYSCALLAPI
@@ -105,12 +127,19 @@ NtCreateNamedPipeFile(
     IN PLARGE_INTEGER DefaultTimeOut
 );
 
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtDeleteDriverEntry(
+    IN ULONG Id
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteBootEntry(
-    IN PUNICODE_STRING EntryName,
-    IN PUNICODE_STRING EntryValue
+    IN ULONG Id
 );
 
 NTSYSCALLAPI
@@ -140,6 +169,14 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateBootEntries(
+    IN PVOID Buffer,
+    IN PULONG BufferLength
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtEnumerateDriverEntries(
     IN PVOID Buffer,
     IN PULONG BufferLength
 );
@@ -199,6 +236,20 @@ NtLockFile(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtModifyBootEntry(
+    IN PBOOT_ENTRY BootEntry
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtModifyDriverEntry(
+    IN PEFI_DRIVER_ENTRY DriverEntry
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtNotifyChangeDirectoryFile(
     IN HANDLE FileHandle,
     IN HANDLE Event OPTIONAL,
@@ -238,6 +289,13 @@ NTAPI
 NtQueryAttributesFile(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     OUT PFILE_BASIC_INFORMATION FileInformation
+);
+
+NTSTATUS
+NTAPI
+NtQueryDriverEntryOrder(
+    IN PULONG Ids,
+    IN PULONG Count
 );
 
 NTSYSCALLAPI
@@ -399,6 +457,13 @@ NTAPI
 NtSetBootOptions(
     IN PBOOT_OPTIONS BootOptions,
     IN ULONG FieldsToChange
+);
+
+NTSTATUS
+NTAPI
+NtSetDriverEntryOrder(
+    IN PULONG Ids,
+    IN PULONG Count
 );
 
 NTSYSCALLAPI
@@ -620,7 +685,6 @@ ZwDeviceIoControlFile(
     IN ULONG OutputBufferSize
 );
 
-#ifdef NTOS_MODE_USER
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -628,7 +692,6 @@ ZwFlushBuffersFile(
     IN HANDLE FileHandle,
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
-#endif
 
 NTSYSAPI
 NTSTATUS
@@ -955,4 +1018,5 @@ ZwWriteFileGather(
 );
 
 #endif
+
 

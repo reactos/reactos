@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             hal/hal.c
@@ -12,10 +11,12 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntddk.h>
+#include <ntdddisk.h>
+#include <arc/arc.h>
+#include <intrin.h>
 #include <ndk/halfuncs.h>
+#include <ndk/iofuncs.h>
 #include <ndk/kdfuncs.h>
-#include <rosldr.h>
-#include <internal/kd.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -26,7 +27,7 @@
 
 /* DATA **********************************************************************/
 
-ULONG KdComPortInUse = 0;
+ULONG _KdComPortInUse = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -41,6 +42,38 @@ DriverEntry(
   return STATUS_SUCCESS;
 }
 
+/*
+* @unimplemented
+*/
+VOID
+NTAPI
+HalStopProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
+{
+    KEBUGCHECK(0);
+    return;
+}
+
+/*
+* @unimplemented
+*/
+VOID
+NTAPI
+HalStartProfileInterrupt(IN KPROFILE_SOURCE ProfileSource)
+{
+    KEBUGCHECK(0);
+    return;
+}
+
+/*
+* @unimplemented
+*/
+ULONG_PTR
+NTAPI
+HalSetProfileInterval(IN ULONG_PTR Interval)
+{
+    KEBUGCHECK(0);
+    return Interval;
+}
 
 VOID
 FASTCALL
@@ -131,8 +164,8 @@ HalAllocateCommonBuffer(
 PVOID
 NTAPI
 HalAllocateCrashDumpRegisters(
-  ULONG Unknown1,
-  ULONG Unknown2)
+  PADAPTER_OBJECT AdapterObject,
+  PULONG NumberOfMapRegisters)
 {
   UNIMPLEMENTED;
   return NULL;
@@ -172,7 +205,8 @@ HalBeginSystemInterrupt (KIRQL Irql,
 VOID
 NTAPI
 HalCalibratePerformanceCounter(
-  ULONG Count)
+  volatile LONG *Count,
+  ULONGLONG NewCount)
 {
   UNIMPLEMENTED;
 }
@@ -293,7 +327,7 @@ HalGetBusDataByOffset(
 }
 
 
-BOOLEAN
+ARC_STATUS
 NTAPI
 HalGetEnvironmentVariable(
   PCH Name,
@@ -302,7 +336,7 @@ HalGetEnvironmentVariable(
 {
   UNIMPLEMENTED;
 
-  return FALSE;
+  return ENOENT;
 }
 
 
@@ -335,7 +369,7 @@ BOOLEAN
 NTAPI
 HalInitSystem(
   ULONG BootPhase,
-  PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+  PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   UNIMPLEMENTED;
 
@@ -346,7 +380,7 @@ HalInitSystem(
 VOID
 NTAPI
 HalInitializeProcessor(ULONG ProcessorNumber,
-                       PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+                       PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   UNIMPLEMENTED;
 }
@@ -446,6 +480,13 @@ HalRequestSoftwareInterrupt(
   UNIMPLEMENTED;
 }
 
+VOID FASTCALL
+HalClearSoftwareInterrupt(
+  IN KIRQL Request)
+{
+  UNIMPLEMENTED;
+}
+
 
 VOID
 NTAPI
@@ -497,7 +538,7 @@ HalSetDisplayParameters(
 }
 
 
-BOOLEAN
+ARC_STATUS
 NTAPI
 HalSetEnvironmentVariable(
   PCH Name,
@@ -505,24 +546,36 @@ HalSetEnvironmentVariable(
 {
   UNIMPLEMENTED;
 
-  return TRUE;
-}
-
-
-VOID
-NTAPI
-HalSetRealTimeClock(
-  PTIME_FIELDS Time)
-{
-  UNIMPLEMENTED;
+  return ESUCCESS;
 }
 
 
 BOOLEAN
 NTAPI
-HalStartNextProcessor(
-  ULONG Unknown1,
-  ULONG Unknown2)
+HalSetRealTimeClock(
+  PTIME_FIELDS Time)
+{
+  UNIMPLEMENTED;
+
+  return TRUE;
+}
+
+
+ULONG
+NTAPI
+HalSetTimeIncrement(
+  ULONG Increment)
+{
+  UNIMPLEMENTED;
+
+  return Increment;
+}
+
+
+BOOLEAN
+NTAPI
+HalStartNextProcessor(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                      IN PKPROCESSOR_STATE ProcessorState)
 {
   UNIMPLEMENTED;
 
@@ -560,13 +613,60 @@ HalTranslateBusAddress(
 
 VOID
 NTAPI
-IoAssignDriveLetters(
-  PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
-  PSTRING NtDeviceName,
-  PUCHAR NtSystemPath,
-  PSTRING NtSystemPathString)
+HalpAssignDriveLetters(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+                       IN PSTRING NtDeviceName,
+                       OUT PUCHAR NtSystemPath,
+                       OUT PSTRING NtSystemPathString)
 {
-  UNIMPLEMENTED;
+    /* Call the kernel */
+    IoAssignDriveLetters(LoaderBlock,
+                                NtDeviceName,
+                                NtSystemPath,
+                                NtSystemPathString);
+}
+
+NTSTATUS
+NTAPI
+HalpReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                       IN ULONG SectorSize,
+                       IN BOOLEAN ReturnRecognizedPartitions,
+                       IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+{
+    /* Call the kernel */
+    return IoReadPartitionTable(DeviceObject,
+                                SectorSize,
+                                ReturnRecognizedPartitions,
+                                PartitionBuffer);
+}
+
+NTSTATUS
+NTAPI
+HalpWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                        IN ULONG SectorSize,
+                        IN ULONG SectorsPerTrack,
+                        IN ULONG NumberOfHeads,
+                        IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+{
+    /* Call the kernel */
+    return IoWritePartitionTable(DeviceObject,
+                                 SectorSize,
+                                 SectorsPerTrack,
+                                 NumberOfHeads,
+                                 PartitionBuffer);
+}
+
+NTSTATUS
+NTAPI
+HalpSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
+                            IN ULONG SectorSize,
+                            IN ULONG PartitionNumber,
+                            IN ULONG PartitionType)
+{
+    /* Call the kernel */
+    return IoSetPartitionInformation(DeviceObject,
+                                     SectorSize,
+                                     PartitionNumber,
+                                     PartitionType);
 }
 
 
@@ -626,132 +726,6 @@ IoMapTransfer(
 }
 
 
-BOOLEAN
-NTAPI
-KdPortGetByte(
-  PUCHAR  ByteRecieved)
-{
-  UNIMPLEMENTED;
-
-  return TRUE;
-}
-
-
-BOOLEAN
-NTAPI
-KdPortGetByteEx(
-  PKD_PORT_INFORMATION PortInformation,
-  PUCHAR  ByteRecieved)
-{
-  UNIMPLEMENTED;
-
-  return TRUE;
-}
-
-
-BOOLEAN
-NTAPI
-KdPortInitialize(
-  PKD_PORT_INFORMATION PortInformation,
-  ULONG Unknown1,
-  ULONG Unknown2)
-{
-  UNIMPLEMENTED;
-
-  return TRUE;
-}
-
-
-BOOLEAN
-NTAPI
-KdPortInitializeEx(
-  PKD_PORT_INFORMATION PortInformation,
-  ULONG Unknown1,
-  ULONG Unknown2)
-{
-  UNIMPLEMENTED;
-  
-  return TRUE;
-}
-
-
-BOOLEAN
-NTAPI
-KdPortPollByte(
-  PUCHAR  ByteRecieved)
-{
-  UNIMPLEMENTED;
-
-  return TRUE;
-}
-
-
-BOOLEAN
-NTAPI
-KdPortPollByteEx(
-  PKD_PORT_INFORMATION PortInformation,
-  PUCHAR  ByteRecieved)
-{
-  UNIMPLEMENTED;
-
-  return TRUE;
-}
-
-
-VOID
-NTAPI
-KdPortPutByte(
-  UCHAR ByteToSend)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-NTAPI
-KdPortPutByteEx(
-  PKD_PORT_INFORMATION PortInformation,
-  UCHAR ByteToSend)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-NTAPI
-KdPortRestore(VOID)
-{
-  UNIMPLEMENTED;
-}
-
-
-VOID
-NTAPI
-KdPortSave(VOID)
-{
-  UNIMPLEMENTED;
-}
-
-
-BOOLEAN
-NTAPI
-KdPortDisableInterrupts()
-{
-  UNIMPLEMENTED;
-
-  return FALSE;
-}
-
-
-BOOLEAN
-NTAPI
-KdPortEnableInterrupts()
-{
-  UNIMPLEMENTED;
-
-  return FALSE;
-}
-
 #undef KeAcquireSpinLock
 VOID
 NTAPI
@@ -784,6 +758,15 @@ KeAcquireInStackQueuedSpinLock(
   UNIMPLEMENTED;
 }
 
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLockRaiseToSynch(
+    IN PKSPIN_LOCK SpinLock,
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+   UNIMPLEMENTED;
+}
 
 VOID
 FASTCALL
@@ -836,14 +819,14 @@ KeQueryPerformanceCounter(
 }
 
 #undef KeRaiseIrql
-NTOSAPI
 KIRQL
-DDKAPI
+NTAPI
 KeRaiseIrql(
-    IN KIRQL NewIrql)
+  KIRQL NewIrql,
+  PKIRQL OldIrql)
 {
   UNIMPLEMENTED;
-  return 0;
+  return *OldIrql;
 }
 
 
@@ -883,6 +866,30 @@ KeStallExecutionProcessor(
   ULONG Microseconds)
 {
   UNIMPLEMENTED;
+}
+
+
+LOGICAL
+FASTCALL
+KeTryToAcquireQueuedSpinLock(
+  KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+  PKIRQL OldIrql)
+{
+  UNIMPLEMENTED;
+
+  return FALSE;
+}
+
+
+BOOLEAN
+FASTCALL
+KeTryToAcquireQueuedSpinLockRaiseToSynch(
+  KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+  PKIRQL OldIrql)
+{
+  UNIMPLEMENTED;
+
+  return FALSE;
 }
 
 
@@ -1059,6 +1066,14 @@ KeAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
   UNIMPLEMENTED;
   return (KIRQL)0;
+}
+
+KIRQL
+FASTCALL
+KeAcquireQueuedSpinLockRaiseToSynch(IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNIMPLEMENTED;
+    return (KIRQL)0;
 }
 
 VOID

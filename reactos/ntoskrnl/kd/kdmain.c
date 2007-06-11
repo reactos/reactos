@@ -17,8 +17,9 @@ BOOLEAN KdDebuggerEnabled = FALSE;
 BOOLEAN KdEnteredDebugger = FALSE;
 BOOLEAN KdDebuggerNotPresent = TRUE;
 BOOLEAN KiEnableTimerWatchdog = FALSE;
-ULONG KiBugCheckData;
+BOOLEAN KdBreakAfterSymbolLoad = FALSE;
 BOOLEAN KdpBreakPending;
+BOOLEAN KdPitchDebugger = TRUE;
 VOID STDCALL PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
@@ -106,9 +107,29 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                           IN BOOLEAN SecondChance)
 {
     KD_CONTINUE_TYPE Return;
+    ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
 
-    /* HACK (just like all this routine */
-    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) Context->Eip++;
+    /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
+    if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
+        (ExceptionRecord->NumberParameters > 0) &&
+        ((ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS) ||
+         (ExceptionCommand == BREAKPOINT_UNLOAD_SYMBOLS) ||
+         (ExceptionCommand == BREAKPOINT_COMMAND_STRING) ||
+         (ExceptionCommand == BREAKPOINT_PRINT)))
+    {
+        /* Check if this is a debug print */
+        if (ExceptionCommand == BREAKPOINT_PRINT)
+        {
+            /* Print the string */
+            KdpServiceDispatcher(BREAKPOINT_PRINT,
+                                 (PVOID)ExceptionRecord->ExceptionInformation[1],
+                                 ExceptionRecord->ExceptionInformation[2]);
+        }
+
+        /* This we can handle: simply bump EIP */
+        Context->Eip++;
+        return TRUE;
+    }
 
     /* Get out of here if the Debugger isn't connected */
     if (KdDebuggerNotPresent) return FALSE;
@@ -215,26 +236,6 @@ KdPollBreakIn(VOID)
 }
 
 /*
- * @implemented
- */
-VOID
-STDCALL
-KeEnterKernelDebugger(VOID)
-{
-    HalDisplayString("\n\n *** Entered kernel debugger ***\n");
-
-    /* Set the Variable */
-    KdEnteredDebugger = TRUE;
-
-    /* Halt the CPU */
-#ifdef _M_IX86
-    for (;;) Ke386HaltProcessor();
-#elif defined(_M_PPC)
-    for (;;);
-#endif
-}
-
-/*
  * @unimplemented
  */
 NTSTATUS
@@ -244,6 +245,23 @@ KdPowerTransition(ULONG PowerState)
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KdChangeOption(IN KD_OPTION Option,
+               IN ULONG InBufferLength OPTIONAL,
+               IN PVOID InBuffer,
+               IN ULONG OutBufferLength OPTIONAL,
+               OUT PVOID OutBuffer,
+               OUT PULONG OutBufferRequiredLength OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 NTSTATUS
 STDCALL
@@ -293,6 +311,23 @@ NtSetDebugFilterState(IN ULONG ComponentId,
 	else
 		KdComponentTable[i].Level &= ~Level;
 	return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KdSystemDebugControl(IN SYSDBG_COMMAND Command,
+                     IN PVOID InputBuffer,
+                     IN ULONG InputBufferLength,
+                     OUT PVOID OutputBuffer,
+                     IN ULONG OutputBufferLength,
+                     IN OUT PULONG ReturnLength,
+                     IN KPROCESSOR_MODE PreviousMode)
+{
+    /* HACK */
+    return KdpServiceDispatcher(Command, InputBuffer, InputBufferLength);
 }
 
 PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;

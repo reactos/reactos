@@ -22,6 +22,12 @@
     <library>rossym</library>
     <library>string</library>
     <library>wdmguid</library>
+    <library>kdcom</library>
+    <library>bootvid</library>
+    <compilerflag>-O0</compilerflag>
+    <linkerflag>-lgcc</linkerflag>
+    <linkerflag>-Lobj-ppc/lib/mmu</linkerflag>
+    <linkerflag>-lmmu</linkerflag>
     <directory name="include">
         <pch>ntoskrnl.h</pch>
     </directory>
@@ -49,20 +55,22 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file first="true">main_asm.S</file>
-				<file>mmu.c</file>
 				<file>cpu.c</file>
 				<file>exp.c</file>
 				<file>kiinit.c</file>
 				<file>ppc_irq.c</file>
+				<file>systimer.c</file>
+				<file>stubs.c</file>
 			</directory>
 		</if>
             <file>apc.c</file>
+	    <file>balmgr.c</file>
             <file>bug.c</file>
             <file>clock.c</file>
             <file>config.c</file>
             <file>devqueue.c</file>
             <file>dpc.c</file>
-            <file>event.c</file>
+	    <file>eventobj.c</file>
             <file>except.c</file>
             <file>freeldr.c</file>
             <file>gate.c</file>
@@ -70,14 +78,14 @@
             <file>ipi.c</file>
             <file>krnlinit.c</file>
             <file>mutex.c</file>
-            <file>process.c</file>
+	    <file>procobj.c</file>
             <file>profile.c</file>
             <file>queue.c</file>
             <file>sem.c</file>
             <file>spinlock.c</file>
             <file>thrdschd.c</file>
             <file>thrdobj.c</file>
-            <file>timer.c</file>
+	    <file>timerobj.c</file>
             <file>wait.c</file>
     </directory>
         <if property="ARCH" value="i386">
@@ -95,7 +103,9 @@
             <file>view.c</file>
     </directory>
     <directory name="cm">
+	    <file>cmdata.c</file>
             <file>import.c</file>
+	    <file>newcm.c</file>
             <file>ntfunc.c</file>
             <file>regfile.c</file>
             <file>registry.c</file>
@@ -128,7 +138,7 @@
     </directory>
     <directory name="dbgk">
         <file>dbgkutil.c</file>
-        <file>debug.c</file>
+        <file>dbgkobj.c</file>
     </directory>
     <directory name="ex">
         <if property="ARCH" value="i386">
@@ -137,25 +147,30 @@
                 <file>fastinterlck_asm.S</file>
             </directory>
         </if>
+	<if property="ARCH" value="powerpc">
+		<directory name="powerpc">
+			<file>fastinterlck.c</file>
+		</directory>
+	</if>
             <file>atom.c</file>
             <file>callback.c</file>
             <file>dbgctrl.c</file>
-            <file>error.c</file>
             <file>efi.c</file>
             <file>event.c</file>
             <file>evtpair.c</file>
             <file>fmutex.c</file>
             <file>handle.c</file>
+	    <file>harderr.c</file>
             <file>init.c</file>
             <file>locale.c</file>
             <file>lookas.c</file>
             <file>mutant.c</file>
-            <file>power.c</file>
             <file>pushlock.c</file>
             <file>profile.c</file>
             <file>resource.c</file>
             <file>rundown.c</file>
             <file>sem.c</file>
+	    <file>shutdown.c</file>
             <file>sysinfo.c</file>
             <file>time.c</file>
             <file>timer.c</file>
@@ -165,18 +180,28 @@
             <file>zone.c</file>
         <file>zw.S</file>
     </directory>
-    <directory name="fs">
-            <file>context.c</file>
-            <file>fastio.c</file>
-            <file>filelock.c</file>
-            <file>mcb.c</file>
-            <file>name.c</file>
-            <file>notify.c</file>
-            <file>oplock.c</file>
-            <file>pool.c</file>
-            <file>tunnel.c</file>
-            <file>unc.c</file>
-            <file>util.c</file>
+    <directory name="fsrtl">
+	<file>dbcsname.c</file>
+	<file>fastio.c</file>
+	<file>faulttol.c</file>
+	<file>filelock.c</file>
+	<file>filter.c</file>
+	<file>filtrctx.c</file>
+	<file>fsfilter.c</file>
+	<file>fsrtlpc.c</file>
+	<file>largemcb.c</file>
+	<file>name.c</file>
+	<file>notify.c</file>
+	<file>oplock.c</file>
+	<file>pnp.c</file>
+	<file>stackovf.c</file>
+	<file>tunnel.c</file>
+	<file>unc.c</file>
+    </directory>
+    <directory name="fstub">
+	<file>disksup.c</file>
+	<file>fstubex.c</file>
+	<file>halstub.c</file>
     </directory>
     <directory name="inbv">
         <file>inbv.c</file>
@@ -184,12 +209,11 @@
     <directory name="io">
         <directory name="iomgr">
             <file>adapter.c</file>
-            <file>arcname.c</file>
+	    <file>arcname.c</file>
             <file>bootlog.c</file>
             <file>controller.c</file>
             <file>device.c</file>
             <file>deviface.c</file>
-            <file>disk.c</file>
             <file>driver.c</file>
             <file>drvrlist.c</file>
             <file>error.c</file>
@@ -205,8 +229,8 @@
             <file>rawfs.c</file>
             <file>remlock.c</file>
             <file>resource.c</file>
+	    <file>symlink.c</file>
             <file>util.c</file>
-            <file>symlink.c</file>
             <file>timer.c</file>
             <file>volume.c</file>
         </directory>
@@ -239,10 +263,7 @@
             <file>create.c</file>
             <file>listen.c</file>
             <file>port.c</file>
-            <file>query.c</file>
-            <file>queue.c</file>
-            <file>receive.c</file>
-            <file>reply.c</file>
+	    <file>reply.c</file>
             <file>send.c</file>
     </directory>
     <directory name="mm">
@@ -267,9 +288,8 @@
             <file>iospace.c</file>
             <file>kmap.c</file>
             <file>marea.c</file>
-            <file>mdl.c</file>
+	    <file>mdlsup.c</file>
             <file>mm.c</file>
-            <file>process.c</file>
             <file>mminit.c</file>
             <file>mpw.c</file>
             <file>ncache.c</file>
@@ -283,9 +303,11 @@
             <file>physical.c</file>
             <file>pool.c</file>
             <file>ppool.c</file>
+	    <file>procsup.c</file>
             <file>region.c</file>
             <file>rmap.c</file>
             <file>section.c</file>
+	    <file>sysldr.c</file>
             <file>verifier.c</file>
             <file>virtual.c</file>
             <file>wset.c</file>
@@ -298,10 +320,10 @@
             <file>obhandle.c</file>
             <file>obname.c</file>
             <file>oblife.c</file>
+	    <file>oblink.c</file>
             <file>obref.c</file>
             <file>sdcache.c</file>
             <file>obsecure.c</file>
-            <file>symlink.c</file>
             <file>obwait.c</file>
     </directory>
     <directory name="po">
@@ -312,9 +334,9 @@
             <file>debug.c</file>
             <file>job.c</file>
             <file>kill.c</file>
-            <file>notify.c</file>
             <file>process.c</file>
             <file>psmgr.c</file>
+	    <file>psnotify.c</file>
             <file>query.c</file>
             <file>quota.c</file>
             <file>security.c</file>

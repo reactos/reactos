@@ -19,9 +19,6 @@
 <directory name="games">
 	<xi:include href="games/games.rbuild" />
 </directory>
-<directory name="getfirefox">
-	<xi:include href="getfirefox/getfirefox.rbuild" />
-</directory>
 <directory name="hostname">
 	<xi:include href="hostname/hostname.rbuild" />
 </directory>

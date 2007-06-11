@@ -30,11 +30,11 @@ void* _alloca(size_t size);
 #endif
 
 ULONG CcFastMdlReadWait;
+ULONG CcFastMdlReadNotPossible;
 ULONG CcFastReadNotPossible;
 ULONG CcFastReadWait;
 ULONG CcFastReadNoWait;
 ULONG CcFastReadResourceMiss;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -381,7 +381,15 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
   while (Length > 0)
     {
       TempLength = min(max(Bcb->CacheSegmentSize, MAX_RW_LENGTH), Length);
-      ReadCacheSegmentChain(Bcb, ReadOffset, TempLength, Buffer);
+      Status = ReadCacheSegmentChain(Bcb, ReadOffset, TempLength, Buffer);
+      if (!NT_SUCCESS(Status))
+        {
+          IoStatus->Information = 0;
+          IoStatus->Status = Status;
+          DPRINT1("ReadCacheSegmentChain failed, Status %x\n", Status);
+          return FALSE;
+        }
+
       ReadLength += TempLength;
       Length -= TempLength;
       ReadOffset += TempLength;

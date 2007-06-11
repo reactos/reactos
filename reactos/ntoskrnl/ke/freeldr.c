@@ -51,11 +51,6 @@ NLS_DATA_BLOCK BldrNlsDataBlock;
 SETUP_LOADER_BLOCK BldrSetupBlock;
 struct _boot_infos_t *BootInfo;
 
-#ifdef _M_PPC
-#include "font.h"
-boot_infos_t PpcEarlybootInfo;
-#endif
-
 #define KSEG0_BASE 0x80000000
 
 /* FUNCTIONS *****************************************************************/
@@ -305,6 +300,9 @@ VOID
 INIT_FUNCTION
 NTAPI
 LdrpSettleHal(PVOID NewHalBase);
+VOID
+NTAPI
+KiSetupSyscallHandler();
 
 VOID
 FASTCALL
@@ -322,6 +320,9 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #ifdef _M_IX86
     PKTSS Tss;
     PKGDTENTRY TssEntry;
+#else
+    /* Do this very early so we can service things like DebugService */
+    KiSetupSyscallHandler();
 #endif
 
 #ifdef _M_IX86

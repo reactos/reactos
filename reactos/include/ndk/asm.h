@@ -20,6 +20,19 @@ Author:
 #ifndef _ASM_H
 #define _ASM_H
 
+#define NEW_SCHEDULER
+
+//
+// PCR Access
+//
+#ifdef __ASM__
+#ifdef CONFIG_SMP
+#define PCR                                     fs:
+#else
+#define PCR                                     ds:[0xFF000000]
+#endif
+#endif
+
 //
 // CPU Modes
 //
@@ -90,15 +103,16 @@ Author:
 #define KTHREAD_STACK_LIMIT                     0x1C
 #define KTHREAD_TEB                             0x74
 #define KTHREAD_KERNEL_STACK                    0x20
-#define KTHREAD_STATE                           0x4C
-#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_ALERTED                         0x5E
 #define KTHREAD_APCSTATE_PROCESS                0x28 + 0x10
 #define KTHREAD_PENDING_USER_APC                0x28 + 0x16
 #define KTHREAD_PENDING_KERNEL_APC              0x28 + 0x15
 #define KTHREAD_CONTEXT_SWITCHES                0x48
+#define KTHREAD_STATE                           0x4C
+#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_WAIT_IRQL                       0x4E
 #define KTHREAD_NEXT_PROCESSOR                  0x40
+#define KTHREAD_WAIT_REASON                     0x5A
 #define KTHREAD_SWAP_BUSY                       0x5D
 #define KTHREAD_SERVICE_TABLE                   0x118
 #define KTHREAD_PREVIOUS_MODE                   0xD7
@@ -126,6 +140,28 @@ Author:
 #define EPROCESS_VDM_OBJECTS                    0x144
 
 //
+// KTIMER_TABLE Offsets
+//
+#ifdef __ASM__
+#define KTIMER_TABLE_ENTRY                      0x00
+#define KTIMER_TABLE_TIME                       0x08
+#define TIMER_ENTRY_SIZE                        0x10
+#define TIMER_TABLE_SIZE                        0x200
+#endif
+
+//
+// KPRCB Offsets
+//
+#define KPRCB_DR0                               0x2F8
+#define KPRCB_DR1                               0x2FC
+#define KPRCB_DR2                               0x300
+#define KPRCB_DR3                               0x304
+#define KPRCB_DR6                               0x308
+#define KPRCB_DR7                               0x30C
+#define KPRCB_TIMER_HAND                        0x964
+#define KPRCB_TIMER_REQUEST                     0x968
+
+//
 // KPCR Offsets
 //
 #define KPCR_EXCEPTION_LIST                     0x0
@@ -145,8 +181,10 @@ Author:
 #define KPCR_IDT                                0x38
 #define KPCR_GDT                                0x3C
 #define KPCR_TSS                                0x40
+#define KPCR_STALL_SCALE_FACTOR                 0x4C
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
+#define KPCR_VDM_ALERT                          0x54
 #define KPCR_PRCB_DATA                          0x120
 #define KPCR_CURRENT_THREAD                     0x124
 #define KPCR_PRCB_NEXT_THREAD                   0x128
@@ -164,6 +202,7 @@ Author:
 #define KPCR_PRCB_DEBUG_DPC_TIME                0x654
 #define KPCR_PRCB_INTERRUPT_TIME                0x658
 #define KPCR_PRCB_ADJUST_DPC_THRESHOLD          0x65C
+#define KPCR_PRCB_SKIP_TICK                     0x664
 #define KPCR_SYSTEM_CALLS                       0x6B8
 #define KPCR_PRCB_DPC_QUEUE_DEPTH               0xA4C
 #define KPCR_PRCB_DPC_COUNT                     0xA50
@@ -183,10 +222,12 @@ Author:
 //
 #define KINTERRUPT_SERVICE_ROUTINE              0x0C
 #define KINTERRUPT_SERVICE_CONTEXT              0x10
+#define KINTERRUPT_TICK_COUNT                   0x18
 #define KINTERRUPT_ACTUAL_LOCK                  0x1C
 #define KINTERRUPT_IRQL                         0x20
 #define KINTERRUPT_VECTOR                       0x24
 #define KINTERRUPT_SYNCHRONIZE_IRQL             0x29
+#define KINTERRUPT_DISPATCH_COUNT               0x38
 
 //
 // KGDTENTRY Offsets
@@ -451,9 +492,14 @@ Author:
 #endif
 
 //
-// DR7 Values
+// DR6 and 7 Masks
 //
+#define DR6_LEGAL                               0xE00F
+#define DR7_LEGAL                               0xFFFF0155
+#define DR7_ACTIVE                              0x55
+#define DR7_OVERRIDE_V                          0x04
 #define DR7_RESERVED_MASK                       0xDC00
+#define DR7_OVERRIDE_MASK                       0xF0000
 
 //
 // Usermode callout frame definitions
@@ -461,6 +507,7 @@ Author:
 #define CBSTACK_STACK                           0x0
 #define CBSTACK_TRAP_FRAME                      0x4
 #define CBSTACK_CALLBACK_STACK                  0x8
+#define CBSTACK_EBP                             0x18
 #define CBSTACK_RESULT                          0x20
 #define CBSTACK_RESULT_LENGTH                   0x24
 
@@ -469,6 +516,11 @@ Author:
 //
 #ifdef __ASM__
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
+#define STATUS_IN_PAGE_ERROR                    0xC0000006
+#define STATUS_GUARD_PAGE_VIOLATION             0x80000001
+#define STATUS_PRIVILEGED_INSTRUCTION           0xC0000096
+#define STATUS_STACK_OVERFLOW                   0xC00000FD
+#define KI_EXCEPTION_ACCESS_VIOLATION           0x10000004
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
 #define STATUS_NO_CALLBACK_ACTIVE               0xC0000258
 #define STATUS_CALLBACK_POP_STACK               0xC0000423
@@ -489,11 +541,14 @@ Author:
 #define STATUS_FLOAT_MULTIPLE_FAULTS            0xC00002B4
 #define STATUS_FLOAT_MULTIPLE_TRAPS             0xC00002B5
 #define APC_INDEX_MISMATCH                      0x01
+#define IRQL_NOT_GREATER_OR_EQUAL               0x09
+#define IRQL_NOT_LESS_OR_EQUAL                  0x0A
 #define TRAP_CAUSE_UNKNOWN                      0x12
 #define KMODE_EXCEPTION_NOT_HANDLED             0x13
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8
+#define HARDWARE_INTERRUPT_STORM                0xF2
 
 //
 // IRQL Levels
@@ -541,6 +596,11 @@ Author:
 // Kernel Feature Bits
 //
 #define KF_RDTSC                                0x00000002
+
+//
+// Kernel Stack Size
+//
+#define KERNEL_STACK_SIZE                       0x3000
 #endif
 
 //
@@ -549,4 +609,5 @@ Author:
 #define PRIMARY_VECTOR_BASE                     0x30 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
+
 

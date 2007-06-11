@@ -25,31 +25,134 @@ FAST_MUTEX ExpEnvironmentLock;
 ERESOURCE ExpFirmwareTableResource;
 LIST_ENTRY ExpFirmwareTableProviderListHead;
 
+NTSTATUS
+NTAPI
+ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
+                          IN PLIST_ENTRY UserModeList,
+                          OUT PRTL_PROCESS_MODULES Modules,
+                          IN ULONG Length,
+                          OUT PULONG ReturnLength)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG RequiredLength;
+    PRTL_PROCESS_MODULE_INFORMATION ModuleInfo;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ANSI_STRING ModuleName;
+    ULONG ModuleCount = 0;
+    PLIST_ENTRY NextEntry;
+    PCHAR p;
+
+    /* Setup defaults */
+    RequiredLength = FIELD_OFFSET(RTL_PROCESS_MODULES, Modules);
+    ModuleInfo = &Modules->Modules[0];
+
+    /* Loop the kernel list */
+    NextEntry = KernelModeList->Flink;
+    while (NextEntry != KernelModeList)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* Update size and check if we can manage one more entry */
+        RequiredLength += sizeof(RTL_PROCESS_MODULE_INFORMATION);
+        if (Length >= RequiredLength)
+        {
+            /* Fill it out */
+            ModuleInfo->MappedBase = NULL;
+            ModuleInfo->ImageBase = LdrEntry->DllBase;
+            ModuleInfo->ImageSize = LdrEntry->SizeOfImage;
+            ModuleInfo->Flags = LdrEntry->Flags;
+            ModuleInfo->LoadCount = LdrEntry->LoadCount;
+            ModuleInfo->LoadOrderIndex = ModuleCount;
+            ModuleInfo->InitOrderIndex = 0;
+
+            /* Setup name */
+            RtlInitEmptyAnsiString(&ModuleName,
+                                   ModuleInfo->FullPathName,
+                                   sizeof(ModuleInfo->FullPathName));
+
+            /* Convert it */
+            Status = RtlUnicodeStringToAnsiString(&ModuleName,
+                                                  &LdrEntry->FullDllName,
+                                                  FALSE);
+            if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
+            {
+                /* Calculate offset to name */
+                p = ModuleName.Buffer + ModuleName.Length;
+                while ((p > ModuleName.Buffer) && (*--p))
+                {
+                    /* Check if we found the separator */
+                    if (*p == OBJ_NAME_PATH_SEPARATOR)
+                    {
+                        /* We did, break out */
+                        p++;
+                        break;
+                    }
+                }
+
+                /* Set the offset */
+                ModuleInfo->OffsetToFileName = p - ModuleName.Buffer;
+            }
+            else
+            {
+                /* Return empty name */
+                ModuleInfo->FullPathName[0] = ANSI_NULL;
+                ModuleInfo->OffsetToFileName = 0;
+            }
+
+            /* Go to the next module */
+            ModuleInfo++;
+        }
+        else
+        {
+            /* Set error code */
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+
+        /* Update count and move to next entry */
+        ModuleCount++;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check if caller also wanted user modules */
+    if (UserModeList)
+    {
+        /* FIXME: TODO */
+        DPRINT1("User-mode list not yet supported in ReactOS!\n");
+    }
+
+    /* Update return length */
+    if (ReturnLength) *ReturnLength = RequiredLength;
+
+    /* Validate the length again */
+    if (Length >= FIELD_OFFSET(RTL_PROCESS_MODULES, Modules))
+    {
+        /* Set the final count */
+        Modules->NumberOfModules = ModuleCount;
+    }
+    else
+    {
+        /* Otherwise, we failed */
+        Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Done */
+    return Status;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
+#undef ExGetPreviousMode
 KPROCESSOR_MODE
 NTAPI
 ExGetPreviousMode (VOID)
 {
-    return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-ExEnumHandleTable (
-	PULONG	HandleTable,
-	PVOID	Callback,
-	PVOID	Param,
-	PHANDLE	Handle OPTIONAL
-	)
-{
-	UNIMPLEMENTED;
+    return KeGetPreviousMode();
 }
 
 /*
@@ -70,7 +173,7 @@ ExGetCurrentProcessorCpuUsage (
 	ScaledIdle = Prcb->IdleThread->KernelTime * 100;
 	TotalTime = Prcb->KernelTime + Prcb->UserTime;
 	if (TotalTime != 0)
-		*CpuUsage = 100 - (ScaledIdle / TotalTime);
+		*CpuUsage = (ULONG)(100 - (ScaledIdle / TotalTime));
 	else
 		*CpuUsage = 0;
 }
@@ -210,7 +313,9 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
     /*
      * Get the environment variable
      */
-    Result = HalGetEnvironmentVariable(AName.Buffer, ValueBufferLength, Value);
+    Result = HalGetEnvironmentVariable(AName.Buffer,
+                                       (USHORT)ValueBufferLength,
+                                       Value);
     if(!Result)
     {
       RtlFreeAnsiString(&AName);
@@ -336,6 +441,36 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   return Status;
 }
 
+NTSTATUS
+NTAPI
+NtEnumerateSystemEnvironmentValuesEx(IN ULONG InformationClass,
+                                     IN PVOID Buffer,
+                                     IN ULONG BufferLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtQuerySystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
+                                IN LPGUID VendorGuid,
+                                IN PVOID Value,
+                                IN OUT PULONG ReturnLength,
+                                IN OUT PULONG Attributes)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtSetSystemEnvironmentValueEx(IN PUNICODE_STRING VariableName,
+                              IN LPGUID VendorGuid)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /* --- Query/Set System Information --- */
 
@@ -548,7 +683,7 @@ QSI_DEF(SystemTimeOfDayInformation)
 
   KeQuerySystemTime(&CurrentTime);
 
-  Sti->BootTime= SystemBootTime;
+  Sti->BootTime= KeBootTime;
   Sti->CurrentTime = CurrentTime;
   Sti->TimeZoneBias.QuadPart = ExpTimeZoneBias.QuadPart;
   Sti->TimeZoneId = ExpTimeZoneId;
@@ -658,8 +793,8 @@ QSI_DEF(SystemProcessInformation)
 			SpiCur->QuotaPagedPoolUsage = pr->QuotaUsage[0];
 			SpiCur->QuotaPeakNonPagedPoolUsage = pr->QuotaPeak[1];
 			SpiCur->QuotaNonPagedPoolUsage = pr->QuotaUsage[1];
-			SpiCur->PagefileUsage = pr->QuotaUsage[3];
-			SpiCur->PeakPagefileUsage = pr->QuotaPeak[3];
+			SpiCur->PagefileUsage = pr->QuotaUsage[2];
+			SpiCur->PeakPagefileUsage = pr->QuotaPeak[2];
 			SpiCur->PrivatePageCount = pr->CommitCharge;
             ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCur + 1);
 
@@ -817,7 +952,12 @@ QSI_DEF(SystemCallTimeInformation)
 /* Class 11 - Module Information */
 QSI_DEF(SystemModuleInformation)
 {
-	return LdrpQueryModuleInformation(Buffer, Size, ReqSize);
+    extern LIST_ENTRY PsLoadedModuleList;
+    return ExpQueryModuleInformation(&PsLoadedModuleList,
+                                     NULL,
+                                     (PRTL_PROCESS_MODULES)Buffer,
+                                     Size,
+                                     ReqSize);
 }
 
 /* Class 12 - Locks Information */
@@ -1119,33 +1259,100 @@ QSI_DEF(SystemFullMemoryInformation)
 }
 
 /* Class 26 - Load Image */
-SSI_DEF(SystemLoadImage)
+SSI_DEF(SystemLoadGdiDriverInformation)
 {
-  PSYSTEM_GDI_DRIVER_INFORMATION Sli = (PSYSTEM_GDI_DRIVER_INFORMATION)Buffer;
+    PSYSTEM_GDI_DRIVER_INFORMATION DriverInfo = (PVOID)Buffer;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    UNICODE_STRING ImageName;
+    PVOID ImageBase;
+    ULONG_PTR EntryPoint;
+    NTSTATUS Status;
+    ULONG DirSize;
+    PIMAGE_NT_HEADERS NtHeader;
 
-  if (sizeof(SYSTEM_GDI_DRIVER_INFORMATION) != Size)
+    /* Validate size */
+    if (Size != sizeof(SYSTEM_GDI_DRIVER_INFORMATION))
     {
-      return(STATUS_INFO_LENGTH_MISMATCH);
+        /* Incorrect buffer length, fail */
+        return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-  return(LdrpLoadImage(&Sli->DriverName,
-		       &Sli->ImageAddress,
-		       &Sli->SectionPointer,
-		       &Sli->EntryPoint,
-		       (PVOID)&Sli->ExportSectionPointer));
+    /* Only kernel-mode can call this function */
+    if (PreviousMode != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
+
+    /* Load the driver */
+    ImageName = DriverInfo->DriverName;
+    Status = MmLoadSystemImage(&ImageName,
+                               NULL,
+                               NULL,
+                               0,
+                               NULL,
+                               &ImageBase);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Return the export pointer */
+    DriverInfo->ExportSectionPointer =
+        RtlImageDirectoryEntryToData(ImageBase,
+                                     TRUE,
+                                     IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                     &DirSize);
+
+    /* Get the entrypoint */
+    NtHeader = RtlImageNtHeader(ImageBase);
+    EntryPoint = NtHeader->OptionalHeader.AddressOfEntryPoint;
+    EntryPoint += (ULONG_PTR)ImageBase;
+
+    /* Save other data */
+    DriverInfo->ImageAddress = ImageBase;
+    DriverInfo->SectionPointer = NULL;
+    DriverInfo->EntryPoint = (PVOID)EntryPoint;
+    DriverInfo->ImageLength = NtHeader->OptionalHeader.SizeOfImage;
+
+    /* All is good */
+    return STATUS_SUCCESS;
 }
 
 /* Class 27 - Unload Image */
-SSI_DEF(SystemUnloadImage)
-{
-  PVOID Sui = (PVOID)Buffer;
-
-  if (sizeof(PVOID) != Size)
+SSI_DEF(SystemUnloadGdiDriverInformation)
+{  
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLIST_ENTRY NextEntry;
+    PVOID BaseAddr = *((PVOID*)Buffer);
+     
+    if(Size != sizeof(PVOID)) 
+        return STATUS_INFO_LENGTH_MISMATCH;
+   
+    if(KeGetPreviousMode() != KernelMode) 
+        return STATUS_PRIVILEGE_NOT_HELD;
+    
+    // Scan the module list 
+    NextEntry = PsLoadedModuleList.Flink;
+    while(NextEntry != &PsLoadedModuleList)
     {
-      return(STATUS_INFO_LENGTH_MISMATCH);
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+        
+        if (LdrEntry->DllBase == BaseAddr)
+        {
+            // Found it.
+            break;
+        }
+
+        NextEntry = NextEntry->Flink;
     }
 
-  return(LdrpUnloadImage(Sui));
+    // Check if we found the image
+    if(NextEntry != &PsLoadedModuleList)
+    {
+        return MmUnloadSystemImage(LdrEntry);
+    }
+    else
+    {
+        DPRINT1("Image 0x%x not found.\n", BaseAddr);
+        return STATUS_DLL_NOT_FOUND;
+    }
+    
 }
 
 /* Class 28 - Time Adjustment Information */
@@ -1272,16 +1479,78 @@ SSI_DEF(SystemRegistryQuotaInformation)
 }
 
 /* Class 38 - Load And Call Image */
-SSI_DEF(SystemLoadAndCallImage)
+SSI_DEF(SystemExtendServiceTableInformation)
 {
-  PUNICODE_STRING Slci = (PUNICODE_STRING)Buffer;
+    UNICODE_STRING ImageName;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PLDR_DATA_TABLE_ENTRY ModuleObject;
+    NTSTATUS Status;
+    PIMAGE_NT_HEADERS NtHeader;
+    DRIVER_OBJECT Win32k;
+    PDRIVER_INITIALIZE DriverInit;
+    PVOID ImageBase;
+    ULONG_PTR EntryPoint;
 
-  if (sizeof(UNICODE_STRING) != Size)
+    /* Validate the size */
+    if (Size != sizeof(UNICODE_STRING)) return STATUS_INFO_LENGTH_MISMATCH;
+
+    /* Check who is calling */
+    if (PreviousMode != KernelMode)
     {
-      return(STATUS_INFO_LENGTH_MISMATCH);
+        /* Make sure we can load drivers */
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, UserMode))
+        {
+            /* FIXME: We can't, fail */
+            //return STATUS_PRIVILEGE_NOT_HELD;
+        }
+
+        /* Probe and capture the driver name */
+        ProbeAndCaptureUnicodeString(&ImageName, UserMode, Buffer);
+
+        /* Force kernel as previous mode */
+        return ZwSetSystemInformation(SystemExtendServiceTableInformation,
+                                      &ImageName,
+                                      sizeof(ImageName));
     }
 
-  return(LdrpLoadAndCallImage(Slci));
+    /* Just copy the string */
+    ImageName = *(PUNICODE_STRING)Buffer;
+
+    /* Load the image */
+    Status = MmLoadSystemImage(&ImageName,
+                               NULL,
+                               NULL,
+                               0,
+                               (PVOID)&ModuleObject,
+                               &ImageBase);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get the headers */
+    NtHeader = RtlImageNtHeader(ImageBase);
+    if (!NtHeader)
+    {
+        /* Fail */
+        MmUnloadSystemImage(ModuleObject);
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+
+    /* Get the entrypoint */
+    EntryPoint = NtHeader->OptionalHeader.AddressOfEntryPoint;
+    EntryPoint += (ULONG_PTR)ImageBase;
+    DriverInit = (PDRIVER_INITIALIZE)EntryPoint;
+
+    /* Create a dummy device */
+    RtlZeroMemory(&Win32k, sizeof(Win32k));
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    Win32k.DriverStart = ImageBase;
+
+    /* Call it */
+    Status = (DriverInit)(&Win32k, NULL);
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    /* Unload if we failed */
+    if (!NT_SUCCESS(Status)) MmUnloadSystemImage(ModuleObject);
+    return Status;
 }
 
 /* Class 39 - Priority Separation */
@@ -1493,8 +1762,8 @@ CallQS [] =
 	SI_QX(SystemInterruptInformation),
 	SI_QS(SystemDpcBehaviourInformation),
 	SI_QX(SystemFullMemoryInformation), /* it should be SI_XX */
-	SI_XS(SystemLoadImage),
-	SI_XS(SystemUnloadImage),
+	SI_XS(SystemLoadGdiDriverInformation),
+	SI_XS(SystemUnloadGdiDriverInformation),
 	SI_QS(SystemTimeAdjustmentInformation),
 	SI_QX(SystemSummaryMemoryInformation), /* it should be SI_XX */
 	SI_QX(SystemNextEventIdInformation), /* it should be SI_XX */
@@ -1505,7 +1774,7 @@ CallQS [] =
 	SI_QX(SystemKernelDebuggerInformation),
 	SI_QX(SystemContextSwitchInformation),
 	SI_QS(SystemRegistryQuotaInformation),
-	SI_XS(SystemLoadAndCallImage),
+	SI_XS(SystemExtendServiceTableInformation),
 	SI_XS(SystemPrioritySeperation),
 	SI_QX(SystemPlugPlayBusInformation), /* it should be SI_XX */
 	SI_QX(SystemDockInformation), /* it should be SI_XX */
@@ -1659,12 +1928,32 @@ NtFlushInstructionCache (
 	IN	ULONG	NumberOfBytesToFlush
 	)
 {
-        PAGED_CODE();
-#ifdef _M_IX86
-	__asm__("wbinvd\n");
+    PAGED_CODE();
+
+#if defined(_M_IX86)
+    __wbinvd();
+#elif defined(_M_PPC)
+    int i;
+    for(i = 0; i < NumberOfBytesToFlush; i += PPC_MIN_CACHE_LINE_SIZE)
+    __asm__("xor 0,0,0\n\t"
+	    "dcbf 0,%0\n\t"
+	    "icbi 0,%0\n\t"
+	    "sync" : : "r" (BaseAddress));
+#elif defined(_M_MIPS)
+    DPRINT1("NtFlushInstructionCache() is not implemented\n");
+    for (;;);
+#else
+#error Unknown architecture
 #endif
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
+ULONG
+NTAPI
+NtGetCurrentProcessorNumber(VOID)
+{
+    /* Just return the CPU */
+    return KeGetCurrentProcessorNumber();
+}
 
 /* EOF */

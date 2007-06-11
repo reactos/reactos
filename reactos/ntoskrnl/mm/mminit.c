@@ -19,6 +19,7 @@
 /*
  * Compiler defined symbols
  */
+extern unsigned int _image_base__;
 extern unsigned int _text_start__;
 extern unsigned int _text_end__;
 
@@ -26,7 +27,6 @@ extern unsigned int _init_start__;
 extern unsigned int _init_end__;
 
 extern unsigned int _bss_end__;
-
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
 MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
@@ -37,13 +37,6 @@ PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 
 VOID INIT_FUNCTION NTAPI MmInitVirtualMemory(ULONG_PTR LastKernelAddress, ULONG KernelLength);
-
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitVirtualMemory)
-#pragma alloc_text(INIT, MmInit1)
-#pragma alloc_text(INIT, MmInit2)
-#pragma alloc_text(INIT, MmInit3)
-#endif
 
 /* FUNCTIONS ****************************************************************/
 
@@ -82,7 +75,7 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
 {
    PVOID BaseAddress;
    ULONG Length;
-   ULONG ParamLength = KernelLength;
+   //ULONG ParamLength = KernelLength;
    NTSTATUS Status;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PFN_TYPE Pfn;
@@ -158,8 +151,25 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                       0,
                       BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)KERNEL_BASE;
-   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - KERNEL_BASE;
+#if 0
+   DPRINT1("LD Vars: %lx %lx %lx %lx %lx %lx. Last: %lx\n",
+           &_image_base__,
+           &_text_start__,
+           &_text_end__,
+           &_init_start__,
+           &_init_end__,
+           &_bss_end__,
+           LastKernelAddress);
+   BaseAddress = (PVOID)&_image_base__;
+   DPRINT1("Non-LD Vars: %lx %lx %lx %lx %lx %lx. Last: %lx\n",
+           0,
+           0,
+           0,
+           0,
+           0,
+           0,
+           LastKernelAddress);
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - (ULONG_PTR)&_image_base__;
    ParamLength = ParamLength - Length;
 
    /*
@@ -224,6 +234,7 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                       TRUE,
                       0,
                       BoundaryAddressMultiple);
+#endif
 
    BaseAddress = MiNonPagedPoolStart;
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -299,11 +310,15 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    ULONG i;
    ULONG kernel_len;
    ULONG_PTR MappingAddress;
+   PLDR_DATA_TABLE_ENTRY LdrEntry;
 
    DPRINT("MmInit1(FirstKrnlPhysAddr, %p, LastKrnlPhysAddr %p, LastKernelAddress %p)\n",
           FirstKrnlPhysAddr,
           LastKrnlPhysAddr,
           LastKernelAddress);
+
+   /* Set the page directory */
+   PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
    {
@@ -323,12 +338,29 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
       }
    }
 
+   /* NTLDR Hacks */
+   if (!MmFreeLdrMemHigher) MmFreeLdrMemHigher = 65536;
+   if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
+   if (!FirstKrnlPhysAddr)
+   {
+       /* Get the kernel entry */
+       LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
+                                    LDR_DATA_TABLE_ENTRY,
+                                    InLoadOrderLinks);
+
+       /* Get the addresses */
+       FirstKrnlPhysAddr = (ULONG_PTR)LdrEntry->DllBase - KSEG0_BASE;
+
+       /* FIXME: How do we get the last address? */
+   }
+
    if (MmFreeLdrMemHigher >= (MaxMem - 1) * 1024)
    {
       MmFreeLdrMemHigher = (MaxMem - 1) * 1024;
    }
 
    /* Set memory limits */
+   MmSystemRangeStart = (PVOID)KSEG0_BASE;
    MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
    MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
 
@@ -413,9 +445,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
 #endif
 
    DPRINT("Invalidating between %x and %x\n",
-          LastKernelAddress, KERNEL_BASE + 0x00600000);
+          LastKernelAddress, KSEG0_BASE + 0x00600000);
    for (MappingAddress = LastKernelAddress;
-        MappingAddress < KERNEL_BASE + 0x00600000;
+        MappingAddress < KSEG0_BASE + 0x00600000;
         MappingAddress += PAGE_SIZE)
    {
       MmRawDeleteVirtualMapping((PVOID)MappingAddress);
@@ -430,42 +462,70 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmInitializeMdlImplementation();
 }
 
-VOID
+BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
+extern KMUTANT MmSystemLoadLock;
+
+BOOLEAN
 NTAPI
-INIT_FUNCTION
-MmInit2(VOID)
+MmInitSystem(IN ULONG Phase,
+             IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-   MmInitializeRmapList();
-   MmInitializePageOp();
-   MmInitSectionImplementation();
-   MmInitPagingFile();
+    if (Phase == 0)
+    {
+        /* Initialize the Loader Lock */
+        KeInitializeMutant(&MmSystemLoadLock, FALSE);
+
+        /* Reload boot drivers */
+        MiReloadBootLoadedDrivers(LoaderBlock);
+
+        /* Initialize the loaded module list */
+        MiInitializeLoadedModuleList(LoaderBlock);
+
+        /* We're done, for now */
+        DPRINT("Mm0: COMPLETE\n");
+    }
+    else if (Phase == 1)
+    {
+        MmInitializeRmapList();
+        RmapReady = TRUE;
+        MmInitializePageOp();
+        PageOpReady = TRUE;
+        MmInitSectionImplementation();
+        SectionsReady = TRUE;
+        MmInitPagingFile();
+        PagingReady = TRUE;
+
+        /* Setup shared user data settings that NT does as well */
+        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
+        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
+        SharedUserData->LargePageMinimum = 0;
+
+        /* For now, we assume that we're always Workstation */
+        SharedUserData->NtProductType = NtProductWinNt;
+    }
+    else if (Phase == 2)
+    {
+        /*
+        * Unmap low memory
+        */
+        MmCreatePhysicalMemorySection();
+        MiInitBalancerThread();
+
+        /*
+        * Initialise the modified page writer.
+        */
+        if (!strstr(LoaderBlock->LoadOptions, "MININT")) MmInitMpwThread();
+
+        /* Initialize the balance set manager */
+        MmInitBsmThread();
+
+        /* FIXME: Read parameters from memory */
+    }
+
+    return TRUE;
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-MmInit3(VOID)
-{
-   /*
-    * Unmap low memory
-    */
-#ifdef CONFIG_SMP
-   /* In SMP mode we can unmap the low memory
-      if all processors are started. */
-   MmDeletePageTable(NULL, 0);
-#endif
-
-   MmCreatePhysicalMemorySection();
-   MiInitBalancerThread();
-
-   /*
-    * Initialise the modified page writer.
-    */
-   MmInitMpwThread();
-
-   /* FIXME: Read parameters from memory */
-}
-
+#if 0
 VOID static
 MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
@@ -477,15 +537,18 @@ MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
    }
 }
+#endif
 
 VOID
 NTAPI
 MiFreeInitMemory(VOID)
 {
+#if 0
    MmLockAddressSpace(MmGetKernelAddressSpace());
    MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
                          (PVOID)&_init_start__,
                          MiFreeInitMemoryPage,
                          NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
+#endif
 }

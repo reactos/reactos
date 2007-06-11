@@ -350,7 +350,7 @@ SeSubProcessToken(IN PTOKEN ParentToken,
         Status = ObInsertObject(NewToken,
                                 NULL,
                                 0,
-                                1,
+                                0,
                                 NULL,
                                 NULL);
         if (NT_SUCCESS(Status))
@@ -444,94 +444,77 @@ SeCopyClientToken(PACCESS_TOKEN Token,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
-SeCreateClientSecurity(IN struct _ETHREAD *Thread,
-		       IN PSECURITY_QUALITY_OF_SERVICE Qos,
-		       IN BOOLEAN RemoteClient,
-		       OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+NTSTATUS
+NTAPI
+SeCreateClientSecurity(IN PETHREAD Thread,
+                       IN PSECURITY_QUALITY_OF_SERVICE Qos,
+                       IN BOOLEAN RemoteClient,
+                       OUT PSECURITY_CLIENT_CONTEXT ClientContext)
 {
-   TOKEN_TYPE TokenType;
-   UCHAR b;
-   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-   PACCESS_TOKEN Token;
-   ULONG g;
-   PACCESS_TOKEN NewToken;
+    TOKEN_TYPE TokenType;
+    BOOLEAN ThreadEffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    PACCESS_TOKEN Token;
+    NTSTATUS Status;
+    PACCESS_TOKEN NewToken;
+    PAGED_CODE();
 
-   PAGED_CODE();
-
-   Token = PsReferenceEffectiveToken(Thread,
-				     &TokenType,
-				     &b,
-				     &ImpersonationLevel);
-   if (TokenType != TokenImpersonation)
-     {
-	ClientContext->DirectAccessEffectiveOnly = Qos->EffectiveOnly;
-     }
-   else
-     {
-	if (Qos->ImpersonationLevel > ImpersonationLevel)
-	  {
-	     if (Token != NULL)
-	       {
-		  ObDereferenceObject(Token);
-	       }
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (ImpersonationLevel == SecurityAnonymous ||
-	    ImpersonationLevel == SecurityIdentification ||
-	    (RemoteClient != FALSE && ImpersonationLevel != SecurityDelegation))
-	  {
-	     if (Token != NULL)
-	       {
-		  ObDereferenceObject(Token);
-	       }
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (b != 0 ||
-	    Qos->EffectiveOnly != 0)
-	  {
-	     ClientContext->DirectAccessEffectiveOnly = TRUE;
-	  }
-	else
-	  {
-	     ClientContext->DirectAccessEffectiveOnly = FALSE;
-	  }
-     }
-
-   if (Qos->ContextTrackingMode == 0)
-     {
-	ClientContext->DirectlyAccessClientToken = FALSE;
-	g = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
-	if (g >= 0)
-	  {
-//	     ObDeleteCapturedInsertInfo(NewToken);
-	  }
-	if (TokenType == TokenPrimary || Token != NULL)
-	  {
-	     ObDereferenceObject(Token);
-	  }
-	if (g < 0)
-	  {
-	     return(g);
-	  }
-    }
-  else
+    Token = PsReferenceEffectiveToken(Thread,
+                                      &TokenType,
+                                      &ThreadEffectiveOnly,
+                                      &ImpersonationLevel);
+    if (TokenType != TokenImpersonation)
     {
-	ClientContext->DirectlyAccessClientToken = TRUE;
-	if (RemoteClient != FALSE)
-	  {
-//	     SeGetTokenControlInformation(Token, &ClientContext->Unknown11);
-	  }
-	NewToken = Token;
+        ClientContext->DirectAccessEffectiveOnly = Qos->EffectiveOnly;
     }
-  ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
-  ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
-  ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
-  ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
-  ClientContext->ServerIsRemote = RemoteClient;
-  ClientContext->ClientToken = NewToken;
+    else
+    {
+        if (Qos->ImpersonationLevel > ImpersonationLevel)
+        {
+            if (Token) ObDereferenceObject(Token);
+            return STATUS_BAD_IMPERSONATION_LEVEL;
+        }
 
-  return(STATUS_SUCCESS);
+        if ((ImpersonationLevel == SecurityAnonymous) ||
+            (ImpersonationLevel == SecurityIdentification) ||
+            ((RemoteClient) && (ImpersonationLevel != SecurityDelegation)))
+        {
+            if (Token) ObDereferenceObject(Token);
+            return STATUS_BAD_IMPERSONATION_LEVEL;
+        }
+
+        ClientContext->DirectAccessEffectiveOnly = ((ThreadEffectiveOnly) ||
+                                                    (Qos->EffectiveOnly)) ?
+                                                    TRUE : FALSE;
+    }
+
+    if (Qos->ContextTrackingMode == SECURITY_STATIC_TRACKING)
+    {
+        ClientContext->DirectlyAccessClientToken = FALSE;
+        Status = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        ClientContext->DirectlyAccessClientToken = TRUE;
+        if (RemoteClient != FALSE)
+        {
+#if 0
+            SeGetTokenControlInformation(Token,
+                                         &ClientContext->ClientTokenControl);
+#endif
+        }
+
+        NewToken = Token;
+    }
+
+    ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+    ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
+    ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
+    ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
+    ClientContext->ServerIsRemote = RemoteClient;
+    ClientContext->ClientToken = NewToken;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -621,7 +604,7 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
   PsImpersonateClient(ServerThread,
 		      ClientContext->ClientToken,
 		      1,
-		      (ULONG)b,
+		      b,
 		      ClientContext->SecurityQos.ImpersonationLevel);
 }
 
@@ -658,6 +641,8 @@ SepInitializeTokenImplementation(VOID)
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Token");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
+    ObjectTypeInitializer.SecurityRequired = TRUE;
     ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(TOKEN);
     ObjectTypeInitializer.GenericMapping = SepTokenMapping;
     ObjectTypeInitializer.PoolType = PagedPool;
@@ -2406,7 +2391,7 @@ SeTokenType(IN PACCESS_TOKEN Token)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -2414,12 +2399,12 @@ SeTokenIsAdmin(
 	IN PACCESS_TOKEN Token
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    PAGED_CODE();
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_WRITE_RESTRICTED) != 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -2427,12 +2412,12 @@ SeTokenIsRestricted(
 	IN PACCESS_TOKEN Token
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    PAGED_CODE();
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_IS_RESTRICTED) != 0;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -2440,8 +2425,8 @@ SeTokenIsWriteRestricted(
 	IN PACCESS_TOKEN Token
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    PAGED_CODE();
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_HAS_RESTORE_PRIVILEGE) != 0;
 }
 
 
@@ -2639,6 +2624,128 @@ NtOpenThreadToken(IN HANDLE ThreadHandle,
 {
   return NtOpenThreadTokenEx(ThreadHandle, DesiredAccess, OpenAsSelf, 0,
                              TokenHandle);
+}
+
+static NTSTATUS
+SepCompareTokens(IN PTOKEN FirstToken,
+                 IN PTOKEN SecondToken,
+                 OUT PBOOLEAN Equal)
+{
+    BOOLEAN Restricted, IsEqual = FALSE;
+
+    ASSERT(FirstToken != SecondToken);
+
+    /* FIXME: Check if every SID that is present in either token is also present in the other one */
+
+    Restricted = SeTokenIsRestricted(FirstToken);
+    if (Restricted == SeTokenIsRestricted(SecondToken))
+    {
+        if (Restricted)
+        {
+            /* FIXME: Check if every SID that is restricted in either token is also restricted in the other one */
+        }
+
+        /* FIXME: Check if every privilege that is present in either token is also present in the other one */
+    }
+
+    *Equal = IsEqual;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+NtCompareTokens(IN HANDLE FirstTokenHandle,
+                IN HANDLE SecondTokenHandle,
+                OUT PBOOLEAN Equal)
+{
+    KPROCESSOR_MODE PreviousMode;
+    PTOKEN FirstToken, SecondToken;
+    BOOLEAN IsEqual;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWriteBoolean(Equal);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    Status = ObReferenceObjectByHandle(FirstTokenHandle,
+                                       TOKEN_QUERY,
+                                       SepTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FirstToken,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = ObReferenceObjectByHandle(SecondTokenHandle,
+                                       TOKEN_QUERY,
+                                       SepTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&SecondToken,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(FirstToken);
+        return Status;
+    }
+
+    if (FirstToken != SecondToken)
+    {
+        Status = SepCompareTokens(FirstToken,
+                                  SecondToken,
+                                  &IsEqual);
+    }
+    else
+        IsEqual = TRUE;
+
+    ObDereferenceObject(FirstToken);
+    ObDereferenceObject(SecondToken);
+
+    if (NT_SUCCESS(Status))
+    {
+        _SEH_TRY
+        {
+            *Equal = IsEqual;
+        }
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtFilterToken(IN HANDLE ExistingTokenHandle,
+              IN ULONG Flags,
+              IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
+              IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
+              IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
+              OUT PHANDLE NewTokenHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

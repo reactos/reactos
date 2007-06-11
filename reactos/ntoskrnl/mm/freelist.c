@@ -451,6 +451,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
                               &MmPageArray[1].ListEntry);
 	       MmStats.NrReservedPages++;
 	    }
+#ifdef _M_IX86
         /* Protect the Page Directory. This will be changed in r3 */
         else if (j >= (MmFreeLdrPageDirectoryStart / PAGE_SIZE) && j < (MmFreeLdrPageDirectoryEnd / PAGE_SIZE))
 	    {
@@ -462,6 +463,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
                               &MmPageArray[j].ListEntry);
 	       MmStats.NrReservedPages++;
 	    }
+#endif
 	    else if (j >= 0xa0000 / PAGE_SIZE && j < 0x100000 / PAGE_SIZE)
 	    {
                MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;

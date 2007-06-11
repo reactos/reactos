@@ -99,4 +99,12 @@ LdrUnlockLoaderLock(
     IN ULONG Cookie OPTIONAL
 );
 
+BOOLEAN
+NTAPI
+LdrVerifyMappedImageMatchesChecksum(
+    IN PVOID BaseAddress,
+    IN ULONG NumberOfBytes,
+    IN ULONG FileLength
+);
+
 #endif

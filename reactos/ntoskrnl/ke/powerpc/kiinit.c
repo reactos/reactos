@@ -15,6 +15,7 @@
 #define NDEBUG
 #include <debug.h>
 #include <ppcdebug.h>
+#include "ppcmmu/mmu.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -29,52 +30,82 @@ KPRCB PrcbData[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
 
-extern void SetPhysByte(ULONG_PTR address, char value);
+/*
+ * Trap frame:
+ * r0 .. r32
+ * lr, ctr, srr0, srr1, dsisr
+ */
+__asm__(".text\n\t"
+	".globl syscall_start\n\t"
+	".globl syscall_end\n\t"
+	".globl KiSystemService\n\t"
+	"syscall_start:\n\t"
+	"mtsprg1 1\n\t"
+	"lis 1,_kernel_trap_stack_top@ha\n\t"
+	"addi 1,1,_kernel_trap_stack_top@l\n\t"
+	"subi 1,1,0x100\n\t"
+	"stw 0,0(1)\n\t"
+	"mfsprg1 0\n\t"            /* 10 */
+	"stw 0,4(1)\n\t"
+	"stw 2,8(1)\n\t"
+	"stw 3,12(1)\n\t"
+	"stw 4,16(1)\n\t"          /* 20 */
+	"stw 5,20(1)\n\t"
+	"stw 6,24(1)\n\t"
+	"stw 7,28(1)\n\t"
+	"stw 8,32(1)\n\t"          /* 30 */
+	"stw 9,36(1)\n\t"
+	"stw 10,40(1)\n\t"
+	"stw 11,44(1)\n\t"
+	"stw 12,48(1)\n\t"         /* 40 */
+	"stw 13,52(1)\n\t"
+	"stw 14,56(1)\n\t"
+	"stw 15,60(1)\n\t"
+	"stw 16,64(1)\n\t"         /* 50 */
+	"stw 17,68(1)\n\t"
+	"stw 18,72(1)\n\t"
+	"stw 19,76(1)\n\t"
+	"stw 20,80(1)\n\t"         /* 60 */
+	"stw 21,84(1)\n\t"
+	"stw 22,88(1)\n\t"
+	"stw 23,92(1)\n\t"
+	"stw 24,96(1)\n\t"         /* 70 */
+	"stw 25,100(1)\n\t"
+	"stw 26,104(1)\n\t"
+	"stw 27,108(1)\n\t"
+	"stw 28,112(1)\n\t"        /* 80 */
+	"stw 29,116(1)\n\t"
+	"stw 30,120(1)\n\t"
+	"stw 31,124(1)\n\t"
+	"mflr 0\n\t"               /* 90 */
+	"stw 0,128(1)\n\t"
+	"mfctr 0\n\t"
+	"stw 0,132(1)\n\t"
+	"mfsrr0 0\n\t"             /* a0 */
+	"stw 0,136(1)\n\t"
+	"mfsrr1 0\n\t"
+	"stw 0,140(1)\n\t"
+	"mfdsisr 0\n\t"            /* b0 */
+	"stw 0,144(1)\n\t"
+	"lis 3,KiSystemService@ha\n\t"         /* b8 */
+	"addi 3,3,KiSystemService@l\n\t"       /* bc */
+	"mtsrr0 3\n\t"
+	"rfi\n\t"
+	"syscall_end:\n\t"
+	".space 4");
+
+extern int syscall_start[], syscall_end;
 
 VOID
-DrawDigit(struct _boot_infos_t *BootInfo, ULONG Digit, int x, int y)
+NTAPI
+KiSetupSyscallHandler()
 {
-    int i,j,k;
-
-    for( i = 0; i < 7; i++ ) {
-	for( j = 0; j < 8; j++ ) {
-	    for( k = 0; k < BootInfo->dispDeviceDepth/8; k++ ) {
-		SetPhysByte(((ULONG_PTR)BootInfo->dispDeviceBase)+
-			    k +
-			    (((j+x) * (BootInfo->dispDeviceDepth/8)) +
-			     ((i+y) * (BootInfo->dispDeviceRowBytes))),
-			    BootInfo->dispFont[Digit][i*8+j] == 'X' ? 255 : 0);
-	    }
-	}
-    }
-}
-
-VOID
-DrawNumber(struct _boot_infos_t *BootInfo, ULONG Number, int x, int y)
-{
-    int i;
-
-    for( i = 0; i < 8; i++, Number<<=4 ) {
-	DrawDigit(BootInfo,(Number>>28)&0xf,x+(i*8),y);
-    }
-}
-
-VOID
-DrawString(struct _boot_infos_t *BootInfo, const char *str, int x, int y)
-{
-    int i, xx;
-    
-    for( i = 0; str[i]; i++ ) {
-	xx = x + (i * 8);
-	if( str[i] >= '0' && str[i] <= '9' ) 
-	    DrawDigit(BootInfo, str[i] - '0', xx, y);
-	else if( str[i] >= 'A' && str[i] <= 'Z' )
-	    DrawDigit(BootInfo, str[i] - 'A' + 10, xx, y);
-	else if( str[i] >= 'a' && str[i] <= 'z' )
-	    DrawDigit(BootInfo, str[i] - 'a' + 10, xx, y);
-	else
-	    DrawDigit(BootInfo, 37, xx, y);
-    }
+    paddr_t handler_target;
+    int *source;
+    for(source = syscall_start, handler_target = 0xc00; 
+	source < &syscall_end; 
+	source++, handler_target += sizeof(int))
+	SetPhys(handler_target, *source);
 }
 
 VOID
@@ -87,14 +118,16 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->MajorVersion = PCR_MAJOR_VERSION;
     Pcr->MinorVersion = PCR_MINOR_VERSION;
     Pcr->CurrentIrql = PASSIVE_LEVEL;
-    Pcr->Prcb = PrcbData;
-    Pcr->Prcb->MajorVersion = 1;
-    Pcr->Prcb->MinorVersion = 1;
-    Pcr->Prcb->Number = 0; /* UP for now */
-    Pcr->Prcb->SetMember = 1;
-    Pcr->Prcb->BuildType = 0;
-    Pcr->Prcb->DpcStack = DpcStack;
-    KiProcessorBlock[ProcessorNumber] = Pcr->Prcb;
+#if 0
+    Pcr->PrcbData = PrcbData;
+    Pcr->PrcbData->MajorVersion = 1;
+    Pcr->PrcbData->MinorVersion = 1;
+    Pcr->PrcbData->Number = 0; /* UP for now */
+    Pcr->PrcbData->SetMember = 1;
+    Pcr->PrcbData->BuildType = 0;
+    Pcr->PrcbData->DpcStack = DpcStack;
+    KiProcessorBlock[ProcessorNumber] = Pcr->PrcbData;
+#endif
 }
 
 extern ULONG KiGetFeatureBits();
@@ -227,49 +260,33 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     for(;;);
 }
 
-/* translate address */
-int PpcVirt2phys( int virt, int inst );
-/* Add a new page table entry for the indicated mapping */
-BOOLEAN InsertPageEntry( int virt, int phys, int slot, int _sdr1 );
-void SetBat( int bat, int inst, int hi, int lo );
-void SetSR( int n, int val );
-
 /* Use this for early boot additions to the page table */
 VOID
 NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG Cpu, PhysicalPage, i;
+    ULONG Cpu;
+    ppc_map_info_t info;
     PKIPCR Pcr = (PKIPCR)KPCR_BASE;
     PKPRCB Prcb;
 
-    /* Zero bats for now ... We may use these for something later */
-    for( i = 0; i < 4; i++ ) {
-	SetBat( i, 0, 0, 0 );
-	SetBat( i, 1, 0, 0 );
-    }
-
-    /* Set up segs for normal paged address space. */
-    for( i = 0; i < 16; i++ ) {
-	SetSR(i, (i < 8 ? PPC_SEG_Ku : PPC_SEG_Ks) | i);
-    }
+    // Make 0xf... special
+    MmuSetVsid(15,15,-1);
 
     /* Save the loader block and get the current CPU */
     //KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;
     if (!Cpu)
     {
-	/* Skippable initialization for secondary processor */
 	/* We'll allocate a page from the end of the kernel area for KPCR.  This code will probably
 	 * change when we get SMP support.
 	 */
-	PhysicalPage = PpcVirt2phys(MmFreeLdrLastKernelAddress, FALSE);
-	MmFreeLdrLastKernelAddress += (1<<PAGE_SHIFT);
-	InsertPageEntry((ULONG)Pcr, PhysicalPage, 0, 0);
-	
-	PhysicalPage = PpcVirt2phys(MmFreeLdrLastKernelAddress, FALSE);
-	MmFreeLdrLastKernelAddress += (1<<PAGE_SHIFT);
-	InsertPageEntry((ULONG)KI_USER_SHARED_DATA, PhysicalPage, 0, 0);
+	info.proc = 0;
+	info.addr = (vaddr_t)Pcr;
+	info.flags = MMU_KRW_UR;
+	info.addr = (vaddr_t)KI_USER_SHARED_DATA;
+	MmuMapPage(&info, 1);
+	MmuMapPage(&info, 1);
     }
 
     /* Skip initial setup if this isn't the Boot CPU */
@@ -287,7 +304,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Setup CPU-related fields */
 AppCpuInit:
-    Prcb = Pcr->Prcb;
+    Prcb = &Pcr->PrcbData;
     Pcr->Number = Cpu;
     Pcr->SetMember = 1 << Cpu;
     Prcb->SetMember = 1 << Cpu;
@@ -320,3 +337,14 @@ AppCpuInit:
                        (PVOID)LoaderBlock);
 }
 
+VOID
+NTAPI
+KiInitMachineDependent(VOID)
+{
+}
+
+void abort()
+{
+    KeBugCheck(0);
+    while(1);
+}

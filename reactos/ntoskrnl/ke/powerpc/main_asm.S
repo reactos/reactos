@@ -3,6 +3,8 @@
 
 #define AP_MAGIC (0x12481020)
 
+.global P0BootStack
+.global	KiDoubleFaultStack
 .global _kernel_stack
 .global _kernel_stack_top
 .global _kernel_trap_stack
@@ -17,6 +19,7 @@
 
 _kernel_stack:
 .fill 3*4096, 1, 0
+P0BootStack:	
 _kernel_stack_top:
 
 /* guard page for the trap stack */
@@ -25,6 +28,9 @@ _kernel_stack_top:
 _kernel_trap_stack:
 .fill 3*4096, 1, 0
 _kernel_trap_stack_top:
+
+.fill 3*4096, 1, 0
+KiDoubleFaultStack:	
 	
 	.text
 	.globl NtProcessStartup
@@ -64,3 +70,7 @@ NtProcessStartup:
     mr		4,3
     bl		KiRosPrepareForSystemStartup
 
+	.global NtCurrentTeb
+NtCurrentTeb:
+	mr 3,12
+	blr	

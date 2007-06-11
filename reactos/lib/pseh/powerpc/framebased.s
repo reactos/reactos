@@ -20,30 +20,33 @@
 
 	.section .text
 
-	.globl __SEHCleanHandlerEnvironment
-__SEHCleanHandlerEnvironment:
+	.globl _SEHCleanHandlerEnvironment
+_SEHCleanHandlerEnvironment:
 	blr
 
-	.globl __SEHCurrentRegistration
-__SEHCurrentRegistration:
+	.globl _SEHCurrentRegistration
+_SEHCurrentRegistration:
 	blr
 
-	.globl __SEHRegisterFrame
-__SEHRegisterFrame:
+	.globl _SEHRegisterFrame
+_SEHRegisterFrame:
 	blr
 
-	.globl __SEHUnregisterFrame
+	.globl _SEHUnregisterFrame
 __SEHUnregisterFrame:
 	blr
 
-	.globl __SEHGlobalUnwind
-__SEHGlobalUnwind:
+	.globl _SEHGlobalUnwind
+_SEHGlobalUnwind:
 
-	.globl __SEHRtlUnwind
-
+	.globl _SEHRtlUnwind
 # RtlUnwind clobbers all the "don't clobber" registers, so we save them
 	blr
 
+	.globl _SEHUnregisterFrame
+_SEHUnregisterFrame:
+	blr
+		
 .RestoreRegisters:
 	blr
 

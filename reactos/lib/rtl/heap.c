@@ -204,7 +204,7 @@ static RTL_CRITICAL_SECTION_DEBUG process_heap_critsect_debug =
 {
     0, 0, NULL,  /* will be set later */
     { &process_heap_critsect_debug.ProcessLocksList, &process_heap_critsect_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": main process heap section") }
+      0, 0, 0, 0, 0
 };
 
 /***********************************************************************

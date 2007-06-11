@@ -16,6 +16,32 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL()
 #endif
 
+#ifdef _PPC_
+#define SWAPD(x) ((((x)&0xff)<<24)|(((x)&0xff00)<<8)|(((x)>>8)&0xff00)|(((x)>>24)&0xff))
+#define SWAPW(x) ((((x)&0xff)<<8)|(((x)>>8)&0xff))
+#else
+#define SWAPD(x) x
+#define SWAPW(x) x
+#endif
+
+VOID
+NTAPI
+RtlpGetStackLimits(PULONG_PTR StackBase,
+                   PULONG_PTR StackLimit);
+
+PEXCEPTION_REGISTRATION_RECORD
+NTAPI
+RtlpGetExceptionList(VOID);
+
+VOID
+NTAPI
+RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
+
+typedef struct _DISPATCHER_CONTEXT
+{
+    PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
 /* These provide support for sharing code between User and Kernel RTL */
 PVOID
 NTAPI
@@ -112,10 +138,16 @@ RtlpCaptureContext(OUT PCONTEXT ContextRecord);
 NTSTATUS
 NTAPI
 DebugService(IN ULONG Service,
-             IN PVOID Buffer,
+             IN const void* Buffer,
              IN ULONG Length,
              IN PVOID Argument1,
              IN PVOID Argument2);
+
+NTSTATUS
+NTAPI
+DebugService2(IN PVOID Argument1,
+              IN PVOID Argument2,
+              IN ULONG Service);
 
 /* Tags for the String Allocators */
 #define TAG_USTR        TAG('U', 'S', 'T', 'R')

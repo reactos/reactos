@@ -34,7 +34,7 @@ CcMdlRead(
 
 /*
  * NAME							INTERNAL
- * CcMdlReadCompleteDev@8
+ * CcMdlReadComplete2@8
  *
  * DESCRIPTION
  *
@@ -51,15 +51,15 @@ CcMdlRead(
  */
 VOID
 STDCALL
-CcMdlReadCompleteDev(IN PMDL MdlChain,
+CcMdlReadComplete2(IN PMDL MemoryDescriptorList,
                      IN PFILE_OBJECT FileObject)
 {
     PMDL Mdl;
 
     /* Free MDLs */
-    while ((Mdl = MdlChain))
+    while ((Mdl = MemoryDescriptorList))
     {
-        MdlChain = Mdl->Next;
+        MemoryDescriptorList = Mdl->Next;
         MmUnlockPages(Mdl);
         IoFreeMdl(Mdl);
     }
@@ -103,7 +103,7 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
     }
 
     /* Use slow path */
-    CcMdlReadCompleteDev(MdlChain, FileObject);
+    CcMdlReadComplete2(MdlChain, FileObject);
 }
 
 /*
@@ -133,14 +133,16 @@ CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
     }
 
     /* Use slow path */
-    CcMdlWriteCompleteDev(FileOffset, MdlChain, FileObject);
+    CcMdlWriteComplete2(FileObject,FileOffset, MdlChain);
 }
 
 VOID
-STDCALL
-CcMdlWriteCompleteDev(IN PLARGE_INTEGER FileOffset,
-                      IN PMDL MdlChain,
-                      IN PFILE_OBJECT FileObject)
+NTAPI
+CcMdlWriteComplete2(
+    IN PFILE_OBJECT FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN PMDL MdlChain
+)
 {
     UNIMPLEMENTED;
 }

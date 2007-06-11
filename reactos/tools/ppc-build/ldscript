@@ -24,6 +24,7 @@ SECTIONS
   {
     *(.rodata)
     *(.got2)
+    *(.eh_frame)
   }
   .idata :
   {
@@ -45,6 +46,10 @@ SECTIONS
     *(.bss)
     *(COMMON)
   }  
+  .rsrc :
+  {
+    *(.rsrc)
+  }
   .rela.text :
   {
     *(.rela.text)

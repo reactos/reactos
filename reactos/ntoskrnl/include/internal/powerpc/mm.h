@@ -5,6 +5,8 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 
+#include "ppcmmu/mmu.h"
+
 #if 0
 /*
  * Page access attributes (or these together)

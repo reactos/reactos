@@ -106,9 +106,64 @@ MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
     return Section->FileObject; // Section->ControlArea->FileObject on NT
 }
 
+NTSTATUS
+NTAPI
+MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
+                        OUT POBJECT_NAME_INFORMATION *ModuleName)
+{
+    POBJECT_NAME_INFORMATION ObjectNameInfo;
+    NTSTATUS Status;
+    ULONG ReturnLength;
 
+    /* Make sure it's an image section */
+    *ModuleName = NULL;
+    if (!(Section->AllocationAttributes & SEC_IMAGE))
+    {
+        /* It's not, fail */
+        return STATUS_SECTION_NOT_IMAGE;
+    }
 
+    /* Allocate memory for our structure */
+    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
+                                           1024,
+                                           TAG('M', 'm', ' ', ' '));
+    if (!ObjectNameInfo) return STATUS_NO_MEMORY;
 
+    /* Query the name */
+    Status = ObQueryNameString(Section->FileObject,
+                               ObjectNameInfo,
+                               1024,
+                               &ReturnLength);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, free memory */
+        ExFreePool(ObjectNameInfo);
+        return Status;
+    }
+
+    /* Success */
+    *ModuleName = ObjectNameInfo;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmGetFileNameForAddress(IN PVOID Address,
+                        OUT PUNICODE_STRING ModuleName)
+{
+    /*
+     * FIXME: TODO.
+     * Filip says to get the MADDRESS_SPACE from EPROCESS,
+     * then use the MmMarea routines to locate the Marea that 
+     * corresponds to the address. Then make sure it's a section
+     * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
+     * per-type union to get the .u.SectionView.Section pointer to
+     * the SECTION_OBJECT. Then we can use MmGetFileNameForSection
+     * to get the full filename.
+     */
+    RtlCreateUnicodeString(ModuleName, L"C:\\ReactOS\\system32\\ntdll.dll");
+    return STATUS_SUCCESS;
+}
 
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
 
@@ -283,7 +338,7 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
    ULONG DirectoryOffset;
    ULONG TableOffset;
 
-   DPRINT("MmGetPageEntrySection(Offset %x)\n", Offset);
+   DPRINT("MmGetPageEntrySection(Segment %x, Offset %x)\n", Segment, Offset);
 
    if (Segment->Length <= NR_SECTION_PAGE_TABLES * PAGE_SIZE)
    {
@@ -733,8 +788,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       MmUnlockAddressSpace(AddressSpace);
       Status = MmspWaitForPageOpCompletionEvent(PageOp);
       /*
-      * Check for various strange conditions
-      */
+       * Check for various strange conditions
+       */
       if (Status != STATUS_SUCCESS)
       {
          DPRINT1("Failed to wait for page op, status = %x\n", Status);
@@ -747,8 +802,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       }
       MmLockAddressSpace(AddressSpace);
       /*
-      * If this wasn't a pagein then restart the operation
-      */
+       * If this wasn't a pagein then restart the operation
+       */
       if (PageOp->OpType != MM_PAGEOP_PAGEIN)
       {
          MmspCompleteAndReleasePageOp(PageOp);
@@ -768,9 +823,9 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       }
       MmLockSectionSegment(Segment);
       /*
-      * If the completed fault was for another address space then set the
-      * page in this one.
-      */
+       * If the completed fault was for another address space then set the
+       * page in this one.
+       */
       if (!MmIsPagePresent(AddressSpace->Process, Address))
       {
          Entry = MmGetPageEntrySectionSegment(Segment, Offset);
@@ -780,7 +835,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          {
             /*
              * The page was a private page in another or in our address space
-            */
+             */
             MmUnlockSectionSegment(Segment);
             MmspCompleteAndReleasePageOp(PageOp);
             return(STATUS_MM_RESTART_OPERATION);
@@ -800,7 +855,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
                                          1);
          if (!NT_SUCCESS(Status))
          {
-            DbgPrint("Unable to create virtual mapping\n");
+            DPRINT1("Unable to create virtual mapping\n");
             KEBUGCHECK(0);
          }
          MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
@@ -826,7 +881,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
       /*
        * Sanity check
-      */
+       */
       if (Segment->Flags & MM_PAGEFILE_SEGMENT)
       {
          DPRINT1("Found a swaped out private page in a pagefile section.\n");
@@ -868,13 +923,13 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       MmSetSavedSwapEntryPage(Page, SwapEntry);
 
       /*
-      * Add the page to the process's working set
-      */
+       * Add the page to the process's working set
+       */
       MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
 
       /*
-      * Finish the operation
-      */
+       * Finish the operation
+       */
       if (Locked)
       {
          MmLockPage(Page);
@@ -892,8 +947,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    {
       MmUnlockSectionSegment(Segment);
       /*
-      * Just map the desired physical page
-      */
+       * Just map the desired physical page
+       */
       Page = Offset >> PAGE_SHIFT;
       Status = MmCreateVirtualMappingUnsafe(AddressSpace->Process,
                                             Address,
@@ -908,16 +963,16 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       }
       /*
        * Don't add an rmap entry since the page mapped could be for
-      * anything.
-      */
+       * anything.
+       */
       if (Locked)
       {
          MmLockPageUnsafe(Page);
       }
 
       /*
-      * Cleanup and release locks
-      */
+       * Cleanup and release locks
+       */
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -959,8 +1014,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       }
 
       /*
-      * Cleanup and release locks
-      */
+       * Cleanup and release locks
+       */
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -975,13 +1030,13 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    if (Entry == 0)
    {
       /*
-      * If the entry is zero (and it can't change because we have
-      * locked the segment) then we need to load the page.
-      */
+       * If the entry is zero (and it can't change because we have
+       * locked the segment) then we need to load the page.
+       */
 
       /*
-      * Release all our locks and read in the page from disk
-      */
+       * Release all our locks and read in the page from disk
+       */
       MmUnlockSectionSegment(Segment);
       MmUnlockAddressSpace(AddressSpace);
 
@@ -1017,26 +1072,26 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
          return(Status);
       }
       /*
-      * Relock the address space and segment
-      */
+       * Relock the address space and segment
+       */
       MmLockAddressSpace(AddressSpace);
       MmLockSectionSegment(Segment);
 
       /*
-      * Check the entry. No one should change the status of a page
-      * that has a pending page-in.
-      */
+       * Check the entry. No one should change the status of a page
+       * that has a pending page-in.
+       */
       Entry1 = MmGetPageEntrySectionSegment(Segment, Offset);
       if (Entry != Entry1)
       {
-         DbgPrint("Someone changed ppte entry while we slept\n");
+         DPRINT1("Someone changed ppte entry while we slept\n");
          KEBUGCHECK(0);
       }
 
       /*
-      * Mark the offset within the section as having valid, in-memory
-      * data
-      */
+       * Mark the offset within the section as having valid, in-memory
+       * data
+       */
       Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
       MmSetPageEntrySectionSegment(Segment, Offset, Entry);
       MmUnlockSectionSegment(Segment);
@@ -1048,7 +1103,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
                                       1);
       if (!NT_SUCCESS(Status))
       {
-         DbgPrint("Unable to create virtual mapping\n");
+         DPRINT1("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
       MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
@@ -1088,33 +1143,33 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
       }
 
       /*
-      * Relock the address space and segment
-      */
+       * Relock the address space and segment
+       */
       MmLockAddressSpace(AddressSpace);
       MmLockSectionSegment(Segment);
 
       /*
-      * Check the entry. No one should change the status of a page
-      * that has a pending page-in.
-      */
+       * Check the entry. No one should change the status of a page
+       * that has a pending page-in.
+       */
       Entry1 = MmGetPageEntrySectionSegment(Segment, Offset);
       if (Entry != Entry1)
       {
-         DbgPrint("Someone changed ppte entry while we slept\n");
+         DPRINT1("Someone changed ppte entry while we slept\n");
          KEBUGCHECK(0);
       }
 
       /*
-      * Mark the offset within the section as having valid, in-memory
-      * data
-      */
+       * Mark the offset within the section as having valid, in-memory
+       * data
+       */
       Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
       MmSetPageEntrySectionSegment(Segment, Offset, Entry);
       MmUnlockSectionSegment(Segment);
 
       /*
-      * Save the swap entry.
-      */
+       * Save the swap entry.
+       */
       MmSetSavedSwapEntryPage(Page, SwapEntry);
       Status = MmCreateVirtualMapping(AddressSpace->Process,
                                       Address,
@@ -1123,7 +1178,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
                                       1);
       if (!NT_SUCCESS(Status))
       {
-         DbgPrint("Unable to create virtual mapping\n");
+         DPRINT1("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
       MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
@@ -1140,8 +1195,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    {
       /*
        * If the section offset is already in-memory and valid then just
-      * take another reference to the page
-      */
+       * take another reference to the page
+       */
 
       Page = PFN_FROM_SSE(Entry);
 
@@ -1155,7 +1210,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
                                       1);
       if (!NT_SUCCESS(Status))
       {
-         DbgPrint("Unable to create virtual mapping\n");
+         DPRINT1("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
       MmInsertRmap(Page, AddressSpace->Process, (PVOID)PAddress);
@@ -1187,6 +1242,8 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    PMM_PAGEOP PageOp;
    PMM_REGION Region;
    ULONG Entry;
+
+   DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
    /*
     * Check if the page has been paged out or has already been set readwrite
@@ -1320,7 +1377,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    }
    if (!NT_SUCCESS(Status))
    {
-      DbgPrint("Unable to create virtual mapping\n");
+      DPRINT1("Unable to create virtual mapping\n");
       KEBUGCHECK(0);
    }
    if (Locked)
@@ -2159,6 +2216,7 @@ MmCreatePhysicalMemorySection(VOID)
    OBJECT_ATTRIBUTES Obj;
    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
    LARGE_INTEGER SectionSize;
+   HANDLE Handle;
 
    /*
     * Create the section mapping physical memory
@@ -2179,7 +2237,7 @@ MmCreatePhysicalMemorySection(VOID)
                             NULL);
    if (!NT_SUCCESS(Status))
    {
-      DbgPrint("Failed to create PhysicalMemory section\n");
+      DPRINT1("Failed to create PhysicalMemory section\n");
       KEBUGCHECK(0);
    }
    Status = ObInsertObject(PhysSection,
@@ -2187,11 +2245,12 @@ MmCreatePhysicalMemorySection(VOID)
                            SECTION_ALL_ACCESS,
                            0,
                            NULL,
-                           NULL);
+                           &Handle);
    if (!NT_SUCCESS(Status))
    {
       ObDereferenceObject(PhysSection);
    }
+   ObCloseHandle(Handle, KernelMode);
    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
    PhysSection->Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
 
@@ -2218,6 +2277,7 @@ MmInitSectionImplementation(VOID)
    ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
    ObjectTypeInitializer.CloseProcedure = MmpCloseSection;
+   ObjectTypeInitializer.ValidAccessMask = SECTION_ALL_ACCESS;
    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &MmSectionObjectType);
 
    return(STATUS_SUCCESS);
@@ -3232,7 +3292,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    Status = ObReferenceObjectByHandle(FileHandle,
                                       FileAccess,
                                       IoFileObjectType,
-                                      UserMode,
+                                      ExGetPreviousMode(),
                                       (PVOID*)(PVOID)&FileObject,
                                       NULL);
 
@@ -3415,7 +3475,6 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                             AllocationAttributes,
                             FileHandle,
                             NULL);
-
    if (NT_SUCCESS(Status))
    {
       Status = ObInsertObject ((PVOID)SectionObject,
@@ -3680,6 +3739,8 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
      SafeViewSize = (ViewSize != NULL ? *ViewSize : 0);
    }
 
+   SafeSectionOffset.LowPart = PAGE_ROUND_DOWN(SafeSectionOffset.LowPart);
+
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_OPERATION,
                                       PsProcessType,
@@ -3716,6 +3777,18 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
                                InheritDisposition,
                                AllocationType,
                                Protect);
+
+   /* Check if this is an image for the current process */
+   if ((Section->AllocationAttributes & SEC_IMAGE) &&
+       (Process == PsGetCurrentProcess()) &&
+       (Status != STATUS_IMAGE_NOT_AT_BASE))
+   {
+        /* Notify the debugger */
+       DbgkMapViewOfSection(Section,
+                            SafeBaseAddress,
+                            SafeSectionOffset.LowPart,
+                            SafeViewSize);
+   }
 
    ObDereferenceObject(Section);
    ObDereferenceObject(Process);
@@ -3920,6 +3993,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
    PROS_SECTION_OBJECT Section;
    PMM_PAGEOP PageOp;
    ULONG_PTR Offset;
+    PVOID ImageBaseAddress = 0;
 
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
           Process, BaseAddress);
@@ -3982,7 +4056,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
       ULONG NrSegments;
       PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
       PMM_SECTION_SEGMENT SectionSegments;
-      PVOID ImageBaseAddress = 0;
       PMM_SECTION_SEGMENT Segment;
 
       Segment = MemoryArea->Data.SectionData.Segment;
@@ -4023,6 +4096,10 @@ MmUnmapViewOfSection(PEPROCESS Process,
    {
       Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
    }
+
+   /* Notify debugger */
+   if (ImageBaseAddress) DbgkUnMapViewOfSection(ImageBaseAddress);
+
    MmUnlockAddressSpace(AddressSpace);
    return(STATUS_SUCCESS);
 }
@@ -4347,7 +4424,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
       if (!NT_SUCCESS(Status))
       {
-         DbgPrint("Unable to allocate page\n");
+         DPRINT1("Unable to allocate page\n");
          KEBUGCHECK(0);
       }
       Status = MmCreateVirtualMapping (NULL,
@@ -4357,7 +4434,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
                                        1);
       if (!NT_SUCCESS(Status))
       {
-         DbgPrint("Unable to create virtual mapping\n");
+         DPRINT1("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
    }
@@ -4484,6 +4561,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
             ImageSize = max(ImageSize, MaxExtent);
          }
       }
+
+      ImageSectionObject->ImageSize = ImageSize;
 
       /* Check there is enough space to map the section at that point. */
       if (MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
@@ -4889,5 +4968,55 @@ MmCreateSection (OUT PVOID  * Section,
                                   SectionPageProtection,
                                   AllocationAttributes));
 }
+
+NTSTATUS
+NTAPI
+NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
+                            IN OUT PULONG NumberOfPages,
+                            IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPages(IN PVOID *VirtualAddresses,
+                       IN ULONG NumberOfPages,
+                       IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtMapUserPhysicalPagesScatter(IN PVOID *VirtualAddresses,
+                              IN ULONG NumberOfPages,
+                              IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtFreeUserPhysicalPages(IN HANDLE ProcessHandle,
+                        IN OUT PULONG NumberOfPages,
+                        IN OUT PULONG UserPfnArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
+                        IN PVOID File2MappedAsFile)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* EOF */

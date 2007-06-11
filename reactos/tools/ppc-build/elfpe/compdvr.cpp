@@ -136,10 +136,14 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
     std::vector<std::string>::iterator i =
 	std::find(args.begin(),args.end(),"-lgcc");
 
+#if 0
     if( i != args.end() ) {
 	args.erase( i );
 	use_libgcc = true;
     }
+#else
+    use_libgcc = true;
+#endif
 
     if( !nostartfiles ) {
 	if( make_dll.size() ) 
@@ -150,10 +154,10 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
 
     if( !nostdlib ) {
 	args.push_back(std::string("-L") + lib_dir);
-	args.push_back("-lkernel32");
 	args.push_back("-lmsvcrt");
 	args.push_back("-lcrtdll");
 	args.push_back("-lmingw32");
+	args.push_back("-lkernel32");
     }
     if( use_libgcc )
 	args.push_back(lib_dir + "/libgcc.a");
@@ -163,8 +167,9 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
     
     args.insert(args.begin()+1,"-T");
     args.insert(args.begin()+2,ldscript);
-    args.insert(args.begin()+1,"-r");
+    args.insert(args.begin()+1,"--emit-relocs");
     args.insert(args.begin()+1,"-dc");
+    args.insert(args.begin()+1,"-r");
     
     for( size_t i = 0; i < args.size(); i++ ) {
 	if( args[i] == "-o" && i < args.size()-1 ) {

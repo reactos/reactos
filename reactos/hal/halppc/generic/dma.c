@@ -1,4 +1,4 @@
-/* $Id: dma.c 23907 2006-09-04 05:52:23Z arty $
+/* $Id: dma.c 24759 2006-11-14 20:59:48Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -440,7 +440,7 @@ HalpDmaAllocateChildAdapter(
 
    ZwClose(Handle);
 
-   AdapterObject->DmaHeader.Version = DeviceDescription->Version;
+   AdapterObject->DmaHeader.Version = (USHORT)DeviceDescription->Version;
    AdapterObject->DmaHeader.Size = sizeof(ADAPTER_OBJECT);
    AdapterObject->DmaHeader.DmaOperations = &HalpDmaOperations;
    AdapterObject->MapRegistersPerChannel = 1;
@@ -476,7 +476,7 @@ HalpDmaInitializeEisaAdapter(
       AdapterBaseVa = (PVOID)FIELD_OFFSET(EISA_CONTROL, DmaController2);
 
    AdapterObject->AdapterNumber = Controller;
-   AdapterObject->ChannelNumber = DeviceDescription->DmaChannel & 3;
+   AdapterObject->ChannelNumber = (UCHAR)(DeviceDescription->DmaChannel & 3);
    AdapterObject->PagePort = (PUCHAR)HalpEisaPortPage[DeviceDescription->DmaChannel];
    AdapterObject->Width16Bits = FALSE;
    AdapterObject->AdapterBaseVa = AdapterBaseVa;
@@ -1565,6 +1565,9 @@ IoFlushAdapterBuffers(
 {
    BOOLEAN SlaveDma = FALSE;
    PROS_MAP_REGISTER_ENTRY RealMapRegisterBase;
+   PHYSICAL_ADDRESS HighestAcceptableAddress;
+   PHYSICAL_ADDRESS PhysicalAddress;
+   PPFN_NUMBER MdlPagesPtr;
 
    ASSERT_IRQL(DISPATCH_LEVEL);  
 
@@ -1601,15 +1604,24 @@ IoFlushAdapterBuffers(
          {
             if (SlaveDma && !AdapterObject->IgnoreCount)
                Length -= HalReadDmaCounter(AdapterObject);
-         }
-
          HalpCopyBufferMap(Mdl, RealMapRegisterBase, CurrentVa, Length, FALSE);
+      }
       }
       else
       {
-         /* FIXME: Unimplemented case */
-         ASSERT(FALSE);
+         MdlPagesPtr = MmGetMdlPfnArray(Mdl);
+         MdlPagesPtr += ((ULONG_PTR)CurrentVa - (ULONG_PTR)Mdl->StartVa) >> PAGE_SHIFT;
+
+         PhysicalAddress.QuadPart = *MdlPagesPtr << PAGE_SHIFT;
+         PhysicalAddress.QuadPart += BYTE_OFFSET(CurrentVa);
+
+         HighestAcceptableAddress = HalpGetAdapterMaximumPhysicalAddress(AdapterObject);
+         if (PhysicalAddress.QuadPart + Length >
+             HighestAcceptableAddress.QuadPart)
+         {
+            HalpCopyBufferMap(Mdl, RealMapRegisterBase, CurrentVa, Length, FALSE);
       }
+   }
    }
 
    RealMapRegisterBase->Counter = 0;
@@ -1793,11 +1805,12 @@ IoMapTransfer(
           HighestAcceptableAddress.QuadPart)
       {
          UseMapRegisters = TRUE;
-         PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
+         PhysicalAddress = RealMapRegisterBase[Counter].PhysicalAddress;
          PhysicalAddress.QuadPart += ByteOffset;
          if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG)
          {
             RealMapRegisterBase->Counter = ~0;
+            Counter = 0;
          }
       }
    }
@@ -1935,16 +1948,77 @@ IoMapTransfer(
  *
  * @implemented
  */
-
-BOOLEAN STDCALL
-HalFlushCommonBuffer(
-   ULONG Unknown1,
-   ULONG Unknown2,
-   ULONG Unknown3,
-   ULONG Unknown4,
-   ULONG Unknown5)
+BOOLEAN
+NTAPI
+HalFlushCommonBuffer(IN PADAPTER_OBJECT AdapterObject,
+                     IN ULONG Length,
+                     IN PHYSICAL_ADDRESS LogicalAddress,
+                     IN PVOID VirtualAddress)
 {
-   return TRUE;
+    /* Function always returns true */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+HalAllocateCrashDumpRegisters(IN PADAPTER_OBJECT AdapterObject,
+                              IN OUT PULONG NumberOfMapRegisters)
+{
+    PADAPTER_OBJECT MasterAdapter = AdapterObject->MasterAdapter;
+    ULONG MapRegisterNumber;
+
+    /* Check if it needs map registers */
+    if (AdapterObject->NeedsMapRegisters)
+    {
+        /* Check if we have enough */
+        if (*NumberOfMapRegisters > AdapterObject->MapRegistersPerChannel)
+        {
+            /* We don't, fail */
+            AdapterObject->NumberOfMapRegisters = 0;
+            return NULL;
+        }
+
+        /* Try to find free map registers */
+        MapRegisterNumber = -1;
+        MapRegisterNumber = RtlFindClearBitsAndSet(MasterAdapter->MapRegisters,
+                                                   *NumberOfMapRegisters,
+                                                   0);
+
+        /* Check if nothing was found */
+        if (MapRegisterNumber == -1)
+        {
+            /* No free registers found, so use the base registers */
+            RtlSetBits(MasterAdapter->MapRegisters,
+                       0,
+                       *NumberOfMapRegisters);
+            MapRegisterNumber = 0;
+        }
+
+        /* Calculate the new base */
+        AdapterObject->MapRegisterBase =
+            (PROS_MAP_REGISTER_ENTRY)(MasterAdapter->MapRegisterBase +
+                                      MapRegisterNumber);
+
+        /* Check if scatter gather isn't supported */
+        if (!AdapterObject->ScatterGather)
+        {
+            /* Set the flag */
+            AdapterObject->MapRegisterBase =
+                (PROS_MAP_REGISTER_ENTRY)
+                ((ULONG_PTR)AdapterObject->MapRegisterBase | MAP_BASE_SW_SG);
+        }
+    }
+    else
+    {
+        AdapterObject->MapRegisterBase = NULL;
+        AdapterObject->NumberOfMapRegisters = 0;
+    }
+
+    /* Return the base */
+    return AdapterObject->MapRegisterBase;
 }
 
 /* EOF */

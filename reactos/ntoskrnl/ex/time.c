@@ -15,29 +15,61 @@
 
 #define TICKSPERMINUTE  600000000
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitTimeZoneInfo)
-#endif
-
 /* GLOBALS ******************************************************************/
 
 /* Note: Bias[minutes] = UTC - local time */
 TIME_ZONE_INFORMATION ExpTimeZoneInfo;
+ULONG ExpLastTimeZoneBias = -1;
 LARGE_INTEGER ExpTimeZoneBias;
 ULONG ExpTimeZoneId;
 ULONG ExpTickCountMultiplier;
+ERESOURCE ExpTimeRefreshLock;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
-INIT_FUNCTION
+BOOLEAN
 NTAPI
-ExpInitTimeZoneInfo(VOID)
+ExAcquireTimeRefreshLock(BOOLEAN Wait)
+{
+    /* Simply acquire the Resource */
+    KeEnterCriticalRegion();
+    if (!(ExAcquireResourceExclusiveLite(&ExpTimeRefreshLock, Wait)))
+    {
+        /* We failed! */
+        KeLeaveCriticalRegion();
+        return FALSE;
+    }
+
+    /* Success */
+    return TRUE;
+}
+
+VOID
+NTAPI
+ExReleaseTimeRefreshLock(VOID)
+{
+    /* Simply release the Resource */
+    ExReleaseResourceLite(&ExpTimeRefreshLock);
+    KeLeaveCriticalRegion();
+}
+
+VOID
+NTAPI
+ExUpdateSystemTimeFromCmos(IN BOOLEAN UpdateInterruptTime,
+                           IN ULONG MaxSepInSeconds)
+{
+    /* FIXME: TODO */
+    return;
+}
+
+BOOLEAN
+NTAPI
+ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 {
     LARGE_INTEGER CurrentTime;
     NTSTATUS Status;
 
-     /* Read time zone information from the registry */
+    /* Read time zone information from the registry */
     Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
     if (!NT_SUCCESS(Status))
     {
@@ -52,8 +84,8 @@ ExpInitTimeZoneInfo(VOID)
 
         /* Set bias and ID */
         ExpTimeZoneBias.QuadPart = ((LONGLONG)(ExpTimeZoneInfo.Bias +
-                                               ExpTimeZoneInfo.StandardBias)) *
-                                               TICKSPERMINUTE;
+            ExpTimeZoneInfo.StandardBias)) *
+            TICKSPERMINUTE;
         ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
     }
 
@@ -64,7 +96,7 @@ ExpInitTimeZoneInfo(VOID)
     SharedUserData->TimeZoneId = ExpTimeZoneId;
 
     /* Convert boot time from local time to UTC */
-    SystemBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
+    KeBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
 
     /* Convert system time from local time to UTC */
     do
@@ -78,12 +110,15 @@ ExpInitTimeZoneInfo(VOID)
     SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
     SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
     SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
+
+    /* Return success */
+    return TRUE;
 }
 
 NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
 {
-    LARGE_INTEGER LocalTime, SystemTime;
+    LARGE_INTEGER LocalTime, SystemTime, OldTime;
     TIME_FIELDS TimeFields;
     DPRINT("ExpSetTimeZoneInformation() called\n");
 
@@ -107,7 +142,7 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
     ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
 
     /* Copy the timezone information */
-    RtlMoveMemory(&ExpTimeZoneInfo,
+    RtlCopyMemory(&ExpTimeZoneInfo,
                   TimeZoneInformation,
                   sizeof(TIME_ZONE_INFORMATION));
 
@@ -124,7 +159,7 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
     ExLocalTimeToSystemTime(&LocalTime, &SystemTime);
 
     /* Set the new system time */
-    KiSetSystemTime(&SystemTime);
+    KeSetSystemTime(&SystemTime, &OldTime, FALSE, NULL);
 
     /* Return success */
     DPRINT("ExpSetTimeZoneInformation() done\n");
@@ -185,16 +220,13 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         return STATUS_PRIVILEGE_NOT_HELD;
     }
 
-    /* Check if caller wants the old time */
-    if(PreviousTime) KeQuerySystemTime(&OldSystemTime);
-
     /* Convert the time and set it in HAL */
     ExSystemTimeToLocalTime(&NewSystemTime, &LocalTime);
     RtlTimeToTimeFields(&LocalTime, &TimeFields);
     HalSetRealTimeClock(&TimeFields);
 
     /* Now set system time */
-    KiSetSystemTime(&NewSystemTime);
+    KeSetSystemTime(&NewSystemTime, &OldSystemTime, FALSE, NULL);
 
     /* Check if caller wanted previous time */
     if(PreviousTime)

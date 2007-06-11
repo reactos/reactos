@@ -1,40 +1,59 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ex/init.c
- * PURPOSE:         Executive initalization
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Added ExpInitializeExecutive
- *                                                    and optimized/cleaned it.
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * PURPOSE:         Executive Initialization Code
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl (ekohl@rz-online.de)
  */
+
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
+//#include <ntoskrnl/cm/newcm.h>
+#include "ntoskrnl/cm/cm.h"
+#include <ntverp.h>
 
 /* DATA **********************************************************************/
 
-#define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
-
 /* NT Version Info */
-ULONG NtMajorVersion = 5;
-ULONG NtMinorVersion = 0;
-ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
-ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
+ULONG NtMajorVersion = VER_PRODUCTMAJORVERSION;
+ULONG NtMinorVersion = VER_PRODUCTMINORVERSION;
+#if DBG
+ULONG NtBuildNumber = VER_PRODUCTBUILD | 0xC0000000;
+#else
+ULONG NtBuildNumber = VER_PRODUCTBUILD;
+#endif
+
+/* NT System Info */
 ULONG NtGlobalFlag;
 ULONG ExSuiteMask;
+
+/* Cm Version Info */
+ULONG CmNtSpBuildNumber;
+ULONG CmNtCSDVersion;
+ULONG CmNtCSDReleaseType;
+UNICODE_STRING CmVersionString;
+UNICODE_STRING CmCSDVersionString;
+CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR;
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;
 BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
 ULONG InitSafeBootMode;
-
-BOOLEAN NoGuiBoot = FALSE;
+BOOLEAN InitIsWinPEMode, InitWinPEModeType;
 
 /* NT Boot Path */
 UNICODE_STRING NtSystemRoot;
+
+/* NT Initial User Application */
+WCHAR NtInitialUserProcessBuffer[128] = L"\\SystemRoot\\System32\\smss.exe";
+ULONG NtInitialUserProcessBufferLength = sizeof(NtInitialUserProcessBuffer) -
+                                         sizeof(WCHAR);
+ULONG NtInitialUserProcessBufferType = REG_SZ;
 
 /* Boot NLS information */
 PVOID ExpNlsTableBase;
@@ -44,7 +63,121 @@ NLSTABLEINFO ExpNlsTableInfo;
 ULONG ExpNlsTableSize;
 PVOID ExpNlsSectionPointer;
 
+/* CMOS Timer Sanity */
+BOOLEAN ExCmosClockIsSane = TRUE;
+
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS
+NTAPI
+ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    UNICODE_STRING LinkName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE LinkHandle;
+    NTSTATUS Status;
+    ANSI_STRING AnsiName;
+    CHAR Buffer[256];
+    ANSI_STRING TargetString;
+    UNICODE_STRING TargetName;
+
+    /* Initialize the ArcName tree */
+    RtlInitUnicodeString(&LinkName, L"\\ArcName");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               SePublicDefaultUnrestrictedSd);
+
+    /* Create it */
+    Status = NtCreateDirectoryObject(&LinkHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 1, 0, 0);
+    }
+
+    /* Close the LinkHandle */
+    NtClose(LinkHandle);
+
+    /* Initialize the Device tree */
+    RtlInitUnicodeString(&LinkName, L"\\Device");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               SePublicDefaultUnrestrictedSd);
+
+    /* Create it */
+    Status = NtCreateDirectoryObject(&LinkHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 2, 0, 0);
+    }
+
+    /* Close the LinkHandle */
+    ObCloseHandle(LinkHandle, KernelMode);
+
+    /* Create the system root symlink name */
+    RtlInitAnsiString(&AnsiName, "\\SystemRoot");
+    Status = RtlAnsiStringToUnicodeString(&LinkName, &AnsiName, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 3, 0, 0);
+    }
+
+    /* Initialize the attributes for the link */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               SePublicDefaultUnrestrictedSd);
+
+    /* Build the ARC name */
+    sprintf(Buffer,
+            "\\ArcName\\%s%s",
+            LoaderBlock->ArcBootDeviceName,
+            LoaderBlock->NtBootPathName);
+    Buffer[strlen(Buffer) - 1] = ANSI_NULL;
+
+    /* Convert it to Unicode */
+    RtlInitString(&TargetString, Buffer);
+    Status = RtlAnsiStringToUnicodeString(&TargetName,
+                                          &TargetString,
+                                          TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, bugcheck */
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 4, 0, 0);
+    }
+
+    /* Create it */
+    Status = NtCreateSymbolicLinkObject(&LinkHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &TargetName);
+
+    /* Free the strings */
+    RtlFreeUnicodeString(&LinkName);
+    RtlFreeUnicodeString(&TargetName);
+
+    /* Check if creating the link failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 5, 0, 0);
+    }
+
+    /* Close the handle and return success */
+    ObCloseHandle(LinkHandle, KernelMode);
+    return STATUS_SUCCESS;
+}
 
 VOID
 NTAPI
@@ -58,6 +191,8 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     LARGE_INTEGER SectionOffset = {{0}};
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    ULONG NlsTablesEncountered = 0;
+    ULONG NlsTableSizes[3]; /* 3 NLS tables */
 
     /* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
@@ -77,17 +212,16 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             {
                 /* Increase the table size */
                 ExpNlsTableSize += MdBlock->PageCount * PAGE_SIZE;
+
+                /* FreeLdr-specific */
+                NlsTableSizes[NlsTablesEncountered] = MdBlock->PageCount * PAGE_SIZE;
+                NlsTablesEncountered++;
+                ASSERT(NlsTablesEncountered < 4);
             }
 
             /* Go to the next block */
             NextEntry = MdBlock->ListEntry.Flink;
         }
-
-        /*
-         * In NT, the memory blocks are contiguous, but in ReactOS they aren't,
-         * so unless someone fixes FreeLdr, we'll have to use this icky hack.
-         */
-        ExpNlsTableSize += 2 * PAGE_SIZE; // BIAS FOR FREELDR. HACK!
 
         /* Allocate the a new buffer since loader memory will be freed */
         ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
@@ -96,9 +230,27 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
-        RtlMoveMemory(ExpNlsTableBase,
+        //RtlCopyMemory(ExpNlsTableBase,
+        //              LoaderBlock->NlsData->AnsiCodePageData,
+        //              ExpNlsTableSize);
+
+        /*
+         * In NT, the memory blocks are contiguous, but in ReactOS they aren't,
+         * so unless someone fixes FreeLdr, we'll have to use this icky hack.
+         */
+        RtlCopyMemory(ExpNlsTableBase,
                       LoaderBlock->NlsData->AnsiCodePageData,
-                      ExpNlsTableSize);
+                      NlsTableSizes[0]);
+
+        RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0]),
+                      LoaderBlock->NlsData->OemCodePageData,
+                      NlsTableSizes[1]);
+
+        RtlCopyMemory((PVOID)((ULONG_PTR)ExpNlsTableBase + NlsTableSizes[0] +
+                      NlsTableSizes[1]),
+                      LoaderBlock->NlsData->UnicodeCodePageData,
+                      NlsTableSizes[2]);
+        /* End of Hack */
 
         /* Initialize and reset the NLS TAbles */
         RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
@@ -154,7 +306,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Copy the codepage data in its new location. */
-    RtlMoveMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
+    RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
     ExFreePool(ExpNlsTableBase);
@@ -191,213 +343,25 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Copy the table into the system process and set this as the base */
-    RtlMoveMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
+    RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
     ExpNlsTableBase = SectionBase;
-}
-
-static
-VOID
-INIT_FUNCTION
-InitSystemSharedUserPage (IN PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    UNICODE_STRING ArcDeviceName;
-    UNICODE_STRING ArcName;
-    UNICODE_STRING BootPath;
-    UNICODE_STRING DriveDeviceName;
-    UNICODE_STRING DriveName;
-    WCHAR DriveNameBuffer[20];
-    PWCHAR ArcNameBuffer;
-    NTSTATUS Status;
-    ULONG Length;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE Handle;
-    ULONG i;
-    BOOLEAN BootDriveFound = FALSE;
-
-    /* Set the Product Type */
-    SharedUserData->NtProductType = NtProductWinNt;
-    SharedUserData->ProductTypeIsValid = TRUE;
-
-    /*
-     * Retrieve the current dos system path
-     * (e.g.: C:\reactos) from the given arc path
-     * (e.g.: multi(0)disk(0)rdisk(0)partititon(1)\reactos)
-     * Format: "<arc_name>\<path> [options...]"
-     */
-
-    RtlCreateUnicodeStringFromAsciiz(&BootPath, LoaderBlock->NtBootPathName);
-
-    /* Remove the trailing backslash */
-    BootPath.Length -= sizeof(WCHAR);
-    BootPath.MaximumLength -= sizeof(WCHAR);
-
-    /* Only ARC Name left - Build full ARC Name */
-    ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-    swprintf (ArcNameBuffer, L"\\ArcName\\%S", LoaderBlock->ArcBootDeviceName);
-    RtlInitUnicodeString (&ArcName, ArcNameBuffer);
-
-    /* Allocate ARC Device Name string */
-    ArcDeviceName.Length = 0;
-    ArcDeviceName.MaximumLength = 256 * sizeof(WCHAR);
-    ArcDeviceName.Buffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-
-    /* Open the Symbolic Link */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &ArcName,
-                               OBJ_OPENLINK,
-                               NULL,
-                               NULL);
-    Status = NtOpenSymbolicLinkObject(&Handle,
-                                      SYMBOLIC_LINK_ALL_ACCESS,
-                                      &ObjectAttributes);
-
-    /* Free the String */
-    ExFreePool(ArcName.Buffer);
-
-    /* Check for Success */
-    if (!NT_SUCCESS(Status)) {
-
-        /* Free the Strings */
-        RtlFreeUnicodeString(&BootPath);
-        ExFreePool(ArcDeviceName.Buffer);
-        CPRINT("NtOpenSymbolicLinkObject() failed (Status %x)\n", Status);
-        KEBUGCHECK(0);
-    }
-
-    /* Query the Link */
-    Status = NtQuerySymbolicLinkObject(Handle,
-                                       &ArcDeviceName,
-                                       &Length);
-    NtClose (Handle);
-
-    /* Check for Success */
-    if (!NT_SUCCESS(Status)) {
-
-        /* Free the Strings */
-        RtlFreeUnicodeString(&BootPath);
-        ExFreePool(ArcDeviceName.Buffer);
-        CPRINT("NtQuerySymbolicLinkObject() failed (Status %x)\n", Status);
-        KEBUGCHECK(0);
-    }
-
-    /* Allocate Device Name string */
-    DriveDeviceName.Length = 0;
-    DriveDeviceName.MaximumLength = 256 * sizeof(WCHAR);
-    DriveDeviceName.Buffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
-
-    /* Loop Drives */
-    for (i = 0; i < 26; i++)  {
-
-        /* Setup the String */
-        swprintf (DriveNameBuffer, L"\\??\\%C:", 'A' + i);
-        RtlInitUnicodeString(&DriveName,
-                             DriveNameBuffer);
-
-        /* Open the Symbolic Link */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &DriveName,
-                                   OBJ_OPENLINK,
-                                   NULL,
-                                   NULL);
-        Status = NtOpenSymbolicLinkObject(&Handle,
-                                          SYMBOLIC_LINK_ALL_ACCESS,
-                                          &ObjectAttributes);
-
-        /* If it failed, skip to the next drive */
-        if (!NT_SUCCESS(Status)) {
-            DPRINT("Failed to open link %wZ\n", &DriveName);
-            continue;
-        }
-
-        /* Query it */
-        Status = NtQuerySymbolicLinkObject(Handle,
-                                           &DriveDeviceName,
-                                           &Length);
-
-        /* If it failed, skip to the next drive */
-        if (!NT_SUCCESS(Status)) {
-            DPRINT("Failed to query link %wZ\n", &DriveName);
-            continue;
-        }
-        DPRINT("Opened link: %wZ ==> %wZ\n", &DriveName, &DriveDeviceName);
-
-        /* See if we've found the boot drive */
-        if (!RtlCompareUnicodeString (&ArcDeviceName, &DriveDeviceName, FALSE)) {
-
-            DPRINT("DOS Boot path: %c:%wZ\n", 'A' + i, &BootPath);
-            swprintf(SharedUserData->NtSystemRoot, L"%C:%wZ", 'A' + i, &BootPath);
-            BootDriveFound = TRUE;
-        }
-
-        /* Close this Link */
-        NtClose (Handle);
-    }
-
-    /* Free all the Strings we have in memory */
-    RtlFreeUnicodeString (&BootPath);
-    ExFreePool(DriveDeviceName.Buffer);
-    ExFreePool(ArcDeviceName.Buffer);
-
-    /* Make sure we found the Boot Drive */
-    if (BootDriveFound == FALSE) {
-
-        DbgPrint("No system drive found!\n");
-        KEBUGCHECK (NO_BOOT_DEVICE);
-    }
-}
-
-VOID
-INIT_FUNCTION
-ExpDisplayNotice(VOID)
-{
-    CHAR str[50];
-   
-    if (ExpInTextModeSetup)
-    {
-        HalDisplayString(
-        "\n\n\n     ReactOS " KERNEL_VERSION_STR " Setup \n");
-        HalDisplayString(
-        "    \xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD");
-        HalDisplayString(
-        "\xCD\xCD\n");
-        return;
-    }
-    
-    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
-                     KERNEL_VERSION_BUILD_STR")\n");
-    HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
-    HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
-                     "Public License, and you\n");
-    HalDisplayString("are welcome to change it and/or distribute copies of it "
-                     "under certain\n");
-    HalDisplayString("conditions. There is absolutely no warranty for "
-                      "ReactOS.\n\n");
-
-    /* Display number of Processors */
-    sprintf(str,
-            "Found %x system processor(s). [%lu MB Memory]\n",
-            (int)KeNumberProcessors,
-            (MmFreeLdrMemHigher + 1088)/ 1024);
-    HalDisplayString(str);
-    
 }
 
 NTSTATUS
 NTAPI
-ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
-                      IN PHANDLE ThreadHandle)
+ExpLoadInitialProcess(IN OUT PRTL_USER_PROCESS_INFORMATION ProcessInformation)
 {
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
     NTSTATUS Status;
     ULONG Size;
-    RTL_USER_PROCESS_INFORMATION ProcessInformation;
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
     UNICODE_STRING SmssName, Environment, SystemDriveString;
+    PVOID EnvironmentPtr = NULL;
 
     /* Allocate memory for the process parameters */
     Size = sizeof(RTL_USER_PROCESS_PARAMETERS) +
-           ((MAX_PATH * 4) * sizeof(WCHAR));
+           ((MAX_PATH * 6) * sizeof(WCHAR));
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                      (PVOID)&ProcessParameters,
                                      0,
@@ -419,17 +383,19 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     /* Allocate a page for the environment */
     Size = PAGE_SIZE;
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                     (PVOID)&ProcessParameters->Environment,
+                                     &EnvironmentPtr,
                                      0,
                                      &Size,
                                      MEM_COMMIT,
-                                     PAGE_READWRITE
-                                     );
+                                     PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
         KeBugCheckEx(SESSION2_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
+
+    /* Write the pointer */
+    ProcessParameters->Environment = EnvironmentPtr;
 
     /* Make a buffer for the DOS path */
     p = (PWSTR)(ProcessParameters + 1);
@@ -458,16 +424,53 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     ProcessParameters->ImagePathName.Buffer = p;
     ProcessParameters->ImagePathName.MaximumLength = MAX_PATH * sizeof(WCHAR);
 
-    /* Append the system path and session manager name */
-    RtlAppendUnicodeToString(&ProcessParameters->ImagePathName,
-                             L"\\SystemRoot\\System32");
-    RtlAppendUnicodeToString(&ProcessParameters->ImagePathName,
-                             L"\\smss.exe");
+    /* Make sure the buffer is a valid string which within the given length */
+    if ((NtInitialUserProcessBufferType != REG_SZ) ||
+        ((NtInitialUserProcessBufferLength != -1) &&
+         ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
+          (NtInitialUserProcessBufferLength >
+           sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
+    {
+        /* Invalid initial process string, bugcheck */
+        KeBugCheckEx(SESSION2_INITIALIZATION_FAILED,
+                     (ULONG_PTR)STATUS_INVALID_PARAMETER,
+                     NtInitialUserProcessBufferType,
+                     NtInitialUserProcessBufferLength,
+                     sizeof(NtInitialUserProcessBuffer));
+    }
+
+    /* Cut out anything after a space */
+    p = NtInitialUserProcessBuffer;
+    while (*p && *p != L' ') p++;
+
+    /* Set the image path length */
+    ProcessParameters->ImagePathName.Length =
+        (USHORT)((PCHAR)p - (PCHAR)NtInitialUserProcessBuffer);
+
+    /* Copy the actual buffer */
+    RtlCopyMemory(ProcessParameters->ImagePathName.Buffer,
+                  NtInitialUserProcessBuffer,
+                  ProcessParameters->ImagePathName.Length);
+
+    /* Null-terminate it */
+    ProcessParameters->
+        ImagePathName.Buffer[ProcessParameters->ImagePathName.Length /
+                             sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Make a buffer for the command line */
+    p = (PWSTR)((PCHAR)ProcessParameters->ImagePathName.Buffer +
+                ProcessParameters->ImagePathName.MaximumLength);
+    ProcessParameters->CommandLine.Buffer = p;
+    ProcessParameters->CommandLine.MaximumLength = MAX_PATH * sizeof(WCHAR);
+
+    /* Add the image name to the command line */
+    RtlAppendUnicodeToString(&ProcessParameters->CommandLine,
+                             NtInitialUserProcessBuffer);
 
     /* Create the environment string */
     RtlInitEmptyUnicodeString(&Environment,
                               ProcessParameters->Environment,
-                              Size);
+                              (USHORT)Size);
 
     /* Append the DLL path to it */
     RtlAppendUnicodeToString(&Environment, L"Path=" );
@@ -488,11 +491,8 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     RtlAppendUnicodeStringToString(&Environment, &NtSystemRoot);
     RtlAppendUnicodeStringToString(&Environment, &NullString);
 
-    /* Get and set the command line equal to the image path */
-    ProcessParameters->CommandLine = ProcessParameters->ImagePathName;
-    SmssName = ProcessParameters->ImagePathName;
-
     /* Create SMSS process */
+    SmssName = ProcessParameters->ImagePathName;
     Status = RtlCreateUserProcess(&SmssName,
                                   OBJ_CASE_INSENSITIVE,
                                   RtlDeNormalizeProcessParams(
@@ -503,7 +503,7 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
                                   FALSE,
                                   NULL,
                                   NULL,
-                                  &ProcessInformation);
+                                  ProcessInformation);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
@@ -511,16 +511,14 @@ ExpLoadInitialProcess(IN PHANDLE ProcessHandle,
     }
 
     /* Resume the thread */
-    Status = ZwResumeThread(ProcessInformation.ThreadHandle, NULL);
+    Status = ZwResumeThread(ProcessInformation->ThreadHandle, NULL);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
         KeBugCheckEx(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
-    /* Return Handles */
-    *ProcessHandle = ProcessInformation.ProcessHandle;
-    *ThreadHandle = ProcessInformation.ThreadHandle;
+    /* Return success */
     return STATUS_SUCCESS;
 }
 
@@ -661,8 +659,100 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Fail if this is XP */
     if (Extension->MinorVersion < 2) return FALSE;
 
-    /* This is 2003 or newer, aprove it */
+    /* This is 2003 or newer, approve it */
     return TRUE;
+}
+
+VOID
+NTAPI
+ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    ULONG i = 0;
+    PLIST_ENTRY NextEntry;
+    ULONG Count, Length;
+    PWCHAR Name;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN OverFlow = FALSE;
+    CHAR NameBuffer[256];
+    ANSI_STRING SymbolString;
+
+    /* Loop the driver list */
+    NextEntry = LoaderBlock->LoadOrderListHead.Flink;
+    while (NextEntry != &LoaderBlock->LoadOrderListHead)
+    {
+        /* Skip the first two images */
+        if (i >= 2)
+        {
+            /* Get the entry */
+            LdrEntry = CONTAINING_RECORD(NextEntry,
+                                         LDR_DATA_TABLE_ENTRY,
+                                         InLoadOrderLinks);
+            if (LdrEntry->FullDllName.Buffer[0] == L'\\')
+            {
+                /* We have a name, read its data */
+                Name = LdrEntry->FullDllName.Buffer;
+                Length = LdrEntry->FullDllName.Length / sizeof(WCHAR);
+
+                /* Check if our buffer can hold it */
+                if (sizeof(NameBuffer) < Length + sizeof(ANSI_NULL))
+                {
+                    /* It's too long */
+                    OverFlow = TRUE;
+                }
+                else
+                {
+                    /* Copy the name */
+                    Count = 0;
+                    do
+                    {
+                        /* Copy the character */
+                        NameBuffer[Count++] = (CHAR)*Name++;
+                    } while (Count < Length);
+
+                    /* Null-terminate */
+                    NameBuffer[Count] = ANSI_NULL;
+                }
+            }
+            else
+            {
+                /* This should be a driver, check if it fits */
+                if (sizeof(NameBuffer) <
+                    (sizeof("\\System32\\Drivers\\") +
+                     NtSystemRoot.Length / sizeof(WCHAR) - sizeof(UNICODE_NULL) +
+                     LdrEntry->BaseDllName.Length / sizeof(WCHAR) +
+                     sizeof(ANSI_NULL)))
+                {
+                    /* Buffer too small */
+                    OverFlow = TRUE;
+                    while (TRUE);
+                }
+                else
+                {
+                    /* Otherwise build the name. HACKED for GCC :( */
+                    sprintf(NameBuffer,
+                            "%S\\System32\\Drivers\\%S",
+                            &SharedUserData->NtSystemRoot[2],
+                            LdrEntry->BaseDllName.Buffer);
+                }
+            }
+
+            /* Check if the buffer was ok */
+            if (!OverFlow)
+            {
+                /* Initialize the ANSI_STRING for the debugger */
+                RtlInitString(&SymbolString, NameBuffer);
+
+                /* Load the symbols */
+                DbgLoadImageSymbols(&SymbolString,
+                                    LdrEntry->DllBase,
+                                    0xFFFFFFFF);
+            }
+        }
+
+        /* Go to the next entry */
+        i++;
+        NextEntry = NextEntry->Flink;
+    }
 }
 
 VOID
@@ -674,6 +764,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     CHAR Buffer[256];
     ANSI_STRING AnsiPath;
     NTSTATUS Status;
+    PCHAR CommandLine, PerfMem;
+    ULONG PerfMemUsed;
 
     /* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))
@@ -696,7 +788,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         if (!HalInitSystem(ExpInitializationPhase, LoaderBlock))
         {
             /* Initialization failed */
-            KEBUGCHECK(HAL_INITIALIZATION_FAILED);
+            KeBugCheck(HAL_INITIALIZATION_FAILED);
         }
 
         /* We're done */
@@ -726,6 +818,50 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Set phase to 0 */
     ExpInitializationPhase = 0;
+
+    /* Get boot command line */
+    CommandLine = LoaderBlock->LoadOptions;
+    if (CommandLine)
+    {
+        /* Upcase it for comparison and check if we're in performance mode */
+        _strupr(CommandLine);
+        PerfMem = strstr(CommandLine, "PERFMEM");
+        if (PerfMem)
+        {
+            /* Check if the user gave a number of bytes to use */
+            PerfMem = strstr(PerfMem, "=");
+            if (PerfMem)
+            {
+                /* Read the number of pages we'll use */
+                PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
+                if (PerfMem)
+                {
+                    /* FIXME: TODO */
+                    DPRINT1("BBT performance mode not yet supported."
+                            "/PERFMEM option ignored.\n");
+                }
+            }
+        }
+
+        /* Check if we're burning memory */
+        PerfMem = strstr(CommandLine, "BURNMEMORY");
+        if (PerfMem)
+        {
+            /* Check if the user gave a number of bytes to use */
+            PerfMem = strstr(PerfMem, "=");
+            if (PerfMem)
+            {
+                /* Read the number of pages we'll use */
+                PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
+                if (PerfMem)
+                {
+                    /* FIXME: TODO */
+                    DPRINT1("Burnable memory support not yet present."
+                            "/BURNMEM option ignored.\n");
+                }
+            }
+        }
+    }
 
     /* Setup NLS Base and offsets */
     NlsData = LoaderBlock->NlsData;
@@ -770,12 +906,12 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Convert to ANSI_STRING and null-terminate it */
     RtlInitString(&AnsiPath, Buffer );
-    Buffer[--AnsiPath.Length] = UNICODE_NULL;
+    Buffer[--AnsiPath.Length] = ANSI_NULL;
 
     /* Get the string from KUSER_SHARED_DATA's buffer */
-    NtSystemRoot.Buffer = SharedUserData->NtSystemRoot;
-    NtSystemRoot.MaximumLength = sizeof(SharedUserData->NtSystemRoot) / sizeof(WCHAR);
-    NtSystemRoot.Length = 0;
+    RtlInitEmptyUnicodeString(&NtSystemRoot,
+                              SharedUserData->NtSystemRoot,
+                              sizeof(SharedUserData->NtSystemRoot));
 
     /* Now fill it in */
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
@@ -784,11 +920,20 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
 
+    /* Setup initial system settings (FIXME: Needs Cm Rewrite) */
+    CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
+
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
 
-    /* Break into the Debugger if requested */
-    if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    /* Initialize the memory manager at phase 0 */
+    if (!MmInitSystem(0, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
+
+    /* Load boot symbols */
+    ExpLoadBootSymbols(LoaderBlock);
+
+    /* Check if we should break after symbol load */
+    if (KdBreakAfterSymbolLoad) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
     /* Set system ranges */
     SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;
@@ -796,6 +941,22 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Make a copy of the NLS Tables */
     ExpInitNls(LoaderBlock);
+
+    /* Check if the user wants a kernel stack trace database */
+    if (NtGlobalFlag & FLG_KERNEL_STACK_TRACE_DB)
+    {
+        /* FIXME: TODO */
+        DPRINT1("Kernel-mode stack trace support not yet present."
+                "FLG_KERNEL_STACK_TRACE_DB flag ignored.\n");
+    }
+
+    /* Check if he wanted exception logging */
+    if (NtGlobalFlag & FLG_ENABLE_EXCEPTION_LOGGING)
+    {
+        /* FIXME: TODO */
+        DPRINT1("Kernel-mode exception logging support not yet present."
+                "FLG_ENABLE_EXCEPTION_LOGGING flag ignored.\n");
+    }
 
     /* Initialize the Handle Table */
     ExpInitializeHandleTables();
@@ -825,11 +986,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Load basic Security for other Managers */
     if (!SeInit()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
-    /* Set up Region Maps, Sections and the Paging File */
-    MmInit2();
-
     /* Initialize the Process Manager */
-    if (!PsInitSystem()) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
+    if (!PsInitSystem(LoaderBlock)) KEBUGCHECK(PROCESS_INITIALIZATION_FAILED);
+
+    /* Initialize the PnP Manager */
+    if (!PpInitSystem()) KEBUGCHECK(PP0_INITIALIZATION_FAILED);
+
+    /* Initialize the User-Mode Debugging Subsystem */
+    DbgkInitialize();
 
     /* Calculate the tick count multiplier */
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
@@ -846,19 +1010,37 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #elif defined(_PPC_) // <3 Arty
     SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_POWERPC;
     SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_POWERPC;
-#elif
+#elif defined(_MIPS_)
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_R4000;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_R4000;
+#else
 #error "Unsupported ReactOS Target"
 #endif
 }
 
 VOID
 NTAPI
-ExPhase2Init(PVOID Context)
+Phase1InitializationDiscard(PVOID Context)
 {
+    PLOADER_PARAMETER_BLOCK LoaderBlock = Context;
+    PCHAR CommandLine, Y2KHackRequired;
     LARGE_INTEGER Timeout;
-    HANDLE ProcessHandle;
-    HANDLE ThreadHandle;
     NTSTATUS Status;
+    TIME_FIELDS TimeFields;
+    LARGE_INTEGER SystemBootTime, UniversalBootTime, OldTime;
+    PRTL_USER_PROCESS_INFORMATION ProcessInfo;
+    BOOLEAN SosEnabled, NoGuiBoot;
+    ULONG YearHack = 0;
+
+    /* Allocate initial process information */
+    ProcessInfo = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(RTL_USER_PROCESS_INFORMATION),
+                                        TAG('I', 'n', 'i', 't'));
+    if (!ProcessInfo)
+    {
+        /* Bugcheck */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 8, 0, 0);
+    }
 
     /* Set to phase 1 */
     ExpInitializationPhase = 1;
@@ -867,124 +1049,233 @@ ExPhase2Init(PVOID Context)
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
     /* Do Phase 1 HAL Initialization */
-    HalInitSystem(1, KeLoaderBlock);
+    if (!HalInitSystem(1, LoaderBlock)) KeBugCheck(HAL1_INITIALIZATION_FAILED);
 
-    /* Setup system time */
-    KiInitializeSystemClock();
+    /* Get the command line and upcase it */
+    CommandLine = _strupr(LoaderBlock->LoadOptions);
+
+    /* Check if GUI Boot is enabled */
+    NoGuiBoot = (strstr(CommandLine, "NOGUIBOOT")) ? TRUE: FALSE;
+
+    /* Get the SOS setting */
+    SosEnabled = strstr(CommandLine, "SOS") ? TRUE: FALSE;
+
+    /* Setup the boot driver */
+    InbvEnableBootDriver(!NoGuiBoot);
+    InbvDriverInitialize(LoaderBlock, 18);
+
+    /* Check if GUI boot is enabled */
+    if (!NoGuiBoot)
+    {
+        /* It is, display the boot logo and enable printing strings */
+        InbvEnableDisplayString(SosEnabled);
+        DisplayBootBitmap(SosEnabled);
+    }
+    else
+    {
+        /* Release display ownership if not using GUI boot */
+        InbvNotifyDisplayOwnershipLost(NULL);
+
+        /* Don't allow boot-time strings */
+        InbvEnableDisplayString(FALSE);
+    }
+
+    /* Check if this is LiveCD (WinPE) mode */
+    if (strstr(CommandLine, "MININT"))
+    {
+        /* Setup WinPE Settings */
+        InitIsWinPEMode = TRUE;
+        InitWinPEModeType |= (strstr(CommandLine, "INRAM")) ? 0x80000000 : 1;
+    }
+
+    /* FIXME: Print product name, version, and build */
+
+    /* Initialize Power Subsystem in Phase 0 */
+    if (!PoInitSystem(0, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+
+    /* Check for Y2K hack */
+    Y2KHackRequired = strstr(CommandLine, "YEAR");
+    if (Y2KHackRequired) Y2KHackRequired = strstr(Y2KHackRequired, "=");
+    if (Y2KHackRequired) YearHack = atol(Y2KHackRequired + 1);
+
+    /* Query the clock */
+    if ((ExCmosClockIsSane) && (HalQueryRealTimeClock(&TimeFields)))
+    {
+        /* Check if we're using the Y2K hack */
+        if (Y2KHackRequired) TimeFields.Year = (CSHORT)YearHack;
+
+        /* Convert to time fields */
+        RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
+        UniversalBootTime = SystemBootTime;
+
+#if 0 // FIXME: Won't work until we can read registry data here
+        /* FIXME: This assumes that the RTC is not already in GMT */
+        ExpTimeZoneBias.QuadPart = Int32x32To64(ExpLastTimeZoneBias * 60,
+                                                10000000);
+
+        /* Set the boot time-zone bias */
+        SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.HighPart;
+        SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.LowPart;
+        SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.HighPart;
+
+        /* Convert the boot time to local time, and set it */
+        UniversalBootTime.QuadPart = SystemBootTime.QuadPart +
+                                     ExpTimeZoneBias.QuadPart;
+#endif
+
+        /* Update the system time */
+        KeSetSystemTime(&UniversalBootTime, &OldTime, FALSE, NULL);
+
+        /* Remember this as the boot time */
+        KeBootTime = UniversalBootTime;
+        KeBootTimeBias = 0;
+    }
 
     /* Initialize all processors */
-    HalAllProcessorsStarted();
+    if (!HalAllProcessorsStarted()) KeBugCheck(HAL1_INITIALIZATION_FAILED);
+
+    /* FIXME: Print CPU and Memory */
+
+    /* Update the progress bar */
+    InbvUpdateProgressBar(5);
 
     /* Call OB initialization again */
-    if (!ObInit()) KEBUGCHECK(OBJECT1_INITIALIZATION_FAILED);
+    if (!ObInit()) KeBugCheck(OBJECT1_INITIALIZATION_FAILED);
 
     /* Initialize Basic System Objects and Worker Threads */
-    if (!ExInitSystem()) KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+    if (!ExInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 1, 0);
 
     /* Initialize the later stages of the kernel */
-    if (!KeInitSystem()) KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+    if (!KeInitSystem()) KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 2, 0);
+
+    /* Call KD Providers at Phase 1 */
+    if (!KdInitSystem(ExpInitializationPhase, KeLoaderBlock))
+    {
+        /* Failed, bugcheck */
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, 0, 0, 3, 0);
+    }
+
+    /* Initialize the SRM in Phase 1 */
+    if (!SeInit()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
+
+    /* Update the progress bar */
+    InbvUpdateProgressBar(10);
+
+    /* Create SystemRoot Link */
+    Status = ExpCreateSystemRootLink(LoaderBlock);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to create the system root link */
+        KeBugCheckEx(SYMBOLIC_INITIALIZATION_FAILED, Status, 0, 0, 0);
+    }
+
+    /* Set up Region Maps, Sections and the Paging File */
+    if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 
     /* Create NLS section */
     ExpInitNls(KeLoaderBlock);
 
-    /* Call KD Providers at Phase 1 */
-    KdInitSystem(1, KeLoaderBlock);
-
-    /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
-    IoInit();
-
-    /* TBD */
-    PoInit(AcpiTableDetected, KeLoaderBlock);
-
-    /* Initialize the Registry (Hives are NOT yet loaded!) */
-    CmInitializeRegistry();
-
-    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
-    MmInit3();
-
     /* Initialize Cache Views */
-    CcInit();
+    if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
 
-    /* Initialize File Locking */
-    FsRtlpInitFileLockingImplementation();
+    /* Initialize the Registry */
+    if (!CmInitSystem1()) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
 
-    /* Report all resources used by hal */
+    /* Update progress bar */
+    InbvUpdateProgressBar(15);
+
+    /* Update timezone information */
+    ExRefreshTimeZoneInformation(&SystemBootTime);
+
+    /* Initialize the File System Runtime Library */
+    if (!FsRtlInitSystem()) KeBugCheck(FILE_INITIALIZATION_FAILED);
+
+    /* Report all resources used by HAL */
     HalReportResourceUsage();
 
-    /* Clear the screen to blue */
-    HalInitSystem(2, KeLoaderBlock);
+    /* Call the debugger DLL once we have KD64 6.0 support */
+    KdDebuggerInitialize1(LoaderBlock);
 
-    /* Check if GUI Boot is enabled */
-    if (strstr(KeLoaderBlock->LoadOptions, "NOGUIBOOT")) NoGuiBoot = TRUE;
+    /* Setup PnP Manager in phase 1 */
+    if (!PpInitSystem()) KeBugCheck(PP1_INITIALIZATION_FAILED);
 
-    /* Display version number and copyright/warranty message */
-    if (NoGuiBoot) ExpDisplayNotice();
-
-    /* Call KD Providers at Phase 2 */
-    KdInitSystem(2, KeLoaderBlock);
+    /* Update progress bar */
+    InbvUpdateProgressBar(20);
 
     /* Initialize LPC */
-    LpcpInitSystem();
+    if (!LpcInitSystem()) KeBugCheck(LPC_INITIALIZATION_FAILED);
 
-    /* Import and Load Registry Hives */
-    CmInitHives(ExpInTextModeSetup);
+    /* Initialize the I/O Subsystem */
+    if (!IoInitSystem(KeLoaderBlock)) KeBugCheck(IO1_INITIALIZATION_FAILED);
+
+    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
+    MmInitSystem(2, LoaderBlock);
+
+    /* Update progress bar */
+    InbvUpdateProgressBar(80);
 
     /* Initialize VDM support */
     KeI386VdmInitialize();
 
-    /* Initialize the time zone information from the registry */
-    ExpInitTimeZoneInfo();
+    /* Initialize Power Subsystem in Phase 1*/
+    if (!PoInitSystem(1, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
 
-    /* Enter the kernel debugger before starting up the boot drivers */
-    if (KdDebuggerEnabled && KdpEarlyBreak)
-        DbgBreakPoint();
+    /* Initialize the Process Manager at Phase 1 */
+    if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
 
-    /* Setup Drivers and Root Device Node */
-    IoInit2(FALSE);
+    /* Update progress bar */
+    InbvUpdateProgressBar(85);
 
-    /* Display the boot screen image if not disabled */
-    if (!NoGuiBoot) InbvEnableBootDriver(TRUE);
+    /* Make sure nobody touches the loader block again */
+    if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
+    LoaderBlock = Context = NULL;
 
-    /* Create ARC Names, SystemRoot SymLink, Load Drivers and Assign Letters */
-    IoInit3();
-
-    /* Load the System DLL and its Entrypoints */
-    PsLocateSystemDll();
-
-    /* Initialize shared user page. Set dos system path, dos device map, etc. */
-    InitSystemSharedUserPage(KeLoaderBlock);
+    /* Update progress bar */
+    InbvUpdateProgressBar(90);
 
     /* Launch initial process */
-    Status = ExpLoadInitialProcess(&ProcessHandle,
-                                   &ThreadHandle);
+    Status = ExpLoadInitialProcess(ProcessInfo);
+
+    /* Update progress bar */
+    InbvUpdateProgressBar(100);
+
+    /* Allow strings to be displayed */
+    InbvEnableDisplayString(TRUE);
 
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
-    Status = ZwWaitForSingleObject(ProcessHandle, FALSE, &Timeout);
+    Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
+
     if (Status == STATUS_SUCCESS)
     {
         /* Bugcheck the system if SMSS couldn't initialize */
         KeBugCheck(SESSION5_INITIALIZATION_FAILED);
     }
-    else
-    {
-        /* Close process handles */
-        ZwClose(ThreadHandle);
-        ZwClose(ProcessHandle);
 
-        /*
-        * FIXME: FILIP!
-        * Disable the Boot Logo
-        */
-        if (!NoGuiBoot) InbvEnableBootDriver(FALSE);
+    /* Close process handles */
+    ZwClose(ProcessInfo->ThreadHandle);
+    ZwClose(ProcessInfo->ProcessHandle);
 
-        /* FIXME: We should free the initial process' memory!*/
+    /* FIXME: We should free the initial process' memory!*/
 
-        /* Increase init phase */
-        ExpInitializationPhase += 1;
+    /* Increase init phase */
+    ExpInitializationPhase += 1;
 
-        /* Jump into zero page thread */
-        MmZeroPageThreadMain(NULL);
-    }
+    /* Free the process information */
+    ExFreePool(ProcessInfo);
 }
-/* EOF */
+
+VOID
+NTAPI
+Phase1Initialization(IN PVOID Context)
+{
+    /* Do the .INIT part of Phase 1 which we can free later */
+    Phase1InitializationDiscard(Context);
+
+    /* Jump into zero page thread */
+    MmZeroPageThreadMain(NULL);
+}
+
+
+

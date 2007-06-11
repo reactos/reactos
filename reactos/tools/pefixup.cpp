@@ -254,7 +254,7 @@ int main(int argc, char **argv)
    {
       close(fd_in);
       printf("'%s' isn't a PE image (too short)\n", argv[1]);
-      return 1;
+      return 0;
    }
 
    /* Lower down we overwrite the byte at len, so here, we need at least
@@ -288,7 +288,8 @@ int main(int argc, char **argv)
    {
       printf("'%s' isn't a PE image (bad headers)\n", argv[1]);
       free(buffer);
-      return 1;
+      // XXX arty fixme
+      return 0;
    }
 
    if (fixup_exports)

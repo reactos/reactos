@@ -22,7 +22,6 @@
 
 #undef ExAcquireFastMutex
 #undef ExReleaseFastMutex
-#undef ExTryToAcquireFastMutex
 
 /* FUNCTIONS *****************************************************************/
 
@@ -75,7 +74,7 @@ ExReleaseFastMutex(PFAST_MUTEX FastMutex)
 
 BOOLEAN
 FASTCALL
-ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
+ExiTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
 {
     KIRQL OldIrql;
 

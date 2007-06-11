@@ -1564,34 +1564,34 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 /* NOTE: we don't set a memory clobber in the __stosX functions because Visual C++ doesn't */
 /* Note that the PPC store multiple operations may raise an exception in LE 
  * mode */
-static __inline__ __attribute__((always_inline)) void __stosb(unsigned char * Dest, const unsigned char Data, size_t Count)
+static __inline__ __attribute__((always_inline)) void __stosb(unsigned char * Dest, const unsigned char Data, unsigned long Count)
 {
     memset(Dest, Data, Count);
 }
 
-static __inline__ __attribute__((always_inline)) void __stosw(unsigned short * Dest, const unsigned short Data, size_t Count)
+static __inline__ __attribute__((always_inline)) void __stosw(unsigned short * Dest, const unsigned short Data, unsigned long Count)
 {
     while(Count--) 
 	*Dest++ = Data;
 }
 
-static __inline__ __attribute__((always_inline)) void __stosd(unsigned long * Dest, const unsigned long Data, size_t Count)
+static __inline__ __attribute__((always_inline)) void __stosd(unsigned long * Dest, const unsigned long Data, unsigned long Count)
 {
     while(Count--)
 	*Dest++ = Data;
 }
 
-static __inline__ __attribute__((always_inline)) void __movsb(unsigned char * Destination, const unsigned char * Source, size_t Count)
+static __inline__ __attribute__((always_inline)) void __movsb(unsigned char * Destination, const unsigned char * Source, unsigned long Count)
 {
     memcpy(Destination, Source, Count);
 }
 
-static __inline__ __attribute__((always_inline)) void __movsw(unsigned short * Destination, const unsigned short * Source, size_t Count)
+static __inline__ __attribute__((always_inline)) void __movsw(unsigned short * Destination, const unsigned short * Source, unsigned long Count)
 {
     memcpy(Destination, Source, Count * sizeof(*Source));
 }
 
-static __inline__ __attribute__((always_inline)) void __movsd(unsigned long * Destination, const unsigned long * Source, size_t Count)
+static __inline__ __attribute__((always_inline)) void __movsd(unsigned long * Destination, const unsigned long * Source, unsigned long Count)
 {
     memcpy(Destination, Source, Count * sizeof(*Source));
 }
@@ -1635,6 +1635,7 @@ static __inline__ __attribute__((always_inline)) unsigned char __readfsbyte(cons
 	    "\tlbz %0,0(%2)\n"
 	    : "=b" (result)
 	    : "b" (Offset), "b" (addr));
+    return result;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned short __readfsword(const unsigned long Offset)
@@ -1810,7 +1811,6 @@ static __inline__ __attribute__((always_inline)) unsigned char __inbyte(const un
     int ret;
     __asm__(
 	"mfmsr 5\n\t"
-	"xori  %1,%1,7\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"isync\n\t"
@@ -1826,7 +1826,6 @@ static __inline__ __attribute__((always_inline)) unsigned short __inword(const u
     int ret;
     __asm__(
 	"mfmsr 5\n\t"
-	"xori  %1,%1,6\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"isync\n\t"
@@ -1842,7 +1841,6 @@ static __inline__ __attribute__((always_inline)) unsigned long __indword(const u
     int ret;
     __asm__(
 	"mfmsr 5\n\t"
-	"xori  %1,%1,4\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"isync\n\t"
@@ -1878,7 +1876,6 @@ static __inline__ __attribute__((always_inline)) void __outbyte(unsigned short c
 {
     __asm__(
 	"mfmsr 5\n\t"
-	"xori  %0,%0,7\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"sync\n\t"
@@ -1895,7 +1892,6 @@ static __inline__ __attribute__((always_inline)) void __outword(unsigned short c
 {
     __asm__(
 	"mfmsr 5\n\t"
-	"xori  %0,%0,7\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"sync\n\t"
@@ -1912,7 +1908,6 @@ static __inline__ __attribute__((always_inline)) void __outdword(unsigned short 
 {
     __asm__(
 	"mfmsr 5\n\t"
-	"xori  %0,%0,7\n\t"     /* Undo effects of LE without swapping */
 	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
 	"mtmsr 6\n\t"
 	"sync\n\t"
@@ -1928,7 +1923,7 @@ static __inline__ __attribute__((always_inline)) void __outdword(unsigned short 
 static __inline__ __attribute__((always_inline)) void __outbytestring(unsigned short const Port, const unsigned char * const Buffer, const unsigned long Count)
 {
     unsigned long count = Count;
-    unsigned char *buffer = Buffer;
+    const unsigned char *buffer = Buffer;
     while(count--) {
 	__outbyte(Port, *buffer++);
     }
@@ -1937,7 +1932,7 @@ static __inline__ __attribute__((always_inline)) void __outbytestring(unsigned s
 static __inline__ __attribute__((always_inline)) void __outwordstring(unsigned short const Port, const unsigned short * const Buffer, const unsigned long Count)
 {
     unsigned long count = Count;
-    unsigned short *buffer = Buffer;
+    const unsigned short *buffer = Buffer;
     while(count--) {
 	__outword(Port, *buffer++);
     }
@@ -1946,7 +1941,7 @@ static __inline__ __attribute__((always_inline)) void __outwordstring(unsigned s
 static __inline__ __attribute__((always_inline)) void __outdwordstring(unsigned short const Port, const unsigned long * const Buffer, const unsigned long Count)
 {
     unsigned long count = Count;
-    unsigned long *buffer = Buffer;
+    const unsigned long *buffer = Buffer;
     while(count--) {
 	__outdword(Port, *buffer++);
     }
@@ -1958,14 +1953,13 @@ static __inline__ __attribute__((always_inline)) void __cpuid(int CPUInfo[], con
 {
     unsigned long lo32;
     __asm__("mfpvr" : "=b" (lo32));
-    return lo32;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void)
 {
     unsigned long lo32;
-    __asm__("mfdec" : "=b" (lo32));
-    return lo32;
+    __asm__("mfdec %0" : "=b" (lo32));
+    return -lo32;
 }
 
 

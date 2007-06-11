@@ -212,10 +212,22 @@ RtlConvertUlongToLuid(ULONG Ulong)
 #endif
 #endif
 
+#ifdef NTOS_KERNEL_RUNTIME
+
 //
-// This macro does nothing in kernel mode
+// Executing RTL functions at DISPATCH_LEVEL or higher will result in a
+// bugcheck.
+//
+#define RTL_PAGED_CODE PAGED_CODE
+
+#else
+
+//
+// This macro does nothing in user mode
 //
 #define RTL_PAGED_CODE NOP_FUNCTION
+
+#endif
 
 //
 // RTL Splay Tree Functions
@@ -223,40 +235,51 @@ RtlConvertUlongToLuid(ULONG Ulong)
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlSplay(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlDelete(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlDeleteNoSplay(
-    PRTL_SPLAY_LINKS Links,
-    PRTL_SPLAY_LINKS *Root
+RtlSplay(
+    IN PRTL_SPLAY_LINKS Links
 );
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
+RtlDelete(IN PRTL_SPLAY_LINKS Links
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteNoSplay(
+    IN PRTL_SPLAY_LINKS Links,
+    OUT PRTL_SPLAY_LINKS *Root
+);
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
+RtlSubtreeSuccessor(
+    IN PRTL_SPLAY_LINKS Links
+);
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
+RtlSubtreePredecessor(
+    IN PRTL_SPLAY_LINKS Links
+);
 
 NTSYSAPI
 PRTL_SPLAY_LINKS
 NTAPI
-RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
+RtlRealSuccessor(
+    IN PRTL_SPLAY_LINKS Links
+);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealPredecessor(
+    IN PRTL_SPLAY_LINKS Links
+);
 
 #define RtlIsLeftChild(Links) \
     (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
@@ -304,16 +327,6 @@ RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
-#endif
-
-#ifdef NTOS_KERNEL_RUNTIME
-
-//
-// Executing RTL functions at DISPATCH_LEVEL or higher will result in a
-// bugcheck.
-//
-#define RTL_PAGED_CODE PAGED_CODE
-
 #endif
 
 //
@@ -758,6 +771,17 @@ RtlAddAuditAccessObjectAce(
     IN BOOLEAN Success,
     IN BOOLEAN Failure
 );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddMandatoryAce(
+    IN OUT PACL Acl,
+    IN ULONG Revision,
+    IN ULONG Flags,
+    IN ULONG MandatoryFlags,
+    IN ULONG AceType,
+    IN PSID LabelSid);
 
 NTSYSAPI
 NTSTATUS
@@ -1869,9 +1893,9 @@ RtlCreateUserThread(
     IN HANDLE ProcessHandle,
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN BOOLEAN CreateSuspended,
-    IN LONG StackZeroBits,
-    IN ULONG StackReserve,
-    IN ULONG StackCommit,
+    IN ULONG StackZeroBits,
+    IN SIZE_T StackReserve,
+    IN SIZE_T StackCommit,
     IN PTHREAD_START_ROUTINE StartAddress,
     IN PVOID Parameter,
     IN OUT PHANDLE ThreadHandle,
@@ -2471,14 +2495,72 @@ DbgPrintEx(
 ULONG
 NTAPI
 DbgPrompt(
-    IN PCH PromptString,
-    OUT PCH OutputString,
-    IN ULONG OutputSize
+    IN PCCH Prompt,
+    OUT PCH Response,
+    IN ULONG MaximumResponseLength
 );
 
 VOID
 NTAPI
-DbgBreakPoint(VOID);
+DbgBreakPoint(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+DbgLoadImageSymbols(
+    IN PANSI_STRING Name,
+    IN PVOID Base,
+    IN ULONG_PTR ProcessId
+);
+
+VOID
+NTAPI
+DbgUnLoadImageSymbols(
+    IN PANSI_STRING Name,
+    IN PVOID Base,
+    IN ULONG_PTR ProcessId
+);
+
+//
+// Generic Table Functions
+//
+#if defined(NTOS_MODE_USER) || defined(_NTIFS_)
+PVOID
+NTAPI
+RtlInsertElementGenericTable(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL
+);
+
+PVOID
+NTAPI
+RtlInsertElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL,
+    IN PVOID NodeOrParent,
+    IN TABLE_SEARCH_RESULT SearchResult
+);
+
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmpty(
+    IN PRTL_GENERIC_TABLE Table
+);
+
+PVOID
+NTAPI
+RtlLookupElementGenericTableFull(
+    IN PRTL_GENERIC_TABLE Table,
+    IN PVOID Buffer,
+    OUT PVOID *NodeOrParent,
+    OUT TABLE_SEARCH_RESULT *SearchResult
+);
+#endif
 
 //
 // Handle Table Functions
@@ -2686,7 +2768,17 @@ RtlCheckRegistryKey(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath);
+RtlCreateRegistryKey(
+    IN ULONG RelativeTo,
+    IN PWSTR Path
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFormatCurrentUserKeyPath(
+    IN OUT PUNICODE_STRING KeyPath
+);
 
 NTSYSAPI
 NTSTATUS

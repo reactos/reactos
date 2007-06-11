@@ -122,6 +122,7 @@
  */
 
 #include <hal.h>
+#include <rosldr.h>
 #include <ppcboot.h>
 #include <ppcdebug.h>
 
@@ -129,7 +130,6 @@
 #include <debug.h>
 
 boot_infos_t PpcEarlybootInfo;
-BOOLEAN PPCGetEEBit();
 
 #define SCREEN_SYNCHRONIZATION
 
@@ -291,7 +291,7 @@ HalDisplayString(IN PCH String)
   PCH pch;
   //static KSPIN_LOCK Lock;
   KIRQL OldIrql;
-  BOOLEAN InterruptsEnabled = PPCGetEEBit();
+  BOOLEAN InterruptsEnabled = __readmsr();
 
   /* See comment at top of file */
   if (! HalOwnsDisplay || ! DisplayInitialized)
@@ -341,8 +341,7 @@ HalDisplayString(IN PCH String)
       pch++;
     }
 
-  if(InterruptsEnabled)
-      _enable();
+  __writemsr(InterruptsEnabled);
 
   //KiReleaseSpinLock(&Lock);
   KfLowerIrql(OldIrql);

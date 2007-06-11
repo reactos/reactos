@@ -12,11 +12,9 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ObInit)
-#endif
+/* GLOBALS *******************************************************************/
 
 GENERIC_MAPPING ObpTypeMapping =
 {
@@ -37,8 +35,16 @@ GENERIC_MAPPING ObpDirectoryMapping =
     DIRECTORY_ALL_ACCESS
 };
 
+GENERIC_MAPPING ObpSymbolicLinkMapping =
+{
+    STANDARD_RIGHTS_READ    | SYMBOLIC_LINK_QUERY,
+    STANDARD_RIGHTS_WRITE,
+    STANDARD_RIGHTS_EXECUTE | SYMBOLIC_LINK_QUERY,
+    SYMBOLIC_LINK_ALL_ACCESS
+};
+
 PDEVICE_MAP ObSystemDeviceMap = NULL;
-ULONG ObpTraceLevel = OB_HANDLE_DEBUG | OB_REFERENCE_DEBUG;
+ULONG ObpTraceLevel = 0;
 
 VOID
 NTAPI
@@ -53,7 +59,7 @@ INIT_FUNCTION
 NTAPI
 ObInit2(VOID)
 {
-    ULONG i;
+    CCHAR i;
     PKPRCB Prcb;
     PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
 
@@ -124,10 +130,15 @@ ObInit(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
-    SECURITY_DESCRIPTOR SecurityDescriptor;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     OBP_LOOKUP_CONTEXT Context;
+    HANDLE Handle;
     PKPRCB Prcb = KeGetCurrentPrcb();
+    PLIST_ENTRY ListHead, NextEntry;
+    POBJECT_HEADER Header;
+    POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    POBJECT_HEADER_NAME_INFO NameInfo;
+    NTSTATUS Status;
 
     /* Check if this is actually Phase 1 initialization */
     if (ObpInitializationPhase != 0) goto ObPostPhase0;
@@ -162,6 +173,10 @@ ObInit(VOID)
     /* Initialize the Default Event */
     KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE );
 
+    /* Setup default access for the system process */
+    PsGetCurrentProcess()->GrantedAccess = PROCESS_ALL_ACCESS;
+    PsGetCurrentThread()->GrantedAccess = THREAD_ALL_ACCESS;
+
     /* Setup the Object Reaper */
     ExInitializeWorkItem(&ObpReaperWorkItem, ObpReapObject, NULL);
 
@@ -182,18 +197,27 @@ ObInit(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.GenericMapping = ObpTypeMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_TYPE);
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObTypeObjectType);
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObpTypeObjectType);
 
     /* Create the Directory Type */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Directory");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
     ObjectTypeInitializer.MaintainTypeList = FALSE;
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObDirectoryType);
+
+    /* Create 'symbolic link' object type */
+    RtlInitUnicodeString(&Name, L"SymbolicLink");
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge =
+        sizeof(OBJECT_SYMBOLIC_LINK);
+    ObjectTypeInitializer.GenericMapping = ObpSymbolicLinkMapping;
+    ObjectTypeInitializer.ValidAccessMask = SYMBOLIC_LINK_ALL_ACCESS;
+    ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
+    ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObSymbolicLinkType);
 
     /* Phase 0 initialization complete */
     ObpInitializationPhase++;
@@ -204,92 +228,107 @@ ObPostPhase0:
     /* Re-initialize lookaside lists */
     ObInit2();
 
-    /* Create security descriptor */
-    RtlCreateSecurityDescriptor(&SecurityDescriptor,
-                                SECURITY_DESCRIPTOR_REVISION1);
-    RtlSetOwnerSecurityDescriptor(&SecurityDescriptor,
-                                  SeAliasAdminsSid,
-                                  FALSE);
-    RtlSetGroupSecurityDescriptor(&SecurityDescriptor,
-                                  SeLocalSystemSid,
-                                  FALSE);
-    RtlSetDaclSecurityDescriptor(&SecurityDescriptor,
-                                 TRUE,
-                                 SePublicDefaultDacl,
-                                 FALSE);
-
-    /* Create root directory */
+    /* Initialize Object Types directory attributes */
+    RtlInitUnicodeString(&Name, L"\\");
     InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               OBJ_PERMANENT,
-                               NULL,
-                               &SecurityDescriptor);
-    ObCreateObject(KernelMode,
-                   ObDirectoryType,
-                   &ObjectAttributes,
-                   KernelMode,
-                   NULL,
-                   sizeof(OBJECT_DIRECTORY),
-                   0,
-                   0,
-                   (PVOID*)&NameSpaceRoot);
-    ObInsertObject((PVOID)NameSpaceRoot,
-                   NULL,
-                   DIRECTORY_ALL_ACCESS,
-                   0,
-                   NULL,
-                   NULL);
+                               SePublicDefaultUnrestrictedSd);
 
-    /* Create '\ObjectTypes' directory */
+    /* Create the directory */
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Get a handle to it */
+    Status = ObReferenceObjectByHandle(Handle,
+                                       0,
+                                       ObDirectoryType,
+                                       KernelMode,
+                                       (PVOID*)&ObpRootDirectoryObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Close the extra handle */
+    Status = NtClose(Handle);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Initialize Object Types directory attributes */
     RtlInitUnicodeString(&Name, L"\\ObjectTypes");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               OBJ_PERMANENT,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               &SecurityDescriptor);
-    ObCreateObject(KernelMode,
-                   ObDirectoryType,
-                   &ObjectAttributes,
-                   KernelMode,
-                   NULL,
-                   sizeof(OBJECT_DIRECTORY),
-                   0,
-                   0,
-                   (PVOID*)&ObpTypeDirectoryObject);
-    ObInsertObject((PVOID)ObpTypeDirectoryObject,
-                   NULL,
-                   DIRECTORY_ALL_ACCESS,
-                   0,
-                   NULL,
-                   NULL);
-    
-    /* Insert the two objects we already created but couldn't add */
-    /* NOTE: Uses TypeList & Creator Info in OB 2.0 */
-    Context.Directory = ObpTypeDirectoryObject;
-    Context.DirectoryLocked = TRUE;
-    if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
-                                 &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ObTypeObjectType))->Name,
-                                 OBJ_CASE_INSENSITIVE,
-                                 FALSE,
-                                 &Context))
+                               NULL);
+
+    /* Create the directory */
+    Status = NtCreateDirectoryObject(&Handle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Get a handle to it */
+    Status = ObReferenceObjectByHandle(Handle,
+                                       0,
+                                       ObDirectoryType,
+                                       KernelMode,
+                                       (PVOID*)&ObpTypeDirectoryObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Close the extra handle */
+    Status = NtClose(Handle);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Initialize lookup context */
+    ObpInitializeDirectoryLookup(&Context);
+
+    /* Lock it */
+    ObpAcquireDirectoryLockExclusive(ObpTypeDirectoryObject, &Context);
+
+    /* Loop the object types */
+    ListHead = &ObpTypeObjectType->TypeList;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
     {
-        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, OBJECT_TO_OBJECT_HEADER(ObTypeObjectType));
-    }
-    if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
-                                 &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ObDirectoryType))->Name,
-                                 OBJ_CASE_INSENSITIVE,
-                                 FALSE,
-                                 &Context))
-    {
-        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, OBJECT_TO_OBJECT_HEADER(ObDirectoryType));
+        /* Get the creator info from the list */
+        CreatorInfo = CONTAINING_RECORD(NextEntry,
+                                        OBJECT_HEADER_CREATOR_INFO,
+                                        TypeList);
+
+        /* Recover the header and the name header from the creator info */
+        Header = (POBJECT_HEADER)(CreatorInfo + 1);
+        NameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
+
+        /* Make sure we have a name, and aren't inserted yet */
+        if ((NameInfo) && !(NameInfo->Directory))
+        {
+            /* Do the initial lookup to setup the context */
+            if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
+                                         &NameInfo->Name,
+                                         OBJ_CASE_INSENSITIVE,
+                                         FALSE,
+                                         &Context))
+            {
+                /* Insert this object type */
+                ObpInsertEntryDirectory(ObpTypeDirectoryObject,
+                                        &Context,
+                                        Header);
+            }
+        }
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
     }
 
-    /* Create 'symbolic link' object type */
-    ObInitSymbolicLinkImplementation();
+    /* Cleanup after lookup */
+    ObpCleanupDirectoryLookup(&Context);
 
-    /* FIXME: Hack Hack! */
-    ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ObSystemDeviceMap), TAG('O', 'b', 'D', 'm'));
-    RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
+    /* Initialize DOS Devices Directory and related Symbolic Links */
+    Status = ObpCreateDosDevicesDirectory();
+    if (!NT_SUCCESS(Status)) return FALSE;
     return TRUE;
 }
 

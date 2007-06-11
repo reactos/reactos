@@ -4,8 +4,10 @@
   <directory name="cmd">
     <xi:include href="cmd/cmd.rbuild" />
   </directory>
-  <directory name="explorer">
-    <xi:include href="explorer/explorer.rbuild" />
-  </directory>
+  <if property="ARCH" value="x86">
+    <directory name="explorer">
+      <xi:include href="explorer/explorer.rbuild" />
+    </directory>
+  </if>
   </group>
 </rbuild>

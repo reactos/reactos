@@ -27,6 +27,121 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
 		 PUNICODE_STRING TargetPath);
 
 /* FUNCTONS *****************************************************************/
+
+PVOID
+NTAPI
+CmpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
+                        IN PUNICODE_STRING Name,
+                        IN ULONG Attributes,
+                        IN UCHAR SearchShadow,
+                        IN POBP_LOOKUP_CONTEXT Context)
+{
+    BOOLEAN CaseInsensitive = FALSE;
+    POBJECT_HEADER_NAME_INFO HeaderNameInfo;
+    ULONG HashValue;
+    ULONG HashIndex;
+    LONG TotalChars;
+    WCHAR CurrentChar;
+    POBJECT_DIRECTORY_ENTRY *AllocatedEntry;
+    POBJECT_DIRECTORY_ENTRY *LookupBucket;
+    POBJECT_DIRECTORY_ENTRY CurrentEntry;
+    PVOID FoundObject = NULL;
+    PWSTR Buffer;
+    PAGED_CODE();
+
+    /* Always disable this until we have DOS Device Maps */
+    SearchShadow = FALSE;
+
+    /* Fail if we don't have a directory or name */
+    if (!(Directory) || !(Name)) goto Quickie;
+
+    /* Get name information */
+    TotalChars = Name->Length / sizeof(WCHAR);
+    Buffer = Name->Buffer;
+
+    /* Fail if the name is empty */
+    if (!(Buffer) || !(TotalChars)) goto Quickie;
+
+    /* Set up case-sensitivity */
+    if (Attributes & OBJ_CASE_INSENSITIVE) CaseInsensitive = TRUE;
+
+    /* Create the Hash */
+    for (HashValue = 0; TotalChars; TotalChars--)
+    {
+        /* Go to the next Character */
+        CurrentChar = *Buffer++;
+
+        /* Prepare the Hash */
+        HashValue += (HashValue << 1) + (HashValue >> 1);
+
+        /* Create the rest based on the name */
+        if (CurrentChar < 'a') HashValue += CurrentChar;
+        else if (CurrentChar > 'z') HashValue += RtlUpcaseUnicodeChar(CurrentChar);
+        else HashValue += (CurrentChar - ('a'-'A'));
+    }
+
+    /* Merge it with our number of hash buckets */
+    HashIndex = HashValue % 37;
+
+    /* Save the result */
+    Context->HashValue = HashValue;
+    Context->HashIndex = (USHORT)HashIndex;
+
+    /* Get the root entry and set it as our lookup bucket */
+    AllocatedEntry = &Directory->HashBuckets[HashIndex];
+    LookupBucket = AllocatedEntry;
+
+    /* Start looping */
+    while ((CurrentEntry = *AllocatedEntry))
+    {
+        /* Do the hashes match? */
+        if (CurrentEntry->HashValue == HashValue)
+        {
+            /* Make sure that it has a name */
+            ASSERT(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object)->NameInfoOffset != 0);
+
+            /* Get the name information */
+            HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object));
+
+            /* Do the names match? */
+            if ((Name->Length == HeaderNameInfo->Name.Length) &&
+                (RtlEqualUnicodeString(Name, &HeaderNameInfo->Name, CaseInsensitive)))
+            {
+                break;
+            }
+        }
+
+        /* Move to the next entry */
+        AllocatedEntry = &CurrentEntry->ChainLink;
+    }
+
+    /* Check if we still have an entry */
+    if (CurrentEntry)
+    {
+        /* Set this entry as the first, to speed up incoming insertion */
+        if (AllocatedEntry != LookupBucket)
+        {
+            /* Set the Current Entry */
+            *AllocatedEntry = CurrentEntry->ChainLink;
+
+            /* Link to the old Hash Entry */
+            CurrentEntry->ChainLink = *LookupBucket;
+
+            /* Set the new Hash Entry */
+            *LookupBucket = CurrentEntry;
+        }
+
+        /* Save the found object */
+        FoundObject = CurrentEntry->Object;
+        if (!FoundObject) goto Quickie;
+    }
+
+Quickie:
+    /* Return the object we found */
+    Context->Object = FoundObject;
+    return FoundObject;
+}
+
 NTSTATUS
 NTAPI
 CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
@@ -57,11 +172,11 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
     if (ObjectCreateInfo->RootDirectory == NULL)
     {
-        ObReferenceObjectByPointer(NameSpaceRoot,
+        ObReferenceObjectByPointer(ObpRootDirectoryObject,
             DIRECTORY_TRAVERSE,
             CmiKeyType,
             ObjectCreateInfo->ProbeMode);
-        CurrentObject = NameSpaceRoot;
+        CurrentObject = ObpRootDirectoryObject;
     }
     else
     {
@@ -137,9 +252,10 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
             if (End != NULL) *End = 0;
 
             RtlInitUnicodeString(&StartUs, Start);
+            ObpInitializeDirectoryLookup(&Context);
             Context.DirectoryLocked = TRUE;
             Context.Directory = CurrentObject;
-            FoundObject = ObpLookupEntryDirectory(CurrentObject, &StartUs, Attributes, FALSE, &Context);
+            FoundObject = CmpLookupEntryDirectory(CurrentObject, &StartUs, Attributes, FALSE, &Context);
             if (FoundObject == NULL)
             {
                 if (End != NULL)
@@ -196,7 +312,7 @@ Next:
         if (Status == STATUS_REPARSE)
         {
             /* reparse the object path */
-            NextObject = NameSpaceRoot;
+            NextObject = ObpRootDirectoryObject;
             current = PathString.Buffer;
 
             ObReferenceObjectByPointer(NextObject,
@@ -276,8 +392,8 @@ CmiObjectParse(IN PVOID ParsedObject,
     Length = wcslen(StartPtr);
 
 
-  KeyName.Length = Length * sizeof(WCHAR);
-  KeyName.MaximumLength = KeyName.Length + sizeof(WCHAR);
+  KeyName.Length = (USHORT)Length * sizeof(WCHAR);
+  KeyName.MaximumLength = (USHORT)KeyName.Length + sizeof(WCHAR);
   KeyName.Buffer = ExAllocatePool(NonPagedPool,
 				  KeyName.MaximumLength);
   RtlCopyMemory(KeyName.Buffer,
@@ -382,6 +498,7 @@ CmiObjectParse(IN PVOID ParsedObject,
           RtlFreeUnicodeString(&KeyName);
           return(Status);
         }
+#if 0
       DPRINT("Inserting Key into Object Tree\n");
       Status = ObInsertObject((PVOID)FoundObject,
                               NULL,
@@ -390,6 +507,11 @@ CmiObjectParse(IN PVOID ParsedObject,
                               NULL,
                               NULL);
       DPRINT("Status %x\n", Status);
+#else
+/* Free the create information */
+ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo);
+OBJECT_TO_OBJECT_HEADER(FoundObject)->ObjectCreateInfo = NULL;
+#endif
 
       /* Add the keep-alive reference */
       ObReferenceObject(FoundObject);
@@ -669,7 +791,7 @@ CmiAssignSecurityDescriptor(PKEY_OBJECT KeyObject,
 NTSTATUS STDCALL
 CmiObjectSecurity(PVOID ObjectBody,
 		  SECURITY_OPERATION_CODE OperationCode,
-		  SECURITY_INFORMATION SecurityInformation,
+		  PSECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
 		  PULONG BufferLength,
 		  PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
@@ -687,7 +809,7 @@ CmiObjectSecurity(PVOID ObjectBody,
       case QuerySecurityDescriptor:
         DPRINT("Query security descriptor\n");
         return CmiQuerySecurityDescriptor((PKEY_OBJECT)ObjectBody,
-					  SecurityInformation,
+					  *SecurityInformation,
 					  SecurityDescriptor,
 					  BufferLength);
 
@@ -751,7 +873,7 @@ CmiObjectQueryName (PVOID ObjectBody,
     {
       ObjectNameInfo->Name.Buffer = (PWCHAR)(ObjectNameInfo + 1);
       ObjectNameInfo->Name.Length = 0;
-      ObjectNameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
+      ObjectNameInfo->Name.MaximumLength = (USHORT)Length - sizeof(OBJECT_NAME_INFORMATION);
     }
 
 
@@ -850,7 +972,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	       ULONG Attributes,
 	       PKEY_OBJECT* ReturnedObject)
 {
-  PKEY_OBJECT CurKey = 0;
+  PKEY_OBJECT CurKey = NULL;
   ULONG Index;
 
   DPRINT("Scanning key list for: %wZ (Parent: %wZ)\n",
@@ -931,13 +1053,13 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
   if (TargetPath->Buffer == NULL && TargetPath->MaximumLength == 0)
     {
       TargetPath->Length = 0;
-      TargetPath->MaximumLength = ValueCell->DataSize + sizeof(WCHAR);
+      TargetPath->MaximumLength = (USHORT)ValueCell->DataSize + sizeof(WCHAR);
       TargetPath->Buffer = ExAllocatePool(NonPagedPool,
 					  TargetPath->MaximumLength);
     }
 
-  TargetPath->Length = min(TargetPath->MaximumLength - sizeof(WCHAR),
-			   (ULONG) ValueCell->DataSize);
+  TargetPath->Length = min((USHORT)TargetPath->MaximumLength - sizeof(WCHAR),
+			   (USHORT)ValueCell->DataSize);
 
   if (ValueCell->DataSize > 0)
     {

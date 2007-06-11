@@ -25,6 +25,27 @@ Author:
 #include <umtypes.h>
 
 //
+// LPC Exports
+//
+#ifndef NTOS_MODE_USER
+NTKERNELAPI
+NTSTATUS
+NTAPI
+LpcRequestWaitReplyPort(
+    IN PVOID Port,
+    IN PPORT_MESSAGE LpcMessageRequest,
+    OUT PPORT_MESSAGE LpcMessageReply
+);
+
+NTSTATUS
+NTAPI
+LpcRequestPort(
+    IN PVOID Port,
+    IN PPORT_MESSAGE LpcMessage
+);
+#endif
+
+//
 // Native calls
 //
 NTSYSCALLAPI
@@ -107,6 +128,12 @@ NtQueryInformationPort(
     PVOID PortInformation,
     ULONG PortInformationLength,
     PULONG ReturnLength
+);
+
+NTSTATUS
+NTAPI
+NtQueryPortInformationProcess(
+    VOID
 );
 
 NTSYSCALLAPI

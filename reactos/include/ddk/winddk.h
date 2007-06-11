@@ -41,12 +41,6 @@ extern "C" {
 #define DDKAPI __stdcall
 #define FASTCALL __fastcall
 #define DDKCDECLAPI __cdecl
-#ifndef DDKFASTAPI
-#define DDKFASTAPI
-#endif
-#ifndef NTOSAPI
-#define NTOSAPI
-#endif
 
 #ifdef _NTOSKRNL_
 /* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
@@ -154,9 +148,19 @@ typedef ULONG WAIT_TYPE;
 #define WaitAny 1
 typedef HANDLE TRACEHANDLE;
 typedef PVOID PWMILIB_CONTEXT;
-typedef PVOID PSYSCTL_IRP_DISPOSITION;
 typedef ULONG LOGICAL;
 #endif
+
+/*
+** WmiLib specific structure
+*/
+typedef enum
+{
+    IrpProcessed,    // Irp was processed and possibly completed
+    IrpNotCompleted, // Irp was process and NOT completed
+    IrpNotWmi,       // Irp is not a WMI irp
+    IrpForward       // Irp is wmi irp, but targeted at another device object
+} SYSCTL_IRP_DISPOSITION, *PSYSCTL_IRP_DISPOSITION;
 
 /*
 ** Routines specific to this DDK
@@ -243,6 +247,8 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define MAXIMUM_PRIORITY                  32
 
 #define MAXIMUM_SUSPEND_COUNT             MAXCHAR
+
+#define MAXIMUM_FILENAME_LENGTH           256
 
 #define FILE_SUPERSEDED                   0x00000000
 #define FILE_OPENED                       0x00000001
@@ -401,6 +407,7 @@ extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
+extern POBJECT_TYPE NTSYSAPI PsProcessType;
 
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 extern volatile CCHAR NTSYSAPI KeNumberProcessors;
@@ -431,6 +438,11 @@ typedef struct _KSYSTEM_TIME
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
 extern volatile KSYSTEM_TIME KeTickCount;
+
+#define NX_SUPPORT_POLICY_ALWAYSOFF 0
+#define NX_SUPPORT_POLICY_ALWAYSON 1
+#define NX_SUPPORT_POLICY_OPTIN 2
+#define NX_SUPPORT_POLICY_OPTOUT 3
 
 typedef struct _KUSER_SHARED_DATA
 {
@@ -625,6 +637,28 @@ typedef IO_ALLOCATION_ACTION
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
+
+typedef struct _EXCEPTION_RECORD32
+{
+    NTSTATUS ExceptionCode;
+    ULONG ExceptionFlags;
+    ULONG ExceptionRecord;
+    ULONG ExceptionAddress;
+    ULONG NumberParameters;
+    ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
+
+typedef struct _EXCEPTION_RECORD64
+{
+    NTSTATUS ExceptionCode;
+    ULONG ExceptionFlags;
+    ULONG64 ExceptionRecord;
+    ULONG64 ExceptionAddress;
+    ULONG NumberParameters;
+    ULONG __unusedAlignment;
+    ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
+
 typedef EXCEPTION_DISPOSITION
 (DDKAPI *PEXCEPTION_ROUTINE)(
   IN struct _EXCEPTION_RECORD *ExceptionRecord,
@@ -640,20 +674,23 @@ typedef VOID
   IN PVOID  Context);
 
 typedef NTSTATUS
-(DDKAPI *PDRIVER_ADD_DEVICE)(
+(DDKAPI DRIVER_ADD_DEVICE)(
   IN struct _DRIVER_OBJECT  *DriverObject,
   IN struct _DEVICE_OBJECT  *PhysicalDeviceObject);
+typedef DRIVER_ADD_DEVICE *PDRIVER_ADD_DEVICE;
 
 typedef NTSTATUS
-(DDKAPI *PIO_COMPLETION_ROUTINE)(
+(DDKAPI IO_COMPLETION_ROUTINE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  Context);
+typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
 
 typedef VOID
-(DDKAPI *PDRIVER_CANCEL)(
+(DDKAPI DRIVER_CANCEL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
+typedef DRIVER_CANCEL *PDRIVER_CANCEL;
 
 typedef VOID
 (DDKAPI *PKDEFERRED_ROUTINE)(
@@ -663,9 +700,10 @@ typedef VOID
   IN PVOID  SystemArgument2);
 
 typedef NTSTATUS
-(DDKAPI *PDRIVER_DISPATCH)(
+(DDKAPI DRIVER_DISPATCH)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
+typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
 
 typedef VOID
 (DDKAPI *PIO_DPC_ROUTINE)(
@@ -688,14 +726,16 @@ typedef NTSTATUS
   IN PUNICODE_STRING  RegistryPath);
 
 typedef NTSTATUS
-(DDKAPI *PDRIVER_INITIALIZE)(
+(DDKAPI DRIVER_INITIALIZE)(
   IN struct _DRIVER_OBJECT  *DriverObject,
   IN PUNICODE_STRING  RegistryPath);
+typedef DRIVER_INITIALIZE *PDRIVER_INITIALIZE;
 
 typedef BOOLEAN
-(DDKAPI *PKSERVICE_ROUTINE)(
+(DDKAPI KSERVICE_ROUTINE)(
   IN struct _KINTERRUPT  *Interrupt,
   IN PVOID  ServiceContext);
+typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
 
 typedef VOID
 (DDKAPI *PIO_TIMER_ROUTINE)(
@@ -709,17 +749,19 @@ typedef VOID
   IN ULONG  Count);
 
 typedef VOID
-(DDKAPI *PDRIVER_STARTIO)(
+(DDKAPI DRIVER_STARTIO)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
+typedef DRIVER_STARTIO *PDRIVER_STARTIO;
 
 typedef BOOLEAN
 (DDKAPI *PKSYNCHRONIZE_ROUTINE)(
   IN PVOID  SynchronizeContext);
 
 typedef VOID
-(DDKAPI *PDRIVER_UNLOAD)(
+(DDKAPI DRIVER_UNLOAD)(
   IN struct _DRIVER_OBJECT  *DriverObject);
+typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
 
 
 
@@ -1207,8 +1249,8 @@ typedef struct _EX_RUNDOWN_REF
 {
     union
     {
-        ULONG_PTR Count;
-        PVOID Ptr;
+        __volatile ULONG_PTR Count;
+        __volatile PVOID Ptr;
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
@@ -1303,7 +1345,7 @@ typedef struct _IRP {
   ULONG  Flags;
   union {
     struct _IRP  *MasterIrp;
-    LONG  IrpCount;
+    __volatile LONG  IrpCount;
     PVOID  SystemBuffer;
   } AssociatedIrp;
   LIST_ENTRY  ThreadListEntry;
@@ -1325,7 +1367,7 @@ typedef struct _IRP {
     } AsynchronousParameters;
     LARGE_INTEGER  AllocationSize;
   } Overlay;
-  PDRIVER_CANCEL  CancelRoutine;
+  __volatile PDRIVER_CANCEL  CancelRoutine;
   PVOID  UserBuffer;
   union {
     struct {
@@ -2128,7 +2170,7 @@ typedef struct _DEVICE_OBJECT {
   PIO_TIMER  Timer;
   ULONG  Flags;
   ULONG  Characteristics;
-  PVPB  Vpb;
+  __volatile PVPB  Vpb;
   PVOID  DeviceExtension;
   DEVICE_TYPE  DeviceType;
   CCHAR  StackSize;
@@ -2563,6 +2605,10 @@ typedef struct
     DEBUG_DEVICE_ADDRESS BaseAddress[6];
     DEBUG_MEMORY_REQUIREMENTS Memory;
 } DEBUG_DEVICE_DESCRIPTOR, *PDEBUG_DEVICE_DESCRIPTOR;
+
+typedef enum _KD_OPTION {
+    KD_OPTION_SET_BLOCK_ENABLE,
+} KD_OPTION;
 
 /* Function Type Defintions for Dispatch Functions */
 
@@ -3084,8 +3130,8 @@ typedef struct _ERESOURCE {
   POWNER_ENTRY  OwnerTable;
   SHORT  ActiveCount;
   USHORT  Flag;
-  PKSEMAPHORE  SharedWaiters;
-  PKEVENT  ExclusiveWaiters;
+  __volatile PKSEMAPHORE  SharedWaiters;
+  __volatile PKEVENT  ExclusiveWaiters;
   OWNER_ENTRY  OwnerThreads[2];
   ULONG  ContentionCount;
   USHORT  NumberOfSharedWaiters;
@@ -3391,37 +3437,40 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define FO_RANDOM_ACCESS                  0x00100000
 #define FO_FILE_OPEN_CANCELLED            0x00200000
 #define FO_VOLUME_OPEN                    0x00400000
-#define FO_FILE_OBJECT_HAS_EXTENSION      0x00800000
 #define FO_REMOTE_ORIGIN                  0x01000000
 
-typedef struct _FILE_OBJECT {
-  CSHORT  Type;
-  CSHORT  Size;
-  PDEVICE_OBJECT  DeviceObject;
-  PVPB  Vpb;
-  PVOID  FsContext;
-  PVOID  FsContext2;
-  PSECTION_OBJECT_POINTERS  SectionObjectPointer;
-  PVOID  PrivateCacheMap;
-  NTSTATUS  FinalStatus;
-  struct _FILE_OBJECT  *RelatedFileObject;
-  BOOLEAN  LockOperation;
-  BOOLEAN  DeletePending;
-  BOOLEAN  ReadAccess;
-  BOOLEAN  WriteAccess;
-  BOOLEAN  DeleteAccess;
-  BOOLEAN  SharedRead;
-  BOOLEAN  SharedWrite;
-  BOOLEAN  SharedDelete;
-  ULONG  Flags;
-  UNICODE_STRING  FileName;
-  LARGE_INTEGER  CurrentByteOffset;
-  ULONG  Waiters;
-  ULONG  Busy;
-  PVOID  LastLock;
-  KEVENT  Lock;
-  KEVENT  Event;
-  PIO_COMPLETION_CONTEXT  CompletionContext;
+typedef struct _FILE_OBJECT
+{
+    CSHORT Type;
+    CSHORT Size;
+    PDEVICE_OBJECT DeviceObject;
+    PVPB Vpb;
+    PVOID FsContext;
+    PVOID FsContext2;
+    PSECTION_OBJECT_POINTERS SectionObjectPointer;
+    PVOID PrivateCacheMap;
+    NTSTATUS FinalStatus;
+    struct _FILE_OBJECT *RelatedFileObject;
+    BOOLEAN LockOperation;
+    BOOLEAN DeletePending;
+    BOOLEAN ReadAccess;
+    BOOLEAN WriteAccess;
+    BOOLEAN DeleteAccess;
+    BOOLEAN SharedRead;
+    BOOLEAN SharedWrite;
+    BOOLEAN SharedDelete;
+    ULONG Flags;
+    UNICODE_STRING FileName;
+    LARGE_INTEGER CurrentByteOffset;
+    __volatile ULONG Waiters;
+    __volatile ULONG Busy;
+    PVOID LastLock;
+    KEVENT Lock;
+    KEVENT Event;
+    __volatile PIO_COMPLETION_CONTEXT CompletionContext;
+    KSPIN_LOCK IrpListLock;
+    LIST_ENTRY IrpList;
+    __volatile PVOID FileObjectExtension;
 } FILE_OBJECT;
 typedef struct _FILE_OBJECT *PFILE_OBJECT;
 
@@ -3772,6 +3821,7 @@ typedef struct _IO_STACK_LOCATION {
 /* IO_STACK_LOCATION.Control */
 
 #define SL_PENDING_RETURNED               0x01
+#define SL_ERROR_RETURNED                 0x02
 #define SL_INVOKE_ON_CANCEL               0x20
 #define SL_INVOKE_ON_SUCCESS              0x40
 #define SL_INVOKE_ON_ERROR                0x80
@@ -4398,7 +4448,7 @@ typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK * PIO_REMOVE_LOCK_TRACKING_BLOCK;
 typedef struct _IO_REMOVE_LOCK_COMMON_BLOCK {
   BOOLEAN  Removed;
   BOOLEAN  Reserved[3];
-  LONG  IoCount;
+  __volatile LONG  IoCount;
   KEVENT  RemoveEvent;
 } IO_REMOVE_LOCK_COMMON_BLOCK;
 
@@ -4409,7 +4459,7 @@ typedef struct _IO_REMOVE_LOCK_DBG_BLOCK {
   LONG  AllocateTag;
   LIST_ENTRY  LockList;
   KSPIN_LOCK  Spin;
-  LONG  LowMemoryCount;
+  __volatile LONG  LowMemoryCount;
   ULONG  Reserved1[4];
   PVOID  Reserved2;
   PIO_REMOVE_LOCK_TRACKING_BLOCK  Blocks;
@@ -4425,9 +4475,10 @@ typedef struct _IO_REMOVE_LOCK {
 typedef struct _IO_WORKITEM *PIO_WORKITEM;
 
 typedef VOID
-(DDKAPI *PIO_WORKITEM_ROUTINE)(
+(DDKAPI IO_WORKITEM_ROUTINE)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PVOID  Context);
+typedef IO_WORKITEM_ROUTINE *PIO_WORKITEM_ROUTINE;
 
 typedef struct _SHARE_ACCESS {
   ULONG  OpenCount;
@@ -4580,7 +4631,7 @@ typedef VOID
 typedef struct _WORK_QUEUE_ITEM {
   LIST_ENTRY  List;
   PWORKER_THREAD_ROUTINE  WorkerRoutine;
-  PVOID  Parameter;
+  __volatile PVOID  Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
 
 typedef enum _KBUGCHECK_CALLBACK_REASON {
@@ -5216,6 +5267,109 @@ typedef struct _KFLOATING_SAVE {
   ULONG  Spare1;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+#if defined(__GNUC__)
+  ULONG ret;
+  __asm__ __volatile__ (
+    "movl %%fs:%c1, %0\n"
+    : "=r" (ret)
+    : "i" (FIELD_OFFSET(KPCR, Number))
+  );
+  return ret;
+#elif defined(_MSC_VER)
+#if _MSC_FULL_VER >= 13012035
+  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+#else
+  __asm { movzx eax, _PCR KPCR.Number }
+#endif
+#else
+#error Unknown compiler
+#endif
+}
+
+#elif defined(__x86_64__)
+
+typedef struct _KFLOATING_SAVE {
+  ULONG Dummy;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+#elif defined(__PowerPC__)
+
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+
+#define PASSIVE_LEVEL                      0
+#define LOW_LEVEL                          0
+#define APC_LEVEL                          1
+#define DISPATCH_LEVEL                     2
+#define PROFILE_LEVEL                     27
+#define CLOCK1_LEVEL                      28
+#define CLOCK2_LEVEL                      28
+#define IPI_LEVEL                         29
+#define POWER_LEVEL                       30
+#define HIGH_LEVEL                        31
+
+typedef struct _KFLOATING_SAVE {
+  ULONG Dummy;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+typedef struct _KPCR_TIB {
+  PVOID  ExceptionList;         /* 00 */
+  PVOID  StackBase;             /* 04 */
+  PVOID  StackLimit;            /* 08 */
+  PVOID  SubSystemTib;          /* 0C */
+  _ANONYMOUS_UNION union {
+    PVOID  FiberData;           /* 10 */
+    DWORD  Version;             /* 10 */
+  } DUMMYUNIONNAME;
+  PVOID  ArbitraryUserPointer;  /* 14 */
+  struct _KPCR_TIB *Self;       /* 18 */
+} KPCR_TIB, *PKPCR_TIB;         /* 1C */
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+typedef struct _KPCR {
+  KPCR_TIB  Tib;                /* 00 */
+  struct _KPCR  *Self;          /* 1C */
+  struct _KPRCB  *Prcb;         /* 20 */
+  KIRQL  Irql;                  /* 24 */
+  ULONG  IRR;                   /* 28 */
+  ULONG  IrrActive;             /* 2C */
+  ULONG  IDR;                   /* 30 */
+  PVOID  KdVersionBlock;        /* 34 */
+  PUSHORT  IDT;                 /* 38 */
+  PUSHORT  GDT;                 /* 3C */
+  struct _KTSS  *TSS;           /* 40 */
+  USHORT  MajorVersion;         /* 44 */
+  USHORT  MinorVersion;         /* 46 */
+  KAFFINITY  SetMember;         /* 48 */
+  ULONG  StallScaleFactor;      /* 4C */
+  UCHAR  SpareUnused;           /* 50 */
+  UCHAR  Number;                /* 51 */
+} KPCR, *PKPCR;                 /* 54 */
+
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+    ULONG Number;
+  __asm__ __volatile__ (
+    "lwz %0, %c1(12)\n"
+    : "=r" (Number)
+    : "i" (FIELD_OFFSET(KPCR, Number))
+  );
+  return Number;
+}
+  
+#else
+#error Unknown architecture
+#endif
+
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
@@ -5246,35 +5400,52 @@ typedef enum _INTERLOCKED_RESULT {
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
 
+typedef VOID
+(NTAPI *PciPin2Line)(
+    IN struct _BUS_HANDLER *BusHandler,
+    IN struct _BUS_HANDLER *RootHandler,
+    IN PCI_SLOT_NUMBER SlotNumber,
+    IN PPCI_COMMON_CONFIG PciData
+);
+
+typedef VOID
+(NTAPI *PciLine2Pin)(
+    IN struct _BUS_HANDLER *BusHandler,
+    IN struct _BUS_HANDLER *RootHandler,
+    IN PCI_SLOT_NUMBER SlotNumber,
+    IN PPCI_COMMON_CONFIG PciNewData,
+    IN PPCI_COMMON_CONFIG PciOldData
+);
+
+typedef VOID
+(NTAPI *PciReadWriteConfig)(
+    IN struct _BUS_HANDLER *BusHandler,
+    IN PCI_SLOT_NUMBER Slot,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+#define PCI_DATA_TAG TAG('P', 'C', 'I', ' ')
+#define PCI_DATA_VERSION 1
+
+typedef struct _PCIBUSDATA
+{
+    ULONG Tag;
+    ULONG Version;
+    PciReadWriteConfig ReadConfig;
+    PciReadWriteConfig WriteConfig;
+    PciPin2Line Pin2Line;
+    PciLine2Pin Line2Pin;
+    PCI_SLOT_NUMBER ParentSlot;
+    PVOID Reserved[4];
+} PCIBUSDATA, *PPCIBUSDATA;
+
 NTHALAPI
 KIRQL
 DDKAPI
 KeGetCurrentIrql(
   VOID);
-
-static __inline
-ULONG
-DDKAPI
-KeGetCurrentProcessorNumber(VOID)
-{
-#if defined(__GNUC__)
-  ULONG ret;
-  __asm__ __volatile__ (
-    "movl %%fs:%c1, %0\n"
-    : "=r" (ret)
-    : "i" (FIELD_OFFSET(KPCR, Number))
-  );
-  return ret;
-#elif defined(_MSC_VER)
-#if _MSC_FULL_VER >= 13012035
-  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
-#else
-  __asm { movzx eax, _PCR KPCR.Number }
-#endif
-#else
-#error Unknown compiler
-#endif
-}
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -5363,179 +5534,12 @@ KfReleaseSpinLock(
   IN PKSPIN_LOCK SpinLock,
   IN KIRQL NewIrql);
 
-#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
-#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
-#define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
-#define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
-
-#define RtlCopyMemoryNonTemporal RtlCopyMemory
-
-#define KeGetDcacheFillSize() 1L
-
-#elif defined(_M_PPC)
-
-#define PAGE_SIZE                         0x1000
-#define PAGE_SHIFT                        12L
-
-typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
-
-#define PASSIVE_LEVEL                      0
-#define LOW_LEVEL                          0
-#define APC_LEVEL                          1
-#define DISPATCH_LEVEL                     2
-#define PROFILE_LEVEL                     27
-#define CLOCK1_LEVEL                      28
-#define CLOCK2_LEVEL                      28
-#define IPI_LEVEL                         29
-#define SYNCH_LEVEL			 (IPI_LEVEL-1)
-#define POWER_LEVEL                       30
-#define HIGH_LEVEL                        31
- 
-extern NTOSAPI PVOID MmHighestUserAddress;
-extern NTOSAPI PVOID MmSystemRangeStart;
-extern NTOSAPI ULONG_PTR MmUserProbeAddress;
-
-#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
-#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
-#define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
-#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
-
-#define KI_USER_SHARED_DATA               0xffdf0000
-#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
-
-#define EFLAG_SIGN                        0x8000
-#define EFLAG_ZERO                        0x4000
-#define EFLAG_SELECT                      (EFLAG_SIGN | EFLAG_ZERO)
-
-#define RESULT_NEGATIVE                   ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_ZERO                       ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_POSITIVE                   ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-
-typedef struct _KPCR_TIB {
-  PVOID  ExceptionList;         /* 00 */
-  PVOID  StackBase;             /* 04 */
-  PVOID  StackLimit;            /* 08 */
-  PVOID  SubSystemTib;          /* 0C */
-  _ANONYMOUS_UNION union {
-    PVOID  FiberData;           /* 10 */
-    DWORD  Version;             /* 10 */
-  } DUMMYUNIONNAME;
-  PVOID  ArbitraryUserPointer;  /* 14 */
-  struct _KPCR_TIB *Self;       /* 18 */
-} KPCR_TIB, *PKPCR_TIB;         /* 1C */
-
-#define PCR_MINOR_VERSION 1
-#define PCR_MAJOR_VERSION 1
-
-typedef struct _KPCR {
-  KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 1C */
-  struct _KPRCB  *Prcb;         /* 20 */
-  KIRQL  Irql;                  /* 24 */
-  ULONG  IRR;                   /* 28 */
-  ULONG  IrrActive;             /* 2C */
-  ULONG  IDR;                   /* 30 */
-  PVOID  KdVersionBlock;        /* 34 */
-  PUSHORT  IDT;                 /* 38 */
-  PUSHORT  GDT;                 /* 3C */
-  struct _KTSS  *TSS;           /* 40 */
-  USHORT  MajorVersion;         /* 44 */
-  USHORT  MinorVersion;         /* 46 */
-  KAFFINITY  SetMember;         /* 48 */
-  ULONG  StallScaleFactor;      /* 4C */
-  UCHAR  SpareUnused;           /* 50 */
-  UCHAR  Number;                /* 51 */
-} KPCR, *PKPCR;                 /* 54 */
-
-#if !defined(__INTERLOCKED_DECLARED)
-#define __INTERLOCKED_DECLARED
-
-NTHALAPI
-KIRQL
-DDKAPI
-KeGetCurrentIrql(
-  VOID);
-
-NTOSAPI
-LONG
-DDKFASTAPI
-InterlockedIncrement(
-  IN PLONG  VOLATILE  Addend);
-
-NTOSAPI
-LONG
-DDKFASTAPI
-InterlockedDecrement(
-  IN PLONG  VOLATILE  Addend);
-
-NTOSAPI
-LONG
-DDKFASTAPI
-InterlockedCompareExchange(
-  IN OUT PLONG  VOLATILE  Destination,
-  IN LONG  Exchange,
-  IN LONG  Comparand);
-
-NTOSAPI
-LONG
-DDKFASTAPI
-InterlockedExchange(
-  IN OUT PLONG  VOLATILE  Target,
-  IN LONG Value);
-
-NTOSAPI
-LONG
-DDKFASTAPI
-InterlockedExchangeAdd(
-  IN OUT PLONG VOLATILE  Addend,
-  IN LONG  Value);
-
-/*
- * PVOID
- * InterlockedExchangePointer(
- *   IN OUT PVOID VOLATILE  *Target,
- *   IN PVOID  Value)
- */
-#define InterlockedExchangePointer(Target, Value) \
-  ((PVOID) InterlockedExchange((PLONG) Target, (LONG) Value))
-
-/*
- * PVOID
- * InterlockedCompareExchangePointer(
- *   IN OUT PVOID  *Destination,
- *   IN PVOID  Exchange,
- *   IN PVOID  Comparand)
- */
-#define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
-  ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
-
-#endif /* !__INTERLOCKED_DECLARED */
-
-NTOSAPI
-VOID
-DDKFASTAPI
-KefAcquireSpinLockAtDpcLevel(
-  IN PKSPIN_LOCK  SpinLock);
-
-NTOSAPI
-VOID
-DDKFASTAPI
-KefReleaseSpinLockFromDpcLevel(
-  IN PKSPIN_LOCK  SpinLock);
-
-NTHALAPI
-KIRQL
-DDKFASTAPI
-KfAcquireSpinLock(
-  IN PKSPIN_LOCK SpinLock);
-
-NTHALAPI
-VOID
-DDKFASTAPI
-KfReleaseSpinLock(
-  IN PKSPIN_LOCK SpinLock,
-  IN KIRQL NewIrql);
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTryToAcquireSpinLockAtDpcLevel(
+    IN OUT PKSPIN_LOCK SpinLock
+);
 
 #define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
 #define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
@@ -5546,31 +5550,14 @@ KfReleaseSpinLock(
 
 #define KeGetDcacheFillSize() 1L
 
-typedef enum _INTERLOCKED_RESULT {
-  ResultNegative = -1,
-  ResultZero = 0,
-  ResultPositive = 1
-} INTERLOCKED_RESULT;
 
-typedef struct _KFLOATING_SAVE {
-    ULONG Fr[32];
-} KFLOATING_SAVE, *PKFLOATING_SAVE;
-
-static __inline
-ULONG
-DDKAPI
-KeGetCurrentProcessorNumber(VOID)
-{
-	return 0; // XXX arty fixme
-}
-#endif /* _X86_ */
 
 /*
 ** Utillity functions
 */
 
 #define ARGUMENT_PRESENT(ArgumentPointer) \
-  ((BOOLEAN) ((PVOID)ArgumentPointer != (PVOID)NULL))
+  ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
 
 /*
  * ULONG
@@ -5693,16 +5680,14 @@ extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
 /** Runtime library routines **/
 
-VOID
-FORCEINLINE
+static __inline VOID
 InitializeListHead(
   IN PLIST_ENTRY  ListHead)
 {
   ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-VOID
-FORCEINLINE
+static __inline VOID
 InsertHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  Entry)
@@ -5715,8 +5700,7 @@ InsertHeadList(
   ListHead->Flink = Entry;
 }
 
-VOID
-FORCEINLINE
+static __inline VOID
 InsertTailList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  Entry)
@@ -5761,8 +5745,7 @@ InsertTailList(
 	(_Entry)->Next = (_ListHead)->Next; \
 	(_ListHead)->Next = (_Entry); \
 
-BOOLEAN
-FORCEINLINE
+static __inline BOOLEAN
 RemoveEntryList(
   IN PLIST_ENTRY  Entry)
 {
@@ -5776,8 +5759,7 @@ RemoveEntryList(
   return (OldFlink == OldBlink);
 }
 
-PLIST_ENTRY
-FORCEINLINE
+static __inline PLIST_ENTRY
 RemoveHeadList(
   IN PLIST_ENTRY  ListHead)
 {
@@ -5791,8 +5773,7 @@ RemoveHeadList(
   return Entry;
 }
 
-PLIST_ENTRY
-FORCEINLINE
+static __inline PLIST_ENTRY
 RemoveTailList(
   IN PLIST_ENTRY  ListHead)
 {
@@ -6467,8 +6448,8 @@ RtlUlonglongByteSwap(
     ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
 )
 
-VOID
 FORCEINLINE
+VOID
 RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
                           IN PWSTR Buffer,
                           IN USHORT BufferSize)
@@ -6478,8 +6459,8 @@ RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
     UnicodeString->Buffer = Buffer;
 }
 
-VOID
 FORCEINLINE
+VOID
 RtlInitEmptyAnsiString(OUT PANSI_STRING AnsiString,
                        IN PCHAR Buffer,
                        IN USHORT BufferSize)
@@ -6606,6 +6587,12 @@ RtlxUnicodeStringToAnsiSize(
 #define RtlZeroBytes RtlZeroMemory
 #endif
 
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeAreAllApcsDisabled(
+    VOID
+);
 
 /* Guarded Mutex routines */
 
@@ -6663,6 +6650,22 @@ BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(
     IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionEx(
+     IN OUT PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionEx(
+     IN OUT PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
 );
 
 /* Fast Mutex */
@@ -7195,12 +7198,6 @@ NTAPI
 ExSystemTimeToLocalTime(
   IN PLARGE_INTEGER  SystemTime,
   OUT PLARGE_INTEGER  LocalTime);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-ExTryToAcquireResourceExclusiveLite(
-  IN PERESOURCE  Resource);
 
 NTKERNELAPI
 VOID
@@ -8969,15 +8966,6 @@ KeMemoryBarrier(
 #endif
 }
 
-#elif defined(_PPC_)
-
-static __inline
-VOID
-KeMemoryBarrier(
-  VOID)
-{
-}
-
 #endif
 
 NTKERNELAPI
@@ -9298,7 +9286,7 @@ KeRaiseIrqlToSynchLevel(
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
-#elif defined(_PPC_)
+#elif defined(__PowerPC__)
 
 NTHALAPI
 VOID
@@ -9317,7 +9305,7 @@ KIRQL
 DDKAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
-  
+
 NTHALAPI
 KIRQL
 DDKAPI
@@ -9339,7 +9327,8 @@ NTKERNELAPI
 KIRQL
 NTAPI
 KeRaiseIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL  NewIrql,
+  OUT PKIRQL  OldIrql);
 
 NTKERNELAPI
 KIRQL
@@ -9347,9 +9336,11 @@ NTAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
 
-#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
-#define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
-#define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
+NTKERNELAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
 
 #endif
 
@@ -9406,19 +9397,6 @@ VOID
 NTAPI
 MmBuildMdlForNonPagedPool(
   IN OUT PMDL  MemoryDescriptorList);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmCreateSection(
-  OUT PVOID *SectionObject,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
-  IN PLARGE_INTEGER  MaximumSize,
-  IN ULONG  SectionPageProtection,
-  IN ULONG  AllocationAttributes,
-  IN HANDLE  FileHandle  OPTIONAL,
-  IN PFILE_OBJECT  File  OPTIONAL);
 
 typedef enum _MMFLUSH_TYPE {
   MmFlushForDelete,
@@ -10085,6 +10063,7 @@ NTAPI
 PsTerminateSystemThread(
   IN NTSTATUS  ExitStatus);
 
+extern NTSYSAPI PEPROCESS PsInitialSystemProcess;
 
 
 /** Security reference monitor routines **/
@@ -10688,7 +10667,6 @@ PoUnregisterSystemState(
 
 /** WMI library support routines **/
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiCompleteRequest(
@@ -10698,7 +10676,6 @@ WmiCompleteRequest(
   IN ULONG  BufferUsed,
   IN CCHAR  PriorityBoost);
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiFireEvent(
@@ -10718,7 +10695,6 @@ WmiQueryTraceInformation(
   OUT PULONG  RequiredLength OPTIONAL,
   IN PVOID  Buffer OPTIONAL);
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiSystemControl(
@@ -10777,13 +10753,13 @@ DbgBreakPointWithStatus(
   IN ULONG  Status);
 
 ULONG
-__cdecl
+DDKCDECLAPI
 DbgPrint(
   IN PCCH  Format,
   IN ...);
 
 ULONG
-__cdecl
+DDKCDECLAPI
 DbgPrintEx(
   IN ULONG  ComponentId,
   IN ULONG  Level,

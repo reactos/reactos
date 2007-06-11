@@ -41,8 +41,8 @@ Author:
 //
 #ifndef NTOS_MODE_USER
 
-extern NTSYSAPI struct _EPROCESS* PsInitialSystemProcess;
-extern NTSYSAPI POBJECT_TYPE PsProcessType;
+//extern NTSYSAPI struct _EPROCESS* PsInitialSystemProcess;
+//extern NTSYSAPI POBJECT_TYPE PsProcessType;
 
 #endif
 
@@ -114,11 +114,6 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PSP_VARIABLE_QUANTUMS                   4
 #define PSP_LONG_QUANTUMS                       16
 
-//
-// Number of TLS expansion slots
-//
-#define TLS_EXPANSION_SLOTS                     64
-
 #ifndef NTOS_MODE_USER
 
 //
@@ -152,6 +147,21 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PROCESS_ALL_ACCESS                      (STANDARD_RIGHTS_REQUIRED | \
                                                  SYNCHRONIZE | \
                                                  0xFFF)
+
+//
+// Thread Base Priorities
+//
+#ifndef THREAD_BASE_PRIORITY_MIN
+#define THREAD_BASE_PRIORITY_LOWRT              15
+#define THREAD_BASE_PRIORITY_MAX                2
+#define THREAD_BASE_PRIORITY_MIN                -2
+#define THREAD_BASE_PRIORITY_IDLE               -15
+#endif
+
+//
+// TLS Slots
+//
+#define TLS_MINIMUM_AVAILABLE                   64
 #endif
 
 //
@@ -195,6 +205,7 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define STA_ADDRESS_SPACE_OWNER_BIT             0x4
 #endif
 
+#define TLS_EXPANSION_SLOTS                     1024
 //
 // Process Flags
 //
@@ -225,6 +236,11 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PSF_SWAP_ALLOWED_BIT                    0x2000000
 #define PSF_CREATE_FAILED_BIT                   0x4000000
 #define PSF_DEFAULT_IO_PRIORITY_BIT             0x8000000
+
+//
+// Vista Process Flags
+//
+#define PSF2_PROTECTED_BIT                      0x800
 
 #ifdef NTOS_MODE_USER
 //
@@ -519,19 +535,6 @@ typedef NTSTATUS
 (NTAPI *PPOST_PROCESS_INIT_ROUTINE)(
     VOID
 );
-
-#ifdef NTOS_MODE_USER
-
-//
-// ClientID Structure
-//
-typedef struct _CLIENT_ID
-{
-    HANDLE UniqueProcess;
-    HANDLE UniqueThread;
-} CLIENT_ID, *PCLIENT_ID;
-
-#endif
 
 //
 // Descriptor Table Entry Definition
@@ -915,6 +918,16 @@ typedef struct _THREAD_BASIC_INFORMATION
 #ifndef NTOS_MODE_USER
 
 //
+// Job Set Array
+//
+typedef struct _JOB_SET_ARRAY
+{
+    HANDLE JobHandle;
+    ULONG MemberLevel;
+    ULONG Flags;
+} JOB_SET_ARRAY, *PJOB_SET_ARRAY;
+
+//
 // EPROCESS Quota Structures
 //
 typedef struct _EPROCESS_QUOTA_ENTRY
@@ -982,7 +995,6 @@ typedef struct _PSP_RATE_APC
 //
 // Executive Thread (ETHREAD)
 //
-#include <pshpack4.h>
 typedef struct _ETHREAD
 {
     KTHREAD Tcb;
@@ -1181,7 +1193,11 @@ typedef struct _EPROCESS
 #endif
     PETHREAD ForkInProgress;
     ULONG HardwareTrigger;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PMM_AVL_TABLE PhysicalVadroot;
+#else
     MM_AVL_TABLE PhysicalVadroot;
+#endif
     PVOID CloneRoot;
     ULONG NumberOfPrivatePages;
     ULONG NumberOfLockedPages;
@@ -1198,7 +1214,6 @@ typedef struct _EPROCESS
     PVOID VdmObjects;
     PVOID DeviceMap;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    ULONG AlpcPagedPoolQuotaCache;
     PVOID EtwDataSource;
     PVOID FreeTebHint;
 #else
@@ -1206,11 +1221,7 @@ typedef struct _EPROCESS
 #endif
     union
     {
-#ifdef _M_IX86
-        HARDWARE_PTE_X86 PagedirectoryPte;
-#else
-	HARDWARE_PTE_PPC PagedirectoryPte;
-#endif
+        HARDWARE_PTE PagedirectoryPte;
         ULONGLONG Filler;
     };
     ULONG Session;
@@ -1336,7 +1347,6 @@ typedef struct _EPROCESS
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
 } EPROCESS;
-#include <poppack.h>
 
 //
 // Job Token Filter Data

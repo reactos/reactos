@@ -24,8 +24,8 @@ typedef union
    USHORT both;
    struct
    {
-      BYTE master;
-      BYTE slave;
+      UCHAR master;
+      UCHAR slave;
    };
 }
 PIC_MASK;
@@ -55,9 +55,16 @@ static ULONG HalpPendingInterruptCount[NR_IRQS];
 #define DIRQL_TO_IRQ(x)  (PROFILE_LEVEL - x)
 #define IRQ_TO_DIRQL(x)  (PROFILE_LEVEL - x)
 
+#ifdef _MSC_VER
+
+#define KiInterruptDispatch2(x, y)
+
+#else
+
 VOID STDCALL
 KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
-BOOLEAN PPCGetEEBit();
+
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
@@ -74,6 +81,25 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
 VOID NTAPI HalpInitPICs(VOID)
 {
   memset(HalpPendingInterruptCount, 0, sizeof(HalpPendingInterruptCount));
+
+  /* Initialization sequence */
+  WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
+  WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
+  /* Start of hardware irqs (0x24) */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, IRQ_BASE);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, IRQ_BASE + 8);
+  /* 8259-1 is master */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x4);
+  /* 8259-2 is slave */
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x2);
+  /* 8086 mode */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
+  /* Enable interrupts */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, 0xFF);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0xFF);
+  
+  /* We can now enable interrupts */
   _enable();
 }
 
@@ -82,7 +108,6 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
  * FUNCTION: Enable all irqs with higher priority.
  */
 {
-  BOOLEAN InterruptsEnabled = PPCGetEEBit();
   const USHORT mask[] = 
   {
      0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -98,16 +123,14 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
   WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
   WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
 
-  /* restore flags */
-  if(InterruptsEnabled)
-      _enable();
+  /* restore ints */
+  _enable();
 }
 
-VOID STATIC
+VOID
 HalpExecuteIrqs(KIRQL NewIrql)
 {
   ULONG IrqLimit, i;
-  
   IrqLimit = min(PROFILE_LEVEL - NewIrql, NR_IRQS);
 
   /*
@@ -126,16 +149,16 @@ HalpExecuteIrqs(KIRQL NewIrql)
 	        * For each deferred interrupt execute all the handlers at DIRQL.
 	        */
 	       HalpPendingInterruptCount[i]--;
-	       KiInterruptDispatch2(i + IRQ_BASE, NewIrql);
+	       //HalpHardwareInt[i]();
 	     }
-	   KeGetPcr()->Irql--;
-	   HalpEndSystemInterrupt(KeGetPcr()->Irql);
+	   //KeGetPcr()->Irql--;
+	   //HalpEndSystemInterrupt(KeGetPcr()->Irql);
 	}
     }
 
 }
 
-VOID STATIC
+VOID
 HalpLowerIrql(KIRQL NewIrql)
 {
   if (NewIrql >= PROFILE_LEVEL)
@@ -281,7 +304,7 @@ KeRaiseIrqlToDpcLevel (VOID)
 KIRQL STDCALL
 KeRaiseIrqlToSynchLevel (VOID)
 {
-  return KfRaiseIrql (CLOCK2_LEVEL);
+  return KfRaiseIrql (DISPATCH_LEVEL);
 }
 
 
@@ -310,12 +333,13 @@ HalBeginSystemInterrupt (KIRQL Irql,
      WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
   }
-  
+#if 0
   if (KeGetPcr()->Irql >= Irql)
     {
       HalpPendingInterruptCount[irq]++;
       return(FALSE);
     }
+#endif
   *OldIrql = KeGetPcr()->Irql;
   KeGetPcr()->Irql = Irql;
 
@@ -397,6 +421,25 @@ HalRequestSoftwareInterrupt(
 
     case DISPATCH_LEVEL:
       ((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST] = TRUE;
+      break;
+      
+    default:
+      KEBUGCHECK(0);
+  }
+}
+
+VOID FASTCALL
+HalClearSoftwareInterrupt(
+  IN KIRQL Request)
+{
+  switch (Request)
+  {
+    case APC_LEVEL:
+      ((PKIPCR)KeGetPcr())->HalReserved[HAL_APC_REQUEST] = FALSE;
+      break;
+
+    case DISPATCH_LEVEL:
+      ((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST] = FALSE;
       break;
       
     default:

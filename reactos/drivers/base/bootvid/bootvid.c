@@ -1,672 +1,475 @@
-/*
- * ReactOS Boot video driver
- *
- * Copyright (C) 2003 Casper S. Hornstroup
- * Copyright (C) 2004 Filip Navara
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * $Id$
- */
+#include "precomp.h"
 
-/* INCLUDES ******************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
-#include <ntddk.h>
-#include <windef.h>
-#include <ndk/ldrfuncs.h>
-#include "bootvid.h"
-#include "ntbootvid.h"
-#include "resource.h"
-
-#define NDEBUG
-#include <debug.h>
-
-/* GLOBALS *******************************************************************/
-
-/*
- * NOTE:
- * This is based on SvgaLib 640x480x16 mode definition with the
- * following changes:
- * - Graphics: Data Rotate (Index 3)
- *   Set to zero to indicate that the data written to video memory by
- *   CPU should be processed unmodified.
- * - Graphics: Mode Register (Index 5)
- *   Set to Write Mode 2 and Read Mode 0.
- */
-
-static const VGA_REGISTERS Mode12Regs =
+BOOLEAN
+NTAPI
+VgaInterpretCmdStream(IN PUSHORT CmdStream)
 {
-   /* CRT Controller Registers */
-   {0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0x0B, 0x3E, 0x00, 0x40, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0xEA, 0x8C, 0xDF, 0x28, 0x00, 0xE7, 0x04, 0xE3},
-   /* Attribute Controller Registers */
-   {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
-    0x0C, 0x0D, 0x0E, 0x0F, 0x81, 0x00, 0x0F, 0x00, 0x00},
-   /* Graphics Controller Registers */
-   {0x00, 0x0F, 0x00, 0x00, 0x00, 0x02, 0x05, 0x0F, 0xFF},
-   /* Sequencer Registers */
-   {0x03, 0x01, 0x0F, 0x00, 0x06},
-   /* Misc Output Register */
-   0xE3
-};
+    PUCHAR Base = (PUCHAR)VgaRegisterBase;
+    USHORT Cmd;
+    UCHAR Major, Minor;
+    USHORT Count;
+    UCHAR Index;
+    PUSHORT Buffer;
+    PUSHORT ShortPort;
+    PUCHAR Port;
+    UCHAR Value;
+    USHORT ShortValue;
 
-PUCHAR VideoMemory;
+    /* First make sure that we have a Command Stream */
+    if (!CmdStream) return TRUE;
 
-/* Must be 4 bytes per entry */
-long maskbit[640];
+    /* Loop as long as we have commands */
+    while (*CmdStream)
+    {
+        /* Get the Major and Minor Function */
+        Cmd = *CmdStream;
+        Major = Cmd & 0xF0;
+        Minor = Cmd & 0x0F;
 
-static CLIENT_ID BitmapThreadId;
-static PUCHAR BootimageBitmap;
+        /* Move to the next command */
+        CmdStream++;
 
-static LONG ShutdownNotify;
-static KEVENT ShutdownCompleteEvent;
-
-/* DATA **********************************************************************/
-
-static PDRIVER_OBJECT BootVidDriverObject = NULL;
-
-/* FUNCTIONS *****************************************************************/
-
-static BOOLEAN FASTCALL
-InbvFindBootimage()
-{
-   PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
-   LDR_RESOURCE_INFO ResourceInfo;
-   NTSTATUS Status;
-   PVOID BaseAddress = BootVidDriverObject->DriverStart;
-   ULONG Size;
-
-   ResourceInfo.Type = RT_BITMAP;
-   ResourceInfo.Name = IDB_BOOTIMAGE;
-   ResourceInfo.Language = 0x09;
-
-   Status = LdrFindResource_U(
-      BaseAddress,
-      &ResourceInfo,
-      RESOURCE_DATA_LEVEL,
-      &ResourceDataEntry);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("LdrFindResource_U() failed with status 0x%.08x\n", Status);
-      return FALSE;
-   }
-
-   Status = LdrAccessResource(
-      BaseAddress,
-      ResourceDataEntry,
-      (PVOID*)&BootimageBitmap,
-      &Size);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("LdrAccessResource() failed with status 0x%.08x\n", Status);
-      return FALSE;
-   }
-
-   return TRUE;
-}
-
-
-static BOOLEAN FASTCALL
-InbvMapVideoMemory(VOID)
-{
-   PHYSICAL_ADDRESS PhysicalAddress;
-
-   PhysicalAddress.QuadPart = 0xA0000;
-   VideoMemory = MmMapIoSpace(PhysicalAddress, 0x10000, MmNonCached);
-
-   return VideoMemory != NULL;
-}
-
-
-static BOOLEAN FASTCALL
-InbvUnmapVideoMemory(VOID)
-{
-   MmUnmapIoSpace(VideoMemory, 0x10000);
-   return TRUE;
-}
-
-
-static VOID FASTCALL
-vgaPreCalc()
-{
-   ULONG j;
-
-   for (j = 0; j < 80; j++)
-   {
-      maskbit[j * 8 + 0] = 128;
-      maskbit[j * 8 + 1] = 64;
-      maskbit[j * 8 + 2] = 32;
-      maskbit[j * 8 + 3] = 16;
-      maskbit[j * 8 + 4] = 8;
-      maskbit[j * 8 + 5] = 4;
-      maskbit[j * 8 + 6] = 2;
-      maskbit[j * 8 + 7] = 1;
-   }
-}
-
-
-static VOID FASTCALL
-vgaSetRegisters(const VGA_REGISTERS *Registers)
-{
-   UINT i;
-
-   /* Update misc output register */
-   WRITE_PORT_UCHAR(MISC, Registers->Misc);
-
-   /* Synchronous reset on */
-   WRITE_PORT_UCHAR(SEQ, 0x00);
-   WRITE_PORT_UCHAR(SEQDATA, 0x01);
-
-   /* Write sequencer registers */
-   for (i = 1; i < sizeof(Registers->Sequencer); i++)
-   {
-      WRITE_PORT_UCHAR(SEQ, i);
-      WRITE_PORT_UCHAR(SEQDATA, Registers->Sequencer[i]);
-   }
-
-   /* Synchronous reset off */
-   WRITE_PORT_UCHAR(SEQ, 0x00);
-   WRITE_PORT_UCHAR(SEQDATA, 0x03);
-
-   /* Deprotect CRT registers 0-7 */
-   WRITE_PORT_UCHAR(CRTC, 0x11);
-   WRITE_PORT_UCHAR(CRTCDATA, Registers->CRT[0x11] & 0x7f);
-
-   /* Write CRT registers */
-   for (i = 0; i < sizeof(Registers->CRT); i++)
-   {
-      WRITE_PORT_UCHAR(CRTC, i);
-      WRITE_PORT_UCHAR(CRTCDATA, Registers->CRT[i]);
-   }
-
-   /* Write graphics controller registers */
-   for (i = 0; i < sizeof(Registers->Graphics); i++)
-   {
-      WRITE_PORT_UCHAR(GRAPHICS, i);
-      WRITE_PORT_UCHAR(GRAPHICSDATA, Registers->Graphics[i]);
-   }
-
-   /* Write attribute controller registers */
-   for (i = 0; i < sizeof(Registers->Attribute); i++)
-   {
-      READ_PORT_UCHAR(STATUS);
-      WRITE_PORT_UCHAR(ATTRIB, i);
-      WRITE_PORT_UCHAR(ATTRIB, Registers->Attribute[i]);
-   }
-}
-
-
-static VOID
-InbvInitVGAMode(VOID)
-{
-   /* Zero out video memory (clear a possibly trashed screen) */
-   RtlZeroMemory(VideoMemory, 0x10000);
-
-   vgaSetRegisters(&Mode12Regs);
-
-   /* Set the PEL mask. */
-   WRITE_PORT_UCHAR(PELMASK, 0xff);
-
-   vgaPreCalc();
-}
-
-
-static BOOLEAN STDCALL
-VidResetDisplay(VOID)
-{
-   /*
-    * We are only using standard VGA facilities so we can rely on the
-    * HAL 'int10mode3' reset to cleanup the hardware state.
-    */
-
-   return FALSE;
-}
-
-
-static VOID STDCALL
-VidCleanUp(VOID)
-{
-   InbvUnmapVideoMemory();
-   InterlockedIncrement(&ShutdownNotify);
-   KeWaitForSingleObject(&ShutdownCompleteEvent, Executive, KernelMode,
-                         FALSE, NULL);
-}
-
-
-static VOID FASTCALL
-InbvSetColor(INT Index, UCHAR Red, UCHAR Green, UCHAR Blue)
-{
-   WRITE_PORT_UCHAR(PELINDEX, Index);
-   WRITE_PORT_UCHAR(PELDATA, Red >> 2);
-   WRITE_PORT_UCHAR(PELDATA, Green >> 2);
-   WRITE_PORT_UCHAR(PELDATA, Blue >> 2);
-}
-
-
-static VOID FASTCALL
-InbvSetBlackPalette()
-{
-   register ULONG r = 0;
-
-   /* Disable screen and enable palette access. */
-   READ_PORT_UCHAR(STATUS);
-   WRITE_PORT_UCHAR(ATTRIB, 0x00);
-
-   for (r = 0; r < 16; r++)
-   {
-      InbvSetColor(r, 0, 0, 0);
-   }
-
-   /* Enable screen and enable palette access. */
-   READ_PORT_UCHAR(STATUS);
-   WRITE_PORT_UCHAR(ATTRIB, 0x20);
-}
-
-
-static VOID FASTCALL
-InbvDisplayBitmap(ULONG Width, ULONG Height, PCHAR ImageData)
-{
-   ULONG j, k, y;
-   register ULONG i;
-   register ULONG x;
-   register ULONG c;
-
-   k = 0;
-   for (y = 0; y < Height; y++)
-   {
-      for (j = 0; j < 8; j++)
-      {
-         x = j;
-
-         /*
-          * Loop through the line and process every 8th pixel.
-          * This way we can get a way with using the same bit mask
-          * for several pixels and thus not need to do as much I/O
-          * communication.
-          */
-         while (x < 640)
-         {
-            c = 0;
-
-            if (x < Width)
+        /* Check which major function this was */
+        if (Major == 0x10)
+        {
+            /* Now let's see the minor function */
+            if (Minor & CMD_STREAM_READ)
             {
-               c = ImageData[k + x];
-               for (i = 1; i < 4; i++)
-               {
-                  if (x + i * 8 < Width)
-                  {
-                     c |= (ImageData[k + x + i * 8] << i * 8);
-                  }
-               }
+                /* Now check the sub-type */
+                if (Minor & CMD_STREAM_USHORT)
+                {
+                    /* The port is what is in the stream right now */
+                    ShortPort = UlongToPtr((ULONG)*CmdStream);
+
+                    /* Move to the next command */
+                    CmdStream++;
+
+                    /* Read USHORT from the port */
+                    READ_PORT_USHORT(PtrToUlong(Base) + ShortPort);
+                }
+                else
+                {
+                    /* The port is what is in the stream right now */
+                    Port = UlongToPtr((ULONG)*CmdStream);
+
+                    /* Move to the next command */
+                    CmdStream++;
+
+                    /* Read UCHAR from the port */
+                    READ_PORT_UCHAR(PtrToUlong(Base) + Port);
+                }
             }
-
-            InbvPutPixels(x, 479 - y, c);
-            x += 8 * 4;
-         }
-      }
-      k += Width;
-   }
-}
-
-
-static VOID FASTCALL
-InbvDisplayCompressedBitmap()
-{
-   PBITMAPV5HEADER bminfo;
-   ULONG i,j,k;
-   ULONG x,y;
-   ULONG curx,cury;
-   ULONG bfOffBits;
-   ULONG clen;
-   PCHAR ImageData;
-   UCHAR ClrUsed;
-
-   bminfo = (PBITMAPV5HEADER) &BootimageBitmap[0];
-   DPRINT("bV5Size = %d\n", bminfo->bV5Size);
-   DPRINT("bV5Width = %d\n", bminfo->bV5Width);
-   DPRINT("bV5Height = %d\n", bminfo->bV5Height);
-   DPRINT("bV5Planes = %d\n", bminfo->bV5Planes);
-   DPRINT("bV5BitCount = %d\n", bminfo->bV5BitCount);
-   DPRINT("bV5Compression = %d\n", bminfo->bV5Compression);
-   DPRINT("bV5SizeImage = %d\n", bminfo->bV5SizeImage);
-   DPRINT("bV5XPelsPerMeter = %d\n", bminfo->bV5XPelsPerMeter);
-   DPRINT("bV5YPelsPerMeter = %d\n", bminfo->bV5YPelsPerMeter);
-   DPRINT("bV5ClrUsed = %d\n", bminfo->bV5ClrUsed);
-   DPRINT("bV5ClrImportant = %d\n", bminfo->bV5ClrImportant);
-
-   if (bminfo->bV5ClrUsed)
-      ClrUsed = bminfo->bV5ClrUsed;
-   else
-      ClrUsed = 1 << bminfo->bV5BitCount;
-
-   bfOffBits = bminfo->bV5Size + ClrUsed * sizeof(RGBQUAD);
-   DPRINT("bfOffBits = %d\n", bfOffBits);
-   DPRINT("size of color indices = %d\n", ClrUsed * sizeof(RGBQUAD));
-   DPRINT("first byte of data = %d\n", BootimageBitmap[bfOffBits]);
-
-   InbvSetBlackPalette();
-
-   ImageData = ExAllocatePool(NonPagedPool, bminfo->bV5Width * bminfo->bV5Height);
-   RtlZeroMemory(ImageData, bminfo->bV5Width * bminfo->bV5Height);
-
-   /*
-    * ImageData has 1 pixel per byte.
-    * bootimage has 2 pixels per byte.
-    */
-
-   if (bminfo->bV5Compression == 2)
-   {
-      k = 0;
-      j = 0;
-      while ((j < bminfo->bV5SizeImage) && (k < (ULONG) (bminfo->bV5Width * bminfo->bV5Height)))
-      {
-         unsigned char b;
-
-         clen = BootimageBitmap[bfOffBits + j];
-         j++;
-
-         if (clen > 0)
-         {
-            /* Encoded mode */
-
-            b = BootimageBitmap[bfOffBits + j];
-            j++;
-
-            for (i = 0; i < (clen / 2); i++)
+            else if (Minor & CMD_STREAM_WRITE_ARRAY)
             {
-               ImageData[k] = (b & 0xf0) >> 4;
-               k++;
-               ImageData[k] = b & 0xf;
-               k++;
+                /* Now check the sub-type */
+                if (Minor & CMD_STREAM_USHORT)
+                {
+                    /* The port is what is in the stream right now */
+                    ShortPort = UlongToPtr(Cmd);
+
+                    /* Move to the next command and get the count */
+                    Count = *(CmdStream++);
+
+                    /* The buffer is what's next in the command stream */
+                    Buffer = CmdStream++;
+
+                    /* Write USHORT to the port */
+                    WRITE_PORT_BUFFER_USHORT(PtrToUshort(Base) + ShortPort, Buffer, Count);
+
+                    /* Move past the buffer in the command stream */
+                    CmdStream += Count;
+                }
+                else
+                {
+                    /* The port is what is in the stream right now */
+                    Port = UlongToPtr(Cmd);
+
+                    /* Move to the next command and get the count */
+                    Count = *(CmdStream++);
+
+                    /* Add the base to the port */
+                    Port = PtrToUlong(Port) + Base;
+
+                    /* Move to next command */
+                    CmdStream++;
+
+                    /* Loop the cmd array */
+                    for (; Count; Count--, CmdStream++)
+                    {
+                        /* Get the byte we're writing */
+                        Value = (UCHAR)*CmdStream;
+
+                        /* Write UCHAR to the port */
+                        WRITE_PORT_UCHAR(Port, Value);
+                    }
+                }
             }
-            if ((clen & 1) > 0)
+            else if (Minor & CMD_STREAM_USHORT)
             {
-               ImageData[k] = (b & 0xf0) >> 4;
-               k++;
-            }
-         }
-         else
-         {
-            /* Absolute mode */
-            b = BootimageBitmap[bfOffBits + j];
-            j++;
+                /* Get the ushort we're writing and advance in the stream */
+                ShortValue = *CmdStream;
+                CmdStream++;
 
-            if (b == 0)
-            {
-               /* End of line */
-               if (k % bminfo->bV5Width)
-               {
-                  cury = k / bminfo->bV5Width;
-                  k = (cury + 1) * bminfo->bV5Width;
-               }
-            }
-            else if (b == 1)
-            {
-               /* End of image */
-               break;
-            }
-            else if (b == 2)
-            {
-               x = BootimageBitmap[bfOffBits + j];
-               j++;
-               y = BootimageBitmap[bfOffBits + j];
-               j++;
-               curx = k % bminfo->bV5Width;
-               cury = k / bminfo->bV5Width;
-               k = (cury + y) * bminfo->bV5Width + (curx + x);
+                /* Write USHORT to the port (which is in cmd) */
+                WRITE_PORT_USHORT((PUSHORT)Base + Cmd, ShortValue);
             }
             else
             {
-               if ((j & 1) > 0)
-               {
-                  DPRINT("Unaligned copy!\n");
-               }
+                /* The port is what is in the stream right now */
+                Port = UlongToPtr((ULONG)*CmdStream);
 
-               clen = b;
-               for (i = 0; i < (clen / 2); i++)
-               {
-                  b = BootimageBitmap[bfOffBits + j];
-                  j++;
+                /* Get the uchar we're writing */
+                Value = (UCHAR)*++CmdStream;
 
-                  ImageData[k] = (b & 0xf0) >> 4;
-                  k++;
-                  ImageData[k] = b & 0xf;
-                  k++;
-               }
-               if ((clen & 1) > 0)
-               {
-                  b = BootimageBitmap[bfOffBits + j];
-                  j++;
-                  ImageData[k] = (b & 0xf0) >> 4;
-                  k++;
-               }
-               /* Word align */
-               j += (j & 1);
+                /* Move to the next command */
+                CmdStream++;
+
+                /* Write UCHAR to the port (which is in cmd) */
+                WRITE_PORT_UCHAR(PtrToUlong(Base) + Port, Value);
             }
-         }
-      }
+        }
+        else if (Major == 0x20)
+        {
+            /* Check the minor function. Note these are not flags anymore. */
+            switch (Minor)
+            {
+                case 0:
+                    /* The port is what is in the stream right now */
+                    ShortPort = UlongToPtr(*CmdStream);
 
-      InbvDisplayBitmap(bminfo->bV5Width, bminfo->bV5Height, ImageData);
-   }
-   else
-   {
-      DbgPrint("Warning boot image need to be compressed using RLE4\n");
-   }
+                    /* Move to the next command and get the count */
+                    Count = *(CmdStream++);
 
-   ExFreePool(ImageData);
+                    /* Move to the next command and get the value to write */
+                    ShortValue = *(CmdStream++);
+
+                    /* Add the base to the port */
+                    ShortPort = PtrToUlong(ShortPort) + (PUSHORT)Base;
+
+                    /* Move to next command */
+                    CmdStream++;
+
+                    /* Make sure we have data */
+                    if (!ShortValue) continue;
+
+                    /* Loop the cmd array */
+                    for (; Count; Count--, CmdStream++, Value++)
+                    {
+                        /* Get the byte we're writing */
+                        ShortValue += (*CmdStream) << 8;
+
+                        /* Write USHORT to the port */
+                        WRITE_PORT_USHORT(ShortPort, ShortValue);
+                    }
+                    break;
+                case 1:
+                    /* The port is what is in the stream right now. Add the base too */
+                    Port = *CmdStream + Base;
+
+                    /* Move to the next command and get the count */
+                    Count = *++CmdStream;
+
+                    /* Move to the next command and get the index to write */
+                    Index = (UCHAR)*++CmdStream;
+
+                    /* Move to next command */
+                    CmdStream++;
+
+                    /* Loop the cmd array */
+                    for (; Count; Count--, Index++)
+                    {
+                        /* Write the index */
+                        WRITE_PORT_UCHAR(Port, Index);
+
+                        /* Get the byte we're writing */
+                        Value = (UCHAR)*CmdStream;
+
+                        /* Move to next command */
+                        CmdStream++;
+
+                        /* Write UCHAR value to the port */
+                        WRITE_PORT_UCHAR(Port, Value);
+                    }
+                    break;
+                case 2:
+                    /* The port is what is in the stream right now. Add the base too */
+                    Port = *CmdStream + Base;
+
+                    /* Read the current value and add the stream data */
+                    Value = READ_PORT_UCHAR(Port);
+                    Value &= *CmdStream++;
+                    Value ^= *CmdStream++;
+
+                    /* Write the value */
+                    WRITE_PORT_UCHAR(Port, Value);
+                    break;
+                default:
+                    /* Unknown command, fail */
+                    return FALSE;
+            }
+        }
+        else if (Major != 0xF0)
+        {
+            /* Unknown major function, fail */
+            return FALSE;
+        }
+
+        /* Get the next command */
+        Cmd = *CmdStream;
+    }
+
+    /* If we got here, return success */
+    return TRUE;
 }
 
-
-static VOID FASTCALL
-InbvFadeUpPalette()
+BOOLEAN
+NTAPI
+VgaIsPresent(VOID)
 {
-   PBITMAPV5HEADER bminfo;
-   PRGBQUAD Palette;
-   ULONG i;
-   unsigned char r, g, b;
-   register ULONG c;
-   LARGE_INTEGER Interval;
-   FADER_PALETTE_ENTRY FaderPalette[16];
-   FADER_PALETTE_ENTRY FaderPaletteDelta[16];
-   UCHAR ClrUsed;
+    UCHAR VgaReg, VgaReg2, VgaReg3;
+    UCHAR SeqReg, SeqReg2;
+    UCHAR i;
 
-   RtlZeroMemory(&FaderPalette, sizeof(FaderPalette));
-   RtlZeroMemory(&FaderPaletteDelta, sizeof(FaderPaletteDelta));
+    /* Read the VGA Address Register */
+    VgaReg = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE);
 
-   bminfo = (PBITMAPV5HEADER)&BootimageBitmap[0];
-   Palette = (PRGBQUAD)&BootimageBitmap[bminfo->bV5Size];
+    /* Select Read Map Select Register */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
 
-   if (bminfo->bV5ClrUsed)
-      ClrUsed = bminfo->bV5ClrUsed;
-   else
-      ClrUsed = 1 << bminfo->bV5BitCount;
+    /* Read it back...it should be 4 */
+    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE)) & 0xF) != 4) return FALSE;
 
-   for (i = 0; i < 16 && i < ClrUsed; i++)
-   {
-      FaderPaletteDelta[i].r = ((Palette[i].rgbRed << 8) / PALETTE_FADE_STEPS);
-      FaderPaletteDelta[i].g = ((Palette[i].rgbGreen << 8) / PALETTE_FADE_STEPS);
-      FaderPaletteDelta[i].b = ((Palette[i].rgbBlue << 8) / PALETTE_FADE_STEPS);
-   }
+    /* Read the VGA Data Register */
+    VgaReg2 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF);
 
-   for (i = 0; i < PALETTE_FADE_STEPS && !ShutdownNotify; i++)
-   {
-      /* Disable screen and enable palette access. */
-      READ_PORT_UCHAR(STATUS);
-      WRITE_PORT_UCHAR(ATTRIB, 0x00);
+    /* Enable all planes */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 3);
 
-      for (c = 0; c < ClrUsed; c++)
-      {
-         /* Add the delta */
-         FaderPalette[c].r += FaderPaletteDelta[c].r;
-         FaderPalette[c].g += FaderPaletteDelta[c].g;
-         FaderPalette[c].b += FaderPaletteDelta[c].b;
+    /* Read it back...it should be 3 */
+    if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != 0x3)
+    {
+        /* Reset the registers and fail */
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+        return FALSE;
+    }
 
-         /* Get the integer values */
-         r = FaderPalette[c].r >> 8;
-         g = FaderPalette[c].g >> 8;
-         b = FaderPalette[c].b >> 8;
+    /* Select Bit Mask Register */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
 
-         /* Don't go too far */
-         if (r > Palette[c].rgbRed)
-            r = Palette[c].rgbRed;
-         if (g > Palette[c].rgbGreen)
-            g = Palette[c].rgbGreen;
-         if (b > Palette[c].rgbBlue)
-            b = Palette[c].rgbBlue;
+    /* Read it back...it should be 8 */
+    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE)) & 0xF) != 8)
+    {
+        /* Reset the registers and fail */
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+        return FALSE;
+    }
 
-         /* Update the hardware */
-         InbvSetColor(c, r, g, b);
-      }
+    /* Read the VGA Data Register */
+    VgaReg3 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF);
 
-      /* Enable screen and disable palette access. */
-      READ_PORT_UCHAR(STATUS);
-      WRITE_PORT_UCHAR(ATTRIB, 0x20);
+    /* Loop bitmasks */
+    for (i = 0xBB; i; i >>= 1)
+    {
+        /*  Set bitmask */
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, i);
 
-      /* Wait for a bit. */
-      Interval.QuadPart = -PALETTE_FADE_TIME;
-      KeDelayExecutionThread(KernelMode, FALSE, &Interval);
-   }
+        /* Read it back...it should be the same */
+        if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != i)
+        {
+            /* Reset the registers and fail */
+            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0xFF);
+            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
+            WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+            return FALSE;
+        }
+    }
+
+    /* Select Read Map Select Register */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 4);
+
+    /* Read it back...it should be 3 */
+    if (READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) != 3)
+    {
+        /* Reset the registers and fail */
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0);
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, 0xFF);
+        return FALSE;
+    }
+
+    /* Write the registers we read earlier */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg);
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 8);
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, VgaReg2);
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, VgaReg3);
+
+    /* Read sequencer address */
+    SeqReg = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4);
+
+    /* Select memory mode register */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4, 4);
+
+    /* Read it back...it should still be 4 */
+    if (((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4)) & 7) != 4)
+    {
+        /*  Fail */
+        return FALSE;
+    }
+
+    /* Read sequencer Data */
+    SeqReg2 = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5);
+
+    /* Write null plane */
+    WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x100);
+
+    /* Write sequencer flag */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, SeqReg2 ^ 8);
+
+    /* Read it back */
+    if ((READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5)) != (SeqReg2 ^ 8))
+    {
+        /* Not the same value...restore registers and fail */
+        WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, 2);
+        WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x300);
+        return FALSE;
+    }
+
+    /* Now write the registers we read */
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C5, SeqReg2);
+    WRITE_PORT_USHORT((PUSHORT)VgaRegisterBase + 0x3C4, 0x300);
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3C4, SeqReg);
+
+    /* VGA is present! */
+    return TRUE;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
 
-static VOID STDCALL
-InbvBitmapThreadMain(PVOID Ignored)
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+VidInitialize(IN BOOLEAN SetMode)
 {
-   if (InbvFindBootimage())
-   {
-      InbvDisplayCompressedBitmap();
-      InbvFadeUpPalette();
-   }
-   else
-   {
-      DbgPrint("Warning: Cannot find boot image\n");
-   }
-   KeSetEvent(&ShutdownCompleteEvent, 0, FALSE);
+    ULONG Context = 0;
+    PHYSICAL_ADDRESS TranslatedAddress;
+    PHYSICAL_ADDRESS NullAddress = {{0}};
+    ULONG AddressSpace = 1;
+    BOOLEAN Result;
+    ULONG_PTR Base;
+
+    /* Make sure that we have a bus translation function */
+    if (!HalFindBusAddressTranslation) return FALSE;
+
+    /* Get the VGA Register address */
+    Result = HalFindBusAddressTranslation(NullAddress,
+                                          &AddressSpace,
+                                          &TranslatedAddress,
+                                          &Context,
+                                          TRUE);
+    if (!Result) return FALSE;
+
+    /* See if this is I/O Space, which we need to map */
+TryAgain:
+    if (!AddressSpace)
+    {
+        /* Map it */
+        Base = (ULONG_PTR)MmMapIoSpace(TranslatedAddress, 0x400, MmNonCached);
+    }
+    else
+    {
+        /* The base is the translated address, no need to map I/O space */
+        Base = TranslatedAddress.LowPart;
+    }
+
+    /* Set the VGA Register base and now check if we have a VGA device */
+    VgaRegisterBase = Base;
+    if (VgaIsPresent())
+    {
+        /* Translate the VGA Memory Address */
+        NullAddress.LowPart = 0xA0000;
+        AddressSpace = 0;
+        Result = HalFindBusAddressTranslation(NullAddress,
+                                              &AddressSpace,
+                                              &TranslatedAddress,
+                                              &Context,
+                                              FALSE);
+        if (Result)
+        {
+            /* Success! See if this is I/O Space, which we need to map */
+            if (!AddressSpace)
+            {
+                /* Map it */
+                Base = (ULONG_PTR)MmMapIoSpace(TranslatedAddress,
+                                               0x20000,
+                                               MmNonCached);
+            }
+            else
+            {
+                /* The base is the translated address, no need to map I/O space */
+                Base = TranslatedAddress.LowPart;
+            }
+
+            /* Set the VGA Memory Base */
+            VgaBase = Base;
+
+            /* Now check if we have to set the mode */
+            if (SetMode)
+            {
+                //
+                // Reset the display
+                //
+                //HalResetDisplay();
+                curr_x = 0;
+                curr_y = 0;
+
+                /* Initialize it */
+                VgaInterpretCmdStream(AT_Initialization);
+                return TRUE;
+            }
+        }
+    }
+    else
+    {
+        /* It's not, so unmap the I/O space if we mapped it */
+        if (!AddressSpace) MmUnmapIoSpace((PVOID)VgaRegisterBase, 0x400);
+    }
+
+    /* If we got here, then we failed...let's try again */
+    Result = HalFindBusAddressTranslation(NullAddress,
+                                          &AddressSpace,
+                                          &TranslatedAddress,
+                                          &Context,
+                                          TRUE);
+    if (Result) goto TryAgain;
+
+    /* If we got here, then we failed even past our re-try... */
+    return FALSE;
 }
 
-
-static BOOLEAN STDCALL
-VidInitialize(VOID)
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+VidResetDisplay(IN BOOLEAN HalReset)
 {
-   NTSTATUS Status;
-   HANDLE BitmapThreadHandle;
+    /* Clear the current position */
+    curr_x = 0;
+    curr_y = 0;
 
-   InbvMapVideoMemory();
-   InbvInitVGAMode();
+    /* Clear the screen with HAL if we were asked to */
+    //if (HalReset) HalResetDisplay();
 
-   Status = PsCreateSystemThread(
-      &BitmapThreadHandle,
-      THREAD_ALL_ACCESS,
-      NULL,
-      NULL,
-      &BitmapThreadId,
-      InbvBitmapThreadMain,
-      NULL);
+    /* Re-initialize the VGA Display */
+    VgaInterpretCmdStream(AT_Initialization);
 
-   if (!NT_SUCCESS(Status))
-   {
-      return FALSE;
-   }
-
-   ZwClose(BitmapThreadHandle);
-
-   return TRUE;
+    /* Re-initialize the palette and fill the screen black */
+    InitializePalette();
+    VidSolidColorFill(0, 0, 639, 479, 0);
 }
 
-
-static NTSTATUS STDCALL
-VidDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
-{
-   PIO_STACK_LOCATION IrpSp;
-   NTSTATUS Status;
-   NTBOOTVID_FUNCTION_TABLE* FunctionTable;
-
-   IrpSp = IoGetCurrentIrpStackLocation(Irp);
-   Status = STATUS_SUCCESS;
-
-   switch(IrpSp->MajorFunction)
-   {
-      /* Opening and closing handles to the device */
-      case IRP_MJ_CREATE:
-      case IRP_MJ_CLOSE:
-         break;
-
-      case IRP_MJ_DEVICE_CONTROL:
-         switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
-         {
-            case IOCTL_BOOTVID_INITIALIZE:
-               VidInitialize();
-               FunctionTable = (NTBOOTVID_FUNCTION_TABLE *)
-                  Irp->AssociatedIrp.SystemBuffer;
-               FunctionTable->ResetDisplay = VidResetDisplay;
-               Irp->IoStatus.Information = sizeof(NTBOOTVID_FUNCTION_TABLE);
-               break;
-
-            case IOCTL_BOOTVID_CLEANUP:
-               VidCleanUp();
-               break;
-
-            default:
-               Status = STATUS_NOT_IMPLEMENTED;
-               break;
-         }
-         break;
-
-      /* Unsupported operations */
-      default:
-         Status = STATUS_NOT_IMPLEMENTED;
-   }
-
-   Irp->IoStatus.Status = Status;
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-   return Status;
-}
-
-
-NTSTATUS STDCALL
-DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
-{
-   PDEVICE_OBJECT BootVidDevice;
-   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BootVid");
-   NTSTATUS Status;
-
-   BootVidDriverObject = DriverObject;
-
-   ShutdownNotify = 0;
-   KeInitializeEvent(&ShutdownCompleteEvent, NotificationEvent, FALSE);
-
-   /* Register driver routines */
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatch;
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatch;
-   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatch;
-   DriverObject->DriverUnload = NULL;
-
-   DriverObject->Flags |= DO_BUFFERED_IO;
-
-   /* Create device */
-   Status = IoCreateDevice(
-      DriverObject,
-      0,
-      &DeviceName,
-      FILE_DEVICE_BOOTVID,
-      0,
-      FALSE,
-      &BootVidDevice);
-
-   return Status;
-}

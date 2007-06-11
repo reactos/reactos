@@ -17,21 +17,20 @@
 
 #ifdef _NTOSKRNL_
 
+#define KeGetCurrentThread  _KeGetCurrentThread
+#define KeGetPreviousMode   _KeGetPreviousMode
+#undef  PsGetCurrentProcess
+#define PsGetCurrentProcess _PsGetCurrentProcess
+
+#include "arch/intrin_i.h"
 #include "ke.h"
 #ifdef _M_IX86
 #include "i386/mm.h"
+#elif defined(_M_PPC)
+#include "powerpc/mm.h"
+#endif
 #include "i386/fpu.h"
 #include "i386/v86m.h"
-#elif defined(_M_PPC)
-#ifndef InterlockedExchangeAddSizeT
-#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
-#define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
-#define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
-#endif
-#include "powerpc/mm.h"
-#else
-#error "Unknown CPU"
-#endif
 #include "ob.h"
 #include "mm.h"
 #include "ex.h"
@@ -41,7 +40,11 @@
 #include "po.h"
 #include "se.h"
 #include "ldr.h"
+#ifndef _WINKD_
 #include "kd.h"
+#else
+#include "kd64.h"
+#endif
 #include "fsrtl.h"
 #include "lpc.h"
 #include "rtl.h"
@@ -53,6 +56,7 @@
 #include "test.h"
 #include "inbv.h"
 #include "vdm.h"
+#include "hal.h"
 
 #include <pshpack1.h>
 /*
@@ -70,18 +74,12 @@ typedef struct __DESCRIPTOR
 /*
  * Initalization functions (called once by main())
  */
-VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
-VOID IoInit(VOID);
-VOID IoInit2(BOOLEAN BootLog);
-VOID NTAPI IoInit3(VOID);
 BOOLEAN NTAPI ObInit(VOID);
-VOID CmInitializeRegistry(VOID);
-VOID NTAPI CmInitHives(BOOLEAN SetupBoot);
-VOID CmInit2(PCHAR CommandLine);
+BOOLEAN NTAPI CmInitSystem1(VOID);
 VOID CmShutdownRegistry(VOID);
 BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
-VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
+BOOLEAN NTAPI KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 /* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
 BOOLEAN FASTCALL
@@ -185,7 +183,7 @@ DefaultSetInfoBufferCheck(ULONG Class,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (Class >= 0 && Class < ClassListEntries)
+    if (Class < ClassListEntries)
     {
         if (!(ClassList[Class].Flags & ICIF_SET))
         {
@@ -236,7 +234,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (Class >= 0 && Class < ClassListEntries)
+    if (Class < ClassListEntries)
     {
         if (!(ClassList[Class].Flags & ICIF_QUERY))
         {
@@ -287,7 +285,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
  */
-#if defined(_X86_) || defined(_M_AMD64)
+#if defined(_X86_) || defined(_M_AMD64) || defined(_MIPS_) || defined(_PPC_)
 
 /* for x86 and x86-64 the MSB is 1 so we can simply test on that */
 #define IsPointerOffset(Ptr) ((LONG_PTR)(Ptr) >= 0)
@@ -297,14 +295,14 @@ DefaultQueryInfoBufferCheck(ULONG Class,
 /* on Itanium if the 24 most significant bits are set, we're not dealing with
    offsets anymore. */
 #define IsPointerOffset(Ptr)  (((ULONG_PTR)(Ptr) & 0xFFFFFF0000000000ULL) == 0)
-#elif defined(_PPC_)
-#define IsPointerOffset(Ptr) ((LONG_PTR)(Ptr) >= 0)
+
 #else
 #error IsPointerOffset() needs to be defined for this architecture
 #endif
 
 #endif
 
+#ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
 C_ASSERT(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
@@ -316,30 +314,43 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
 C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
+//C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+//C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
+C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
+C_ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NextThread) == KPCR_PRCB_NEXT_THREAD);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) == KPCR_PRCB_DATA);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, KeSystemCalls) == KPCR_SYSTEM_CALLS);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + /*FIELD_OFFSET(KDPC_DATA, DpcQueuDepth)*/12 == KPCR_PRCB_DPC_QUEUE_DEPTH);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + 16 == KPCR_PRCB_DPC_COUNT);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, TimerRequest) == KPCR_PRCB_TIMER_REQUEST);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, MaximumDpcQueueDepth) == KPCR_PRCB_MAXIMUM_DPC_QUEUE_DEPTH);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcRequestRate) == KPCR_PRCB_DPC_REQUEST_RATE);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcInterruptRequested) == KPCR_PRCB_DPC_INTERRUPT_REQUESTED);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcRoutineActive) == KPCR_PRCB_DPC_ROUTINE_ACTIVE);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcLastCount) == KPCR_PRCB_DPC_LAST_COUNT);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, TimerRequest) == KPCR_PRCB_TIMER_REQUEST);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, QuantumEnd) == KPCR_PRCB_QUANTUM_END);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DeferredReadyListHead) == KPCR_PRCB_DEFERRED_READY_LIST_HEAD);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PowerState) == KPCR_PRCB_POWER_STATE_IDLE_FUNCTION);
+//C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PrcbLock) == KPCR_PRCB_PRCB_LOCK);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
+C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
+#endif
+
+/* Platform specific checks */
 #ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
 C_ASSERT(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
 C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, SavedExceptionStack) == TF_SAVED_EXCEPTION_STACK);
 C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
 C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
-#endif
-//C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
-//C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
-C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
-C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
-C_ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
-#ifdef _M_IX86
-C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
-C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
 C_ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
 C_ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
-C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
-C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
-#endif
-
-#ifdef _M_PPC
-#include <reactos/ppcboot.h>
-#include <reactos/ppcdebug.h>
 #endif
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

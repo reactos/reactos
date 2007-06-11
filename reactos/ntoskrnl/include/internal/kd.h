@@ -15,6 +15,8 @@ struct _KD_DISPATCH_TABLE;
 extern KD_PORT_INFORMATION GdbPortInfo;
 extern BOOLEAN _KdDebuggerEnabled;
 extern BOOLEAN _KdDebuggerNotPresent;
+extern BOOLEAN KdBreakAfterSymbolLoad;
+extern BOOLEAN KdPitchDebugger;
 
 BOOLEAN
 NTAPI

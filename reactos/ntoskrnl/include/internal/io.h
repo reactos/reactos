@@ -10,25 +10,40 @@
 //
 // Define this if you want debugging support
 //
-#define _IO_DEBUG_                                      0x00
+#define _IO_DEBUG_                                      0x01
 
 //
 // These define the Debug Masks Supported
 //
 #define IO_IRP_DEBUG                                    0x01
+#define IO_FILE_DEBUG                                   0x02
+#define IO_API_DEBUG                                    0x04
+#define IO_CTL_DEBUG                                    0x08
 
 //
 // Debug/Tracing support
 //
 #if _IO_DEBUG_
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
-#define IOTRACE DbgPrintEx
+#define IOTRACE(x, ...)                                     \
+    {                                                       \
+        DbgPrintEx("%s [%.16s] - ",                         \
+                   __FUNCTION__,                            \
+                   PsGetCurrentProcess()->ImageFileName);   \
+        DbgPrintEx(__VA_ARGS__);                            \
+    }
 #else
-#define IOTRACE(x, ...)                                 \
-    if (x & IopTraceLevel) DbgPrint(__VA_ARGS__)
+#define IOTRACE(x, ...)                                     \
+    if (x & IopTraceLevel)                                  \
+    {                                                       \
+        DbgPrint("%s [%.16s] - ",                           \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName);     \
+        DbgPrint(__VA_ARGS__);                              \
+    }
 #endif
 #else
-#define IOTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define IOTRACE(x, ...) DPRINT(__VA_ARGS__);
 #endif
 
 //
@@ -41,11 +56,6 @@
 //
 #define IrpCompletionPacket                             0x1
 #define IrpMiniCompletionPacket                         0x2
-
-//
-// Number of partition tables in the Boot Record
-//
-#define PARTITION_TBL_SIZE                              4
 
 //
 // We can call the Ob Inlined API, it's the same thing
@@ -228,6 +238,16 @@ typedef struct _IO_COMPLETION_PACKET
     PVOID Context;
     IO_STATUS_BLOCK IoStatus;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
+
+//
+// I/O Completion Context for IoSetIoCompletionRoutineEx
+//
+typedef struct _IO_UNLOAD_SAFE_COMPLETION_CONTEXT
+{
+    PDEVICE_OBJECT DeviceObject;
+    PVOID Context;
+    PIO_COMPLETION_ROUTINE CompletionRoutine;
+} IO_UNLOAD_SAFE_COMPLETION_CONTEXT, *PIO_UNLOAD_SAFE_COMPLETION_CONTEXT;
 
 //
 // I/O Wrapper around the Executive Work Item
@@ -414,53 +434,16 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
 
 //
-// Internal Representation of a Disk
-//
-typedef struct _DISKENTRY
-{
-    LIST_ENTRY ListEntry;
-    ULONG DiskNumber;
-    ULONG Signature;
-    ULONG Checksum;
-    PDEVICE_OBJECT DeviceObject;
-} DISKENTRY, *PDISKENTRY; 
-
-//
-// Partition Table Entry
-//
-#include <pshpack1.h>
-typedef struct _PARTITION
-{
-    UCHAR BootFlags;
-    UCHAR StartingHead;
-    UCHAR StartingSector;
-    UCHAR StartingCylinder;
-    UCHAR PartitionType;
-    UCHAR EndingHead;
-    UCHAR EndingSector;
-    UCHAR EndingCylinder;
-    ULONG StartingBlock;
-    ULONG SectorCount;
-} PARTITION, *PPARTITION;
-
-//
-// Boot Record Structure
-//
-typedef struct _PARTITION_SECTOR
-{
-  UCHAR BootCode[440];
-  ULONG Signature;
-  UCHAR Reserved[2];
-  PARTITION Partition[PARTITION_TBL_SIZE];
-  USHORT Magic;
-} PARTITION_SECTOR, *PPARTITION_SECTOR;
-#include <poppack.h>
-
-//
 // PNP Routines
 //
 VOID
 PnpInit(
+    VOID
+);
+
+BOOLEAN
+NTAPI
+PpInitSystem(
     VOID
 );
 
@@ -497,6 +480,7 @@ NTSTATUS
 IopCreateDeviceNode(
     IN PDEVICE_NODE ParentNode,
     IN PDEVICE_OBJECT PhysicalDeviceObject,
+    IN PUNICODE_STRING ServiceName,
     OUT PDEVICE_NODE *DeviceNode
 );
 
@@ -562,12 +546,21 @@ IopInitializePnpServices(
 // Initialization Routines
 //
 NTSTATUS
-IoCreateArcNames(
-    VOID
+NTAPI
+IopCreateArcNames(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 NTSTATUS
-IoCreateSystemRootLink(
+NTAPI
+IopReassignSystemRoot(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    OUT PANSI_STRING NtBootPath
+);
+
+BOOLEAN
+NTAPI
+IoInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
@@ -789,6 +782,7 @@ PnpRootDriverEntry(
 
 NTSTATUS
 PnpRootCreateDevice(
+    IN PUNICODE_STRING ServiceName,
     IN OUT PDEVICE_OBJECT *PhysicalDeviceObject
 );
 
@@ -807,21 +801,16 @@ IopInitializeSystemDrivers(
     VOID
 );
 
+NTSTATUS
+NTAPI
+IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
+                IN PDRIVER_INITIALIZE InitializationFunction,
+                OUT PDRIVER_OBJECT *pDriverObject);
+
 VOID
 NTAPI
 IopDeleteDriver(
     IN PVOID ObjectBody
-);
-
-NTSTATUS
-FASTCALL
-IopCreateDriverObject(
-    OUT PDRIVER_OBJECT *DriverObject,
-    IN PUNICODE_STRING ServiceName,
-    IN ULONG CreateAttributes,
-    IN BOOLEAN FileSystemDriver,
-    IN PVOID DriverImageStart,
-    IN ULONG DriverImageSize
 );
 
 NTSTATUS
@@ -912,7 +901,7 @@ NTAPI
 IopSecurityFile(
     IN PVOID ObjectBody,
     IN SECURITY_OPERATION_CODE OperationCode,
-    IN SECURITY_INFORMATION SecurityInformation,
+    IN PSECURITY_INFORMATION SecurityInformation,
     IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN OUT PULONG BufferLength,
     OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
@@ -966,53 +955,6 @@ IopDeleteIoCompletion(
 );
 
 //
-// I/O HAL Entrypoints
-//
-NTSTATUS
-FASTCALL
-xHalQueryDriveLayout(
-    IN PUNICODE_STRING DeviceName,
-    OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo
-);
-
-VOID
-FASTCALL
-xHalIoAssignDriveLetters(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-    IN PSTRING NtDeviceName,
-    OUT PUCHAR NtSystemPath,
-    OUT PSTRING NtSystemPathString
-);
-
-NTSTATUS
-FASTCALL
-xHalIoReadPartitionTable(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN BOOLEAN ReturnRecognizedPartitions,
-    OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer
-);
-
-NTSTATUS
-FASTCALL
-xHalIoSetPartitionInformation(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN ULONG PartitionNumber,
-    IN ULONG PartitionType
-);
-
-NTSTATUS
-FASTCALL
-xHalIoWritePartitionTable(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN ULONG SectorsPerTrack,
-    IN ULONG NumberOfHeads,
-    IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer
-);
-
-//
 // Global I/O Data
 //
 extern POBJECT_TYPE IoCompletionType;
@@ -1023,6 +965,7 @@ extern GENERIC_MAPPING IopCompletionMapping;
 extern GENERIC_MAPPING IopFileMapping;
 extern POBJECT_TYPE _IoFileObjectType;
 extern HAL_DISPATCH _HalDispatchTable;
+extern LIST_ENTRY IopErrorLogListHead;
 
 //
 // Inlined Functions

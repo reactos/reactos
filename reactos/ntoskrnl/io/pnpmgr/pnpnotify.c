@@ -31,8 +31,8 @@ typedef struct _PNP_NOTIFY_ENTRY
 	PDRIVER_NOTIFICATION_CALLBACK_ROUTINE PnpNotificationProc;
 } PNP_NOTIFY_ENTRY, *PPNP_NOTIFY_ENTRY;
 
-static KGUARDED_MUTEX PnpNotifyListLock;
-static LIST_ENTRY PnpNotifyListHead;
+KGUARDED_MUTEX PnpNotifyListLock;
+LIST_ENTRY PnpNotifyListHead;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -321,13 +321,6 @@ IopNotifyPlugPlayNotification(
 	}
 	KeReleaseGuardedMutex(&PnpNotifyListLock);
 	ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);
-}
-
-VOID INIT_FUNCTION
-IopInitPnpNotificationImplementation(VOID)
-{
-	KeInitializeGuardedMutex(&PnpNotifyListLock);
-	InitializeListHead(&PnpNotifyListHead);
 }
 
 /* EOF */
