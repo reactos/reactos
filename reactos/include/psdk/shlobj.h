@@ -210,6 +210,9 @@ typedef GUID SHELLVIEWID;
 #define FCIDM_STATUS       (FCIDM_BROWSERFIRST + 1)
 
 
+VOID SHSetInstanceExplorer(IUnknown *punk);
+BOOL WINAPI IsUserAnAdmin(VOID);
+
 /****************************************************************************
  * IShellIcon interface
  */
@@ -365,6 +368,25 @@ DECLARE_INTERFACE_(IACList,IUnknown)
 /*** IACList methods ***/
 #define IACList_Expand(p,a)             (p)->lpVtbl->Expand(p,a)
 #endif
+
+
+/* IDockingWindowFrame interface */
+#define INTERFACE IDockingWindow
+DECLARE_INTERFACE_(IDockingWindow,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleWindow methods ***/
+    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
+    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
+    /*** IDockingWindow methods ***/
+    STDMETHOD_(HRESULT,ShowDW)(THIS_ BOOL) PURE;
+    STDMETHOD_(HRESULT,CloseDW)(THIS_ DWORD) PURE;
+    STDMETHOD_(HRESULT,ResizeBoderDW)(THIS_ LPCRECT,IUnknown*,BOOL) PURE;
+};
+#undef INTERFACE
 
 
 /****************************************************************************
