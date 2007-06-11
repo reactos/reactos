@@ -33,45 +33,6 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 
 
 
-#define HSHELL_HIGHBIT            0x8000
-#define HSHELL_FLASH              (HSHELL_REDRAW|HSHELL_HIGHBIT)
-#define HSHELL_RUDEAPPACTIVATED   (HSHELL_WINDOWACTIVATED|HSHELL_HIGHBIT)
-
-#define FAPPCOMMAND_MOUSE   0x8000
-#define FAPPCOMMAND_KEY 0
-#define FAPPCOMMAND_OEM 0x1000
-#define FAPPCOMMAND_MASK    0xf000
-
-#define GET_APPCOMMAND_LPARAM(lParam)   ((SHORT)(HIWORD(lParam) & ~FAPPCOMMAND_MASK))
-#define GET_DEVICE_LPARAM(lParam)   ((WORD)(HIWORD(lParam) & FAPPCOMMAND_MASK))
-#define GET_MOUSEORKEY_LPARAM   GET_DEVICE_LPARAM
-#define GET_FLAGS_LPARAM(lParam)    (LOWORD(lParam))
-#define GET_KEYSTATE_LPARAM(lParam) GET_FLAGS_LPARAM(lParam)
-
-#define TBSTATE_ELLIPSES    0x40
-
-#define TPM_VERPOSANIMATION 0x1000
-#define TPM_VERNEGANIMATION 0x2000
-
-BOOL WINAPI IsUserAnAdmin(VOID);
-
-#define INTERFACE IDockingWindow
-DECLARE_INTERFACE_(IDockingWindow,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IOleWindow methods ***/
-    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
-    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
-    /*** IDockingWindow methods ***/
-    STDMETHOD_(HRESULT,ShowDW)(THIS_ BOOL) PURE;
-    STDMETHOD_(HRESULT,CloseDW)(THIS_ DWORD) PURE;
-    STDMETHOD_(HRESULT,ResizeBoderDW)(THIS_ LPCRECT,IUnknown*,BOOL) PURE;
-};
-#undef INTERFACE
-
 #ifdef COBJMACROS
 #define IDockingWindow_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
 #define IDockingWindow_AddRef(T) (T)->lpVtbl->AddRef(T)
