@@ -1632,6 +1632,25 @@ static const WCHAR TOOLTIPS_CLASSW[] = { 't','o','o','l','t','i','p','s','_',
 #define TOOLTIPS_CLASS "tooltips_class32"
 #endif
 
+#if (_WIN32_WINNT >= 0x501)
+#define BUTTON_IMAGELIST_ALIGN_LEFT 0
+#define BUTTON_IMAGELIST_ALIGN_RIGHT 1
+#define BUTTON_IMAGELIST_ALIGN_TOP 2
+#define BUTTON_IMAGELIST_ALIGN_BOTTOM 3
+#define BUTTON_IMAGELIST_ALIGN_CENTER 4
+
+typedef struct
+{
+    HIMAGELIST himl;
+    RECT margin;
+    UINT uAlign;
+} BUTTON_IMAGELIST, *PBUTTON_IMAGELIST;
+
+#define BCM_FIRST   0x1600
+#define BCM_GETIDEALSIZE    (BCM_FIRST + 1)
+#define BCM_SETIMAGELIST    (BCM_FIRST + 2)
+#endif /* _WIN32_WINNT */
+
 #define INFOTIPSIZE             1024
 
 #define TTS_ALWAYSTIP           0x01

@@ -377,6 +377,15 @@ DECLARE_INTERFACE_(IACList,IUnknown)
 
 void WINAPI SHAddToRecentDocs(UINT,LPCVOID);
 
+HANDLE WINAPI SHChangeNotification_Lock(
+	HANDLE hChange,
+	DWORD dwProcessId,
+	LPITEMIDLIST **lppidls,
+	LPLONG lpwEventId);
+BOOL WINAPI SHChangeNotification_Unlock ( HANDLE hLock);
+
+
+
 /****************************************************************************
  * SHBrowseForFolder API
  */
