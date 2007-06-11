@@ -210,7 +210,7 @@ typedef GUID SHELLVIEWID;
 #define FCIDM_STATUS       (FCIDM_BROWSERFIRST + 1)
 
 
-VOID SHSetInstanceExplorer(IUnknown *punk);
+VOID WINAPI SHSetInstanceExplorer(LPUNKNOWN);
 BOOL WINAPI IsUserAnAdmin(VOID);
 
 /****************************************************************************
