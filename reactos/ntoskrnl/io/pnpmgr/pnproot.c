@@ -331,7 +331,7 @@ EnumerateDevices(
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM "\\" REGSTR_KEY_ROOTENUM);
   UNICODE_STRING SubKeyName;
   WCHAR DevicePath[MAX_PATH + 1];
-  RTL_QUERY_REGISTRY_TABLE QueryTable[4];
+  RTL_QUERY_REGISTRY_TABLE QueryTable[5];
   PPNPROOT_DEVICE Device = NULL;
   HANDLE KeyHandle = INVALID_HANDLE_VALUE;
   HANDLE SubKeyHandle = INVALID_HANDLE_VALUE;
@@ -502,9 +502,9 @@ EnumerateDevices(
         QueryTable[2].QueryRoutine = QueryBinaryValueCallback;
         QueryTable[2].Name = L"BasicConfigVector";
         QueryTable[2].EntryContext = &Buffer1;
-        QueryTable[2].QueryRoutine = QueryBinaryValueCallback;
-        QueryTable[2].Name = L"BootConfig";
-        QueryTable[2].EntryContext = &Buffer2;
+        QueryTable[3].QueryRoutine = QueryBinaryValueCallback;
+        QueryTable[3].Name = L"BootConfig";
+        QueryTable[3].EntryContext = &Buffer2;
 
         Status = RtlQueryRegistryValues(
           RTL_REGISTRY_HANDLE,
@@ -526,8 +526,8 @@ EnumerateDevices(
           &DeviceExtension->DeviceListHead,
           &Device->ListEntry);
         DeviceExtension->DeviceListCount++;
-        Device = NULL;
       }
+      Device = NULL;
 
       Index2++;
     }
