@@ -694,7 +694,7 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
-    DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
+    DeviceNode = IopGetDeviceNode(DeviceObject);
 
     switch (Operation)
     {

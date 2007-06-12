@@ -135,7 +135,7 @@ IopGetDriverObject(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Failed to reference driver object, status=0x%08x\n", Status);
+      DPRINT("Failed to reference driver object, status=0x%08x\n", Status);
       return Status;
    }
 

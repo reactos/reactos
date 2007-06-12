@@ -2574,6 +2574,11 @@ IopInvalidateDeviceRelations(
      */
     for (i = 0; i < DeviceRelations->Count; i++)
     {
+        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
+        {
+            ObDereferenceObject(DeviceRelations->Objects[i]);
+            continue;
+        }
         Status = IopCreateDeviceNode(
             DeviceNode,
             DeviceRelations->Objects[i],
