@@ -95,6 +95,6 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME "Landinstallingen"
+  IDS_CPLNAME "Landinstellingen"
   IDS_CPLDESCRIPTION "Keuze taal en weergave van getallen, valuta's, data en tijden wijzigen."
 END
