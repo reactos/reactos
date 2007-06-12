@@ -165,7 +165,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
     PAGED_CODE();
 
-    DPRINT("CmindObject(ObjectCreateInfo %x, ReturnedObject %x, "
+    DPRINT("CmFindObject(ObjectCreateInfo %x, ReturnedObject %x, "
         "RemainingPath %x)\n",ObjectCreateInfo,ReturnedObject,RemainingPath);
 
     RtlInitUnicodeString (RemainingPath, NULL);

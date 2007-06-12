@@ -11,6 +11,7 @@
 
 #include "Ddraw/ddraw.h"
 #include "Surface/surface.h"
+#include "Clipper/clipper.h"
 
 /* DirectDraw startup code only internal use  */
 extern DDRAWI_DIRECTDRAW_GBL ddgbl;
@@ -35,9 +36,23 @@ void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src
 VOID Cleanup(LPDIRECTDRAW7 iface);
 
 /* own macro to alloc memmory */
+
+/*
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m)
 #define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p); \
                            p = NULL;
+*/
+#define DxHeapMemAlloc(p, m)  { \
+                                p = malloc(m); \
+                                if (p != NULL) \
+                                { \
+                                    ZeroMemory(p,m); \
+                                } \
+                              }
+#define DxHeapMemFree(p)   { \
+                             free(p); \
+                             p = NULL; \
+                           }
 
 /******** Main Object ********/
 

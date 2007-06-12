@@ -37,3 +37,6 @@
 <directory name="timedate">
 	<xi:include href="timedate/timedate.rbuild" />
 </directory>
+<directory name="usrmgr">
+	<xi:include href="usrmgr/usrmgr.rbuild" />
+</directory>

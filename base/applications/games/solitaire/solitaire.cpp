@@ -15,7 +15,10 @@ HWND        hwndMain;
 HWND        hwndStatus;
 HINSTANCE    hInstance;
 
-TCHAR szAppName[] = _T("Solitaire");
+TCHAR szAppName[128];
+TCHAR MsgQuit[128];
+TCHAR MsgAbout[128];
+INT nOptions = 8;
 
 CardWindow SolWnd;
 
@@ -44,9 +47,15 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
     MSG            msg;
     WNDCLASSEX    wndclass;
     INITCOMMONCONTROLSEX ice;
-    HACCEL        hAccelTable;            
+    HACCEL        hAccelTable;
 
     hInstance = hInst;
+
+    // Load application title
+    LoadString(hInst, IDS_SOL_NAME, szAppName, sizeof(szAppName) / sizeof(szAppName[0]));
+    // Load MsgBox() text here to avoid loading it many times later
+    LoadString(hInst, IDS_SOL_ABOUT, MsgAbout, sizeof(MsgAbout) / sizeof(MsgAbout[0]));
+    LoadString(hInst, IDS_SOL_QUIT, MsgQuit, sizeof(MsgQuit) / sizeof(MsgQuit[0]));
 
     //Window class for the main application parent window
     wndclass.cbSize            = sizeof(wndclass);
@@ -55,12 +64,12 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
     wndclass.cbClsExtra        = 0;
     wndclass.cbWndExtra        = 0;
     wndclass.hInstance        = hInst;
-    wndclass.hIcon            = LoadIcon (hInst, MAKEINTRESOURCE(IDI_ICON1));
+    wndclass.hIcon            = LoadIcon (hInst, MAKEINTRESOURCE(IDI_SOLITAIRE));
     wndclass.hCursor        = LoadCursor (NULL, IDC_ARROW);
     wndclass.hbrBackground    = (HBRUSH)NULL;
     wndclass.lpszMenuName    = MAKEINTRESOURCE(IDR_MENU1);
     wndclass.lpszClassName    = szAppName;
-    wndclass.hIconSm        = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, 0);
+    wndclass.hIconSm        = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_SOLITAIRE), IMAGE_ICON, 16, 16, 0);
 
     RegisterClassEx(&wndclass);
 
@@ -111,6 +120,51 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
     return msg.wParam;
 }
 
+VOID LoadSettings(VOID)
+{
+
+}
+
+BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_INITDIALOG:
+        CheckRadioButton(hDlg, IDC_OPT_DRAWONE, IDC_OPT_DRAWTHREE,
+                         (nOptions & OPTION_THREE_CARDS) ? IDC_OPT_DRAWTHREE : IDC_OPT_DRAWONE);
+
+        return TRUE;
+
+    case WM_COMMAND:
+        switch(LOWORD(wParam))
+        {
+        case IDOK:
+            nOptions &= ~OPTION_THREE_CARDS;
+            if (IsDlgButtonChecked(hDlg, IDC_OPT_DRAWTHREE) == BST_CHECKED)
+                nOptions |= OPTION_THREE_CARDS;
+
+            EndDialog(hDlg, TRUE);
+            return TRUE;
+
+        case IDCANCEL:
+            EndDialog(hDlg, FALSE);
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
+}
+
+VOID ShowGameOptionsDlg(HWND hwnd)
+{
+   INT nOldOptions = nOptions;
+
+   if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc))
+   {
+      if ((nOldOptions & OPTION_THREE_CARDS) != (nOptions & OPTION_THREE_CARDS))
+          NewGame();
+   }
+}
 
 //-----------------------------------------------------------------------------
 LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -126,7 +180,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
         hwndStatus = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, "Ready", hwnd, 0);
-        
+
         //SendMessage(hwndStatus, SB_SIMPLE, (WPARAM)TRUE, 0);
 
         SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
@@ -156,14 +210,12 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         //MoveWindow(hwndStatus, 0, nHeight-nStatusHeight, nWidth, nHeight, TRUE);
         //parts[0] = nWidth - 256;
         //SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
-
         return 0;
 
     case WM_GETMINMAXINFO:
-        mmi = (MINMAXINFO *)lParam;        
+        mmi = (MINMAXINFO *)lParam;
         mmi->ptMinTrackSize.x = 600;
         mmi->ptMinTrackSize.y = 400;
-
         return 0;
 
     case WM_COMMAND:
@@ -180,18 +232,15 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case IDM_GAME_OPTIONS:
-            //ShowGameOptionsDlg(hwnd);
+            ShowGameOptionsDlg(hwnd);
             return 0;
 
         case IDM_HELP_CONTENTS:
-
             WinHelp(hwnd, szHelpPath, HELP_CONTENTS, 0);//HELP_KEY, (DWORD)"How to play");
-            
             return 0;
 
         case IDM_HELP_ABOUT:
-            MessageBox(hwnd, _T("Solitaire by J Brown\r\n\r\nCardLib version 1.0."), szAppName, MB_OK|MB_ICONINFORMATION);
-
+            MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
             return 0;
 
         case IDM_GAME_EXIT:
@@ -203,12 +252,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_CLOSE:
         
-        ret = IDOK;
-
-        if(fGameStarted)
-        {
-            ret = MessageBox(hwnd, _T("Quit the current game?"), szAppName, MB_OKCANCEL|MB_ICONQUESTION);
-        }
+        ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
 
         if(ret == IDOK)
         {

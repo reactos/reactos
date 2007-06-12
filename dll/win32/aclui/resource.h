@@ -12,6 +12,7 @@
 #define IDC_ADVANCED    1007
 #define IDC_LABEL_ADVANCED      1008
 #define IDC_LABEL_PERMISSIONS_FOR       1009
+#define IDC_OWNER   1010
 
 #define IDS_PSP_TITLE	1001
 #define IDS_UNKNOWN     1002

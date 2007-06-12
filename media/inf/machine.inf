@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = System
 ClassGUID  = {4D36E97D-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/11/2005,1.01.0.0
+DriverVer  = 08/07/2006,1.02
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -66,6 +66,8 @@ HKR, , Icon,           0, "-27"
 [NO_DRV.Services]
 AddService = , 0x00000002
 
+[NO_DRV.HW]
+
 ;-------------------------- PCI-ISA BUS DRIVER --------------------------
 
 [PCI_ISA_Inst.NT]
@@ -75,7 +77,6 @@ CopyFiles = PCI_ISA_CopyFiles.NT
 isapnp.sys
 
 [PCI_ISA_Inst.NT.Services]
-;DO NOT INSTALL ISAPNP -> FREEZES SYSTEM
 ;AddService = isapnp, 0x00000002, isapnp_Service_Inst
 AddService = , 0x00000002
 

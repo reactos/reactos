@@ -4,6 +4,7 @@
  * Copyright 2002 Robert Dickenson
  * Copyright 2003 Vincent Béron
  * Copyright 2004 Sylvain Pétréolle
+ * Copyright 2007 Pierre Schweitzer 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,16 +44,19 @@ BEGIN
     END
     POPUP "&Aide"
     BEGIN
-        MENUITEM "&A propos...",                  ID_HELP_ABOUT
+        MENUITEM "&À propos...",                  ID_HELP_ABOUT
     END
 END
 
 IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "&Registres"
+    POPUP "&Fichier"
     BEGIN
-        MENUITEM "&Importer un fichier de registres...",    ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Exporter un fichier de registres...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Importer...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Exporter...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM SEPARATOR
+        MENUITEM "Charger un fichier registre...",				ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Décharger un fichier registre...",				ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Déconnecter de registres réseau...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -61,7 +65,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Quitter",                       ID_REGISTRY_EXIT
     END
-    POPUP "&Edition"
+    POPUP "&Édition"
     BEGIN
         MENUITEM "&Modifier",                     ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -72,7 +76,11 @@ BEGIN
             MENUITEM "Valeur c&haîne",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valeur &binaire",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valeur &mot double",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "Valeur chaîne &multiple",			ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valeur chaîne &extensible",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
+        MENUITEM SEPARATOR
+        MENUITEM "&Permissions...",		ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Supprimer\tDel",                ID_EDIT_DELETE
         MENUITEM "Ren&ommer",                     ID_EDIT_RENAME
@@ -101,8 +109,117 @@ BEGIN
     BEGIN
         MENUITEM "&Sujets de l'aide",                ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&A propos de l'éditeur de registres",      ID_HELP_ABOUT
+        MENUITEM "&À propos de l'éditeur de registres",      ID_HELP_ABOUT
     END
+END
+
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Modifier",                     ID_EDIT_MODIFY
+	MENUITEM "Modifier les données binaires",          ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "Supprimer\tDel",                ID_EDIT_DELETE
+	MENUITEM "&Renommer",                     ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "&Nouveau"
+        BEGIN
+            MENUITEM "Clé",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "Valeur chaîne",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valeur &binaire",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valeur mot &double",                ID_EDIT_NEW_DWORDVALUE
+        END
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "Dérouler/Réduire",                 ID_TREE_EXPANDBRANCH
+        POPUP "&Nouveau"
+        BEGIN
+            MENUITEM "Clé",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "Valeur chaîne",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valeur &binaire",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valeur mot &double",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM "Cherche",                           ID_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "Supprimer",                         ID_TREE_DELETE
+        MENUITEM "&Renommer",                         ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Exporter",                         ID_TREE_EXPORT
+        MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Copier le nom de la clé",                  ID_EDIT_COPYKEYNAME
+  END
+END
+
+
+/*
+ * Dialog
+ */
+
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Éditer la chaîne"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,196,64,50,14
+END
+
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Éditer la chaîne multiple"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,196,154,50,14
+END
+
+IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Éditer la valeur binaire"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,196,154,50,14
+END
+
+
+IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Éditer le mot double"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
+    GROUPBOX        "Base",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "&Hexadécimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "&Décimal",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,196,82,50,14
 END
 
 /*
@@ -167,6 +284,82 @@ BEGIN
     ID_EDIT_FINDNEXT        "Recherche l'occurence suivante du texte de la dernière recherche"
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "Erreur"
+    IDS_WARNING		    "Attention"
+    IDS_BAD_KEY             "Impossible de récupérer la clé '%s'"
+    IDS_BAD_VALUE           "Impossible de récupérer la valeur '%s'"
+    IDS_UNSUPPORTED_TYPE    "Impossible d'éditer les clés de ce type (%ld)"
+    IDS_TOO_BIG_VALUE       "La valeur est trop importante (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Les données de type REG_MULTI_SZ ne peuvent contenir des chaînes vides.\nLes chaînes vides ont été supprimées de la liste."
+    IDS_QUERY_DELETE_KEY_ONE    "Êtes-vous sûr de vouloir supprimer cette clé?"
+    IDS_QUERY_DELETE_KEY_MORE   "Êtes-vous sûr de vouloir supprimer ces clés?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Confirmation de la suppression de la clé"
+    IDS_QUERY_DELETE_ONE    "Êtes-vous sûr de vouloir supprimer cette valeur?"
+    IDS_QUERY_DELETE_MORE   "Êtes-vous sûr de vouloir supprimer ces valeurs?"
+    IDS_QUERY_DELETE_CONFIRM "Confirmation de la suppression de la valeur"
+    IDS_ERR_DELVAL_CAPTION  "Erreur lors de la suppression des valeurs"
+    IDS_ERR_DELETEVALUE     "Impossible de supprimer toutes les valeurs seléctionnées!"
+    IDS_ERR_RENVAL_CAPTION  "Erreur lors de la tentative pour renommer la valeur"
+    IDS_ERR_RENVAL_TOEMPTY  "Impossible de renommer %s. Le nom de valeur spécifié est vide. Essayez à nouveau avec un autre nom."
+    IDS_NEW_KEY             "Nouvelle clé #%d"
+    IDS_NEW_VALUE           "Nouvelle valeur #%d"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(valeur binaire de longueur nulle)"
+    IDS_DEFAULT_VALUE_NAME  "(Défaut)"
+    IDS_VALUE_NOT_SET       "(valeur non définie)"
+    IDS_UNKNOWN_TYPE        "Type inconnu: (0x%lx)"
+    IDS_MY_COMPUTER         "Mon ordinateur"
+    IDS_IMPORT_REG_FILE     "Importer un fichier registre"
+    IDS_EXPORT_REG_FILE     "Exporter un fichier registre"
+    IDS_INVALID_DWORD       "(valeur mot double invalide)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "Fichiers registres"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Fichiers registres de Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "Tous les fichiers (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "Contrôle total"
+  IDS_ACCESS_READ               "Lecture"
+  IDS_ACCESS_QUERYVALUE         "Demander une valeur"
+  IDS_ACCESS_SETVALUE           "Définir valeur"
+  IDS_ACCESS_CREATESUBKEY       "Créer une sous-clé"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Énumérer les sous-clés"
+  IDS_ACCESS_NOTIFY             "Notifier"
+  IDS_ACCESS_CREATELINK         "Créer un lien"
+  IDS_ACCESS_DELETE             "Supprimer"
+  IDS_ACCESS_WRITEDAC           "Écriture DAC"
+  IDS_ACCESS_WRITEOWNER         "Écriture en propriétaire"
+  IDS_ACCESS_READCONTROL        "Contrôle en lecture"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "Seulement cette clé"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "Cette clé et les sous-clés"
+  IDS_INHERIT_SUBKEYSONLY        "Les sous-clés seulement"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "Dérouler"
+  IDS_COLLAPSE                   "Réduire"
+  IDS_GOTO_SUGGESTED_KEY         "Aller à '%s'"
+  IDS_FINISHEDFIND               "Recherche dans le registre terminée."
+END
+
 /*****************************************************************/
 
 
@@ -179,17 +372,67 @@ STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
     WS_BORDER
 FONT 8, "MS Sans Serif"
 BEGIN
+   GROUPBOX "Expoter le rang",IDC_STATIC,2,0,366,48
+   CONTROL "Tout",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "Branche s&eléctionnée",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
-IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Boîte de dialogue"
-FONT 8, "MS Sans Serif"
+CAPTION "Ajouter aux favoris"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
-    PUSHBUTTON      "Annuler",IDCANCEL,130,24,50,14
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,129,24,50,14
+    LTEXT           "Nom du &favori:",IDC_STATIC,7,7,70,10
+    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
+IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Supprimer des favoris"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,7,114,50,14
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST | 
+                    WS_BORDER | WS_TABSTOP,7,20,150,90
+    LTEXT           "Seléctionnez le(s) favori(s):",IDC_STATIC,7,7,99,12
+END
+
+IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Chercher"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Chercher le suivant",IDOK,197,7,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,197,24,50,14
+    GROUPBOX        "Rechercher",IDC_STATIC,7,25,63,51
+    LTEXT           "Rechercher:",IDC_STATIC,7,8,37,10
+    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
+    CONTROL         "Clés",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,36,35,8
+    CONTROL         "&Valeurs",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,48,36,8
+    CONTROL         "&Données",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,60,42,8
+    CONTROL         "Chaîne complète seulement",IDC_MATCHSTRING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+    CONTROL         "Sensible à la case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,83,48,90,12
+END
+
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Chercher"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
+    PUSHBUTTON      "Annuler",IDCANCEL,93,29,45,14
+    LTEXT           "Recherche dans le registre...",IDC_STATIC,33,12,83,8
+END
 
 /*
  * TEXTINCLUDE

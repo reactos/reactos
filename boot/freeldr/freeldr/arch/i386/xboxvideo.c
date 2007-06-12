@@ -76,7 +76,7 @@ XboxVideoAttrToSingleColor(UCHAR Attr)
          (0 == (Attr & 0x01) ? 0 : Intensity);
 }
 
-static VOID
+VOID
 XboxVideoAttrToColors(UCHAR Attr, ULONG *FgColor, ULONG *BgColor)
 {
   *FgColor = XboxVideoAttrToSingleColor(Attr & 0xf);

@@ -250,6 +250,7 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
+
     Status = NtCreateKey(&KeyHandle,
                          KEY_CREATE_LINK,
                          &ObjectAttributes,

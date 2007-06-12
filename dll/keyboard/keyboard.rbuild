@@ -2,6 +2,9 @@
 	<directory name="kbdbe">
 		<xi:include href="kbdbe/kbdbe.rbuild" />
 	</directory>
+	<directory name="kbdbur">
+		<xi:include href="kbdbur/kbdbur.rbuild" />
+	</directory>
 	<directory name="kbdda">
 		<xi:include href="kbdda/kbdda.rbuild" />
 	</directory>
@@ -10,6 +13,9 @@
 	</directory>
 	<directory name="kbdes">
 		<xi:include href="kbdes/kbdes.rbuild" />
+	</directory>
+	<directory name="kbdfi">
+		<xi:include href="kbdfi/kbdfi.rbuild" />
 	</directory>
 	<directory name="kbdfr">
 		<xi:include href="kbdfr/kbdfr.rbuild" />

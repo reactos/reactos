@@ -239,7 +239,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
             }
 
             /* Release lock and reference */
-            ObReferenceObject(Port);
+            ObReferenceObject(ConnectionPort);
             KeReleaseGuardedMutex(&LpcpLock);
         }
     }

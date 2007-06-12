@@ -1,0 +1,6 @@
+LIBRARY usrmgr.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

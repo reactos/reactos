@@ -1017,7 +1017,11 @@ DispatchToUser:
         }
 
         /* 3rd strike, kill the process */
-        DPRINT1("Kill the process\n");
+        DPRINT1("Kill %.16s, ExceptionCode: %lx, ExceptionAddress: %lx\n",
+                PsGetCurrentProcess()->ImageFileName,
+                ExceptionRecord->ExceptionCode,
+                ExceptionRecord->ExceptionAddress);
+
         ZwTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
         KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
                      ExceptionRecord->ExceptionCode,

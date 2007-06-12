@@ -694,7 +694,7 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
-    DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
+    DeviceNode = IopGetDeviceNode(DeviceObject);
 
     switch (Operation)
     {
@@ -786,14 +786,11 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING DeviceInstance;
 
-    DPRINT("IopResetDevice() called\n");
-    DPRINT("Device name: %wZ\n", &ResetDeviceData->DeviceInstance);
-
     Status = IopCaptureUnicodeString(&DeviceInstance, &ResetDeviceData->DeviceInstance);
     if (!NT_SUCCESS(Status))
-    {
-	return Status;
-    }
+        return Status;
+
+    DPRINT("IopResetDevice(%wZ)\n", &DeviceInstance);
 
     /* Get the device object */
     DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);

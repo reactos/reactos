@@ -1,6 +1,10 @@
 #include <windows.h>
 #include "resource.h"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_SOLITAIRE ICON DISCARDABLE "solitaire.ico"
+
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"

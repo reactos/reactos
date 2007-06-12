@@ -239,4 +239,15 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "RosPasjans.lnk"
     IDS_SHORT_WINEMINE   "ROSaper.lnk"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_WZD_NAME         "Program instalacyjny nie mo¿e kontynuowaæ dopóki nie wpiszesz swojego imienia i nazwiska."
+    IDS_WZD_SETCOMPUTERNAME  "Program instalacyjny nie zdo³a³ ustawiæ nowej nazwy komputera."
+    IDS_WZD_COMPUTERNAME  "Program instalacyjny nie mo¿e kontynuowaæ dopóki nie wpiszesz nazwy komputera."
+    IDS_WZD_PASSWORDEMPTY  "Musisz wprowadziæ has³o !"
+    IDS_WZD_PASSWORDMATCH  "Oba wprowadzone has³a nie s¹ identyczne. Musisz wpisaæ to samo has³o dwa razy."
+    IDS_WZD_PASSWORDCHAR  "Wprowadzone has³o zawiera nieodpowiednie znaki. Proszê wprowadziæ has³o bez ich udzia³u."
+    IDS_WZD_LOCALTIME    "Program instalacyjny nie zdo³a³ ustawiæ czasu lokalnego."
+END
 /* EOF */

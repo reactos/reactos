@@ -97,7 +97,7 @@ SetupCopyFile(PWCHAR SourceFileName,
   OBJECT_ATTRIBUTES ObjectAttributes;
   HANDLE FileHandleSource;
   HANDLE FileHandleDest;
-  IO_STATUS_BLOCK IoStatusBlock;
+  static IO_STATUS_BLOCK IoStatusBlock;
   FILE_STANDARD_INFORMATION FileStandard;
   FILE_BASIC_INFORMATION FileBasic;
   PUCHAR Buffer;

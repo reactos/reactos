@@ -374,6 +374,8 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     PRTL_USER_PROCESS_INFORMATION ProcessInformation;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams = NULL;
 
+    NullString.Length = sizeof(WCHAR);
+
     /* Use the initial buffer, after the strings */
     ProcessInformation = &InitBuffer->ProcessInfo;
 

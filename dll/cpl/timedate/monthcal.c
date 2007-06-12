@@ -249,9 +249,7 @@ MonthCalReload(IN PMONTHCALWND infoPtr)
     infoPtr->hbHeader = GetSysColorBrush(infoPtr->Enabled ? MONTHCAL_HEADERBG : MONTHCAL_DISABLED_HEADERBG);
     infoPtr->hbSelection = GetSysColorBrush(infoPtr->Enabled ? MONTHCAL_SELBG : MONTHCAL_DISABLED_SELBG);
 
-    for (i = 0;
-         i < 7;
-         i++)
+    for (i = 0; i < 7; i++)
     {
         if (GetLocaleInfo(LOCALE_USER_DEFAULT,
                           LOCALE_SABBREVDAYNAME1 +

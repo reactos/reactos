@@ -10,6 +10,7 @@
   <property name="BASEADDRESS_VDMDBG" value="0x5b0d0000" />
   <property name="BASEADDRESS_OBJSEL" value="0x5b400000" />
   <property name="BASEADDRESS_SLAYER" value="0x5c7e0000" />
+  <property name="BASEADDRESS_USRMGR" value="0x5c900000" />
   <property name="BASEADDRESS_COMMCTRL" value="0x5d090000" />
   <property name="BASEADDRESS_DPLAYX" value="0x5e080000" />
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />

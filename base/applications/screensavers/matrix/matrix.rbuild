@@ -26,5 +26,5 @@
 	<file>password.c</file>
 	<file>screensave.c</file>
 	<file>settings.c</file>
-	<file>matrix.rc</file>
+	<file>rsrc.rc</file>
 </module>

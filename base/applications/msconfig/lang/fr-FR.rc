@@ -51,7 +51,7 @@ BEGIN
  CONTROL "Démarrage &Sélectif", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 75, 10
  CHECKBOX "T&raiter le fichier SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 100, 10
  CHECKBOX "&Charger les Services Système", IDC_CBX_SYSTEM_SERVICE, 30, 95, 105, 10
- CHECKBOX "L&oad Startup Items", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
+ CHECKBOX "Charger les éléments de démarrage", IDC_CBX_STARTUP_ITEM, 30, 110, 75, 10
 END
 
 IDD_FREELDR_PAGE DIALOG DISCARDABLE  0, 0, 362, 175
@@ -59,11 +59,11 @@ STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
    CONTROL "", IDC_LIST_BOX, "ListBox", 0x50010141, 10, 10, 340, 50, 0x00000200
-   PUSHBUTTON    "&Check All Boot Paths", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
+   PUSHBUTTON    "&Cocher tous les chemins de démarrage", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 70, 12
    PUSHBUTTON    "&Par Défaut", IDC_BTN_SET_DEFAULT_BOOT, 100, 65, 70, 12
    PUSHBUTTON    "&Monter", IDC_BTN_MOVE_UP_BOOT_OPTION, 190, 65, 70, 12
    PUSHBUTTON    "&Descendre", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 280, 65, 70, 12
-   GROUPBOX "Options de Boot", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
+   GROUPBOX "Options de démarrage", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
    CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 50, 10
    CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 55, 10
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
@@ -116,7 +116,7 @@ BEGIN
     IDS_SERVICES_COLUMN_SERVICE "Service"
     IDS_SERVICES_COLUMN_REQ     "Requis"
     IDS_SERVICES_COLUMN_VENDOR  "Fabricant"
-    IDS_SERVICES_COLUMN_STATUS  "Etat"
+    IDS_SERVICES_COLUMN_STATUS  "État"
 END
 
 STRINGTABLE DISCARDABLE
@@ -137,7 +137,7 @@ BEGIN
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "Propriétés système"
-    IDS_TOOLS_SYSDM_DESCR    "Affiche/modifie des information a propos de l'ordinateur."
+    IDS_TOOLS_SYSDM_DESCR    "Affiche/modifie des information à propos de l'ordinateur."
     IDS_TOOLS_SYSDM_CMD      "control"
     IDS_TOOLS_SYSDM_PARAM    "sysdm.cpl"
 

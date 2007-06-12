@@ -744,7 +744,8 @@ ScmStartUserModeService(PSERVICE Service,
     ResumeThread(ProcessInformation.hThread);
 
     /* Connect control pipe */
-    if (ConnectNamedPipe(Service->ControlPipeHandle, NULL))
+    if (ConnectNamedPipe(Service->ControlPipeHandle, NULL) ?
+        TRUE : (dwError = GetLastError()) == ERROR_PIPE_CONNECTED)
     {
         DWORD dwProcessId = 0;
         DWORD dwRead = 0;
@@ -772,8 +773,7 @@ ScmStartUserModeService(PSERVICE Service,
     }
     else
     {
-        dwError = GetLastError();
-        DPRINT("Connecting control pipe failed!\n");
+        DPRINT1("Connecting control pipe failed! (Error %lu)\n", dwError);
 
         /* Close control pipe */
         CloseHandle(Service->ControlPipeHandle);

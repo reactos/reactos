@@ -805,6 +805,9 @@ NTSTATUS
 NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
+                IN PUNICODE_STRING RegistryPath,
+                IN PVOID DllBase,
+                IN ULONG SizeOfImage,
                 OUT PDRIVER_OBJECT *pDriverObject);
 
 VOID

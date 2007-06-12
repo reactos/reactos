@@ -317,7 +317,7 @@ User32CreateWindowEx(DWORD dwExStyle,
   DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
 #endif
 
-   if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD))
+   if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD) && Handle != (HWND)0)
    {
       SendMessageW(hWndParent, WM_MDIREFRESHMENU, 0, 0);
       SetWindowPos(Handle, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW |

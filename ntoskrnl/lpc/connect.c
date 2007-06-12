@@ -273,7 +273,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         /* Map it */
         Status = MmMapViewOfSection(SectionToMap,
                                     PsGetCurrentProcess(),
-                                    &Port->ClientSectionBase,
+                                    &ClientPort->ClientSectionBase,
                                     0,
                                     0,
                                     &SectionOffset,

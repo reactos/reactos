@@ -210,9 +210,23 @@ typedef GUID SHELLVIEWID;
 #define FCIDM_STATUS       (FCIDM_BROWSERFIRST + 1)
 
 
+VOID WINAPI SHSetInstanceExplorer(LPUNKNOWN);
+BOOL WINAPI IsUserAnAdmin(VOID);
+
 /****************************************************************************
  * IShellIcon interface
  */
+
+#undef  INTERFACE
+#define INTERFACE   IShellFolderViewCB
+DECLARE_INTERFACE_(IShellFolderViewCB, IUnknown)
+{
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD(MessageSFVCB)(THIS_ UINT uMsg, WPARAM wParam, LPARAM lParam) PURE;
+};
+#undef INTERFACE
 
 #define INTERFACE IShellIcon
 DECLARE_INTERFACE_(IShellIcon,IUnknown)
@@ -356,6 +370,25 @@ DECLARE_INTERFACE_(IACList,IUnknown)
 #endif
 
 
+/* IDockingWindowFrame interface */
+#define INTERFACE IDockingWindow
+DECLARE_INTERFACE_(IDockingWindow,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleWindow methods ***/
+    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
+    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
+    /*** IDockingWindow methods ***/
+    STDMETHOD_(HRESULT,ShowDW)(THIS_ BOOL) PURE;
+    STDMETHOD_(HRESULT,CloseDW)(THIS_ DWORD) PURE;
+    STDMETHOD_(HRESULT,ResizeBoderDW)(THIS_ LPCRECT,IUnknown*,BOOL) PURE;
+};
+#undef INTERFACE
+
+
 /****************************************************************************
 * SHAddToRecentDocs API
 */
@@ -365,6 +398,15 @@ DECLARE_INTERFACE_(IACList,IUnknown)
 #define SHARD_PATH WINELIB_NAME_AW(SHARD_PATH)
 
 void WINAPI SHAddToRecentDocs(UINT,LPCVOID);
+
+HANDLE WINAPI SHChangeNotification_Lock(
+	HANDLE hChange,
+	DWORD dwProcessId,
+	LPITEMIDLIST **lppidls,
+	LPLONG lpwEventId);
+BOOL WINAPI SHChangeNotification_Unlock ( HANDLE hLock);
+
+
 
 /****************************************************************************
  * SHBrowseForFolder API
@@ -519,8 +561,19 @@ HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 #define SFVM_GET_WEBVIEW_THEME        86 /* undocumented */
 #define SFVM_GETDEFERREDVIEWSETTINGS  92 /* undocumented */
 
+
+
+
 /* Types and definitions for the SFM_* parameters */
 #include <pshpack8.h>
+typedef struct _SFV_CREATE
+{
+    UINT cbSize;
+    IShellFolder *pshf;
+    IShellView *psvOuter;
+    IShellFolderViewCB *psfvcb;
+} SFV_CREATE;
+
 
 #define QCMINFO_PLACE_BEFORE          0
 #define QCMINFO_PLACE_AFTER           1

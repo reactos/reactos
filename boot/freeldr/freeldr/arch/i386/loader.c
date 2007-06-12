@@ -596,6 +596,14 @@ FrLdrMapImage(IN FILE *Image,
     ULONG ImageSize;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    /* Try to see, maybe it's loaded already */
+    if (LdrGetModuleObject(Name) != NULL)
+    {
+        /* It's loaded, return NULL. It would be wise to return 
+           correct LoadBase, but it seems to be ignored almost everywhere */
+        return NULL;
+    }
+
     /* Set the virtual (image) and physical (load) addresses */
     LoadBase = (PVOID)NextModuleBase;
     ImageBase = RVA(LoadBase , -KERNEL_BASE_PHYS + KSEG0_BASE);
@@ -647,7 +655,13 @@ FrLdrMapImage(IN FILE *Image,
     if (ImageType == 1) FrLdrLoadImage("hal.dll", 10, FALSE);
 
     /* Perform import fixups */
-    LdrPEFixupImports(LoadBase, Name);
+    if (!NT_SUCCESS(LdrPEFixupImports(LoadBase, Name)))
+    {
+        /* Fixup failed, just don't include it in the list */
+        // NextModuleBase = OldNextModuleBase;
+        LoaderBlock.ModsCount = ImageId;
+        return NULL;
+    }
 
     /* Return the final mapped address */
     return LoadBase;

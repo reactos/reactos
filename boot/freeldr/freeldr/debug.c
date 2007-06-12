@@ -38,7 +38,7 @@ ULONG		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY |
+ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_FILESYSTEM |
 		                 DPRINT_REACTOS | DPRINT_WINDOWS | DPRINT_HWDETECT;
 #else //#elif defined (DEBUG_NONE)
 ULONG		DebugPrintMask = 0;
@@ -55,8 +55,8 @@ ULONG		DebugPrintMask = 0;
 
 #define BOCHS_OUTPUT_PORT	0xe9
 
-ULONG		DebugPort = RS232;
-//ULONG		DebugPort = SCREEN;
+//ULONG		DebugPort = RS232;
+ULONG		DebugPort = SCREEN;
 //ULONG		DebugPort = BOCHS;
 //ULONG		DebugPort = SCREEN|BOCHS;
 ULONG		ComPort = COM1;
@@ -75,6 +75,7 @@ VOID DebugInit(VOID)
 
 VOID DebugPrintChar(UCHAR Character)
 {
+/*
 	if (Character == '\n')
 	{
 		DebugStartOfLine = TRUE;
@@ -96,6 +97,8 @@ VOID DebugPrintChar(UCHAR Character)
 	{
 		MachConsPutChar(Character);
 	}
+*/
+	ofwprintf("%c", Character);
 }
 
 VOID DebugPrintHeader(ULONG Mask)

@@ -73,7 +73,7 @@ OpenDirectory(
     InitializeObjectAttributes(
         &ObjectAttributes,
         &NtPathU,
-        Write ? FILE_WRITE_ATTRIBUTES : FILE_READ_ATTRIBUTES,
+        OBJ_CASE_INSENSITIVE,
         NULL,
         NULL);
 

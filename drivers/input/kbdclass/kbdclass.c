@@ -10,6 +10,16 @@
 #define INITGUID
 #include "kbdclass.h"
 
+static DRIVER_UNLOAD DriverUnload;
+static DRIVER_DISPATCH ClassCreate;
+static DRIVER_DISPATCH ClassClose;
+static DRIVER_DISPATCH ClassCleanup;
+static DRIVER_DISPATCH ClassRead;
+static DRIVER_DISPATCH ClassDeviceControl;
+static DRIVER_DISPATCH IrpStub;
+static DRIVER_ADD_DEVICE ClassAddDevice;
+static DRIVER_STARTIO ClassStartIo;
+
 static VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
@@ -212,11 +222,11 @@ ReadRegistryEntries(
 
 	ParametersRegistryKey.Length = 0;
 	ParametersRegistryKey.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters") + sizeof(UNICODE_NULL);
-	ParametersRegistryKey.Buffer = ExAllocatePool(PagedPool, ParametersRegistryKey.MaximumLength);
+	ParametersRegistryKey.Buffer = ExAllocatePoolWithTag(PagedPool, ParametersRegistryKey.MaximumLength, CLASS_TAG);
 	if (!ParametersRegistryKey.Buffer)
 	{
-		DPRINT("ExAllocatePool() failed\n");
-		return STATUS_INSUFFICIENT_RESOURCES;
+		DPRINT("ExAllocatePoolWithTag() failed\n");
+		return STATUS_NO_MEMORY;
 	}
 	RtlCopyUnicodeString(&ParametersRegistryKey, RegistryPath);
 	RtlAppendUnicodeToString(&ParametersRegistryKey, L"\\Parameters");
@@ -276,6 +286,7 @@ ReadRegistryEntries(
 			Status = STATUS_NO_MEMORY;
 	}
 
+	ExFreePoolWithTag(ParametersRegistryKey.Buffer, CLASS_TAG);
 	return Status;
 }
 
@@ -303,11 +314,11 @@ CreateClassDeviceObject(
 		+ DriverExtension->DeviceBaseName.Length /* "KeyboardClass" */
 		+ 4 * sizeof(WCHAR)                      /* Id between 0 and 9999 */
 		+ sizeof(UNICODE_NULL);                  /* Final NULL char */
-	DeviceNameU.Buffer = ExAllocatePool(PagedPool, DeviceNameU.MaximumLength);
+	DeviceNameU.Buffer = ExAllocatePoolWithTag(PagedPool, DeviceNameU.MaximumLength, CLASS_TAG);
 	if (!DeviceNameU.Buffer)
 	{
-		DPRINT("ExAllocatePool() failed\n");
-		return STATUS_INSUFFICIENT_RESOURCES;
+		DPRINT("ExAllocatePoolWithTag() failed\n");
+		return STATUS_NO_MEMORY;
 	}
 	Status = RtlAppendUnicodeToString(&DeviceNameU, L"\\Device\\");
 	if (!NT_SUCCESS(Status))
@@ -348,7 +359,7 @@ CreateClassDeviceObject(
 cleanup:
 	if (!NT_SUCCESS(Status))
 	{
-		ExFreePool(DeviceNameU.Buffer);
+		ExFreePoolWithTag(DeviceNameU.Buffer, CLASS_TAG);
 		return Status;
 	}
 
@@ -361,11 +372,11 @@ cleanup:
 	KeInitializeSpinLock(&DeviceExtension->SpinLock);
 	DeviceExtension->ReadIsPending = FALSE;
 	DeviceExtension->InputCount = 0;
-	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(KEYBOARD_INPUT_DATA));
+	DeviceExtension->PortData = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(KEYBOARD_INPUT_DATA), CLASS_TAG);
 	if (!DeviceExtension->PortData)
 	{
-		ExFreePool(DeviceNameU.Buffer);
-		return STATUS_INSUFFICIENT_RESOURCES;
+		ExFreePoolWithTag(DeviceNameU.Buffer, CLASS_TAG);
+		return STATUS_NO_MEMORY;
 	}
 	DeviceExtension->DeviceName = DeviceNameU.Buffer;
 	Fdo->Flags |= DO_POWER_PAGABLE;
@@ -548,8 +559,7 @@ ConnectPortDriver(
 	CONNECT_DATA ConnectData;
 	NTSTATUS Status;
 
-	DPRINT("Connecting PortDO %p [%wZ] to ClassDO %p\n",
-		PortDO, &PortDO->DriverObject->DriverName, ClassDO);
+	DPRINT("Connecting PortDO %p to ClassDO %p\n", PortDO, ClassDO);
 
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -605,8 +615,7 @@ DestroyPortDriver(
 	KIRQL OldIrql;
 	NTSTATUS Status;
 
-	DPRINT("Destroying PortDO %p [%wZ]\n",
-		PortDO, &PortDO->DriverObject->DriverName);
+	DPRINT("Destroying PortDO %p\n", PortDO);
 
 	DeviceExtension = (PPORT_DEVICE_EXTENSION)PortDO->DeviceExtension;
 	ClassDeviceExtension = DeviceExtension->ClassDO->DeviceExtension;
@@ -644,8 +653,8 @@ DestroyPortDriver(
 
 	if (!DriverExtension->ConnectMultiplePorts && DeviceExtension->ClassDO)
 	{
-		ExFreePool(ClassDeviceExtension->PortData);
-		ExFreePool((PVOID)ClassDeviceExtension->DeviceName);
+		ExFreePoolWithTag(ClassDeviceExtension->PortData, CLASS_TAG);
+		ExFreePoolWithTag((PVOID)ClassDeviceExtension->DeviceName, CLASS_TAG);
 		IoDeleteDevice(DeviceExtension->ClassDO);
 	}
 
@@ -838,11 +847,11 @@ SearchForLegacyDrivers(
 
 	/* Allocate memory */
 	Size = sizeof(KEY_VALUE_BASIC_INFORMATION) + MAX_PATH;
-	KeyValueInformation = ExAllocatePool(PagedPool, Size);
+	KeyValueInformation = ExAllocatePoolWithTag(PagedPool, Size, CLASS_TAG);
 	if (!KeyValueInformation)
 	{
-		DPRINT("ExAllocatePool() failed\n");
-		Status = STATUS_INSUFFICIENT_RESOURCES;
+		DPRINT("ExAllocatePoolWithTag() failed\n");
+		Status = STATUS_NO_MEMORY;
 		goto cleanup;
 	}
 
@@ -893,7 +902,7 @@ SearchForLegacyDrivers(
 			DPRINT("IoGetDeviceObjectPointer(%wZ) failed with status 0x%08lx\n", &PortName, Status);
 			continue;
 		}
-		DPRINT("Legacy driver found: %wZ\n", &PortDeviceObject->DriverObject->DriverName);
+		DPRINT("Legacy driver found\n");
 
 		Status = ClassAddDevice(DriverObject, PortDeviceObject);
 		if (!NT_SUCCESS(Status))
@@ -905,7 +914,7 @@ SearchForLegacyDrivers(
 
 cleanup:
 	if (KeyValueInformation != NULL)
-		ExFreePool(KeyValueInformation);
+		ExFreePoolWithTag(KeyValueInformation, CLASS_TAG);
 	if (hDeviceMapKey != (HANDLE)-1)
 		ZwClose(hDeviceMapKey);
 	if (hPortKey != (HANDLE)-1)

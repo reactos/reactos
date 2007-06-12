@@ -24,7 +24,7 @@ ULONG MmFreeLdrPageDirectoryEnd;
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
 BOOLEAN AcpiTableDetected;
 
-/* NT Loader Data. Eats up about 50KB! */
+/* NT Loader Data. Eats up about 80KB! */
 LOADER_PARAMETER_BLOCK BldrLoaderBlock;                 // 0x0000
 LOADER_PARAMETER_EXTENSION BldrExtensionBlock;          // 0x0060
 CHAR BldrCommandLine[256];                              // 0x00DC
@@ -35,12 +35,13 @@ CHAR BldrNtBootPath[64];                                // 0x029C
 LDR_DATA_TABLE_ENTRY BldrModules[64];                   // 0x02DC
 MEMORY_ALLOCATION_DESCRIPTOR BldrMemoryDescriptors[64]; // 0x14DC
 WCHAR BldrModuleStrings[64][260];                       // 0x19DC
-NLS_DATA_BLOCK BldrNlsDataBlock;                        // 0x9BDC
-SETUP_LOADER_BLOCK BldrSetupBlock;                      // 0x9BE8
-ARC_DISK_INFORMATION BldrArcDiskInfo;                   // 0x9F34
-CHAR BldrArcNames[32][256];                             // 0x9F3C
-ARC_DISK_SIGNATURE BldrDiskInfo[32];                    // 0xBF3C
-                                                        // 0xC23C
+WCHAR BldrModuleStringsFull[64][260];                   // 0x9BDC
+NLS_DATA_BLOCK BldrNlsDataBlock;                        // 0x11DDC
+SETUP_LOADER_BLOCK BldrSetupBlock;                      // 0x11DE8
+ARC_DISK_INFORMATION BldrArcDiskInfo;                   // 0x12134
+CHAR BldrArcNames[32][256];                             // 0x1213C
+ARC_DISK_SIGNATURE BldrDiskInfo[32];                    // 0x1413C
+                                                        // 0x1443C
 
 /* FUNCTIONS *****************************************************************/
 
@@ -60,6 +61,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     CHAR CommandLine[256];
     PARC_DISK_SIGNATURE RosDiskInfo, ArcDiskInfo;
     PIMAGE_NT_HEADERS NtHeader;
+    WCHAR PathToDrivers[] = L"\\SystemRoot\\System32\\drivers\\";
+    WCHAR PathToSystem32[] = L"\\SystemRoot\\System32\\";
+    CHAR DriverNameLow[256];
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
@@ -210,6 +214,10 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                            &MdEntry->ListEntry);
         }
 
+        /* Lowercase the drivername so we can check its extension later */
+        strcpy(DriverNameLow, DriverName);
+        _strlwr(DriverNameLow);
+
         /* Setup the loader entry */
         LdrEntry = &BldrModules[i];
         RtlZeroMemory(LdrEntry, sizeof(LDR_DATA_TABLE_ENTRY));
@@ -222,7 +230,29 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 
         /* Setup driver name */
         RtlInitUnicodeString(&LdrEntry->BaseDllName, BldrModuleStrings[i]);
-        RtlInitUnicodeString(&LdrEntry->FullDllName, BldrModuleStrings[i]);
+
+        /* Construct a correct full name */
+        BldrModuleStringsFull[i][0] = 0;
+        LdrEntry->FullDllName.MaximumLength = 260 * sizeof(WCHAR);
+        LdrEntry->FullDllName.Length = 0;
+        LdrEntry->FullDllName.Buffer = BldrModuleStringsFull[i];
+
+        /* Guess the path */
+        if (strstr(DriverNameLow, ".dll") || strstr(DriverNameLow, ".exe"))
+        {
+            UNICODE_STRING TempString;
+            RtlInitUnicodeString(&TempString, PathToSystem32);
+            RtlAppendUnicodeStringToString(&LdrEntry->FullDllName, &TempString);
+        }
+        else /* .sys */
+        {
+            UNICODE_STRING TempString;
+            RtlInitUnicodeString(&TempString, PathToDrivers);
+            RtlAppendUnicodeStringToString(&LdrEntry->FullDllName, &TempString);
+        }
+
+        /* Append base name of the driver */
+        RtlAppendUnicodeStringToString(&LdrEntry->FullDllName, &LdrEntry->BaseDllName);
 
         /* Copy data from Freeldr Module Entry */
         LdrEntry->DllBase = ModStart;

@@ -9,6 +9,8 @@
 
 #include "kbdclass.h"
 
+static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
+
 static NTSTATUS NTAPI
 ForwardIrpAndWaitCompletion(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -35,7 +37,7 @@ ForwardIrpAndWait(
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 	
-	DPRINT("Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
+	DPRINT("Calling lower device %p\n", LowerDevice);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 	
 	Status = IoCallDriver(LowerDevice, Irp);
@@ -93,7 +95,7 @@ DuplicateUnicodeString(
 		if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
 			DestMaxLength += sizeof(UNICODE_NULL);
 
-		DestinationString->Buffer = ExAllocatePool(PagedPool, DestMaxLength);
+		DestinationString->Buffer = ExAllocatePoolWithTag(PagedPool, DestMaxLength, CLASS_TAG);
 		if (DestinationString->Buffer == NULL)
 			return STATUS_NO_MEMORY;
 

@@ -99,7 +99,7 @@ SOURCE=.\matrix.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\matrix.rc
+SOURCE=.\rsrc.rc
 # End Source File
 # Begin Source File
 

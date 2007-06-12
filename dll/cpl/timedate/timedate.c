@@ -118,7 +118,7 @@ CPlApplet(HWND hwndCpl,
           LPARAM lParam1,
           LPARAM lParam2)
 {
-    int i = (int)lParam1;
+    INT i = (INT)lParam1;
 
     switch (uMsg)
     {

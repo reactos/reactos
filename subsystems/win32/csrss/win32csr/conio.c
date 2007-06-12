@@ -1053,10 +1053,12 @@ ConioDeleteConsole(Object_t *Object)
       HeapFree(Win32CsrApiHeap, 0, Event);
     }
 
+#if 0 // FIXME
   if (0 == InterlockedDecrement(&Console->ActiveBuffer->Header.ReferenceCount))
     {
       ConioDeleteScreenBuffer((Object_t *) Console->ActiveBuffer);
     }
+#endif
 
   Console->ActiveBuffer = NULL;
   ConioCleanupConsole(Console);

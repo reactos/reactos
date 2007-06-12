@@ -9,6 +9,9 @@
  */
 #include "rosdraw.h"
 
+/* PSEH for SEH Support */
+#include <pseh/pseh.h>
+
 /*
  * all param have been checked if they are vaild before they are call to 
  * Internal_CreateSurface, if not please fix the code in the functions 
@@ -106,7 +109,7 @@ CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This,
     DDHAL_CREATESURFACEDATA mDdCreateSurface;
 
 
-    That[0]->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
+    DxHeapMemAlloc( That[0]->lpLcl->lpSurfMore, sizeof(DDRAWI_DDRAWSURFACE_MORE));
     if (That[0]->lpLcl->lpSurfMore == NULL)
     {
         DxHeapMemFree(That);
@@ -198,7 +201,7 @@ CreateBackBufferSurface(LPDDRAWI_DIRECTDRAW_INT This,
     {
         
 
-    That[t]->lpLcl->lpSurfMore =  DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_MORE));
+    DxHeapMemAlloc(That[t]->lpLcl->lpSurfMore, sizeof(DDRAWI_DDRAWSURFACE_MORE));
     if (That[t]->lpLcl->lpSurfMore == NULL)
     {
         DxHeapMemFree(That);

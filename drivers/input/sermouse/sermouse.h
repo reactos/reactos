@@ -2,17 +2,10 @@
 #include <kbdmou.h>
 #include <ntddser.h>
 #include <ntddmou.h>
+#include <debug.h>
 
-#if defined(__GNUC__)
-  #include <debug.h>
-#elif defined(_MSC_VER)
-  #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
-  #define DPRINT
-  #define CHECKPOINT
-#else
-  #error Unknown compiler!
-#endif
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#define SERMOUSE_TAG TAG('S', 'M', 'o', 'u')
 
 typedef enum
 {

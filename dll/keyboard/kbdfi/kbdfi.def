@@ -1,0 +1,8 @@
+;
+; ReactOS Operating System
+;
+LIBRARY kbdfi.dll
+
+EXPORTS
+KbdLayerDescriptor
+;EOF

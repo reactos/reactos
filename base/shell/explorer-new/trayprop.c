@@ -1,7 +1,7 @@
 /*
- * WineMine (rsrc.rc)
+ * ReactOS Explorer
  *
- * Copyright 2000 Joshua Thielen <jt85296@ltu.edu>
+ * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <windows.h>
-#include "resource.h"
+#include <precomp.h>
 
-#include "rsrc.rc"
+HWND
+DisplayTrayProperties(ITrayWindow *Tray)
+{
+    DbgPrint("DisplayTrayProperties() not implemented!\n");
+    MessageBox(NULL, _T("Not implemented"), NULL, 0);
+    return NULL;
+}

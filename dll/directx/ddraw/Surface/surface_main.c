@@ -355,6 +355,65 @@ Main_DDrawSurface_GetCaps(LPDIRECTDRAWSURFACE7 iface, LPDDSCAPS2 pCaps)
 }
 
 HRESULT WINAPI
+Main_DDrawSurface_GetClipper(LPDIRECTDRAWSURFACE7 iface,
+				  LPDIRECTDRAWCLIPPER* ppClipper)
+{
+    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
+
+	DX_WINDBG_trace();
+
+    if (This == NULL)
+    {
+       return DDERR_INVALIDOBJECT;  
+    }
+
+    if (ppClipper == NULL)
+    {
+       return DDERR_INVALIDPARAMS;  
+    }
+
+    if (This->lpLcl->lp16DDClipper == NULL)
+    {
+        return DDERR_NOCLIPPERATTACHED;
+    }
+
+    *ppClipper = (LPDIRECTDRAWCLIPPER)This->lpLcl->lp16DDClipper;
+
+    return DD_OK;    
+}
+
+HRESULT WINAPI
+Main_DDrawSurface_SetClipper (LPDIRECTDRAWSURFACE7 iface,
+				  LPDIRECTDRAWCLIPPER pDDClipper)
+{
+    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
+
+	DX_WINDBG_trace();
+
+    if (This == NULL)
+    {
+       return DDERR_INVALIDOBJECT;  
+    }
+
+    if(pDDClipper == NULL)
+    {
+        if(!This->lpLcl->lp16DDClipper)
+            return DDERR_NOCLIPPERATTACHED;
+        
+        DirectDrawClipper_Release((LPDIRECTDRAWCLIPPER)This->lpLcl->lp16DDClipper);
+        This->lpLcl->lp16DDClipper = NULL;
+        return DD_OK;
+    }
+
+    // FIXME: Check Surface type and return DDERR_INVALIDSURFACETYPE
+
+    DirectDrawClipper_AddRef((LPDIRECTDRAWCLIPPER)pDDClipper);
+    This->lpLcl->lp16DDClipper = (LPDDRAWI_DDRAWCLIPPER_INT)pDDClipper;
+
+    return DD_OK;
+}
+
+HRESULT WINAPI
 Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
 {
     LPDDRAWI_DDRAWSURFACE_INT This;

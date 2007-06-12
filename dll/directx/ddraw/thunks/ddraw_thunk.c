@@ -775,36 +775,9 @@ ThunkDirectDraw4_WaitForVerticalBlank(LPDIRECTDRAW4 iface, DWORD dwFlags, HANDLE
     return Main_DirectDraw_WaitForVerticalBlank((LPDIRECTDRAW7) iface, dwFlags, hEvent);
 }
 
-HRESULT WINAPI
-ThunkDirectDraw2_GetAvailableVidMem(LPDIRECTDRAW2 iface, LPDDSCAPS pCaps, LPDWORD pdwTotal, LPDWORD pdwFree)
-{
-    HRESULT retValue = DDERR_GENERIC;
-	
-	DX_WINDBG_trace();
 
-	if (pCaps != NULL)
-	{
-	   DDSCAPS2 pCaps2;
-	   ZeroMemory(&pCaps2,sizeof(DDSCAPS2));
-	   memcpy(&pCaps2, pCaps, sizeof(DDSCAPS));	  
-	   retValue = Main_DirectDraw_GetAvailableVidMem((LPDIRECTDRAW7) iface, &pCaps2, pdwTotal, pdwFree);                   
-       memcpy(pCaps, &pCaps2, sizeof(DDSCAPS));	   	   
-	}
-	else
-	{
-		retValue = Main_DirectDraw_GetAvailableVidMem((LPDIRECTDRAW7) iface, NULL, pdwTotal, pdwFree);
-	}
 
-    return retValue;
-}
 
-HRESULT WINAPI
-ThunkDirectDraw4_GetAvailableVidMem(LPDIRECTDRAW4 iface, LPDDSCAPS2 pCaps, LPDWORD pdwTotal, LPDWORD pdwFree)
-{   
-	DX_WINDBG_trace();
-
-	return Main_DirectDraw_GetAvailableVidMem((LPDIRECTDRAW7) iface, pCaps, pdwTotal, pdwFree);    
-}
 
 HRESULT WINAPI
 ThunkDirectDraw4_GetSurfaceFromDC(LPDIRECTDRAW4 iface, HDC hdc, LPDIRECTDRAWSURFACE4 *pSurf)

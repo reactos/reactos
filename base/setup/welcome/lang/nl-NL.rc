@@ -8,7 +8,7 @@ BEGIN
     IDS_APPTITLE            "ReactOS - Welkom"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
     IDS_DEFAULTTOPICDESC    "Welkom bij het React Operation System.\n\nKlik links op een onderwerp."
-//    IDS_CHECKTEXT           "Gaat terug naar dit scherm"
+//    IDS_CHECKTEXT           "Ga terug naar dit scherm"
 //    IDS_CLOSETEXT           "Afsluiten"
 END
 

@@ -37,7 +37,8 @@
  		<file>createsurface.c</file>
 	</directory>	
 	<directory name="Clipper">	
-		<file>clipper_stubs.c</file>		
+		<file>clipper_stubs.c</file>
+		<file>clipper_main.c</file>			
 	</directory>	
 	<directory name="Color">
 		<file>color_stubs.c</file>			

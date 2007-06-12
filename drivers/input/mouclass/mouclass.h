@@ -2,26 +2,15 @@
 #include <kbdmou.h>
 #include <ntddkbd.h>
 #include <stdio.h>
-
-#if defined(__GNUC__)
-  #include <pseh/pseh.h>
-  #include <debug.h>
-#elif defined(_MSC_VER)
-  #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
-  #define DPRINT
-  #define CHECKPOINT
-  #define _SEH_TRY __try
-  #define _SEH_HANDLE __except(1)
-  #define _SEH_END
-  #define _SEH_GetExceptionCode() GetExceptionCode()
-#else
-  #error Unknown compiler!
-#endif
+#include <pseh/pseh.h>
+#include <debug.h>
 
 #define MAX_PATH 260
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#define CLASS_TAG TAG('M', 'o', 'u', 'C')
 
 typedef enum
 {
@@ -83,10 +72,7 @@ ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS NTAPI
-ForwardIrpAndForget(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
+DRIVER_DISPATCH ForwardIrpAndForget;
 
 NTSTATUS
 DuplicateUnicodeString(

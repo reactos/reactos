@@ -7,6 +7,7 @@
 #ifndef PORTCLS_PRIVATE_H
 #define PORTCLS_PRIVATE_H
 
+#include <windows.h>
 #include <ntddk.h>
 #include <debug.h>
 

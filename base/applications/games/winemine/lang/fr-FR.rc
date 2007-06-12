@@ -18,7 +18,7 @@ MENU_WINEMINE MENU DISCARDABLE
     POPUP "&Options" {
         MENUITEM "&Nouveau",           IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Mark Question", IDM_MARKQ
+        MENUITEM "&Marqueur ?", IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "&Débutant",      IDM_BEGINNER
         MENUITEM "&Amateur",      IDM_ADVANCED
@@ -29,7 +29,7 @@ MENU_WINEMINE MENU DISCARDABLE
     }
     POPUP "&Info" {
         MENUITEM "&Temps accéléré",    IDM_TIMES
-        MENUITEM "&A propos",         IDM_ABOUT
+        MENUITEM "&À propos",         IDM_ABOUT
     }
 }
 
@@ -81,7 +81,7 @@ EXSTYLE DS_SHELLFONT
 
 DLG_ABOUT DIALOG DISCARDABLE  0, 0, 145, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
-CAPTION "A propos"
+CAPTION "À propos"
 FONT 8, "MS Shell Dlg"
 EXSTYLE DS_SHELLFONT
 {
