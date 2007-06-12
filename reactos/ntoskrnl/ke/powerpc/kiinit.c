@@ -224,12 +224,13 @@ NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
-    ppc_map_info_t info;
+    ppc_map_info_t info[3];
     PKIPCR Pcr = (PKIPCR)KPCR_BASE;
     PKPRCB Prcb;
 
     // Make 0xf... special
-    MmuSetVsid(15,15,-1);
+    MmuAllocVsid((2 << 4) + 15);
+    MmuSetVsid(15,16,2);
 
     /* Save the loader block and get the current CPU */
     //KeLoaderBlock = LoaderBlock;
@@ -239,12 +240,19 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 	/* We'll allocate a page from the end of the kernel area for KPCR.  This code will probably
 	 * change when we get SMP support.
 	 */
-	info.proc = 0;
-	info.addr = (vaddr_t)Pcr;
-	info.flags = MMU_KRW_UR;
-	info.addr = (vaddr_t)KI_USER_SHARED_DATA;
-	MmuMapPage(&info, 1);
-	MmuMapPage(&info, 1);
+	info[0].phys = 0;
+	info[0].proc = 2;
+	info[0].addr = (vaddr_t)Pcr;
+	info[0].flags = MMU_KRW_UR;
+	info[1].phys = 0;
+	info[1].proc = 2;
+	info[1].addr = ((vaddr_t)Pcr) + (1 << PAGE_SHIFT);
+	info[1].flags = MMU_KRW_UR;
+	info[2].phys = 0;
+	info[2].proc = 2;
+	info[2].addr = (vaddr_t)KI_USER_SHARED_DATA;
+	info[2].flags = MMU_KRW_UR;
+	MmuMapPage(info, 3);
     }
 
     /* Skip initial setup if this isn't the Boot CPU */
