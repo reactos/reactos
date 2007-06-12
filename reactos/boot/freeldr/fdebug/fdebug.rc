@@ -14,5 +14,6 @@ IDI_FDEBUG ICON "fdebug.ico"
 #include "lang/ja-JP.rc"
 #include "lang/nb-NO.rc"
 #include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
 #include "lang/tr-TR.rc"
 
