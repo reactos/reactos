@@ -10,6 +10,7 @@
         http://www.osronline.com/ddkx/stream/aud-prop_9f77.htm
 */
 
+#include "private.h"
 #include <portcls.h>
 #include <drmk.h>
 

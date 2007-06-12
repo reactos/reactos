@@ -5,6 +5,7 @@
     by Andrew Greenwood
 */
 
+#include "../private.h"
 #include <portcls.h>
 #include "port.h"
 

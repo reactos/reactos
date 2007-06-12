@@ -9,6 +9,7 @@
  *                  27 Jan 07   Created
  */
 
+#include "private.h"
 #include <portcls.h>
 
 /*

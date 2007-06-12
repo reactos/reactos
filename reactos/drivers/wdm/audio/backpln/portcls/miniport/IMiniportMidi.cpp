@@ -9,7 +9,7 @@
     REFERENCE:
         http://www.osronline.com/ddkx/stream/audmp-routines_1fsj.htm
 */
-
+#include "../private.h"
 #include <portcls.h>
 
 NTSTATUS

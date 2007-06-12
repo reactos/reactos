@@ -9,9 +9,9 @@
  *                  27 Jan 07   Created
  */
 
-#include <portcls.h>
-#include "private.h"
 
+#include "private.h"
+#include <portcls.h>
 
 /*
     A safe place for IRPs to be bounced to, if no handler has been

@@ -11,7 +11,7 @@
         IPortMidi inherits from IPort. This file contains specific
         extensions.
 */
-
+#include "../private.h"
 #include <stdunk.h>
 #include <portcls.h>
 #include "port.h"

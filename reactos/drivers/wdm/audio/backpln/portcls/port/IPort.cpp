@@ -11,7 +11,7 @@
 */
 
 #if 0
-
+#include "../private.h"
 #include <stdunk.h>
 #include <portcls.h>
 
