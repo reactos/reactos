@@ -15,14 +15,14 @@ DebugService
 (ULONG Service, const void *Buffer, ULONG Length, PVOID Arg1, PVOID Arg2)
 {
     NTSTATUS Result;
-    __asm__("mr 3,%1\n\t"
-	    "mr 4,%2\n\t"
-	    "mr 5,%3\n\t"
-	    "mr 6,%4\n\t"
-	    "mr 7,%5\n\t"
-	    "mr 8,%6\n\t"
+    __asm__("mr 3,%2\n\t"
+	    "mr 4,%3\n\t"
+	    "mr 5,%4\n\t"
+	    "mr 6,%5\n\t"
+	    "mr 7,%6\n\t"
+	    "mr 8,%1\n\t"
 	    "sc\n\t"
-	    "mr %0,3\n\t" : 
+	    "mr %0,3\n\t" :
 	    "=r" (Result) : 
 	    "r" (0x10000), 
 	    "r" (Service), 

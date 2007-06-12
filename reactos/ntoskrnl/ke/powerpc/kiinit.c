@@ -40,56 +40,14 @@ __asm__(".text\n\t"
 	".globl syscall_end\n\t"
 	".globl KiSystemService\n\t"
 	"syscall_start:\n\t"
-	"mtsprg1 1\n\t"
-	"lis 1,_kernel_trap_stack_top@ha\n\t"
-	"addi 1,1,_kernel_trap_stack_top@l\n\t"
+	"mr 2,1\n\t"
+	"lis 1,KiSystemService1@ha\n\t"
+	"addi 1,1,KiSystemService1@l\n\t"
+	"mfsrr0 0\n\t"
+	"mtsrr0 1\n\t"
+	"lis 1,_kernel_trap_stack@ha\n\t"
+	"addi 1,1,_kernel_trap_stack@l\n\t"
 	"subi 1,1,0x100\n\t"
-	"stw 0,0(1)\n\t"
-	"mfsprg1 0\n\t"            /* 10 */
-	"stw 0,4(1)\n\t"
-	"stw 2,8(1)\n\t"
-	"stw 3,12(1)\n\t"
-	"stw 4,16(1)\n\t"          /* 20 */
-	"stw 5,20(1)\n\t"
-	"stw 6,24(1)\n\t"
-	"stw 7,28(1)\n\t"
-	"stw 8,32(1)\n\t"          /* 30 */
-	"stw 9,36(1)\n\t"
-	"stw 10,40(1)\n\t"
-	"stw 11,44(1)\n\t"
-	"stw 12,48(1)\n\t"         /* 40 */
-	"stw 13,52(1)\n\t"
-	"stw 14,56(1)\n\t"
-	"stw 15,60(1)\n\t"
-	"stw 16,64(1)\n\t"         /* 50 */
-	"stw 17,68(1)\n\t"
-	"stw 18,72(1)\n\t"
-	"stw 19,76(1)\n\t"
-	"stw 20,80(1)\n\t"         /* 60 */
-	"stw 21,84(1)\n\t"
-	"stw 22,88(1)\n\t"
-	"stw 23,92(1)\n\t"
-	"stw 24,96(1)\n\t"         /* 70 */
-	"stw 25,100(1)\n\t"
-	"stw 26,104(1)\n\t"
-	"stw 27,108(1)\n\t"
-	"stw 28,112(1)\n\t"        /* 80 */
-	"stw 29,116(1)\n\t"
-	"stw 30,120(1)\n\t"
-	"stw 31,124(1)\n\t"
-	"mflr 0\n\t"               /* 90 */
-	"stw 0,128(1)\n\t"
-	"mfctr 0\n\t"
-	"stw 0,132(1)\n\t"
-	"mfsrr0 0\n\t"             /* a0 */
-	"stw 0,136(1)\n\t"
-	"mfsrr1 0\n\t"
-	"stw 0,140(1)\n\t"
-	"mfdsisr 0\n\t"            /* b0 */
-	"stw 0,144(1)\n\t"
-	"lis 3,KiSystemService@ha\n\t"         /* b8 */
-	"addi 3,3,KiSystemService@l\n\t"       /* bc */
-	"mtsrr0 3\n\t"
 	"rfi\n\t"
 	"syscall_end:\n\t"
 	".space 4");
