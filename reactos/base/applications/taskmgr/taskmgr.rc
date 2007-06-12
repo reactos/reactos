@@ -216,6 +216,7 @@ IDB_TRAYICON            BITMAP  DISCARDABLE "res/trayicon.bmp"
 #include "lang/nb-NO.rc"
 #include "lang/nl-NL.rc"
 #include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
 #include "lang/sv-SE.rc"
 #ifdef __GCC__
 #include "lang/uk-UA.rc"

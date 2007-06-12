@@ -17,4 +17,4 @@ IDI_MAINAPP ICON DISCARDABLE resources/mmc.ico
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"
 #include "lang/pl-PL.rc"
-
+#include "lang/ru-RU.rc"
