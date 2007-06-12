@@ -212,7 +212,19 @@ IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem,
    FreeMenuText(MenuItem);
    if(RemoveFromList)
    {
-      /* FIXME - Remove from List */
+      PMENU_ITEM CurItem = Menu->MenuItemList;
+      while(CurItem)
+      {
+         if (CurItem->Next == MenuItem)
+         {
+            CurItem->Next = MenuItem->Next;
+            break;
+         }
+         else
+         {
+            CurItem = CurItem->Next;
+         }
+      }
       Menu->MenuInfo.MenuItemCount--;
    }
    if(bRecurse && MenuItem->hSubMenu)
