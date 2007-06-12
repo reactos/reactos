@@ -1,3 +1,13 @@
+/*
+ * PROJECT:     ReactOS Character Map
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/charmap/about.c
+ * PURPOSE:     about dialog
+ * COPYRIGHT:   Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
+ *
+ */
+
+
 #include <precomp.h>
 
 
