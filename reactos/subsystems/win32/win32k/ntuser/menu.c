@@ -301,6 +301,7 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
          RemoveEntryList(&Menu->ListEntry);
       }
 
+      WindowStation = Menu->Process->Win32WindowStation;
       Status = ObReferenceObjectByHandle(Menu->Process->Win32WindowStation,
                                          0,
                                          ExWindowStationObjectType,

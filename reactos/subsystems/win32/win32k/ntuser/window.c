@@ -799,7 +799,6 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
             ret = SysMenu;
          }
          IntDestroyMenuObject(Menu, FALSE, TRUE);
-         IntReleaseMenuObject(Menu);
       }
       if(RetMenu)
          return ret;
