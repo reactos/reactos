@@ -1081,6 +1081,22 @@ Language=English
 SPIN_LOCK_INIT_FAILURE
 .
 
+MessageId=0x8F
+Severity=Success
+Facility=System
+SymbolicName=PP0_INITIALIZATION_FAILED
+Language=English
+PP0_INITIALIZATION_FAILED
+.
+
+MessageId=0x90
+Severity=Success
+Facility=System
+SymbolicName=PP1_INITIALIZATION_FAILED
+Language=English
+PP1_INITIALIZATION_FAILED
+.
+
 MessageId=0x94
 Severity=Success
 Facility=System
@@ -1097,6 +1113,14 @@ Language=English
 INVALID_WORK_QUEUE_ITEM
 .
 
+MessageId=0xA0
+Severity=Success
+Facility=System
+SymbolicName=INTERNAL_POWER_ERROR
+Language=English
+INTERNAL_POWER_ERROR
+.
+
 MessageId=0xA5
 Severity=Success
 Facility=System
@@ -1104,6 +1128,38 @@ SymbolicName=ACPI_BIOS_ERROR
 Language=English
 The BIOS in this system is not fully ACPI compliant.  Please contact your
 system vendor for an updated BIOS.
+.
+
+MessageId=0xA8
+Severity=Informational
+Facility=System
+SymbolicName=BOOTING_IN_SAFEMODE_MINIMAL
+Language=English
+The system is booting in safemode - Minimal Services
+.
+
+MessageId=0xA9
+Severity=Informational
+Facility=System
+SymbolicName=BOOTING_IN_SAFEMODE_NETWORK
+Language=English
+The system is booting in safemode - Minimal Services with Network
+.
+
+MessageId=0xAA
+Severity=Informational
+Facility=System
+SymbolicName=BOOTING_IN_SAFEMODE_DSREPAIR
+Language=English
+The system is booting in safemode - Directory Services Repair
+.
+
+MessageId=0xB7
+Severity=Informational
+Facility=System
+SymbolicName=BOOTLOG_ENABLED
+Language=English
+Boot Logging Enabled
 .
 
 MessageId=0xBE
@@ -1284,42 +1340,42 @@ Language=English
 IMPERSONATING_WORKER_THREAD
 .
 
-MessageId=0x9A
+MessageId=0x7E
 Severity=Informational
 Facility=System
-SymbolicName=REACTOS_BANNER
+SymbolicName=WINDOWS_NT_BANNER
 Language=English
-ReactOS Version %s (Build %s)
+ReactOS (R) Version %hs (Build %u%hs)
 .
 
-MessageId=0x9B
+MessageId=0x87
 Severity=Informational
 Facility=System
-SymbolicName=REACTOS_SERVICE_PACK
+SymbolicName=WINDOWS_NT_CSD_STRING
 Language=English
 Service Pack
 .
 
-MessageId=0x9C
+MessageId=0x88
 Severity=Informational
 Facility=System
-SymbolicName=REACTOS_INFO_STRING_UNI_PROCESSOR
+SymbolicName=WINDOWS_NT_INFO_STRING
 Language=English
 %u System Processor [%u MB Memory] %Z
+.
+
+MessageId=0x89
+Severity=Informational
+Facility=System
+SymbolicName=WINDOWS_NT_MP_STRING
+Language=English
+MultiProcessor Kernel
 .
 
 MessageId=0x9D
 Severity=Informational
 Facility=System
-SymbolicName=REACTOS_MP_KERNEL
-Language=English
-MulitProcessor Kernel
-.
-
-MessageId=0x9E
-Severity=Informational
-Facility=System
-SymbolicName=REACTOS_INFO_STRING_MULTI_PROCESSOR
+SymbolicName=WINDOWS_NT_INFO_STRING_PLURAL
 Language=English
 %u System Processors [%u MB Memory] %Z
 .
