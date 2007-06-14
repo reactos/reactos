@@ -17,11 +17,6 @@ HRESULT WINAPI
 Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
 {
 
-    /*
- * Code from wine, this functions have been cut and paste from wine 0.9.35
- * and have been modify allot and are still in devloping so it match with
- * msdn document struct and flags
- */
 
       HRESULT retVal = DD_OK;
     HWND window;
@@ -31,15 +26,26 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
 
     _SEH_TRY
     {
-        /* Get the old window */
-        window = (HWND) This->lpLcl->hWnd;
-#if 0 // this check is totally invalid if you ask me - mbosma
-        if(!window)
+        // FIXME test if 0x20 exists as a flag and what thuse it do 
+        if ( ( cooplevel & (~(DDSCL_FPUPRESERVE | DDSCL_FPUSETUP | DDSCL_MULTITHREADED | DDSCL_CREATEDEVICEWINDOW |
+                            DDSCL_SETDEVICEWINDOW | DDSCL_SETFOCUSWINDOW | DDSCL_ALLOWMODEX | DDSCL_EXCLUSIVE |
+                            DDSCL_NORMAL | DDSCL_NOWINDOWCHANGES | DDSCL_ALLOWREBOOT | DDSCL_FULLSCREEN))) ||
+           (!( cooplevel & (DDSCL_NORMAL | DDSCL_EXCLUSIVE | DDSCL_SETFOCUSWINDOW))) || 
+           ((cooplevel & DDSCL_FPUSETUP) && (cooplevel & DDSCL_FPUPRESERVE))) 
         {
-            retVal = DDERR_NOHWND;
-            _SEH_LEAVE;
+            return DDERR_INVALIDPARAMS;
         }
-#endif
+
+ 
+
+
+
+
+    /*
+ * Code from wine, this functions have been cut and paste from wine 0.9.35
+ * and have been modify allot and are still in devloping so it match with
+ * msdn document struct and flags
+ */
 
         if(hwnd && !IsWindow(hwnd))
         {
@@ -47,34 +53,13 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
              _SEH_LEAVE;
         }
 
-        /* Tests suggest that we need one of them: */
-        if(!(cooplevel & (DDSCL_SETFOCUSWINDOW |
-                      DDSCL_NORMAL         |
-                      DDSCL_EXCLUSIVE      )))
-        {
-            retVal = DDERR_INVALIDPARAMS;
-             _SEH_LEAVE;
-        }
 
         /* Handle those levels first which set various hwnds */
         if(cooplevel & DDSCL_SETFOCUSWINDOW)
         {
-            /* This isn't compatible with a lot of flags */
-            if(cooplevel & ( DDSCL_MULTITHREADED   |
-                         DDSCL_FPUSETUP        |
-                         DDSCL_FPUPRESERVE     |
-                         DDSCL_ALLOWREBOOT     |
-                         DDSCL_ALLOWMODEX      |
-                         DDSCL_SETDEVICEWINDOW |
-                         DDSCL_NORMAL          |
-                         DDSCL_EXCLUSIVE       |
-                         DDSCL_FULLSCREEN      ) )
-            {
-                retVal = DDERR_INVALIDPARAMS;
-                 _SEH_LEAVE;
-            }
+            
 
-            else if(This->lpLcl->dwLocalFlags & DDRAWILCL_SETCOOPCALLED)
+            if(This->lpLcl->dwLocalFlags & DDRAWILCL_SETCOOPCALLED)
             {
                 retVal = DDERR_HWNDALREADYSET;
                  _SEH_LEAVE;
