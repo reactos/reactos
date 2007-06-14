@@ -60,6 +60,11 @@ BOOL Test_SetCooperativeLevel (INT* passed, INT* failed)
 	/* The Test */
 	TEST ( DirectDraw->SetCooperativeLevel (NULL, DDSCL_FULLSCREEN) == DDERR_INVALIDPARAMS );
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN) == DDERR_INVALIDPARAMS );
+
+	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_NORMAL) == DD_OK );
+	TEST ( DirectDraw->Compact() == DDERR_NOEXCLUSIVEMODE );
+
+
 	TEST ( DirectDraw->SetCooperativeLevel (NULL, DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE) == DDERR_INVALIDPARAMS );
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN) == DDERR_INVALIDPARAMS);
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_NORMAL | DDSCL_ALLOWMODEX) == DDERR_INVALIDPARAMS );
@@ -68,7 +73,9 @@ BOOL Test_SetCooperativeLevel (INT* passed, INT* failed)
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE) == DD_OK);
 	TEST ( DirectDraw->Compact() == DD_OK );
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_FULLSCREEN | DDSCL_EXCLUSIVE | DDSCL_ALLOWMODEX) == DD_OK);
+    TEST ( DirectDraw->Compact() == DD_OK );
 	TEST ( DirectDraw->SetCooperativeLevel (NULL, DDSCL_NORMAL) == DD_OK );
+    TEST ( DirectDraw->Compact() == DDERR_NOEXCLUSIVEMODE );
 	TEST ( DirectDraw->SetCooperativeLevel (hwnd, DDSCL_NORMAL) == DD_OK );
 	TEST ( DirectDraw->Compact() == DDERR_NOEXCLUSIVEMODE );
 
