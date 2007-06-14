@@ -2574,11 +2574,19 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   if (! ConioGetIntersection(&SrcRegion, &ScreenBuffer, &ScrollRectangle))
     {
       ConioUnlockScreenBuffer(Buff);
+      if (NULL != Console)
+        {
+          ConioUnlockConsole(Console);
+        }
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
 
   if (UseClipRectangle && ! ConioGetIntersection(&SrcRegion, &SrcRegion, &ClipRectangle))
     {
+      if (NULL != Console)
+        {
+          ConioUnlockConsole(Console);
+        }
       ConioUnlockScreenBuffer(Buff);
       return Request->Status = STATUS_SUCCESS;
     }
@@ -2593,6 +2601,10 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   /* Make sure destination rectangle is inside the screen buffer */
   if (! ConioGetIntersection(&DstRegion, &DstRegion, &ScreenBuffer))
     {
+      if (NULL != Console)
+        {
+          ConioUnlockConsole(Console);
+        }
       ConioUnlockScreenBuffer(Buff);
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
@@ -2663,6 +2675,10 @@ CSR_API(CsrReadConsoleOutputChar)
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))
     {
+      if (NULL != Console)
+        {
+          ConioUnlockConsole(Console);
+        }
       return Request->Status = Status;
     }
 
