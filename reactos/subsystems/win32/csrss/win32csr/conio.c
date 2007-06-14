@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+extern NTSTATUS FASTCALL
+Win32CsrInsertObject2(PCSRSS_PROCESS_DATA, PHANDLE, Object_t *);
+
 /* GLOBALS *******************************************************************/
 
 #define ConioInitRect(Rect, Top, Left, Bottom, Right) \
@@ -36,14 +39,16 @@
 static NTSTATUS FASTCALL
 ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console)
 {
-  if (NULL == ProcessData->Console)
+  PCSRSS_CONSOLE ProcessConsole = ProcessData->Console;
+
+  if (!ProcessConsole)
     {
       *Console = NULL;
       return STATUS_SUCCESS;
     }
 
-  EnterCriticalSection(&(ProcessData->Console->Header.Lock));
-  *Console = ProcessData->Console;
+  EnterCriticalSection(&(ProcessConsole->Header.Lock));
+  *Console = ProcessConsole;
 
   return STATUS_SUCCESS;
 }
@@ -219,7 +224,6 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       return Status;
     }
 
-
   /* copy buffer contents to screen */
   ConioDrawConsole(Console);
 
@@ -305,9 +309,9 @@ CSR_API(CsrAllocConsole)
     if (NewConsole || !ProcessData->bInheritHandles)
     {
         /* Insert the Objects */
-        Status = Win32CsrInsertObject(ProcessData,
-                                      &Request->Data.AllocConsoleRequest.InputHandle,
-                                      &Console->Header);
+        Status = Win32CsrInsertObject2(ProcessData,
+                                       &Request->Data.AllocConsoleRequest.InputHandle,
+                                       &Console->Header);
         if (! NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
@@ -316,9 +320,9 @@ CSR_API(CsrAllocConsole)
             return Request->Status = Status;
         }
 
-        Status = Win32CsrInsertObject(ProcessData,
-                                      &Request->Data.AllocConsoleRequest.OutputHandle,
-                                      &Console->ActiveBuffer->Header);
+        Status = Win32CsrInsertObject2(ProcessData,
+                                       &Request->Data.AllocConsoleRequest.OutputHandle,
+                                       &Console->ActiveBuffer->Header);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");

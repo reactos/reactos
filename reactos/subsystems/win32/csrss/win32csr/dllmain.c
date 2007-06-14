@@ -104,6 +104,14 @@ Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
 }
 
 NTSTATUS FASTCALL
+Win32CsrInsertObject2(PCSRSS_PROCESS_DATA ProcessData,
+                      PHANDLE Handle,
+                      Object_t *Object)
+{
+  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object);
+}
+
+NTSTATUS FASTCALL
 Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle,
                  Object_t **Object)

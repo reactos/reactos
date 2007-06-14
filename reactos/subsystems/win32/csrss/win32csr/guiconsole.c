@@ -1916,7 +1916,10 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
     {
       Title = L"";
     }
-  SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM) Title);
+
+  /* FIXME: deadlock */
+  //SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM) Title);
+
   if (NULL != Buffer)
     {
       HeapFree(Win32CsrApiHeap, 0, Buffer);
