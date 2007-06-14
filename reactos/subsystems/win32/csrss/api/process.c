@@ -107,7 +107,7 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
    }
    else
    {
-      DPRINT("Process data for pid %d already exist\n", ProcessId);
+      DPRINT1("Process data for pid %d already exist\n", ProcessId);
    }
    UNLOCK;
    if (pProcessData == NULL)
@@ -249,7 +249,7 @@ CSR_API(CsrCreateProcess)
            Status = CsrDuplicateHandleTable(ProcessData, NewProcessData);
          }
      }
-    
+
    /* Set default shutdown parameters */
    NewProcessData->ShutdownLevel = 0x280;
    NewProcessData->ShutdownFlags = 0;

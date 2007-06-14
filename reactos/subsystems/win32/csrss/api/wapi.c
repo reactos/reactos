@@ -33,7 +33,7 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
   PCSRSS_API_DEFINITION Scan;
   PCSRSS_API_DEFINITION New;
 
-	DPRINT("CSR: %s called", __FUNCTION__);
+  DPRINT("CSR: %s called\n", __FUNCTION__);
 
   NewCount = 0;
   for (Scan = NewDefinitions; 0 != Scan->Handler; Scan++)
@@ -148,13 +148,17 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
         return Status;
     }
 
-    ProcessData = CsrCreateProcessData(Request->ClientId.UniqueProcess);
+    ProcessData = CsrGetProcessData(Request->ClientId.UniqueProcess);
     if (ProcessData == NULL)
     {
-        DPRINT1("Unable to allocate or find data for process 0x%x\n",
-                Request->ClientId.UniqueProcess);
-        Status = STATUS_UNSUCCESSFUL;
-        return Status;
+        ProcessData = CsrCreateProcessData(Request->ClientId.UniqueProcess);
+        if (ProcessData == NULL)
+        {
+            DPRINT1("Unable to allocate or find data for process 0x%x\n",
+                    Request->ClientId.UniqueProcess);
+            Status = STATUS_UNSUCCESSFUL;
+            return Status;
+        }
     }
 
     ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
@@ -203,7 +207,7 @@ ClientConnectionThread(HANDLE ServerPort)
     PCSR_API_MESSAGE Reply;
     PCSRSS_PROCESS_DATA ProcessData;
   
-    DPRINT("CSR: %s called", __FUNCTION__);
+    DPRINT("CSR: %s called\n", __FUNCTION__);
 
     /* Reply must be NULL at the first call to NtReplyWaitReceivePort */
     Reply = NULL; 
@@ -242,7 +246,15 @@ ClientConnectionThread(HANDLE ServerPort)
 
         if (Request->Header.u2.s2.Type == LPC_CLIENT_DIED)
         {
-            DPRINT("Clietn died, oh well\n");
+            DPRINT("Client died, oh well\n");
+            Reply = NULL;
+            continue;
+        }
+
+        if ((Request->Header.u2.s2.Type != LPC_ERROR_EVENT) &&
+            (Request->Header.u2.s2.Type != LPC_REQUEST))
+        {
+            DPRINT1("CSR: received message %d\n", Request->Header.u2.s2.Type);
             Reply = NULL;
             continue;
         }
@@ -285,6 +297,8 @@ ClientConnectionThread(HANDLE ServerPort)
 
     /* Close the port and exit the thread */
     NtClose(ServerPort);
+
+    DPRINT("CSR: %s done\n", __FUNCTION__);
     RtlExitUserThread(STATUS_SUCCESS);
 }
 

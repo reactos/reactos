@@ -528,7 +528,8 @@ CsrpCreateApiPort (int argc, char ** argv, char ** envp)
 {
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    CsrInitProcessData();
+	CsrInitProcessData();
+
 	return CsrpCreateListenPort (L"\\Windows\\ApiPort",
 				     & hApiPort,
 #ifdef NTLPC
