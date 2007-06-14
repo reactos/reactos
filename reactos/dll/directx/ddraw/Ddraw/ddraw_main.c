@@ -161,7 +161,7 @@ Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 
     _SEH_TRY
     {
-        if (This->lpLcl->lpGbl->lpExclusiveOwner == This->lpLcl)
+        if (This->lpLcl->lpGbl->lpExclusiveOwner != This->lpLcl)
         {
             retVal = DDERR_NOEXCLUSIVEMODE;
         }
