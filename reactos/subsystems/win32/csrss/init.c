@@ -530,13 +530,8 @@ CsrpCreateApiPort (int argc, char ** argv, char ** envp)
 
 	CsrInitProcessData();
 
-	return CsrpCreateListenPort (L"\\Windows\\ApiPort",
-				     & hApiPort,
-#ifdef NTLPC
-                     (PTHREAD_START_ROUTINE)ClientConnectionThread);
-#else
-				     ServerApiPortThread);
-#endif
+	return CsrpCreateListenPort(L"\\Windows\\ApiPort", &hApiPort,
+		(PTHREAD_START_ROUTINE)ClientConnectionThread);
 }
 
 /**********************************************************************

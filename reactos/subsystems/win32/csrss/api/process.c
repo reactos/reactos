@@ -174,6 +174,10 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
         {
           NtUnmapViewOfSection(NtCurrentProcess(), pProcessData->CsrSectionViewBase);
         }
+      if (pProcessData->ServerCommunicationPort)
+        {
+          NtClose(pProcessData->ServerCommunicationPort);
+        }
       if (pPrevProcessData)
         {
           pPrevProcessData->next = pProcessData->next;

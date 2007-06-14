@@ -6,9 +6,6 @@
 	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x0600</define>
 	<define name="WINVER">0x0501</define>
-    <if property="NTLPC" value="1">
-        <define name="NTLPC" />
-    </if>
 	<library>nt</library>
 	<library>ntdll</library>
 	<library>smdll</library>

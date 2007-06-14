@@ -19,6 +19,8 @@
 
 /* GLOBALS *******************************************************************/
 
+extern HANDLE hApiPort;
+
 HANDLE CsrssApiHeap = (HANDLE) 0;
 
 static unsigned ApiDefinitionsCount = 0;
@@ -132,13 +134,8 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
     DPRINT("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
 
     Status = NtAcceptConnectPort(&ServerPort,
-#ifdef NTLPC
                                  NULL,
                                  Request,
-#else
-                                 hApiListenPort,
-                                 NULL,
-#endif
                                  TRUE,
                                  0,
                                  & LpcRead);
@@ -163,6 +160,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
 
     ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
     ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
+    ProcessData->ServerCommunicationPort = ServerPort;
 
     Status = NtCompleteConnectPort(ServerPort);
     if (!NT_SUCCESS(Status))
@@ -171,7 +169,6 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
         return Status;
     }
 
-#if !defined(NTLPC) /* ReactOS LPC */
     HANDLE ServerThread = (HANDLE) 0;
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
@@ -190,7 +187,6 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
     }
 
     NtClose(ServerThread);
-#endif
 
     Status = STATUS_SUCCESS;
     DPRINT("CSR: %s done\n", __FUNCTION__);
@@ -216,7 +212,7 @@ ClientConnectionThread(HANDLE ServerPort)
     for (;;)
     {
         /* Send the reply and wait for a new request */
-        Status = NtReplyWaitReceivePort(ServerPort,
+        Status = NtReplyWaitReceivePort(hApiPort,
                                         0,
                                         &Reply->Header,
                                         &Request->Header);
@@ -231,10 +227,7 @@ ClientConnectionThread(HANDLE ServerPort)
         {
             DPRINT("Port died, oh well\n");
             CsrFreeProcessData( Request->Header.ClientId.UniqueProcess );
-            //NtClose()
-            Reply = NULL;
-            continue;
-            //break;
+            break;
         }
 
         if (Request->Header.u2.s2.Type == LPC_CONNECTION_REQUEST)
@@ -296,7 +289,7 @@ ClientConnectionThread(HANDLE ServerPort)
     }
 
     /* Close the port and exit the thread */
-    NtClose(ServerPort);
+    // NtClose(ServerPort);
 
     DPRINT("CSR: %s done\n", __FUNCTION__);
     RtlExitUserThread(STATUS_SUCCESS);
@@ -310,6 +303,7 @@ ClientConnectionThread(HANDLE ServerPort)
  * 	Handle connection requests from clients to the port
  * 	"\Windows\ApiPort".
  */
+#if 0
 DWORD STDCALL
 ServerApiPortThread (HANDLE hApiListenPort)
 {
@@ -344,6 +338,7 @@ ServerApiPortThread (HANDLE hApiListenPort)
     NtTerminateThread(NtCurrentThread(), Status);
     return 0;
 }
+#endif
 
 /**********************************************************************
  * NAME
@@ -357,88 +352,85 @@ ServerApiPortThread (HANDLE hApiListenPort)
 DWORD STDCALL
 ServerSbApiPortThread (HANDLE hSbApiPortListen)
 {
-	HANDLE          hConnectedPort = (HANDLE) 0;
-	PORT_MESSAGE    Request;
-	PVOID           Context = NULL;
-	NTSTATUS        Status = STATUS_SUCCESS;
+    HANDLE          hConnectedPort = (HANDLE) 0;
+    PORT_MESSAGE    Request;
+    PVOID           Context = NULL;
+    NTSTATUS        Status = STATUS_SUCCESS;
     PPORT_MESSAGE Reply = NULL;
 
-	DPRINT("CSR: %s called\n", __FUNCTION__);
+    DPRINT("CSR: %s called\n", __FUNCTION__);
 
     RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
-	Status = NtListenPort (hSbApiPortListen, & Request);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("CSR: %s: NtListenPort(SB) failed (Status=0x%08lx)\n",
-			__FUNCTION__, Status);
-	} else {
-DPRINT("-- 1\n");
-		Status = NtAcceptConnectPort (& hConnectedPort,
-#ifdef NTLPC
-				     NULL,
-                     &Request,
-#else
-				     hSbApiPortListen,
-                     NULL,
-#endif
-   						TRUE,
-   						NULL,
-	   					NULL);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT1("CSR: %s: NtAcceptConnectPort() failed (Status=0x%08lx)\n",
-				__FUNCTION__, Status);
-		} else {
-DPRINT("-- 2\n");
-			Status = NtCompleteConnectPort (hConnectedPort);
-			if(!NT_SUCCESS(Status))
-			{
-				DPRINT1("CSR: %s: NtCompleteConnectPort() failed (Status=0x%08lx)\n",
-					__FUNCTION__, Status);
-			} else {
-DPRINT("-- 3\n");
-				
-				/*
-				 * Tell the init thread the SM gave the
-				 * green light for boostrapping.
-				 */
-				Status = NtSetEvent (hBootstrapOk, NULL);
-				if(!NT_SUCCESS(Status))
-				{
-					DPRINT1("CSR: %s: NtSetEvent failed (Status=0x%08lx)\n",
-						__FUNCTION__, Status);
-				}
-				/* Wait for messages from the SM */
-DPRINT("-- 4\n");
-				while (TRUE)
-				{
-					Status = NtReplyWaitReceivePort(hConnectedPort,
-                                      					Context,
-									Reply,
-									& Request);
-					if(!NT_SUCCESS(Status))
-					{
-						DPRINT1("CSR: %s: NtReplyWaitReceivePort failed (Status=0x%08lx)\n",
-							__FUNCTION__, Status);
-						break;
-					}
-					switch (Request.u2.s2.Type)//fix .h PORT_MESSAGE_TYPE(Request))
-					{
-						/* TODO */
-					default:
-						DPRINT1("CSR: %s received message (type=%d)\n",
-							__FUNCTION__, Request.u2.s2.Type);
-					}
-DPRINT("-- 5\n");
-				}
-			}
-		}
-	}
-	DPRINT("CSR: %s: terminating!\n", __FUNCTION__);
-	if(hConnectedPort) NtClose (hConnectedPort);
-	NtClose (hSbApiPortListen);
-	NtTerminateThread (NtCurrentThread(), Status);
-	return 0;
+    Status = NtListenPort (hSbApiPortListen, & Request);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSR: %s: NtListenPort(SB) failed (Status=0x%08lx)\n",
+                __FUNCTION__, Status);
+    } else {
+        DPRINT("-- 1\n");
+        Status = NtAcceptConnectPort(&hConnectedPort,
+                                     NULL,
+                                     &Request,
+                                     TRUE,
+                                     NULL,
+                                     NULL);
+        if(!NT_SUCCESS(Status))
+        {
+            DPRINT1("CSR: %s: NtAcceptConnectPort() failed (Status=0x%08lx)\n",
+                    __FUNCTION__, Status);
+        } else {
+            DPRINT("-- 2\n");
+            Status = NtCompleteConnectPort (hConnectedPort);
+            if(!NT_SUCCESS(Status))
+            {
+                DPRINT1("CSR: %s: NtCompleteConnectPort() failed (Status=0x%08lx)\n",
+                        __FUNCTION__, Status);
+            } else {
+                DPRINT("-- 3\n");
+                /*
+                 * Tell the init thread the SM gave the
+                 * green light for boostrapping.
+                 */
+                Status = NtSetEvent (hBootstrapOk, NULL);
+                if(!NT_SUCCESS(Status))
+                {
+                    DPRINT1("CSR: %s: NtSetEvent failed (Status=0x%08lx)\n",
+                            __FUNCTION__, Status);
+                }
+                /* Wait for messages from the SM */
+                DPRINT("-- 4\n");
+                while (TRUE)
+                {
+                    Status = NtReplyWaitReceivePort(hConnectedPort,
+                                                    Context,
+                                                    Reply,
+                                                    &Request);
+                    if(!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("CSR: %s: NtReplyWaitReceivePort failed (Status=0x%08lx)\n",
+                                __FUNCTION__, Status);
+                        break;
+                    }
+
+                    switch (Request.u2.s2.Type) //fix .h PORT_MESSAGE_TYPE(Request))
+                    {
+                        /* TODO */
+                        default:
+                        DPRINT1("CSR: %s received message (type=%d)\n",
+                                __FUNCTION__, Request.u2.s2.Type);
+                    }
+                    DPRINT("-- 5\n");
+                }
+            }
+        }
+    }
+
+    DPRINT("CSR: %s: terminating!\n", __FUNCTION__);
+    if(hConnectedPort) NtClose (hConnectedPort);
+    NtClose (hSbApiPortListen);
+    NtTerminateThread (NtCurrentThread(), Status);
+    return 0;
 }
 
 /* EOF */
