@@ -216,6 +216,13 @@ ClientConnectionThread(HANDLE ServerPort)
                                         0,
                                         &Reply->Header,
                                         &Request->Header);
+        /* Client died, continue */
+        if (Status == STATUS_INVALID_CID)
+        {
+            Reply = NULL;
+            continue;
+        }
+
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("NtReplyWaitReceivePort failed: %lx\n", Status);
