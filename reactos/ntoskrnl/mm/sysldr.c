@@ -1767,7 +1767,7 @@ LoaderScan:
                                    NtHeader->OptionalHeader.AddressOfEntryPoint);
     LdrEntry->SizeOfImage = DriverSize;
     LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
-    LdrEntry->SectionPointer = NULL; // FIXME: Bug 2151.
+    LdrEntry->SectionPointer = Section;
 
     /* Now write the DLL name */
     LdrEntry->BaseDllName.Buffer = (PVOID)(LdrEntry + 1);
