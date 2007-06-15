@@ -37,10 +37,10 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     /* fixme linking too second link when we shall not doing it */
     if (IsBadReadPtr(This,sizeof(LPDIRECTDRAW)))
     {
-        DX_STUB_str("1. no linking\n");
-
         /* We do not have a DirectDraw interface, we need alloc it*/
         LPDDRAWI_DIRECTDRAW_INT memThis;
+
+        DX_STUB_str("1. no linking\n");
 
         DxHeapMemAlloc(memThis, sizeof(DDRAWI_DIRECTDRAW_INT));
         if (memThis == NULL)
@@ -60,9 +60,10 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     }
     else
     {
-        DX_STUB_str("2.linking\n");
         /* We got the DirectDraw interface alloc and we need create the link */
         LPDDRAWI_DIRECTDRAW_INT  newThis;
+
+        DX_STUB_str("2.linking\n");
 
         /* step 1.Alloc the new  DDRAWI_DIRECTDRAW_INT for the lnking */
         DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
@@ -378,6 +379,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     D3DHAL_GLOBALDRIVERDATA mD3dDriverData;
     DDHAL_DDEXEBUFCALLBACKS mD3dBufferCallbacks;
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+    DDHAL_GETDRIVERINFODATA DdGetDriverInfo = { 0 };
 
     DX_WINDBG_trace();
 
@@ -533,7 +535,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     /* FIXME D3D setup mD3dCallbacks and mD3dDriverData */
 
-    DDHAL_GETDRIVERINFODATA DdGetDriverInfo = { 0 };
+    
 
 
     if (mHALInfo.dwFlags & DDHALINFO_GETDRIVERINFOSET)

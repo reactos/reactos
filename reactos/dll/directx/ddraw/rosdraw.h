@@ -192,13 +192,14 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 } \
 	return DD_OK;
 
-
+ #ifdef __GNU__
 #define DX_STUB_str(x) \
 		{ \
         char buffer[1024]; \
 		sprintf ( buffer, "Function %s %s (%s:%d)\n", __FUNCTION__,x,__FILE__,__LINE__ ); \
 		OutputDebugStringA(buffer); \
         }
+
 
 #define DX_WINDBG_trace() \
 	static BOOL firstcallx = TRUE; \
@@ -210,6 +211,8 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 		firstcallx = TRUE; \
 	}
 
+
+
 #define DX_WINDBG_trace_res(width,height,bpp) \
 	static BOOL firstcallxx = TRUE; \
 	if (firstcallxx) \
@@ -219,5 +222,11 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 		OutputDebugStringA(buffer); \
 		firstcallxx = FALSE; \
 	}
+
+#else
+    #define DX_WINDBG_trace() //
+    #define DX_STUB_str(x) //
+    #define DX_WINDBG_trace_res(width,height,bpp) //
+#endif
 
 #endif /* __DDRAW_PRIVATE */

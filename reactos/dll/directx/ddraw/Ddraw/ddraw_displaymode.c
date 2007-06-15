@@ -47,9 +47,9 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
 
             while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
             {
-                DX_STUB_str("here\n");
-
                 DDSURFACEDESC2 SurfaceDesc; 
+
+                DX_STUB_str("here\n");
 
                 iMode++;
 
@@ -121,9 +121,9 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
                                                                 DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
     LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-    DX_WINDBG_trace();
-
     HRESULT ret = DD_OK;
+
+    DX_STUB_str("here\n");
 
     _SEH_TRY
     {
@@ -145,6 +145,7 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
             }
             else
             {
+                LONG retval;
                 // Here we go
                 DEVMODE DevMode;
                 DevMode.dmFields = 0;
@@ -163,7 +164,8 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
                 DevMode.dmBitsPerPel = dwBPP;
                 DevMode.dmDisplayFrequency = dwRefreshRate;
 
-                LONG retval = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN); /* FIXME: Are we supposed to set CDS_SET_PRIMARY as well ? */
+                retval = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN);
+                /* FIXME: Are we supposed to set CDS_SET_PRIMARY as well ? */
 
                 if(retval == DISP_CHANGE_BADMODE)
                 {
@@ -200,10 +202,12 @@ Main_DirectDraw_RestoreDisplayMode (LPDIRECTDRAW7 iface)
 
     _SEH_TRY
     {
+        BOOL ModeChanged;
+
         ChangeDisplaySettings(NULL, 0);
 
         // Update Interals
-        BOOL ModeChanged;
+
         
         This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
         DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
