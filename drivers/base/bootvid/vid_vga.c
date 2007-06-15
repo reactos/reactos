@@ -499,6 +499,16 @@ VidVgaDisplayString(
 {
 }
 
+static VOID NTAPI
+VidVgaDisplayStringXY(
+   IN PUCHAR String,
+   IN ULONG Top,
+   IN ULONG Left,
+   IN BOOLEAN Transparent)
+{
+}
+
+
 VID_FUNCTION_TABLE VidVgaTable =
 {
    VidVgaInitialize,
@@ -508,5 +518,6 @@ VID_FUNCTION_TABLE VidVgaTable =
    VidVgaScreenToBufferBlt,
    VidVgaBitBlt,
    VidVgaSolidColorFill,
-   VidVgaDisplayString
+   VidVgaDisplayString,
+   VidVgaDisplayStringXY
 };

@@ -238,6 +238,16 @@ VidVgaTextDisplayString(
    WRITE_PORT_UCHAR(CRTCDATA, (UCHAR)((offset >> 8) & 0xff));
 }
 
+static VOID NTAPI
+VidVgaTextDisplayStringXY(
+   IN PUCHAR String,
+   IN ULONG Top,
+   IN ULONG Left,
+   IN BOOLEAN Transparent)
+{
+}
+
+
 VID_FUNCTION_TABLE VidVgaTextTable = {
    VidVgaTextInitialize,
    VidVgaTextCleanUp,
@@ -246,5 +256,6 @@ VID_FUNCTION_TABLE VidVgaTextTable = {
    VidVgaTextScreenToBufferBlt,
    VidVgaTextBitBlt,
    VidVgaTextSolidColorFill,
-   VidVgaTextDisplayString
+   VidVgaTextDisplayString,
+   VidVgaTextDisplayStringXY
 };

@@ -89,6 +89,15 @@ VidXboxDisplayString(
 {
 }
 
+static VOID NTAPI
+VidXboxDisplayStringXY(
+   IN PUCHAR String,
+   IN ULONG Top,
+   IN ULONG Left,
+   IN BOOLEAN Transparent)
+{
+}
+
 VID_FUNCTION_TABLE VidXboxTable = {
    VidXboxInitialize,
    VidXboxCleanUp,
@@ -97,5 +106,6 @@ VID_FUNCTION_TABLE VidXboxTable = {
    VidXboxScreenToBufferBlt,
    VidXboxBitBlt,
    VidXboxSolidColorFill,
-   VidXboxDisplayString
+   VidXboxDisplayString,
+   VidXboxDisplayStringXY
 };

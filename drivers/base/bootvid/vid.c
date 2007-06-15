@@ -50,13 +50,13 @@ VidInitialize(
       VidTable = &VidXboxTable;
    else if (SetMode)
       VidTable = &VidVgaTable;
-   else
-      VidTable = &VidVgaTextTable;
+   /*else
+      VidTable = &VidVgaTextTable;*/
    return VidTable->Initialize(SetMode);
 }
 
-VOID STDCALL
-VidResetDisplay(VOID)
+VOID NTAPI
+VidResetDisplay(IN BOOLEAN HalReset)
 {
    VidTable->ResetDisplay();
 }
@@ -116,4 +116,29 @@ VidDisplayString(
    IN PCSTR String)
 {
    VidTable->DisplayString(String);
+}
+
+VOID NTAPI
+VidSetScrollRegion(IN ULONG x1,
+                   IN ULONG y1,
+                   IN ULONG x2,
+                   IN ULONG y2)
+{
+    // UNIMPLEMENTED
+}
+
+VOID NTAPI
+VidDisplayStringXY(IN PUCHAR String,
+                   IN ULONG Left,
+                   IN ULONG Top,
+                   IN BOOLEAN Transparent)
+{
+    // UNIMPLEMENTED
+}
+
+ULONG NTAPI
+VidSetTextColor(IN ULONG Color)
+{
+    // UNIMPLEMENTED
+    return 0; // FIXME: Return old text color
 }
