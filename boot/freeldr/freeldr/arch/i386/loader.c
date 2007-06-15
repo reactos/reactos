@@ -487,7 +487,7 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
         }
         else
         {
-            DbgPrint("Don't yet support loading new modules from imports\n");
+            //DbgPrint("Don't yet support loading new modules from imports\n");
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }

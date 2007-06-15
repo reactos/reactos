@@ -253,7 +253,7 @@ BOOLEAN OlpcDiskGetPartitionEntry( ULONG DriveNumber, ULONG PartitionNumber,
 
 BOOLEAN OlpcDiskGetDriveGeometry( ULONG DriveNumber, PGEOMETRY DriveGeometry )
 {
-    ofwprintf("GetGeometry(%d)\n", DriveNumber);
+    //ofwprintf("GetGeometry(%d)\n", DriveNumber);
     DriveGeometry->BytesPerSector = 512;
     DriveGeometry->Heads = 16;
     DriveGeometry->Sectors = 63;
@@ -262,7 +262,7 @@ BOOLEAN OlpcDiskGetDriveGeometry( ULONG DriveNumber, PGEOMETRY DriveGeometry )
 
 ULONG OlpcDiskGetCacheableBlockCount( ULONG DriveNumber )
 {
-    ofwprintf("GetCacheableBlockCount\n");
+    //ofwprintf("GetCacheableBlockCount\n");
     return 1;
 }
 

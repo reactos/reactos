@@ -395,7 +395,7 @@ mb3:
 	//movw	%dx,%fs
 	//movw	%dx,%gs
 	//movw	%dx,%ss
-	//movl	$STACK32ADDR,%esp
+	movl	$STACK32ADDR,%esp
 
 	//movl	$mb_info,%ebx
 	/* See if the boot device was passed in */
