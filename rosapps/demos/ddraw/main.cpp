@@ -1,9 +1,11 @@
 #include <windows.h>
+#include <ddrawi.h>
 #include <ddraw.h>
 
 LPDIRECTDRAW7 DirectDraw = NULL;
 LPDIRECTDRAWSURFACE7 FrontBuffer = NULL;
 LPDIRECTDRAWCLIPPER Clipper = NULL;
+LPDDRAWI_DIRECTDRAW_INT This = NULL;
 
 PCHAR DDErrorString (HRESULT hResult);
 LONG WINAPI WndProc (HWND hwnd, UINT message, UINT wParam, LONG lParam);
@@ -25,6 +27,8 @@ bool Init (HWND hwnd)
 		MessageBox(0,DDErrorString(hResult), "DirectDrawCreateEx", 0);
 		return 0;
 	}
+
+    This = (LPDDRAWI_DIRECTDRAW_INT)DirectDraw;
 
 	// Set Fullscreen or windowed mode
 	OutputDebugString("=> DDraw->SetCooperativeLevel\n");
@@ -143,7 +147,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 {
 	MSG msg;  
 	WNDCLASS wndclass; 
-
+	HWND hwnd;
 	Fullscreen = MessageBox(0, "Do you want to me to run in Fullscreen ?", 0, MB_YESNO) == IDYES;
 
 	// Create windnow
@@ -160,19 +164,27 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
 	RegisterClass(&wndclass);    
 
-	HWND hwnd = CreateWindow("DDrawDemo", 
-                         "ReactOS DirectDraw Demo", 
 #ifdef USE_CLIPPER
+	hwnd = CreateWindow("DDrawDemo", 
+                         "ReactOS DirectDraw Demo", 
 						 Fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,
-#else
-						 WS_POPUP,
-#endif 
-			             CW_USEDEFAULT, 
+						 CW_USEDEFAULT, 
 						 CW_USEDEFAULT,
-                         800, 
-                         600,     
-                         NULL, NULL, 
+						 800, 
+						 600,     
+						 NULL, NULL, 
 						 hInst, NULL);
+#else
+	hwnd = CreateWindow("DDrawDemo", 
+                         "ReactOS DirectDraw Demo", 
+                         WS_POPUP,
+						 CW_USEDEFAULT, 
+						 CW_USEDEFAULT,
+						 800, 
+						 600,     
+						 NULL, NULL, 
+						 hInst, NULL);
+#endif
 
 	// Inizalize Ddraw
 	if(Init(hwnd))
