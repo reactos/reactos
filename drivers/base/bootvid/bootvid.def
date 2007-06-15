@@ -1,15 +1,14 @@
-LIBRARY BOOTVID.DLL
+LIBRARY bootvid.sys
 
 EXPORTS
-VidBitBlt@12
-VidBufferToScreenBlt@24
-VidCleanUp@0
-VidDisplayString@4
-VidDisplayStringXY
-VidInitialize@4
-VidResetDisplay@4
-VidScreenToBufferBlt@24
-VidSetScrollRegion@16
-VidSetTextColor@4
-VidSolidColorFill@20
-
+VidInitialize
+VidCleanUp
+VidResetDisplay
+VidBufferToScreenBlt
+VidScreenToBufferBlt
+VidBitBlt
+VidSolidColorFill
+VidDisplayString
+BootVidDisplayBootLogo
+BootVidUpdateProgress
+BootVidFinalizeBootLogo

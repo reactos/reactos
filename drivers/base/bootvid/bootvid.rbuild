@@ -2,11 +2,13 @@
 	<importlibrary definition="bootvid.def"></importlibrary>
 	<bootstrap base="$(CDOUTPUT)" nameoncd="bootvid.dll" />
 	<include base="bootvid">.</include>
-	<define name="__USE_W32API" />
+        <define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>bootvid.c</file>
-	<file>bootdata.c</file>
-	<file>vga.c</file>
+	<file>vid.c</file>
+	<file>vid_vga.c</file>
+	<file>vid_vgatext.c</file>
+	<file>vid_xbox.c</file>
 	<file>bootvid.rc</file>
 </module>
