@@ -86,7 +86,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD coopl
             /* FIXME in setup.c  set DDRAWI_UMODELOADED | DDRAWI_DISPLAYDRV | DDRAWI_EMULATIONINITIALIZED | DDRAWI_GDIDRV  | DDRAWI_ATTACHEDTODESKTOP */
             /* FIXME in setup.c This->lpLcl->lpGbl->dwFlags =  */
 
-            This->lpLcl->dwLocalFlags = DDRAWILCL_SETCOOPCALLED | DDRAWILCL_DIRECTDRAW7 | DDRAWILCL_HOOKEDHWND;
+            This->lpLcl->dwLocalFlags = DDRAWILCL_SETCOOPCALLED | DDRAWILCL_DIRECTDRAW7 ;
             This->lpLcl->hWnd = (ULONG_PTR) hwnd;
             This->lpLcl->hFocusWnd = (ULONG_PTR) hwnd;
             This->lpLcl->lpGbl->lpExclusiveOwner=NULL;

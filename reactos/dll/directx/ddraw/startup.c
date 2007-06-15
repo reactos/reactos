@@ -285,7 +285,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
     }
 
     /* Fill some basic info for Surface */
-    This->lpLcl->lpGbl->dwFlags = dwFlags | DDRAWI_ATTACHEDTODESKTOP;
+    This->lpLcl->lpGbl->dwFlags =  This->lpLcl->lpGbl->dwFlags | dwFlags | DDRAWI_ATTACHEDTODESKTOP;
     This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;
     This->lpLcl->hDD = ddgbl.hDD;
 
