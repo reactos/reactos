@@ -532,22 +532,57 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     // DxHeapMemFree( mpTextures);
 
     /* FIXME D3D setup mD3dCallbacks and mD3dDriverData */
+
     DDHAL_GETDRIVERINFODATA DdGetDriverInfo = { 0 };
-    DdGetDriverInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
-    DdGetDriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
 
-    DdGetDriverInfo.lpvData = (PVOID)&ddgbl.lpDDCBtmp->HALDDMiscellaneous;
 
-    DdGetDriverInfo.dwExpectedSize = sizeof (DDHAL_DDMISCELLANEOUSCALLBACKS);
-
-    if(mHALInfo.GetDriverInfo (&DdGetDriverInfo) == DDHAL_DRIVER_NOTHANDLED || DdGetDriverInfo.ddRVal != DD_OK)
+    if (mHALInfo.dwFlags & DDHALINFO_GETDRIVERINFOSET)
     {
-        DxHeapMemFree(mpFourCC);
-        DxHeapMemFree(mpTextures);
-        DxHeapMemFree(ddgbl.lpDDCBtmp);
-        // FIXME Close DX fristcall and second call
-        return DD_FALSE;
+        DdGetDriverInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
+        DdGetDriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
+        DdGetDriverInfo.lpvData = (PVOID)&ddgbl.lpDDCBtmp->HALDDMiscellaneous;
+        DdGetDriverInfo.dwExpectedSize = sizeof (DDHAL_DDMISCELLANEOUSCALLBACKS);
+
+        if(mHALInfo.GetDriverInfo (&DdGetDriverInfo) == DDHAL_DRIVER_NOTHANDLED || DdGetDriverInfo.ddRVal != DD_OK)
+        {
+            DxHeapMemFree(mpFourCC);
+            DxHeapMemFree(mpTextures);
+            DxHeapMemFree(ddgbl.lpDDCBtmp);
+            // FIXME Close DX fristcall and second call
+            return DD_FALSE;
+        }
+
+        RtlZeroMemory(&DdGetDriverInfo, sizeof(DDHAL_GETDRIVERINFODATA));
+        DdGetDriverInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
+        DdGetDriverInfo.guidInfo = GUID_Miscellaneous2Callbacks;
+        
+        /* FIXME 
+        DdGetDriverInfo.lpvData = (PVOID)&ddgbl.lpDDCBtmp->HALDDMiscellaneous;
+        DdGetDriverInfo.dwExpectedSize = sizeof (DDHAL_DDMISCELLANEOUS2CALLBACKS);
+
+        if(mHALInfo.GetDriverInfo (&DdGetDriverInfo) == DDHAL_DRIVER_NOTHANDLED || DdGetDriverInfo.ddRVal != DD_OK)
+        {
+            DxHeapMemFree(mpFourCC);
+            DxHeapMemFree(mpTextures);
+            DxHeapMemFree(ddgbl.lpDDCBtmp);
+            // FIXME Close DX fristcall and second call
+            return DD_FALSE;
+        }
+        DD_MISCELLANEOUS2CALLBACKS 
+        {
+            DWORD                dwSize;
+            DWORD                dwFlags;
+            PDD_ALPHABLT         AlphaBlt;  // unsuse acoding msdn and always set to NULL
+            PDD_CREATESURFACEEX  CreateSurfaceEx;
+            PDD_GETDRIVERSTATE   GetDriverState;
+            PDD_DESTROYDDLOCAL   DestroyDDLocal;
+        }
+          DDHAL_MISC2CB32_CREATESURFACEEX
+          DDHAL_MISC2CB32_GETDRIVERSTATE
+          DDHAL_MISC2CB32_DESTROYDDLOCAL
+        */
     }
+
 
     return DD_OK;
 }
