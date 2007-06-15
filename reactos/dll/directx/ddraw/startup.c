@@ -172,8 +172,9 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
             }
         }
     }
-
-    DX_STUB_str("here\n");
+    /* Windows handler are by set of SetCooperLevel 
+     * so do not set it 
+     */
 
     if (reenable == FALSE)
     {
@@ -183,8 +184,8 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
             devicetypes= 1;
 
             /* Create HDC for default, hal and hel driver */
-            This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
-            This->lpLcl->hDC = (ULONG_PTR) GetDC((HWND)This->lpLcl->hWnd);
+            // This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
+            This->lpLcl->hDC = (ULONG_PTR)CreateDCA("DISPLAY",NULL,NULL,NULL);
 
             /* cObsolete is undoc in msdn it being use in CreateDCA */
             RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
@@ -197,8 +198,8 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
         {
             devicetypes = 2;
             /* Create HDC for default, hal driver */
-            This->lpLcl->hWnd =(ULONG_PTR) GetActiveWindow();
-            This->lpLcl->hDC = (ULONG_PTR) GetDC((HWND)This->lpLcl->hWnd);
+            // This->lpLcl->hWnd =(ULONG_PTR) GetActiveWindow();
+            This->lpLcl->hDC = (ULONG_PTR)CreateDCA("DISPLAY",NULL,NULL,NULL);
 
             /* cObsolete is undoc in msdn it being use in CreateDCA */
             RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
@@ -210,8 +211,8 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
             devicetypes = 3;
 
             /* Create HDC for default, hal and hel driver */
-            This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
-            This->lpLcl->hDC = (ULONG_PTR) GetDC((HWND)This->lpLcl->hWnd);
+            //This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
+            This->lpLcl->hDC = (ULONG_PTR)CreateDCA("DISPLAY",NULL,NULL,NULL);
 
             /* cObsolete is undoc in msdn it being use in CreateDCA */
             RtlCopyMemory(&ddgbl.cObsolete,&"DISPLAY",7);
@@ -225,15 +226,17 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
              * the register. we do not support that yet
              */
              devicetypes = 4;
-             This->lpLcl->hDC = (ULONG_PTR) NULL ;
-             This->lpLcl->hWnd = (ULONG_PTR) GetActiveWindow();
+             //This->lpLcl->hDC = (ULONG_PTR) NULL ;
+             //This->lpLcl->hDC = (ULONG_PTR)CreateDCA("DISPLAY",NULL,NULL,NULL);
         }
 
+        /*
         if ( (HDC)This->lpLcl->hDC == NULL)
         {
             DX_STUB_str("DDERR_OUTOFMEMORY\n");
             return DDERR_OUTOFMEMORY ;
         }
+        */
     }
 
     This->lpLcl->lpDDCB = ddgbl.lpDDCBtmp;
@@ -583,6 +586,11 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
           DDHAL_MISC2CB32_GETDRIVERSTATE
           DDHAL_MISC2CB32_DESTROYDDLOCAL
         */
+    }
+
+    if (mHALInfo.dwFlags & DDHALINFO_GETDRIVERINFO2)
+    {
+        This->lpLcl->lpGbl->dwFlags = This->lpLcl->lpGbl->dwFlags | DDRAWI_DRIVERINFO2;
     }
 
 
