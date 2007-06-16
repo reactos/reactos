@@ -46,6 +46,18 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
     
 }
 
+HRESULT WINAPI
+Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
+				      LPVOID* ppObj)
+{
+    DX_WINDBG_trace();
+
+	DX_STUB_str("Unimplement\n");
+
+	return E_NOINTERFACE;
+}
+
+
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 {
@@ -670,7 +682,7 @@ IDirectDrawSurface7Vtbl DirectDrawSurface7_Vtable =
 {
       /*** IUnknown ***/
     Main_DDrawSurface_QueryInterface,
-    Main_DDrawSurface_AddRef,
+    Main_DDrawSurface_AddRef,                        /* (Compact done) */
     Main_DDrawSurface_Release,
     /*** IDirectDrawSurface ***/
     Main_DDrawSurface_AddAttachedSurface,

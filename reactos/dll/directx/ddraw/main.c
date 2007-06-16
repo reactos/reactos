@@ -37,13 +37,31 @@ DirectDrawCreate (LPGUID lpGUID,
                   LPDIRECTDRAW* lplpDD, 
                   LPUNKNOWN pUnkOuter) 
 {    
+    HRESULT retVal = DDERR_GENERIC;
     /* 
        remove this when UML digram are in place 
        this api is finish and is working as it should
     */
 
     DX_WINDBG_trace();
-    return DirectDrawCreateEx(lpGUID, (LPVOID*)lplpDD, &IID_IDirectDraw2, pUnkOuter);
+     _SEH_TRY
+    {
+        /* check see if pUnkOuter is null or not */
+        if (pUnkOuter)
+        {
+            retVal = CLASS_E_NOAGGREGATION; 
+        }
+        else
+        {
+            retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, &IID_IDirectDraw, TRUE);
+        }
+     }
+    _SEH_HANDLE
+    {
+    }
+    _SEH_END;
+
+    return retVal;
 }
 
 /*

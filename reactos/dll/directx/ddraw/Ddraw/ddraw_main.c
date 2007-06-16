@@ -8,6 +8,11 @@
  *
  */
 
+/* TODO
+ * add warper functions for dx 1 - 6 
+ * map the  DirectDraw4_Vtable, DirectDraw2_Vtable, DirectDraw_Vtable
+ * table to right version of the functions
+ */
 
 #include "rosdraw.h"
 
@@ -34,9 +39,42 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
         */
         if (IsEqualGUID(&IID_IDirectDraw7, id))
         {
+            /* FIXME linking */
+
             /* DirectDraw7 Vtable */
             This->lpVtbl = &DirectDraw7_Vtable;
             This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags + DDRAWILCL_DIRECTDRAW7;
+            *obj = &This->lpVtbl;
+            Main_DirectDraw_AddRef(iface);
+        }
+        else if (IsEqualGUID(&IID_IDirectDraw4, id))
+        {
+            /* FIXME linking */
+
+            /* DirectDraw4 Vtable */
+            This->lpVtbl = &DirectDraw4_Vtable;
+            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags;
+            *obj = &This->lpVtbl;
+            Main_DirectDraw_AddRef(iface);
+        }
+        else if (IsEqualGUID(&IID_IDirectDraw2, id))
+        {
+            /* FIXME linking */
+
+
+            /* DirectDraw4 Vtable */
+            This->lpVtbl = &DirectDraw2_Vtable;
+            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags;
+            *obj = &This->lpVtbl;
+            Main_DirectDraw_AddRef(iface);
+        }
+        else if (IsEqualGUID(&IID_IDirectDraw, id))
+        {
+            /* FIXME linking */
+
+            /* DirectDraw4 Vtable */
+            This->lpVtbl = &DirectDraw_Vtable;
+            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags;
             *obj = &This->lpVtbl;
             Main_DirectDraw_AddRef(iface);
         }
@@ -415,171 +453,7 @@ Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
     return ret;
 }
 
-/* For DirectDraw 4 - 6 */
-HRESULT WINAPI
-Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW4 iface,
-                                    LPDDDEVICEIDENTIFIER pDDDI, DWORD dwFlags)
-{
-    HRESULT retVal = DD_OK;
-    DDDEVICEIDENTIFIER2 pDDDI2;
 
-    ZeroMemory(&pDDDI2,sizeof(DDDEVICEIDENTIFIER2));
-
-    _SEH_TRY
-    {
-        memcpy(&pDDDI2 , pDDDI, sizeof(DDDEVICEIDENTIFIER));
-
-        retVal = Main_DirectDraw_GetDeviceIdentifier7((LPDIRECTDRAW7)iface, &pDDDI2, dwFlags);
-
-        if (IsBadWritePtr(pDDDI, sizeof(DDDEVICEIDENTIFIER)))
-        {
-            retVal = DDERR_INVALIDPARAMS;
-        }
-        else
-        {
-            memcpy(pDDDI , &pDDDI2, sizeof(DDDEVICEIDENTIFIER) );
-        }
-    }
-    _SEH_HANDLE
-    {
-        retVal = DD_FALSE;
-    }
-    _SEH_END;
-
-    return retVal;
-}
-
-HRESULT WINAPI
-Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
-                                     LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
-{
-    HRESULT retVal = DDERR_INVALIDPARAMS;
-
-    BOOL found = FALSE;
-    DWORD iDevNum = 0;
-    DISPLAY_DEVICEA DisplayDeviceA;
-    HKEY hKey;
-    DWORD lpType = 0;
-    DWORD strSize = MAX_DDDEVICEID_STRING;
-    char *pdest;
-    char* pcCnvEnd;
-    long *lpdata;
-
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
-
-    DX_WINDBG_trace();
-
-    _SEH_TRY
-    {
-        if ( (IsBadWritePtr( pDDDI, sizeof(DDDEVICEIDENTIFIER2) ) ) ||
-             (dwFlags & ~DDGDI_GETHOSTIDENTIFIER))
-        {
-            retVal = DDERR_INVALIDPARAMS;
-            _SEH_LEAVE;
-        }
-
-        /* now we can start getting the driver data */
-
-        while (1)
-        {
-            ZeroMemory(&DisplayDeviceA,sizeof(DISPLAY_DEVICEA));
-
-            DisplayDeviceA.cb = sizeof(DISPLAY_DEVICEA);
-
-            if ( EnumDisplayDevicesA( NULL, iDevNum, &DisplayDeviceA, 0) == 0)
-            {
-                retVal = DDERR_INVALIDPARAMS;
-                break;
-            }
-
-            if (!_stricmp(DisplayDeviceA.DeviceName, This->lpLcl->lpGbl->cDriverName))
-            {
-                /* if we got another device like hardware mpeg decoder or video card or another drv */
-                found = TRUE;
-            }
-            else if (DisplayDeviceA.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
-            {
-                /* double check if it primary driver we just found */
-                if (!_stricmp( This->lpLcl->lpGbl->cDriverName, "DISPLAY"))
-                {
-                    /* yeah we found it */
-                    found = TRUE;
-                }
-            }
-
-            if (found == TRUE)
-            {
-                /* we found our driver now we start setup it */
-                if (!_strnicmp(DisplayDeviceA.DeviceKey,"\\REGISTRY\\Machine\\",18))
-                {
-                    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, &DisplayDeviceA.DeviceKey[18], 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS )
-                    {
-
-                        if (RegQueryValueExA(hKey, "InstalledDisplayDrivers",0, &lpType, (LPBYTE)pDDDI->szDriver, &strSize) != ERROR_SUCCESS)
-                        {
-                            ZeroMemory(pDDDI->szDriver,MAX_DDDEVICEID_STRING);
-                        }
-                        else
-                        {
-                            strcat(pDDDI->szDriver,".dll");
-                        }
-                        RegCloseKey(hKey);
-                    }
-
-                    strcpy( pDDDI->szDescription, DisplayDeviceA.DeviceString);
-                    pDDDI->liDriverVersion.HighPart = 0;
-                    pDDDI->liDriverVersion.LowPart = 0;
-
-                    pdest = strstr(DisplayDeviceA.DeviceID,"REV_");
-                    pDDDI->dwRevision =  strtol ( &pdest[4], &pcCnvEnd, 16);
-
-                    pdest = strstr(DisplayDeviceA.DeviceID,"SUBSYS_");
-                    pDDDI->dwSubSysId =  strtol ( &pdest[7], &pcCnvEnd, 16);
-
-                    pdest = strstr(DisplayDeviceA.DeviceID,"DEV_");
-                    pDDDI->dwDeviceId = strtol ( &pdest[4], &pcCnvEnd, 16);
-
-                    pdest = strstr(DisplayDeviceA.DeviceID,"VEN_");
-                    pDDDI->dwVendorId =strtol ( &pdest[4], &pcCnvEnd, 16);
-
-                    /* Count out the guidDeviceIdentifier */
-                    memcpy(&pDDDI->guidDeviceIdentifier, &CLSID_DirectDraw,sizeof(GUID));
-                   
-                    pDDDI->guidDeviceIdentifier.Data1 ^= pDDDI->dwVendorId;
-
-                    lpdata = (long *)&pDDDI->guidDeviceIdentifier.Data2;
-                    *lpdata ^= pDDDI->dwDeviceId;
-
-                    lpdata = (long *)&pDDDI->guidDeviceIdentifier.Data4;
-                    *lpdata = (*lpdata ^ pDDDI->dwSubSysId) ^ pDDDI->liDriverVersion.LowPart;
-
-                    lpdata = (long *)&pDDDI->guidDeviceIdentifier.Data4[4];
-                    *lpdata = (*lpdata ^ pDDDI->dwRevision) ^ pDDDI->liDriverVersion.HighPart;
-
-                    /* FIXME pDDDI->dwWHQLLevel
-                     * we leave this with no informations, I do not known 
-                     * if program care for it, I mark this api done, and 
-                     * tested, no bugs was found in it
-                     */
-                    pDDDI->dwWHQLLevel = 0;
-                    retVal = DD_OK;
-                }
-
-                break;
-            }
-
-            iDevNum++;
-         }
-
-    }
-    _SEH_HANDLE
-    {
-        retVal = DD_FALSE;
-    }
-    _SEH_END;
-
-    return retVal;
-}
 
 /* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
 /* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
@@ -617,3 +491,94 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_StartModeTest,
     Main_DirectDraw_EvaluateMode
 };
+
+
+IDirectDraw4Vtbl DirectDraw4_Vtable =
+{
+    Main_DirectDraw_QueryInterface,
+    Main_DirectDraw_AddRef,
+    Main_DirectDraw_Release,
+    Main_DirectDraw_Compact,
+    Main_DirectDraw_CreateClipper,
+    Main_DirectDraw_CreatePalette,
+    Main_DirectDraw_CreateSurface4,
+    Main_DirectDraw_DuplicateSurface,
+    Main_DirectDraw_EnumDisplayModes,
+    Main_DirectDraw_EnumSurfaces,
+    Main_DirectDraw_FlipToGDISurface,
+    Main_DirectDraw_GetCaps,
+    Main_DirectDraw_GetDisplayMode,
+    Main_DirectDraw_GetFourCCCodes,
+    Main_DirectDraw_GetGDISurface,
+    Main_DirectDraw_GetMonitorFrequency,
+    Main_DirectDraw_GetScanLine,
+    Main_DirectDraw_GetVerticalBlankStatus,
+    Main_DirectDraw_Initialize,
+    Main_DirectDraw_RestoreDisplayMode,
+    Main_DirectDraw_SetCooperativeLevel,
+    Main_DirectDraw_SetDisplayMode,
+    Main_DirectDraw_WaitForVerticalBlank,
+    Main_DirectDraw_GetAvailableVidMem4,
+    Main_DirectDraw_GetSurfaceFromDC,
+    Main_DirectDraw_RestoreAllSurfaces,
+    Main_DirectDraw_TestCooperativeLevel,
+    Main_DirectDraw_GetDeviceIdentifier
+};
+
+IDirectDraw2Vtbl DirectDraw2_Vtable =
+{
+    Main_DirectDraw_QueryInterface,
+    Main_DirectDraw_AddRef,
+    Main_DirectDraw_Release,
+    Main_DirectDraw_Compact,
+    Main_DirectDraw_CreateClipper,
+    Main_DirectDraw_CreatePalette,
+    Main_DirectDraw_CreateSurface,
+    Main_DirectDraw_DuplicateSurface,
+    Main_DirectDraw_EnumDisplayModes,
+    Main_DirectDraw_EnumSurfaces,
+    Main_DirectDraw_FlipToGDISurface,
+    Main_DirectDraw_GetCaps,
+    Main_DirectDraw_GetDisplayMode,
+    Main_DirectDraw_GetFourCCCodes,
+    Main_DirectDraw_GetGDISurface,
+    Main_DirectDraw_GetMonitorFrequency,
+    Main_DirectDraw_GetScanLine,
+    Main_DirectDraw_GetVerticalBlankStatus,
+    Main_DirectDraw_Initialize,
+    Main_DirectDraw_RestoreDisplayMode,
+    Main_DirectDraw_SetCooperativeLevel,
+    Main_DirectDraw_SetDisplayMode,
+    Main_DirectDraw_WaitForVerticalBlank,
+    Main_DirectDraw_GetAvailableVidMem
+};
+
+IDirectDrawVtbl DirectDraw_Vtable =
+{
+    Main_DirectDraw_QueryInterface,
+    Main_DirectDraw_AddRef,
+    Main_DirectDraw_Release,
+    Main_DirectDraw_Compact,
+    Main_DirectDraw_CreateClipper,
+    Main_DirectDraw_CreatePalette,
+    Main_DirectDraw_CreateSurface,
+    Main_DirectDraw_DuplicateSurface,
+    Main_DirectDraw_EnumDisplayModes,
+    Main_DirectDraw_EnumSurfaces,
+    Main_DirectDraw_FlipToGDISurface,
+    Main_DirectDraw_GetCaps,
+    Main_DirectDraw_GetDisplayMode,
+    Main_DirectDraw_GetFourCCCodes,
+    Main_DirectDraw_GetGDISurface,
+    Main_DirectDraw_GetMonitorFrequency,
+    Main_DirectDraw_GetScanLine,
+    Main_DirectDraw_GetVerticalBlankStatus,
+    Main_DirectDraw_Initialize,
+    Main_DirectDraw_RestoreDisplayMode,
+    Main_DirectDraw_SetCooperativeLevel,
+    Main_DirectDraw_SetDisplayMode,
+    Main_DirectDraw_WaitForVerticalBlank
+};
+
+
+

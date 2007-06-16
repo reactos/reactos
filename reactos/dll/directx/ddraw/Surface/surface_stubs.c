@@ -10,16 +10,7 @@
 
 #include "rosdraw.h"
 
-HRESULT WINAPI
-Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
-				      LPVOID* ppObj)
-{
-    DX_WINDBG_trace();
 
-	DX_STUB_str("Unimplement\n");
-
-	return E_NOINTERFACE;
-}
 
 
 /* MSDN: "not currently implemented." */
