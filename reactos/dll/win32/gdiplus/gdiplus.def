@@ -268,6 +268,7 @@ GdipGetImageEncodersSize@8
 GdipGetImageEncoders@12
 GdipComment@12
 GdipComment@12
+GdipCreatePath@8
 GdipCreatePath2@20
 GdipCreatePath2I@20
 GdipClonePath@8
