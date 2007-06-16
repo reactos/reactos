@@ -4,33 +4,49 @@
  * PURPOSE:           Run-Time Library
  * FILE:              lib/rtl/i386/trig_asm.s
  * PROGRAMER:         Aleksey Bragin (aleksey reactos org)
-*/
-
+ *
+ */
 .globl _atan
 .globl _cos
 .globl _sin
-.globl _tan
-
+ 
 .intel_syntax noprefix
 
+/* FUNCTIONS ***************************************************************/
+
 _atan:
-        fld qword ptr [esp+8]
+        push    ebp
+        mov     ebp,esp
+        fld     qword ptr [ebp+8]
         fld1
         fpatan
+        pop     ebp
         ret
 
 _cos:
-        fld qword ptr [esp+8]
+        push    ebp
+        mov     ebp,esp
+        fld     qword ptr [ebp+8]
         fcos
+        pop     ebp
         ret
 
 _sin:
-        fld qword ptr [esp+8]
+        push    ebp
+        mov     ebp,esp
+        fld     qword ptr [ebp+8]
         fsin
+        pop     ebp
         ret
 
 _tan:
-        fld     qword ptr [esp+8]
+        push    ebp
+        mov     ebp,esp
+        sub     esp,4
+        fld     qword ptr [ebp+8]
         fptan
-        fstp    dword ptr [esp-4]
+        fstp    dword ptr [ebp-4]
+        mov     esp,ebp
+        pop     ebp
         ret
+
