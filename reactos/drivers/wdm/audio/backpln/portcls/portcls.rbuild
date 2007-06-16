@@ -8,7 +8,6 @@
     <library>ntoskrnl</library>
     <library>ks</library>
     <library>drmk</library>
-    <library>kernel32</library>
 
     <file>dll.c</file>
     <file>adapter.c</file>
