@@ -12,6 +12,6 @@
 .intel_syntax noprefix
 
 _sqrt:
-        fld     qword ptr [esp+4]
+        fld     qword ptr [esp+8]
         fsqrt
         ret

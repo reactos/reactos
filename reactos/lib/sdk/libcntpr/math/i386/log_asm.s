@@ -9,7 +9,7 @@
 .intel_syntax noprefix
 
 _log:
-        fld     qword ptr [esp+4]
+        fld     qword ptr [esp+8]
         fldln2
         fxch    st(1)
         fyl2x

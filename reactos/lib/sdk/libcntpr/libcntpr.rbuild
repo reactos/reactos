@@ -26,21 +26,18 @@
                 <file>allrem_asm.s</file>
                 <file>allshl_asm.s</file>
                 <file>allshr_asm.s</file>
-                <file>atan_asm.s</file>
                 <file>aulldiv_asm.s</file>
                 <file>aulldvrm_asm.s</file>
                 <file>aullrem_asm.s</file>
                 <file>aullshr_asm.s</file>
                 <file>ceil_asm.s</file>
-                <file>cos_asm.s</file>
                 <file>fabs_asm.s</file>
                 <file>floor_asm.s</file>
                 <file>ftol_asm.s</file>
                 <file>log_asm.s</file>
                 <file>pow_asm.s</file>
-                <file>sin_asm.s</file>
                 <file>sqrt_asm.s</file>
-                <file>tan_asm.s</file>
+                <file>trig_asm.s</file>
             </directory>
         </if>
         <file>abs.c</file>
