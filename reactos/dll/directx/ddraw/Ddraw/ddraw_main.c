@@ -51,9 +51,9 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                 /* DirectDraw7 Vtable */
                 newThis->lpVtbl = &DirectDraw7_Vtable;
                 newThis->lpLcl = This->lpLcl;
-                newThis->dwIntRefCnt = 1;
                 newThis->lpLink = This;
                 *obj = &newThis->lpVtbl;
+                Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
             }
         }
         else if (IsEqualGUID(&IID_IDirectDraw4, id))
@@ -70,9 +70,9 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                 /* DirectDraw4 Vtable */
                 newThis->lpVtbl = &DirectDraw4_Vtable;
                 newThis->lpLcl = This->lpLcl;
-                newThis->dwIntRefCnt = 1;
                 newThis->lpLink = This;
                 *obj = &newThis->lpVtbl;
+                Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
             }
         }
         else if (IsEqualGUID(&IID_IDirectDraw2, id))
@@ -89,9 +89,9 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                 /* DirectDraw4 Vtable */
                 newThis->lpVtbl = &DirectDraw2_Vtable;
                 newThis->lpLcl = This->lpLcl;
-                newThis->dwIntRefCnt = 1;
                 newThis->lpLink = This;
                 *obj = &newThis->lpVtbl;
+                Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
             }
         }
         else if (IsEqualGUID(&IID_IDirectDraw, id))
@@ -108,9 +108,9 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                 /* DirectDraw4 Vtable */
                 newThis->lpVtbl = &DirectDraw_Vtable;
                 newThis->lpLcl = This->lpLcl;
-                newThis->dwIntRefCnt = 1;
                 newThis->lpLink = This;
                 *obj = &newThis->lpVtbl;
+                Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
             }
         }
         else
