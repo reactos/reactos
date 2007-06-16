@@ -20,7 +20,7 @@ WNDCLASSW wnd_class;
 
 HRESULT WINAPI
 Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
-                   REFIID id, BOOL ex)
+                   REFIID id, BOOL reenable)
 {
     LPDDRAWI_DIRECTDRAW_INT This;
 
@@ -101,7 +101,39 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     *pIface = (LPDIRECTDRAW)This;
 
     /* Get right interface we whant */
-    if (Main_DirectDraw_QueryInterface((LPDIRECTDRAW7)This, id, (void**)&pIface) == DD_OK)
+
+    This->lpVtbl = 0;
+    if (IsEqualGUID(&IID_IDirectDraw7, id))
+    {
+        /* DirectDraw7 Vtable */
+        This->lpVtbl = &DirectDraw7_Vtable;
+        This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags + DDRAWILCL_DIRECTDRAW7;
+        *pIface = (LPDIRECTDRAW)&This->lpVtbl;
+        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw4, id))
+    {
+        /* DirectDraw4 Vtable */
+        This->lpVtbl = &DirectDraw4_Vtable;
+        *pIface = (LPDIRECTDRAW)&This->lpVtbl;
+        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw2, id))
+    {
+        /* DirectDraw2 Vtable */
+        This->lpVtbl = &DirectDraw2_Vtable;
+        *pIface = (LPDIRECTDRAW)&This->lpVtbl;
+        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw, id))
+    {
+        /* DirectDraw4 Vtable */
+        This->lpVtbl = &DirectDraw_Vtable;
+        *pIface = (LPDIRECTDRAW)&This->lpVtbl;
+        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+    }
+
+    if ( This->lpVtbl != 0)
     {
         DX_STUB_str("Got iface\n");
 

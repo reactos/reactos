@@ -53,7 +53,7 @@ DirectDrawCreate (LPGUID lpGUID,
         }
         else
         {
-            retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, &IID_IDirectDraw, TRUE);
+            retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, &IID_IDirectDraw, FALSE);
         }
      }
     _SEH_HANDLE
@@ -97,7 +97,7 @@ DirectDrawCreateEx(LPGUID lpGUID,
         }
         else
         {
-            retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, TRUE);
+            retVal = Create_DirectDraw (lpGUID, (LPDIRECTDRAW*)lplpDD, id, FALSE);
         }
 
         /* Create our DirectDraw interface */
