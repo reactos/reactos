@@ -9,6 +9,7 @@
 .globl _atan
 .globl _cos
 .globl _sin
+.globl _tan
  
 .intel_syntax noprefix
 
