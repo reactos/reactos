@@ -39,44 +39,79 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
         */
         if (IsEqualGUID(&IID_IDirectDraw7, id))
         {
-            /* FIXME linking */
+            LPDDRAWI_DIRECTDRAW_INT  newThis;
+            DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
 
-            /* DirectDraw7 Vtable */
-            This->lpVtbl = &DirectDraw7_Vtable;
-            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags + DDRAWILCL_DIRECTDRAW7;
-            *obj = &This->lpVtbl;
-            Main_DirectDraw_AddRef(iface);
+            if (newThis == NULL)
+            {
+                retVal = DDERR_OUTOFMEMORY;
+            }
+            else
+            {
+                /* DirectDraw7 Vtable */
+                newThis->lpVtbl = &DirectDraw7_Vtable;
+                newThis->lpLcl = This->lpLcl;
+                newThis->dwIntRefCnt = 1;
+                newThis->lpLink = This;
+                *obj = &newThis->lpVtbl;
+            }
         }
         else if (IsEqualGUID(&IID_IDirectDraw4, id))
         {
-            /* FIXME linking */
+            LPDDRAWI_DIRECTDRAW_INT  newThis;
+            DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
 
-            /* DirectDraw4 Vtable */
-            This->lpVtbl = &DirectDraw4_Vtable;
-            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags;
-            *obj = &This->lpVtbl;
-            Main_DirectDraw_AddRef(iface);
+            if (newThis == NULL)
+            {
+                retVal = DDERR_OUTOFMEMORY;
+            }
+            else
+            {
+                /* DirectDraw4 Vtable */
+                newThis->lpVtbl = &DirectDraw4_Vtable;
+                newThis->lpLcl = This->lpLcl;
+                newThis->dwIntRefCnt = 1;
+                newThis->lpLink = This;
+                *obj = &newThis->lpVtbl;
+            }
         }
         else if (IsEqualGUID(&IID_IDirectDraw2, id))
         {
-            /* FIXME linking */
+            LPDDRAWI_DIRECTDRAW_INT  newThis;
+            DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
 
-
-            /* DirectDraw4 Vtable */
-            This->lpVtbl = &DirectDraw2_Vtable;
-            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags;
-            *obj = &This->lpVtbl;
-            Main_DirectDraw_AddRef(iface);
+            if (newThis == NULL)
+            {
+                retVal = DDERR_OUTOFMEMORY;
+            }
+            else
+            {
+                /* DirectDraw4 Vtable */
+                newThis->lpVtbl = &DirectDraw2_Vtable;
+                newThis->lpLcl = This->lpLcl;
+                newThis->dwIntRefCnt = 1;
+                newThis->lpLink = This;
+                *obj = &newThis->lpVtbl;
+            }
         }
         else if (IsEqualGUID(&IID_IDirectDraw, id))
         {
-            /* FIXME linking */
+            LPDDRAWI_DIRECTDRAW_INT  newThis;
+            DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
 
-            /* DirectDraw4 Vtable */
-            This->lpVtbl = &DirectDraw_Vtable;
-            This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags;
-            *obj = &This->lpVtbl;
-            Main_DirectDraw_AddRef(iface);
+            if (newThis == NULL)
+            {
+                retVal = DDERR_OUTOFMEMORY;
+            }
+            else
+            {
+                /* DirectDraw4 Vtable */
+                newThis->lpVtbl = &DirectDraw_Vtable;
+                newThis->lpLcl = This->lpLcl;
+                newThis->dwIntRefCnt = 1;
+                newThis->lpLink = This;
+                *obj = &newThis->lpVtbl;
+            }
         }
         else
         {
