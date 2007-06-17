@@ -519,18 +519,18 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                 {
                     LPDDCAPS_DX5 myCaps = (LPDDCAPS_DX5) pDriverCaps;
 
+                    /* FIXME  This->lpLcl->lpGbl->lpddNLVCaps are not set in startup.c 
+                    if (This->lpLcl->lpGbl->lpddNLVCaps->dwSize == sizeof(DDNONLOCALVIDMEMCAPS))
+                    {
+                        memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVCaps, sizeof(DDNONLOCALVIDMEMCAPS));
+                    }
+                    */
+                    memset(myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
+
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
                         memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
                     }
-
-                   /* FIXME
-                      DWORD dwNLVBCaps;
-                      DWORD dwNLVBCaps2;
-                      DWORD dwNLVBCKeyCaps;
-                      DWORD dwNLVBFXCaps;
-                      DWORD dwNLVBRops[DD_ROP_SPACE];
-                    */
 
                     myCaps->dwVidMemFree = dwFree;
                     myCaps->dwVidMemTotal = dwTotal;
@@ -545,6 +545,14 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                 {
                     LPDDCAPS_DX7 myCaps = (LPDDCAPS_DX7) pDriverCaps;
 
+                    /* FIXME  This->lpLcl->lpGbl->lpddNLVCaps are not set in startup.c 
+                    if (This->lpLcl->lpGbl->lpddNLVCaps->dwSize == sizeof(DDNONLOCALVIDMEMCAPS))
+                    {
+                        memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVCaps, sizeof(DDNONLOCALVIDMEMCAPS));
+                    }
+                    */
+                    memset(myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
+
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
                         memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
@@ -553,18 +561,10 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                     myCaps->dwVidMemFree = dwFree;
                     myCaps->dwVidMemTotal = dwTotal;
 
-                    /* FIXME
-                      DWORD dwNLVBCaps;
-                      DWORD dwNLVBCaps2;
-                      DWORD dwNLVBCKeyCaps;
-                      DWORD dwNLVBFXCaps;
-                      DWORD dwNLVBRops[DD_ROP_SPACE];
-                    */
-
-                    myCaps->ddsCaps.dwCaps = ddscaps.dwCaps;
-                    myCaps->ddsCaps.dwCaps2 = ddscaps.dwCaps2;
-                    myCaps->ddsCaps.dwCaps3 = ddscaps.dwCaps3;
-                    myCaps->ddsCaps.dwCaps4 = ddscaps.dwCaps4;
+                    myCaps->ddsCaps.dwCaps = myCaps->ddsOldCaps.dwCaps;
+                    myCaps->ddsCaps.dwCaps2 = 0;
+                    myCaps->ddsCaps.dwCaps3 = 0;
+                    myCaps->ddsCaps.dwCaps4 = 0;
                     myCaps->dwSize = sizeof(DDCAPS_DX7);
 
                 }
@@ -699,7 +699,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_EnumDisplayModes,           /* (EnumDisplayModes testing / devloping) */
     Main_DirectDraw_EnumSurfaces,
     Main_DirectDraw_FlipToGDISurface,
-    Main_DirectDraw_GetCaps,
+    Main_DirectDraw_GetCaps,                    /* (GetCaps testing / devloping) */
     Main_DirectDraw_GetDisplayMode,             /* (GetDisplayMode testing / devloping) */
     Main_DirectDraw_GetFourCCCodes,             /* (GetFourCCCodes done) */
     Main_DirectDraw_GetGDISurface,
