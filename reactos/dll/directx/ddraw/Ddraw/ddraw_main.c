@@ -468,23 +468,53 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
 
      if ((IsBadWritePtr(pDriverCaps,sizeof(LPDDCAPS)))) 
      {
+         DDSCAPS2 ddscaps = { 0 };
+         DWORD dwTotal = 0;
+         DWORD dwFree = 0;
         /* Setup hardware caps */
+
+         Main_DirectDraw_GetAvailableVidMem4(iface, &ddscaps, &dwTotal, &dwFree);
+
+
         switch (pDriverCaps->dwSize)
         {
             case sizeof(DDCAPS_DX1):
-                retVal = DDERR_INVALIDPARAMS;
+                {
+                    LPDDCAPS_DX1 myCaps = (LPDDCAPS_DX1) pDriverCaps;
+
+                    myCaps->dwVidMemFree = dwFree;
+                    myCaps->dwVidMemTotal = dwTotal;
+                }
                 break;
+
             case sizeof(DDCAPS_DX3):
-                retVal = DDERR_INVALIDPARAMS;
+                {
+                    LPDDCAPS_DX3 myCaps = (LPDDCAPS_DX3) pDriverCaps;
+
+                    myCaps->dwVidMemFree = dwFree;
+                    myCaps->dwVidMemTotal = dwTotal;
+                }
                 break;
+
             case sizeof(DDCAPS_DX5):
-                retVal = DDERR_INVALIDPARAMS;
+                {
+                    LPDDCAPS_DX5 myCaps = (LPDDCAPS_DX5) pDriverCaps;
+
+                    myCaps->dwVidMemFree = dwFree;
+                    myCaps->dwVidMemTotal = dwTotal;
+                }
                 break;
 
             /* DDCAPS_DX6 is same as DDCAPS_DX7 */
             case sizeof(DDCAPS_DX7):
-                retVal = DDERR_INVALIDPARAMS;
+                {
+                    LPDDCAPS_DX7 myCaps = (LPDDCAPS_DX7) pDriverCaps;
+
+                    myCaps->dwVidMemFree = dwFree;
+                    myCaps->dwVidMemTotal = dwTotal;
+                }
                 break;
+
             default:
                 retVal = DDERR_INVALIDPARAMS;
                 break;
@@ -515,6 +545,8 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                 break;
         }
      }
+
+     return  retVal;
 }
 
 
