@@ -127,7 +127,7 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     }
     else if (IsEqualGUID(&IID_IDirectDraw, id))
     {
-        /* DirectDraw4 Vtable */
+        /* DirectDraw Vtable */
         This->lpVtbl = &DirectDraw_Vtable;
         *pIface = (LPDIRECTDRAW)&This->lpVtbl;
         Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);

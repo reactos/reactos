@@ -18,6 +18,28 @@
 CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
+
+
+
+/*++
+* @name DirectDrawCreateClipper
+*
+*     The DirectDrawCreateClipper routine <FILLMEIN>.
+*
+* @param dwFlags
+*        <FILLMEIN>.
+*
+* @param lplpDDClipper
+*        <FILLMEIN>.
+*
+* @param pUnkOuter
+*        <FILLMEIN>.
+*
+* @return  <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
                                         LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
 {
@@ -26,10 +48,26 @@ HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags,
     return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
 }
 
-/*
- * IMPLEMENT
- * Status this api is finish and is 100% correct 
- */
+/*++
+* @name DirectDrawCreate
+*
+*     The DirectDrawCreate routine <FILLMEIN>.
+*
+* @param lpGUID
+*        <FILLMEIN>.
+*
+* @param lplpDD
+*        <FILLMEIN>.
+*
+* @param pUnkOuter
+*        Alwas set to NULL other wise will  DirectDrawCreate fail it return 
+*        errror code CLASS_E_NOAGGREGATION
+*
+* @return  <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 
 HRESULT 
 WINAPI 
@@ -64,11 +102,26 @@ DirectDrawCreate (LPGUID lpGUID,
     return retVal;
 }
 
-/*
- * IMPLEMENT
- * Status this api is finish and is 100% correct 
- */
-
+/*++
+* @name DirectDrawCreateEx
+*
+*     The DirectDrawCreateEx routine <FILLMEIN>.
+*
+* @param lpGUID
+*        <FILLMEIN>.
+*
+* @param lplpDD
+*        <FILLMEIN>.
+*
+* @param pUnkOuter
+*        Alwas set to NULL other wise will  DirectDrawCreateEx fail it return 
+*        errror code CLASS_E_NOAGGREGATION
+*
+* @return  <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 HRESULT 
 WINAPI 
 DirectDrawCreateEx(LPGUID lpGUID,
@@ -187,6 +240,46 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
     sizeof(D3DHAL_DP2COMMAND) + ( D3DHAL_DP2COMMAND->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO));
     to get the xxxx end positions. 
  */
+
+/*++
+* @name D3DParseUnknownCommand
+*
+*     The D3DParseUnknownCommand routine    <FILLMEIN>.
+*
+* @param lpCmd
+*       Is a typcast to LPD3DHAL_DP2COMMAND struct 
+*       typedef struct _D3DHAL_DP2COMMAND
+*       {
+*           BYTE  bCommand;
+*           BYTE  bReserved;
+*           union
+*           {
+*               WORD  wPrimitiveCount;
+*               WORD  wStateCount;
+*           };
+*       } D3DHAL_DP2COMMAND, *LPD3DHAL_DP2COMMAND;
+* 
+*       lpCmd->bCommand 
+*       only accpect D3DDP2OP_VIEWPORTINFO, and undocument command 0x0D
+*       rest of the command will be return error code for.
+*
+        Command 0x0D
+*       dp2command->bReserved 
+*       is how big struect we got in wStateCount or how many wStateCount we got
+*       do not known more about it, no info in msdn about it either.
+*
+*       Command  D3DDP2OP_VIEWPORTINFO
+*        <FILLMEIN>.
+*
+* @param lpRetCmd
+*        <FILLMEIN>.
+*
+* @return  <FILLMEIN>.
+*
+* @remarks 
+    
+*
+*--*/
 
 HRESULT WINAPI 
 D3DParseUnknownCommand( LPVOID lpCmd, 

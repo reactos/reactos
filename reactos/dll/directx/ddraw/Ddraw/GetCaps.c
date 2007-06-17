@@ -98,7 +98,7 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVCaps, sizeof(DDNONLOCALVIDMEMCAPS));
                     }
                     */
-                    memset(myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
+                    memset(&myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
@@ -124,7 +124,7 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVCaps, sizeof(DDNONLOCALVIDMEMCAPS));
                     }
                     */
-                    memset(myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
+                    memset(&myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
@@ -206,7 +206,7 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVHELCaps, sizeof(DDNONLOCALVIDMEMCAPS));
                     }
                     */
-                    memset(myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
+                    memset(&myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
@@ -232,7 +232,7 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVHELCaps, sizeof(DDNONLOCALVIDMEMCAPS));
                     }
                     */
-                    memset(myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
+                    memset(&myCaps->dwNLVBCaps,0,sizeof(DDNONLOCALVIDMEMCAPS));
 
                     if (CoreCaps->dwSize == sizeof(DDCORECAPS))
                     {
