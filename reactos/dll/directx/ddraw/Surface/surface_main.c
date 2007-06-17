@@ -80,7 +80,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 
 	 DX_WINDBG_trace();
 
-     if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags 
+     if (( ThisDest->lpLcl->lpGbl->lpDD->lpDDCBtmp->HALDDSurface.dwFlags 
 		   & DDHAL_SURFCB32_BLT) != DDHAL_SURFCB32_BLT)
 	 {
 		 return DDERR_GENERIC;
@@ -95,7 +95,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
      }   
 
 	 mDdBlt.lpDD = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
-	 mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Blt;
+     mDdBlt.Blt = ThisDest->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->lpDDCBtmp->HALDDSurface.Blt;
      mDdBlt.lpDDDestSurface = ThisDest->lpLcl->lpSurfMore->slist[0];
 
 	 ThisDest->lpLcl->lpSurfMore->slist[0]->hDC = 

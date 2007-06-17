@@ -121,8 +121,29 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
         ThisSurfInt->lpLcl = ThisSurfLcl;
         ThisSurfLcl->lpGbl = ThisSurfaceGbl;
+
+        ThisSurfLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
+
         ThisSurfaceGbl->lpDD = pDDraw->lpLcl->lpGbl;
-        
+        ThisSurfaceGbl->lpDDHandle = pDDraw->lpLcl->lpGbl;
+
+        /* FIXME ? */
+        ThisSurfaceGbl->dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
+
+        if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
+        {
+            ThisSurfaceGbl->wWidth  = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayWidth;
+            ThisSurfaceGbl->wHeight = pDDraw->lpLcl->lpGbl->vmiData.dwDisplayHeight;
+            ThisSurfaceGbl->lPitch  = pDDraw->lpLcl->lpGbl->vmiData.lDisplayPitch;
+            ThisSurfaceGbl->dwLinearSize = pDDraw->lpLcl->lpGbl->vmiData.lDisplayPitch;
+        }
+        else
+        {
+            ThisSurfaceGbl->wWidth  = (WORD)pDDSD->dwWidth;
+            ThisSurfaceGbl->wHeight = (WORD)pDDSD->dwHeight;
+            ThisSurfaceGbl->lPitch  = pDDSD->lPitch;
+            ThisSurfaceGbl->dwLinearSize = pDDSD->lPitch;
+        }
 
         /* FIXME set right version */
         ThisSurfInt->lpVtbl = &DirectDrawSurface7_Vtable;
@@ -135,6 +156,9 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
         ThisSurfLcl->dwProcessId = GetCurrentProcessId();
 
+
+
+
         /* FIXME the lpLnk */
         /* FIXME the ref counter */
     }
@@ -142,10 +166,48 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
     /* Fixme call on DdCanCreate then on DdCreateSurface createsurface data here */
 
+    /* FIXME bIsDifferentPixelFormat being set to true or false with automatic detcitons */
+    mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE;
+
+    mDdCanCreateSurface.lpDD = pDDraw->lpLcl->lpGbl;
+    mDdCanCreateSurface.CanCreateSurface = pDDraw->lpLcl->lpDDCB->HALDD.CanCreateSurface;
+    mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
+    mDdCanCreateSurface.ddRVal = DDERR_GENERIC;
+
+    if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+    {
+        DX_STUB_str("mDdCanCreateSurface DDHAL_DRIVER_NOTHANDLED fail");
+        return DDERR_NOTINITIALIZED;
+    }
+
+   if (mDdCanCreateSurface.ddRVal != DD_OK)
+   {
+        DX_STUB_str("mDdCanCreateSurface fail");
+        return DDERR_NOTINITIALIZED;
+   }
+
+    mDdCreateSurface.lpDD = pDDraw->lpLcl->lpGbl;
+    mDdCreateSurface.CreateSurface = pDDraw->lpLcl->lpGbl->lpDDCBtmp->HALDD.CreateSurface;
+    mDdCreateSurface.ddRVal =  DDERR_GENERIC;
+    mDdCreateSurface.dwSCnt = slist_int[0]->dwIntRefCnt + 1; // is this correct 
+    mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
+    mDdCreateSurface.lplpSList = slist_lcl;
+
+    if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
+    {
+           return DDERR_NOTINITIALIZED;
+    }
+
+    if (mDdCreateSurface.ddRVal != DD_OK) 
+    {
+           return mDdCreateSurface.ddRVal;
+    }
 
     *ppSurf = &slist_int[0]->lpVtbl;
-    return DD_FALSE;
+    return DD_OK;
 }
+
+
 
 void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc)
 {
