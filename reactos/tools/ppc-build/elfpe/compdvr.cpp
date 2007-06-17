@@ -169,6 +169,8 @@ int run_ld( bool verbose, bool nostdlib, bool nostartfiles, bool is_dll,
     args.insert(args.begin()+2,ldscript);
     args.insert(args.begin()+1,"--emit-relocs");
     args.insert(args.begin()+1,"-dc");
+    args.insert(args.begin()+1,"-z");
+    args.insert(args.begin()+2,"defs");
     args.insert(args.begin()+1,"-r");
     
     for( size_t i = 0; i < args.size(); i++ ) {

@@ -28,7 +28,7 @@ SECTIONS
   }
   .idata :
   {
-     SORT(*)(.idata$2)
+     *(.idata$2)
      SORT(*)(.idata$3)
      LONG(0); LONG(0); LONG(0); LONG(0); LONG(0);
      SORT(*)(.idata$4)

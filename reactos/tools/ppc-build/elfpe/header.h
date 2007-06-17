@@ -7,6 +7,18 @@
 #include "util.h"
 #include "objectfile.h"
 
+typedef struct section_mapping_t {
+    const ElfObjectFile::Section *section;
+    uint32_t rva;
+    int index;
+    
+    section_mapping_t
+    (const ElfObjectFile::Section *sect, uint32_t rva, int index) :
+	section(sect), rva(rva), index(index) { }
+    section_mapping_t(const section_mapping_t &other) :
+	section(other.section), rva(other.rva), index(other.index) { }
+} section_mapping_t;
+
 class ElfPeHeader {
 public:
     ElfPeHeader
@@ -24,27 +36,15 @@ public:
     const ElfObjectFile::secdata_t &getData() const;
 
 private:
-    typedef struct section_mapping_t {
-	const ElfObjectFile::Section *section;
-	uint32_t rva;
-	int index;
-	
-	section_mapping_t
-	(const ElfObjectFile::Section *sect, uint32_t rva, int index) :
-	    section(sect), rva(rva), index(index) { }
-	section_mapping_t(const section_mapping_t &other) :
-	    section(other.section), rva(other.rva), index(other.index) { }
-    } section_mapping_t;
-
     void createHeaderSection();
     uint32_t getSectionRvas(std::vector<section_mapping_t> &rvas) const;
     uint32_t getEntryPoint(const std::vector<section_mapping_t> &rvas, const ElfObjectFile::Symbol *entry) const;
     int computeSize() const;
     int getExeFlags() const { return 0; }
     int getDllFlags() const { return dll ? IMAGE_FILE_DLL : 0; }
-    u32pair_t getExportInfo() const;
-    u32pair_t getImportInfo() const;
-    u32pair_t getResourceInfo() const;
+    u32pair_t getExportInfo(const std::vector<section_mapping_t> &rvas) const;
+    u32pair_t getImportInfo(const std::vector<section_mapping_t> &rvas) const;
+    u32pair_t getResourceInfo(const std::vector<section_mapping_t> &rvas) const;
     u32pair_t getExceptionInfo() const;
     u32pair_t getSecurityInfo() const;
     u32pair_t getRelocInfo() const;

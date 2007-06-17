@@ -83,9 +83,9 @@ void ElfPeHeader::createHeaderSection()
     le32write_postinc(dataptr, 0);
     le32write_postinc(dataptr, 10); // # Directories
     // "Directories"
-    le32pwrite_postinc(dataptr, getExportInfo());
-    le32pwrite_postinc(dataptr, getImportInfo());
-    le32pwrite_postinc(dataptr, getResourceInfo());
+    le32pwrite_postinc(dataptr, getExportInfo(sectionRvaSet));
+    le32pwrite_postinc(dataptr, getImportInfo(sectionRvaSet));
+    le32pwrite_postinc(dataptr, getResourceInfo(sectionRvaSet));
     le32pwrite_postinc(dataptr, getExceptionInfo());
     le32pwrite_postinc(dataptr, getSecurityInfo());
     le32pwrite_postinc(dataptr, getRelocInfo());
@@ -155,28 +155,37 @@ uint16_t ElfPeHeader::getPeArch() const
     return IMAGE_FILE_MACHINE_POWERPCBE; /* for now */
 }
 
-u32pair_t getNamedSectionInfo(ElfObjectFile *eof, const std::string &name) 
+u32pair_t getNamedSectionInfo(ElfObjectFile *eof, const std::vector<section_mapping_t> &mapping, const std::string &name) 
 {
     const ElfObjectFile::Section *sect = eof->getNamedSection(name);
+    uint32_t sectaddr;
+    int i;
+
     if(sect)
-	return std::make_pair(sect->getStartRva(), sect->logicalSize());
-    else
-	return std::make_pair(0,0);
+    {
+	for(i = 0; i < mapping.size(); i++)
+	    if(mapping[i].index == sect->getNumber())
+	    {
+		return std::make_pair
+		    (mapping[i].rva, sect->logicalSize());
+	    }
+    }
+    return std::make_pair(0,0);
 }
 
-u32pair_t ElfPeHeader::getExportInfo() const
+u32pair_t ElfPeHeader::getExportInfo(const std::vector<section_mapping_t> &mapping) const
 {
-    return getNamedSectionInfo(eof, ".edata");
+    return getNamedSectionInfo(eof, mapping, ".edata");
 }
 
-u32pair_t ElfPeHeader::getImportInfo() const
+u32pair_t ElfPeHeader::getImportInfo(const std::vector<section_mapping_t> &mapping) const
 {
-    return getNamedSectionInfo(eof, ".idata");
+    return getNamedSectionInfo(eof, mapping, ".idata");
 }
 
-u32pair_t ElfPeHeader::getResourceInfo() const
+u32pair_t ElfPeHeader::getResourceInfo(const std::vector<section_mapping_t> &mapping) const
 {
-    return getNamedSectionInfo(eof, ".rsrc");
+    return getNamedSectionInfo(eof, mapping, ".rsrc");
 }
 
 u32pair_t ElfPeHeader::getExceptionInfo() const 
@@ -215,7 +224,7 @@ u32pair_t ElfPeHeader::getMachInfo() const
 }
 
 uint32_t ElfPeHeader::getEntryPoint
-(const std::vector<ElfPeHeader::section_mapping_t> &secmap, 
+(const std::vector<section_mapping_t> &secmap, 
  const ElfObjectFile::Symbol *entry) const
 {
     if(entry == NULL) return computeSize();

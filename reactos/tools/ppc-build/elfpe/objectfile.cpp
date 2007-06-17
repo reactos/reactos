@@ -28,7 +28,7 @@ ElfObjectFile::ElfObjectFile(const std::string &filename) : fd(-1)
 	{
 	    s = elf_nextscn(elfHeader, s);
 	    if(!s) break;
-	    sect = new Section(*this, s);
+	    sect = new Section(*this, i, s);
 	    sections.push_back(sect);
 	    sections_by_name.insert(std::make_pair(sect->getName(), sect));
 	}

@@ -24,11 +24,12 @@ public:
     class Section {
     public:
 	Section(const Section &other) : 
-	    obj(other.obj), section(other.section), have_data(false) { 
+	    obj(other.obj), section(other.section), have_data(false), 
+	    number(other.number) { 
 	    e32shdr = elf32_getshdr(section);
 	}
-	Section(ElfObjectFile &obj, Elf_Scn *sechdr) : 
-	    obj(&obj), section(sechdr), have_data(false) {
+	Section(ElfObjectFile &obj, int number, Elf_Scn *sechdr) : 
+	    obj(&obj), section(sechdr), have_data(false), number(number) {
 	    e32shdr = elf32_getshdr(section);
 	}
 	Section &operator = (const Section &other) {
@@ -36,6 +37,7 @@ public:
 	    have_data = false;
 	    section = other.section;
 	    e32shdr = other.e32shdr;
+	    number = other.number;
 	}
 	operator bool () { return !!section; }
 	std::string getName() const { 
@@ -44,6 +46,10 @@ public:
 
 	int getType() const {
 	    return e32shdr->sh_type;
+	}
+
+	int getNumber() const {
+	    return number;
 	}
 
 	int getLink() const {
@@ -80,6 +86,7 @@ public:
 
     private:
 	const ElfObjectFile *obj;
+	int number;
 	Elf_Scn *section;
 	Elf32_Shdr *e32shdr;
 	mutable bool have_data;
