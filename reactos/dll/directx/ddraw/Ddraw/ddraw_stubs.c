@@ -57,13 +57,6 @@ Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
 	DX_STUB;
 }
 
-HRESULT WINAPI
-Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
-            LPDDCAPS pHELCaps)
-{
-	DX_WINDBG_trace();
-	DX_STUB;
-}
 
 HRESULT WINAPI
 Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface,

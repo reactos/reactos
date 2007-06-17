@@ -131,7 +131,7 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                 }
                 else
                 {
-                    /* DirectDraw4 Vtable */
+                    /* DirectDraw Vtable */
                     newThis->lpVtbl = &DirectDraw_Vtable;
                     newThis->lpLcl = This->lpLcl;
                     newThis->lpLink = This;
@@ -450,6 +450,74 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
     //LeaveCriticalSection(&ddcs);
     return retVal;
 }
+
+HRESULT WINAPI
+Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
+                         LPDDCAPS pHELCaps)
+{
+    HRESULT retVal = DD_OK;
+
+    DX_WINDBG_trace();
+    if (!(IsBadWritePtr(pDriverCaps,sizeof(LPDDCAPS))))
+    {
+        if (!(IsBadWritePtr(pHELCaps,sizeof(LPDDCAPS))))
+        {
+            return DDERR_INVALIDPARAMS;
+        }
+    }
+
+     if ((IsBadWritePtr(pDriverCaps,sizeof(LPDDCAPS)))) 
+     {
+        /* Setup hardware caps */
+        switch (pDriverCaps->dwSize)
+        {
+            case sizeof(DDCAPS_DX1):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+            case sizeof(DDCAPS_DX3):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+            case sizeof(DDCAPS_DX5):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+
+            /* DDCAPS_DX6 is same as DDCAPS_DX7 */
+            case sizeof(DDCAPS_DX7):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+            default:
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+        }
+     }
+
+     if ((IsBadWritePtr(pHELCaps,sizeof(LPDDCAPS)))) 
+     {
+        /* Setup hardware caps */
+        switch (pHELCaps->dwSize)
+        {
+            case sizeof(DDCAPS_DX1):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+            case sizeof(DDCAPS_DX3):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+            case sizeof(DDCAPS_DX5):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+
+            /* DDCAPS_DX6 is same as DDCAPS_DX7 */
+            case sizeof(DDCAPS_DX7):
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+            default:
+                retVal = DDERR_INVALIDPARAMS;
+                break;
+        }
+     }
+}
+
+
 
 
 
