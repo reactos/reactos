@@ -290,7 +290,7 @@ ObfDereferenceObject(IN PVOID Object)
 
     if (Header->PointerCount < Header->HandleCount)
     {
-        DPRINT("Misbehaving object: %wZ\n", &Header->Type->Name);
+        DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
         return Header->PointerCount;
     }
 
@@ -301,7 +301,7 @@ ObfDereferenceObject(IN PVOID Object)
         /* Sanity check */
         if (Header->HandleCount)
         {
-            DPRINT("Misbehaving object: %wZ\n", &Header->Type->Name);
+            DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
             return Header->PointerCount;
         }
 
