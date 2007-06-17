@@ -76,6 +76,7 @@
 				<file>prep_pci.c</file>
 				<file>prep_vga.c</file>
 				<file>mboot.c</file>
+				<file>loader.c</file>
 			</module>
 		</if>
 	</directory>

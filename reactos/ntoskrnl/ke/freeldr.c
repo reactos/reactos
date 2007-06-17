@@ -17,8 +17,9 @@
 
 /* FreeLDR Module Data */
 LOADER_MODULE KeLoaderModules[64];
+LDR_DATA_TABLE_ENTRY ModuleObject[NUM_BOOT_DRIVERS];
 ULONG KeLoaderModuleCount;
-static CHAR KeLoaderModuleStrings[64][256];
+CHAR KeLoaderModuleStrings[64][256];
 
 /* FreeLDR Memory Data */
 ADDRESS_RANGE KeMemoryMap[64];
@@ -32,9 +33,6 @@ ULONG MmFreeLdrPageDirectoryEnd;
 ROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
 static CHAR KeLoaderCommandLine[256];
 BOOLEAN AcpiTableDetected;
-
-/* FreeLDR PE Hack Data */
-extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 
 /* NT Loader Data */
 LOADER_PARAMETER_BLOCK BldrLoaderBlock;
@@ -221,7 +219,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else if (!(_stricmp(DriverName, "hal.dll")))
         {
             /* The HAL actually gets loaded somewhere else */
-            ModStart = HalModuleObject.DllBase;
+            ModStart = ModuleObject[1].DllBase;
 
             /* Create an MD for the HAL */
             MdEntry = &BldrMemoryDescriptors[i];
@@ -297,10 +295,6 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 }
 
 VOID
-INIT_FUNCTION
-NTAPI
-LdrpSettleHal(PVOID NewHalBase);
-VOID
 NTAPI
 KiSetupSyscallHandler();
 
@@ -314,7 +308,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     ULONG StartKernelBase;
     ULONG HalBase;
     ULONG DriverBase;
-    ULONG DriverSize;
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     CHAR* s;
 #ifdef _M_IX86
@@ -406,6 +399,11 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
             strcpy(KeLoaderModuleStrings[i], (PCHAR)KeLoaderModules[i].String);
         }
 
+	DPRINT1("Module %08x-%08x: %s\n", 
+		KeLoaderModules[i].ModStart,
+		KeLoaderModules[i].ModEnd,
+		KeLoaderModuleStrings[i]);
+
 #ifdef _M_PPC
 	KeLoaderModules[i].ModStart += KSEG0_BASE - StartKernelBase;
 	KeLoaderModules[i].ModEnd   += KSEG0_BASE - StartKernelBase;
@@ -429,9 +427,8 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
     /* Choose last module address as the final kernel address */
     MmFreeLdrLastKernelAddress =
-        ROUND_UP(KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd, 0x10000);
+        KeLoaderModules[KeRosLoaderBlock.ModsCount - 1].ModEnd;
 
-    /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
 
     /* Choose Driver Base */
@@ -442,47 +439,20 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     LdrHalBase = (ULONG_PTR)DriverBase;
 #endif
 
+    /* Convert the loader block */
+    KiRosFrldrLpbToNtLpb(&KeRosLoaderBlock, &NtLoaderBlock);
+
     /* Initialize Module Management */
-    LdrInitModuleManagement((PVOID)KeLoaderModules[0].ModStart);
-
-#ifdef _M_PPC
-    LdrpSettleHal((PVOID)DriverBase);
-#endif
-
-    /* Load HAL.DLL with the PE Loader */
-    LdrSafePEProcessModule((PVOID)HalBase,
-                            (PVOID)DriverBase,
-                            (PVOID)KeLoaderModules[0].ModStart,
-                            &DriverSize);
-
-    /* Increase the last kernel address with the size of HAL */
-    MmFreeLdrLastKernelAddress += PAGE_ROUND_UP(DriverSize);
-
-#ifdef _M_IX86
-    /* Now select the final beginning and ending Kernel Addresses */
-    MmFreeLdrFirstKrnlPhysAddr = KeLoaderModules[0].ModStart -
-                                 KSEG0_BASE + 0x200000;
-    MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
-                                KSEG0_BASE + 0x200000;
-#endif
+    /* LdrInitModuleManagement((PVOID)KeLoaderModules[0].ModStart); */
 
     /* Setup the IDT */
     KeInitExceptions(); // ONCE HACK BELOW IS GONE, MOVE TO KISYSTEMSTARTUP!
     KeInitInterrupts(); // ROS HACK DEPRECATED SOON BY NEW HAL
 
-    /* Load the Kernel with the PE Loader */
-    LdrSafePEProcessModule((PVOID)KeLoaderModules[0].ModStart,
-                           (PVOID)KeLoaderModules[0].ModStart,
-                           (PVOID)DriverBase,
-                           &DriverSize);
-
     /* Sets up the VDM Data */
 #ifdef _M_IX86
     NtEarlyInitVdm();
 #endif
-
-    /* Convert the loader block */
-    KiRosFrldrLpbToNtLpb(&KeRosLoaderBlock, &NtLoaderBlock);
 
     /* Do general System Startup */
     KiSystemStartup(NtLoaderBlock);

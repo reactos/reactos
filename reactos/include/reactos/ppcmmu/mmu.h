@@ -96,15 +96,14 @@ static inline int PPCMMU(int action, void *arg1, void *arg2, void *arg3)
     int (*mmumain)(int action, void *arg1, void *arg2, void *arg3) = (void *)MMUCODE;
     __asm__("bl 1f\n\t"
 	    "\n1:\n\t"
-	    "mflr 0\n\t"
-	    "stw 0,0(%0)" : : "r" (&pc));
+	    "mflr %0\n\t" : "=r" (pc));
 
     for(i = 0, gotbat = 0; i < 4 && gotbat < 2; i++)
     {
 	GetBat(i, 1, &batu, &batl);
-	if(batu & 0x3fc)
+	if(batu & 0xffc)
 	{
-	    mask = ~(0x1ffff | ((batu & 0x3fc)>>2)<<17);
+	    mask = ~(0x1ffff | ((batu & 0xffc)>>2)<<17);
 	    if(!(batu & 2) || ((batu & mask) != (pc & mask)))
 		usebat[gotbat++] = i;
 	} else {

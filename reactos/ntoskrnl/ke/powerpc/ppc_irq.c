@@ -822,14 +822,13 @@ VOID
 NTAPI
 KiSystemService(ppc_trap_frame_t *trap_frame)
 {
-    SetPhysByte(0x800003f8, 'S');
-    SetPhysByte(0x800003f8, 'C');
-    SetPhysByte(0x800003f8, '!');
-    SetPhysByte(0x800003f8, '\r');
-    SetPhysByte(0x800003f8, '\n');
+    int i;
     switch(trap_frame->gpr[8])
     {
     case 0x10000: /* DebugService */
+	for( i = 0; i < trap_frame->gpr[5]; i++ )
+	    SetPhysByte(0x800003f8, ((PCHAR)trap_frame->gpr[4])[i]);
+
 	trap_frame->gpr[3] = KdpServiceDispatcher
 	    (trap_frame->gpr[3], 
 	     (PCHAR)trap_frame->gpr[4],

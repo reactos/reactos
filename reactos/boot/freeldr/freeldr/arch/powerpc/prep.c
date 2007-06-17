@@ -34,7 +34,8 @@ BOOLEAN PpcPrepDiskReadLogicalSectors
 
 BOOLEAN PpcPrepConsKbHit()
 {
-    return GetPhysByte(prep_serial+5) & 1;
+    return 1;
+    //return GetPhysByte(prep_serial+5) & 1;
 }
 
 int PpcPrepConsGetCh() 

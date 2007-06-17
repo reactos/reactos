@@ -35,6 +35,7 @@ char                    reactos_arc_strings[32][256];
 unsigned long           reactos_disk_count = 0;
 CHAR szHalName[255];
 CHAR szBootPath[255];
+CHAR SystemRoot[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 BOOLEAN FrLdrBootType;
 
@@ -199,6 +200,8 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     CHAR szFileName[256];
     ULONG BufferSize;
 
+    strcpy(SystemRoot, szSystemRoot);
+
     /* open the codepage key */
     rc = RegOpenKey(NULL,
                     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
@@ -300,7 +303,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     return(TRUE);
 }
 
-static BOOLEAN
+BOOLEAN
 FrLdrLoadDriver(PCHAR szFileName,
                 INT nPos)
 {
@@ -312,6 +315,25 @@ FrLdrLoadDriver(PCHAR szFileName,
 
     /* Open the Driver */
     FilePointer = FsOpenFile(szFileName);
+
+    /* Try under the system root in the main dir and drivers */
+    if (FilePointer == NULL)
+    {
+	strcpy(value, SystemRoot);
+	strcat(value, "SYSTEM32\\");
+	strcat(value, szFileName);
+	printf("Trying %s\n", value);
+	FilePointer = FsOpenFile(value);
+    }
+
+    if (FilePointer == NULL)
+    {
+	strcpy(value, SystemRoot);
+	strcat(value, "SYSTEM32\\DRIVERS\\");
+	strcat(value, szFileName);
+	printf("Trying %s\n", value);
+	FilePointer = FsOpenFile(value);
+    }
 
     /* Make sure we did */
     if (FilePointer == NULL) {

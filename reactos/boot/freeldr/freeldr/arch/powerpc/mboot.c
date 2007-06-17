@@ -30,7 +30,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static PVOID KernelMemory = 0;
+PVOID KernelMemory = 0;
 extern boot_infos_t BootInfo;
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
@@ -39,20 +39,6 @@ extern boot_infos_t BootInfo;
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Directory */
 #define PDE_SHIFT 22
 #define PDE_SHIFT_PAE 18
-
-
-/* Converts a Relative Address read from the Kernel into a Physical Address */
-ULONG RaToPa(ULONG p) {
-    return (ULONG)(KernelMemory) + p;
-}
-
-/* Converts a Phsyical Address Pointer into a Page Frame Number */
-#define PaPtrToPfn(p) \
-    (((ULONG_PTR)&p) >> PFN_SHIFT)
-
-/* Converts a Phsyical Address into a Page Frame Number */
-#define PaToPfn(p) \
-    ((p) >> PFN_SHIFT)
 
 #define STARTUP_BASE                0xC0000000
 #define HYPERSPACE_BASE             0xC0400000
@@ -74,7 +60,7 @@ ULONG RaToPa(ULONG p) {
 
 
 #define BAT_GRANULARITY             (64 * 1024)
-#define KernelMemorySize            (16 * 1024 * 1024)
+#define KernelMemorySize            (8 * 1024 * 1024)
 #define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
 #define XROUNDUP(x,n)               ((((ULONG)x) + ((n) - 1)) & (~((n) - 1)))
 
@@ -95,6 +81,15 @@ ULONG_PTR KernelEntry;
 
 /* Dummy to bring in memmove */
 PVOID memmove_dummy = memmove;
+
+PLOADER_MODULE
+NTAPI
+LdrGetModuleObject(PCHAR ModuleName);
+
+NTSTATUS
+NTAPI
+LdrPEFixupImports(IN PVOID DllBase,
+                  IN PCHAR DllName);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -117,34 +112,6 @@ PVOID memmove_dummy = memmove;
 
 typedef void (*KernelEntryFn)( void * );
 
-VOID
-DrawDigit(boot_infos_t *BootInfo, ULONG Digit, int x, int y)
-{
-    int i,j,k;
-
-    for( i = 0; i < 7; i++ ) {
-	for( j = 0; j < 8; j++ ) {
-	    for( k = 0; k < BootInfo->dispDeviceDepth/8; k++ ) {
-		SetPhysByte(((ULONG_PTR)BootInfo->dispDeviceBase)+
-			    k +
-			    (((j+x) * (BootInfo->dispDeviceDepth/8)) +
-			     ((i+y) * (BootInfo->dispDeviceRowBytes))),
-			    BootInfo->dispFont[Digit][i*8+j] == ' ' ? 0 : 255);
-	    }
-	}
-    }
-}
-
-VOID
-DrawNumber(boot_infos_t *BootInfo, ULONG Number, int x, int y)
-{
-    int i;
-
-    for( i = 0; i < 8; i++, Number<<=4 ) {
-	DrawDigit(BootInfo,(Number>>28)&0xf,x+(i*8),y);
-    }
-}
-
 int MmuPageMiss(int inst, ppc_trap_frame_t *trap)
 {
     int i;
@@ -161,24 +128,35 @@ FrLdrStartup(ULONG Magic)
 {
     KernelEntryFn KernelEntryAddress = 
 	(KernelEntryFn)(KernelEntry + KernelBase);
-    ULONG_PTR i, page;
+    ULONG_PTR i, j, page, count;
+    PCHAR ModHeader;
     boot_infos_t *LocalBootInfo = &BootInfo;
     LocalBootInfo->dispFont = (font_char *)&LocalBootInfo[1];
     LoaderBlock.ArchExtra = (ULONG)LocalBootInfo;
     ppc_map_info_t *info = MmAllocateMemory(0x80 * sizeof(*info));
 
+    for(i = 0; i < LoaderBlock.ModsCount; i++)
+    {
+	ModHeader = ((PCHAR)reactos_modules[i].ModStart);
+	if(ModHeader[0] == 'M' && ModHeader[1] == 'Z')
+	    LdrPEFixupImports
+		((PVOID)reactos_modules[i].ModStart,
+		 (PCHAR)reactos_modules[i].String);
+    }
+
     /* We'll use vsid 1 for freeldr (expendable) */
     for(i = 0; i < 8; i++)
     {
 	MmuAllocVsid(16 + i);
-	MmuSetVsid(i, i+1, 1);
     }
+    MmuSetVsid(0, 8, 1);
+
     /* Vsid 0 is reactos kernel */
     for(i = 8; i < 16; i++)
     {
 	MmuAllocVsid(i);
-	MmuSetVsid(i, i+1, 0);
     }
+    MmuSetVsid(8, 16, 0);
 
     MmuSetPageCallback(MmuPageMiss);
 
@@ -197,19 +175,37 @@ FrLdrStartup(ULONG Magic)
     MmuMapPage(info, page);
 
     /* Map module name strings */
-    for( i = 0; i < LoaderBlock.ModsCount; i++ )
+    for( count = 0, i = 0; i < LoaderBlock.ModsCount; i++ )
     {
 	page = ROUND_DOWN(((ULONG)reactos_modules[i].String), (1<<PFN_SHIFT));
-	info[i].flags = MMU_ALL_RW;
-	info[i].proc = 1;
-	info[i].addr = page;
-	info[i].phys = page; // PpcVirt2phys(page, 0);
-	MmuMapPage(info, 1);
+	for( j = 0; j < count; j++ )
+	{
+	    if(info[j].addr == page) break;
+	}
+	if( j != count )
+	{
+	    info[count].flags = MMU_ALL_RW;
+	    info[count].proc = 1;
+	    info[count].addr = page;
+	    info[count].phys = page; // PpcVirt2phys(page, 0);
+	    count++;
+	}
     }
 
-    info[i].addr = (ULONG)&LoaderBlock;
-    info[i].phys = info[i].addr;
-    MmuMapPage(info, 1);
+    page = ROUND_DOWN((vaddr_t)&LoaderBlock, (1 << PAGE_SHIFT));
+    for( j = 0; j < count; j++ )
+    {
+	if(info[j].addr == page) break;
+    }
+    if( j != count )
+    {
+	info[count].flags = MMU_ALL_RW;
+	info[count].proc = 1;
+	info[count].addr = page;
+	info[count].phys = page; // PpcVirt2phys(page, 0);
+	count++;
+    }
+    MmuMapPage(info, count);
 
     MmuTurnOn(KernelEntryAddress, (void*)&LoaderBlock);
 
@@ -364,6 +360,16 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     PCHAR sptr;
     Elf32_Ehdr ehdr;
     Elf32_Shdr *shdr;
+    LPSTR TempName;
+
+    TempName = strrchr(ImageName, '\\');
+    if(TempName) TempName++; else TempName = (LPSTR)ImageName;
+    ModuleData = LdrGetModuleObject(TempName);
+    
+    if(ModuleData) 
+    {
+	return TRUE;
+    }
 
     if(!KernelAddr)
 	KernelAddr = (ULONG)NextModuleBase - (ULONG)KernelMemory + KernelBase;
@@ -579,6 +585,11 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     ModuleData->ModEnd = NextModuleBase;
     ModuleData->String = (ULONG)MmAllocateMemory(strlen(ImageName)+1);
     strcpy((PCHAR)ModuleData->String, ImageName);
+    printf("Module %s (%x-%x) next at %x\n",
+	   ModuleData->String, 
+	   ModuleData->ModStart,
+	   ModuleData->ModEnd,
+	   NextModuleBase);
     LoaderBlock.ModsCount++;
 
     /* Return Success */
@@ -626,8 +637,6 @@ FrLdrLoadModule(FILE *ModuleImage,
     PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;
     LPSTR TempName;
-
-    printf("Load module %s at %x\n", ModuleName, (ULONG)NextModuleBase - (ULONG)KernelMemory + KernelBase);
 
     /* Get current module data structure and module name string array */
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];

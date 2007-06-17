@@ -1,40 +1,46 @@
 /* This file is generated with wmc version 0.3.0. Do not edit! */
 /* Source : ntoskrnl/ntoskrnl.mc */
 /* Cmdline: wmc -i -H include/reactos/bugcodes.h -o ntoskrnl/bugcodes.rc ntoskrnl/ntoskrnl.mc */
-/* Date   : Wed May 23 04:08:35 2007 */
+/* Date   : Wed Jun 13 06:44:39 2007 */
 
 
 1 MESSAGETABLE
 LANGUAGE 0x9, 0x1
 {
- /* NBlocks    */ 0x0000001bL,
- /* Lo,Hi,Offs */ 0x00000000L, 0x00000039L, 0x00000148L,
- /* Lo,Hi,Offs */ 0x0000003eL, 0x00000042L, 0x00000c74L,
- /* Lo,Hi,Offs */ 0x00000044L, 0x00000045L, 0x00000e04L,
- /* Lo,Hi,Offs */ 0x00000048L, 0x00000059L, 0x00000e4cL,
- /* Lo,Hi,Offs */ 0x0000005cL, 0x0000007bL, 0x00001060L,
- /* Lo,Hi,Offs */ 0x0000007dL, 0x00000080L, 0x00001588L,
- /* Lo,Hi,Offs */ 0x0000008eL, 0x0000008eL, 0x000017acL,
- /* Lo,Hi,Offs */ 0x00000094L, 0x00000094L, 0x000017c8L,
- /* Lo,Hi,Offs */ 0x00000096L, 0x00000096L, 0x000017ecL,
- /* Lo,Hi,Offs */ 0x000000a5L, 0x000000a5L, 0x0000180cL,
- /* Lo,Hi,Offs */ 0x000000beL, 0x000000beL, 0x00001880L,
- /* Lo,Hi,Offs */ 0x000000c3L, 0x000000c3L, 0x00001918L,
- /* Lo,Hi,Offs */ 0x000000c5L, 0x000000c5L, 0x00001a84L,
- /* Lo,Hi,Offs */ 0x000000c8L, 0x000000c8L, 0x00001d04L,
- /* Lo,Hi,Offs */ 0x000000cbL, 0x000000cbL, 0x00001df4L,
- /* Lo,Hi,Offs */ 0x000000ceL, 0x000000ceL, 0x00001e20L,
- /* Lo,Hi,Offs */ 0x000000d0L, 0x000000d1L, 0x00001e5cL,
- /* Lo,Hi,Offs */ 0x000000d3L, 0x000000d4L, 0x00001ea0L,
- /* Lo,Hi,Offs */ 0x000000d8L, 0x000000d8L, 0x00001f08L,
- /* Lo,Hi,Offs */ 0x000000e0L, 0x000000e5L, 0x00001f28L,
- /* Lo,Hi,Offs */ 0x000000e9L, 0x000000eaL, 0x0000217cL,
- /* Lo,Hi,Offs */ 0x000000efL, 0x000000efL, 0x0000229cL,
- /* Lo,Hi,Offs */ 0x000000f4L, 0x000000f4L, 0x000022b8L,
- /* Lo,Hi,Offs */ 0x000000faL, 0x000000faL, 0x000022dcL,
- /* Lo,Hi,Offs */ 0x000000fcL, 0x000000fcL, 0x00002300L,
- /* Lo,Hi,Offs */ 0x4000009aL, 0x4000009fL, 0x0000232cL,
- /* Lo,Hi,Offs */ 0x8000007fL, 0x80000083L, 0x000024b8L,
+ /* NBlocks    */ 0x00000021L,
+ /* Lo,Hi,Offs */ 0x00000000L, 0x00000039L, 0x00000190L,
+ /* Lo,Hi,Offs */ 0x0000003eL, 0x00000042L, 0x00000cbcL,
+ /* Lo,Hi,Offs */ 0x00000044L, 0x00000045L, 0x00000e4cL,
+ /* Lo,Hi,Offs */ 0x00000048L, 0x00000059L, 0x00000e94L,
+ /* Lo,Hi,Offs */ 0x0000005cL, 0x0000007bL, 0x000010a8L,
+ /* Lo,Hi,Offs */ 0x0000007dL, 0x00000080L, 0x000015d0L,
+ /* Lo,Hi,Offs */ 0x0000008eL, 0x00000090L, 0x000017f4L,
+ /* Lo,Hi,Offs */ 0x00000094L, 0x00000094L, 0x00001850L,
+ /* Lo,Hi,Offs */ 0x00000096L, 0x00000096L, 0x00001874L,
+ /* Lo,Hi,Offs */ 0x000000a0L, 0x000000a0L, 0x00001894L,
+ /* Lo,Hi,Offs */ 0x000000a5L, 0x000000a5L, 0x000018b0L,
+ /* Lo,Hi,Offs */ 0x000000beL, 0x000000beL, 0x00001924L,
+ /* Lo,Hi,Offs */ 0x000000c3L, 0x000000c3L, 0x000019bcL,
+ /* Lo,Hi,Offs */ 0x000000c5L, 0x000000c5L, 0x00001b28L,
+ /* Lo,Hi,Offs */ 0x000000c8L, 0x000000c8L, 0x00001da8L,
+ /* Lo,Hi,Offs */ 0x000000cbL, 0x000000cbL, 0x00001e98L,
+ /* Lo,Hi,Offs */ 0x000000ceL, 0x000000ceL, 0x00001ec4L,
+ /* Lo,Hi,Offs */ 0x000000d0L, 0x000000d1L, 0x00001f00L,
+ /* Lo,Hi,Offs */ 0x000000d3L, 0x000000d4L, 0x00001f44L,
+ /* Lo,Hi,Offs */ 0x000000d8L, 0x000000d8L, 0x00001facL,
+ /* Lo,Hi,Offs */ 0x000000e0L, 0x000000e5L, 0x00001fccL,
+ /* Lo,Hi,Offs */ 0x000000e9L, 0x000000eaL, 0x00002220L,
+ /* Lo,Hi,Offs */ 0x000000efL, 0x000000efL, 0x00002340L,
+ /* Lo,Hi,Offs */ 0x000000f4L, 0x000000f4L, 0x0000235cL,
+ /* Lo,Hi,Offs */ 0x000000faL, 0x000000faL, 0x00002380L,
+ /* Lo,Hi,Offs */ 0x000000fcL, 0x000000fcL, 0x000023a4L,
+ /* Lo,Hi,Offs */ 0x4000007eL, 0x4000007eL, 0x000023d0L,
+ /* Lo,Hi,Offs */ 0x40000087L, 0x40000089L, 0x000023fcL,
+ /* Lo,Hi,Offs */ 0x4000009dL, 0x4000009dL, 0x00002458L,
+ /* Lo,Hi,Offs */ 0x4000009fL, 0x4000009fL, 0x00002484L,
+ /* Lo,Hi,Offs */ 0x400000a8L, 0x400000aaL, 0x00002564L,
+ /* Lo,Hi,Offs */ 0x400000b7L, 0x400000b7L, 0x0000262cL,
+ /* Lo,Hi,Offs */ 0x8000007fL, 0x80000083L, 0x00002648L,
 
  /* Msg 0x00000000 */ 0x0048, 0x0000,
  "The bug code is undefined. Please use an existing code instead.\n\x00\x00\x00\x00",
@@ -424,11 +430,20 @@ LANGUAGE 0x9, 0x1
  /* Msg 0x0000008e */ 0x001c, 0x0000,
  "SPIN_LOCK_INIT_FAILURE\n\x00",
 
+ /* Msg 0x0000008f */ 0x0020, 0x0000,
+ "PP0_INITIALIZATION_FAILED\n\x00\x00",
+
+ /* Msg 0x00000090 */ 0x0020, 0x0000,
+ "PP1_INITIALIZATION_FAILED\n\x00\x00",
+
  /* Msg 0x00000094 */ 0x0024, 0x0000,
  "KERNEL_STACK_LOCKED_AT_EXIT\n\x00\x00\x00\x00",
 
  /* Msg 0x00000096 */ 0x0020, 0x0000,
  "INVALID_WORK_QUEUE_ITEM\n\x00\x00\x00\x00",
+
+ /* Msg 0x000000a0 */ 0x001c, 0x0000,
+ "INTERNAL_POWER_ERROR\n\x00\x00\x00",
 
  /* Msg 0x000000a5 */ 0x0074, 0x0000,
  "The BIOS in this system is not fully ACPI compliant.  Please contact you",
@@ -530,19 +545,19 @@ LANGUAGE 0x9, 0x1
  /* Msg 0x000000fc */ 0x002c, 0x0000,
  "ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY\n\x00\x00",
 
- /* Msg 0x4000009a */ 0x0024, 0x0000,
- "ReactOS Version %s (Build %s)\n\x00\x00",
+ /* Msg 0x4000007e */ 0x002c, 0x0000,
+ "ReactOS (R) Version %hs (Build %u%hs)\n\x00\x00",
 
- /* Msg 0x4000009b */ 0x0014, 0x0000,
+ /* Msg 0x40000087 */ 0x0014, 0x0000,
  "Service Pack\n\x00\x00\x00",
 
- /* Msg 0x4000009c */ 0x002c, 0x0000,
+ /* Msg 0x40000088 */ 0x002c, 0x0000,
  "%u System Processor [%u MB Memory] %Z\n\x00\x00",
 
- /* Msg 0x4000009d */ 0x001c, 0x0000,
- "MulitProcessor Kernel\n\x00\x00",
+ /* Msg 0x40000089 */ 0x001c, 0x0000,
+ "MultiProcessor Kernel\n\x00\x00",
 
- /* Msg 0x4000009e */ 0x002c, 0x0000,
+ /* Msg 0x4000009d */ 0x002c, 0x0000,
  "%u System Processors [%u MB Memory] %Z\n\x00",
 
  /* Msg 0x4000009f */ 0x00e0, 0x0000,
@@ -550,6 +565,18 @@ LANGUAGE 0x9, 0x1
  "e,\n and you\\n are welcome to change it and/or distribute copies of it ",
  "under\n certain\\n conditions. There is absolutely no warranty for React",
  "OS.\\n\n\x00\x00\x00\x00",
+
+ /* Msg 0x400000a8 */ 0x003c, 0x0000,
+ "The system is booting in safemode - Minimal Services\n\x00\x00\x00",
+
+ /* Msg 0x400000a9 */ 0x0048, 0x0000,
+ "The system is booting in safemode - Minimal Services with Network\n\x00\x00",
+
+ /* Msg 0x400000aa */ 0x0044, 0x0000,
+ "The system is booting in safemode - Directory Services Repair\n\x00\x00",
+
+ /* Msg 0x400000b7 */ 0x001c, 0x0000,
+ "Boot Logging Enabled\n\x00\x00\x00",
 
  /* Msg 0x8000007f */ 0x0064, 0x0000,
  "A problem has been detected and ReactOS has been shut down to prevent da",

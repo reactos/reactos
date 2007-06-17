@@ -17,6 +17,7 @@
 
 #ifdef _NTOSKRNL_
 
+#define NUM_BOOT_DRIVERS    32
 #define KeGetCurrentThread  _KeGetCurrentThread
 #define KeGetPreviousMode   _KeGetPreviousMode
 #undef  PsGetCurrentProcess
@@ -351,6 +352,14 @@ C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
 C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
 C_ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
 C_ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
+#endif
+
+#ifdef _PPC_
+#define SWAPD(x) ((((x)&0xff)<<24)|(((x)&0xff00)<<8)|(((x)>>8)&0xff00)|(((x)>>24)&0xff))
+#define SWAPW(x) ((((x)&0xff)<<8)|(((x)>>8)&0xff))
+#else
+#define SWAPD(x) x
+#define SWAPW(x) x
 #endif
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

@@ -1,10 +1,10 @@
 /* This file is generated with wmc version 0.3.0. Do not edit! */
 /* Source : dll/win32/kernel32/kernel32.mc */
 /* Cmdline: wmc -i -U -H include/reactos/errcodes.h -o dll/win32/kernel32/errcodes.rc dll/win32/kernel32/kernel32.mc */
-/* Date   : Wed May 23 04:08:35 2007 */
+/* Date   : Wed Jun 13 06:13:07 2007 */
 
-#ifndef __WMCGENERATED_4653be43_H
-#define __WMCGENERATED_4653be43_H
+#ifndef __WMCGENERATED_466f8af3_H
+#define __WMCGENERATED_466f8af3_H
 
 /* Severity codes */
 #define STATUS_SEVERITY_ERROR	0x3

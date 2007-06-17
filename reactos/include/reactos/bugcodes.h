@@ -1,10 +1,10 @@
 /* This file is generated with wmc version 0.3.0. Do not edit! */
 /* Source : ntoskrnl/ntoskrnl.mc */
 /* Cmdline: wmc -i -H include/reactos/bugcodes.h -o ntoskrnl/bugcodes.rc ntoskrnl/ntoskrnl.mc */
-/* Date   : Sun Apr  1 07:41:30 2007 */
+/* Date   : Wed Jun 13 06:44:39 2007 */
 
-#ifndef __WMCGENERATED_460f622a_H
-#define __WMCGENERATED_460f622a_H
+#ifndef __WMCGENERATED_466f9257_H
+#define __WMCGENERATED_466f9257_H
 
 /* Severity codes */
 #define STATUS_SEVERITY_ERROR	0x3
@@ -550,6 +550,22 @@
 /* Approx. msg: The BIOS in this system is not fully ACPI compliant.  Please contact your */
 #define ACPI_BIOS_ERROR	((ULONG)0x000000a5L)
 
+/* MessageId  : 0x400000a8 */
+/* Approx. msg: The system is booting in safemode - Minimal Services */
+#define BOOTING_IN_SAFEMODE_MINIMAL	((ULONG)0x400000a8L)
+
+/* MessageId  : 0x400000a9 */
+/* Approx. msg: The system is booting in safemode - Minimal Services with Network */
+#define BOOTING_IN_SAFEMODE_NETWORK	((ULONG)0x400000a9L)
+
+/* MessageId  : 0x400000aa */
+/* Approx. msg: The system is booting in safemode - Directory Services Repair */
+#define BOOTING_IN_SAFEMODE_DSREPAIR	((ULONG)0x400000aaL)
+
+/* MessageId  : 0x400000b7 */
+/* Approx. msg: Boot Logging Enabled */
+#define BOOTLOG_ENABLED	((ULONG)0x400000b7L)
+
 /* MessageId  : 0x000000be */
 /* Approx. msg: ATTEMPTED_WRITE_TO_READONLY_MEMORY */
 #define ATTEMPTED_WRITE_TO_READONLY_MEMORY	((ULONG)0x000000beL)
@@ -635,7 +651,7 @@
 #define WINDOWS_NT_INFO_STRING	((ULONG)0x40000088L)
 
 /* MessageId  : 0x40000089 */
-/* Approx. msg: MulitProcessor Kernel */
+/* Approx. msg: MultiProcessor Kernel */
 #define WINDOWS_NT_MP_STRING	((ULONG)0x40000089L)
 
 /* MessageId  : 0x4000009d */

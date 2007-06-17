@@ -1806,7 +1806,7 @@ NdisQueryBufferOffset(
                         VirtualAddress, \
                         Length)         \
 {                                       \
-	if (VirtualAddress)                   \
+	if (ARGUMENT_PRESENT(VirtualAddress))                   \
 		*((PVOID*)VirtualAddress) = MmGetSystemAddressForMdl(Buffer); \
                                         \
 	*((PUINT)Length) = MmGetMdlByteCount(Buffer); \
@@ -2022,48 +2022,52 @@ NdisQueryBufferOffset(
  *   OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
  *   OUT PUINT  TotalPacketLength  OPTIONAL);
  */
-#define NdisQueryPacket(Packet,                                           \
-                        PhysicalBufferCount,                              \
-                        BufferCount,                                      \
-                        FirstBuffer,                                      \
-                        TotalPacketLength)                                \
-{                                                                         \
-  if (FirstBuffer)                                                        \
-    *((PNDIS_BUFFER*)FirstBuffer) = (Packet)->Private.Head;               \
-  if ((TotalPacketLength) || (BufferCount) || (PhysicalBufferCount))      \
-  {                                                                       \
-    if (!(Packet)->Private.ValidCounts) {                                 \
-      UINT _Offset;                                                       \
-      UINT _PacketLength;                                                 \
-      PNDIS_BUFFER _NdisBuffer;                                           \
-      UINT _PhysicalBufferCount = 0;                                      \
-      UINT _TotalPacketLength   = 0;                                      \
-      UINT _Count               = 0;                                      \
-                                                                          \
-      for (_NdisBuffer = (Packet)->Private.Head;                          \
-        _NdisBuffer != (PNDIS_BUFFER)NULL;                                \
-        _NdisBuffer = _NdisBuffer->Next)                                  \
-      {                                                                   \
-        _PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(_NdisBuffer);   \
-        NdisQueryBufferOffset(_NdisBuffer, &_Offset, &_PacketLength);     \
-        _TotalPacketLength += _PacketLength;                              \
-        _Count++;                                                         \
-      }                                                                   \
-      (Packet)->Private.PhysicalCount = _PhysicalBufferCount;             \
-      (Packet)->Private.TotalLength   = _TotalPacketLength;               \
-      (Packet)->Private.Count         = _Count;                           \
-      (Packet)->Private.ValidCounts   = TRUE;                             \
-	}                                                                       \
-                                                                          \
-  if (PhysicalBufferCount)                                                \
-      *((PUINT)PhysicalBufferCount) = (Packet)->Private.PhysicalCount;    \
-                                                                          \
-  if (BufferCount)                                                        \
-      *((PUINT)BufferCount) = (Packet)->Private.Count;                    \
-                                                                          \
-  if (TotalPacketLength)                                                  \
-      *((PUINT)TotalPacketLength) = (Packet)->Private.TotalLength;        \
-  } \
+static __inline
+VOID
+NdisQueryPacket(
+    IN PNDIS_PACKET  Packet,
+    OUT PUINT  PhysicalBufferCount  OPTIONAL,
+    OUT PUINT  BufferCount  OPTIONAL,
+    OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
+    OUT PUINT  TotalPacketLength  OPTIONAL)
+{
+    if (FirstBuffer)
+        *FirstBuffer = Packet->Private.Head;
+    if (TotalPacketLength || BufferCount || PhysicalBufferCount)
+    {
+        if (!Packet->Private.ValidCounts)
+        {
+            UINT Offset;
+            UINT PacketLength;
+            PNDIS_BUFFER NdisBuffer;
+            UINT PhysicalBufferCount = 0;
+            UINT TotalPacketLength = 0;
+            UINT Count = 0;
+
+            for (NdisBuffer = Packet->Private.Head;
+                 NdisBuffer != (PNDIS_BUFFER)NULL;
+                 NdisBuffer = NdisBuffer->Next)
+            {
+                PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(NdisBuffer);
+                NdisQueryBufferOffset(NdisBuffer, &Offset, &PacketLength);
+                TotalPacketLength += PacketLength;
+                Count++;
+            }
+            Packet->Private.PhysicalCount = PhysicalBufferCount;
+            Packet->Private.TotalLength = TotalPacketLength;
+            Packet->Private.Count = Count;
+            Packet->Private.ValidCounts = TRUE;
+        }
+
+        if (PhysicalBufferCount)
+            *PhysicalBufferCount = Packet->Private.PhysicalCount;
+
+        if (BufferCount)
+            *BufferCount = Packet->Private.Count;
+
+        if (TotalPacketLength)
+            *TotalPacketLength = Packet->Private.TotalLength;
+    }
 }
 
 /*
@@ -2281,7 +2285,7 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 
 #endif
 
-#if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_PPC)
 
 /*
  * VOID
@@ -2305,17 +2309,17 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 #else
 
 #define NdisMoveMappedMemory(Destination, Source, Length) \
-{ \
-  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length; \
-  while (_Dest < _End) \
-    *_Dest++ = _Src++; \
+{
+  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length;
+  while (_Dest < _End)
+    *_Dest++ = _Src++;
 }
 
 #define NdisZeroMappedMemory(Destination, Length) \
-{ \
-  PUCHAR _Dest = Destination, _End = _Dest + Length; \
-  while (_Dest < _End) \
-    *_Dest++ = 0; \
+{
+  PUCHAR _Dest = Destination, _End = _Dest + Length;
+  while (_Dest < _End)
+    *_Dest++ = 0;
 }
 
 #endif /* _M_IX86 or _M_AMD64 */
@@ -4126,6 +4130,7 @@ typedef struct _NDIS_INTERRUPT {
   KEVENT  DpcsCompletedEvent;
 } NDIS_INTERRUPT, *PNDIS_INTERRUPT;
 
+
 typedef enum _NDIS_WORK_ITEM_TYPE {
   NdisWorkItemRequest,
   NdisWorkItemSend,
@@ -4255,19 +4260,19 @@ typedef VOID DDKAPI
   IN PUCHAR  Packet,
   IN ULONG  PacketSize);
 
-typedef VOID DDKFASTAPI
+typedef VOID FASTCALL
 (*NDIS_M_DEQUEUE_WORK_ITEM)(
   IN PNDIS_MINIPORT_BLOCK  Miniport,
   IN NDIS_WORK_ITEM_TYPE  WorkItemType,
   OUT PVOID  *WorkItemContext);
 
-typedef NDIS_STATUS DDKFASTAPI
+typedef NDIS_STATUS FASTCALL
 (*NDIS_M_QUEUE_NEW_WORK_ITEM)(
   IN PNDIS_MINIPORT_BLOCK  Miniport,
   IN NDIS_WORK_ITEM_TYPE  WorkItemType,
   IN PVOID  WorkItemContext);
 
-typedef NDIS_STATUS DDKFASTAPI
+typedef NDIS_STATUS FASTCALL
 (*NDIS_M_QUEUE_WORK_ITEM)(
   IN PNDIS_MINIPORT_BLOCK  Miniport,
   IN NDIS_WORK_ITEM_TYPE  WorkItemType,
@@ -4294,7 +4299,7 @@ typedef VOID DDKAPI
 (*NDIS_M_SEND_RESOURCES_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
-typedef BOOLEAN DDKFASTAPI
+typedef BOOLEAN FASTCALL
 (*NDIS_M_START_SENDS)(
   IN PNDIS_MINIPORT_BLOCK  Miniport);
 
