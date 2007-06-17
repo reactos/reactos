@@ -121,11 +121,13 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
         ThisSurfInt->lpLcl = ThisSurfLcl;
         ThisSurfLcl->lpGbl = ThisSurfaceGbl;
-        ThisSurfLcl->lpSurfMore = ThisSurfaceMore;
+        ThisSurfaceGbl->lpDD = pDDraw->lpLcl->lpGbl;
+        
 
         /* FIXME set right version */
         ThisSurfInt->lpVtbl = &DirectDrawSurface7_Vtable;
 
+        ThisSurfLcl->lpSurfMore = ThisSurfaceMore;
         ThisSurfaceMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
         ThisSurfaceMore->lpDD_int = pDDraw;
         ThisSurfaceMore->lpDD_lcl = pDDraw->lpLcl;

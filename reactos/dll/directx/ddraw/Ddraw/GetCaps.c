@@ -267,3 +267,4 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
 
      return  retVal;
 }
+
