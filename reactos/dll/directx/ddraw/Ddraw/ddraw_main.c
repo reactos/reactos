@@ -455,96 +455,157 @@ HRESULT WINAPI
 Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
                          LPDDCAPS pHELCaps)
 {
-    HRESULT retVal = DD_OK;
+    HRESULT retVal = DDERR_INVALIDPARAMS;
+    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
-    if (!(IsBadWritePtr(pDriverCaps,sizeof(LPDDCAPS))))
+
+        _SEH_TRY
     {
-        if (!(IsBadWritePtr(pHELCaps,sizeof(LPDDCAPS))))
+        if ((!pDriverCaps) && (!pHELCaps))
         {
-            return DDERR_INVALIDPARAMS;
+                retVal = DDERR_INVALIDPARAMS;
+                _SEH_LEAVE;
         }
-    }
 
-     if ((IsBadWritePtr(pDriverCaps,sizeof(LPDDCAPS)))) 
-     {
-         DDSCAPS2 ddscaps = { 0 };
-         DWORD dwTotal = 0;
-         DWORD dwFree = 0;
-        /* Setup hardware caps */
-
-         Main_DirectDraw_GetAvailableVidMem4(iface, &ddscaps, &dwTotal, &dwFree);
-
-
-        switch (pDriverCaps->dwSize)
+        if (pDriverCaps)
         {
-            case sizeof(DDCAPS_DX1):
+            /* Setup hardware caps */
+            DDSCAPS2 ddscaps = { 0 };
+            LPDDCORECAPS CoreCaps = (LPDDCORECAPS)&This->lpLcl->lpGbl->ddCaps;
+
+            DWORD dwTotal = 0;
+            DWORD dwFree = 0;
+
+            Main_DirectDraw_GetAvailableVidMem4(iface, &ddscaps, &dwTotal, &dwFree);
+
+            switch (pDriverCaps->dwSize)
+            {
+                case sizeof(DDCAPS_DX1):
                 {
                     LPDDCAPS_DX1 myCaps = (LPDDCAPS_DX1) pDriverCaps;
 
+                    if (CoreCaps->dwSize == sizeof(DDCORECAPS))
+                    {
+                        memcpy(myCaps, CoreCaps, sizeof(DDCAPS_DX1));
+                    }
+
                     myCaps->dwVidMemFree = dwFree;
                     myCaps->dwVidMemTotal = dwTotal;
+                    myCaps->dwSize = sizeof(DDCAPS_DX1);
+
+                    retVal = DD_OK;
                 }
                 break;
 
-            case sizeof(DDCAPS_DX3):
+                case sizeof(DDCAPS_DX3):
                 {
                     LPDDCAPS_DX3 myCaps = (LPDDCAPS_DX3) pDriverCaps;
 
+                    if (CoreCaps->dwSize == sizeof(DDCORECAPS))
+                    {
+                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCAPS_DX3));
+                    }
+
                     myCaps->dwVidMemFree = dwFree;
                     myCaps->dwVidMemTotal = dwTotal;
+                    myCaps->dwSize = sizeof(DDCAPS_DX3);
+
+                    retVal = DD_OK;
                 }
                 break;
 
-            case sizeof(DDCAPS_DX5):
+                case sizeof(DDCAPS_DX5):
                 {
                     LPDDCAPS_DX5 myCaps = (LPDDCAPS_DX5) pDriverCaps;
 
+                    if (CoreCaps->dwSize == sizeof(DDCORECAPS))
+                    {
+                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
+                    }
+
+                   /* FIXME
+                      DWORD dwNLVBCaps;
+                      DWORD dwNLVBCaps2;
+                      DWORD dwNLVBCKeyCaps;
+                      DWORD dwNLVBFXCaps;
+                      DWORD dwNLVBRops[DD_ROP_SPACE];
+                    */
+
                     myCaps->dwVidMemFree = dwFree;
                     myCaps->dwVidMemTotal = dwTotal;
+                    myCaps->dwSize = sizeof(DDCAPS_DX5);
+
+                    retVal = DD_OK;
                 }
                 break;
 
-            /* DDCAPS_DX6 is same as DDCAPS_DX7 */
-            case sizeof(DDCAPS_DX7):
+                /* DDCAPS_DX6 is same as DDCAPS_DX7 */
+                case sizeof(DDCAPS_DX7):
                 {
                     LPDDCAPS_DX7 myCaps = (LPDDCAPS_DX7) pDriverCaps;
 
+                    if (CoreCaps->dwSize == sizeof(DDCORECAPS))
+                    {
+                        memcpy(&myCaps->dwCaps, &CoreCaps->dwCaps, sizeof(DDCORECAPS));
+                    }
+
                     myCaps->dwVidMemFree = dwFree;
                     myCaps->dwVidMemTotal = dwTotal;
+
+                    /* FIXME
+                      DWORD dwNLVBCaps;
+                      DWORD dwNLVBCaps2;
+                      DWORD dwNLVBCKeyCaps;
+                      DWORD dwNLVBFXCaps;
+                      DWORD dwNLVBRops[DD_ROP_SPACE];
+                    */
+
+                    myCaps->ddsCaps.dwCaps = ddscaps.dwCaps;
+                    myCaps->ddsCaps.dwCaps2 = ddscaps.dwCaps2;
+                    myCaps->ddsCaps.dwCaps3 = ddscaps.dwCaps3;
+                    myCaps->ddsCaps.dwCaps4 = ddscaps.dwCaps4;
+                    myCaps->dwSize = sizeof(DDCAPS_DX7);
+
                 }
                 break;
 
-            default:
-                retVal = DDERR_INVALIDPARAMS;
-                break;
+                default:
+                    retVal = DDERR_INVALIDPARAMS;
+                    break;
+            }
         }
-     }
 
-     if ((IsBadWritePtr(pHELCaps,sizeof(LPDDCAPS)))) 
-     {
-        /* Setup hardware caps */
-        switch (pHELCaps->dwSize)
+        if (pHELCaps)
         {
-            case sizeof(DDCAPS_DX1):
-                retVal = DDERR_INVALIDPARAMS;
-                break;
-            case sizeof(DDCAPS_DX3):
-                retVal = DDERR_INVALIDPARAMS;
-                break;
-            case sizeof(DDCAPS_DX5):
-                retVal = DDERR_INVALIDPARAMS;
-                break;
+            /* Setup software caps */
+            switch (pHELCaps->dwSize)
+            {
+                case sizeof(DDCAPS_DX1):
+                    retVal = DDERR_INVALIDPARAMS;
+                    break;
+                case sizeof(DDCAPS_DX3):
+                    retVal = DDERR_INVALIDPARAMS;
+                    break;
+                case sizeof(DDCAPS_DX5):
+                    retVal = DDERR_INVALIDPARAMS;
+                    break;
 
-            /* DDCAPS_DX6 is same as DDCAPS_DX7 */
-            case sizeof(DDCAPS_DX7):
-                retVal = DDERR_INVALIDPARAMS;
-                break;
-            default:
-                retVal = DDERR_INVALIDPARAMS;
-                break;
+                /* DDCAPS_DX6 is same as DDCAPS_DX7 */
+                case sizeof(DDCAPS_DX7):
+                    retVal = DDERR_INVALIDPARAMS;
+                    break;
+                default:
+                    retVal = DDERR_INVALIDPARAMS;
+                    break;
+            }
         }
-     }
+    }
+    _SEH_HANDLE
+    {
+        retVal = DD_FALSE;
+    }
+    _SEH_END;
 
      return  retVal;
 }
