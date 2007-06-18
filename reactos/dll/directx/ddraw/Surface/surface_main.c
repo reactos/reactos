@@ -209,7 +209,7 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 	This->lpLcl->lpSurfMore->slist[0]->hDC = This->lpLcl->lpSurfMore->lpDD_lcl->hDC;
 	 
     mdLock.ddRVal = DDERR_NOTPALETTIZED;
-	mdLock.Lock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Lock;
+    mdLock.Lock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->HALDDSurface.Lock;
     mdLock.dwFlags = flags;
 	mdLock.lpDDSurface = This->lpLcl->lpSurfMore->slist[0];
 	mdLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;   
@@ -278,7 +278,7 @@ HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRec
     mdUnLock.ddRVal = DDERR_NOTPALETTIZED;
     mdUnLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
 	mdUnLock.lpDDSurface =  This->lpLcl->lpSurfMore->slist[0];
-	mdUnLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->cbDDSurfaceCallbacks.Unlock;
+	mdUnLock.Unlock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->HALDDSurface.Unlock;
 
     if (!DdResetVisrgn( mdUnLock.lpDDSurface, NULL)) 
     {   
