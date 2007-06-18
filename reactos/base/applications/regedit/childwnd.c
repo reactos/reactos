@@ -71,8 +71,9 @@ static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
     SetRect(&rt, 0, 0, cx, cy);
 
     cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx  , rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left, 23, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top + 25, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top - 30, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx  , rt.top + 25, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
     EndDeferWindowPos(hdwp);
 }
 
@@ -253,6 +254,28 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 	}
 }
 
+
+LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldwndproc;
+	static TCHAR s_szNode[256];
+    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWL_USERDATA);
+
+	switch (uMsg)
+    {
+		case WM_KEYUP:
+			if (wParam == VK_RETURN)
+			{
+				GetWindowText(hwnd, s_szNode, sizeof(s_szNode) / sizeof(s_szNode[0]));
+				SelectNode(g_pChildWnd->hTreeWnd, s_szNode);
+			}
+			break;
+		default:
+			break;
+	}
+	return CallWindowProc(oldwndproc, hwnd, uMsg, wParam, lParam);
+}
+
 /*******************************************************************************
  *
  *  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
@@ -273,6 +296,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     switch (message) {
     case WM_CREATE:
     {
+		WNDPROC oldproc;
         TCHAR buffer[MAX_PATH];
         /* load "My Computer" string */
         LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
@@ -283,10 +307,18 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         _tcsncpy(pChildWnd->szPath, buffer, MAX_PATH);
         pChildWnd->nSplitPos = 250;
         pChildWnd->hWnd = hWnd;
-        pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, (HMENU) TREE_WINDOW);
+		pChildWnd->hAddressBarWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Edit"), NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP, 
+										CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+										hWnd, (HMENU)0, hInst, 0);
+		pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, (HMENU) TREE_WINDOW);
         pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW/*, pChildWnd->szPath*/);
         SetFocus(pChildWnd->hTreeWnd);
-        break;
+		
+		/* Subclass the AddressBar */
+		oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_WNDPROC);
+        SetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_USERDATA, (DWORD_PTR)oldproc);
+        SetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_WNDPROC, (DWORD_PTR)AddressBarProc);
+		break;
     }
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
@@ -424,6 +456,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			if (fullPath) {
 			    _stprintf(fullPath, _T("%s\\%s"), rootName, keyPath);
 			    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)fullPath);
+				SendMessage(pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
 			    HeapFree(GetProcessHeap(), 0, fullPath);
 
 			    {

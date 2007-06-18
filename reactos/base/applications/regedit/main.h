@@ -57,6 +57,7 @@ typedef struct {
     HWND    hWnd;
     HWND    hTreeWnd;
     HWND    hListWnd;
+	HWND    hAddressBarWnd;
     int     nFocusPanel;      /* 0: left  1: right */
     int	    nSplitPos;
     WINDOWPLACEMENT pos;
