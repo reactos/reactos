@@ -41,8 +41,33 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     DWORD num_of_surf=1;
     DWORD count;
 
-
     /* Fixme adding vaidlate of income param */
+    if(pDDraw->lpLcl->dwLocalFlags == 0x20000)
+    {
+        return DDERR_NOCOOPERATIVELEVELSET;
+    }
+
+    if(pUnkOuter)
+    {
+        return CLASS_E_NOAGGREGATION;
+    }
+
+    if(!pDDSD->dwFlags & DDSD_CAPS)
+    {
+        return DDERR_INVALIDPARAMS;
+    }
+
+    if(!(pDDSD->dwFlags & DDSD_HEIGHT) && !(pDDSD->dwFlags & DDSD_HEIGHT) 
+        && !(pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
+    {
+        return DDERR_INVALIDPARAMS;
+    }
+
+    else if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwFlags & DDSD_HEIGHT 
+        && pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
+    {
+        return DDERR_INVALIDPARAMS;
+    }
 
     /* FIXME count our how many surface we need */
 
@@ -74,9 +99,6 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         DxHeapMemFree(slist_int);
         return DDERR_OUTOFMEMORY;
     }
-
-
-
 
     for( count=0; count < num_of_surf; count++ )
     {
@@ -156,13 +178,9 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
         ThisSurfLcl->dwProcessId = GetCurrentProcessId();
 
-
-
-
         /* FIXME the lpLnk */
         /* FIXME the ref counter */
     }
-
 
     /* Fixme call on DdCanCreate then on DdCreateSurface createsurface data here */
 
@@ -180,11 +198,11 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return DDERR_NOTINITIALIZED;
     }
 
-   if (mDdCanCreateSurface.ddRVal != DD_OK)
-   {
+    if (mDdCanCreateSurface.ddRVal != DD_OK)
+    {
         DX_STUB_str("mDdCanCreateSurface fail");
         return DDERR_NOTINITIALIZED;
-   }
+    }
 
     mDdCreateSurface.lpDD = pDDraw->lpLcl->lpGbl;
     mDdCreateSurface.CreateSurface = pDDraw->lpLcl->lpGbl->lpDDCBtmp->HALDD.CreateSurface;
@@ -195,12 +213,12 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
     if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
     {
-           return DDERR_NOTINITIALIZED;
+        return DDERR_NOTINITIALIZED;
     }
 
     if (mDdCreateSurface.ddRVal != DD_OK) 
     {
-           return mDdCreateSurface.ddRVal;
+        return mDdCreateSurface.ddRVal;
     }
 
     *ppSurf = &slist_int[0]->lpVtbl;
@@ -233,7 +251,7 @@ CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This,
         return DDERR_OUTOFMEMORY;
     }
 
-   // That->lpLcl->lpSurfMore->slist = lpLcl;
+    // That->lpLcl->lpSurfMore->slist = lpLcl;
 
     That->lpVtbl = &DirectDrawSurface7_Vtable;
     That->lpLcl->lpSurfMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
@@ -263,38 +281,38 @@ CreatePrimarySurface(LPDDRAWI_DIRECTDRAW_INT This,
     mDdCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
 
     mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+    
+    That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
 
-           That->lpLcl->ddsCaps.dwCaps = pDDSD->ddsCaps.dwCaps;
+    This->lpLcl->lpPrimary = That;
+    if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+    {   
+        return DDERR_NOTINITIALIZED;
+    }
 
-       This->lpLcl->lpPrimary = That;
-       if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
-       {   
-           return DDERR_NOTINITIALIZED;
-       }
+    if (mDdCanCreateSurface.ddRVal != DD_OK)
+    {
+        return DDERR_NOTINITIALIZED;
+    }
 
-       if (mDdCanCreateSurface.ddRVal != DD_OK)
-       {
-           return DDERR_NOTINITIALIZED;
-       }
+    mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
 
-       mDdCreateSurface.lplpSList = That->lpLcl->lpSurfMore->slist;
+    if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
+    {
+        return DDERR_NOTINITIALIZED;
+    }
 
-       if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
-       {
-           return DDERR_NOTINITIALIZED;
-       }
+    if (mDdCreateSurface.ddRVal != DD_OK) 
+    {   
+        return mDdCreateSurface.ddRVal;
+    }
 
-       if (mDdCreateSurface.ddRVal != DD_OK) 
-       {   
-           return mDdCreateSurface.ddRVal;
-       }
+    That->lpLcl->lpSurfMore->slist = mDdCreateSurface.lplpSList ;
 
-      That->lpLcl->lpSurfMore->slist = mDdCreateSurface.lplpSList ;
+    That->lpLink = This->lpLcl->lpGbl->dsList;
+    This->lpLcl->lpGbl->dsList = That;
 
-      That->lpLink = This->lpLcl->lpGbl->dsList;
-      This->lpLcl->lpGbl->dsList = That;
-
-       return DD_OK;
+    return DD_OK;
 }
 
 HRESULT 
@@ -398,7 +416,6 @@ CreateOverlaySurface(LPDDRAWI_DIRECTDRAW_INT This,
               LPDDRAWI_DDRAWSURFACE_INT *That,
               LPDDSURFACEDESC2 pDDSD)
 {
-
   DDSURFACEDESC mddsdOverlay;
   DDRAWI_DDRAWSURFACE_GBL mOverlayGlobal;
   DDRAWI_DDRAWSURFACE_LCL mOverlayLocal[6];
@@ -487,21 +504,21 @@ CreateOverlaySurface(LPDDRAWI_DIRECTDRAW_INT This,
   {
     j = (i + 1) % cSurfaces;
 
-	
+    
     /*if (!mHALInfo.lpDDSurfaceCallbacks->AddAttachedSurface(mpOverlayLocals[i], mpOverlayLocals[j])) 
-	{
+    {
      // derr(L"DirectDrawImpl[%08x]::__setupDevice DdAttachSurface(%d, %d) failed", this, i, j);
       return DD_FALSE;
     }*/
 
-	if (!DdAttachSurface(mpOverlayLocals[i], mpOverlayLocals[j])) 
-	{
+    if (!DdAttachSurface(mpOverlayLocals[i], mpOverlayLocals[j])) 
+    {
      // derr(L"DirectDrawImpl[%08x]::__setupDevice DdAttachSurface(%d, %d) failed", this, i, j);
 //printf("Fail to DdAttachSurface (%d:%d)\n", i, j);
         DX_STUB_str("DdAttachSurface fail");
       return DD_FALSE;
     }
-	
+    
   }
 
     // DDHAL_CREATESURFACEDATA      mDdCreateSurface;
@@ -513,14 +530,14 @@ CreateOverlaySurface(LPDDRAWI_DIRECTDRAW_INT This,
 
   if (mDdCreateSurface.CreateSurface(&mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
   {
-	DX_STUB_str("mDdCreateSurface DDHAL_DRIVER_NOTHANDLED fail");
-	return DDERR_NOTINITIALIZED;
+    DX_STUB_str("mDdCreateSurface DDHAL_DRIVER_NOTHANDLED fail");
+    return DDERR_NOTINITIALIZED;
   }
   
 
   if (mDdCreateSurface.ddRVal != DD_OK) 
   {   
-	 DX_STUB_str("mDdCreateSurface fail");
+     DX_STUB_str("mDdCreateSurface fail");
      return mDdCreateSurface.ddRVal;
   }
 
@@ -540,20 +557,17 @@ CreateOverlaySurface(LPDDRAWI_DIRECTDRAW_INT This,
   mDdUpdateOverlay.rSrc.right = 50;
   mDdUpdateOverlay.rSrc.bottom = 50;
 
- 
- 
-
   if ( mDdUpdateOverlay.UpdateOverlay(&mDdUpdateOverlay) == DDHAL_DRIVER_NOTHANDLED)
   {
-	DX_STUB_str("UpdateOverlay fail");
-	 return DDERR_NOTINITIALIZED;
+    DX_STUB_str("UpdateOverlay fail");
+     return DDERR_NOTINITIALIZED;
   }
   
 
   if (mDdUpdateOverlay.ddRVal != DD_OK) 
   {   
       DX_STUB_str("mDdUpdateOverlay fail");
-	  //printf("Fail to mDdUpdateOverlay mDdUpdateOverlay.ddRVal = %d:%s\n",(int)mDdUpdateOverlay.ddRVal,DDErrorString(mDdUpdateOverlay.ddRVal)); 
+      //printf("Fail to mDdUpdateOverlay mDdUpdateOverlay.ddRVal = %d:%s\n",(int)mDdUpdateOverlay.ddRVal,DDErrorString(mDdUpdateOverlay.ddRVal)); 
       return mDdUpdateOverlay.ddRVal;
   }
 

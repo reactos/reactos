@@ -489,7 +489,7 @@ Main_DirectDraw_CreateSurface (LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD,
     }
     _SEH_HANDLE
     {
-        ret = DDERR_GENERIC;
+        ret = DDERR_INVALIDPARAMS;
     }
     _SEH_END;
   // LeaveCriticalSection(&ddcs);
@@ -502,24 +502,22 @@ HRESULT WINAPI
 Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
                                LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
-   HRESULT ret;
+    HRESULT ret;
     DX_WINDBG_trace();
     // EnterCriticalSection(&ddcs);
     _SEH_TRY
     {
         ret = Internal_CreateSurface( (LPDDRAWI_DIRECTDRAW_INT)iface,pDDSD, ppSurf,pUnkOuter);
     }
-        _SEH_HANDLE
+    _SEH_HANDLE
     {
-        ret = DDERR_GENERIC;
+        ret = DDERR_INVALIDPARAMS;
     }
     _SEH_END;
 
     // LeaveCriticalSection(&ddcs);
     return ret;
 }
-
-
 
 /* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
 /* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
