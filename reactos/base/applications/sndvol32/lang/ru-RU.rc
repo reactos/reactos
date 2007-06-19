@@ -21,7 +21,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SNDVOL32       "Volume Control"
+    IDS_SNDVOL32       "Управление громкостью"
     IDS_NOMIXERDEVICES "Нет доступных микшерных устройств! Приложение будет завершено."
 END
 

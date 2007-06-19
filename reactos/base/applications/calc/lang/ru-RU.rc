@@ -53,8 +53,8 @@ MAIN_MENU MENU DISCARDABLE
 SCIMS_MENU MENU DISCARDABLE
 {
    POPUP "&Правка" {
-      MENUITEM "&Копировать Ctrl+C",  IDM_COPY
-      MENUITEM "Вст&авить Ctrl+V",    IDM_PASTE
+      MENUITEM "&Копировать \tCtrl+C",  IDM_COPY
+      MENUITEM "Вст&авить \tCtrl+V",    IDM_PASTE
    }
    POPUP "&Вид" {
       MENUITEM "&Простой",            IDM_MODE_STANDARD
@@ -81,8 +81,8 @@ SCIMS_MENU MENU DISCARDABLE
 SCIWS_MENU MENU DISCARDABLE
 {
    POPUP "&Правка" {
-      MENUITEM "&Копировать Ctrl+C",  IDM_COPY
-      MENUITEM "Вст&авить Ctrl+V",    IDM_PASTE
+      MENUITEM "&Копировать \tCtrl+C",  IDM_COPY
+      MENUITEM "Вст&авить \tCtrl+V",    IDM_PASTE
    }
    POPUP "&Вид" {
       MENUITEM "&Простой",            IDM_MODE_STANDARD

@@ -144,10 +144,10 @@ PUSHBUTTON      "Отмена", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе ReactOS Notepad"
+CAPTION "О программе Блокнот ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
+    CONTROL         "Блокнот ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
@@ -192,12 +192,12 @@ STRING_NOTSAVED,                                "Файл '%s'\nбыл изменен\n\n \
 STRING_NOTFOUND,                                "'%s' не найден."
 STRING_OUT_OF_MEMORY,                           "Недостаточно памяти для завершения этой операции. \
 \nЗакройте одно или несколько приложений и повторите попытку."
-STRING_CANNOTFIND                               "Не найду '%s'"
+STRING_CANNOTFIND                               "Невозможно найти '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Юникод"
 STRING_UNICODE_BE,                              "Юникод (big endian)"
 STRING_UTF8,                                    "UTF-8"
-STRING_CRLF,                                    "Форточки"
-STRING_LF,                                      "Юникс"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
 STRING_CR,                                      "Макинтош"
 }

@@ -63,12 +63,12 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "О Service Manager"
+CAPTION "О Менеджере служб"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Service Manager v0.5\nCopyright (C) 2005-2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
-  PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
+  LTEXT "Менеджер служб v0.5\nCopyright (C) 2005-2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  PUSHBUTTON "Закрыть", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -155,7 +155,7 @@ BEGIN
 END
 
 IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
-CAPTION "Service Control"
+CAPTION "Управление службами"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
@@ -250,34 +250,34 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXPORT       " Exports the current list to a file."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_EXPORT       " Экспорт текущего списка в файл."
+  IDS_HINT_EXIT         " Выход из программы."
 
-  IDS_HINT_CONNECT      " Manage a different computer."
-  IDS_HINT_START        " Start the selected service."
-  IDS_HINT_STOP         " Stop the selected service."
-  IDS_HINT_PAUSE        " Pause the selected service."
-  IDS_HINT_RESUME       " Resume the selected service."
-  IDS_HINT_RESTART      " Stop and start the selected service."
-  IDS_HINT_REFRESH      " Refresh the service list."
-  IDS_HINT_EDIT         " Edit the properties of the selected service."
-  IDS_HINT_CREATE       " Create a new service."
-  IDS_HINT_DELETE       " Delete the selected service."
+  IDS_HINT_CONNECT      " Управление другими компьютерами."
+  IDS_HINT_START        " Запустить выбранную службу."
+  IDS_HINT_STOP         " Остановить выбранную службу."
+  IDS_HINT_PAUSE        " Приостановить выбранную службу."
+  IDS_HINT_RESUME       " Продолжить выбранную службу."
+  IDS_HINT_RESTART      " Перезапуск выбранной службы."
+  IDS_HINT_REFRESH      " Обновить список служб."
+  IDS_HINT_EDIT         " Изменить свойства выбранной службы."
+  IDS_HINT_CREATE       " Создать новую службу."
+  IDS_HINT_DELETE       " Удалить выбранную службу."
   IDS_HINT_PROP         " Open property sheet for the current selection."
 
-  IDS_HINT_LARGE        " Display items by using large icons."
-  IDS_HINT_SMALL        " Display items by using small icons."
-  IDS_HINT_LIST         " Display item in a list."
-  IDS_HINT_DETAILS      " Display information about each item in a window."
-  IDS_HINT_CUST         " Customizes the view."
+  IDS_HINT_LARGE        " Отображать элементы в виде больших значков."
+  IDS_HINT_SMALL        " Отображать элементы в виде маленьких значков."
+  IDS_HINT_LIST         " Отображать элементы в виде списка."
+  IDS_HINT_DETAILS      " Отображение информации о каждом элементе в окне."
+  IDS_HINT_CUST         " Настройка вида."
 
-  IDS_HINT_HELP         " Display help window."
-  IDS_HINT_ABOUT        " About ReactOS Service Manager."
+  IDS_HINT_HELP         " Показать окно справки."
+  IDS_HINT_ABOUT        " О Менеджере служб ReactOS."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Востановить нормальный размер окна."
+  IDS_HINT_SYS_MOVE     " Переместить это окно."
+  IDS_HINT_SYS_SIZE     " Изменить размер этого окна."
+  IDS_HINT_SYS_MINIMIZE " Сворачивание окна в значок."
+  IDS_HINT_SYS_MAXIMIZE " Развернуть это окно на полный экран."
+  IDS_HINT_SYS_CLOSE    " Закрыть это окно."
 END

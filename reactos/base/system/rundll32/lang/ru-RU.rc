@@ -8,5 +8,5 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 {
 IDS_DllNotLoaded,   "Невозможно загрузить библиотеку '%s'"
-IDS_MissingEntry, "Невозможно найти точку входа: %s\nВ библиотеке %s"
+IDS_MissingEntry, "Невозможно найти точку входа: %s\nв библиотеке %s"
 }

@@ -41,11 +41,11 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "О Device Manager"
+CAPTION "О Диспетчере устройств"
 FONT 8,"Tahoma",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Device Manager v0.1\nCopyright (C) 2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Диспетчер устройств v0.1\nCopyright (C) 2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Закрыть", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -67,7 +67,7 @@ END
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ReactOS Device Manager"
+  IDS_APPNAME "Диспетчер устройств ReactOS"
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Выход из программы."
   IDS_HINT_REFRESH      " Обновить список."
