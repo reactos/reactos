@@ -58,7 +58,7 @@ static BOOL OpenGLEnable(void)
   if(glChoosePixelFormat == NULL) {
         glChoosePixelFormat = (CHOOSEPIXELFMT)GetProcAddress(hOpenGL, "wglChoosePixelFormat");
         if(glChoosePixelFormat == NULL)
-                return(0);
+                return(FALSE);
   }
 
   if(glSetPixelFormat == NULL) {
