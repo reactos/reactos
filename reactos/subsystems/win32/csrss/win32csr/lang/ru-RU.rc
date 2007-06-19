@@ -1,0 +1,48 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOG DISCARDABLE  0, 0, 200, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Завершение программы - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Завершение программы... Пажалуйста подождите",IDC_STATIC,7,7,186,11
+    CONTROL         "Progress",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    7,20,186,13
+    LTEXT           "Если вы завершите программу сейчас, то вы можете потерять несохраненные данные. Чтобы завешить программу сейчас нажмите Завершить",
+                    IDC_STATIC,7,40,186,26
+    DEFPUSHBUTTON   "&Завешить",IDC_END_NOW,150,71,43,17
+END
+
+IDD_NOT_RESPONDING DIALOG DISCARDABLE 0, 0, 192, 122
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Завершение программы - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Отмена",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "&Завершить",IDC_END_NOW,78,98,43,17
+    LTEXT           "Эта программа не отвечает",IDC_STATIC,7,7,178,8
+    LTEXT           "Для возврата в ReactOS и сохранения данных нажмите Отмена",
+                    IDC_STATIC,7,26,178,16
+    LTEXT           "Если вы завершите программу сейчас, то вы можете потерять несохраненные данные. Чтобы завешить программу сейчас нажмите Завершить",
+                    IDC_STATIC,7,53,178,26
+END
+
+STRINGTABLE
+BEGIN
+  IDS_EDIT "Редактировать"
+  IDS_MARK "Пометить"
+  IDS_COPY "Копировать\tEnter"
+  IDS_PASTE "Вставить"
+  IDS_SELECTALL "Выделить все"
+  IDS_SCROLL "Прокрутить"
+  IDS_FIND "Искать..."
+  IDS_DEFAULTS "Defaults"
+  IDS_PROPERTIES "Свойства"
+  IDS_SCROLLHERE "Scroll Here"
+  IDS_SCROLLTOP "Scroll Top"
+  IDS_SCROLLBOTTOM "Прокрутить вниз"
+  IDS_SCROLLPAGE_UP "Page Up"
+  IDS_SCROLLPAGE_DOWN "Page Down"
+  IDS_SCROLLUP "Прокрутить вверх"
+  IDS_SCROLLDOWN "Scroll Down"
+END
