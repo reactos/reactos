@@ -196,6 +196,8 @@ HalScrollDisplay (VOID)
 VOID STATIC FASTCALL
 HalPutCharacter (CHAR Character)
 {
+    WRITE_PORT_UCHAR((PVOID)0x3f8, Character);
+#if 0
     int i,j,k;
     ULONG Dest =
 	(GraphVideoBuffer + 
@@ -213,6 +215,7 @@ HalPutCharacter (CHAR Character)
 	}
 	Dest += PpcEarlybootInfo.dispDeviceRowBytes;
     }
+#endif
 }
 
 /* PRIVATE FUNCTIONS ********************************************************/
