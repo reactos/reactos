@@ -7,7 +7,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Схемы управления питанием"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
+  ICON IDI_ACDC, IDI_ACDC, 16,15,32,32
   LTEXT "Выберите схему управления электропитанием с наиболее подходящими параметрами для этого компьютера. Изменение нижеследующих параметров изменит выбранную схему.",
 	-1,45,13,194,36
   GROUPBOX "&Схемы управления питанием", -1, 7,57,240,46
@@ -77,8 +77,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Дополнительно"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
-    LTEXT           "Выберите желаемые параметры энергосбережения.",-1,30,5,205,20
+    ICON            IDI_ACDC,IDI_ACDC,16,15,32,32
+    LTEXT           "Выберите желаемые параметры энергосбережения.",-1,45,13,205,20
     GROUPBOX        "Параметры",-1,5,35,225,55
     CONTROL         "&Всегда отображать значок на панели задач",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,15,48,200,10
@@ -103,18 +103,18 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Спящий режим"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    ICON            IDI_SCREEN,IDI_SCREEN,16,15,32,32
     LTEXT           "При переходе в спящий режим компьютер переносит содержимое оперативной памяти на диск и выключается. При выходе из спящего режима компьютер возвращается в прежнее состояние.",
-                    -1,35,5,195,35
-    GROUPBOX        "Спящий режим",-1,5,45,235,25
+                    -1,45,13,195,35
+    GROUPBOX        "Спящий режим",-1,5,57,235,25
     CONTROL         "&Разрешить переход в спящий режим",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,10,55,210,10
-    GROUPBOX        "Место на диске для перехода в спящий режим",-1,5,80,240,60
-    LTEXT           "Свободно места на диске:",-1,10,90,100,10
-    LTEXT           "Нет данных",IDC_FREESPACE,130,90,70,10
-    LTEXT           "Требуется для спящего режима:",-1,10,100,115,10
-    LTEXT           "Нет данных",IDC_SPACEFORHIBERNATEFILE,130,100,55,10
-    LTEXT           "Для возможности перехода в спящий режим требуется освободить место на диске.",IDC_TOLESSFREESPACE,10,115,220,20
+                    WS_TABSTOP,10,67,210,10
+    GROUPBOX        "Место на диске для перехода в спящий режим",-1,5,92,240,60
+    LTEXT           "Свободно места на диске:",-1,10,102,100,10
+    LTEXT           "Нет данных",IDC_FREESPACE,130,102,70,10
+    LTEXT           "Требуется для спящего режима:",-1,10,112,115,10
+    LTEXT           "Нет данных",IDC_SPACEFORHIBERNATEFILE,130,112,55,10
+    LTEXT           "Для возможности перехода в спящий режим требуется освободить место на диске.",IDC_TOLESSFREESPACE,10,127,220,20
 END
 
 STRINGTABLE

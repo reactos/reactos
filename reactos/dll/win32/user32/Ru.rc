@@ -1,0 +1,75 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Выбор окна"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Отмена", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "&Отменить", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "&Вырезать", WM_CUT
+    MENUITEM "&Копировать", WM_COPY
+    MENUITEM "В&ставить", WM_PASTE
+    MENUITEM "&Удалить", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "Выделить &все", EM_SETSEL
+  END
+}
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  MENUITEM "&Востановить", 61728
+  MENUITEM "&Переместить", 61456
+  MENUITEM "Р&азмер", 61440
+  MENUITEM "&Свернуть", 61472
+  MENUITEM "&Развернуть", 61488
+  MENUITEM SEPARATOR
+  MENUITEM "&Закрыть\tAlt-F4", 61536
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+{
+  IDS_ERROR,    "Ошибка"
+  IDS_OK,       "OK"
+  IDS_CANCEL,   "Отмена"
+  IDS_ABORT,    "&Прекратить"
+  IDS_RETRY,    "П&овторить"
+  IDS_IGNORE,   "&Игнорировать"
+  IDS_YES,      "&Да"
+  IDS_NO,       "&Нет"
+  IDS_HELP,     "Справка"
+  IDS_TRYAGAIN, "&Повторить позднее"
+  IDS_CONTINUE, "П&родолжить"
+}
+
+STRINGTABLE
+{
+  IDS_MDI_MOREWINDOWS, "&Другие окна..."
+}
+

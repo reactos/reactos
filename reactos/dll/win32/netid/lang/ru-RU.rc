@@ -1,0 +1,22 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Имя компьютера"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT       "ReactOS использует указанные ниже сведения для идентификации компьютера в сети.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "Описание:", IDC_STATIC, 6, 40, 70, 9
+    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT       "Полное имя:", IDC_STATIC, 6, 68, 64, 9
+    LTEXT       "(По умолчанию)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    LTEXT       "Рабочая группа:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT       "(пусто)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    LTEXT       "Чтобы вызвать мастер сетевой идентификации для присоединения компьютера к домену, нажмите кнопку ""Идентификация"".", IDC_STATIC, 6, 108, 172, 24
+    PUSHBUTTON  "&Идентификация...", IDC_NETWORK_ID, 185, 114, 67, 15
+    LTEXT       "Чтобы изменить имя компьютера или домена нажмите ""Изменить"".", IDC_STATIC, 6, 149, 170, 17
+    PUSHBUTTON  "И&зменить...",IDC_NETWORK_PROPERTY, 185, 149, 67, 15
+    LTEXT       "Примечание: Только администраторы могут изменять эти параметры.", IDC_STATIC, 6, 179, 300, 9
+END
+
