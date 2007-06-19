@@ -26,10 +26,23 @@
 
 /* GLOBALS *******************************************************************/
 
-static PVID_FUNCTION_TABLE VidTable;
+extern VID_FUNCTION_TABLE VidFramebufTable;
 extern VID_FUNCTION_TABLE VidVgaTable;
 extern VID_FUNCTION_TABLE VidVgaTextTable;
 extern VID_FUNCTION_TABLE VidXboxTable;
+static PVID_FUNCTION_TABLE VidTable = &VidFramebufTable;
+
+ULONG ScrollRegion[4] =
+{
+    0,
+    0,
+    640 - 1,
+    480 - 1
+};
+
+ULONG TextColor = 0xFFFF;
+ULONG curr_x = 0, curr_y = 0;
+BOOLEAN NextLine = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -37,6 +50,7 @@ BOOLEAN NTAPI
 VidInitialize(
    IN BOOLEAN SetMode)
 {
+#if I_FINISHED_DEVELOPING
    ULONG PciId;
    
    /*
@@ -50,8 +64,12 @@ VidInitialize(
       VidTable = &VidXboxTable;
    else if (SetMode)
       VidTable = &VidVgaTable;
-   /*else
-      VidTable = &VidVgaTextTable;*/
+   else
+      VidTable = &VidVgaTextTable;
+#else
+    VidTable = &VidFramebufTable;
+#endif
+
    return VidTable->Initialize(SetMode);
 }
 
@@ -124,7 +142,19 @@ VidSetScrollRegion(IN ULONG x1,
                    IN ULONG x2,
                    IN ULONG y2)
 {
-    // UNIMPLEMENTED
+    /* Assert alignment */
+    ASSERT((x1 & 0x7) == 0);
+    ASSERT((x2 & 0x7) == 7);
+
+    /* Set Scroll Region */
+    ScrollRegion[0] = x1;
+    ScrollRegion[1] = y1;
+    ScrollRegion[2] = x2;
+    ScrollRegion[3] = y2;
+
+    /* Set current X and Y */
+    curr_x = x1;
+    curr_y = y1;
 }
 
 VOID NTAPI
@@ -133,12 +163,16 @@ VidDisplayStringXY(IN PUCHAR String,
                    IN ULONG Top,
                    IN BOOLEAN Transparent)
 {
-    // UNIMPLEMENTED
+    VidTable->DisplayStringXY(String, Left, Top, Transparent);
 }
 
 ULONG NTAPI
 VidSetTextColor(IN ULONG Color)
 {
-    // UNIMPLEMENTED
-    return 0; // FIXME: Return old text color
+    ULONG OldColor;
+
+    /* Save the old color and set the new one */
+    OldColor = TextColor;
+    TextColor = Color;
+    return OldColor;
 }

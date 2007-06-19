@@ -5,8 +5,10 @@
         <define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<file>bfont.c</file>
 	<file>bootvid.c</file>
 	<file>vid.c</file>
+	<file>vid_fb.c</file>
 	<file>vid_vga.c</file>
 	<file>vid_vgatext.c</file>
 	<file>vid_xbox.c</file>
