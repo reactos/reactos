@@ -681,21 +681,46 @@ CopyImage(
                             && bi->bmiColors[1].rgbReserved == 0);
                     }
                 }
+/*
                 else if (!monochrome)
                 {
                     monochrome = ds.dsBm.bmBitsPixel == 1;
                 }
-
+*/
                 if (monochrome)
                 {
                     res = CreateBitmap(desiredx, desiredy, 1, 1, NULL);
                 }
                 else
                 {
-                    HDC screenDC = GetDC(NULL);
-                    res = CreateCompatibleBitmap(screenDC, desiredx, desiredy);
-                    ReleaseDC(NULL, screenDC);
+                    /* FIXME This is a tempary fix until we found time to rewrite copyimage */
+                    //HDC screenDC = GetDC(NULL); hnd
+
+                    HBITMAP hOldBitmapBitmap, hOldBitmapLoad, hbmLoad;
+                    HDC hdcImage, hdcBitmap;
+
+                    hdcImage = CreateCompatibleDC(0);
+                    hdcBitmap = CreateCompatibleDC(0);
+
+                    hbmLoad = CreateBitmap (desiredx, desiredy, ds.dsBm.bmPlanes, ds.dsBm.bmBitsPixel, NULL);
+                    hOldBitmapBitmap = SelectObject(hdcBitmap, (HBITMAP) hnd);
+                    hOldBitmapLoad = SelectObject(hdcImage, hbmLoad);
+     
+                    /* Copy the user's image */
+                    BitBlt (hdcImage, 0, 0, desiredx, desiredy, hdcBitmap, 0, 0, SRCCOPY);
+     
+                    SelectObject (hdcImage, hOldBitmapLoad);
+                    SelectObject (hdcBitmap, hOldBitmapBitmap);
+                    DeleteDC (hdcImage);
+                    DeleteDC (hdcBitmap);
+
+                    return hbmLoad;
+
+
+                    //res = CreateCompatibleBitmap(screenDC, desiredx, desiredy);
+                    //ReleaseDC(NULL, screenDC);
                 }
+
             }
 
             if (res)
