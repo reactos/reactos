@@ -192,7 +192,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 } \
 	return DD_OK;
 
- #ifdef __GNU__
+ //#ifdef __GNU__
 #define DX_STUB_str(x) \
 		{ \
         char buffer[1024]; \
@@ -222,11 +222,12 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 		OutputDebugStringA(buffer); \
 		firstcallxx = FALSE; \
 	}
-
+/*
 #else
     #define DX_WINDBG_trace() //
     #define DX_STUB_str(x) //
     #define DX_WINDBG_trace_res(width,height,bpp) //
 #endif
+*/
 
 #endif /* __DDRAW_PRIVATE */
