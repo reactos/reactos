@@ -196,6 +196,7 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 
 	/* FIXME add a check see if lock suport or not */
 
+    DX_STUB_str("test\n");
 	if (prect!=NULL)
     {
         mdLock.bHasRect = TRUE;
@@ -206,8 +207,8 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
         mdLock.bHasRect = FALSE;		
     }
 	
-	This->lpLcl->lpSurfMore->slist[0]->hDC = This->lpLcl->lpSurfMore->lpDD_lcl->hDC;
-	 
+	//This->lpLcl->lpSurfMore->slist[0]->hDC = This->lpLcl->lpSurfMore->lpDD_lcl->hDC;
+	DX_STUB_str("test\n");
     mdLock.ddRVal = DDERR_NOTPALETTIZED;
     mdLock.Lock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->HALDDSurface.Lock;
     mdLock.dwFlags = flags;
@@ -215,12 +216,14 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 	mdLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;   
     mdLock.lpSurfData = NULL;
      
+    DX_STUB_str("test\n");
 	if (!DdResetVisrgn(This->lpLcl->lpSurfMore->slist[0], NULL)) 
     {
       DX_STUB_str("Here DdResetVisrgn lock");
       return DDERR_UNSUPPORTED;
     }
    
+    DX_STUB_str("test\n");
     if (mdLock.Lock(&mdLock)!= DDHAL_DRIVER_HANDLED)
     {
       DX_STUB_str("Here DDHAL_DRIVER_HANDLED lock");
@@ -228,6 +231,7 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
     }       
    
     // FIXME ??? is this right ?? 
+    DX_STUB_str("test\n");
     if (pDDSD != NULL)
     {
 		ZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
@@ -247,17 +251,21 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
         //    pDDSD->dwSize = sizeof(DDSURFACEDESC);
         //}
 
+        DX_STUB_str("test\n");
         pDDSD->lpSurface = (LPVOID)  mdLock.lpSurfData;	
 		
 		pDDSD->dwHeight =This->lpLcl->lpGbl->wHeight;
 		pDDSD->dwWidth = This->lpLcl->lpGbl->wWidth;
-		pDDSD->ddpfPixelFormat.dwRGBBitCount = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl->
-			                                   lpModeInfo->dwBPP;
+
+         DX_STUB_str("test\n");
+
+
+		pDDSD->ddpfPixelFormat.dwRGBBitCount = This->lpLcl->lpGbl->lPitch/ 8;
 		pDDSD->lPitch = This->lpLcl->lpGbl->lPitch;
 		pDDSD->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
-
+        DX_STUB_str("test\n");
     }
-      
+    DX_STUB_str("test\n");
     return mdLock.ddRVal;
 }
 
