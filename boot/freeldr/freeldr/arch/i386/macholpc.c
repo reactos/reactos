@@ -28,11 +28,13 @@ static int part_handle = -1, kernel_mem = 0;
 
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootprep" };
 
+int decode_int(UCHAR *p);
 VOID OlpcVideoInit();
 
 VOID
 XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
+ULONG_PTR MemMin, MemMax; // OFW can report whole physical memory region
 
 VOID
 OlpcMachInit(const char *CmdLine_)
@@ -151,10 +153,25 @@ ULONG OlpcMemGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 
     memhandle = OFFinddevice("/memory");
 
+	/* Get Max/Min memory boundaries */
+    returned = OFGetprop(memhandle, "reg", 
+			   (char *)memdata, sizeof(memdata));
+
+	ofwprintf("Returned 'reg' data: %d\n", returned);
+	if( returned == -1 )
+	{
+		ofwprintf("getprop /memory[@reg] failed\n");
+		return 0;
+	}
+	MemMin = decode_int(&memdata[0]);
+	MemMax = MemMin + decode_int(&memdata[1]);
+	ofwprintf("Memory start: %x, memory end: %x\n", MemMin, MemMax);
+
+	/* Get unclaimed regions */
     returned = OFGetprop(memhandle, "available", 
 			   (char *)memdata, sizeof(memdata));
 
-    ofwprintf("Returned data: %d\n", returned);
+    ofwprintf("Returned 'available' data: %d\n", returned);
     if( returned == -1 ) {
 	ofwprintf("getprop /memory[@reg] failed\n");
 	return 0;
@@ -165,36 +182,40 @@ ULONG OlpcMemGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     }
     ofwprintf("\n");
 
-    for( i = 0; i < returned / 2; i++ ) {
-	BiosMemoryMap[slots].Type = 1/*MEMTYPE_USABLE*/;
-	BiosMemoryMap[slots].BaseAddress = memdata[i*2];
-	BiosMemoryMap[slots].Length = memdata[i*2+1];
-	ofwprintf("MemoryMap[%d] = (%x:%x)\n", 
-	       i, 
-	       (int)BiosMemoryMap[slots].BaseAddress,
-	       (int)BiosMemoryMap[slots].Length);
+	for( i = 0; i < returned / 2; i++ )
+	{
+		if (decode_int(&memdata[i*2]) > 0x7000000)
+			continue;
 
-	/* Hack for pearpc */
-	if(/* kernel_mem */FALSE) {
-	    /*BiosMemoryMap[slots].Length = kernel_mem * 1024;
-	    if( !FixedMemory ) {
-		OFClaim((int)BiosMemoryMap[slots].BaseAddress,
-			  (int)BiosMemoryMap[slots].Length,
-			  0x1000);
-		FixedMemory = BiosMemoryMap[slots].BaseAddress;
-	    }
-	    total += BiosMemoryMap[slots].Length;
-	    slots++;*/
-	    break;
-	/* Normal way */
-	} else if( BiosMemoryMap[slots].Length &&
-		   OFClaim((int)BiosMemoryMap[slots].BaseAddress,
-			     (int)BiosMemoryMap[slots].Length,
-			     0x1000) ) {
-	    total += BiosMemoryMap[slots].Length;
-	    slots++;
+		BiosMemoryMap[slots].Type = 1/*MEMTYPE_USABLE*/;
+		BiosMemoryMap[slots].BaseAddress = decode_int(&memdata[i*2]);
+		BiosMemoryMap[slots].Length = decode_int(&memdata[i*2+1]);
+		ofwprintf("MemoryMap[%d] = (%x:%x)\n", 
+			i, 
+			(int)BiosMemoryMap[slots].BaseAddress,
+			(int)BiosMemoryMap[slots].Length);
+
+		/* Hack for pearpc */
+		if(/* kernel_mem */FALSE) {
+			/*BiosMemoryMap[slots].Length = kernel_mem * 1024;
+			if( !FixedMemory ) {
+			OFClaim((int)BiosMemoryMap[slots].BaseAddress,
+			(int)BiosMemoryMap[slots].Length,
+			0x1000);
+			FixedMemory = BiosMemoryMap[slots].BaseAddress;
+			}
+			total += BiosMemoryMap[slots].Length;
+			slots++;*/
+			break;
+			/* Normal way */
+		} else if( BiosMemoryMap[slots].Length &&
+			OFClaim((int)BiosMemoryMap[slots].BaseAddress,
+			(int)BiosMemoryMap[slots].Length,
+			0x1000) ) {
+				total += BiosMemoryMap[slots].Length;
+				slots++;
+		}
 	}
-    }
 
     ofwprintf( "Returning memory map (%dk total)\n", total / 1024 );
 

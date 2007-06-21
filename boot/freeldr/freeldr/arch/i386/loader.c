@@ -44,6 +44,11 @@ extern PAGE_DIRECTORY_X86 hyperspace_pagetable;
 extern PAGE_DIRECTORY_X86 apic_pagetable;
 extern PAGE_DIRECTORY_X86 kpcr_pagetable;
 extern PAGE_DIRECTORY_X86 kuser_pagetable;
+extern PAGE_DIRECTORY_X86 framebuffer_pagetable;
+
+#define FRAMEBUFFER_PHYS 0xFD000000
+#define FRAMEBUFFER_VIRT 0xFF000000
+#define FRAMEBUFFER_SIZE 2 * 1024 * 1024
 
 PVOID
 NTAPI
@@ -73,6 +78,9 @@ VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
+    /* Goodbye OFW */
+    OFInterpret0("usb-quiet");
+
     /* Disable Interrupts */
     _disable();
 
@@ -190,6 +198,11 @@ FrLdrSetupPageDirectory(VOID)
     PageDir->Pde[KuserPageTableIndex].Write = 1;
     PageDir->Pde[KuserPageTableIndex].PageFrameNumber = PaPtrToPfn(kuser_pagetable);
 
+    /* Set up framebuffer mapping PDE */
+    PageDir->Pde[FRAMEBUFFER_VIRT >> PDE_SHIFT].Valid = 1;
+    PageDir->Pde[FRAMEBUFFER_VIRT >> PDE_SHIFT].Write = 1;
+    PageDir->Pde[FRAMEBUFFER_VIRT >> PDE_SHIFT].PageFrameNumber = PaPtrToPfn(framebuffer_pagetable);
+
     /* Set up Low Memory PTEs */
     PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
     for (i=0; i<1024; i++)
@@ -238,6 +251,16 @@ FrLdrSetupPageDirectory(VOID)
         PageDir->Pde[i].Owner = 1;
         PageDir->Pde[i].PageFrameNumber = PaToPfn(KI_USER_SHARED_DATA + i * PAGE_SIZE);
     }
+
+    /* Set up Framebuffer PTEs */
+    PageDir = (PPAGE_DIRECTORY_X86)&framebuffer_pagetable;
+    for (i=0; i<512; i++)
+    {
+        PageDir->Pde[i].Valid = 1;
+        PageDir->Pde[i].Write = 1;
+        PageDir->Pde[i].PageFrameNumber = PaToPfn(FRAMEBUFFER_PHYS + i * PAGE_SIZE);
+    }
+
 }
 
 PLOADER_MODULE
