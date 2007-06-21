@@ -1,3 +1,3 @@
 <group>
-	<installfile base="system32">lake.bmp</installfile>
+	<installfile>lake.bmp</installfile>
 </group>

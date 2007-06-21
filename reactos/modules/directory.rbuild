@@ -41,6 +41,13 @@
 			</xi:fallback>
 		</xi:include>
 	</directory>
+	<directory name="wallpaper">
+		<xi:include href="wallpaper/directory.rbuild">
+			<xi:fallback>
+				<xi:include href="empty.rbuild" />
+			</xi:fallback>
+		</xi:include>
+	</directory>
 	<directory name="windows">
 		<xi:include href="windows/directory.rbuild">
 			<xi:fallback>
