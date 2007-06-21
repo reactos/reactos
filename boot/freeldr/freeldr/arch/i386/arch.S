@@ -480,7 +480,7 @@ gdt:
 	.word	0x0000
 
 /* GDT table pointer */
-gdtptr:
+EXTERN(gdtptr)
 	.word	0x27		/* Limit */
 	.long	gdt			/* Base Address */
 

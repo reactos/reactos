@@ -20,6 +20,8 @@
 #define _NTSYSTEM_
 #include <freeldr.h>
 
+#include <arch.h>
+
 #define NDEBUG
 #include <debug.h>
 #undef DbgPrint
@@ -56,6 +58,10 @@ LdrPEGetExportByName(PVOID BaseAddress,
                      PUCHAR SymbolName,
                      USHORT Hint);
 
+VOID FASTCALL
+FrLdrResetGdtIdt();
+
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -87,12 +93,54 @@ FrLdrStartup(ULONG Magic)
     /* Re-initalize EFLAGS */
     Ke386EraseFlags();
 
+    /* Point GDT+IDT to FreeLdr instead of OFW */
+    FrLdrResetGdtIdt();
+
     /* Initialize the page directory */
     FrLdrSetupPageDirectory();
 
     /* Initialize Paging, Write-Protection and Load NTOSKRNL */
     FrLdrSetupPae(Magic);
 }
+
+/*++
+ * FrLdrResetGdtIdt
+ * INTERNAL
+ *
+ *     Sets GDT and IDT as to what ReactOS expects
+ *
+ * Params:
+ *     Magic - Multiboot Magic
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+VOID
+FASTCALL
+FrLdrResetGdtIdt()
+{
+    /* Load the GDT and IDT */
+    asm("lgdt	gdtptr\n\
+        lidt	i386idtptr\n");
+
+    /* Clear prefetch queue & correct CS,
+    * jump to low mem */
+    asm("ljmp	$0x08, $mb4\n\
+         mb4:\n");
+
+    /* Reload segment selectors */
+    asm("movw	$0x10,%dx\n\
+        movw	%dx,%ds\n\
+        movw	%dx,%es\n\
+        movw	%dx,%fs\n\
+        movw	%dx,%gs\n\
+        movw	%dx,%ss\n");
+}
+
 
 /*++
  * FrLdrSetupPae
