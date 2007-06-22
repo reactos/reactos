@@ -186,6 +186,8 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
      * devicetypes = 4 :loading a guid drv from the register
      */
 
+    ddgbl.lpDriverHandle = &ddgbl;
+
     if (reenable == FALSE)
     {
         if ((!IsBadReadPtr(This->lpLink,sizeof(LPDIRECTDRAW))) && (This->lpLink == NULL))
@@ -558,7 +560,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     This->lpLcl->lpGbl->dwNumFourCC        = mHALInfo.ddCaps.dwNumFourCCCodes;
     This->lpLcl->lpGbl->lpdwFourCC         = mpFourCC;
-    This->lpLcl->lpGbl->dwMonitorFrequency = mHALInfo.dwMonitorFrequency;
+    This->lpLcl->lpGbl->dwMonitorFrequency = mHALInfo.dwMonitorFrequency;     // 0
     This->lpLcl->lpGbl->dwModeIndex        = mHALInfo.dwModeIndex;
     This->lpLcl->lpGbl->dwNumModes         = mHALInfo.dwNumModes;
     This->lpLcl->lpGbl->lpModeInfo         = mHALInfo.lpModeInfo;
