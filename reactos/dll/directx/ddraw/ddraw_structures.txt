@@ -37,7 +37,7 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
   ULONG_PTR  hWnd;
   ULONG_PTR  hDC;                       // create HDC and save it to this pointer
   DWORD  dwErrorMode;
-  LPDDRAWI_DDRAWSURFACE_INT  lpPrimary;
+  LPDDRAWI_DDRAWSURFACE_INT  lpPrimary;  // The primary surface
   LPDDRAWI_DDRAWSURFACE_INT  lpCB;
   DWORD   dwPreferredMode;
   HINSTANCE  hD3DInstance;
@@ -49,7 +49,7 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
   DWORD   dwHotTracking;
   DWORD   dwIMEState;
   ULONG_PTR  hWndPopup;
-  ULONG_PTR  hDD;
+  ULONG_PTR  hDD;                      // from Gdientry1 copy the _DDRAWI_DIRECTDRAW_GBL hDD after startup then copy this back each time we need hDD
   ULONG_PTR  hGammaCalibrator;
   LPDDGAMMACALIBRATORPROC  lpGammaCalibrator;
 } DDRAWI_DIRECTDRAW_LCL;
@@ -62,20 +62,20 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   DWORD  dwInternal1;
   DWORD  dwUnused1[9];
   LPDDHAL_CALLBACKS  lpDDCBtmp;
-  LPDDRAWI_DDRAWSURFACE_INT  dsList;
+  LPDDRAWI_DDRAWSURFACE_INT  dsList;   // list of all created directdraw surface, it is a pointer list    
   LPDDRAWI_DDRAWPALETTE_INT  palList;
   LPDDRAWI_DDRAWCLIPPER_INT  clipperList;
   LPDDRAWI_DIRECTDRAW_GBL  lp16DD;    // pointer to it self (DDRAWI_DIRECTDRAW_GBL)
   DWORD  dwMaxOverlays;
   DWORD  dwCurrOverlays;
-  DWORD  dwMonitorFrequency;
+  DWORD  dwMonitorFrequency;         // current mointor freq, (nivida always set this to 0, it is a bug in nvida drv)
   DDCORECAPS  ddHELCaps;
   DWORD  dwUnused2[50];
   DDCOLORKEY  ddckCKDestOverlay;
   DDCOLORKEY  ddckCKSrcOverlay;
   VIDMEMINFO  vmiData;
   LPVOID  lpDriverHandle;
-  LPDDRAWI_DIRECTDRAW_LCL  lpExclusiveOwner;
+  LPDDRAWI_DIRECTDRAW_LCL  lpExclusiveOwner;  // which local directdraw comobject is in Exclusive mode and own this  
   DWORD  dwModeIndex;
   DWORD  dwModeIndexOrig;
   DWORD  dwNumFourCC;
@@ -118,7 +118,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   ULONG_PTR  lpD3DExtendedCaps;
   DWORD  dwDOSBoxEvent;
   RECT  rectDesktop;
-  char  cDriverName[MAX_DRIVER_NAME];
+  char  cDriverName[MAX_DRIVER_NAME];   // driver name, if we send in CreateDirectDraw(NULL, ...) this will be fill in the name "display" 
   ULONG_PTR   lpD3DHALCallbacks3;
   DWORD  dwNumZPixelFormats;
   LPDDPIXELFORMAT  lpZPixelFormats;

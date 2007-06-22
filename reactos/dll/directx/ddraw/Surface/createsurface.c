@@ -187,10 +187,11 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         ThisSurfLcl->dwProcessId = GetCurrentProcessId();
 
         /* FIXME the lpLnk */
-        /* FIXME the ref counter */
 
         Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)ThisSurfInt);
     }
+
+    pDDraw->lpLcl->lpGbl->dsList = (LPDDRAWI_DDRAWSURFACE_INT) slist_int;
 
     /* Fixme call on DdCanCreate then on DdCreateSurface createsurface data here */
 
@@ -231,7 +232,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return mDdCreateSurface.ddRVal;
     }
 
-    *ppSurf = &slist_int[0]->lpVtbl;
+    *ppSurf = (LPDIRECTDRAWSURFACE7) &slist_int[0]->lpVtbl;
     return DD_OK;
 }
 
