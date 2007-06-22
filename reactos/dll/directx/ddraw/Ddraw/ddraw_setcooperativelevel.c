@@ -14,13 +14,10 @@
 #include <pseh/pseh.h>
 
 HRESULT WINAPI
-Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
+Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DWORD cooplevel)
 {
+    HRESULT retVal = DD_OK;
 
-
-      HRESULT retVal = DD_OK;
-    HWND window;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
 

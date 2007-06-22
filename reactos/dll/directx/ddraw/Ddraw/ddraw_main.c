@@ -22,12 +22,11 @@
 #include <pseh/pseh.h>
 
 HRESULT WINAPI
-Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
+Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
                                 REFIID id,
                                 LPVOID *obj)
 {
     HRESULT retVal = DD_OK;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
 
@@ -55,13 +54,13 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                     newThis->lpLcl = This->lpLcl;
                     newThis->lpLink = This;
                     *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
+                    Main_DirectDraw_AddRef(newThis);
                 }
             }
             else
             {
                 *obj = This;
-                Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+                Main_DirectDraw_AddRef(This);
             }
         }
         else if (IsEqualGUID(&IID_IDirectDraw4, id))
@@ -82,13 +81,13 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                     newThis->lpLcl = This->lpLcl;
                     newThis->lpLink = This;
                     *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
+                    Main_DirectDraw_AddRef(newThis);
                 }
             }
             else
             {
                 *obj = This;
-                Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+                Main_DirectDraw_AddRef(This);
             }
         }
         else if (IsEqualGUID(&IID_IDirectDraw2, id))
@@ -109,13 +108,13 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                     newThis->lpLcl = This->lpLcl;
                     newThis->lpLink = This;
                     *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
+                    Main_DirectDraw_AddRef(newThis);
                 }
             }
             else
             {
                 *obj = This;
-                Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+                Main_DirectDraw_AddRef(This);
             }
         }
         else if (IsEqualGUID(&IID_IDirectDraw, id))
@@ -136,13 +135,13 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
                     newThis->lpLcl = This->lpLcl;
                     newThis->lpLink = This;
                     *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef((LPDIRECTDRAW7)newThis);
+                    Main_DirectDraw_AddRef(newThis);
                 }
             }
             else
             {
                 *obj = This;
-                Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+                Main_DirectDraw_AddRef(This);
             }
         }
         else
@@ -161,10 +160,9 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
 }
 
 ULONG WINAPI
-Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
+Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This)
 {
     ULONG retValue = 0;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
 
@@ -200,15 +198,14 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
 
 
 ULONG WINAPI
-Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
+Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
 {
     ULONG Counter = 0;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
     _SEH_TRY
     {
-        if (iface!=NULL)
+        if (This!=NULL)
         {
             This->lpLcl->dwLocalRefCnt--;
             This->dwIntRefCnt--;
@@ -226,7 +223,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
                     ChangeDisplaySettings(NULL, 0);
                 }*/
 
-                Cleanup(iface);
+                Cleanup(This);
             }
 
             /* FIXME cleanup being not call why ?? */
@@ -245,7 +242,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 }
 
 HRESULT WINAPI
-Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
+Main_DirectDraw_Initialize (LPDDRAWI_DIRECTDRAW_INT This, LPGUID lpGUID)
 {
 	return DDERR_ALREADYINITIALIZED;
 }
@@ -256,10 +253,9 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
  * when no exclusive owner are set in corpativelevel 
  */
 HRESULT WINAPI
-Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
+Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
 {
     HRESULT retVal = DD_OK;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
 
     DX_WINDBG_trace();
     // EnterCriticalSection(&ddcs);
@@ -280,7 +276,7 @@ Main_DirectDraw_Compact(LPDIRECTDRAW7 iface)
 }
 
 HRESULT WINAPI 
-Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW2 iface, LPDDSCAPS ddscaps, LPDWORD dwTotal, LPDWORD dwFree)
+Main_DirectDraw_GetAvailableVidMem(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS ddscaps, LPDWORD dwTotal, LPDWORD dwFree)
 {
     DDSCAPS2 myddscaps;
     HRESULT retValue = DD_OK;
@@ -290,7 +286,7 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW2 iface, LPDDSCAPS ddscaps, LPDWO
     _SEH_TRY
     {
         myddscaps.dwCaps =  ddscaps->dwCaps;
-        retValue = Main_DirectDraw_GetAvailableVidMem4((LPDIRECTDRAW7)iface, &myddscaps, dwTotal, dwFree);
+        retValue = Main_DirectDraw_GetAvailableVidMem4(This, &myddscaps, dwTotal, dwFree);
     }
     _SEH_HANDLE
     {
@@ -302,12 +298,12 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW2 iface, LPDDSCAPS ddscaps, LPDWO
 }
 
 HRESULT WINAPI 
-Main_DirectDraw_GetAvailableVidMem4(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 ddscaps,
                    LPDWORD dwTotal, LPDWORD dwFree)
 {
     HRESULT retVal = DD_OK;
     DDHAL_GETAVAILDRIVERMEMORYDATA  memdata;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
+
     DX_WINDBG_trace();
 
     _SEH_TRY
@@ -402,9 +398,8 @@ Main_DirectDraw_GetAvailableVidMem4(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD lpCodes)
+Main_DirectDraw_GetFourCCCodes(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpNumCodes, LPDWORD lpCodes)
 {
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     HRESULT retVal = DD_OK;
 
     DX_WINDBG_trace();
@@ -463,7 +458,7 @@ Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD lpNumCodes, LPDWORD 
 
 /* For DirectDraw 1 - 3 */
 HRESULT WINAPI 
-Main_DirectDraw_CreateSurface (LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD,
+Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDDSD,
                                LPDIRECTDRAWSURFACE *ppSurf, IUnknown *pUnkOuter)
 {
    HRESULT ret = DDERR_GENERIC;
@@ -477,7 +472,7 @@ Main_DirectDraw_CreateSurface (LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD,
         if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
         {
             CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2, (LPDDSURFACEDESC)pDDSD);
-            ret = Internal_CreateSurface((LPDDRAWI_DIRECTDRAW_INT)iface,
+            ret = Internal_CreateSurface(This,
                                          &dd_desc_v2,
                                          (LPDIRECTDRAWSURFACE7 *)ppSurf,
                                          pUnkOuter);
@@ -499,7 +494,7 @@ Main_DirectDraw_CreateSurface (LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD,
 
 /* For DirectDraw 4 - 7 */
 HRESULT WINAPI 
-Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
+Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pDDSD,
                                LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
     HRESULT ret;
@@ -507,7 +502,7 @@ Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
     // EnterCriticalSection(&ddcs);
     _SEH_TRY
     {
-        ret = Internal_CreateSurface( (LPDDRAWI_DIRECTDRAW_INT)iface,pDDSD, ppSurf,pUnkOuter);
+        ret = Internal_CreateSurface(This, pDDSD, ppSurf,pUnkOuter);
     }
     _SEH_HANDLE
     {

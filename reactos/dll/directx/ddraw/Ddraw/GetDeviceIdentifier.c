@@ -25,7 +25,7 @@
 #include <pseh/pseh.h>
 /* For DirectDraw 4 - 6 */
 HRESULT WINAPI
-Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW4 iface,
+Main_DirectDraw_GetDeviceIdentifier(LPDDRAWI_DIRECTDRAW_INT This,
                                     LPDDDEVICEIDENTIFIER pDDDI, DWORD dwFlags)
 {
     HRESULT retVal = DD_OK;
@@ -37,7 +37,7 @@ Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW4 iface,
     {
         memcpy(&pDDDI2 , pDDDI, sizeof(DDDEVICEIDENTIFIER));
 
-        retVal = Main_DirectDraw_GetDeviceIdentifier7((LPDIRECTDRAW7)iface, &pDDDI2, dwFlags);
+        retVal = Main_DirectDraw_GetDeviceIdentifier7(This, &pDDDI2, dwFlags);
 
         if (IsBadWritePtr(pDDDI, sizeof(DDDEVICEIDENTIFIER)))
         {
@@ -58,7 +58,7 @@ Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW4 iface,
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
+Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
                                      LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
 {
     HRESULT retVal = DDERR_INVALIDPARAMS;
@@ -72,8 +72,6 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7 iface,
     char *pdest;
     char* pcCnvEnd;
     long *lpdata;
-
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT) iface;
 
     DX_WINDBG_trace();
 

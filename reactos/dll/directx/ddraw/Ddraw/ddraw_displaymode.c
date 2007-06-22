@@ -15,11 +15,10 @@
 #include <pseh/pseh.h>
 
 HRESULT WINAPI 
-Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
+Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                                   LPDDSURFACEDESC2 pDDSD, LPVOID pContext, LPDDENUMMODESCALLBACK2 pCallback)
 {
     HRESULT ret = DD_OK;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     INT iMode = 0;
     DEVMODE DevMode;
 
@@ -117,10 +116,9 @@ Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
 }
 
 HRESULT WINAPI
-Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight,
+Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWORD dwHeight,
                                                                 DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     HRESULT ret = DD_OK;
 
     DX_STUB_str("here\n");
@@ -181,7 +179,7 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
                     BOOL ModeChanged;
                     This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
                     DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
-                    StartDirectDraw((LPDIRECTDRAW)iface, 0, TRUE);
+                    StartDirectDraw((LPDIRECTDRAW)This, 0, TRUE);
                 }
             }
         }
@@ -195,9 +193,8 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
 }
 
 HRESULT WINAPI
-Main_DirectDraw_RestoreDisplayMode (LPDIRECTDRAW7 iface)
+Main_DirectDraw_RestoreDisplayMode (LPDDRAWI_DIRECTDRAW_INT This)
 {
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DX_WINDBG_trace();
 
     _SEH_TRY
@@ -211,7 +208,7 @@ Main_DirectDraw_RestoreDisplayMode (LPDIRECTDRAW7 iface)
         
         This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
         DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
-        StartDirectDraw((LPDIRECTDRAW)iface, 0, TRUE);
+        StartDirectDraw((LPDIRECTDRAW)This, 0, TRUE);
     }
     _SEH_HANDLE
     {
@@ -223,10 +220,9 @@ Main_DirectDraw_RestoreDisplayMode (LPDIRECTDRAW7 iface)
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetMonitorFrequency (LPDIRECTDRAW7 iface, LPDWORD lpFreq)
+Main_DirectDraw_GetMonitorFrequency (LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpFreq)
 {
     HRESULT retVal = DD_OK;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DX_WINDBG_trace();
 
     _SEH_TRY
@@ -257,10 +253,9 @@ Main_DirectDraw_GetMonitorFrequency (LPDIRECTDRAW7 iface, LPDWORD lpFreq)
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetDisplayMode (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD)
+Main_DirectDraw_GetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pDDSD)
 {
     HRESULT retVal = DD_OK;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
     DX_WINDBG_trace();
 
     _SEH_TRY

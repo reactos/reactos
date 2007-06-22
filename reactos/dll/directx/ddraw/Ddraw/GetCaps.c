@@ -25,11 +25,10 @@
 
 
 HRESULT WINAPI
-Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
+Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                          LPDDCAPS pHELCaps)
 {
     HRESULT retVal = DDERR_INVALIDPARAMS;
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
 
     DX_WINDBG_trace();
 
@@ -50,7 +49,7 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
             DWORD dwTotal = 0;
             DWORD dwFree = 0;
 
-            Main_DirectDraw_GetAvailableVidMem4(iface, &ddscaps, &dwTotal, &dwFree);
+            Main_DirectDraw_GetAvailableVidMem4(This, &ddscaps, &dwTotal, &dwFree);
 
             switch (pDriverCaps->dwSize)
             {
@@ -158,7 +157,7 @@ Main_DirectDraw_GetCaps( LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
             DWORD dwTotal = 0;
             DWORD dwFree = 0;
 
-            Main_DirectDraw_GetAvailableVidMem4(iface, &ddscaps, &dwTotal, &dwFree);
+            Main_DirectDraw_GetAvailableVidMem4(This, &ddscaps, &dwTotal, &dwFree);
 
             switch (pHELCaps->dwSize)
             {

@@ -85,7 +85,7 @@ Internal_CreateSurface(
 void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc);
 
 /* DirectDraw Cleanup code only internal use */
-VOID Cleanup(LPDIRECTDRAW7 iface);
+VOID Cleanup(LPDDRAWI_DIRECTDRAW_INT iface);
 
 /* own macro to alloc memmory */
 

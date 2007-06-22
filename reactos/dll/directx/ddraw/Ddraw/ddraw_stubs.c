@@ -15,7 +15,7 @@
  */
 HRESULT
 WINAPI
-Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface,
+Main_DirectDraw_CreateClipper(LPDDRAWI_DIRECTDRAW_INT This,
                               DWORD dwFlags,
                               LPDIRECTDRAWCLIPPER *ppClipper,
                               IUnknown *pUnkOuter)
@@ -24,14 +24,14 @@ Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface,
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
+HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                   LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,
+HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDDRAWI_DIRECTDRAW_INT This, LPDIRECTDRAWSURFACE7 src,
                  LPDIRECTDRAWSURFACE7* dst)
 {
 	DX_WINDBG_trace();
@@ -39,7 +39,7 @@ HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRA
 }
 
 HRESULT WINAPI
-Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
+Main_DirectDraw_EnumSurfaces(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                  LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
                  LPDDENUMSURFACESCALLBACK7 callback)
 {
@@ -51,7 +51,7 @@ Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
  * Status: Implentation removed due to rewrite
  */
 HRESULT WINAPI
-Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
+Main_DirectDraw_FlipToGDISurface(LPDDRAWI_DIRECTDRAW_INT This)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
@@ -59,7 +59,7 @@ Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
 
 
 HRESULT WINAPI
-Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface,
+Main_DirectDraw_GetGDISurface(LPDDRAWI_DIRECTDRAW_INT This,
                                              LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface)
 {
 	DX_WINDBG_trace();
@@ -67,14 +67,14 @@ Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface,
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
+Main_DirectDraw_GetScanLine(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpdwScanLine)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
 }
 
 HRESULT WINAPI
-Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL lpbIsInVB)
+Main_DirectDraw_GetVerticalBlankStatus(LPDDRAWI_DIRECTDRAW_INT This, LPBOOL lpbIsInVB)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
@@ -84,41 +84,41 @@ Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL lpbIsInVB)
  * Status: Implentation removed due to rewrite
  */
 HRESULT WINAPI
-Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
+Main_DirectDraw_WaitForVerticalBlank(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                                                    HANDLE h)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
+HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDDRAWI_DIRECTDRAW_INT This, HDC hdc,
                                                 LPDIRECTDRAWSURFACE7 *lpDDS)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW7 iface)
+HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDDRAWI_DIRECTDRAW_INT This)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface)
+HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDDRAWI_DIRECTDRAW_INT This)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
 }
 
 
-HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes,
+HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDDRAWI_DIRECTDRAW_INT This, LPSIZE pModes,
                   DWORD dwNumModes, DWORD dwFlags)
 {
 	DX_WINDBG_trace();
 	DX_STUB;
 }
 
-HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b)
+HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDDRAWI_DIRECTDRAW_INT This,DWORD a,DWORD* b)
 {
 	DX_WINDBG_trace();
 	DX_STUB;

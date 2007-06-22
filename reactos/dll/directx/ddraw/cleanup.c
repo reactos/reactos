@@ -13,10 +13,8 @@
 #include "d3dhal.h"
 
 VOID 
-Cleanup(LPDIRECTDRAW7 iface) 
+Cleanup(LPDDRAWI_DIRECTDRAW_INT This) 
 {
-    LPDDRAWI_DIRECTDRAW_INT This = (LPDDRAWI_DIRECTDRAW_INT)iface;
-
     DX_WINDBG_trace();
 
     if (ddgbl.lpDDCBtmp != NULL)

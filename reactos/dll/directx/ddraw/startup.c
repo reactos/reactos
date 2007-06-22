@@ -109,28 +109,28 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
         This->lpVtbl = &DirectDraw7_Vtable;
         This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags + DDRAWILCL_DIRECTDRAW7;
         *pIface = (LPDIRECTDRAW)&This->lpVtbl;
-        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+        Main_DirectDraw_AddRef(This);
     }
     else if (IsEqualGUID(&IID_IDirectDraw4, id))
     {
         /* DirectDraw4 Vtable */
         This->lpVtbl = &DirectDraw4_Vtable;
         *pIface = (LPDIRECTDRAW)&This->lpVtbl;
-        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+        Main_DirectDraw_AddRef(This);
     }
     else if (IsEqualGUID(&IID_IDirectDraw2, id))
     {
         /* DirectDraw2 Vtable */
         This->lpVtbl = &DirectDraw2_Vtable;
         *pIface = (LPDIRECTDRAW)&This->lpVtbl;
-        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+        Main_DirectDraw_AddRef(This);
     }
     else if (IsEqualGUID(&IID_IDirectDraw, id))
     {
         /* DirectDraw Vtable */
         This->lpVtbl = &DirectDraw_Vtable;
         *pIface = (LPDIRECTDRAW)&This->lpVtbl;
-        Main_DirectDraw_AddRef((LPDIRECTDRAW7)This);
+        Main_DirectDraw_AddRef(This);
     }
 
     if ( This->lpVtbl != 0)

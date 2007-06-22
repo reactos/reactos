@@ -1,68 +1,175 @@
-// public interfaces
-HRESULT WINAPI Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 , REFIID , LPVOID *);
-ULONG   WINAPI Main_DirectDraw_AddRef(LPDIRECTDRAW7 );
-ULONG   WINAPI Main_DirectDraw_Release(LPDIRECTDRAW7 );
-HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 );
-HRESULT WINAPI Main_DirectDraw_CreateClipper(LPDIRECTDRAW7, DWORD, LPDIRECTDRAWCLIPPER *, IUnknown *);
-HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7, DWORD, LPPALETTEENTRY, LPDIRECTDRAWPALETTE*, LPUNKNOWN);
-HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7, LPDIRECTDRAWSURFACE7, LPDIRECTDRAWSURFACE7*);
-HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW4, LPDDDEVICEIDENTIFIER, DWORD);
-HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier7(LPDIRECTDRAW7, LPDDDEVICEIDENTIFIER2, DWORD);
+/* public interfaces  we doing pur type cast here instead in the code, it will make more cleaner code */
 
-HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7, DWORD, LPDDSURFACEDESC2, LPVOID,
-											LPDDENUMSURFACESCALLBACK7);
+HRESULT WINAPI
+Main_DirectDraw_QueryInterface (
+                                LPDDRAWI_DIRECTDRAW_INT This,
+                                REFIID id,
+                                LPVOID *obj);
 
-HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7);
-HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7, LPDDSURFACEDESC2);
-HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7, HDC, LPDIRECTDRAWSURFACE7 *);
-HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7, LPDDCAPS pDriverCaps, LPDDCAPS);
-HRESULT WINAPI Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7, LPDWORD pNumCodes, LPDWORD);
-HRESULT WINAPI Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7, LPDIRECTDRAWSURFACE7 *);
-HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD dwFlags, HANDLE);
-HRESULT WINAPI Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7, LPDWORD);
-HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7, LPDWORD);
-HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7, LPBOOL);
-HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7);
-HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7, HWND, DWORD);
-HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD);
-HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW7 iface);
-HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface);
-HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID);
-HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes, DWORD dwNumModes, DWORD dwFlags);
-HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b);
+ULONG WINAPI
+Main_DirectDraw_AddRef (LPDDRAWI_DIRECTDRAW_INT This);
 
-HRESULT WINAPI Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 , REFIID , LPVOID *);
-ULONG   WINAPI Main_DirectDraw_AddRef(LPDIRECTDRAW7 );
-ULONG   WINAPI Main_DirectDraw_Release(LPDIRECTDRAW7 );
-HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 );
-HRESULT WINAPI Main_DirectDraw_CreateClipper(LPDIRECTDRAW7, DWORD, LPDIRECTDRAWCLIPPER *, IUnknown *);
-HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7, DWORD, LPPALETTEENTRY, LPDIRECTDRAWPALETTE*, LPUNKNOWN);
-HRESULT WINAPI Main_DirectDraw_CreateSurface(LPDIRECTDRAW, LPDDSURFACEDESC, LPDIRECTDRAWSURFACE *, IUnknown *);
-HRESULT WINAPI Main_DirectDraw_CreateSurface4(LPDIRECTDRAW7, LPDDSURFACEDESC2, LPDIRECTDRAWSURFACE7 *, IUnknown *);
-HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7, LPDIRECTDRAWSURFACE7, LPDIRECTDRAWSURFACE7*);
+ULONG WINAPI
+Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This);
+
+HRESULT WINAPI
+Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This);
+
+HRESULT WINAPI
+Main_DirectDraw_CreateClipper(
+                              LPDDRAWI_DIRECTDRAW_INT This,
+                              DWORD dwFlags,
+                              LPDIRECTDRAWCLIPPER *ppClipper,
+                              IUnknown *pUnkOuter);
+
+HRESULT WINAPI
+Main_DirectDraw_CreatePalette(
+                              LPDDRAWI_DIRECTDRAW_INT This,
+                              DWORD dwFlags,
+                              LPPALETTEENTRY palent,
+                              LPDIRECTDRAWPALETTE* ppPalette,
+                              LPUNKNOWN pUnkOuter);
+
+HRESULT WINAPI 
+Main_DirectDraw_CreateSurface4(
+                               LPDDRAWI_DIRECTDRAW_INT This,
+                               LPDDSURFACEDESC2 pDDSD,
+                               LPDIRECTDRAWSURFACE7 *ppSurf,
+                               IUnknown *pUnkOuter);
+
+HRESULT WINAPI
+Main_DirectDraw_DuplicateSurface(
+                                 LPDDRAWI_DIRECTDRAW_INT This,
+                                 LPDIRECTDRAWSURFACE7 src,
+                                 LPDIRECTDRAWSURFACE7* dst);
+
+HRESULT WINAPI 
+Main_DirectDraw_EnumDisplayModes(
+                                 LPDDRAWI_DIRECTDRAW_INT This,
+                                 DWORD dwFlags,
+                                 LPDDSURFACEDESC2 pDDSD,
+                                 LPVOID pContext,
+                                 LPDDENUMMODESCALLBACK2 pCallback);
+
+HRESULT WINAPI
+Main_DirectDraw_EnumSurfaces(
+                             LPDDRAWI_DIRECTDRAW_INT This,
+                             DWORD dwFlags,
+                             LPDDSURFACEDESC2 lpDDSD2,
+                             LPVOID context,
+                             LPDDENUMSURFACESCALLBACK7 callback);
+
+HRESULT WINAPI
+Main_DirectDraw_FlipToGDISurface(LPDDRAWI_DIRECTDRAW_INT This);
+
+HRESULT WINAPI
+Main_DirectDraw_GetCaps(
+                        LPDDRAWI_DIRECTDRAW_INT This,
+                        LPDDCAPS pDriverCaps,
+                        LPDDCAPS pHELCaps);
+
+HRESULT WINAPI
+Main_DirectDraw_GetDisplayMode (
+                                LPDDRAWI_DIRECTDRAW_INT This,
+                                LPDDSURFACEDESC2 pDDSD);
+
+HRESULT WINAPI
+Main_DirectDraw_GetFourCCCodes(
+                               LPDDRAWI_DIRECTDRAW_INT This,
+                               LPDWORD lpNumCodes,
+                               LPDWORD lpCodes);
+
+HRESULT WINAPI
+Main_DirectDraw_GetGDISurface(
+                              LPDDRAWI_DIRECTDRAW_INT This,
+                              LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface);
+
+HRESULT WINAPI
+Main_DirectDraw_GetMonitorFrequency (
+                                     LPDDRAWI_DIRECTDRAW_INT This,
+                                     LPDWORD lpFreq);
 
 
-HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7, DWORD, LPDDSURFACEDESC2, LPVOID,
-											LPDDENUMSURFACESCALLBACK7);
+HRESULT WINAPI
+Main_DirectDraw_GetScanLine(LPDDRAWI_DIRECTDRAW_INT This,
+                            LPDWORD lpdwScanLine);
 
-HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7);
-HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7, LPDDSURFACEDESC2);
-HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7, HDC, LPDIRECTDRAWSURFACE7 *);
-HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7, LPDDCAPS pDriverCaps, LPDDCAPS);
-HRESULT WINAPI Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7, LPDWORD pNumCodes, LPDWORD);
-HRESULT WINAPI Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7, LPDIRECTDRAWSURFACE7 *);
-HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD dwFlags, HANDLE);
-HRESULT WINAPI Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7, LPDWORD);
-HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7, LPDWORD);
-HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7, LPBOOL);
-HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7);
-HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7, HWND, DWORD);
-HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD);
-HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW7 iface);
-HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface);
-HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID);
-HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes, DWORD dwNumModes, DWORD dwFlags);
-HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b);
+HRESULT WINAPI
+Main_DirectDraw_GetVerticalBlankStatus(
+                                       LPDDRAWI_DIRECTDRAW_INT This,
+                                       LPBOOL lpbIsInVB);
+
+HRESULT WINAPI
+Main_DirectDraw_Initialize (
+                            LPDDRAWI_DIRECTDRAW_INT This,
+                            LPGUID lpGUID);
+
+
+HRESULT WINAPI
+Main_DirectDraw_RestoreDisplayMode (LPDDRAWI_DIRECTDRAW_INT This);
+
+HRESULT WINAPI
+Main_DirectDraw_SetCooperativeLevel (
+                                     LPDDRAWI_DIRECTDRAW_INT This,
+                                     HWND hwnd,
+                                     DWORD cooplevel);
+
+HRESULT WINAPI
+Main_DirectDraw_SetDisplayMode(
+                               LPDDRAWI_DIRECTDRAW_INT This,
+                               DWORD dwWidth,
+                               DWORD dwHeight,
+                               DWORD dwBPP,
+                               DWORD dwRefreshRate,
+                               DWORD dwFlags);
+
+HRESULT WINAPI
+Main_DirectDraw_WaitForVerticalBlank(
+                                     LPDDRAWI_DIRECTDRAW_INT This,
+                                     DWORD dwFlags,
+                                     HANDLE h);
+
+
+HRESULT WINAPI
+Main_DirectDraw_GetAvailableVidMem4(
+                                    LPDDRAWI_DIRECTDRAW_INT This,
+                                    LPDDSCAPS2 ddscaps,
+                                    LPDWORD dwTotal,
+                                    LPDWORD dwFree);
+
+HRESULT WINAPI 
+Main_DirectDraw_GetSurfaceFromDC(
+                                 LPDDRAWI_DIRECTDRAW_INT This,
+                                 HDC hdc,
+                                 LPDIRECTDRAWSURFACE7 *lpDDS);
+
+HRESULT WINAPI 
+Main_DirectDraw_RestoreAllSurfaces(LPDDRAWI_DIRECTDRAW_INT This);
+
+HRESULT WINAPI 
+Main_DirectDraw_TestCooperativeLevel(LPDDRAWI_DIRECTDRAW_INT This);
+
+HRESULT WINAPI
+Main_DirectDraw_GetDeviceIdentifier7(
+                                     LPDDRAWI_DIRECTDRAW_INT This,
+                                     LPDDDEVICEIDENTIFIER2 pDDDI,
+                                     DWORD dwFlags);
+
+HRESULT WINAPI 
+Main_DirectDraw_StartModeTest(
+                              LPDDRAWI_DIRECTDRAW_INT This,
+                              LPSIZE pModes,
+                              DWORD dwNumModes,
+                              DWORD dwFlags);
+
+HRESULT WINAPI
+Main_DirectDraw_EvaluateMode(
+                             LPDDRAWI_DIRECTDRAW_INT This,
+                             DWORD a,
+                             DWORD* b);
+
+
+
 
 // hel callbacks
 
