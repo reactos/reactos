@@ -20,14 +20,66 @@ extern WCHAR classname[128];
 extern WNDCLASSW wnd_class;
 extern CRITICAL_SECTION ddcs;
 extern IDirectDraw7Vtbl DirectDraw7_Vtable;
+extern IDirectDraw4Vtbl DirectDraw4_Vtable;
+extern IDirectDraw2Vtbl DirectDraw2_Vtable;
+extern IDirectDrawVtbl DirectDraw_Vtable;
 
-HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW iface, LPGUID pGUID, BOOL reenable);
-HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable);
-HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW iface, BOOL reenable);
-HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
-HRESULT WINAPI ReCreateDirectDraw(LPDIRECTDRAW iface);
-HRESULT Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
-                        LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter);
+
+extern IDirectDrawSurface7Vtbl DirectDrawSurface7_Vtable;
+extern IDirectDrawSurface3Vtbl DirectDrawSurface3_VTable;
+extern IDirectDrawPaletteVtbl DirectDrawPalette_Vtable;
+extern IDirectDrawClipperVtbl DirectDrawClipper_Vtable;
+extern IDirectDrawColorControlVtbl DirectDrawColorControl_Vtable;
+extern IDirectDrawGammaControlVtbl DirectDrawGammaControl_Vtable;
+extern IDirectDrawKernelVtbl        DirectDrawKernel_Vtable;
+extern IDirectDrawSurfaceKernelVtbl DirectDrawSurfaceKernel_Vtable;
+
+/* Start up direct hal or hel 
+ * iface = a pointer to the com object 
+ * pGUID = guid hardware acclations or software acclation this can  be NULL 
+ * reenable = FALSE if we whant create a new directdraw com 
+ *          = TRUE if we really whant rebuild the whole com interface (not in use)
+ */
+
+HRESULT WINAPI 
+StartDirectDraw(
+                LPDIRECTDRAW iface,
+                LPGUID pGUID,
+                BOOL reenable);
+
+/* iface = a pointer to the com object 
+ * reenable = FALSE / TRUE rebuld dx hal interface, this is need if we doing a mode change 
+ */
+
+HRESULT WINAPI
+StartDirectDrawHal(
+                   LPDIRECTDRAW iface,
+                   BOOL reenable);
+
+/* iface = a pointer to the com object 
+ * reenable = FALSE / TRUE rebuld dx hel interface, this is need if we doing a mode change 
+ */
+
+HRESULT WINAPI
+StartDirectDrawHel(
+                   LPDIRECTDRAW iface,
+                   BOOL reenable);
+
+HRESULT WINAPI
+Create_DirectDraw (
+                   LPGUID pGUID,
+                   LPDIRECTDRAW* pIface,
+                   REFIID id,
+                   BOOL ex);
+
+HRESULT WINAPI
+ReCreateDirectDraw(LPDIRECTDRAW iface);
+HRESULT 
+Internal_CreateSurface(
+                       LPDDRAWI_DIRECTDRAW_INT pDDraw,
+                       LPDDSURFACEDESC2 pDDSD, 
+                       LPDIRECTDRAWSURFACE7 *ppSurf,
+                       IUnknown *pUnkOuter);
 
 /* convert DDSURFACEDESC to DDSURFACEDESC2 */
 void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src_pDesc);
@@ -98,22 +150,11 @@ typedef struct _DDRAWI_DDKERNELSURFACE_INT
 /* now to real info that are for private use and are our own */
 
 
-/*********** VTables ************/
-extern IDirectDrawVtbl				DirectDraw_Vtable;
-extern IDirectDraw2Vtbl				DirectDraw2_Vtable;
-extern IDirectDraw4Vtbl				DirectDraw4_Vtable;
-extern IDirectDraw7Vtbl				DirectDraw7_Vtable;
 
 
-extern IDirectDrawSurface7Vtbl		DirectDrawSurface7_Vtable;
-extern IDirectDrawSurface3Vtbl		DirectDrawSurface3_VTable;
 
-extern IDirectDrawPaletteVtbl		DirectDrawPalette_Vtable;
-extern IDirectDrawClipperVtbl		DirectDrawClipper_Vtable;
-extern IDirectDrawColorControlVtbl	DirectDrawColorControl_Vtable;
-extern IDirectDrawGammaControlVtbl	DirectDrawGammaControl_Vtable;
-extern IDirectDrawKernelVtbl        DirectDrawKernel_Vtable;
-extern IDirectDrawSurfaceKernelVtbl DirectDrawSurfaceKernel_Vtable;
+
+
 
 /********* Prototypes **********/
 VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
@@ -192,42 +233,33 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 } \
 	return DD_OK;
 
- //#ifdef __GNU__
-#define DX_STUB_str(x) \
-		{ \
+
+/*
+    #define DX_STUB_str(x) \
+    { \
         char buffer[1024]; \
-		sprintf ( buffer, "Function %s %s (%s:%d)\n", __FUNCTION__,x,__FILE__,__LINE__ ); \
-		OutputDebugStringA(buffer); \
+        sprintf ( buffer, "Function %s %s (%s:%d)\n", __FUNCTION__,x,__FILE__,__LINE__ ); \
+        OutputDebugStringA(buffer); \
+    }
+
+
+    #define DX_WINDBG_trace() \
+        static BOOL firstcallx = TRUE; \
+        if (firstcallx) \
+        { \
+            char buffer[1024]; \
+            sprintf ( buffer, "Enter Function %s (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
+            OutputDebugStringA(buffer); \
+            firstcallx = TRUE; \
         }
 
-
-#define DX_WINDBG_trace() \
-	static BOOL firstcallx = TRUE; \
-	if (firstcallx) \
-	{ \
-		char buffer[1024]; \
-		sprintf ( buffer, "Enter Function %s (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
-		OutputDebugStringA(buffer); \
-		firstcallx = TRUE; \
-	}
+*/
 
 
 
-#define DX_WINDBG_trace_res(width,height,bpp) \
-	static BOOL firstcallxx = TRUE; \
-	if (firstcallxx) \
-	{ \
-		char buffer[1024]; \
-		sprintf ( buffer, "Setmode have been req width=%d, height=%d bpp=%d\n",width,height,bpp); \
-		OutputDebugStringA(buffer); \
-		firstcallxx = FALSE; \
-	}
-/*
-#else
     #define DX_WINDBG_trace() //
     #define DX_STUB_str(x) //
-    #define DX_WINDBG_trace_res(width,height,bpp) //
-#endif
-*/
+
+
 
 #endif /* __DDRAW_PRIVATE */

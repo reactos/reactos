@@ -48,7 +48,7 @@ DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode)
 
     if (EnumDisplaySettingsEx(NULL, SetMode->dwModeIndex, &DevMode, 0 ) != 0)
     {
-        DX_WINDBG_trace_res((int)DevMode.dmPelsWidth, (int)DevMode.dmPelsHeight, (int)DevMode.dmBitsPerPel );
+
 
         if (ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
         {

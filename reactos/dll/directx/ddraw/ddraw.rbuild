@@ -57,4 +57,10 @@
 	<directory name="Videoport">	
 		<file>videoport_stubs.c</file>		
 	</directory>
+	<directory name="Vtable">	
+		<file>DirectDraw7_Vtable.c</file>		
+		<file>DirectDraw4_Vtable.c</file>
+		<file>DirectDraw2_Vtable.c</file>
+		<file>DirectDraw_Vtable.c</file>
+	</directory>
 </module>
