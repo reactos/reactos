@@ -14,12 +14,30 @@
  * table to right version of the functions
  */
 
+
+
 #include "rosdraw.h"
 
 #include <string.h>
 
 /* PSEH for SEH Support */
 #include <pseh/pseh.h>
+
+
+
+LPDDRAWI_DIRECTDRAW_INT
+internal_directdraw_int_alloc(LPDDRAWI_DIRECTDRAW_INT This)
+{
+    LPDDRAWI_DIRECTDRAW_INT  newThis;
+    DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
+    if (newThis)
+    {
+        newThis->lpLcl = This->lpLcl;
+        newThis->lpLink = This;
+    }
+
+    return  newThis;
+}
 
 HRESULT WINAPI
 Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
@@ -40,109 +58,66 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
         {
             if (This->lpVtbl != &DirectDraw7_Vtable)
             {
-                LPDDRAWI_DIRECTDRAW_INT  newThis;
-                DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
+                This = internal_directdraw_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
 
-                if (newThis == NULL)
-                {
-                    retVal = DDERR_OUTOFMEMORY;
-                }
-                else
-                {
-                    /* DirectDraw7 Vtable */
-                    newThis->lpVtbl = &DirectDraw7_Vtable;
-                    newThis->lpLcl = This->lpLcl;
-                    newThis->lpLink = This;
-                    *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef(newThis);
-                }
-            }
-            else
-            {
-                *obj = This;
-                Main_DirectDraw_AddRef(This);
-            }
+            This->lpVtbl = &DirectDraw7_Vtable;
+            *obj = This;
+            Main_DirectDraw_AddRef(This);
         }
         else if (IsEqualGUID(&IID_IDirectDraw4, id))
         {
             if (This->lpVtbl != &DirectDraw4_Vtable)
             {
-                LPDDRAWI_DIRECTDRAW_INT  newThis;
-                DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
+                This = internal_directdraw_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
 
-                if (newThis == NULL)
-                {
-                    retVal = DDERR_OUTOFMEMORY;
-                }
-                else
-                {
-                    /* DirectDraw4 Vtable */
-                    newThis->lpVtbl = &DirectDraw4_Vtable;
-                    newThis->lpLcl = This->lpLcl;
-                    newThis->lpLink = This;
-                    *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef(newThis);
-                }
-            }
-            else
-            {
-                *obj = This;
-                Main_DirectDraw_AddRef(This);
-            }
+            This->lpVtbl = &DirectDraw2_Vtable;
+            *obj = This;
+            Main_DirectDraw_AddRef(This);
         }
-        else if (IsEqualGUID(&IID_IDirectDraw2, id))
-        {
-            if (This->lpVtbl != &DirectDraw2_Vtable)
-            {
-                LPDDRAWI_DIRECTDRAW_INT  newThis;
-                DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
 
-                if (newThis == NULL)
-                {
-                    retVal = DDERR_OUTOFMEMORY;
-                }
-                else
-                {
-                    /* DirectDraw4 Vtable */
-                    newThis->lpVtbl = &DirectDraw2_Vtable;
-                    newThis->lpLcl = This->lpLcl;
-                    newThis->lpLink = This;
-                    *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef(newThis);
-                }
-            }
-            else
+        else if (IsEqualGUID(&IID_IDirectDraw4, id))
+        {
+            if (This->lpVtbl != &DirectDraw4_Vtable)
             {
-                *obj = This;
-                Main_DirectDraw_AddRef(This);
+                This = internal_directdraw_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
             }
+
+            This->lpVtbl = &DirectDraw2_Vtable;
+            *obj = This;
+            Main_DirectDraw_AddRef(This);
         }
         else if (IsEqualGUID(&IID_IDirectDraw, id))
         {
             if (This->lpVtbl != &DirectDraw_Vtable)
             {
-                LPDDRAWI_DIRECTDRAW_INT  newThis;
-                DxHeapMemAlloc(newThis, sizeof(DDRAWI_DIRECTDRAW_INT));
+                This = internal_directdraw_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
 
-                if (newThis == NULL)
-                {
-                    retVal = DDERR_OUTOFMEMORY;
-                }
-                else
-                {
-                    /* DirectDraw Vtable */
-                    newThis->lpVtbl = &DirectDraw_Vtable;
-                    newThis->lpLcl = This->lpLcl;
-                    newThis->lpLink = This;
-                    *obj = &newThis->lpVtbl;
-                    Main_DirectDraw_AddRef(newThis);
-                }
-            }
-            else
-            {
-                *obj = This;
-                Main_DirectDraw_AddRef(This);
-            }
+            This->lpVtbl = &DirectDraw_Vtable;
+            *obj = This;
+            Main_DirectDraw_AddRef(This);
         }
         else
         {
