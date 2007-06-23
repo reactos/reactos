@@ -29,12 +29,14 @@ extern ULONG TextColor, curr_x, curr_y;
 extern BOOLEAN NextLine;
 
 extern UCHAR BitmapFont8x16[256 * 16];
+extern UCHAR BitmapFont10x18[256 * 18 * 2];
+
 
 //static BOOLEAN VidpInitialized = FALSE;
 static PUCHAR VidpMemory = (VOID *)0xFF000000;
 
-#define CHAR_WIDTH  8
-#define CHAR_HEIGHT 16
+#define CHAR_WIDTH  10
+#define CHAR_HEIGHT 18
 #define TOP_BOTTOM_LINES 0
 
 #define DISPLAY_WIDTH 1200
@@ -48,33 +50,97 @@ NTAPI
 DisplayCharacter(CHAR Character,
                  ULONG Left,
                  ULONG Top,
-                 ULONG TextColor,
+                 ULONG Color,
                  ULONG BackTextColor)
 {
-    PUCHAR FontPtr;
+    PUSHORT FontPtr;
     WORD *Pixel;
-    UCHAR Mask;
+    USHORT Mask;
     ULONG Stride = DISPLAY_WIDTH * BytesPerPixel;
     unsigned Line;
     unsigned Col;
+    UCHAR BytesPerChar = (CHAR_WIDTH < 8) ? 1 : 2;
 
     //HACK
-    TextColor = 0xFFFF;
+    Color = 0xFFFF;
     BackTextColor = 0;
 
-    FontPtr = BitmapFont8x16 + Character * 16;
+    FontPtr = (PUSHORT)(BitmapFont10x18 + Character * CHAR_HEIGHT * BytesPerChar);
+
     Pixel = (WORD *) ((char *) VidpMemory + (Top + TOP_BOTTOM_LINES) * Stride
         + Left * BytesPerPixel);
     for (Line = 0; Line < CHAR_HEIGHT; Line++)
     {
-        Mask = 0x80;
+        Mask = (1 << (CHAR_WIDTH-1));
         for (Col = 0; Col < CHAR_WIDTH; Col++)
         {
-            Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? TextColor : BackTextColor);
+            Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? Color : BackTextColor);
             Mask = Mask >> 1;
         }
         Pixel = (WORD *) ((char *) Pixel + Stride);
     }
+}
+
+VOID
+NTAPI
+FbScroll(ULONG Scroll)
+{
+    ULONG Top;
+    PUCHAR SourceOffset, DestOffset, j;
+    ULONG Offset;
+    ULONG i;
+
+    /* Set memory positions of the scroll */
+    SourceOffset = VidpMemory +
+        (ScrollRegion[1] * DISPLAY_WIDTH * BytesPerPixel) +
+        ScrollRegion[0] * BytesPerPixel;
+
+    DestOffset = SourceOffset + Scroll * DISPLAY_WIDTH * BytesPerPixel;
+
+    /* Save top and check if it's above the bottom */
+    Top = ScrollRegion[1];
+    if (Top > ScrollRegion[3]) return;
+
+    /* Start loop */
+    do
+    {
+        /* Set number of bytes to loop and start offset */
+        Offset = ScrollRegion[0] * BytesPerPixel;
+        j = SourceOffset;
+
+        /* Check if this is part of the scroll region */
+        if (Offset <= (ScrollRegion[2] * BytesPerPixel))
+        {
+            /* Update position */
+            i = DestOffset - SourceOffset;
+
+            /* Loop the X axis */
+            do
+            {
+                /* Write value in the new position so that we can do the scroll */
+                //WRITE_REGISTER_UCHAR((PUCHAR)j,
+                //                     READ_REGISTER_UCHAR((PUCHAR)j + i));
+                RtlCopyMemory(j, j+i, BytesPerPixel);
+
+                /* Move to the next memory location to write to */
+                j += BytesPerPixel;
+
+                /* Move to the next byte in the region */
+                Offset++;
+
+                /* Make sure we don't go past the scroll region */
+            } while (Offset <= (ScrollRegion[2] * BytesPerPixel));
+        }
+
+        /* Move to the next line */
+        SourceOffset += DISPLAY_WIDTH * BytesPerPixel;
+        DestOffset += DISPLAY_WIDTH * BytesPerPixel;
+
+        /* Increase top */
+        Top++;
+
+        /* Make sure we don't go past the scroll region */
+    } while (Top <= ScrollRegion[3]);
 }
 
 
@@ -100,6 +166,7 @@ VidFbInitialize(
       VidpInitialized = TRUE;
    }
 #endif
+   DPRINT1("VidFbInitialize(SetMode %d)\n", SetMode);
    return TRUE;
 }
 
@@ -157,7 +224,7 @@ static VOID NTAPI
 VidFbDisplayString(
    IN PCSTR String)
 {
-    ULONG TopDelta = 14;
+    ULONG TopDelta = CHAR_HEIGHT-2;
 
     /* Start looping the string */
     while (*String)
@@ -170,7 +237,7 @@ VidFbDisplayString(
             if (curr_y >= ScrollRegion[3])
             {
                 /* Scroll the view */
-                //VgaScroll(TopDelta);
+                FbScroll(TopDelta);
                 curr_y -= TopDelta;
 
                 /* Preserve row */
@@ -203,7 +270,7 @@ VidFbDisplayString(
 
             /* Display this character */
             DisplayCharacter(*String, curr_x, curr_y, TextColor, 16);
-            curr_x += 8;
+            curr_x += CHAR_WIDTH;
 
             /* Check if we should scroll */
             if (curr_x > ScrollRegion[2])
@@ -213,7 +280,7 @@ VidFbDisplayString(
                 if (curr_y > ScrollRegion[3])
                 {
                     /* Do the scroll */
-                    //VgaScroll(TopDelta);
+                    FbScroll(TopDelta);
                     curr_y -= TopDelta;
 
                     /* Save the row */

@@ -36,8 +36,8 @@ ULONG ScrollRegion[4] =
 {
     0,
     0,
-    640 - 1,
-    480 - 1
+    1200 - 1,
+    900 - 1
 };
 
 ULONG TextColor = 0xFFFF;
