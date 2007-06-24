@@ -323,6 +323,8 @@ MingwModuleHandler::GetActualSourceFilename (
 		else //if ( module.type == IdlHeader )
 		{
 			newname = basename + ".h";
+			PassThruCacheDirectory ( NormalizeFilename ( newname ),
+				                     backend->intermediateDirectory );
 			return new FileLocation ( fileLocation->directory, filename );
 		}
 	}
@@ -341,7 +343,7 @@ MingwModuleHandler::GetExtraDependencies (
 		if ( (module.type == RpcServer) || (module.type == RpcClient) )
 			return GetRpcServerHeaderFilename ( basename ) + " " + GetRpcClientHeaderFilename ( basename );
 		else
-			return GetIdlHeaderFilename ( basename );			
+			return GetIdlHeaderFilename ( basename );
 	}
 	else
 		return "";
@@ -522,9 +524,6 @@ MingwModuleHandler::GetObjectFilename (
 	else
 		directoryTree = backend->intermediateDirectory;
 
-	if (newExtension == ".h")
-		directoryTree = NULL;
-
 	string obj_file = PassThruCacheDirectory (
 		NormalizeFilename ( ReplaceExtension (
 			RemoveVariables ( sourceFilename ),
@@ -679,13 +678,20 @@ MingwModuleHandler::ConcatenatePaths (
 /* static */ string
 MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Include*>& includes )
 {
-	string parameters;
+	string parameters, path_prefix;
 	for ( size_t i = 0; i < includes.size (); i++ )
 	{
 		Include& include = *includes[i];
 		if ( parameters.length () > 0 )
 			parameters += " ";
-		parameters += "-I" + include.directory;
+		if ( include.baseValue == "__intermediate" )
+			path_prefix = backend->intermediateDirectory->name + cSep;
+		else if (include.baseValue == "__output" )
+			path_prefix = backend->outputDirectory->name + cSep;
+		else
+			path_prefix = "";
+
+		parameters += "-I" + path_prefix + include.directory;
 	}
 	return parameters;
 }
@@ -1234,7 +1240,8 @@ MingwModuleHandler::GetRpcClientHeaderFilename ( string basename ) const
 string
 MingwModuleHandler::GetIdlHeaderFilename ( string basename ) const
 {
-	return basename + ".h";
+	return PassThruCacheDirectory ( basename + ".h",
+	                                backend->intermediateDirectory );
 }
 
 void
