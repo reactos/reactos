@@ -187,6 +187,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
      */
 
     ddgbl.lpDriverHandle = &ddgbl;
+    ddgbl.hDDVxd = -1;
 
     if (reenable == FALSE)
     {
@@ -322,6 +323,16 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
     This->lpLcl->lpGbl->dwFlags =  This->lpLcl->lpGbl->dwFlags | dwFlags | DDRAWI_ATTACHEDTODESKTOP;
     This->lpLcl->lpDDCB = This->lpLcl->lpGbl->lpDDCBtmp;
     This->lpLcl->hDD = ddgbl.hDD;
+
+    ddgbl.rectDevice.bottom = 0;
+    ddgbl.rectDevice.left= 0;
+    ddgbl.rectDevice.right = ddgbl.vmiData.dwDisplayWidth;
+    ddgbl.rectDevice.right = ddgbl.vmiData.dwDisplayHeight;
+
+    ddgbl.rectDesktop.bottom = 0;
+    ddgbl.rectDesktop.left= 0;
+    ddgbl.rectDesktop.right = ddgbl.vmiData.dwDisplayWidth;
+    ddgbl.rectDesktop.right = ddgbl.vmiData.dwDisplayHeight;
 
     DX_STUB_str("DD_OK\n");
     return DD_OK;
