@@ -174,6 +174,7 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
     DWORD hel_ret = DD_FALSE;
     DWORD devicetypes = 0;
     DWORD dwFlags = 0;
+    DEVMODE devmode;
 
     DX_WINDBG_trace();
 
@@ -333,6 +334,29 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
     ddgbl.rectDesktop.left= 0;
     ddgbl.rectDesktop.right = ddgbl.vmiData.dwDisplayWidth;
     ddgbl.rectDesktop.right = ddgbl.vmiData.dwDisplayHeight;
+
+
+    /* HALINFO always returen false for lpModeInfo */
+    DxHeapMemAlloc(ddgbl.lpModeInfo, sizeof(DDHALMODEINFO));
+    if (!ddgbl.lpModeInfo)
+    {
+       return DDERR_OUTOFMEMORY;
+    }
+    
+    
+    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
+    ddgbl.lpModeInfo->dwWidth      = devmode.dmPelsWidth;
+    ddgbl.lpModeInfo->dwHeight     = devmode.dmPelsHeight;
+    ddgbl.lpModeInfo->dwBPP        = devmode.dmBitsPerPel;
+    ddgbl.lpModeInfo->lPitch       = ddgbl.vmiData.lDisplayPitch;
+    ddgbl.lpModeInfo->wRefreshRate = (WORD)devmode.dmDisplayFrequency;
+    ddgbl.lpModeInfo->dwRBitMask = ddgbl.vmiData.ddpfDisplay.dwRBitMask;
+    ddgbl.lpModeInfo->dwGBitMask = ddgbl.vmiData.ddpfDisplay.dwGBitMask;
+    ddgbl.lpModeInfo->dwBBitMask = ddgbl.vmiData.ddpfDisplay.dwBBitMask;
+    ddgbl.lpModeInfo->dwAlphaBitMask = ddgbl.vmiData.ddpfDisplay.dwRGBAlphaBitMask;
+    ddgbl.dwMonitorFrequency = ddgbl.lpModeInfo->wRefreshRate;
+    ddgbl.dwNumModes = 1;
+    ddgbl.dwSaveNumModes = 1;
 
     DX_STUB_str("DD_OK\n");
     return DD_OK;
@@ -516,18 +540,20 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
 
     /* Alloc mpTextures */
-#if 0
+
     DX_STUB_str("1 Here\n");
 
+    /*
     if (This->lpLcl->lpGbl->texture != NULL)
     {
-        DxHeapMemFree(This->lpLcl->lpGbl->texture;
+        DxHeapMemFree(This->lpLcl->lpGbl->);
     }
+    */
 
     mpTextures = NULL;
     if (mD3dDriverData.dwNumTextureFormats > 0)
     {
-        mpTextures = (DDSURFACEDESC*) DxHeapMemAlloc(sizeof(DDSURFACEDESC) * mD3dDriverData.dwNumTextureFormats);
+        DxHeapMemAlloc(mpTextures, sizeof(DDSURFACEDESC) * mD3dDriverData.dwNumTextureFormats);
         if (mpTextures == NULL)
         {
             DxHeapMemFree(mpFourCC);
@@ -538,9 +564,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     DX_STUB_str("2 Here\n");
 
-#else
-      mpTextures = NULL;
-#endif
+
 
 
     /* Get all basic data from the driver */
@@ -571,10 +595,10 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     This->lpLcl->lpGbl->dwNumFourCC        = mHALInfo.ddCaps.dwNumFourCCCodes;
     This->lpLcl->lpGbl->lpdwFourCC         = mpFourCC;
-    This->lpLcl->lpGbl->dwMonitorFrequency = mHALInfo.dwMonitorFrequency;     // 0
+    // This->lpLcl->lpGbl->dwMonitorFrequency = mHALInfo.dwMonitorFrequency;     // 0
     This->lpLcl->lpGbl->dwModeIndex        = mHALInfo.dwModeIndex;
-    This->lpLcl->lpGbl->dwNumModes         = mHALInfo.dwNumModes;
-    This->lpLcl->lpGbl->lpModeInfo         = mHALInfo.lpModeInfo;
+    // This->lpLcl->lpGbl->dwNumModes         = mHALInfo.dwNumModes;
+    // This->lpLcl->lpGbl->lpModeInfo         = mHALInfo.lpModeInfo;
 
     DX_STUB_str("Here\n");
 
