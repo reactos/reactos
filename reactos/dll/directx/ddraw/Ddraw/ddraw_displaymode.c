@@ -26,7 +26,6 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 
     _SEH_TRY
     {
-        DX_STUB_str("here\n");
 
         if 
         ((!IsBadReadPtr(pCallback,sizeof(LPDDENUMMODESCALLBACK2)))  ||
@@ -39,16 +38,12 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
         else
         {
 
-            DX_STUB_str("here\n");
-
             DevMode.dmSize = sizeof(DEVMODE);
             DevMode.dmDriverExtra = 0;
 
             while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
             {
                 DDSURFACEDESC2 SurfaceDesc; 
-
-                DX_STUB_str("here\n");
 
                 iMode++;
 
@@ -70,8 +65,6 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                 */
                 SurfaceDesc.ddpfPixelFormat.dwRGBBitCount = DevMode.dmBitsPerPel;
 
-                DX_STUB_str("here\n");
-
                 // FIXME1: This->lpLcl->lpGbl->dwMonitorFrequency is not set !
                 if(dwFlags & DDEDM_REFRESHRATES && SurfaceDesc.dwRefreshRate != This->lpLcl->lpGbl->dwMonitorFrequency)
                 {
@@ -82,7 +75,6 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 
                 if(pDDSD)
                 {
-                    DX_STUB_str("here\n");
                     if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwHeight != SurfaceDesc.dwHeight)
                         continue;
 
@@ -110,8 +102,6 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
     }
     _SEH_END;
 
-    DX_STUB_str("here\n");
-
     return ret;
 }
 
@@ -120,8 +110,7 @@ Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWO
                                                                 DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
     HRESULT ret = DD_OK;
-
-    DX_STUB_str("here\n");
+    DX_WINDBG_trace();
 
     _SEH_TRY
     {

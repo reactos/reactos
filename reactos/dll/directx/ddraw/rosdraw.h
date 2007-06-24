@@ -234,7 +234,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 	return DD_OK;
 
 
-/*
+#if 0
     #define DX_STUB_str(x) \
     { \
         char buffer[1024]; \
@@ -253,13 +253,22 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
             firstcallx = TRUE; \
         }
 
-*/
 
-
-
+#define DX_WINDBG_trace_res(width,height,bpp, freq) \
+	static BOOL firstcallxx = TRUE; \
+	if (firstcallxx) \
+	{ \
+		char buffer[1024]; \
+		sprintf ( buffer, "Setmode have been req width=%d, height=%d bpp=%d freq = %d\n",width,height,bpp, freq); \
+		OutputDebugStringA(buffer); \
+		firstcallxx = FALSE; \
+	}
+#else
     #define DX_WINDBG_trace() //
+    #define DX_WINDBG_trace_res(width,height,bpp, freq) \\
+
     #define DX_STUB_str(x) //
 
-
+#endif
 
 #endif /* __DDRAW_PRIVATE */
