@@ -465,11 +465,11 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         InbvResetDisplay();
 
         /* Display blue screen */
-        InbvSolidColorFill(0, 0, 639, 479, 4);
+        InbvSolidColorFill(0, 0, 1200-1, 900-1, 4);
         InbvSetTextColor(15);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
-        InbvSetScrollRegion(0, 0, 639, 479);
+        InbvSetScrollRegion(0, 0, 1200-1, 900-1);
     }
 
     /* Check if this is a hard error */

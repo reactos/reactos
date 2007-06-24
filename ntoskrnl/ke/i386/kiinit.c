@@ -381,7 +381,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG FeatureBits;
     LARGE_INTEGER PageDirectory;
     PVOID DpcStack;
-    ULONG Vendor[3];
+    //ULONG Vendor[3];
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -463,6 +463,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeI386XMMIPresent = (KeFeatureBits & KF_XMMI) ? TRUE : FALSE;
 
         /* Detect 8-byte compare exchange support */
+#if 0 //FIXME: Investigate why it's reported that Geode does not support this.
         if (!(KeFeatureBits & KF_CMPXCHG8B))
         {
             /* Copy the vendor string */
@@ -475,6 +476,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                          Vendor[1],
                          Vendor[2]);
         }
+#endif
 
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
