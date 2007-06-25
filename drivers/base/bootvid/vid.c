@@ -40,7 +40,7 @@ ULONG ScrollRegion[4] =
     900 - 1
 };
 
-ULONG TextColor = 0xFFFF;
+ULONG TextColor = 0xF;
 ULONG curr_x = 0, curr_y = 0;
 BOOLEAN NextLine = FALSE;
 

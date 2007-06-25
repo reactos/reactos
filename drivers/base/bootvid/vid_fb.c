@@ -31,9 +31,27 @@ extern BOOLEAN NextLine;
 extern UCHAR BitmapFont8x16[256 * 16];
 extern UCHAR BitmapFont10x18[256 * 18 * 2];
 
+USHORT VgaPalette[] = {
+    0x0000, /* 0 black */
+    0xA800, /* 1 blue */
+    0x0540, /* 2 green */
+    0xAD40, /* 3 cyan */
+    0x0015, /* 4 red */
+    0xA815, /* 5 magenta */
+    0x02B5, /* 6 brown */
+    0xAD55, /* 7 light gray */
+    0x52AA, /* 8 dark gray */
+    0xFAAA, /* 9 bright blue */
+    0x57EA, /* 10 bright green */
+    0xFFEA, /* 11 bright cyan */
+    0x52BF, /* 12 bright red */
+    0xFABF, /* 13 bright magenta */
+    0x57FF, /* 14 bright yellow */
+    0xFFFF  /* 15 bright white */
+};
 
-//static BOOLEAN VidpInitialized = FALSE;
-static PUCHAR VidpMemory = (VOID *)0xFF000000;
+static BOOLEAN VidpInitialized = FALSE;
+static PUCHAR VidpMemory = (VOID *)0xEE000000;
 
 #define CHAR_WIDTH  10
 #define CHAR_HEIGHT 18
@@ -60,10 +78,16 @@ DisplayCharacter(CHAR Character,
     unsigned Line;
     unsigned Col;
     UCHAR BytesPerChar = (CHAR_WIDTH < 8) ? 1 : 2;
+    BOOLEAN Transparent = FALSE;
 
-    //HACK
-    Color = 0xFFFF;
-    BackTextColor = 0;
+    /* Transform from VGA palette to RGB565 */
+    if (Color < 16)
+        Color = VgaPalette[Color];
+    
+    if (BackTextColor < 16)
+        BackTextColor = VgaPalette[BackTextColor];
+    else
+        Transparent = TRUE;
 
     FontPtr = (PUSHORT)(BitmapFont10x18 + Character * CHAR_HEIGHT * BytesPerChar);
 
@@ -74,7 +98,11 @@ DisplayCharacter(CHAR Character,
         Mask = (1 << (CHAR_WIDTH-1));
         for (Col = 0; Col < CHAR_WIDTH; Col++)
         {
-            Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? Color : BackTextColor);
+            if (!Transparent)
+                Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? Color : BackTextColor);
+            else
+                Pixel[Col] = (0 != (FontPtr[Line] & Mask) ? Color : Pixel[Col]); // transparent background
+
             Mask = Mask >> 1;
         }
         Pixel = (WORD *) ((char *) Pixel + Stride);
@@ -150,7 +178,6 @@ static BOOLEAN NTAPI
 VidFbInitialize(
    IN BOOLEAN SetMode)
 {
-#if 0
    PHYSICAL_ADDRESS PhysicalAddress;
 
    if (!VidpInitialized)
@@ -160,12 +187,9 @@ VidFbInitialize(
       if (VidpMemory == NULL)
          return FALSE;
 
-      memset(VidpMemory, 0x00, 0x200000);
-      //memset((VOID *)0xFF000000, 0x90, 1024*1024);
-
       VidpInitialized = TRUE;
    }
-#endif
+
    DPRINT1("VidFbInitialize(SetMode %d)\n", SetMode);
    return TRUE;
 }
@@ -218,6 +242,27 @@ VidFbSolidColorFill(
    IN ULONG Bottom,
    IN ULONG Color)
 {
+    ULONG Line, Col;
+    PUSHORT p;
+
+    /* Sanity checks */
+    if (Top > Bottom)
+        return;
+    if (Left > Right)
+        return;
+
+    /* Translate color to the VGA palette */
+    if (Color < 16)
+        Color = VgaPalette[Color];
+
+    for (Line = Top; Line <= Bottom; Line++)
+    {
+        p = (PUSHORT)(VidpMemory + (Line * DISPLAY_WIDTH * BytesPerPixel) + Left * BytesPerPixel);
+        for (Col = 0; Col < (Right-Left); Col++)
+        {
+            *p++ = Color;
+        }
+    }
 }
 
 static VOID NTAPI
