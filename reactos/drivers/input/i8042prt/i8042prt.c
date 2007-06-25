@@ -164,11 +164,8 @@ NTSTATUS STDCALL I8042SynchWritePort(PDEVICE_EXTENSION DevExt,
 			}
 			if (Ack == KBD_ACK)
 				return STATUS_SUCCESS;
-			if (Ack != KBD_RESEND)
-			{
-				DPRINT1("Unexpected Ack 0x%x\n", Ack);
-				return STATUS_UNEXPECTED_IO_ERROR;
-			}
+			if (Ack == KBD_RESEND)
+				DPRINT("I8042 asks for a data resend\n");
 		} else {
 			return STATUS_SUCCESS;
 		}
