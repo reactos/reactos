@@ -62,7 +62,7 @@
   <include>.</include>
   <include>include</include>
   <include>include/psdk</include>
-  <include base="__intermediate">include/psdk</include>
+  <include root="intermediate">include/psdk</include>
   <include>include/dxsdk</include>
   <include>include/crt</include>
   <include>include/ddk</include>

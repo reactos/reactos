@@ -684,9 +684,9 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 		Include& include = *includes[i];
 		if ( parameters.length () > 0 )
 			parameters += " ";
-		if ( include.baseValue == "__intermediate" )
+		if ( include.root == "intermediate" )
 			path_prefix = backend->intermediateDirectory->name + cSep;
-		else if (include.baseValue == "__output" )
+		else if (include.root == "output" )
 			path_prefix = backend->outputDirectory->name + cSep;
 		else
 			path_prefix = "";
@@ -797,7 +797,7 @@ MingwModuleHandler::GenerateMacro (
 	for ( i = 0; i < data.includes.size(); i++ )
 	{
 		const Include& include = *data.includes[i];
-		string includeDirectory;
+		string includeDirectory, path_prefix;
 		if ( include.baseModule != NULL &&
 		     ( include.baseModule->type == RpcServer ||
 		       include.baseModule->type == RpcClient ||
@@ -806,9 +806,18 @@ MingwModuleHandler::GenerateMacro (
 	                                                            backend->intermediateDirectory );
 		else
 			includeDirectory = include.directory;
+
+		if ( include.root == "intermediate" )
+			path_prefix = backend->intermediateDirectory->name + cSep;
+		else if (include.root == "output" )
+			path_prefix = backend->outputDirectory->name + cSep;
+		else
+			path_prefix = "";
+
 		fprintf (
 			fMakefile,
-			" -I%s",
+			" -I%s%s",
+			path_prefix.c_str(),
 			includeDirectory.c_str() );
 	}
 	for ( i = 0; i < data.defines.size(); i++ )

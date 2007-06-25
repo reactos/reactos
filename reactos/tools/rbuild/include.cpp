@@ -52,7 +52,6 @@ Include::Include ( const Project& project,
 {
 	this->directory = NormalizeFilename ( basePath + sSep + directory );
 	this->basePath = NormalizeFilename ( basePath );
-	this->baseValue = basePath;
 }
 
 Include::~Include ()
@@ -67,18 +66,12 @@ Include::ProcessXML()
 	if ( att )
 	{
 		bool referenceResolved = false;
-		baseValue = att->value;
 
 		if ( !module )
 		{
-			if ( att->value == "__intermediate" || att->value == "__output" )
-				referenceResolved = true;
-			else
-			{
-				throw XMLInvalidBuildFileException (
-					node->location,
-					"'base' attribute illegal from global <include>" );
-			}
+			throw XMLInvalidBuildFileException (
+				node->location,
+				"'base' attribute illegal from global <include>" );
 		}
 
 		if ( !referenceResolved )
@@ -109,4 +102,18 @@ Include::ProcessXML()
 	}
 	else
 		directory = NormalizeFilename ( node->value );
+
+	att = node->GetAttribute ( "root", false );
+	if ( att )
+	{
+		if ( att->value != "intermediate" && att->value != "output" )
+		{
+			throw InvalidAttributeValueException (
+				node->location,
+				"root",
+				att->value );
+		}
+
+		root = att->value;
+	}
 }

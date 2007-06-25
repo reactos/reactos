@@ -366,7 +366,7 @@ public:
 	const Module* baseModule;
 	std::string directory;
 	std::string basePath;
-	std::string baseValue;
+	std::string root;
 
 	Include ( const Project& project,
 	          const XMLElement* includeNode );
