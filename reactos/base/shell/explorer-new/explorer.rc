@@ -14,6 +14,7 @@ IDI_START ICON DISCARDABLE res/start.ico
 IDB_STARTMENU BITMAP DISCARDABLE res/logov.bmp
 
 #include "lang/en-US.rc"
+#include "lang/de-DE.rc"
 #include "lang/fr-FR.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
