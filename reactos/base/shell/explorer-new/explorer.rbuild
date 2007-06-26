@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-	<module name="explorer" type="win32gui" installname="explorer2.exe" unicode="true">
-		<include base="explorer">.</include>
+	<module name="explorer_new" type="win32gui" installname="explorer_new.exe" unicode="true">
+		<include base="explorer_new">.</include>
 		<define name="WIN32" />
 		<define name="_WIN32_IE">0x0600</define>
 		<define name="_WIN32_WINNT">0x0600</define>
