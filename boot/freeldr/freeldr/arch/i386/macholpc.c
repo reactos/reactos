@@ -287,11 +287,6 @@ ULONG OlpcDiskGetCacheableBlockCount( ULONG DriveNumber )
     return 1;
 }
 
-VOID OlpcHwDetect()
-{
-    ofwprintf("OlpcHwDetect\n");
-}
-
 /* Strategy:
  *
  * For now, it'll be easy enough to use the boot command line as our boot path.

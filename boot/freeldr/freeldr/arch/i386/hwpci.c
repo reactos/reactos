@@ -139,7 +139,7 @@ FindPciBios(PCM_PCI_BUS_DATA BusData)
 }
 
 
-static VOID
+VOID
 DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
