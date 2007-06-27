@@ -9,6 +9,14 @@
  *
  */
 
+#if !defined(_KSMEDIA_)
+#error KSMEDIA.H  please included BDAMEDIA.H
+#endif
+
+#if !defined(_BDAMEDIA_)
+#error BDAMEDIA.H please included ATSCMEDIA.H
+#endif
+
 #if !defined(_ATSCMEDIA_)
 #define _ATSCMEDIA_
 #define BDANETWORKTYPE_ATSC DEFINE_GUIDNAMED(BDANETWORKTYPE_ATSC)
