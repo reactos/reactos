@@ -227,6 +227,8 @@ IntVideoPortCreateAdapterDeviceObject(
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    ULONG DeviceNumber;
+   ULONG PciSlotNumber;
+   PCI_SLOT_NUMBER SlotNumber;
    ULONG Size;
    NTSTATUS Status;
    WCHAR DeviceBuffer[20];
@@ -345,8 +347,14 @@ IntVideoPortCreateAdapterDeviceObject(
          PhysicalDeviceObject,
          DevicePropertyAddress,
          Size,
-         &DeviceExtension->SystemIoSlotNumber,
+         &PciSlotNumber,
          &Size);
+
+        /* Convert slotnumber to PCI_SLOT_NUMBER */
+        SlotNumber.u.AsULONG = 0;
+        SlotNumber.u.bits.DeviceNumber = (PciSlotNumber >> 16) & 0xFFFF;
+        SlotNumber.u.bits.FunctionNumber = PciSlotNumber & 0xFFFF;
+        DeviceExtension->SystemIoSlotNumber = SlotNumber.u.AsULONG;
    }
 
    InitializeListHead(&DeviceExtension->AddressMappingListHead);

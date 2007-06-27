@@ -1404,7 +1404,18 @@ NdisIPnPStartDevice(
       else
         Adapter->NdisMiniportBlock.SlotNumber = 0;
     }
+  else
+    {
+        /* Convert slotnumber to PCI_SLOT_NUMBER */
+        ULONG PciSlotNumber = Adapter->NdisMiniportBlock.SlotNumber;
+        PCI_SLOT_NUMBER SlotNumber;
 
+        SlotNumber.u.AsULONG = 0;
+        SlotNumber.u.bits.DeviceNumber = (PciSlotNumber >> 16) & 0xFFFF;
+        SlotNumber.u.bits.FunctionNumber = PciSlotNumber & 0xFFFF;
+
+        Adapter->NdisMiniportBlock.SlotNumber = SlotNumber.u.AsULONG;
+    }
   NdisCloseConfiguration(ConfigHandle);
 
   /*

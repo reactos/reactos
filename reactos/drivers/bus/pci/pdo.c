@@ -157,6 +157,7 @@ PdoQueryCapabilities(
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
   PDEVICE_CAPABILITIES DeviceCapabilities;
+  ULONG DeviceNumber, FunctionNumber;
 
   DPRINT("Called\n");
 
@@ -166,8 +167,11 @@ PdoQueryCapabilities(
   if (DeviceCapabilities->Version != 1)
     return STATUS_UNSUCCESSFUL;
 
+  DeviceNumber = DeviceExtension->PciDevice->SlotNumber.u.bits.DeviceNumber;
+  FunctionNumber = DeviceExtension->PciDevice->SlotNumber.u.bits.FunctionNumber;
+
   DeviceCapabilities->UniqueID = FALSE;
-  DeviceCapabilities->Address = DeviceExtension->PciDevice->SlotNumber.u.AsULONG;
+  DeviceCapabilities->Address = ((DeviceNumber << 16) & 0xFFFF0000) + (FunctionNumber & 0xFFFF);
   DeviceCapabilities->UINumber = (ULONG)-1; /* FIXME */
 
   return STATUS_SUCCESS;
