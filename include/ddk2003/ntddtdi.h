@@ -2,12 +2,17 @@
 #ifndef _NTDDTDI_
 #define _NTDDTDI_
 
+#if _MSC_VER > 1000
+#pragma once
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define DD_TDI_DEVICE_NAME "\\Device\\UNKNOWN"
-#define _TDI_CONTROL_CODE(request,method)   CTL_CODE(FILE_DEVICE_TRANSPORT, request, method, FILE_ANY_ACCESS)
+#define _TDI_CONTROL_CODE(request,method) CTL_CODE(FILE_DEVICE_TRANSPORT, request, method, FILE_ANY_ACCESS)
+
 #define IOCTL_TDI_ACCEPT                    _TDI_CONTROL_CODE( 0, METHOD_BUFFERED )
 #define IOCTL_TDI_CONNECT                   _TDI_CONTROL_CODE( 1, METHOD_BUFFERED )
 #define IOCTL_TDI_DISCONNECT                _TDI_CONTROL_CODE( 2, METHOD_BUFFERED )
@@ -27,4 +32,6 @@ extern "C" {
 }
 #endif
 
-#endif 
+#endif
+
+
