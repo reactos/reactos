@@ -1223,22 +1223,11 @@ co_WinPosSetWindowPos(
          }
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
-            if (Window->Parent)
-            {
-               NtGdiOffsetRgn(DirtyRgn,
-                  Window->WindowRect.left - Window->Parent->ClientRect.left,
-                  Window->WindowRect.top - Window->Parent->ClientRect.top);
-               co_UserRedrawWindow(Window->Parent, NULL, DirtyRgn,
-                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-            }
-            else
-            {
-               NtGdiOffsetRgn(DirtyRgn,
-                  Window->WindowRect.left - Window->ClientRect.left,
-                  Window->WindowRect.top - Window->ClientRect.top);
-               co_UserRedrawWindow(Window, NULL, DirtyRgn,
-                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-            }
+            NtGdiOffsetRgn(DirtyRgn,
+               Window->WindowRect.left - Window->ClientRect.left,
+               Window->WindowRect.top - Window->ClientRect.top);
+            co_UserRedrawWindow(Window, NULL, DirtyRgn,
+               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
          NtGdiDeleteObject(DirtyRgn);
       }
