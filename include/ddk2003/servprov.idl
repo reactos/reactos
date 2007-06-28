@@ -1,0 +1,67 @@
+
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+
+import "objidl.idl";
+
+interface IServiceProvider;
+[
+    object,
+    uuid(6d5140c1-7436-11ce-8034-00aa006009fa),
+    pointer_default(unique)
+]
+
+
+interface IServiceProvider : IUnknown
+{
+    typedef [unique] IServiceProvider *LPSERVICEPROVIDER;
+
+cpp_quote("#if (_MSC_VER >= 1100) && defined(__cplusplus) && !defined(CINTERFACE)")
+cpp_quote("    EXTERN_C const IID IID_IServiceProvider;")
+cpp_quote("    extern \"C++\"")
+cpp_quote("    {")
+cpp_quote("        MIDL_INTERFACE(\"6d5140c1-7436-11ce-8034-00aa006009fa\")")
+cpp_quote("        IServiceProvider : public IUnknown")
+cpp_quote("        {")
+cpp_quote("             public:")
+cpp_quote("                 virtual /* [local] */ HRESULT STDMETHODCALLTYPE QueryService( ")
+cpp_quote("                /* [in] */ REFGUID guidService,")
+cpp_quote("                /* [in] */ REFIID riid,")
+cpp_quote("                /* [out] */ void __RPC_FAR *__RPC_FAR *ppvObject) = 0;")
+cpp_quote("            ")
+cpp_quote("            template <class Q>")
+cpp_quote("            HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, Q** pp)")
+cpp_quote("            {")
+cpp_quote("                return QueryService(guidService, __uuidof(Q), (void **)pp);")
+cpp_quote("            }")
+cpp_quote("        };")
+cpp_quote("    }")
+cpp_quote("")
+cpp_quote("    /* [call_as] */ HRESULT STDMETHODCALLTYPE IServiceProvider_RemoteQueryService_Proxy( ")
+cpp_quote("        IServiceProvider __RPC_FAR * This,")
+cpp_quote("        /* [in] */ REFGUID guidService,")
+cpp_quote("        /* [in] */ REFIID riid,")
+cpp_quote("        /* [iid_is][out] */ IUnknown __RPC_FAR *__RPC_FAR *ppvObject);")
+cpp_quote("")
+cpp_quote("    void __RPC_STUB IServiceProvider_RemoteQueryService_Stub(")
+cpp_quote("        IRpcStubBuffer *This,")
+cpp_quote("        IRpcChannelBuffer *_pRpcChannelBuffer,")
+cpp_quote("        PRPC_MESSAGE _pRpcMessage,")
+cpp_quote("        DWORD *_pdwStubPhase);")
+cpp_quote("")
+cpp_quote("#else")
+    [local]
+    HRESULT QueryService(
+        [in] REFGUID guidService,
+        [in] REFIID riid,
+        [out] void ** ppvObject);
+
+    [call_as(QueryService)]
+    HRESULT RemoteQueryService(
+        [in] REFGUID guidService,
+        [in] REFIID riid,
+    [out, iid_is(riid)] IUnknown ** ppvObject);
+}
+cpp_quote("#endif")
+
+
