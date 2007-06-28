@@ -79,13 +79,7 @@ VOID
 KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject);
 
 VOID
-KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName);
-
-VOID
-KdbSymInit(
-    IN PLDR_DATA_TABLE_ENTRY NtoskrnlTextSection,
-    IN PLDR_DATA_TABLE_ENTRY LdrHalTextSection
-);
+KdbSymProcessBootSymbols(IN PANSI_STRING FileName);
 
 BOOLEAN
 KdbSymPrintAddress(IN PVOID Address);
@@ -214,6 +208,13 @@ STDCALL
 KdpGdbStubInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase);
+
+VOID
+STDCALL
+KdbSymInit(
+    struct _KD_DISPATCH_TABLE *DispatchTable,
+    ULONG BootPhase);
+
 
 /* KD ROUTINES ***************************************************************/
 
