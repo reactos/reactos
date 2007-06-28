@@ -61,11 +61,13 @@
 
   <include>.</include>
   <include>include</include>
+  <include>include/ddk2003</include>
   <include>include/psdk</include>
   <include root="intermediate">include/psdk</include>
   <include>include/dxsdk</include>
   <include>include/crt</include>
   <include>include/ddk</include>
+
   <include>include/GL</include>
   <include>include/ndk</include>
   <include>include/reactos</include>
