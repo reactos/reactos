@@ -21,7 +21,7 @@ sprintf_nt(IN PCHAR Buffer,
 {
     va_list ap;
     va_start(ap, Format);
-    sprintf(Buffer, Format, ap);
+    vsprintf(Buffer, Format, ap);
     va_end(ap);
 }
 
