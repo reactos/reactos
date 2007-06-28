@@ -44,13 +44,15 @@ Define::Define ( const Project& project,
 
 Define::Define ( const Project& project,
 	             const Module* module,
-	             const std::string name_ )
+	             const std::string name_,
+	             const std::string backend_)
 	: project(project),
 	  module(module),
 	  node(NULL)
 {
 	name = name_;
 	value = "";
+    backend = backend_;
 }
 
 Define::~Define ()
@@ -62,9 +64,11 @@ Define::Initialize()
 {
 	const XMLAttribute* att = node->GetAttribute ( "name", true );
 	const XMLAttribute* empty = node->GetAttribute ( "empty", false );
+    const XMLAttribute* bck = node->GetAttribute ( "backend", false );
 	assert(att);
 	name = att->value;
-	value = node->value;
+    value = node->value;
+    if ( bck ) backend = bck->value;
 	if( empty ) value = " ";
 }
 

@@ -390,6 +390,7 @@ public:
     const XMLElement* node;
 	std::string name;
 	std::string value;
+    std::string backend;
 
 	Define ( const Project& project,
 	         const XMLElement& defineNode );
@@ -398,7 +399,8 @@ public:
 	         const XMLElement& defineNode );
 	Define ( const Project& project,
 	         const Module* module,
-	         const std::string name_ );
+	         const std::string name_,
+	         const std::string backend_ = "" );
 	~Define();
 	void ProcessXML();
 private:

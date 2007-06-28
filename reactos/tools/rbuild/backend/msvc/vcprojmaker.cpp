@@ -195,6 +195,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<Define*>& defs = data.defines;
 		for ( i = 0; i < defs.size(); i++ )
 		{
+			if ( defs[i]->backend != "" && defs[i]->backend != "msvc" )
+				continue;
+
 			if ( defs[i]->value[0] )
 				common_defines.insert( defs[i]->name + "=" + defs[i]->value );
 			else
