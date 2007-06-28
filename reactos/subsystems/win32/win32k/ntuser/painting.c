@@ -551,7 +551,10 @@ co_UserRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRg
       {
          hRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
          if (NtGdiCombineRgn(hRgn, UpdateRgn, NULL, RGN_COPY) == NULLREGION)
+         {
             NtGdiDeleteObject(hRgn);
+            hRgn = NULL;
+         }
          else
             NtGdiOffsetRgn(hRgn, Window->ClientRect.left, Window->ClientRect.top);
       }
