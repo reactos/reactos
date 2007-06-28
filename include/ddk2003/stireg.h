@@ -1,5 +1,7 @@
+
 #ifndef _STIREG_
 #define _STIREG_
+
 #define REGSTR_VAL_TYPE_W                           L"Type"
 #define REGSTR_VAL_VENDOR_NAME_W                    L"Vendor"
 #define REGSTR_VAL_DEVICETYPE_W                     L"DeviceType"
@@ -19,9 +21,7 @@
 #define REGSTR_VAL_LAUNCHABLE_W                     L"Launchable"
 #define REGSTR_VAL_LAUNCHABLE                       TEXT("Launchable")
 #define IS_DIGITAL_CAMERA_STR                       L"IsDigitalCamera"
-#define IS_DIGITAL_CAMERA_VAL                       1
 #define SUPPORTS_MSCPLUS_STR                        L"SupportsMSCPlus"
-#define SUPPORTS_MSCPLUS_VAL                        1
 #define STI_DEVICE_VALUE_TWAIN_NAME                 L"TwainDS"
 #define STI_DEVICE_VALUE_ISIS_NAME                  L"ISISDriverName"
 #define STI_DEVICE_VALUE_ICM_PROFILE                L"ICMProfile"
@@ -36,4 +36,9 @@
 #define STI_DEVICE_VALUE_TIMEOUT_A                  "PollTimeout"
 #define STI_DEVICE_VALUE_DISABLE_NOTIFICATIONS_A    "DisableNotifications"
 #define REGSTR_VAL_BAUDRATE_A                       "BaudRate"
+#define SUPPORTS_MSCPLUS_VAL    1
+#define IS_DIGITAL_CAMERA_VAL   1
+
 #endif
+
+
