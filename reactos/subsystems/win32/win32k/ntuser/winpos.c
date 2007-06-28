@@ -1224,9 +1224,9 @@ co_WinPosSetWindowPos(
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
             NtGdiOffsetRgn(DirtyRgn,
-               Window->WindowRect.left - Window->ClientRect.left,
-               Window->WindowRect.top - Window->ClientRect.top);
-            co_UserRedrawWindow(Window, NULL, DirtyRgn,
+                           Window->WindowRect.left,
+                           Window->WindowRect.top);
+            IntInvalidateWindows(Window, DirtyRgn,
                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
          NtGdiDeleteObject(DirtyRgn);
