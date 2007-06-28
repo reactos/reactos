@@ -611,9 +611,9 @@ KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName)
 
     DPRINT("KdbSymProcessBootSymbols(%wZ)\n", &ModuleName);
 
-    /* Check which list we should use */
-    ListHead = (KeLoaderBlock) ? &KeLoaderBlock->LoadOrderListHead :
-                                 &PsLoadedModuleList;
+    /* We use PsLoadedModuleList here, otherwise (in case of
+       using KeLoaderBlock) all our data will be just lost */
+    ListHead = &PsLoadedModuleList;
 
     /* Found module we are interested in */
     NextEntry = ListHead->Flink;
@@ -690,6 +690,7 @@ KdbSymInit(PKD_DISPATCH_TABLE DispatchTable,
     PCHAR p1, p2;
     int Found;
     char YesNo;
+    ANSI_STRING FileName;
 
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
@@ -758,6 +759,16 @@ KdbSymInit(PKD_DISPATCH_TABLE DispatchTable,
         }
 
         RosSymInitKernelMode();
+    }
+    else if (BootPhase == 1)
+    {
+        /* Load symbols for NTOSKRNL.EXE and HAL.DLL*/
+        /* FIXME: Load as 1st and 2nd entries of InLoadOrderList instead
+                  of hardcoding them here! */
+        RtlInitAnsiString(&FileName, "\\SystemRoot\\System32\\NTOSKRNL.EXE");
+        KdbSymProcessBootSymbols(&FileName);
+        RtlInitAnsiString(&FileName, "\\SystemRoot\\System32\\HAL.DLL");
+        KdbSymProcessBootSymbols(&FileName);
     }
 }
 
