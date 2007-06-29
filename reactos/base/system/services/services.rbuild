@@ -13,6 +13,7 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>rpcrt4</library>
+	<library>pseh</library>
 	<file>config.c</file>
 	<file>database.c</file>
 	<file>driver.c</file>
