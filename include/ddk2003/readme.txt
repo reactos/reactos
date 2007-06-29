@@ -15,9 +15,9 @@ add ros hack to upssvc.h so it works again
 
 ------------------------------------------------------------
 cderr.h
-Contain one change that does not exists in windows 2003sp1 
+Contain change that does not exists in windows 2003sp1 
 But it does exists in ddk for windows 2000/XP, 
-Regedit need it, it is FNERR_BUFFERTOOSMALL 
+it is FNERR_BUFFERTOOSMALL, FRERR_BUFFERLENGTHZERO 
 
 warning.h / rpc.h
 Contain one change, we do not use ms seh 

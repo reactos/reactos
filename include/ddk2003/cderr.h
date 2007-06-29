@@ -44,6 +44,7 @@
 
 /* for Windows 2000/XP/ReactOS this is not in windows 2003 ddk */
 #define FNERR_BUFFERTOOSMALL        0x3003
+#define FRERR_BUFFERLENGTHZERO      0x4001
 
 #endif
 
