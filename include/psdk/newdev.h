@@ -1,70 +1,49 @@
-/*
- * newdev.h
- *
- * Driver installation DLL interface
- *
- * This file is part of the w32api package.
- *
- * Contributors:
- *   Created by Casper S. Hornstrup <chorns@users.sourceforge.net>
- *
- * THIS SOFTWARE IS NOT COPYRIGHTED
- *
- * This source code is offered for use in the public domain. You may
- * use, modify or distribute it freely.
- *
- * This code is distributed in the hope that it will be useful but
- * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
- * DISCLAIMED. This includes but is not limited to warranties of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- */
 
-#ifndef __NEWDEV_H
-#define __NEWDEV_H
+#ifndef _INC_NEWDEV
+#define _INC_NEWDEV
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
+#include <pshpack1.h> 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#pragma pack(push,4)
 
-/* UpdateDriverForPlugAndPlayDevices.InstallFlags constants */
-#define INSTALLFLAG_FORCE                 0x00000001
-#define INSTALLFLAG_READONLY              0x00000002
-#define INSTALLFLAG_NONINTERACTIVE        0x00000004
-#define INSTALLFLAG_BITS                  0x00000007
+#define INSTALLFLAG_FORCE           0x00000001
+#define INSTALLFLAG_READONLY        0x00000002
+#define INSTALLFLAG_NONINTERACTIVE  0x00000004
+#define INSTALLFLAG_BITS            0x00000007
 
-BOOL WINAPI
+BOOL
+WINAPI
 UpdateDriverForPlugAndPlayDevicesA(
-  HWND  hwndParent,
-  LPCSTR  HardwareId,
-  LPCSTR  FullInfPath,
-  DWORD  InstallFlags,
-  PBOOL  bRebootRequired  OPTIONAL);
+  HWND hwndParent,
+  LPCSTR HardwareId,
+  LPCSTR FullInfPath,
+  DWORD InstallFlags,
+  PBOOL bRebootRequired OPTIONAL);
 
-BOOL WINAPI
+BOOL
+WINAPI
 UpdateDriverForPlugAndPlayDevicesW(
-  HWND  hwndParent,
-  LPCWSTR  HardwareId,
-  LPCWSTR  FullInfPath,
-  DWORD  InstallFlags,
-  PBOOL  bRebootRequired  OPTIONAL);
+  HWND hwndParent,
+  LPCWSTR HardwareId,
+  LPCWSTR FullInfPath,
+  DWORD InstallFlags,
+  PBOOL bRebootRequired OPTIONAL);
 
 #ifdef UNICODE
 #define UpdateDriverForPlugAndPlayDevices UpdateDriverForPlugAndPlayDevicesW
 #else
 #define UpdateDriverForPlugAndPlayDevices UpdateDriverForPlugAndPlayDevicesA
-#endif /* UNICODE */
-
-#pragma pack(pop)
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __NEWDEV_H */
+#include <poppack.h>
+
+#endif
+
+
