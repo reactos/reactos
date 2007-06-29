@@ -9,11 +9,6 @@
 	<library>advapi32</library>
 	<library>eventlog_server</library>
 	<library>rpcrt4</library>
-	<library>kernel32</library>
-	<library>user32</library>
-	<library>ole32</library>
-	<library>user32</library>
-	<library>msvcrt</library>
 	<library>pseh</library>
 	<file>eventlog.c</file>
 	<file>logport.c</file>
