@@ -115,7 +115,7 @@ typedef long RPC_STATUS;
     #include <poppack.h>
 #else
     #include <rpcdce.h>
-    /* #include <rpcnsi.h> */
+    #include <rpcnsi.h>
     #include <rpcnterr.h>
     #include <excpt.h>
     #include <winerror.h>

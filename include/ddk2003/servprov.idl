@@ -1,5 +1,5 @@
 
-cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+
 cpp_quote("")
 
 import "objidl.idl";
