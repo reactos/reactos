@@ -243,7 +243,7 @@ static const IID* get_ip_iid(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemory
 /***********************************************************************
  *           NdrInterfacePointerMarshall [RPCRT4.@]
  */
-unsigned char * WINAPI NdrInterfacePointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+unsigned char * RPC_ENTRY NdrInterfacePointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                   unsigned char *pMemory,
                                                   PFORMAT_STRING pFormat)
 {
@@ -275,7 +275,7 @@ unsigned char * WINAPI NdrInterfacePointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrInterfacePointerUnmarshall [RPCRT4.@]
  */
-unsigned char * WINAPI NdrInterfacePointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
+unsigned char * RPC_ENTRY NdrInterfacePointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                     unsigned char **ppMemory,
                                                     PFORMAT_STRING pFormat,
                                                     unsigned char fMustAlloc)
@@ -301,7 +301,7 @@ unsigned char * WINAPI NdrInterfacePointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg
 /***********************************************************************
  *           NdrInterfacePointerBufferSize [RPCRT4.@]
  */
-void WINAPI NdrInterfacePointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
+void RPC_ENTRY NdrInterfacePointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
                                          unsigned char *pMemory,
                                          PFORMAT_STRING pFormat)
 {
@@ -321,7 +321,7 @@ void WINAPI NdrInterfacePointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrInterfacePointerMemorySize [RPCRT4.@]
  */
-unsigned long WINAPI NdrInterfacePointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
+unsigned long RPC_ENTRY NdrInterfacePointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
                                                   PFORMAT_STRING pFormat)
 {
   FIXME("(%p,%p): stub\n", pStubMsg, pFormat);
@@ -331,7 +331,7 @@ unsigned long WINAPI NdrInterfacePointerMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrInterfacePointerFree [RPCRT4.@]
  */
-void WINAPI NdrInterfacePointerFree(PMIDL_STUB_MESSAGE pStubMsg,
+void RPC_ENTRY NdrInterfacePointerFree(PMIDL_STUB_MESSAGE pStubMsg,
                                    unsigned char *pMemory,
                                    PFORMAT_STRING pFormat)
 {
@@ -343,7 +343,7 @@ void WINAPI NdrInterfacePointerFree(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrOleAllocate [RPCRT4.@]
  */
-void * WINAPI NdrOleAllocate(size_t Size)
+void * RPC_ENTRY NdrOleAllocate(size_t Size)
 {
   if (!LoadCOM()) return NULL;
   return COM_MemAlloc(Size);
@@ -352,7 +352,7 @@ void * WINAPI NdrOleAllocate(size_t Size)
 /***********************************************************************
  *           NdrOleFree [RPCRT4.@]
  */
-void WINAPI NdrOleFree(void *NodeToFree)
+void RPC_ENTRY NdrOleFree(void *NodeToFree)
 {
   if (!LoadCOM()) return;
   COM_MemFree(NodeToFree);

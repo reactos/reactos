@@ -382,7 +382,7 @@ typedef struct _NDR_EHD_CONTEXT
 
 #include "poppack.h"
 
-void WINAPI NdrRpcSmSetClientToOsf(PMIDL_STUB_MESSAGE pMessage)
+void RPC_ENTRY NdrRpcSmSetClientToOsf(PMIDL_STUB_MESSAGE pMessage)
 {
 #if 0 /* these functions are not defined yet */
     pMessage->pfnAllocate = NdrRpcSmClientAllocate;
@@ -974,7 +974,7 @@ LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, uns
 #endif
 
 /* FIXME: need to free some stuff in here too */
-long WINAPI NdrStubCall2(
+long RPC_ENTRY NdrStubCall2(
     struct IRpcStubBuffer * pThis,
     struct IRpcChannelBuffer * pChannel,
     PRPC_MESSAGE pRpcMsg,
@@ -1471,7 +1471,7 @@ long WINAPI NdrStubCall2(
     return S_OK;
 }
 
-void WINAPI NdrServerCall2(PRPC_MESSAGE pRpcMsg)
+void RPC_ENTRY NdrServerCall2(PRPC_MESSAGE pRpcMsg)
 {
     DWORD dwPhase;
     NdrStubCall2(NULL, NULL, pRpcMsg, &dwPhase);

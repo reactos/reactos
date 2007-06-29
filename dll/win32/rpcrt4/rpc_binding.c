@@ -632,7 +632,7 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
 /***********************************************************************
  *             RpcStringBindingComposeA (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcStringBindingComposeA(unsigned char *ObjUuid, unsigned char *Protseq,
+RPC_STATUS RPC_ENTRY RpcStringBindingComposeA(unsigned char *ObjUuid, unsigned char *Protseq,
                                            unsigned char *NetworkAddr, unsigned char *Endpoint,
                                            unsigned char *Options, unsigned char** StringBinding )
 {
@@ -684,7 +684,7 @@ RPC_STATUS WINAPI RpcStringBindingComposeA(unsigned char *ObjUuid, unsigned char
 /***********************************************************************
  *             RpcStringBindingComposeW (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcStringBindingComposeW( LPWSTR ObjUuid, LPWSTR Protseq,
+RPC_STATUS RPC_ENTRY RpcStringBindingComposeW( LPWSTR ObjUuid, LPWSTR Protseq,
                                             LPWSTR NetworkAddr, LPWSTR Endpoint,
                                             LPWSTR Options, LPWSTR* StringBinding )
 {
@@ -737,7 +737,7 @@ RPC_STATUS WINAPI RpcStringBindingComposeW( LPWSTR ObjUuid, LPWSTR Protseq,
 /***********************************************************************
  *             RpcStringBindingParseA (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned char **ObjUuid,
+RPC_STATUS RPC_ENTRY RpcStringBindingParseA( unsigned char *StringBinding, unsigned char **ObjUuid,
                                           unsigned char **Protseq, unsigned char **NetworkAddr,
                                           unsigned char **Endpoint, unsigned char **Options)
 {
@@ -828,7 +828,7 @@ fail:
 /***********************************************************************
  *             RpcStringBindingParseW (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcStringBindingParseW( LPWSTR StringBinding, LPWSTR *ObjUuid,
+RPC_STATUS RPC_ENTRY RpcStringBindingParseW( LPWSTR StringBinding, LPWSTR *ObjUuid,
                                           LPWSTR *Protseq, LPWSTR *NetworkAddr,
                                           LPWSTR *Endpoint, LPWSTR *Options)
 {
@@ -918,7 +918,7 @@ fail:
 /***********************************************************************
  *             RpcBindingFree (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
+RPC_STATUS RPC_ENTRY RpcBindingFree( RPC_BINDING_HANDLE* Binding )
 {
   RPC_STATUS status;
   TRACE("(%p) = %p\n", Binding, *Binding);
@@ -930,7 +930,7 @@ RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
 /***********************************************************************
  *             RpcBindingVectorFree (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
+RPC_STATUS RPC_ENTRY RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
 {
   RPC_STATUS status;
   unsigned long c;
@@ -947,7 +947,7 @@ RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
 /***********************************************************************
  *             RpcBindingInqObject (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
+RPC_STATUS RPC_ENTRY RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
 {
   RpcBinding* bind = (RpcBinding*)Binding;
 
@@ -959,7 +959,7 @@ RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
 /***********************************************************************
  *             RpcBindingSetObject (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingSetObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
+RPC_STATUS RPC_ENTRY RpcBindingSetObject( RPC_BINDING_HANDLE Binding, UUID* ObjectUuid )
 {
   RpcBinding* bind = (RpcBinding*)Binding;
 
@@ -971,7 +971,7 @@ RPC_STATUS WINAPI RpcBindingSetObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
 /***********************************************************************
  *             RpcBindingFromStringBindingA (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingFromStringBindingA( unsigned char *StringBinding, RPC_BINDING_HANDLE* Binding )
+RPC_STATUS RPC_ENTRY RpcBindingFromStringBindingA( unsigned char *StringBinding, RPC_BINDING_HANDLE* Binding )
 {
   RPC_STATUS ret;
   RpcBinding* bind = NULL;
@@ -1010,7 +1010,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( unsigned char *StringBinding, RP
 /***********************************************************************
  *             RpcBindingFromStringBindingW (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingFromStringBindingW( LPWSTR StringBinding, RPC_BINDING_HANDLE* Binding )
+RPC_STATUS RPC_ENTRY RpcBindingFromStringBindingW( LPWSTR StringBinding, RPC_BINDING_HANDLE* Binding )
 {
   RPC_STATUS ret;
   RpcBinding* bind = NULL;
@@ -1049,7 +1049,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( LPWSTR StringBinding, RPC_BINDIN
 /***********************************************************************
  *             RpcBindingToStringBindingA (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, unsigned char** StringBinding )
+RPC_STATUS RPC_ENTRY RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, unsigned char** StringBinding )
 {
   RPC_STATUS ret;
   RpcBinding* bind = (RpcBinding*)Binding;
@@ -1071,7 +1071,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, unsign
 /***********************************************************************
  *             RpcBindingToStringBindingW (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, unsigned short** StringBinding )
+RPC_STATUS RPC_ENTRY RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, unsigned short** StringBinding )
 {
   RPC_STATUS ret;
   unsigned char *str = NULL;
@@ -1088,7 +1088,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, unsign
  *  Exists in win9x and winNT, but with different number of arguments
  *  (9x version has 3 arguments, NT has 2).
  */
-RPC_STATUS WINAPI I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING_FN BlockingFn)
+RPC_STATUS RPC_ENTRY I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING_FN BlockingFn)
 {
   RpcBinding* bind = (RpcBinding*)Binding;
 
@@ -1102,7 +1102,7 @@ RPC_STATUS WINAPI I_RpcBindingSetAsync( RPC_BINDING_HANDLE Binding, RPC_BLOCKING
 /***********************************************************************
  *             RpcNetworkIsProtseqValidA (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcNetworkIsProtseqValidA(unsigned char *protseq) {
+RPC_STATUS RPC_ENTRY RpcNetworkIsProtseqValidA(unsigned char *protseq) {
   UNICODE_STRING protseqW;
 
   if (!protseq) return RPC_S_INVALID_RPC_PROTSEQ; /* ? */
@@ -1124,7 +1124,7 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidA(unsigned char *protseq) {
  *   ncalrpc   local-only rpc over LPC (LPC is not really used)
  *   ncacn_np  rpc over named pipes
  */
-RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
+RPC_STATUS RPC_ENTRY RpcNetworkIsProtseqValidW(LPWSTR protseq) {
   static const WCHAR protseqsW[][15] = { 
     {'n','c','a','l','r','p','c',0},
     {'n','c','a','c','n','_','n','p',0}

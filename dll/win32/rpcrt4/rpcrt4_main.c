@@ -172,7 +172,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  *
  *  S_OK if successful.
  */
-RPC_STATUS WINAPI RpcStringFreeA(unsigned char** String)
+RPC_STATUS RPC_ENTRY RpcStringFreeA(unsigned char** String)
 {
   HeapFree( GetProcessHeap(), 0, *String);
 
@@ -188,7 +188,7 @@ RPC_STATUS WINAPI RpcStringFreeA(unsigned char** String)
  *
  *  S_OK if successful.
  */
-RPC_STATUS WINAPI RpcStringFreeW(unsigned short** String)
+RPC_STATUS RPC_ENTRY RpcStringFreeW(unsigned short** String)
 {
   HeapFree( GetProcessHeap(), 0, *String);
 
@@ -200,7 +200,7 @@ RPC_STATUS WINAPI RpcStringFreeW(unsigned short** String)
  *
  * Raises an exception.
  */
-void WINAPI RpcRaiseException(RPC_STATUS exception)
+void RPC_ENTRY RpcRaiseException(RPC_STATUS exception)
 {
   /* FIXME: translate exception? */
   RaiseException(exception, 0, 0, NULL);
@@ -219,7 +219,7 @@ void WINAPI RpcRaiseException(RPC_STATUS exception)
  *     0  if Uuid1 and Uuid2 are equal
  *     1  if Uuid1 is greater than Uuid2
  */
-int WINAPI UuidCompare(UUID *Uuid1, UUID *Uuid2, RPC_STATUS *Status)
+int RPC_ENTRY UuidCompare(UUID *Uuid1, UUID *Uuid2, RPC_STATUS *Status)
 {
   int i;
 
@@ -262,7 +262,7 @@ int WINAPI UuidCompare(UUID *Uuid1, UUID *Uuid2, RPC_STATUS *Status)
  * RETURNS
  *     TRUE/FALSE
  */
-int WINAPI UuidEqual(UUID *Uuid1, UUID *Uuid2, RPC_STATUS *Status)
+int RPC_ENTRY UuidEqual(UUID *Uuid1, UUID *Uuid2, RPC_STATUS *Status)
 {
   TRACE("(%s,%s)\n", debugstr_guid(Uuid1), debugstr_guid(Uuid2));
   return !UuidCompare(Uuid1, Uuid2, Status);
@@ -278,7 +278,7 @@ int WINAPI UuidEqual(UUID *Uuid1, UUID *Uuid2, RPC_STATUS *Status)
  * RETURNS
  *     TRUE/FALSE
  */
-int WINAPI UuidIsNil(UUID *Uuid, RPC_STATUS *Status)
+int RPC_ENTRY UuidIsNil(UUID *Uuid, RPC_STATUS *Status)
 {
   TRACE("(%s)\n", debugstr_guid(Uuid));
   if (!Uuid) return TRUE;
@@ -294,7 +294,7 @@ int WINAPI UuidIsNil(UUID *Uuid, RPC_STATUS *Status)
  * RETURNS
  *     RPC_S_OK
  */
-RPC_STATUS WINAPI UuidCreateNil(UUID *Uuid)
+RPC_STATUS RPC_ENTRY UuidCreateNil(UUID *Uuid)
 {
   *Uuid = uuid_nil;
   return RPC_S_OK;
@@ -391,7 +391,7 @@ exit:
  *         suggests using NVRAM for storing persistent 
  *         values.
  */
-RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
+RPC_STATUS RPC_ENTRY UuidCreate(UUID *Uuid)
 {
     static int initialised, count;
 
@@ -475,7 +475,7 @@ RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
  *  RPC_S_UUID_LOCAL_ONLY if UUID is only locally unique.
  *
  */
-RPC_STATUS WINAPI UuidCreateSequential(UUID *Uuid)
+RPC_STATUS RPC_ENTRY UuidCreateSequential(UUID *Uuid)
 {
    return UuidCreate(Uuid);
 }
@@ -489,7 +489,7 @@ RPC_STATUS WINAPI UuidCreateSequential(UUID *Uuid)
  * Code based on FreeDCE implementation
  *
  */
-unsigned short WINAPI UuidHash(UUID *uuid, RPC_STATUS *Status)
+unsigned short RPC_ENTRY UuidHash(UUID *uuid, RPC_STATUS *Status)
 {
   BYTE *data = (BYTE*)uuid;
   short c0 = 0, c1 = 0, x, y;
@@ -527,7 +527,7 @@ unsigned short WINAPI UuidHash(UUID *uuid, RPC_STATUS *Status)
  *  S_OK if successful.
  *  S_OUT_OF_MEMORY if unsucessful.
  */
-RPC_STATUS WINAPI UuidToStringA(UUID *Uuid, unsigned char** StringUuid)
+RPC_STATUS RPC_ENTRY UuidToStringA(UUID *Uuid, unsigned char** StringUuid)
 {
   *StringUuid = HeapAlloc( GetProcessHeap(), 0, sizeof(char) * 37);
 
@@ -553,7 +553,7 @@ RPC_STATUS WINAPI UuidToStringA(UUID *Uuid, unsigned char** StringUuid)
  *  S_OK if successful.
  *  S_OUT_OF_MEMORY if unsucessful.
  */
-RPC_STATUS WINAPI UuidToStringW(UUID *Uuid, unsigned short** StringUuid)
+RPC_STATUS RPC_ENTRY UuidToStringW(UUID *Uuid, unsigned short** StringUuid)
 {
   char buf[37];
 
@@ -587,7 +587,7 @@ static const BYTE hex2bin[] =
 /***********************************************************************
  *		UuidFromStringA (RPCRT4.@)
  */
-RPC_STATUS WINAPI UuidFromStringA(unsigned char* s, UUID *uuid)
+RPC_STATUS RPC_ENTRY UuidFromStringA(unsigned char* s, UUID *uuid)
 {
     int i;
 
@@ -627,7 +627,7 @@ RPC_STATUS WINAPI UuidFromStringA(unsigned char* s, UUID *uuid)
 /***********************************************************************
  *		UuidFromStringW (RPCRT4.@)
  */
-RPC_STATUS WINAPI UuidFromStringW(unsigned short* s, UUID *uuid)
+RPC_STATUS RPC_ENTRY UuidFromStringW(unsigned short* s, UUID *uuid)
 {
     int i;
 

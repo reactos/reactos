@@ -49,7 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 /***********************************************************************
  *           NdrProxyInitialize [RPCRT4.@]
  */
-void WINAPI NdrProxyInitialize(void *This,
+void RPC_ENTRY NdrProxyInitialize(void *This,
                               PRPC_MESSAGE pRpcMsg,
                               PMIDL_STUB_MESSAGE pStubMsg,
                               PMIDL_STUB_DESC pStubDescriptor,
@@ -71,7 +71,7 @@ void WINAPI NdrProxyInitialize(void *This,
 /***********************************************************************
  *           NdrProxyGetBuffer [RPCRT4.@]
  */
-void WINAPI NdrProxyGetBuffer(void *This,
+void RPC_ENTRY NdrProxyGetBuffer(void *This,
                              PMIDL_STUB_MESSAGE pStubMsg)
 {
   HRESULT hr;
@@ -93,7 +93,7 @@ void WINAPI NdrProxyGetBuffer(void *This,
 /***********************************************************************
  *           NdrProxySendReceive [RPCRT4.@]
  */
-void WINAPI NdrProxySendReceive(void *This,
+void RPC_ENTRY NdrProxySendReceive(void *This,
                                PMIDL_STUB_MESSAGE pStubMsg)
 {
   ULONG Status = 0;
@@ -125,7 +125,7 @@ void WINAPI NdrProxySendReceive(void *This,
 /***********************************************************************
  *           NdrProxyFreeBuffer [RPCRT4.@]
  */
-void WINAPI NdrProxyFreeBuffer(void *This,
+void RPC_ENTRY NdrProxyFreeBuffer(void *This,
                               PMIDL_STUB_MESSAGE pStubMsg)
 {
   HRESULT hr;
@@ -138,7 +138,7 @@ void WINAPI NdrProxyFreeBuffer(void *This,
 /***********************************************************************
  *           NdrProxyErrorHandler [RPCRT4.@]
  */
-HRESULT WINAPI NdrProxyErrorHandler(DWORD dwExceptionCode)
+HRESULT RPC_ENTRY NdrProxyErrorHandler(DWORD dwExceptionCode)
 {
   WARN("(0x%08lx): a proxy call failed\n", dwExceptionCode);
 
@@ -151,7 +151,7 @@ HRESULT WINAPI NdrProxyErrorHandler(DWORD dwExceptionCode)
 /***********************************************************************
  *           NdrStubInitialize [RPCRT4.@]
  */
-void WINAPI NdrStubInitialize(PRPC_MESSAGE pRpcMsg,
+void RPC_ENTRY NdrStubInitialize(PRPC_MESSAGE pRpcMsg,
                              PMIDL_STUB_MESSAGE pStubMsg,
                              PMIDL_STUB_DESC pStubDescriptor,
                              LPRPCCHANNELBUFFER pRpcChannelBuffer)
@@ -164,7 +164,7 @@ void WINAPI NdrStubInitialize(PRPC_MESSAGE pRpcMsg,
 /***********************************************************************
  *           NdrStubGetBuffer [RPCRT4.@]
  */
-void WINAPI NdrStubGetBuffer(LPRPCSTUBBUFFER This,
+void RPC_ENTRY NdrStubGetBuffer(LPRPCSTUBBUFFER This,
                             LPRPCCHANNELBUFFER pRpcChannelBuffer,
                             PMIDL_STUB_MESSAGE pStubMsg)
 {
@@ -180,7 +180,7 @@ void WINAPI NdrStubGetBuffer(LPRPCSTUBBUFFER This,
 /************************************************************************
  *             NdrClientInitializeNew [RPCRT4.@]
  */
-void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE pStubMsg, 
+void RPC_ENTRY NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE pStubMsg, 
                                     PMIDL_STUB_DESC pStubDesc, unsigned int ProcNum )
 {
   TRACE("(pRpcMessage == ^%p, pStubMsg == ^%p, pStubDesc == ^%p, ProcNum == %d)\n",
@@ -208,7 +208,7 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
 /***********************************************************************
  *             NdrServerInitializeNew [RPCRT4.@]
  */
-unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_MESSAGE pStubMsg,
+unsigned char* RPC_ENTRY NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_MESSAGE pStubMsg,
                                               PMIDL_STUB_DESC pStubDesc )
 {
   TRACE("(pRpcMsg == ^%p, pStubMsg == ^%p, pStubDesc == ^%p)\n", pRpcMsg, pStubMsg, pStubDesc);
@@ -235,7 +235,7 @@ unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_M
 /***********************************************************************
  *           NdrGetBuffer [RPCRT4.@]
  */
-unsigned char *WINAPI NdrGetBuffer(MIDL_STUB_MESSAGE *stubmsg, unsigned long buflen, RPC_BINDING_HANDLE handle)
+unsigned char *RPC_ENTRY NdrGetBuffer(MIDL_STUB_MESSAGE *stubmsg, unsigned long buflen, RPC_BINDING_HANDLE handle)
 {
   TRACE("(stubmsg == ^%p, buflen == %lu, handle == %p): wild guess.\n", stubmsg, buflen, handle);
   
@@ -256,7 +256,7 @@ unsigned char *WINAPI NdrGetBuffer(MIDL_STUB_MESSAGE *stubmsg, unsigned long buf
 /***********************************************************************
  *           NdrFreeBuffer [RPCRT4.@]
  */
-void WINAPI NdrFreeBuffer(MIDL_STUB_MESSAGE *pStubMsg)
+void RPC_ENTRY NdrFreeBuffer(MIDL_STUB_MESSAGE *pStubMsg)
 {
   TRACE("(pStubMsg == ^%p): wild guess.\n", pStubMsg);
   I_RpcFreeBuffer(pStubMsg->RpcMsg);
@@ -267,7 +267,7 @@ void WINAPI NdrFreeBuffer(MIDL_STUB_MESSAGE *pStubMsg)
 /************************************************************************
  *           NdrSendReceive [RPCRT4.@]
  */
-unsigned char *WINAPI NdrSendReceive( MIDL_STUB_MESSAGE *stubmsg, unsigned char *buffer  )
+unsigned char *RPC_ENTRY NdrSendReceive( MIDL_STUB_MESSAGE *stubmsg, unsigned char *buffer  )
 {
   RPC_STATUS status;
 

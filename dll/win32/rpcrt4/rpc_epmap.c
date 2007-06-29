@@ -66,7 +66,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /***********************************************************************
  *             RpcEpRegisterA (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
+RPC_STATUS RPC_ENTRY RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
                                   UUID_VECTOR *UuidVector, unsigned char *Annotation )
 {
   RPCSS_NP_MESSAGE msg;
@@ -139,7 +139,7 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
 /***********************************************************************
  *             RpcEpUnregister (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
+RPC_STATUS RPC_ENTRY RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
                                    UUID_VECTOR *UuidVector )
 {
   RPCSS_NP_MESSAGE msg;
@@ -209,7 +209,7 @@ RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bin
 /***********************************************************************
  *             RpcEpResolveBinding (RPCRT4.@)
  */
-RPC_STATUS WINAPI RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE IfSpec )
+RPC_STATUS RPC_ENTRY RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE IfSpec )
 {
   RPCSS_NP_MESSAGE msg;
   RPCSS_NP_REPLY reply;

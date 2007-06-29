@@ -481,7 +481,7 @@ fail:
 /***********************************************************************
  *           I_RpcGetBuffer [RPCRT4.@]
  */
-RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
+RPC_STATUS RPC_ENTRY I_RpcGetBuffer(PRPC_MESSAGE pMsg)
 {
   TRACE("(%p): BufferLength=%d\n", pMsg, pMsg->BufferLength);
   /* FIXME: pfnAllocate? */
@@ -495,7 +495,7 @@ RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
 /***********************************************************************
  *           I_RpcFreeBuffer [RPCRT4.@]
  */
-RPC_STATUS WINAPI I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
+RPC_STATUS RPC_ENTRY I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
 {
   TRACE("(%p) Buffer=%p\n", pMsg, pMsg->Buffer);
   /* FIXME: pfnFree? */
@@ -507,7 +507,7 @@ RPC_STATUS WINAPI I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
 /***********************************************************************
  *           I_RpcSend [RPCRT4.@]
  */
-RPC_STATUS WINAPI I_RpcSend(PRPC_MESSAGE pMsg)
+RPC_STATUS RPC_ENTRY I_RpcSend(PRPC_MESSAGE pMsg)
 {
   RpcBinding* bind = (RpcBinding*)pMsg->Handle;
   RpcConnection* conn;
@@ -566,7 +566,7 @@ RPC_STATUS WINAPI I_RpcSend(PRPC_MESSAGE pMsg)
 /***********************************************************************
  *           I_RpcReceive [RPCRT4.@]
  */
-RPC_STATUS WINAPI I_RpcReceive(PRPC_MESSAGE pMsg)
+RPC_STATUS RPC_ENTRY I_RpcReceive(PRPC_MESSAGE pMsg)
 {
   RpcBinding* bind = (RpcBinding*)pMsg->Handle;
   RpcConnection* conn;
@@ -635,7 +635,7 @@ fail:
 /***********************************************************************
  *           I_RpcSendReceive [RPCRT4.@]
  */
-RPC_STATUS WINAPI I_RpcSendReceive(PRPC_MESSAGE pMsg)
+RPC_STATUS RPC_ENTRY I_RpcSendReceive(PRPC_MESSAGE pMsg)
 {
   RPC_STATUS status;
 

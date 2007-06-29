@@ -133,7 +133,7 @@ void RPCRT4_DoContextRundownIfNeeded(RpcConnection *Conn)
 /***********************************************************************
  *           NDRCContextBinding
  */
-RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
+RPC_BINDING_HANDLE RPC_ENTRY NDRCContextBinding(NDR_CCONTEXT CContext)
 {
   if(!CContext)
     RpcRaiseException(ERROR_INVALID_HANDLE);
@@ -144,7 +144,7 @@ RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
 /***********************************************************************
  *           NDRCContextMarshall
  */
-void WINAPI NDRCContextMarshall(NDR_CCONTEXT CContext, void *pBuff )
+void RPC_ENTRY NDRCContextMarshall(NDR_CCONTEXT CContext, void *pBuff )
 {
   CContextHandle *ctx = (CContextHandle*)CContext;
   memcpy(pBuff, &ctx->Ndr, sizeof(ContextHandleNdr));
@@ -153,7 +153,7 @@ void WINAPI NDRCContextMarshall(NDR_CCONTEXT CContext, void *pBuff )
 /***********************************************************************
  *           NdrClientContextMarshall
  */
-void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+void RPC_ENTRY NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                      NDR_CCONTEXT ContextHandle,
                                      int fCheck)
 {
@@ -169,7 +169,7 @@ void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NDRCContextUnmarshall
  */
-void WINAPI NDRCContextUnmarshall(NDR_CCONTEXT *pCContext, 
+void RPC_ENTRY NDRCContextUnmarshall(NDR_CCONTEXT *pCContext, 
                                   RPC_BINDING_HANDLE hBinding,
                                   void *pBuff, 
                                   unsigned long DataRepresentation )
@@ -203,7 +203,7 @@ void WINAPI NDRCContextUnmarshall(NDR_CCONTEXT *pCContext,
 /***********************************************************************
  *           NdrClientContextUnmarshall
  */
-void WINAPI NdrClientContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
+void RPC_ENTRY NdrClientContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                        NDR_CCONTEXT * pContextHandle,
                                        RPC_BINDING_HANDLE BindHandle)
 {
@@ -222,7 +222,7 @@ void WINAPI NdrClientContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           RpcSmDestroyClientContext
  */
-RPC_STATUS WINAPI RpcSmDestroyClientContext(void** ContextHandle)
+RPC_STATUS RPC_ENTRY RpcSmDestroyClientContext(void** ContextHandle)
 {
   CContextHandle *ctx = (CContextHandle*)ContextHandle;
 
@@ -239,7 +239,7 @@ RPC_STATUS WINAPI RpcSmDestroyClientContext(void** ContextHandle)
 /***********************************************************************
  *           RpcSsDestroyClientContext
  */
-void WINAPI RpcSsDestroyClientContext(void** ContextHandle)
+void RPC_ENTRY RpcSsDestroyClientContext(void** ContextHandle)
 {
   RPC_STATUS status;
 
@@ -252,7 +252,7 @@ void WINAPI RpcSsDestroyClientContext(void** ContextHandle)
 /***********************************************************************
  *           NdrContextHandleSize
  */
-void WINAPI NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
+void RPC_ENTRY NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
                                  unsigned char* pMemory,
                                  PFORMAT_STRING pFormat)
 {
@@ -262,7 +262,7 @@ void WINAPI NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrContextHandleInitialize
  */
-NDR_SCONTEXT WINAPI NdrContextHandleInitialize(PMIDL_STUB_MESSAGE pStubMsg,
+NDR_SCONTEXT RPC_ENTRY NdrContextHandleInitialize(PMIDL_STUB_MESSAGE pStubMsg,
                                                PFORMAT_STRING pFormat)
 {
   FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
@@ -272,7 +272,7 @@ NDR_SCONTEXT WINAPI NdrContextHandleInitialize(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrServerContextMarshall
  */
-void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+void RPC_ENTRY NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                      NDR_SCONTEXT ContextHandle,
                                      NDR_RUNDOWN RundownRoutine)
 {
@@ -293,7 +293,7 @@ void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrServerContextUnmarshall
  */
-NDR_SCONTEXT WINAPI NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
+NDR_SCONTEXT RPC_ENTRY NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
 {
   SContextHandle *Hdl;
 
@@ -304,7 +304,7 @@ NDR_SCONTEXT WINAPI NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
 /***********************************************************************
  *           NdrServerContextNewMarshall
  */
-void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+void RPC_ENTRY NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                         NDR_SCONTEXT ContextHandle,
                                         NDR_RUNDOWN RundownRoutine,
                                         PFORMAT_STRING pFormat)
@@ -315,7 +315,7 @@ void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrServerContextNewUnmarshall
  */
-NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
+NDR_SCONTEXT RPC_ENTRY NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                   PFORMAT_STRING pFormat)
 {
   FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
@@ -325,7 +325,7 @@ NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NDRSContextMarshall
  */
-void WINAPI NDRSContextMarshall(IN NDR_SCONTEXT CContext,
+void RPC_ENTRY NDRSContextMarshall(IN NDR_SCONTEXT CContext,
                                 OUT void *pBuff,
                                 IN NDR_RUNDOWN userRunDownIn)
 {
@@ -342,7 +342,7 @@ void WINAPI NDRSContextMarshall(IN NDR_SCONTEXT CContext,
 /***********************************************************************
  *           NDRSContextUnmarshall
  */
-NDR_SCONTEXT WINAPI NDRSContextUnmarshall(IN void *pBuff,
+NDR_SCONTEXT RPC_ENTRY NDRSContextUnmarshall(IN void *pBuff,
                                           IN unsigned long DataRepresentation)
 {
   return (NDR_SCONTEXT) RPCRT4_SrvUnmarshallCtxHdl((ContextHandleNdr*)pBuff);
@@ -351,7 +351,7 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshall(IN void *pBuff,
 /***********************************************************************
  *           NDRSContextMarshallEx
  */
-void WINAPI NDRSContextMarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
+void RPC_ENTRY NDRSContextMarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
                                   IN NDR_SCONTEXT CContext,
                                   OUT void *pBuff,
                                   IN NDR_RUNDOWN userRunDownIn)
@@ -362,7 +362,7 @@ void WINAPI NDRSContextMarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
 /***********************************************************************
  *           NDRSContextUnmarshallEx
  */
-NDR_SCONTEXT WINAPI NDRSContextUnmarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
+NDR_SCONTEXT RPC_ENTRY NDRSContextUnmarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
                                             IN void *pBuff,
                                             IN unsigned long DataRepresentation)
 {
