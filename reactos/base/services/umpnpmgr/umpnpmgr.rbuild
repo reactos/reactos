@@ -13,6 +13,7 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>rpcrt4</library>
+	<library>pseh</library>
 	<library>wdmguid</library>
 	<file>umpnpmgr.c</file>
 	<file>umpnpmgr.rc</file>
