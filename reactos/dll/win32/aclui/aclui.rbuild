@@ -1,4 +1,4 @@
-<module name="aclui" type="win32dll" baseaddress="${BASEADDRESS_ACLUI}" installbase="system32" installname="aclui.dll">
+<module name="aclui" type="win32dll" baseaddress="${BASEADDRESS_ACLUI}" installbase="system32" installname="aclui.dll" allowwarnings ="true">
 	<importlibrary definition="aclui.spec.def" />
 	<include base="aclui">.</include>
 	<define name="UNICODE" />
