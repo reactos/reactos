@@ -53,16 +53,19 @@
 #endif
 
 
-
-#ifndef __cplusplus
-    #undef try
-    #undef except
-    #undef finally
-    #undef leave
-        #define try         __try
-        #define except      __except
-        #define finally     __finally
-        #define leave       __leave
+#ifndef __GNUC__
+    #ifndef __cplusplus
+        #undef try
+        #undef except
+        #undef finally
+        #undef leave
+            #define try         __try
+            #define except      __except
+            #define finally     __finally
+            #define leave       __leave
+    #endif
+#else
+        /* FIXME when gcc support ms seh remove  #ifndef __REACTOS__ */ 
 #endif
 
 #if _MSC_VER <= 1400

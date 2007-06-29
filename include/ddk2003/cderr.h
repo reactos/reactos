@@ -42,5 +42,8 @@
 #define FNERR_INVALIDFILENAME       0x3002
 #define FNERR_SUBCLASSFAILURE       0x3001
 
+/* for Windows 2000/XP/ReactOS this is not in windows 2003 ddk */
+#define FNERR_BUFFERTOOSMALL        0x3003
+
 #endif
 
