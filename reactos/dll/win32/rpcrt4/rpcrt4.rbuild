@@ -18,6 +18,7 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>iphlpapi</library>
+	<library>pseh</library>
 	<file>cproxy.c</file>
 	<file>cpsf.c</file>
 	<file>cstub.c</file>
