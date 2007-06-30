@@ -81,6 +81,7 @@ LONG UnattendDestinationPartitionNumber;
 LONG UnattendMBRInstallType = -1;
 LONG UnattendFormatPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
+BOOLEAN RepairUpdateFlag = FALSE;
 
 /* LOCALS *******************************************************************/
 
@@ -814,11 +815,13 @@ RepairIntroPage(PINPUT_RECORD Ir)
 
   CONSOLE_SetTextXY(6, 12, "The repair functions are not implemented yet.");
 
-  CONSOLE_SetTextXY(8, 15, "\x07  Press R for the Recovery Console.");
+  CONSOLE_SetTextXY(8, 15, "\x07  Press U for Updating OS.");
+  
+  CONSOLE_SetTextXY(8, 17, "\x07  Press R for the Recovery Console.");
 
-  CONSOLE_SetTextXY(8, 17, "\x07  Press ESC to return to the main page.");
+  CONSOLE_SetTextXY(8, 19, "\x07  Press ESC to return to the main page.");
 
-  CONSOLE_SetTextXY(8, 19, "\x07  Press ENTER to reboot your computer.");
+  CONSOLE_SetTextXY(8, 21, "\x07  Press ENTER to reboot your computer.");
 
   CONSOLE_SetStatusText("   ESC = Main page  ENTER = Reboot");
 
@@ -829,6 +832,11 @@ RepairIntroPage(PINPUT_RECORD Ir)
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
 	  return REBOOT_PAGE;
+	}
+    else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U') /* U */
+	{
+	  RepairUpdateFlag = TRUE;
+	  return INSTALL_INTRO_PAGE;
 	}
     else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
 	{
@@ -870,6 +878,12 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
   CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
+  if (RepairUpdateFlag)
+    {
+      //return SELECT_PARTITION_PAGE; 
+      return DEVICE_SETTINGS_PAGE;
+    }
+    
   if (IsUnattendedSetup)
     {
       return SELECT_PARTITION_PAGE;
@@ -1017,7 +1031,12 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
   CONSOLE_SetTextXY(6, 24, "and press ENTER.");
 
   CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
-
+  
+  if (RepairUpdateFlag) 
+    {
+      return SELECT_PARTITION_PAGE;
+    }
+  
   while(TRUE)
     {
       CONSOLE_ConInKey(Ir);
@@ -2058,7 +2077,12 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
   DrawFileSystemList (FileSystemList);
 
   CONSOLE_SetStatusText ("   ENTER = Continue   ESC = Cancel   F3 = Quit");
-
+  if (RepairUpdateFlag) 
+    {
+       return (CHECK_FILE_SYSTEM_PAGE);
+    //return SELECT_PARTITION_PAGE;
+    }
+    
   if (IsUnattendedSetup)
     {
       if (UnattendFormatPartition)
@@ -3046,7 +3070,12 @@ RegistryPage(PINPUT_RECORD Ir)
   CONSOLE_SetTextXY(6, 8, "Setup is updating the system configuration");
 
   CONSOLE_SetStatusText("   Creating registry hives...");
-
+  
+  if (RepairUpdateFlag) 
+    {
+    	return SUCCESS_PAGE;
+    }
+    
   if (!SetInstallPathValue(&DestinationPath))
     {
       DPRINT("SetInstallPathValue() failed\n");
