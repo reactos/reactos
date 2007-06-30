@@ -111,6 +111,8 @@ IntVideoPortDispatchOpen(
 
    DPRINT("IntVideoPortDispatchOpen\n");
 
+   ASSERT(Irp != NULL);
+
    if (CsrssInitialized == FALSE)
    {
       /*

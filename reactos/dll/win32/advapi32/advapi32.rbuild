@@ -1,4 +1,5 @@
-<module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}"  installbase="system32" installname="advapi32.dll">
+<module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}"  installbase="system32" installname="advapi32.dll"  allowwarnings ="true">
+
 	<importlibrary definition="advapi32.def" />
 	<include base="advapi32">.</include>
 	<include base="scm_client">.</include>
@@ -15,6 +16,7 @@
 	<library>rpcrt4</library>
 	<library>wine</library>
 	<library>kernel32</library>
+	<library>pseh</library>
 	<pch>advapi32.h</pch>
 	<directory name="crypt">
 			<file>crypt.c</file>

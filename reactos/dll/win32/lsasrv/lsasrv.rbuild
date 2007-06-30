@@ -13,6 +13,7 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>rpcrt4</library>
+	<library>pseh</library>
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
 	<file>lsasrv.rc</file>

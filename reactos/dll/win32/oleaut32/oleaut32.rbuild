@@ -20,6 +20,7 @@
 	<library>comctl32</library>
 	<library>urlmon</library>
 	<library>uuid</library>
+	<library>pseh</library>
 	<file>connpt.c</file>
 	<file>dispatch.c</file>
 	<file>hash.c</file>

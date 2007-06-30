@@ -24,6 +24,7 @@
 	<library>rpcrt4</library>
 	<library>version</library>
 	<library>shell32</library>
+	<library>pseh</library>
 	<file>cfgmgr.c</file>
 	<file>devclass.c</file>
 	<file>devinst.c</file>
