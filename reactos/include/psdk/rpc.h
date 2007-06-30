@@ -150,9 +150,9 @@ typedef long RPC_STATUS;
                                  } \
                                  _SEH_END;
 
-            #define RpcTryFinally  _SEH_TRY {
-            #define RpcFinally  } _SEH_HANDLE {
-            #define RpcEndFinally } _SEH_END;
+            #define RpcTryFinally
+            #define RpcFinally
+            #define RpcEndFinally
             #define RpcExceptionCode() _SEH_GetExceptionCode()
 
             /* #define RpcAbnormalTermination() abort() */
