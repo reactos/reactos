@@ -1,6 +1,9 @@
+#include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <limits.h>
 #include <ctype.h>
+
 
 /*
  * Convert a string to an unsigned long integer.
@@ -64,6 +67,7 @@ strtoul(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = ULONG_MAX;
+
   }
   else if (neg)
     acc = -acc;

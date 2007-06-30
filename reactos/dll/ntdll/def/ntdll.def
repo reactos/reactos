@@ -1065,6 +1065,7 @@ strspn
 strstr
 strtol
 strtoul
+strtoull
 swprintf
 tan
 tolower
