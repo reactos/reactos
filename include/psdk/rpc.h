@@ -3,6 +3,12 @@
 #include <windows.h>
 #endif
 
+#ifdef __GNUC__
+    #ifndef _SEH_NO_NATIVE_NLG
+        /* FIXME ReactOS SEH support, we need remove this when gcc support native seh */
+        #include  <libs/pseh/pseh.h>
+    #endif
+#endif
 
 #ifndef __RPC_H__
 #define __RPC_H__
@@ -63,32 +69,26 @@ typedef long RPC_STATUS;
     #define RPC_ENTRY
 #endif
 
-#if !defined(DECLSPEC_IMPORT)
-    #if (defined(_M_MRX000) || defined(_M_IX86) || defined(_M_IA64) || defined(_M_AMD64)) && !defined(MIDL_PASS)
-        #define DECLSPEC_IMPORT __declspec(dllimport)
-    #else
-        #define DECLSPEC_IMPORT
+
+#ifndef __GNUC__
+    #if !defined(DECLSPEC_IMPORT)
+            #define DECLSPEC_IMPORT
     #endif
-#endif
 
-#if !defined(DECLSPEC_EXPORT)
-    #if (defined(_M_MRX000) || defined(_M_IX86) || defined(_M_IA64) || defined(_M_AMD64)) && !defined(MIDL_PASS)
-        #define DECLSPEC_EXPORT __declspec(dllexport)
+    #if !defined(_RPCRT4_)
+        #define RPCRTAPI DECLSPEC_IMPORT
     #else
-        #define DECLSPEC_EXPORT
+        #define RPCRTAPI 
     #endif
-#endif
 
-#if !defined(_RPCRT4_)
-    #define RPCRTAPI DECLSPEC_IMPORT
+    #if !defined(_RPCNS4_)
+        #define RPCNSAPI DECLSPEC_IMPORT
+    #else
+        #define RPCNSAPI 
+    #endif
 #else
-    #define RPCRTAPI DECLSPEC_EXPORT
-#endif
-
-#if !defined(_RPCNS4_)
-    #define RPCNSAPI DECLSPEC_IMPORT
-#else
-    #define RPCNSAPI DECLSPEC_EXPORT
+    #define RPCRTAPI 
+    #define RPCNSAPI 
 #endif
 
 
@@ -115,7 +115,7 @@ typedef long RPC_STATUS;
     #include <poppack.h>
 #else
     #include <rpcdce.h>
-    #include <rpcnsi.h>
+    /* #include <rpcnsi.h> */
     #include <rpcnterr.h>
     #include <excpt.h>
     #include <winerror.h>
@@ -132,14 +132,31 @@ typedef long RPC_STATUS;
     #else
         /* FIXME ReactOS SEH support, we need remove this when gcc support native seh */
 
-        #define RpcTryExcept if (1) {
-        #define RpcExcept(expr) } else {
-        #define RpcEndExcept }
-        #define RpcTryFinally
-        #define RpcFinally
-        #define RpcEndFinally
-        #define RpcExceptionCode() 0
-        /* #define RpcAbnormalTermination() abort() */
+        #ifdef _SEH_NO_NATIVE_NLG
+            /* hack for  _SEH_NO_NATIVE_NLG */
+                #define RpcTryExcept if (1) {
+                #define RpcExcept(expr) } else {
+                #define RpcEndExcept }
+                #define RpcTryFinally
+                #define RpcFinally
+                #define RpcEndFinally
+                #define RpcExceptionCode() 0
+        #else
+            #define RpcTryExcept _SEH_TRY {
+            #define RpcExcept(expr) } _SEH_HANDLE { \
+                                      if (expr) \
+                                      {
+            #define RpcEndExcept } \
+                                 } \
+                                 _SEH_END;
+
+            #define RpcTryFinally  _SEH_TRY {
+            #define RpcFinally  } _SEH_HANDLE {
+            #define RpcEndFinally } _SEH_END;
+            #define RpcExceptionCode() _SEH_GetExceptionCode()
+
+            /* #define RpcAbnormalTermination() abort() */
+        #endif
     #endif
 #endif
 
@@ -152,4 +169,5 @@ typedef long RPC_STATUS;
 #endif
 
 #endif
+
 
