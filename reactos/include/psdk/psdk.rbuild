@@ -23,4 +23,5 @@
 	<file>mshtmhst.idl</file>
 	<file>exdisp.idl</file>
 	<file>wtypes.idl</file>
+	<file>comcat.idl</file>
 </module>
