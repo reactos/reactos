@@ -1,7 +1,56 @@
+Changes from 2.17 to 2.18
+
+- Re-encoded the source files for Full Unicode (by Ben Laenen)
+- Re-enabled the "ff", "fl", "fi", "ffl", "ffi" ligatures by default in Serif
+  (by Ben Laenen)
+- Disabled the "fi", "ffi" ligatures for languages with dotless i in Serif (by
+  Ben Laenen)
+- added Tifinagh to Sans Book and Bold, U+2D30-U+2D65, U+2D6F, partially hinted
+  in Sans Book. (by Denis Jacquerye)
+- added Tai Xuan Jing Symbols (U+1D300-1D356) to Sans (by Remy Oudompheng)
+- added double-struck letters (U+1D538-U+1D56B minus reserved code points) to
+  Sans (by Gee Fung Sit)
+- added U+22EE-U+22F1 to Sans (by Gee Fung Sit)
+- added U+2C67-U+2C6C, U+2C75-U+2C77 to Serif (by Gee Fung Sit)
+- italicized various glyphs in Latin Extended-B, IPA Extensions, Spacing
+  Modifier Letters, Phonetic Extension (Supplement) and Super- and Subscripts
+  in Serif Oblique fonts (by Gee Fung Sit)
+- modified outlines, bearings of Hebrew U+05D6, U+05D8, U+05DB, U+05DE, U+05E0,
+  U+05E1, U+05E2, U+05EA in Sans Book and Oblique, adjusted hinting in Book
+  based on Yotam Benshalom's comments. (by Denis Jacquerye)
+- added Braille Patterns (U+2800-U+28FF) to Serif fonts (by Gee Fung Sit)
+- added N'Ko to Sans Book and Bold: U+07C0-U+07E7, U+07EB-U+07F5, U+07F8-U+07FA
+  (by Eugeniy  Meshcheryakov)
+- added U+0ED8 (Lao digit 8) to Sans (by Remy Oudompheng)
+- added Lao diacritics U+0EB0-0EB9, U+0EBB-0EBC, U+0EC8-0ECD to Mono (by Remy
+  Oudompheng)
+- renamed Serif [Bold] Oblique, make it Italic (by Eugeniy  Meshcheryakov)
+- added U+29FA-U+29FB to Sans and Sans Mono (by Gee Fung Sit)
+- swapped glyphs for Eng U+014A from Sami Eng to African Eng, the latter being
+  more common (by Denis Jacquerye)
+- swapped ae U+00E6 and ae.alt in Serif Italics fonts, thus fixing #8213 (by
+  Denis Jacquerye)
+- minor improvements to Misc. Symbols in Sans (by Gee Fung Sit)
+- minor improvements and additions to Sans ExtraLight (by Gee Fung Sit)
+- improved instructions for various Cyrillic letters (by Eugeniy  Meshcheryakov)
+- fixed hinting of theta and chi in Sans Book (by Ben Laenen)
+- added Georgian Mkhedruli to Sans, Serif and Mono, ASumtavruli to Sans and
+  Serif (by Besarion Gugushvili)
+
+Changes from 2.16 to 2.17
+
+- Sans fonts: fix position for certain combinations of Arabic fatha, kasra,
+  shadda, damma, kasratan, dammatan, fathatan and hamza (by Ben Laenen)
+- added 'ae.alt' to Serif Oblique fonts, with design matching shape of italic
+  'a' instead of slanted 'a', see bug #8213 (by Denis Jacquerye)
+- added super- and subscripts to Serif and Mono: U+1D2C-U+1D2E, U+1D30-U+1D3C,
+  U+1D3E-U+1D42, U+1D62-U+1D65, U+1D78, U+2071, U+207A-U+207E, U+208A-U+208E,
+  U+2090-U+2094 (by Gee Fung Sit)
+
 Changes from 2.15 to 2.16
 
--  fixed hinting instructions for digits in DejaVu Sans Oblique, Bold Oblique,
-   and Serif Book to not change glyph width (by Eugeniy  Meshcheryakov)
+- fixed hinting instructions for digits in DejaVu Sans Oblique, Bold Oblique,
+  and Serif Book to not change glyph width (by Eugeniy  Meshcheryakov)
 - added instructions for U+0404, U+0411, U+0413, U+0414, U+0417-U+041B, U+041F,
   U+0423, U+0424, U+0426-U+0429, U+042C, U+042E, U+042F, U+0490 in Serif Bold
   (by Eugeniy  Meshcheryakov)
@@ -843,4 +892,4 @@ Changes from 0.9 to 0.9.1:
 - proper caron shape for dcaron and tcaron
 - minor visual changes
 
-$Id: NEWS 1718 2007-04-01 15:30:22Z moyogo $
+$Id: NEWS 1923 2007-07-01 11:31:32Z ben_laenen $

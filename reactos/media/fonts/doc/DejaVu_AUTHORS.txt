@@ -1,6 +1,7 @@
 Adrian Schroeter
 Andrey Valentinovich Panov
 Ben Laenen
+Besarion Gugushvili
 Bhikkhu Pesala
 Clayborne Arevalo
 Dafydd Harries
@@ -36,4 +37,4 @@ Valentin Stoykov
 Vasek Stodulka
 Wesley Transue
 
-$Id: AUTHORS 1647 2007-03-11 12:31:55Z remyoudompheng $
+$Id: AUTHORS 1910 2007-06-25 19:10:14Z ben_laenen $

@@ -18,6 +18,10 @@
 <installfile base="media/fonts">DejaVuSerifCondensed-Bold.ttf</installfile>
 <installfile base="media/fonts">DejaVuSerifCondensed-BoldOblique.ttf</installfile>
 <installfile base="media/fonts">DejaVuSerifCondensed-Oblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerif-Italic.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerif-BoldItalic.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerifCondensed-BoldItalic.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerifCondensed-Italic.ttf</installfile>
 <installfile base="media/fonts">c0419bt_.ttf</installfile>
 <installfile base="media/fonts">c0582bt_.ttf</installfile>
 <installfile base="media/fonts">c0583bt_.ttf</installfile>

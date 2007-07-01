@@ -1,4 +1,4 @@
-DejaVu fonts 2.16 (c)2004-2007 DejaVu fonts team
+DejaVu fonts 2.18 (c)2004-2007 DejaVu fonts team
 -----------------------------------------------
 
 The DejaVu fonts are a font family based on the Bitstream Vera Fonts
@@ -21,16 +21,16 @@ DejaVu Sans Oblique
 DejaVu Sans ExtraLight (experimental)
 DejaVu Serif
 DejaVu Serif Bold
-DejaVu Serif Bold Oblique (experimental)
-DejaVu Serif Oblique (experimental)
+DejaVu Serif Bold Italic (experimental)
+DejaVu Serif Italic (experimental)
 DejaVu Sans Condensed (experimental)
 DejaVu Sans Condensed Bold (experimental)
 DejaVu Sans Condensed Bold Oblique (experimental)
 DejaVu Sans Condensed Oblique (experimental)
 DejaVu Serif Condensed (experimental)
 DejaVu Serif Condensed Bold (experimental)
-DejaVu Serif Condensed Bold Oblique (experimental)
-DejaVu Serif Condensed Oblique (experimental)
+DejaVu Serif Condensed Bold Italic (experimental)
+DejaVu Serif Condensed Italic (experimental)
 
 All fonts are also available as derivative called DejaVu LGC with support
 only for Latin, Greek and Cyrillic scripts.
@@ -56,4 +56,4 @@ U+213C-U+2140, U+2295-2298, U+2308-230b, U+26A2-U+26B1, U+2701-2704,
 U+2706-2709, U+270c-274b, U+2758-275a, U+2761-2775, U+2780-2794,
 U+2798-27af, U+27b1-27be, U+fb05-fb06
 
-$Id: README 1718 2007-04-01 15:30:22Z moyogo $
+$Id: README 1923 2007-07-01 11:31:32Z ben_laenen $
