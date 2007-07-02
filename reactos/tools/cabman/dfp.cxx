@@ -1116,6 +1116,7 @@ uint32_t CDFParser::PerformFileCopy()
 
 	*SrcName = '\0';
 	*DstName = '\0';
+	*Options = '\0';
 
 	// source file
 	i = CurrentChar;
