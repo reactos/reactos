@@ -230,7 +230,7 @@ dll\win32\version\version.dll                       1
 dll\win32\vdmdbg\vdmdbg.dll                         1
 dll\win32\wininet\wininet.dll                       1
 dll\win32\winmm\winmm.dll                           1
-dll\win32\winmm\wavemap\msacm32.drv                 1
+dll\win32\winmm\wavemap\msacm32.drv                 1   optional
 dll\win32\winspool\winspool.drv                     1
 dll\win32\wintrust\wintrust.dll                     1
 dll\win32\wldap32\wldap32.dll                       1
@@ -245,12 +245,10 @@ dll\win32\wtsapi32\wtsapi32.dll                     1
 drivers\base\bootvid\bootvid.dll                    1
 drivers\base\beep\beep.sys                          2
 drivers\base\null\null.sys                          2
-drivers\base\serial\serial.sys                      2
 
 drivers\bus\acpi\acpi.sys                           2
 drivers\bus\isapnp\isapnp.sys                       2
 drivers\bus\pci\pci.sys                             2
-drivers\bus\serenum\serenum.sys                     2
 
 drivers\filesystems\fs_rec\fs_rec.sys               2
 drivers\filesystems\msfs\msfs.sys                   2
@@ -268,13 +266,16 @@ drivers\network\wshtcpip\wshtcpip.dll               1
 drivers\network\dd\ne2000\ne2000.sys                2
 drivers\network\dd\pcnet\pcnet.sys                  2
 
+drivers\serial\serenum\serenum.sys                  2
+drivers\serial\serial\serial.sys                    2
+
 drivers\storage\ide\pciide\pciide.sys               2
 drivers\storage\ide\pciidex\pciidex.sys             2
 
-;drivers\usb\miniport\usbohci\usbohci.sys            2
-;drivers\usb\miniport\usbuhci\usbuhci.sys            2
-;drivers\usb\usbhub\usbhub.sys                       2
-;drivers\usb\usbport\usbport.sys                     2
+;drivers\usb\miniport\usbohci\usbohci.sys           2
+;drivers\usb\miniport\usbuhci\usbuhci.sys           2
+;drivers\usb\usbhub\usbhub.sys                      2
+;drivers\usb\usbport\usbport.sys                    2
 drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
 
 drivers\video\displays\vga\vgaddi.dll               1
