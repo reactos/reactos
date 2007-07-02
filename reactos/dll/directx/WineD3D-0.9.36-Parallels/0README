@@ -1,0 +1,6 @@
+This is a small subset of WINE project including only Direct3D
+libraries. The libraries can be built using MS Visual C++ and
+native Windows headers from Platform SDK and DirectX SDK.
+
+This version is based on wine-0.9.36 snapshot. The changes made
+to original WINE sources are ifdefed under WINE_NATIVEWIN32.

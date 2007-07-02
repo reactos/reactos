@@ -1,0 +1,170 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "d3d8"=".\dlls\d3d8\d3d8.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wine
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wined3d
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name ddraw
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name ddrawex
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name d3d9
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "d3d8_test"=".\dlls\d3d8\tests\d3d8_test.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name d3d8
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "d3d9"=".\dlls\d3d9\d3d9.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wine
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wined3d
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "d3d9_test"=".\dlls\d3d9\tests\d3d9_test.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name d3d9
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "ddraw"=".\dlls\ddraw\ddraw.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wine
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wined3d
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "ddraw_test"=".\dlls\ddraw\tests\ddraw_test.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name ddraw
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "ddrawex"=".\dlls\ddrawex\ddrawex.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wine
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wined3d
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "wine"=".\libs\wine\wine.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "wined3d"=".\dlls\wined3d\wined3d.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wine
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+

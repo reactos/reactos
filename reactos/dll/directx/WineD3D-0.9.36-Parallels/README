@@ -1,0 +1,196 @@
+1. INTRODUCTION
+
+Wine is a program which allows running Microsoft Windows programs
+(including DOS, Windows 3.x and Win32 executables) on Unix.  It
+consists of a program loader which loads and executes a Microsoft
+Windows binary, and a library (called Winelib) that implements Windows
+API calls using their Unix or X11 equivalents.  The library may also
+be used for porting Win32 code into native Unix executables.
+
+Wine is free software, released under the GNU LGPL; see the file
+LICENSE for the details.
+
+
+2. QUICK START
+
+Whenever you compile from source, it is recommended to use the Wine
+Installer to build and install Wine.  From the top-level directory
+of the Wine source (which contains this file), run:
+
+./tools/wineinstall
+
+Run programs as "wine program".  For more information and problem
+resolution, read the rest of this file, the Wine man page, and
+especially the wealth of information found at http://www.winehq.org.
+
+
+3. REQUIREMENTS
+
+To compile and run Wine, you must have one of the following:
+
+  Linux version 2.0.36 or above
+  FreeBSD 5.3 or later
+  Solaris x86 2.5 or later
+  NetBSD-current
+  Mac OS X 10.4 or later
+
+As Wine requires kernel-level thread support to run, only the operating
+systems mentioned above are supported.
+Other operating systems which support kernel threads may be supported
+in the future.
+
+Linux info:
+  While Linux 2.2.x should still work and Linux 2.0.x may still work
+  (older 2.0.x versions had thread-related crashes),
+  it's best to have a current kernel such as 2.4.x or 2.6.x.
+
+FreeBSD info:
+  Wine should build on FreeBSD 4.x and FreeBSD 5.x, but versions before
+  FreeBSD 5.3 will generally not work properly.
+ 
+  More information can be found in the FreeBSD ports tree at
+  <ftp://ftp.freebsd.org/pub/FreeBSD/ports/ports/emulators/wine/>.
+
+Solaris info:
+  You will most likely need to build Wine with the GNU toolchain
+  (gcc, gas, etc.). Warning : installing gas does *not* ensure that it
+  will be used by gcc. Recompiling gcc after installing gas or
+  symlinking cc, as and ld to the gnu tools is said to be necessary.
+
+NetBSD info:
+  Make sure you have the USER_LDT, SYSVSHM, SYSVSEM, and SYSVMSG options
+  turned on in your kernel.
+
+Mac OS X info:
+  You need Xcode 2.4 or later to build properly on x86.
+
+
+Supported file systems:
+  Wine should run on most file systems. However, Wine will fail to start
+  if umsdos is used for the /tmp directory. A few compatibility problems have
+  also been reported using files accessed through Samba. Also, as NTFS
+  can only be used safely with readonly access for now, we recommend against
+  using NTFS, as Windows programs need write access almost everywhere.
+  In case of NTFS files, copy over to a writable location.
+
+Basic requirements:
+  You need to have the X11 development include files installed
+  (called xlib6g-dev in Debian and XFree86-devel in Red Hat).
+
+Build tool requirements:
+  On x86 Systems gcc >= 2.7.2 is required.
+  Versions earlier than 2.7.2.3 may have problems when certain files
+  are compiled with optimization, often due to problems with header file
+  management.
+
+  Of course you also need "make" (most likely GNU make).
+
+  You also need flex version 2.5 or later and bison.
+
+Optional support libraries:
+  Run ./configure --verbose to see the optional libraries that could
+  be used but aren't found on your system.
+
+
+4. COMPILATION
+
+In case you chose to not use wineinstall, run the following commands
+to build Wine:
+
+./configure
+make depend
+make
+
+This will build the program "wine" and numerous support libraries/binaries.
+The program "wine" will load and run Windows executables.
+The library "libwine" ("Winelib") can be used to compile and link
+Windows source code under Unix.
+
+To see compile configuration options, do ./configure --help.
+
+To upgrade to a new release by using a patch file, first cd to the
+top-level directory of the release (the one containing this README
+file). Then do a "make clean", and patch the release with:
+
+    bunzip2 -c patch-file | patch -p1
+
+where "patch-file" is the name of the patch file (something like
+wine-0.9.x.diff.bz2). You can then re-run "./configure", and then
+run "make depend && make".
+
+
+5. SETUP
+
+Once Wine has been built correctly, you can do "make install"; this
+will install the wine executable, the Wine man page, and a few other
+needed files.
+
+Don't forget to uninstall any conflicting previous Wine installation
+first.  Try either "dpkg -r wine" or "rpm -e wine" or "make uninstall"
+before installing.
+
+See the Support area at http://www.winehq.org/ for configuration
+hints.
+
+In case of library loading errors
+(e.g. "Error while loading shared libraries: libntdll.so"), make sure
+to add the library path to /etc/ld.so.conf and run ldconfig as root.
+
+
+6. RUNNING PROGRAMS
+
+When invoking Wine, you may specify the entire path to the executable,
+or a filename only.
+
+For example: to run Solitaire:
+
+	wine sol		   (using the search Path as specified in
+	wine sol.exe		    the config file to locate the file)
+
+	wine c:\\windows\\sol.exe  (using DOS filename syntax)
+
+	wine /usr/windows/sol.exe  (using Unix filename syntax)
+
+        wine sol.exe /parameter1 -parameter2 parameter3
+				   (calling program with parameters)
+
+Wine is not yet complete, so several programs may crash. In that crash
+you will be dropped into the debugger so that you can investigate and
+fix the problem.  For more information on how to do this, please check
+the debugging section of the Wine Developer's Guide.
+
+
+7. GETTING MORE INFORMATION
+
+WWW:	A great deal of information about Wine is available from WineHQ at
+	http://www.winehq.org/ : various Wine Guides, application database,
+	bug tracking. This is probably the best starting point.
+
+FAQ:	The Wine FAQ is located at http://www.winehq.org/FAQ
+
+Usenet:	You can discuss Wine-related issues and get help
+	on comp.emulators.ms-windows.wine.
+
+Bugs:	Report bugs to Wine Bugzilla at http://bugs.winehq.org
+	Please search the bugzilla database to check whether your
+	problem is already found before posting a bug report.  You can
+	also post bug reports to comp.emulators.ms-windows.wine.
+
+IRC:	Online help is available at channel #WineHQ on irc.freenode.net.
+
+GIT:	The current Wine development tree is available through GIT.
+	Go to http://www.winehq.org/site/git for more information.
+
+Mailing lists:
+	There are several mailing lists for Wine users and developers;
+	see http://www.winehq.org/forums for more information.
+
+Wiki:	The Wine Wiki is located at http://wiki.winehq.org
+
+If you add something, or fix a bug, please send a patch (in 'diff -u'
+format) to wine-patches@winehq.org list for inclusion in the next
+release.
+
+--
+Alexandre Julliard
+julliard@winehq.org
