@@ -10,6 +10,7 @@
 #define strlenW(s) wcslen((const wchar_t *)(s))
 #define strcpyW(d,s) wcscpy((wchar_t *)(d),(const wchar_t *)(s))
 #define strcatW(d,s) wcscat((wchar_t *)(d),(const wchar_t *)(s))
+#define strcspnW(d,s) wcscspn((wchar_t *)(d),(const wchar_t *)(s))
 #define strstrW(d,s) wcsstr((const wchar_t *)(d),(const wchar_t *)(s))
 #define strtolW(s,e,b) wcstol((const wchar_t *)(s),(wchar_t **)(e),(b))
 #define strchrW(s,c) wcschr((const wchar_t *)(s),(wchar_t)(c))

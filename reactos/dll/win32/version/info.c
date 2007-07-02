@@ -764,7 +764,7 @@ static BOOL WINAPI VersionInfo32_QueryValue( VS_VERSION_INFO_STRUCT32 *info, LPC
 /***********************************************************************
  *           VerQueryValueA              [VERSION.@]
  */
-BOOL WINAPI VerQueryValueA( LPVOID pBlock, LPCSTR lpSubBlock,
+BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
                                LPVOID *lplpBuffer, UINT *puLen )
 {
     static const char rootA[] = "\\";
@@ -814,7 +814,7 @@ BOOL WINAPI VerQueryValueA( LPVOID pBlock, LPCSTR lpSubBlock,
 /***********************************************************************
  *           VerQueryValueW              [VERSION.@]
  */
-BOOL WINAPI VerQueryValueW( LPVOID pBlock, LPCWSTR lpSubBlock,
+BOOL WINAPI VerQueryValueW( LPCVOID pBlock, LPCWSTR lpSubBlock,
                                LPVOID *lplpBuffer, UINT *puLen )
 {
     static const WCHAR rootW[] = { '\\', 0 };
