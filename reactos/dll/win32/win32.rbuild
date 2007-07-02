@@ -37,6 +37,9 @@
 <directory name="console">
 	<xi:include href="console/console.rbuild" />
 </directory>
+<directory name="comcat">
+	<xi:include href="comcat/comcat.rbuild" />
+</directory>
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.rbuild" />
 </directory>
