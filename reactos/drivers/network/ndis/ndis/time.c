@@ -206,7 +206,7 @@ NdisMSetPeriodicTimer(
   ASSERT(Timer);
 
   /* relative delays are negative, absolute are positive; resolution is 100ns */
-  Timeout.QuadPart = MillisecondsPeriod * -10000;
+  Timeout.QuadPart = Int32x32To64(MillisecondsPeriod, -10000);
 
   KeSetTimerEx (&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc);
 }
