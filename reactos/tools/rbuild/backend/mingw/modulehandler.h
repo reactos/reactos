@@ -172,6 +172,9 @@ private:
 	void GenerateWidlCommandsIdlHeader (
 		const CompilationUnit& compilationUnit,
 		const std::string& widlflagsMacro );
+	void GenerateWidlCommandsTypeLib (
+		const CompilationUnit& compilationUnit,
+		const std::string& widlflagsMacro );
 	void GenerateWidlCommands ( const CompilationUnit& compilationUnit,
 	                            const std::string& widlflagsMacro );
 	void GenerateCommands ( const CompilationUnit& compilationUnit,
@@ -498,6 +501,14 @@ class MingwIdlHeaderModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwIdlHeaderModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
+
+class MingwTypeLibModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwTypeLibModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 };

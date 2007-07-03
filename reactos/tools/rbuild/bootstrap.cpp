@@ -68,6 +68,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case RpcClient:
 		case Alias:
 		case IdlHeader:
+		case TypeLib:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

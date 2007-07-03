@@ -273,7 +273,8 @@ enum ModuleType
 	ExportDriver = 22,
 	IdlHeader = 23,
 	IsoRegTest = 24,
-	LiveIsoRegTest = 25
+	LiveIsoRegTest = 25,
+	TypeLib = 26
 };
 
 enum HostType

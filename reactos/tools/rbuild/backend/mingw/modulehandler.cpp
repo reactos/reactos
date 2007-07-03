@@ -265,6 +265,9 @@ MingwModuleHandler::InstanciateHandler (
 		case IdlHeader:
 			handler = new MingwIdlHeaderModuleHandler ( module );
 			break;
+		case TypeLib:
+			handler = new MingwTypeLibModuleHandler ( module );
+			break;
 		default:
 			throw UnknownModuleTypeException (
 				module.node.location,
@@ -320,11 +323,15 @@ MingwModuleHandler::GetActualSourceFilename (
 				                     backend->intermediateDirectory );
 			return new FileLocation ( backend->intermediateDirectory, NormalizeFilename ( newname ) );
 		}
-		else //if ( module.type == IdlHeader )
+		else if ( module.type == IdlHeader )
 		{
 			newname = basename + ".h";
 			PassThruCacheDirectory ( NormalizeFilename ( newname ),
 				                     backend->intermediateDirectory );
+			return new FileLocation ( fileLocation->directory, filename );
+		}
+		else
+		{
 			return new FileLocation ( fileLocation->directory, filename );
 		}
 	}
@@ -342,8 +349,10 @@ MingwModuleHandler::GetExtraDependencies (
 		string basename = GetBasename ( filename );
 		if ( (module.type == RpcServer) || (module.type == RpcClient) )
 			return GetRpcServerHeaderFilename ( basename ) + " " + GetRpcClientHeaderFilename ( basename );
-		else
+		else if ( module.type == IdlHeader )
 			return GetIdlHeaderFilename ( basename );
+		else
+			return "";
 	}
 	else
 		return "";
@@ -1254,6 +1263,32 @@ MingwModuleHandler::GetIdlHeaderFilename ( string basename ) const
 }
 
 void
+MingwModuleHandler::GenerateWidlCommandsTypeLib (
+	const CompilationUnit& compilationUnit,
+	const string& widlflagsMacro )
+{
+	FileLocation* sourceFileLocation = compilationUnit.GetFilename ( backend->intermediateDirectory );
+	string filename = sourceFileLocation->filename;
+	string dependencies = filename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
+
+	string TypeLibFilename = module.GetTargetName ();
+
+	fprintf ( fMakefile,
+	          "%s: %s $(WIDL_TARGET) | %s\n",
+	          GetTargetMacro ( module ).c_str (),
+	          dependencies.c_str (),
+	          GetDirectory ( TypeLibFilename ).c_str () );
+	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
+	fprintf ( fMakefile,
+	          "\t%s %s %s -t -T $@ %s\n",
+	          "$(Q)$(WIDL_TARGET)",
+	          GetWidlFlags ( compilationUnit ).c_str (),
+	          widlflagsMacro.c_str (),
+			  filename.c_str () );
+}
+
+void
 MingwModuleHandler::GenerateWidlCommandsClient (
 	const CompilationUnit& compilationUnit,
 	const string& widlflagsMacro )
@@ -1331,7 +1366,10 @@ MingwModuleHandler::GenerateWidlCommands (
 	else if ( module.type == RpcClient )
 		GenerateWidlCommandsClient ( compilationUnit,
 		                             widlflagsMacro );
-	else
+	else if ( module.type == TypeLib )
+		GenerateWidlCommandsTypeLib ( compilationUnit,
+										widlflagsMacro );
+	else // applies also for other module.types which include idl files
 		GenerateWidlCommandsIdlHeader ( compilationUnit,
 		                                widlflagsMacro );
 }
@@ -2453,6 +2491,20 @@ MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler (
 	: MingwModuleHandler ( module_ )
 {
 }
+
+MingwTypeLibModuleHandler::MingwTypeLibModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwTypeLibModuleHandler::Process ()
+{
+	GenerateRules ();
+}
+
 
 void
 MingwKernelModeDLLModuleHandler::AddImplicitLibraries ( Module& module )
