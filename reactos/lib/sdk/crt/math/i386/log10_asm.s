@@ -15,8 +15,11 @@
 /* FUNCTIONS ***************************************************************/
 
 _log10:
-        fld     qword ptr [esp+4]
-        fldlg2
-        fyl2x
+        push    ebp
+        mov     ebp,esp            
+        fld     qword ptr [ebp+8]   
+        fldlg2  
+        fyl2x                    
+        pop     ebp
         ret
 

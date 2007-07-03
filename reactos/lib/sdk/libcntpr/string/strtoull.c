@@ -4,7 +4,6 @@
 #include <limits.h>
 #include <ctype.h>
 
-
 unsigned long long
 strtoull(const char *nptr, char **endptr, int base)
 {
@@ -59,7 +58,6 @@ strtoull(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = ULLONG_MAX;
-
   }
   else if (neg)
     acc = -acc;
@@ -67,5 +65,3 @@ strtoull(const char *nptr, char **endptr, int base)
     *endptr = any ? (char *)((size_t)(s - 1)) : (char *)((size_t)nptr);
   return acc;
 }
-
-
