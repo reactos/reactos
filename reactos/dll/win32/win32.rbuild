@@ -244,6 +244,9 @@
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.rbuild" />
 </directory>
+<directory name="stdole2.tlb">
+	<xi:include href="stdole2.tlb/stdole2.rbuild" />
+</directory>
 <directory name="syssetup">
 	<xi:include href="syssetup/syssetup.rbuild" />
 </directory>
