@@ -838,7 +838,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Look at our exception code */
     switch (ExceptionRecord->ExceptionCode)
     {
-        /* Breapoint */
+        /* Breakpoint */
         case STATUS_BREAKPOINT:
 
             /* Decrement EIP by one */
