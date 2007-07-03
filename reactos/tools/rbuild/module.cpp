@@ -839,8 +839,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Alias;
 	if ( attribute.value == "idlheader" )
 		return IdlHeader;
-	if ( attribute.value == "typelib" )
-		return TypeLib;
+	if ( attribute.value == "embeddedtypelib" )
+		return EmbeddedTypeLib;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -892,7 +892,7 @@ Module::GetDefaultModuleExtension () const
 		case BootProgram:
 		case IdlHeader:
 			return "";
-		case TypeLib:
+		case EmbeddedTypeLib:
 			return ".tlb";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -943,7 +943,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
-		case TypeLib:
+		case EmbeddedTypeLib:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -986,7 +986,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
-		case TypeLib:
+		case EmbeddedTypeLib:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -1031,7 +1031,7 @@ Module::IsDLL () const
 		case RpcClient:
 		case Alias:
 		case IdlHeader:
-		case TypeLib:
+		case EmbeddedTypeLib:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -1063,7 +1063,7 @@ Module::GenerateInOutputTree () const
 		case LiveIso:
 		case IsoRegTest:
 		case LiveIsoRegTest:
-		case TypeLib:
+		case EmbeddedTypeLib:
 			return true;
 		case StaticLibrary:
 		case ObjectLibrary:
@@ -1565,7 +1565,7 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 		case RpcClient:
 		case Alias:
 		case IdlHeader:
-		case TypeLib:
+		case EmbeddedTypeLib:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

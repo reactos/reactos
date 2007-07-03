@@ -274,7 +274,7 @@ enum ModuleType
 	IdlHeader = 23,
 	IsoRegTest = 24,
 	LiveIsoRegTest = 25,
-	TypeLib = 26
+	EmbeddedTypeLib = 26
 };
 
 enum HostType

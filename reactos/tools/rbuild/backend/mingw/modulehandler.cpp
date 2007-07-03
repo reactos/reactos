@@ -265,8 +265,8 @@ MingwModuleHandler::InstanciateHandler (
 		case IdlHeader:
 			handler = new MingwIdlHeaderModuleHandler ( module );
 			break;
-		case TypeLib:
-			handler = new MingwTypeLibModuleHandler ( module );
+		case EmbeddedTypeLib:
+			handler = new MingwEmbeddedTypeLibModuleHandler ( module );
 			break;
 		default:
 			throw UnknownModuleTypeException (
@@ -1263,7 +1263,7 @@ MingwModuleHandler::GetIdlHeaderFilename ( string basename ) const
 }
 
 void
-MingwModuleHandler::GenerateWidlCommandsTypeLib (
+MingwModuleHandler::GenerateWidlCommandsEmbeddedTypeLib (
 	const CompilationUnit& compilationUnit,
 	const string& widlflagsMacro )
 {
@@ -1272,19 +1272,22 @@ MingwModuleHandler::GenerateWidlCommandsTypeLib (
 	string dependencies = filename;
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
-	string TypeLibFilename = module.GetTargetName ();
-
+	string basename = GetBasename ( filename );
+	string EmbeddedTypeLibFilename = basename + ".tlb";
+	
 	fprintf ( fMakefile,
 	          "%s: %s $(WIDL_TARGET) | %s\n",
 	          GetTargetMacro ( module ).c_str (),
 	          dependencies.c_str (),
-	          GetDirectory ( TypeLibFilename ).c_str () );
+	          GetDirectory ( EmbeddedTypeLibFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
-	          "\t%s %s %s -t -T $@ %s\n",
+	          //"\t%s %s %s -t -T $@ %s\n",
+			  "\t%s %s %s -t -T %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
 	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
+		      EmbeddedTypeLibFilename.c_str(),
 			  filename.c_str () );
 }
 
@@ -1366,8 +1369,8 @@ MingwModuleHandler::GenerateWidlCommands (
 	else if ( module.type == RpcClient )
 		GenerateWidlCommandsClient ( compilationUnit,
 		                             widlflagsMacro );
-	else if ( module.type == TypeLib )
-		GenerateWidlCommandsTypeLib ( compilationUnit,
+	else if ( module.type == EmbeddedTypeLib )
+		GenerateWidlCommandsEmbeddedTypeLib ( compilationUnit,
 										widlflagsMacro );
 	else // applies also for other module.types which include idl files
 		GenerateWidlCommandsIdlHeader ( compilationUnit,
@@ -2492,7 +2495,7 @@ MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler (
 {
 }
 
-MingwTypeLibModuleHandler::MingwTypeLibModuleHandler (
+MingwEmbeddedTypeLibModuleHandler::MingwEmbeddedTypeLibModuleHandler (
 	const Module& module_ )
 
 	: MingwModuleHandler ( module_ )
@@ -2500,7 +2503,7 @@ MingwTypeLibModuleHandler::MingwTypeLibModuleHandler (
 }
 
 void
-MingwTypeLibModuleHandler::Process ()
+MingwEmbeddedTypeLibModuleHandler::Process ()
 {
 	GenerateRules ();
 }
