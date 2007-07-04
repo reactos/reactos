@@ -18,8 +18,7 @@
 #include <mmddk.h>
 
 #include <stdio.h>
-#define DPRINT printf
-
+#include <debug.h>
 
 /* Need to check these */
 #define MAX_DEVICES             256
