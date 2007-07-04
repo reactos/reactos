@@ -1645,6 +1645,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
                goto ReleaseCapturedString;
            }
        }
+
+       /* We have a driver for this DeviceNode */
+       DeviceNode->Flags |= DN_DRIVER_LOADED;
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);

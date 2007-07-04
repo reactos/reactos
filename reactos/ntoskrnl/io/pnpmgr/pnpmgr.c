@@ -2380,29 +2380,30 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       if (!NT_SUCCESS(Status))
       {
           /* Driver is not initialized, try to load it */
-      Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
+          Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
 
-      if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
-      {
+          if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
+          {
               /* STATUS_IMAGE_ALREADY_LOADED means this driver
                  was loaded by the bootloader */
-         if (Status != STATUS_IMAGE_ALREADY_LOADED)
-         {
+              if (Status != STATUS_IMAGE_ALREADY_LOADED)
+              {
                   /* Initialize the driver */
-            DeviceNode->Flags |= DN_DRIVER_LOADED;
-            Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
-               &DeviceNode->ServiceName, FALSE, &DriverObject);
-         }
-         else
-         {
+                  Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+                      &DeviceNode->ServiceName, FALSE, &DriverObject);
+              }
+              else
+              {
                   Status = STATUS_SUCCESS;
-         }
+              }
           }
       }
 
       /* Driver is loaded and initialized at this point */
          if (NT_SUCCESS(Status))
          {
+            /* We have a driver for this DeviceNode */
+            DeviceNode->Flags |= DN_DRIVER_LOADED;
             /* Attach lower level filter drivers. */
             IopAttachFilterDrivers(DeviceNode, TRUE);
             /* Initialize the function driver for the device node */
