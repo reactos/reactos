@@ -2379,45 +2379,55 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
 
       if (!NT_SUCCESS(Status))
       {
-          /* Driver is not initialized, try to load it */
-          Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
+         /* Driver is not initialized, try to load it */
+         Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
 
-          if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
-          {
-              /* STATUS_IMAGE_ALREADY_LOADED means this driver
-                 was loaded by the bootloader */
-              if (Status != STATUS_IMAGE_ALREADY_LOADED)
-              {
-                  /* Initialize the driver */
-                  Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
-                      &DeviceNode->ServiceName, FALSE, &DriverObject);
-              }
-              else
-              {
-                  Status = STATUS_SUCCESS;
-              }
-          }
+         if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
+         {
+            /* STATUS_IMAGE_ALREADY_LOADED means this driver
+               was loaded by the bootloader */
+            if (Status != STATUS_IMAGE_ALREADY_LOADED)
+            {
+               /* Initialize the driver */
+               Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
+                  &DeviceNode->ServiceName, FALSE, &DriverObject);
+            }
+            else
+            {
+               Status = STATUS_SUCCESS;
+            }
+         }
+         else
+         {
+            DPRINT1("IopLoadServiceModule(%wZ) failed with status 0x%08x\n",
+                    &DeviceNode->ServiceName, Status);
+         }
       }
 
       /* Driver is loaded and initialized at this point */
+      if (NT_SUCCESS(Status))
+      {
+         /* We have a driver for this DeviceNode */
+         DeviceNode->Flags |= DN_DRIVER_LOADED;
+         /* Attach lower level filter drivers. */
+         IopAttachFilterDrivers(DeviceNode, TRUE);
+         /* Initialize the function driver for the device node */
+         Status = IopInitializeDevice(DeviceNode, DriverObject);
+
          if (NT_SUCCESS(Status))
          {
-            /* We have a driver for this DeviceNode */
-            DeviceNode->Flags |= DN_DRIVER_LOADED;
-            /* Attach lower level filter drivers. */
-            IopAttachFilterDrivers(DeviceNode, TRUE);
-            /* Initialize the function driver for the device node */
-            Status = IopInitializeDevice(DeviceNode, DriverObject);
+            /* Attach upper level filter drivers. */
+            IopAttachFilterDrivers(DeviceNode, FALSE);
+            IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
 
-            if (NT_SUCCESS(Status))
-            {
-               /* Attach upper level filter drivers. */
-               IopAttachFilterDrivers(DeviceNode, FALSE);
-               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
-
-               Status = IopStartDevice(DeviceNode);
-            }
+            Status = IopStartDevice(DeviceNode);
          }
+         else
+         {
+            DPRINT1("IopInitializeDevice(%wZ) failed with status 0x%08x\n",
+                    &DeviceNode->InstancePath, Status);
+         }
+      }
       else
       {
          /*
