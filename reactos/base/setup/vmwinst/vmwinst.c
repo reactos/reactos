@@ -49,6 +49,7 @@ static WCHAR PathToVideoDrivers40[MAX_PATH+1] = L"X:\\video\\winnt2k\\";
 static WCHAR DestinationPath[MAX_PATH+1];
 static WCHAR *vmx_fb = L"vmx_fb.dll";
 static WCHAR *vmx_mode = L"vmx_mode.dll";
+static WCHAR *vmx_mode_v6 = L"vmx mode.dll";
 static WCHAR *vmx_svga = L"vmx_svga.sys";
 
 static WCHAR *SrcPath = PathToVideoDrivers45;
@@ -171,7 +172,7 @@ IsVMwareCDInDrive(WCHAR *Drv)
       PathToVideoDrivers45[0] = Current;
       if(SetCurrentDirectory(PathToVideoDrivers60))
         SrcPath = PathToVideoDrivers60;
-      if(SetCurrentDirectory(PathToVideoDrivers55))
+      else if(SetCurrentDirectory(PathToVideoDrivers55))
         SrcPath = PathToVideoDrivers55;
       else if(SetCurrentDirectory(PathToVideoDrivers45))
         SrcPath = PathToVideoDrivers45;
@@ -184,7 +185,7 @@ IsVMwareCDInDrive(WCHAR *Drv)
       }
 
       if(FileExists(SrcPath, vmx_fb) &&
-         FileExists(SrcPath, vmx_mode) &&
+         (FileExists(SrcPath, vmx_mode) || FileExists(SrcPath, vmx_mode_v6)) &&
          FileExists(SrcPath, vmx_svga))
       {
         *Drv = Current;
