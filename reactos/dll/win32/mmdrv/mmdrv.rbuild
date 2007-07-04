@@ -8,9 +8,11 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>winmm</library>
-	<file>auxil.c</file>
 	<file>entry.c</file>
-	<file>midi.c</file>
-	<file>utils.c</file>
+	<file>mme.c</file>
+	<file>kernel.c</file>
+	<file>session.c</file>
+	<file>common.c</file>
 	<file>wave.c</file>
+	<file>wave_io.c</file>
 </module>

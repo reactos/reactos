@@ -2,68 +2,42 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS Multimedia
- * FILE:                 lib/mmdrv/entry.c
- * PURPOSE:              Multimedia User Mode Driver
+ * FILE:                 dll/win32/mmdrv/entry.c
+ * PURPOSE:              Multimedia User Mode Driver (DriverProc)
  * PROGRAMMER:           Andrew Greenwood
- *                       Aleksey Bragin
  * UPDATE HISTORY:
- *                       Jan 30, 2004: Imported into ReactOS tree (Greenwood)
- *                       Mar 16, 2004: Cleaned up a bit (Bragin)
+ *                       Jan 14, 2007: Created
  */
 
+#include <mmdrv.h>
 
-#include "mmdrv.h"
 
-#define NDEBUG
-#include <debug.h>
+/*
+    Nothing particularly special happens here.
 
-#define EXPORT __declspec(dllexport)
+    Back in the days of Windows 3.1, we would do something more useful here,
+    as this is effectively the old-style equivalent of NT's "DriverEntry",
+    though far more primitive.
 
-CRITICAL_SECTION DriverSection;
+    In summary, we just implement to satisfy the MME API (winmm) requirements.
+*/
 
-APIENTRY LONG DriverProc(DWORD DriverID, HANDLE DriverHandle, UINT Message,
-                LONG Param1, LONG Param2)
+LONG
+DriverProc(
+    DWORD driver_id,
+    HANDLE driver_handle,
+    UINT message,
+    LONG parameter1,
+    LONG parameter2)
 {
-    DPRINT("DriverProc\n");
-
-//    HINSTANCE Module;
-
-    switch(Message)
+    switch ( message )
     {
         case DRV_LOAD :
             DPRINT("DRV_LOAD\n");
-            return TRUE; // dont need to do any more
-/*            
-            Module = GetDriverModuleHandle(DriverHandle);
-
-        // Create our process heap
-        Heap = GetProcessHeap();
-        if (Heap == NULL)
-            return FALSE;
-
-        DisableThreadLibraryCalls(Module);
-        InitializeCriticalSection(&CS);
-
-        //
-        // Load our device list
-        //
-
-//        if (sndFindDevices() != MMSYSERR_NOERROR) {
-//            DeleteCriticalSection(&mmDrvCritSec);
-//            return FALSE;
-//        }
-
-    return TRUE;
-*/
-//            return 1L;
+            return 1L;
 
         case DRV_FREE :
             DPRINT("DRV_FREE\n");
-
-//            TerminateMidi();
-//            TerminateWave();
-
-//            DeleteCriticalSection(&CS);
             return 1L;
 
         case DRV_OPEN :
@@ -82,6 +56,11 @@ APIENTRY LONG DriverProc(DWORD DriverID, HANDLE DriverHandle, UINT Message,
             DPRINT("DRV_DISABLE\n");
             return 1L;
 
+        /*
+            We don't provide configuration capabilities. This used to be
+            for things like I/O port, IRQ, DMA settings, etc.
+        */
+
         case DRV_QUERYCONFIGURE :
             DPRINT("DRV_QUERYCONFIGURE\n");
             return 0L;
@@ -93,44 +72,11 @@ APIENTRY LONG DriverProc(DWORD DriverID, HANDLE DriverHandle, UINT Message,
         case DRV_INSTALL :
             DPRINT("DRV_INSTALL\n");
             return DRVCNF_RESTART;
-
-        default :
-            DPRINT("?\n");
-            return DefDriverProc(DriverID, DriverHandle, Message, Param1, Param2);
     };
+
+    return DefDriverProc(driver_id,
+                         driver_handle,
+                         message,
+                         parameter1,
+                         parameter2);
 }
-
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
-{
-    DPRINT("DllMain called!\n");
-
-    if (Reason == DLL_PROCESS_ATTACH)
-    {
-        DisableThreadLibraryCalls(hInstance);
-
-        // Create our heap
-        Heap = HeapCreate(0, 800, 0);
-        if (Heap == NULL)
-            return FALSE;
-
-        InitializeCriticalSection(&CS);
-
-        // OK to do this now??        
-        FindDevices();
-
-    }
-    else if (Reason == DLL_PROCESS_DETACH)
-    {
-        // We need to do cleanup here...
-//        TerminateMidi();
-//        TerminateWave();
-
-        DeleteCriticalSection(&CS);
-        HeapDestroy(Heap);
-    }
-    
-    return TRUE;
-}
-
-/* EOF */
