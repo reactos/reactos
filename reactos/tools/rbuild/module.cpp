@@ -339,6 +339,14 @@ Module::Module ( const Project& project,
 	att = moduleNode.GetAttribute ( "entrypoint", false );
 	if ( att != NULL )
 	{
+		if ( att->value == "" )
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"entrypoint",
+				att->value );
+		}
+
 		entrypoint = att->value;
 		isDefaultEntryPoint = false;
 	}
