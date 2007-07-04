@@ -42,7 +42,7 @@ enum OptimizationType
 enum HeadersType
 {
 	MSVCHeaders,
-	WineHeaders
+	ReactOSHeaders
 };
 
 class MSVCConfiguration

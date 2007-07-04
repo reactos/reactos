@@ -73,9 +73,9 @@ void MSVCBackend::Process()
 
 	if (!only_msvc_headers)
 	{
-		m_configurations.push_back ( new MSVCConfiguration( Debug, WineHeaders ));
-		m_configurations.push_back ( new MSVCConfiguration( Release, WineHeaders ));
-		m_configurations.push_back ( new MSVCConfiguration( Speed, WineHeaders ));
+		m_configurations.push_back ( new MSVCConfiguration( Debug, ReactOSHeaders ));
+		m_configurations.push_back ( new MSVCConfiguration( Release, ReactOSHeaders ));
+		m_configurations.push_back ( new MSVCConfiguration( Speed, ReactOSHeaders ));
 	}
 
 	if ( configuration.CleanAsYouGo ) {
