@@ -80,57 +80,60 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 {
    PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
-   BOOLEAN IsPnpDriver = FALSE;
 
-   if (DriverObject->DriverExtension->AddDevice)
+   if (!DriverObject->DriverExtension->AddDevice)
+      return STATUS_SUCCESS;
+
+   /* This is a Plug and Play driver */
+   DPRINT("Plug and Play driver found\n");
+   ASSERT(DeviceNode->PhysicalDeviceObject);
+
+   /* Check if this plug-and-play driver is used as a legacy one for this device node */
+   if (IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER))
    {
-      /* This is a Plug and Play driver */
-      DPRINT("Plug and Play driver found\n");
-
-      ASSERT(DeviceNode->PhysicalDeviceObject);
-
-      DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
-         DriverObject->DriverExtension->AddDevice);
-
-      IsPnpDriver = !IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER);
-      Status = DriverObject->DriverExtension->AddDevice(
-         DriverObject, IsPnpDriver ? DeviceNode->PhysicalDeviceObject : NULL);
-
-      if (!NT_SUCCESS(Status))
-      {
-         return Status;
-      }
-
-      if (IsPnpDriver)
-      {
-         Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-
-         if (Fdo == DeviceNode->PhysicalDeviceObject)
-         {
-            /* FIXME: What do we do? Unload the driver or just disable the device? */
-            DbgPrint("An FDO was not attached\n");
-            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            return STATUS_UNSUCCESSFUL;
-         }
-
-         if (Fdo->DeviceType == FILE_DEVICE_ACPI)
-         {
-            static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
-
-            /* There can be only one system power device */
-            if (!SystemPowerDeviceNodeCreated)
-            {
-               PopSystemPowerDeviceNode = DeviceNode;
-               SystemPowerDeviceNodeCreated = TRUE;
-            }
-         }
-
-         ObDereferenceObject(Fdo);
-      }
-
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
-      IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
+      return STATUS_SUCCESS;
    }
+
+   DPRINT("Calling %wZ->AddDevice(%wZ)\n",
+      &DriverObject->DriverName,
+      &DeviceNode->InstancePath);
+   Status = DriverObject->DriverExtension->AddDevice(
+      DriverObject, DeviceNode->PhysicalDeviceObject);
+   if (!NT_SUCCESS(Status))
+   {
+      IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+      return Status;
+   }
+
+   /* Check if driver added a FDO above the PDO */
+   Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+   if (Fdo == DeviceNode->PhysicalDeviceObject)
+   {
+      /* FIXME: What do we do? Unload the driver or just disable the device? */
+      DPRINT1("An FDO was not attached\n");
+      IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   /* Check if we have a ACPI device (needed for power management) */
+   if (Fdo->DeviceType == FILE_DEVICE_ACPI)
+   {
+      static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
+
+      /* There can be only one system power device */
+      if (!SystemPowerDeviceNodeCreated)
+      {
+         PopSystemPowerDeviceNode = DeviceNode;
+         ObReferenceObject(PopSystemPowerDeviceNode);
+         SystemPowerDeviceNodeCreated = TRUE;
+      }
+   }
+
+   ObDereferenceObject(Fdo);
+
+   IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
+   IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
 
    return STATUS_SUCCESS;
 }
