@@ -549,9 +549,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCMIDLTool\"/>\r\n" );
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		if (configuration.VSProjectVersion == "8.00")
 		{
+			fprintf ( OUT, "\t\t\t<Tool\r\n" );
 			fprintf ( OUT, "\t\t\t\tName=\"VCManifestTool\"\r\n" );
 			fprintf ( OUT, "\t\t\t\tEmbedManifest=\"false\"/>\r\n" );
 		}
