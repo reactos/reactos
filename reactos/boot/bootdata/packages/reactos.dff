@@ -225,6 +225,7 @@ dll\win32\ufatx\ufatx.dll                           1   optional
 dll\win32\urlmon\urlmon.dll                         1
 dll\win32\user32\user32.dll                         1
 dll\win32\userenv\userenv.dll                       1
+dll\win32\usp10\usp10.dll                           1
 dll\win32\uxtheme\uxtheme.dll                       1
 dll\win32\version\version.dll                       1
 dll\win32\vdmdbg\vdmdbg.dll                         1
