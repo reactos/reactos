@@ -122,10 +122,18 @@
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
 
+typedef struct _USER32_TRACKINGLIST {
+    TRACKMOUSEEVENT tme;
+    POINT pos; /* center of hover rectangle */
+    UINT_PTR timer;
+} USER32_TRACKINGLIST,*PUSER32_TRACKINGLIST;
+
+
 typedef struct _USER32_THREAD_DATA
 {
     MSG LastMessage;
     HKL KeyboardLayoutHandle;
+    USER32_TRACKINGLIST tracking_info; /* TrackMouseEvent stuff */
 } USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
 
 PUSER32_THREAD_DATA User32GetThreadData();
