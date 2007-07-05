@@ -8,11 +8,17 @@
  */
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 extern PCALLBACK_OBJECT SetSystemTimeCallback;
+
+static VOID
+NTAPI
+PopGetSysButton(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PVOID Context);
 
 VOID
 NTAPI
@@ -34,6 +40,101 @@ PoNotifySystemTimeSet(VOID)
     }
 }
 
+typedef struct _SYS_BUTTON_CONTEXT
+{
+	PDEVICE_OBJECT DeviceObject;
+	PIO_WORKITEM WorkItem;
+	KEVENT Event;
+	IO_STATUS_BLOCK IoStatusBlock;
+	ULONG SysButton;
+} SYS_BUTTON_CONTEXT, *PSYS_BUTTON_CONTEXT;
+
+static NTSTATUS
+NTAPI
+PopGetSysButtonCompletion(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	IN PVOID Context)
+{
+	PSYS_BUTTON_CONTEXT SysButtonContext = Context;
+	ULONG SysButton;
+
+	if (Irp->PendingReturned)
+		IoMarkIrpPending(Irp);
+
+	/* The DeviceObject can be NULL, so use the one we stored */
+	DeviceObject = SysButtonContext->DeviceObject;
+
+	/* FIXME: What do do with the sys button event? */
+	SysButton = *(PULONG)Irp->AssociatedIrp.SystemBuffer;
+	{
+		DPRINT1("A device reported the event 0x%x (", SysButton);
+		if (SysButton & SYS_BUTTON_POWER) DbgPrint(" POWER");
+		if (SysButton & SYS_BUTTON_SLEEP) DbgPrint(" SLEEP");
+		if (SysButton & SYS_BUTTON_LID) DbgPrint(" LID");
+		if (SysButton == 0) DbgPrint(" WAKE");
+		DbgPrint(" )\n");
+	}
+
+	/* Allocate a new workitem to send the next IOCTL_GET_SYS_BUTTON_EVENT */
+	SysButtonContext->WorkItem = IoAllocateWorkItem(DeviceObject);
+	if (!SysButtonContext->WorkItem)
+	{
+		DPRINT("IoAllocateWorkItem() failed\n");
+		ExFreePool(SysButtonContext);
+		return STATUS_SUCCESS;
+	}
+	IoQueueWorkItem(
+		SysButtonContext->WorkItem,
+		PopGetSysButton,
+		DelayedWorkQueue,
+		SysButtonContext);
+
+	return STATUS_SUCCESS /* STATUS_CONTINUE_COMPLETION */;
+}
+
+static VOID
+NTAPI
+PopGetSysButton(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PVOID Context)
+{
+	PSYS_BUTTON_CONTEXT SysButtonContext = Context;
+	PIO_WORKITEM CurrentWorkItem = SysButtonContext->WorkItem;;
+	PIRP Irp;
+
+	/* Get button pressed (IOCTL_GET_SYS_BUTTON_EVENT) */
+	KeInitializeEvent(&SysButtonContext->Event, NotificationEvent, FALSE);
+	Irp = IoBuildDeviceIoControlRequest(
+		IOCTL_GET_SYS_BUTTON_EVENT,
+		DeviceObject,
+		NULL,
+		0,
+		&SysButtonContext->SysButton,
+		sizeof(SysButtonContext->SysButton),
+		FALSE,
+		&SysButtonContext->Event,
+		&SysButtonContext->IoStatusBlock);
+	if (Irp)
+	{
+		IoSetCompletionRoutine(
+			Irp,
+			PopGetSysButtonCompletion,
+			SysButtonContext,
+			TRUE,
+			FALSE,
+			FALSE);
+		IoCallDriver(DeviceObject, Irp);
+	}
+	else
+	{
+		DPRINT1("IoBuildDeviceIoControlRequest() failed\n");
+		ExFreePool(SysButtonContext);
+	}
+
+	IoFreeWorkItem(CurrentWorkItem);
+}
+
 NTSTATUS
 NTAPI
 PopAddRemoveSysCapsCallback(
@@ -41,9 +142,14 @@ PopAddRemoveSysCapsCallback(
 	IN PVOID Context)
 {
 	PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification;
+	PSYS_BUTTON_CONTEXT SysButtonContext;
 	OBJECT_ATTRIBUTES ObjectAttributes;
-	HANDLE DeviceHandle;
+	HANDLE FileHandle;
+	PDEVICE_OBJECT DeviceObject;
+	PFILE_OBJECT FileObject;
+	PIRP Irp;
 	IO_STATUS_BLOCK IoStatusBlock;
+	KEVENT Event;
 	BOOLEAN Arrival;
 	ULONG Caps;
 	NTSTATUS Status;
@@ -67,7 +173,7 @@ PopAddRemoveSysCapsCallback(
 	{
 		DPRINT("Arrival of %wZ\n", Notification->SymbolicLinkName);
 
-		/* Open device */
+		/* Open the device */
 		InitializeObjectAttributes(
 			&ObjectAttributes,
 			Notification->SymbolicLinkName,
@@ -75,7 +181,7 @@ PopAddRemoveSysCapsCallback(
 			NULL,
 			NULL);
 		Status = ZwOpenFile(
-			&DeviceHandle,
+			&FileHandle,
 			FILE_READ_DATA,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -86,32 +192,89 @@ PopAddRemoveSysCapsCallback(
 			DPRINT("ZwOpenFile() failed with status 0x%08lx\n", Status);
 			return Status;
 		}
+		Status = ObReferenceObjectByHandle(
+			FileHandle,
+			FILE_READ_DATA,
+			IoFileObjectType,
+			ExGetPreviousMode(),
+			(PVOID*)&FileObject,
+			NULL);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT("ObReferenceObjectByHandle() failed with status 0x%08lx\n", Status);
+			ZwClose(FileHandle);
+			return Status;
+		}
+		DeviceObject = IoGetRelatedDeviceObject(FileObject);
+		ObDereferenceObject(FileObject);
 
-		/* Send IOCTL_GET_SYS_BUTTON_CAPS to get new caps */
-		Status = ZwDeviceIoControlFile(
-			DeviceHandle,
-			NULL,
-			NULL,
-			NULL,
-			&IoStatusBlock,
+		/* Get capabilities (IOCTL_GET_SYS_BUTTON_CAPS) */
+		KeInitializeEvent(&Event, NotificationEvent, FALSE);
+		Irp = IoBuildDeviceIoControlRequest(
 			IOCTL_GET_SYS_BUTTON_CAPS,
+			DeviceObject,
 			NULL,
 			0,
 			&Caps,
-			sizeof(Caps));
+			sizeof(Caps),
+			FALSE,
+			&Event,
+			&IoStatusBlock);
+		if (!Irp)
+		{
+			DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+			ZwClose(FileHandle);
+			return STATUS_INSUFFICIENT_RESOURCES;
+		}
+		Status = IoCallDriver(DeviceObject, Irp);
+		if (Status == STATUS_PENDING)
+		{
+			DPRINT("IOCTL_GET_SYS_BUTTON_CAPS pending\n");
+			KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+			Status = IoStatusBlock.Status;
+		}
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("ZwDeviceIoControlFile(IOCTL_GET_SYS_BUTTON_CAPS) failed with status 0x%08lx\n", Status);
-			ZwClose(DeviceHandle);
-			return Status;
+			DPRINT("Sending IOCTL_GET_SYS_BUTTON_CAPS failed with status 0x%08x\n", Status);
+			ZwClose(FileHandle);
+			return STATUS_INSUFFICIENT_RESOURCES;
 		}
-		/* FIXME: What do do with this? */
-		DPRINT1("Device capabilities: 0x%lx\n", Caps);
 
-		/* Send IOCTL_GET_SYS_BUTTON_CAPS to get current caps */
-		/* FIXME: Set a IO completion routine on it to be able to send a new one */
-		DPRINT1("Send a IOCTL_GET_SYS_BUTTON_EVENT\n");
-		return ZwClose(DeviceHandle);
+		/* FIXME: What do do with the capabilities? */
+		{
+			DPRINT1("Device capabilities: 0x%x (", Caps);
+			if (Caps & SYS_BUTTON_POWER) DbgPrint(" POWER");
+			if (Caps & SYS_BUTTON_SLEEP) DbgPrint(" SLEEP");
+			if (Caps & SYS_BUTTON_LID) DbgPrint(" LID");
+			DbgPrint(" )\n");
+		}
+
+		SysButtonContext = ExAllocatePool(NonPagedPool, sizeof(SYS_BUTTON_CONTEXT));
+		if (!SysButtonContext)
+		{
+			DPRINT("ExAllocatePool() failed\n");
+			ZwClose(FileHandle);
+			return STATUS_INSUFFICIENT_RESOURCES;
+		}
+
+		/* Queue a work item to get sys button event */
+		SysButtonContext->WorkItem = IoAllocateWorkItem(DeviceObject);
+		SysButtonContext->DeviceObject = DeviceObject;
+		if (!SysButtonContext->WorkItem)
+		{
+			DPRINT("IoAllocateWorkItem() failed\n");
+			ZwClose(FileHandle);
+			ExFreePool(SysButtonContext);
+			return STATUS_INSUFFICIENT_RESOURCES;
+		}
+		IoQueueWorkItem(
+			SysButtonContext->WorkItem,
+			PopGetSysButton,
+			DelayedWorkQueue,
+			SysButtonContext);
+
+		ZwClose(FileHandle);
+		return STATUS_SUCCESS;
 	}
 	else
 	{
