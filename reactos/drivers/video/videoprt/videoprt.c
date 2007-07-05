@@ -713,7 +713,7 @@ VideoPortInitialize(
          return STATUS_UNSUCCESSFUL;
    }
 
-   /* add no PNP bus here, add more bus type if it need it */
+   /* add no PNP bus here, add more bus type if it needed */
    if ( (HwInitializationData->AdapterInterfaceType == 0) ||
         (HwInitializationData->AdapterInterfaceType == -1) )
 
@@ -739,7 +739,7 @@ VideoPortInitialize(
 
       if (HwInitializationData->HwInitDataSize != SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
       {
-          /* power manger */
+          /* power management */
           DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
       }
       Status = IntVideoPortCreateAdapterDeviceObject(DriverObject, DriverExtension,
