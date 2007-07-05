@@ -713,6 +713,15 @@ VideoPortInitialize(
          return STATUS_UNSUCCESSFUL;
    }
 
+   /* add no PNP bus here, add more bus type if it need it */
+   if ( (HwInitializationData->AdapterInterfaceType == 0) ||
+        (HwInitializationData->AdapterInterfaceType == -1) )
+
+   {
+       DPRINT1("No PNP Videocard .\n");
+       LegacyDetection = TRUE;
+   }
+
    DriverObject->MajorFunction[IRP_MJ_CREATE] = IntVideoPortDispatchOpen;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = IntVideoPortDispatchClose;
    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IntVideoPortDispatchDeviceControl;
@@ -727,6 +736,12 @@ VideoPortInitialize(
    if (LegacyDetection)
    {
       PDEVICE_OBJECT DeviceObject;
+
+      if (HwInitializationData->HwInitDataSize != SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA)
+      {
+          /* power manger */
+          DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
+      }
       Status = IntVideoPortCreateAdapterDeviceObject(DriverObject, DriverExtension,
                                                      NULL, &DeviceObject);
       DPRINT("IntVideoPortCreateAdapterDeviceObject returned 0x%x\n", Status);
