@@ -2099,7 +2099,7 @@ SepCreateSystemProcessToken(VOID)
 
   if ( NT_SUCCESS(Status) )
     {
-      Status = RtlAddAccessAllowedAce(AccessToken->DefaultDacl, ACL_REVISION, GENERIC_READ|GENERIC_EXECUTE|READ_CONTROL, SeAliasAdminsSid);
+      Status = RtlAddAccessAllowedAce(AccessToken->DefaultDacl, ACL_REVISION, GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE|READ_CONTROL, SeAliasAdminsSid);
     }
 
   if ( ! NT_SUCCESS(Status) )
