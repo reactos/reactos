@@ -33,9 +33,6 @@ BOOLEAN
 NTAPI
 SepInitializationPhase0(VOID)
 {
-    DPRINT1("FIXME: SeAccessCheck has been HACKED to always grant access!\n");
-    DPRINT1("FIXME: Please fix all the code that doesn't get proper rights!\n");
-
     SepInitLuid();
     if (!SepInitSecurityIDs()) return FALSE;
     if (!SepInitDACLs()) return FALSE;
@@ -1155,17 +1152,10 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
   else
     {
-#if 1
-      *AccessStatus = STATUS_SUCCESS;
-      DPRINT1("FIX caller rights (granted 0x%lx, desired 0x%lx, generic mapping %p)!\n",
-        *GrantedAccess, DesiredAccess, GenericMapping);
-      return TRUE;
-#else
       DPRINT1("Denying access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p)\n",
         *GrantedAccess, DesiredAccess, GenericMapping);
       *AccessStatus = STATUS_ACCESS_DENIED;
       return FALSE;
-#endif
     }
 }
 
