@@ -695,7 +695,7 @@ ClassAddDevice(
 	}
 
 	DeviceExtension = (PPORT_DEVICE_EXTENSION)Fdo->DeviceExtension;
-	RtlZeroMemory(DeviceExtension, sizeof(PPORT_DEVICE_EXTENSION));
+	RtlZeroMemory(DeviceExtension, sizeof(PORT_DEVICE_EXTENSION));
 	DeviceExtension->Common.IsClassDO = FALSE;
 	DeviceExtension->DeviceObject = Fdo;
 	DeviceExtension->PnpState = dsStopped;
