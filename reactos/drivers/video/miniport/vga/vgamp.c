@@ -31,7 +31,7 @@ DriverEntry(IN PVOID Context1,
 
   VideoPortZeroMemory(&InitData, sizeof InitData);
 
-  InitData.HwInitDataSize = sizeof(InitData);
+  InitData.HwInitDataSize = SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA;
   /* FIXME: Fill in InitData members  */
   InitData.StartingDeviceNumber = 0;
 

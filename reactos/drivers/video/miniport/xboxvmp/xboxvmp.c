@@ -42,7 +42,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
 
   VideoPortZeroMemory(&InitData, sizeof(InitData));
   InitData.AdapterInterfaceType = PCIBus;
-  InitData.HwInitDataSize = sizeof(VIDEO_HW_INITIALIZATION_DATA);
+  InitData.HwInitDataSize = SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA;
   InitData.HwFindAdapter = XboxVmpFindAdapter;
   InitData.HwInitialize = XboxVmpInitialize;
   InitData.HwStartIO = XboxVmpStartIO;

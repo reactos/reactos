@@ -81,14 +81,7 @@ IntVideoPortAddDevice(
       DriverExtension,
       PhysicalDeviceObject,
       &DeviceObject);
-   if (!NT_SUCCESS(Status))
-      return Status;
 
-   if (PhysicalDeviceObject == NULL)
-   {
-      /* We will never have a IRP_MJ_PNP/IRP_MN_START_DEVICE Irp */
-      Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
-   }
    return Status;
 }
 
