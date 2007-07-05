@@ -1223,7 +1223,16 @@ co_WinPosSetWindowPos(
          }
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
+                      /* old code
+            NtGdiOffsetRgn(DirtyRgn, Window->WindowRect.left, Window->WindowRect.top);
+            IntInvalidateWindows(Window, DirtyRgn,
+               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+         }
+         NtGdiDeleteObject(DirtyRgn);
+         */
+
             PWINDOW_OBJECT Parent = Window->Parent;
+
             NtGdiOffsetRgn(DirtyRgn,
                            Window->WindowRect.left,
                            Window->WindowRect.top);
@@ -1235,8 +1244,11 @@ co_WinPosSetWindowPos(
                   RDW_ERASE | RDW_INVALIDATE);
                co_IntPaintWindows(Parent, RDW_ERASENOW, FALSE);
             }
-            IntInvalidateWindows(Window, DirtyRgn,
+            else
+            {
+                IntInvalidateWindows(Window, DirtyRgn,
                 RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            }
          }
          NtGdiDeleteObject(DirtyRgn);
       }
