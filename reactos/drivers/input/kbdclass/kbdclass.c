@@ -797,10 +797,10 @@ ClassStartIo(
 
 		/* Go to next packet and complete this request */
 		Irp->IoStatus.Status = Status;
-		IoCompleteRequest(Irp, IO_KEYBOARD_INCREMENT);
-
-		IoStartNextPacket(DeviceObject, FALSE);
 		KeReleaseSpinLock(&DeviceExtension->SpinLock, oldIrql);
+
+		IoCompleteRequest(Irp, IO_KEYBOARD_INCREMENT);
+		IoStartNextPacket(DeviceObject, FALSE);
 	}
 	else
 	{
