@@ -962,21 +962,29 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
                                         lpResumeHandle,
                                         (char *)pszGroupName);
 
-    lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSA)lpServices;
-    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    if (dwError == ERROR_MORE_DATA)
     {
-        if (lpStatusPtr->lpServiceName)
-            lpStatusPtr->lpServiceName =
-                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
-
-        if (lpStatusPtr->lpDisplayName)
-            lpStatusPtr->lpDisplayName =
-                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
-
-        lpStatusPtr++;
+        DPRINT("Required buffer size %ul\n", *pcbBytesNeeded);
+        SetLastError(dwError);
+        return FALSE;
     }
+    else if (dwError == ERROR_SUCCESS)
+    {
+        lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSA)lpServices;
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        {
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-    if (dwError != ERROR_SUCCESS)
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+            lpStatusPtr++;
+        }
+    }
+    else
     {
         DPRINT1("ScmrEnumServicesStatusExA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
@@ -1026,22 +1034,29 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
                                         lpResumeHandle,
                                         (wchar_t *)pszGroupName);
 
-    lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSW)lpServices;
-    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    if (dwError == ERROR_MORE_DATA)
     {
-        if (lpStatusPtr->lpServiceName)
-            lpStatusPtr->lpServiceName =
-                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
-
-        if (lpStatusPtr->lpDisplayName)
-            lpStatusPtr->lpDisplayName =
-                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
-
-        lpStatusPtr++;
+        DPRINT("Required buffer size %ul\n", *pcbBytesNeeded);
+        SetLastError(dwError);
+        return FALSE;
     }
+    else if (dwError == ERROR_SUCCESS)
+    {
+        lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSW)lpServices;
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        {
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-    if (dwError != ERROR_SUCCESS &&
-        dwError != ERROR_MORE_DATA)
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+            lpStatusPtr++;
+        }
+    }
+    else
     {
         DPRINT1("ScmrEnumServicesStatusExW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
