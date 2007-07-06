@@ -109,13 +109,11 @@ typedef struct _KDB_MODULE_INFO
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD)	KdbSymLoadUserModuleSymbols(LDRMOD)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	KdbSymLoadDriverSymbols(FILENAME, MODULE)
 # define KDB_UNLOADDRIVER_HOOK(MODULE)		KdbSymUnloadDriverSymbols(MODULE)
-# define KDB_LOADERINIT_HOOK(NTOS, HAL)		KdbSymInit(NTOS, HAL)
 # define KDB_SYMBOLFILE_HOOK(FILENAME)		KdbSymProcessBootSymbols(FILENAME)
 #else
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD)	do { } while (0)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	do { } while (0)
 # define KDB_UNLOADDRIVER_HOOK(MODULE)		do { } while (0)
-# define KDB_LOADERINIT_HOOK(NTOS, HAL)		do { } while (0)
 # define KDB_SYMBOLFILE_HOOK(FILENAME)		do { } while (0)
 # define KDB_CREATE_THREAD_HOOK(CONTEXT)	do { } while (0)
 #endif
@@ -211,7 +209,7 @@ KdpGdbStubInit(
 
 VOID
 STDCALL
-KdbSymInit(
+KdpKdbgInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase);
 
@@ -267,7 +265,8 @@ BOOLEAN
 #define KdSerial 1
 #define KdFile 2
 #define KdBochs 3
-#define KdMax 4
+#define KdKdbg 4
+#define KdMax 5
 
 /* KD Private Debug Modes */
 typedef struct _KDP_DEBUG_MODE

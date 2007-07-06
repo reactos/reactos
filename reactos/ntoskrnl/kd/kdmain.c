@@ -108,6 +108,7 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
 {
     KD_CONTINUE_TYPE Return;
     ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
+    ULONG EipOld;
 
     /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
@@ -125,6 +126,11 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
                                  ExceptionRecord->ExceptionInformation[2]);
         }
+        else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
+        {
+            /* Load symbols. Currently implemented only for KDBG! */
+            KDB_SYMBOLFILE_HOOK((PANSI_STRING)ExceptionRecord->ExceptionInformation[1]);
+        }
 
         /* This we can handle: simply bump EIP */
         Context->Eip++;
@@ -134,12 +140,28 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
     /* Get out of here if the Debugger isn't connected */
     if (KdDebuggerNotPresent) return FALSE;
 
+    /* Save old EIP value */
+    EipOld = Context->Eip;
+
     /* Call KDBG if available */
     Return = KdbEnterDebuggerException(ExceptionRecord,
                                        PreviousMode,
                                        Context,
                                        TrapFrame,
                                        !SecondChance);
+
+    /* Bump EIP over int 3 if debugger did not already change it */
+    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
+    {
+#ifdef KDBG
+        if (Context->Eip == EipOld)
+            Context->Eip++;
+#else
+        /* We simulate the original behaviour when KDBG is turned off.
+           Return var is set to kdHandleException, thus we always return FALSE */
+        Context->Eip = EipOld;
+#endif
+    }
 
     /* Convert return to BOOLEAN */
     if (Return == kdContinue) return TRUE;

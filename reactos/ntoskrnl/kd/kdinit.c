@@ -37,7 +37,8 @@ KD_DISPATCH_TABLE DispatchTable[KdMax];
 PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
                                          KdpSerialInit,
                                          KdpInitDebugLog,
-                                         KdpBochsInit};
+                                         KdpBochsInit,
+                                         KdpKdbgInit};
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

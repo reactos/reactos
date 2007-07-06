@@ -684,8 +684,8 @@ KdbDebugPrint(PCH Message, ULONG Length)
  */
 VOID
 STDCALL
-KdbSymInit(PKD_DISPATCH_TABLE DispatchTable,
-           ULONG BootPhase)
+KdpKdbgInit(PKD_DISPATCH_TABLE DispatchTable,
+            ULONG BootPhase)
 {
     PCHAR p1, p2;
     int Found;
@@ -697,7 +697,7 @@ KdbSymInit(PKD_DISPATCH_TABLE DispatchTable,
     if (BootPhase == 0)
     {
         /* Write out the functions that we support for now */
-        DispatchTable->KdpInitRoutine = KdbSymInit;
+        DispatchTable->KdpInitRoutine = KdpKdbgInit;
         DispatchTable->KdpPrintRoutine = KdbDebugPrint;
 
         /* Register as a Provider */

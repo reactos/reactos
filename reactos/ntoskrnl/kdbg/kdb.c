@@ -1303,7 +1303,7 @@ KdbEnterDebuggerException(
           * The breakpoint will point to the next instruction by default so
           * point it back to the start of original instruction.
           */
-         TrapFrame->Eip--;
+         //TrapFrame->Eip--;
 
          /*
           * ... and restore the original instruction.
@@ -1642,7 +1642,7 @@ KdbpSafeReadMemory(OUT PVOID Dest,
       Status = _SEH_GetExceptionCode();
    }
    _SEH_END;
-   
+
    return Status;
 }
 
