@@ -8,10 +8,11 @@
  * UPDATE HISTORY:
  *      01-05-2001  CSH  Created
  */
-#include <ntddk.h>
 #include <isapnp.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 
@@ -155,7 +156,7 @@ static VOID WriteUlong(UCHAR Index, ULONG Value)
 static __inline VOID SetReadDataPort(ULONG Port)
 {
   IsaPnPReadPort = (PUCHAR)Port;
-	WriteUchar(0x00, Port >> 2);
+	WriteUchar(0x00, (UCHAR) (Port >> 2));
 	KeStallExecutionProcessor(100);
 }
 
@@ -328,7 +329,7 @@ static ULONG IsolatePnPCards(VOID)
 		if ((checksum != 0x00) && (checksum == chksum)) {
 			csn++;
 
-			WriteUchar(0x06, csn);
+			WriteUchar(0x06, (UCHAR) csn);
 			KeStallExecutionProcessor(250);
 			iteration++;
 			SendWake(0x00);
@@ -491,7 +492,7 @@ static NTSTATUS AddResourceList(
         Priority);
 
   List = (PISAPNP_CONFIGURATION_LIST)
-      ExAllocatePool(PagedPool, sizeof(ISAPNP_CONFIGURATION_LIST));
+      ExAllocatePoolWithTag(PagedPool, sizeof(ISAPNP_CONFIGURATION_LIST), TAG_ISAPNP);
   if (!List)
     return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -531,13 +532,13 @@ static NTSTATUS AddResourceDescriptor(
         LogicalDevice->DescriptorCount);
 
   d = (PISAPNP_DESCRIPTOR)
-    ExAllocatePool(PagedPool, sizeof(ISAPNP_DESCRIPTOR));
+    ExAllocatePoolWithTag(PagedPool, sizeof(ISAPNP_DESCRIPTOR), TAG_ISAPNP);
   if (!d)
     return STATUS_NO_MEMORY;
 
   RtlZeroMemory(d, sizeof(ISAPNP_DESCRIPTOR));
 
-  d->Descriptor.Option = Option;
+  d->Descriptor.Option = (UCHAR) Option;
 
   *Descriptor = d;
 
@@ -907,8 +908,8 @@ static PISAPNP_LOGICAL_DEVICE ParseLogicalDevice(
 
   Peek(tmp, Size);
 
-  LogicalDevice = (PISAPNP_LOGICAL_DEVICE)ExAllocatePool(
-    PagedPool, sizeof(ISAPNP_LOGICAL_DEVICE));
+  LogicalDevice = (PISAPNP_LOGICAL_DEVICE)ExAllocatePoolWithTag(
+    PagedPool, sizeof(ISAPNP_LOGICAL_DEVICE), TAG_ISAPNP);
 	if (!LogicalDevice)
 		return NULL;
 
@@ -953,7 +954,7 @@ static BOOLEAN CreateLogicalDevice(PISAPNP_DEVICE_EXTENSION DeviceExtension,
 
   DPRINT("Card %d  Size %d\n", Card->CardId, Size);
 
-  LogicalDevice = ParseLogicalDevice(DeviceExtension, Card, Size, number++);
+  LogicalDevice = ParseLogicalDevice(DeviceExtension, Card, Size, (USHORT) number++);
 	if (!LogicalDevice)
 		return FALSE;
 
@@ -970,7 +971,7 @@ static BOOLEAN CreateLogicalDevice(PISAPNP_DEVICE_EXTENSION DeviceExtension,
 	  	case ISAPNP_SRIN_LDEVICE_ID:
         if ((Size >= 5) && (Size <= 6)) {
           LogicalDevice = ParseLogicalDevice(
-            DeviceExtension, Card, Size, number++);
+            DeviceExtension, Card, Size, (USHORT)number++);
 	        if (!LogicalDevice)
   	        return FALSE;
   				Size = 0;
@@ -1286,8 +1287,8 @@ static NTSTATUS BuildResourceLists(PISAPNP_LOGICAL_DEVICE LogicalDevice)
     LogicalDevice->DescriptorCount);
 
   LogicalDevice->ResourceLists =
-    (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePool(
-      PagedPool, ListSize);
+    (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePoolWithTag(
+      PagedPool, ListSize, TAG_ISAPNP);
 	if (!LogicalDevice->ResourceLists)
 		return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1377,7 +1378,7 @@ static NTSTATUS BuildDeviceList(PISAPNP_DEVICE_EXTENSION DeviceExtension)
 	SendWait();
 	SendKey();
 	for (csn = 1; csn <= 10; csn++) {
-		SendWake(csn);
+		SendWake((UCHAR)csn);
 		Peek(header, 9);
 		checksum = Checksum(header);
 
@@ -1388,14 +1389,14 @@ static NTSTATUS BuildDeviceList(PISAPNP_DEVICE_EXTENSION DeviceExtension)
 			header[0], header[1], header[2], header[3],
 			header[4], header[5], header[6], header[7], header[8]);
 
-    Card = (PISAPNP_CARD)ExAllocatePool(
-      PagedPool, sizeof(ISAPNP_CARD));
+    Card = (PISAPNP_CARD)ExAllocatePoolWithTag(
+      PagedPool, sizeof(ISAPNP_CARD), TAG_ISAPNP);
     if (!Card)
       return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlZeroMemory(Card, sizeof(ISAPNP_CARD));
 
-		Card->CardId = csn;
+		Card->CardId = (USHORT) csn;
 		Card->VendorId = (header[1] << 8) | header[0];
 		Card->DeviceId = (header[3] << 8) | header[2];
 		Card->Serial = (header[7] << 24) | (header[6] << 16) | (header[5] << 8) | header[4];
@@ -1439,7 +1440,7 @@ ISAPNPQueryBusRelations(
 
   Size = sizeof(DEVICE_RELATIONS) + sizeof(Relations->Objects) *
     (DeviceExtension->DeviceListCount - 1);
-  Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
+  Relations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(PagedPool, Size, TAG_ISAPNP);
   if (!Relations)
     return STATUS_INSUFFICIENT_RESOURCES;
 

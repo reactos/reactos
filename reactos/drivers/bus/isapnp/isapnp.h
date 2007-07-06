@@ -1,9 +1,19 @@
 #ifndef __ISAPNP_H
 #define __ISAPNP_H
 
+#include <ntddk.h>
+
+#ifdef _MSC_VER
+  #define STDCALL
+  #define DDKAPI
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#define TAG_ISAPNP TAG('I', 'P', 'N', 'P')
 
 #define IO_RESOURCE_REQUIRED  0x00  //ROS Extension
  
