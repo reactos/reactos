@@ -15,6 +15,18 @@
 #endif
 #include <debug.h>
 
+static DRIVER_DISPATCH PciDispatchDeviceControl;
+static NTSTATUS STDCALL PciDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+
+static DRIVER_ADD_DEVICE PciAddDevice; 
+static NTSTATUS STDCALL PciAddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT PhysicalDeviceObject);
+
+static DRIVER_DISPATCH PciPowerControl;
+static NTSTATUS STDCALL PciPowerControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+
+static DRIVER_DISPATCH PciPnpControl;
+static NTSTATUS STDCALL PciPnpControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+
 
 #ifdef  ALLOC_PRAGMA
 
