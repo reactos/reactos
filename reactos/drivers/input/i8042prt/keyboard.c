@@ -39,7 +39,7 @@ static LOCAL_KEYBOARD_INDICATOR_TRANSLATION IndicatorTranslation = { 3, {
 	{0x45, KEYBOARD_NUM_LOCK_ON},
 	{0x46, KEYBOARD_SCROLL_LOCK_ON}}};
 
-IO_WORKITEM_ROUTINE  I8042DebugWorkItem;
+static IO_WORKITEM_ROUTINE  I8042DebugWorkItem;
 static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
                                        PVOID Context);
 
