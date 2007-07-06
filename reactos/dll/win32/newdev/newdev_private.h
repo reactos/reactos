@@ -27,7 +27,7 @@ typedef struct _DEVINSTDATA
 	HWND hDialog;
 	HDEVINFO hDevInfo;
 	SP_DEVINFO_DATA devInfoData;
-	SP_DRVINFO_DATA drvInfoData;
+	SP_DRVINFO_DATA_W drvInfoData;
 
 	LPWSTR CustomSearchPath; /* MULTI_SZ string */
 } DEVINSTDATA, *PDEVINSTDATA;

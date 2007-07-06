@@ -205,7 +205,7 @@ FindDriverProc(
 			NULL))
 		{
 			config_flags |= CONFIGFLAG_FAILEDINSTALL;
-			SetupDiSetDeviceRegistryProperty(
+			SetupDiSetDeviceRegistryPropertyW(
 				DevInstData->hDevInfo,
 				&DevInstData->devInfoData,
 				SPDRP_CONFIGFLAGS,

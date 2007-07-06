@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define YDEBUG
+//#define YDEBUG
 #include "newdev_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(newdev);
@@ -54,8 +54,8 @@ UpdateDriverForPlugAndPlayDevicesW(
 
 	DevInstData.hDevInfo = INVALID_HANDLE_VALUE;
 
-	TRACE("UpdateDriverForPlugAndPlayDevicesW(%p %S %S 0x%lx %p)\n",
-		hwndParent, HardwareId, FullInfPath, InstallFlags, bRebootRequired);
+	TRACE("UpdateDriverForPlugAndPlayDevicesW(%p %s %s 0x%x %p)\n",
+		hwndParent, debugstr_w(HardwareId), debugstr_w(FullInfPath), InstallFlags, bRebootRequired);
 
 	/* FIXME: InstallFlags bRebootRequired ignored! */
 
@@ -78,7 +78,7 @@ UpdateDriverForPlugAndPlayDevicesW(
 		{
 			if (GetLastError() != ERROR_NO_MORE_ITEMS)
 			{
-				TRACE("SetupDiEnumDeviceInfo() failed with error 0x%lx\n", GetLastError());
+				TRACE("SetupDiEnumDeviceInfo() failed with error 0x%x\n", GetLastError());
 				goto cleanup;
 			}
 			/* This error was expected */
@@ -105,7 +105,7 @@ UpdateDriverForPlugAndPlayDevicesW(
 			}
 			else if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
 			{
-				TRACE("SetupDiGetDeviceRegistryPropertyW() failed with error 0x%lx\n", GetLastError());
+				TRACE("SetupDiGetDeviceRegistryPropertyW() failed with error 0x%x\n", GetLastError());
 				goto cleanup;
 			}
 			/* This error was expected */
@@ -147,7 +147,7 @@ UpdateDriverForPlugAndPlayDevicesW(
 		}
 		else if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
 		{
-			TRACE("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", GetLastError());
+			TRACE("SetupDiGetDeviceInstanceIdW() failed with error 0x%x\n", GetLastError());
 			goto cleanup;
 		}
 		else if ((Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize)) == NULL)
@@ -158,15 +158,15 @@ UpdateDriverForPlugAndPlayDevicesW(
 		}
 		else if (!SetupDiGetDeviceInstanceIdW(DevInstData.hDevInfo, &DevInstData.devInfoData, Buffer, BufferSize, NULL))
 		{
-			TRACE("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", GetLastError());
+			TRACE("SetupDiGetDeviceInstanceIdW() failed with error 0x%x\n", GetLastError());
 			goto cleanup;
 		}
-		TRACE("Trying to update the driver of %S\n", Buffer);
+		TRACE("Trying to update the driver of %s\n", debugstr_w(Buffer));
 
 		/* Search driver in the specified .inf file */
 		if (!SearchDriver(&DevInstData, NULL, FullInfPath))
 		{
-			TRACE("SearchDriver() failed with error 0x%lx\n", GetLastError());
+			TRACE("SearchDriver() failed with error 0x%x\n", GetLastError());
 			continue;
 		}
 
@@ -174,7 +174,7 @@ UpdateDriverForPlugAndPlayDevicesW(
 		//if (!InstallCurrentDriver(&DevInstData))
 		if (!InstallCurrentDriver(&DevInstData) && GetLastError() != ERROR_PRIVILEGE_NOT_HELD)
 		{
-			TRACE("InstallCurrentDriver() failed with error 0x%lx\n", GetLastError());
+			TRACE("InstallCurrentDriver() failed with error 0x%x\n", GetLastError());
 			continue;
 		}
 
@@ -188,7 +188,7 @@ UpdateDriverForPlugAndPlayDevicesW(
 	}
 	else
 	{
-		TRACE("No device found with HardwareID %S\n", HardwareId);
+		TRACE("No device found with HardwareID %s\n", debugstr_w(HardwareId));
 		SetLastError(ERROR_NO_SUCH_DEVINST);
 	}
 
@@ -259,7 +259,7 @@ SearchDriver(
 	DevInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
 	if (!SetupDiGetDeviceInstallParamsW(DevInstData->hDevInfo, &DevInstData->devInfoData, &DevInstallParams))
 	{
-		TRACE("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiGetDeviceInstallParams() failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 	DevInstallParams.FlagsEx |= DI_FLAGSEX_ALLOWEXCLUDEDDRVS;
@@ -286,7 +286,7 @@ SearchDriver(
 		&DevInstallParams);
 	if (!ret)
 	{
-		TRACE("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiSetDeviceInstallParams() failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -296,7 +296,7 @@ SearchDriver(
 		SPDIT_COMPATDRIVER);
 	if (!ret)
 	{
-		TRACE("SetupDiBuildDriverInfoList() failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiBuildDriverInfoList() failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -311,7 +311,7 @@ SearchDriver(
 	{
 		if (GetLastError() == ERROR_NO_MORE_ITEMS)
 			return FALSE;
-		TRACE("SetupDiEnumDriverInfo() failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiEnumDriverInfo() failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -425,7 +425,7 @@ ScanFoldersForDriver(
 		LPCWSTR Path;
 		for (Path = DevInstData->CustomSearchPath; *Path != '\0'; Path += wcslen(Path) + 1)
 		{
-			TRACE("Search driver in %S\n", Path);
+			TRACE("Search driver in %s\n", debugstr_w(Path));
 			if (wcslen(Path) == 2 && Path[1] == ':')
 			{
 				if (SearchDriverRecursive(DevInstData, Path))
@@ -522,7 +522,9 @@ InstallCurrentDriver(
 {
 	BOOL ret;
 
-	TRACE("Installing driver %s: %s\n", DevInstData->drvInfoData.MfgName, DevInstData->drvInfoData.Description);
+	TRACE("Installing driver %s: %s\n",
+		debugstr_w(DevInstData->drvInfoData.MfgName),
+		debugstr_w(DevInstData->drvInfoData.Description));
 
 	ret = SetupDiCallClassInstaller(
 		DIF_SELECTBESTCOMPATDRV,
@@ -530,7 +532,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_SELECTBESTCOMPATDRV) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_SELECTBESTCOMPATDRV) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -540,7 +542,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_ALLOW_INSTALL) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_ALLOW_INSTALL) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -550,7 +552,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_PREANALYZE) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_PREANALYZE) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -560,7 +562,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_POSTANALYZE) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_POSTANALYZE) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -570,7 +572,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_INSTALLDEVICEFILES) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_INSTALLDEVICEFILES) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -580,7 +582,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_REGISTER_COINSTALLERS) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_REGISTER_COINSTALLERS) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -590,7 +592,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_INSTALLINTERFACES) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_INSTALLINTERFACES) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -600,7 +602,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_INSTALLDEVICE) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_INSTALLDEVICE) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -610,7 +612,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_FINISHINSTALL) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_NEWDEVICEWIZARD_FINISHINSTALL) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -620,7 +622,7 @@ InstallCurrentDriver(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiCallClassInstaller(DIF_DESTROYPRIVATEDATA) failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCallClassInstaller(DIF_DESTROYPRIVATEDATA) failed with error 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -664,7 +666,7 @@ DevInstallW(
 	DevInstData->hDevInfo = SetupDiCreateDeviceInfoListExW(NULL, NULL, NULL, NULL);
 	if (DevInstData->hDevInfo == INVALID_HANDLE_VALUE)
 	{
-		TRACE("SetupDiCreateDeviceInfoListExW() failed with error 0x%lx\n", GetLastError());
+		TRACE("SetupDiCreateDeviceInfoListExW() failed with error 0x%x\n", GetLastError());
 		goto cleanup;
 	}
 
@@ -677,7 +679,8 @@ DevInstallW(
 		&DevInstData->devInfoData);
 	if (!ret)
 	{
-		TRACE("SetupDiOpenDeviceInfoW() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
+		TRACE("SetupDiOpenDeviceInfoW() failed with error 0x%x (InstanceId %s)\n",
+			GetLastError(), debugstr_w(InstanceId));
 		DevInstData->devInfoData.cbSize = 0;
 		goto cleanup;
 	}
@@ -701,7 +704,7 @@ DevInstallW(
 		}
 		else
 		{
-			ret = SetupDiGetDeviceRegistryProperty(
+			ret = SetupDiGetDeviceRegistryPropertyW(
 				DevInstData->hDevInfo,
 				&DevInstData->devInfoData,
 				SPDRP_DEVICEDESC,
@@ -712,11 +715,12 @@ DevInstallW(
 	}
 	if (!ret)
 	{
-		TRACE("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx (InstanceId %S)\n", GetLastError(), InstanceId);
+		TRACE("SetupDiGetDeviceRegistryProperty() failed with error 0x%x (InstanceId %s)\n",
+			GetLastError(), debugstr_w(InstanceId));
 		goto cleanup;
 	}
 
-	if (SetupDiGetDeviceRegistryProperty(
+	if (SetupDiGetDeviceRegistryPropertyW(
 		DevInstData->hDevInfo,
 		&DevInstData->devInfoData,
 		SPDRP_CONFIGFLAGS,
@@ -733,7 +737,7 @@ DevInstallW(
 		}
 	}
 
-	TRACE("Installing %s (%S)\n", DevInstData->buffer, InstanceId);
+	TRACE("Installing %s (%s)\n", debugstr_w((PCWSTR)DevInstData->buffer), debugstr_w(InstanceId));
 
 	/* Search driver in default location and removable devices */
 	if (!PrepareFoldersToScan(DevInstData, FALSE, FALSE, NULL))
