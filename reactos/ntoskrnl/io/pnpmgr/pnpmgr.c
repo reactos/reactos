@@ -37,16 +37,10 @@ PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
 
 typedef struct _INVALIDATE_DEVICE_RELATION_DATA
 {
+    PDEVICE_OBJECT DeviceObject;
     DEVICE_RELATION_TYPE Type;
     PIO_WORKITEM WorkItem;
-    PKEVENT Event;
-    NTSTATUS Status;
 } INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
-
-static VOID NTAPI
-IopInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID InvalidateContext);
 
 VOID
 NTAPI
@@ -253,6 +247,22 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                             &Stack);
 }
 
+static VOID NTAPI
+IopAsynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID InvalidateContext)
+{
+    PINVALIDATE_DEVICE_RELATION_DATA Data = InvalidateContext;
+
+    IoSynchronousInvalidateDeviceRelations(
+        Data->DeviceObject,
+        Data->Type);
+
+    ObDereferenceObject(Data->WorkItem);
+    IoFreeWorkItem(Data->WorkItem);
+    ExFreePool(Data);
+}
+
 /*
  * @implemented
  */
@@ -275,53 +285,16 @@ IoInvalidateDeviceRelations(
         return;
     }
 
+    ObReferenceObject(DeviceObject);
+    Data->DeviceObject = DeviceObject;
     Data->Type = Type;
     Data->WorkItem = WorkItem;
-    Data->Event = NULL;
 
     IoQueueWorkItem(
         WorkItem,
-        IopInvalidateDeviceRelations,
+        IopAsynchronousInvalidateDeviceRelations,
         DelayedWorkQueue,
         Data);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-IoSynchronousInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN DEVICE_RELATION_TYPE Type)
-{
-    PIO_WORKITEM WorkItem;
-    PINVALIDATE_DEVICE_RELATION_DATA Data;
-    KEVENT Event;
-
-    Data = ExAllocatePool(PagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
-    if (!Data)
-        return;
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!WorkItem)
-    {
-        ExFreePool(Data);
-        return;
-    }
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Data->Type = Type;
-    Data->WorkItem = WorkItem;
-    Data->Event = &Event;
-
-    IoQueueWorkItem(
-        WorkItem,
-        IopInvalidateDeviceRelations,
-        DelayedWorkQueue,
-        Data);
-
-    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-    ExFreePool(Data);
 }
 
 /*
@@ -2186,6 +2159,158 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
 }
 
 /*
+ * @implemented
+ */
+VOID
+NTAPI
+IoSynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type)
+{
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+    DEVICETREE_TRAVERSE_CONTEXT Context;
+    PDEVICE_RELATIONS DeviceRelations;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_NODE ChildDeviceNode;
+    IO_STACK_LOCATION Stack;
+    BOOLEAN BootDrivers;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
+    HANDLE Handle;
+    NTSTATUS Status;
+    ULONG i;
+
+    DPRINT("DeviceObject 0x%p\n", DeviceObject);
+
+    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
+
+    Stack.Parameters.QueryDeviceRelations.Type = Type;
+
+    Status = IopInitiatePnpIrp(
+        DeviceObject,
+        &IoStatusBlock,
+        IRP_MN_QUERY_DEVICE_RELATIONS,
+        &Stack);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
+
+    if (!DeviceRelations || DeviceRelations->Count <= 0)
+    {
+        DPRINT("No PDOs\n");
+        if (DeviceRelations)
+        {
+            ExFreePool(DeviceRelations);
+        }
+        return;
+    }
+
+    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
+
+    /*
+     * Create device nodes for all discovered devices
+     */
+    for (i = 0; i < DeviceRelations->Count; i++)
+    {
+        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
+        {
+            ObDereferenceObject(DeviceRelations->Objects[i]);
+            continue;
+        }
+        Status = IopCreateDeviceNode(
+            DeviceNode,
+            DeviceRelations->Objects[i],
+            NULL,
+            &ChildDeviceNode);
+        DeviceNode->Flags |= DNF_ENUMERATED;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("No resources\n");
+            for (i = 0; i < DeviceRelations->Count; i++)
+                ObDereferenceObject(DeviceRelations->Objects[i]);
+            ExFreePool(DeviceRelations);
+            return;
+        }
+    }
+    ExFreePool(DeviceRelations);
+
+    /*
+     * Retrieve information about all discovered children from the bus driver
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionInterrogateDeviceStack,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    /*
+     * Retrieve configuration from the registry for discovered children
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionConfigureChildServices,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    /*
+     * Get the state of the system boot. If the \\SystemRoot link isn't
+     * created yet, we will assume that it's possible to load only boot
+     * drivers.
+     */
+    InitializeObjectAttributes(
+        &ObjectAttributes,
+        &LinkName,
+        0,
+        NULL,
+        NULL);
+    Status = ZwOpenFile(
+        &Handle,
+        FILE_ALL_ACCESS,
+        &ObjectAttributes,
+        &IoStatusBlock,
+        0,
+        0);
+     if (NT_SUCCESS(Status))
+     {
+         BootDrivers = FALSE;
+         ZwClose(Handle);
+     }
+     else
+         BootDrivers = TRUE;
+
+    /*
+     * Initialize services for discovered children. Only boot drivers will
+     * be loaded from boot driver!
+     */
+    Status = IopInitializePnpServices(DeviceNode, BootDrivers);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    DPRINT("IopInvalidateDeviceRelations() finished\n");
+}
+
+/*
  * IopActionConfigureChildServices
  *
  * Retrieve configuration for all (direct) child nodes of a parent node.
@@ -2525,173 +2650,6 @@ IopInitializePnpServices(IN PDEVICE_NODE DeviceNode,
    }
 
    return IopTraverseDeviceTree(&Context);
-}
-
-/* Invalidate device list enumerated by a device node.
- * The call can be make synchronous by defining the Event field
- * of the INVALIDATE_DEVICE_RELATION_DATA structure
- */
-static VOID NTAPI
-IopInvalidateDeviceRelations(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID InvalidateContext) /* PINVALIDATE_DEVICE_RELATION_DATA */
-{
-    PINVALIDATE_DEVICE_RELATION_DATA Data = InvalidateContext;
-    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
-    PKEVENT Event = Data->Event;
-    DEVICETREE_TRAVERSE_CONTEXT Context;
-    PDEVICE_RELATIONS DeviceRelations;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PDEVICE_NODE ChildDeviceNode;
-    IO_STACK_LOCATION Stack;
-    BOOLEAN BootDrivers;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
-    HANDLE Handle;
-    NTSTATUS Status;
-    ULONG i;
-
-    DPRINT("DeviceObject 0x%p\n", DeviceObject);
-
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
-
-    Stack.Parameters.QueryDeviceRelations.Type = Data->Type;
-
-    Status = IopInitiatePnpIrp(
-        DeviceObject,
-        &IoStatusBlock,
-        IRP_MN_QUERY_DEVICE_RELATIONS,
-        &Stack);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
-        goto cleanup;
-    }
-
-    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
-
-    if (!DeviceRelations || DeviceRelations->Count <= 0)
-    {
-        DPRINT("No PDOs\n");
-        if (DeviceRelations)
-        {
-            ExFreePool(DeviceRelations);
-        }
-        Status = STATUS_SUCCESS;
-        goto cleanup;
-    }
-
-    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
-
-    /*
-     * Create device nodes for all discovered devices
-     */
-    for (i = 0; i < DeviceRelations->Count; i++)
-    {
-        if (IopGetDeviceNode(DeviceRelations->Objects[i]) != NULL)
-        {
-            ObDereferenceObject(DeviceRelations->Objects[i]);
-            continue;
-        }
-        Status = IopCreateDeviceNode(
-            DeviceNode,
-            DeviceRelations->Objects[i],
-            NULL,
-            &ChildDeviceNode);
-        DeviceNode->Flags |= DNF_ENUMERATED;
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("No resources\n");
-            for (i = 0; i < DeviceRelations->Count; i++)
-                ObDereferenceObject(DeviceRelations->Objects[i]);
-            ExFreePool(DeviceRelations);
-            Status = STATUS_NO_MEMORY;
-            goto cleanup;
-        }
-    }
-    ExFreePool(DeviceRelations);
-
-    /*
-     * Retrieve information about all discovered children from the bus driver
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionInterrogateDeviceStack,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        goto cleanup;
-    }
-
-    /*
-     * Retrieve configuration from the registry for discovered children
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionConfigureChildServices,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        goto cleanup;
-    }
-
-    /*
-     * Get the state of the system boot. If the \\SystemRoot link isn't
-     * created yet, we will assume that it's possible to load only boot
-     * drivers.
-     */
-    InitializeObjectAttributes(
-        &ObjectAttributes,
-        &LinkName,
-        0,
-        NULL,
-        NULL);
-    Status = ZwOpenFile(
-        &Handle,
-        FILE_ALL_ACCESS,
-        &ObjectAttributes,
-        &IoStatusBlock,
-        0,
-        0);
-     if (NT_SUCCESS(Status))
-     {
-         BootDrivers = FALSE;
-         ZwClose(Handle);
-     }
-     else
-         BootDrivers = TRUE;
-
-    /*
-     * Initialize services for discovered children. Only boot drivers will
-     * be loaded from boot driver!
-     */
-    Status = IopInitializePnpServices(DeviceNode, BootDrivers);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
-        goto cleanup;
-    }
-
-    DPRINT("IopInvalidateDeviceRelations() finished\n");
-    Status = STATUS_SUCCESS;
-
-cleanup:
-    IoFreeWorkItem(Data->WorkItem);
-    if (Event)
-    {
-        Data->Status = Status;
-        KeSetEvent(Event, 0, FALSE);
-    }
-    else
-        ExFreePool(Data);
 }
 
 static NTSTATUS INIT_FUNCTION
