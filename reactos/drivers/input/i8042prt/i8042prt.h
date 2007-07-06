@@ -304,6 +304,7 @@ BOOLEAN STDCALL I8042PacketIsr(PDEVICE_EXTENSION DevExt,
 
 VOID I8042PacketDpc(PDEVICE_EXTENSION DevExt);
 
+IO_WORKITEM_ROUTINE I8042SendHookWorkItem;
 VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
                                    PVOID Context);
 

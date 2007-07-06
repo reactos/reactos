@@ -29,6 +29,19 @@
 
 UNICODE_STRING I8042RegistryPath;
 
+DRIVER_ADD_DEVICE I8042AddDevice;
+static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
+                                       PDEVICE_OBJECT Pdo);
+
+DRIVER_STARTIO I8042StartIo;
+static VOID STDCALL I8042StartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+DRIVER_DISPATCH I8042CreateDispatch;
+static NTSTATUS STDCALL I8042CreateDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+DRIVER_DISPATCH I8042InternalDeviceControl;
+static NTSTATUS STDCALL I8042InternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
 /* FUNCTIONS *****************************************************************/
 
 /*
