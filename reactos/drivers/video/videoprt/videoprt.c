@@ -21,6 +21,7 @@
  * $Id$
  */
 
+
 #include "videoprt.h"
 #include <wdmguid.h>
 
@@ -714,8 +715,9 @@ VideoPortInitialize(
    }
 
    /* add no PNP bus here, add more bus type if it needed */
-   if ( (HwInitializationData->AdapterInterfaceType == 0) ||
-        (HwInitializationData->AdapterInterfaceType == -1) )
+   
+   if ( (HwInitializationData->AdapterInterfaceType == InterfaceTypeUndefined) ||
+        (HwInitializationData->AdapterInterfaceType == Internal) )
 
    {
        DPRINT1("No PNP Videocard .\n");
