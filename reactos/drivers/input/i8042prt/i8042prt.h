@@ -320,6 +320,7 @@ NTSTATUS STDCALL I8042SynchWritePortKbd(PVOID Context,
                                         UCHAR Value,
                                         BOOLEAN WaitForAck);
 
+KSERVICE_ROUTINE I8042InterruptServiceKbd;
 BOOLEAN STDCALL I8042InterruptServiceKbd(struct _KINTERRUPT *Interrupt,
                                          VOID * Context);
 
@@ -354,6 +355,7 @@ VOID STDCALL I8042DpcRoutineMouseTimeout(PKDPC Dpc,
                                          PVOID SystemArgument1,
                                          PVOID SystemArgument2);
 
+KSERVICE_ROUTINE I8042InterruptServiceMouse;
 BOOLEAN STDCALL I8042InterruptServiceMouse(struct _KINTERRUPT *Interrupt,
                                            VOID *Context);
 

@@ -9,13 +9,12 @@
 
 /* INCLUDES ****************************************************************/
 
+#include "i8042prt.h"
+
 #ifndef NDEBUG
 #define NDEBUG
 #endif
 #include <debug.h>
-
-#include "i8042prt.h"
-
 
 VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, UCHAR Input)
 {

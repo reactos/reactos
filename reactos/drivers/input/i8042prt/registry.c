@@ -11,12 +11,12 @@
 
 /* INCLUDES ****************************************************************/
 
+#include "i8042prt.h"
+
 #ifndef NDEBUG
 #define NDEBUG
 #endif
 #include <debug.h>
-
-#include "i8042prt.h"
 
 /* FUNCTIONS *****************************************************************/
 

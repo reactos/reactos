@@ -12,9 +12,14 @@
 /* INCLUDES ****************************************************************/
 
 #include "i8042prt.h"
-#include "kdfuncs.h"
 
+#ifdef __REACTOS__
+#include "kdfuncs.h"
+#endif
+
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
