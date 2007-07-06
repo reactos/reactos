@@ -9,7 +9,9 @@
 
 #include "pci.h"
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 /*** PRIVATE *****************************************************************/
@@ -134,7 +136,7 @@ PdoQueryBusInformation(
 
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->Fdo->DeviceExtension;
-  BusInformation = ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
+  BusInformation = ExAllocatePoolWithTag(PagedPool, sizeof(PNP_BUS_INFORMATION), TAG_PCI);
   Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
   if (BusInformation != NULL)
   {
@@ -397,8 +399,8 @@ PdoQueryResourceRequirements(
   DPRINT("ListSize %lu (0x%lx)\n", ListSize, ListSize);
 
   /* Allocate the resource requirements list */
-  ResourceList = ExAllocatePool(PagedPool,
-                                ListSize);
+  ResourceList = ExAllocatePoolWithTag(PagedPool,
+                                ListSize, TAG_PCI);
   if (ResourceList == NULL)
   {
     Irp->IoStatus.Information = 0;
@@ -702,8 +704,8 @@ PdoQueryResources(
     + ResCount * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
   /* Allocate the resource list */
-  ResourceList = ExAllocatePool(PagedPool,
-                                ListSize);
+  ResourceList = ExAllocatePoolWithTag(PagedPool,
+                                ListSize, TAG_PCI);
   if (ResourceList == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
 

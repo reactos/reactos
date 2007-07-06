@@ -10,7 +10,9 @@
 #define INITGUID
 #include "pci.h"
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 
@@ -280,7 +282,7 @@ PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
 
   Buffer[Index] = UNICODE_NULL;
   
-  BufferU.Length = BufferU.MaximumLength = Index * sizeof(WCHAR);
+  BufferU.Length = BufferU.MaximumLength = (USHORT) Index * sizeof(WCHAR);
   BufferU.Buffer = Buffer;
 
   return RtlDuplicateUnicodeString(0, &BufferU, HardwareIDs);
@@ -344,7 +346,7 @@ PciCreateCompatibleIDsString(PUNICODE_STRING CompatibleIDs,
 
   Buffer[Index] = UNICODE_NULL;
 
-  BufferU.Length = BufferU.MaximumLength = Index * sizeof(WCHAR);
+  BufferU.Length = BufferU.MaximumLength = (USHORT)Index * sizeof(WCHAR);
   BufferU.Buffer = Buffer;
 
   return RtlDuplicateUnicodeString(0, &BufferU, CompatibleIDs);

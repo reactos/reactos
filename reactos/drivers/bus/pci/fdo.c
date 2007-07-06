@@ -9,7 +9,9 @@
 
 #include "pci.h"
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 /*** PRIVATE *****************************************************************/
@@ -122,7 +124,7 @@ FdoEnumerateDevices(
       Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
       if (!NT_SUCCESS(Status))
       {
-        Device = (PPCI_DEVICE)ExAllocatePool(NonPagedPool, sizeof(PCI_DEVICE));
+        Device = (PPCI_DEVICE)ExAllocatePoolWithTag(NonPagedPool, sizeof(PCI_DEVICE),TAG_PCI);
         if (!Device)
         {
           /* FIXME: Cleanup resources for already discovered devices */
@@ -204,7 +206,7 @@ FdoQueryBusRelations(
 
   Size = sizeof(DEVICE_RELATIONS) + sizeof(Relations->Objects) *
     (DeviceExtension->DeviceListCount - 1);
-  Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
+  Relations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(PagedPool, Size, TAG_PCI);
   if (!Relations)
     return STATUS_INSUFFICIENT_RESOURCES;
 
