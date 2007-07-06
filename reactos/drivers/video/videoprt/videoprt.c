@@ -1397,6 +1397,7 @@ VpNotifyEaData(
    IN PDEVICE_OBJECT DeviceObject,
    IN PVOID Data)
 {
+     DPRINT1("unimplemented VpNotifyEaData\n");
 }
 
 /*
