@@ -504,7 +504,7 @@ GetServiceList(PMAIN_WND_INFO Info)
                                  0, &BytesNeeded,
                                  &NumServices,
                                  &ResumeHandle,
-                                 0) == 0)
+                                 0) == FALSE)
         {
             /* Call function again if required size was returned */
             if (GetLastError() == ERROR_MORE_DATA)
@@ -527,7 +527,7 @@ GetServiceList(PMAIN_WND_INFO Info)
                                          &BytesNeeded,
                                          &NumServices,
                                          &ResumeHandle,
-                                         0) == 0)
+                                         0) == FALSE)
                 {
                     HeapFree(ProcessHeap,
                              0,
