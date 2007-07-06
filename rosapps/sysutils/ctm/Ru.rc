@@ -1,0 +1,32 @@
+// Russian (RU) resources
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_APP_TITLE           "Консольный Диспетчер задач v0.1 от Aleksey Bragin <aleksey@studiocerebral.com>"
+   
+   IDS_COLUMN_NUMBER       "# "
+   IDS_COLUMN_IMAGENAME    "Имя образа                  "
+   IDS_COLUMN_PID          "PID  "
+   IDS_COLUMN_CPU          "ЦП"
+   IDS_COLUMN_MEM          "Использование памяти"
+   IDS_COLUMN_MEM_UNIT		"КБ"
+   IDS_COLUMN_PF           "Ошибок страницы"
+
+   IDS_IDLE_PROCESS        "Бездействие системы"
+   IDS_YES                 "Y"
+   IDS_NO                  "N"
+   
+   IDS_MENU                "Нажмите: q - выход, k - завершить процесс"
+   IDS_MENU_QUIT           "Q"
+   IDS_MENU_KILL_PROCESS   "K"
+   
+   IDS_KILL_PROCESS        "Вы уверены, что нужно завершить процесс? (y/n)"
+   IDS_KILL_PROCESS_ERR1   "Не удалось завершить этот процесс..."
+   IDS_KILL_PROCESS_ERR2   "Не удалось завершить процесс %d (невозможно выполнить OpenProcess)"
+   
+   IDS_CTM_GENERAL_ERR1    "ctm: невозможно использовать консоль."
+   IDS_CTM_GENERAL_ERR2    "ctm: невозможно использовать GetConsoleMode() для ввода в консоли."
+   IDS_CTM_GENERAL_ERR3    "ctm: невозможно использовать GetConsoleMode() для вывода в консоли."
+END

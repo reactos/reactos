@@ -1,0 +1,44 @@
+// Russian language resource file (Dmitry Chapyshev, 2007-07-05)
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+/* Dialogs */
+IDD_OPTIONS DIALOG DISCARDABLE  0, 0, 180, 200
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Параметры"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT	"Нет никаких настроек.", 0, 50, 95, 80, 8
+END
+
+IDD_DOIT DIALOG DISCARDABLE  0, 0, 180, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Выполнение операций"
+FONT 8, "MS Sans Serif"
+BEGIN    
+
+    CTEXT	    "{Состояние}", IDC_TSTATUS, 0, 10, 180, 8
+
+    CONTROL         "", IDC_STATUS1, "msctls_progress32", PBS_SMOOTH, 20, 25, 140, 15
+    
+    CONTROL         "", IDC_STATUS2, "msctls_progress32", PBS_SMOOTH, 20, 45, 140, 15
+
+    PUSHBUTTON      "Прервать", IDC_CANCEL, 65, 70, 50, 14, WS_DISABLED
+END
+
+IDR_POPUP MENU DISCARDABLE 
+BEGIN
+    POPUP "PopUp", MENUBARBREAK	
+    BEGIN
+        MENUITEM "Нет действия",        	    	1, GRAYED 
+        MENUITEM "Установить (рекомендуется)",       2, GRAYED
+        MENUITEM "Установить из исходных кодов",         3, GRAYED
+        MENUITEM "Обновить",                      4, GRAYED
+        MENUITEM "Удалить",                   5, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Параметры",                     8
+        MENUITEM SEPARATOR
+        MENUITEM "Выполнить",                        6
+    END
+END
+
