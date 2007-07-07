@@ -11,7 +11,9 @@
 
 #include <ntddk.h>
 #include <ntddbeep.h>
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 /* TYPES *********************************************************************/
