@@ -37,10 +37,17 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#ifndef NDEBUG
 #define NDEBUG
+#endif NDEBUG
 #include <debug.h>
 
 #include "scsiport_int.h"
+
+#ifdef _MSC_VER
+  #define STDCALL
+  #define DDKAPI
+#endif
 
 ULONG InternalDebugLevel = 0x00;
 
@@ -1411,7 +1418,7 @@ CreatePortConfig:
           + sizeof(ULONG));
 
       /* Store number of buses there */
-      DeviceExtension->BusesConfig->NumberOfBuses = DeviceExtension->BusNum;
+      DeviceExtension->BusesConfig->NumberOfBuses = (UCHAR)DeviceExtension->BusNum;
 
       /* Scan the adapter for devices */
       SpiScanAdapter(DeviceExtension);
@@ -3306,9 +3313,9 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
                 DeviceExtension->LunExtensionList[Hint] = LunExtension;
 
                 /* Fill Path, Target, Lun fields */
-                LunExtension->PathId = LunInfo->PathId = Bus;
-                LunExtension->TargetId = LunInfo->TargetId = Target;
-                LunExtension->Lun = LunInfo->Lun = Lun;
+                LunExtension->PathId = LunInfo->PathId = (UCHAR)Bus;
+                LunExtension->TargetId = LunInfo->TargetId = (UCHAR) Target;
+                LunExtension->Lun = LunInfo->Lun = (UCHAR)Lun;
 
                 /* Set flag to prevent race conditions */
                 LunExtension->Flags |= SCSI_PORT_SCAN_IN_PROGRESS;
@@ -3395,7 +3402,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
             ExFreePool(LunInfo);
 
         /* Sum what we found */
-        BusScanInfo->LogicalUnitsCount += DevicesFound;
+        BusScanInfo->LogicalUnitsCount += (UCHAR) DevicesFound;
         DPRINT("    Found %d devices on bus %d\n", DevicesFound, Bus);
     }
 
@@ -4904,9 +4911,9 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	  for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
 	    {
 	      LunExtension = SpiGetLunExtension(DeviceExtension,
-						BusNumber,
-						Target,
-						Lun);
+						(UCHAR)BusNumber,
+						(UCHAR)Target,
+						(UCHAR)Lun);
 	      if (LunExtension != NULL)
 		{
 		  if (Target != CurrentTarget)
