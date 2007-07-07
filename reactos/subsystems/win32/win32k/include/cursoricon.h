@@ -31,6 +31,13 @@ typedef struct _CURSORCLIP_INFO
   UINT Bottom;
 } CURSORCLIP_INFO, *PCURSORCLIP_INFO;
 
+typedef struct _CURSORACCELERATION_INFO
+{
+    UINT FirstThreshold;
+    UINT SecondThreshold;
+    UINT Acceleration;
+} CURSORACCELERATION_INFO, *PCURSORACCELERATION_INFO;
+
 typedef struct _SYSTEM_CURSORINFO
 {
   BOOL Enabled;
@@ -44,6 +51,14 @@ typedef struct _SYSTEM_CURSORINFO
   UINT DblClickSpeed;
   UINT DblClickWidth;
   UINT DblClickHeight;
+
+  UINT MouseHoverTime;
+  UINT MouseHoverWidth;
+  UINT MouseHoverHeight;
+
+  UINT MouseSpeed; 
+  CURSORACCELERATION_INFO CursorAccelerationInfo; 
+
   DWORD LastBtnDown;
   LONG LastBtnDownX;
   LONG LastBtnDownY;
@@ -71,4 +86,5 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 #endif /* _WIN32K_CURSORICON_H */
 
 /* EOF */
+
 

@@ -521,17 +521,23 @@ NtUserCreateWindowStation(
    CurInfo->WheelScroLines = 3;
    CurInfo->WheelScroChars = 3;
 
-   
-
    /* FIXME: Obtain the following information from the registry */    
    CurInfo->SwapButtons = FALSE;
    CurInfo->DblClickSpeed = 500;
    CurInfo->DblClickWidth = 4;
    CurInfo->DblClickHeight = 4;
 
-   WindowStationObject->SystemCursor = CurInfo;
-    
-    
+   CurInfo->MouseSpeed = 10;
+   CurInfo->CursorAccelerationInfo.FirstThreshold  = 6;
+   CurInfo->CursorAccelerationInfo.SecondThreshold = 10;
+   CurInfo->CursorAccelerationInfo.Acceleration    = 1;
+
+   CurInfo->MouseHoverTime = 80;
+   CurInfo->MouseHoverWidth = 4;
+   CurInfo->MouseHoverHeight = 4;
+
+   WindowStationObject->SystemCursor = CurInfo;  
+
    if (!IntSetupClipboard(WindowStationObject))
    {
        DPRINT1("WindowStation: Error Setting up the clipboard!!!\n");

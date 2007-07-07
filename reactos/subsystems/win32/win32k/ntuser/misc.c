@@ -900,6 +900,7 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
    }
 }
 
+
 ULONG FASTCALL
 IntSystemParametersInfo(
    UINT uiAction,
@@ -961,6 +962,11 @@ IntSystemParametersInfo(
       case SPI_SETSCREENSAVERRUNNING: 
       case SPI_SETSCREENSAVETIMEOUT:
       case SPI_SETFLATMENU:
+      case SPI_SETMOUSEHOVERTIME:
+      case SPI_SETMOUSEHOVERWIDTH:
+      case SPI_SETMOUSEHOVERHEIGHT:
+      case SPI_SETMOUSE:
+      case SPI_SETMOUSESPEED:
          /* We will change something, so set the flag here */
          bChanged = TRUE;
       case SPI_GETDESKWALLPAPER:
@@ -970,6 +976,11 @@ IntSystemParametersInfo(
       case SPI_GETSCREENSAVETIMEOUT:
       case SPI_GETSCREENSAVEACTIVE:
       case SPI_GETFLATMENU:
+      case SPI_GETMOUSEHOVERTIME:
+      case SPI_GETMOUSEHOVERWIDTH:
+      case SPI_GETMOUSEHOVERHEIGHT:
+      case SPI_GETMOUSE:
+      case SPI_GETMOUSESPEED:
          {
             PSYSTEM_CURSORINFO CurInfo;
 
@@ -1041,6 +1052,60 @@ IntSystemParametersInfo(
                   /* FIXME limit the maximum time to 1000 ms? */
                   CurInfo->DblClickSpeed = uiParam;
                   break;
+               case SPI_GETMOUSEHOVERTIME:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   *((UINT*)pvParam) = CurInfo->MouseHoverTime;
+                   break;
+               case SPI_SETMOUSEHOVERTIME:
+                  CurInfo = IntGetSysCursorInfo(WinStaObject);
+                  CurInfo->MouseHoverTime = uiParam;
+                  if(CurInfo->MouseHoverTime < USER_TIMER_MINIMUM) 
+                  {
+                      CurInfo->MouseHoverTime = USER_TIMER_MINIMUM;
+                  }
+                  /* FIXME limit the maximum time to 1000 ms? */
+                  break; 
+               case SPI_GETMOUSEHOVERWIDTH:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   *(PUINT)pvParam = CurInfo->MouseHoverWidth;
+                   break;
+               case SPI_GETMOUSEHOVERHEIGHT:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   *(PUINT)pvParam = CurInfo->MouseHoverHeight;
+                   break;
+               case SPI_SETMOUSEHOVERWIDTH:
+                  CurInfo = IntGetSysCursorInfo(WinStaObject);
+                  CurInfo->MouseHoverWidth = uiParam;
+                  break; 
+               case SPI_SETMOUSEHOVERHEIGHT:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   CurInfo->MouseHoverHeight = uiParam;
+                   break; 
+               case SPI_SETMOUSE:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   CurInfo->CursorAccelerationInfo = *(PCURSORACCELERATION_INFO)pvParam;
+                   break; 
+               case SPI_GETMOUSE:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   *(PCURSORACCELERATION_INFO)pvParam = CurInfo->CursorAccelerationInfo;
+                   break; 
+               case SPI_SETMOUSESPEED:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   CurInfo->MouseSpeed = uiParam;
+                   /* Limit value to 1...20 range */ 
+                   if(CurInfo->MouseSpeed < 1)
+                   {
+                       CurInfo->MouseSpeed = 1;
+                   }
+                   else if(CurInfo->MouseSpeed > 20)
+                   {
+                       CurInfo->MouseSpeed = 20;
+                   }
+                   break;
+               case SPI_GETMOUSESPEED:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   *(PUINT)pvParam = CurInfo->MouseSpeed;
+                   break; 
                case SPI_SETDESKWALLPAPER:
                   {
                      /* This function expects different parameters than the user mode version!
@@ -1374,7 +1439,7 @@ UserSystemParametersInfo(
    PVOID pvParam,
    UINT fWinIni)
 {
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    switch(uiAction)
    {
@@ -1385,9 +1450,57 @@ UserSystemParametersInfo(
       case SPI_SETFONTSMOOTHING:
       case SPI_SETFOCUSBORDERHEIGHT:
       case SPI_SETFOCUSBORDERWIDTH:
+      case SPI_SETMOUSEHOVERTIME:
+      case SPI_SETMOUSEHOVERWIDTH:
+      case SPI_SETMOUSEHOVERHEIGHT:
+      case SPI_SETMOUSESPEED:
          {
             return (DWORD)IntSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
          }
+      case SPI_SETMOUSE:
+          {
+              CURSORACCELERATION_INFO CursorAccelerationInfo;
+              _SEH_TRY
+              {
+                  ProbeForRead(pvParam, sizeof( CURSORACCELERATION_INFO ), 1);
+                  RtlCopyMemory(&CursorAccelerationInfo,pvParam,sizeof(CURSORACCELERATION_INFO));
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return IntSystemParametersInfo(uiAction, uiParam, &CursorAccelerationInfo, fWinIni);
+          }
+      case SPI_GETMOUSE:
+          {
+              CURSORACCELERATION_INFO CursorAccelerationInfo;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &CursorAccelerationInfo, fWinIni))
+              {
+                  return( FALSE);
+              }
+              _SEH_TRY
+              {
+                  ProbeForWrite(pvParam,  sizeof( CURSORACCELERATION_INFO ), 1);
+                  RtlCopyMemory(pvParam,&CursorAccelerationInfo,sizeof(CURSORACCELERATION_INFO));
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return( TRUE);
+          }
       case SPI_SETWORKAREA:
          {
             RECT rc;
@@ -1430,22 +1543,33 @@ UserSystemParametersInfo(
 	  case SPI_GETSCREENSAVEACTIVE:
 	  case SPI_GETFLATMENU:
       case SPI_SETFLATMENU:
-         {
-            BOOL Ret;
-
-            if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
-            {
-               return( FALSE);
-            }
-
-            Status = MmCopyToCaller(pvParam, &Ret, sizeof(BOOL));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( TRUE);
-         }
+      case SPI_GETMOUSEHOVERHEIGHT:
+      case SPI_GETMOUSEHOVERWIDTH:
+      case SPI_GETMOUSEHOVERTIME:
+      case SPI_GETMOUSESPEED:
+          {
+              UINT Ret;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
+              {
+                  return( FALSE);
+              }
+              _SEH_TRY
+              {
+                  ProbeForWrite(pvParam, sizeof(UINT ), 1);
+                  *(PUINT)pvParam = Ret;
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return( TRUE);
+          }
       case SPI_SETDESKWALLPAPER:
          {
             /* !!! As opposed to the user mode version this version accepts a handle
