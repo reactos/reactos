@@ -68,6 +68,7 @@ static NTSTATUS STDCALL
 ScsiPortCreateClose(IN PDEVICE_OBJECT DeviceObject,
 		    IN PIRP Irp);
 
+static DRIVER_DISPATCH ScsiPortDispatchScsi;
 static NTSTATUS STDCALL
 ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 		     IN PIRP Irp);
@@ -76,6 +77,7 @@ static NTSTATUS STDCALL
 ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 		      IN PIRP Irp);
 
+static DRIVER_STARTIO ScsiPortStartIo;
 static VOID STDCALL
 ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 		IN PIRP Irp);
@@ -111,6 +113,7 @@ SpiGetSrbData(IN PVOID DeviceExtension,
               IN UCHAR Lun,
               IN UCHAR QueueTag);
 
+static KSERVICE_ROUTINE ScsiPortIsr;
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,
 	    IN PVOID ServiceContext);
@@ -136,6 +139,7 @@ static VOID
 SpiSendRequestSense(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     IN PSCSI_REQUEST_BLOCK Srb);
 
+static IO_COMPLETION_ROUTINE SpiCompletionRoutine;
 NTSTATUS STDCALL
 SpiCompletionRoutine(PDEVICE_OBJECT DeviceObject,
                      PIRP Irp,
@@ -2063,6 +2067,7 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
 
     DPRINT ("SpiGetPciConfiguration() called\n");
 
+	RtlZeroMemory(&ResourceList, sizeof(PCM_RESOURCE_LIST));
     SlotNumber.u.AsULONG = 0;
 
     /* Loop through all devices */
@@ -3022,7 +3027,10 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
 
     SenseBuffer = ExAllocatePoolWithTag (NonPagedPool, SENSE_BUFFER_SIZE, TAG_SCSIPORT);
     if (SenseBuffer == NULL)
+    {
+        ExFreePool(InquiryBuffer);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     while (KeepTrying)
     {
@@ -4304,6 +4312,8 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 
     /* We need to acquire spinlock */
     KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
+
+	RtlZeroMemory(&InterruptData, sizeof(SCSI_PORT_INTERRUPT_DATA));
 
 TryAgain:
 
