@@ -39,7 +39,7 @@
 
 #ifndef NDEBUG
 #define NDEBUG
-#endif NDEBUG
+#endif
 #include <debug.h>
 
 #include "scsiport_int.h"
@@ -416,8 +416,8 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
                                  NumberOfBytes,
                                  FALSE);
 
-    DeviceBase = ExAllocatePool(NonPagedPool,
-                                sizeof(MAPPED_ADDRESS));
+    DeviceBase = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(MAPPED_ADDRESS), TAG_SCSIPORT);
 
     if (DeviceBase == NULL)
         return MappedAddress;
@@ -849,8 +849,8 @@ ScsiPortInitialize(IN PVOID Argument1,
     if (HwInitializationData->NumberOfAccessRanges)
     {
         ConfigInfo.AccessRanges =
-            ExAllocatePool(PagedPool,
-            HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE));
+            ExAllocatePoolWithTag(PagedPool,
+            HwInitializationData->NumberOfAccessRanges * sizeof(ACCESS_RANGE), TAG_SCSIPORT);
 
         /* Fail if failed */
         if (ConfigInfo.AccessRanges == NULL)
@@ -964,7 +964,7 @@ CreatePortConfig:
         PortConfigSize = (sizeof(PORT_CONFIGURATION_INFORMATION) +
                           HwInitializationData->NumberOfAccessRanges *
                           sizeof(ACCESS_RANGE) + 7) & ~7;
-        DeviceExtension->PortConfig = ExAllocatePool(NonPagedPool, PortConfigSize);
+        DeviceExtension->PortConfig = ExAllocatePoolWithTag(NonPagedPool, PortConfigSize, TAG_SCSIPORT);
 
         /* Fail if failed */
         if (DeviceExtension->PortConfig == NULL)
@@ -1218,7 +1218,7 @@ CreatePortConfig:
               Count = DeviceExtension->RequestsNumber * 2;
 
           /* Allocate the data */
-          SrbData = ExAllocatePool(NonPagedPool, Count * sizeof(SCSI_REQUEST_BLOCK_INFO));
+          SrbData = ExAllocatePoolWithTag(NonPagedPool, Count * sizeof(SCSI_REQUEST_BLOCK_INFO), TAG_SCSIPORT);
           if (SrbData == NULL)
               return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1401,9 +1401,9 @@ CreatePortConfig:
       IoStartTimer(PortDeviceObject);
 
       /* Initialize bus scanning information */
-      DeviceExtension->BusesConfig = ExAllocatePool(PagedPool,
+      DeviceExtension->BusesConfig = ExAllocatePoolWithTag(PagedPool,
           sizeof(PSCSI_BUS_SCAN_INFO) * DeviceExtension->PortConfig->NumberOfBuses
-          + sizeof(ULONG));
+          + sizeof(ULONG), TAG_SCSIPORT);
 
       if (!DeviceExtension->BusesConfig)
       {
@@ -1928,7 +1928,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     FullSize = sizeof(CM_RESOURCE_LIST) + (ListLength - 1) *
         sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
-    ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, FullSize);
+    ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, FullSize, TAG_SCSIPORT);
 
     if (!ResourceList)
         return NULL;
@@ -2933,7 +2933,7 @@ SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     LunExtensionSize += sizeof(SCSI_PORT_LUN_EXTENSION);
     DPRINT("LunExtensionSize %lu\n", LunExtensionSize);
 
-    LunExtension = ExAllocatePool(NonPagedPool, LunExtensionSize);
+    LunExtension = ExAllocatePoolWithTag(NonPagedPool, LunExtensionSize, TAG_SCSIPORT);
     if (LunExtension == NULL)
     {
         DPRINT1("Out of resources!\n");
@@ -3016,11 +3016,11 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
 
     DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    InquiryBuffer = ExAllocatePool (NonPagedPool, INQUIRYDATABUFFERSIZE);
+    InquiryBuffer = ExAllocatePoolWithTag (NonPagedPool, INQUIRYDATABUFFERSIZE, TAG_SCSIPORT);
     if (InquiryBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    SenseBuffer = ExAllocatePool (NonPagedPool, SENSE_BUFFER_SIZE);
+    SenseBuffer = ExAllocatePoolWithTag (NonPagedPool, SENSE_BUFFER_SIZE, TAG_SCSIPORT);
     if (SenseBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -3236,7 +3236,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
         else
         {
             /* We need to allocate this buffer */
-            BusScanInfo = ExAllocatePool(NonPagedPool, sizeof(SCSI_BUS_SCAN_INFO));
+            BusScanInfo = ExAllocatePoolWithTag(NonPagedPool, sizeof(SCSI_BUS_SCAN_INFO), TAG_SCSIPORT);
 
             if (!BusScanInfo)
             {
@@ -3258,7 +3258,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
         }
 
         /* Create LUN information structure */
-        LunInfo = ExAllocatePool(PagedPool, sizeof(SCSI_LUN_INFO));
+        LunInfo = ExAllocatePoolWithTag(PagedPool, sizeof(SCSI_LUN_INFO), TAG_SCSIPORT);
 
         if (LunInfo == NULL)
         {
@@ -3364,7 +3364,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
                     LunInfo->DeviceObject = DeviceExtension->DeviceObject;
 
                     /* Allocate another buffer */
-                    LunInfo = ExAllocatePool(PagedPool, sizeof(SCSI_LUN_INFO));
+                    LunInfo = ExAllocatePoolWithTag(PagedPool, sizeof(SCSI_LUN_INFO), TAG_SCSIPORT);
 
                     if (!LunInfo)
                     {
@@ -3571,7 +3571,7 @@ SpiSendRequestSense(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     DPRINT("SpiSendRequestSense() entered, InitialSrb %p\n", InitialSrb);
 
     /* Allocate Srb */
-    Srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK) + sizeof(PVOID));
+    Srb = ExAllocatePoolWithTag(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK) + sizeof(PVOID), TAG_SCSIPORT);
     RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
 
     /* Allocate IRP */
@@ -5480,8 +5480,8 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                 ExFreePool(InternalConfigInfo->Parameter);
 
             /* Allocate it */
-            InternalConfigInfo->Parameter = ExAllocatePool(NonPagedPool,
-                                                           KeyValueInformation->DataLength);
+            InternalConfigInfo->Parameter = ExAllocatePoolWithTag(NonPagedPool,
+                                                           KeyValueInformation->DataLength, TAG_SCSIPORT);
 
             if (InternalConfigInfo->Parameter != NULL)
             {
