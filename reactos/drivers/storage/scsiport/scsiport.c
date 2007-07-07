@@ -849,6 +849,9 @@ ScsiPortInitialize(IN PVOID Argument1,
     /* Zero the internal configuration info structure */
     RtlZeroMemory(&ConfigInfo, sizeof(CONFIGURATION_INFO));
 
+    /* Zero starting slot number */
+    SlotNumber.u.AsULONG = 0;
+
     /* Allocate space for access ranges */
     if (HwInitializationData->NumberOfAccessRanges)
     {
@@ -1025,7 +1028,7 @@ CreatePortConfig:
                                    HwInitializationData,
                                    PortConfig,
                                    RegistryPath,
-                                   BusNumber,
+                                   ConfigInfo.BusNumber,
                                    &SlotNumber))
           {
               /* Continue to the next bus, nothing here */
@@ -2087,10 +2090,12 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
                                      &PciConfig,
                                      sizeof(ULONG));
 
-            /* There is nothing there */
-            if (DataSize < sizeof(ULONG))
+            /* If result of HalGetBusData is 0, then the bus is wrong */
+            if (DataSize == 0)
                 return FALSE;
 
+            /* If result is PCI_INVALID_VENDORID, then this device has no more
+               "Functions" */
             if (PciConfig.VendorID == PCI_INVALID_VENDORID)
                 break;
 
