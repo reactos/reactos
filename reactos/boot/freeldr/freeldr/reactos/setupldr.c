@@ -452,8 +452,8 @@ for(;;);
     return;
 
   /* Load buslogic.sys (depends on hardware detection) */
-  if (!LoadDriver(SourcePath, "buslogic.sys"))
-    return;
+  //if (!LoadDriver(SourcePath, "buslogic.sys"))
+    //return;
 
   /* Load class2.sys */
   if (!LoadDriver(SourcePath, "class2.sys"))
