@@ -498,8 +498,9 @@ NtUserCreateWindowStation(
    /*
     * Initialize the new window station object
     */
+
    WindowStationObject->ScreenSaverRunning = FALSE;
-   WindowStationObject->ScreenSaverTimeOut = 10 * 60;
+   
    WindowStationObject->FlatMenu = FALSE;
 
    if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
@@ -516,12 +517,12 @@ NtUserCreateWindowStation(
    CurInfo->CursorClipInfo.IsClipped = FALSE;
    CurInfo->LastBtnDown = 0;
    CurInfo->CurrentCursorObject = NULL;
-   CurInfo->ShowingCursor = 0;
-    
-   CurInfo->WheelScroLines = 3;
-   CurInfo->WheelScroChars = 3;
+   CurInfo->ShowingCursor = 0;   
 
    /* FIXME: Obtain the following information from the registry */    
+
+   CurInfo->WheelScroLines = 3;
+   CurInfo->WheelScroChars = 3;
    CurInfo->SwapButtons = FALSE;
    CurInfo->DblClickSpeed = 500;
    CurInfo->DblClickWidth = 4;
@@ -536,7 +537,10 @@ NtUserCreateWindowStation(
    CurInfo->MouseHoverWidth = 4;
    CurInfo->MouseHoverHeight = 4;
 
+   WindowStationObject->ScreenSaverTimeOut = 10 * 60;
    WindowStationObject->SystemCursor = CurInfo;  
+
+   /* END FIXME loading from register */
 
    if (!IntSetupClipboard(WindowStationObject))
    {
