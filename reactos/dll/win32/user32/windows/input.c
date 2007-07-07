@@ -686,16 +686,8 @@ static void CALLBACK TrackMouseEventProc(HWND hwndUnused, UINT uMsg, UINT_PTR id
     GetCursorPos(&pos);
     hwnd = WindowFromPoint(pos);
 
-    /* FIXME WIN32k   does not support SPI_GETMOUSEHOVERWIDTH and SPI_GETMOUSEHOVERHEIGHT
-     * SystemParametersInfoW(SPI_GETMOUSEHOVERWIDTH, 0, &hoverwidth, 0);
-     * SystemParametersInfoW(SPI_GETMOUSEHOVERHEIGHT, 0, &hoverheight, 0);
-     */
-
-    /* FIXME hack until win32k support SPI_GETMOUSEHOVERWIDTH and SPI_GETMOUSEHOVERHEIGHT 
-     * it take care of some program that does not working
-     */
-    hoverwidth = 4;
-    hoverheight = 4;
+    SystemParametersInfoW(SPI_GETMOUSEHOVERWIDTH, 0, &hoverwidth, 0);
+    SystemParametersInfoW(SPI_GETMOUSEHOVERHEIGHT, 0, &hoverheight, 0);
 
     /* see if this tracking event is looking for TME_LEAVE and that the */
     /* mouse has left the window */
@@ -846,12 +838,7 @@ TrackMouseEvent(
     /* if HOVER_DEFAULT was specified replace this with the systems current value */
     if (hover_time == HOVER_DEFAULT || hover_time == 0)
     {
-        /* FIXME SPI_GETMOUSEHOVERTIME are not implement in win32k 
-         *       SystemParametersInfoW(SPI_GETMOUSEHOVERTIME, 0, &hover_time, 0);
-         */
-
-        /* FIXME Hack until SPI_GETMOUSEHOVERTIME are implement some program need this being set to working */
-        hover_time = 400;
+        SystemParametersInfoW(SPI_GETMOUSEHOVERTIME, 0, &hover_time, 0);
     }
 
     GetCursorPos(&pos);
