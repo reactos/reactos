@@ -42,52 +42,38 @@ typedef struct tagLINE_INFO
 
 static DWORD g_columnToSort = ~0UL;
 static BOOL  g_invertSort = FALSE;
-static LPTSTR g_valueName;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
-static int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
-static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
+static const int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
+static const int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
 LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
 {
     int item;
-	size_t len, maxLen;
-    LPTSTR newStr;
     LVITEM LVItem;
     PLINE_INFO lineinfo;
 
-    if (!g_valueName) g_valueName = HeapAlloc(GetProcessHeap(), 0, 1024);
-    if (!g_valueName) return NULL;
-    *g_valueName = 0;
-    maxLen = HeapSize(GetProcessHeap(), 0, g_valueName);
-    if (maxLen == -1) return NULL;
-
+    /*
+       if a new item is inserted, then no allocation,
+       otherwise the heap block will be lost!
+    */
     item = ListView_GetNextItem(hwndLV, iStartAt, LVNI_SELECTED);
     if (item == -1) return NULL;
-    LVItem.mask = LVIF_PARAM;
+
+    /*
+        Should be always TRUE anyways
+    */
     LVItem.iItem = item;
-    for(;;)
-    {
-      if(ListView_GetItem(hwndLV, &LVItem))
-      {
-        lineinfo = (PLINE_INFO)LVItem.lParam;
-        if(!lineinfo->name)
-        {
-          *g_valueName = 0;
-          return g_valueName;
-        }
-        len = _tcslen(lineinfo->name);
-        if (len < maxLen - 1) break;
-        newStr = HeapReAlloc(GetProcessHeap(), 0, g_valueName, maxLen * 2);
-        if (!newStr) return NULL;
-        g_valueName = newStr;
-        maxLen *= 2;
-      }
-      else
+    LVItem.iSubItem = 0;
+    LVItem.mask = LVIF_PARAM;
+    if (ListView_GetItem(hwndLV, &LVItem) == FALSE)
+        return NULL; 
+
+    lineinfo = (PLINE_INFO)LVItem.lParam;
+    if (lineinfo == NULL)
         return NULL;
-    }
-    memcpy(g_valueName, lineinfo->name, sizeof(TCHAR) * (len + 1));
-    return g_valueName;
+
+    return lineinfo->name;
 }
 
 BOOL IsDefaultValue(HWND hwndLV, int i)
@@ -110,11 +96,11 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
  */
 static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position, BOOL ValExists)
 {
-    LINE_INFO* linfo;
+    PLINE_INFO linfo;
     LVITEM item;
     int index;
 
-    linfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINE_INFO) + dwCount);
+    linfo = (PLINE_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINE_INFO) + dwCount);
     linfo->dwValType = dwValType;
     linfo->val_len = dwCount;
     if(dwCount > 0)
@@ -402,69 +388,63 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             g_pChildWnd->nFocusPanel = 0;
             break;
         case LVN_BEGINLABELEDIT:
+            Info = (NMLVDISPINFO*)lParam;
+            if(Info)
             {
-              PLINE_INFO lineinfo;
-              Info = (NMLVDISPINFO*)lParam;
-              if(Info)
-              {
-                lineinfo = (PLINE_INFO)Info->item.lParam;
+                PLINE_INFO lineinfo = (PLINE_INFO)Info->item.lParam;
                 if(!lineinfo->name || !_tcscmp(lineinfo->name, _T("")))
                 {
-                  *Result = TRUE;
+                    *Result = TRUE;
                 }
                 else
                 {
-                  *Result = FALSE;
+                    *Result = FALSE;
                 }
-              }
-              else
-                *Result = TRUE;
-              return TRUE;
             }
+            else
+                *Result = TRUE;
+            return TRUE;
         case LVN_ENDLABELEDIT:
+            Info = (NMLVDISPINFO*)lParam;
+            if(Info && Info->item.pszText)
             {
-              PLINE_INFO lineinfo;
-              Info = (NMLVDISPINFO*)lParam;
-              if(Info && Info->item.pszText)
-              {
-                lineinfo = (PLINE_INFO)Info->item.lParam;
+                PLINE_INFO lineinfo = (PLINE_INFO)Info->item.lParam;
                 if(!lineinfo->name || !_tcscmp(lineinfo->name, _T("")))
                 {
-                  *Result = FALSE;
+                    *Result = FALSE;
                 }
                 else
                 {
-		  //if((ret = RenameValue(lineinfo->name, Info->item.pszText)) != ERROR_SUCCESS)
-                  {
-		    TCHAR msg[128], caption[128];
+        		    if(_tcslen(Info->item.pszText) == 0)
+		            {
+                        TCHAR msg[128], caption[128];
 
-		    LoadString(hInst, IDS_ERR_RENVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
-		    if(_tcslen(Info->item.pszText) == 0)
-		    {
-		      LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, sizeof(msg)/sizeof(TCHAR));
-		      MessageBox(0, msg, NULL, 0);
-		      *Result = TRUE;
-		    }
-		    else
-			{
-			  HKEY hKeyRoot;
-			  LPCTSTR keyPath;
-			  LONG lResult;
-			  keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-			  lResult = RegRenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
-                          if (lineinfo->name)
-                            LocalFree(lineinfo->name);
-                          lineinfo->name = _tcsdup(Info->item.pszText);
-		      *Result = TRUE;
-		      return (lResult == ERROR_SUCCESS);
-			}
-		  }
+                        LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, sizeof(msg)/sizeof(TCHAR));
+                        LoadString(hInst, IDS_ERR_RENVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
+                        MessageBox(0, msg, caption, 0);
+                        *Result = TRUE;
+		            }
+		            else
+			        {
+                        HKEY hKeyRoot;
+                        LPCTSTR keyPath;
+                        LONG lResult;
+
+                        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+                        lResult = RegRenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
+                        lineinfo->name = realloc(lineinfo->name, (_tcslen(Info->item.pszText)+1)*sizeof(TCHAR));
+                        if (lineinfo->name != NULL)
+                            _tcscpy(lineinfo->name, Info->item.pszText);
+
+                        *Result = TRUE;
+                        return (lResult == ERROR_SUCCESS);
+                    }
                 }
-              }
-              else
-                *Result = TRUE;
-              return TRUE;
             }
+            else
+                *Result = TRUE;
+
+            return TRUE;
     }
     return FALSE;
 }
@@ -493,12 +473,10 @@ fail:
     return NULL;
 }
 
-void DestroyListView(HWND hwndLV) {
+void DestroyListView(HWND hwndLV)
+{
     INT count, i;
 	LVITEM item;
-
-    if (g_valueName)
-        HeapFree(GetProcessHeap(), 0, g_valueName);
 
     count = ListView_GetItemCount(hwndLV);
     for (i = 0; i < count; i++) {
@@ -519,8 +497,6 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     DWORD val_count;
     HKEY hNewKey;
     LONG errCode;
-    INT count, i;
-    LVITEM item;
     BOOL AddedDefault = FALSE;
 
     if (!hwndLV) return FALSE;
@@ -528,14 +504,8 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     (void)ListView_EditLabel(hwndLV, -1);
 
     SendMessage(hwndLV, WM_SETREDRAW, FALSE, 0);
-    count = ListView_GetItemCount(hwndLV);
-    for (i = 0; i < count; i++) {
-        item.mask = LVIF_PARAM;
-        item.iItem = i;
-        (void)ListView_GetItem(hwndLV, &item);
-        free(((LINE_INFO*)item.lParam)->name);
-        HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
-    }
+    DestroyListView(hwndLV);
+
     g_columnToSort = ~0UL;
     (void)ListView_DeleteAllItems(hwndLV);
 
@@ -560,9 +530,12 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
         /*                } */
         /*                dwValSize = max_val_size; */
         while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
+            /* Remove unwanted path from key name */
+            TCHAR *pLastBl = _tcsrchr(ValName, TEXT('\\'));
+            if (pLastBl != NULL) ++pLastBl; else pLastBl = ValName;
             /* Add a terminating 0 character. Usually this is only necessary for strings. */
             ((TCHAR*)ValBuf)[dwValSize/sizeof(TCHAR)] = 0;
-            AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize, -1, TRUE);
+            AddEntryToList(hwndLV, pLastBl, dwValType, ValBuf, dwValSize, -1, TRUE);
             dwValNameLen = max_val_name_len;
             dwValSize = max_val_size;
             dwValType = 0L;

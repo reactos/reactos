@@ -67,13 +67,18 @@ static void draw_splitbar(HWND hWnd, int x)
 static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(2);
-    RECT rt;
-    SetRect(&rt, 0, 0, cx, cy);
+    RECT rt, rs;
 
+    SetRect(&rt, 0, 0, cx, cy);
+    cy = 0;
+    if (hStatusBar != NULL) {
+        GetWindowRect(hStatusBar, &rs);
+        cy = rs.bottom - rs.top + 8;
+    }
     cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
 	DeferWindowPos(hdwp, pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left, 23, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top + 25, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top - 30, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx  , rt.top + 25, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top + 25, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx  , rt.top + 25, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
     EndDeferWindowPos(hdwp);
 }
 
@@ -274,6 +279,17 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			break;
 	}
 	return CallWindowProc(oldwndproc, hwnd, uMsg, wParam, lParam);
+}
+
+/* fix coords to top-left when SHIFT-F10 is pressed */
+void FixPointIfContext(POINTS *pt, HWND hWnd)
+{
+    if (pt->x == -1 && pt->y == -1) {
+        POINT p = { 0, 0 };
+        ClientToScreen(hWnd, &p);
+        pt->x = (WORD)(p.x);
+        pt->y = (WORD)(p.y);
+    }
 }
 
 /*******************************************************************************
@@ -527,6 +543,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         pt = MAKEPOINTS(lParam);
         cnt = ListView_GetSelectedCount(pChildWnd->hListWnd);
         i = ListView_GetNextItem(pChildWnd->hListWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
+        FixPointIfContext(&pt, pChildWnd->hListWnd);
         if(i == -1)
         {
           TrackPopupMenu(GetSubMenu(hPopupMenus, PM_NEW), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
@@ -566,7 +583,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         ScreenToClient(pChildWnd->hTreeWnd, &hti.pt);
         (void)TreeView_HitTest(pChildWnd->hTreeWnd, &hti);
 
-        if ((hti.flags & TVHT_ONITEM) != 0)
+        if ((hti.flags & TVHT_ONITEM) != 0 || (pt.x == -1 && pt.y == -1))
         {
           hContextMenu = GetSubMenu(hPopupMenus, PM_TREECONTEXT);
           (void)TreeView_SelectItem(pChildWnd->hTreeWnd, hti.hItem);
@@ -627,7 +644,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
               s += _tcslen(s) + 1;
 			}
 		  }
-
+          FixPointIfContext(&pt, pChildWnd->hTreeWnd);
           TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, pChildWnd->hWnd, NULL);
         }
       }

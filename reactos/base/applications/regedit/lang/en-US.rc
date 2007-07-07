@@ -135,6 +135,8 @@ BEGIN
             MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -147,6 +149,8 @@ BEGIN
             MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Find",                           ID_EDIT_FIND
         MENUITEM SEPARATOR

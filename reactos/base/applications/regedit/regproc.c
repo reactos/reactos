@@ -696,6 +696,11 @@ void processSetValue(LPSTR line)
         line_idx++;
         val_name = line + line_idx;
         while (TRUE) {
+            /* check if the line is unterminated (otherwise it may loop forever!) */
+            if (line[line_idx] == '\0') {
+                fprintf(stderr,"Warning! unrecognized line:\n%s\n", line);
+                return;
+            } else
             if (line[line_idx] == '\\')   /* skip escaped character */
             {
                 line_idx += 2;
@@ -1391,7 +1396,19 @@ BOOL import_registry_file(LPTSTR filename)
     FILE* reg_file = _tfopen(filename, _T("r"));
 
     if (reg_file) {
-        processRegLines(reg_file, doSetValue);
+        unsigned char ch1 = fgetc(reg_file);
+        unsigned char ch2 = fgetc(reg_file);
+
+        /* detect UTF-16.LE or UTF-16.BE format */
+        if ((ch1 == 0xff && ch2 == 0xfe) ||
+            (ch1 == 0xfe && ch2 == 0xff)) {
+            /* TODO: implement support for UNICODE files! */
+        } else {
+            /* restore read point to the first line */
+            fseek(reg_file, 0L, SEEK_SET);
+            processRegLines(reg_file, doSetValue);
+        }
+        fclose(reg_file);
         return TRUE;
     }
     return FALSE;
@@ -1849,4 +1866,5 @@ BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lp
         _sntprintf(pszDest, iDestLength, TEXT("%s"), pszRootKey);
     return TRUE;
 }
+
 
