@@ -313,6 +313,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_CREATE:
     {
 		WNDPROC oldproc;
+        HFONT hFont;
         TCHAR buffer[MAX_PATH];
         /* load "My Computer" string */
         LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
@@ -329,6 +330,16 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, (HMENU) TREE_WINDOW);
         pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW/*, pChildWnd->szPath*/);
         SetFocus(pChildWnd->hTreeWnd);
+
+        /* set the address bar font */
+        if (pChildWnd->hAddressBarWnd)
+        {
+            hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+            SendMessage(pChildWnd->hAddressBarWnd,
+                        WM_SETFONT,
+                        (WPARAM)hFont,
+                        0);
+        }
 		
 		/* Subclass the AddressBar */
 		oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_WNDPROC);
