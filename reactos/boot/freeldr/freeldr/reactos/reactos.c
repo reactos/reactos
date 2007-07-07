@@ -33,9 +33,92 @@ char                    reactos_arc_strings[32][256];
 unsigned long           reactos_disk_count = 0;
 CHAR szHalName[255];
 CHAR szBootPath[255];
+CHAR SystemRoot[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 BOOLEAN FrLdrBootType;
 extern ULONG_PTR KernelBase, KernelEntry;
+
+BOOLEAN
+FrLdrLoadDriver(PCHAR szFileName,
+                INT nPos)
+{
+    PFILE FilePointer;
+    CHAR value[256], *FinalSlash;
+    LPSTR p;
+
+    if (!_stricmp(szFileName, "hal.dll"))
+    {
+        /* Use the boot.ini name instead */
+        szFileName = szHalName;
+    }
+
+    FinalSlash = strrchr(szFileName, '\\');
+    if(FinalSlash)
+	szFileName = FinalSlash + 1;
+
+    /* Open the Driver */
+    FilePointer = FsOpenFile(szFileName);
+
+    /* Try under the system root in the main dir and drivers */
+    if (FilePointer == NULL)
+    {
+	strcpy(value, SystemRoot);
+	if(value[strlen(value)-1] != '\\')
+	    strcat(value, "\\");
+	strcat(value, szFileName);
+	FilePointer = FsOpenFile(value);
+    }
+
+    if (FilePointer == NULL)
+    {
+	strcpy(value, SystemRoot);
+	if(value[strlen(value)-1] != '\\')
+	    strcat(value, "\\");
+	strcat(value, "SYSTEM32\\");
+	strcat(value, szFileName);
+	FilePointer = FsOpenFile(value);
+    }
+
+    if (FilePointer == NULL)
+    {
+	strcpy(value, SystemRoot);
+	if(value[strlen(value)-1] != '\\')
+	    strcat(value, "\\");
+	strcat(value, "SYSTEM32\\DRIVERS\\");
+	strcat(value, szFileName);
+	FilePointer = FsOpenFile(value);
+    }
+
+    /* Make sure we did */
+    if (FilePointer == NULL) {
+
+        /* Fail if file wasn't opened */
+        strcpy(value, szFileName);
+        strcat(value, " not found.");
+        return(FALSE);
+    }
+
+    /* Update the status bar with the current file */
+    strcpy(value, "Reading ");
+    p = strrchr(szFileName, '\\');
+    if (p == NULL) {
+
+        strcat(value, szFileName);
+
+    } else {
+
+        strcat(value, p + 1);
+
+    }
+    UiDrawStatusText(value);
+
+    /* Load the driver */
+    FrLdrMapImage(FilePointer, szFileName, 0);
+
+    /* Update status and return */
+    UiDrawProgressBarCenter(nPos, 100, szLoadingMsg);
+    return(TRUE);
+}
 
 PVOID
 NTAPI
@@ -47,13 +130,6 @@ FrLdrLoadImage(IN PCHAR szFileName,
     PCHAR szShortName;
     CHAR szBuffer[256], szFullPath[256];
     PVOID LoadBase;
-
-    /* Check if this the HAL being loaded */
-    if (!_stricmp(szFileName, "hal.dll"))
-    {
-        /* Use the boot.ini name instead */
-        szFileName = szHalName;
-    }
 
     /* Extract filename without path */
     szShortName = strrchr(szFileName, '\\');
@@ -618,6 +694,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		strcat(szBootPath, "\\");
 
 	DbgPrint((DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath));
+	strcpy(SystemRoot, szBootPath);
 
 	/*
 	 * Find the kernel image name

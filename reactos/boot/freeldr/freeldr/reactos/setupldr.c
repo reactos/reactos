@@ -30,8 +30,10 @@ unsigned long			reactos_memory_map_descriptor_size;
 memory_map_t			reactos_memory_map[32];		// Memory map
 char szBootPath[256];
 char szHalName[256];
+CHAR SystemRoot[255];
 extern ULONG_PTR KernelBase, KernelEntry;
 
+extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
 
 #define USE_UI
 
@@ -91,65 +93,7 @@ static FrLdrLoadKernel(IN PCHAR szFileName,
 static BOOLEAN
 LoadDriver(PCSTR szSourcePath, PCSTR szFileName)
 {
-  CHAR szFullName[256];
-#ifdef USE_UI
-  CHAR szBuffer[80];
-#endif
-  PFILE FilePointer;
-  PCSTR szShortName;
-
-  if (szSourcePath[0] != '\\')
-    {
-      strcpy(szFullName, "\\");
-      strcat(szFullName, szSourcePath);
-    }
-  else
-    {
-      strcpy(szFullName, szSourcePath);
-    }
-
-  if (szFullName[strlen(szFullName)] != '\\')
-    {
-      strcat(szFullName, "\\");
-    }
-
-  if (szFileName[0] != '\\')
-    {
-      strcat(szFullName, szFileName);
-    }
-  else
-    {
-      strcat(szFullName, szFileName + 1);
-    }
-
-  szShortName = strrchr(szFileName, '\\');
-  if (szShortName == NULL)
-    szShortName = szFileName;
-  else
-    szShortName = szShortName + 1;
-
-
-  FilePointer = FsOpenFile(szFullName);
-  if (FilePointer == NULL)
-    {
-      printf("Could not find %s\n", szFileName);
-      return(FALSE);
-    }
-
-  /*
-   * Update the status bar with the current file
-   */
-#ifdef USE_UI
-  sprintf(szBuffer, "Setup is loading files (%s)", szShortName);
-  UiDrawStatusText(szBuffer);
-#else
-  printf("Reading %s\n", szShortName);
-#endif
-
-  /* Load the driver */
-  FrLdrMapImage(FilePointer, (LPSTR)szFileName, 2);
-
-  return(TRUE);
+    return FrLdrLoadDriver((PCHAR)szFileName, 0);
 }
 
 
@@ -342,6 +286,9 @@ VOID RunLoader(VOID)
   strcat(strcat(strcat(reactos_kernel_cmdline, SourcePath), " "),
          LoadOptions);
 
+  strcpy(SystemRoot, SourcePath);
+  strcat(SystemRoot, "\\");
+  
     /* Setup the boot path and kernel path */
     strcpy(szBootPath, SourcePath);
     strcpy(szKernelName, szBootPath);
