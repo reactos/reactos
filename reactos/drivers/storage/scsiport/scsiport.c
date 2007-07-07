@@ -204,6 +204,10 @@ static NTSTATUS
 SpiHandleAttachRelease(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                        PIRP Irp);
 
+static NTSTATUS
+SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCachedSize);
+
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -599,70 +603,178 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
 			     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 			     IN ULONG NumberOfBytes)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  DEVICE_DESCRIPTION DeviceDescription;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    DEVICE_DESCRIPTION DeviceDescription;
+    ULONG MapRegistersCount;
+    NTSTATUS Status;
 
-  DPRINT("ScsiPortGetUncachedExtension(%p %p %lu)\n",
-	 HwDeviceExtension, ConfigInfo, NumberOfBytes);
+    DPRINT("ScsiPortGetUncachedExtension(%p %p %lu)\n",
+        HwDeviceExtension, ConfigInfo, NumberOfBytes);
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
 
-  /* Check for allocated common DMA buffer */
-  if (DeviceExtension->VirtualAddress != NULL)
+    /* Check for allocated common DMA buffer */
+    if (DeviceExtension->SrbExtensionBuffer != NULL)
     {
-      DPRINT1("The HBA has already got a common DMA buffer!\n");
-      return NULL;
+        DPRINT1("The HBA has already got a common DMA buffer!\n");
+        return NULL;
     }
 
-  /* Check for DMA adapter object */
-  if (DeviceExtension->AdapterObject == NULL)
+    /* Check for DMA adapter object */
+    if (DeviceExtension->AdapterObject == NULL)
     {
-      /* Initialize DMA adapter description */
-      RtlZeroMemory(&DeviceDescription,
-		    sizeof(DEVICE_DESCRIPTION));
-      DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
-      DeviceDescription.Master = ConfigInfo->Master;
-      DeviceDescription.ScatterGather = ConfigInfo->ScatterGather;
-      DeviceDescription.DemandMode = ConfigInfo->DemandMode;
-      DeviceDescription.Dma32BitAddresses = ConfigInfo->Dma32BitAddresses;
-      DeviceDescription.BusNumber = ConfigInfo->SystemIoBusNumber;
-      DeviceDescription.DmaChannel = ConfigInfo->DmaChannel;
-      DeviceDescription.InterfaceType = ConfigInfo->AdapterInterfaceType;
-      DeviceDescription.DmaWidth = ConfigInfo->DmaWidth;
-      DeviceDescription.DmaSpeed = ConfigInfo->DmaSpeed;
-      DeviceDescription.MaximumLength = ConfigInfo->MaximumTransferLength;
-      DeviceDescription.DmaPort = ConfigInfo->DmaPort;
+        /* Initialize DMA adapter description */
+        RtlZeroMemory(&DeviceDescription, sizeof(DEVICE_DESCRIPTION));
 
-      /* Get a DMA adapter object */
-      DeviceExtension->AdapterObject = HalGetAdapter(&DeviceDescription,
-						     &DeviceExtension->MapRegisterCount);
-      if (DeviceExtension->AdapterObject == NULL)
-	{
-	  DPRINT1("HalGetAdapter() failed\n");
-	  return NULL;
-	}
+        DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
+        DeviceDescription.Master = ConfigInfo->Master;
+        DeviceDescription.ScatterGather = ConfigInfo->ScatterGather;
+        DeviceDescription.DemandMode = ConfigInfo->DemandMode;
+        DeviceDescription.Dma32BitAddresses = ConfigInfo->Dma32BitAddresses;
+        DeviceDescription.BusNumber = ConfigInfo->SystemIoBusNumber;
+        DeviceDescription.DmaChannel = ConfigInfo->DmaChannel;
+        DeviceDescription.InterfaceType = ConfigInfo->AdapterInterfaceType;
+        DeviceDescription.DmaWidth = ConfigInfo->DmaWidth;
+        DeviceDescription.DmaSpeed = ConfigInfo->DmaSpeed;
+        DeviceDescription.MaximumLength = ConfigInfo->MaximumTransferLength;
+        DeviceDescription.DmaPort = ConfigInfo->DmaPort;
+
+        /* Get a DMA adapter object */
+        DeviceExtension->AdapterObject =
+            HalGetAdapter(&DeviceDescription, &MapRegistersCount);
+
+        /* Fail in case of error */
+        if (DeviceExtension->AdapterObject == NULL)
+        {
+            DPRINT1("HalGetAdapter() failed\n");
+            return NULL;
+        }
+
+        /* Set number of physical breaks */
+        if (ConfigInfo->NumberOfPhysicalBreaks != 0 &&
+            MapRegistersCount > ConfigInfo->NumberOfPhysicalBreaks)
+        {
+            DeviceExtension->PortCapabilities.MaximumPhysicalPages =
+                ConfigInfo->NumberOfPhysicalBreaks;
+        }
+        else
+        {
+            DeviceExtension->PortCapabilities.MaximumPhysicalPages = MapRegistersCount;
+        }
     }
 
-  /* Allocate a common DMA buffer */
-  DeviceExtension->CommonBufferLength =
-    NumberOfBytes + DeviceExtension->SrbExtensionSize;
-  DeviceExtension->VirtualAddress =
-    HalAllocateCommonBuffer(DeviceExtension->AdapterObject,
-			    DeviceExtension->CommonBufferLength,
-			    &DeviceExtension->PhysicalAddress,
-			    FALSE);
-  if (DeviceExtension->VirtualAddress == NULL)
+    /* Update auto request sense feature */
+    DeviceExtension->SupportsAutoSense = ConfigInfo->AutoRequestSense;
+
+    /* Update Srb extension size */
+    if (DeviceExtension->SrbExtensionSize != ConfigInfo->SrbExtensionSize)
+        DeviceExtension->SrbExtensionSize = ConfigInfo->SrbExtensionSize;
+
+    /* Update Srb extension alloc flag */
+    if (ConfigInfo->AutoRequestSense || DeviceExtension->SrbExtensionSize)
+        DeviceExtension->NeedSrbExtensionAlloc = TRUE;
+
+    /* Allocate a common DMA buffer */
+    Status = SpiAllocateCommonBuffer(DeviceExtension, NumberOfBytes);
+
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("HalAllocateCommonBuffer() failed!\n");
-      DeviceExtension->CommonBufferLength = 0;
-      return NULL;
+        DPRINT1("SpiAllocateCommonBuffer() failed with Status = 0x%08X!\n", Status);
+        return NULL;
     }
 
-  return (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress +
-                 DeviceExtension->SrbExtensionSize);
+    return DeviceExtension->NonCachedExtension;
 }
+
+static NTSTATUS
+SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCachedSize)
+{
+    PVOID *SrbExtension, CommonBuffer;
+    ULONG CommonBufferLength, BufSize;
+
+    /* If size is 0, set it to 16 */
+    if (!DeviceExtension->SrbExtensionSize)
+        DeviceExtension->SrbExtensionSize = 16;
+
+    /* Calculate size */
+    BufSize = DeviceExtension->SrbExtensionSize;
+
+    /* Add autosense data size if needed */
+    if (DeviceExtension->SupportsAutoSense)
+        BufSize += sizeof(SENSE_DATA);
+
+
+    /* Round it */
+    BufSize = (BufSize + sizeof(LONGLONG) - 1) & ~(sizeof(LONGLONG) - 1);
+
+    /* Sum up into the total common buffer length, and round it to page size */
+    CommonBufferLength =
+        ROUND_TO_PAGES(NonCachedSize + BufSize * DeviceExtension->RequestsNumber);
+
+    /* Allocate it */
+    if (!DeviceExtension->AdapterObject)
+    {
+        /* From nonpaged pool if there is no DMA */
+        CommonBuffer = ExAllocatePool(NonPagedPool, CommonBufferLength);
+    }
+    else
+    {
+        /* Perform a full request since we have a DMA adapter*/
+        CommonBuffer = HalAllocateCommonBuffer(DeviceExtension->AdapterObject,
+            CommonBufferLength,
+            &DeviceExtension->PhysicalAddress,
+            FALSE );
+    }
+
+    /* Fail in case of error */
+    if (!CommonBuffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Zero it */
+    RtlZeroMemory(CommonBuffer, CommonBufferLength);
+
+    /* Store its size in Device Extension */
+    DeviceExtension->CommonBufferLength = CommonBufferLength;
+
+    /* SrbExtension buffer is located at the beginning of the buffer */
+    DeviceExtension->SrbExtensionBuffer = CommonBuffer;
+
+    /* Non-cached extension buffer is located at the end of
+       the common buffer */
+    if (NonCachedSize)
+    {
+        CommonBufferLength -=  NonCachedSize;
+        DeviceExtension->NonCachedExtension = (PUCHAR)CommonBuffer + CommonBufferLength;
+    }
+    else
+    {
+        DeviceExtension->NonCachedExtension = NULL;
+    }
+
+    if (DeviceExtension->NeedSrbExtensionAlloc)
+    {
+        /* Look up how many SRB data structures we need */
+        DeviceExtension->SrbDataCount = CommonBufferLength / BufSize;
+
+        /* Initialize the free SRB extensions list */
+        SrbExtension = (PVOID *)CommonBuffer;
+        DeviceExtension->FreeSrbExtensions = SrbExtension;
+
+        /* Fill the remainding pointers (if we have more than 1 SRB) */
+        while (CommonBufferLength >= 2 * BufSize)
+        {
+            *SrbExtension = (PVOID*)((PCHAR)SrbExtension + BufSize);
+            SrbExtension = *SrbExtension;
+
+            CommonBufferLength -= BufSize;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 
 /*
@@ -1204,9 +1316,8 @@ CreatePortConfig:
           DeviceExtension->SupportsAutoSense = PortConfig->AutoRequestSense;
           DeviceExtension->NeedSrbExtensionAlloc = TRUE;
 
-          //Status = STATUS_UNSUCCESFUL;
-          /* TODO: Allocate common buffer */
-          ASSERT(FALSE);
+          /* Allocate common buffer */
+          Status = SpiAllocateCommonBuffer(DeviceExtension, 0);
 
           /* Check for failure */
           if (!NT_SUCCESS(Status))
