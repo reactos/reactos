@@ -854,6 +854,9 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 	STGMEDIUM stgm;
 	LPIDA pIDList;
 	LPCITEMIDLIST parent_pidl;
+	WCHAR parent_path[MAX_PATH];
+	LPCWSTR parent_dir = NULL;
+	SFGAOF attribs;
 	int i;
 
 	if (0 == ShellView_GetSelections(This))
@@ -887,10 +890,16 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 	pIDList = GlobalLock(stgm.u.hGlobal);
 
 	parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pIDList+pIDList->aoffset[0]);
+	hr = IShellFolder_GetAttributesOf(This->pSFParent, 1, &parent_pidl, &attribs);
+	if (SUCCEEDED(hr) && (attribs & SFGAO_FILESYSTEM) &&
+	    SHGetPathFromIDListW(parent_pidl, parent_path))
+	{
+	  parent_dir = parent_path;
+	}
+
 	for (i = pIDList->cidl; i > 0; --i)
 	{
 	  LPCITEMIDLIST pidl;
-	  SFGAOF attribs;
 
 	  pidl = (LPCITEMIDLIST)((LPBYTE)pIDList+pIDList->aoffset[i]);
 
@@ -899,19 +908,19 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 
 	  if (SUCCEEDED(hr) && ! (attribs & SFGAO_FOLDER))
 	  {
-	    SHELLEXECUTEINFOA shexinfo;
+	    SHELLEXECUTEINFOW shexinfo;
 
-	    shexinfo.cbSize = sizeof(SHELLEXECUTEINFOA);
+	    shexinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
 	    shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	/* SEE_MASK_IDLIST is also possible. */
 	    shexinfo.hwnd = NULL;
 	    shexinfo.lpVerb = NULL;
 	    shexinfo.lpFile = NULL;
 	    shexinfo.lpParameters = NULL;
-	    shexinfo.lpDirectory = NULL;
+	    shexinfo.lpDirectory = parent_dir;
 	    shexinfo.nShow = SW_NORMAL;
 	    shexinfo.lpIDList = ILCombine(parent_pidl, pidl);
 
-	    ShellExecuteExA(&shexinfo);    /* Discard error/success info */
+	    ShellExecuteExW(&shexinfo);    /* Discard error/success info */
 
 	    ILFree((LPITEMIDLIST)shexinfo.lpIDList);
 	  }
