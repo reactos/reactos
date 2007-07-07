@@ -472,6 +472,16 @@ cb: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) cb
 
+.PHONY: msbuild
+msbuild: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) msbuild
+
+.PHONY: msbuild_clean
+msbuild_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c msbuild
+
 .PHONY: depmap
 depmap: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
