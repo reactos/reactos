@@ -3087,6 +3087,9 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
     /* Build the actual SG list */
     while (TotalLength < Srb->DataTransferLength)
     {
+        if (!ScatterGatherList)
+            break;
+
         ScatterGatherList->Length = Srb->DataTransferLength - TotalLength;
         ScatterGatherList->PhysicalAddress = IoMapTransfer(DeviceExtension->AdapterObject,
                                                            Irp->MdlAddress,
@@ -3649,7 +3652,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
             /* Scan all logical units */
             for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
             {
-                if (!LunExtension)
+                if ((!LunExtension) || (!LunInfo))
                     break;
 
                 /* Add extension to the list */
@@ -3934,6 +3937,12 @@ SpiSendRequestSense(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                            TRUE,
                            TRUE,
                            TRUE);
+
+    if (!Srb)
+    {
+        DPRINT("SpiSendRequestSense() failed, Srb %p\n", Srb);
+        return;
+    }
 
     IrpStack = IoGetNextIrpStackLocation(Irp);
     IrpStack->MajorFunction = IRP_MJ_SCSI;
