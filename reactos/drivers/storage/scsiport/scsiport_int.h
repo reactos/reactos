@@ -238,7 +238,6 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   SCSI_PORT_INTERRUPT_DATA InterruptData;
 
-  ULONG CommonBufferSize;
   /* SRB extension stuff*/
   ULONG SrbExtensionSize;
   PVOID SrbExtensionBuffer;
@@ -279,7 +278,6 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   BOOLEAN ReceiveEvent;
 
   PHYSICAL_ADDRESS PhysicalAddress;
-  PVOID VirtualAddress;
   ULONG CommonBufferLength;
   ULONG InterruptLevel;
   ULONG IoAddress;

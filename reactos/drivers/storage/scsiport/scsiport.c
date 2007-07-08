@@ -522,7 +522,7 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
         /* Simply look it up in the allocated common buffer */
         Offset = (PUCHAR)VirtualAddress - (PUCHAR)DeviceExtension->SrbExtensionBuffer;
 
-        BufferLength = DeviceExtension->CommonBufferSize - Offset;
+        BufferLength = DeviceExtension->CommonBufferLength - Offset;
         PhysicalAddress.QuadPart = DeviceExtension->PhysicalAddress.QuadPart + Offset;
     }
     else if (DeviceExtension->MapRegisters)
@@ -763,26 +763,27 @@ SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCa
  */
 PVOID STDCALL
 ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
-			  IN SCSI_PHYSICAL_ADDRESS PhysicalAddress)
+                          IN SCSI_PHYSICAL_ADDRESS PhysicalAddress)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  ULONG Offset;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    ULONG Offset;
 
-  DPRINT("ScsiPortGetVirtualAddress(%p %I64x)\n",
-	 HwDeviceExtension, PhysicalAddress.QuadPart);
+    DPRINT("ScsiPortGetVirtualAddress(%p %I64x)\n",
+        HwDeviceExtension, PhysicalAddress.QuadPart);
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
 
-  if (DeviceExtension->PhysicalAddress.QuadPart > PhysicalAddress.QuadPart)
-    return NULL;
+    if (DeviceExtension->PhysicalAddress.QuadPart > PhysicalAddress.QuadPart)
+        return NULL;
 
-  Offset = (ULONG)(PhysicalAddress.QuadPart - DeviceExtension->PhysicalAddress.QuadPart);
-  if (Offset >= DeviceExtension->CommonBufferLength)
-    return NULL;
+    Offset = (ULONG)(PhysicalAddress.QuadPart - DeviceExtension->PhysicalAddress.QuadPart);
 
-  return (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress + Offset);
+    if (Offset >= DeviceExtension->CommonBufferLength)
+        return NULL;
+
+    return (PVOID)((ULONG_PTR)DeviceExtension->SrbExtensionBuffer + Offset);
 }
 
 static VOID
@@ -1633,7 +1634,7 @@ SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
     /* Free common buffer (if it exists) */
     if (DeviceExtension->SrbExtensionBuffer != NULL &&
-        DeviceExtension->CommonBufferSize != 0)
+        DeviceExtension->CommonBufferLength != 0)
     {
             if (!DeviceExtension->AdapterObject)
             {
@@ -1643,7 +1644,7 @@ SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
             {
 #if 0
                 HalFreeCommonBuffer(DeviceExtension->AdapterObject,
-                                    DeviceExtension->CommonBufferSize,
+                                    DeviceExtension->CommonBufferLength,
                                     DeviceExtension->PhysicalCommonBuffer,
                                     DeviceExtension->SrbExtensionBuffer,
                                     FALSE);
