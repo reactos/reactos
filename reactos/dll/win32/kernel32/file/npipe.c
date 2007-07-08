@@ -1091,7 +1091,7 @@ PeekNamedPipe(HANDLE hNamedPipe,
 
     /* Calculate the bytes returned, minus our structure overhead */
     BytesRead = (ULONG)(Iosb.Information -
-                        FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))
+                        FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]));
 
     /* Check if caller requested bytes read */
     if (lpBytesRead)
