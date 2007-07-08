@@ -116,7 +116,7 @@ SpiGetInquiryData (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		   IN PIRP Irp);
 
 static PSCSI_REQUEST_BLOCK_INFO
-SpiGetSrbData(IN PVOID DeviceExtension,
+SpiGetSrbData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
               IN UCHAR PathId,
               IN UCHAR TargetId,
               IN UCHAR Lun,
@@ -2888,6 +2888,7 @@ ScsiPortStartPacket(IN OUT PVOID Context)
     PSCSI_REQUEST_BLOCK Srb;
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
     PSCSI_PORT_LUN_EXTENSION LunExtension;
+    PSCSI_REQUEST_BLOCK_INFO SrbInfo;
     BOOLEAN Result;
     BOOLEAN StartTimer;
 
@@ -2937,8 +2938,6 @@ ScsiPortStartPacket(IN OUT PVOID Context)
         /* Is this an abort request? */
         if (Srb->Function == SRB_FUNCTION_ABORT_COMMAND)
         {
-            PSCSI_REQUEST_BLOCK_INFO SrbInfo;
-
             /* Get pointer to SRB info structure */
             SrbInfo = SpiGetSrbData(DeviceExtension,
                                     Srb->PathId,
@@ -3011,8 +3010,13 @@ ScsiPortStartPacket(IN OUT PVOID Context)
         /* If it's tagged - special thing */
         if (Srb->QueueTag != SP_UNTAGGED)
         {
-            /* TODO: Support tagged requests */
-            ASSERT(FALSE);
+            SrbInfo = &DeviceExtension->SrbInfo[Srb->QueueTag - 1];
+
+            /* Chek for consistency */
+            ASSERT(SrbInfo->Requests.Blink == NULL);
+
+            /* Insert it into the list of requests */
+            InsertTailList(&LunExtension->SrbInfo.Requests, &SrbInfo->Requests);
         }
     }
 
@@ -3875,7 +3879,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 }
 
 static PSCSI_REQUEST_BLOCK_INFO
-SpiGetSrbData(IN PVOID DeviceExtension,
+SpiGetSrbData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
               IN UCHAR PathId,
               IN UCHAR TargetId,
               IN UCHAR Lun,
@@ -3900,9 +3904,11 @@ SpiGetSrbData(IN PVOID DeviceExtension,
     }
     else
     {
-        /* TODO: Implement when we have it */
-        ASSERT(FALSE);
-        return NULL;
+        /* Make sure the tag is valid, if it is - return the data */
+        if (QueueTag > DeviceExtension->SrbDataCount || QueueTag < 1)
+            return NULL;
+        else
+            return &DeviceExtension->SrbInfo[QueueTag -1];
     }
 }
 
