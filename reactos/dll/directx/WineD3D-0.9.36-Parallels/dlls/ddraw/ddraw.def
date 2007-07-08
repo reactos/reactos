@@ -1,24 +1,26 @@
 LIBRARY "ddraw.dll"
 EXPORTS
-	AcquireDDThreadLock @1
-	CheckFullscreen @2
-	CompleteCreateSysmemSurface @3
-	D3DParseUnknownCommand @4
-	DDGetAttachedSurfaceLcl @5
-	DDInternalLock @6
-	DDInternalUnlock @7
-	DSoundHelp @8
-	DirectDrawCreate @9
-	DirectDrawCreateClipper @10
-	DirectDrawCreateEx @11
-	DirectDrawEnumerateA @12
-	DirectDrawEnumerateExA @13
-	DirectDrawEnumerateExW @14
-	DirectDrawEnumerateW @15
-	DllCanUnloadNow @16 PRIVATE
-	DllGetClassObject @17 PRIVATE
-	GetDDSurfaceLocal @18
-;	GetOLEThunkData @19
-	GetSurfaceFromDC @20
-;	RegisterSpecialCase @21
-	ReleaseDDThreadLock @22
+    AcquireDDThreadLock @0
+    ReleaseDDThreadLock @0
+    GetSurfaceFromDC@12
+    GetDDSurfaceLocal@12
+    D3DParseUnknownCommand@8
+    DDGetAttachedSurfaceLcl@12
+    DDInternalLock@8
+    DDInternalUnlock@4
+    DSoundHelp@12
+    DirectDrawCreate@12
+    DirectDrawCreateClipper@12
+    DirectDrawCreateEx@16
+    DirectDrawEnumerateA@8
+    DirectDrawEnumerateW@8
+    DirectDrawEnumerateExA@12
+    DirectDrawEnumerateExW@12
+    DllCanUnloadNow  PRIVATE
+    DllGetClassObject PRIVATE
+    
+; fixme ??
+    CheckFullscreen
+    CompleteCreateSysmemSurface
+;GetOLEThunkData
+;RegisterSpecialCase

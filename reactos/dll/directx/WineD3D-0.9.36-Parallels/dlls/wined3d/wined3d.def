@@ -1,3 +1,3 @@
 LIBRARY "wined3d.dll"
 EXPORTS
-	WineDirect3DCreate @1
+    WineDirect3DCreate @12
