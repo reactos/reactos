@@ -17,9 +17,11 @@
 #ifndef PORT_PRIVATE_H
 #define PORT_PRIVATE_H
 
+#include "private.h"
 #include <stdunk.h>
 #include <portcls.h>
 
+#if 0
 typedef struct CPort
 {
     union
@@ -31,5 +33,6 @@ typedef struct CPort
     LONG m_ref_count;
     PUNKNOWN m_outer_unknown;
 } CPort;
+#endif
 
 #endif

@@ -2,6 +2,7 @@
     Undocumented PortCls exports
 */
 
+#include "private.h"
 #include <portcls.h>
 
 PORTCLASSAPI NTSTATUS

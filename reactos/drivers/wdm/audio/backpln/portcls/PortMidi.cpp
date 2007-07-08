@@ -11,11 +11,13 @@
         IPortMidi inherits from IPort. This file contains specific
         extensions.
 */
-#include "../private.h"
+#include "private.h"
 #include <stdunk.h>
 #include <portcls.h>
 #include "port.h"
 
+
+#if 0
 
 /*
     IPort Methods
@@ -72,3 +74,5 @@ CPortMidi::RegisterServiceGroup(IN PSERVICEGROUP ServiceGroup)
 {
     return STATUS_UNSUCCESSFUL;
 }
+
+#endif

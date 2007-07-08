@@ -38,6 +38,9 @@
 <directory name="video">
 	<xi:include href="video/directory.rbuild" />
 </directory>
+<directory name="wdm">
+	<xi:include href="wdm/wdm.rbuild" />
+</directory>
 <directory name="wmi">
 	<xi:include href="wmi/wmilib.rbuild" />
 </directory>

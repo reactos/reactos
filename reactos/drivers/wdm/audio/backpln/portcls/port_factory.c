@@ -7,7 +7,7 @@
 
 #define INITGUID
 
-#include "../private.h"
+#include "private.h"
 #include <portcls.h>
 #include <ks.h>
 #include <kcom.h>

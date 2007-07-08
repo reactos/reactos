@@ -10,7 +10,7 @@
         http://www.osronline.com/ddkx/stream/audmp-routines_64vn.htm
 */
 
-#include "../private.h"
+#include "private.h"
 #include <portcls.h>
 
 NTSTATUS
