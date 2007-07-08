@@ -535,7 +535,9 @@ FdoPnpControl(
 #endif
   default:
     DPRINT1("Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);
+    /* fall through */
 
+  case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
     /*
      * Do NOT complete the IRP as it will be processed by the lower
      * device object, which will complete the IRP

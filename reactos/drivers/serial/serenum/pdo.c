@@ -4,7 +4,7 @@
  * FILE:            drivers/bus/serenum/pdo.c
  * PURPOSE:         IRP_MJ_PNP operations for PDOs
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "serenum.h"

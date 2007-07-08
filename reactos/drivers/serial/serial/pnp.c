@@ -394,6 +394,11 @@ SerialPnp(
 			}
 			break;
 		}
+		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0xd */
+		{
+			DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
 		default:
 		{
 			DPRINT1("Unknown minor function 0x%x\n", MinorFunction);

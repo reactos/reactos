@@ -4,7 +4,7 @@
  * FILE:            drivers/bus/serenum/fdo.c
  * PURPOSE:         IRP_MJ_PNP operations for FDOs
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "serenum.h"
@@ -171,7 +171,6 @@ SerenumFdoPnp(
 		IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations (optional) 0x7
 		IRP_MN_QUERY_INTERFACE (optional) 0x8
 		IRP_MN_QUERY_CAPABILITIES (optional) 0x9
-		IRP_MN_FILTER_RESOURCE_REQUIREMENTS (optional or required) 0xb
 		IRP_MN_QUERY_PNP_DEVICE_STATE (optional) 0x14
 		IRP_MN_DEVICE_USAGE_NOTIFICATION (required or optional) 0x16
 		IRP_MN_SURPRISE_REMOVAL 0x17
@@ -203,6 +202,11 @@ SerenumFdoPnp(
 					return ForwardIrpAndForget(DeviceObject, Irp);
 			}
 			break;
+		}
+		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* 0xd */
+		{
+			DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 		default:
 		{

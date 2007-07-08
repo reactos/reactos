@@ -1371,6 +1371,12 @@ PdoPnpControl(
     Status = PdoWriteConfig(DeviceObject, Irp, IrpSp);
     break;
 
+  case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+    DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS received\n");
+    /* Nothing to do */
+    Irp->IoStatus.Status = Status;
+    break;
+
   default:
     DPRINT1("Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);
     break;

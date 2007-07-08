@@ -4,24 +4,14 @@
  * FILE:            drivers/bus/serenum/serenum.h
  * PURPOSE:         Serial enumerator driver header
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include <ntifs.h>
 #include <ntddk.h>
 #include <ntddser.h>
 #include <stdio.h>
-
-#if defined(__GNUC__)
-  #include <debug.h>
-#elif defined(_MSC_VER)
-  #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
-  #define DPRINT DPRINT1
-  #define CHECKPOINT CHECKPOINT1
-#else
-  #error Unknown compiler!
-#endif
+#include <debug.h>
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
