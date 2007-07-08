@@ -1,6 +1,7 @@
 <module name="d3d8" type="win32dll" entrypoint="0" installbase="system32" installname="d3d8.dll">  
 	<importlibrary definition="d3d8.def" />
 	<include base="d3d8">.</include>
+	<include base="ReactOS">include/reactos/wine-paralles</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />

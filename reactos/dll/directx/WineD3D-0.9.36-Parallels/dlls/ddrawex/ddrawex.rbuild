@@ -1,6 +1,7 @@
 <module name="ddrawex" type="win32dll" entrypoint="0" installbase="system32" installname="ddrawex.dll">  
 	<importlibrary definition="ddrawex.def" />
 	<include base="ddrawex">.</include>
+	<include base="ReactOS">include/reactos/wine-paralles</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
