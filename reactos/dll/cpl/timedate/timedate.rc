@@ -16,6 +16,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDC_CPLICON ICON "resources/applet.ico"
 IDC_WORLD BITMAP "resources/world.bmp"
 
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/da-DK.rc"
 #include "lang/de-DE.rc"

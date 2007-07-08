@@ -21,6 +21,7 @@ IDI_CPLSYSTEM ICON "resources/applet.ico"
  * a neutral version. This is to get localized bitmaps for example.
  */
 
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/da-DK.rc"
 #include "lang/de-DE.rc"

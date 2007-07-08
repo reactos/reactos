@@ -17,6 +17,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_CPLICON ICON "resources/applet.ico"
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"

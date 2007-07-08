@@ -1,0 +1,7 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+	IDS_CPLNAME "Добавяне на оборудване"
+	IDS_CPLDESCRIPTION "Добавяне на оборудване към компютъра ви."
+END
