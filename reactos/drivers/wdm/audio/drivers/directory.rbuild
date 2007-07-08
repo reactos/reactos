@@ -1,3 +1,6 @@
-<directory name="mpu401_ks">
-	<xi:include href="mpu401_ks/mpu401.rbuild" />
+<directory name="mpu401">
+	<xi:include href="mpu401/mpu401.rbuild" />
 </directory>
+<!--directory name="sb16">
+	<xi:include href="sb16/sb16.rbuild" />
+</directory-->
