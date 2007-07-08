@@ -698,7 +698,7 @@ SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCa
     if (!DeviceExtension->AdapterObject)
     {
         /* From nonpaged pool if there is no DMA */
-        CommonBuffer = ExAllocatePool(NonPagedPool, CommonBufferLength);
+        CommonBuffer = ExAllocatePoolWithTag(NonPagedPool, CommonBufferLength, TAG_SCSIPORT);
     }
     else
     {
@@ -3058,8 +3058,8 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
        either from NonPagedPool, or from our static list */
     if (SrbInfo->NumberOfMapRegisters > MAX_SG_LIST)
     {
-        SrbInfo->ScatterGather = ExAllocatePool(
-            NonPagedPool, SrbInfo->NumberOfMapRegisters * sizeof(SCSI_SG_ADDRESS));
+        SrbInfo->ScatterGather = ExAllocatePoolWithTag(
+            NonPagedPool, SrbInfo->NumberOfMapRegisters * sizeof(SCSI_SG_ADDRESS), TAG_SCSIPORT);
 
         if (SrbInfo->ScatterGather == NULL)
             ASSERT(FALSE);
@@ -3088,7 +3088,7 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
     while (TotalLength < Srb->DataTransferLength)
     {
         ScatterGatherList->Length = Srb->DataTransferLength - TotalLength;
-        ScatterGatherList->PhysicalAddress = IoMapTransfer(NULL,
+        ScatterGatherList->PhysicalAddress = IoMapTransfer(DeviceExtension->AdapterObject,
                                                            Irp->MdlAddress,
                                                            MapRegisterBase,
                                                            DataVA + TotalLength,
