@@ -11,16 +11,5 @@ IDC_CPLICON ICON "resources/applet.ico"
 IDC_FLAGS ICON "resources/flags.ico"
 
 
-/*
- * Everything specific to any language goes in one of the specific
- * files. Note that you can and may override resources which also have
- * a neutral version. This is to get localized bitmaps for example.
-*/
-
-#include "lang/en-US.rc"
-#include "lang/fr-FR.rc"
-#include "lang/id-ID.rc"
-#include "lang/it-IT.rc"
-#include "lang/pl-PL.rc"
-#include "lang/ru-RU.rc"
+#include "rsrc.rc"
 

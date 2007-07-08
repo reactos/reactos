@@ -5,7 +5,7 @@
 * https://sourceforge.net/projects/reactospl
 */
 
-LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
 STRING_HELP,  "Sposób u¿ycia: %S wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A:rozmiar] [-C]\n\n\
