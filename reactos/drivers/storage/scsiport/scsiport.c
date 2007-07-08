@@ -1568,7 +1568,7 @@ CreatePortConfig:
     if (ConfigInfo.Parameter != NULL)
         ExFreePool(ConfigInfo.Parameter);
 
-    DPRINT("ScsiPortInitialize() done, Status = 0x%08X, DeviceFound = %b!\n",
+    DPRINT("ScsiPortInitialize() done, Status = 0x%08X, DeviceFound = %d!\n",
         Status, DeviceFound);
 
     return (DeviceFound == FALSE) ? Status : STATUS_SUCCESS;
@@ -2524,6 +2524,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
         {
             /* Get next logical unit request */
             SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
 
             /* SpiGetNextRequestFromLun() releases the spinlock */
             KeLowerIrql(Irql);
@@ -4157,6 +4158,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         {
             /* Start the next packet */
             SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
         }
         else
         {
@@ -4164,7 +4166,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
             KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
         }
 
-        DPRINT("IoCompleting request IRP 0x%08X\n", Irp);
+        DPRINT("IoCompleting request IRP 0x%08p\n", Irp);
 
         IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 
@@ -4272,7 +4274,10 @@ Error:
         && (Srb->SrbFlags & SRB_FLAGS_NO_QUEUE_FREEZE))
     {
         if (LunExtension->RequestTimeout == -1)
+        {
             SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+        }
         else
             KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
     }
