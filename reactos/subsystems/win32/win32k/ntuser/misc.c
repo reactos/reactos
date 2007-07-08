@@ -1410,7 +1410,7 @@ IntSystemParametersInfo(
 
       default:
          {
-            DPRINT1("SystemParametersInfo: Unsupported Action 0x%x (uiParam: 0x%x, pvParam: 0x%x, fWinIni: 0x%x)\n",
+             DPRINT1("FIXME: Unsupported SPI Action 0x%x (uiParam: 0x%x, pvParam: 0x%x, fWinIni: 0x%x)\n",
                     uiAction, uiParam, pvParam, fWinIni);
             return FALSE;
          }
@@ -1429,6 +1429,94 @@ IntSystemParametersInfo(
    return TRUE;
 }
 
+static BOOL 
+UserSystemParametersInfo_StructSet(
+    UINT uiAction,
+    UINT uiParam,
+    PVOID pvParam,
+    UINT fWinIni,
+    PVOID pBuffer, /* private kmode buffer */
+    UINT cbSize    /* size of buffer and expected size usermode data, pointed by pvParam  */
+    )
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    _SEH_TRY
+    {
+        ProbeForRead(pvParam, cbSize, 1);
+        RtlCopyMemory(pBuffer,pvParam,cbSize);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return( FALSE);
+    }
+    if(*(PUINT)pBuffer != cbSize)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return( FALSE);
+    }
+    return IntSystemParametersInfo(uiAction, uiParam, pBuffer, fWinIni);
+}
+
+static BOOL 
+UserSystemParametersInfo_StructGet(
+    UINT uiAction,
+    UINT uiParam,
+    PVOID pvParam,
+    UINT fWinIni,
+    PVOID pBuffer, /* private kmode buffer */
+    UINT cbSize    /* size of buffer and expected size usermode data, pointed by pvParam  */
+    )
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    _SEH_TRY
+    {
+        ProbeForRead(pvParam, cbSize, 1);
+        /* Copy only first UINT describing structure size*/
+        *((PUINT)pBuffer) = *((PUINT)pvParam);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return( FALSE);
+    }
+    if(uiParam != cbSize || *((PUINT)pBuffer) != cbSize)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return( FALSE);
+    }
+    if(!IntSystemParametersInfo(uiAction, uiParam, pBuffer, fWinIni))
+    {
+        return( FALSE);
+    }
+    _SEH_TRY
+    {
+        ProbeForWrite(pvParam,  cbSize, 1);
+        RtlCopyMemory(pvParam,pBuffer,cbSize);
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return( FALSE);
+    }
+    return( TRUE);
+}
+
 /*
  * @implemented
  */
@@ -1441,8 +1529,21 @@ UserSystemParametersInfo(
 {
    NTSTATUS Status = STATUS_SUCCESS;
 
+   /* FIXME: Support Windows Vista SPI Actions */
+
    switch(uiAction)
    {
+#if 1 /* only for 32bit applications */
+      case SPI_SETLOWPOWERACTIVE:
+      case SPI_SETLOWPOWERTIMEOUT:
+      case SPI_SETPOWEROFFACTIVE:
+      case SPI_SETPOWEROFFTIMEOUT:
+#endif 
+      case SPI_SETICONS:
+      case SPI_SETSCREENSAVETIMEOUT:
+      case SPI_SETSCREENSAVEACTIVE:
+      case SPI_SETFLATMENU:
+      case SPI_SETSCREENSAVERRUNNING:
       case SPI_SETDOUBLECLKWIDTH:
       case SPI_SETDOUBLECLKHEIGHT:
       case SPI_SETDOUBLECLICKTIME:
@@ -1454,9 +1555,323 @@ UserSystemParametersInfo(
       case SPI_SETMOUSEHOVERWIDTH:
       case SPI_SETMOUSEHOVERHEIGHT:
       case SPI_SETMOUSESPEED:
-         {
-            return (DWORD)IntSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
+      case SPI_SETMOUSETRAILS:
+      case SPI_SETSNAPTODEFBUTTON:
+      case SPI_SETBEEP:
+      case SPI_SETBLOCKSENDINPUTRESETS:
+      case SPI_SETKEYBOARDDELAY:
+      case SPI_SETKEYBOARDPREF:
+      case SPI_SETKEYBOARDSPEED:
+      case SPI_SETLANGTOGGLE:
+      case SPI_SETMOUSEBUTTONSWAP:
+      case SPI_SETWHEELSCROLLLINES:
+      case SPI_SETMENUSHOWDELAY:
+      case SPI_SETMENUFADE:
+      case SPI_SETMENUDROPALIGNMENT:
+      case SPI_SETICONTITLEWRAP:
+      case SPI_SETCURSORS:
+      case SPI_SETDESKPATTERN:
+      case SPI_SETDROPSHADOW:
+      case SPI_SETACTIVEWINDOWTRACKING:
+      case SPI_SETACTIVEWNDTRKZORDER:
+      case SPI_SETACTIVEWNDTRKTIMEOUT:
+      case SPI_SETBORDER:
+      case SPI_SETCARETWIDTH:
+      case SPI_SETDRAGHEIGHT:
+      case SPI_SETDRAGWIDTH:
+      case SPI_SETFOREGROUNDFLASHCOUNT:
+      case SPI_SETFOREGROUNDLOCKTIMEOUT:
+      case SPI_SETSHOWIMEUI:
+      case SPI_SETFONTSMOOTHINGORIENTATION:
+      case SPI_SETFONTSMOOTHINGTYPE:
+      case SPI_SETFONTSMOOTHINGCONTRAST:
+      case SPI_SETKEYBOARDCUES:
+      case SPI_SETCOMBOBOXANIMATION:
+      case SPI_SETCURSORSHADOW:
+      case SPI_SETHOTTRACKING:
+      case SPI_SETLISTBOXSMOOTHSCROLLING:
+      case SPI_SETMENUANIMATION:
+      case SPI_SETSELECTIONFADE:
+      case SPI_SETTOOLTIPANIMATION:
+      case SPI_SETTOOLTIPFADE:
+      case SPI_SETUIEFFECTS:
+      case SPI_SETMOUSECLICKLOCK:
+      case SPI_SETMOUSESONAR:
+      case SPI_SETMOUSEVANISH:
+      case SPI_SETSCREENREADER:
+      case SPI_SETSHOWSOUNDS:
+        {
+            return IntSystemParametersInfo(uiAction, uiParam, NULL, fWinIni);
          }
+#if 1 /* only for 32bit applications */
+      case SPI_GETLOWPOWERACTIVE:
+      case SPI_GETLOWPOWERTIMEOUT:
+      case SPI_GETPOWEROFFACTIVE:
+      case SPI_GETPOWEROFFTIMEOUT:
+#endif       
+      case SPI_GETSCREENSAVERRUNNING:
+      case SPI_GETSCREENSAVETIMEOUT:
+      case SPI_GETSCREENSAVEACTIVE:
+      case SPI_GETKEYBOARDCUES:
+      case SPI_GETFONTSMOOTHING:
+      case SPI_GETGRADIENTCAPTIONS:
+      case SPI_GETFOCUSBORDERHEIGHT:
+      case SPI_GETFOCUSBORDERWIDTH:
+      case SPI_GETWHEELSCROLLLINES:
+      case SPI_GETWHEELSCROLLCHARS:
+      case SPI_GETFLATMENU:
+      case SPI_GETMOUSEHOVERHEIGHT:
+      case SPI_GETMOUSEHOVERWIDTH:
+      case SPI_GETMOUSEHOVERTIME:
+      case SPI_GETMOUSESPEED:
+      case SPI_GETMOUSETRAILS:
+      case SPI_GETSNAPTODEFBUTTON:
+      case SPI_GETBEEP:
+      case SPI_GETBLOCKSENDINPUTRESETS:
+      case SPI_GETKEYBOARDDELAY:
+      case SPI_GETKEYBOARDPREF:
+      case SPI_GETMENUDROPALIGNMENT:
+      case SPI_GETMENUFADE:
+      case SPI_GETMENUSHOWDELAY:
+      case SPI_GETICONTITLEWRAP:
+      case SPI_GETDROPSHADOW:
+      case SPI_GETFONTSMOOTHINGCONTRAST:
+      case SPI_GETFONTSMOOTHINGORIENTATION:
+      case SPI_GETFONTSMOOTHINGTYPE:
+      case SPI_GETACTIVEWINDOWTRACKING:
+      case SPI_GETACTIVEWNDTRKZORDER:
+      case SPI_GETBORDER:
+      case SPI_GETCOMBOBOXANIMATION:
+      case SPI_GETCURSORSHADOW:
+      case SPI_GETHOTTRACKING:
+      case SPI_GETLISTBOXSMOOTHSCROLLING:
+      case SPI_GETMENUANIMATION:
+      case SPI_GETSELECTIONFADE:
+      case SPI_GETTOOLTIPANIMATION:
+      case SPI_GETTOOLTIPFADE:
+      case SPI_GETUIEFFECTS:
+      case SPI_GETMOUSECLICKLOCK:
+      case SPI_GETMOUSECLICKLOCKTIME:
+      case SPI_GETMOUSESONAR:
+      case SPI_GETMOUSEVANISH:
+      case SPI_GETSCREENREADER:
+      case SPI_GETSHOWSOUNDS:
+     { /* pvParam is PINT,PUINT or PBOOL */
+              UINT Ret;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
+              {
+                  return( FALSE);
+              }
+              _SEH_TRY
+              {
+                  ProbeForWrite(pvParam, sizeof(UINT ), 1);
+                  *(PUINT)pvParam = Ret;
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return( TRUE);
+          }
+      case SPI_GETACTIVEWNDTRKTIMEOUT:
+      case SPI_GETKEYBOARDSPEED:
+      case SPI_GETCARETWIDTH:
+      case SPI_GETDRAGFULLWINDOWS:
+      case SPI_GETFOREGROUNDFLASHCOUNT:
+      case SPI_GETFOREGROUNDLOCKTIMEOUT:
+          { /* pvParam is PDWORD */
+              DWORD Ret;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
+              {
+                  return( FALSE);
+              }
+              _SEH_TRY
+              {
+                  ProbeForWrite(pvParam, sizeof(DWORD ), 1);
+                  *(PDWORD)pvParam = Ret;
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return( TRUE);
+          }
+      case SPI_GETICONMETRICS:
+          {
+              ICONMETRICSW Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETICONMETRICS:
+          {
+              ICONMETRICSW Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETMINIMIZEDMETRICS:
+          {
+              MINIMIZEDMETRICS Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETMINIMIZEDMETRICS:
+          {
+              MINIMIZEDMETRICS Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETNONCLIENTMETRICS:
+          {
+              NONCLIENTMETRICS Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETNONCLIENTMETRICS:
+          {
+              NONCLIENTMETRICS Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETANIMATION:
+          {
+              ANIMATIONINFO Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETANIMATION:
+          {
+              ANIMATIONINFO Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETACCESSTIMEOUT:
+          {
+              ACCESSTIMEOUT Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETACCESSTIMEOUT:
+          {
+              ACCESSTIMEOUT Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETFILTERKEYS:
+          {
+              FILTERKEYS Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETFILTERKEYS:
+          {
+              FILTERKEYS Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETHIGHCONTRAST:
+          {
+              HIGHCONTRAST Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETHIGHCONTRAST:
+          {
+              HIGHCONTRAST Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETSOUNDSENTRY:
+          {
+              SOUNDSENTRY Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETSOUNDSENTRY:
+          {
+              SOUNDSENTRY Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETSTICKYKEYS:
+          {
+              STICKYKEYS Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETSTICKYKEYS:
+          {
+              STICKYKEYS Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_GETTOGGLEKEYS:
+          {
+              TOGGLEKEYS Buffer;  
+              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETTOGGLEKEYS:
+          {
+              TOGGLEKEYS Buffer;  
+              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
+                  &Buffer,sizeof(Buffer));
+          }
+      case SPI_SETWORKAREA:
+          {
+              RECT rc;
+              _SEH_TRY
+              {
+                  ProbeForRead(pvParam, sizeof( RECT ), 1);
+                  RtlCopyMemory(&rc,pvParam,sizeof(RECT));
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni);
+          }
+      case SPI_GETWORKAREA:
+          {
+              RECT rc;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni))
+              {
+                  return( FALSE);
+              }
+              _SEH_TRY
+              {
+                  ProbeForWrite(pvParam,  sizeof( RECT ), 1);
+                  RtlCopyMemory(pvParam,&rc,sizeof(RECT));
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return( TRUE);
+          }
       case SPI_SETMOUSE:
           {
               CURSORACCELERATION_INFO CursorAccelerationInfo;
@@ -1501,62 +1916,37 @@ UserSystemParametersInfo(
               }
               return( TRUE);
           }
-      case SPI_SETWORKAREA:
-         {
-            RECT rc;
-            Status = MmCopyFromCaller(&rc, (PRECT)pvParam, sizeof(RECT));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( (DWORD)IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni));
-         }
-      case SPI_GETWORKAREA:
-         {
-            RECT rc;
-
-            if(!IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni))
-            {
-               return( FALSE);
-            }
-
-            Status = MmCopyToCaller((PRECT)pvParam, &rc, sizeof(RECT));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( TRUE);
-         }
-	  case SPI_GETKEYBOARDCUES:
-      case SPI_GETFONTSMOOTHING:
-      case SPI_GETGRADIENTCAPTIONS:
-      case SPI_GETFOCUSBORDERHEIGHT:
-      case SPI_GETFOCUSBORDERWIDTH:
-	  case SPI_GETWHEELSCROLLLINES:
-      case SPI_GETWHEELSCROLLCHARS:
-	  case SPI_GETSCREENSAVERRUNNING:
-	  case SPI_SETSCREENSAVERRUNNING:
-	  case SPI_GETSCREENSAVETIMEOUT:
-	  case SPI_SETSCREENSAVETIMEOUT:
-	  case SPI_GETSCREENSAVEACTIVE:
-	  case SPI_GETFLATMENU:
-      case SPI_SETFLATMENU:
-      case SPI_GETMOUSEHOVERHEIGHT:
-      case SPI_GETMOUSEHOVERWIDTH:
-      case SPI_GETMOUSEHOVERTIME:
-      case SPI_GETMOUSESPEED:
+      case SPI_SETICONTITLELOGFONT:
           {
-              UINT Ret;
-              if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
+              LOGFONTW LogFont;
+              _SEH_TRY
+              {
+                  ProbeForRead(pvParam, sizeof( LOGFONTW ), 1);
+                  RtlCopyMemory(&LogFont,pvParam,sizeof(LOGFONTW));
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return IntSystemParametersInfo(uiAction, uiParam, &LogFont, fWinIni);
+          }
+      case SPI_GETICONTITLELOGFONT:
+          {
+              LOGFONTW LogFont;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &LogFont, fWinIni))
               {
                   return( FALSE);
               }
               _SEH_TRY
               {
-                  ProbeForWrite(pvParam, sizeof(UINT ), 1);
-                  *(PUINT)pvParam = Ret;
+                  ProbeForWrite(pvParam,  sizeof( LOGFONTW ), 1);
+                  RtlCopyMemory(pvParam,&LogFont,sizeof(LOGFONTW));
               }
               _SEH_HANDLE
               {
@@ -1570,122 +1960,91 @@ UserSystemParametersInfo(
               }
               return( TRUE);
           }
-      case SPI_SETDESKWALLPAPER:
-         {
-            /* !!! As opposed to the user mode version this version accepts a handle
-                   to the bitmap! */
-            HBITMAP hbmWallpaper;
-
-            Status = MmCopyFromCaller(&hbmWallpaper, pvParam, sizeof(HBITMAP));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( IntSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hbmWallpaper, fWinIni));
-         }
+      case SPI_ICONVERTICALSPACING:
+      case SPI_ICONHORIZONTALSPACING:
+          {
+              UINT Ret;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
+              {
+                  return( FALSE);
+              }
+              if(NULL != pvParam)
+              {
+                  _SEH_TRY
+                  {
+                      ProbeForWrite(pvParam, sizeof(UINT ), 1);
+                      *(PUINT)pvParam = Ret;
+                  }
+                  _SEH_HANDLE
+                  {
+                      Status = _SEH_GetExceptionCode();
+                  }
+                  _SEH_END;
+                  if(!NT_SUCCESS(Status))
+                  {
+                      SetLastNtError(Status);
+                      return( FALSE);
+                  }
+              }
+              return( TRUE);
+          }
+      case SPI_SETDEFAULTINPUTLANG:
+      case SPI_SETDESKWALLPAPER:     /* !!! As opposed to the user mode version this version accepts a handle
+                                         to the bitmap! */
+          {
+              HANDLE Handle;
+              _SEH_TRY
+              {
+                  ProbeForRead(pvParam, sizeof( HANDLE ), 1);
+                  Handle = *(PHANDLE)pvParam;
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return IntSystemParametersInfo(uiAction, uiParam, &Handle, fWinIni);
+          }
+      case SPI_GETDEFAULTINPUTLANG:
       case SPI_GETDESKWALLPAPER:
-         {
-            /* !!! As opposed to the user mode version this version returns a handle
-                   to the bitmap! */
-            HBITMAP hbmWallpaper;
-            BOOL Ret;
-
-            Ret = IntSystemParametersInfo(SPI_GETDESKWALLPAPER, 0, &hbmWallpaper, fWinIni);
-
-            Status = MmCopyToCaller(pvParam, &hbmWallpaper, sizeof(HBITMAP));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( Ret);
-         }
-      case SPI_GETICONTITLELOGFONT:
-         {
-            LOGFONTW IconFont;
-
-            if(!IntSystemParametersInfo(uiAction, uiParam, &IconFont, fWinIni))
-            {
-               return( FALSE);
-            }
-
-            Status = MmCopyToCaller(pvParam, &IconFont, sizeof(LOGFONTW));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( TRUE);
-         }
-      case SPI_GETNONCLIENTMETRICS:
-      case SPI_SETNONCLIENTMETRICS:
-         {
-            NONCLIENTMETRICSW metrics;
-
-            Status = MmCopyFromCaller(&metrics, pvParam, sizeof(NONCLIENTMETRICSW));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            if(metrics.cbSize != sizeof(NONCLIENTMETRICSW))
-            {
-               SetLastWin32Error(ERROR_INVALID_PARAMETER);
-               return( FALSE);
-            }
-
-            if(!IntSystemParametersInfo(uiAction, uiParam, &metrics, fWinIni))
-            {
-               return( FALSE);
-            }
-
-            Status = MmCopyToCaller(pvParam, &metrics, sizeof(NONCLIENTMETRICSW));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( TRUE);
-         }
-      case SPI_GETMINIMIZEDMETRICS:
-      case SPI_SETMINIMIZEDMETRICS:
-         {
-            MINIMIZEDMETRICS minimetrics;
-
-            Status = MmCopyFromCaller(&minimetrics, pvParam, sizeof(MINIMIZEDMETRICS));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            if(minimetrics.cbSize != sizeof(MINIMIZEDMETRICS))
-            {
-               SetLastWin32Error(ERROR_INVALID_PARAMETER);
-               return( FALSE);
-            }
-            if(!IntSystemParametersInfo(uiAction, uiParam, &minimetrics, fWinIni))
-            {
-               return( FALSE);
-            }
-
-            Status = MmCopyToCaller(pvParam, &minimetrics, sizeof(MINIMIZEDMETRICS));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               return( FALSE);
-            }
-            return( TRUE);
-         }
+          {
+              HANDLE Handle;
+              if(!IntSystemParametersInfo(uiAction, uiParam, &Handle, fWinIni))
+              {
+                  return( FALSE);
+              }
+              _SEH_TRY
+              {
+                  ProbeForWrite(pvParam,  sizeof( HANDLE ), 1);
+                  *(PHANDLE)pvParam = Handle;
+                  RtlCopyMemory(pvParam,&Handle,sizeof(HANDLE));
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END;
+              if(!NT_SUCCESS(Status))
+              {
+                  SetLastNtError(Status);
+                  return( FALSE);
+              }
+              return( TRUE);
+          }
       default :
 		  {
-              DPRINT1("FIXME: UNIMPLEMENTED SPI Code: %lx \n",uiAction );
+              SetLastNtError(ERROR_INVALID_PARAMETER);
+              DPRINT1("Invalid SPI Code: %lx \n",uiAction );
 			  break;
 		  }
    }
    return( FALSE);
 }
-
 
 
 
