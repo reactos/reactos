@@ -7,12 +7,15 @@
 <directory name="devenum">
 	<xi:include href="devenum/devenum.rbuild" />
 </directory>
+<!--
 <directory name="ddraw">
 	<xi:include href="ddraw/ddraw.rbuild" />
 </directory>
+-->
 <directory name="dinput">
 	<xi:include href="dinput/dinput.rbuild" />
 </directory>
+
 <directory name="dinput8">
 	<xi:include href="dinput8/dinput8.rbuild" />
 </directory>
@@ -28,14 +31,15 @@
 <directory name="dxdiagn">
 	<xi:include href="dxdiagn/dxdiagn.rbuild" />
 </directory>
+<!--
 <directory name="d3d8">
 	<xi:include href="d3d8/d3d8.rbuild" />
 </directory>
 <directory name="d3d9">
 	<xi:include href="d3d9/d3d9.rbuild" />
 </directory>
-
-<directory name="d3d9">
+-->
+<directory name="WineD3D-0.9.36-Parallels">
 	<xi:include href="WineD3D-0.9.36-Parallels/WineD3D-0.9.36-Parallels.rbuild" />
 </directory>
 </group>

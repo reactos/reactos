@@ -1,6 +1,6 @@
-<module name="wine3d" type="win32dll" entrypoint="0" installbase="system32" installname="wine3d.dll">  
-	<importlibrary definition="wine3d.def" />
-	<include base="wine3d">.</include>
+<module name="wined3d" type="win32dll" entrypoint="0" installbase="system32" installname="wined3d.dll">  
+	<importlibrary definition="wined3d.def" />
+	<include base="wined3d">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
