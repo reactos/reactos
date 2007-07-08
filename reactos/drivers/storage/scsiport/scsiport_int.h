@@ -20,8 +20,6 @@
 /* Defines how many logical unit arrays will be in a device extension */
 #define LUS_NUMBER 8
 
-#define MAX_SG_LIST 17
-
 /* Flags */
 #define SCSI_PORT_DEVICE_BUSY         0x0001
 #define SCSI_PORT_LU_ACTIVE           0x0002
@@ -87,12 +85,6 @@ typedef struct _SCSI_PORT_DEVICE_BASE
   ULONG SystemIoBusNumber;
 } SCSI_PORT_DEVICE_BASE, *PSCSI_PORT_DEVICE_BASE;
 
-typedef struct _SCSI_SG_ADDRESS
-{
-    ULONGLONG PhysicalAddress;
-    ULONG Length;
-} SCSI_SG_ADDRESS, *PSCSI_SG_ADDRESS;
-
 typedef struct _SCSI_REQUEST_BLOCK_INFO
 {
     LIST_ENTRY Requests;
@@ -107,10 +99,6 @@ typedef struct _SCSI_REQUEST_BLOCK_INFO
     ULONG NumberOfMapRegisters;
 
     struct _SCSI_REQUEST_BLOCK_INFO *CompletedRequests;
-
-    /* Scatter-gather list */
-    PSCSI_SG_ADDRESS ScatterGather;
-    SCSI_SG_ADDRESS ScatterGatherList[MAX_SG_LIST];
 } SCSI_REQUEST_BLOCK_INFO, *PSCSI_REQUEST_BLOCK_INFO;
 
 typedef struct _SCSI_PORT_LUN_EXTENSION
