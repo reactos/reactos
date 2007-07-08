@@ -9,6 +9,7 @@
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
+	<define name="WINE_NATIVEWIN32" />
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>
