@@ -967,6 +967,7 @@ IntSystemParametersInfo(
       case SPI_SETMOUSEHOVERHEIGHT:
       case SPI_SETMOUSE:
       case SPI_SETMOUSESPEED:
+      case SPI_SETMOUSEBUTTONSWAP:
          /* We will change something, so set the flag here */
          bChanged = TRUE;
       case SPI_GETDESKWALLPAPER:
@@ -1080,6 +1081,10 @@ IntSystemParametersInfo(
                case SPI_SETMOUSEHOVERHEIGHT:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    CurInfo->MouseHoverHeight = uiParam;
+                   break; 
+               case SPI_SETMOUSEBUTTONSWAP:
+                   CurInfo = IntGetSysCursorInfo(WinStaObject);
+                   CurInfo->SwapButtons = uiParam;
                    break; 
                case SPI_SETMOUSE:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
