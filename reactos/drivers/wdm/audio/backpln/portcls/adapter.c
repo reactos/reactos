@@ -21,7 +21,7 @@
     The AddDevice parameter is a driver-supplied pointer to a function which
     typically then calls PcAddAdapterDevice (see below.)
 */
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcInitializeAdapterDriver(
     IN  PDRIVER_OBJECT DriverObject,
     IN  PUNICODE_STRING RegistryPathName,
@@ -89,7 +89,7 @@ PcInitializeAdapterDriver(
     The StartDevice parameter is a driver-supplied function which gets
     called in response to IRP_MJ_PNP / IRP_MN_START_DEVICE.
 */
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcAddAdapterDevice(
     IN  PDRIVER_OBJECT DriverObject,
     IN  PDEVICE_OBJECT PhysicalDeviceObject,

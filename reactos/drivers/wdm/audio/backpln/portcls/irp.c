@@ -198,7 +198,7 @@ PortClsSysControl(
     Drivers may implement their own IRP handlers. If a driver decides to let
     PortCls handle the IRP, it can do so by calling this.
 */
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcDispatchIrp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -251,7 +251,7 @@ PcDispatchIrp(
 /*
  * @unimplemented
  */
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcCompleteIrp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
@@ -264,7 +264,7 @@ PcCompleteIrp(
 /*
  * @unimplemented
  */
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcForwardIrpSynchronous(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)

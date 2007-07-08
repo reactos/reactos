@@ -7,7 +7,11 @@
 #ifndef PORTCLS_PRIVATE_H
 #define PORTCLS_PRIVATE_H
 
+/* windows.h should no be included my drivers at all */
+#ifndef _MSC_VER
 #include <windows.h>
+#endif
+
 #include <ntddk.h>
 #include <debug.h>
 

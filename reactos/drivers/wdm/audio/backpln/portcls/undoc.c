@@ -5,26 +5,26 @@
 #include "private.h"
 #include <portcls.h>
 
-PORTCLASSAPI NTSTATUS
+NTSTATUS
 KsoDispatchCreateWithGenericFactory(
     LONG Unknown,
     PIRP Irp)
 {
 }
 
-PORTCLASSAPI void
+void
 KsoGetIrpTargetFromFileObject(
     LONG Unknown)
 {
 }
 
-PORTCLASSAPI void
+void
 KsoGetIrpTargetFromIrp(
     LONG Unknown)
 {
 }
 
-PORTCLASSAPI void
+void
 PcAcquireFormatResources(
     LONG Unknown,
     LONG Unknown2,
@@ -33,7 +33,6 @@ PcAcquireFormatResources(
 {
 }
 
-PORTCLASSAPI
 NTSTATUS
 PcAddToEventTable(
     PVOID Ptr,
@@ -47,7 +46,6 @@ PcAddToEventTable(
 {
 }
 
-PORTCLASSAPI
 NTSTATUS
 PcAddToPropertyTable(
     PVOID Ptr,
@@ -58,7 +56,6 @@ PcAddToPropertyTable(
 {
 }
 
-PORTCLASSAPI
 NTSTATUS
 PcCaptureFormat(
     LONG Unknown,
@@ -68,7 +65,6 @@ PcCaptureFormat(
 {
 }
 
-PORTCLASSAPI
 NTSTATUS
 PcCreateSubdeviceDescriptor(
     /* TODO */ )

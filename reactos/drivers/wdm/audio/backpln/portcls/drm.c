@@ -14,7 +14,7 @@
 #include <portcls.h>
 #include <drmk.h>
 
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcAddContentHandlers(
     IN  ULONG ContentId,
     IN  PVOID *paHandlers,
@@ -23,7 +23,7 @@ PcAddContentHandlers(
     return DrmAddContentHandlers(ContentId, paHandlers, NumHandlers);
 }
 
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcCreateContentMixed(
     IN  PULONG paContentId,
     IN  ULONG cContentId,
@@ -32,14 +32,14 @@ PcCreateContentMixed(
     return DrmCreateContentMixed(paContentId, cContentId, pMixedContentId);
 }
 
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcDestroyContent(
     IN  ULONG ContentId)
 {
     return DrmDestroyContent(ContentId);
 }
 
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcForwardContentToDeviceObject(
     IN  ULONG ContentId,
     IN  PVOID Reserved,
@@ -48,7 +48,7 @@ PcForwardContentToDeviceObject(
     return DrmForwardContentToDeviceObject(ContentId, Reserved, DrmForward);
 }
 
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcForwardContentToFileObject(
     IN  ULONG ContentId,
     IN  PFILE_OBJECT FileObject)
@@ -56,7 +56,7 @@ PcForwardContentToFileObject(
     return DrmForwardContentToFileObject(ContentId, FileObject);
 }
 
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcForwardContentToInterface(
     IN  ULONG ContentId,
     IN  PUNKNOWN pUnknown,
@@ -65,7 +65,7 @@ PcForwardContentToInterface(
     return DrmForwardContentToInterface(ContentId, pUnknown, NumMethods);
 }
 
-PORTCLASSAPI NTSTATUS NTAPI
+NTSTATUS NTAPI
 PcGetContentRights(
     IN  ULONG ContentId,
     OUT PDRMRIGHTS DrmRights)
