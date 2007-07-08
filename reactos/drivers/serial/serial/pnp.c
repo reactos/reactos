@@ -218,8 +218,7 @@ SerialPnpStartDevice(
 	ComPortBase = ULongToPtr(DeviceExtension->BaseAddress);
 
 	/* Test if we are trying to start the serial port used for debugging */
-    DPRINT1("KdComPort: %p\n", KdComPortInUse);
-	if (KdComPortInUse == ULongToPtr(DeviceExtension->BaseAddress))
+	if (*KdComPortInUse == ULongToPtr(DeviceExtension->BaseAddress))
 	{
 		DPRINT("Failing IRP_MN_START_DEVICE as this serial port is used for debugging\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
