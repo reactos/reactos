@@ -112,6 +112,18 @@ extern "C" {
     (ALIGN_DOWN_POINTER(((ULONG_PTR)(p) + sizeof(t) - 1), t))
 
 /*
+ * GUID Comparison
+ */
+
+#ifndef __IID_ALIGNED__
+    #define __IID_ALIGNED__
+
+    #define IsEqualGUIDAligned(guid1, guid2) \
+        ( (*(PLONGLONG)(guid1) == *(PLONGLONG)(guid2)) && \
+            (*((PLONGLONG)(guid1) + 1) == *((PLONGLONG)(guid2) + 1)) )
+#endif
+
+/*
 ** Forward declarations
 */
 
@@ -5726,7 +5738,7 @@ RemoveTailList(
   return Entry;
 }
 
-#if !defined(_WINBASE_H) || _WIN32_WINNT < 0x0501
+#if !defined(_WINBASE_) || _WIN32_WINNT < 0x0501
 
 NTKERNELAPI
 PSLIST_ENTRY

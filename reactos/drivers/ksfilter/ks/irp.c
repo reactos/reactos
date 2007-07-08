@@ -280,6 +280,13 @@ KsDispatchIrp(
     IN  PIRP Irp)
 {
     /* Calls a dispatch routine corresponding to the function code of the IRP */
+
+    /*
+        First we need to get the dispatch table. An opaque header is pointed to by
+        FsContext. The first element points to this table. This table is the key
+        to dispatching the IRP correctly.
+    */
+
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }

@@ -8,6 +8,10 @@
 #ifndef DRMK_H
 #define DRMK_H
 
+#include <ntddk.h>
+#include <debug.h>
+#include <punknown.h>
+
 typedef struct
 {
     DWORD Flags;
@@ -28,6 +32,11 @@ typedef struct
     Digital Rights Management Functions
     TODO: Check calling convention
 */
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 NTAPI NTSTATUS
 DrmAddContentHandlers(
@@ -67,5 +76,8 @@ DrmGetContentRights(
     IN  ULONG ContentId,
     OUT PDRMRIGHTS DrmRights);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

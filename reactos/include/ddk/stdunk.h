@@ -90,7 +90,7 @@ class CUnknown : public INonDelegatingUnknown
     : CUnknown(outer_unknown) \
     { }
 
-#else   /* Not C++ */
+#else   /* Not C++ - this is probably very buggy... */
 
 STDMETHODCALLTYPE
 NTSTATUS

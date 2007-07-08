@@ -7,6 +7,7 @@
 	<define name="__USE_W32API" />
 	<define name="BUILDING_KS" />
 	<define name="_NTDDK_" />
+    <define name="_COMDDK_" />
 	<file>ks.rc</file>
 	<file>allocators.c</file>
 	<file>clocks.c</file>
@@ -18,4 +19,5 @@
 	<file>properties.c</file>
 	<file>topology.c</file>
 	<file>worker.c</file>
+	<file>kcom.c</file>
 </module>

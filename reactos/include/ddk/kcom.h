@@ -1,5 +1,3 @@
-
-
 #if !defined(_KS_)
 #error KS.H must be included before KCOM.H
 #endif

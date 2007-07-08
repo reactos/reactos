@@ -7,5 +7,5 @@
 	<define name="__USE_W32API" />
 	<define name="BUILDING_DRMK" />
 	<file>drmk.rc</file>
-	<file>stubs.c</file>
+	<file>stubs.cpp</file>
 </module>

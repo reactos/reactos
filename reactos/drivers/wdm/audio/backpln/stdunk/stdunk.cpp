@@ -17,12 +17,13 @@
     This is a little bit of a hack, but ReactOS doesn't seem to have this
     defined. TODO: Make the aligned test truly aligned.
 */
-
+#if 0
 #define IsEqualGUID(a, b) \
     RtlEqualMemory(&a, &b, sizeof(GUID))
 
 #define IsEqualGUIDAligned(a, b) \
     IsEqualGUID(a, b)
+#endif
 
 /*
     Shut the linker up - can also pass -defsym ___cxa_pure_virtual=0
@@ -43,7 +44,7 @@ CUnknown::CUnknown(PUNKNOWN outer_unknown)
     }
     else
     {
-        m_outer_unknown = PUNKNOWN(dynamic_cast<PNONDELEGATINGUNKNOWN>(this));
+        m_outer_unknown = PUNKNOWN(static_cast<PNONDELEGATINGUNKNOWN>(this));
     }
 }
 

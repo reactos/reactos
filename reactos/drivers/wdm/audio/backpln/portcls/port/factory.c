@@ -5,8 +5,12 @@
     by Andrew Greenwood
 */
 
+#define INITGUID
+
 #include "../private.h"
 #include <portcls.h>
+#include <ks.h>
+#include <kcom.h>
 #include "port.h"
 
 /*
@@ -19,14 +23,17 @@ PcNewPort(
 {
     /*
         ClassId can be one of the following:
-        CLSID_PortDMus -> IPortDMus (dmusicks.h)
+        CLSID_PortDMus -> IPortDMus (dmusicks.h)    -- TODO
         CLSID_PortMidi -> IPortMidi
         CLSID_PortTopology -> IPortTopology
         CLSID_PortWaveCyclic -> IPortWaveCyclic
         CLSID_PortWavePci -> IPortWavePci
+
+        TODO: What about PortWavePciStream?
     */
 
     PPORT new_port = NULL;
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     if ( ! OutPort )
     {
@@ -34,26 +41,32 @@ PcNewPort(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* FIXME - do not hack, for it is bad */
-    //new_port = new PPortMidi;
-
-//    STD_CREATE_BODY_(CPortMidi, (PUNKNOWN) &new_port, NULL, 0, PUNKNOWN);
-
-/*
-    if ( ClassId == CLSID_PortMidi )
-        new_port = new IPortMidi;
-    else if ( ClassId == CLSID_PortTopology )
-        new_port = new IPortTopology;
-    else if ( ClassId == CLSID_PortWaveCyclic )
-        new_port = new IPortWaveCyclic;
-    else if ( ClassId == CLSID_PortWavePci )
-        new_port = new IPortWavePci;
+    if ( ( IsEqualGUIDAligned(ClassId, &CLSID_PortMidi)         ) ||
+         ( IsEqualGUIDAligned(ClassId, &CLSID_PortTopology)     ) ||
+         ( IsEqualGUIDAligned(ClassId, &CLSID_PortWaveCyclic)   ) ||
+         ( IsEqualGUIDAligned(ClassId, &CLSID_PortWavePci)      ) )
+    {
+        DPRINT("Calling KoCreateInstance\n");
+        /* Call KS.SYS's Kernel-mode COM function */
+        status = KoCreateInstance(ClassId, NULL, CLSCTX_KERNEL_SERVER, &IID_IPort, &new_port);
+    }
     else
-*/
-        return STATUS_NOT_SUPPORTED;
+    {
+
+        DPRINT("PcNewPort received a CLSID it does not deal with\n");
+        status = STATUS_NOT_SUPPORTED;
+    }
+
+    /* If an unsupported CLSID was handed to us, or the creation failed, we fail */
+    if ( status != STATUS_SUCCESS )
+    {
+        return status;
+    }
 
     /* Fill the caller's PPORT* to point to the new port */
     *OutPort = new_port;
+
+    DPRINT("PcNewPort succeeded\n");
 
     return STATUS_SUCCESS;
 }

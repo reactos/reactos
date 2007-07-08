@@ -1,10 +1,11 @@
-<module name="mpu401_ks" type="exportdriver" installbase="system32/drivers" installname="mpu401_ks.sys" allowwarnings="true">
+<module name="mpu401" type="kernelmodedriver" installbase="system32/drivers" installname="mpu401.sys" allowwarnings="true" entrypoint="DriverEntry">
+    <linkerflag>-Wl,--entry,_DriverEntry@8</linkerflag>
 	<include base="mpu401">.</include>
 	<include base="mpu401">..</include>
-	<importlibrary definition="mpu401.def" />
-	<library>ntoskrnl</library>
-	<library>portcls</library>
+    <library>ntoskrnl</library>
+    <library>portcls</library>
+    <define name="DBG" />
 	<define name="__USE_W32API" />
-	<file>mpu401.rc</file>
+	<!--file>mpu401.rc</file-->
 	<file>adapter.cpp</file>
 </module>

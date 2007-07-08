@@ -51,7 +51,8 @@ ResourceList_AddRef(
 {
     struct CUnknown* this = CONTAINING_RECORD(this_container, struct CUnknown, IUnknown);
 
-    InterlockedIncrement(&this->m_ref_count);
+/* fixme */
+/*    ExInterlockedIncrement(&this->m_ref_count); */
     return this->m_ref_count;
 }
 
@@ -62,7 +63,8 @@ ResourceList_Release(
 {
     struct CUnknown* this = CONTAINING_RECORD(this_container, struct CUnknown, IUnknown);
 
-    InterlockedDecrement(&this->m_ref_count);
+/* fixme */
+/*    ExInterlockedDecrement(&this->m_ref_count); */
 
     if ( this->m_ref_count == 0 )
     {
