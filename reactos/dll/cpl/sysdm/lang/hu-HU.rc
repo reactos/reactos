@@ -1,5 +1,5 @@
 // Hungarian resource file by Peter Lukacs
-LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 
