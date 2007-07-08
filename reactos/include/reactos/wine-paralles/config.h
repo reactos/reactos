@@ -5,7 +5,7 @@
 #define __WINE_CONFIG_H
 
 /* avoid fine grained includes which cause problems with MS SDK */
-#define WINE_NATIVEWIN32 1
+#define WINE_NATIVEWIN32 0
 
 /* use MSVC native exceptions */
 #define USE_COMPILER_EXCEPTIONS 1
@@ -14,6 +14,10 @@
 # define WINE_NO_DEBUG_MSGS 1
 # define WINE_NO_TRACE_MSGS 1
 #endif
+
+
+#define HAVE_MODE_T 1
+#define HAVE_SSIZE_T 1
 
 /* Define to 1 if you have the <float.h> header file. */
 #define HAVE_FLOAT_H 1

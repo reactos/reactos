@@ -485,8 +485,8 @@ typedef void (APIENTRY * PGLFNGLTEXSUBIMAGE3DEXTPROC) (GLenum target, GLint leve
 /* GL_EXT_texture_env_dot3 */
 #ifndef GL_EXT_texture_env_dot3
 #define GL_EXT_texture_env_dot3 1
-#define GL_DOT3_RGB_EXT			  0x8740
-#define GL_DOT3_RGBA_EXT		  0x8741
+// #define GL_DOT3_RGB_EXT			  0x8740
+// #define GL_DOT3_RGBA_EXT		  0x8741
 #endif
 /* GL_EXT_texture_lod_bias */
 #ifndef GL_EXT_texture_lod_bias
@@ -520,7 +520,7 @@ typedef void (APIENTRY * PGLFNGLTEXSUBIMAGE3DEXTPROC) (GLenum target, GLint leve
 /* GL_EXT_texture_env_dot3 */
 #ifndef GL_EXT_texture_env_dot3
 #define GL_EXT_texture_env_dot3 1
-#define GL_DOT3_RGB_EXT                   0x8740
+//#define GL_DOT3_RGB_EXT                   0x8740
 #define GL_DOT3_RGBA_EXT                  0x8741
 #endif
 /* GL_ARB_texture_float */
