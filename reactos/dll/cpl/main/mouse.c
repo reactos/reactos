@@ -369,8 +369,9 @@ ButtonProc(IN HWND hwndDlg,
             {
                 if (pButtonData->g_OrigSwapMouseButtons != pButtonData->g_SwapMouseButtons)
                 {
-                    SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_OrigSwapMouseButtons, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
                     pButtonData->g_OrigSwapMouseButtons = pButtonData->g_SwapMouseButtons;
+                    SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, pButtonData->g_OrigSwapMouseButtons, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+                    
                 }
 
 #if (WINVER >= 0x0500)
