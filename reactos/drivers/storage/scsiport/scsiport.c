@@ -85,6 +85,10 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 static BOOLEAN STDCALL
 ScsiPortStartPacket(IN OUT PVOID Context);
 
+IO_ALLOCATION_ACTION
+STDCALL
+SpiAdapterControl(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                  PVOID MapRegisterBase, PVOID Context);
 
 static PSCSI_PORT_LUN_EXTENSION
 SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
@@ -94,6 +98,11 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		    IN UCHAR PathId,
 		    IN UCHAR TargetId,
 		    IN UCHAR Lun);
+
+static PSCSI_REQUEST_BLOCK_INFO
+SpiAllocateSrbStructures(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                         PSCSI_PORT_LUN_EXTENSION LunExtension,
+                         PSCSI_REQUEST_BLOCK Srb);
 
 static NTSTATUS
 SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
@@ -490,92 +499,64 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
  */
 SCSI_PHYSICAL_ADDRESS STDCALL
 ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
-			   IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
-			   IN PVOID VirtualAddress,
-			   OUT ULONG *Length)
+                           IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
+                           IN PVOID VirtualAddress,
+                           OUT ULONG *Length)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  SCSI_PHYSICAL_ADDRESS PhysicalAddress;
-  SCSI_PHYSICAL_ADDRESS NextPhysicalAddress;
-  ULONG BufferLength = 0;
-  ULONG Offset;
-  PVOID EndAddress;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    SCSI_PHYSICAL_ADDRESS PhysicalAddress;
+    ULONG BufferLength = 0;
+    ULONG Offset;
+    PSCSI_SG_ADDRESS SGList;
+    PSCSI_REQUEST_BLOCK_INFO SrbInfo;
 
-  DPRINT("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
-	 HwDeviceExtension, Srb, VirtualAddress, Length);
+    DPRINT("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
+        HwDeviceExtension, Srb, VirtualAddress, Length);
 
-  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
-				      SCSI_PORT_DEVICE_EXTENSION,
-				      MiniPortDeviceExtension);
+    DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                        SCSI_PORT_DEVICE_EXTENSION,
+                                        MiniPortDeviceExtension);
 
-  *Length = 0;
-
-  if (Srb == NULL)
+    if (Srb == NULL || Srb->SenseInfoBuffer == VirtualAddress)
     {
-      if ((ULONG_PTR)DeviceExtension->VirtualAddress > (ULONG_PTR)VirtualAddress)
-	{
-	  PhysicalAddress.QuadPart = 0ULL;
-	  return PhysicalAddress;
-	}
+        /* Simply look it up in the allocated common buffer */
+        Offset = (PUCHAR)VirtualAddress - (PUCHAR)DeviceExtension->SrbExtensionBuffer;
 
-      Offset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)DeviceExtension->VirtualAddress;
-      if (Offset >= DeviceExtension->CommonBufferLength)
-	{
-	  PhysicalAddress.QuadPart = 0ULL;
-	  return PhysicalAddress;
-	}
-
-      PhysicalAddress.QuadPart =
-	DeviceExtension->PhysicalAddress.QuadPart + (ULONGLONG)Offset;
-      BufferLength = DeviceExtension->CommonBufferLength - Offset;
+        BufferLength = DeviceExtension->CommonBufferSize - Offset;
+        PhysicalAddress.QuadPart = DeviceExtension->PhysicalAddress.QuadPart + Offset;
     }
-  else
+    else if (DeviceExtension->MapRegisters)
     {
-      EndAddress = (PVOID)((ULONG_PTR)Srb->DataBuffer + Srb->DataTransferLength);
-      if (VirtualAddress == NULL)
-	{
-	  VirtualAddress = Srb->DataBuffer;
-	}
-      else if (VirtualAddress < Srb->DataBuffer || VirtualAddress >= EndAddress)
-	{
-	  PhysicalAddress.QuadPart = 0LL;
-	  return PhysicalAddress;
-	}
+        /* Scatter-gather list must be used */
+        SrbInfo = SpiGetSrbData(DeviceExtension,
+                               Srb->PathId,
+                               Srb->TargetId,
+                               Srb->Lun,
+                               Srb->QueueTag);
 
-      PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
-      if (PhysicalAddress.QuadPart == 0LL)
-	{
-	  return PhysicalAddress;
-	}
+        SGList = SrbInfo->ScatterGather;
 
-      Offset = (ULONG_PTR)VirtualAddress & (PAGE_SIZE - 1);
-#if 1
-      /* 
-       * FIXME:
-       *   MmGetPhysicalAddress doesn't return the offset within the page.
-       *   We must set the correct offset.
-       */
-      PhysicalAddress.u.LowPart = (PhysicalAddress.u.LowPart & ~(PAGE_SIZE - 1)) + Offset;
-#endif
-      BufferLength += PAGE_SIZE - Offset;
-      while ((ULONG_PTR)VirtualAddress + BufferLength < (ULONG_PTR)EndAddress)
-	{
-	  NextPhysicalAddress = MmGetPhysicalAddress((PVOID)((ULONG_PTR)VirtualAddress + BufferLength));
-	  if (PhysicalAddress.QuadPart + (ULONGLONG)BufferLength != NextPhysicalAddress.QuadPart)
-	    {
-	      break;
-	    }
-	  BufferLength += PAGE_SIZE;
-	}
-      if ((ULONG_PTR)VirtualAddress + BufferLength >= (ULONG_PTR)EndAddress)
-	{
-	  BufferLength = (ULONG_PTR)EndAddress - (ULONG_PTR)VirtualAddress;
-	}
+        /* Find needed item in the SG list */
+        Offset = (PCHAR)VirtualAddress - (PCHAR)Srb->DataBuffer;
+        while (Offset >= SGList->Length)
+        {
+            Offset -= SGList->Length;
+            SGList++;
+        }
+
+        /* We're done, store length and physical address */
+        BufferLength = SGList->Length - Offset;
+        PhysicalAddress.QuadPart = SGList->PhysicalAddress.QuadPart + Offset;
+    }
+    else
+    {
+        /* Nothing */
+        *Length = 0;
+        PhysicalAddress.QuadPart = (LONGLONG)(SP_UNINITIALIZED_VALUE);
     }
 
-  *Length = BufferLength;
-
-  return PhysicalAddress;
+    *Length = BufferLength;
+    return PhysicalAddress;
 }
 
 
@@ -2727,6 +2708,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb;
     PSCSI_REQUEST_BLOCK_INFO SrbInfo;
     LONG CounterResult;
+    NTSTATUS Status;
 
     DPRINT("ScsiPortStartIo() called!\n");
 
@@ -2749,9 +2731,21 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
     if (DeviceExtension->NeedSrbDataAlloc ||
         DeviceExtension->NeedSrbExtensionAlloc)
     {
-        /* TODO: Implement */
-        ASSERT(FALSE);
-        SrbInfo = NULL;
+        /* Allocate them */
+        SrbInfo = SpiAllocateSrbStructures(DeviceExtension,
+                                           LunExtension,
+                                           Srb);
+
+        /* Couldn't alloc one or both data structures, return */
+        if (SrbInfo == NULL)
+        {
+            /* We have to call IoStartNextPacket, because this request
+               was not started */
+            if (LunExtension->Flags & LUNEX_REQUEST_PENDING)
+                IoStartNextPacket(DeviceObject, FALSE);
+
+            return;
+        }
     }
     else
     {
@@ -2806,7 +2800,6 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 
         if (DeviceExtension->MapRegisters)
         {
-#if 0
             /* Calculate number of needed map registers */
             SrbInfo->NumberOfMapRegisters = ADDRESS_AND_SIZE_TO_SPAN_PAGES(
                     Srb->DataBuffer,
@@ -2837,9 +2830,6 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 
             /* Control goes to SpiAdapterControl */
             return;
-#else
-            ASSERT(FALSE);
-#endif
         }
     }
 
@@ -3038,6 +3028,87 @@ ScsiPortStartPacket(IN OUT PVOID Context)
     return Result;
 }
 
+IO_ALLOCATION_ACTION
+STDCALL
+SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
+                  PIRP Irp,
+                  PVOID MapRegisterBase,
+                  PVOID Context)
+{
+    PSCSI_REQUEST_BLOCK Srb;
+    PSCSI_SG_ADDRESS ScatterGatherList;
+    KIRQL CurrentIrql;
+    PIO_STACK_LOCATION IrpStack;
+    ULONG TotalLength = 0;
+    PSCSI_REQUEST_BLOCK_INFO SrbInfo;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+    PUCHAR DataVA;
+    BOOLEAN WriteToDevice;
+
+    /* Get pointers to SrbInfo and DeviceExtension */
+    SrbInfo = (PSCSI_REQUEST_BLOCK_INFO)Context;
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    /* Get pointer to SRB */
+    IrpStack = IoGetCurrentIrpStackLocation(Irp);
+    Srb = (PSCSI_REQUEST_BLOCK)IrpStack->Parameters.Others.Argument1;
+
+    /* Depending on the map registers number, we allocate 
+       either from NonPagedPool, or from our static list */
+    if (SrbInfo->NumberOfMapRegisters > MAX_SG_LIST)
+    {
+        SrbInfo->ScatterGather = ExAllocatePool(
+            NonPagedPool, SrbInfo->NumberOfMapRegisters * sizeof(SCSI_SG_ADDRESS));
+
+        if (SrbInfo->ScatterGather == NULL)
+            ASSERT(FALSE);
+
+        Srb->SrbFlags |= SRB_FLAGS_SGLIST_FROM_POOL;
+    }
+    else
+    {
+        SrbInfo->ScatterGather = SrbInfo->ScatterGatherList;
+    }
+
+    /* Use chosen SG list source */
+    ScatterGatherList = SrbInfo->ScatterGather;
+
+    /* Save map registers base */
+    SrbInfo->BaseOfMapRegister = MapRegisterBase;
+
+    /* Determine WriteToDevice flag */
+    WriteToDevice = Srb->SrbFlags & SRB_FLAGS_DATA_OUT ? TRUE : FALSE;
+
+    /* Get virtual address of the data buffer */
+    DataVA = (PUCHAR)MmGetMdlVirtualAddress(Irp->MdlAddress) +
+                ((PCHAR)Srb->DataBuffer - SrbInfo->DataOffset);
+
+    /* Build the actual SG list */
+    while (TotalLength < Srb->DataTransferLength)
+    {
+        ScatterGatherList->Length = Srb->DataTransferLength - TotalLength;
+        ScatterGatherList->PhysicalAddress = IoMapTransfer(NULL,
+                                                           Irp->MdlAddress,
+                                                           MapRegisterBase,
+                                                           DataVA + TotalLength,
+                                                           &ScatterGatherList->Length,
+                                                           WriteToDevice);
+
+        TotalLength += ScatterGatherList->Length;
+        ScatterGatherList++;
+    }
+
+    /* Schedule an active request */
+    InterlockedIncrement(&DeviceExtension->ActiveRequestCounter );
+    KeAcquireSpinLock(&DeviceExtension->SpinLock, &CurrentIrql);
+    KeSynchronizeExecution(DeviceExtension->Interrupt,
+                           ScsiPortStartPacket,
+                           DeviceObject);
+    KeReleaseSpinLock(&DeviceExtension->SpinLock, CurrentIrql);
+
+    return DeallocateObjectKeepRegisters;
+}
+
 static PSCSI_PORT_LUN_EXTENSION
 SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
@@ -3111,6 +3182,155 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     /* We did not find anything */
     DPRINT("Nothing found\n");
     return NULL;
+}
+
+static PSCSI_REQUEST_BLOCK_INFO
+SpiAllocateSrbStructures(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                         PSCSI_PORT_LUN_EXTENSION LunExtension,
+                         PSCSI_REQUEST_BLOCK Srb)
+{
+    PCHAR SrbExtension;
+    PSCSI_REQUEST_BLOCK_INFO SrbInfo;
+
+    /* Spinlock must be held while this function executes */
+    KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
+
+    /* Allocate SRB data structure */
+    if (DeviceExtension->NeedSrbDataAlloc)
+    {
+        /* Treat the abort request in a special way */
+        if (Srb->Function == SRB_FUNCTION_ABORT_COMMAND)
+        {
+            SrbInfo = SpiGetSrbData(DeviceExtension,
+                                    Srb->PathId,
+                                    Srb->TargetId,
+                                    Srb->Lun,
+                                    Srb->QueueTag);
+        }
+        else if (Srb->SrbFlags &
+                 (SRB_FLAGS_QUEUE_ACTION_ENABLE | SRB_FLAGS_NO_QUEUE_FREEZE) &&
+                 !(Srb->SrbFlags & SRB_FLAGS_DISABLE_DISCONNECT)
+                 )
+        {
+            /* Do not process tagged commands if need request sense is set */
+            if (LunExtension->Flags & LUNEX_NEED_REQUEST_SENSE)
+            {
+                ASSERT(!(LunExtension->Flags & LUNEX_REQUEST_PENDING));
+
+                LunExtension->PendingRequest = Srb->OriginalRequest;
+                LunExtension->Flags |= LUNEX_REQUEST_PENDING | SCSI_PORT_LU_ACTIVE;
+
+                /* Relese the spinlock and return */
+                KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+                return NULL;
+            }
+
+            ASSERT(LunExtension->SrbInfo.Srb == NULL);
+            SrbInfo = DeviceExtension->FreeSrbInfo;
+
+            if (SrbInfo == NULL)
+            {
+                /* No SRB structures left in the list. We have to leave
+                   and wait while we are called again */
+
+                DeviceExtension->Flags |= SCSI_PORT_REQUEST_PENDING;
+                KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+                return NULL;
+            }
+
+            DeviceExtension->FreeSrbInfo = (PSCSI_REQUEST_BLOCK_INFO)SrbInfo->Requests.Flink;
+
+            /* QueueTag must never be 0, so +1 to it */
+            Srb->QueueTag = (UCHAR)(SrbInfo - DeviceExtension->SrbInfo) + 1;
+        }
+        else
+        {
+            /* Usual untagged command */
+            if (
+                (!IsListEmpty(&LunExtension->SrbInfo.Requests) ||
+                LunExtension->Flags & LUNEX_NEED_REQUEST_SENSE) &&
+                !(Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
+                )
+            {
+                /* Mark it as pending and leave */
+                ASSERT(!(LunExtension->Flags & LUNEX_REQUEST_PENDING));
+                LunExtension->Flags |= LUNEX_REQUEST_PENDING | SCSI_PORT_LU_ACTIVE;
+                LunExtension->PendingRequest = Srb->OriginalRequest;
+
+                KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+                return(NULL);
+            }
+
+            Srb->QueueTag = SP_UNTAGGED;
+            SrbInfo = &LunExtension->SrbInfo;
+        }
+    }
+    else
+    {
+        Srb->QueueTag = SP_UNTAGGED;
+        SrbInfo = &LunExtension->SrbInfo;
+    }
+
+    /* Allocate SRB extension structure */
+    if (DeviceExtension->NeedSrbExtensionAlloc)
+    {
+        /* Check the list of free extensions */
+        SrbExtension = DeviceExtension->FreeSrbExtensions;
+
+        /* If no free extensions... */
+        if (SrbExtension == NULL)
+        {
+            /* Free SRB data */
+            if (Srb->Function != SRB_FUNCTION_ABORT_COMMAND &&
+                Srb->QueueTag != SP_UNTAGGED)
+            {
+                SrbInfo->Requests.Blink = NULL;
+                SrbInfo->Requests.Flink = (PLIST_ENTRY)DeviceExtension->FreeSrbInfo;
+                DeviceExtension->FreeSrbInfo = SrbInfo;
+            }
+
+            /* Return, in order to be called again later */
+            DeviceExtension->Flags |= SCSI_PORT_REQUEST_PENDING;
+            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+            return NULL;
+        }
+
+        /* Remove that free SRB extension from the list (since
+           we're going to use it) */
+        DeviceExtension->FreeSrbExtensions = *((PVOID *)SrbExtension);
+
+        /* Spinlock can be released now */
+        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+
+        Srb->SrbExtension = SrbExtension;
+
+        if (Srb->SenseInfoBuffer != NULL &&
+            DeviceExtension->SupportsAutoSense)
+        {
+            /* Store pointer to the SenseInfo buffer */
+            SrbInfo->SaveSenseRequest = Srb->SenseInfoBuffer;
+
+            /* Does data fit the buffer? */
+            if (Srb->SenseInfoBufferLength > sizeof(SENSE_DATA))
+            {
+                /* No, disabling autosense at all */
+                Srb->SrbFlags |= SRB_FLAGS_DISABLE_AUTOSENSE;
+            }
+            else
+            {
+                /* Yes, update the buffer pointer */
+                Srb->SenseInfoBuffer = SrbExtension + DeviceExtension->SrbExtensionSize;
+            }
+        }
+    }
+    else
+    {
+        /* Cleanup... */
+        Srb->SrbExtension = NULL;
+        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+    }
+
+    return SrbInfo;
 }
 
 
