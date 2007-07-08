@@ -7,7 +7,7 @@
  */
 #include "resource.h"
 
-LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 
 /* Dialogs */

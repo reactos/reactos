@@ -5,7 +5,7 @@
  * Translation done by Vertaald door Eric Janssen
  */
 
-LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 {
 IDS_DllNotLoaded,   "LoadLibrary kon '%s' niet laden"

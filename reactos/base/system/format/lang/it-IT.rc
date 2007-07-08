@@ -1,6 +1,6 @@
 #include "resource.h"
 
-LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 /*
  * Moved all hardcoded strings to En.rc.

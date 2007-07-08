@@ -13,11 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Hungarian (unknown sub-lang: 0x0) resources
+// Hungarian resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_HUN)
 #ifdef _WIN32
-LANGUAGE LANG_HUNGARIAN, 0x0
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 #pragma code_page(1250)
 #endif //_WIN32
 
