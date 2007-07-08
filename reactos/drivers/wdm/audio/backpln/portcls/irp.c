@@ -113,7 +113,7 @@ PortClsPnp(
         ASSERT(portcls_ext->StartDevice);
 
         /* Call the StartDevice routine */
-        DPRINT("Calling StartDevice at 0x%8x\n", portcls_ext->StartDevice);
+        DPRINT("Calling StartDevice at 0x%8p\n", portcls_ext->StartDevice);
         status = portcls_ext->StartDevice(DeviceObject, Irp, resource_list);
 
         if ( ! NT_SUCCESS(status) )

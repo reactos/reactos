@@ -151,7 +151,7 @@ PcAddAdapterDevice(
 
     if ( ! NT_SUCCESS(status) )
     {
-        DPRINT("IoCreateDevice() failed with status 0x$08lx\n", status);
+        DPRINT("IoCreateDevice() failed with status 0x%08lx\n", status);
         return status;
     }
 
