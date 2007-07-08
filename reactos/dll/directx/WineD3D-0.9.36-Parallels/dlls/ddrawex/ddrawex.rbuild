@@ -1,4 +1,4 @@
-<module name="dplay" type="ddrawex" entrypoint="0" installbase="system32" installname="ddrawex.dll">  
+<module name="ddrawex" type="win32dll" entrypoint="0" installbase="system32" installname="ddrawex.dll">  
 	<importlibrary definition="ddrawex.def" />
 	<include base="ddrawex">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
