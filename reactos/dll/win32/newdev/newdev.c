@@ -301,7 +301,7 @@ SearchDriver(
 	}
 
 	DevInstData->drvInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
-	ret = SetupDiEnumDriverInfo(
+	ret = SetupDiEnumDriverInfoW(
 		DevInstData->hDevInfo,
 		&DevInstData->devInfoData,
 		SPDIT_COMPATDRIVER,
