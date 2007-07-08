@@ -8,7 +8,9 @@
 #define WINE_NATIVEWIN32 0
 
 /* use MSVC native exceptions */
-#define USE_COMPILER_EXCEPTIONS 1
+//#define USE_COMPILER_EXCEPTIONS 1
+/* use GCC native exceptions */
+#define USE_COMPILER_EXCEPTIONS 0 
 
 #ifdef NDEBUG
 # define WINE_NO_DEBUG_MSGS 1
