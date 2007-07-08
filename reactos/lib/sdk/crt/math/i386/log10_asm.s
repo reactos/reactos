@@ -17,8 +17,8 @@
 _log10:
         push    ebp
         mov     ebp,esp            
-        fld     qword ptr [ebp+8]   
         fldlg2  
+        fld     qword ptr [ebp+8]   
         fyl2x                    
         pop     ebp
         ret
