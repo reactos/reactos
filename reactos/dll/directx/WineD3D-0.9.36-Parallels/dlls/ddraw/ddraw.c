@@ -37,8 +37,6 @@
 # include "winerror.h"
 # include "wingdi.h"
 #endif
-#include "wine/exception.h"
-#include "excpt.h"
 
 #include "ddraw.h"
 #include "d3d.h"

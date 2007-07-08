@@ -41,8 +41,8 @@
 # include "wingdi.h"
 # include "winreg.h"
 #endif
-#include "wine/exception.h"
-#include "excpt.h"
+/* using the GPL PSEH libary for SEH Support */
+#include <pseh/pseh.h>
 
 #include "ddraw.h"
 #include "d3d.h"
@@ -495,6 +495,7 @@ HRESULT WINAPI
 DirectDrawEnumerateA(LPDDENUMCALLBACKA Callback,
                      void *Context)
 {
+    HRESULT Ret = DD_OK;
     BOOL stop = FALSE;
 
 #ifdef WINE_NATIVEWIN32
@@ -503,21 +504,21 @@ DirectDrawEnumerateA(LPDDENUMCALLBACKA Callback,
 #endif
     TRACE(" Enumerating default DirectDraw HAL interface\n");
     /* We only have one driver */
-    __TRY
+    _SEH_TRY
     {
         static CHAR driver_desc[] = "DirectDraw HAL",
         driver_name[] = "display";
 
         stop = !Callback(NULL, driver_desc, driver_name, Context);
     }
-    __EXCEPT_PAGE_FAULT
+    _SEH_HANDLE
     {
-        return E_INVALIDARG;
+        Ret = E_INVALIDARG;
     }
-    __ENDTRY
+    _SEH_END;
 
     TRACE(" End of enumeration\n");
-    return DD_OK;
+    return Ret;
 }
 
 /***********************************************************************
@@ -535,6 +536,7 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA Callback,
                        DWORD Flags)
 {
     BOOL stop = FALSE;
+    HRESULT Ret = DD_OK;
 
 #ifdef WINE_NATIVEWIN32
     if (IsPassthrough())
@@ -542,7 +544,7 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA Callback,
 #endif
     TRACE("Enumerating default DirectDraw HAL interface\n");
     /* We only have one driver by now */
-    __TRY
+    _SEH_TRY
     {
         static CHAR driver_desc[] = "DirectDraw HAL",
         driver_name[] = "display";
@@ -550,14 +552,14 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA Callback,
         /* QuickTime expects the description "DirectDraw HAL" */
         stop = !Callback(NULL, driver_desc, driver_name, Context, 0);
     }
-    __EXCEPT_PAGE_FAULT
+    _SEH_HANDLE
     {
-        return E_INVALIDARG;
+        Ret = E_INVALIDARG;
     }
-    __ENDTRY;
+    _SEH_END;
 
     TRACE("End of enumeration\n");
-    return DD_OK;
+    return Ret;
 }
 
 /***********************************************************************
@@ -573,6 +575,7 @@ HRESULT WINAPI
 DirectDrawEnumerateW(LPDDENUMCALLBACKW Callback, LPVOID Context)
 {
     BOOL stop = FALSE;
+    HRESULT Ret = DD_OK;
 
 #ifdef WINE_NATIVEWIN32
     if (IsPassthrough())
@@ -580,21 +583,21 @@ DirectDrawEnumerateW(LPDDENUMCALLBACKW Callback, LPVOID Context)
 #endif
     TRACE(" Enumerating default DirectDraw HAL interface\n");
     /* We only have one driver */
-    __TRY
+    _SEH_TRY
     {
         static WCHAR driver_desc[] = L"DirectDraw HAL",
         driver_name[] = L"display";
 
         stop = !Callback(NULL, driver_desc, driver_name, Context);
     }
-    __EXCEPT_PAGE_FAULT
+    _SEH_HANDLE
     {
-        return E_INVALIDARG;
+        Ret = E_INVALIDARG;
     }
-    __ENDTRY
+    SEH_END;
 
     TRACE(" End of enumeration\n");
-    return DD_OK;
+    return  Ret;
 }
 
 /***********************************************************************
@@ -610,6 +613,7 @@ HRESULT WINAPI
 DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW Callback, LPVOID Context, DWORD Flags)
 {
     BOOL stop = FALSE;
+    HRESULT Ret = DD_OK;
 
 #ifdef WINE_NATIVEWIN32
     if (IsPassthrough())
@@ -617,7 +621,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW Callback, LPVOID Context, DWORD Flags
 #endif
     TRACE("Enumerating default DirectDraw HAL interface\n");
     /* We only have one driver by now */
-    __TRY
+    _SEH_TRY
     {
         static WCHAR driver_desc[] = L"DirectDraw HAL",
         driver_name[] = L"display";
@@ -625,14 +629,14 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW Callback, LPVOID Context, DWORD Flags
         /* QuickTime expects the description "DirectDraw HAL" */
         stop = !Callback(NULL, driver_desc, driver_name, Context, 0);
     }
-    __EXCEPT_PAGE_FAULT
+    _SEH_HANDLE
     {
-        return E_INVALIDARG;
+        Ret = E_INVALIDARG;
     }
-    __ENDTRY;
+    SEH_END;
 
     TRACE("End of enumeration\n");
-    return DD_OK;
+    return  Ret;
 }
 
 
