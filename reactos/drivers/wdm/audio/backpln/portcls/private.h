@@ -13,26 +13,31 @@
 
 #include <portcls.h>
 
-NTAPI
+#ifdef _MSC_VER
+  #define STDCALL
+  #define DDKAPI
+#endif
+
 NTSTATUS
+NTAPI
 PortClsCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
-NTAPI
 NTSTATUS
+NTAPI
 PortClsPnp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
-NTAPI
 NTSTATUS
+NTAPI
 PortClsPower(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
-NTAPI
 NTSTATUS
+NTAPI
 PortClsSysControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);

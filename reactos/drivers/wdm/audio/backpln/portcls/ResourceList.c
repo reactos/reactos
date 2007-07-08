@@ -33,8 +33,8 @@ typedef struct CResourceList
     Basic IUnknown methods
 */
 
-STDMETHODCALLTYPE
 NTSTATUS
+STDMETHODCALLTYPE
 ResourceList_QueryInterface(
     IResourceList* this_container,
     IN  REFIID refiid,
@@ -44,8 +44,8 @@ ResourceList_QueryInterface(
     return STATUS_SUCCESS;
 }
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 ResourceList_AddRef(
     IResourceList* this_container)
 {
@@ -56,8 +56,8 @@ ResourceList_AddRef(
     return this->m_ref_count;
 }
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 ResourceList_Release(
     IResourceList* this_container)
 {
@@ -80,15 +80,15 @@ ResourceList_Release(
     IResourceList methods
 */
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 ResourceList_NumberOfEntries(IResourceList* this_container)
 {
     return 0;
 }
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 ResourceList_NumberOfEntriesOfType(
     IResourceList* this_container,
     IN  CM_RESOURCE_TYPE type)
@@ -120,8 +120,8 @@ ResourceList_NumberOfEntriesOfType(
     return count;
 }
 
-STDMETHODCALLTYPE
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
+STDMETHODCALLTYPE
 ResourceList_FindTranslatedEntry(
     IResourceList* this_container,
     IN  CM_RESOURCE_TYPE Type,
@@ -130,8 +130,8 @@ ResourceList_FindTranslatedEntry(
     return NULL;
 }
 
-STDMETHODCALLTYPE
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
+STDMETHODCALLTYPE
 ResourceList_FindUntranslatedEntry(
     IResourceList* this_container,
     IN  CM_RESOURCE_TYPE Type,
@@ -140,8 +140,8 @@ ResourceList_FindUntranslatedEntry(
     return NULL;
 }
 
-STDMETHODCALLTYPE
 NTSTATUS
+STDMETHODCALLTYPE
 ResourceList_AddEntry(
     IResourceList* this_container,
     IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated,
@@ -150,8 +150,8 @@ ResourceList_AddEntry(
     return STATUS_SUCCESS;
 }
 
-STDMETHODCALLTYPE
 NTSTATUS
+STDMETHODCALLTYPE
 ResourceList_AddEntryFromParent(
     IResourceList* this_container,
     IN  IResourceList* Parent,
@@ -161,16 +161,16 @@ ResourceList_AddEntryFromParent(
     return STATUS_SUCCESS;
 }
 
-STDMETHODCALLTYPE
 PCM_RESOURCE_LIST
+STDMETHODCALLTYPE
 ResourceList_TranslatedList(
     IResourceList* this_container)
 {
     return NULL;
 }
 
-STDMETHODCALLTYPE
 PCM_RESOURCE_LIST
+STDMETHODCALLTYPE
 ResourceList_UntranslatedList(
     IResourceList* this_container)
 {

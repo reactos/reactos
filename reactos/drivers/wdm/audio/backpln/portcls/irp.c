@@ -18,8 +18,9 @@
     set. Whether this is a good idea or not...?
 */
 #if 0
-static NTAPI
+static
 NTSTATUS
+NTAPI
 IrpStub(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -40,8 +41,8 @@ IrpStub(
     Handles IRP_MJ_CREATE, which occurs when someone wants to make use of
     a device.
 */
-NTAPI
 NTSTATUS
+NTAPI
 PortClsCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -62,8 +63,8 @@ PortClsCreate(
     IRP_MJ_PNP handler
     Used for things like IRP_MN_START_DEVICE
 */
-NTAPI
 NTSTATUS
+NTAPI
 PortClsPnp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -148,8 +149,8 @@ PortClsPnp(
     Power management. Handles IRP_MJ_POWER
     (not implemented)
 */
-NTAPI
 NTSTATUS
+NTAPI
 PortClsPower(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -169,8 +170,8 @@ PortClsPower(
     System control. Handles IRP_MJ_SYSTEM_CONTROL
     (not implemented)
 */
-NTAPI
 NTSTATUS
+NTAPI
 PortClsSysControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
