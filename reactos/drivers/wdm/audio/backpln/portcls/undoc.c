@@ -10,18 +10,24 @@ KsoDispatchCreateWithGenericFactory(
     LONG Unknown,
     PIRP Irp)
 {
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 void
 KsoGetIrpTargetFromFileObject(
     LONG Unknown)
 {
+    UNIMPLEMENTED;
+	return;
 }
 
 void
 KsoGetIrpTargetFromIrp(
     LONG Unknown)
 {
+    UNIMPLEMENTED;
+	return;
 }
 
 void
@@ -31,6 +37,8 @@ PcAcquireFormatResources(
     LONG Unknown3,
     LONG Unknown4)
 {
+    UNIMPLEMENTED;
+	return;
 }
 
 NTSTATUS
@@ -44,6 +52,8 @@ PcAddToEventTable(
     LONG Unknown6,
     LONG Unknown7)
 {
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -54,6 +64,8 @@ PcAddToPropertyTable(
     LONG Unknown3,
     CHAR Unknown4)
 {
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -63,12 +75,16 @@ PcCaptureFormat(
     LONG Unknown3,
     LONG Unknown4)
 {
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 PcCreateSubdeviceDescriptor(
     /* TODO */ )
 {
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* PcDeleteSubdeviceDescriptor */

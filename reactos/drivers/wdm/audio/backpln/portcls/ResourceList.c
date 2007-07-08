@@ -218,7 +218,7 @@ PcNewResourceList(
 
     DPRINT("PcNewResourceList\n");
 
-    new_list = ExAllocatePoolWithTag(sizeof(IResourceList), PoolType, 'LRcP');
+    new_list = ExAllocatePoolWithTag(sizeof(IResourceList), PoolType, TAG_PORTCLASS);
 
     if ( ! new_list )
     {
