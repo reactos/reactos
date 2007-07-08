@@ -210,8 +210,8 @@ acpi_os_install_interrupt_handler(u32 irq, OSD_HANDLER handler, void *context)
   Vector = HalGetInterruptVector(
     Internal,
     0,
-    0,
     irq,
+    0,
     &DIrql,
     &Affinity);
 

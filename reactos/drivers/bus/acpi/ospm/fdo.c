@@ -368,9 +368,6 @@ AcpiCheckIfIsSerialDebugPort(
   BOOLEAN Done;
   RESOURCE* resource;
 
-  if (!KdComPortInUse)
-    return FALSE;
-
   AcpiStatus = bm_get_node(Device->BmHandle, 0, &Node);
   if (!ACPI_SUCCESS(AcpiStatus))
     return FALSE;
@@ -871,41 +868,41 @@ FdoPnpControl(
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   switch (IrpSp->MinorFunction) {
-  case IRP_MN_CANCEL_REMOVE_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_CANCEL_REMOVE_DEVICE:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
-  case IRP_MN_CANCEL_STOP_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_CANCEL_STOP_DEVICE:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
-  case IRP_MN_DEVICE_USAGE_NOTIFICATION:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_DEVICE_USAGE_NOTIFICATION:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
-  case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
   case IRP_MN_QUERY_DEVICE_RELATIONS:
     Status = FdoQueryBusRelations(DeviceObject, Irp, IrpSp);
     break;
 
-  case IRP_MN_QUERY_PNP_DEVICE_STATE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_QUERY_PNP_DEVICE_STATE:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
-  case IRP_MN_QUERY_REMOVE_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_QUERY_REMOVE_DEVICE:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
-  case IRP_MN_QUERY_STOP_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_QUERY_STOP_DEVICE:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
-  case IRP_MN_REMOVE_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_REMOVE_DEVICE:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
   case IRP_MN_START_DEVICE:
     DPRINT("IRP_MN_START_DEVICE received\n");
@@ -918,13 +915,13 @@ FdoPnpControl(
     Status = STATUS_UNSUCCESSFUL;
     break;
 
-  case IRP_MN_SURPRISE_REMOVAL:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
+  //case IRP_MN_SURPRISE_REMOVAL:
+  //  Status = STATUS_NOT_IMPLEMENTED;
+  //  break;
 
   default:
     DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
-    Status = STATUS_NOT_IMPLEMENTED;
+    Status = Irp->IoStatus.Status;
     break;
   }
 
