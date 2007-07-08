@@ -1,0 +1,71 @@
+/*
+ * PROJECT:     Solitaire
+ * LICENSE:     Freeware, permission to use under Public Domain
+ * FILE:        base/applications/games/solitaire/en.rc
+ * PURPOSE:     English Language File for Solitaire
+ * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
+ */
+#include "resource.h"
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+
+/* Dialogs */
+
+IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Настройки"
+FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
+BEGIN
+    GROUPBOX        "Карти", -1, 7, 7, 65, 40
+    AUTORADIOBUTTON "Изтегли &една", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Изтегли &три", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+
+    AUTOCHECKBOX    "&Показване на времето", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
+    AUTOCHECKBOX    "Лента &състояние", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+
+    DEFPUSHBUTTON   "Добре", IDOK, 35, 97, 50, 14
+    PUSHBUTTON      "Отказ", IDCANCEL, 101, 97, 50, 14
+END
+
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_SOL_NAME    "Пасианс"
+    IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
+    IDS_SOL_QUIT    "Да прекратя ли текущата игра?"
+END
+
+
+/* Menus */
+
+IDR_MENU1 MENU DISCARDABLE
+BEGIN
+    POPUP "&Игра"
+    BEGIN
+        MENUITEM "&Раздаване\tF2",                   IDM_GAME_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Тесте...",                    IDM_GAME_DECK
+        MENUITEM "&Настройки...",                 IDM_GAME_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "Из&ход",                       IDM_GAME_EXIT
+    END
+    POPUP "Помо&щ"
+    BEGIN
+        MENUITEM "&Съдържание\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&За",                      IDM_HELP_ABOUT
+    END
+END
+
+
+
+/* Accelerator */
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
+    VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
+END

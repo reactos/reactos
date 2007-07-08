@@ -107,6 +107,7 @@ BEGIN
     "CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE ""explorer.exe.manifest""\r\n"
     "#endif\r\n"
     "\r\n"
+    "#include ""explorer-bg.rc""\r\n"
     "#include ""explorer-cz.rc""\r\n"
     "#include ""explorer-de.rc""\r\n"
     "#include ""explorer-en.rc""\r\n"
@@ -211,6 +212,7 @@ END
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.manifest"
 #endif
 
+#include "explorer-bg.rc"
 #include "explorer-cz.rc"
 #include "explorer-de.rc"
 #include "explorer-en.rc"

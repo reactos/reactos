@@ -1,0 +1,204 @@
+/*
+ *  Notepad (Bulgarian resources)
+ *
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+{
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "^O", CMD_OPEN
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+}
+
+MAIN_MENU MENU
+BEGIN
+	POPUP "&Файл"
+	BEGIN
+		MENUITEM "&Нов...",           CMD_NEW
+		MENUITEM "&Отваряне\tCtrl+O",     CMD_OPEN
+		MENUITEM "&Запис\tCtrl+S",     CMD_SAVE
+		MENUITEM "Запис &като...",       CMD_SAVE_AS
+		MENUITEM SEPARATOR
+		MENUITEM "Настройка на страницата...",    CMD_PAGE_SETUP
+		MENUITEM "От&печатване",            CMD_PRINT
+		MENUITEM "Настройка на печатача...", CMD_PRINTER_SETUP
+		MENUITEM SEPARATOR
+		MENUITEM "Из&ход",             CMD_EXIT
+	END
+	POPUP "&Edit"
+	BEGIN
+		MENUITEM "&Отмяна\tCtrl+Z",     CMD_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "От&рязване\tCtrl+X",      CMD_CUT
+		MENUITEM "&Запомняне\tCtrl+C",     CMD_COPY
+		MENUITEM "&Поставяне\tCtrl+V",    CMD_PASTE
+		MENUITEM "&Изтриване\tDel",      CMD_DELETE
+		MENUITEM SEPARATOR
+		MENUITEM "&Търсене...\tCtrl+F",  CMD_SEARCH
+		MENUITEM "Търсене на &следващото\tF3",    CMD_SEARCH_NEXT
+		MENUITEM "Замяна\tCtrl+H",   CMD_REPLACE
+		MENUITEM "Отиване на...\tCtrl+G",  CMD_GOTO
+		MENUITEM SEPARATOR
+		MENUITEM "Избор на вси&чки\tCtrl+A",       CMD_SELECT_ALL
+		MENUITEM "&Време/дата\tF5",    CMD_TIME_DATE
+	END
+	POPUP "О&формление"
+	BEGIN
+		MENUITEM "&Пренасяне на дългите редове",  CMD_WRAP
+		MENUITEM "&Шрифт...",          CMD_FONT
+	END
+	POPUP "&Изглед"
+	BEGIN
+		MENUITEM "Лента на &състоянието",    CMD_STATUSBAR
+	END
+	POPUP "Помо&щ"
+	BEGIN
+		MENUITEM "&Съдържание",         CMD_HELP_CONTENTS
+		MENUITEM "&Търсене...",        CMD_HELP_SEARCH
+		MENUITEM "&Помощ за помощта",     CMD_HELP_ON_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "&За"             CMD_ABOUT
+		MENUITEM "С&ведения",      CMD_ABOUT_WINE
+	END
+END
+
+/* Dialog `Page setup' */
+
+DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Настройка на страницата"
+{
+LTEXT    "&Глава:",  0x140,   10, 07, 40, 15
+EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
+LTEXT    "&Пета:",  0x142,   10, 24, 40, 15
+EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
+
+GROUPBOX "&Полета:",      0x144,     10, 43,160, 45
+LTEXT    "&Отляво:",        0x145,   20, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Отгоре:",         0x148,    20, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Отдясно:",       0x14B, 100, 55, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT    "&Отдолу:",      0x14E,100, 73, 30, 10, WS_CHILD
+EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+
+DEFPUSHBUTTON "Добре",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Отказ",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Помо&щ",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
+}
+
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Знаков набор"
+{
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Знаков набор:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Endlines:",0x156,5,20,41,12
+}
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Отиване на ред"
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Ред номер:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "Добре", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Отказ", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+}
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "За Бележника на РеактОС"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Бележник на РеактОС, в1,0\r\nВъзпроизводствено право 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nВъзпроизводствено право 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nВъзпроизводствено право 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nВъзпроизводствено право 2002 Andriy Palamarchuk\r\n",
+                    -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
+    CONTROL         " ",
+                    -1,"Static",0x50000000,8,48,272,11
+    DEFPUSHBUTTON   "Затваряне",IDOK,114,149,44,15,WS_GROUP
+    ICON            IDI_NPICON,-1,12,9,20,30
+    EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
+                    ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  /* STRING_LICENSE, "Приложението е свободно; можете да по разпространявате и/или променяте в рамките на условията на Общото обществено разрешително ГНУ, както е обнародвано от Учреждението за свободен софтуер. either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA." */
+END
+
+STRINGTABLE DISCARDABLE
+{
+STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Страница &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,             "20 мм"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 мм"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,              "25 мм"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,   "25 мм"     /* FIXME */
+
+STRING_NOTEPAD,                                 "Бележник"
+STRING_ERROR,                                   "ГРЕШКА"
+STRING_WARNING,                                 "ПРЕДУПРЕЖДЕНИЕ"
+STRING_INFO,                                    "Сведение"
+
+STRING_UNTITLED,                                "(без име)"
+
+STRING_ALL_FILES,                               "Всички файлове (*.*)"
+STRING_TEXT_FILES_TXT,                  "Словесни файлове (*.txt)"
+
+STRING_TOOLARGE,                                "Файлът '%s' е твърде голям за бележника.\n \
+Please use a different editor."
+STRING_NOTEXT,                                  "Не сте въвел текст. \
+\nPlease type something and try again"
+STRING_DOESNOTEXIST,                            "Файлът '%s'\nне съществува\n\n \
+Do you want to create a new file ?"
+STRING_NOTSAVED,                                "Файлът '%s'\nе бил променен\n\n \
+Would you like to save the changes ?"
+STRING_NOTFOUND,                                        "'%s' не може да бъде открит."
+STRING_OUT_OF_MEMORY,                   "Няма достатъчно памет за приключване на\
+задачата. \nЗатворете едно или повече приложения,\n за да освободите памет."
+STRING_CANNOTFIND                               "Не мога да открия '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Уникод"
+STRING_UNICODE_BE,                              "Уникод (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Уьиндоуьс"
+STRING_LF,                                      "Юникс"
+STRING_CR,                                      "Мак"
+}

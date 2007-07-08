@@ -3,6 +3,7 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"

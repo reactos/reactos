@@ -1,0 +1,28 @@
+// Bulgarian language resource file
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "&Затваряне",                      IDM_CLOSE
+    END
+    POPUP "Из&глед"
+    BEGIN
+        MENUITEM "Големи значки",                 IDM_LARGEICONS
+        MENUITEM "Малки значки",                 IDM_SMALLICONS
+        MENUITEM "Списък",                        IDM_LIST
+        MENUITEM "Подробен",                     IDM_DETAILS
+    END
+    POPUP "Помощ"
+    BEGIN
+        MENUITEM "За",                       IDM_ABOUT
+    END
+END
+
