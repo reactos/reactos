@@ -34,5 +34,9 @@
 <directory name="d3d9">
 	<xi:include href="d3d9/d3d9.rbuild" />
 </directory>
+
+<directory name="d3d9">
+	<xi:include href="WineD3D-0.9.36-Parallels/WineD3D-0.9.36-Parallels.rbuild" />
+</directory>
 </group>
 
