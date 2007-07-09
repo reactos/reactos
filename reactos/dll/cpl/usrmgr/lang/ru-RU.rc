@@ -1,5 +1,5 @@
 // Russian language resource file (Dmitry Chapyshev, 2007-06-12)
-LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 /* Dialogs */
 

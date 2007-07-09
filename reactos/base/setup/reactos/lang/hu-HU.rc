@@ -1,7 +1,7 @@
 /* OLD $Id: En.rc 12852 2005-01-06 13:58:04Z mf $ */
 // Hungarian translation by Robert Horvath - talley at cubeclub.hu
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_HUNGARIAN_HUNGARY
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 /* String Tables */
 STRINGTABLE DISCARDABLE 

@@ -5,7 +5,7 @@
  * TRANSLATOR:  Sumath Aowsakulsutthi
  */
 
-LANGUAGE LANG_THAI, SUBLANG_THAI_THAILAND
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 /* String Tables */
 

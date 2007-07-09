@@ -4,7 +4,7 @@
  * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  */
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
 IDS_DllNotLoaded,   "Невозможно загрузить библиотеку '%s'"

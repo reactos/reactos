@@ -5,7 +5,7 @@
 * https://sourceforge.net/projects/reactospl  
 */  
 
-LANGUAGE LANG_POLISH, SUBLANG_POLISH_POLAND
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
 IDS_DllNotLoaded,   "LoadLibrary nie móg³ za³adowaæ '%s'"

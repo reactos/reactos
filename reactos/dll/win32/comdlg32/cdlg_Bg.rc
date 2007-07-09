@@ -476,13 +476,6 @@ STRINGTABLE DISCARDABLE
     IDS_OPEN_FILE   "Отваряне на файл"
 }
 
-
-/****************************************************************/
-/* English neutral resources
-/****************************************************************/
-
-LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
-
 CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Шрифт"
