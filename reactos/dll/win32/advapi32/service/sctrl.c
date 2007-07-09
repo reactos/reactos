@@ -177,7 +177,12 @@ ScServiceMainStub(LPVOID Context)
                                 0,
                                 (dwArgCount + 1) * sizeof(LPSTR));
         if (lpArgVector == NULL)
+        {
+            HeapFree(GetProcessHeap(),
+                        0,
+                        AnsiString);
             return ERROR_OUTOFMEMORY;
+        }
 
         dwArgCount = 0;
         Ptr = AnsiString;
