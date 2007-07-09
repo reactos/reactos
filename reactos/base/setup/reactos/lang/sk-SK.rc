@@ -1,0 +1,12 @@
+// Slovak translation by Kario  2007 <kario@szm.sk>
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+/* String Tables */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CAPTION  "Inötal·cia ReactOS"
+    IDS_TEXT     "ReactOS sa z tohto CD ned· nainötalovaù hneÔ teraz!\n\nReötartujte prosÌm poËÌtaË s vloûen˝m CD, aby sa mohol ReactOS naiötalovaù."
+END
+
+/* EOF */

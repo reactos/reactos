@@ -1,0 +1,27 @@
+// Slovak language resource file (Kario, 2007-02-25) <kario@szm.sk>
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&S˙bor"
+    BEGIN
+        MENUITEM "&Zavrieù",                    IDM_CLOSE
+    END
+    POPUP "&Zobrazenia"
+    BEGIN
+        MENUITEM "&VeækÈ ikony",                IDM_LARGEICONS
+        MENUITEM "&MalÈ ikony",                 IDM_SMALLICONS
+        MENUITEM "&Zoznam",                     IDM_LIST
+        MENUITEM "&Podrobnosti",                IDM_DETAILS
+    END
+    POPUP "&PomocnÌk"
+    BEGIN
+        MENUITEM "»&o je...",                   IDM_ABOUT
+    END
+END
