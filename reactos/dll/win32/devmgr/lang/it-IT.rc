@@ -1,6 +1,6 @@
 // Italian language resource file (Paolo Devoti, devotip@tiscali.it, 2007-01-10)
 
-LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN

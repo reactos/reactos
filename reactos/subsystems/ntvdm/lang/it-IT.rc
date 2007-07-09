@@ -8,7 +8,7 @@
 *              Copyright (C) 2007 Daniele Forsi (dforsi at gmail.com) Italian Translation
 */
 
-LANGUAGE LANG_ITALIAN, SUBLANG_ITALIAN
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 {
 

@@ -1,7 +1,7 @@
 // German language resource file (David Hinz (fRy2oo5), 2005-12-04) ( and Friedrich Stange (dj_smith_reactos@online.de), 2006-1-20 )
 // This is incomplete, IDS_DEV_UNKNOWN_RESOURCE still needs to be translated
 
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN

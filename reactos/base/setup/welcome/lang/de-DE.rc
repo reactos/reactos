@@ -4,7 +4,7 @@
  * German (Austria) resources by Klemens Friedl (frik85 at hotmail dot com)
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 /* String Tables */
 
