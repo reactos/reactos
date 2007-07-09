@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS Kernel
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/cm/registry.c
@@ -46,78 +45,79 @@ volatile BOOLEAN CmiHiveSyncPending = FALSE;
 KDPC CmiHiveSyncDpc;
 KTIMER CmiHiveSyncTimer;
 
-static VOID STDCALL
+static VOID
+NTAPI
 CmiHiveSyncDpcRoutine(PKDPC Dpc,
-		      PVOID DeferredContext,
-		      PVOID SystemArgument1,
-		      PVOID SystemArgument2);
+                      PVOID DeferredContext,
+                      PVOID SystemArgument1,
+                      PVOID SystemArgument2);
 
 extern LIST_ENTRY CmiCallbackHead;
 extern FAST_MUTEX CmiCallbackLock;
 
 extern UNICODE_STRING CmpSystemStartOptions;
 extern UNICODE_STRING CmpLoadOptions;
+
 /* FUNCTIONS ****************************************************************/
 
-VOID STDCALL
+VOID
+NTAPI
 CmiWorkerThread(PVOID Param)
 {
-  NTSTATUS Status;
-  PLIST_ENTRY CurrentEntry;
-  PKEY_OBJECT CurrentKey;
-  ULONG Count;
+    NTSTATUS Status;
+    PLIST_ENTRY CurrentEntry;
+    PKEY_OBJECT CurrentKey;
+    ULONG Count;
 
-
-  while (1)
-  {
-    Status = KeWaitForSingleObject(&CmiWorkerTimer,
-	                           Executive,
-				   KernelMode,
-				   FALSE,
-				   NULL);
-    if (Status == STATUS_SUCCESS)
+    while (1)
     {
-      DPRINT("CmiWorkerThread\n");
+        Status = KeWaitForSingleObject(&CmiWorkerTimer,
+                                       Executive,
+                                       KernelMode,
+                                       FALSE,
+                                       NULL);
+        if (Status == STATUS_SUCCESS)
+        {
+            DPRINT("CmiWorkerThread\n");
 
-      /* Acquire hive lock */
-      KeEnterCriticalRegion();
-      ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+            /* Acquire hive lock */
+            KeEnterCriticalRegion();
+            ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
-      CmiTimer++;
+            CmiTimer++;
 
-      Count = 0;
-      CurrentEntry = CmiKeyObjectListHead.Blink;
-      while (CurrentEntry != &CmiKeyObjectListHead)
-      {
-         CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, ListEntry);
-	 if (CurrentKey->TimeStamp + 120 > CmiTimer)
-	 {
-	    /* The object was accessed in the last 10min */
-	    break;
-	 }
-	 if (1 == ObGetObjectPointerCount(CurrentKey) &&
-	     !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
-	 {
-	    ObDereferenceObject(CurrentKey);
+            Count = 0;
             CurrentEntry = CmiKeyObjectListHead.Blink;
-	    Count++;
-	 }
-	 else
-	 {
-	    CurrentEntry = CurrentEntry->Blink;
-	 }
-      }
-      ExReleaseResourceLite(&CmpRegistryLock);
-      KeLeaveCriticalRegion();
+            while (CurrentEntry != &CmiKeyObjectListHead)
+            {
+                CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, ListEntry);
+                if (CurrentKey->TimeStamp + 120 > CmiTimer)
+                {
+                    /* The object was accessed in the last 10min */
+                    break;
+                }
+                if (1 == ObGetObjectPointerCount(CurrentKey) &&
+                    !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
+                {
+                    ObDereferenceObject(CurrentKey);
+                    CurrentEntry = CmiKeyObjectListHead.Blink;
+                    Count++;
+                }
+                else
+                {
+                    CurrentEntry = CurrentEntry->Blink;
+                }
+            }
+            ExReleaseResourceLite(&CmpRegistryLock);
+            KeLeaveCriticalRegion();
 
-      DPRINT("Removed %d key objects\n", Count);
-
+            DPRINT("Removed %d key objects\n", Count);
+        }
+        else
+        {
+            KEBUGCHECK(0);
+        }
     }
-    else
-    {
-      KEBUGCHECK(0);
-    }
-  }
 }
 
 PVOID
@@ -194,7 +194,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
 
 NTSTATUS
 CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-	       IN PEREGISTRY_HIVE RegistryHive)
+               IN PEREGISTRY_HIVE RegistryHive)
 {
     UNICODE_STRING RemainingPath;
     PKEY_OBJECT ParentKey;
@@ -205,81 +205,82 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
 
     DPRINT("CmiConnectHive(%p, %p) called.\n",
-	   KeyObjectAttributes, RegistryHive);
+        KeyObjectAttributes, RegistryHive);
 
     /* Capture all the info */
     DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(KeyObjectAttributes,
-					KernelMode,
-					FALSE,
-					&ObjectCreateInfo,
-					&ObjectName);
+                                        KernelMode,
+                                        FALSE,
+                                        &ObjectCreateInfo,
+                                        &ObjectName);
 
     if (!NT_SUCCESS(Status))
-      {
-	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-	return Status;
-      }
+    {
+        DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+        return Status;
+    }
 
     Status = CmFindObject(&ObjectCreateInfo,
-			  &ObjectName,
-			  (PVOID*)&ParentKey,
-			  &RemainingPath,
-			  CmpKeyObjectType,
-			  NULL,
-			  NULL);
+                          &ObjectName,
+                          (PVOID*)&ParentKey,
+                          &RemainingPath,
+                          CmpKeyObjectType,
+                          NULL,
+                          NULL);
     /* Yields a new reference */
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
 
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     if (!NT_SUCCESS(Status))
-      {
-	return Status;
-      }
+    {
+        return Status;
+    }
 
     DPRINT ("RemainingPath %wZ\n", &RemainingPath);
 
     if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
-      {
-	ObDereferenceObject (ParentKey);
-	RtlFreeUnicodeString(&RemainingPath);
-	return STATUS_OBJECT_NAME_COLLISION;
-      }
+    {
+        ObDereferenceObject (ParentKey);
+        RtlFreeUnicodeString(&RemainingPath);
+        return STATUS_OBJECT_NAME_COLLISION;
+    }
 
     /* Ignore leading backslash */
     SubName = RemainingPath.Buffer;
     if (*SubName == L'\\')
-	SubName++;
+        SubName++;
 
     /* If RemainingPath contains \ we must return error
        because CmiConnectHive() can not create trees */
     if (wcschr (SubName, L'\\') != NULL)
-      {
-	ObDereferenceObject (ParentKey);
-	RtlFreeUnicodeString(&RemainingPath);
-	return STATUS_OBJECT_NAME_NOT_FOUND;
-      }
+    {
+        ObDereferenceObject (ParentKey);
+        RtlFreeUnicodeString(&RemainingPath);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
 
     DPRINT("RemainingPath %wZ  ParentKey %p\n",
-	   &RemainingPath, ParentKey);
+        &RemainingPath, ParentKey);
 
     Status = ObCreateObject(KernelMode,
-			    CmpKeyObjectType,
-			    NULL,
-			    KernelMode,
-			    NULL,
-			    sizeof(KEY_OBJECT),
-			    0,
-			    0,
-			    (PVOID*)&NewKey);
-        
+                            CmpKeyObjectType,
+                            NULL,
+                            KernelMode,
+                            NULL,
+                            sizeof(KEY_OBJECT),
+                            0,
+                            0,
+                            (PVOID*)&NewKey);
+
     if (!NT_SUCCESS(Status))
-      {
-	DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
-	ObDereferenceObject (ParentKey);
-	RtlFreeUnicodeString(&RemainingPath);
-	return Status;
-      }
+    {
+        DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
+        ObDereferenceObject (ParentKey);
+        RtlFreeUnicodeString(&RemainingPath);
+        return Status;
+    }
+
 #if 0
     DPRINT("Inserting Key into Object Tree\n");
     Status =  ObInsertObject((PVOID)NewKey,
@@ -288,55 +289,55 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                              0,
                              NULL,
                              NULL);
-  DPRINT("Status %x\n", Status);
+    DPRINT("Status %x\n", Status);
 #else
     /* Free the create information */
     ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo);
     OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo = NULL;
 #endif
-  NewKey->Flags = 0;
-  NewKey->SubKeyCounts = 0;
-  NewKey->SubKeys = NULL;
-  NewKey->SizeOfSubKeys = 0;
-  InsertTailList(&CmiKeyObjectListHead, &NewKey->ListEntry);
+    NewKey->Flags = 0;
+    NewKey->SubKeyCounts = 0;
+    NewKey->SubKeys = NULL;
+    NewKey->SizeOfSubKeys = 0;
+    InsertTailList(&CmiKeyObjectListHead, &NewKey->ListEntry);
 
-  DPRINT ("SubName %S\n", SubName);
+    DPRINT ("SubName %S\n", SubName);
 
-  Status = CmiAddSubKey(ParentKey->RegistryHive,
-			ParentKey,
-			NewKey,
-			&RemainingPath,
-			0,
-			NULL,
-			REG_OPTION_VOLATILE);
-  if (!NT_SUCCESS(Status))
+    Status = CmiAddSubKey(ParentKey->RegistryHive,
+                          ParentKey,
+                          NewKey,
+                          &RemainingPath,
+                          0,
+                          NULL,
+                          REG_OPTION_VOLATILE);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
-      ObDereferenceObject (NewKey);
-      ObDereferenceObject (ParentKey);
-      return STATUS_INSUFFICIENT_RESOURCES;
+        DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
+        ObDereferenceObject (NewKey);
+        ObDereferenceObject (ParentKey);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  NewKey->KeyCellOffset = RegistryHive->Hive.HiveHeader->RootCell;
-  NewKey->KeyCell = HvGetCell (&RegistryHive->Hive, NewKey->KeyCellOffset);
-  NewKey->RegistryHive = RegistryHive;
+    NewKey->KeyCellOffset = RegistryHive->Hive.HiveHeader->RootCell;
+    NewKey->KeyCell = HvGetCell (&RegistryHive->Hive, NewKey->KeyCellOffset);
+    NewKey->RegistryHive = RegistryHive;
 
-  Status = RtlpCreateUnicodeString(&NewKey->Name,
-              SubName, NonPagedPool);
-  RtlFreeUnicodeString(&RemainingPath);
-  if (!NT_SUCCESS(Status))
+    Status = RtlpCreateUnicodeString(&NewKey->Name,
+        SubName, NonPagedPool);
+    RtlFreeUnicodeString(&RemainingPath);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
-      ObDereferenceObject (NewKey);
-      ObDereferenceObject (ParentKey);
-      return STATUS_INSUFFICIENT_RESOURCES;
+        DPRINT1("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
+        ObDereferenceObject (NewKey);
+        ObDereferenceObject (ParentKey);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  /* FN1 */
-  ObReferenceObject (NewKey);
+    /* FN1 */
+    ObReferenceObject (NewKey);
 
-  CmiAddKeyToList (ParentKey, NewKey);
-  ObDereferenceObject (ParentKey);
+    CmiAddKeyToList (ParentKey, NewKey);
+    ObDereferenceObject (ParentKey);
 
     VERIFY_KEY_OBJECT(NewKey);
 
@@ -350,406 +351,401 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 static NTSTATUS
 CmiInitControlSetLink (VOID)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING ControlSetKeyName = RTL_CONSTANT_STRING(
-                                L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
-  UNICODE_STRING ControlSetLinkName =  RTL_CONSTANT_STRING(
-                            L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
-  UNICODE_STRING ControlSetValueName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
-  HANDLE KeyHandle;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ControlSetKeyName = RTL_CONSTANT_STRING(
+        L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
+    UNICODE_STRING ControlSetLinkName =  RTL_CONSTANT_STRING(
+        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+    UNICODE_STRING ControlSetValueName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
+    HANDLE KeyHandle;
+    NTSTATUS Status;
 
-  /* Create 'ControlSet001' key */
-  InitializeObjectAttributes (&ObjectAttributes,
-			      &ControlSetKeyName,
-			      OBJ_CASE_INSENSITIVE,
-			      NULL,
-			      NULL);
-  Status = ZwCreateKey (&KeyHandle,
-			KEY_ALL_ACCESS,
-			&ObjectAttributes,
-			0,
-			NULL,
-			REG_OPTION_NON_VOLATILE,
-			NULL);
-  if (!NT_SUCCESS(Status))
+    /* Create 'ControlSet001' key */
+    InitializeObjectAttributes (&ObjectAttributes,
+                                &ControlSetKeyName,
+                                OBJ_CASE_INSENSITIVE,
+                                NULL,
+                                NULL);
+    Status = ZwCreateKey (&KeyHandle,
+                          KEY_ALL_ACCESS,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          REG_OPTION_NON_VOLATILE,
+                          NULL);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
-      return Status;
+        DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
+        return Status;
     }
-  ZwClose (KeyHandle);
+    ZwClose (KeyHandle);
 
-  /* Link 'CurrentControlSet' to 'ControlSet001' key */
-  InitializeObjectAttributes (&ObjectAttributes,
-			      &ControlSetLinkName,
-			      OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
-			      NULL,
-			      NULL);
-  Status = ZwCreateKey (&KeyHandle,
-			KEY_ALL_ACCESS | KEY_CREATE_LINK,
-			&ObjectAttributes,
-			0,
-			NULL,
-			REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
-			NULL);
-  if (!NT_SUCCESS(Status))
+    /* Link 'CurrentControlSet' to 'ControlSet001' key */
+    InitializeObjectAttributes (&ObjectAttributes,
+                                &ControlSetLinkName,
+                                OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
+                                NULL,
+                                NULL);
+    Status = ZwCreateKey (&KeyHandle,
+                          KEY_ALL_ACCESS | KEY_CREATE_LINK,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
+                          NULL);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
-      return Status;
+        DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
+        return Status;
     }
 
-  Status = ZwSetValueKey (KeyHandle,
-			  &ControlSetValueName,
-			  0,
-			  REG_LINK,
-			  (PVOID)ControlSetKeyName.Buffer,
-			  ControlSetKeyName.Length);
-  if (!NT_SUCCESS(Status))
+    Status = ZwSetValueKey (KeyHandle,
+                            &ControlSetValueName,
+                            0,
+                            REG_LINK,
+                            (PVOID)ControlSetKeyName.Buffer,
+                            ControlSetKeyName.Length);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("ZwSetValueKey() failed (Status %lx)\n", Status);
+        DPRINT1 ("ZwSetValueKey() failed (Status %lx)\n", Status);
     }
-  ZwClose (KeyHandle);
+    ZwClose (KeyHandle);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot)
 {
-  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING FileName;
-  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
-  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
-  HANDLE KeyHandle;
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING FileName;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
+    HANDLE KeyHandle;
 
-  NTSTATUS Status;
+    NTSTATUS Status;
 
-  WCHAR ConfigPath[MAX_PATH];
+    WCHAR ConfigPath[MAX_PATH];
 
-  ULONG BufferSize;
-  ULONG ResultSize;
-  PWSTR EndPtr;
+    ULONG BufferSize;
+    ULONG ResultSize;
+    PWSTR EndPtr;
 
+    DPRINT("CmiInitHives() called\n");
 
-  DPRINT("CmiInitHives() called\n");
-
-  if (SetupBoot == TRUE)
+    if (SetupBoot == TRUE)
     {
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &KeyName,
-				 OBJ_CASE_INSENSITIVE,
-				 NULL,
-				 NULL);
-      Status =  ZwOpenKey(&KeyHandle,
-			  KEY_ALL_ACCESS,
-			  &ObjectAttributes);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
-	  return(Status);
-	}
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status =  ZwOpenKey(&KeyHandle,
+                            KEY_ALL_ACCESS,
+                            &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
+            return(Status);
+        }
 
-      BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
-      ValueInfo = ExAllocatePool(PagedPool,
-				 BufferSize);
-      if (ValueInfo == NULL)
-	{
-	  ZwClose(KeyHandle);
-	  return(STATUS_INSUFFICIENT_RESOURCES);
-	}
+        BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+        ValueInfo = ExAllocatePool(PagedPool, BufferSize);
+        if (ValueInfo == NULL)
+        {
+            ZwClose(KeyHandle);
+            return(STATUS_INSUFFICIENT_RESOURCES);
+        }
 
-      Status = ZwQueryValueKey(KeyHandle,
-			       &ValueName,
-			       KeyValuePartialInformation,
-			       ValueInfo,
-			       BufferSize,
-			       &ResultSize);
-      ZwClose(KeyHandle);
-      if (!NT_SUCCESS(Status))
-	{
-	  ExFreePool(ValueInfo);
-	  return(Status);
-	}
+        Status = ZwQueryValueKey(KeyHandle,
+                                 &ValueName,
+                                 KeyValuePartialInformation,
+                                 ValueInfo,
+                                 BufferSize,
+                                 &ResultSize);
+        ZwClose(KeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(ValueInfo);
+            return(Status);
+        }
 
-      RtlCopyMemory(ConfigPath,
-		    ValueInfo->Data,
-		    ValueInfo->DataLength);
-      ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = (WCHAR)0;
-      ExFreePool(ValueInfo);
+        RtlCopyMemory(ConfigPath,
+                      ValueInfo->Data,
+                      ValueInfo->DataLength);
+        ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = (WCHAR)0;
+        ExFreePool(ValueInfo);
     }
-  else
+    else
     {
-      wcscpy(ConfigPath, L"\\SystemRoot");
+        wcscpy(ConfigPath, L"\\SystemRoot");
     }
-  wcscat(ConfigPath, L"\\system32\\config");
+    wcscat(ConfigPath, L"\\system32\\config");
 
-  DPRINT("ConfigPath: %S\n", ConfigPath);
+    DPRINT("ConfigPath: %S\n", ConfigPath);
 
-  EndPtr = ConfigPath + wcslen(ConfigPath);
+    EndPtr = ConfigPath + wcslen(ConfigPath);
 
-  /* FIXME: Save boot log */
+    /* FIXME: Save boot log */
 
-  /* Connect the SYSTEM hive only if it has been created */
-  if (SetupBoot == TRUE)
+    /* Connect the SYSTEM hive only if it has been created */
+    if (SetupBoot == TRUE)
     {
-      wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
-      DPRINT ("ConfigPath: %S\n", ConfigPath);
+        wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
+        DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-      RtlInitUnicodeString (&KeyName,
-			    REG_SYSTEM_KEY_NAME);
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &KeyName,
-				 OBJ_CASE_INSENSITIVE,
-				 NULL,
-				 NULL);
+        RtlInitUnicodeString (&KeyName,
+                              REG_SYSTEM_KEY_NAME);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
 
-      RtlInitUnicodeString (&FileName,
-			    ConfigPath);
-      Status = CmiLoadHive (&ObjectAttributes,
-			    &FileName,
-			    0);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
-	  return Status;
-	}
+        RtlInitUnicodeString (&FileName,
+                              ConfigPath);
+        Status = CmiLoadHive (&ObjectAttributes,
+                              &FileName,
+                              0);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
+            return Status;
+        }
 
-      Status = CmiInitControlSetLink ();
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("CmiInitControlSetLink() failed (Status %lx)\n", Status);
-	  return(Status);
-	}
+        Status = CmiInitControlSetLink ();
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("CmiInitControlSetLink() failed (Status %lx)\n", Status);
+            return(Status);
+        }
     }
 
-  /* Connect the SOFTWARE hive */
-  wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
-  RtlInitUnicodeString (&FileName,
-			ConfigPath);
-  DPRINT ("ConfigPath: %S\n", ConfigPath);
+    /* Connect the SOFTWARE hive */
+    wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
+    RtlInitUnicodeString (&FileName,
+                          ConfigPath);
+    DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-  RtlInitUnicodeString (&KeyName,
-			REG_SOFTWARE_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
+    RtlInitUnicodeString (&KeyName,
+                          REG_SOFTWARE_KEY_NAME);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
-  Status = CmiLoadHive (&ObjectAttributes,
-			&FileName,
-			0);
-  if (!NT_SUCCESS(Status))
+    Status = CmiLoadHive (&ObjectAttributes,
+                          &FileName,
+                          0);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-      return(Status);
+        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+        return(Status);
     }
 
-  /* Connect the SAM hive */
-  wcscpy(EndPtr, REG_SAM_FILE_NAME);
-  RtlInitUnicodeString (&FileName,
-			ConfigPath);
-  DPRINT ("ConfigPath: %S\n", ConfigPath);
+    /* Connect the SAM hive */
+    wcscpy(EndPtr, REG_SAM_FILE_NAME);
+    RtlInitUnicodeString (&FileName,
+                          ConfigPath);
+    DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-  RtlInitUnicodeString (&KeyName,
-			REG_SAM_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = CmiLoadHive (&ObjectAttributes,
-			&FileName,
-			0);
-  if (!NT_SUCCESS(Status))
+    RtlInitUnicodeString (&KeyName,
+                          REG_SAM_KEY_NAME);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = CmiLoadHive (&ObjectAttributes,
+                          &FileName,
+                          0);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-      return(Status);
+        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+        return(Status);
     }
 
-  /* Connect the SECURITY hive */
-  wcscpy(EndPtr, REG_SEC_FILE_NAME);
-  RtlInitUnicodeString (&FileName,
-			ConfigPath);
-  DPRINT ("ConfigPath: %S\n", ConfigPath);
+    /* Connect the SECURITY hive */
+    wcscpy(EndPtr, REG_SEC_FILE_NAME);
+    RtlInitUnicodeString (&FileName,
+                          ConfigPath);
+    DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-  RtlInitUnicodeString (&KeyName,
-			REG_SEC_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = CmiLoadHive (&ObjectAttributes,
-			&FileName,
-			0);
-  if (!NT_SUCCESS(Status))
+    RtlInitUnicodeString (&KeyName,
+                          REG_SEC_KEY_NAME);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = CmiLoadHive (&ObjectAttributes,
+                          &FileName,
+                          0);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-      return(Status);
+        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+        return(Status);
     }
 
-  /* Connect the DEFAULT hive */
-  wcscpy(EndPtr, REG_DEFAULT_USER_FILE_NAME);
-  RtlInitUnicodeString (&FileName,
-			ConfigPath);
-  DPRINT ("ConfigPath: %S\n", ConfigPath);
+    /* Connect the DEFAULT hive */
+    wcscpy(EndPtr, REG_DEFAULT_USER_FILE_NAME);
+    RtlInitUnicodeString (&FileName,
+                          ConfigPath);
+    DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-  RtlInitUnicodeString (&KeyName,
-			REG_DEFAULT_USER_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = CmiLoadHive (&ObjectAttributes,
-			&FileName,
-			0);
-  if (!NT_SUCCESS(Status))
+    RtlInitUnicodeString (&KeyName,
+                          REG_DEFAULT_USER_KEY_NAME);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = CmiLoadHive (&ObjectAttributes,
+                          &FileName,
+                          0);
+    if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-      return(Status);
+        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+        return(Status);
     }
 
-//  CmiCheckRegistry(TRUE);
+    //CmiCheckRegistry(TRUE);
 
-  /* Start automatic hive synchronization */
-  KeInitializeDpc(&CmiHiveSyncDpc,
-		  CmiHiveSyncDpcRoutine,
-		  NULL);
-  KeInitializeTimer(&CmiHiveSyncTimer);
-  CmiHiveSyncEnabled = TRUE;
+    /* Start automatic hive synchronization */
+    KeInitializeDpc(&CmiHiveSyncDpc,
+                    CmiHiveSyncDpcRoutine,
+                    NULL);
+    KeInitializeTimer(&CmiHiveSyncTimer);
+    CmiHiveSyncEnabled = TRUE;
 
-  DPRINT("CmiInitHives() done\n");
+    DPRINT("CmiInitHives() done\n");
 
-  return(STATUS_SUCCESS);
+    return(STATUS_SUCCESS);
 }
-
 
 VOID
 CmShutdownRegistry(VOID)
 {
-  PEREGISTRY_HIVE Hive;
-  PLIST_ENTRY Entry;
+    PEREGISTRY_HIVE Hive;
+    PLIST_ENTRY Entry;
 
-  DPRINT("CmShutdownRegistry() called\n");
+    DPRINT("CmShutdownRegistry() called\n");
 
-  /* Stop automatic hive synchronization */
-  CmiHiveSyncEnabled = FALSE;
+    /* Stop automatic hive synchronization */
+    CmiHiveSyncEnabled = FALSE;
 
-  /* Cancel pending hive synchronization */
-  if (CmiHiveSyncPending == TRUE)
+    /* Cancel pending hive synchronization */
+    if (CmiHiveSyncPending == TRUE)
     {
-      KeCancelTimer(&CmiHiveSyncTimer);
-      CmiHiveSyncPending = FALSE;
+        KeCancelTimer(&CmiHiveSyncTimer);
+        CmiHiveSyncPending = FALSE;
     }
 
-      /* Lock the hive list */
+    /* Lock the hive list */
     ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
 
-  Entry = CmpHiveListHead.Flink;
-  while (Entry != &CmpHiveListHead)
+    Entry = CmpHiveListHead.Flink;
+    while (Entry != &CmpHiveListHead)
     {
-      Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
+        Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
 
-      if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
-	{
-	  /* Flush non-volatile hive */
-	  CmiFlushRegistryHive(Hive);
-	}
+        if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
+        {
+            /* Flush non-volatile hive */
+            CmiFlushRegistryHive(Hive);
+        }
 
-      Entry = Entry->Flink;
+        Entry = Entry->Flink;
     }
 
     /* Release the lock */
     ExReleasePushLock(&CmpHiveListHeadLock);
 
-  DPRINT("CmShutdownRegistry() done\n");
+    DPRINT("CmShutdownRegistry() done\n");
 }
 
-
-VOID STDCALL
+VOID
+NTAPI
 CmiHiveSyncRoutine(PVOID DeferredContext)
 {
-  PEREGISTRY_HIVE Hive;
-  PLIST_ENTRY Entry;
+    PEREGISTRY_HIVE Hive;
+    PLIST_ENTRY Entry;
 
-  DPRINT("CmiHiveSyncRoutine() called\n");
+    DPRINT("CmiHiveSyncRoutine() called\n");
 
-  CmiHiveSyncPending = FALSE;
+    CmiHiveSyncPending = FALSE;
 
-      /* Lock the hive list */
+    /* Lock the hive list */
     ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
 
-  Entry = CmpHiveListHead.Flink;
-  while (Entry != &CmpHiveListHead)
+    Entry = CmpHiveListHead.Flink;
+    while (Entry != &CmpHiveListHead)
     {
-      Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
+        Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
 
-      if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
-	{
-	  /* Flush non-volatile hive */
-	  CmiFlushRegistryHive(Hive);
-	}
+        if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
+        {
+            /* Flush non-volatile hive */
+            CmiFlushRegistryHive(Hive);
+        }
 
-      Entry = Entry->Flink;
+        Entry = Entry->Flink;
     }
 
     /* Release the lock */
     ExReleasePushLock(&CmpHiveListHeadLock);
 
-  DPRINT("DeferredContext 0x%p\n", DeferredContext);
-  ExFreePool(DeferredContext);
+    DPRINT("DeferredContext 0x%p\n", DeferredContext);
+    ExFreePool(DeferredContext);
 
-  DPRINT("CmiHiveSyncRoutine() done\n");
+    DPRINT("CmiHiveSyncRoutine() done\n");
 }
 
-
-static VOID STDCALL
+static VOID
+NTAPI
 CmiHiveSyncDpcRoutine(PKDPC Dpc,
-		      PVOID DeferredContext,
-		      PVOID SystemArgument1,
-		      PVOID SystemArgument2)
+                      PVOID DeferredContext,
+                      PVOID SystemArgument1,
+                      PVOID SystemArgument2)
 {
-  PWORK_QUEUE_ITEM WorkQueueItem;
+    PWORK_QUEUE_ITEM WorkQueueItem;
 
-  WorkQueueItem = ExAllocatePool(NonPagedPool,
-				 sizeof(WORK_QUEUE_ITEM));
-  if (WorkQueueItem == NULL)
+    WorkQueueItem = ExAllocatePool(NonPagedPool,
+                                   sizeof(WORK_QUEUE_ITEM));
+    if (WorkQueueItem == NULL)
     {
-      DbgPrint("Failed to allocate work item\n");
-      return;
+        DPRINT1("Failed to allocate work item\n");
+        return;
     }
 
-  ExInitializeWorkItem(WorkQueueItem,
-		       CmiHiveSyncRoutine,
-		       WorkQueueItem);
+    ExInitializeWorkItem(WorkQueueItem,
+                         CmiHiveSyncRoutine,
+                         WorkQueueItem);
 
-  DPRINT("DeferredContext 0x%p\n", WorkQueueItem);
-  ExQueueWorkItem(WorkQueueItem,
-		  CriticalWorkQueue);
+    DPRINT("DeferredContext 0x%p\n", WorkQueueItem);
+    ExQueueWorkItem(WorkQueueItem,
+                    CriticalWorkQueue);
 }
-
 
 VOID
 CmiSyncHives(VOID)
 {
-  LARGE_INTEGER Timeout;
+    LARGE_INTEGER Timeout;
 
-  DPRINT("CmiSyncHives() called\n");
+    DPRINT("CmiSyncHives() called\n");
 
   if (CmiHiveSyncEnabled == FALSE ||
-      CmiHiveSyncPending == TRUE)
-    return;
+        CmiHiveSyncPending == TRUE)
+        return;
 
-  CmiHiveSyncPending = TRUE;
+    CmiHiveSyncPending = TRUE;
 
-  Timeout.QuadPart = (LONGLONG)-50000000;
-  KeSetTimer(&CmiHiveSyncTimer,
-	     Timeout,
-	     &CmiHiveSyncDpc);
+    Timeout.QuadPart = (LONGLONG)-50000000;
+    KeSetTimer(&CmiHiveSyncTimer,
+               Timeout,
+               &CmiHiveSyncDpc);
 }
 
 /* EOF */
