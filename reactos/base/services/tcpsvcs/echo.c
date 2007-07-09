@@ -11,32 +11,6 @@
 
 extern BOOL bShutDown;
 
-DWORD WINAPI EchoHandler(VOID* Sock_)
-{
-    DWORD RetVal = 0;
-    SOCKET Sock = (SOCKET)Sock_;
-
-    if (!EchoIncomingPackets(Sock)) {
-        LogEvent(_T("Echo: EchoIncomingPackets failed\n"), 0, FALSE);
-        RetVal = 1;
-    }
-
-    LogEvent(_T("Echo: Shutting connection down...\n"), 0, FALSE);
-
-    if (ShutdownConnection(Sock, TRUE))
-        LogEvent(_T("Echo: Connection is down\n"), 0, FALSE);
-    else
-    {
-        LogEvent(_T("Echo: Connection shutdown failed\n"), 0, FALSE);
-        RetVal = 1;
-    }
-
-    LogEvent(_T("Echo: Terminating thread\n"), 0, FALSE);
-    ExitThread(RetVal);
-}
-
-
-
 BOOL EchoIncomingPackets(SOCKET Sock)
 {
     char ReadBuffer[BUF];
@@ -87,4 +61,28 @@ BOOL EchoIncomingPackets(SOCKET Sock)
 		LogEvent(_T("Echo: thread recieved shutdown signal\n"), 0, FALSE);
 
     return TRUE;
+}
+
+DWORD WINAPI EchoHandler(VOID* Sock_)
+{
+    DWORD RetVal = 0;
+    SOCKET Sock = (SOCKET)Sock_;
+
+    if (!EchoIncomingPackets(Sock)) {
+        LogEvent(_T("Echo: EchoIncomingPackets failed\n"), 0, FALSE);
+        RetVal = 1;
+    }
+
+    LogEvent(_T("Echo: Shutting connection down...\n"), 0, FALSE);
+
+    if (ShutdownConnection(Sock, TRUE))
+        LogEvent(_T("Echo: Connection is down\n"), 0, FALSE);
+    else
+    {
+        LogEvent(_T("Echo: Connection shutdown failed\n"), 0, FALSE);
+        RetVal = 1;
+    }
+
+    LogEvent(_T("Echo: Terminating thread\n"), 0, FALSE);
+    ExitThread(RetVal);
 }

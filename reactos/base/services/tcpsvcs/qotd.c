@@ -13,6 +13,22 @@
 
 LPCTSTR FilePath = _T("\\drivers\\etc\\quotes"); /* 19 chars */
 
+BOOL SendQuote(SOCKET Sock, char* Quote)
+{
+    INT StringSize;
+    INT RetVal;
+
+    StringSize = (INT)strlen(Quote);
+    RetVal = send(Sock, Quote, sizeof(char) * StringSize, 0);
+
+    if (RetVal == SOCKET_ERROR)
+        return FALSE;
+
+    LogEvent(_T("QOTD: Connection closed by peer\n"), 0, FALSE);
+    return TRUE;
+}
+
+
 DWORD WINAPI QotdHandler(VOID* Sock_)
 {
     FILE *fp;
@@ -73,20 +89,4 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
     LogEvent(_T("QOTD: Terminating thread\n"), 0, FALSE);
     ExitThread(0);
 
-}
-
-
-BOOL SendQuote(SOCKET Sock, char* Quote)
-{
-    INT StringSize;
-    INT RetVal;
-
-    StringSize = (INT)strlen(Quote);
-    RetVal = send(Sock, Quote, sizeof(char) * StringSize, 0);
-
-    if (RetVal == SOCKET_ERROR)
-        return FALSE;
-
-    LogEvent(_T("QOTD: Connection closed by peer\n"), 0, FALSE);
-    return TRUE;
 }

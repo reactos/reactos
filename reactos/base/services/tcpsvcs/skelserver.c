@@ -12,34 +12,8 @@
 extern BOOL bShutDown;
 extern BOOL bPause;
 
-DWORD WINAPI StartServer(LPVOID lpParam)
-{
-	SOCKET ListeningSocket;
-	PSERVICES pServices;
-    TCHAR buf[256];
-
-    pServices = (PSERVICES)lpParam;
-
-//DebugBreak();
-    ListeningSocket = SetUpListener(htons(pServices->Port));
-    if (ListeningSocket == INVALID_SOCKET)
-    {
-		LogEvent(_T("Socket error when setting up listener\n"), 0, TRUE);
-        return 3;
-    }
-
-    _stprintf(buf, _T("%s is waiting for connections on port %d...\n"),
-        pServices->Name, pServices->Port);
-    LogEvent(buf, 0, FALSE);
-
-    if (! bShutDown)
-    	AcceptConnections(ListeningSocket, pServices->Service, pServices->Name);
-
-    ExitThread(0);
-}
-
-
-SOCKET SetUpListener(USHORT Port)
+static SOCKET
+SetUpListener(USHORT Port)
 {
     SOCKET Sock;
     SOCKADDR_IN Server;
@@ -59,6 +33,7 @@ SOCKET SetUpListener(USHORT Port)
             LogEvent(_T("bind() failed\n"), 0, TRUE);
 
     }
+
     return INVALID_SOCKET;
 }
 
@@ -74,8 +49,10 @@ typedef struct _WORKER_THREAD {
 
 */
 
-VOID AcceptConnections(SOCKET ListeningSocket,
-    LPTHREAD_START_ROUTINE Service, TCHAR *Name)
+static VOID
+AcceptConnections(SOCKET ListeningSocket,
+                  LPTHREAD_START_ROUTINE Service,
+                  TCHAR *Name)
 {
     SOCKADDR_IN Client;
     SOCKET Sock;
@@ -86,8 +63,6 @@ VOID AcceptConnections(SOCKET ListeningSocket,
     DWORD ThreadID;
     TCHAR buf[256];
     INT TimeOut = 2000; // 2 seconds
-
-//DebugBreak();
 
     /* set timeout values */
     TimeVal.tv_sec  = TimeOut / 1000;
@@ -144,7 +119,9 @@ VOID AcceptConnections(SOCKET ListeningSocket,
     }
 }
 
-BOOL ShutdownConnection(SOCKET Sock, BOOL bRec)
+BOOL
+ShutdownConnection(SOCKET Sock,
+                   BOOL bRec)
 {
     TCHAR buf[256];
 
@@ -180,4 +157,37 @@ BOOL ShutdownConnection(SOCKET Sock, BOOL bRec)
         return FALSE;
 
     return TRUE;
+}
+
+
+DWORD WINAPI
+StartServer(LPVOID lpParam)
+{
+    SOCKET ListeningSocket;
+    PSERVICES pServices;
+    TCHAR buf[256];
+
+    pServices = (PSERVICES)lpParam;
+
+    ListeningSocket = SetUpListener(htons(pServices->Port));
+    if (ListeningSocket == INVALID_SOCKET)
+    {
+        LogEvent(_T("Socket error when setting up listener"), 0, TRUE);
+        return 3;
+    }
+
+    _stprintf(buf,
+              _T("%s is waiting for connections on port %d"),
+              pServices->Name,
+              pServices->Port);
+    LogEvent(buf, 0, FALSE);
+
+    if (!bShutDown)
+        AcceptConnections(ListeningSocket, pServices->Service, pServices->Name);
+
+    _stprintf(buf,
+              _T("Exiting %s thread"),
+              pServices->Name);
+    LogEvent(buf, 0, FALSE);
+    ExitThread(0);
 }

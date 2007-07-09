@@ -9,6 +9,19 @@
 
 #include "tcpsvcs.h"
 
+BOOL SendTime(SOCKET Sock, CHAR *time)
+{
+    INT StringSize = (INT)strlen(time);
+    INT RetVal = send(Sock, time, sizeof(CHAR) * StringSize, 0);
+
+    if (RetVal == SOCKET_ERROR)
+        return FALSE;
+
+    LogEvent(_T("DayTime: Connection closed by peer.\n"), 0, FALSE);
+    return TRUE;
+}
+
+
 DWORD WINAPI DaytimeHandler(VOID* Sock_)
 {
     struct tm *newtime;
@@ -34,17 +47,4 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
 
     LogEvent(_T("DayTime: Terminating thread\n"), 0, FALSE);
     ExitThread(RetVal);
-}
-
-
-BOOL SendTime(SOCKET Sock, CHAR *time)
-{
-    INT StringSize = (INT)strlen(time);
-    INT RetVal = send(Sock, time, sizeof(CHAR) * StringSize, 0);
-
-    if (RetVal == SOCKET_ERROR)
-        return FALSE;
-
-    LogEvent(_T("DayTime: Connection closed by peer.\n"), 0, FALSE);
-    return TRUE;
 }
