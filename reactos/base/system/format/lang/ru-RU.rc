@@ -2,7 +2,7 @@
 
 #include "resource.h"
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_RUSSIAN_RUSSIA
 STRINGTABLE DISCARDABLE
 {
 STRING_HELP,  "Использование: %S том: [-FS:система] [-V:метка] [-Q] [-A:размер] [-C]\n\n\

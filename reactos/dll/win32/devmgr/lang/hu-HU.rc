@@ -1,6 +1,6 @@
 //Hungarian language resource file (Robert Horvath, talley at cubeclub dot hu)
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_HUNGARIAN, SUBLANG_HUNGARIAN_HUNGARY
 
 STRINGTABLE
 BEGIN
