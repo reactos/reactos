@@ -369,7 +369,8 @@ WinMain(HINSTANCE hInstance,
 
 #if 1
     hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    WaitForSingleObject(hEvent, INFINITE);
+    if (hEvent)
+        WaitForSingleObject(hEvent, INFINITE);
 #else
     for (;;)
     {

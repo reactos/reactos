@@ -1225,7 +1225,7 @@ done:;
     else
     {
         /* Release the display name buffer */
-        if (lpService->lpServiceName != lpService->lpDisplayName)
+        if (lpService->lpServiceName != NULL)
             HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
 
         if (hServiceHandle != NULL)
