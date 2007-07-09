@@ -1,0 +1,13 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ * Slovak translation by Kario  2007 <kario@szm.sk>
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "Naèítanie kninice zlyhalo pri pokus naèíta '%s'"
+IDS_MissingEntry, "Chybnı vstupnı bod:%s\nv %s"
+}
