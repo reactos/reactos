@@ -138,9 +138,13 @@ extern "C"
 #include <ntddk.h>
 #include <drmk.h>
 
-/* TODO */
+#ifndef PC_NO_IMPORTS
+#define PORTCLASSAPI EXTERN_C __declspec(dllimport)
+#else
 #define PORTCLASSAPI EXTERN_C
+#endif
 
+/* TODO */
 #define PCFILTER_NODE ((ULONG) -1)
 
 /* HACK */
