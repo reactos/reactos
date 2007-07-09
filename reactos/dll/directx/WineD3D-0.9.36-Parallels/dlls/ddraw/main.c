@@ -33,14 +33,14 @@
 
 #define COBJMACROS
 
-#ifndef WINE_NATIVEWIN32
+//#ifndef WINE_NATIVEWIN32
 # include "windef.h"
 # include "winbase.h"
 # include "winnls.h"
 # include "winerror.h"
 # include "wingdi.h"
 # include "winreg.h"
-#endif
+//#endif
 /* using the GPL PSEH libary for SEH Support */
 #include <pseh/pseh.h>
 
@@ -594,7 +594,7 @@ DirectDrawEnumerateW(LPDDENUMCALLBACKW Callback, LPVOID Context)
     {
         Ret = E_INVALIDARG;
     }
-    SEH_END;
+    _SEH_END;
 
     TRACE(" End of enumeration\n");
     return  Ret;
@@ -633,7 +633,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW Callback, LPVOID Context, DWORD Flags
     {
         Ret = E_INVALIDARG;
     }
-    SEH_END;
+    _SEH_END;
 
     TRACE("End of enumeration\n");
     return  Ret;
@@ -1056,7 +1056,7 @@ DSoundHelp(DWORD arg0, DWORD arg1, DWORD arg2)
 }
 
 HRESULT WINAPI
-D3DParseUnknownCommand(DWORD arg0, DWORD arg1)
+D3DParseUnknownCommand(LPVOID arg0, LPVOID* arg1)
 {
     if (IsPassthrough())
         return pD3DParseUnknownCommand(arg0, arg1);

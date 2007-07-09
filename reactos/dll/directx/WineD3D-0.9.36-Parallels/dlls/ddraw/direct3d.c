@@ -26,15 +26,14 @@
 
 #define COBJMACROS
 
-#ifndef WINE_NATIVEWIN32
+//#ifndef WINE_NATIVEWIN32
 # include "windef.h"
 # include "winbase.h"
 # include "winnls.h"
 # include "winerror.h"
 # include "wingdi.h"
-#endif
-#include "wine/exception.h"
-#include "excpt.h"
+//#endif
+
 
 #include "ddraw.h"
 #include "d3d.h"

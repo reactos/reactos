@@ -34,12 +34,10 @@
 # include <windows.h>
 #endif
 
-/* Bug in ReactOS PSDK */
-typedef struct _RGNDATA
-{
-    RGNDATAHEADER   rdh;
-    char            Buffer[1];
-} RGNDATA, *PRGNDATA, *NPRGNDATA, *LPRGNDATA;
+
+
+
+
 
 #include "ddraw.h"
 #include "ddrawi.h"
