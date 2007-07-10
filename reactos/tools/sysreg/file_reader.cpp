@@ -13,7 +13,7 @@
 namespace System_
 {
 //---------------------------------------------------------------------------------------
-	FileReader::FileReader() : m_File(NULL)
+    FileReader::FileReader() : DataSource(),  m_File(NULL)
 	{
 	}
 //---------------------------------------------------------------------------------------
@@ -21,12 +21,12 @@ namespace System_
 	{
 	}
 //---------------------------------------------------------------------------------------
-	bool FileReader::openFile(TCHAR const * filename)
+    bool FileReader::open(const string & filename)
 	{
 #ifdef UNICODE
-		m_File = _tfopen(filename, _T("rb,ccs=UNICODE"));
+		m_File = _tfopen(filename.c_str(), _T("rb,ccs=UNICODE"));
 #else
-		m_File = _tfopen(filename, _T("rb"));
+		m_File = _tfopen(filename.c_str(), _T("rb"));
 #endif
 
 		if (m_File)
@@ -39,7 +39,7 @@ namespace System_
 		}
 	}
 //---------------------------------------------------------------------------------------
-	bool FileReader::closeFile()
+	bool FileReader::close()
 	{
 		if (!m_File)
 		{
@@ -55,7 +55,7 @@ namespace System_
 		return false;
 	}
 //---------------------------------------------------------------------------------------
-	bool FileReader::readFile(vector<string> & lines)
+	bool FileReader::read(vector<string> & lines)
 	{
 		if (!m_File)
 		{

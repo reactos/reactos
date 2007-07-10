@@ -12,6 +12,7 @@
 
 
 #include "user_types.h"
+#include "data_source.h"
 #include <vector>
 
 namespace System_
@@ -23,7 +24,7 @@ namespace System_
 ///
 /// Description: this class implements reading from a file
 
-	class FileReader
+    class FileReader : public DataSource
 	{
 	public:
 //---------------------------------------------------------------------------------------
@@ -51,7 +52,7 @@ namespace System_
 /// @param filename name of the file to open
 /// @return bool
 
-	bool openFile(TCHAR const * filename);
+	virtual bool open(const string & filename);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -61,7 +62,7 @@ namespace System_
 ///
 /// @return bool
 
-	bool closeFile();
+	virtual bool close();
 
 //---------------------------------------------------------------------------------------
 ///
@@ -72,7 +73,7 @@ namespace System_
 /// Note: returns true on success
 ///
 
-	bool readFile(vector<string> & lines);
+	virtual bool read(vector<string> & lines);
 
 
 

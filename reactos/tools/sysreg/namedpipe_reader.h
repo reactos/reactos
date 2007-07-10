@@ -14,6 +14,7 @@
 
 
 #include "user_types.h"
+#include "data_source.h"
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +43,7 @@ namespace System_
 ///
 /// Description: this class implements a named pipe reader. 
 
-	class NamedPipeReader
+    class NamedPipeReader : public DataSource
 	{
 	public:
 
@@ -64,7 +65,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 ///
-/// openPipe
+/// open
 ///
 /// Description: this function attempts to open a pipe. If an pipe is already open or
 /// it fails to open a pipe, the function returns false
@@ -73,17 +74,17 @@ namespace System_
 ///
 /// @return bool
 
-		bool openPipe(const string & PipeCmd);
+		virtual bool open(const string & PipeCmd);
 
 //---------------------------------------------------------------------------------------
 ///
-/// closePipe
+/// close
 ///
 /// Description: closes a pipe. Returns true on success
 ///
 /// @return bool
 
-		bool closePipe();
+		virtual bool close();
 
 //---------------------------------------------------------------------------------------
 ///
@@ -95,7 +96,7 @@ namespace System_
 /// @param Buffer to be written to
 /// @return size_t
 
-		size_t readPipe(std::vector<string> & vect);
+	virtual bool read(std::vector<string> & vect);
 
 //---------------------------------------------------------------------------------------
 ///

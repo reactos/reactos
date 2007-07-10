@@ -18,11 +18,11 @@ endif
 SYSREGBUILD_TARGET = \
 	$(EXEPREFIX)$(SYSREGBUILD_OUT_)sysreg$(EXEPOSTFIX)
 
+ifeq ($(HOST),mingw32-linux)
 SYSREGBUILD_SOURCES = $(addprefix $(SYSREGBUILD_BASE_),\
 	conf_parser.cpp \
 	env_var.cpp \
 	pipe_reader.cpp \
-	namedpipe_reader.cpp \
 	rosboot_test.cpp \
 	sysreg.cpp \
 	file_reader.cpp \
@@ -30,10 +30,28 @@ SYSREGBUILD_SOURCES = $(addprefix $(SYSREGBUILD_BASE_),\
 	unicode.cpp \
 	)
 
+else
+SYSREGBUILD_SOURCES = $(addprefix $(SYSREGBUILD_BASE_),\
+	conf_parser.cpp \
+	env_var.cpp \
+	rosboot_test.cpp \
+	namedpipe_reader.cpp \
+	sysreg.cpp \
+	file_reader.cpp \
+	os_support.cpp \
+	unicode.cpp \
+	)
+endif
+
 SYSREGBUILD_OBJECTS = \
   $(addprefix $(INTERMEDIATE_), $(SYSREGBUILD_SOURCES:.cpp=.o))
 
-SYSREGBUILD_HOST_CFLAGS = $(TOOLS_CPPFLAGS) -D__USE_W32API -Iinclude -Iinclude/reactos -Iinclude/psdk
+
+ifeq ($(HOST),mingw32-linux)
+SYSREGBUILD_HOST_CFLAGS = $(TOOLS_CPPFLAGS) -D__USE_W32API -D__LINUX__ -Iinclude -Iinclude/reactos -Iinclude/psdk -Iinclude/reactos/libs
+else
+SYSREGBUILD_HOST_CFLAGS = $(TOOLS_CPPFLAGS) -D__USE_W32API -Iinclude -Iinclude/reactos -Iinclude/psdk -Iinclude/reactos/libs
+endif
 
 SYSREGBUILD_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
@@ -56,11 +74,11 @@ $(SYSREGBUILD_INT_)env_var.o: $(SYSREGBUILD_BASE_)env_var.cpp | $(SYSREGBUILD_IN
 $(SYSREGBUILD_INT_)pipe_reader.o: $(SYSREGBUILD_BASE_)pipe_reader.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
-
+ifneq ($(HOST),mingw32-linux)
 $(SYSREGBUILD_INT_)namedpipe_reader.o: $(SYSREGBUILD_BASE_)namedpipe_reader.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
-
+endif
 $(SYSREGBUILD_INT_)rosboot_test.o: $(SYSREGBUILD_BASE_)rosboot_test.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@

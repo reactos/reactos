@@ -20,7 +20,7 @@ namespace System_
 
 	using std::vector;
 //---------------------------------------------------------------------------------------
-	NamedPipeReader::NamedPipeReader() : h_Pipe(NULLVAL)
+    NamedPipeReader::NamedPipeReader() : DataSource(), h_Pipe(NULLVAL)
 	{
 
 	}
@@ -33,7 +33,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool NamedPipeReader::openPipe(string const & PipeCmd)
+	bool NamedPipeReader::open(const string & PipeCmd)
 	{
 		if (h_Pipe != NULLVAL)
 		{
@@ -41,7 +41,6 @@ namespace System_
 			return false;
 		}
 
-#ifdef WIN32
 		h_Pipe = CreateFile(PipeCmd.c_str(),
 			GENERIC_WRITE | GENERIC_READ,
 			0,
@@ -65,40 +64,19 @@ namespace System_
 		ConnectNamedPipe(
 			h_Pipe,
 			0);
-#else
-		h_Pipe = open("PipeCmd.c_str()", O_RDONLY);
-
-		if(INVALID_HANDLE_VALUE == h_Pipe) {
-			cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << endl;
-			h_Pipe = NULLVAL;
-			return false;
-		}
-		else
-		{
-			cout << "NamedPipeReader::openPipe> successfully opened pipe" << endl;
-			return true;
-		}
-#endif
-
 	}
 
 //---------------------------------------------------------------------------------------
 
-	bool NamedPipeReader::closePipe() 
+	bool NamedPipeReader::close() 
 	{
 		if (!h_Pipe)
 		{
 			cerr << "NamedPipeReader::closePipe> pipe is not open" << endl;
 			return false;
 		}
-
-
-#ifndef WIN32
-		close(h_Pipe);
-#else
 		DisconnectNamedPipe(h_Pipe);
 		CloseHandle(h_Pipe);
-#endif
 
 		h_Pipe = NULLVAL;
 		return true;
@@ -193,13 +171,12 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	size_t NamedPipeReader::readPipe(vector<string> & vect)
+	bool NamedPipeReader::read(vector<string> & vect)
 	{
 		char * localbuf;
 		DWORD localsize = 100;
 		size_t lines = vect.size ();
 
-#ifdef WIN32
 		BOOL fSuccess;
 		localbuf = (char*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(char));
 #ifdef UNICODE
@@ -252,46 +229,6 @@ namespace System_
 		{
 			return 0;
 		}
-
-#else /* WIN32 */
-
-	localbuf = (char*) malloc(localsize * sizeof(char));		
-	if (localbuf != NULL)
-	{
-
-		DWORD cbRead;
-
-		bool append_line = false;
-		do
-		{
-			do 
-			{ 
-				memset(localbuf, 0, localsize * sizeof(char));
-
-				cbRead = read(h_Pipe,
-						localbuf,
-						(localsize-1) * sizeof(char));
-				 
-				if (cbRead > 0)
-				{
-					extractLines(localbuf, vect, append_line, cbRead);
-				}
-
-			} while (!cbRead);  // repeat loop as long as there is data to read 
-		} while (append_line);
-
-		if (cbRead < 0)
-			return 0;
-
-
-		free(localbuf);
-	}
-	else
-	{
-		return 0;
-	}
-
-#endif /* WIN32 */
 
 	return (vect.size () - lines);
 	}

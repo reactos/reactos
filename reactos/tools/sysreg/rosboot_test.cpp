@@ -65,31 +65,143 @@ namespace Sysreg_
 	{
 
 	}
+//---------------------------------------------------------------------------------------
+    void RosBootTest::getPidFromFile()
+    {
+		FileReader file;
+		if (file.open(m_PidFile.c_str ()))
+        {
+			vector<string> lines;
+			file.read(lines);
+			if (lines.size() == 1)
+			{
+				string line = lines[0];
+				m_Pid = _ttoi(line.c_str ());
+			}
+			file.close();
+		}
+    }
+//---------------------------------------------------------------------------------------
+    bool RosBootTest::executeBootCmd()
+    {
+        m_Pid = OsSupport::createProcess ((TCHAR*)m_BootCmd.c_str(), 0, NULL); 
+        if (!m_Pid)
+        {
+            cerr << "Error: failed to launch boot cmd" << m_BootCmd << endl;
+            return false;
+        }
+
+        return true;
+    }
+//---------------------------------------------------------------------------------------
+    void RosBootTest::delayRead()
+    {
+        if (m_Delayread)
+		{
+			///
+			/// delay reading until emulator is ready
+			///
+
+            OsSupport::sleep(m_Delayread * CLOCKS_PER_SEC );
+		}
+    }
+
 
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::execute(ConfigParser &conf_parser) 
-	{
-		string boot_cmd;
-		string debug_port;
-		string timeout;
-		string delayread;
-		bool ret;
+    bool RosBootTest::configurePipe()
+    {
+        if (!_tcscmp(m_DebugPort.c_str(), _T("qemupipe")))
+        {
+            string::size_type pipe_pos = m_BootCmd.find(_T("-serial pipe:"));
+            if (pipe_pos != string::npos)
+            {
+			    pipe_pos += 12;
+			    string::size_type pipe_pos_end = m_BootCmd.find (_T(" "), pipe_pos);
+                if (pipe_pos != string::npos && pipe_pos_end != string::npos)
+			    {
+    				m_Pipe = _T("\\\\.\\pipe\\") + m_BootCmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
+#ifdef __LINUX__
+                    m_DataSource = new PipeReader();
+#else
+                    m_DataSource = new NamedPipeReader();
+#endif
+                    return true;
+	    		}
+            }
+        }
+        else if (!_tcscmp(m_DebugPort.c_str(), _T("vmwarepipe")))
+        {
+            cerr << "VmWare debug pipe is currently fixed to \\\\.\\pipe\\vmwaredebug" << endl;
+		    m_Pipe = _T("\\\\.\\pipe\\vmwaredebug");
+#ifdef __LINUX__
+                    m_DataSource = new PipeReader();
+#else
+                    m_DataSource = new NamedPipeReader();
+#endif
 
+            return true;
+        }
+
+        //
+        // FIXME
+        // support other emulators
+        
+        return false;
+    }
+//---------------------------------------------------------------------------------------
+    bool RosBootTest::configureFile()
+    {
+        if (!_tcscmp(m_DebugPort.c_str(), _T("qemufile")))
+        {
+            string::size_type file_pos = m_BootCmd.find(_T("-serial file:"));
+            if (file_pos != string::npos)
+            {
+                file_pos += 12;
+			    string::size_type file_pos_end = m_BootCmd.find (_T(" "), file_pos);
+                if (file_pos != string::npos && file_pos_end != string::npos)
+			    {
+    				m_File = m_BootCmd.substr (file_pos, file_pos_end - file_pos);
+                    m_DataSource = new FileReader();
+                    return true;
+	    		}
+                cerr << "Error: missing space at end of option" << endl;
+            }
+        }
+        else if (!_tcscmp(m_DebugPort.c_str(), _T("vmwarefile")))
+        {
+            cerr << "VmWare debug file is currently fixed to debug.log" << endl;
+            m_File = "debug.log";
+            m_DataSource = new FileReader();
+            return true;
+        }
+
+        // 
+        // FIXME
+        // support other emulators
+
+        return false;
+    }
+//---------------------------------------------------------------------------------------
+    bool RosBootTest::readConfigurationValues(ConfigParser &conf_parser)
+    {
 		///
 		/// read required configuration arguments
 		///
 
-		if (!conf_parser.getStringValue (RosBootTest::DEBUG_PORT, debug_port))
+
+
+		if (!conf_parser.getStringValue (RosBootTest::DEBUG_PORT, m_DebugPort))
 		{
 			cerr << "Error: ROSBOOT_DEBUG_TYPE is not set in configuration file" << endl;
 			return false;
 		}
-		if (!conf_parser.getStringValue(RosBootTest::VARIABLE_NAME, boot_cmd))
+		if (!conf_parser.getStringValue(RosBootTest::VARIABLE_NAME, m_BootCmd))
 		{
 			cerr << "Error: ROSBOOT_CMD is not set in configuration file" << endl;
 			return false;
 		}
 		
+        string timeout;
 		if (conf_parser.getStringValue(RosBootTest::TIME_OUT, timeout))
 		{
 			TCHAR * stop;
@@ -101,6 +213,19 @@ namespace Sysreg_
 				m_Timeout = 60.0;
 			}
 		}
+        if (m_DebugPort.find(_T("pipe")) != string::npos)
+        {
+#ifdef __LINUX__
+            if (!conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile))
+		    {
+                cerr << "Error: linux hosts must provide pid file option" << endl;
+                return false;
+		    }
+            _tremove(m_PidFile.c_str ());
+#endif
+        }
+
+        string delayread;
 
 		if (conf_parser.getStringValue(RosBootTest::DELAY_READ, delayread))
 		{
@@ -121,30 +246,66 @@ namespace Sysreg_
 		conf_parser.getStringValue (RosBootTest::CRITICAL_APP, m_CriticalApp);
 		conf_parser.getStringValue (RosBootTest::DEBUG_FILE, m_DebugFile);
 
-		if (conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile))
-		{
-			_tremove(m_PidFile.c_str ());
-		}
-		
-		if (!_tcscmp(debug_port.c_str(), _T("pipe")))
-		{
-			ret = fetchDebugByPipe(boot_cmd);
-		}
-		else if (!_tcscmp(debug_port.c_str(),  _T("file")))
-		{
-			if (!m_DebugFile.length())
-			{
-				cerr << "Error: ROSBOOT_DEBUG_FILE is not set in configuration file" << endl;
-				return false;
-			}
-			ret = fetchDebugByFile(boot_cmd);
-		}
-		else
-		{
-			cerr <<"Error: unknown debug port " << debug_port <<endl
-				<<" Currently only file|pipe is supported" <<endl;
-			return false;
-		}
+        return true;
+    }
+//---------------------------------------------------------------------------------------
+	bool RosBootTest::execute(ConfigParser &conf_parser) 
+	{
+
+		if (!readConfigurationValues(conf_parser))
+        {
+            return false;
+        }
+        
+        string src;
+
+        if (m_DebugPort.find(_T("pipe")) != string::npos)
+        {
+            if (!configurePipe())
+            {
+                cerr << "Error: failed to configure pipe" << endl;
+                return false;
+            }
+
+#ifndef __LINUX__
+            if (!executeBootCmd())
+            {
+                cerr << "Error: failed to launch emulator" << endl;
+                return false;
+            }
+#endif
+            src = m_Pipe;
+        }
+        else if (m_DebugPort.find(_T("file")) != string::npos)
+        {
+            if (!configureFile())
+            {
+                cerr << "Error: failed to configure pipe" << endl;
+                return false;
+            }
+            if (!executeBootCmd())
+            {
+                cerr << "Error: failed to launch emulator" << endl;
+                return false;
+            }
+
+            src = m_File;
+        }
+        
+        if (!m_DataSource->open(src))
+        {
+            cerr << "Error: failed to open data source with " << src << endl;
+            return false;
+        }
+
+        bool ret = analyzeDebugData();
+
+        m_DataSource->close();
+        OsSupport::sleep(3 * CLOCKS_PER_SEC);
+        if (m_Pid)
+        {
+		    OsSupport::terminateProcess (m_Pid);
+        }
 
 		return ret;
 	}
@@ -338,65 +499,21 @@ namespace Sysreg_
 
 	}
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::fetchDebugByPipe(string boot_cmd)
+	bool RosBootTest::analyzeDebugData()
 	{
-		string pipecmd = _T("");
-		bool ret = true;
-		
-		///
-		/// FIXME
-		/// split up arguments
-
-
-		OsSupport::ProcessID pid = OsSupport::createProcess ((TCHAR*)boot_cmd.c_str (), 0, NULL); 
-		string::size_type pipe_pos = boot_cmd.find (_T("serial pipe:"));
-
-		NamedPipeReader namedpipe_reader;
-		if (pipe_pos != string::npos)
-		{
-			pipe_pos += 12;
-			string::size_type pipe_pos_end = boot_cmd.find (_T(" "), pipe_pos);
-			if (pipe_pos != string::npos && pipe_pos > 0 && pipe_pos < boot_cmd.size())
-			{
-				pipecmd = _T("\\\\.\\pipe\\") + boot_cmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
-			}
-		}
-
-		if (!pipecmd.length ())
-		{
-			//FIXME
-			pipecmd = _T("\\\\.\\pipe\\vmwaredebug");
-		}
-
-		if (m_Delayread)
-		{
-			///
-			/// delay reading until emulator is ready
-			///
-
-			sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
-		}
-
-		if (!namedpipe_reader.openPipe(pipecmd))
-		{
-			cerr << "Error: failed to open pipe with cmd: " << boot_cmd <<endl;
-			return false;
-		}
-		string Buffer;
-		Buffer.reserve (500);
-
 		vector<string> vect;
 		size_t lines = 0;
 		bool write_log;
 		ofstream file;
-		if (m_DebugFile.length ())
+        bool ret = true;
+
+        if (m_DebugFile.length ())
 		{
 			_tremove(m_DebugFile.c_str ());
 			file.open (m_DebugFile.c_str ());
 		}
 
 		write_log = file.is_open ();
-
 		while(1)
 		{
 			if (isTimeout(m_Timeout))
@@ -404,8 +521,8 @@ namespace Sysreg_
 				break;
 			}
 			size_t prev_count = vect.size ();
-			size_t line_count = namedpipe_reader.readPipe (vect);
-			if (!line_count)
+
+			if (!m_DataSource->read (vect))
 			{
 				cerr << "No data read" << endl;
 				continue;				
@@ -429,109 +546,14 @@ namespace Sysreg_
 			{
 				break;
 			}
-			lines += line_count;
-		}
-		namedpipe_reader.closePipe ();
+			lines += (vect.size() -prev_count); //WTF?
+        }
+		m_DataSource->close();
 		if (write_log)
 		{
 			file.close();
 		}
-		_sleep(3* CLOCKS_PER_SEC);
-		OsSupport::terminateProcess (pid);
 
-		return ret;
+        return ret;
 	}
-//---------------------------------------------------------------------------------------
-	bool RosBootTest::fetchDebugByFile(string boot_cmd)
-	{
-		PipeReader pipe_reader;
-		_tremove(m_DebugFile.c_str ());
-
-		if (!pipe_reader.openPipe(boot_cmd, string(_T("rt"))))
-		{
-			cerr << "Error: failed to open pipe with cmd: " << boot_cmd << endl;
-			return false;
-		}
-
-		if (m_Delayread)
-		{
-			///
-			/// delay reading until emulator is ready
-			///
-
-			sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
-		}
-
-		OsSupport::ProcessID pid = 0;
-
-		if (m_PidFile != _T(""))
-		{
-			FileReader file;
-			if (file.openFile(m_PidFile.c_str ()))
-			{
-				vector<string> lines;
-				file.readFile(lines);
-				if (lines.size())
-				{
-					string line = lines[0];
-					pid = _ttoi(line.c_str ());
-				}
-				file.closeFile();
-			}
-		}
-		FileReader file;
-		if (!file.openFile (m_DebugFile.c_str ()))
-		{
-			cerr << "Error: failed to open debug log " << m_DebugFile<< endl;
-			pipe_reader.closePipe ();
-			return false;
-		}
-
-		vector<string> lines;
-		bool ret = true;
-
-		while(!pipe_reader.isEof ())
-		{
-			if (file.readFile (lines))
-			{
-				DebugState state = checkDebugData(lines);
-
-				if (state == DebugStateBSODDetected || state == DebugStateUMEDetected)
-				{
-					ret = false;
-					break;
-				}
-				else if (state == DebugStateCPReached)
-				{
-					break;
-				}
-			}
-			if (isTimeout(m_Timeout))
-			{
-				///
-				/// timeout has been reached
-				///
-				if (m_Checkpoint != _T(""))
-				{
-					///
-					/// timeout was reached but
-					/// the checkpoint was not reached
-					/// we see this as a "hang"
-					///
-					ret = false;
-				}
-				break;
-			}
-		}
-		file.closeFile ();
-
-		if (pid)
-		{
-			OsSupport::terminateProcess (pid);
-		}
-
-		pipe_reader.closePipe ();	
-		return ret;
-	}
-
 } // end of namespace Sysreg_

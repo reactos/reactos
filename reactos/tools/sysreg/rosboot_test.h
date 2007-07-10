@@ -12,16 +12,16 @@
 
 
 #include "reg_test.h"
+#include "data_source.h"
 #include <vector>
 #ifndef WIN32
 #include <unistd.h>
-#define _sleep sleep
 #endif
 
 namespace Sysreg_
 {
 	using std::vector;
-
+    using System_::DataSource;
 //---------------------------------------------------------------------------------------
 ///
 /// class RosBootTest
@@ -74,31 +74,15 @@ namespace Sysreg_
 	virtual bool execute(ConfigParser & conf_parser);
 
 	protected:
-//---------------------------------------------------------------------------------------
-///
-/// fetchDebugByPipe
-///
-/// Description: this functions debugs ReactOS by PipeReader class
-///
-/// Note: if an error occurs, this function returns false
-///
-/// @param BootCmd the command which is passed to PipeReader class
-/// @return bool
 
-	bool fetchDebugByPipe(string BootCmd);
+    void getPidFromFile();
+    bool executeBootCmd();
+    void delayRead();
+    bool configurePipe();
+    bool configureFile();
+    bool analyzeDebugData();
+    bool readConfigurationValues(ConfigParser & conf_parser);
 
-//---------------------------------------------------------------------------------------
-///
-/// fetchDebugByFile
-///
-/// Description: this functions fetches debug info by reading a debug log
-///
-/// Note: if an error occurs, this function returns false
-///
-/// @param BootCmd the command which is passed to PipeReader class
-/// @return bool
-
-	bool fetchDebugByFile(string BootCmd);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -144,8 +128,15 @@ protected:
 	string m_Checkpoint;
 	string m_CriticalApp;
 	string m_DebugFile;
+    string m_BootCmd;
+    string m_DebugPort;
+    string m_Pipe;
+    string m_File;
+    DataSource * m_DataSource;
 	vector <string> m_Checkpoints;
 	unsigned long m_Delayread;
+    long m_Pid;
+    long m_DelayRead;
 
 	}; // end of class RosBootTest
 

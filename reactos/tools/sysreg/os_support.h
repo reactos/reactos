@@ -10,7 +10,7 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-#if 0
+#if 1
 #include <windows.h>
 #else
 #include <unistd.h>
@@ -39,7 +39,7 @@ namespace System_
 #else
 
 		typedef pid_t ProcessID;
-		#endif
+#endif
 
 //---------------------------------------------------------------------------------------
 ///
@@ -75,6 +75,8 @@ namespace System_
 /// @param pid process id of the process to terminate
 
 	static bool terminateProcess(ProcessID pid);
+
+    static void sleep(long value);
 
 	protected:
 //---------------------------------------------------------------------------------------

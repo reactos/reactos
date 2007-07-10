@@ -57,6 +57,10 @@ namespace System_
 		free(command);
 		return pid;
 	}
+    void OsSupport::sleep(long value)
+    {
+        _sleep(value);
+    }
 #else
 /********************************************************************************************************************/
 	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs)
@@ -82,6 +86,11 @@ namespace System_
 		kill(pid, SIGKILL);
 		return true;
 	}
+
+    void OsSupport::sleep(long value)
+    {
+        sleep(value);
+    }
 
 
 #endif

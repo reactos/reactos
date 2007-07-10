@@ -13,6 +13,7 @@
 
 
 #include "user_types.h"
+#include "data_source.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -25,7 +26,7 @@ namespace System_
 /// Description: this class implements a pipe reader. It uses _popen to perform opening of 
 ///              pipe / _pclose
 
-	class PipeReader
+    class PipeReader : public DataSource
 	{
 	public:
 
