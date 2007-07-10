@@ -75,7 +75,7 @@ BEGIN
         MENUITEM "&Verwijderen\tDel",                 ID_EDIT_DELETE
         MENUITEM "&Naam wijzigen",                    ID_EDIT_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Sleutelnaam kopiÃ«ren",             ID_EDIT_COPYKEYNAME
+        MENUITEM "&Sleutelnaam kopiëren",             ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Zoeken\tCtrl+F",                   ID_EDIT_FIND, GRAYED
         MENUITEM "Volgende Zoeken\tF3",               ID_EDIT_FINDNEXT, GRAYED
@@ -160,7 +160,7 @@ BEGIN
     ID_VIEW_REFRESH         "Het venster vernieuwen"
     ID_EDIT_DELETE          "De selectie verwijderen"
     ID_EDIT_RENAME          "De naam van de selectie wijzigen"
-    ID_EDIT_COPYKEYNAME     "De naam van de geselecteerde sleutel naar het Klembord kopiÃ«ren"
+    ID_EDIT_COPYKEYNAME     "De naam van de geselecteerde sleutel naar het Klembord kopiëren"
     ID_EDIT_FIND            "Een tekenreeks zoeken in een sleutel, een waarde of gegevens"
     ID_EDIT_FINDNEXT        "De opgegeven tekst nogmaals zoeken"
 END
