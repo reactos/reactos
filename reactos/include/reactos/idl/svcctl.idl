@@ -78,7 +78,8 @@ cpp_quote("#endif")
 
   /* Function 7 */
   DWORD R(SetServiceStatus) ([in] handle_t BindingHandle,
-                             [in] SERVICE_STATUS_HANDLE hServiceStatus); /* FIXME */
+                             [in] SERVICE_STATUS_HANDLE hServiceStatus,
+                             [in] SERVICE_STATUS *lpServiceStatus);
 
   /* Function 8 */
   DWORD R(UnlockServiceDatabase) ([in] handle_t BindingHandle,
