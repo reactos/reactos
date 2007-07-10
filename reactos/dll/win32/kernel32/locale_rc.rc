@@ -169,7 +169,7 @@
 
 #include "nls/lvi.nls"   /* 0x0426  LANG_LATVIAN, SUBLANG_NEUTRAL */
 
-//#include "nls/lth.nls"   /* 0x0427  LANG_LITHUANIAN, SUBLANG_LITHUANIAN */
+#include "nls/lth.nls"   /* 0x0427  LANG_LITHUANIAN, SUBLANG_LITHUANIAN */
 
 //#include "nls/far.nls"   /* 0x0429  LANG_FARSI, SUBLANG_NEUTRAL */
 
