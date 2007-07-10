@@ -227,6 +227,13 @@ KiInitMachineDependent(VOID)
                     /* Move on */
                     CurrentSample++;
                     Sample++;
+
+                    if (Sample == sizeof(Samples) / sizeof(Samples[0]))
+                    {
+                        /* Restart */
+                        CurrentSample = Samples;
+                        Sample = 0;
+                    }
                 }
 
                 /* Save the CPU Speed */
