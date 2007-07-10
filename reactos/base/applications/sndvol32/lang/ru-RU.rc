@@ -11,7 +11,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Выход", IDC_EXIT
     END
-    POPUP "&Help"
+    POPUP "&Справка"
     BEGIN
         MENUITEM "&Вызов справки", IDC_HELP_TOPICS
         MENUITEM SEPARATOR

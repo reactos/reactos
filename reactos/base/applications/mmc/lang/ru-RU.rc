@@ -12,12 +12,12 @@ BEGIN
 
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О ReactOS Management Console...", ID_HELP_ABOUT
+        MENUITEM "&О Консоли управления ReactOS...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Management Console"
+    IDS_APPTITLE "Консоль управления ReactOS"
     IDS_CONSOLETITLE "Console%1!u!"
 END

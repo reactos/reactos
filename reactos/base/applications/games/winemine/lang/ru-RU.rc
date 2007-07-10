@@ -5,7 +5,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE {
-     IDS_APPNAME, "WineMine"
+     IDS_APPNAME, "Сапер"
 
 }
 
@@ -81,7 +81,7 @@ CAPTION "О программе"
 FONT 8, "MS Shell Dlg"
 EXSTYLE DS_SHELLFONT
 {
-    LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
+    LTEXT                               "Сапер", IDNONE,  10,  10,  35,  10
     LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
     LTEXT                 "под лицензией Wine", IDNONE,  35,  35, 100,  10
     ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20

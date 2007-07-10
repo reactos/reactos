@@ -287,69 +287,69 @@ BEGIN
     PUSHBUTTON      "ŒÚÏÂÌ‡",IDCANCEL,174,133,50,14
     LTEXT           "”ÒÚ‡ÌÓ‚Í‡ ÔÓˆÂÒÒÓÓ‚, Ì‡ ÍÓÚÓ˚ı ·Û‰ÂÚ ‚˚ÔÓÎÌˇÚ¸Òˇ Á‡‰‡˜‡.",
                     IDC_STATIC,5,5,220,16
-    CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+    CONTROL         "÷œ 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
-    CONTROL         "CPU 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,41,37,10
-    CONTROL         "CPU 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,54,37,10
-    CONTROL         "CPU 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,67,37,10
-    CONTROL         "CPU 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,80,37,10
-    CONTROL         "CPU 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,93,37,10
-    CONTROL         "CPU 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,106,37,10
-    CONTROL         "CPU 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,11,119,37,10
-    CONTROL         "CPU 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,61,28,37,10
-    CONTROL         "CPU 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
+    CONTROL         "÷œ 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_DISABLED |
                     WS_TABSTOP,61,41,37,10
-    CONTROL         "CPU 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,54,41,10
-    CONTROL         "CPU 11",IDC_CPU11,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 11",IDC_CPU11,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,67,41,10
-    CONTROL         "CPU 12",IDC_CPU12,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 12",IDC_CPU12,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,80,41,10
-    CONTROL         "CPU 13",IDC_CPU13,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 13",IDC_CPU13,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,93,41,10
-    CONTROL         "CPU 14",IDC_CPU14,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 14",IDC_CPU14,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,106,41,10
-    CONTROL         "CPU 15",IDC_CPU15,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 15",IDC_CPU15,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,61,119,41,10
-    CONTROL         "CPU 16",IDC_CPU16,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 16",IDC_CPU16,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,28,41,10
-    CONTROL         "CPU 17",IDC_CPU17,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 17",IDC_CPU17,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,41,41,10
-    CONTROL         "CPU 18",IDC_CPU18,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 18",IDC_CPU18,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,54,41,10
-    CONTROL         "CPU 19",IDC_CPU19,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 19",IDC_CPU19,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,67,41,10
-    CONTROL         "CPU 20",IDC_CPU20,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 20",IDC_CPU20,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,80,41,10
-    CONTROL         "CPU 21",IDC_CPU21,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 21",IDC_CPU21,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,93,41,10
-    CONTROL         "CPU 22",IDC_CPU22,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 22",IDC_CPU22,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,106,41,10
-    CONTROL         "CPU 23",IDC_CPU23,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 23",IDC_CPU23,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,116,119,41,10
-    CONTROL         "CPU 24",IDC_CPU24,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 24",IDC_CPU24,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,28,41,10
-    CONTROL         "CPU 25",IDC_CPU25,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 25",IDC_CPU25,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,41,41,10
-    CONTROL         "CPU 26",IDC_CPU26,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 26",IDC_CPU26,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,54,41,10
-    CONTROL         "CPU 27",IDC_CPU27,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 27",IDC_CPU27,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,67,41,10
-    CONTROL         "CPU 28",IDC_CPU28,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 28",IDC_CPU28,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,80,41,10
-    CONTROL         "CPU 29",IDC_CPU29,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 29",IDC_CPU29,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,93,41,10
-    CONTROL         "CPU 30",IDC_CPU30,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 30",IDC_CPU30,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,106,41,10
-    CONTROL         "CPU 31",IDC_CPU31,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "÷œ 31",IDC_CPU31,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,175,119,41,10
 END
 

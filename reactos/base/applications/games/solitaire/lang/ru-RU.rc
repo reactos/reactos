@@ -29,8 +29,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire от J Brown\n\nCardLib версии 1.0."
+    IDS_SOL_NAME    "Пасьянс"
+    IDS_SOL_ABOUT   "Пасьянс от J Brown\n\nCardLib версии 1.0."
     IDS_SOL_QUIT    "Закончить текущую игру?"
 END
 
