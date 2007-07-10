@@ -64,7 +64,7 @@ ScLookupServiceByServiceName(LPCWSTR lpServiceName)
     return NULL;
 }
 
-
+/*
 static PACTIVE_SERVICE
 ScLookupServiceByThreadId(DWORD ThreadId)
 {
@@ -82,7 +82,7 @@ ScLookupServiceByThreadId(DWORD ThreadId)
 
     return NULL;
 }
-
+*/
 
 static DWORD WINAPI
 ScServiceMainStub(LPVOID Context)
@@ -483,32 +483,6 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
-}
-
-
-/**********************************************************************
- *	SetServiceStatus
- *
- * @implemented
- */
-BOOL STDCALL
-SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
-                 LPSERVICE_STATUS lpServiceStatus)
-{
-    PACTIVE_SERVICE Service;
-
-    Service = ScLookupServiceByThreadId((DWORD)hServiceStatus);
-    if (!Service)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    RtlCopyMemory(&Service->ServiceStatus,
-                  lpServiceStatus,
-                  sizeof(SERVICE_STATUS));
-
-    return TRUE;
 }
 
 

@@ -1829,6 +1829,69 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
     return TRUE;
 }
 
+/**********************************************************************
+ *  SetServiceObjectSecurity
+ *
+ * @implemented
+ */
+BOOL STDCALL
+SetServiceObjectSecurity(SC_HANDLE hService,
+                         SECURITY_INFORMATION dwSecurityInformation,
+                         PSECURITY_DESCRIPTOR lpSecurityDescriptor)
+{
+    PSECURITY_DESCRIPTOR SelfRelativeSD = NULL;
+    ULONG Length;
+    NTSTATUS Status;
+    DWORD dwError;
+
+    Length = 0;
+    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
+                                   SelfRelativeSD,
+                                   &Length);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    SelfRelativeSD = HeapAlloc(GetProcessHeap(), 0, Length);
+    if (SelfRelativeSD == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
+                                   SelfRelativeSD,
+                                   &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrSetServiceObjectSecurity(BindingHandle,
+                                           (unsigned int)hService,
+                                           dwSecurityInformation,
+                                           (unsigned char *)SelfRelativeSD,
+                                           Length);
+
+    HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 
 /**********************************************************************
  *  QueryServiceStatus
@@ -1896,66 +1959,34 @@ QueryServiceStatusEx(SC_HANDLE hService,
     return TRUE;
 }
 
-
 /**********************************************************************
- *  SetServiceObjectSecurity
+ *	SetServiceStatus
  *
  * @implemented
  */
 BOOL STDCALL
-SetServiceObjectSecurity(SC_HANDLE hService,
-                         SECURITY_INFORMATION dwSecurityInformation,
-                         PSECURITY_DESCRIPTOR lpSecurityDescriptor)
+SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
+                 LPSERVICE_STATUS lpServiceStatus)
 {
-    PSECURITY_DESCRIPTOR SelfRelativeSD = NULL;
-    ULONG Length;
-    NTSTATUS Status;
     DWORD dwError;
 
-    Length = 0;
-    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
-                                   SelfRelativeSD,
-                                   &Length);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    SelfRelativeSD = HeapAlloc(GetProcessHeap(), 0, Length);
-    if (SelfRelativeSD == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    Status = RtlMakeSelfRelativeSD(lpSecurityDescriptor,
-                                   SelfRelativeSD,
-                                   &Length);
-    if (!NT_SUCCESS(Status))
-    {
-        HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
+    DPRINT("SetServiceStatus() called\n");
+    DPRINT("ThreadId %lu, data addr %p called\n", hServiceStatus, lpServiceStatus);
 
     HandleBind();
 
     /* Call to services.exe using RPC */
-    dwError = ScmrSetServiceObjectSecurity(BindingHandle,
-                                           (unsigned int)hService,
-                                           dwSecurityInformation,
-                                           (unsigned char *)SelfRelativeSD,
-                                           Length);
-
-    HeapFree(GetProcessHeap(), 0, SelfRelativeSD);
-
+    dwError = ScmrSetServiceStatus(BindingHandle,
+                                   (unsigned long)hServiceStatus,
+                                   lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        DPRINT1("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
+
+    DPRINT("SetServiceStatus() done (ret %lu\n", dwError);
 
     return TRUE;
 }
