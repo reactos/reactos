@@ -907,11 +907,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_CONTRAST:
-            DialogBoxParam(hInstance,
-                           MAKEINTRESOURCE(IDD_BRIGHTNESS),
-                           Info->hSelf,
-                           ContrastProc,
-                           (LPARAM)Info);
+            /* FIXME : Create a window for contrast */
         break;
 
         case ID_BLACKANDWHITE:
