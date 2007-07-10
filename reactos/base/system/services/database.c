@@ -128,6 +128,37 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 }
 
 
+PSERVICE
+ScmGetServiceEntryByThreadId(ULONG ThreadId)
+{
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+
+    DPRINT("ScmGetServiceEntryByThreadId() called\n");
+    DPRINT("Finding ThreadId %lu\n", ThreadId);
+
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+        DPRINT("Found threadId %lu\n", CurrentService->ThreadId);
+        if (CurrentService->ThreadId == ThreadId)
+        {
+            DPRINT("Found service: '%S'\n", CurrentService->lpDisplayName);
+            return CurrentService;
+        }
+
+        ServiceEntry = ServiceEntry->Flink;
+    }
+
+    DPRINT("Couldn't find a matching service\n");
+
+    return NULL;
+}
+
+
 DWORD
 ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                           PSERVICE *lpServiceRecord)
@@ -542,8 +573,8 @@ ScmControlService(PSERVICE Service,
     DPRINT("ScmControlService() called\n");
 
     ControlPacket = (SCM_CONTROL_PACKET*) HeapAlloc(GetProcessHeap(),
-                              HEAP_ZERO_MEMORY,
-                              sizeof(SCM_CONTROL_PACKET));
+                                                    HEAP_ZERO_MEMORY,
+                                                    sizeof(SCM_CONTROL_PACKET));
     if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -597,7 +628,7 @@ ScmSendStartCommand(PSERVICE Service,
         }
     }
     TotalLength++;
-    DPRINT("ArgsLength: %ld\nTotalLength: %ld\n\n", ArgsLength, TotalLength);
+    DPRINT("ArgsLength: %ld TotalLength: %ld\n", ArgsLength, TotalLength);
 
     /* Allocate a control packet */
     ControlPacket = (SCM_CONTROL_PACKET*) HeapAlloc(GetProcessHeap(),

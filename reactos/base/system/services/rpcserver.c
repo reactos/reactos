@@ -700,11 +700,31 @@ ScmrQueryServiceStatus(handle_t BindingHandle,
 /* Function 7 */
 unsigned long
 ScmrSetServiceStatus(handle_t BindingHandle,
-                     unsigned long hServiceStatus) /* FIXME */
+                     unsigned long hServiceStatus,
+                     LPSERVICE_STATUS lpServiceStatus)
 {
-    DPRINT1("ScmrSetServiceStatus() is unimplemented\n");
-    /* FIXME */
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PSERVICE lpService;
+
+    DPRINT("ScmrSetServiceStatus() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    lpService = ScmGetServiceEntryByThreadId((ULONG)hServiceStatus);
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    RtlCopyMemory(&lpService->Status,
+                  lpServiceStatus,
+                  sizeof(SERVICE_STATUS));
+
+    DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
+    DPRINT("ScmrSetServiceStatus() done\n");
+
+    return ERROR_SUCCESS;
 }
 
 
