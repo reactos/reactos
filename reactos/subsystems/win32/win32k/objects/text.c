@@ -1872,15 +1872,22 @@ NtGdiExtTextOut(
          if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
          TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
          {
-         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-         if (error)
-         {
-            DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-         }
+             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+             if (error)
+             {
+                DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+             }
 
-         glyph = face->glyph;
-            realglyph = NtGdiGlyphCacheSet(face, glyph_index, 
-            TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
+             glyph = face->glyph;
+             realglyph = NtGdiGlyphCacheSet(face, glyph_index, 
+                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
+             if (!realglyph)
+             {
+                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+                 IntUnLockFreeType;
+                 goto fail;
+             }      
+
          }
          /* retrieve kerning distance */
          if (use_kerning && previous && glyph_index)
@@ -1927,10 +1934,9 @@ NtGdiExtTextOut(
       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
       {
         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-
         if (error)
         {
-           DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+           DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
            IntUnLockFreeType;
            goto fail;
         }
@@ -1940,6 +1946,12 @@ NtGdiExtTextOut(
                                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, 
                                        glyph, 
                                        RenderMode);
+        if (!realglyph)
+        {
+            DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
+            IntUnLockFreeType;
+            goto fail;
+        }      
       }
 //      DbgPrint("realglyph: %x\n", realglyph);
 //      DbgPrint("TextLeft: %d\n", TextLeft);
