@@ -148,6 +148,10 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
     LPTSTR p = path;
     TCHAR szSystemPath[MAX_PATH];
     TCHAR szProgramPath[MAX_PATH];
+    TCHAR szWorkingDir[MAX_PATH];
+    LPTSTR lpWorkingDir = NULL;
+    LPTSTR lpFilePart;
+    DWORD dwLen;
 
     if (bCheckExistence)
     {
@@ -178,7 +182,31 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
     if (!LoadString(hDllInstance, nIdTitle, title, sizeof(title)/sizeof(title[0])))
         return FALSE;
 
-    return SUCCEEDED(CreateShellLink(path, command, _T(""), NULL, NULL, 0, title));
+    dwLen = GetFullPathName(path,
+                            sizeof(szWorkingDir) / sizeof(szWorkingDir[0]),
+                            szWorkingDir,
+                            &lpFilePart);
+    if (dwLen != 0 && dwLen <= sizeof(szWorkingDir) / sizeof(szWorkingDir[0]))
+    {
+        /* Successfully determined the file path */
+
+        if (lpFilePart != NULL)
+        {
+            /* We're only interested in the path. Cut the file name off.
+               Also remove the trailing backslash unless the working directory
+               is only going to be a drive, ie. C:\ */
+            *(lpFilePart--) = _T('\0');
+            if (!(lpFilePart - szWorkingDir == 2 && szWorkingDir[1] == _T(':') &&
+                  szWorkingDir[2] == _T('\\')))
+            {
+                *lpFilePart = _T('\0');
+            }
+        }
+
+        lpWorkingDir = szWorkingDir;
+    }
+
+    return SUCCEEDED(CreateShellLink(path, command, _T(""), lpWorkingDir, NULL, 0, title));
 }
 
 
