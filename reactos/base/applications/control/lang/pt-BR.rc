@@ -1,0 +1,28 @@
+// Brazilian language resource file (Wagner Leandro Bueno Angelo, 2007-07-09)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Arquivo"
+    BEGIN
+        MENUITEM "&Fechar",                      IDM_CLOSE
+    END
+    POPUP "&Visualizar"
+    BEGIN
+        MENUITEM "Ícones grandes",               IDM_LARGEICONS
+        MENUITEM "Ícones pequenos",              IDM_SMALLICONS
+        MENUITEM "Lista",                        IDM_LIST
+        MENUITEM "Detalhes",                     IDM_DETAILS
+    END
+    POPUP "Aj&uda"
+    BEGIN
+        MENUITEM "Sobre...",                     IDM_ABOUT
+    END
+END
+
