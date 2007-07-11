@@ -1034,6 +1034,35 @@ typedef struct tagDATABLOCKHEADER
 
 typedef struct {
     DATABLOCK_HEADER dbh;
+    WORD wFillAttribute;
+    WORD wPopupFillAttribute;
+    COORD dwScreenBufferSize;
+    COORD dwWindowSize;
+    COORD dwWindowOrigin;
+    DWORD nFont;
+    DWORD nInputBufferSize;
+    COORD dwFontSize;
+    UINT uFontFamily;
+    UINT uFontWeight;
+    WCHAR FaceName[LF_FACESIZE];
+    UINT uCursorSize;
+    BOOL bFullScreen;
+    BOOL bQuickEdit;
+    BOOL bInsertMode;
+    BOOL bAutoPosition;
+    UINT uHistoryBufferSize;
+    UINT uNumberOfHistoryBuffers;
+    BOOL bHistoryNoDup;
+    COLORREF ColorTable[16];
+} NT_CONSOLE_PROPS, *LPNT_CONSOLE_PROPS;
+
+typedef struct {
+    DATABLOCK_HEADER dbh;
+    UINT uCodePage;
+} NT_FE_CONSOLE_PROPS, *LPNT_FE_CONSOLE_PROPS;
+
+typedef struct {
+    DATABLOCK_HEADER dbh;
     CHAR szDarwinID[MAX_PATH];
     WCHAR szwDarwinID[MAX_PATH];
 } EXP_DARWIN_LINK, *LPEXP_DARWIN_LINK;
