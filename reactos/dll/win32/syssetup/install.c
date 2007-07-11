@@ -146,23 +146,10 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
     TCHAR title[256];
     TCHAR name[256];
     LPTSTR p = path;
-    TCHAR szSystemPath[MAX_PATH];
-    TCHAR szProgramPath[MAX_PATH];
     TCHAR szWorkingDir[MAX_PATH];
     LPTSTR lpWorkingDir = NULL;
     LPTSTR lpFilePart;
     DWORD dwLen;
-
-    if (bCheckExistence)
-    {
-        if (!GetSystemDirectory(szSystemPath, sizeof(szSystemPath)/sizeof(szSystemPath[0])))
-            return FALSE;
-        _tcscpy(szProgramPath, szSystemPath);
-        _tcscat(szProgramPath, _T("\\"));
-        if ((_taccess(_tcscat(szProgramPath, command), 0 )) == -1)
-            /* Expected error, don't return FALSE */
-            return TRUE;
-    }
 
     if (ExpandEnvironmentStrings(command,
                                  path,
@@ -170,6 +157,13 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
     {
         _tcscpy(path,
                 command);
+    }
+
+    if (bCheckExistence)
+    {
+        if ((_taccess(path, 0 )) == -1)
+            /* Expected error, don't return FALSE */
+            return TRUE;
     }
 
     dwLen = GetFullPathName(path,
