@@ -174,59 +174,59 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Acknowledgements"
-    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information"
-    IDS_OWNERTITLE       "Personalize your Software"
-    IDS_OWNERSUBTITLE    "Setup uses this information about yourself to personalize ReactOS."
-    IDS_COMPUTERTITLE    "Computer Name and Administrator Password"
-    IDS_COMPUTERSUBTITLE "You must provide a name and an Administrator Password for your computer."
-    IDS_LOCALETITLE      "Regional settings"
-    IDS_LOCALESUBTITLE   "You can customize ReactOS for different regions and languages."
-    IDS_DATETIMETITLE    "Date and Time"
-    IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
-    IDS_PROCESSTITLE     "Process page title"
-    IDS_PROCESSSUBTITLE  "Process page subtitle"
+    IDS_ACKTITLE         "Anerkennungen"
+    IDS_ACKSUBTITLE      "Das Fundament, auf dem ReactOS gebaut ist und Lizenzinformationen"
+    IDS_OWNERTITLE       "Personalisieren Sie ihre Software"
+    IDS_OWNERSUBTITLE    "Das Setup nutzt diese Informationen über Sie, um ReactOS zu personalisieren."
+    IDS_COMPUTERTITLE    "Computername und Administratorpasswort"
+    IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für ihren Computer festlegen."
+    IDS_LOCALETITLE      "Regionale Einstellungen"
+    IDS_LOCALESUBTITLE   "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
+    IDS_DATETIMETITLE    "Datum und Uhrzeit"
+    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für ihren Computer."
+    IDS_PROCESSTITLE     "Prozess page Titel"
+    IDS_PROCESSSUBTITLE  "Prozess page Subtitel"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_WINEFILE    "Launch Winefile"
-    IDS_CMT_IBROWSER	"Launch iBrowser"
-    IDS_CMT_GETFIREFOX	"Download/install Firefox"
-    IDS_CMT_DOWNLOADER  "Download and install various applications"
+    IDS_CMT_WINEFILE    "Starte Winefile"
+    IDS_CMT_IBROWSER	"Starte iBrowser"
+    IDS_CMT_GETFIREFOX	"Download/installiere Firefox"
+    IDS_CMT_DOWNLOADER  "Downloaden und installeren verschiedener Anwendungen"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Accessories"
-    IDS_CMT_CALC        "Launch Calculator"
-    IDS_CMT_CMD         "Open command prompt"
-    IDS_CMT_EXPLORER    "Launch Explorer"
-    IDS_CMT_NOTEPAD     "Launch Text Editor"
-    IDS_CMT_REGEDIT     "Launch Registry Editor"
-    IDS_CMT_WORDPAD     "Launch Document Editor"
-    IDS_CMT_SCREENSHOT  "Take screenshot"
-    IDS_CMT_DEVMGMT     "Launch Device Manager"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
+    IDS_ACCESSORIES     "Zubehör"
+    IDS_CMT_CALC        "Starte Taschenrechner"
+    IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
+    IDS_CMT_EXPLORER    "Starte Explorer"
+    IDS_CMT_NOTEPAD     "Starte Texteditor"
+    IDS_CMT_REGEDIT     "Starte Registrierungseditor"
+    IDS_CMT_WORDPAD     "Starte Dokument Editor"
+    IDS_CMT_SCREENSHOT  "Screenshot erstellen"
+    IDS_CMT_DEVMGMT     "Starte Geräte Manager"
+    IDS_CMT_SERVMAN     "Starte Service Manager"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Games"
-    IDS_CMT_SOLITAIRE	"Solitaire"
+    IDS_GAMES		"Spiele"
+    IDS_CMT_SOLITAIRE	"Solitär"
     IDS_CMT_WINEMINE	"WineMine"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "ReactOS Setup"
-    IDS_UNKNOWN_ERROR           "Unknown error"
-    IDS_REGISTERING_COMPONENTS  "Registering components..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
-    IDS_REGSVR_FAILED           "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
-    IDS_TIMEOUT			        "Timeout during registration"
+    IDS_REACTOS_SETUP		"ReactOS Setup"
+    IDS_UNKNOWN_ERROR           "Unbekannter Fehler"
+    IDS_REGISTERING_COMPONENTS  "Registriere Komponenten..."
+    IDS_LOADLIBRARY_FAILED	"LoadLibrary fehlgeschlagen: "
+    IDS_GETPROCADDR_FAILED	"GetProcAddr fehlgeschlagen: "
+    IDS_REGSVR_FAILED           "DllRegisterServer fehlgeschlagen: "
+    IDS_DLLINSTALL_FAILED	"DllInstall fehlgeschlagen: "
+    IDS_TIMEOUT			"Zeitüberschreitung während der Registrierung"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -248,18 +248,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Setup cannot continue until you enter your name."
-    IDS_WZD_SETCOMPUTERNAME  "Setup failed to set the computer name."
-    IDS_WZD_COMPUTERNAME  "Setup cannot continue until you enter the name of your computer."
-    IDS_WZD_PASSWORDEMPTY  "You must enter a password !"
-    IDS_WZD_PASSWORDMATCH  "The passwords you entered do not match. Please enter the desired password again."
-    IDS_WZD_PASSWORDCHAR  "The password you entered contains invalid characters. Please enter a cleaned password."
-    IDS_WZD_LOCALTIME    "Setup was unable to set the local time."
+    IDS_WZD_NAME         "Setup kann erst fortgesetzt werden kann, wenn ein Name eingegeben wurde."
+    IDS_WZD_SETCOMPUTERNAME  "Setup konnte den Computernamen nicht setzen."
+    IDS_WZD_COMPUTERNAME  Setup kann erst fortgesetzt werden kann, wenn ein Computername eingegeben wurde."
+    IDS_WZD_PASSWORDEMPTY  "Sie müssen ein Passwort setzen!"
+    IDS_WZD_PASSWORDMATCH  "Die Passwörter sind nicht gleich. Bitte setzen Sie die Passwöter erneut."
+    IDS_WZD_PASSWORDCHAR  "Das Passwort das sie setzten enthält ungültige Zeichen. Bitte setzen Sie ein gültiges Passwort."
+    IDS_WZD_LOCALTIME    "Setup konnte die lokale Zeit nicht setzen."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Installing devices..."
+    IDS_STATUS_INSTALL_DEV "Geräte werden installiert..."
 END
 
 /* EOF */
