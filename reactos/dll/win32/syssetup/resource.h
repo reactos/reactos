@@ -64,6 +64,9 @@
 #define IDD_GPL                 2100
 #define IDC_GPL_TEXT            2101
 
+#define IDD_STATUSWINDOW_DLG    2200
+#define IDC_STATUSLABEL         2201
+
 #define IDS_ACKTITLE			3010
 #define IDS_ACKSUBTITLE			3011
 
@@ -134,6 +137,8 @@
 #define IDS_WZD_PASSWORDMATCH  3454
 #define IDS_WZD_PASSWORDCHAR  3455
 #define IDS_WZD_LOCALTIME    3456
+
+#define IDS_STATUS_INSTALL_DEV 3500
 
 #define IDR_GPL					4000
 

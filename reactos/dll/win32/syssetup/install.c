@@ -397,9 +397,66 @@ cleanup:
 }
 
 
+static BOOL CALLBACK
+StatusMessageWindowProc(
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(wParam);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            TCHAR szMsg[256];
+
+            if (!LoadString(hDllInstance, IDS_STATUS_INSTALL_DEV, szMsg, sizeof(szMsg)/sizeof(szMsg[0])))
+                return FALSE;
+            SetDlgItemText(hwndDlg, IDC_STATUSLABEL, szMsg);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+
+static DWORD WINAPI
+ShowStatusMessageThread(
+    IN LPVOID lpParameter)
+{
+    HWND *phWnd = (HWND *)lpParameter;
+    HWND hWnd;
+    MSG Msg;
+
+    hWnd = CreateDialogParam(
+        hDllInstance,
+        MAKEINTRESOURCE(IDD_STATUSWINDOW_DLG),
+        GetDesktopWindow(),
+        StatusMessageWindowProc,
+        (LPARAM)NULL);
+    if (!hWnd)
+        return 0;
+    *phWnd = hWnd;
+
+    ShowWindow(hWnd, SW_SHOW);
+
+    /* Message loop for the Status window */
+    while (GetMessage(&Msg, NULL, 0, 0))
+    {
+        TranslateMessage(&Msg);
+        DispatchMessage(&Msg);
+    }
+
+    return 0;
+}
+
 static BOOL
 CommonInstall(VOID)
 {
+    HWND hWnd = NULL;
+
     hSysSetupInf = SetupOpenInfFileW(
         L"syssetup.inf",
         NULL,
@@ -418,32 +475,43 @@ CommonInstall(VOID)
         return FALSE;
     }
 
+    CreateThread(
+        NULL,
+        0,
+        ShowStatusMessageThread,
+        (LPVOID)&hWnd,
+        0,
+        NULL);
+
     if (!EnableUserModePnpManager())
     {
        DebugPrint("EnableUserModePnpManager() failed!\n");
+       SetupCloseInfFile(hSysSetupInf);
+       EndDialog(hWnd, 0);
        return FALSE;
     }
 
     if (CMP_WaitNoPendingInstallEvents(INFINITE) != WAIT_OBJECT_0)
     {
       DebugPrint("CMP_WaitNoPendingInstallEvents() failed!\n");
+      SetupCloseInfFile(hSysSetupInf);
+      EndDialog(hWnd, 0);
       return FALSE;
     }
 
+    EndDialog(hWnd, 0);
     return TRUE;
 }
 
 DWORD WINAPI
 InstallLiveCD(IN HINSTANCE hInstance)
 {
-    HKEY hKey = NULL;
-    LPTSTR Shell = NULL;
     STARTUPINFO StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
     BOOL res;
 
     if (!CommonInstall())
-        return 0;
+        goto cleanup;
     SetupCloseInfFile(hSysSetupInf);
 
     /* Run the shell */
@@ -472,9 +540,6 @@ InstallLiveCD(IN HINSTANCE hInstance)
     WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
 
 cleanup:
-    if (hKey != NULL)
-        RegCloseKey(hKey);
-    HeapFree(GetProcessHeap(), 0, Shell);
     MessageBoxA(
         NULL,
         "You can shutdown your computer, or press ENTER to reboot",

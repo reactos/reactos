@@ -155,6 +155,15 @@ BEGIN
 END
 
 
+IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
+STYLE NOT WS_VISIBLE | DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Please wait..."
+FONT 8,"MS Shell Dlg 2",400,0,1
+BEGIN
+    LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
+END
+
+
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Riconoscimenti"
@@ -238,4 +247,10 @@ BEGIN
     IDS_WZD_PASSWORDCHAR    "La password contiene caratteri non validi. Digitate una password diversa."
     IDS_WZD_LOCALTIME       "La procedura di installazione non ha potuto impostare l'ora locale."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALL_DEV "Installing devices..."
+END
+
 /* EOF */
