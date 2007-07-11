@@ -63,7 +63,7 @@ HINF hSysSetupInf = INVALID_HANDLE_VALUE;
 
 /* FUNCTIONS ****************************************************************/
 
-void
+static VOID
 DebugPrint(char* fmt,...)
 {
     char buffer[512];
@@ -72,6 +72,8 @@ DebugPrint(char* fmt,...)
     va_start(ap, fmt);
     vsprintf(buffer, fmt, ap);
     va_end(ap);
+
+    LogItem(SYSSETUP_SEVERITY_FATAL_ERROR, L"Failed");
 
     strcat(buffer, "\nRebooting now!");
     MessageBoxA(NULL,
@@ -138,12 +140,25 @@ HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir,
 
 
 static BOOL
-CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nIdTitle)
+CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nIdTitle, BOOL bCheckExistence)
 {
     TCHAR path[MAX_PATH];
     TCHAR title[256];
     TCHAR name[256];
     LPTSTR p = path;
+    TCHAR szSystemPath[MAX_PATH];
+    TCHAR szProgramPath[MAX_PATH];
+
+    if (bCheckExistence)
+    {
+        if (!GetSystemDirectory(szSystemPath, sizeof(szSystemPath)/sizeof(szSystemPath[0])))
+            return FALSE;
+        _tcscpy(szProgramPath, szSystemPath);
+        _tcscat(szProgramPath, _T("\\"));
+        if ((_taccess(_tcscat(szProgramPath, command), 0 )) == -1)
+            /* Expected error, don't return FALSE */
+            return TRUE;
+    }
 
     if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
         return FALSE;
@@ -156,11 +171,11 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
 
     p = PathAddBackslash(p);
 
-    if(!LoadString(hDllInstance, nIdName, name, 256))
+    if (!LoadString(hDllInstance, nIdName, name, sizeof(name)/sizeof(name[0])))
         return FALSE;
     _tcscpy(p, name);
 
-    if (!LoadString(hDllInstance, nIdTitle, title, 256))
+    if (!LoadString(hDllInstance, nIdTitle, title, sizeof(title)/sizeof(title[0])))
         return FALSE;
 
     return SUCCEEDED(CreateShellLink(path, command, _T(""), NULL, NULL, 0, title));
@@ -186,35 +201,37 @@ CreateShortcutFolder(int csidl, UINT nID, LPTSTR name, int nameLen)
 }
 
 
-static VOID
+static BOOL
 CreateRandomSid(
     OUT PSID *Sid)
 {
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     LARGE_INTEGER SystemTime;
     PULONG Seed;
+    NTSTATUS Status;
 
-    NtQuerySystemTime (&SystemTime);
+    NtQuerySystemTime(&SystemTime);
     Seed = &SystemTime.u.LowPart;
 
-    RtlAllocateAndInitializeSid(
+    Status = RtlAllocateAndInitializeSid(
         &SystemAuthority,
         4,
         SECURITY_NT_NON_UNIQUE,
         RtlUniform(Seed),
-        RtlUniform (Seed),
-        RtlUniform (Seed),
+        RtlUniform(Seed),
+        RtlUniform(Seed),
         SECURITY_NULL_RID,
         SECURITY_NULL_RID,
         SECURITY_NULL_RID,
         SECURITY_NULL_RID,
         Sid);
+    return NT_SUCCESS(Status);
 }
 
 
 static VOID
 AppendRidToSid(
-    IN PSID *Dst,
+    OUT PSID *Dst,
     IN PSID Src,
     IN ULONG NewRid)
 {
@@ -260,7 +277,7 @@ CreateTempDir(
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                      _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"),
                      0,
-                     KEY_ALL_ACCESS,
+                     KEY_QUERY_VALUE,
                      &hKey))
     {
         DebugPrint("Error: %lu\n", GetLastError());
@@ -326,7 +343,7 @@ ProcessSysSetupInf(VOID)
         if (!SetupGetStringField(&InfContext,
                                  0,
                                  LineBuffer,
-                                 256,
+                                 sizeof(LineBuffer)/sizeof(LineBuffer[0]),
                                  &LineLength))
         {
             return FALSE;
@@ -380,19 +397,9 @@ cleanup:
 }
 
 
-DWORD STDCALL
-InstallLiveCD (HINSTANCE hInstance)
+static BOOL
+CommonInstall(VOID)
 {
-    LONG rc;
-    HKEY hKey = NULL;
-    DWORD dwType;
-    DWORD requiredSize;
-    LPTSTR Shell = NULL;
-    TCHAR CommandLine[MAX_PATH];
-    STARTUPINFO StartupInfo;
-    PROCESS_INFORMATION ProcessInformation;
-    BOOL res;
-
     hSysSetupInf = SetupOpenInfFileW(
         L"syssetup.inf",
         NULL,
@@ -401,62 +408,43 @@ InstallLiveCD (HINSTANCE hInstance)
     if (hSysSetupInf == INVALID_HANDLE_VALUE)
     {
         DebugPrint("SetupOpenInfFileW() failed to open 'syssetup.inf' (Error: %lu)\n", GetLastError());
-        return 0;
+        return FALSE;
     }
 
     if (!ProcessSysSetupInf())
     {
         DebugPrint("ProcessSysSetupInf() failed!\n");
-        return 0;
+        SetupCloseInfFile(hSysSetupInf);
+        return FALSE;
     }
-
-    SetupCloseInfFile(hSysSetupInf);
 
     if (!EnableUserModePnpManager())
     {
-        DebugPrint("EnableUserModePnpManager() failed!\n");
-        return 0;
+       DebugPrint("EnableUserModePnpManager() failed!\n");
+       return FALSE;
     }
 
-    /* Load the default shell */
-    rc = RegOpenKeyEx(
-        HKEY_LOCAL_MACHINE,
-        TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), /* FIXME: should be REGSTR_PATH_WINLOGON */
-        0,
-        KEY_QUERY_VALUE,
-        &hKey);
-    if (rc != ERROR_SUCCESS)
-        goto cleanup;
-    rc = RegQueryValueEx(
-        hKey,
-        TEXT("Shell"),
-        NULL,
-        &dwType,
-        NULL,
-        &requiredSize);
-    if (rc != ERROR_SUCCESS)
-        goto cleanup;
-    else if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
-        goto cleanup;
-    else if (requiredSize > (MAX_PATH - 1) * sizeof(TCHAR))
-        goto cleanup;
-    Shell = HeapAlloc(GetProcessHeap(), 0, requiredSize + sizeof(TCHAR));
-    if (!Shell)
-        goto cleanup;
-    Shell[requiredSize / sizeof(WCHAR)] = '\0';
-    rc = RegQueryValueEx(
-        hKey,
-        TEXT("Shell"),
-        NULL,
-        NULL,
-        (LPBYTE)Shell,
-        &requiredSize);
-    if (rc != ERROR_SUCCESS)
-        goto cleanup;
-    if (dwType == REG_EXPAND_SZ)
-        ExpandEnvironmentStrings(Shell, CommandLine, MAX_PATH);
-    else if (dwType == REG_SZ)
-        _tcscpy(CommandLine, Shell);
+    if (CMP_WaitNoPendingInstallEvents(INFINITE) != WAIT_OBJECT_0)
+    {
+      DebugPrint("CMP_WaitNoPendingInstallEvents() failed!\n");
+      return FALSE;
+    }
+
+    return TRUE;
+}
+
+DWORD WINAPI
+InstallLiveCD(IN HINSTANCE hInstance)
+{
+    HKEY hKey = NULL;
+    LPTSTR Shell = NULL;
+    STARTUPINFO StartupInfo;
+    PROCESS_INFORMATION ProcessInformation;
+    BOOL res;
+
+    if (!CommonInstall())
+        return 0;
+    SetupCloseInfFile(hSysSetupInf);
 
     /* Run the shell */
     StartupInfo.cb = sizeof(StartupInfo);
@@ -467,7 +455,7 @@ InstallLiveCD (HINSTANCE hInstance)
     StartupInfo.cbReserved2 = 0;
     StartupInfo.lpReserved2 = 0;
     res = CreateProcess(
-        CommandLine,
+        _T("userinit.exe"),
         NULL,
         NULL,
         NULL,
@@ -496,133 +484,97 @@ cleanup:
 }
 
 
-DWORD STDCALL
-InstallReactOS (HINSTANCE hInstance)
+static BOOL
+CreateShortcuts(VOID)
 {
-    TCHAR sAccessories[256];
-    TCHAR sGames[256];
-    TCHAR szBuffer[MAX_PATH];
-    TCHAR Path[MAX_PATH];
-
-#if 0
-    OutputDebugStringA ("InstallReactOS() called\n");
-
-    if (!InitializeSetupActionLog (FALSE))
-    {
-        OutputDebugStringA ("InitializeSetupActionLog() failed\n");
-    }
-
-    LogItem(SYSSETUP_SEVERITY_INFORMATION,
-            L"ReactOS Setup starting");
-
-    LogItem(SYSSETUP_SEVERITY_FATAL_ERROR,
-            L"Buuuuuuaaaah!");
-
-    LogItem(SYSSETUP_SEVERITY_INFORMATION,
-            L"ReactOS Setup finished");
-
-    TerminateSetupActionLog ();
-#endif
-#if 0
-    UNICODE_STRING SidString;
-#endif
-    ULONG LastError;
-
-    if (!InitializeProfiles ())
-    {
-        DebugPrint ("InitializeProfiles() failed\n");
-        return 0;
-    }
+    TCHAR szFolder[256];
 
     CoInitialize(NULL);
-    SetUserDefaultLCID(GetSystemDefaultLCID());
-    SetThreadLocale(GetSystemDefaultLCID());
 
     /* Create desktop shortcuts */
-    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD);
+    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD, FALSE);
 
     /* Create program startmenu shortcuts */
-    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("explorer.exe"), IDS_CMT_EXPLORER);
-    /* workaround to stop empty links for trunk builds */
-    if (GetSystemDirectory(szBuffer, MAX_PATH)) 
+    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("explorer.exe"), IDS_CMT_EXPLORER, FALSE);
+    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("downloader.exe"), IDS_CMT_DOWNLOADER, TRUE);
+    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_FIREFOX, _T("getfirefox.exe"), IDS_CMT_GETFIREFOX, TRUE);
+
+    /* Create administrative tools startmenu shortcuts */
+    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("servman.exe"), IDS_CMT_SERVMAN, FALSE);
+    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_DEVICE, _T("devmgmt.exe"), IDS_CMT_DEVMGMT, FALSE);
+
+    /* Create and fill Accessories subfolder */
+    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
-        _tcscpy(Path, szBuffer);
-        if ((_taccess(_tcscat(Path, _T("\\downloader.exe")), 0 )) != -1)
-            CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("downloader.exe"), IDS_CMT_DOWNLOADER);
-
-        _tcscpy(Path, szBuffer);
-        if ((_taccess(_tcscat(Path, _T("\\getfirefox.exe")), 0 )) != -1)
-            CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_FIREFOX, _T("getfirefox.exe"), IDS_CMT_GETFIREFOX);
-    }
-
-
-    /* Create administritive tools startmenu shortcuts */
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("servman.exe"), IDS_CMT_SERVMAN);
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_DEVICE, _T("devmgmt.exe"), IDS_CMT_DEVMGMT);
-
-    /* create and fill Accessories subfolder */
-    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) 
-    {
-        CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_CALC, _T("calc.exe"), IDS_CMT_CALC);
-        CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD);
-        CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_NOTEPAD, _T("notepad.exe"), IDS_CMT_NOTEPAD);
-        CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_REGEDIT, _T("regedit.exe"), IDS_CMT_REGEDIT);
-        CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_WORDPAD, _T("wordpad.exe"), IDS_CMT_WORDPAD);
-        if (GetSystemDirectory(szBuffer, MAX_PATH)) 
-        {
-            _tcscpy(Path, szBuffer);
-            if ((_taccess(_tcscat(Path, _T("\\screenshot.exe")), 0 )) != -1)
-                CreateShortcut(CSIDL_PROGRAMS, sAccessories, IDS_SHORT_SNAP, _T("screenshot.exe"), IDS_CMT_SCREENSHOT);
-        }
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CALC, _T("calc.exe"), IDS_CMT_CALC, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_NOTEPAD, _T("notepad.exe"), IDS_CMT_NOTEPAD, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("regedit.exe"), IDS_CMT_REGEDIT, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("wordpad.exe"), IDS_CMT_WORDPAD, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
     }
 
     /* Create Games subfolder and fill if the exe is available */
-    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256)) 
+    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
-        CreateShortcut(CSIDL_PROGRAMS, sGames, IDS_SHORT_SOLITAIRE, _T("sol.exe"), IDS_CMT_SOLITAIRE);
-        CreateShortcut(CSIDL_PROGRAMS, sGames, IDS_SHORT_WINEMINE, _T("winemine.exe"), IDS_CMT_WINEMINE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SOLITAIRE, _T("sol.exe"), IDS_CMT_SOLITAIRE, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WINEMINE, _T("winemine.exe"), IDS_CMT_WINEMINE, FALSE);
     }
 
     CoUninitialize();
 
-    /* Create the semi-random Domain-SID */
-    CreateRandomSid(&DomainSid);
-    if (DomainSid == NULL)
+    return TRUE;
+}
+
+DWORD WINAPI
+InstallReactOS(HINSTANCE hInstance)
+{
+    TCHAR szBuffer[MAX_PATH];
+    DWORD LastError;
+
+    InitializeSetupActionLog(FALSE);
+    LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
+
+    /* Set user langage to the system language */
+    SetUserDefaultLCID(GetSystemDefaultLCID());
+    SetThreadLocale(GetSystemDefaultLCID());
+
+    if (!InitializeProfiles())
     {
-        DebugPrint ("Domain-SID creation failed!\n");
+        DebugPrint("InitializeProfiles() failed");
         return 0;
     }
 
-#if 0
-    RtlConvertSidToUnicodeString (&SidString, DomainSid, TRUE);
-    DebugPrint ("Domain-SID: %wZ\n", &SidString);
-    RtlFreeUnicodeString (&SidString);
-#endif
+    if (!CreateShortcuts())
+    {
+        DebugPrint("InitializeProfiles() failed");
+        return 0;
+    }
 
     /* Initialize the Security Account Manager (SAM) */
-    if (!SamInitializeSAM ())
+    if (!SamInitializeSAM())
     {
-        DebugPrint ("SamInitializeSAM() failed!\n");
-        RtlFreeSid (DomainSid);
+        DebugPrint("SamInitializeSAM() failed!");
+        return 0;
+    }
+
+    /* Create the semi-random Domain-SID */
+    if (!CreateRandomSid(&DomainSid))
+    {
+        DebugPrint("Domain-SID creation failed!");
         return 0;
     }
 
     /* Set the Domain SID (aka Computer SID) */
-    if (!SamSetDomainSid (DomainSid))
+    if (!SamSetDomainSid(DomainSid))
     {
-        DebugPrint ("SamSetDomainSid() failed!\n");
-        RtlFreeSid (DomainSid);
+        DebugPrint("SamSetDomainSid() failed!");
+        RtlFreeSid(DomainSid);
         return 0;
     }
 
     /* Append the Admin-RID */
     AppendRidToSid(&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
-
-#if 0
-    RtlConvertSidToUnicodeString (&SidString, DomainSid, TRUE);
-    DebugPrint ("Admin-SID: %wZ\n", &SidString);
-    RtlFreeUnicodeString (&SidString);
-#endif
 
     /* Create the Administrator account */
     if (!SamCreateUser(L"Administrator", L"", AdminSid))
@@ -635,7 +587,7 @@ InstallReactOS (HINSTANCE hInstance)
         LastError = GetLastError();
         if (LastError != ERROR_USER_EXISTS)
         {
-            DebugPrint("SamCreateUser() failed!\n");
+            DebugPrint("SamCreateUser() failed!");
             RtlFreeSid(AdminSid);
             RtlFreeSid(DomainSid);
             return 0;
@@ -645,7 +597,7 @@ InstallReactOS (HINSTANCE hInstance)
     /* Create the Administrator profile */
     if (!CreateUserProfileW(AdminSid, L"Administrator"))
     {
-        DebugPrint("CreateUserProfileW() failed!\n");
+        DebugPrint("CreateUserProfileW() failed!");
         RtlFreeSid(AdminSid);
         RtlFreeSid(DomainSid);
         return 0;
@@ -664,37 +616,15 @@ InstallReactOS (HINSTANCE hInstance)
         CreateDirectory(szBuffer, NULL);
     }
 
-    hSysSetupInf = SetupOpenInfFileW(L"syssetup.inf",
-                                     NULL,
-                                     INF_STYLE_WIN4,
-                                     NULL);
-    if (hSysSetupInf == INVALID_HANDLE_VALUE)
-    {
-        DebugPrint("SetupOpenInfFileW() failed to open 'syssetup.inf' (Error: %lu)\n", GetLastError());
+    if (!CommonInstall())
         return 0;
-    }
-
-    if (!ProcessSysSetupInf())
-    {
-        DebugPrint("ProcessSysSetupInf() failed!\n");
-        return 0;
-    }
-
-    if (!EnableUserModePnpManager())
-    {
-        DebugPrint("EnableUserModePnpManager() failed!\n");
-        return 0;
-    }
-
-    if (CMP_WaitNoPendingInstallEvents(INFINITE) != WAIT_OBJECT_0)
-    {
-        DebugPrint("CMP_WaitNoPendingInstallEvents() failed!\n");
-        return 0;
-    }
 
     InstallWizard();
 
     SetupCloseInfFile(hSysSetupInf);
+
+    LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS done");
+    TerminateSetupActionLog();
 
     /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
     /// DO NOT REMOVE!!!
@@ -708,8 +638,10 @@ InstallReactOS (HINSTANCE hInstance)
  * @unimplemented
  */
 DWORD STDCALL
-SetupChangeFontSize(HANDLE hWnd,
-                    LPCWSTR lpszFontSize)
+SetupChangeFontSize(
+    IN HANDLE hWnd,
+    IN LPCWSTR lpszFontSize)
 {
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
