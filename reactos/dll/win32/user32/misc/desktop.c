@@ -120,76 +120,113 @@ SystemParametersInfoA(UINT uiAction,
 {
   switch (uiAction)
     {
-      case SPI_SETDOUBLECLKWIDTH:
-      case SPI_SETDOUBLECLKHEIGHT:
-      case SPI_SETDOUBLECLICKTIME:
-      case SPI_SETGRADIENTCAPTIONS:
-      case SPI_SETFONTSMOOTHING:
-      case SPI_SETFOCUSBORDERHEIGHT:
-      case SPI_SETFOCUSBORDERWIDTH:
-      case SPI_SETWORKAREA:
-      case SPI_GETWORKAREA:
-      case SPI_GETFONTSMOOTHING:
-      case SPI_GETGRADIENTCAPTIONS:
-      case SPI_GETFOCUSBORDERHEIGHT:
-      case SPI_GETFOCUSBORDERWIDTH:
-      case SPI_GETMINIMIZEDMETRICS:
-      case SPI_SETMINIMIZEDMETRICS:
+      case SPI_GETHIGHCONTRAST:
+      case SPI_SETHIGHCONTRAST:
+      case SPI_GETSOUNDSENTRY:
+      case SPI_SETSOUNDSENTRY:
         {
-           return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
+            /* FIXME: Support this accessibility SPI actions */
+            DPRINT1("FIXME: Unsupported SPI Code: %lx \n",uiAction );
+            return FALSE;
         }
+
       case SPI_GETNONCLIENTMETRICS:
         {
-           LPNONCLIENTMETRICSA nclma = (LPNONCLIENTMETRICSA)pvParam;
+           LPNONCLIENTMETRICSA pnclma = (LPNONCLIENTMETRICSA)pvParam;
            NONCLIENTMETRICSW nclmw;
+           if(pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
+           {
+               SetLastError(ERROR_INVALID_PARAMETER);
+               return FALSE;
+           }
            nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
 
            if (!SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW),
                                       &nclmw, fWinIni))
              return FALSE;
 
-           nclma->iBorderWidth = nclmw.iBorderWidth;
-           nclma->iScrollWidth = nclmw.iScrollWidth;
-           nclma->iScrollHeight = nclmw.iScrollHeight;
-           nclma->iCaptionWidth = nclmw.iCaptionWidth;
-           nclma->iCaptionHeight = nclmw.iCaptionHeight;
-           nclma->iSmCaptionWidth = nclmw.iSmCaptionWidth;
-           nclma->iSmCaptionHeight = nclmw.iSmCaptionHeight;
-           nclma->iMenuWidth = nclmw.iMenuWidth;
-           nclma->iMenuHeight = nclmw.iMenuHeight;
-           LogFontW2A(&(nclma->lfCaptionFont), &(nclmw.lfCaptionFont));
-           LogFontW2A(&(nclma->lfSmCaptionFont), &(nclmw.lfSmCaptionFont));
-           LogFontW2A(&(nclma->lfMenuFont), &(nclmw.lfMenuFont));
-           LogFontW2A(&(nclma->lfStatusFont), &(nclmw.lfStatusFont));
-           LogFontW2A(&(nclma->lfMessageFont), &(nclmw.lfMessageFont));
+           pnclma->iBorderWidth = nclmw.iBorderWidth;
+           pnclma->iScrollWidth = nclmw.iScrollWidth;
+           pnclma->iScrollHeight = nclmw.iScrollHeight;
+           pnclma->iCaptionWidth = nclmw.iCaptionWidth;
+           pnclma->iCaptionHeight = nclmw.iCaptionHeight;
+           pnclma->iSmCaptionWidth = nclmw.iSmCaptionWidth;
+           pnclma->iSmCaptionHeight = nclmw.iSmCaptionHeight;
+           pnclma->iMenuWidth = nclmw.iMenuWidth;
+           pnclma->iMenuHeight = nclmw.iMenuHeight;
+           LogFontW2A(&(pnclma->lfCaptionFont), &(nclmw.lfCaptionFont));
+           LogFontW2A(&(pnclma->lfSmCaptionFont), &(nclmw.lfSmCaptionFont));
+           LogFontW2A(&(pnclma->lfMenuFont), &(nclmw.lfMenuFont));
+           LogFontW2A(&(pnclma->lfStatusFont), &(nclmw.lfStatusFont));
+           LogFontW2A(&(pnclma->lfMessageFont), &(nclmw.lfMessageFont));
            return TRUE;
         }
       case SPI_SETNONCLIENTMETRICS:
         {
-           LPNONCLIENTMETRICSA nclma = (LPNONCLIENTMETRICSA)pvParam;
+           LPNONCLIENTMETRICSA pnclma = (LPNONCLIENTMETRICSA)pvParam;
            NONCLIENTMETRICSW nclmw;
+           if(pnclma->cbSize != sizeof(NONCLIENTMETRICSA))
+           {
+               SetLastError(ERROR_INVALID_PARAMETER);
+               return FALSE;
+           }
            nclmw.cbSize = sizeof(NONCLIENTMETRICSW);
-           nclmw.iBorderWidth = nclma->iBorderWidth;
-           nclmw.iScrollWidth = nclma->iScrollWidth;
-           nclmw.iScrollHeight = nclma->iScrollHeight;
-           nclmw.iCaptionWidth = nclma->iCaptionWidth;
-           nclmw.iCaptionHeight = nclma->iCaptionHeight;
-           nclmw.iSmCaptionWidth = nclma->iSmCaptionWidth;
-           nclmw.iSmCaptionHeight = nclma->iSmCaptionHeight;
-           nclmw.iMenuWidth = nclma->iMenuWidth;
-           nclmw.iMenuHeight = nclma->iMenuHeight;
-           LogFontA2W(&(nclmw.lfCaptionFont), &(nclma->lfCaptionFont));
-           LogFontA2W(&(nclmw.lfSmCaptionFont), &(nclma->lfSmCaptionFont));
-           LogFontA2W(&(nclmw.lfMenuFont), &(nclma->lfMenuFont));
-           LogFontA2W(&(nclmw.lfStatusFont), &(nclma->lfStatusFont));
-           LogFontA2W(&(nclmw.lfMessageFont), &(nclma->lfMessageFont));
+           nclmw.iBorderWidth = pnclma->iBorderWidth;
+           nclmw.iScrollWidth = pnclma->iScrollWidth;
+           nclmw.iScrollHeight = pnclma->iScrollHeight;
+           nclmw.iCaptionWidth = pnclma->iCaptionWidth;
+           nclmw.iCaptionHeight = pnclma->iCaptionHeight;
+           nclmw.iSmCaptionWidth = pnclma->iSmCaptionWidth;
+           nclmw.iSmCaptionHeight = pnclma->iSmCaptionHeight;
+           nclmw.iMenuWidth = pnclma->iMenuWidth;
+           nclmw.iMenuHeight = pnclma->iMenuHeight;
+           LogFontA2W(&(nclmw.lfCaptionFont), &(pnclma->lfCaptionFont));
+           LogFontA2W(&(nclmw.lfSmCaptionFont), &(pnclma->lfSmCaptionFont));
+           LogFontA2W(&(nclmw.lfMenuFont), &(pnclma->lfMenuFont));
+           LogFontA2W(&(nclmw.lfStatusFont), &(pnclma->lfStatusFont));
+           LogFontA2W(&(nclmw.lfMessageFont), &(pnclma->lfMessageFont));
 
-           if (!SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW),
-                                      &nclmw, fWinIni))
-             return FALSE;
-
-           return TRUE;
+           return SystemParametersInfoW(uiAction, sizeof(NONCLIENTMETRICSW),
+                                        &nclmw, fWinIni);
         }
+      case SPI_GETICONMETRICS:
+          {
+              LPICONMETRICSA picma = (LPICONMETRICSA)pvParam;
+              ICONMETRICSW icmw;
+              if(picma->cbSize != sizeof(ICONMETRICSA))
+              {
+                  SetLastError(ERROR_INVALID_PARAMETER);
+                  return FALSE;
+              }
+              icmw.cbSize = sizeof(ICONMETRICSW);
+              if (!SystemParametersInfoW(uiAction, sizeof(ICONMETRICSW),
+                                        &icmw, fWinIni))
+                  return FALSE;
+              
+              picma->iHorzSpacing = icmw.iHorzSpacing;
+              picma->iVertSpacing = icmw.iVertSpacing;
+              picma->iTitleWrap = icmw.iTitleWrap;
+              LogFontW2A(&(picma->lfFont), &(icmw.lfFont));
+              return TRUE;
+          }
+      case SPI_SETICONMETRICS:
+          {
+              LPICONMETRICSA picma = (LPICONMETRICSA)pvParam;
+              ICONMETRICSW icmw;
+              if(picma->cbSize != sizeof(ICONMETRICSA))
+              {
+                  SetLastError(ERROR_INVALID_PARAMETER);
+                  return FALSE;
+              }
+              icmw.cbSize = sizeof(ICONMETRICSW);
+              icmw.iHorzSpacing = picma->iHorzSpacing;
+              icmw.iVertSpacing = picma->iVertSpacing;
+              icmw.iTitleWrap = picma->iTitleWrap;
+              LogFontA2W(&(icmw.lfFont), &(picma->lfFont));
+
+              return SystemParametersInfoW(uiAction, sizeof(ICONMETRICSW),
+                                           &icmw, fWinIni);
+          }
       case SPI_GETICONTITLELOGFONT:
         {
            LOGFONTW lfw;
@@ -198,6 +235,13 @@ SystemParametersInfoA(UINT uiAction,
            LogFontW2A(pvParam, &lfw);
            return TRUE;
         }
+      case SPI_SETICONTITLELOGFONT:
+          {
+              LPLOGFONTA plfa = (LPLOGFONTA)pvParam;
+              LOGFONTW lfw;
+              LogFontA2W(&lfw,plfa);
+              return SystemParametersInfoW(uiAction, 0, &lfw, fWinIni);
+          }
       case SPI_GETDESKWALLPAPER:
       {
         HKEY hKey;
@@ -284,8 +328,7 @@ SystemParametersInfoA(UINT uiAction,
         return Ret;
       }
     }
-
-  return FALSE;
+    return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 }
 
 
@@ -300,6 +343,15 @@ SystemParametersInfoW(UINT uiAction,
 {
   switch(uiAction)
   {
+    case SPI_GETHIGHCONTRAST:
+    case SPI_SETHIGHCONTRAST:
+    case SPI_GETSOUNDSENTRY:
+    case SPI_SETSOUNDSENTRY:
+       {
+           /* FIXME: Support this accessibility SPI actions */
+           DPRINT1("FIXME: Unsupported SPI Code: %lx \n",uiAction );
+           return FALSE;
+       }
     case SPI_GETDESKWALLPAPER:
     {
       HKEY hKey;
