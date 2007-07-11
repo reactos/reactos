@@ -241,7 +241,6 @@ BEGIN
     IDS_SHORT_CMD        "Command Prompt.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
     IDS_SHORT_DOWNLOADER "Download !.lnk"
-    IDS_SHORT_FIREFOX    "Get Firefox.lnk"
     IDS_SHORT_SERVICE    "Service Manager.lnk"
     IDS_SHORT_DEVICE     "Device Manager.lnk"
     IDS_SHORT_CALC       "Calculator.lnk"

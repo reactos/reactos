@@ -237,7 +237,6 @@ BEGIN
     IDS_SHORT_CMD        "Wiersz poleceñ.lnk"
     IDS_SHORT_EXPLORER   "Eksplorator ReactOS.lnk"
     IDS_SHORT_DOWNLOADER "Œci¹gaj! .lnk"
-    IDS_SHORT_FIREFOX    "Œci¹gnij Firefoxa.lnk"
     IDS_SHORT_SERVICE    "Mened¿er Us³ug.lnk"
     IDS_SHORT_DEVICE     "Mened¿er Urz¹dzeñ.lnk"
     IDS_SHORT_CALC       "Kalculator.lnk"
