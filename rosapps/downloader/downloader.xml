@@ -4,33 +4,33 @@
 			<regname>Mozilla Firefox (1.5)</regname>
 			<licence>MPL/GPL/LGPL</licence>
 			<version>1.5.0.9</version>
-			<description>The most popular and one of the best free WebBrowsers out there.</description>
+			<description>The most popular and one of the best free Web Browsers out there.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/firefox/releases/1.5.0.9/win32/en-US/Firefox%20Setup%201.5.0.9.exe</location>
 		</application>
 		<application name="Firefox 2.0">
 			<regname>Mozilla Firefox (2.0.0.1)</regname>
 			<licence>MPL/GPL/LGPL</licence>
 			<version>2.0.0.1</version>
-			<description>The most popular and one of the best free WebBrowsers out there.</description>
+			<description>The most popular and one of the best free Web Browsers out there.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/firefox/releases/latest/win32/en-US/Firefox%20Setup%202.0.0.1.exe</location>
 		</application>
 		<application name="Thunderbird">
 			<regname>Mozilla Thunderbird (1.5)</regname>
 			<licence>MPL/GPL/LGPL</licence>
 			<version>1.5.0.9</version>
-			<description>The most popular and one of the best free MailClients out there.</description>
+			<description>The most popular and one of the best free Mail Clients out there.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/thunderbird/releases/latest/win32/en-US/Thunderbird%20Setup%201.5.0.9.exe</location>
 		</application>
 		<application name="SeaMonkey">
 			<regname>SeaMonkey (1.0.7)</regname>
 			<version>1.0.7</version>
-			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, Composer bundle you will ever need.</description>
+			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.</description>
 			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/seamonkey/releases/1.0.7/seamonkey-1.0.7.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Mozilla ActiveX Control">
 			<regname>Mozilla ActiveX Control v1.7.12 (ReactOS special)</regname>
 			<version>1.7.12</version>
-			<description>Essential Component to get ReactOS Explorer's and other application's Internet Browsing feature running.</description>
+			<description>Essential Component to get ReactOS Explorer's and other applications' Internet Browsing feature running.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/MozillaControl1712-ReactOS.exe</location>
 		</application>
 		<application name="Off By One Browser">
@@ -85,7 +85,7 @@
 		<application name="TuxPaint">
 			<regname>Tux Paint 0.9.16</regname>
 			<version>0.9.16</version>
-			<description>An open source bitmap graphics editor geared towards young children.</description>
+			<description>An Open Source bitmap graphics editor geared towards young children.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.16-win32-installer.exe</location>
 		</application>
 	</category>
@@ -107,8 +107,8 @@
 		<application name="FreeBASIC">
 			<regname>FreeBASIC 0.16b</regname>
 			<version>0.16b</version>
-			<description>Open Source Basic Compiler. The Basic syntax is compatible to QBASIC.</description>
-			<location>http://switch.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.16b-win32.exe</location>
+			<description>Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.</description>
+			<location>http://switch.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.17b-win32.exe</location>
 		</application>
 	</category>
 	<category name="Games &amp; Fun" icon="6">
@@ -125,7 +125,7 @@
 		<application name="OpenTTD">
 			<regname>OpenTTD 0.5.0</regname>
 			<version>0.5.0-RC5</version>
-			<description>Open-source-clone of the "Transport Tycoon Deluxe" game-engine. You need a copy of Transport Tycoon.</description>
+			<description>Open Source clone of the "Transport Tycoon Deluxe" game engine. You need a copy of Transport Tycoon.</description>
 			<location>http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.5.0-RC5-win32.exe</location>
 		</application>
 		<application name="LBreakout2">LBreakout2 2.4.1
@@ -157,7 +157,7 @@
 		<application name="uTorrent">
 			<regname>&#181;Torrent</regname>
 			<version>1.6</version>
-			<description>Small and fast Torrent Client.</description>
+			<description>Small and fast BitTorrent Client.</description>
 			<location>http://download.utorrent.com/1.6/uTorrent-1.6-install.exe</location>
 		</application>
 		<application name="Audio Grabber">
