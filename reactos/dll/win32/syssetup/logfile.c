@@ -44,145 +44,145 @@ HANDLE hLogFile = NULL;
 BOOL STDCALL
 InitializeSetupActionLog (BOOL bDeleteOldLogFile)
 {
-  WCHAR szFileName[MAX_PATH];
+    WCHAR szFileName[MAX_PATH];
 
-  GetWindowsDirectoryW (szFileName,
-			MAX_PATH);
+    GetWindowsDirectoryW (szFileName,
+        MAX_PATH);
 
-  if (szFileName[wcslen (szFileName)] != L'\\')
+    if (szFileName[wcslen (szFileName)] != L'\\')
     {
-      wcsncat (szFileName,
-	       L"\\",
-	       MAX_PATH);
+        wcsncat(szFileName,
+               L"\\",
+               MAX_PATH);
     }
-  wcsncat (szFileName,
-	   L"setuplog.txt",
-	   MAX_PATH);
+    wcsncat(szFileName,
+            L"setuplog.txt",
+           MAX_PATH);
 
-  if (bDeleteOldLogFile != FALSE)
+    if (bDeleteOldLogFile != FALSE)
     {
-      SetFileAttributesW (szFileName,
-			  FILE_ATTRIBUTE_NORMAL);
-      DeleteFileW (szFileName);
-    }
-
-  hLogFile = CreateFileW (szFileName,
-			  GENERIC_READ | GENERIC_WRITE,
-			  FILE_SHARE_READ | FILE_SHARE_WRITE,
-			  NULL,
-			  OPEN_ALWAYS,
-			  FILE_ATTRIBUTE_NORMAL,
-			  NULL);
-  if (hLogFile == INVALID_HANDLE_VALUE)
-    {
-      hLogFile = NULL;
-      return FALSE;
+        SetFileAttributesW(szFileName,
+                           FILE_ATTRIBUTE_NORMAL);
+        DeleteFileW(szFileName);
     }
 
-  return TRUE;
+    hLogFile = CreateFileW(szFileName,
+                           GENERIC_READ | GENERIC_WRITE,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE,
+                           NULL,
+                           OPEN_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL,
+                           NULL);
+    if (hLogFile == INVALID_HANDLE_VALUE)
+    {
+        hLogFile = NULL;
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
 VOID STDCALL
 TerminateSetupActionLog (VOID)
 {
-  if (hLogFile != NULL)
+    if (hLogFile != NULL)
     {
-      CloseHandle (hLogFile);
-      hLogFile = NULL;
+        CloseHandle (hLogFile);
+        hLogFile = NULL;
     }
 }
 
 
 BOOL STDCALL
-LogItem (DWORD dwSeverity,
-	 LPWSTR lpMessageText)
+LogItem(DWORD dwSeverity,
+        LPWSTR lpMessageText)
 {
-  LPSTR lpNewLine = "\r\n";
-  LPSTR lpSeverityString;
-  LPSTR lpMessageString;
-  DWORD dwMessageLength;
-  DWORD dwMessageSize;
-  DWORD dwWritten;
+    LPSTR lpNewLine = "\r\n";
+    LPSTR lpSeverityString;
+    LPSTR lpMessageString;
+    DWORD dwMessageLength;
+    DWORD dwMessageSize;
+    DWORD dwWritten;
 
-  /* Get the severity code string */
-  switch (dwSeverity)
+    /* Get the severity code string */
+    switch (dwSeverity)
     {
-      case SYSSETUP_SEVERITY_INFORMATION:
-	lpSeverityString = "Information : ";
-	break;
+        case SYSSETUP_SEVERITY_INFORMATION:
+            lpSeverityString = "Information : ";
+            break;
 
-      case SYSSETUP_SEVERITY_WARNING:
-	lpSeverityString = "Warning : ";
-	break;
+        case SYSSETUP_SEVERITY_WARNING:
+            lpSeverityString = "Warning : ";
+            break;
 
-      case SYSSETUP_SEVERITY_ERROR:
-	lpSeverityString = "Error : ";
-	break;
+        case SYSSETUP_SEVERITY_ERROR:
+            lpSeverityString = "Error : ";
+            break;
 
-      case SYSSETUP_SEVERITY_FATAL_ERROR:
-	lpSeverityString = "Fatal error : ";
-	break;
+        case SYSSETUP_SEVERITY_FATAL_ERROR:
+            lpSeverityString = "Fatal error : ";
+            break;
 
-      default:
-	lpSeverityString = "Unknown : ";
-	break;
+        default:
+            lpSeverityString = "Unknown : ";
+            break;
     }
 
-  /* Get length of the converted ansi string */
-  dwMessageLength = wcslen(lpMessageText) * sizeof(WCHAR);
-  RtlUnicodeToMultiByteSize (&dwMessageSize,
-			     lpMessageText,
-			     dwMessageLength);
+    /* Get length of the converted ansi string */
+    dwMessageLength = wcslen(lpMessageText) * sizeof(WCHAR);
+    RtlUnicodeToMultiByteSize(&dwMessageSize,
+                              lpMessageText,
+                              dwMessageLength);
 
-  /* Allocate message string buffer */
-  lpMessageString = (LPSTR) HeapAlloc (GetProcessHeap (),
-				       HEAP_ZERO_MEMORY,
-				       dwMessageSize);
-  if (lpMessageString == NULL)
+    /* Allocate message string buffer */
+    lpMessageString = (LPSTR) HeapAlloc(GetProcessHeap (),
+                                        HEAP_ZERO_MEMORY,
+                                        dwMessageSize);
+    if (lpMessageString == NULL)
     {
-      return FALSE;
+        return FALSE;
     }
 
-  /* Convert unicode to ansi */
-  RtlUnicodeToMultiByteN (lpMessageString,
-			  dwMessageSize,
-			  NULL,
-			  lpMessageText,
-			  dwMessageLength);
+    /* Convert unicode to ansi */
+    RtlUnicodeToMultiByteN(lpMessageString,
+                           dwMessageSize,
+                           NULL,
+                           lpMessageText,
+                           dwMessageLength);
 
-  /* Set file pointer to the end of the file */
-  SetFilePointer (hLogFile,
-		  0,
-		  NULL,
-		  FILE_END);
+    /* Set file pointer to the end of the file */
+    SetFilePointer(hLogFile,
+                   0,
+                   NULL,
+                   FILE_END);
 
-  /* Write severity code */
-  WriteFile (hLogFile,
-	     lpSeverityString,
-	     strlen (lpSeverityString),
-	     &dwWritten,
-	     NULL);
+    /* Write severity code */
+    WriteFile(hLogFile,
+              lpSeverityString,
+              strlen(lpSeverityString),
+              &dwWritten,
+              NULL);
 
-  /* Write message string */
-  WriteFile (hLogFile,
-	     lpMessageString,
-	     dwMessageSize,
-	     &dwWritten,
-	     NULL);
+    /* Write message string */
+    WriteFile(hLogFile,
+              lpMessageString,
+              dwMessageSize,
+              &dwWritten,
+              NULL);
 
-  /* Write newline */
-  WriteFile (hLogFile,
-	     lpNewLine,
-	     2,
-	     &dwWritten,
-	     NULL);
+    /* Write newline */
+    WriteFile(hLogFile,
+              lpNewLine,
+              2,
+              &dwWritten,
+              NULL);
 
-  HeapFree (GetProcessHeap (),
-	    0,
-	    lpMessageString);
+    HeapFree(GetProcessHeap(),
+             0,
+             lpMessageString);
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */
