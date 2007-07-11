@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Log file functions
@@ -33,7 +32,6 @@
 
 #include <syssetup/syssetup.h>
 
-
 /* GLOBALS ******************************************************************/
 
 HANDLE hLogFile = NULL;
@@ -41,28 +39,26 @@ HANDLE hLogFile = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-BOOL STDCALL
+BOOL WINAPI
 InitializeSetupActionLog (BOOL bDeleteOldLogFile)
 {
     WCHAR szFileName[MAX_PATH];
 
-    GetWindowsDirectoryW (szFileName,
-        MAX_PATH);
+    GetWindowsDirectoryW(szFileName, MAX_PATH);
 
-    if (szFileName[wcslen (szFileName)] != L'\\')
+    if (szFileName[wcslen(szFileName)] != L'\\')
     {
         wcsncat(szFileName,
-               L"\\",
-               MAX_PATH);
+                L"\\",
+                MAX_PATH);
     }
     wcsncat(szFileName,
             L"setuplog.txt",
-           MAX_PATH);
+            MAX_PATH);
 
-    if (bDeleteOldLogFile != FALSE)
+    if (bDeleteOldLogFile)
     {
-        SetFileAttributesW(szFileName,
-                           FILE_ATTRIBUTE_NORMAL);
+        SetFileAttributesW(szFileName, FILE_ATTRIBUTE_NORMAL);
         DeleteFileW(szFileName);
     }
 
@@ -83,8 +79,8 @@ InitializeSetupActionLog (BOOL bDeleteOldLogFile)
 }
 
 
-VOID STDCALL
-TerminateSetupActionLog (VOID)
+VOID WINAPI
+TerminateSetupActionLog(VOID)
 {
     if (hLogFile != NULL)
     {
@@ -94,16 +90,19 @@ TerminateSetupActionLog (VOID)
 }
 
 
-BOOL STDCALL
-LogItem(DWORD dwSeverity,
-        LPWSTR lpMessageText)
+BOOL WINAPI
+SYSSETUP_LogItem(IN const LPSTR lpFileName,
+                 IN DWORD dwLineNumber,
+                 IN DWORD dwSeverity,
+                 IN LPWSTR lpMessageText)
 {
-    LPSTR lpNewLine = "\r\n";
-    LPSTR lpSeverityString;
+    const LPCSTR lpNewLine = "\r\n";
+    LPCSTR lpSeverityString;
     LPSTR lpMessageString;
     DWORD dwMessageLength;
     DWORD dwMessageSize;
     DWORD dwWritten;
+    CHAR Buffer[6];
 
     /* Get the severity code string */
     switch (dwSeverity)
@@ -136,13 +135,11 @@ LogItem(DWORD dwSeverity,
                               dwMessageLength);
 
     /* Allocate message string buffer */
-    lpMessageString = (LPSTR) HeapAlloc(GetProcessHeap (),
+    lpMessageString = (LPSTR) HeapAlloc(GetProcessHeap(),
                                         HEAP_ZERO_MEMORY,
                                         dwMessageSize);
-    if (lpMessageString == NULL)
-    {
+    if (!lpMessageString)
         return FALSE;
-    }
 
     /* Convert unicode to ansi */
     RtlUnicodeToMultiByteN(lpMessageString,
@@ -156,6 +153,27 @@ LogItem(DWORD dwSeverity,
                    0,
                    NULL,
                    FILE_END);
+
+    /* Write file name */
+    WriteFile(hLogFile,
+              lpFileName,
+              strlen(lpFileName),
+              &dwWritten,
+              NULL);
+
+    /* Write comma */
+    WriteFile(hLogFile, ",", 1, &dwWritten, NULL);
+
+    /* Write line number */
+    snprintf(Buffer, sizeof(Buffer), "%lu", dwLineNumber);
+    WriteFile(hLogFile,
+              Buffer,
+              strlen(Buffer),
+              &dwWritten,
+              NULL);
+
+    /* Write comma */
+    WriteFile(hLogFile, ",", 1, &dwWritten, NULL);
 
     /* Write severity code */
     WriteFile(hLogFile,
@@ -174,7 +192,7 @@ LogItem(DWORD dwSeverity,
     /* Write newline */
     WriteFile(hLogFile,
               lpNewLine,
-              2,
+              sizeof(lpNewLine),
               &dwWritten,
               NULL);
 

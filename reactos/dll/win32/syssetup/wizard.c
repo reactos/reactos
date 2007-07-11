@@ -572,7 +572,7 @@ ComputerPageDlgProc(HWND hwndDlg,
   TCHAR Password2[15];
   PWCHAR Password;
   WCHAR Title[64];
-  WCHAR EmptyComputerName[256], EmptyPassword[256], NotMatchPassword[256], WrongPassword[256];
+  WCHAR EmptyComputerName[256], NotMatchPassword[256], WrongPassword[256];
   DWORD Length;
   LPNMHDR lpnm;
 
