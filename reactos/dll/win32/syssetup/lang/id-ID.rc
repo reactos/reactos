@@ -205,6 +205,8 @@ BEGIN
     IDS_CMT_REGEDIT     "Jalankan Editor Registri"
     IDS_CMT_WORDPAD     "Jalankan Editor Dokumen"
     IDS_CMT_SCREENSHOT  "Ambil foto layar"
+    IDS_CMT_DEVMGMT     "Launch Device Manager"
+    IDS_CMT_SERVMAN     "Launch Service Manager"
 END
 
 STRINGTABLE

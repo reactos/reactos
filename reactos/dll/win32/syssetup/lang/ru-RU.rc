@@ -188,6 +188,8 @@ BEGIN
     IDS_CMT_REGEDIT     "Запустить редактор реестра"
     IDS_CMT_WORDPAD     "Запустить редактор документов"
     IDS_CMT_SCREENSHOT  "Сделать снимок экрана"
+    IDS_CMT_DEVMGMT     "Launch Device Manager"
+    IDS_CMT_SERVMAN     "Launch Service Manager"
 END
 
 STRINGTABLE

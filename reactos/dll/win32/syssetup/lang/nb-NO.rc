@@ -197,6 +197,7 @@ BEGIN
     IDS_CMT_WINEFILE    "Start Winefile"
     IDS_CMT_IBROWSER	"Start iBrowser"
     IDS_CMT_GETFIREFOX	"Last Ned/Installer Firefox"
+    IDS_CMT_DOWNLOADER  "Download and install various applications"
 END
 
 STRINGTABLE
@@ -209,6 +210,8 @@ BEGIN
     IDS_CMT_REGEDIT     "Start Register Editor"
     IDS_CMT_WORDPAD     "Start Dokument Editor"
     IDS_CMT_SCREENSHOT  "Ta Skjermbilde"
+    IDS_CMT_DEVMGMT     "Launch Device Manager"
+    IDS_CMT_SERVMAN     "Launch Service Manager"
 END
 
 STRINGTABLE

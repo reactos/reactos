@@ -183,6 +183,7 @@ BEGIN
     IDS_CMT_WINEFILE    "Запустити Winefile"
     IDS_CMT_IBROWSER	"Запустити iBrowser"
     IDS_CMT_GETFIREFOX	"Завантажити/встановити Firefox"
+    IDS_CMT_DOWNLOADER  "Download and install various applications"
 END
 
 STRINGTABLE
@@ -195,6 +196,8 @@ BEGIN
     IDS_CMT_REGEDIT     "Запустити Редактор реєстра"
     IDS_CMT_WORDPAD     "Запустити Редактор документів"
     IDS_CMT_SCREENSHOT  "Зробити знімок екрана"
+    IDS_CMT_DEVMGMT     "Launch Device Manager"
+    IDS_CMT_SERVMAN     "Launch Service Manager"
 END
 
 STRINGTABLE

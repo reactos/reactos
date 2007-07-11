@@ -174,58 +174,60 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Anerkennungen"
-    IDS_ACKSUBTITLE      "Das Fundament, auf dem ReactOS gebaut ist und Lizenzinformationen"
-    IDS_OWNERTITLE       "Personalisieren Sie ihre Software"
-    IDS_OWNERSUBTITLE    "Das Setup nutzt diese Informationen über Sie, um ReactOS zu personalisieren."
-    IDS_COMPUTERTITLE    "Computername und Administratorpasswort"
-    IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für ihren Computer festlegen."
-    IDS_LOCALETITLE      "Regionale Einstellungen"
-    IDS_LOCALESUBTITLE   "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
-    IDS_DATETIMETITLE    "Datum und Uhrzeit"
-    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für ihren Computer."
+    IDS_ACKTITLE         "Acknowledgements"
+    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information"
+    IDS_OWNERTITLE       "Personalize your Software"
+    IDS_OWNERSUBTITLE    "Setup uses this information about yourself to personalize ReactOS."
+    IDS_COMPUTERTITLE    "Computer Name and Administrator Password"
+    IDS_COMPUTERSUBTITLE "You must provide a name and an Administrator Password for your computer."
+    IDS_LOCALETITLE      "Regional settings"
+    IDS_LOCALESUBTITLE   "You can customize ReactOS for different regions and languages."
+    IDS_DATETIMETITLE    "Date and Time"
+    IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
     IDS_PROCESSTITLE     "Process page title"
     IDS_PROCESSSUBTITLE  "Process page subtitle"
 END
 
-
 STRINGTABLE
 BEGIN
-    IDS_CMT_WINEFILE    "Starte Winefile"
-    IDS_CMT_IBROWSER	"Starte iBrowser"
+    IDS_CMT_WINEFILE    "Launch Winefile"
+    IDS_CMT_IBROWSER	"Launch iBrowser"
+    IDS_CMT_GETFIREFOX	"Download/install Firefox"
+    IDS_CMT_DOWNLOADER  "Download and install various applications"
 END
 
-
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Zubehör"
-    IDS_CMT_CALC        "Starte Taschenrechner"
-    IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
-    IDS_CMT_EXPLORER    "Starte Explorer"
-    IDS_CMT_NOTEPAD     "Starte Texteditor"
-    IDS_CMT_REGEDIT     "Starte Registrierungseditor"
+    IDS_ACCESSORIES     "Accessories"
+    IDS_CMT_CALC        "Launch Calculator"
+    IDS_CMT_CMD         "Open command prompt"
+    IDS_CMT_EXPLORER    "Launch Explorer"
+    IDS_CMT_NOTEPAD     "Launch Text Editor"
+    IDS_CMT_REGEDIT     "Launch Registry Editor"
+    IDS_CMT_WORDPAD     "Launch Document Editor"
+    IDS_CMT_SCREENSHOT  "Take screenshot"
+    IDS_CMT_DEVMGMT     "Launch Device Manager"
+    IDS_CMT_SERVMAN     "Launch Service Manager"
 END
 
-
 STRINGTABLE
 BEGIN
-    IDS_GAMES		"Spiele"
+    IDS_GAMES		    "Games"
     IDS_CMT_SOLITAIRE	"Solitaire"
     IDS_CMT_WINEMINE	"WineMine"
 END
 
-
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP			"ReactOS Setup"
-    IDS_UNKNOWN_ERROR			"Unbekannter Fehler"
-    IDS_REGISTERING_COMPONENTS	"Registriere Komponenten..."
-    IDS_LOADLIBRARY_FAILED		"LoadLibrary fehlgeschlagen: "
-    IDS_GETPROCADDR_FAILED		"GetProcAddr fehlgeschlagen: "
-    IDS_REGSVR_FAILED			"DllRegisterServer fehlgeschlagen: "
-    IDS_DLLINSTALL_FAILED		"DllInstall fehlgeschlagen: "
-    IDS_TIMEOUT				"Zeitüberschreitung während der Registrierung"
-    IDS_REASON_UNKNOWN			"Grund unbekannt"
+    IDS_REACTOS_SETUP		    "ReactOS Setup"
+    IDS_UNKNOWN_ERROR           "Unknown error"
+    IDS_REGISTERING_COMPONENTS  "Registering components..."
+    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
+    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
+    IDS_REGSVR_FAILED           "DllRegisterServer failed: "
+    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
+    IDS_TIMEOUT			        "Timeout during registration"
+    IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE

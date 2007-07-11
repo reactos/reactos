@@ -198,6 +198,8 @@ BEGIN
     IDS_CMT_REGEDIT     "Lancia l'editor del registro"
     IDS_CMT_WORDPAD     "Lancia l'editor dei documenti"
     IDS_CMT_SCREENSHOT  "Salva una schermata"
+    IDS_CMT_DEVMGMT     "Launch Device Manager"
+    IDS_CMT_SERVMAN     "Launch Service Manager"
 END
 
 STRINGTABLE
