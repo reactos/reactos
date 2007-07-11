@@ -164,23 +164,13 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
             return TRUE;
     }
 
-    if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
-        return FALSE;
-
-    if (folder)
+    if (ExpandEnvironmentStrings(command,
+                                 path,
+                                 sizeof(path) / sizeof(path[0])) == 0)
     {
-        p = PathAddBackslash(p);
-        _tcscpy(p, folder);
+        _tcscpy(path,
+                command);
     }
-
-    p = PathAddBackslash(p);
-
-    if (!LoadString(hDllInstance, nIdName, name, sizeof(name)/sizeof(name[0])))
-        return FALSE;
-    _tcscpy(p, name);
-
-    if (!LoadString(hDllInstance, nIdTitle, title, sizeof(title)/sizeof(title[0])))
-        return FALSE;
 
     dwLen = GetFullPathName(path,
                             sizeof(szWorkingDir) / sizeof(szWorkingDir[0]),
@@ -205,6 +195,25 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
 
         lpWorkingDir = szWorkingDir;
     }
+
+
+    if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
+        return FALSE;
+
+    if (folder)
+    {
+        p = PathAddBackslash(p);
+        _tcscpy(p, folder);
+    }
+
+    p = PathAddBackslash(p);
+
+    if (!LoadString(hDllInstance, nIdName, name, sizeof(name)/sizeof(name[0])))
+        return FALSE;
+    _tcscpy(p, name);
+
+    if (!LoadString(hDllInstance, nIdTitle, title, sizeof(title)/sizeof(title[0])))
+        return FALSE;
 
     return SUCCEEDED(CreateShellLink(path, command, _T(""), lpWorkingDir, NULL, 0, title));
 }
@@ -585,33 +594,33 @@ CreateShortcuts(VOID)
     CoInitialize(NULL);
 
     /* Create desktop shortcuts */
-    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD, FALSE);
+    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, FALSE);
 
     /* Create program startmenu shortcuts */
-    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("explorer.exe"), IDS_CMT_EXPLORER, FALSE);
-    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("downloader.exe"), IDS_CMT_DOWNLOADER, TRUE);
-    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_FIREFOX, _T("getfirefox.exe"), IDS_CMT_GETFIREFOX, TRUE);
+    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("%SystemRoot%\\explorer.exe"), IDS_CMT_EXPLORER, FALSE);
+    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("%SystemRoot%\\system32\\downloader.exe"), IDS_CMT_DOWNLOADER, TRUE);
+    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_FIREFOX, _T("%SystemRoot%\\system32\\getfirefox.exe"), IDS_CMT_GETFIREFOX, TRUE);
 
     /* Create administrative tools startmenu shortcuts */
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("servman.exe"), IDS_CMT_SERVMAN, FALSE);
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_DEVICE, _T("devmgmt.exe"), IDS_CMT_DEVMGMT, FALSE);
+    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("%SystemRoot%\\system32\\servman.exe"), IDS_CMT_SERVMAN, FALSE);
+    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_DEVICE, _T("%SystemRoot%\\system32\\devmgmt.exe"), IDS_CMT_DEVMGMT, FALSE);
 
     /* Create and fill Accessories subfolder */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CALC, _T("calc.exe"), IDS_CMT_CALC, FALSE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CMD, _T("cmd.exe"), IDS_CMT_CMD, FALSE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_NOTEPAD, _T("notepad.exe"), IDS_CMT_NOTEPAD, FALSE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("regedit.exe"), IDS_CMT_REGEDIT, FALSE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("wordpad.exe"), IDS_CMT_WORDPAD, FALSE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CALC, _T("%SystemRoot%\\system32\\calc.exe"), IDS_CMT_CALC, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_NOTEPAD, _T("%SystemRoot%\\system32\\notepad.exe"), IDS_CMT_NOTEPAD, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("%SystemRoot%\\regedit.exe"), IDS_CMT_REGEDIT, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
     }
 
     /* Create Games subfolder and fill if the exe is available */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SOLITAIRE, _T("sol.exe"), IDS_CMT_SOLITAIRE, FALSE);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WINEMINE, _T("winemine.exe"), IDS_CMT_WINEMINE, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SOLITAIRE, _T("%SystemRoot%\\system32\\sol.exe"), IDS_CMT_SOLITAIRE, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WINEMINE, _T("%SystemRoot%\\system32\\winemine.exe"), IDS_CMT_WINEMINE, FALSE);
     }
 
     CoUninitialize();
