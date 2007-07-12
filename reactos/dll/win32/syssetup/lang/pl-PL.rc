@@ -210,8 +210,8 @@ BEGIN
    IDS_CMT_REGEDIT     "Uruchom Edytor Rejestru"
    IDS_CMT_WORDPAD     "Uruchom Wordpada"
    IDS_CMT_SCREENSHOT  "Zrzut ekranu"
-   IDS_CMT_DEVMGMT     "Launch Device Manager"
-   IDS_CMT_SERVMAN     "Launch Service Manager"
+   IDS_CMT_DEVMGMT     "Uruchom Mened¿er Urz¹dzeñ"
+   IDS_CMT_SERVMAN     "Uruchom Mened¿er Us³ug"
 END
 
 STRINGTABLE
