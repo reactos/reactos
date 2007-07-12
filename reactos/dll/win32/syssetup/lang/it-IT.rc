@@ -157,7 +157,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Please wait..."
+CAPTION "Attendere ..."
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -198,26 +198,26 @@ BEGIN
     IDS_CMT_REGEDIT     "Lancia l'editor del registro"
     IDS_CMT_WORDPAD     "Lancia l'editor dei documenti"
     IDS_CMT_SCREENSHOT  "Salva una schermata"
-    IDS_CMT_DEVMGMT     "Launch Device Manager"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
+    IDS_CMT_DEVMGMT     "Lancia la Gestione periferiche"
+    IDS_CMT_SERVMAN     "Lancia la Gestione dei servizi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		"Giochi"
-    IDS_CMT_SOLITAIRE	"Solitario"
-    IDS_CMT_WINEMINE	"Campo minato"
+    IDS_GAMES           "Giochi"
+    IDS_CMT_SOLITAIRE   "Solitario"
+    IDS_CMT_WINEMINE    "Campo minato"
 END
 
 STRINGTABLE
 BEGIN
-IDS_REACTOS_SETUP		"Installazione di ReactOS"
+IDS_REACTOS_SETUP               "Installazione di ReactOS"
     IDS_UNKNOWN_ERROR           "Errore sconosciuto"
     IDS_REGISTERING_COMPONENTS  "Registrazione dei componenti..."
-    IDS_LOADLIBRARY_FAILED	"LoadLibrary fallito: "
-    IDS_GETPROCADDR_FAILED	"GetProcAddr fallito: "
+    IDS_LOADLIBRARY_FAILED	    "LoadLibrary fallito: "
+    IDS_GETPROCADDR_FAILED	    "GetProcAddr fallito: "
     IDS_REGSVR_FAILED           "DllRegisterServer fallito: "
-    IDS_DLLINSTALL_FAILED	"DllInstall fallito: "
+    IDS_DLLINSTALL_FAILED       "DllInstall fallito: "
     IDS_TIMEOUT	                "Tempo scaduto durante la registrazione"
     IDS_REASON_UNKNOWN          ""
 END
@@ -251,7 +251,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Installing devices..."
+    IDS_STATUS_INSTALL_DEV "Installazione dei dispositivi in corso..."
 END
 
 /* EOF */
