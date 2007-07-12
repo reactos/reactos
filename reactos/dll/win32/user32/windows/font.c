@@ -1156,7 +1156,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                                  rect, str, len_seg, NULL ))  return 0;
                 if (prefix_offset != -1 && prefix_offset < len_seg)
                 {
-                    TEXT_DrawUnderscore (hdc, xseg, y + tm.tmAscent + 1, str, prefix_offset, (flags & DT_NOCLIP) ? NULL : rect);
+                    TEXT_DrawUnderscore (hdc, xseg, y + tm.tmAscent + 2, str, prefix_offset, (flags & DT_NOCLIP) ? NULL : rect);
                 }
                 len -= len_seg;
                 str += len_seg;
