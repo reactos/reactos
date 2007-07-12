@@ -394,18 +394,14 @@ SetFilePointer(HANDLE hFile,
      return -1;
    }
 
-   Distance.u.LowPart = lDistanceToMove;
    if (lpDistanceToMoveHigh)
    {
       Distance.u.HighPart = *lpDistanceToMoveHigh;
-   }
-   else if (lDistanceToMove >= 0)
-   {
-      Distance.u.HighPart = 0;
+      Distance.u.LowPart = lDistanceToMove;
    }
    else
    {
-      Distance.u.HighPart = -1;
+      Distance.QuadPart = lDistanceToMove;
    }
 
    switch(dwMoveMethod)
@@ -441,6 +437,14 @@ SetFilePointer(HANDLE hFile,
      return -1;
    }
 
+   if (lpDistanceToMoveHigh == NULL && FilePosition.CurrentByteOffset.HighPart != 0)
+   {
+     /* If we're moving the pointer outside of the 32 bit boundaries but
+        the application only passed a 32 bit value we need to bail out! */
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return -1;
+   }
+
    errCode = NtSetInformationFile(hFile,
 				  &IoStatusBlock,
 				  &FilePosition,
@@ -448,14 +452,28 @@ SetFilePointer(HANDLE hFile,
 				  FilePositionInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastErrorByStatus(errCode);
-	return -1;
+       if (lpDistanceToMoveHigh != NULL)
+           *lpDistanceToMoveHigh = -1;
+
+       SetLastErrorByStatus(errCode);
+       return -1;
      }
 
    if (lpDistanceToMoveHigh != NULL)
      {
         *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
      }
+
+   if (FilePosition.CurrentByteOffset.u.LowPart == -1)
+     {
+       /* The value of -1 is valid here, especially when the new
+          file position is greater than 4 GB. Since NtSetInformationFile
+          succeeded we never set an error code and we explicitly need
+          to clear a previously set error code in this case, which
+          an application will check if INVALID_SET_FILE_POINTER is returned! */
+       SetLastError(ERROR_SUCCESS);
+     }
+
    return FilePosition.CurrentByteOffset.u.LowPart;
 }
 
