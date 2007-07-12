@@ -954,6 +954,10 @@ IntSystemParametersInfo(
 
    switch(uiAction)
    {
+     case SPI_GETDRAGFULLWINDOWS:
+           /* FIXME: Implement this, don't just return constant */ 
+           *(PBOOL)pvParam = FALSE;
+           break;
       case SPI_GETKEYBOARDCUES:
       case SPI_SETDOUBLECLKWIDTH:
       case SPI_SETDOUBLECLKHEIGHT:
@@ -1739,13 +1743,13 @@ UserSystemParametersInfo(
           }
       case SPI_GETNONCLIENTMETRICS:
           {
-              NONCLIENTMETRICS Buffer;  
+              NONCLIENTMETRICSW Buffer;  
               return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
                   &Buffer,sizeof(Buffer));
           }
       case SPI_SETNONCLIENTMETRICS:
           {
-              NONCLIENTMETRICS Buffer;  
+              NONCLIENTMETRICSW Buffer;  
               return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
                   &Buffer,sizeof(Buffer));
           }
@@ -1782,30 +1786,6 @@ UserSystemParametersInfo(
       case SPI_SETFILTERKEYS:
           {
               FILTERKEYS Buffer;  
-              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
-                  &Buffer,sizeof(Buffer));
-          }
-      case SPI_GETHIGHCONTRAST:
-          {
-              HIGHCONTRAST Buffer;  
-              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
-                  &Buffer,sizeof(Buffer));
-          }
-      case SPI_SETHIGHCONTRAST:
-          {
-              HIGHCONTRAST Buffer;  
-              return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
-                  &Buffer,sizeof(Buffer));
-          }
-      case SPI_GETSOUNDSENTRY:
-          {
-              SOUNDSENTRY Buffer;  
-              return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
-                  &Buffer,sizeof(Buffer));
-          }
-      case SPI_SETSOUNDSENTRY:
-          {
-              SOUNDSENTRY Buffer;  
               return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
                   &Buffer,sizeof(Buffer));
           }
@@ -2040,6 +2020,15 @@ UserSystemParametersInfo(
                   return( FALSE);
               }
               return( TRUE);
+          }
+      case SPI_GETHIGHCONTRAST:
+      case SPI_SETHIGHCONTRAST:
+      case SPI_GETSOUNDSENTRY:
+      case SPI_SETSOUNDSENTRY:
+          {
+              /* FIXME: Support this accessibility SPI actions */
+              DPRINT1("FIXME: Unsupported SPI Code: %lx \n",uiAction );
+              break;
           }
       default :
 		  {
