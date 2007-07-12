@@ -143,6 +143,7 @@ static BOOL
 CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nIdTitle, BOOL bCheckExistence)
 {
     TCHAR path[MAX_PATH];
+    TCHAR exeName[MAX_PATH];
     TCHAR title[256];
     TCHAR name[256];
     LPTSTR p = path;
@@ -172,7 +173,8 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
                             &lpFilePart);
     if (dwLen != 0 && dwLen <= sizeof(szWorkingDir) / sizeof(szWorkingDir[0]))
     {
-        /* Successfully determined the file path */
+        /* Save the file name */
+        _tcscpy(exeName, lpFilePart);
 
         if (lpFilePart != NULL)
         {
@@ -209,7 +211,7 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
     if (!LoadString(hDllInstance, nIdTitle, title, sizeof(title)/sizeof(title[0])))
         return FALSE;
 
-    return SUCCEEDED(CreateShellLink(path, command, _T(""), lpWorkingDir, NULL, 0, title));
+    return SUCCEEDED(CreateShellLink(path, exeName, _T(""), lpWorkingDir, NULL, 0, title));
 }
 
 
