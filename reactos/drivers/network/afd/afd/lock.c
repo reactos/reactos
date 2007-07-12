@@ -237,10 +237,15 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
   UINT Information,
   PIO_COMPLETION_ROUTINE Completion,
   BOOL ShouldUnlock ) {
-    SocketStateUnlock( FCB );
+
     if( Status == STATUS_PENDING ) {
+	/* We should firstly mark this IRP as pending, because 
+	   otherwise it may be completed by StreamSocketConnectComplete()
+	   before we return from SocketStateUnlock(). */
 	IoMarkIrpPending( Irp );
+    SocketStateUnlock( FCB );
     } else {
+	SocketStateUnlock( FCB );
 	Irp->IoStatus.Status = Status;
 	Irp->IoStatus.Information = Information;
 	if( Completion )
