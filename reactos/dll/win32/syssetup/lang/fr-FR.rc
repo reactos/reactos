@@ -207,8 +207,8 @@ BEGIN
     IDS_CMT_REGEDIT     "Lancer l'Éditeur de Registre"
     IDS_CMT_WORDPAD     "Lancer l'Éditeur de Documents"
     IDS_CMT_SCREENSHOT  "Faire une capture d'écran"
-    IDS_CMT_DEVMGMT     "Launch Device Manager"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
+    IDS_CMT_DEVMGMT     "Lancer le gestionnaire de périphériques"
+    IDS_CMT_SERVMAN     "Lancer le gestionnaire de services"
 END
 
 STRINGTABLE
