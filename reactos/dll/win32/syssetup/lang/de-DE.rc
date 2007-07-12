@@ -184,8 +184,8 @@ BEGIN
     IDS_LOCALESUBTITLE   "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
     IDS_DATETIMETITLE    "Datum und Uhrzeit"
     IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für ihren Computer."
-    IDS_PROCESSTITLE     "Prozess page Titel"
-    IDS_PROCESSSUBTITLE  "Prozess page Subtitel"
+    IDS_PROCESSTITLE     "Prozess-Seitentitel"
+    IDS_PROCESSSUBTITLE  "Prozess-Seitenuntertitel"
 END
 
 STRINGTABLE
@@ -206,8 +206,8 @@ BEGIN
     IDS_CMT_REGEDIT     "Starte Registrierungseditor"
     IDS_CMT_WORDPAD     "Starte Dokument Editor"
     IDS_CMT_SCREENSHOT  "Screenshot erstellen"
-    IDS_CMT_DEVMGMT     "Starte Geräte Manager"
-    IDS_CMT_SERVMAN     "Starte Service Manager"
+    IDS_CMT_DEVMGMT     "Starte Geräte-Manager"
+    IDS_CMT_SERVMAN     "Starte Dienst-Manager"
 END
 
 STRINGTABLE
@@ -232,17 +232,17 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "Command Prompt.lnk"
+    IDS_SHORT_CMD        "Eingabeaufforderung.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
     IDS_SHORT_DOWNLOADER "Download !.lnk"
-    IDS_SHORT_SERVICE    "Service Manager.lnk"
-    IDS_SHORT_DEVICE     "Device Manager.lnk"
-    IDS_SHORT_CALC       "Calculator.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
+    IDS_SHORT_SERVICE    "Dienste-Manager.lnk"
+    IDS_SHORT_DEVICE     "Geräte-Manager.lnk"
+    IDS_SHORT_CALC       "Rechner.lnk"
+    IDS_SHORT_REGEDIT    "Registrierungseditor.lnk"
+    IDS_SHORT_NOTEPAD    "Editor.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
+    IDS_SHORT_SOLITAIRE  "Solitär.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 END
 
