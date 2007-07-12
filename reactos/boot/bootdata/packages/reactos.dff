@@ -52,7 +52,7 @@ base\applications\network\telnet\telnet.exe         1
 base\applications\network\tracert\tracert.exe       1
 base\applications\network\whois\whois.exe           1
 base\applications\notepad\notepad.exe               1
-base\applications\regedit\regedit.exe               1
+base\applications\regedit\regedit.exe               4
 base\applications\regedit\clb\clb.dll               1
 base\applications\sc\sc.exe                         1
 base\applications\screensavers\matrix\matrix.scr    1
