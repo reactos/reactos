@@ -56,6 +56,16 @@
 #define IDC_SCR_CHANNEL                 1047
 #define IDC_OK                          1048
 #define IDC_CANCEL                      1049
+#define IDC_BTN_SYSTEM_UP               1050
+#define IDC_BTN_SYSTEM_DOWN             1051
+#define IDC_BTN_SYSTEM_ENABLE           1052
+#define IDC_BTN_SYSTEM_DISABLE          1053
+#define IDC_BTN_SYSTEM_FIND             1054
+#define IDC_BTN_SYSTEM_NEW              1055
+#define IDC_BTN_SYSTEM_EDIT             1056
+#define IDC_SYSTEM_TREE                 1057
+#define IDC_BTN_SYSTEM_ACTIVATE         1058
+#define IDC_BTN_SYSTEM_DEACTIVATE       1059
 
 #define IDS_TAB_TOOLS                   2001
 #define IDS_TAB_SYSTEM                  2002
