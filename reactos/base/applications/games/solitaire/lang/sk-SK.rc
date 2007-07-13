@@ -9,7 +9,7 @@
  */
 #include "resource.h"
 
-LANGUAGE LANG_Slovak, SUBLANG_DEFAULT
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 
 /* Dialogs */
