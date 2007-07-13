@@ -307,61 +307,104 @@ GetDiskFreeSpaceExW(
     PULARGE_INTEGER lpTotalNumberOfFreeBytes
     )
 {
-    FILE_FS_SIZE_INFORMATION FileFsSize;
+    union
+    {
+        FILE_FS_SIZE_INFORMATION FsSize;
+        FILE_FS_FULL_SIZE_INFORMATION FsFullSize;
+    } FsInfo;
     IO_STATUS_BLOCK IoStatusBlock;
     ULARGE_INTEGER BytesPerCluster;
-    WCHAR RootPathName[MAX_PATH];
     HANDLE hFile;
-    NTSTATUS errCode;
+    NTSTATUS Status;
 
-    /*
-    FIXME: this is obviously wrong for UNC paths, symbolic directories etc.
-    -Gunnar
-    */
-    if (lpDirectoryName)
-    {
-        wcsncpy (RootPathName, lpDirectoryName, 3);
-    }
-    else
-    {
-        GetCurrentDirectoryW (MAX_PATH, RootPathName);
-    }
-    RootPathName[3] = 0;
+    if (lpDirectoryName == NULL)
+        lpDirectoryName = L"\\";
 
-    hFile = InternalOpenDirW(RootPathName, FALSE);
+    hFile = InternalOpenDirW(lpDirectoryName, FALSE);
     if (INVALID_HANDLE_VALUE == hFile)
     {
         return FALSE;
     }
 
-    errCode = NtQueryVolumeInformationFile(hFile,
-                                           &IoStatusBlock,
-                                           &FileFsSize,
-                                           sizeof(FILE_FS_SIZE_INFORMATION),
-                                           FileFsSizeInformation);
-    if (!NT_SUCCESS(errCode))
+    if (lpFreeBytesAvailableToCaller != NULL || lpTotalNumberOfBytes != NULL)
     {
-        CloseHandle(hFile);
-        SetLastErrorByStatus (errCode);
+        /* To get the free space available to the user associated with the
+           current thread, try FileFsFullSizeInformation. If this is not
+           supported by the file system, fall back to FileFsSize */
+
+        Status = NtQueryVolumeInformationFile(hFile,
+                                              &IoStatusBlock,
+                                              &FsInfo.FsFullSize,
+                                              sizeof(FsInfo.FsFullSize),
+                                              FileFsFullSizeInformation);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Close the handle before returning data
+               to avoid a handle leak in case of a fault! */
+            CloseHandle(hFile);
+
+            BytesPerCluster.QuadPart =
+                FsInfo.FsFullSize.BytesPerSector * FsInfo.FsFullSize.SectorsPerAllocationUnit;
+
+            if (lpFreeBytesAvailableToCaller != NULL)
+            {
+                lpFreeBytesAvailableToCaller->QuadPart =
+                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.CallerAvailableAllocationUnits.QuadPart;
+            }
+
+            if (lpTotalNumberOfBytes != NULL)
+            {
+                lpTotalNumberOfBytes->QuadPart =
+                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.TotalAllocationUnits.QuadPart;
+            }
+
+            if (lpTotalNumberOfFreeBytes != NULL)
+            {
+                lpTotalNumberOfFreeBytes->QuadPart =
+                    BytesPerCluster.QuadPart * FsInfo.FsFullSize.ActualAvailableAllocationUnits.QuadPart;
+            }
+
+            return TRUE;
+        }
+    }
+
+    Status = NtQueryVolumeInformationFile(hFile,
+                                          &IoStatusBlock,
+                                          &FsInfo.FsSize,
+                                          sizeof(FsInfo.FsSize),
+                                          FileFsSizeInformation);
+
+    /* Close the handle before returning data
+       to avoid a handle leak in case of a fault! */
+    CloseHandle(hFile);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus (Status);
         return FALSE;
     }
 
     BytesPerCluster.QuadPart =
-        FileFsSize.BytesPerSector * FileFsSize.SectorsPerAllocationUnit;
+        FsInfo.FsSize.BytesPerSector * FsInfo.FsSize.SectorsPerAllocationUnit;
 
-    // FIXME: Use quota information
-	if (lpFreeBytesAvailableToCaller)
+    if (lpFreeBytesAvailableToCaller)
+    {
         lpFreeBytesAvailableToCaller->QuadPart =
-            BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
+            BytesPerCluster.QuadPart * FsInfo.FsSize.AvailableAllocationUnits.QuadPart;
+    }
 
-	if (lpTotalNumberOfBytes)
+    if (lpTotalNumberOfBytes)
+    {
         lpTotalNumberOfBytes->QuadPart =
-            BytesPerCluster.QuadPart * FileFsSize.TotalAllocationUnits.QuadPart;
-	if (lpTotalNumberOfFreeBytes)
-        lpTotalNumberOfFreeBytes->QuadPart =
-            BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
+            BytesPerCluster.QuadPart * FsInfo.FsSize.TotalAllocationUnits.QuadPart;
+    }
 
-    CloseHandle(hFile);
+    if (lpTotalNumberOfFreeBytes)
+    {
+        lpTotalNumberOfFreeBytes->QuadPart =
+            BytesPerCluster.QuadPart * FsInfo.FsSize.AvailableAllocationUnits.QuadPart;
+    }
 
     return TRUE;
 }
