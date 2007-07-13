@@ -1,10 +1,9 @@
-/////////////////////////////////////////////////////////////////////////////
-// Hungarian (HU) resources by Robert Horvath (talley at cubeclub.hu)
+// Russian language resource file (Dmitry Chapyshev, 2007-06-10)
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
-#pragma code_page(1252)
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -14,23 +13,23 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDC_FDEBUG MENU DISCARDABLE 
 BEGIN
-    POPUP "&File"
+    POPUP "&Файл"
     BEGIN
-        MENUITEM "&Csatlakoztatбs", IDM_FILE_CONNECT
-        MENUITEM "Kapcsolat&bontбs", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Соединение", IDM_FILE_CONNECT
+        MENUITEM "&Отключение", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
+        MENUITEM "О&чистить экран", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Start Capture", IDM_FILE_STARTCAPTURE
-        MENUITEM "S&top Capture", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Начать захват", IDM_FILE_STARTCAPTURE
+        MENUITEM "Ос&тановить захват", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Helyi &visszhang", IDM_FILE_LOCALECHO
+        MENUITEM "&Локальный ответ", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "&Kilйpйs", IDM_EXIT
+        MENUITEM "&Выход", IDM_EXIT
     END
-    POPUP "&Sъgу"
+    POPUP "&Справка"
     BEGIN
-        MENUITEM "&Nйvjegy ...", IDM_ABOUT
+        MENUITEM "&О программе...", IDM_ABOUT
     END
 END
 
@@ -118,10 +117,10 @@ END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 259, 210
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "FreeLoader Debugger"
+CAPTION "О программе FreeLoader Debugger"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)",
+    CONTROL         "FreeLoader Debugger v1.0\nCopyright (C) 2003\nот Brian Palmer (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
@@ -132,28 +131,28 @@ END
 
 IDD_CONNECTION DIALOG DISCARDABLE  0, 0, 196, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Kapcsolat tulajdonsбgai"
+CAPTION "Настройки соединения"
 FONT 8, "Tahoma"
 BEGIN
-    LTEXT           "Hasznбlt port (pl. COM1):",IDC_STATIC,7,7,108,8
+    LTEXT           "Введите COM-порт (e.g. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Бtviteli sebessйg (pl. 115200):",IDC_STATIC,7,38,114,
+    LTEXT           "Введите скорость передачи (e.g. 115200):",IDC_STATIC,7,38,114,
                     8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
-    PUSHBUTTON      "Mйgse",IDCANCEL,100,79,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,100,79,50,14
 END
 
 IDD_CAPTURE DIALOG DISCARDABLE  0, 0, 251, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Naplу Бllomбny"
+CAPTION "Файл захвата"
 FONT 8, "Tahoma"
 BEGIN
-    LTEXT           "Бllomбny neve:",IDC_STATIC,7,17,62,8
+    LTEXT           "Название файла захвата:",IDC_STATIC,7,17,62,8
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Bцngйszйs",IDC_BROWSE,194,26,50,14
+    PUSHBUTTON      "&Обзор",IDC_BROWSE,194,26,50,14
     DEFPUSHBUTTON   "OK",IDOK,139,74,50,14
-    PUSHBUTTON      "Mйgse",IDCANCEL,194,74,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,194,74,50,14
 END
 
 
@@ -165,7 +164,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_APP_TITLE           "fdebug"
-    IDS_HELLO               "Hellуka!"
+    IDS_HELLO               "Привет мир!"
     IDC_FDEBUG              "FDEBUG"
 END
 
@@ -174,7 +173,7 @@ BEGIN
     IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
-#endif    
+#endif
 /////////////////////////////////////////////////////////////////////////////
 
 

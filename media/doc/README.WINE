@@ -10,20 +10,14 @@ please add it.
 If you find that a function in ReactOS that is not implemented properly
 and is based on WINE sources, check the latest Winehq CVS and see if
 it has been fixed there. If so, please submit a patch to
-ros-dev@reactos.com. Otherwise please send a patch to both
-wine-patches@winehq.com and ros-dev@reactos.com
+ros-dev@reactos.org. Otherwise please send a patch to both
+wine-patches@winehq.com and ros-dev@reactos.org
 
-When porting a dll from WINE to ReactOS please take a look at how
-comctl32 has been imported. We start by creating a makefile that has
-a target defined like so:
+When porting a new DLL from Wine to ReactOS, please do the following steps
+- Create a new directory in dll/win32/ of the same name as the new Wine DLL
+- Add a new entry in dll/win32/win32.rbuild
+- Follow the guide "Update process for autosync DLLs" at the bottom of this file
 
-TARGET_TYPE = winedll
-
-This will cause the reactos build system to look for a file called
-makefile.ros-template. This file contains all of the information needed
-for the ReactOS build system to make use of the WINE Makefile.in.
-This will allow you to use the WINE tools and librarys with very little
-work to import a new dll.
 
 The following build tools are shared with Wine.
 
@@ -41,6 +35,7 @@ reactos/dll/win32/advpack         # Autosync
 reactos/dll/win32/avifil32        # Autosync
 reactos/dll/win32/cabinet         # Autosync
 reactos/dll/win32/clusapi         # Autosync
+reactos/dll/win32/comcat          # Autosync
 reactos/dll/win32/comctl32        # Autosync
 reactos/dll/win32/comdlg32        # Synced to Wine-0_9_16
 reactos/dll/win32/crypt32         # Autosync
@@ -54,11 +49,11 @@ reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
-reactos/dll/win32/msvcrt20        # Out of sync
 reactos/dll/win32/mpr             # Autosync
-reactos/dll/win32/msacm           # Out of sync
+reactos/dll/win32/msacm32         # Out of sync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
+reactos/dll/win32/msvcrt20        # Out of sync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/netapi32        # Synced to Wine-0_9_5
 reactos/dll/win32/objsel          # Autosync
@@ -79,7 +74,7 @@ reactos/dll/win32/shell32         # Synced to Wine-0_9_5
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Synced to Wine-0_9_5
-reactos/dll/win32/twain           # Out of sync
+reactos/dll/win32/twain_32        # Out of sync
 reactos/dll/win32/urlmon          # Synced to Wine-0_9_10
 reactos/dll/win32/uxtheme         # Autosync
 reactos/dll/win32/version         # Synced at 20060509
@@ -149,33 +144,29 @@ User32 -
   reactos/dll/win32/user32/windows/text.c       # Forked (lstr.c)
   reactos/dll/win32/user32/windows/winpos.c     # Forked
 
-Update process for shared DLLs
+Update process for autosync DLLs
 
-- Cd to the parent directory of your top-level "reactos" directory
-- Check out the Wine release: "cvs -d :pserver:cvs@cvs.winehq.com:2401/home/wine co wine -r Wine-20050211"
-- Create "vendor" directory (as a sibling of your top-level "reactos" directory)
-- Cd to the vendor dir and check out the current vendor drop:
-  "svn co svn://svn.reactos.org/reactos/vendor/wine".
-- For each component shared with Wine (e.g. cabinet):
-  "del vendor\wine\dlls\cabinet\current\*"
-  "copy wine\dlls\cabinet vendor\wine\dlls\cabinet\current"
-  "del vendor\wine\dlls\cabinet\current\.cvsignore"
-  Check svn status, svn add/delete files as needed
-  Tag new Wine release "svn copy vendor\wine\dlls\cabinet\current vendor\wine\dlls\cabinet\Wine-20050211"
-- Commit the vendor drop: svn commit vendor\wine -m "Wine-20050211 vendor drop"
-- Determine the revision number of the last Wine tag by looking at http://svn.reactos.ru/svn/reactos/tags/
-  and finding the last Wine-yyyymmdd-sync tag, e.g. Wine-20050111-sync had rev 13007
-- For each component shared with Wine (e.g. cabinet):
-- "cd reactos\lib\cabinet"
-- Check for changes in the ReactOS tree: "svn diff -r 13007" (13007 is the revno of the previous sync).
-  If any changes are found, see if they're present in the Wine code. If not, submit to WineHQ
-  if apropriate.
-- Merge in Wine changes:
-  "svn merge svn://svn.reactos.org/vendor/wine/dlls/cabinet/Wine-20050111
-   svn://svn.reactos.org/vendor/wine/dlls/cabinet/current"
-- Fix any merge conflicts
-- Build and test (building will sometimes require adjusting header files)
-- Check which files were changed: "svn status"
-- For each of the changed files, get the WineHQ CVS log. Copy author and CVS commit message into a
-  commit log
-- Commit changed files "svn commit" using generated commit log as commit message
+*** This process can only be done on Microsoft Windows ***
+- Download wineimport.cmd at svn://svn.reactos.org/reactos/trunk/tools/
+- Download cvs command line program and be sure to put it in your path
+  (available at http://ftp.gnu.org/non-gnu/cvs/binary/stable/x86-woe/ )
+- Download svn command line program and be sure to put it in your path
+  (available at http://subversion.tigris.org/servlets/ProjectDocumentList?folderID=91 )
+- Download patch command line program and be sure to put it in your path
+  (available at http://gnuwin32.sourceforge.net/packages/patch.htm )
+- Optionally, download junction.exe and put it in your path
+  (available at http://www.sysinternals.com/Utilities/Junction.html )
+- Cd to the directory containing wineimport.cmd
+- Run
+  "wineimport.cmd fullprocessing {path_to_your_rectos_directory} {name_of_the_wine_dll}"
+- In case of error, you can
+  1) add missing definitions to ReactOS headers
+  2) fix {name_of_the_wine_dll}_ros.diff patch file, by removing outdated changes
+  3) or modify Wine code, by adding a {name_of_the_wine_dll}_ros.diff patch,
+     which will be applied after Wine source checkout
+     DO NOT DIRECTLY MODIFY WINE SOURCE CODE
+- Once Wine DLL compiles, install and run ReactOS and search for regressions
+- In case of regression, you can
+  1) Fix ReactOS code (not in the shared DLL)
+  2) or update the {name_of_the_wine_dll}_ros.diff patch file
+- Commit your changes with the "Autosyncing with Wine HEAD" commit message

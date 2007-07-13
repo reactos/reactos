@@ -26,6 +26,7 @@
 #define ADDRESS_TAG_BIT 0x80000000UL
 #define HandleToUlong( h ) ((ULONG)(ULONG_PTR)(h) )
 #define HandleToLong( h ) ((LONG)(LONG_PTR) (h) )
+#define ULongToHandle( h) ((HANDLE)(ULONG_PTR) (h))
 #define LongToHandle( h) ((HANDLE)(LONG_PTR) (h))
 #define PtrToUlong( p ) ((ULONG)(ULONG_PTR) (p) )
 #define PtrToLong( p ) ((LONG)(LONG_PTR) (p) )
@@ -77,6 +78,8 @@ inline unsigned long HandleToUlong(const void* h )
     { return((unsigned long) h ); }
 inline long HandleToLong( const void* h )
     { return((long) h ); }
+inline void* ULongToHandle( const long h )
+    { return((void*) (UINT_PTR) h ); }
 inline void* LongToHandle( const long h )
     { return((void*) (INT_PTR) h ); }
 inline unsigned long PtrToUlong( const void* p)

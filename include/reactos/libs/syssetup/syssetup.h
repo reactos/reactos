@@ -39,16 +39,20 @@ InstallReactOS (HINSTANCE hInstance);
 #define SYSSETUP_SEVERITY_FATAL_ERROR   3
 
 
-BOOL STDCALL
-InitializeSetupActionLog (BOOL bDeleteOldLogFile);
+BOOL WINAPI
+InitializeSetupActionLog(IN BOOL bDeleteOldLogFile);
 
-VOID STDCALL
-TerminateSetupActionLog (VOID);
+VOID WINAPI
+TerminateSetupActionLog(VOID);
 
-BOOL STDCALL
-LogItem (DWORD dwSeverity,
-	 LPWSTR lpMessageText);
+BOOL WINAPI
+SYSSETUP_LogItem(IN const LPSTR lpFileName,
+                 IN DWORD dwLineNumber,
+                 IN DWORD dwSeverity,
+                 IN LPWSTR lpMessageText);
 
+#define LogItem(dwSeverity, lpMessageText) \
+    SYSSETUP_LogItem(__FILE__, __LINE__, dwSeverity, lpMessageText)
 
 #endif /* __SYSSETUP_H_INCLUDED__ */
 

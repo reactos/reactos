@@ -16,6 +16,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+
+
 #ifdef __midl
 
 [
@@ -26,6 +28,12 @@
 
 interface eventlog
 {
+    cpp_quote("#ifdef __GNUC__")
+    cpp_quote("/* FIXME ReactOS SEH support, we need remove this when gcc support native seh */")
+    cpp_quote("#include <pseh/pseh.h>")
+    cpp_quote("#endif")
+
+
 	cpp_quote("#define RPC_ENABLED")
 	cpp_quote("#if 0")
 	typedef [handle, unique] wchar_t *LPWSTR;
@@ -221,7 +229,10 @@ interface eventlog
 }
 
 #else
-
+    cpp_quote("#ifdef __GNUC__")
+    cpp_quote("/* FIXME ReactOS SEH support, we need remove this when gcc support native seh */")
+    cpp_quote("#include  <pseh/pseh.h>")
+    cpp_quote("#endif")
 
 [
 	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),

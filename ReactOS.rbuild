@@ -29,39 +29,36 @@
   <if property="GDB" value="0">
     <if property="OPTIMIZE" value="1">
         <compilerflag>-Os</compilerflag>
-        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-ftracer</compilerflag>
         <compilerflag>-momit-leaf-frame-pointer</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
     <if property="OPTIMIZE" value="2">
         <compilerflag>-Os</compilerflag>
-        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
     <if property="OPTIMIZE" value="3">
         <compilerflag>-O1</compilerflag>
-        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
     <if property="OPTIMIZE" value="4">
         <compilerflag>-O2</compilerflag>
-        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
     <if property="OPTIMIZE" value="5">
         <compilerflag>-O3</compilerflag>
-        <compilerflag>-Wno-strict-aliasing</compilerflag>
         <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
     </if>
   </if>
 
+  <compilerflag>-Wno-strict-aliasing</compilerflag>
   <compilerflag>-Wpointer-arith</compilerflag>
   <linkerflag>-enable-stdcall-fixup</linkerflag>
 
   <include>.</include>
   <include>include</include>
   <include>include/psdk</include>
+  <include root="intermediate">include/psdk</include>
   <include>include/dxsdk</include>
   <include>include/crt</include>
   <include>include/ddk</include>

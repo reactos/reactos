@@ -29,7 +29,7 @@
 	<define name="_X86_" />
 	<file switches="--oldnames">eventlogrpc.idl</file>
 </module>
-<module name="eventlog_client" type="rpcclient">
+<module name="eventlog_client" type="rpcclient" >
 	<include base="ReactOS">.</include>
 	<include base="ReactOS">w32api/include</include>
 	<define name="_X86_" />

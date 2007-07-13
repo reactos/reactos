@@ -21,7 +21,7 @@ sprintf_nt(IN PCHAR Buffer,
 {
     va_list ap;
     va_start(ap, Format);
-    sprintf(Buffer, Format, ap);
+    vsprintf(Buffer, Format, ap);
     va_end(ap);
 }
 
@@ -1767,7 +1767,7 @@ LoaderScan:
                                    NtHeader->OptionalHeader.AddressOfEntryPoint);
     LdrEntry->SizeOfImage = DriverSize;
     LdrEntry->CheckSum = NtHeader->OptionalHeader.CheckSum;
-    LdrEntry->SectionPointer = NULL; // ?
+    LdrEntry->SectionPointer = Section;
 
     /* Now write the DLL name */
     LdrEntry->BaseDllName.Buffer = (PVOID)(LdrEntry + 1);

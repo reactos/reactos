@@ -2588,5 +2588,10 @@
 #define SCARD_W_CARD_NOT_AUTHENTICATED                     _HRESULT_TYPEDEF_(0x8010006FL)
 
 
+#define CAT_E_FIRST                                        _HRESULT_TYPEDEF_(0x80040160L)
+#define CAT_E_CATIDNOEXIST                                 _HRESULT_TYPEDEF_(0x80040160L)
+#define CAT_E_NODESCRIPTION                                _HRESULT_TYPEDEF_(0x80040161L)
+#define CAT_E_LAST                                         _HRESULT_TYPEDEF_(0x80040161L)
+
 
 #endif

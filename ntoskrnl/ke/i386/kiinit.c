@@ -12,6 +12,16 @@
 #define NDEBUG
 #include <debug.h>
 
+
+VOID
+NTAPI
+KiSetupStackAndInitializeKernel(IN PKPROCESS InitProcess,
+                                IN PKTHREAD InitThread,
+                                IN PVOID IdleStack,
+                                IN PKPRCB Prcb,
+                                IN CCHAR Number,
+                                IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
 /* GLOBALS *******************************************************************/
 
 /* Spinlocks used only on X86 */
@@ -227,6 +237,13 @@ KiInitMachineDependent(VOID)
                     /* Move on */
                     CurrentSample++;
                     Sample++;
+
+                    if (Sample == sizeof(Samples) / sizeof(Samples[0]))
+                    {
+                        /* Restart */
+                        CurrentSample = Samples;
+                        Sample = 0;
+                    }
                 }
 
                 /* Save the CPU Speed */
@@ -747,28 +764,32 @@ AppCpuInit:
     KfRaiseIrql(HIGH_LEVEL);
 
     /* Align stack and make space for the trap frame and NPX frame */
-    InitialStack &= -KTRAP_FRAME_ALIGN;
-#ifdef __GNUC__
-    __asm__ __volatile__("xorl %ebp, %ebp");
-    __asm__ __volatile__("movl %0,%%esp" : :"r" (InitialStack));
-    __asm__ __volatile__("subl %0,%%esp" : :"r" (NPX_FRAME_LENGTH +
-                                                 KTRAP_FRAME_LENGTH +
-                                                 KTRAP_FRAME_ALIGN));
-    __asm__ __volatile__("push %0" : :"r" (CR0_EM + CR0_TS + CR0_MP));
-#else
-    __asm xor ebp, ebp;
-    __asm mov esp, InitialStack;
-    __asm sub esp, NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH;
-    __asm push CR0_EM + CR0_TS + CR0_MP;
-#endif
+    InitialStack &= ~(KTRAP_FRAME_ALIGN - 1);
 
-    /* Call main kernel initialization */
-    KiInitializeKernel(&KiInitialProcess.Pcb,
-                       InitialThread,
-                       (PVOID)InitialStack,
-                       (PKPRCB)__readfsdword(KPCR_PRCB),
-                       (CCHAR)Cpu,
-                       KeLoaderBlock);
+    /* NOTE: We cannot setup the stack using inline assembly and then later assume
+             that the compiler is smart enough to figure out how the stack layout
+             changed! This is to avoid generating wrong code. We cannot directly
+             call KiInitializeKernel from here! */
+
+    KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,
+                                    InitialThread,
+                                    (PVOID)InitialStack,
+                                    (PKPRCB)__readfsdword(KPCR_PRCB),
+                                    (CCHAR)Cpu,
+                                    KeLoaderBlock);
+
+    /* NOTE: KiSetupStackAndInitializeKernel never returns! Do NOT add any code here! */
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI
+KiSystemStartupFinal(VOID)
+{
+    /* NOTE: This routine is called after setting up the stack in KiSystemStartup!
+             This code cannot be moved to KiSystemStartup because it cannot be assumed
+             that the compiler can generate working code after modifying ESP/EBP
+             using inline assembly! */
 
     /* Set the priority of this thread to 0 */
     KeGetCurrentThread()->Priority = 0;

@@ -140,6 +140,7 @@
         <file>splitp.c</file>
         <file>strtol.c</file>
         <file>strtoul.c</file>
+        <file>strtoull.c</file>
         <file>wcstol.c</file>
         <file>wcstombs.c</file>
         <file>wcstoul.c</file>

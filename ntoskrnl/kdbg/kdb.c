@@ -168,6 +168,29 @@ KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFram
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
 
+STATIC VOID
+KdbpKdbTrapFrameFromKernelStack(PVOID KernelStack,
+                                PKDB_KTRAP_FRAME KdbTrapFrame)
+{
+   ULONG_PTR *StackPtr;
+
+   RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
+   StackPtr = (ULONG_PTR *) KernelStack;
+   KdbTrapFrame->Tf.Ebp = StackPtr[3];
+   KdbTrapFrame->Tf.Edi = StackPtr[4];
+   KdbTrapFrame->Tf.Esi = StackPtr[5];
+   KdbTrapFrame->Tf.Ebx = StackPtr[6];
+   KdbTrapFrame->Tf.Eip = StackPtr[7];
+   KdbTrapFrame->Tf.HardwareEsp = (ULONG) (StackPtr + 8);
+   KdbTrapFrame->Tf.HardwareSegSs = KGDT_R0_DATA;
+   KdbTrapFrame->Tf.SegCs = KGDT_R0_CODE;
+   KdbTrapFrame->Tf.SegDs = KGDT_R0_DATA;
+   KdbTrapFrame->Tf.SegEs = KGDT_R0_DATA;
+   KdbTrapFrame->Tf.SegGs = KGDT_R0_DATA;
+
+   /* FIXME: what about the other registers??? */
+}
+
 /*!\brief Overwrites the instruction at \a Address with \a NewInst and stores
  *        the old instruction in *OldInst.
  *
@@ -1040,7 +1063,8 @@ KdbpAttachToThread(
    if (KdbCurrentThread != KdbOriginalThread)
    {
       ASSERT(KdbCurrentTrapFrame == &KdbThreadTrapFrame);
-      KdbpKdbTrapFrameToTrapFrame(KdbCurrentTrapFrame, KdbCurrentThread->Tcb.TrapFrame);
+      /* Actually, we can't save the context, there's no guarantee that there
+       * was a trap frame */
    }
    else
    {
@@ -1050,12 +1074,13 @@ KdbpAttachToThread(
    /* Switch to the thread's context */
    if (Thread != KdbOriginalThread)
    {
-      if (Thread->Tcb.TrapFrame == NULL)
-      {
-         KdbpPrint("Threads TrapFrame is NULL! Cannot attach.\n");
-         return FALSE;
-      }
-      KdbpTrapFrameToKdbTrapFrame(Thread->Tcb.TrapFrame, &KdbThreadTrapFrame);
+      /* The thread we're attaching to isn't the thread on which we entered
+       * kdb and so the thread we're attaching to is not running. There
+       * is no guarantee that it actually has a trap frame. So we have to
+       * peek directly at the registers which were saved on the stack when the
+       * thread was preempted in the scheduler */
+      KdbpKdbTrapFrameFromKernelStack(Thread->Tcb.KernelStack,
+                                      &KdbThreadTrapFrame);
       KdbCurrentTrapFrame = &KdbThreadTrapFrame;
    }
    else /* Switching back to original thread */
@@ -1278,7 +1303,7 @@ KdbEnterDebuggerException(
           * The breakpoint will point to the next instruction by default so
           * point it back to the start of original instruction.
           */
-         TrapFrame->Eip--;
+         //TrapFrame->Eip--;
 
          /*
           * ... and restore the original instruction.
@@ -1529,11 +1554,8 @@ KdbEnterDebuggerException(
       }
    }
 
-   /* Save the current thread's trapframe */
-   if (KdbCurrentTrapFrame == &KdbThreadTrapFrame)
-   {
-      KdbpKdbTrapFrameToTrapFrame(KdbCurrentTrapFrame, KdbCurrentThread->Tcb.TrapFrame);
-   }
+   /* We can't update the current thread's trapframe 'cause it might not
+      have one */
 
    /* Detach from attached process */
    if (KdbCurrentProcess != KdbOriginalProcess)
@@ -1620,7 +1642,7 @@ KdbpSafeReadMemory(OUT PVOID Dest,
       Status = _SEH_GetExceptionCode();
    }
    _SEH_END;
-   
+
    return Status;
 }
 

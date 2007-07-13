@@ -77,7 +77,7 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
     }
 
   /* Load it */
-  return RosSymCreateFromRaw((char *) ImageStart + SectionHeader->PointerToRawData,
+  return RosSymCreateFromRaw((char *) ImageStart + SectionHeader->VirtualAddress,
                              SectionHeader->SizeOfRawData, RosSymInfo);
 }
 

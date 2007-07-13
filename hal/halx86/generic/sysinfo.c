@@ -12,7 +12,12 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG KdComPortInUse = 0;
+#ifdef __GNUC__
+static PUCHAR realKdComPortInUse = 0;
+PUCHAR *_KdComPortInUse = &realKdComPortInUse;
+#else
+PUCHAR _KdComPortInUse = 0;
+#endif
 
 /* FUNCTIONS *****************************************************************/
 

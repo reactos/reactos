@@ -1417,7 +1417,7 @@ RtlUnicodeStringToCountedOemString(
 
     if (!Length)
     {
-        RtlZeroMemory(OemDest, sizeof(UNICODE_STRING));
+        RtlZeroMemory(OemDest, sizeof(OEM_STRING));
     }
 
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
@@ -1619,7 +1619,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
 
     if (!Length)
     {
-        RtlZeroMemory(OemDest, sizeof(UNICODE_STRING));
+        RtlZeroMemory(OemDest, sizeof(OEM_STRING));
     }
 
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;

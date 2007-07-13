@@ -1345,7 +1345,7 @@ Severity=Informational
 Facility=System
 SymbolicName=WINDOWS_NT_BANNER
 Language=English
-ReactOS (R) Version %hs (Build %u%hs)
+ReactOS (R) Kernel Version %hs (Build %u%hs)
 .
 
 MessageId=0x87

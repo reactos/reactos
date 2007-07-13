@@ -504,6 +504,13 @@ RPCRTAPI unsigned short RPC_ENTRY
 RPCRTAPI int RPC_ENTRY
   UuidIsNil( UUID* Uuid, RPC_STATUS* Status_ );
 
+
+RPCRTAPI RPC_STATUS RPC_ENTRY
+RpcImpersonateClient (IN RPC_BINDING_HANDLE BindingHandle OPTIONAL);
+
+RPCRTAPI RPC_STATUS RPC_ENTRY 
+RpcRevertToSelf ();
+
 #ifdef __cplusplus
 }
 #endif

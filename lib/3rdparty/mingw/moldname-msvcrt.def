@@ -156,3 +156,4 @@ nextafter
 snwprintf
 snprintf
 strtoull=_strtoui64
+vsnprintf

@@ -72,19 +72,23 @@ void* calloc(size_t _nmemb, size_t _size)
 void* realloc(void* _ptr, size_t _size)
 {
    size_t nSize;
-       
-   if (( _size == 0) && (_ptr !=NULL))
+   
+   if (_ptr == NULL)
+      return malloc(_size);
+   
+   if (_size == 0)
+   {
+   	   free(_ptr);
        return NULL;
+   }
    
    nSize = ROUND_SIZE(_size);
    
+   /* check for integer overflow */
    if (nSize<_size)
        return NULL;
-               
-   if (!_ptr) return malloc(_size);
-   if (_size) return HeapReAlloc(hHeap, 0, _ptr, nSize);
-   free(_ptr);
-   return NULL;
+   
+   return HeapReAlloc(hHeap, 0, _ptr, nSize);
 }
 
 /*

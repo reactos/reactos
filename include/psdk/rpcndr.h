@@ -651,6 +651,13 @@ RPCRTAPI void * RPC_ENTRY
 RPCRTAPI void RPC_ENTRY
   NdrRpcSsDefaultFree( void *NodeToFree );
 
+
+#define RPC_BAD_STUB_DATA_EXCEPTION_FILTER  \
+                 ( (RpcExceptionCode() == STATUS_ACCESS_VIOLATION)  || \
+                   (RpcExceptionCode() == STATUS_DATATYPE_MISALIGNMENT) || \
+                   (RpcExceptionCode() == RPC_X_BAD_STUB_DATA) || \
+                   (RpcExceptionCode() == RPC_S_INVALID_BOUND) )
+
 #ifdef __cplusplus
 }
 #endif

@@ -33,9 +33,6 @@ BOOLEAN
 NTAPI
 SepInitializationPhase0(VOID)
 {
-    DPRINT1("FIXME: SeAccessCheck has been HACKED to always grant access!\n");
-    DPRINT1("FIXME: Please fix all the code that doesn't get proper rights!\n");
-
     SepInitLuid();
     if (!SepInitSecurityIDs()) return FALSE;
     if (!SepInitDACLs()) return FALSE;
@@ -123,15 +120,15 @@ SeInitSRM(VOID)
 
   /* Create '\Security' directory */
   RtlInitUnicodeString(&Name,
-		       L"\\Security");
+                       L"\\Security");
   InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_PERMANENT,
-			     0,
-			     NULL);
+                             &Name,
+                             OBJ_PERMANENT,
+                             0,
+                             NULL);
   Status = ZwCreateDirectoryObject(&DirectoryHandle,
-				   DIRECTORY_ALL_ACCESS,
-				   &ObjectAttributes);
+                                   DIRECTORY_ALL_ACCESS,
+                                   &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Failed to create 'Security' directory!\n");
@@ -140,17 +137,17 @@ SeInitSRM(VOID)
 
   /* Create 'LSA_AUTHENTICATION_INITALIZED' event */
   RtlInitUnicodeString(&Name,
-		       L"\\LSA_AUTHENTICATION_INITALIZED");
+                       L"\\LSA_AUTHENTICATION_INITALIZED");
   InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_PERMANENT,
-			     DirectoryHandle,
-			     SePublicDefaultSd);
+                             &Name,
+                             OBJ_PERMANENT,
+                             DirectoryHandle,
+                             SePublicDefaultSd);
   Status = ZwCreateEvent(&EventHandle,
-			 EVENT_ALL_ACCESS,
-			 &ObjectAttributes,
-			 SynchronizationEvent,
-			 FALSE);
+                         EVENT_ALL_ACCESS,
+                         &ObjectAttributes,
+                         SynchronizationEvent,
+                         FALSE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Failed to create 'LSA_AUTHENTICATION_INITALIZED' event!\n");
@@ -271,170 +268,170 @@ SeDefaultObjectMethod(PVOID Object,
 
       /* Get owner and owner size */
       if (SecurityInformation & OWNER_SECURITY_INFORMATION)
-	{
-	  if (SecurityDescriptor->Owner != NULL)
-	    {
-		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Owner = (PSID)((ULONG_PTR)SecurityDescriptor->Owner +
-				   (ULONG_PTR)SecurityDescriptor);
-		else
-		    Owner = (PSID)SecurityDescriptor->Owner;
-		OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
-	    }
-	  Control |= (SecurityDescriptor->Control & SE_OWNER_DEFAULTED);
-	}
+        {
+          if (SecurityDescriptor->Owner != NULL)
+            {
+                if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+                    Owner = (PSID)((ULONG_PTR)SecurityDescriptor->Owner +
+                                   (ULONG_PTR)SecurityDescriptor);
+                else
+                    Owner = (PSID)SecurityDescriptor->Owner;
+                OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+            }
+          Control |= (SecurityDescriptor->Control & SE_OWNER_DEFAULTED);
+        }
       else
-	{
-	  if (ObjectSd->Owner != NULL)
-	  {
-	      Owner = (PSID)((ULONG_PTR)ObjectSd->Owner + (ULONG_PTR)ObjectSd);
-	      OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
-	  }
-	  Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
-	}
+        {
+          if (ObjectSd->Owner != NULL)
+          {
+              Owner = (PSID)((ULONG_PTR)ObjectSd->Owner + (ULONG_PTR)ObjectSd);
+              OwnerLength = ROUND_UP(RtlLengthSid(Owner), 4);
+          }
+          Control |= (ObjectSd->Control & SE_OWNER_DEFAULTED);
+        }
 
       /* Get group and group size */
       if (SecurityInformation & GROUP_SECURITY_INFORMATION)
-	{
-	  if (SecurityDescriptor->Group != NULL)
-	    {
-		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
-				   (ULONG_PTR)SecurityDescriptor);
-		else
-		    Group = (PSID)SecurityDescriptor->Group;
-		GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
-	    }
-	  Control |= (SecurityDescriptor->Control & SE_GROUP_DEFAULTED);
-	}
+        {
+          if (SecurityDescriptor->Group != NULL)
+            {
+                if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+                    Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
+                                   (ULONG_PTR)SecurityDescriptor);
+                else
+                    Group = (PSID)SecurityDescriptor->Group;
+                GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+            }
+          Control |= (SecurityDescriptor->Control & SE_GROUP_DEFAULTED);
+        }
       else
-	{
-	  if (ObjectSd->Group != NULL)
-	    {
-	      Group = (PSID)((ULONG_PTR)ObjectSd->Group + (ULONG_PTR)ObjectSd);
-	      GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
-	    }
-	  Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
-	}
+        {
+          if (ObjectSd->Group != NULL)
+            {
+              Group = (PSID)((ULONG_PTR)ObjectSd->Group + (ULONG_PTR)ObjectSd);
+              GroupLength = ROUND_UP(RtlLengthSid(Group), 4);
+            }
+          Control |= (ObjectSd->Control & SE_GROUP_DEFAULTED);
+        }
 
       /* Get DACL and DACL size */
       if (SecurityInformation & DACL_SECURITY_INFORMATION)
-	{
-	  if ((SecurityDescriptor->Control & SE_DACL_PRESENT) &&
-	      (SecurityDescriptor->Dacl != NULL))
-	    {
-		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl +
-				  (ULONG_PTR)SecurityDescriptor);
-		else
-		    Dacl = (PACL)SecurityDescriptor->Dacl;
+        {
+          if ((SecurityDescriptor->Control & SE_DACL_PRESENT) &&
+              (SecurityDescriptor->Dacl != NULL))
+            {
+                if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+                    Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl +
+                                  (ULONG_PTR)SecurityDescriptor);
+                else
+                    Dacl = (PACL)SecurityDescriptor->Dacl;
 
-	      DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
-	    }
-	  Control |= (SecurityDescriptor->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
-	}
+              DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
+            }
+          Control |= (SecurityDescriptor->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
+        }
       else
-	{
-	  if ((ObjectSd->Control & SE_DACL_PRESENT) &&
-	      (ObjectSd->Dacl != NULL))
-	    {
-	      Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
-	      DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
-	    }
-	  Control |= (ObjectSd->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
-	}
+        {
+          if ((ObjectSd->Control & SE_DACL_PRESENT) &&
+              (ObjectSd->Dacl != NULL))
+            {
+              Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
+              DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
+            }
+          Control |= (ObjectSd->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
+        }
 
       /* Get SACL and SACL size */
       if (SecurityInformation & SACL_SECURITY_INFORMATION)
-	{
-	  if ((SecurityDescriptor->Control & SE_SACL_PRESENT) &&
-	      (SecurityDescriptor->Sacl != NULL))
-	    {
-		if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
-		    Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl +
-				  (ULONG_PTR)SecurityDescriptor);
-		else
-		    Sacl = (PACL)SecurityDescriptor->Sacl;
-		SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
-	    }
-	  Control |= (SecurityDescriptor->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
-	}
+        {
+          if ((SecurityDescriptor->Control & SE_SACL_PRESENT) &&
+              (SecurityDescriptor->Sacl != NULL))
+            {
+                if( SecurityDescriptor->Control & SE_SELF_RELATIVE )
+                    Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl +
+                                  (ULONG_PTR)SecurityDescriptor);
+                else
+                    Sacl = (PACL)SecurityDescriptor->Sacl;
+                SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
+            }
+          Control |= (SecurityDescriptor->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
+        }
       else
-	{
-	  if ((ObjectSd->Control & SE_SACL_PRESENT) &&
-	      (ObjectSd->Sacl != NULL))
-	    {
-	      Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
-	      SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
-	    }
-	  Control |= (ObjectSd->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
-	}
+        {
+          if ((ObjectSd->Control & SE_SACL_PRESENT) &&
+              (ObjectSd->Sacl != NULL))
+            {
+              Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
+              SaclLength = ROUND_UP((ULONG)Sacl->AclSize, 4);
+            }
+          Control |= (ObjectSd->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
+        }
 
       NewSd = ExAllocatePool(NonPagedPool,
-			     sizeof(SECURITY_DESCRIPTOR) + OwnerLength + GroupLength +
-			     DaclLength + SaclLength);
+                             sizeof(SECURITY_DESCRIPTOR) + OwnerLength + GroupLength +
+                             DaclLength + SaclLength);
       if (NewSd == NULL)
-	{
-	  ObDereferenceObject(Object);
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
+        {
+          ObDereferenceObject(Object);
+          return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
       RtlCreateSecurityDescriptor(NewSd,
-				  SECURITY_DESCRIPTOR_REVISION1);
+                                  SECURITY_DESCRIPTOR_REVISION1);
       /* We always build a self-relative descriptor */
       NewSd->Control = (USHORT)Control | SE_SELF_RELATIVE;
 
       Current = (ULONG_PTR)NewSd + sizeof(SECURITY_DESCRIPTOR);
 
       if (OwnerLength != 0)
-	{
-	  RtlCopyMemory((PVOID)Current,
-			Owner,
-			OwnerLength);
-	  NewSd->Owner = (PSID)(Current - (ULONG_PTR)NewSd);
-	  Current += OwnerLength;
-	}
+        {
+          RtlCopyMemory((PVOID)Current,
+                        Owner,
+                        OwnerLength);
+          NewSd->Owner = (PSID)(Current - (ULONG_PTR)NewSd);
+          Current += OwnerLength;
+        }
 
       if (GroupLength != 0)
-	{
-	  RtlCopyMemory((PVOID)Current,
-			Group,
-			GroupLength);
-	  NewSd->Group = (PSID)(Current - (ULONG_PTR)NewSd);
-	  Current += GroupLength;
-	}
+        {
+          RtlCopyMemory((PVOID)Current,
+                        Group,
+                        GroupLength);
+          NewSd->Group = (PSID)(Current - (ULONG_PTR)NewSd);
+          Current += GroupLength;
+        }
 
       if (DaclLength != 0)
-	{
-	  RtlCopyMemory((PVOID)Current,
-			Dacl,
-			DaclLength);
-	  NewSd->Dacl = (PACL)(Current - (ULONG_PTR)NewSd);
-	  Current += DaclLength;
-	}
+        {
+          RtlCopyMemory((PVOID)Current,
+                        Dacl,
+                        DaclLength);
+          NewSd->Dacl = (PACL)(Current - (ULONG_PTR)NewSd);
+          Current += DaclLength;
+        }
 
       if (SaclLength != 0)
-	{
-	  RtlCopyMemory((PVOID)Current,
-			Sacl,
-			SaclLength);
-	  NewSd->Sacl = (PACL)(Current - (ULONG_PTR)NewSd);
-	  Current += SaclLength;
-	}
+        {
+          RtlCopyMemory((PVOID)Current,
+                        Sacl,
+                        SaclLength);
+          NewSd->Sacl = (PACL)(Current - (ULONG_PTR)NewSd);
+          Current += SaclLength;
+        }
 
       /* Add the new SD */
       Status = ObpAddSecurityDescriptor(NewSd,
-					&Header->SecurityDescriptor);
+                                        &Header->SecurityDescriptor);
       if (NT_SUCCESS(Status))
-	{
-	  /* Remove the old security descriptor */
-	  ObpRemoveSecurityDescriptor(ObjectSd);
-	}
+        {
+          /* Remove the old security descriptor */
+          ObpRemoveSecurityDescriptor(ObjectSd);
+        }
       else
-	{
-	  /* Restore the old security descriptor */
-	  Header->SecurityDescriptor = ObjectSd;
-	}
+        {
+          /* Restore the old security descriptor */
+          Header->SecurityDescriptor = ObjectSd;
+        }
 
       ExFreePool(NewSd);
     }
@@ -449,7 +446,7 @@ SeDefaultObjectMethod(PVOID Object,
     {
       /* Assign the security descriptor to the object header */
       Status = ObpAddSecurityDescriptor(SecurityDescriptor,
-	                    				&Header->SecurityDescriptor);
+                                        &Header->SecurityDescriptor);
     }
 
 
@@ -571,14 +568,14 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
  */
 NTSTATUS STDCALL
 SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
-		   IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
-		   OUT PSECURITY_DESCRIPTOR *NewDescriptor,
-		   IN GUID *ObjectType OPTIONAL,
-		   IN BOOLEAN IsDirectoryObject,
-		   IN ULONG AutoInheritFlags,
-		   IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-		   IN PGENERIC_MAPPING GenericMapping,
-		   IN POOL_TYPE PoolType)
+                   IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
+                   OUT PSECURITY_DESCRIPTOR *NewDescriptor,
+                   IN GUID *ObjectType OPTIONAL,
+                   IN BOOLEAN IsDirectoryObject,
+                   IN ULONG AutoInheritFlags,
+                   IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
+                   IN PGENERIC_MAPPING GenericMapping,
+                   IN POOL_TYPE PoolType)
 {
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
@@ -601,12 +598,12 @@ SeAssignSecurityEx(IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
  */
 NTSTATUS STDCALL
 SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
-		 PSECURITY_DESCRIPTOR _ExplicitDescriptor OPTIONAL,
-		 PSECURITY_DESCRIPTOR *NewDescriptor,
-		 BOOLEAN IsDirectoryObject,
-		 PSECURITY_SUBJECT_CONTEXT SubjectContext,
-		 PGENERIC_MAPPING GenericMapping,
-		 POOL_TYPE PoolType)
+                 PSECURITY_DESCRIPTOR _ExplicitDescriptor OPTIONAL,
+                 PSECURITY_DESCRIPTOR *NewDescriptor,
+                 BOOLEAN IsDirectoryObject,
+                 PSECURITY_SUBJECT_CONTEXT SubjectContext,
+                 PGENERIC_MAPPING GenericMapping,
+                 POOL_TYPE PoolType)
 {
   PISECURITY_DESCRIPTOR ParentDescriptor = _ParentDescriptor;
   PISECURITY_DESCRIPTOR ExplicitDescriptor = _ExplicitDescriptor;
@@ -646,23 +643,23 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
       Owner = ExplicitDescriptor->Owner;
       
       if (ExplicitDescriptor->Control & SE_SELF_RELATIVE)
-	{
-	  Owner = (PSID)(((ULONG_PTR)Owner) + (ULONG_PTR)ExplicitDescriptor);
+        {
+          Owner = (PSID)(((ULONG_PTR)Owner) + (ULONG_PTR)ExplicitDescriptor);
 
-	}
+        }
     }
   else
     {
       if (Token != NULL)
-	{
-	  DPRINT("Use token owner sid!\n");
-	  Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
-	}
+        {
+          DPRINT("Use token owner sid!\n");
+          Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
+        }
       else
-	{
-	  DPRINT("Use default owner sid!\n");
-	  Owner = SeLocalSystemSid;
-	}
+        {
+          DPRINT("Use default owner sid!\n");
+          Owner = SeLocalSystemSid;
+        }
 
       Control |= SE_OWNER_DEFAULTED;
     }
@@ -676,22 +673,22 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
       DPRINT("Use explicit group sid!\n");
       Group = ExplicitDescriptor->Group;
       if (ExplicitDescriptor->Control & SE_SELF_RELATIVE)
-	{
-	  Group = (PSID)(((ULONG_PTR)Group) + (ULONG_PTR)ExplicitDescriptor);
-	}
+        {
+          Group = (PSID)(((ULONG_PTR)Group) + (ULONG_PTR)ExplicitDescriptor);
+        }
     }
   else
     {
       if (Token != NULL)
-	{
-	  DPRINT("Use token group sid!\n");
-	  Group = Token->PrimaryGroup;
-	}
+        {
+          DPRINT("Use token group sid!\n");
+          Group = Token->PrimaryGroup;
+        }
       else
-	{
-	  DPRINT("Use default group sid!\n");
-	  Group = SeLocalSystemSid;
-	}
+        {
+          DPRINT("Use default group sid!\n");
+          Group = SeLocalSystemSid;
+        }
 
       Control |= SE_OWNER_DEFAULTED;
     }
@@ -707,22 +704,22 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
       DPRINT("Use explicit DACL!\n");
       Dacl = ExplicitDescriptor->Dacl;
       if (Dacl != NULL && (ExplicitDescriptor->Control & SE_SELF_RELATIVE))
-	{
-	  Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ExplicitDescriptor);
-	}
+        {
+          Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ExplicitDescriptor);
+        }
 
       Control |= SE_DACL_PRESENT;
     }
   else if (ParentDescriptor != NULL &&
-	   (ParentDescriptor->Control & SE_DACL_PRESENT))
+           (ParentDescriptor->Control & SE_DACL_PRESENT))
     {
       DPRINT("Use parent DACL!\n");
       /* FIXME: Inherit */
       Dacl = ParentDescriptor->Dacl;
       if (Dacl != NULL && (ParentDescriptor->Control & SE_SELF_RELATIVE))
-	{
-	  Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ParentDescriptor);
-	}
+        {
+          Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ParentDescriptor);
+        }
       Control |= (SE_DACL_PRESENT | SE_DACL_DEFAULTED);
     }
   else if (Token != NULL && Token->DefaultDacl != NULL)
@@ -750,22 +747,22 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
       DPRINT("Use explicit SACL!\n");
       Sacl = ExplicitDescriptor->Sacl;
       if (Sacl != NULL && (ExplicitDescriptor->Control & SE_SELF_RELATIVE))
-	{
-	  Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)ExplicitDescriptor);
-	}
+        {
+          Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)ExplicitDescriptor);
+        }
 
       Control |= SE_SACL_PRESENT;
     }
   else if (ParentDescriptor != NULL &&
-	   (ParentDescriptor->Control & SE_SACL_PRESENT))
+           (ParentDescriptor->Control & SE_SACL_PRESENT))
     {
       DPRINT("Use parent SACL!\n");
       /* FIXME: Inherit */
       Sacl = ParentDescriptor->Sacl;
       if (Sacl != NULL && (ParentDescriptor->Control & SE_SELF_RELATIVE))
-	{
-	  Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)ParentDescriptor);
-	}
+        {
+          Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)ParentDescriptor);
+        }
       Control |= (SE_SACL_PRESENT | SE_SACL_DEFAULTED);
     }
 
@@ -777,14 +774,14 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
       OwnerLength + GroupLength + DaclLength + SaclLength;
 
   DPRINT("L: sizeof(SECURITY_DESCRIPTOR) %d OwnerLength %d GroupLength %d DaclLength %d SaclLength %d\n",
-	 sizeof(SECURITY_DESCRIPTOR),
-	 OwnerLength,
-	 GroupLength,
-	 DaclLength,
-	 SaclLength);
+         sizeof(SECURITY_DESCRIPTOR),
+         OwnerLength,
+         GroupLength,
+         DaclLength,
+         SaclLength);
 
   Descriptor = ExAllocatePool(PagedPool,
-			      Length);
+                              Length);
   if (Descriptor == NULL)
     {
       DPRINT1("ExAlloctePool() failed\n");
@@ -794,7 +791,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
 
   RtlZeroMemory( Descriptor, Length );
   RtlCreateSecurityDescriptor(Descriptor,
-			      SECURITY_DESCRIPTOR_REVISION);
+                              SECURITY_DESCRIPTOR_REVISION);
 
   Descriptor->Control = (USHORT)Control | SE_SELF_RELATIVE;
 
@@ -803,8 +800,8 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
   if (SaclLength != 0)
     {
       RtlCopyMemory((PVOID)Current,
-		    Sacl,
-		    SaclLength);
+                    Sacl,
+                    SaclLength);
       Descriptor->Sacl = (PACL)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
       Current += SaclLength;
     }
@@ -812,8 +809,8 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
   if (DaclLength != 0)
     {
       RtlCopyMemory((PVOID)Current,
-		    Dacl,
-		    DaclLength);
+                    Dacl,
+                    DaclLength);
       Descriptor->Dacl = (PACL)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
       Current += DaclLength;
     }
@@ -821,8 +818,8 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
   if (OwnerLength != 0)
     {
       RtlCopyMemory((PVOID)Current,
-		    Owner,
-		    OwnerLength);
+                    Owner,
+                    OwnerLength);
       Descriptor->Owner = (PSID)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
       Current += OwnerLength;
       DPRINT("Owner of %x at %x\n", Descriptor, Descriptor->Owner);
@@ -852,7 +849,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR _ParentDescriptor OPTIONAL,
 
 static BOOLEAN
 SepSidInToken(PACCESS_TOKEN _Token,
-	      PSID Sid)
+              PSID Sid)
 {
   ULONG i;
   PTOKEN Token = (PTOKEN)_Token;
@@ -901,15 +898,15 @@ SepSidInToken(PACCESS_TOKEN _Token,
  */
 BOOLEAN STDCALL
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-	      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-	      IN BOOLEAN SubjectContextLocked,
-	      IN ACCESS_MASK DesiredAccess,
-	      IN ACCESS_MASK PreviouslyGrantedAccess,
-	      OUT PPRIVILEGE_SET* Privileges,
-	      IN PGENERIC_MAPPING GenericMapping,
-	      IN KPROCESSOR_MODE AccessMode,
-	      OUT PACCESS_MASK GrantedAccess,
-	      OUT PNTSTATUS AccessStatus)
+              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+              IN BOOLEAN SubjectContextLocked,
+              IN ACCESS_MASK DesiredAccess,
+              IN ACCESS_MASK PreviouslyGrantedAccess,
+              OUT PPRIVILEGE_SET* Privileges,
+              IN PGENERIC_MAPPING GenericMapping,
+              IN KPROCESSOR_MODE AccessMode,
+              OUT PACCESS_MASK GrantedAccess,
+              OUT PNTSTATUS AccessStatus)
 {
     LUID_AND_ATTRIBUTES Privilege;
     ACCESS_MASK CurrentAccess, AccessMask;
@@ -994,19 +991,19 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 
   Token = SubjectSecurityContext->ClientToken ?
-	    SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
+            SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
 
   /* Get the DACL */
   Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
-					&Present,
-					&Dacl,
-					&Defaulted);
+                                        &Present,
+                                        &Dacl,
+                                        &Defaulted);
   if (!NT_SUCCESS(Status))
     {
       if (SubjectContextLocked == FALSE)
-	{
-	  SeUnlockSubjectContext(SubjectSecurityContext);
-	}
+        {
+          SeUnlockSubjectContext(SubjectSecurityContext);
+        }
 
       *AccessStatus = Status;
       return FALSE;
@@ -1016,9 +1013,9 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   if (Present == TRUE && Dacl == NULL)
     {
       if (SubjectContextLocked == FALSE)
-	{
-	  SeUnlockSubjectContext(SubjectSecurityContext);
-	}
+        {
+          SeUnlockSubjectContext(SubjectSecurityContext);
+        }
 
       *GrantedAccess = DesiredAccess;
       *AccessStatus = STATUS_SUCCESS;
@@ -1032,36 +1029,36 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   Privilege.Attributes = SE_PRIVILEGE_ENABLED;
 
   if (SepPrivilegeCheck(Token,
-			&Privilege,
-			1,
-			PRIVILEGE_SET_ALL_NECESSARY,
-			AccessMode))
+                        &Privilege,
+                        1,
+                        PRIVILEGE_SET_ALL_NECESSARY,
+                        AccessMode))
     {
       CurrentAccess |= WRITE_OWNER;
       if (DesiredAccess == CurrentAccess)
-	{
-	  if (SubjectContextLocked == FALSE)
-	    {
-	      SeUnlockSubjectContext(SubjectSecurityContext);
-	    }
+        {
+          if (SubjectContextLocked == FALSE)
+            {
+              SeUnlockSubjectContext(SubjectSecurityContext);
+            }
 
-	  *GrantedAccess = CurrentAccess;
-	  *AccessStatus = STATUS_SUCCESS;
-	  return TRUE;
-	}
+          *GrantedAccess = CurrentAccess;
+          *AccessStatus = STATUS_SUCCESS;
+          return TRUE;
+        }
     }
 
   /* RULE 3: Check whether the token is the owner */
   Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
-					 &Sid,
-					 &Defaulted);
+                                         &Sid,
+                                         &Defaulted);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
       if (SubjectContextLocked == FALSE)
-	{
-	  SeUnlockSubjectContext(SubjectSecurityContext);
-	}
+        {
+          SeUnlockSubjectContext(SubjectSecurityContext);
+        }
 
       *AccessStatus = Status;
       return FALSE;
@@ -1071,25 +1068,25 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     {
       CurrentAccess |= (READ_CONTROL | WRITE_DAC);
       if (DesiredAccess == CurrentAccess)
-	{
-	  if (SubjectContextLocked == FALSE)
-	    {
-	      SeUnlockSubjectContext(SubjectSecurityContext);
-	    }
+        {
+          if (SubjectContextLocked == FALSE)
+            {
+              SeUnlockSubjectContext(SubjectSecurityContext);
+            }
 
-	  *GrantedAccess = CurrentAccess;
-	  *AccessStatus = STATUS_SUCCESS;
-	  return TRUE;
-	}
+          *GrantedAccess = CurrentAccess;
+          *AccessStatus = STATUS_SUCCESS;
+          return TRUE;
+        }
     }
 
   /* Fail if DACL is absent */
   if (Present == FALSE)
     {
       if (SubjectContextLocked == FALSE)
-	{
-	  SeUnlockSubjectContext(SubjectSecurityContext);
-	}
+        {
+          SeUnlockSubjectContext(SubjectSecurityContext);
+        }
 
       *GrantedAccess = 0;
       *AccessStatus = STATUS_ACCESS_DENIED;
@@ -1155,30 +1152,23 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
   else
     {
-#if 1
-      *AccessStatus = STATUS_SUCCESS;
-      DPRINT1("FIX caller rights (granted 0x%lx, desired 0x%lx, generic mapping %p)!\n",
-        *GrantedAccess, DesiredAccess, GenericMapping);
-      return TRUE;
-#else
       DPRINT1("Denying access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p)\n",
         *GrantedAccess, DesiredAccess, GenericMapping);
       *AccessStatus = STATUS_ACCESS_DENIED;
       return FALSE;
-#endif
     }
 }
 
 
 NTSTATUS STDCALL
 NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-	      IN HANDLE TokenHandle,
-	      IN ACCESS_MASK DesiredAccess,
-	      IN PGENERIC_MAPPING GenericMapping,
-	      OUT PPRIVILEGE_SET PrivilegeSet,
-	      OUT PULONG ReturnLength,
-	      OUT PACCESS_MASK GrantedAccess,
-	      OUT PNTSTATUS AccessStatus)
+              IN HANDLE TokenHandle,
+              IN ACCESS_MASK DesiredAccess,
+              IN PGENERIC_MAPPING GenericMapping,
+              OUT PPRIVILEGE_SET PrivilegeSet,
+              OUT PULONG ReturnLength,
+              OUT PACCESS_MASK GrantedAccess,
+              OUT PNTSTATUS AccessStatus)
 {
   SECURITY_SUBJECT_CONTEXT SubjectSecurityContext = {0};
   KPROCESSOR_MODE PreviousMode;
@@ -1198,11 +1188,11 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
 
   Status = ObReferenceObjectByHandle(TokenHandle,
-				     TOKEN_QUERY,
-				     SepTokenObjectType,
-				     PreviousMode,
-				     (PVOID*)&Token,
-				     NULL);
+                                     TOKEN_QUERY,
+                                     SepTokenObjectType,
+                                     PreviousMode,
+                                     (PVOID*)&Token,
+                                     NULL);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Failed to reference token (Status %lx)\n", Status);
@@ -1232,15 +1222,15 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   SeLockSubjectContext(&SubjectSecurityContext);
 
   if (SeAccessCheck(SecurityDescriptor,
-		    &SubjectSecurityContext,
-		    TRUE,
-		    DesiredAccess,
-		    0,
-		    &PrivilegeSet,
-		    GenericMapping,
-		    PreviousMode,
-		    GrantedAccess,
-		    AccessStatus))
+                    &SubjectSecurityContext,
+                    TRUE,
+                    DesiredAccess,
+                    0,
+                    &PrivilegeSet,
+                    GenericMapping,
+                    PreviousMode,
+                    GrantedAccess,
+                    AccessStatus))
     {
       Status = *AccessStatus;
     }

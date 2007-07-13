@@ -1,24 +1,16 @@
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <ctype.h>
 
-/*
- * Convert a string to an unsigned long integer.
- *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
- * alphabets and digits are each contiguous.
- *
- * @implemented
- */
-unsigned long
-strtoul(const char *nptr, char **endptr, int base)
+unsigned long long
+strtoull(const char *nptr, char **endptr, int base)
 {
   const char *s = nptr;
-  unsigned long acc;
+  unsigned long long acc;
   int c;
-  unsigned long cutoff;
+  unsigned long long cutoff;
   int neg = 0, any, cutlim;
 
   /*
@@ -43,8 +35,8 @@ strtoul(const char *nptr, char **endptr, int base)
   }
   if (base == 0)
     base = c == '0' ? 8 : 10;
-  cutoff = (unsigned long)ULONG_MAX / (unsigned long)base;
-  cutlim = (unsigned long)ULONG_MAX % (unsigned long)base;
+  cutoff = (unsigned long long)ULLONG_MAX / (unsigned long long)base;
+  cutlim = (unsigned long long)ULLONG_MAX % (unsigned long long)base;
   for (acc = 0, any = 0;; c = *s++)
   {
     if (isdigit(c))
@@ -65,7 +57,7 @@ strtoul(const char *nptr, char **endptr, int base)
   }
   if (any < 0)
   {
-    acc = ULONG_MAX;
+    acc = ULLONG_MAX;
   }
   else if (neg)
     acc = -acc;

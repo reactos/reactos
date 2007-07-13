@@ -525,6 +525,8 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
     return STATUS_SUCCESS;
 }
 
+extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
+
 NTSTATUS
 NTAPI
 LdrPEGetOrLoadModule(IN PCHAR ModuleName,
@@ -536,31 +538,15 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
     *ImportedModule = LdrGetModuleObject(ImportedName);
     if (*ImportedModule == NULL)
     {
-        /*
-         * For now, we only support import-loading the HAL.
-         * Later, FrLdrLoadDriver should be made to share the same
-         * code, and we'll just call it instead.
-         */
-        if (!_stricmp(ImportedName, "hal.dll") ||
-            !_stricmp(ImportedName, "kdcom.dll") ||
-            !_stricmp(ImportedName, "bootvid.dll"))
-        {
-            /* Load the HAL */
-            FrLdrLoadImage(ImportedName, 10, FALSE);
-
-            /* Return the new module */
-            *ImportedModule = LdrGetModuleObject(ImportedName);
-            if (*ImportedModule == NULL)
-            {
-                DbgPrint("Error loading import: %s\n", ImportedName);
-                return STATUS_UNSUCCESSFUL;
-            }
-        }
-        else
-        {
-            //DbgPrint("Don't yet support loading new modules from imports\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-        }
+	if (!FrLdrLoadDriver(ImportedName, 0))
+	{
+	    return STATUS_UNSUCCESSFUL;
+	}
+	else
+	{
+	    return LdrPEGetOrLoadModule
+		(ModuleName, ImportedName, ImportedModule);
+	}
     }
 
     return Status;
@@ -583,7 +569,7 @@ LdrPEFixupImports(IN PVOID DllBase,
                                      TRUE,
                                      IMAGE_DIRECTORY_ENTRY_IMPORT,
                                      &Size);
-    while (ImportModuleDirectory->Name)
+    while (ImportModuleDirectory && ImportModuleDirectory->Name)
     {
         /*  Check to make sure that import lib is kernel  */
         ImportedName = (PCHAR) DllBase + ImportModuleDirectory->Name;
@@ -721,9 +707,6 @@ FrLdrMapImage(IN FILE *Image,
 
     /* Increase the next Load Base */
     NextModuleBase = ROUND_UP(NextModuleBase + ImageSize, PAGE_SIZE);
-
-    /* Load HAL if this is the kernel */
-    if (ImageType == 1) FrLdrLoadImage("hal.dll", 10, FALSE);
 
     /* Perform import fixups */
     if (!NT_SUCCESS(LdrPEFixupImports(LoadBase, Name)))

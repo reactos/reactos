@@ -24,7 +24,7 @@ CmpHiveRootSecurityDescriptor(VOID)
     NTSTATUS Status;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PACL Acl, AclCopy;
-    PSID Sid[3];
+    PSID Sid[4];
     SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
     ULONG AceLength, AclLength, SidLength;
