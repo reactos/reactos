@@ -32,6 +32,7 @@
 				<file>portio.c</file>
 				<file>macholpc.c</file>
 				<file>machxbox.c</file>
+				<file>olpchw.c</file>
 				<file>olpcvideo.c</file>
 				<file>xboxcons.c</file>
 				<file>xboxdisk.c</file>
