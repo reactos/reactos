@@ -11,8 +11,24 @@
  */
 
 #include <string>
-#include <tchar.h>
 #include <iostream>
+
+#ifndef __LINUX__
+ #include <tchar.h>
+#else
+ #define TCHAR char
+ #define tstrcpy strcpy
+ #define _tcscat strcat
+ #define _tcscpy(str1, str2) strcpy(str1, str2)
+ #define _tcslen(str1) strlen(str1)
+ #define _tcstod strtod
+ #define _tcscmp strcmp
+ #define _tcstoul strtoul
+ #define _tcsncmp strncmp
+ #define _tremove remove
+ #define _ttoi atoi
+ #define _T(x) x
+#endif
 
 	typedef std::basic_string<TCHAR> string;
 	typedef std::basic_istringstream<TCHAR> istringstream;

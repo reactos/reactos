@@ -10,7 +10,7 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
-#if 1
+#ifndef __LINUX__
 #include <windows.h>
 #else
 #include <unistd.h>
