@@ -21,6 +21,8 @@
 
 #define FIND_DATA_SIZE	(16*1024)
 
+#define FIND_DEVICE_HANDLE ((HANDLE)0x1)
+
 typedef struct _KERNEL32_FIND_FILE_DATA
 {
    HANDLE DirectoryHandle;
@@ -48,6 +50,61 @@ typedef struct _KERNEL32_FIND_DATA_HEADER
 
 
 /* FUNCTIONS ****************************************************************/
+
+HANDLE
+InternalCopyDeviceFindDataW(LPWIN32_FIND_DATAW lpFindFileData,
+                            LPCWSTR lpFileName,
+                            ULONG DeviceNameInfo)
+{
+    UNICODE_STRING DeviceName;
+
+    DeviceName.Length = DeviceName.MaximumLength = (USHORT)(DeviceNameInfo & 0xFFFF);
+    DeviceName.Buffer = (LPWSTR)((ULONG_PTR)lpFileName + (DeviceNameInfo >> 16));
+
+    /* Return the data */
+    RtlZeroMemory(lpFindFileData,
+                  sizeof(*lpFindFileData));
+    lpFindFileData->dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
+    RtlCopyMemory(lpFindFileData->cFileName,
+                  DeviceName.Buffer,
+                  DeviceName.Length);
+
+    return FIND_DEVICE_HANDLE;
+}
+
+HANDLE
+InternalCopyDeviceFindDataA(LPWIN32_FIND_DATAA lpFindFileData,
+                            PUNICODE_STRING FileName,
+                            ULONG DeviceNameInfo)
+{
+    UNICODE_STRING DeviceName;
+    ANSI_STRING BufferA;
+    CHAR Buffer[MAX_PATH];
+
+    DeviceName.Length = DeviceName.MaximumLength = (USHORT)(DeviceNameInfo & 0xFFFF);
+    DeviceName.Buffer = (LPWSTR)((ULONG_PTR)FileName->Buffer + (DeviceNameInfo >> 16));
+
+    BufferA.MaximumLength = sizeof(Buffer) - sizeof(Buffer[0]);
+    BufferA.Buffer = Buffer;
+    if (bIsFileApiAnsi)
+        RtlUnicodeStringToAnsiString (&BufferA, &DeviceName, FALSE);
+    else
+        RtlUnicodeStringToOemString (&BufferA, &DeviceName, FALSE);
+
+    /* NOTE: Free the string before we try to write the results to the caller,
+             this way we prevent a memory leak in case of a fault... */
+    RtlFreeUnicodeString(FileName);
+
+    /* Return the data */
+    RtlZeroMemory(lpFindFileData,
+                  sizeof(*lpFindFileData));
+    lpFindFileData->dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
+    RtlCopyMemory(lpFindFileData->cFileName,
+                  BufferA.Buffer,
+                  BufferA.Length);
+
+    return FIND_DEVICE_HANDLE;
+}
 
 VOID
 InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
@@ -143,6 +200,12 @@ InternalFindNextFile (
 
 	DPRINT("InternalFindNextFile(%lx)\n", hFindFile);
 
+    if (hFindFile == FIND_DEVICE_HANDLE)
+    {
+        SetLastError (ERROR_NO_MORE_FILES);
+        return FALSE;
+    }
+
         IHeader = (PKERNEL32_FIND_DATA_HEADER)hFindFile;
         if (hFindFile == NULL || hFindFile == INVALID_HANDLE_VALUE ||
             IHeader->Type != FileFind)
@@ -196,214 +259,185 @@ InternalFindNextFile (
 HANDLE
 STDCALL
 InternalFindFirstFile (
-	LPCWSTR	lpFileName,
-        BOOLEAN DirectoryOnly
+    LPCWSTR	lpFileName,
+    BOOLEAN DirectoryOnly,
+    PULONG DeviceNameInfo
 	)
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	PKERNEL32_FIND_DATA_HEADER IHeader;
 	PKERNEL32_FIND_FILE_DATA IData;
 	IO_STATUS_BLOCK IoStatusBlock;
-	UNICODE_STRING NtPathU;
-	UNICODE_STRING PatternStr = RTL_CONSTANT_STRING(L"*");
+	UNICODE_STRING NtPathU, FileName, PathFileName;
 	NTSTATUS Status;
-	PWSTR e1, e2;
-	WCHAR CurrentDir[256];
-	PWCHAR SlashlessFileName;
-	PWSTR SearchPath;
-	PWCHAR SearchPattern;
-	ULONG Length;
+	PWSTR NtPathBuffer;
+	BOOLEAN RemovedSlash = FALSE;
 	BOOL bResult;
+	CURDIR DirInfo;
+    HANDLE hDirectory = NULL;
 
 	DPRINT("FindFirstFileW(lpFileName %S)\n",
 	       lpFileName);
 
-	Length = wcslen(lpFileName);
-	if (L'\\' == lpFileName[Length - 1])
-	{
-	    SlashlessFileName = RtlAllocateHeap(hProcessHeap,
-	                                        0,
-					        Length * sizeof(WCHAR));
-	    if (NULL == SlashlessFileName)
-	    {
-	        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	        return NULL;
-	    }
-	    memcpy(SlashlessFileName, lpFileName, (Length - 1) * sizeof(WCHAR));
-	    SlashlessFileName[Length - 1] = L'\0';
-	    lpFileName = SlashlessFileName;
-	}
-	else
-	{
-	    SlashlessFileName = NULL;
-	}
+	*DeviceNameInfo = 0;
+	RtlZeroMemory(&PathFileName,
+	              sizeof(PathFileName));
+	RtlInitUnicodeString(&FileName,
+	                     lpFileName);
 
-	e1 = wcsrchr(lpFileName, L'/');
-	e2 = wcsrchr(lpFileName, L'\\');
-	SearchPattern = max(e1, e2);
-	SearchPath = CurrentDir;
-
-	if (NULL == SearchPattern)
-	{
-	   CHECKPOINT;
-	   SearchPattern = (PWCHAR)lpFileName;
-           Length = GetCurrentDirectoryW(sizeof(CurrentDir) / sizeof(WCHAR), SearchPath);
-	   if (0 == Length)
-	   {
-	      if (NULL != SlashlessFileName)
-	      {
-	         RtlFreeHeap(hProcessHeap,
-	                     0,
-	                     SlashlessFileName);
-	      }
-	      return NULL;
-	   }
-	   if (Length > sizeof(CurrentDir) / sizeof(WCHAR))
-	   {
-	      SearchPath = RtlAllocateHeap(hProcessHeap,
-	                                   HEAP_ZERO_MEMORY,
-					   Length * sizeof(WCHAR));
-	      if (NULL == SearchPath)
-	      {
-	         if (NULL != SlashlessFileName)
-	         {
-	            RtlFreeHeap(hProcessHeap,
-	                        0,
-	                        SlashlessFileName);
-	         }
-	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	         return NULL;
-	      }
-	      GetCurrentDirectoryW(Length, SearchPath);
-	   }
-	}
-	else
-	{
-	   CHECKPOINT;
-	   SearchPattern++;
-	   Length = SearchPattern - lpFileName;
-	   if (Length + 1 > sizeof(CurrentDir) / sizeof(WCHAR))
-	   {
-              SearchPath = RtlAllocateHeap(hProcessHeap,
-	                                   HEAP_ZERO_MEMORY,
-					   (Length + 1) * sizeof(WCHAR));
-	      if (NULL == SearchPath)
-	      {
-	         if (NULL != SlashlessFileName)
-	         {
-	            RtlFreeHeap(hProcessHeap,
-	                        0,
-	                        SlashlessFileName);
-	         }
-	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	         return NULL;
-	      }
-	   }
-           memcpy(SearchPath, lpFileName, Length * sizeof(WCHAR));
-	   SearchPath[Length] = 0;
-	}
-
-	bResult = RtlDosPathNameToNtPathName_U (SearchPath,
+	bResult = RtlDosPathNameToNtPathName_U (lpFileName,
 	                                        &NtPathU,
-	                                        NULL,
-	                                        NULL);
-        if (SearchPath != CurrentDir)
-	{
-	   RtlFreeHeap(hProcessHeap,
-	               0,
-		       SearchPath);
-	}
+	                                        (PCWSTR *)((ULONG_PTR)&PathFileName.Buffer),
+	                                        &DirInfo);
 	if (FALSE == bResult)
 	{
-	   if (NULL != SlashlessFileName)
-	   {
-	      RtlFreeHeap(hProcessHeap,
-	                  0,
-	                  SlashlessFileName);
-	   }
-           SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	   return NULL;
+	    SetLastError(ERROR_PATH_NOT_FOUND);
+	    return NULL;
 	}
 
-	DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
+	/* Save the buffer pointer for later, we need to free it! */
+	NtPathBuffer = NtPathU.Buffer;
 
-	IHeader = RtlAllocateHeap (hProcessHeap,
-	                           HEAP_ZERO_MEMORY,
-                                   sizeof(KERNEL32_FIND_DATA_HEADER) +
-	                               sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
-	if (NULL == IHeader)
+	/* If there is a file name/pattern then determine it's length */
+	if (PathFileName.Buffer != NULL)
 	{
-	   RtlFreeHeap (hProcessHeap,
-	                0,
-	                NtPathU.Buffer);
-	   if (NULL != SlashlessFileName)
-	   {
-	      RtlFreeHeap(hProcessHeap,
-	                  0,
-	                  SlashlessFileName);
-	   }
-	   SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	   return NULL;
+	    PathFileName.Length = NtPathU.Length -
+	        (USHORT)((ULONG_PTR)PathFileName.Buffer - (ULONG_PTR)NtPathU.Buffer);
 	}
+	PathFileName.MaximumLength = PathFileName.Length;
 
- 	IHeader->Type = FileFind;
- 	IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
-
-	/* change pattern: "*.*" --> "*" */
-	if (wcscmp (SearchPattern, L"*.*"))
+	if (DirInfo.DosPath.Length != 0 && DirInfo.DosPath.Buffer != PathFileName.Buffer)
 	{
-	    RtlInitUnicodeString(&PatternStr, SearchPattern);
+	    if (PathFileName.Buffer != NULL)
+	    {
+	        /* This is a relative path to DirInfo.Handle, adjust NtPathU! */
+	        NtPathU.Length = NtPathU.MaximumLength =
+	            (USHORT)((ULONG_PTR)PathFileName.Buffer - (ULONG_PTR)DirInfo.DosPath.Buffer);
+	        NtPathU.Buffer = DirInfo.DosPath.Buffer;
+	    }
+	}
+	else
+	{
+	    /* This is an absolute path, NtPathU receives the full path */
+	    DirInfo.Handle = NULL;
+	    if (PathFileName.Buffer != NULL)
+	    {
+	        NtPathU.Length = NtPathU.MaximumLength =
+	            (USHORT)((ULONG_PTR)PathFileName.Buffer - (ULONG_PTR)NtPathU.Buffer);
+	    }
 	}
 
-	DPRINT("NtPathU \'%S\' Pattern \'%S\'\n",
-	       NtPathU.Buffer, PatternStr.Buffer);
+	/* Remove a trailing backslash from the path, unless it's a DOS drive directly */
+	if (NtPathU.Length > 3 * sizeof(WCHAR) &&
+	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 2] != L':' &&
+	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 1] != L'\\')
+	{
+	    NtPathU.Length -= sizeof(WCHAR);
+	    RemovedSlash = TRUE;
+	}
+
+	DPRINT("lpFileName: \"%ws\"\n", lpFileName);
+	DPRINT("NtPathU: \"%wZ\"\n", &NtPathU);
+	DPRINT("PathFileName: \"%wZ\"\n", &PathFileName);
+	DPRINT("RelativeTo: 0x%p\n", DirInfo.Handle);
 
 	InitializeObjectAttributes (&ObjectAttributes,
 	                            &NtPathU,
-	                            0,
-	                            NULL,
+	                            OBJ_CASE_INSENSITIVE,
+	                            DirInfo.Handle,
 	                            NULL);
 
-	Status = NtOpenFile (&IData->DirectoryHandle,
+	Status = NtOpenFile (&hDirectory,
 	                     FILE_LIST_DIRECTORY,
 	                     &ObjectAttributes,
 	                     &IoStatusBlock,
 	                     FILE_SHARE_READ|FILE_SHARE_WRITE,
 	                     FILE_DIRECTORY_FILE);
 
-	RtlFreeHeap (hProcessHeap,
-	             0,
-	             NtPathU.Buffer);
+	if (!NT_SUCCESS(Status) && RemovedSlash)
+	{
+	    /* Try again, this time with the trailing slash... */
+	    NtPathU.Length -= sizeof(WCHAR);
+
+	    Status = NtOpenFile (&hDirectory,
+	                         FILE_LIST_DIRECTORY,
+	                         &ObjectAttributes,
+	                         &IoStatusBlock,
+	                         FILE_SHARE_READ|FILE_SHARE_WRITE,
+	                         FILE_DIRECTORY_FILE);
+
+	    NtPathU.Length -= sizeof(WCHAR);
+	}
 
 	if (!NT_SUCCESS(Status))
 	{
-	   RtlFreeHeap (hProcessHeap, 0, IHeader);
-	   if (NULL != SlashlessFileName)
-	   {
-	      RtlFreeHeap(hProcessHeap,
-	                  0,
-	                  SlashlessFileName);
-	   }
+	    RtlFreeHeap (hProcessHeap,
+	                 0,
+	                 NtPathBuffer);
+
+	   /* See if the application tries to look for a DOS device */
+	   *DeviceNameInfo = RtlIsDosDeviceName_U((PWSTR)((ULONG_PTR)lpFileName));
+	   if (*DeviceNameInfo != 0)
+	       return FIND_DEVICE_HANDLE;
+
 	   SetLastErrorByStatus (Status);
 	   return(NULL);
 	}
-	IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
-	IData->pFileInfo->FileIndex = 0;
-        IData->DirectoryOnly = DirectoryOnly;
 
-        bResult = InternalFindNextFile((HANDLE)IHeader, &PatternStr);
-	if (NULL != SlashlessFileName)
+	if (PathFileName.Length == 0)
 	{
-	   RtlFreeHeap(hProcessHeap,
-	               0,
-	               SlashlessFileName);
+	    /* No file part?! */
+	    NtClose(hDirectory);
+	    RtlFreeHeap (hProcessHeap,
+	                 0,
+	                 NtPathBuffer);
+	    SetLastError(ERROR_FILE_NOT_FOUND);
+	    return NULL;
 	}
 
-        if (!bResult)
-        {
-            FindClose((HANDLE)IHeader);
-            return NULL;
-        }
+	IHeader = RtlAllocateHeap (hProcessHeap,
+	                           HEAP_ZERO_MEMORY,
+	                               sizeof(KERNEL32_FIND_DATA_HEADER) +
+	                               sizeof(KERNEL32_FIND_FILE_DATA) + FIND_DATA_SIZE);
+	if (NULL == IHeader)
+	{
+	    RtlFreeHeap (hProcessHeap,
+	                 0,
+	                 NtPathBuffer);
+	    NtClose(hDirectory);
+
+	    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	    return NULL;
+	}
+
+	IHeader->Type = FileFind;
+	IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
+	IData->DirectoryHandle = hDirectory;
+
+	/* change pattern: "*.*" --> "*" */
+	if (PathFileName.Length == 6 &&
+	    RtlCompareMemory(PathFileName.Buffer,
+	                     L"*.*",
+	                     6) == 6)
+	{
+	    PathFileName.Length = 2;
+	}
+
+	IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
+	IData->pFileInfo->FileIndex = 0;
+	IData->DirectoryOnly = DirectoryOnly;
+
+	bResult = InternalFindNextFile((HANDLE)IHeader, &PathFileName);
+
+	RtlFreeHeap (hProcessHeap,
+	             0,
+	             NtPathBuffer);
+
+	if (!bResult)
+	{
+	    FindClose((HANDLE)IHeader);
+	    return NULL;
+	}
 
 	return (HANDLE)IHeader;
 }
@@ -423,6 +457,7 @@ FindFirstFileA (
 	PKERNEL32_FIND_FILE_DATA IData;
 	UNICODE_STRING FileNameU;
 	ANSI_STRING FileName;
+	ULONG DeviceNameInfo;
 
 	RtlInitAnsiString (&FileName,
 	                   (LPSTR)lpFileName);
@@ -437,15 +472,22 @@ FindFirstFileA (
 		                             &FileName,
 		                             TRUE);
 
-	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE);
-
-	RtlFreeUnicodeString (&FileNameU);
+	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE, &DeviceNameInfo);
 
 	if (IHeader == NULL)
 	{
+		RtlFreeUnicodeString (&FileNameU);
 		DPRINT("Failing request\n");
 		return INVALID_HANDLE_VALUE;
 	}
+
+	if ((HANDLE)IHeader == FIND_DEVICE_HANDLE)
+	{
+		/* NOTE: FileNameU will be freed in InternalCopyDeviceFindDataA */
+		return InternalCopyDeviceFindDataA(lpFindFileData, &FileNameU, DeviceNameInfo);
+	}
+
+	RtlFreeUnicodeString (&FileNameU);
 
 	IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 
@@ -501,6 +543,9 @@ FindClose (
 	PKERNEL32_FIND_DATA_HEADER IHeader;
 
 	DPRINT("FindClose(hFindFile %x)\n",hFindFile);
+
+	if (hFindFile == FIND_DEVICE_HANDLE)
+		return TRUE;
 
 	if (!hFindFile || hFindFile == INVALID_HANDLE_VALUE)
 	{
@@ -600,6 +645,7 @@ FindFirstFileExW (LPCWSTR               lpFileName,
 {
     PKERNEL32_FIND_DATA_HEADER IHeader;
     PKERNEL32_FIND_FILE_DATA IData;
+    ULONG DeviceNameInfo;
 
     if (fInfoLevelId != FindExInfoStandard)
     {
@@ -614,12 +660,15 @@ FindFirstFileExW (LPCWSTR               lpFileName,
             return INVALID_HANDLE_VALUE;
         }
 
-        IHeader = InternalFindFirstFile (lpFileName, fSearchOp == FindExSearchLimitToDirectories ? TRUE : FALSE);
-	if (IHeader == NULL)
-	{
-		DPRINT("Failing request\n");
-		return INVALID_HANDLE_VALUE;
-	}
+        IHeader = InternalFindFirstFile (lpFileName, fSearchOp == FindExSearchLimitToDirectories ? TRUE : FALSE, &DeviceNameInfo);
+        if (IHeader == NULL)
+        {
+            DPRINT("Failing request\n");
+            return INVALID_HANDLE_VALUE;
+        }
+
+        if ((HANDLE)IHeader == FIND_DEVICE_HANDLE)
+            return InternalCopyDeviceFindDataW((LPWIN32_FIND_DATAW)lpFindFileData, lpFileName, DeviceNameInfo);
 
         IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 
@@ -650,6 +699,7 @@ FindFirstFileExA (
     PKERNEL32_FIND_FILE_DATA IData;
     UNICODE_STRING FileNameU;
     ANSI_STRING FileNameA;
+    ULONG DeviceNameInfo;
 
     if (fInfoLevelId != FindExInfoStandard)
     {
@@ -672,15 +722,22 @@ FindFirstFileExA (
 	else
             RtlOemStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
 
-	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE);
-
-	RtlFreeUnicodeString (&FileNameU);
+	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE, &DeviceNameInfo);
 
 	if (IHeader == NULL)
 	{
+		RtlFreeUnicodeString (&FileNameU);
 		DPRINT("Failing request\n");
 		return INVALID_HANDLE_VALUE;
 	}
+
+	if ((HANDLE)IHeader == FIND_DEVICE_HANDLE)
+	{
+		/* NOTE: FileNameU will be freed in InternalCopyDeviceFindDataA */
+		return InternalCopyDeviceFindDataA(lpFindFileData, &FileNameU, DeviceNameInfo);
+	}
+
+	RtlFreeUnicodeString (&FileNameU);
 
         IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 
