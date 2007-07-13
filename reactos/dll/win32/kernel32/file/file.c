@@ -1183,7 +1183,7 @@ UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR 
     int i;
     LPWSTR p;
 
-    if ( !path || !prefix || !buffer )
+    if ( !path || !buffer )
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return 0;
@@ -1195,7 +1195,8 @@ UINT WINAPI GetTempFileNameW( LPCWSTR path, LPCWSTR prefix, UINT unique, LPWSTR 
     /* add a \, if there isn't one  */
     if ((p == buffer) || (p[-1] != '\\')) *p++ = '\\';
 
-    for (i = 3; (i > 0) && (*prefix); i--) *p++ = *prefix++;
+    if ( prefix )
+        for (i = 3; (i > 0) && (*prefix); i--) *p++ = *prefix++;
 
     unique &= 0xffff;
 
