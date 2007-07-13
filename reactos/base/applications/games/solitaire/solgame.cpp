@@ -13,6 +13,8 @@
 #define TRACE(s) printf("%s(%i): %s",__FILE__,__LINE__,s)
 #endif
 
+extern TCHAR MsgWin[128];
+
 CardStack activepile;
 bool fGameStarted = false;
 
@@ -240,7 +242,7 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
 
     if(fGameOver)
     {
-        MessageBox(SolWnd, _T("Congratulations, you win!!"), szAppName, MB_OK | MB_ICONINFORMATION);
+        MessageBox(SolWnd, MsgWin, szAppName, MB_OK | MB_ICONINFORMATION);
     
         for(int i = 0; i < 4; i++)
         {

@@ -18,6 +18,7 @@ HINSTANCE    hInstance;
 TCHAR szAppName[128];
 TCHAR MsgQuit[128];
 TCHAR MsgAbout[128];
+TCHAR MsgWin[128];
 INT nOptions = 8;
 
 CardWindow SolWnd;
@@ -53,9 +54,10 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
 
     // Load application title
     LoadString(hInst, IDS_SOL_NAME, szAppName, sizeof(szAppName) / sizeof(szAppName[0]));
-    // Load MsgBox() text here to avoid loading it many times later
+    // Load MsgBox() texts here to avoid loading them many times later
     LoadString(hInst, IDS_SOL_ABOUT, MsgAbout, sizeof(MsgAbout) / sizeof(MsgAbout[0]));
     LoadString(hInst, IDS_SOL_QUIT, MsgQuit, sizeof(MsgQuit) / sizeof(MsgQuit[0]));
+    LoadString(hInst, IDS_SOL_WIN, MsgWin, sizeof(MsgWin) / sizeof(MsgWin[0]));
 
     //Window class for the main application parent window
     wndclass.cbSize            = sizeof(wndclass);
@@ -265,4 +267,5 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
     return DefWindowProc (hwnd, iMsg, wParam, lParam);
 }
+
 
