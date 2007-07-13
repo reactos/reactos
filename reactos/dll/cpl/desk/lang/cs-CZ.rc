@@ -19,29 +19,30 @@ BEGIN
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
+
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Screensaver"
+CAPTION "Spoøiè obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Screensaver",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Spoøiè obrazovky",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Se&ttings",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "Pre&view",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Wait",IDC_WAITTEXT, 14, 125, 16, 9
+    PUSHBUTTON      "&Nastavení",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "Ná&hled",IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "È&ekat",IDC_WAITTEXT, 14, 125, 18, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "minutes", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Ask for &password on resume.",IDC_SCREENS_USEPASSCHK,"button",
+    LTEXT           "minut", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "Chránit &heslem.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
-    GROUPBOX        "&Energy Saving features of monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
+    GROUPBOX        "Napájení monitoru", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "Pro nastavení napájení Vašeho monitoru, kliknìte na Napájení.",
                     IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "P&ower...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "Na&pájení...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -51,46 +52,46 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Item:", IDC_STATIC, 7, 159, 26, 9
+    LTEXT           "Položka:", IDC_STATIC, 7, 159, 26, 9
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Advanced", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
+    PUSHBUTTON      "Upøesnit", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Advanced Appearance"
+CAPTION "Upøesnit vzhled"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "Element:", 8, 5, 160, 50, 9
+    LTEXT "Položka:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Size", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    LTEXT "&Velikost:", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
-    LTEXT   "&1st Color:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT   "&1. barva:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT   "&2nd Color:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT   "&2. barva:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "Font:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "Písmo:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Fontsize:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "Velikost:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
-    LTEXT   "Color:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    LTEXT   "Barva:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
     AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
 
-    PUSHBUTTON "Cancel", IDCANCEL, 191, 220, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 191, 220, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
@@ -99,13 +100,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Displej:",1820,3,100,30,8
+    LTEXT           "&Obrazovka:",1820,3,100,38,8
     LTEXT           "<none>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "&Velikost obrazovky",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
                     30,130,58,17
-    LTEXT           "Ménì",1815,9,130,15,8,NOT WS_GROUP
-    LTEXT           "Více",1816,93,130,21,8,NOT WS_GROUP
+    LTEXT           "Menší",1815,9,130,18,8,NOT WS_GROUP
+    LTEXT           "Vìtší",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Poèet barev",1817,125,120,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
@@ -115,20 +116,19 @@ BEGIN
     PUSHBUTTON      "R&ozšíøené nastavení...",IDC_SETTINGS_ADVANCED,306,165,56,14
 END
 
-
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normal",           ID_MENU_NORMAL
-    MENUITEM "Disabled",         ID_MENU_DISABLED
-    MENUITEM "Selected",         ID_MENU_SELECTED
+    MENUITEM "Normální",           ID_MENU_NORMAL
+    MENUITEM "Nepøístupné",         ID_MENU_DISABLED
+    MENUITEM "Vybráno",         ID_MENU_SELECTED
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Obrazovka"
     IDS_CPLDESCRIPTION "Nastavení obrazovky, spoøièe, vzhledu a rozlišení."
-    IDS_NONE "(Nic)"
-    IDS_CENTER "Vycentrovat"
+    IDS_NONE "(Není)"
+    IDS_CENTER "Na støed"
     IDS_STRETCH "Roztáhnout"
     IDS_TILE "Dlaždice"
 END
@@ -137,9 +137,9 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_COLOR_4BIT "16 barev"
     IDS_COLOR_8BIT "256 barev"
-    IDS_COLOR_16BIT "High Color (16 Bit)"
-    IDS_COLOR_24BIT "True Color (24 Bit)"
-    IDS_COLOR_32BIT "True Color (32 Bit)"
+    IDS_COLOR_16BIT "High Color (16 Bitù)"
+    IDS_COLOR_24BIT "True Color (24 Bitù)"
+    IDS_COLOR_32BIT "True Color (32 Bitù)"
     IDS_PIXEL "%lux%lu bodù"
 END
 
@@ -151,36 +151,36 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_INACTWIN "Inactive Window"
-    IDS_ACTWIN   "Active Window"
-    IDS_WINTEXT  "Window Text"
-    IDS_MESSBOX  "Message Box"
-    IDS_MESSTEXT "Message Text"
+    IDS_INACTWIN "Neaktivní okno"
+    IDS_ACTWIN   "Aktivní okno"
+    IDS_WINTEXT  "Text okna"
+    IDS_MESSBOX  "Okno zprávy"
+    IDS_MESSTEXT "Text zprávy"
     IDS_BUTTEXT  "OK"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ELEMENT_1 "Desktop"
-    IDS_ELEMENT_2 "Caption of inactive windows"
-    IDS_ELEMENT_3 "Border of inactive windows"
-    IDS_ELEMENT_4 "Caption of active windows"
-    IDS_ELEMENT_5 "Border of active windows"
-    IDS_ELEMENT_6 "Menu"
-    IDS_ELEMENT_7 "Hilited elements"
-    IDS_ELEMENT_8 "Windows"
-    IDS_ELEMENT_9 "Scrollbars"
-    IDS_ELEMENT_10 "3D objects"
-    IDS_ELEMENT_11 "Palette title"
-    IDS_ELEMENT_12 "Symbol title"
-    IDS_ELEMENT_13 "Captionbar"
-    IDS_ELEMENT_14 "Deactivated menu elements"
-    IDS_ELEMENT_15 "Dialog"
-    IDS_ELEMENT_16 "Scrollbar controls"
-    IDS_ELEMENT_17 "Application background"
-    IDS_ELEMENT_18 "Small captionbar"
-    IDS_ELEMENT_19 "Symbol distance (horizontal)"
-    IDS_ELEMENT_20 "Symbol distance (vertical)"
-    IDS_ELEMENT_21 "Quickinfo"
-    IDS_ELEMENT_22 "Symbol"
+    IDS_ELEMENT_1 "Plocha"
+    IDS_ELEMENT_2 "Neaktivní záhlaví"
+    IDS_ELEMENT_3 "Okraj neaktivního okna"
+    IDS_ELEMENT_4 "Aktivní záhlaví"
+    IDS_ELEMENT_5 "Okraj aktivního okna"
+    IDS_ELEMENT_6 "Nabídka"
+    IDS_ELEMENT_7 "Vybraná položka"
+    IDS_ELEMENT_8 "Okno"
+    IDS_ELEMENT_9 "Posuvník"
+    IDS_ELEMENT_10 "3D objekty"
+    IDS_ELEMENT_11 "Paleta"
+    IDS_ELEMENT_12 "Popis ikon"
+    IDS_ELEMENT_13 "Tlaèítka záhlaví"
+    IDS_ELEMENT_14 "Nepøístupné položky"
+    IDS_ELEMENT_15 "Okno zprávy"
+    IDS_ELEMENT_16 "Ovládání posuvníku"
+    IDS_ELEMENT_17 "Pozadí aplikace"
+    IDS_ELEMENT_18 "Tlaèítka záhlaví (malá)"
+    IDS_ELEMENT_19 "Rozestup ikon (vodorovnì)"
+    IDS_ELEMENT_20 "Rozestup ikon (svisle)"
+    IDS_ELEMENT_21 "Popis tlaèítek"
+    IDS_ELEMENT_22 "Ikona"
 END
