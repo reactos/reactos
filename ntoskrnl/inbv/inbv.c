@@ -11,7 +11,7 @@ KSPIN_LOCK BootDriverLock;
 KIRQL InbvOldIrql;
 INBV_DISPLAY_STATE InbvDisplayState;
 BOOLEAN InbvBootDriverInstalled;
-BOOLEAN InbvDisplayDebugStrings;
+BOOLEAN InbvDisplayDebugStrings = TRUE;
 INBV_DISPLAY_STRING_FILTER InbvDisplayFilter;
 ULONG ProgressBarLeft, ProgressBarTop;
 BOOLEAN ShowProgressBar;
@@ -238,17 +238,26 @@ InbvDisplayString(IN PCHAR String)
         /* Check if a filter is installed */
         if (InbvDisplayFilter) InbvDisplayFilter(&String);
 
-        /* Acquire the lock */
-        InbvAcquireLock();
+        if (InbvBootDriverInstalled)
+        {
+            /* Acquire the lock */
+            InbvAcquireLock();
 
-        /* Make sure we're installed and display the string */
-        if (InbvBootDriverInstalled) VidDisplayString((PUCHAR) String);
+            /* Make sure we're installed and display the string */
+            VidDisplayString((PUCHAR) String);
 
-        /* Call Headless (We don't support headless for now)
-        HeadlessDispatch(DISPLAY_STRING); */
+            /* Call Headless (We don't support headless for now)
+            HeadlessDispatch(DISPLAY_STRING); */
 
-        /* Release the lock */
-        InbvReleaseLock();
+            /* Release the lock */
+            InbvReleaseLock();
+        }
+        else
+        {
+            /* We're still allowed to print very-early debug messages.
+               Be warned, this is a HACK! */
+            VidDisplayString((PUCHAR) String);
+        }
 
         /* All done */
         return TRUE;
@@ -577,7 +586,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         }
 
         /* Set the scrolling region */
-        InbvSetScrollRegion(32, 80, 631, 400);
+        InbvSetScrollRegion(32, 80, 1191, 820);
 
         /* Make sure we have resources */
         if ((Bitmap) && (Header))
@@ -615,7 +624,7 @@ FinalizeBootLogo(VOID)
     if (InbvGetDisplayState() == INBV_DISPLAY_STATE_OWNED)
     {
         /* Clear the screen */
-        VidSolidColorFill(0, 0, 639, 479, 0);
+        VidSolidColorFill(0, 0, 1199, 899, 0);
     }
 
     /* Reset progress bar and lock */
