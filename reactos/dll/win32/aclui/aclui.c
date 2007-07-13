@@ -896,12 +896,12 @@ ResizeControls(IN PSECURITY_PAGE sp,
                IN INT Width,
                IN INT Height)
 {
-    HWND hWndAllow, hWndDeny;
+    HWND hWndAllow, hWndDeny, hWndOwnerEdit;
     RECT rcControl, rcControl2, rcControl3, rcWnd;
     INT cxWidth, cxEdge, btnSpacing;
     POINT pt, pt2;
     HDWP dwp;
-    INT nControls = 7;
+    INT nControls = 8;
     LVCOLUMN lvc;
     
     hWndAllow = GetDlgItem(sp->hWnd,
@@ -931,6 +931,29 @@ ResizeControls(IN PSECURITY_PAGE sp,
     
     if ((dwp = BeginDeferWindowPos(nControls)))
     {
+        /* resize the owner edit field */
+        hWndOwnerEdit = GetDlgItem(sp->hWnd,
+                                   IDC_OWNER);
+        GetWindowRect(hWndOwnerEdit,
+                      &rcControl);
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(hWndOwnerEdit,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   hWndOwnerEdit,
+                                   NULL,
+                                   0,
+                                   0,
+                                   Width - pt.x - pt2.x,
+                                   rcControl.bottom - rcControl.top,
+                                   SWP_NOMOVE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
         /* resize the Principal list view */
         GetWindowRect(sp->hWndPrincipalsList,
                       &rcControl);
