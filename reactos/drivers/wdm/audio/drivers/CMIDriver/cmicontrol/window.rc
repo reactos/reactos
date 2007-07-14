@@ -1,0 +1,155 @@
+/*
+Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. The name of the author may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#include <windows.h>
+#include <commctrl.h>
+#include "resource.h"
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Audio Control Panel (CMI 8738/8768)"
+#define VER_INTERNALNAME_STR        "cmicontrol.exe"
+#define VER_ORIGINALFILENAME_STR    "cmicontrol.exe"
+#ifdef VER_COMPANYNAME_STR
+#undef VER_COMPANYNAME_STR
+#endif
+#define VER_COMPANYNAME_STR         "Dogbert"
+#ifdef VER_PRODUCTNAME_STR
+#undef VER_PRODUCTNAME_STR
+#endif
+#define VER_PRODUCTNAME_STR         ""
+#define VER_LEGALCOPYRIGHT_YEARS    ""
+#define VER_LEGALCOPYRIGHT_STR      "BSD-style license"
+
+#include "common.ver"
+
+IDI_APP_ICON                ICON    DISCARDABLE     "window.ico"
+
+IDD_MAIN DIALOG DISCARDABLE 0, 0, 310, 176
+STYLE DS_ABSALIGN | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Audio Control Panel (CMI 8738/8768)"
+FONT 8, "MS Shell Dlg"
+CLASS "cmiControlPanel"
+BEGIN
+    PUSHBUTTON      "&Close",IDB_CLOSE,250,158,50,14
+    DEFPUSHBUTTON   "&Apply",IDB_APPLY,190,158,50,14
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,7,296,146
+    LTEXT           " ", IDT_SWAPJACKS, 10,162,180,8
+END
+
+IDD_TAB1 DIALOG DISCARDABLE  4, 15, 290, 122
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX    "Enable PCM DAC",              IDC_EN_PCMDAC,     4,4,104,10
+	AUTOCHECKBOX    "Exchange Front/Rear Jacks",   IDC_EXCH_FB,       4,16,104,10
+    GROUPBOX        "Line-In Jack",                IDC_STATIC,        4,30,110,54
+	AUTORADIOBUTTON "Route Rear to Line-In",       IDC_EN_REAR2LINE,  8,40,104,10,WS_GROUP
+	AUTORADIOBUTTON "Route Bass to Line-In",       IDC_EN_BASS2LINE,  8,50,104,10
+	AUTORADIOBUTTON "Route Center to Line-In",     IDC_EN_CENTER2LINE,8,60,104,10
+	AUTORADIOBUTTON "Don't route",                 IDC_NOROUTE_LINE,  8,70,104,10
+    GROUPBOX        "Mic-In Jack",                 IDC_STATIC,        4,86,110,34
+	AUTORADIOBUTTON "Route Center to Mic-In",      IDC_EN_CENTER2MIC, 8,96,104,10,WS_GROUP
+	AUTORADIOBUTTON "Don't route",                 IDC_NOROUTE_MIC,   8,106,104,10
+    GROUPBOX        "Channel Configuration",       IDC_STATIC,        120,4,160,116
+    COMBOBOX                                       IDCB_CHANNELCONFIG,124,14,150,50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX    "L"                            IDC_LEFT,          130,30,20,20
+    AUTOCHECKBOX    "CL"                           IDC_CLEFT,         160,30,20,20
+    AUTOCHECKBOX    "C"                            IDC_CENTER,        190,30,20,20
+    AUTOCHECKBOX    "CR"                           IDC_CRIGHT,        220,30,20,20
+    AUTOCHECKBOX    "R"                            IDC_RIGHT,         250,30,20,20
+    AUTOCHECKBOX    "BL"                           IDC_BLEFT,         130,96,20,20
+    AUTOCHECKBOX    "BR"                           IDC_BRIGHT,        250,96,20,20
+    AUTOCHECKBOX    "Sub"                          IDC_SUB,           240,60,30,20
+    DEFPUSHBUTTON   "&Start"                       IDB_STARTSTOP,     175,98,50,14
+END
+
+IDD_TAB2 DIALOG DISCARDABLE  4, 15, 290, 122
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "S/PDIF output"                IDC_STATIC,        4,4,132,116
+	AUTOCHECKBOX    "Enable S/PDIF-out",           IDC_EN_SPDO,       8,14,110,10
+	AUTOCHECKBOX    "Enable 5V signal levels",     IDC_EN_SPDO5V,     8,28,110,10
+	AUTOCHECKBOX    "Enable copyright bit",        IDC_EN_SPDCOPYRHT, 8,42,110,10
+    GROUPBOX        "S/PDIF input",                IDC_STATIC,        146,4,134,116
+	AUTOCHECKBOX    "Enable S/PDIF-in recording",  IDC_EN_SPDI,       150,14,110,10
+    LTEXT           "(and disable all analog inputs)", -1 ,           162,26,110,10
+	AUTOCHECKBOX    "Select secondary S/PDIF-in",  IDC_SEL_SPDIFI,    150,42,110,10
+	AUTOCHECKBOX    "Invert phase",                IDC_INV_SPDIFI,    150,56,110,10
+	AUTOCHECKBOX    "Invert validity flag",        IDC_POLVALID,      150,70,110,10
+	AUTOCHECKBOX    "Loop S/PDIF-in to S/PDIF-out",IDC_LOOP_SPDF,     150,84,110,10
+END
+
+IDD_TAB3 DIALOG DISCARDABLE  4, 15, 290, 122
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT           "44.1 kHz",          IDC_STATIC, 74,8,40,8
+	LTEXT           "48 kHz",            IDC_STATIC, 114,8,40,8
+	LTEXT           "88.2 kHz",          IDC_STATIC, 154,8,40,8
+	LTEXT           "96 kHz",            IDC_STATIC, 194,8,40,8
+	LTEXT           "PCM"     ,          IDC_STATIC, 4,20,60,8
+	LTEXT           "Multi-Channel PCM", IDC_STATIC, 4,32,60,8
+	LTEXT           "Dolby (AC3)/DTS",   IDC_STATIC, 4,44,60,8
+	AUTOCHECKBOX    "",                  IDC_FMT_441_PCM, 82,20,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_441_MULTI_PCM, 82,32,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_441_DOLBY, 82,44,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_480_PCM, 122,20,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_480_MULTI_PCM, 122,32,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_480_DOLBY, 122,44,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_882_PCM, 162,20,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_882_MULTI_PCM, 162,32,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_882_DOLBY, 162,44,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_960_PCM, 202,20,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_960_MULTI_PCM, 202,32,10,10
+	AUTOCHECKBOX    "",                  IDC_FMT_960_DOLBY, 202,44,10,10
+END
+
+IDD_TAB4 DIALOG DISCARDABLE  4, 15, 290, 124
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "Driver Version:",      IDC_STATIC, 4,5,100,10
+    LTEXT        "",                     IDC_VERSION,80,4,60,10, SS_SUNKEN
+    LTEXT        "Hardware Revision:",   IDC_STATIC, 4,21,100,8
+    LTEXT        "",                     IDC_HWREV,  80,20,60,10, SS_SUNKEN
+    LTEXT        "Maximum Channels:",    IDC_STATIC, 4,37,100,8
+    LTEXT        "",                     IDC_MAXCHAN,80,36,60,10, SS_SUNKEN
+    LTEXT        "Base Address:",        IDC_STATIC, 4,53,100,8
+    LTEXT        "",                     IDC_BASEADR,80,52,60,10, SS_SUNKEN
+    LTEXT        "MPU401 Address:",      IDC_STATIC, 4,69,100,8
+    LTEXT        "",                     IDC_MPUADR, 80,68,60,10, SS_SUNKEN
+
+	LTEXT        "Application Icon: Copyright (c) Tango Desktop Project,", IDC_STATIC,4,84,176,8
+    CONTROL      "http://tango.freedesktop.org/",IDC_URL1,"URLLink",SS_NOTIFY, 178,84,100,8
+
+    LTEXT        "Copyright (c) 2006-2007 Dogbert <dogber1@gmail.com>", IDC_STATIC,4,96,202,8
+    CONTROL       "http://cmediadrivers.googlepages.com/",IDC_URL2,"URLLink",SS_NOTIFY,54,110,182,22
+END

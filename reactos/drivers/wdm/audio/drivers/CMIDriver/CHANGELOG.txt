@@ -1,0 +1,101 @@
+1.1.3:
+- power management fixes for Vista
+- user friendly default values
+- mixer settings are restored after hibernation/sleep
+
+1.1.2:
+- implementation for power management stuff (hibernation, standby etc)
+
+1.1.1:
+- minor fix of the DataRangeIntersection() handler for Vista
+- support for Phillips PSC60x cards
+
+1.1.0:
+- uninstaller for the control panel applet / cmicontrol.exe
+- some minor GUI improvements
+- SPDIF-In recording mode now engagable only in the control panel applet
+
+1.0.9:
+- command line options for cmicontrol.exe
+- pause bug fixed (thanks, max)
+- SPDIF-In recording fixed (bitperfect!)
+- all settings are now saved when you press "Apply" in the window of the control panel applet
+
+1.0.8:
+- resource allocation bug fixed (thanks, teemue)
+
+1.0.7:
+- two major bugs fixed (thanks, Any2)
+- new feature: format selection
+
+1.0.6:
+- prevent WaveRT driver from loading (and crashing) on XP/2k
+- another UART fix - driver will now load on systems on which the i/o ports 0x300-0x330 can't be assigned
+
+1.0.5:
+- recording format validation fixed (thanks, Any2)
+- UART miniport installation failure non-critical anymore (thanks, Tom)
+
+1.0.4:
+- installer for XP x64 fixed
+- MPU401 for 64 bit systems fixed
+
+1.0.3:
+- 100% CPU usage bug fixed
+
+1.0.2:
+- new feature: UART/MPU-401
+- even more inf bugfixes
+- line-in mute control was mono - fixed (thanks, Egor)
+- playback mute switch was toggled - fixed (thanks, DualIP)
+- installer can delete cmedia 'Run' registry entries
+
+1.0.1:
+- some installer fixes
+- inf fix for 64bit WaveRT drivers (thanks, jeffrey)
+- inf fix for Terratec Aureon and other cards (thanks, alex)
+- some other minor inf fixes
+
+1.0.0:
+- installer application
+- minor issue with the control panel and Vista fixed 
+- small fix for control panel applet: subwoofer test signal was incorrectly sent to center (thanks, DualIP)
+- KSPROPERTY_GENERAL_COMPONENTID handler fixed
+
+0.9.9:
+- major inf bugfixes
+- control panel (cmicontrol.exe, cpl)
+- dummy master mute control (for support of legacy software)
+- lots of other minor bugfixes
+- KNOWN ISSUE: center/sub and BL/BR swapped in 5.1 mode - there isn't a trivial solution for this
+
+0.9.8:
+- fixed some AC3 issues under XP
+- fixed w2k compatibility (thanks, egor)
+
+0.9.7:
+- fixed multi-channel stuff for 2k/XP (thanks, cmediafl)
+- 96kHz spdif output support for Vista
+
+0.9.6:
+- WaveRT implementation for Vista - very fast, low latency recording and playback possible
+- APO ('Enhancements') support for Vista - I have no idea why this works only on the SPDIF interface. 
+If you know why this is happening or why the XP mixer tries to render the AC3 pin, please drop me a line.
+
+0.9.5:
+- recording support for Windows Vista
+- selection of spdif-in suppported
+- recording mixer fix for XP
+
+0.9.4a:
+- .inf fix for the 64bit version (thanks, martin)
+
+0.9.4:
+- mixer settings and channel config saved and restored
+- option for disabling the s/pdif output
+- s/pdif and multi channel audio support for Windows Vista
+- some small fixes
+
+0.9.3: 
+- bug fixes for multi channel audio
+- several other minor fixes

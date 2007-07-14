@@ -1,0 +1,257 @@
+[Version]
+Signature="$CHICAGO$"
+Class=MEDIA
+ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
+provider=%CMMfgName%
+LayoutFile=layout.inf, layout1.inf, layout2.inf
+DriverVer=CMIReleaseDate,CMIVersion
+
+[SourceDisksNames]
+200="C-Media 8738/8768 WDM Drivers","",0
+
+[SourceDisksFiles]
+cmipci.sys=200
+cmicpl.cpl=200
+CMICONTROL.exe=200
+
+[Manufacturer]
+%CMMfgName%=CMI
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+[CMI]
+;generic
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_011013F6
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_011113F6
+;Terratec
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_1144153B
+;Auzentech
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_3731584D
+;Diamond
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_87681092
+;TurtleBeach 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_020110B0
+;Phillips
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_060417AB
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_020210B0
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_020410B0
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_009C145F
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_39201462 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_39801462 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_50701462 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_52801462 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_53201462 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_53401462 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_54501462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_54511462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_56501462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_59001462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_59201462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_70201462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_70401462 
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_70411462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_71011462
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_A016147A
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_30021919
+%*WDM_CMPCI.DeviceDesc%=WDM_CMPCI,    PCI\VEN_13F6&DEV_0111&SUBSYS_0577A0A0
+%*WDM_CMMPU.DeviceDesc%=MPU401,       MPU401,   *PNPB006
+
+[WDM_CMPCI]
+Include=ks.inf, wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=CMPCI.CopyList
+AddReg=WDM_CMPCI.AddReg, Mixer_CMPCI.AddReg
+
+[WDM_CMPCI.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,WDM_CMPCI.Interface.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,WDM_CMPCI.Interface.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,WDM_CMPCI.Interface.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,WDM_CMPCI.Interface.Topo
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_UART%,MPU401.Interface.UART
+
+[MPU401]
+Include=ks.inf, wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration, WDMAUDIO.MPU401
+AlsoInstall=KS.Registration(ks.inf), WDMAUDIO.Registration(wdmaudio.inf), WDMAUDIO.MPU401(wdmaudio.inf)
+
+[MPU401.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_UART%,MPU401.Interface.UART
+
+[MPU401.Services]
+Needs=WDMAUDIO.MPU401.Services
+AlsoInstall=WDMAUDIO.MPU401.Services(wdmaudio.inf)
+
+[MPU401.Interface.UART]
+AddReg=MPU401.Interface.UART.AddReg
+[MPU401.Interface.UART.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%WDM_CMPCI.UART.szPname%
+
+[WDM_CMPCI.Interface.Wave]
+AddReg=WDM_PCI.Interface.Wave.AddReg
+[WDM_PCI.Interface.Wave.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%WDM_CMPCI.Wave.szPname%
+
+[WDM_CMPCI.Interface.Topo]
+AddReg=WDM_PCI.Interface.Topo.AddReg
+[WDM_PCI.Interface.Topo.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%WDM_CMPCI.Topo.szPname%
+
+[WDM_CMPCI.AddReg]
+HKR,,AssociatedFilters,,"wdmaud,swmidi,redbook"
+HKR,,Driver,,CMIPCI.SYS
+HKR,,NTMPDriver,,"CMIPCI.sys,sbemul.sys"
+HKR,Drivers,SubClasses,,"wave,midi,mixer"
+HKR,Drivers\wave\wdmaud.drv, Driver,,wdmaud.drv
+HKR,Drivers\midi\wdmaud.drv, Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\wave\wdmaud.drv,Description,,%*WDM_CMPCI.DeviceDesc%
+HKR,Drivers\midi\wdmaud.drv,Description,,%*WDM_CMPCI.DeviceDesc%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%*WDM_CMPCI.DeviceDesc%
+
+[Mixer_CMPCI.AddReg]
+HKLM,%MediaCategories%\%GUID.CMIPCI%,Name,,%*WDM_CMPCI.DeviceDesc%
+HKLM,%MediaCategories%\%GUID.CMIPCI%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IEC5V%,Name,,%Name.IEC5V%
+HKLM,%MediaCategories%\%GUID.IEC5V%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IECOut%,Name,,%Name.IECOut%
+HKLM,%MediaCategories%\%GUID.IECOut%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IECMonitor%,Name,,%Name.IECMonitor%
+HKLM,%MediaCategories%\%GUID.IECMonitor%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IECInverse%,Name,,%Name.IECInverse%
+HKLM,%MediaCategories%\%GUID.IECInverse%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.DAC%,Name,,%Name.DAC%
+HKLM,%MediaCategories%\%GUID.DAC%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IECSelect%,Name,,%Name.IECSelect%
+HKLM,%MediaCategories%\%GUID.IECSelect%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.XCHGFB%,Name,,%Name.XCHGFB%
+HKLM,%MediaCategories%\%GUID.XCHGFB%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.BassLine%,Name,,%Name.BassLine%
+HKLM,%MediaCategories%\%GUID.BassLine%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.CenterLine%,Name,,%Name.CenterLine%
+HKLM,%MediaCategories%\%GUID.CenterLine%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IECCopyright%,Name,,%Name.IECCopyright%
+HKLM,%MediaCategories%\%GUID.IECCopyright%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IECPolValid%,Name,,%Name.IECPolValid%
+HKLM,%MediaCategories%\%GUID.IECPolValid%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.IECLoop%,Name,,%Name.IECLoop%
+HKLM,%MediaCategories%\%GUID.IECLoop%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.RearLine%,Name,,%Name.RearLine%
+HKLM,%MediaCategories%\%GUID.RearLine%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.CenterMic%,Name,,%Name.CenterMic%
+HKLM,%MediaCategories%\%GUID.CenterMic%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.Manuf%,Name,,%Name.Manuf%
+HKLM,%MediaCategories%\%GUID.Manuf%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%GUID.Component%,Name,,%Name.Component%
+HKLM,%MediaCategories%\%GUID.Component%,Display,1,00,00,00,00
+
+[DestinationDirs]
+CMPCI.CopyList      = 10, system32\drivers ; %SystemRoot%\system32\drivers
+CPanel.CopyList     = 10, system32         ; %SystemRoot%\system32\drivers
+DefaultDestDir      = 11
+
+[CMPCI.CopyList]
+cmipci.sys
+
+[CPanel.CopyList]
+cmicpl.cpl
+CMICONTROL.exe
+
+;;**************** NT Install ****************
+
+[WDM_CMPCI.NTx86]
+Include=ks.inf, wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration
+CopyFiles=CMPCI.CopyList, CPanel.CopyList
+AddReg=WDM_CMPCI.AddReg, Mixer_CMPCI.AddReg
+
+[WDM_CMPCI.NTx86.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,WDM_CMPCI.Interface.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,WDM_CMPCI.Interface.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,WDM_CMPCI.Interface.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,WDM_CMPCI.Interface.Topo
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_UART%,MPU401.Interface.UART
+
+[WDM_CMPCI.NTx86.Services]
+AddService = cmipci,  0x00000002, cmipci_Service_Inst
+
+[cmipci_Service_Inst]
+DisplayName    = %CMIPCI.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\system32\drivers\cmipci.sys
+
+[MPU401.NTx86]
+Include=ks.inf, wdmaudio.inf
+Needs=KS.Registration, WDMAUDIO.Registration, WDMAUDIO.MPU401
+AlsoInstall=KS.Registration(ks.inf), WDMAUDIO.Registration(wdmaudio.inf), WDMAUDIO.MPU401(wdmaudio.inf)
+
+[MPU401.NTx86.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_UART%,MPU401.Interface.UART
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_UART%,MPU401.Interface.UART
+
+[MPU401.NTx86.Services]
+Needs=WDMAUDIO.MPU401.Services
+AlsoInstall=WDMAUDIO.MPU401.Services(wdmaudio.inf)
+
+[Strings]
+CMMfgName="Dogbert"
+*WDM_CMPCI.DeviceDesc="CMI8738/8768 Audio Device"
+*WDM_CMMPU.DeviceDesc="CMI8738/8768 MPU-401"
+WDM_CMPCI.Wave.szPname="CMI8738/8768 Wave"
+WDM_CMPCI.Topo.szPname="CMI8738/8768 Mixer"
+WDM_CMPCI.UART.szPname="CMI8738/8768 MPU-401"
+MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
+Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO="{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
+KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
+KSNAME_Wave="Wave"
+KSNAME_Topology="Topology"
+KSNAME_UART="UART"
+CMIPCI.SvcDesc = "CMI8738/8768 Audio Driver"
+GUID.CMIPCI="{9DB14E9A-7BE7-480d-A2FA-32932489DE9C}"
+GUID.IEC5V="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF0}"
+Name.IEC5V="S/PDIF-out 5V signal levels"
+GUID.IECOut="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF1}"
+Name.IECOut="Enable S/PDIF-out"
+GUID.IECInverse="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF2}"
+Name.IECInverse="Invert S/PDIF-in signal"
+GUID.IECMonitor="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF3}"
+Name.IECMonitor="Enable PCM DAC"
+GUID.DAC="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF4}"
+Name.DAC="DAC"
+GUID.IECSelect="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF5}"
+Name.IECSelect="Select secondary S/PDIF-in"
+GUID.XCHGFB="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF6}"
+Name.XCHGFB="Exchange Front/Rear Jacks"
+GUID.BassLine="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF7}"
+Name.BassLine="Route Bass to Line-In Jack"
+GUID.CenterLine="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF8}"
+Name.CenterLine="Route Center to Line-In Jack"
+GUID.IECCopyright="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DF9}"
+Name.IECCopyright="Enable copyright bit"
+GUID.IECPolValid="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DFA}"
+Name.IECPolValid="Invert validity flag"
+GUID.IECLoop="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DFB}"
+Name.IECLoop="Loop S/PDIF-in to S/PDIF-out"
+GUID.RearLine="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DFC}"
+Name.RearLine="Route Rear to Line-In Jack"
+GUID.CenterMic="{2B81CDBB-EE6C-4ECC-8AA5-9A188B023DFD}"
+Name.CenterMic="Route Center to Mic-In Jack"
+GUID.Manuf="{9DB14E9A-7BE7-480d-A2FA-32932489DE9E}"
+Name.Manuf="Dogbert"
+GUID.Component="{9DB14E9A-7BE7-480d-A2FA-32932489DE9D}"
+Name.Component="main"

@@ -1,0 +1,24 @@
+TARGETNAME = cmicpl
+TARGETTYPE = DYNLINK
+TARGETEXT  = cpl
+DLLENTRY   = _DllMainCRTStartup
+
+TARGETLIBS = $(SDK_LIB_PATH)\setupapi.lib \
+             $(SDK_LIB_PATH)\comctl32.lib \
+             $(SDK_LIB_PATH)\kernel32.lib \
+             $(SDK_LIB_PATH)\user32.lib   \
+             $(SDK_LIB_PATH)\shell32.lib
+
+INCLUDES = ..
+
+USE_MSVCRT=1
+
+MSC_WARNING_LEVEL = $(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES = $(CFASTFLAGS) $(C_DEFINES) -DUNICODE -D_UNICODE -DUNDER_NT
+
+UMTYPE = windows
+
+SOURCES = cmicpl.rc    \
+          cmicpl.cpp
+

@@ -1,0 +1,26 @@
+TARGETNAME=setup
+TARGETTYPE=PROGRAM
+TARGETPATH=
+
+USE_MSVCRT=1
+
+INCLUDES=..
+
+TARGETLIBS=$(SDK_LIB_PATH)\kernel32.lib \
+           $(SDK_LIB_PATH)\user32.lib   \
+           $(SDK_LIB_PATH)\newdev.lib
+           
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= main.cpp \
+         window.rc
+
+UMTYPE=windows
+UMENTRY=winmain
+
+C_DEFINES=/DW32 /DWIN32 
+_NT_TARGET_VERSION=$(_NT_TARGET_VERSION_WIN2K)
+
+TARGET_DESTINATION=idw
+ 
+MUI=0 

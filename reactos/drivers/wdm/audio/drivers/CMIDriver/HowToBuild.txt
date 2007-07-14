@@ -1,0 +1,22 @@
+For compiling and building the WDM driver, the following software is required:
+- Microsoft Windows Driver Development Kit (http://www.microsoft.com/whdc/devtools/wdk/default.mspx)
+- 7Zip (http://www.7-zip.org/)
+- Sed (http://gnuwin32.sourceforge.net/packages/sed.htm)
+
+The directories which contain 7z.exe, sed.exe and devcon.exe need to be in your %PATH% environment variable. Replace the file 'dsound.lib' in the [WINDDK]\[xxxx]\lib\w2k\i386 folder with the version from [WINDDK]\[xxxx]\lib\wxp\i386.
+
+The source files should be unpacked to [WINDDK]\[xxxx]\src\[\wdm]\audio\cmedia
+
+envars.bat                   - contains some environment variables: you probably want to change them
+make.bat                     - creates a debug build for x86 systems
+update.bat                   - replaces the currently installed driver with the x86 debug build
+build-release-x64.bat        - creates a non-WaveRT deployment build for x64 systems
+build-release-x64-WaveRT.bat - creates a WaveRT deployment build for x64 systems
+build-release-x86.bat        - creates a non-WaveRT deployment build for x86 systems
+build-release-x86-WaveRT.bat - creates a WaveRT deployment build for x86 systems
+distclean.bat                - cleans up and packs the source
+build-all.bat                - builds all versions and packs the source
+
+For testing and debugging, DebugView (http://www.microsoft.com/technet/sysinternals/utilities/debugview.mspx) is very helpful.
+
+If you have questions, feel free to mail me: dogber1@gmail.com
