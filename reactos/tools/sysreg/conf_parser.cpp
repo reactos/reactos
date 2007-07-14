@@ -16,7 +16,6 @@
 namespace Sysreg_
 {
 	using std::ifstream;
-	extern "C" FILE * open(char * filename, char* filemode);
 //---------------------------------------------------------------------------------------
 	ConfigParser::ConfigParser()
 	{
@@ -36,14 +35,13 @@ namespace Sysreg_
 #ifdef UNICODE
 		file = _tfopen(FileName, _T("rt,ccs=UNICODE"));
 #else
-		file = open(FileName, "rt");
+		file = fopen(FileName, "rt");
 #endif
 		if (!file)
 		{
 			cerr << "Error: ConfigParser::parseFile failed to open configuration file " << FileName << endl;
 			return false;
 		}
-
 		bool ret = false;
 		while (!feof(file))
 		{

@@ -12,7 +12,6 @@
 #include <cstdio>
 namespace System_
 {
-	extern "C" FILE * open(char * filename, char* filemode);
 //---------------------------------------------------------------------------------------
     FileReader::FileReader() : DataSource(),  m_File(NULL)
 	{
@@ -27,7 +26,7 @@ namespace System_
 #ifdef UNICODE
 		m_File = (FILE*)_tfopen(filename.c_str(), _T("rb,ccs=UNICODE"));
 #else
-		m_File = open((char*)filename.c_str(), (char*)"rb");
+		m_File = fopen((char*)filename.c_str(), (char*)"rb");
 #endif
 
 		if (m_File)

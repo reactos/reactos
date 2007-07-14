@@ -23,7 +23,7 @@ using System_::SymbolFile;
 #endif
 
 static const TCHAR USAGE[] = 
-_T("sysreg.exe -l | [conf_file] <testname>\n\n-l            - list available tests\nconf_file     - (optional) path to a configuration file (default: sysreg.cfg)\ntest_name     - name of test to execute\n");
+_T("sysreg.exe [conf_file]\nconfiguration file (default: sysreg.cfg)");
 
 
 
@@ -33,9 +33,8 @@ int _tmain(int argc, TCHAR * argv[])
 	ConfigParser config;
 	TCHAR DefaultConfig[] = _T("sysreg.cfg");
 	TCHAR *ConfigFile;
-	TCHAR * TestName;
 
-	if ((argc != 3) && (argc != 2))
+	if ((argc >= 2))
 	{
 		cerr << USAGE << endl;
 		return -1;
@@ -45,13 +44,11 @@ int _tmain(int argc, TCHAR * argv[])
 
 	if (argc == 2)
 	{
-		ConfigFile = DefaultConfig;
-		TestName = argv[1];
+		ConfigFile = argv[1];
 	}
 	else
 	{
-		ConfigFile = argv[1];
-		TestName = argv[2];
+		ConfigFile = DefaultConfig;
 	}
 
 
@@ -64,7 +61,7 @@ int _tmain(int argc, TCHAR * argv[])
 	RosBootTest * regtest = new RosBootTest();
 	if (!regtest)
 	{
-		cerr << "Error: the requested regression test does not exist" << endl;
+		cerr << "Error: failed to create regression test" << endl;
 		return -1;
 	}
 	
