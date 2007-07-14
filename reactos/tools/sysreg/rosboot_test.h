@@ -122,19 +122,18 @@ typedef enum DebugState
 protected:
 
 	double m_Timeout;
-	string m_PidFile;
 	string m_Checkpoint;
 	string m_CriticalApp;
 	string m_DebugFile;
-    string m_BootCmd;
-    string m_DebugPort;
-    string m_Pipe;
-    string m_File;
-    DataSource * m_DataSource;
+	string m_BootCmd;
+	string m_DebugPort;
+	string m_Pipe;
+	string m_File;
+	DataSource * m_DataSource;
 	vector <string> m_Checkpoints;
 	unsigned long m_Delayread;
-    long m_Pid;
-    long m_DelayRead;
+	long m_Pid;
+	long m_DelayRead;
 
 	}; // end of class RosBootTest
 

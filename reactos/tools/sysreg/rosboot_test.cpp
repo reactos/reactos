@@ -66,22 +66,6 @@ namespace Sysreg_
 
 	}
 //---------------------------------------------------------------------------------------
-    void RosBootTest::getPidFromFile()
-    {
-		FileReader file;
-		if (file.openSource(m_PidFile.c_str ()))
-        {
-			vector<string> lines;
-			file.readSource(lines);
-			if (lines.size() == 1)
-			{
-				string line = lines[0];
-				m_Pid = _ttoi(line.c_str ());
-			}
-			file.closeSource();
-		}
-    }
-//---------------------------------------------------------------------------------------
     bool RosBootTest::executeBootCmd()
     {
         m_Pid = OsSupport::createProcess ((TCHAR*)m_BootCmd.c_str(), 0, NULL); 
@@ -201,7 +185,7 @@ namespace Sysreg_
 			return false;
 		}
 		
-        string timeout;
+        	string timeout;
 		if (conf_parser.getStringValue(RosBootTest::TIME_OUT, timeout))
 		{
 			TCHAR * stop;
@@ -213,20 +197,8 @@ namespace Sysreg_
 				m_Timeout = 60.0;
 			}
 		}
-        if (m_DebugPort.find(_T("pipe")) != string::npos)
-        {
-#ifdef __LINUX__
-            if (!conf_parser.getStringValue (RosBootTest::PID_FILE, m_PidFile))
-		    {
-                cerr << "Error: linux hosts must provide pid file option" << endl;
-                return false;
-		    }
-            _tremove(m_PidFile.c_str ());
-#endif
-        }
 
-        string delayread;
-
+        	string delayread;
 		if (conf_parser.getStringValue(RosBootTest::DELAY_READ, delayread))
 		{
 			TCHAR * stop;
@@ -340,7 +312,8 @@ namespace Sysreg_
 
 			if (line.find (RosBootTest::SYSREG_CHECKPOINT) != string::npos)
 			{
-				line.erase (0, line.find (RosBootTest::SYSREG_CHECKPOINT) + RosBootTest::SYSREG_CHECKPOINT.length ());
+				line.erase (0, line.find (RosBootTest::SYSREG_CHECKPOINT) +
+							  RosBootTest::SYSREG_CHECKPOINT.length ());
 				if (!_tcsncmp(line.c_str (), m_Checkpoint.c_str (), m_Checkpoint.length ()))
 				{
 					state = DebugStateCPReached;
