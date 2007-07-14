@@ -3,7 +3,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Установка нового оборудования",IDC_WELCOMETITLE,120,8,210,24
@@ -21,7 +21,7 @@ END
 IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Это оборудование установить не удалось",IDC_FINISHTITLE,120,8,195,24
@@ -36,7 +36,7 @@ END
 IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Это оборудование установить не удалось",IDC_FINISHTITLE,120,8,195,24
@@ -47,7 +47,7 @@ END
 
 IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Искать по этим путям",IDC_RADIO_SEARCHHERE,"Button",
@@ -65,7 +65,7 @@ END
 
 IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Неизвестное устройство",IDC_DEVICE,51,20,169,16
@@ -73,7 +73,7 @@ END
 
 IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Неизвестное устройство",IDC_DEVICE,51,20,169,16
@@ -82,7 +82,7 @@ END
 IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Установка оборудования завершена",IDC_FINISHTITLE,120,8,195,11
@@ -95,7 +95,7 @@ END
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Установка оборудования"
+CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Установка завершена",IDC_FINISHTITLE,120,8,195,11

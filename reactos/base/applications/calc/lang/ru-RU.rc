@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 {
    IDS_APPNAME,            "Калькулятор"
 
-   IDS_COPYRIGHT1,         "Калькулятор 5.0. Распространяется по LGPL 2"
+   IDS_COPYRIGHT1,         "Калькулятор 5.0. Распространяется под LGPL 2"
    IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
    IDS_COPYRIGHT3          "Сан-Хосе, Калифорния, США"
    IDS_COPYRIGHT4          "james@ActionMessage.com"
