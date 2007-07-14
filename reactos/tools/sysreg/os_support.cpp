@@ -11,7 +11,7 @@
 
 namespace System_
 {
-#ifdef WIN32
+#ifndef __LINUX__
 	bool OsSupport::terminateProcess(OsSupport::ProcessID pid)
 	{
 		HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
@@ -57,10 +57,10 @@ namespace System_
 		free(command);
 		return pid;
 	}
-    void OsSupport::sleep(long value)
-    {
-        _sleep(value);
-    }
+   	void OsSupport::sleep(long value)
+    	{
+        	_sleep(value);
+    	}
 #else
 /********************************************************************************************************************/
 	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs)
@@ -87,10 +87,10 @@ namespace System_
 		return true;
 	}
 
-    void OsSupport::sleep(long value)
-    {
-        sleep(value);
-    }
+    	void OsSupport::sleep(long value)
+    	{
+        	sleep(value);
+    	}
 
 
 #endif

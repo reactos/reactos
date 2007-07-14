@@ -11,10 +11,12 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <cstdio>
 
 namespace Sysreg_
 {
 	using std::ifstream;
+	extern "C" FILE * open(char * filename, char* filemode);
 //---------------------------------------------------------------------------------------
 	ConfigParser::ConfigParser()
 	{
@@ -34,7 +36,7 @@ namespace Sysreg_
 #ifdef UNICODE
 		file = _tfopen(FileName, _T("rt,ccs=UNICODE"));
 #else
-		file = _tfopen(FileName, _T("rt"));
+		file = open(FileName, "rt");
 #endif
 		if (!file)
 		{

@@ -28,11 +28,11 @@ public:
     virtual ~DataSource()
     {}
 
-    virtual bool open(const string & opencmd) = 0;
+    virtual bool openSource(const string & opencmd) = 0;
 
-    virtual bool close() = 0;
+    virtual bool closeSource() = 0;
 
-    virtual bool read(std::vector<string> & vect) = 0;
+    virtual bool readSource(std::vector<string> & vect) = 0;
 
 }; // end of class DataSource
 

@@ -55,7 +55,7 @@ namespace Sysreg_
 	string RosBootTest::CRITICAL_APP = _T("ROSBOOT_CRITICAL_APP");
 
 //---------------------------------------------------------------------------------------
-	RosBootTest::RosBootTest() : RegressionTest(RosBootTest::CLASS_NAME),  m_Timeout(60.0), m_Delayread(0)
+	RosBootTest::RosBootTest() : m_Timeout(60.0), m_Delayread(0)
 	{
 
 	}
@@ -69,16 +69,16 @@ namespace Sysreg_
     void RosBootTest::getPidFromFile()
     {
 		FileReader file;
-		if (file.open(m_PidFile.c_str ()))
+		if (file.openSource(m_PidFile.c_str ()))
         {
 			vector<string> lines;
-			file.read(lines);
+			file.readSource(lines);
 			if (lines.size() == 1)
 			{
 				string line = lines[0];
 				m_Pid = _ttoi(line.c_str ());
 			}
-			file.close();
+			file.closeSource();
 		}
     }
 //---------------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ namespace Sysreg_
             src = m_File;
         }
         
-        if (!m_DataSource->open(src))
+        if (!m_DataSource->openSource(src))
         {
             cerr << "Error: failed to open data source with " << src << endl;
             return false;
@@ -300,7 +300,7 @@ namespace Sysreg_
 
         bool ret = analyzeDebugData();
 
-        m_DataSource->close();
+        m_DataSource->closeSource();
         OsSupport::sleep(3 * CLOCKS_PER_SEC);
         if (m_Pid)
         {
@@ -522,7 +522,7 @@ namespace Sysreg_
 			}
 			size_t prev_count = vect.size ();
 
-			if (!m_DataSource->read (vect))
+			if (!m_DataSource->readSource (vect))
 			{
 				cerr << "No data read" << endl;
 				continue;				
@@ -548,7 +548,7 @@ namespace Sysreg_
 			}
 			lines += (vect.size() -prev_count); //WTF?
         }
-		m_DataSource->close();
+		m_DataSource->closeSource();
 		if (write_log)
 		{
 			file.close();

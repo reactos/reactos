@@ -28,10 +28,16 @@
  #define _tremove remove
  #define _ttoi atoi
  #define _T(x) x
+ #define _tfopen _open
+ #define _tcsstr strstr
+ #define _fgetts fgets
+ #define _tgetenv getenv
+ #define _tmain main
 #endif
 
 	typedef std::basic_string<TCHAR> string;
 	typedef std::basic_istringstream<TCHAR> istringstream;
+
 
 #ifdef UNICODE
 

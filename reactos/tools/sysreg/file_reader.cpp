@@ -9,9 +9,10 @@
 
 #include "file_reader.h"
 #include <assert.h>
-
+#include <cstdio>
 namespace System_
 {
+	extern "C" FILE * open(char * filename, char* filemode);
 //---------------------------------------------------------------------------------------
     FileReader::FileReader() : DataSource(),  m_File(NULL)
 	{
@@ -21,12 +22,12 @@ namespace System_
 	{
 	}
 //---------------------------------------------------------------------------------------
-    bool FileReader::open(const string & filename)
+    bool FileReader::openSource(const string & filename)
 	{
 #ifdef UNICODE
-		m_File = _tfopen(filename.c_str(), _T("rb,ccs=UNICODE"));
+		m_File = (FILE*)_tfopen(filename.c_str(), _T("rb,ccs=UNICODE"));
 #else
-		m_File = _tfopen(filename.c_str(), _T("rb"));
+		m_File = open((char*)filename.c_str(), (char*)"rb");
 #endif
 
 		if (m_File)
@@ -39,7 +40,7 @@ namespace System_
 		}
 	}
 //---------------------------------------------------------------------------------------
-	bool FileReader::close()
+	bool FileReader::closeSource()
 	{
 		if (!m_File)
 		{
@@ -55,7 +56,7 @@ namespace System_
 		return false;
 	}
 //---------------------------------------------------------------------------------------
-	bool FileReader::read(vector<string> & lines)
+	bool FileReader::readSource(vector<string> & lines)
 	{
 		if (!m_File)
 		{
@@ -135,7 +136,7 @@ namespace System_
 			total_length = 0;
 			while((ptr = _tcsstr(offset, _T("\x0D\x0A"))) != NULL)
 			{
-				long long length = ((long long)ptr - (long long)offset);
+				long length = ((long )ptr - (long)offset);
 				length /= sizeof(TCHAR);
 
 				offset[length] = _T('\0');

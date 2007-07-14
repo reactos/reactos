@@ -14,8 +14,8 @@
 
 #include "user_types.h"
 #include "data_source.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+//#include <stdlib.h>
 
 namespace System_
 {
@@ -61,7 +61,7 @@ namespace System_
 ///                           w ... allows writing to the pipe
 /// @return bool
 
-		bool openPipe(const string & PipeCmd, string AccessMode = _T("rt"));
+		bool openSource(const string & PipeCmd);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -71,7 +71,7 @@ namespace System_
 ///
 /// @return bool
 
-		bool closePipe();
+		bool closeSource();
 
 //---------------------------------------------------------------------------------------
 ///
@@ -83,17 +83,7 @@ namespace System_
 /// @param Buffer to be written to
 /// @return string::size_type
 
-		string::size_type readPipe(string & Buffer);
-
-//---------------------------------------------------------------------------------------
-///
-/// writePipe
-///
-/// Description: attempts to write to the pipe. Returns true on success. 
-///
-/// @param Buffer containing information which is written to the pipe
-
-	bool writePipe(const string & Buffer);
+		bool readSource(std::vector<string> & lines);
 
 //---------------------------------------------------------------------------------------
 ///

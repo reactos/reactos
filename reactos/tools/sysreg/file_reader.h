@@ -14,7 +14,6 @@
 #include "user_types.h"
 #include "data_source.h"
 #include <vector>
-
 namespace System_
 {
 	using std::vector;
@@ -52,8 +51,7 @@ namespace System_
 /// @param filename name of the file to open
 /// @return bool
 
-	virtual bool open(const string & filename);
-
+	virtual bool openSource(const string & filename);
 //---------------------------------------------------------------------------------------
 ///
 /// closeFile
@@ -62,7 +60,7 @@ namespace System_
 ///
 /// @return bool
 
-	virtual bool close();
+	virtual bool closeSource();
 
 //---------------------------------------------------------------------------------------
 ///
@@ -73,7 +71,7 @@ namespace System_
 /// Note: returns true on success
 ///
 
-	virtual bool read(vector<string> & lines);
+	virtual bool readSource(vector<string> & lines);
 
 
 

@@ -12,19 +12,15 @@
 #include "sysreg.h"
 
 using System_::EnvironmentVariable;
-using System_::ComponentFactoryTemplate;
 
 using Sysreg_::ConfigParser;
 
 //regression test classes
-using Sysreg_::RegressionTest;
 using Sysreg_::RosBootTest;
 
 #if 0
 using System_::SymbolFile;
 #endif
-
-typedef ComponentFactoryTemplate<RegressionTest, string> ComponentFactory;
 
 static const TCHAR USAGE[] = 
 _T("sysreg.exe -l | [conf_file] <testname>\n\n-l            - list available tests\nconf_file     - (optional) path to a configuration file (default: sysreg.cfg)\ntest_name     - name of test to execute\n");
@@ -35,7 +31,6 @@ _T("sysreg.exe -l | [conf_file] <testname>\n\n-l            - list available tes
 int _tmain(int argc, TCHAR * argv[])
 {
 	ConfigParser config;
-	ComponentFactory comp_factory;
 	TCHAR DefaultConfig[] = _T("sysreg.cfg");
 	TCHAR *ConfigFile;
 	TCHAR * TestName;
@@ -47,19 +42,6 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 
 //---------------------------------------------------------------------------------------
-	/// regression tests should be registered here
-	comp_factory.registerComponent<RosBootTest>(RosBootTest::CLASS_NAME);
-
-//---------------------------------------------------------------------------------------
-
-	if (argc == 2)
-	{
-		if (_tcscmp(argv[1], _T("-l")) == 0)
-		{
-			comp_factory.listComponentIds();
-			return -1;
-		}
-	}
 
 	if (argc == 2)
 	{
@@ -79,7 +61,7 @@ int _tmain(int argc, TCHAR * argv[])
 		return -1;
 	}
 
-	RegressionTest * regtest = comp_factory.createComponent (TestName);
+	RosBootTest * regtest = new RosBootTest();
 	if (!regtest)
 	{
 		cerr << "Error: the requested regression test does not exist" << endl;
@@ -94,11 +76,11 @@ int _tmain(int argc, TCHAR * argv[])
 #endif	
 	if (regtest->execute (config))
 	{
-		cout << "The regression test " << regtest->getName () << " completed successfully" << endl;
+		cout << "The regression test completed successfully" << endl;
 	}
 	else
 	{
-		cout << "The regression test " << regtest->getName () << " failed" << endl;
+		cout << "The regression test failed" << endl;
 		return -2;
 	}
 

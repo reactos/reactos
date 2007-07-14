@@ -9,19 +9,17 @@
  * PURPOSE:     ReactOS boot test
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
-
-
-#include "reg_test.h"
 #include "data_source.h"
+#include "conf_parser.h"
 #include <vector>
-#ifndef WIN32
 #include <unistd.h>
-#endif
+
 
 namespace Sysreg_
 {
 	using std::vector;
     using System_::DataSource;
+
 //---------------------------------------------------------------------------------------
 ///
 /// class RosBootTest
@@ -29,7 +27,7 @@ namespace Sysreg_
 /// Description: this class attempts to boot ReactOS in an emulator with console logging enabled.
 /// It 
 
-	class RosBootTest : public RegressionTest
+	class RosBootTest
 	{
 	public:
 		static string VARIABLE_NAME;

@@ -33,7 +33,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool NamedPipeReader::open(const string & PipeCmd)
+	bool NamedPipeReader::openSource(const string & PipeCmd)
 	{
 		if (h_Pipe != NULLVAL)
 		{
@@ -68,7 +68,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool NamedPipeReader::close() 
+	bool NamedPipeReader::closeSource() 
 	{
 		if (!h_Pipe)
 		{
@@ -171,7 +171,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool NamedPipeReader::read(vector<string> & vect)
+	bool NamedPipeReader::readSource(vector<string> & vect)
 	{
 		char * localbuf;
 		DWORD localsize = 100;

@@ -14,6 +14,7 @@
 
 namespace System_
 {
+	using std::vector;
 //---------------------------------------------------------------------------------------
 	PipeReader::PipeReader() : m_File(NULL)
 	{
@@ -28,7 +29,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool PipeReader::openPipe(string const & PipeCmd, string AccessMode)
+	bool PipeReader::openSource(string const & PipeCmd)
 	{
 		if (m_File != NULL)
 		{
@@ -49,7 +50,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool PipeReader::closePipe() 
+	bool PipeReader::closeSource() 
 	{
 		if (!m_File)
 		{
@@ -78,34 +79,23 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	string::size_type PipeReader::readPipe(string &Buffer)
+	bool PipeReader::readSource(vector<string> & lines)
 	{
-		
-		TCHAR * buf = (TCHAR *)Buffer.c_str();
-		string::size_type size = Buffer.capacity();
-
+		TCHAR * buf = (TCHAR*)malloc(100 * sizeof(TCHAR));
 //#ifdef NDEBUG
-		memset(buf, 0x0, sizeof(TCHAR) * size);
+		memset(buf, 0x0, sizeof(TCHAR) * 100);
 //#endif
 
-		TCHAR * res = _fgetts(buf, size, m_File);
+		TCHAR * res = _fgetts(buf, 100, m_File);
 		if (!res)
 		{
 			cerr << "Error: PipeReader::readPipe failed" << endl;
-			return 0;
+			free(buf);
+			return false;
 		}
-		return _tcslen(buf);
-	}
-
-//---------------------------------------------------------------------------------------
-
-	bool PipeReader::writePipe(const string & Buffer)
-	{
-		//TODO
-		// implement me
-		cerr << "PipeReader::writePipe is not yet implemented" << endl;
-
-		return false;
+		string line(buf);
+		lines.push_back(line);
+		return true;
 	}
 
 } // end of namespace System_

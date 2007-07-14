@@ -74,7 +74,7 @@ namespace System_
 ///
 /// @return bool
 
-		virtual bool open(const string & PipeCmd);
+		virtual bool openSource(const string & PipeCmd);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -84,7 +84,7 @@ namespace System_
 ///
 /// @return bool
 
-		virtual bool close();
+		virtual bool closeSource();
 
 //---------------------------------------------------------------------------------------
 ///
@@ -96,7 +96,7 @@ namespace System_
 /// @param Buffer to be written to
 /// @return size_t
 
-	virtual bool read(std::vector<string> & vect);
+	virtual bool readSource(std::vector<string> & vect);
 
 //---------------------------------------------------------------------------------------
 ///
