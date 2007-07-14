@@ -40,6 +40,7 @@ namespace Sysreg_
 		static string SYSREG_CHECKPOINT;
 		static string DELAY_READ;
 		static string CRITICAL_APP;
+		static string TERMINATE_EMULATOR;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -129,6 +130,7 @@ protected:
 	string m_DebugPort;
 	string m_Pipe;
 	string m_File;
+	string m_KillEmulator;
 	DataSource * m_DataSource;
 	vector <string> m_Checkpoints;
 	unsigned long m_Delayread;

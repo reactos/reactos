@@ -53,6 +53,7 @@ namespace Sysreg_
 	string RosBootTest::CHECK_POINT = _T("ROSBOOT_CHECK_POINT");
 	string RosBootTest::SYSREG_CHECKPOINT = _T("SYSREG_CHECKPOINT:");
 	string RosBootTest::CRITICAL_APP = _T("ROSBOOT_CRITICAL_APP");
+	string RosBootTest::TERMINATE_EMULATOR = _T("ROSBOOT_TERMINATE_EMULATOR");
 
 //---------------------------------------------------------------------------------------
 	RosBootTest::RosBootTest() : m_Timeout(60.0), m_Delayread(0)
@@ -217,6 +218,7 @@ namespace Sysreg_
 		conf_parser.getStringValue (RosBootTest::CHECK_POINT, m_Checkpoint);
 		conf_parser.getStringValue (RosBootTest::CRITICAL_APP, m_CriticalApp);
 		conf_parser.getStringValue (RosBootTest::DEBUG_FILE, m_DebugFile);
+		conf_parser.getStringValue (RosBootTest::TERMINATE_EMULATOR, m_KillEmulator);
 
         return true;
     }
@@ -273,14 +275,16 @@ namespace Sysreg_
         bool ret = analyzeDebugData();
 
         m_DataSource->closeSource();
-        OsSupport::sleep(3 * CLOCKS_PER_SEC);
-        if (m_Pid)
-        {
+	if (m_KillEmulator == "yes")
+	{
+        	OsSupport::sleep(3 * CLOCKS_PER_SEC);
+        	if (m_Pid)
+        	{
 		    OsSupport::terminateProcess (m_Pid);
+        	}
         }
-
-		return ret;
-	}
+	return ret;
+}
 //---------------------------------------------------------------------------------------
 	void RosBootTest::dumpCheckpoints()
 	{
