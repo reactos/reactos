@@ -19,15 +19,19 @@
 
 /* TYPES ********************************************************************/
 
-#define FIND_DATA_SIZE	(16*1024)
+#define FIND_DATA_SIZE	0x4000
 
 #define FIND_DEVICE_HANDLE ((HANDLE)0x1)
 
 typedef struct _KERNEL32_FIND_FILE_DATA
 {
    HANDLE DirectoryHandle;
-   BOOLEAN DirectoryOnly;
+   RTL_CRITICAL_SECTION Lock;
    PFILE_BOTH_DIR_INFORMATION pFileInfo;
+   BOOLEAN DirectoryOnly;
+   BOOLEAN HasMoreData;
+   BOOLEAN HasData;
+   BOOLEAN LockInitialized;
 } KERNEL32_FIND_FILE_DATA, *PKERNEL32_FIND_FILE_DATA;
 
 typedef struct _KERNEL32_FIND_STREAM_DATA
@@ -51,7 +55,7 @@ typedef struct _KERNEL32_FIND_DATA_HEADER
 
 /* FUNCTIONS ****************************************************************/
 
-HANDLE
+static HANDLE
 InternalCopyDeviceFindDataW(LPWIN32_FIND_DATAW lpFindFileData,
                             LPCWSTR lpFileName,
                             ULONG DeviceNameInfo)
@@ -72,7 +76,7 @@ InternalCopyDeviceFindDataW(LPWIN32_FIND_DATAW lpFindFileData,
     return FIND_DEVICE_HANDLE;
 }
 
-HANDLE
+static HANDLE
 InternalCopyDeviceFindDataA(LPWIN32_FIND_DATAA lpFindFileData,
                             PUNICODE_STRING FileName,
                             ULONG DeviceNameInfo)
@@ -91,10 +95,6 @@ InternalCopyDeviceFindDataA(LPWIN32_FIND_DATAA lpFindFileData,
     else
         RtlUnicodeStringToOemString (&BufferA, &DeviceName, FALSE);
 
-    /* NOTE: Free the string before we try to write the results to the caller,
-             this way we prevent a memory leak in case of a fault... */
-    RtlFreeUnicodeString(FileName);
-
     /* Return the data */
     RtlZeroMemory(lpFindFileData,
                   sizeof(*lpFindFileData));
@@ -106,7 +106,7 @@ InternalCopyDeviceFindDataA(LPWIN32_FIND_DATAA lpFindFileData,
     return FIND_DEVICE_HANDLE;
 }
 
-VOID
+static VOID
 InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
                       PFILE_BOTH_DIR_INFORMATION    lpFileInfo)
 {
@@ -131,7 +131,7 @@ InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
     lpFindFileData->cAlternateFileName[lpFileInfo->ShortNameLength / sizeof(WCHAR)] = 0;
 }
 
-VOID
+static VOID
 InternalCopyFindDataA(LPWIN32_FIND_DATAA            lpFindFileData,
                       PFILE_BOTH_DIR_INFORMATION    lpFileInfo)
 {
@@ -189,23 +189,23 @@ InternalCopyFindDataA(LPWIN32_FIND_DATAA            lpFindFileData,
 BOOL
 STDCALL
 InternalFindNextFile (
-	HANDLE	hFindFile,
-        PUNICODE_STRING SearchPattern
-	)
+    HANDLE	hFindFile,
+    PUNICODE_STRING SearchPattern,
+    PVOID lpFindFileData,
+    BOOL bUnicode
+    )
 {
-	PKERNEL32_FIND_DATA_HEADER IHeader;
-	PKERNEL32_FIND_FILE_DATA IData;
-	IO_STATUS_BLOCK IoStatusBlock;
-	NTSTATUS Status;
+    PKERNEL32_FIND_DATA_HEADER IHeader;
+    PKERNEL32_FIND_FILE_DATA IData;
+    IO_STATUS_BLOCK IoStatusBlock;
+    BOOLEAN Locked = FALSE;
+    PFILE_BOTH_DIR_INFORMATION Buffer, FoundFile = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-	DPRINT("InternalFindNextFile(%lx)\n", hFindFile);
+    DPRINT("InternalFindNextFile(%lx, %wZ)\n", hFindFile, SearchPattern);
 
-    if (hFindFile == FIND_DEVICE_HANDLE)
+    if (hFindFile != FIND_DEVICE_HANDLE)
     {
-        SetLastError (ERROR_NO_MORE_FILES);
-        return FALSE;
-    }
-
         IHeader = (PKERNEL32_FIND_DATA_HEADER)hFindFile;
         if (hFindFile == NULL || hFindFile == INVALID_HANDLE_VALUE ||
             IHeader->Type != FileFind)
@@ -215,41 +215,119 @@ InternalFindNextFile (
         }
 
         IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
+        Buffer = (PFILE_BOTH_DIR_INFORMATION)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
 
-        while (1)
+        if (SearchPattern == NULL)
         {
-            if (IData->pFileInfo->NextEntryOffset != 0)
-	    {
-	        IData->pFileInfo = (PVOID)((ULONG_PTR)IData->pFileInfo + IData->pFileInfo->NextEntryOffset);
+            RtlEnterCriticalSection(&IData->Lock);
+            Locked = TRUE;
+        }
+
+        do
+        {
+            if (IData->HasData)
+            {
+                if (!IData->DirectoryOnly || (IData->pFileInfo->FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                {
+                    FoundFile = IData->pFileInfo;
+                }
+
+                if (IData->pFileInfo->NextEntryOffset != 0)
+                {
+                    ULONG_PTR BufferEnd;
+
+                    IData->pFileInfo = (PFILE_BOTH_DIR_INFORMATION)((ULONG_PTR)IData->pFileInfo + IData->pFileInfo->NextEntryOffset);
+
+                    /* Be paranoid and make sure that the next entry is completely there */
+                    BufferEnd = (ULONG_PTR)Buffer + FIND_DATA_SIZE;
+                    if (BufferEnd < (ULONG_PTR)IData->pFileInfo ||
+                        BufferEnd < (ULONG_PTR)&IData->pFileInfo->FileNameLength + sizeof(IData->pFileInfo->FileNameLength) ||
+                        BufferEnd <= (ULONG_PTR)&IData->pFileInfo->FileName[IData->pFileInfo->FileNameLength])
+                    {
+                        goto NeedMoreData;
+                    }
+                }
+                else
+                {
+NeedMoreData:
+                    IData->HasData = FALSE;
+
+                    if (!IData->HasMoreData)
+                        break;
+                }
             }
             else
             {
-                IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
-	        IData->pFileInfo->FileIndex = 0;
-	        Status = NtQueryDirectoryFile (IData->DirectoryHandle,
-	                                       NULL,
+                IData->pFileInfo = Buffer;
+                IData->pFileInfo->NextEntryOffset = 0;
+                Status = NtQueryDirectoryFile (IData->DirectoryHandle,
+                                               NULL,
                                                NULL,
                                                NULL,
                                                &IoStatusBlock,
                                                (PVOID)IData->pFileInfo,
                                                FIND_DATA_SIZE,
                                                FileBothDirectoryInformation,
-                                               SearchPattern ? TRUE : FALSE,
+                                               FALSE,
                                                SearchPattern,
-                                               SearchPattern ? TRUE : FALSE);
-                SearchPattern = NULL;
-                if (!NT_SUCCESS(Status))
+                                               SearchPattern != NULL);
+
+                if (Status == STATUS_BUFFER_OVERFLOW)
                 {
-                    SetLastErrorByStatus (Status);
-                    return FALSE;
-	        }
+                    IData->HasMoreData = TRUE;
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    if (!NT_SUCCESS(Status))
+                        break;
+
+                    IData->HasMoreData = FALSE;
+                }
+
+                IData->HasData = TRUE;
+                SearchPattern = NULL;
             }
-            if (!IData->DirectoryOnly || IData->pFileInfo->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+
+        } while (FoundFile == NULL);
+
+        if (FoundFile != NULL)
+        {
+            _SEH_TRY
             {
-	        DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
-	        return TRUE;
+                if (bUnicode)
+                {
+                    InternalCopyFindDataW(lpFindFileData,
+                                          FoundFile);
+                }
+                else
+                {
+                    InternalCopyFindDataA(lpFindFileData,
+                                          FoundFile);
+                }
             }
+            _SEH_HANDLE
+            {
+            }
+            _SEH_END;
         }
+
+        if (Locked)
+            RtlLeaveCriticalSection(&IData->Lock);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus (Status);
+        return FALSE;
+    }
+    else if (FoundFile == NULL)
+    {
+        SetLastError (ERROR_NO_MORE_FILES);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -261,7 +339,8 @@ STDCALL
 InternalFindFirstFile (
     LPCWSTR	lpFileName,
     BOOLEAN DirectoryOnly,
-    PULONG DeviceNameInfo
+    PVOID lpFindFileData,
+    BOOL bUnicode
 	)
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
@@ -274,12 +353,12 @@ InternalFindFirstFile (
 	BOOLEAN RemovedSlash = FALSE;
 	BOOL bResult;
 	CURDIR DirInfo;
-    HANDLE hDirectory = NULL;
+	ULONG DeviceNameInfo;
+	HANDLE hDirectory = NULL;
 
 	DPRINT("FindFirstFileW(lpFileName %S)\n",
 	       lpFileName);
 
-	*DeviceNameInfo = 0;
 	RtlZeroMemory(&PathFileName,
 	              sizeof(PathFileName));
 	RtlInitUnicodeString(&FileName,
@@ -329,8 +408,8 @@ InternalFindFirstFile (
 
 	/* Remove a trailing backslash from the path, unless it's a DOS drive directly */
 	if (NtPathU.Length > 3 * sizeof(WCHAR) &&
-	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 2] != L':' &&
-	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 1] != L'\\')
+	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 1] == L'\\' &&
+	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 2] != L':')
 	{
 	    NtPathU.Length -= sizeof(WCHAR);
 	    RemovedSlash = TRUE;
@@ -348,11 +427,11 @@ InternalFindFirstFile (
 	                            NULL);
 
 	Status = NtOpenFile (&hDirectory,
-	                     FILE_LIST_DIRECTORY,
+	                     FILE_LIST_DIRECTORY | SYNCHRONIZE,
 	                     &ObjectAttributes,
 	                     &IoStatusBlock,
 	                     FILE_SHARE_READ|FILE_SHARE_WRITE,
-	                     FILE_DIRECTORY_FILE);
+	                     FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
 
 	if (!NT_SUCCESS(Status) && RemovedSlash)
 	{
@@ -360,25 +439,38 @@ InternalFindFirstFile (
 	    NtPathU.Length -= sizeof(WCHAR);
 
 	    Status = NtOpenFile (&hDirectory,
-	                         FILE_LIST_DIRECTORY,
+	                         FILE_LIST_DIRECTORY | SYNCHRONIZE,
 	                         &ObjectAttributes,
 	                         &IoStatusBlock,
 	                         FILE_SHARE_READ|FILE_SHARE_WRITE,
-	                         FILE_DIRECTORY_FILE);
-
-	    NtPathU.Length -= sizeof(WCHAR);
+	                         FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
 	}
 
 	if (!NT_SUCCESS(Status))
 	{
-	    RtlFreeHeap (hProcessHeap,
-	                 0,
-	                 NtPathBuffer);
+	   RtlFreeHeap (hProcessHeap,
+	                0,
+	                NtPathBuffer);
 
 	   /* See if the application tries to look for a DOS device */
-	   *DeviceNameInfo = RtlIsDosDeviceName_U((PWSTR)((ULONG_PTR)lpFileName));
-	   if (*DeviceNameInfo != 0)
+	   DeviceNameInfo = RtlIsDosDeviceName_U((PWSTR)((ULONG_PTR)lpFileName));
+	   if (DeviceNameInfo != 0)
+	   {
+	       if (bUnicode)
+	       {
+	           InternalCopyDeviceFindDataW(lpFindFileData,
+	                                       lpFileName,
+	                                       DeviceNameInfo);
+	       }
+	       else
+	       {
+	           InternalCopyDeviceFindDataA(lpFindFileData,
+	                                       &FileName,
+	                                       DeviceNameInfo);
+	       }
+
 	       return FIND_DEVICE_HANDLE;
+	   }
 
 	   SetLastErrorByStatus (Status);
 	   return(NULL);
@@ -413,6 +505,7 @@ InternalFindFirstFile (
 	IHeader->Type = FileFind;
 	IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 	IData->DirectoryHandle = hDirectory;
+	IData->HasMoreData = TRUE;
 
 	/* change pattern: "*.*" --> "*" */
 	if (PathFileName.Length == 6 &&
@@ -427,7 +520,10 @@ InternalFindFirstFile (
 	IData->pFileInfo->FileIndex = 0;
 	IData->DirectoryOnly = DirectoryOnly;
 
-	bResult = InternalFindNextFile((HANDLE)IHeader, &PathFileName);
+	bResult = InternalFindNextFile((HANDLE)IHeader,
+	                               &PathFileName,
+	                               lpFindFileData,
+	                               bUnicode);
 
 	RtlFreeHeap (hProcessHeap,
 	             0,
@@ -438,6 +534,9 @@ InternalFindFirstFile (
 	    FindClose((HANDLE)IHeader);
 	    return NULL;
 	}
+
+	RtlInitializeCriticalSection(&IData->Lock);
+	IData->LockInitialized = TRUE;
 
 	return (HANDLE)IHeader;
 }
@@ -453,52 +552,12 @@ FindFirstFileA (
 	LPWIN32_FIND_DATAA	lpFindFileData
 	)
 {
-	PKERNEL32_FIND_DATA_HEADER IHeader;
-	PKERNEL32_FIND_FILE_DATA IData;
-	UNICODE_STRING FileNameU;
-	ANSI_STRING FileName;
-	ULONG DeviceNameInfo;
-
-	RtlInitAnsiString (&FileName,
-	                   (LPSTR)lpFileName);
-
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&FileNameU,
-		                              &FileName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&FileNameU,
-		                             &FileName,
-		                             TRUE);
-
-	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE, &DeviceNameInfo);
-
-	if (IHeader == NULL)
-	{
-		RtlFreeUnicodeString (&FileNameU);
-		DPRINT("Failing request\n");
-		return INVALID_HANDLE_VALUE;
-	}
-
-	if ((HANDLE)IHeader == FIND_DEVICE_HANDLE)
-	{
-		/* NOTE: FileNameU will be freed in InternalCopyDeviceFindDataA */
-		return InternalCopyDeviceFindDataA(lpFindFileData, &FileNameU, DeviceNameInfo);
-	}
-
-	RtlFreeUnicodeString (&FileNameU);
-
-	IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
-
-	DPRINT("IData->pFileInfo->FileNameLength %d\n",
-	       IData->pFileInfo->FileNameLength);
-
-	/* copy data into WIN32_FIND_DATA structure */
-        InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
-
-
-	return (HANDLE)IHeader;
+	return FindFirstFileExA (lpFileName,
+	                         FindExInfoStandard,
+	                         (LPVOID)lpFindFileData,
+	                         FindExSearchNameMatch,
+	                         NULL,
+	                         0);
 }
 
 
@@ -511,23 +570,10 @@ FindNextFileA (
 	HANDLE hFindFile,
 	LPWIN32_FIND_DATAA lpFindFileData)
 {
-	PKERNEL32_FIND_FILE_DATA IData;
-
-	if (!InternalFindNextFile (hFindFile, NULL))
-	{
-		DPRINT("InternalFindNextFile() failed\n");
-		return FALSE;
-	}
-
-	IData = (PKERNEL32_FIND_FILE_DATA)((PKERNEL32_FIND_DATA_HEADER)hFindFile + 1);
-
-	DPRINT("IData->pFileInfo->FileNameLength %d\n",
-	       IData->pFileInfo->FileNameLength);
-
-	/* copy data into WIN32_FIND_DATA structure */
-        InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
-
-	return TRUE;
+	return InternalFindNextFile (hFindFile,
+	                             NULL,
+	                             lpFindFileData,
+	                             FALSE);
 }
 
 
@@ -561,6 +607,8 @@ FindClose (
 		{
 			PKERNEL32_FIND_FILE_DATA IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
 			CloseHandle (IData->DirectoryHandle);
+			if (IData->LockInitialized)
+				RtlDeleteCriticalSection(&IData->Lock);
 			break;
 		}
 
@@ -595,13 +643,12 @@ FindFirstFileW (
 	LPWIN32_FIND_DATAW	lpFindFileData
 	)
 {
-
-        return FindFirstFileExW (lpFileName,
-                                 FindExInfoStandard,
-                                 (LPVOID)lpFindFileData,
-                                 FindExSearchNameMatch,
-                                 NULL,
-                                 0);
+    return FindFirstFileExW (lpFileName,
+                             FindExInfoStandard,
+                             (LPVOID)lpFindFileData,
+                             FindExSearchNameMatch,
+                             NULL,
+                             0);
 }
 
 /*
@@ -614,20 +661,10 @@ FindNextFileW (
 	LPWIN32_FIND_DATAW	lpFindFileData
 	)
 {
-	PKERNEL32_FIND_FILE_DATA IData;
-
-	if (!InternalFindNextFile(hFindFile, NULL))
-	{
-		DPRINT("Failing request\n");
-		return FALSE;
-	}
-
-	IData = (PKERNEL32_FIND_FILE_DATA)((PKERNEL32_FIND_DATA_HEADER)hFindFile + 1);
-
-	/* copy data into WIN32_FIND_DATA structure */
-        InternalCopyFindDataW(lpFindFileData, IData->pFileInfo);
-
-	return TRUE;
+	return InternalFindNextFile (hFindFile,
+	                             NULL,
+	                             lpFindFileData,
+	                             TRUE);
 }
 
 
@@ -643,15 +680,14 @@ FindFirstFileExW (LPCWSTR               lpFileName,
                   LPVOID                lpSearchFilter,
                   DWORD                 dwAdditionalFlags)
 {
-    PKERNEL32_FIND_DATA_HEADER IHeader;
-    PKERNEL32_FIND_FILE_DATA IData;
-    ULONG DeviceNameInfo;
+    HANDLE Handle;
 
     if (fInfoLevelId != FindExInfoStandard)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return INVALID_HANDLE_VALUE;
     }
+
     if (fSearchOp == FindExSearchNameMatch || fSearchOp == FindExSearchLimitToDirectories)
     {
         if (lpSearchFilter)
@@ -660,23 +696,19 @@ FindFirstFileExW (LPCWSTR               lpFileName,
             return INVALID_HANDLE_VALUE;
         }
 
-        IHeader = InternalFindFirstFile (lpFileName, fSearchOp == FindExSearchLimitToDirectories ? TRUE : FALSE, &DeviceNameInfo);
-        if (IHeader == NULL)
+        Handle = InternalFindFirstFile (lpFileName,
+                                        fSearchOp == FindExSearchLimitToDirectories,
+                                        lpFindFileData,
+                                        TRUE);
+        if (Handle == NULL)
         {
             DPRINT("Failing request\n");
             return INVALID_HANDLE_VALUE;
         }
 
-        if ((HANDLE)IHeader == FIND_DEVICE_HANDLE)
-            return InternalCopyDeviceFindDataW((LPWIN32_FIND_DATAW)lpFindFileData, lpFileName, DeviceNameInfo);
-
-        IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
-
-        /* copy data into WIN32_FIND_DATA structure */
-        InternalCopyFindDataW((LPWIN32_FIND_DATAW)lpFindFileData, IData->pFileInfo);
-
-	return (HANDLE)IHeader;
+        return Handle;
     }
+
     SetLastError(ERROR_INVALID_PARAMETER);
     return INVALID_HANDLE_VALUE;
 }
@@ -695,11 +727,9 @@ FindFirstFileExA (
 	DWORD			dwAdditionalFlags
 	)
 {
-    PKERNEL32_FIND_DATA_HEADER IHeader;
-    PKERNEL32_FIND_FILE_DATA IData;
     UNICODE_STRING FileNameU;
     ANSI_STRING FileNameA;
-    ULONG DeviceNameInfo;
+    HANDLE Handle;
 
     if (fInfoLevelId != FindExInfoStandard)
     {
@@ -713,39 +743,31 @@ FindFirstFileExA (
             SetLastError(ERROR_INVALID_PARAMETER);
             return INVALID_HANDLE_VALUE;
         }
-	
+
         RtlInitAnsiString (&FileNameA, (LPSTR)lpFileName);
 
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
+        /* convert ansi (or oem) string to unicode */
+        if (bIsFileApiAnsi)
             RtlAnsiStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
-	else
+        else
             RtlOemStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
 
-	IHeader = InternalFindFirstFile (FileNameU.Buffer, FALSE, &DeviceNameInfo);
+        Handle = InternalFindFirstFile (FileNameU.Buffer,
+                                        fSearchOp == FindExSearchLimitToDirectories,
+                                        lpFindFileData,
+                                        FALSE);
 
-	if (IHeader == NULL)
-	{
-		RtlFreeUnicodeString (&FileNameU);
-		DPRINT("Failing request\n");
-		return INVALID_HANDLE_VALUE;
-	}
+        RtlFreeUnicodeString (&FileNameU);
 
-	if ((HANDLE)IHeader == FIND_DEVICE_HANDLE)
-	{
-		/* NOTE: FileNameU will be freed in InternalCopyDeviceFindDataA */
-		return InternalCopyDeviceFindDataA(lpFindFileData, &FileNameU, DeviceNameInfo);
-	}
+        if (Handle == NULL)
+        {
+            DPRINT("Failing request\n");
+            return INVALID_HANDLE_VALUE;
+        }
 
-	RtlFreeUnicodeString (&FileNameU);
-
-        IData = (PKERNEL32_FIND_FILE_DATA)(IHeader + 1);
-
-	/* copy data into WIN32_FIND_DATA structure */
-        InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
-
-        return (HANDLE)IHeader;
+        return Handle;
     }
+
     SetLastError(ERROR_INVALID_PARAMETER);
     return INVALID_HANDLE_VALUE;
 }
