@@ -44,10 +44,10 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Выстроить &значки"
         BEGIN
-            MENUITEM "По &Имени",	0x30	/* column 0 */
-            MENUITEM "По &Типу",	0x32	/* column 2 */
-            MENUITEM "По &Размеру",	0x31	/* ... */
-            MENUITEM "По &Дате",	0x33
+            MENUITEM "По &имени",	0x30	/* column 0 */
+            MENUITEM "По &типу",	0x32	/* column 2 */
+            MENUITEM "По &размеру",	0x31	/* ... */
+            MENUITEM "По &дате",	0x33
             MENUITEM SEPARATOR
             MENUITEM "&Автоматически",	FCIDM_SHVIEW_AUTOARRANGE
         END
@@ -60,7 +60,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Создать"
         BEGIN
-            MENUITEM "&Папка",		FCIDM_SHVIEW_NEWFOLDER
+            MENUITEM "&Папку",		FCIDM_SHVIEW_NEWFOLDER
             MENUITEM "&Ярлык",		FCIDM_SHVIEW_NEWLINK
             MENUITEM SEPARATOR
         END
@@ -92,7 +92,7 @@ END
 
 SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Обзор"
+CAPTION "Проводник"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON "Да", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -125,8 +125,8 @@ FONT 8, "MS Shell Dlg"
 {
  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
  LTEXT "Введите имя программы, папки, документа или ресурс Интернета, и ReactOS откроет их.", 12289, 36, 11, 182, 18
- LTEXT "&Открыть:", 12305, 7, 39, 24, 10
- CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ LTEXT "&Открыть:", 12305, 7, 39, 32, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 42, 37, 179, 100
  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
  PUSHBUTTON "Отмена", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
  PUSHBUTTON "Об&зор...", 12288, 170, 63, 50, 14, WS_TABSTOP
