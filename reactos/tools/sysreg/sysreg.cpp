@@ -34,7 +34,7 @@ int _tmain(int argc, TCHAR * argv[])
 	TCHAR DefaultConfig[] = _T("sysreg.cfg");
 	TCHAR *ConfigFile;
 
-	if ((argc >= 2))
+	if ((argc > 2))
 	{
 		cerr << USAGE << endl;
 		return -1;
@@ -50,7 +50,6 @@ int _tmain(int argc, TCHAR * argv[])
 	{
 		ConfigFile = DefaultConfig;
 	}
-
 
 	if (!config.parseFile (ConfigFile))
 	{
