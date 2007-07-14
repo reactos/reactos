@@ -1206,7 +1206,13 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
   for (i = 0;i < dwCount;i++)
   {
     /* Calculate size */
-    if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+    {
+      /* Junction */
+      iSizeFormat = -14;
+      _tcscpy(szSize, _T("<JUNCTION>"));
+    }
+    else if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     {
       /* Directory */
       iSizeFormat = -14;
