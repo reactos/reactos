@@ -371,7 +371,7 @@ InternalFindFirstFile (
 	if (FALSE == bResult)
 	{
 	    SetLastError(ERROR_PATH_NOT_FOUND);
-	    return NULL;
+	    return INVALID_HANDLE_VALUE;
 	}
 
 	/* Save the buffer pointer for later, we need to free it! */
@@ -473,7 +473,7 @@ InternalFindFirstFile (
 	   }
 
 	   SetLastErrorByStatus (Status);
-	   return(NULL);
+	   return INVALID_HANDLE_VALUE;
 	}
 
 	if (PathFileName.Length == 0)
@@ -484,7 +484,7 @@ InternalFindFirstFile (
 	                 0,
 	                 NtPathBuffer);
 	    SetLastError(ERROR_FILE_NOT_FOUND);
-	    return NULL;
+	    return INVALID_HANDLE_VALUE;
 	}
 
 	IHeader = RtlAllocateHeap (hProcessHeap,
@@ -499,7 +499,7 @@ InternalFindFirstFile (
 	    NtClose(hDirectory);
 
 	    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	    return NULL;
+	    return INVALID_HANDLE_VALUE;
 	}
 
 	IHeader->Type = FileFind;
@@ -532,7 +532,7 @@ InternalFindFirstFile (
 	if (!bResult)
 	{
 	    FindClose((HANDLE)IHeader);
-	    return NULL;
+	    return INVALID_HANDLE_VALUE;
 	}
 
 	RtlInitializeCriticalSection(&IData->Lock);
@@ -680,8 +680,6 @@ FindFirstFileExW (LPCWSTR               lpFileName,
                   LPVOID                lpSearchFilter,
                   DWORD                 dwAdditionalFlags)
 {
-    HANDLE Handle;
-
     if (fInfoLevelId != FindExInfoStandard)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -696,17 +694,10 @@ FindFirstFileExW (LPCWSTR               lpFileName,
             return INVALID_HANDLE_VALUE;
         }
 
-        Handle = InternalFindFirstFile (lpFileName,
-                                        fSearchOp == FindExSearchLimitToDirectories,
-                                        lpFindFileData,
-                                        TRUE);
-        if (Handle == NULL)
-        {
-            DPRINT("Failing request\n");
-            return INVALID_HANDLE_VALUE;
-        }
-
-        return Handle;
+        return InternalFindFirstFile (lpFileName,
+                                      fSearchOp == FindExSearchLimitToDirectories,
+                                      lpFindFileData,
+                                      TRUE);
     }
 
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -758,13 +749,6 @@ FindFirstFileExA (
                                         FALSE);
 
         RtlFreeUnicodeString (&FileNameU);
-
-        if (Handle == NULL)
-        {
-            DPRINT("Failing request\n");
-            return INVALID_HANDLE_VALUE;
-        }
-
         return Handle;
     }
 
