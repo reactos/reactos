@@ -5,11 +5,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 1 24 DISCARDABLE "manifest.xml"
 
-STRINGTABLE DISCARDABLE
-BEGIN
-  IDS_APPNAME "ReactOS Service Manager"
-END
-
 IDI_SM_ICON ICON "res/system.ico"
 
 /* main toolbar icons */

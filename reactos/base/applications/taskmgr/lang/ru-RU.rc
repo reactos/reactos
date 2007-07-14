@@ -191,9 +191,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Новая задача...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "&Переключиться",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "&Завершить задачу",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Новая задача...",IDC_NEWTASK,167,189,73,14
+    PUSHBUTTON      "&Переключиться",IDC_SWITCHTO,89,189,73,14,WS_DISABLED
+    PUSHBUTTON      "&Завершить задачу",IDC_ENDTASK,12,189,73,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOG DISCARDABLE  0, 0, 247, 210
@@ -203,9 +203,9 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Завершить процесс",IDC_ENDPROCESS,171,189,69,14
+    PUSHBUTTON      "&Завершить процесс",IDC_ENDPROCESS,167,189,74,14
     CONTROL         "&Отображать процессы всех пользователей",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,153,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -214,13 +214,13 @@ STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Загрузка ЦП",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
-    GROUPBOX        "Загрузка памяти",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "Файл подкачки",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Всего",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Выделение памяти (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Физическая память (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Память ядра (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Дискрипторов",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "Потоков",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "Дискрипторов",IDS_TOTALS_HANDLE_COUNT,12,131,57,8
+    LTEXT           "Потоков",IDS_TOTALS_THREAD_COUNT,12,140,30,8
     LTEXT           "Процессов",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
@@ -229,7 +229,7 @@ BEGIN
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Всего",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Предел",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8
+    LTEXT           "Предел",IDS_COMMIT_CHARGE_LIMIT,12,184,27,8
     LTEXT           "Пик",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
@@ -238,18 +238,18 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Всего",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Доступно",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
-    LTEXT           "Системный кеш",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
-    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
+    LTEXT           "Доступно",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,33,8
+    LTEXT           "Системный кеш",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,62,8
+    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,192,131,41,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Всего",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Выгружаемая",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
-    LTEXT           "Невыгружаемая",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
-    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
+    LTEXT           "Выгружаемая",IDS_KERNEL_MEMORY_PAGED,137,184,50,8
+    LTEXT           "Невыгружаемая",IDS_KERNEL_MEMORY_NONPAGED,137,193,62,8
+    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,192,174,41,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
@@ -283,8 +283,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Семейство процессоров"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,174,133,50,14
+    DEFPUSHBUTTON   "OK",IDOK,124,133,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,178,133,50,14
     LTEXT           "Установка процессоров, на которых будет выполняться задача.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "ЦП 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -353,65 +353,65 @@ BEGIN
                     WS_DISABLED | WS_TABSTOP,175,119,41,10
 END
 
-IDD_COLUMNS_DIALOG DIALOG DISCARDABLE  0, 0, 195, 199
+IDD_COLUMNS_DIALOG DIALOG DISCARDABLE  0, 0, 230, 199
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Выбор столбцов"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,138,178,50,14
-    LTEXT           "Выбор столбцов, отображаемых в списке Менеджера задач.",
-                    IDC_STATIC,7,7,181,17
+    DEFPUSHBUTTON   "OK",IDOK,113,178,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,167,178,50,14
+    LTEXT           "Выбор столбцов, отображаемых в списке диспетчера задач.",
+                    IDC_STATIC,7,7,220,17
     CONTROL         "&Имя образа",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
     CONTROL         "PID (иденти&ф. процесса)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,92,10
     CONTROL         "&Загрузка ЦП",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,53,10
     CONTROL         "&Время ЦП",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
     CONTROL         "&Память - использование",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,72,63,10
+                    WS_TABSTOP,7,72,93,10
     CONTROL         "Память - изме&нение",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
     CONTROL         "Память - &максимум",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
     CONTROL         "&Ошибок страницы",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,105,53,10
+                    WS_TABSTOP,7,105,90,10
     CONTROL         "Об&ъекты USER",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
     CONTROL         "Число чтений",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,127,49,10
+                    WS_TABSTOP,7,127,60,10
     CONTROL         "Прочитано байт",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
     CONTROL         "Код се&анса",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
     CONTROL         "Им&я пользователя",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,160,51,10
+                    WS_TABSTOP,7,160,80,10
     CONTROL         "Ошибок &страницы - изменение",IDC_PAGEFAULTSDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
-    CONTROL         "Объем виртуал&ьной памяти",IDC_VIRTUALMEMORYSIZE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,114,10
+    CONTROL         "Объем вирт&уальной памяти",IDC_VIRTUALMEMORYSIZE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,110,10
     CONTROL         "Вы&гружаемый пул",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,50,53,10
+                    WS_TABSTOP,107,50,90,10
     CONTROL         "Невыгр&ужаемый пул",IDC_NONPAGEDPOOL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,90,10
     CONTROL         "&Базовый приоритет",IDC_BASEPRIORITY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,90,10
     CONTROL         "Счетчик &дискрипторов",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,83,59,10
+                    WS_TABSTOP,107,83,90,10
     CONTROL         "С&четчик потоков",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,94,59,10
+                    WS_TABSTOP,107,94,67,10
     CONTROL         "Объ&екты GDI",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
     CONTROL         "Число записей",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,116,49,10
+                    WS_TABSTOP,107,116,65,10
     CONTROL         "Записано байт",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
     CONTROL         "Прочий ввод-вывод",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,138,46,10
+                    WS_TABSTOP,107,138,90,10
     CONTROL         "Прочих байт при вводе-выводе",IDC_IOOTHERBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,115,10
 END
 
 

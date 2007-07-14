@@ -280,3 +280,9 @@ BEGIN
   IDS_HINT_SYS_MAXIMIZE " Espande la finestra fino a riempire lo schermo."
   IDS_HINT_SYS_CLOSE    " Chiude questa finestra."
 END
+
+/* Application title */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "ReactOS Service Manager"
+END

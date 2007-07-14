@@ -285,3 +285,10 @@ BEGIN
   IDS_HINT_SYS_MAXIMIZE " Разгръща прозореца, докато запълни целия екран."
   IDS_HINT_SYS_CLOSE    " Затваря прозореца."
 END
+
+/* Application title */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "ReactOS Service Manager"
+END
+
