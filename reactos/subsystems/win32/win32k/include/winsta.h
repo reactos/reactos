@@ -34,10 +34,12 @@ typedef struct _WINSTATION_OBJECT
     HANDLE ShellWindow;
     HANDLE ShellListView;
      
-	BOOL FlatMenu;
-	 /* ScreenSaver */
-	BOOL ScreenSaverRunning;
-	UINT  ScreenSaverTimeOut;
+    BOOL FlatMenu;
+    /* ScreenSaver */
+    BOOL ScreenSaverRunning;
+    UINT  ScreenSaverTimeOut;
+   /* Should this be on each desktop ? */
+    BOOL ScreenSaverActive;
 
     /* Wallpaper */
     HANDLE hbmWallpaper;

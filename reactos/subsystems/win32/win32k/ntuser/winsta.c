@@ -537,8 +537,9 @@ NtUserCreateWindowStation(
    CurInfo->MouseHoverWidth = 4;
    CurInfo->MouseHoverHeight = 4;
 
-   WindowStationObject->ScreenSaverTimeOut = 10 * 60;
-   WindowStationObject->SystemCursor = CurInfo;  
+   WindowStationObject->ScreenSaverActive = FALSE;
+   WindowStationObject->ScreenSaverTimeOut = 10;
+   WindowStationObject->SystemCursor = CurInfo;
 
    /* END FIXME loading from register */
 

@@ -958,6 +958,9 @@ IntSystemParametersInfo(
            /* FIXME: Implement this, don't just return constant */ 
            *(PBOOL)pvParam = FALSE;
            break;
+
+
+
       case SPI_GETKEYBOARDCUES:
       case SPI_SETDOUBLECLKWIDTH:
       case SPI_SETDOUBLECLKHEIGHT:
@@ -1025,10 +1028,11 @@ IntSystemParametersInfo(
                   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
                   WinStaObject->ScreenSaverRunning = uiParam;
                   break;
+               case SPI_SETSCREENSAVEACTIVE:
+                  WinStaObject->ScreenSaverActive = uiParam;
+                  break;
                case SPI_GETSCREENSAVEACTIVE:
-                  /* FIXME: how to disable the screensaver? */
-                  ASSERT(pvParam);
-                  *((BOOL*)pvParam) = TRUE;
+                  if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverActive;
                   break;
                case SPI_GETWHEELSCROLLLINES:
                   ASSERT(pvParam);
