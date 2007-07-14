@@ -1523,12 +1523,15 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szTemp[MAX_PATH];			/* A buffer to format the directory header */
+	SIZE_T len;
 
 	/* Print directory header */
 	_tcscpy(szTemp, szCurPath);
 
-	/* We cut the trailing \ of the full path */
-	szTemp[_tcslen(szTemp)-1] = _T('\0');
+	/* We cut the trailing \ of the full path, unless the path is a drive */
+	len = _tcslen(szTemp);
+	if ((len != 3 || szTemp[len - 2] != _T(':')) && szTemp[len - 1] == _T('\\'))
+		szTemp[len-1] = _T('\0');
 
 	/* Condition to print header:
 	   We are not printing in bare format
