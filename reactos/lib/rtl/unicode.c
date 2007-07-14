@@ -1632,7 +1632,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
         OemDest->MaximumLength = Length;
         if (!OemDest->Buffer) return STATUS_NO_MEMORY;
     }
-    else if (OemDest->Length >= OemDest->MaximumLength)
+    else if (OemDest->Length > OemDest->MaximumLength)
     {
         return STATUS_BUFFER_OVERFLOW;
     }
