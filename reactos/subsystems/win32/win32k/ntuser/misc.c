@@ -1062,13 +1062,24 @@ IntSystemParametersInfo(
                    *((UINT*)pvParam) = CurInfo->MouseHoverTime;
                    break;
                case SPI_SETMOUSEHOVERTIME:
+                   /* see http://msdn2.microsoft.com/en-us/library/ms724947.aspx 
+                    * copy text from it, if some agument why xp and 2003 behovir diffent
+                    * only if they do not have SP install
+                    * " Windows Server 2003 and Windows XP: The operating system does not
+                    *   enforce the use of USER_TIMER_MAXIMUM and USER_TIMER_MINIMUM until
+                    *   Windows Server 2003 SP1 and Windows XP SP2 "
+                    */
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
                   CurInfo->MouseHoverTime = uiParam;
                   if(CurInfo->MouseHoverTime < USER_TIMER_MINIMUM) 
                   {
                       CurInfo->MouseHoverTime = USER_TIMER_MINIMUM;
                   }
-                  /* FIXME limit the maximum time to 1000 ms? */
+                  if(CurInfo->MouseHoverTime > USER_TIMER_MAXIMUM) 
+                  {
+                      CurInfo->MouseHoverTime = USER_TIMER_MAXIMUM;
+                  }
+
                   break; 
                case SPI_GETMOUSEHOVERWIDTH:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
