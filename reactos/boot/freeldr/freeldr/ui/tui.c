@@ -20,7 +20,6 @@
 #include <freeldr.h>
 
 PVOID	TextVideoBuffer = NULL;
-extern BOOLEAN UiDrawTime;
 extern BOOLEAN UiMinimal;
 
 /*
