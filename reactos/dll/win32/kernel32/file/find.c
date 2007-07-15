@@ -350,7 +350,7 @@ InternalFindFirstFile (
 	UNICODE_STRING NtPathU, FileName, PathFileName;
 	NTSTATUS Status;
 	PWSTR NtPathBuffer;
-	BOOLEAN RemovedSlash = FALSE;
+	BOOLEAN RemovedLastChar = FALSE;
 	BOOL bResult;
 	CURDIR DirInfo;
 	ULONG DeviceNameInfo;
@@ -406,13 +406,20 @@ InternalFindFirstFile (
 	    }
 	}
 
-	/* Remove a trailing backslash from the path, unless it's a DOS drive directly */
-	if (NtPathU.Length > 3 * sizeof(WCHAR) &&
-	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 1] == L'\\' &&
+	/* Remove the last character of the path (Unless the path is a drive and
+	   ends with ":\"). If the caller however supplies a path to a device, such
+	   as "C:\NUL" then the last character gets cut off, which later results in
+	   NtOpenFile to return STATUS_OBJECT_NAME_NOT_FOUND, which in turn triggers
+	   a fake DOS device check with RtlIsDosDeviceName_U. However, if there is a
+	   real device with a name eg. "NU" in the system, FindFirstFile will succeed,
+	   rendering the fake DOS device check useless... Why would they invent such a
+	   stupid and broken behavior?! */
+	if (NtPathU.Length >= 2 * sizeof(WCHAR) &&
+	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 1] != L'\\' &&
 	    NtPathU.Buffer[(NtPathU.Length / sizeof(WCHAR)) - 2] != L':')
 	{
 	    NtPathU.Length -= sizeof(WCHAR);
-	    RemovedSlash = TRUE;
+	    RemovedLastChar = TRUE;
 	}
 
 	DPRINT("lpFileName: \"%ws\"\n", lpFileName);
@@ -433,10 +440,10 @@ InternalFindFirstFile (
 	                     FILE_SHARE_READ|FILE_SHARE_WRITE,
 	                     FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
 
-	if (!NT_SUCCESS(Status) && RemovedSlash)
+	if (Status == STATUS_NOT_A_DIRECTORY && RemovedLastChar)
 	{
-	    /* Try again, this time with the trailing slash... */
-	    NtPathU.Length -= sizeof(WCHAR);
+	    /* Try again, this time with the last character ... */
+	    NtPathU.Length += sizeof(WCHAR);
 
 	    Status = NtOpenFile (&hDirectory,
 	                         FILE_LIST_DIRECTORY | SYNCHRONIZE,
@@ -444,6 +451,8 @@ InternalFindFirstFile (
 	                         &IoStatusBlock,
 	                         FILE_SHARE_READ|FILE_SHARE_WRITE,
 	                         FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+
+	    NtPathU.Length += sizeof(WCHAR);
 	}
 
 	if (!NT_SUCCESS(Status))
