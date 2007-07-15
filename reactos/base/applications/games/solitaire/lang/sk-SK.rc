@@ -37,9 +37,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire od J Brown\n\nCardLib verzia 1.0.\n\nPreklad: Kario"
+    IDS_SOL_ABOUT   "Solitaire od J Brown\n\nCardLib verzia 1.0"
     IDS_SOL_QUIT    "Naozaj chcete skonËiù aktu·lnu hru?"
-    IDS_SOL_WIN     "Congratulations, you win!!"
+    IDS_SOL_WIN     "Blahoûel·m, vyhrali ste!"
 END
 
 
