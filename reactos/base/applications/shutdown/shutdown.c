@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS shutdown/logoff utility
- * FILE:            apps/utils/shutdown/shutdown.c
+ * FILE:            base/application/shutdown/shutdown.c
  * PURPOSE:         Initiate logoff, shutdown or reboot of the system
  */
 
@@ -9,162 +9,188 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <tchar.h>
+#include <reason.h> //shutdown codes
 
-static void
-PrintUsage(LPCTSTR Cmd)
-{
-  _ftprintf(stderr, _T("usage: %s [action] [flag]\n"), Cmd);
-  _ftprintf(stderr, _T(" action = \"logoff\", \"reboot\", \"shutdown\" or \"poweroff\"\n"));
-  _ftprintf(stderr, _T(" flag = \"force\"\n"));
+// Print information about which commandline arguments the program accepts.
+static void PrintUsage() {
+	_tprintf("Usage: shutdown [-?] [-l | -s | -r] [-f]\n");
+	_tprintf("\n  No args or -?\t\tDisplay this message");
+	_tprintf("\n  -l\t\t\tLog off");
+	_tprintf("\n  -s\t\t\tShutdown the computer");
+	_tprintf("\n  -r\t\t\tShutdown and restart the computer");
+	_tprintf("\n  -f\t\t\tForces running applications to close without warnings");
+	_tprintf("\n");
 }
 
-int
-_tmain(int argc, TCHAR *argv[])
+struct CommandLineOptions {
+	BOOL abort; // Not used yet
+	BOOL force;
+	BOOL logoff;
+	BOOL restart;
+	BOOL shutdown;
+};
+
+struct ExitOptions {
+	// This flag is used to distinguish between a user-initiated LOGOFF (which has value 0)
+	// and an underdetermined situation because user didn't give an argument to start Exit.
+	BOOL shouldExit;
+	// flags is the type of shutdown to do - EWX_LOGOFF, EWX_REBOOT, EWX_POWEROFF, etc..
+	UINT flags;
+	// reason is the System Shutdown Reason code. F.instance SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED.
+	DWORD reason;
+};
+
+// Takes the commandline arguments, and creates a struct which matches the arguments supplied.
+static struct CommandLineOptions ParseArguments(int argc, TCHAR *argv[])
 {
-  static struct
-    {
-      TCHAR *Name;
-      UINT ExitType;
-      UINT ExitFlags;
-    }
-  Options[] =
-    {
-      { _T("logoff"), EWX_LOGOFF, 0 },
-      { _T("logout"), EWX_LOGOFF, 0 },
-      { _T("poweroff"), EWX_POWEROFF, 0 },
-      { _T("powerdown"), EWX_POWEROFF, 0 },
-      { _T("reboot"), EWX_REBOOT, 0 },
-      { _T("restart"), EWX_REBOOT, 0 },
-      { _T("shutdown"), EWX_SHUTDOWN, 0 },
-      { _T("force"), 0, EWX_FORCE },
-      { _T("forceifhung"), 0, EWX_FORCEIFHUNG },
-      { _T("ifhung"), 0, EWX_FORCEIFHUNG },
-      { _T("hung"), 0, EWX_FORCEIFHUNG },
-    };
-  UINT ExitType, ExitFlags;
-  HANDLE hToken;
-  TOKEN_PRIVILEGES npr;
-  TCHAR *Arg;
-  TCHAR BaseName[_MAX_FNAME];
-  unsigned i, j;
-  BOOL HaveType, Matched;
-
-  ExitType = 0;
-  ExitFlags = 0;
-  HaveType = FALSE;
-
-  _tsplitpath(argv[0], NULL, NULL, BaseName, NULL);
-
-  /* Process optional arguments */
-  for (i = 1; i < (unsigned) argc; i++)
-    {
-      /* Allow e.g. "/s" or "-l" for shutdown resp. logoff */
-      Arg = argv[i];
-      if (_T('/') == *Arg || _T('-') == *Arg)
-        {
-          Arg++;
-        }
-
-      /* Search known options */
-      Matched = FALSE;
-      for (j = 0; j < sizeof(Options) / sizeof(Options[0]) && ! Matched; j++)
-        {
-          /* Match if arg starts the same as the option name */
-          if (0 == _tcsnicmp(Options[j].Name, Arg, _tcslen(Arg)))
-            {
-              if (0 == Options[j].ExitFlags)
-                {
-                  /* Can have only 1 type */
-                  if (HaveType)
-                    {
-                      PrintUsage(BaseName);
-                      exit(1);
-                    }
-                  ExitType = Options[j].ExitType;
-                  HaveType = TRUE;
-                }
-              else
-                {
-                  /* Can have only 1 flag */
-                  if (0 != ExitFlags)
-                    {
-                      PrintUsage(BaseName);
-                      exit(1);
-                    }
-                  ExitFlags |= Options[j].ExitFlags;
-                }
-              Matched = TRUE;
-            }
-        }
-
-      /* Was the argument processed? */
-      if (! Matched)
-        {
-          PrintUsage(BaseName);
-          exit(1);
-        }
-    }
-
-  /* Check command name if user didn't explicitly specify action */
-  if (! HaveType)
-    {
-      for (j = 0; j < sizeof(Options) / sizeof(Options[0]); j++)
-        {
-          if (0 == _tcsicmp(Options[j].Name, BaseName) && 0 == Options[j].ExitFlags)
-            {
-              ExitType = Options[j].ExitType;
-              HaveType = TRUE;
-            }
-        }
-    }
-
-  /* Still not sure what to do? */
-  if (! HaveType)
-    {
-      PrintUsage(BaseName);
-      exit(1);
-    }
-
-  /* Everyone can logoff, for the other actions you need the appropriate privilege */
-  if (EWX_LOGOFF != ExitType)
-    {
-      /* enable shutdown privilege for current process */
-      if (! OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
-        {
-          _ftprintf(stderr, _T("OpenProcessToken failed with error %d\n"), (int) GetLastError());
-          exit(1);
-        }
-      npr.PrivilegeCount = 1;
-      npr.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-      if (! LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &npr.Privileges[0].Luid))
-        {
-          CloseHandle(hToken);
-          _ftprintf(stderr, _T("LookupPrivilegeValue failed with error %d\n"), (int) GetLastError());
-          exit(1);
-        }
-      if (! AdjustTokenPrivileges(hToken, FALSE, &npr, 0, 0, 0)
-          || ERROR_SUCCESS != GetLastError())
-        {
-          if (ERROR_NOT_ALL_ASSIGNED == GetLastError())
-            {
-              _ftprintf(stderr, _T("You are not authorized to shutdown the system\n"));
-            }
-          else
-            {
-              _ftprintf(stderr, _T("AdjustTokenPrivileges failed with error %d\n"), (int) GetLastError());
-            }
-          CloseHandle(hToken);
-          exit(1);
-        }
-      CloseHandle(hToken);
-    }
-
-  /* Finally do it */
-  if (! ExitWindowsEx(ExitType | ExitFlags, 0))
-    {
-      _ftprintf(stderr, _T("ExitWindowsEx failed with error %d\n"), (int) GetLastError());
-      exit(1);
-    }
-
-  return 0;
+	struct CommandLineOptions opts;
+	int i;
+	
+	// Reset all flags in struct
+	opts.abort = FALSE;
+	opts.force = FALSE;
+	opts.logoff = FALSE;
+	opts.restart = FALSE;
+	opts.shutdown = FALSE;
+	
+	for (i = 1; i < argc; i++)
+	{
+		if (argv[i][0] == '-' || argv[i][0] == '/') 
+		{
+			switch(argv[i][1]) {
+				case '?': PrintUsage(); exit(0);
+				case 'f': opts.force = TRUE; break;
+				case 'l': opts.logoff = TRUE; break;
+				case 'r': opts.restart = TRUE; break;
+				case 's': opts.shutdown = TRUE; break;
+				default:
+					// Unknown arguments will exit program.
+					PrintUsage();
+					exit(0);
+					break;
+			}
+		}
+	}
+	
+	return opts;
 }
+
+// Converts the commandline arguments to flags used to shutdown computer
+static struct ExitOptions ParseCommandLineOptionsToExitOptions(struct CommandLineOptions opts) 
+{
+	struct ExitOptions exitOpts;
+	exitOpts.shouldExit = TRUE;
+	
+	// Sets ONE of the exit type flags
+	if (opts.logoff)
+		exitOpts.flags = EWX_LOGOFF;
+	else if (opts.restart)
+		exitOpts.flags = EWX_REBOOT;
+	else if(opts.shutdown)
+		exitOpts.flags = EWX_POWEROFF;
+	else
+	{
+		exitOpts.flags = 0;
+		exitOpts.shouldExit = FALSE;
+	}
+	
+	// Sets additional flags
+	if (opts.force)
+		exitOpts.flags = exitOpts.flags | EWX_FORCE;
+	
+	// Reason for shutdown
+	// Hardcoded to "Other (Planned)"
+	exitOpts.reason = SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED;
+	
+	return exitOpts;
+}
+
+// Writes the last error as both text and error code to the console.
+void DisplayLastError()
+{
+	int errorCode = GetLastError();
+	LPTSTR lpMsgBuf;
+	
+	// Display the error message to the user
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL,
+		errorCode,
+		LANG_USER_DEFAULT,
+		(LPTSTR) &lpMsgBuf,
+		0,
+		NULL);
+	
+	_ftprintf(stderr, lpMsgBuf);
+	_ftprintf(stderr, _T("Error code: %d\n"), errorCode);
+}
+
+void EnableShutdownPrivileges()
+{
+	HANDLE token;
+	TOKEN_PRIVILEGES privs;
+	
+	// Check to see if the choosen action is allowed by the user. Everyone can call LogOff, but only privilieged users can shutdown/restart etc.
+	if (! OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+	{
+		DisplayLastError();
+		exit(1);
+	}
+	
+	// Get LUID (Locally Unique Identifier) for the privilege we need
+	if (!LookupPrivilegeValue(
+			NULL, // system - NULL is localsystem
+			SE_SHUTDOWN_NAME, // name of the privilege
+			&privs.Privileges[0].Luid) // output
+		)
+	{
+		DisplayLastError();
+		exit(1);
+	}
+	// and give our current process (i.e. shutdown.exe) the privilege to shutdown the machine.
+	privs.PrivilegeCount = 1;
+	privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	if (AdjustTokenPrivileges(
+			token,
+			FALSE,
+			&privs,
+			0,
+			(PTOKEN_PRIVILEGES)NULL, // previous state. Set to NULL, we don't care about previous state.
+			NULL
+			) == 0) // return value 0 means failure
+		{
+			DisplayLastError();
+			exit(1);
+		}
+}
+ 
+ // Main entry for program
+int _tmain(int argc, TCHAR *argv[])
+{
+	struct CommandLineOptions opts;
+	struct ExitOptions exitOpts;
+	
+	if (argc == 1) // i.e. no commandline arguments given
+	{
+		PrintUsage();
+		exit(0);
+	}
+
+	opts = ParseArguments(argc, argv);    
+	exitOpts = ParseCommandLineOptionsToExitOptions(opts);
+
+	// Perform the shutdown/restart etc. action
+	if (exitOpts.shouldExit)
+	{
+		EnableShutdownPrivileges();
+	
+		if (!ExitWindowsEx(exitOpts.flags, exitOpts.reason))
+		{
+			DisplayLastError();
+			exit(1);
+		}
+	}
+	return 0;
+}
+
+// EOF
