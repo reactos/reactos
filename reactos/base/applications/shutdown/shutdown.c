@@ -13,13 +13,13 @@
 
 // Print information about which commandline arguments the program accepts.
 static void PrintUsage() {
-	_tprintf("Usage: shutdown [-?] [-l | -s | -r] [-f]\n");
-	_tprintf("\n  No args or -?\t\tDisplay this message");
-	_tprintf("\n  -l\t\t\tLog off");
-	_tprintf("\n  -s\t\t\tShutdown the computer");
-	_tprintf("\n  -r\t\t\tShutdown and restart the computer");
-	_tprintf("\n  -f\t\t\tForces running applications to close without warnings");
-	_tprintf("\n");
+	_tprintf(_T("Usage: shutdown [-?] [-l | -s | -r] [-f]\n"));
+	_tprintf(_T("\n  No args or -?\t\tDisplay this message"));
+	_tprintf(_T("\n  -l\t\t\tLog off"));
+	_tprintf(_T("\n  -s\t\t\tShutdown the computer"));
+	_tprintf(_T("\n  -r\t\t\tShutdown and restart the computer"));
+	_tprintf(_T("\n  -f\t\t\tForces running applications to close without warnings"));
+	_tprintf(_T("\n"));
 }
 
 struct CommandLineOptions {
