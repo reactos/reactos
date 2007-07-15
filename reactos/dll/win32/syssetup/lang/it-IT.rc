@@ -184,7 +184,6 @@ STRINGTABLE
 BEGIN
     IDS_CMT_WINEFILE    "Lancia Winefile"
     IDS_CMT_IBROWSER	"Lancia iBrowser"
-    IDS_CMT_GETFIREFOX	"Scarica/installa Firefox"
     IDS_CMT_DOWNLOADER  "Scarica e installa varie applicazioni"
 END
 

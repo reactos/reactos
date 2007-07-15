@@ -193,7 +193,6 @@ STRINGTABLE
 BEGIN
     IDS_CMT_WINEFILE    "Lancer Winefile"
     IDS_CMT_IBROWSER	"Lancer iBrowser"
-    IDS_CMT_GETFIREFOX	"Télécharger/installer FireFox"
     IDS_CMT_DOWNLOADER  "Télécharger et installer diverses applications"
 END
 

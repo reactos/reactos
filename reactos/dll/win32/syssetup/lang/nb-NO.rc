@@ -196,7 +196,6 @@ STRINGTABLE
 BEGIN
     IDS_CMT_WINEFILE    "Start Winefile"
     IDS_CMT_IBROWSER	"Start iBrowser"
-    IDS_CMT_GETFIREFOX	"Last Ned/Installer Firefox"
     IDS_CMT_DOWNLOADER  "Download and install various applications"
 END
 
