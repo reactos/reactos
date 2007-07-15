@@ -82,12 +82,9 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, PRECT WindowRect)
 }
 
 BOOL FASTCALL
-IntValidateParent(PWINDOW_OBJECT Child, BOOL Recurse)
+IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse)
 {
    PWINDOW_OBJECT ParentWindow = Child->Parent;
-
-   while (ParentWindow && ParentWindow->Style & WS_CHILD)
-      ParentWindow = ParentWindow->Parent;
 
    while (ParentWindow)
    {
@@ -99,7 +96,7 @@ IntValidateParent(PWINDOW_OBJECT Child, BOOL Recurse)
          if (Recurse)
             return FALSE;
 
-         IntInvalidateWindows(ParentWindow, Child->UpdateRegion,
+         IntInvalidateWindows(ParentWindow, hValidateRgn,
                               RDW_VALIDATE | RDW_NOCHILDREN);
       }
 
@@ -243,7 +240,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
    {
       if (Window->UpdateRegion)
       {
-         if (!IntValidateParent(Window, Recurse))
+         if (!IntValidateParent(Window, Window->UpdateRegion, Recurse))
             return;
       }
 
@@ -813,6 +810,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
          IntGetClientRect(Window, &Ps.rcPaint);
       }
       GDIOBJ_SetOwnership(GdiHandleTable, Window->UpdateRegion, PsGetCurrentProcess());
+      /* The region is part of the dc now and belongs to the process! */
       Window->UpdateRegion = NULL;
    }
    else
@@ -833,6 +831,17 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    else
    {
       Ps.fErase = FALSE;
+   }
+   if (Window->UpdateRegion)
+   {
+      if (!(Window->Style & WS_CLIPCHILDREN))
+      {
+         PWINDOW_OBJECT Child;
+         for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
+         {
+            IntInvalidateWindows(Child, Window->UpdateRegion, RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+         }
+      }
    }
 
    Status = MmCopyToCaller(UnsafePs, &Ps, sizeof(PAINTSTRUCT));

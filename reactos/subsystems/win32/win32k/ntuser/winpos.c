@@ -969,7 +969,7 @@ co_WinPosSetWindowPos(
    }
 
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
-    
+
     //DPRINT1("co_WinPosDoNCCALCSize");
 
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
@@ -1197,6 +1197,7 @@ co_WinPosSetWindowPos(
                         CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
                         CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY, 0, 0);
             UserReleaseDC(Window, Dc, FALSE);
+            IntValidateParent(Window, CopyRgn, FALSE);
             NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
          else if(VisRgn)
@@ -1223,14 +1224,6 @@ co_WinPosSetWindowPos(
          }
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
-                      /* old code
-            NtGdiOffsetRgn(DirtyRgn, Window->WindowRect.left, Window->WindowRect.top);
-            IntInvalidateWindows(Window, DirtyRgn,
-               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-         }
-         NtGdiDeleteObject(DirtyRgn);
-         */
-
             PWINDOW_OBJECT Parent = Window->Parent;
 
             NtGdiOffsetRgn(DirtyRgn,
@@ -1241,13 +1234,16 @@ co_WinPosSetWindowPos(
                 !(Parent->Style & WS_CLIPCHILDREN))
             {
                IntInvalidateWindows(Parent, DirtyRgn,
-                  RDW_ERASE | RDW_INVALIDATE);
-               co_IntPaintWindows(Parent, RDW_ERASENOW, FALSE);
+                  RDW_ERASE | RDW_INVALIDATE | RDW_NOCHILDREN);
+               co_IntPaintWindows(Parent, RDW_ERASENOW | RDW_NOCHILDREN, FALSE);
+               IntInvalidateWindows(Window, DirtyRgn,
+                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
             else
             {
-                IntInvalidateWindows(Window, DirtyRgn,
-                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+               IntInvalidateWindows(Window, DirtyRgn,
+                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+               co_IntPaintWindows(Window, RDW_ERASENOW, FALSE);
             }
          }
          NtGdiDeleteObject(DirtyRgn);
@@ -1298,6 +1294,33 @@ co_WinPosSetWindowPos(
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
       co_IntPostOrSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
+
+   if ((Window->Flags & WINDOWOBJECT_NEED_SIZE) &&
+         !(Window->Status & WINDOWSTATUS_DESTROYING))
+   {
+      WPARAM wParam = SIZE_RESTORED;
+
+      Window->Flags &= ~WINDOWOBJECT_NEED_SIZE;
+      if (Window->Style & WS_MAXIMIZE)
+      {
+         wParam = SIZE_MAXIMIZED;
+      }
+      else if (Window->Style & WS_MINIMIZE)
+      {
+         wParam = SIZE_MINIMIZED;
+      }
+
+      co_IntSendMessage(Window->hSelf, WM_SIZE, wParam,
+                        MAKELONG(Window->ClientRect.right -
+                                 Window->ClientRect.left,
+                                 Window->ClientRect.bottom -
+                                 Window->ClientRect.top));
+      co_IntSendMessage(Window->hSelf, WM_MOVE, 0,
+                        MAKELONG(Window->ClientRect.left,
+                                 Window->ClientRect.top));
+      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
+      
+   }
 
    return TRUE;
 }
@@ -1466,33 +1489,6 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    }
 
    /* FIXME: Check for window destruction. */
-
-   if ((Window->Flags & WINDOWOBJECT_NEED_SIZE) &&
-         !(Window->Status & WINDOWSTATUS_DESTROYING))
-   {
-      WPARAM wParam = SIZE_RESTORED;
-
-      Window->Flags &= ~WINDOWOBJECT_NEED_SIZE;
-      if (Window->Style & WS_MAXIMIZE)
-      {
-         wParam = SIZE_MAXIMIZED;
-      }
-      else if (Window->Style & WS_MINIMIZE)
-      {
-         wParam = SIZE_MINIMIZED;
-      }
-
-      co_IntSendMessage(Window->hSelf, WM_SIZE, wParam,
-                        MAKELONG(Window->ClientRect.right -
-                                 Window->ClientRect.left,
-                                 Window->ClientRect.bottom -
-                                 Window->ClientRect.top));
-      co_IntSendMessage(Window->hSelf, WM_MOVE, 0,
-                        MAKELONG(Window->ClientRect.left,
-                                 Window->ClientRect.top));
-      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-      
-   }
 
    /* Activate the window if activation is not requested and the window is not minimized */
    /*
