@@ -281,20 +281,6 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
         return Status;
     }
 
-#if 0
-    DPRINT("Inserting Key into Object Tree\n");
-    Status =  ObInsertObject((PVOID)NewKey,
-                             NULL,
-                             KEY_ALL_ACCESS,
-                             0,
-                             NULL,
-                             NULL);
-    DPRINT("Status %x\n", Status);
-#else
-    /* Free the create information */
-    ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo);
-    OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo = NULL;
-#endif
     NewKey->Flags = 0;
     NewKey->SubKeyCounts = 0;
     NewKey->SubKeys = NULL;
@@ -332,6 +318,10 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
         ObDereferenceObject (ParentKey);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    /* Free the create information */
+    ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo);
+    OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo = NULL;
 
     /* FN1 */
     ObReferenceObject (NewKey);

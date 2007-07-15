@@ -322,24 +322,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         goto Cleanup;
     }
 
-    Status = ObInsertObject((PVOID)KeyObject,
-                            NULL,
-                            DesiredAccess,
-                            0,
-                            NULL,
-                            &hKey);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(KeyObject);
-        DPRINT1("ObInsertObject() failed!\n");
-
-        PostCreateKeyInfo.Object = NULL;
-        PostCreateKeyInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-
-        goto Cleanup;
-    }
-
     KeyObject->ParentKey = Object;
     KeyObject->RegistryHive = KeyObject->ParentKey->RegistryHive;
     KeyObject->Flags = 0;
@@ -398,6 +380,28 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     VERIFY_KEY_OBJECT(KeyObject);
 
+    Status = CmpCreateHandle(KeyObject,
+                             DesiredAccess,
+                             ObjectCreateInfo.Attributes,
+                             &hKey);
+
+    /* Free the create information */
+    ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(KeyObject)->ObjectCreateInfo);
+    OBJECT_TO_OBJECT_HEADER(KeyObject)->ObjectCreateInfo = NULL;
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ObInsertObject() failed!\n");
+
+        PostCreateKeyInfo.Object = NULL;
+        PostCreateKeyInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+
+        goto Cleanup;
+    }
+
+    /* Add the keep-alive reference */
+    ObReferenceObject(KeyObject);
     /* Release hive lock */
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
