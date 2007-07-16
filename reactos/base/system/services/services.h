@@ -134,6 +134,7 @@ VOID ScmStartRpcServer(VOID);
 
 /* services.c */
 
+BOOL ScmWaitForEvent();
 VOID PrintString(LPCSTR fmt, ...);
 
 /* EOF */

@@ -1511,6 +1511,9 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
+    if (!ScmWaitForEvent())
+        return ERROR_ACCESS_DENIED;
+
     dwError = ScmCreateManagerHandle(lpDatabaseName,
                                      &hHandle);
     if (dwError != ERROR_SUCCESS)

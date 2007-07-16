@@ -94,6 +94,27 @@ ScmCreateStartEvent(PHANDLE StartEvent)
 }
 
 
+BOOL ScmWaitForEvent()
+{
+    HANDLE hEvent;
+
+    hEvent = OpenEvent(EVENT_ALL_ACCESS,
+                       FALSE,
+                       TEXT("SvcctrlStartEvent_A3752DX"));
+    
+    if (hEvent)
+    {
+        DWORD ret = WaitForSingleObject(hEvent,
+                                        INFINITE);
+
+        if (ret == WAIT_OBJECT_0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
 BOOL
 ScmNamedPipeHandleRequest(PVOID Request,
                           DWORD RequestSize,
