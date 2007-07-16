@@ -248,8 +248,21 @@ StringTableAddString(HSTRING_TABLE hStringTable,
     /* Check for filled slot table */
     if (pStringTable->dwUsedSlots == pStringTable->dwMaxSlots)
     {
-        FIXME("Resize the string table!\n");
-        return (DWORD)-1;
+        PTABLE_SLOT pNewSlots;
+        DWORD dwNewMaxSlots;
+
+        /* FIXME: not thread safe */
+        dwNewMaxSlots = pStringTable->dwMaxSlots * 2;
+        pNewSlots = MyMalloc(sizeof(TABLE_SLOT) * dwNewMaxSlots);
+        if (pNewSlots == NULL)
+            return (DWORD)-1;
+        memset(&pNewSlots[pStringTable->dwMaxSlots], 0, sizeof(TABLE_SLOT) * (dwNewMaxSlots - pStringTable->dwMaxSlots));
+        memcpy(pNewSlots, pStringTable->pSlots, sizeof(TABLE_SLOT) * pStringTable->dwMaxSlots);
+        pNewSlots = InterlockedExchangePointer(&pStringTable->pSlots, pNewSlots);
+        MyFree(pNewSlots);
+        pStringTable->dwMaxSlots = dwNewMaxSlots;
+
+        return StringTableAddString(hStringTable, lpString, dwFlags);
     }
 
     /* Search for an empty slot */

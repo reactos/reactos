@@ -305,6 +305,14 @@ FreeFunctionPointer(
 
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
 
+VOID WINAPI MyFree(LPVOID lpMem);
+LPVOID WINAPI MyMalloc(DWORD dwSize);
+LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize);
+LPWSTR WINAPI DuplicateString(LPCWSTR lpSrc);
+BOOL WINAPI IsUserAdmin(VOID);
+LPWSTR WINAPI MultiByteToUnicode(LPCSTR lpMultiByteStr, UINT uCodePage);
+LPSTR WINAPI UnicodeToMultiByte(LPCWSTR lpUnicodeStr, UINT uCodePage);
+
 /* parser.c */
 
 typedef BOOL (*FIND_CALLBACK)(LPCWSTR SectionName, PVOID Context);

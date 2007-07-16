@@ -558,9 +558,9 @@ SetupDiClassNameFromGuidExA(
         RequiredSize, MachineNameW, Reserved);
     if (ret)
     {
-        int len = WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName,
+        DWORD len = (DWORD)WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName,
             ClassNameSize, NULL, NULL);
-        if (len > ClassNameSize)
+        if (len == 0 || len > ClassNameSize)
         {
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             ret = FALSE;
@@ -754,9 +754,9 @@ SetupDiGetClassDescriptionExA(
         ClassDescriptionSize * sizeof(WCHAR), RequiredSize, MachineNameW, Reserved);
     if (ret)
     {
-        int len = WideCharToMultiByte(CP_ACP, 0, ClassDescriptionW, -1, ClassDescription,
+        DWORD len = (DWORD)WideCharToMultiByte(CP_ACP, 0, ClassDescriptionW, -1, ClassDescription,
             ClassDescriptionSize, NULL, NULL);
-        if (len > ClassDescriptionSize)
+        if (len == 0 || len > ClassDescriptionSize)
         {
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             ret = FALSE;
@@ -1185,7 +1185,14 @@ SetupDiGetClassDevsExW(
         FIXME(": flag DIGCF_PROFILE ignored\n");
 
     if (Flags & DIGCF_DEVICEINTERFACE)
+    {
+        if (!ClassGuid)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            goto cleanup;
+        }
         rc = SETUP_CreateInterfaceList(list, MachineName, ClassGuid, Enumerator, Flags & DIGCF_PRESENT);
+    }
     else
     {
         /* Determine which class(es) should be included in the deviceset */
