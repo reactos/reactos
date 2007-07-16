@@ -25,6 +25,15 @@
 
 /* INTERNAL DEFINITIONS *******************************************************/
 
+typedef struct _RTLP_HEAP_ENTRY
+{
+    ULONG Size;
+    USHORT Flags;
+    USHORT Unknown1; /* FIXME */
+    ULONG Unknown2; /* FIXME */
+    PVOID Address;
+} RTLP_HEAP_ENTRY, *PRTLP_HEAP_ENTRY;
+
 #define CHECK_PARAM_SIZE(ptr, siz)                                             \
   if((ptr) == NULL || (ptr)->dwSize != (siz))                                  \
   {                                                                            \
@@ -473,30 +482,182 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 Heap32First(LPHEAPENTRY32 lphe, DWORD th32ProcessID, DWORD th32HeapID)
 {
+  PRTL_DEBUG_INFORMATION DebugInfo;
+  PRTL_HEAP_INFORMATION Heap;
+  PRTLP_HEAP_ENTRY Block, LastBlock;
+  ULONG i;
+  NTSTATUS Status;
+
   CHECK_PARAM_SIZE(lphe, sizeof(HEAPENTRY32));
 
-  SetLastError(ERROR_NO_MORE_FILES);
-  return FALSE;
+  DebugInfo = RtlCreateQueryDebugBuffer(0,
+                                        FALSE);
+  if (DebugInfo == NULL)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return FALSE;
+  }
+
+  Status = RtlQueryProcessDebugInformation(th32ProcessID,
+                                           RTL_DEBUG_QUERY_HEAPS | RTL_DEBUG_QUERY_HEAP_BLOCKS,
+                                           DebugInfo);
+
+  if (NT_SUCCESS(Status))
+  {
+    Status = STATUS_NO_MORE_FILES;
+
+    for (i = 0;
+         i != DebugInfo->Heaps->NumberOfHeaps;
+         i++)
+    {
+      Heap = &DebugInfo->Heaps->Heaps[i];
+
+      if ((ULONG_PTR)Heap->BaseAddress == th32HeapID)
+      {
+        lphe->hHandle = (HANDLE)Heap->BaseAddress;
+        lphe->dwAddress = 0;
+        lphe->dwBlockSize = 0;
+        lphe->dwFlags = 0;
+        lphe->dwLockCount = 0;
+        lphe->dwResvd = 0;
+        lphe->th32ProcessID = th32ProcessID;
+        lphe->th32HeapID = (ULONG_PTR)Heap->BaseAddress;
+
+        Block = (PRTLP_HEAP_ENTRY)Heap->Entries;
+        LastBlock = Block + Heap->NumberOfEntries;
+
+        while (Block != LastBlock && (Block->Flags & PROCESS_HEAP_UNCOMMITTED_RANGE))
+        {
+          lphe->dwResvd++;
+          lphe->dwAddress = (ULONG_PTR)((ULONG_PTR)Block->Address + Heap->EntryOverhead);
+          Block++;
+        }
+
+        if (Block != LastBlock && lphe->dwResvd != 0)
+        {
+          lphe->dwBlockSize =  Block->Size;
+
+          if (Block->Flags & 0x2F1) /* FIXME */
+            lphe->dwFlags = LF32_FIXED;
+          else if (Block->Flags & 0x20) /* FIXME */
+            lphe->dwFlags = LF32_MOVEABLE;
+          else if (Block->Flags & 0x100) /* FIXME */
+            lphe->dwFlags = LF32_FREE;
+
+          Status = STATUS_SUCCESS;
+        }
+
+        break;
+      }
+    }
+  }
+
+  RtlDestroyQueryDebugBuffer(DebugInfo);
+
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 Heap32Next(LPHEAPENTRY32 lphe)
 {
+  PRTL_DEBUG_INFORMATION DebugInfo;
+  PRTL_HEAP_INFORMATION Heap;
+  PRTLP_HEAP_ENTRY Block, LastBlock;
+  BOOLEAN FoundUncommitted = FALSE;
+  ULONG i;
+  NTSTATUS Status;
+
   CHECK_PARAM_SIZE(lphe, sizeof(HEAPENTRY32));
 
-  SetLastError(ERROR_NO_MORE_FILES);
-  return FALSE;
+  DebugInfo = RtlCreateQueryDebugBuffer(0,
+                                        FALSE);
+  if (DebugInfo == NULL)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return FALSE;
+  }
+
+  Status = RtlQueryProcessDebugInformation(lphe->th32ProcessID,
+                                           RTL_DEBUG_QUERY_HEAPS | RTL_DEBUG_QUERY_HEAP_BLOCKS,
+                                           DebugInfo);
+
+  if (NT_SUCCESS(Status))
+  {
+    Status = STATUS_NO_MORE_FILES;
+
+    for (i = 0;
+         i != DebugInfo->Heaps->NumberOfHeaps;
+         i++)
+    {
+      Heap = &DebugInfo->Heaps->Heaps[i];
+
+      if ((ULONG_PTR)Heap->BaseAddress == lphe->th32HeapID)
+      {
+        if (++lphe->dwResvd < Heap->NumberOfEntries)
+        {
+          lphe->dwFlags = 0;
+
+          Block = (PRTLP_HEAP_ENTRY)Heap->Entries + lphe->dwResvd;
+          LastBlock = (PRTLP_HEAP_ENTRY)Heap->Entries + Heap->NumberOfEntries;
+
+          while (Block < LastBlock && (Block->Flags & PROCESS_HEAP_UNCOMMITTED_RANGE))
+          {
+            lphe->dwResvd++;
+            lphe->dwAddress = (ULONG_PTR)((ULONG_PTR)Block->Address + Heap->EntryOverhead);
+            FoundUncommitted = TRUE;
+            Block++;
+          }
+
+          if (Block < LastBlock)
+          {
+            if (!FoundUncommitted)
+              lphe->dwAddress += lphe->dwBlockSize;
+
+            lphe->dwBlockSize =  Block->Size;
+
+            if (Block->Flags & 0x2F1) /* FIXME */
+              lphe->dwFlags = LF32_FIXED;
+            else if (Block->Flags & 0x20) /* FIXME */
+              lphe->dwFlags = LF32_MOVEABLE;
+            else if (Block->Flags & 0x100) /* FIXME */
+              lphe->dwFlags = LF32_FREE;
+
+            Status = STATUS_SUCCESS;
+          }
+        }
+
+        break;
+      }
+    }
+  }
+
+  RtlDestroyQueryDebugBuffer(DebugInfo);
+
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return TRUE;
+
 }
 
 
