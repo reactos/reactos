@@ -611,7 +611,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     }
 
     /* First control is on dword boundary */
-    return (LPCSTR)((((int)p) + 3) & ~3);
+    return (LPCSTR)((((UINT_PTR)p) + 3) & ~3);
 }
 
  /***********************************************************************
