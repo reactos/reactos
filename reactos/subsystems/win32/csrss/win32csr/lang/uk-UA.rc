@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS CSRSS subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsys/csrss/win32csr/uk.rc
+ * FILE:            subsystems/win32/csrss/win32csr/lang/uk-UA.rc
  * PURPOSE:         Ukraianian resource file
  * TRANSLATOR:      Artem Reznikov
  */
@@ -46,4 +46,11 @@ BEGIN
   IDS_FIND "Знайти..."
   IDS_DEFAULTS "Замовчування"
   IDS_PROPERTIES "Властивості"
+  IDS_SCROLLHERE "Прокрутити сюди"
+  IDS_SCROLLTOP "Прокрутити на початок"
+  IDS_SCROLLBOTTOM "Прокрутити на кінець"
+  IDS_SCROLLPAGE_UP "Попередня сотрінка"
+  IDS_SCROLLPAGE_DOWN "Наступна сторінка"
+  IDS_SCROLLUP "Прокрутити догори"
+  IDS_SCROLLDOWN "Прокрутити донизу"
 END

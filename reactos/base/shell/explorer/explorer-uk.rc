@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "&Панель інструментів",        ID_VIEW_TOOL_BAR
         MENUITEM "&Додаткова панель",           ID_VIEW_EXTRA_BAR
         MENUITEM "Д&иски",                      ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Вибране",                    ID_VIEW_SIDE_BAR
+        MENUITEM "&Обране",                     ID_VIEW_SIDE_BAR
         MENUITEM "&Рядок стану",                ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Оновити\tF5",                ID_REFRESH
@@ -111,7 +111,7 @@ BEGIN
     POPUP "&Вигляд"
     BEGIN
         MENUITEM "&Панель інструментів",        ID_VIEW_TOOL_BAR
-        MENUITEM "&Вибране",                    ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Обране",                     ID_VIEW_SIDE_BAR, GRAYED
         MENUITEM "&Рядок стану",                ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Оновити\tF5",                ID_REFRESH
@@ -334,7 +334,7 @@ BEGIN
     IDS_START_HELP          "Довідка"
     IDS_SEARCH_FILES        "Пошук..."
     IDS_DOCUMENTS           "Документи"
-    IDS_FAVORITES           "Вибране"
+    IDS_FAVORITES           "Обране"
     IDS_PROGRAMS            "Програми"
     IDS_SETTINGS            "Настройки"
     IDS_EXPLORE             "Огляд"
