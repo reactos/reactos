@@ -193,6 +193,10 @@ User32CreateWindowEx(DWORD dwExStyle,
       ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
+  /* remove DS_SHELLFONT style because it conflicts with WS_EX_MDICHILD */
+  if (dwExStyle & DS_SHELLFONT)
+    dwExStyle &= ~DS_SHELLFONT; 
+
   if (dwExStyle & WS_EX_MDICHILD)
   {
       POINT mPos[2];
