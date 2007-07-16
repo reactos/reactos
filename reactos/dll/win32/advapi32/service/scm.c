@@ -1251,7 +1251,7 @@ WaitForSCManager(VOID)
     /* Try to open the existing event */
     hEvent = OpenEventW(SYNCHRONIZE,
                         FALSE,
-                        L"SvcctrlStartEvent_A3725DX");
+                        L"SvcctrlStartEvent_A3752DX");
     if (hEvent == NULL)
     {
         if (GetLastError() != ERROR_FILE_NOT_FOUND)
@@ -1261,13 +1261,13 @@ WaitForSCManager(VOID)
         hEvent = CreateEventW(NULL,
                               TRUE,
                               FALSE,
-                              L"SvcctrlStartEvent_A3725DX");
+                              L"SvcctrlStartEvent_A3752DX");
         if (hEvent == NULL)
         {
             /* Try to open the existing event again */
             hEvent = OpenEventW(SYNCHRONIZE,
                                 FALSE,
-                                L"SvcctrlStartEvent_A3725DX");
+                                L"SvcctrlStartEvent_A3752DX");
             if (hEvent == NULL)
                 return;
         }
