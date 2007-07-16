@@ -69,14 +69,14 @@ ScmCreateStartEvent(PHANDLE StartEvent)
     hEvent = CreateEvent(NULL,
                          TRUE,
                          FALSE,
-                         TEXT("SvcctrlStartEvent_A3725DX"));
+                         TEXT("SvcctrlStartEvent_A3752DX"));
     if (hEvent == NULL)
     {
         if (GetLastError() == ERROR_ALREADY_EXISTS)
         {
             hEvent = OpenEvent(EVENT_ALL_ACCESS,
                                FALSE,
-                               TEXT("SvcctrlStartEvent_A3725DX"));
+                               TEXT("SvcctrlStartEvent_A3752DX"));
             if (hEvent == NULL)
             {
                 return FALSE;
