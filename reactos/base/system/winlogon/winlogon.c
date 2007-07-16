@@ -64,18 +64,18 @@ StartServicesManager(VOID)
 	{
 		Sleep(1000);
 
-		TRACE("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
+		TRACE("WL: Attempting to open event \"SvcctrlStartEvent_A3752DX\"\n");
 		ServicesInitEvent = OpenEventW(
 			SYNCHRONIZE,
 			FALSE,
-			L"SvcctrlStartEvent_A3725DX");
+			L"SvcctrlStartEvent_A3752DX");
 		if (ServicesInitEvent)
 			break;
 	}
 
 	if (!ServicesInitEvent)
 	{
-		ERR("WL: Failed to open event \"SvcctrlStartEvent_A3725DX\"\n");
+		ERR("WL: Failed to open event \"SvcctrlStartEvent_A3752DX\"\n");
 		return FALSE;
 	}
 
