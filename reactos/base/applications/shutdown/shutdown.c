@@ -19,6 +19,8 @@ static void PrintUsage() {
 	_tprintf(_T("\n  -s\t\t\tShutdown the computer"));
 	_tprintf(_T("\n  -r\t\t\tShutdown and restart the computer"));
 	_tprintf(_T("\n  -f\t\t\tForces running applications to close without warnings"));
+	_tprintf(_T("\n    \t\t\tIf you did not specify any other parameter, this option"));
+	_tprintf(_T("\n    \t\t\twill also log off"));
 	_tprintf(_T("\n"));
 }
 
@@ -96,7 +98,13 @@ static struct ExitOptions ParseCommandLineOptionsToExitOptions(struct CommandLin
 	
 	// Sets additional flags
 	if (opts.force)
+	{
 		exitOpts.flags = exitOpts.flags | EWX_FORCE;
+
+		// This makes sure that we log off, also if there is only the "-f" option specified.
+		// The Windows shutdown utility does it the same way.
+		exitOpts.shouldExit = TRUE;
+	}
 	
 	// Reason for shutdown
 	// Hardcoded to "Other (Planned)"
