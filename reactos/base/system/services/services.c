@@ -97,6 +97,7 @@ ScmCreateStartEvent(PHANDLE StartEvent)
 BOOL ScmWaitForEvent()
 {
     HANDLE hEvent;
+    BOOL ret = FALSE;
 
     hEvent = OpenEvent(EVENT_ALL_ACCESS,
                        FALSE,
@@ -108,10 +109,12 @@ BOOL ScmWaitForEvent()
                                         INFINITE);
 
         if (ret == WAIT_OBJECT_0)
-            return TRUE;
+            ret = TRUE;
+
+        CloseHandle(hEvent);
     }
 
-    return FALSE;
+    return ret;
 }
 
 
