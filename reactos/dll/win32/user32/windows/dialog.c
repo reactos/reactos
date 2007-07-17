@@ -734,7 +734,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
     if (unicode)
     {
-        hwnd = User32CreateWindowEx(template.exStyle, template.className, template.caption,
+        hwnd = User32CreateWindowEx(template.exStyle, (LPCSTR)template.className, (LPCSTR)template.caption,
                                     template.style & ~WS_VISIBLE,
                                     rect.left, rect.top, rect.right, rect.bottom,
                                     owner, hMenu, hInst, NULL,
