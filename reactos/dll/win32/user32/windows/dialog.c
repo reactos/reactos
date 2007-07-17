@@ -734,10 +734,11 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
     if (unicode)
     {
-        hwnd = CreateWindowExW(template.exStyle, template.className, template.caption,
-                               template.style & ~WS_VISIBLE,
-                               rect.left, rect.top, rect.right, rect.bottom,
-                               owner, hMenu, hInst, NULL );
+        hwnd = User32CreateWindowEx(template.exStyle, template.className, template.caption,
+                                    template.style & ~WS_VISIBLE,
+                                    rect.left, rect.top, rect.right, rect.bottom,
+                                    owner, hMenu, hInst, NULL,
+                                    TRUE);
     }
     else
     {
@@ -756,10 +757,11 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             caption = HeapAlloc( GetProcessHeap(), 0, len );
             WideCharToMultiByte( CP_ACP, 0, template.caption, -1, caption, len, NULL, NULL );
         }
-        hwnd = CreateWindowExA(template.exStyle, class, caption,
-                               template.style & ~WS_VISIBLE,
-                               rect.left, rect.top, rect.right, rect.bottom,
-                               owner, hMenu, hInst, NULL );
+        hwnd = User32CreateWindowEx(template.exStyle, class, caption,
+                                    template.style & ~WS_VISIBLE,
+                                    rect.left, rect.top, rect.right, rect.bottom,
+                                    owner, hMenu, hInst, NULL,
+                                    FALSE);
         if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
         if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
     }
