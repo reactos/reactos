@@ -466,6 +466,28 @@ SetSecurityDescriptorSacl (
 
 
 /*
+ * @implemented
+ */
+VOID
+WINAPI
+QuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                        OUT LPDWORD DesiredAccess)
+{
+    *DesiredAccess = 0;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION |
+                               GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
+    {
+        *DesiredAccess |= READ_CONTROL;
+    }
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+    }
+}
+
+/*
  * @unimplemented
  */
 BOOL
