@@ -585,6 +585,7 @@ SetNamedSecurityInfoA@28
 SetNamedSecurityInfoW@28
 SetPrivateObjectSecurity@20
 ;SetPrivateObjectSecurityEx
+SetSecurityAccessMask@8
 SetSecurityDescriptorControl@12
 SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup@12

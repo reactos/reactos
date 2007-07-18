@@ -482,10 +482,30 @@ QuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     }
 
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
-    {
         *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
-    }
 }
+
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+SetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
+                      OUT LPDWORD DesiredAccess)
+{
+    *DesiredAccess = 0;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+        *DesiredAccess |= WRITE_OWNER;
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+        *DesiredAccess |= WRITE_DAC;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+}
+
 
 /*
  * @unimplemented
