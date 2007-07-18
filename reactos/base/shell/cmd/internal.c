@@ -768,7 +768,7 @@ INT CommandShowCommandsDetail (LPTSTR cmd, LPTSTR param)
 	{
 		LPTSTR NewCommand = malloc((_tcslen(param)+4)*sizeof(TCHAR));
 		_tcscpy(NewCommand, param);
-		_tcscat(NewCommand, _T(" /?\0"));
+		_tcscat(NewCommand, _T(" /?"));
 		DoCommand(NewCommand);
 		free(NewCommand);
 	}
