@@ -1,0 +1,19 @@
+/*
+ *  German language file by Colin Finck <2007-07-18>
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "Syntax: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  Keine Argumente\tDiese Meldung anzeigen\n\
+  -?\t\t\tDiese Meldung anzeigen\n\
+  -l\t\t\tBenutzer abmelden\n\
+  -s\t\t\tComputer herunterfahren\n\
+  -r\t\t\tComputer herunterfahren und neu starten\n\
+  -f\t\t\tLaufende Anwendungen ohne Warnung schlieáen\n\
+    \t\t\tWenn Sie keine weiteren Parameter angegeben haben,\n\
+    \t\t\tmeldet Sie diese Option auch ab"
+}

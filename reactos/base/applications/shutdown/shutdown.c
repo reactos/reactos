@@ -5,23 +5,18 @@
  * PURPOSE:         Initiate logoff, shutdown or reboot of the system
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
-#include <tchar.h>
-#include <reason.h> //shutdown codes
+#include "precomp.h"
 
 // Print information about which commandline arguments the program accepts.
 static void PrintUsage() {
-	_tprintf(_T("Usage: shutdown [-?] [-l | -s | -r] [-f]\n"));
-	_tprintf(_T("\n  No args or -?\t\tDisplay this message"));
-	_tprintf(_T("\n  -l\t\t\tLog off"));
-	_tprintf(_T("\n  -s\t\t\tShutdown the computer"));
-	_tprintf(_T("\n  -r\t\t\tShutdown and restart the computer"));
-	_tprintf(_T("\n  -f\t\t\tForces running applications to close without warnings"));
-	_tprintf(_T("\n    \t\t\tIf you did not specify any other parameter, this option"));
-	_tprintf(_T("\n    \t\t\twill also log off"));
-	_tprintf(_T("\n"));
+	LPTSTR lpUsage = NULL;
+
+	if( AllocAndLoadString( &lpUsage,
+							GetModuleHandle(NULL),
+							IDS_USAGE ) )
+	{
+		_putts( lpUsage );
+	}
 }
 
 struct CommandLineOptions {
