@@ -248,14 +248,14 @@ CmpAddValueToList(IN PHHIVE Hive,
     }
 
     /* Fail if we couldn't get a cell */
-    if (!ListCell) return STATUS_INSUFFICIENT_RESOURCES;
+    if (ListCell == HCELL_NULL) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Set this cell as the child list's list cell */
     ChildList->List = ListCell;
 
     /* Get the actual key list memory */
     CellData = HvGetCell(Hive, ListCell);
-    if (!CellData) ASSERT(FALSE);
+    ASSERT(CellData != NULL);
 
     /* Loop all the children */
     for (i = ChildCount - 1; i > Index; i--)
