@@ -1,0 +1,149 @@
+/*
+ * FILE:        base/applications/calc/lang/sk-SK.rc
+ * PURPOSE:     Slovak Language File for Calculator
+ * TRANSLATOR:  Kario <kario@szm.sk>
+ * DATE OF TR.: 14-07-2007
+ */
+
+#include "windows.h"
+#include "resource.h"
+#include "winecalc.h"
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+   IDS_APPNAME,            "KalkulaËka"
+
+   IDS_COPYRIGHT1,         "KalkulaËka 5.0. Licencovan· pod LGPL 2"
+   IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
+   IDS_COPYRIGHT3          "San Jose, California, USA"
+   IDS_COPYRIGHT4          "james@ActionMessage.com"
+   IDS_COPYRIGHT5          "http://www.ActionMessage.com/winecalc/"
+
+   IDS_BTN_BACKSPACE,      "Sp‰ù"
+   IDS_BTN_CLEAR_ENTRY,    "CE"
+   IDS_BTN_CLEAR_ALL,      "C"
+   IDS_BTN_MEM_CLEAR,      "MC"
+   IDS_BTN_MEM_RECALL,     "MR"
+   IDS_BTN_MEM_STORE,      "MS"
+   IDS_BTN_MEM_PLUS,       "M+"
+   IDS_BTN_MEM_STATUS_M,   "M"
+   IDS_BTN_SQRT,           "sqrt"
+   IDS_BTN_DEGREES,        "Stupne"
+   IDS_BTN_RADIANS,        "Radi·ny"
+   IDS_BTN_GRADS,          "Grady"
+   IDS_BTN_SHRT_HEX        "Hex"
+   IDS_BTN_SHRT_DEC        "Dec"
+   IDS_BTN_SHRT_OCT        "Oct"
+   IDS_BTN_SHRT_BIN        "Bin"
+   IDS_ERR_INVALID_INPUT,  "Neplatn˝ vstup pre funkciu."
+   IDS_ERR_DIVIDE_BY_ZERO, "Nulou nemoûno deliù."
+   IDS_ERR_UNDEFINED,      "V˝sledok funkcie je nedefinovan˝."
+}
+
+MAIN_MENU MENU DISCARDABLE
+{
+   POPUP "⁄pr&avy" {
+      MENUITEM "&KopÌrovaù Ctrl+C",     IDM_COPY
+      MENUITEM "Pri&lepiù Ctrl+V",    IDM_PASTE
+   }
+   POPUP "&Zobraziù" {
+      MENUITEM "ä&tandardn·",         IDM_MODE_STANDARD
+      MENUITEM "&Vedeck·",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+      MENUITEM "Zoskupov&aù ËÌslice",   IDM_DIGIT_GROUPING
+   }
+   POPUP "&PomocnÌk" {
+      MENUITEM "&TÈmy PomocnÌka",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "»&o je KalkulaËka", IDM_ABOUT
+   }
+}
+
+SCIMS_MENU MENU DISCARDABLE
+{
+   POPUP "⁄pr&avy" {
+      MENUITEM "&KopÌrovaù Ctrl+C",     IDM_COPY
+      MENUITEM "Pri&lepiù Ctrl+V",    IDM_PASTE
+   }
+   POPUP "&Zobraziù" {
+      MENUITEM "ä&tandardn·",         IDM_MODE_STANDARD
+      MENUITEM "&Vedeck·",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "äe&stn·stkov·\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "D&esiatkov·\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "&OsmiËkov·\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "&Dvojkov·\tF8",       ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+      MENUITEM "St&upne\tF2",      ID_CALC_MS_DEGREES
+      MENUITEM "&Radi·ny\tF3",      ID_CALC_MS_RADIANS
+	  MENUITEM "&Grady\tF4",        ID_CALC_MS_GRADS
+      MENUITEM SEPARATOR
+      MENUITEM "Zoskupov&aù ËÌslice",   IDM_DIGIT_GROUPING
+   }
+   POPUP "&PomocnÌk" {
+      MENUITEM "&TÈmy PomocnÌka",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "»&o je KalkulaËka", IDM_ABOUT
+   }
+}
+
+SCIWS_MENU MENU DISCARDABLE
+{
+   POPUP "⁄pr&avy" {
+      MENUITEM "&KopÌrovaù Ctrl+C",     IDM_COPY
+      MENUITEM "Pri&lepiù Ctrl+V",    IDM_PASTE
+   }
+   POPUP "&Zobraziù" {
+      MENUITEM "ä&tandardn·",         IDM_MODE_STANDARD
+      MENUITEM "&Vedeck·",       IDM_MODE_SCIENTIFIC
+      MENUITEM SEPARATOR
+	  MENUITEM "äe&stn·stkov·\tF5",          ID_CALC_NS_HEX
+	  MENUITEM "D&esiatkov·\tF6",      ID_CALC_NS_DEC
+	  MENUITEM "&OsmiËkov·\tF7",        ID_CALC_NS_OCT
+	  MENUITEM "&Dvojkov·\tF8",       ID_CALC_NS_BIN
+      MENUITEM SEPARATOR
+	  MENUITEM "&Qword\tF12",       ID_CALC_WS_QWORD
+	  MENUITEM "Dwo&rd\tF2",        ID_CALC_WS_DWORD
+	  MENUITEM "&Word\tF3",         ID_CALC_WS_WORD
+	  MENUITEM "&Bajt\tF4",         ID_CALC_WS_BYTE
+      MENUITEM SEPARATOR
+      MENUITEM "Zoskupov&aù ËÌslice",   IDM_DIGIT_GROUPING
+   }
+   POPUP "&PomocnÌk" {
+      MENUITEM "&TÈmy PomocnÌka",      IDM_HELP_TOPICS
+      MENUITEM SEPARATOR
+      MENUITEM "»&o je KalkulaËka", IDM_ABOUT
+   }
+}
+
+MAIN_MENU ACCELERATORS
+BEGIN
+   VK_F1, IDV_HELP,     VIRTKEY
+END
+
+DLG_ABOUT DIALOG 12,0,120,82
+CAPTION "»o je KalkulaËka"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+BEGIN
+   DEFPUSHBUTTON "OK", IDOK,       42, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+WHATS_THIS_MENU MENU DISCARDABLE
+{
+    POPUP "" {
+      MENUITEM "»o je toto?",     IDM_WHATS_THIS
+   }
+}
+
+DLG_STATS DIALOG 12,0,125,78
+CAPTION "ätatistika"
+FONT 9, "Tahoma"
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+BEGIN
+   DEFPUSHBUTTON "&RET",  ID_STATS_RET,   4, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&LOAD", ID_STATS_LOAD, 34, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "&CD"    ID_STATS_CD,   64, 52, 25, 13, WS_TABSTOP | WS_GROUP
+   PUSHBUTTON    "C&AD",  ID_STATS_CAD,  94, 52, 25, 13, WS_TABSTOP | WS_GROUP
+END

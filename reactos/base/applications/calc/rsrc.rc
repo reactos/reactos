@@ -21,6 +21,8 @@
 #include <windows.h>
 #include "resource.h"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 IDI_CALCICON ICON "calculator.ico"
 
 #include "lang/bg-BG.rc"
@@ -40,9 +42,8 @@ IDI_CALCICON ICON "calculator.ico"
 #include "lang/pl-PL.rc"
 #include "lang/pt-PT.rc"
 #include "lang/ru-RU.rc"
+#include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
