@@ -1040,7 +1040,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
+        DPRINT1("ObReferenceObjectByHandle() failed with Status = 0x%08X\n", Status);
         return Status;
     }
 
