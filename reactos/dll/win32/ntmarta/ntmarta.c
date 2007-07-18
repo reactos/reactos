@@ -581,20 +581,13 @@ AccpOpenNamedObject(LPWSTR pObjectName,
         case SE_WINDOW_OBJECT:
             if (Write)
             {
-                if (SecurityInfo & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
-                    DesiredAccess |= WRITE_OWNER;
-                if (SecurityInfo & DACL_SECURITY_INFORMATION)
-                    DesiredAccess |= WRITE_DAC;
-                if (SecurityInfo & SACL_SECURITY_INFORMATION)
-                    DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+                SetSecurityAccessMask(SecurityInfo,
+                                      (PDWORD)&DesiredAccess);
             }
             else
             {
-                if (SecurityInfo & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
-                                    DACL_SECURITY_INFORMATION))
-                    DesiredAccess |= READ_CONTROL;
-                if (SecurityInfo & SACL_SECURITY_INFORMATION)
-                    DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+                QuerySecurityAccessMask(SecurityInfo,
+                                        (PDWORD)&DesiredAccess);
             }
             break;
 
