@@ -561,19 +561,17 @@ BOOL WINAPI DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
 {
     UNICODE_STRING FileName;
     NTSTATUS Status;
-    BOOL ret = FALSE;
-
-    FileName.Buffer = NULL;
+    BOOL ret;
 
     Status = RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName);
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
-        goto cleanup;
+        return FALSE;
     }
+
     ret = DecryptFileW(FileName.Buffer, dwReserved);
 
-cleanup:
     if (FileName.Buffer != NULL)
         RtlFreeUnicodeString(&FileName);
     return ret;
@@ -590,13 +588,26 @@ BOOL WINAPI EncryptFileW(LPCWSTR lpFileName)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI EncryptFileA(LPCSTR lpFileName)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
+    BOOL ret;
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    ret = EncryptFileW(FileName.Buffer);
+
+    if (FileName.Buffer != NULL)
+        RtlFreeUnicodeString(&FileName);
+    return ret;
 }
 
 BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
