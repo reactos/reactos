@@ -127,11 +127,14 @@
  *        Remove all hard code string so they can be
  *		  translate to other langues.
  *
- *    19-jul-2005 (Brandon Turner <turnerb7@msu.edu)
+ *    19-Jul-2005 (Brandon Turner <turnerb7@msu.edu>)
  *        Rewrite the CD, it working as Windows 2000 CMD
  *		
- *    19-jul-2005 (Magnus Olsen <magnus@greatlord.com)
- *        Add SetRootPath and GetRootPath         
+ *    19-Jul-2005 (Magnus Olsen <magnus@greatlord.com>)
+ *        Add SetRootPath and GetRootPath 
+ *
+ *    14-Jul-2007 (Pierre Schweitzer <heis_spiter@hotmail.com>)
+ *        Added commands help display to help command (ex. : "help cmd")           
  */
 
 #include <precomp.h>
@@ -760,7 +763,20 @@ INT CommandShowCommands (LPTSTR cmd, LPTSTR param)
 
 INT CommandShowCommandsDetail (LPTSTR cmd, LPTSTR param)
 {
-	PrintCommandListDetail ();
+	/* If a param was send, display help of correspondent command */
+	if (_tcslen(param))
+	{
+		LPTSTR NewCommand = malloc((_tcslen(param)+4)*sizeof(TCHAR));
+		_tcscpy(NewCommand, param);
+		_tcscat(NewCommand, _T(" /?\0"));
+		DoCommand(NewCommand);
+		free(NewCommand);
+	}
+	/* Else, display detailed commands list */
+	else
+	{
+		PrintCommandListDetail ();
+	}
 	return 0;
 }
 
