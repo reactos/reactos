@@ -229,7 +229,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
  * Internal function used by IntRedrawWindow.
  */
 
-static VOID FASTCALL
+VOID FASTCALL
 co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
 {
    HDC hDC;
