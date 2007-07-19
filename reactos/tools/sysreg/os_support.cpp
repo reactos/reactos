@@ -59,7 +59,7 @@ namespace System_
 	}
    	void OsSupport::sleep(long value)
     	{
-        	_sleep(value);
+        	Sleep(value);
     	}
 #else
 /********************************************************************************************************************/
