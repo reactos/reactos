@@ -1,0 +1,59 @@
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+IDM_TRAYWND MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Za&mknú&#357; panel úloh", ID_LOCKTASKBAR
+        MENUITEM "&Vlastnosti", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Progra&my", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Prázdne)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "O&b&#318;úbené položky", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Prázdne)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "Do&kumenty", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Prázdne)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "Nastav&enia", IDM_SETTINGS
+        BEGIN
+            MENUITEM "&Ovládaci panel", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM SEPARATOR
+            MENUITEM "&Zabezpe&#269;enie systému ReactOS...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "Sie&#357;ové pripoje&nia", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Tla&#269;iarne a faxy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "P&anel úloh a ponuka Štart", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        POPUP "&H&#318;ada&#357;", IDM_SEARCH
+        BEGIN
+            MENUITEM SEPARATOR
+        END
+        MENUITEM "&Pomoc a technická podpora", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Sp&usti&#357;...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "&Synchronizova&#357;", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "O&dhlási&#357; používate&#318;a %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Odpoji&#357;...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Vybr&a&#357; po&#269;íta&#269; z doku", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Vypnú&#357;...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_START             "Štart"
+    IDS_PROPERTIES        "Vl&astnosti"
+    IDS_OPEN_ALL_USERS    "&Otvori&#357; profil All Users"
+    IDS_EXPLORE_ALL_USERS "&Preskúma&#357; profil All Users"
+END
