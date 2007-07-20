@@ -64,7 +64,7 @@ ERRORLEVEL settes til nummer for knappen brukeren velger.\n"
 
 STRING_CLS_HELP, "Tømmer skjermen.\n\nCLS\n"
 
-STRING_CMD_HELP1, "\Interne kommandoer tilgjengelig:\n"
+STRING_CMD_HELP1, "\nInterne kommandoer tilgjengelig:\n"
 
 STRING_CMD_HELP2, "\nFunksjoner tilgjengelig:"
 
@@ -155,7 +155,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributer]] fil ...\n\n\
         H     Skjulte filer\n\
         -     prefiks som betyr IKKE. (f.eks -R)\n"
 
-STRING_DEL_HELP2, "Alle filer i mappen vil bli slettet!\Er du sikker (J/N)?"
+STRING_DEL_HELP2, "Alle filer i mappen vil bli slettet!\nEr du sikker (J/N)?"
 STRING_DEL_HELP3, "    %lu fil slettet\n"
 STRING_DEL_HELP4, "    %lu filer slettet\n"
 
