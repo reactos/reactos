@@ -1,0 +1,74 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_HELP, "Εμφανίζει ή τροποποιεί τις access control lists (ACLs) των αρχείων\n\n\
+CACLS όνομα_αρχείου [/T] [/E] [/C] [/G χρήστης:άδειες [...]] [/R χρήστης [...]]\n\
+               [/P χρήστης:άδειες [...]] [/D χρήστης [...]]\n\
+   filename      Εμφανίζει τις ACLs.\n\
+   /T            Αλλάζει τις ACLs των συγκκριμένων αρχείων στο\n\
+                 συγκεκριμένο φάκελο και σε όλους τους υποφακέλους.\n\
+   /E            Επεξεργάζεται την ACL αντίνα την αντικαταστήσει.n\
+   /C            Συνεχίζει και σε περίπτωση σφάλματος μη πρόσβασης.\n\
+   /G χρήστης:άδειες  Δίνει δικαιώματα στο χρήστη.\n\
+                 Οι άδειες μπορεί αν είναι: R  Ανάγνωση\n\
+                              W  Εγγραφή\n\
+                              C  Αλαλγή (εγγραφή)\n\
+                              F  Πλήρης έλεγχος\n\
+   /R user       Revoke specified user's access rights (only valid with /E).\n\
+   /P χρήστης:άδειες  Αντικατάσταση των δικαιωμάτων του χρήστη.\n\
+                 Οι άδειες μπορεί να είναι: N  Καμία\n\
+                              R  Ανάγνωση\n\
+                              W  Εγγραφή\n\
+                              C  Αλλαγή (εγγραφή)\n\
+                              F  Πλήρης έλεγχος\n\
+   /D user       Αποτροπή χρήστη από προσπέλαση.\n\
+Τα Wildcards μπορούν να χρησιμοποιηθούν για να προσδιορίσουν παραπαπάνω από ένα αρχεία στην εντολή.\n\
+Μπορείτε να προσδιορίσετε παρπαάνω από έναν χρήστη στην εντολή.\n\n\
+Abbreviations:\n\
+   CI - Container Inherit.\n\
+        The ACE will be inherited by directories.\n\
+   OI - Object Inherit.\n\
+        The ACE will be inherited by files.\n\
+   IO - Inherit Only.\n\
+        Το ACE δεν υφίσταται για αυτό το αρχείο/κατάλογο.\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(DENY)"
+IDS_SPECIAL_ACCESS, "(ειδική άδεια:)"
+IDS_GENERIC_READ, "GENERIC_READ"
+IDS_GENERIC_WRITE, "GENERIC_WRITE"
+IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
+IDS_GENERIC_ALL, "GENERIC_ALL"
+IDS_FILE_GENERIC_EXECUTE, "FILE_GENERIC_EXECUTE"
+IDS_FILE_GENERIC_READ, "FILE_GENERIC_READ"
+IDS_FILE_GENERIC_WRITE, "FILE_GENERIC_WRITE"
+IDS_FILE_READ_DATA, "FILE_READ_DATA"
+IDS_FILE_WRITE_DATA, "FILE_WRITE_DATA"
+IDS_FILE_APPEND_DATA, "FILE_APPEND_DATA"
+IDS_FILE_READ_EA, "FILE_READ_EA"
+IDS_FILE_WRITE_EA, "FILE_WRITE_EA"
+IDS_FILE_EXECUTE, "FILE_EXECUTE"
+IDS_FILE_DELETE_CHILD, "FILE_DELETE_CHILD"
+IDS_FILE_READ_ATTRIBUTES, "FILE_READ_ATTRIBUTES"
+IDS_FILE_WRITE_ATTRIBUTES, "FILE_WRITE_ATTRIBUTES"
+IDS_MAXIMUM_ALLOWED, "MAXIMUM_ALLOWED"
+IDS_ACCESS_SYSTEM_SECURITY, "ACCESS_SYSTEM_SECURITY"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIC_RIGHTS_ALL"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RIGHTS_REQUIRED"
+IDS_SYNCHRONIZE, "SYNCHRONIZE"
+IDS_WRITE_OWNER, "WRITE_OWNER"
+IDS_WRITE_DAC, "WRITE_DAC"
+IDS_READ_CONTROL, "READ_CONTROL"
+IDS_DELETE, "DELETE"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
+}
