@@ -16,7 +16,7 @@
 #include "file_reader.h"
 #include "os_support.h"
 
-#include <iostream>
+#include <iostream> 
 #include <vector>
 #include <fstream>
 #include <time.h>
@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include <signal.h>
  
 			
 namespace Sysreg_
@@ -43,20 +44,23 @@ namespace Sysreg_
 	using std::ofstream;
 #endif
 
-	string RosBootTest::VARIABLE_NAME = _T("ROSBOOT_CMD");
-	string RosBootTest::CLASS_NAME = _T("rosboot");
-	string RosBootTest::DEBUG_PORT = _T("ROSBOOT_DEBUG_PORT");
-	string RosBootTest::DEBUG_FILE = _T("ROSBOOT_DEBUG_FILE");
-	string RosBootTest::TIME_OUT = _T("ROSBOOT_TIME_OUT");
-	string RosBootTest::PID_FILE= _T("ROSBOOT_PID_FILE");
-	string RosBootTest::DELAY_READ = _T("ROSBOOT_DELAY_READ");
-	string RosBootTest::CHECK_POINT = _T("ROSBOOT_CHECK_POINT");
-	string RosBootTest::SYSREG_CHECKPOINT = _T("SYSREG_CHECKPOINT:");
-	string RosBootTest::CRITICAL_APP = _T("ROSBOOT_CRITICAL_APP");
-	string RosBootTest::TERMINATE_EMULATOR = _T("ROSBOOT_TERMINATE_EMULATOR");
+    string RosBootTest::ROS_EMU_TYPE= _T("ROS_EMU_TYPE");
+    string RosBootTest::EMU_TYPE_QEMU = _T("qemu");
+    string RosBootTest::EMU_TYPE_VMWARE = _T("vmware");
+    string RosBootTest::ROS_EMU_PATH = _T("ROS_EMU_PATH");
+    string RosBootTest::ROS_HDD_IMAGE= _T("ROS_HDD_IMAGE");
+    string RosBootTest::ROS_CD_IMAGE = _T("ROS_CD_IMAGE");
+    string RosBootTest::ROS_MAX_TIME = _T("ROS_MAX_TIME");
+    string RosBootTest::ROS_LOG_FILE = _T("ROS_LOG_FILE");
+    string RosBootTest::ROS_SYM_DIR = _T("ROS_SYM_DIR");
+	string RosBootTest::ROS_DELAY_READ = _T("ROS_DELAY_READ");
+	string RosBootTest::ROS_SYSREG_CHECKPOINT = _T("SYSREG_CHECKPOINT:");
+	string RosBootTest::ROS_CRITICAL_IMAGE = _T("ROS_CRITICAL_IMAGE");
+	string RosBootTest::ROS_EMU_KILL = _T("ROS_EMU_KILL");
+    string RosBootTest::ROS_EMU_MEM = _T("ROS_EMU_MEM");
 
 //---------------------------------------------------------------------------------------
-	RosBootTest::RosBootTest() : m_Timeout(60.0), m_Delayread(0)
+	RosBootTest::RosBootTest() : m_MaxTime(0.0), m_DelayRead(0)
 	{
 
 	}
@@ -81,196 +85,183 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
     void RosBootTest::delayRead()
     {
-        if (m_Delayread)
+        if (m_DelayRead)
 		{
 			///
 			/// delay reading until emulator is ready
 			///
 
-            OsSupport::sleep(m_Delayread * CLOCKS_PER_SEC );
+            OsSupport::sleep(m_DelayRead);
 		}
     }
 
-
-//---------------------------------------------------------------------------------------
-    bool RosBootTest::configurePipe()
+//----------------------------------------------------------------------------------------
+    bool RosBootTest::configureQemu()
     {
-        if (!_tcscmp(m_DebugPort.c_str(), _T("qemupipe")))
+        string qemupath;
+        string::size_type pos;
+ 
+        bool bootfromcd = false;
+
+        if (m_CDImage != _T("") )
         {
-            string::size_type pipe_pos = m_BootCmd.find(_T("-serial pipe:"));
-            if (pipe_pos != string::npos)
+            bootfromcd = true;    
+        }
+
+#ifdef __LINUX__
+        pos = m_EmuPath.find_last_of(_T("/"));
+#else       
+        pos = m_EmuPath.find_last_of(_T("\\"));
+#endif
+        if (pos == string::npos)
+        {
+            cerr << "Error: ROS_EMU_PATH is invalid!!!" << endl;
+            return false; 
+        }
+        qemupath = m_EmuPath.substr(0, pos);
+
+
+        if (m_HDDImage == _T(""))
+        {
+            if(!bootfromcd)
             {
-			    pipe_pos += 12;
-			    string::size_type pipe_pos_end = m_BootCmd.find (_T(" "), pipe_pos);
-                if (pipe_pos != string::npos && pipe_pos_end != string::npos)
-			    {
-    				m_Pipe = _T("\\\\.\\pipe\\") + m_BootCmd.substr (pipe_pos, pipe_pos_end - pipe_pos);
-#ifdef __LINUX__
-                    m_DataSource = new PipeReader();
-#else
-                    m_DataSource = new NamedPipeReader();
-#endif
-                    return true;
-	    		}
+                cerr << "Error: ROS_CD_IMAGE and ROS_HDD_IMAGE is not set!!!" << endl;
+                return false;
             }
-        }
-        else if (!_tcscmp(m_DebugPort.c_str(), _T("vmwarepipe")))
-        {
-            cerr << "VmWare debug pipe is currently fixed to \\\\.\\pipe\\vmwaredebug" << endl;
-		    m_Pipe = _T("\\\\.\\pipe\\vmwaredebug");
-#ifdef __LINUX__
-                    m_DataSource = new PipeReader();
+            string qemuimgdir = qemupath;
+#ifdef __LINUX___            
+                qemuimgdir += _T("qemu-img");
 #else
-                    m_DataSource = new NamedPipeReader();
-#endif
-
-            return true;
+                qemuimgdir += _T("qemu-img.exe");
+#endif  
+            ///
+            /// FIXME
+            /// call qemu-img to create the tool
+            ///
+            cerr << "Creating HDD Image ..." << endl;
         }
 
-        //
-        // FIXME
-        // support other emulators
+        if (m_MaxMem == "")
+        {
+            // default to 64M
+            m_MaxMem = "64";
+        }
+        if (bootfromcd)
+        {
+            m_BootCmd = m_EmuPath + _T(" -serial pipe:qemu -L ") + qemupath + _T(" -m ") + m_MaxMem + _T(" -hda ") + m_HDDImage +  _T(" -boot d -cdrom ") + m_CDImage;
+        }
+        else
+        {
+            m_BootCmd = m_EmuPath + _T(" -L ") + qemupath + _T(" -m ") + m_MaxMem + _T(" -boot c -serial pipe:sysreg");
+        }
+
+        if (m_KillEmulator == _T("yes"))
+        {
+#ifdef __LINUX__
+            m_BootCmd += _T(" -pidfile pid.txt");
+#endif
+        }
+        else
+        {
+            m_BootCmd += _T(" -no-reboot ");
+        }
+
+        cerr << "Opening Data Source:" << m_BootCmd << endl;
+
+
+#ifdef __LINUX__
+        m_DataSource = new PipeReader();
+        m_Src = m_BootCmd;
+#else
+        m_DataSource = new NamedPipeReader();
+        m_Src = _T("\\\\.\\pipe\\qemu");
+
+        if (!executeBootCmd())
+        {
+            cerr << "Error: failed to launch emulator with: " << m_BootCmd << endl;
+            return false;
+        }
+#endif
         
-        return false;
+        return true;
     }
+
 //---------------------------------------------------------------------------------------
-    bool RosBootTest::configureFile()
+    bool RosBootTest::configureVmWare()
     {
-        if (!_tcscmp(m_DebugPort.c_str(), _T("qemufile")))
-        {
-            string::size_type file_pos = m_BootCmd.find(_T("-serial file:"));
-            if (file_pos != string::npos)
-            {
-                file_pos += 12;
-			    string::size_type file_pos_end = m_BootCmd.find (_T(" "), file_pos);
-                if (file_pos != string::npos && file_pos_end != string::npos)
-			    {
-    				m_File = m_BootCmd.substr (file_pos, file_pos_end - file_pos);
-                    m_DataSource = new FileReader();
-                    return true;
-	    		}
-                cerr << "Error: missing space at end of option" << endl;
-            }
-        }
-        else if (!_tcscmp(m_DebugPort.c_str(), _T("vmwarefile")))
-        {
-            cerr << "VmWare debug file is currently fixed to debug.log" << endl;
-            m_File = "debug.log";
-            m_DataSource = new FileReader();
-            return true;
-        }
-
-        // 
-        // FIXME
-        // support other emulators
-
+        cerr << "VmWare is currently not yet supported" << endl;
         return false;
     }
 //---------------------------------------------------------------------------------------
     bool RosBootTest::readConfigurationValues(ConfigParser &conf_parser)
     {
-		///
-		/// read required configuration arguments
-		///
+        if (!conf_parser.getStringValue(RosBootTest::ROS_EMU_TYPE, m_EmuType))
+        {
+            cerr << "Error: ROS_EMU_TYPE is not set" << endl;
+            return false;
+        }
 
+        if (!conf_parser.getStringValue(RosBootTest::ROS_EMU_PATH, m_EmuPath))
+        {
+            cerr << "Error: ROS_EMU_PATH is not set" << endl;
+            return false;
+        }
 
-
-		if (!conf_parser.getStringValue (RosBootTest::DEBUG_PORT, m_DebugPort))
-		{
-			cerr << "Error: ROSBOOT_DEBUG_TYPE is not set in configuration file" << endl;
-			return false;
-		}
-		if (!conf_parser.getStringValue(RosBootTest::VARIABLE_NAME, m_BootCmd))
-		{
-			cerr << "Error: ROSBOOT_CMD is not set in configuration file" << endl;
-			return false;
-		}
-		
-        	string timeout;
-		if (conf_parser.getStringValue(RosBootTest::TIME_OUT, timeout))
-		{
-			TCHAR * stop;
-			m_Timeout = _tcstod(timeout.c_str (), &stop);
-
-			if (isnan(m_Timeout) || m_Timeout == 0.0)
-			{
-				cerr << "Warning: overriding timeout with default of 60 sec" << endl;
-				m_Timeout = 60.0;
-			}
-		}
-
-        	string delayread;
-		if (conf_parser.getStringValue(RosBootTest::DELAY_READ, delayread))
-		{
-			TCHAR * stop;
-			m_Delayread = _tcstoul(delayread.c_str (), &stop, 10);
-			if (m_Delayread > 60 || m_Delayread < 0)
-			{
-				cerr << "Warning: disabling delay read" << endl;
-				m_Delayread = 0;
-			}
-		}
-
-		///
-		/// read optional arguments
-		///
-
-		conf_parser.getStringValue (RosBootTest::CHECK_POINT, m_Checkpoint);
-		conf_parser.getStringValue (RosBootTest::CRITICAL_APP, m_CriticalApp);
-		conf_parser.getStringValue (RosBootTest::DEBUG_FILE, m_DebugFile);
-		conf_parser.getStringValue (RosBootTest::TERMINATE_EMULATOR, m_KillEmulator);
+        conf_parser.getStringValue (RosBootTest::ROS_HDD_IMAGE, m_HDDImage);
+        conf_parser.getStringValue (RosBootTest::ROS_CD_IMAGE, m_CDImage);
+        conf_parser.getDoubleValue (RosBootTest::ROS_MAX_TIME, m_MaxTime);
+		conf_parser.getStringValue (RosBootTest::ROS_LOG_FILE, m_DebugFile);
+        conf_parser.getStringValue (RosBootTest::ROS_SYM_DIR, m_SymDir);
+        conf_parser.getIntValue (RosBootTest::ROS_DELAY_READ, m_DelayRead);
+        conf_parser.getStringValue (RosBootTest::ROS_SYSREG_CHECKPOINT, m_Checkpoint);
+        conf_parser.getStringValue (RosBootTest::ROS_CRITICAL_IMAGE, m_CriticalImage);
+        conf_parser.getStringValue (RosBootTest::ROS_EMU_KILL, m_KillEmulator);
+        conf_parser.getStringValue (RosBootTest::ROS_EMU_MEM, m_MaxMem);
 
         return true;
     }
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::execute(ConfigParser &conf_parser) 
 	{
-
 		if (!readConfigurationValues(conf_parser))
         {
             return false;
         }
-        
-        string src;
 
-        if (m_DebugPort.find(_T("pipe")) != string::npos)
+        if (m_EmuType == EMU_TYPE_QEMU)
         {
-            if (!configurePipe())
+            if (!configureQemu())
             {
-                cerr << "Error: failed to configure pipe" << endl;
+                cerr << "Error: failed to configure qemu" << endl;
                 return false;
             }
-
-#ifndef __LINUX__
-            if (!executeBootCmd())
-            {
-                cerr << "Error: failed to launch emulator" << endl;
-                return false;
-            }
-#endif
-            src = m_Pipe;
         }
-        else if (m_DebugPort.find(_T("file")) != string::npos)
+        else if (m_EmuType == EMU_TYPE_VMWARE)
         {
-            if (!configureFile())
+            if (!configureVmWare())
             {
-                cerr << "Error: failed to configure pipe" << endl;
+                cerr << "Error: failed to configure vmware" << endl;
                 return false;
             }
-            if (!executeBootCmd())
-            {
-                cerr << "Error: failed to launch emulator" << endl;
-                return false;
-            }
-
-            src = m_File;
         }
-        
-        if (!m_DataSource->openSource(src))
-        {
-            cerr << "Error: failed to open data source with " << src << endl;
+        else
+        {   
+            ///
+            /// unsupported emulator
+
+            cerr << "Error: ROS_EMU_TYPE value is not supported:" << m_EmuType << "=" << EMU_TYPE_QEMU << endl;
             return false;
         }
+
+        OsSupport::sleep(500);
+
+        if (!m_DataSource->openSource(m_Src))
+        {
+            cerr << "Error: failed to open data source with " << m_Src << endl;
+            return false;
+        }
+
+        OsSupport::sleep(3000); 
 
         bool ret = analyzeDebugData();
 
@@ -314,10 +305,10 @@ namespace Sysreg_
 
 			cout << line << endl;
 
-			if (line.find (RosBootTest::SYSREG_CHECKPOINT) != string::npos)
+			if (line.find (RosBootTest::ROS_SYSREG_CHECKPOINT) != string::npos)
 			{
-				line.erase (0, line.find (RosBootTest::SYSREG_CHECKPOINT) +
-							  RosBootTest::SYSREG_CHECKPOINT.length ());
+				line.erase (0, line.find (RosBootTest::ROS_SYSREG_CHECKPOINT) +
+							  RosBootTest::ROS_SYSREG_CHECKPOINT.length ());
 				if (!_tcsncmp(line.c_str (), m_Checkpoint.c_str (), m_Checkpoint.length ()))
 				{
 					state = DebugStateCPReached;
@@ -357,7 +348,7 @@ namespace Sysreg_
 			}
 			else if (line.find (_T("Unhandled exception")) != string::npos)
 			{
-				if (m_CriticalApp == _T("IGNORE"))
+				if (m_CriticalImage == _T("IGNORE"))
 				{
 					///
 					/// ignoring all user-mode exceptions
@@ -403,7 +394,7 @@ namespace Sysreg_
 				}
 
 				string appname = modulename.substr (pos + 1, modulename.length () - pos);
-				if (m_CriticalApp.find (appname) == string::npos && m_CriticalApp.length () > 1)
+				if (m_CriticalImage.find (appname) == string::npos && m_CriticalImage.length () > 1)
 				{
 					/// the application is not in the list of 
 					/// critical apps. Therefore we ignore the user-mode
@@ -453,6 +444,11 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::isTimeout(double max_timeout)
 	{
+        if (max_timeout == 0)
+        {
+            // no timeout specified
+            return false;
+        }
 		static time_t start = 0;
 
 		if (!start)
@@ -493,7 +489,7 @@ namespace Sysreg_
 		write_log = file.is_open ();
 		while(1)
 		{
-			if (isTimeout(m_Timeout))
+			if (isTimeout(m_MaxTime))
 			{
 				break;
 			}

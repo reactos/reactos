@@ -11,6 +11,8 @@
  */
 #include "data_source.h"
 #include "conf_parser.h"
+#include "os_support.h"
+#include "user_types.h"
 #include <vector>
 #include <unistd.h>
 
@@ -19,6 +21,8 @@ namespace Sysreg_
 {
 	using std::vector;
     using System_::DataSource;
+    using System_::OsSupport;
+
 
 //---------------------------------------------------------------------------------------
 ///
@@ -30,17 +34,22 @@ namespace Sysreg_
 	class RosBootTest
 	{
 	public:
-		static string VARIABLE_NAME;
-		static string CLASS_NAME;
-		static string DEBUG_PORT;
-		static string DEBUG_FILE;
-		static string TIME_OUT;
-		static string PID_FILE;
-		static string CHECK_POINT;
-		static string SYSREG_CHECKPOINT;
-		static string DELAY_READ;
-		static string CRITICAL_APP;
-		static string TERMINATE_EMULATOR;
+
+        static string ROS_EMU_TYPE;
+        static string EMU_TYPE_QEMU;
+        static string EMU_TYPE_VMWARE;
+        static string ROS_EMU_PATH;
+        static string ROS_HDD_IMAGE;
+        static string ROS_CD_IMAGE;
+	    static string ROS_MAX_TIME;
+        static string ROS_LOG_FILE;
+        static string ROS_SYM_DIR;
+	    static string ROS_DELAY_READ;
+	    static string ROS_SYSREG_CHECKPOINT;
+	    static string ROS_CRITICAL_IMAGE;
+	    static string ROS_EMU_KILL;
+	    static string ROS_EMU_MEM;
+
 
 //---------------------------------------------------------------------------------------
 ///
@@ -81,7 +90,8 @@ namespace Sysreg_
     bool configureFile();
     bool analyzeDebugData();
     bool readConfigurationValues(ConfigParser & conf_parser);
-
+    bool configureQemu();
+    bool configureVmWare();
 
 //---------------------------------------------------------------------------------------
 ///
@@ -122,22 +132,26 @@ typedef enum DebugState
 
 protected:
 
-	double m_Timeout;
-	string m_Checkpoint;
-	string m_CriticalApp;
-	string m_DebugFile;
-	string m_BootCmd;
-	string m_DebugPort;
-	string m_Pipe;
-	string m_File;
-	string m_KillEmulator;
-	DataSource * m_DataSource;
-	vector <string> m_Checkpoints;
-	unsigned long m_Delayread;
-	long m_Pid;
-	long m_DelayRead;
+    string m_EmuType;
+    string m_EmuPath;
+    string m_HDDImage;
+    string m_CDImage;
+    double m_MaxTime;
+    string m_DebugFile;
+    string m_SymDir;
+    long int m_DelayRead;
+    string m_Checkpoint;
+    string m_CriticalImage;
+    string m_KillEmulator;
+    string m_MaxMem;
+    string m_BootCmd;
+    string m_Src;
 
-	}; // end of class RosBootTest
+    DataSource * m_DataSource;
+    OsSupport::ProcessID m_Pid;
+    std::vector<string> m_Checkpoints;
+
+    }; // end of class RosBootTest
 
 } // end of namespace Sysreg_
 

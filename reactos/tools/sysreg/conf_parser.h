@@ -77,6 +77,9 @@ namespace Sysreg_
 
 	bool getStringValue(string & ConfVariable, string & ConfValue);
 
+    bool getDoubleValue(string ConfVariable, double & value);
+    bool getIntValue(string ConfVariable, long int & value);
+
 	protected:
 		ConfigMap m_Map;
 
@@ -84,6 +87,6 @@ namespace Sysreg_
 
 
 } // end of namspace Sysreg_
-
+    
 
 #endif /* end of CONF_PARSER_H__ */
