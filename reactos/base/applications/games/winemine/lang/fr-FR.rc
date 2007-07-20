@@ -76,15 +76,15 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "Annuler", IDCANCEL,  40,  50,  50,  15
 }
 
-DLG_ABOUT DIALOG DISCARDABLE  0, 0, 145, 80
+DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "À propos"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
     LTEXT                 "Sous licence Wine", IDNONE,  35,  35, 100,  10
-    ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
+    ICON                                IDI_WINEMINE, IDNONE,  10,  25,  20,  20
     DEFPUSHBUTTON                             "Ok", IDOK,      50,  60,  55,  15
 }
 

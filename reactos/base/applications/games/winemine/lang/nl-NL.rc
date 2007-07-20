@@ -76,8 +76,8 @@ CAPTION "Over"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT                               "WineMine", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
     LTEXT                 "onder de Wine licentie", IDNONE,  35,  35, 100,  10
-    ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
+    ICON                                IDI_WINEMINE, IDNONE,  10,  25,  20,  20
     DEFPUSHBUTTON                             "OK", IDOK,      50,  60,  55,  15
 }

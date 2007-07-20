@@ -3,7 +3,7 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE {
-     IDS_APPNAME, "Prato fiorito"
+     IDS_APPNAME, "Campo minato"
 
 }
 
@@ -23,7 +23,7 @@ MENU_WINEMINE MENU DISCARDABLE
     }
     POPUP "&Info" {
         MENUITEM "&Tempi migliori",    				IDM_TIMES
-        MENUITEM "&Informazioni su prato fiorito",         	IDM_ABOUT
+        MENUITEM "&Informazioni su Campo minato",          IDM_ABOUT
     }
 }
 
@@ -62,7 +62,7 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT           "Righe",      IDNONE,   5,   5,  30,  10
     LTEXT           "Colonne",    IDNONE,   5,  35,  30,  10
-    LTEXT           "Fiori",      IDNONE,   5,  65,  30,  10
+    LTEXT           "Mine",       IDNONE,   5,  65,  30,  10
     EDITTEXT                IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
     EDITTEXT                IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
     EDITTEXT               IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
@@ -72,12 +72,12 @@ FONT 8, "MS Shell Dlg"
 
 DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Informazioni su Prato fiorito"
+CAPTION "Informazioni su Campo minato"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT                               "Campo fiorito", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen",      IDNONE,  35,  25, 100,  10
-    LTEXT                 "Sotto licenza Wine",          IDNONE,  35,  35, 100,  10
-    ICON                                "WINEMINE",      IDNONE,  10,  25,  20,  20
-    DEFPUSHBUTTON                             "Ok",    IDOK,      50,  60,  55,  15
+    LTEXT                           "Campo minato", IDNONE,  10,  10,  55,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
+    LTEXT                     "Sotto licenza Wine", IDNONE,  35,  35, 100,  10
+    ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
+    DEFPUSHBUTTON                             "Ok", IDOK,    50,  60,  55,  15
 }
