@@ -1203,6 +1203,7 @@ co_WinPosSetWindowPos(
                         CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
                         CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY, 0, 0);
             UserReleaseDC(Window, Dc, FALSE);
+            IntValidateParent(Window, CopyRgn, FALSE);
             NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
          else if(VisRgn)
