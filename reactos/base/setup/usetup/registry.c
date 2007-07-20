@@ -103,9 +103,9 @@ GetRootKey (PWCHAR Name)
 #if 0
 static void
 append_multi_sz_value (HANDLE hkey,
-		       const WCHAR *value,
-		       const WCHAR *strings,
-		       DWORD str_size )
+                       const WCHAR *value,
+                       const WCHAR *strings,
+                       DWORD str_size )
 {
     DWORD size, type, total;
     WCHAR *buffer, *p;
@@ -190,9 +190,9 @@ static void delete_multi_sz_value( HKEY hkey, const WCHAR *value, const WCHAR *s
  */
 static BOOLEAN
 do_reg_operation(HANDLE KeyHandle,
-		 PUNICODE_STRING ValueName,
-		 PINFCONTEXT Context,
-		 ULONG Flags)
+                 PUNICODE_STRING ValueName,
+                 PINFCONTEXT Context,
+                 ULONG Flags)
 {
   WCHAR EmptyStr = (WCHAR)0;
   ULONG Type;
@@ -202,13 +202,13 @@ do_reg_operation(HANDLE KeyHandle,
     {
 #if 0
       if (ValueName)
-	{
-	  RegDeleteValueW( KeyHandle, ValueName );
-	}
+        {
+          RegDeleteValueW( KeyHandle, ValueName );
+        }
       else
-	{
-	  RegDeleteKeyW( KeyHandle, NULL );
-	}
+        {
+          RegDeleteKeyW( KeyHandle, NULL );
+        }
 #endif
       return TRUE;
     }
@@ -221,41 +221,41 @@ do_reg_operation(HANDLE KeyHandle,
     {
       BOOL exists = !RegQueryValueExW( hkey, value, NULL, NULL, NULL, NULL );
       if (exists && (flags & FLG_ADDREG_NOCLOBBER))
-	return TRUE;
+        return TRUE;
       if (!exists & (flags & FLG_ADDREG_OVERWRITEONLY))
-	return TRUE;
+        return TRUE;
     }
 #endif
 
   switch (Flags & FLG_ADDREG_TYPE_MASK)
     {
       case FLG_ADDREG_TYPE_SZ:
-	Type = REG_SZ;
-	break;
+        Type = REG_SZ;
+        break;
 
       case FLG_ADDREG_TYPE_MULTI_SZ:
-	Type = REG_MULTI_SZ;
-	break;
+        Type = REG_MULTI_SZ;
+        break;
 
       case FLG_ADDREG_TYPE_EXPAND_SZ:
-	Type = REG_EXPAND_SZ;
-	break;
+        Type = REG_EXPAND_SZ;
+        break;
 
       case FLG_ADDREG_TYPE_BINARY:
-	Type = REG_BINARY;
-	break;
+        Type = REG_BINARY;
+        break;
 
       case FLG_ADDREG_TYPE_DWORD:
-	Type = REG_DWORD;
-	break;
+        Type = REG_DWORD;
+        break;
 
       case FLG_ADDREG_TYPE_NONE:
-	Type = REG_NONE;
-	break;
+        Type = REG_NONE;
+        break;
 
       default:
-	Type = Flags >> 16;
-	break;
+        Type = Flags >> 16;
+        break;
     }
 
   if (!(Flags & FLG_ADDREG_BINVALUETYPE) ||
@@ -264,94 +264,94 @@ do_reg_operation(HANDLE KeyHandle,
       PWCHAR Str = NULL;
 
       if (Type == REG_MULTI_SZ)
-	{
-	  if (!SetupGetMultiSzFieldW (Context, 5, NULL, 0, &Size))
-	    Size = 0;
+        {
+          if (!SetupGetMultiSzFieldW (Context, 5, NULL, 0, &Size))
+            Size = 0;
 
-	  if (Size)
-	    {
-	      Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
-	      if (Str == NULL)
-		return FALSE;
+          if (Size)
+            {
+              Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
+              if (Str == NULL)
+                return FALSE;
 
-	      SetupGetMultiSzFieldW (Context, 5, Str, Size, NULL);
-	    }
+              SetupGetMultiSzFieldW (Context, 5, Str, Size, NULL);
+            }
 
-	  if (Flags & FLG_ADDREG_APPEND)
-	    {
-	      if (Str == NULL)
-		return TRUE;
+          if (Flags & FLG_ADDREG_APPEND)
+            {
+              if (Str == NULL)
+                return TRUE;
 
-//	      append_multi_sz_value( hkey, value, str, size );
+//            append_multi_sz_value( hkey, value, str, size );
 
-	      RtlFreeHeap (ProcessHeap, 0, Str);
-	      return TRUE;
-	    }
-	  /* else fall through to normal string handling */
-	}
+              RtlFreeHeap (ProcessHeap, 0, Str);
+              return TRUE;
+            }
+          /* else fall through to normal string handling */
+        }
       else
-	{
-	  if (!SetupGetStringFieldW (Context, 5, NULL, 0, &Size))
-	    Size = 0;
+        {
+          if (!SetupGetStringFieldW (Context, 5, NULL, 0, &Size))
+            Size = 0;
 
-	  if (Size)
-	    {
-	      Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
-	      if (Str == NULL)
-		return FALSE;
+          if (Size)
+            {
+              Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
+              if (Str == NULL)
+                return FALSE;
 
-	      SetupGetStringFieldW (Context, 5, Str, Size, NULL);
-	    }
-	}
+              SetupGetStringFieldW (Context, 5, Str, Size, NULL);
+            }
+        }
 
       if (Type == REG_DWORD)
-	{
-	  ULONG dw = Str ? wcstol (Str, NULL, 0) : 0;
+        {
+          ULONG dw = Str ? wcstol (Str, NULL, 0) : 0;
 
-	  DPRINT("setting dword %wZ to %lx\n", ValueName, dw);
+          DPRINT("setting dword %wZ to %lx\n", ValueName, dw);
 
 #ifdef __REACTOS__
-	  NtSetValueKey (KeyHandle,
-			 ValueName,
-			 0,
-			 Type,
-			 (PVOID)&dw,
-			 sizeof(ULONG));
+          NtSetValueKey (KeyHandle,
+                         ValueName,
+                         0,
+                         Type,
+                         (PVOID)&dw,
+                         sizeof(ULONG));
 #else
-	  RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&dw, sizeof(ULONG));
+          RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&dw, sizeof(ULONG));
 #endif
-	}
+        }
       else
-	{
-	  DPRINT("setting value %wZ to %S\n", ValueName, Str);
+        {
+          DPRINT("setting value %wZ to %S\n", ValueName, Str);
 
-	  if (Str)
-	    {
+          if (Str)
+            {
 #ifdef __REACTOS__
-	      NtSetValueKey (KeyHandle,
-			     ValueName,
-			     0,
-			     Type,
-			     (PVOID)Str,
-			     Size * sizeof(WCHAR));
+              NtSetValueKey (KeyHandle,
+                             ValueName,
+                             0,
+                             Type,
+                             (PVOID)Str,
+                             Size * sizeof(WCHAR));
 #else
-		RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Str, Size * sizeof(WCHAR));
+              RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Str, Size * sizeof(WCHAR));
 #endif
-	    }
-	  else
-	    {
+            }
+          else
+            {
 #ifdef __REACTOS__
-	      NtSetValueKey (KeyHandle,
-			     ValueName,
-			     0,
-			     Type,
-			     (PVOID)&EmptyStr,
-			     sizeof(WCHAR));
+              NtSetValueKey (KeyHandle,
+                             ValueName,
+                             0,
+                             Type,
+                             (PVOID)&EmptyStr,
+                             sizeof(WCHAR));
 #else
-		RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&EmptyStr, sizeof(WCHAR));
+              RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&EmptyStr, sizeof(WCHAR));
 #endif
-	    }
-	}
+            }
+        }
       RtlFreeHeap (ProcessHeap, 0, Str);
     }
   else  /* get the binary data */
@@ -359,27 +359,27 @@ do_reg_operation(HANDLE KeyHandle,
       PUCHAR Data = NULL;
 
       if (!SetupGetBinaryField (Context, 5, NULL, 0, &Size))
-	Size = 0;
+        Size = 0;
 
       if (Size)
-	{
-	  Data = (unsigned char*) RtlAllocateHeap (ProcessHeap, 0, Size);
-	  if (Data == NULL)
-	    return FALSE;
+        {
+          Data = (unsigned char*) RtlAllocateHeap (ProcessHeap, 0, Size);
+          if (Data == NULL)
+            return FALSE;
 
-	  DPRINT("setting binary data %wZ len %lu\n", ValueName, Size);
-	  SetupGetBinaryField (Context, 5, Data, Size, NULL);
-	}
+          DPRINT("setting binary data %wZ len %lu\n", ValueName, Size);
+          SetupGetBinaryField (Context, 5, Data, Size, NULL);
+        }
 
 #ifdef __REACTOS__
       NtSetValueKey (KeyHandle,
-		     ValueName,
-		     0,
-		     Type,
-		     (PVOID)Data,
-		     Size);
+                     ValueName,
+                     0,
+                     Type,
+                     (PVOID)Data,
+                     Size);
 #else
-		RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Data, Size);
+      RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Data, Size);
 #endif
 
       RtlFreeHeap (ProcessHeap, 0, Data);
@@ -391,8 +391,8 @@ do_reg_operation(HANDLE KeyHandle,
 #ifdef __REACTOS__
 NTSTATUS
 CreateNestedKey (PHANDLE KeyHandle,
-		 ACCESS_MASK DesiredAccess,
-		 POBJECT_ATTRIBUTES ObjectAttributes)
+                 ACCESS_MASK DesiredAccess,
+                 POBJECT_ATTRIBUTES ObjectAttributes)
 {
   OBJECT_ATTRIBUTES LocalObjectAttributes;
   UNICODE_STRING LocalKeyName;
@@ -404,22 +404,22 @@ CreateNestedKey (PHANDLE KeyHandle,
   HANDLE LocalKeyHandle;
 
   Status = NtCreateKey (KeyHandle,
-			KEY_ALL_ACCESS,
-			ObjectAttributes,
-			0,
-			NULL,
-			0,
-			&Disposition);
+                        KEY_ALL_ACCESS,
+                        ObjectAttributes,
+                        0,
+                        NULL,
+                        0,
+                        &Disposition);
   DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", ObjectAttributes->ObjectName, Status);
   if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
     return Status;
 
   /* Copy object attributes */
   RtlCopyMemory (&LocalObjectAttributes,
-		 ObjectAttributes,
-		 sizeof(OBJECT_ATTRIBUTES));
+                 ObjectAttributes,
+                 sizeof(OBJECT_ATTRIBUTES));
   RtlCreateUnicodeString (&LocalKeyName,
-			  ObjectAttributes->ObjectName->Buffer);
+                          ObjectAttributes->ObjectName->Buffer);
   LocalObjectAttributes.ObjectName = &LocalKeyName;
   FullNameLength = LocalKeyName.Length / sizeof(WCHAR);
 
@@ -428,20 +428,20 @@ CreateNestedKey (PHANDLE KeyHandle,
     {
       Ptr = wcsrchr (LocalKeyName.Buffer, '\\');
       if (Ptr == NULL || Ptr == LocalKeyName.Buffer)
-	{
-	  Status = STATUS_UNSUCCESSFUL;
-	  break;
-	}
+        {
+          Status = STATUS_UNSUCCESSFUL;
+          break;
+        }
       *Ptr = (WCHAR)0;
       LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
 
       Status = NtCreateKey (&LocalKeyHandle,
-			    KEY_ALL_ACCESS,
-			    &LocalObjectAttributes,
-			    0,
-			    NULL,
-			    0,
-			    &Disposition);
+                            KEY_ALL_ACCESS,
+                            &LocalObjectAttributes,
+                            0,
+                            NULL,
+                            0,
+                            &Disposition);
       DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
     }
 
@@ -456,11 +456,11 @@ CreateNestedKey (PHANDLE KeyHandle,
   while (TRUE)
     {
       if (Length == FullNameLength)
-	{
-	  Status = STATUS_SUCCESS;
-	  *KeyHandle = LocalKeyHandle;
-	  break;
-	}
+        {
+          Status = STATUS_SUCCESS;
+          *KeyHandle = LocalKeyHandle;
+          break;
+        }
       NtClose (LocalKeyHandle);
 
       LocalKeyName.Buffer[Length] = L'\\';
@@ -468,15 +468,15 @@ CreateNestedKey (PHANDLE KeyHandle,
       LocalKeyName.Length = Length * sizeof(WCHAR);
 
       Status = NtCreateKey (&LocalKeyHandle,
-			    KEY_ALL_ACCESS,
-			    &LocalObjectAttributes,
-			    0,
-			    NULL,
-			    0,
-			    &Disposition);
+                            KEY_ALL_ACCESS,
+                            &LocalObjectAttributes,
+                            0,
+                            NULL,
+                            0,
+                            &Disposition);
       DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
       if (!NT_SUCCESS(Status))
-	break;
+        break;
     }
 
   RtlFreeUnicodeString (&LocalKeyName);
@@ -565,24 +565,24 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
                 }
             }
 #else
-		  if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
-		  {
-			  LONG rc = RegOpenKeyW(NULL, Buffer, &KeyHandle);
-			  if (rc != ERROR_SUCCESS)
-			  {
-				  DPRINT("RegOpenKeyW(%S) failed (error %lu)\n", Buffer, rc);
-				  continue; /* ignore if it doesn't exist */
-			  }
-		  }
-		  else
-		  {
-			  LONG rc = RegCreateKeyW(NULL, Buffer, &KeyHandle);
-			  if (rc != ERROR_SUCCESS)
-			  {
-				  DPRINT("RegCreateKeyW(%S) failed (error %lu)\n", Buffer, rc);
-				  continue;
-			  }
-		  }
+          if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
+             {
+                LONG rc = RegOpenKeyW(NULL, Buffer, &KeyHandle);
+                if (rc != ERROR_SUCCESS)
+                  {
+                    DPRINT("RegOpenKeyW(%S) failed (error %lu)\n", Buffer, rc);
+                    continue; /* ignore if it doesn't exist */
+                  }
+              }
+              else
+              {
+                  LONG rc = RegCreateKeyW(NULL, Buffer, &KeyHandle);
+                  if (rc != ERROR_SUCCESS)
+                  {
+                    DPRINT("RegCreateKeyW(%S) failed (error %lu)\n", Buffer, rc);
+                    continue;
+                  }
+              }
 #endif
 
           /* get value name */
@@ -616,8 +616,8 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
 
 BOOLEAN
 ImportRegistryFile(PWSTR Filename,
-		   PWSTR Section,
-		   BOOLEAN Delete)
+                   PWSTR Section,
+                   BOOLEAN Delete)
 {
   WCHAR FileNameBuffer[MAX_PATH];
   HINF hInf;
@@ -629,10 +629,10 @@ ImportRegistryFile(PWSTR Filename,
   wcscat(FileNameBuffer, Filename);
 
   hInf = SetupOpenInfFileW(
-		       FileNameBuffer,
-		       NULL,
-		       INF_STYLE_WIN4,
-		       &ErrorLine);
+                       FileNameBuffer,
+                       NULL,
+                       INF_STYLE_WIN4,
+                       &ErrorLine);
   if (hInf == INVALID_HANDLE_VALUE)
     {
       DPRINT1("SetupOpenInfFile() failed\n");
@@ -661,13 +661,13 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
 
   /* Create the 'secret' InstallPath key */
   InitializeObjectAttributes (&ObjectAttributes,
-			      &KeyName,
-			      OBJ_CASE_INSENSITIVE,
-			      NULL,
-			      NULL);
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE,
+                              NULL,
+                              NULL);
   Status =  NtOpenKey (&KeyHandle,
-		       KEY_ALL_ACCESS,
-		       &ObjectAttributes);
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -675,11 +675,11 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
     }
 
   Status = NtSetValueKey (KeyHandle,
-			  &ValueName,
-			  0,
-			  REG_SZ,
-			  (PVOID)InstallPath->Buffer,
-			  InstallPath->Length);
+                          &ValueName,
+                          0,
+                          REG_SZ,
+                          (PVOID)InstallPath->Buffer,
+                          InstallPath->Length);
   NtClose(KeyHandle);
   if (!NT_SUCCESS(Status))
     {
@@ -705,13 +705,13 @@ SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset
   RtlInitUnicodeString(&ValueName, ValueNameBuffer);
 
   InitializeObjectAttributes (&ObjectAttributes,
-			      &KeyName,
-			      OBJ_CASE_INSENSITIVE,
-			      NULL,
-			      NULL);
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE,
+                              NULL,
+                              NULL);
   Status =  NtOpenKey (&KeyHandle,
-		       KEY_ALL_ACCESS,
-		       &ObjectAttributes);
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
       Status = NtCreateKey(&KeyHandle,
@@ -732,11 +732,11 @@ SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset
   MountInfo.Signature = Signature;
   MountInfo.StartingOffset = StartingOffset;
   Status = NtSetValueKey (KeyHandle,
-			  &ValueName,
-			  0,
-			  REG_BINARY,
-			  (PVOID)&MountInfo,
-			  sizeof(MountInfo));
+                          &ValueName,
+                          0,
+                          REG_BINARY,
+                          (PVOID)&MountInfo,
+                          sizeof(MountInfo));
   NtClose(KeyHandle);
   if (!NT_SUCCESS(Status))
     {
