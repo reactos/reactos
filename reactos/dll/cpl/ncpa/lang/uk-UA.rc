@@ -1,7 +1,7 @@
 /*
  * PROJECT:     Network Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/ncpa/Uk.rc
+ * FILE:        dll/cpl/ncpa/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Network Applet
  * TRANSLATOR:  Artem Reznikov
  */
@@ -64,21 +64,21 @@ END
 
 IDD_CARDSUPPORT DIALOG DISCARDABLE  0, 0, 200,180
 STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Support"
+CAPTION "Підтримка"
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Connection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Address type:", -1, 22, 20, 80, 8
- LTEXT "IP address:", -1, 22, 34, 80, 8
- LTEXT "SubNet mask:", -1, 22, 48, 80, 8
- LTEXT "Default gateway:", -1, 22, 62, 80, 8
+ LTEXT "Тип адреси:", -1, 22, 20, 80, 8
+ LTEXT "IP-адреса:", -1, 22, 34, 80, 8
+ LTEXT "Маска підмережі:", -1, 22, 48, 80, 8
+ LTEXT "Основний шлюз:", -1, 22, 62, 80, 8
  
  RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
  
- PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
+ PUSHBUTTON "&Подробиці...", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_TCPIPPROPERTIES DIALOG DISCARDABLE  0, 0, 246, 228

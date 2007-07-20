@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS System Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/control/Uk.rc
- * PURPOSE:     Ukraianian Language File for ReactOS System Control Panel
- * PROGRAMMERS: temarez
+ * FILE:        base/applications/control/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for control
+ * TRANSLATOR:  Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -21,9 +21,9 @@ BEGIN
     END
     POPUP "&Вигляд"
     BEGIN
-        MENUITEM "&Великі Іконки",              IDM_LARGEICONS
-        MENUITEM "&Малі Іконки",                IDM_SMALLICONS
-        MENUITEM "&Список",                     IDM_LIST
+        MENUITEM "&Великі значки",              IDM_LARGEICONS
+        MENUITEM "&Дрібні значки",              IDM_SMALLICONS
+        MENUITEM "Спис&ок",                     IDM_LIST
         MENUITEM "&Подробиці",                  IDM_DETAILS
     END
     POPUP "&Довідка"
