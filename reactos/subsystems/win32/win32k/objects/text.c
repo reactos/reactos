@@ -2502,6 +2502,8 @@ NtGdiGetGlyphOutline(
   INT adv, lsb, bbx; /* These three hold to widths of the unrotated chars */
   OUTLINETEXTMETRICW *potm;
   PVOID pvBuf = NULL;
+  int n = 0;
+  FT_CharMap found = 0, charmap;
 
   DPRINT("%p, %d, %08x, %p, %08lx, %p, %p\n", hdc, wch, iFormat, pgm,
               cjBuf, UnsafeBuf, pmat2);
@@ -2544,8 +2546,8 @@ NtGdiGetGlyphOutline(
     {
       DPRINT("WARNING: No charmap selected!\n");
       DPRINT("This font face has %d charmaps\n", ft_face->num_charmaps);
-      int n;
-      FT_CharMap found = 0, charmap;
+
+
       
       for (n = 0; n < ft_face->num_charmaps; n++)
       {
@@ -4159,13 +4161,15 @@ NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set)
 {
   /* Ulta-Ugly Hax! */
   INT Ret = 0x80000000;
-  DPRINT("TextCharacterExtra %d", CharExtra);
+
   PDC dc = DC_LockDc ( hDC );
   if (!dc)
-    {
+  {
+       DPRINT("TextCharacterExtra %d", CharExtra);
        SetLastWin32Error(ERROR_INVALID_HANDLE);
        return Ret;
-    }
+  }
+  DPRINT("TextCharacterExtra %d", CharExtra);
   Ret = dc->w.charExtra;
   if( Set ) dc->w.charExtra = CharExtra;
   DC_UnlockDc(dc);
