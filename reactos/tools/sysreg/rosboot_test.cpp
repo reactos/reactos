@@ -44,20 +44,21 @@ namespace Sysreg_
 	using std::ofstream;
 #endif
 
-    string RosBootTest::ROS_EMU_TYPE= _T("ROS_EMU_TYPE");
-    string RosBootTest::EMU_TYPE_QEMU = _T("qemu");
-    string RosBootTest::EMU_TYPE_VMWARE = _T("vmware");
-    string RosBootTest::ROS_EMU_PATH = _T("ROS_EMU_PATH");
-    string RosBootTest::ROS_HDD_IMAGE= _T("ROS_HDD_IMAGE");
-    string RosBootTest::ROS_CD_IMAGE = _T("ROS_CD_IMAGE");
-    string RosBootTest::ROS_MAX_TIME = _T("ROS_MAX_TIME");
-    string RosBootTest::ROS_LOG_FILE = _T("ROS_LOG_FILE");
-    string RosBootTest::ROS_SYM_DIR = _T("ROS_SYM_DIR");
+	string RosBootTest::ROS_EMU_TYPE= _T("ROS_EMU_TYPE");
+	string RosBootTest::EMU_TYPE_QEMU = _T("qemu");
+	string RosBootTest::EMU_TYPE_VMWARE = _T("vmware");
+	string RosBootTest::ROS_EMU_PATH = _T("ROS_EMU_PATH");
+	string RosBootTest::ROS_HDD_IMAGE= _T("ROS_HDD_IMAGE");
+	string RosBootTest::ROS_CD_IMAGE = _T("ROS_CD_IMAGE");
+	string RosBootTest::ROS_MAX_TIME = _T("ROS_MAX_TIME");
+	string RosBootTest::ROS_LOG_FILE = _T("ROS_LOG_FILE");
+	string RosBootTest::ROS_SYM_DIR = _T("ROS_SYM_DIR");
 	string RosBootTest::ROS_DELAY_READ = _T("ROS_DELAY_READ");
 	string RosBootTest::ROS_SYSREG_CHECKPOINT = _T("SYSREG_CHECKPOINT:");
 	string RosBootTest::ROS_CRITICAL_IMAGE = _T("ROS_CRITICAL_IMAGE");
 	string RosBootTest::ROS_EMU_KILL = _T("ROS_EMU_KILL");
-    string RosBootTest::ROS_EMU_MEM = _T("ROS_EMU_MEM");
+	string RosBootTest::ROS_EMU_MEM = _T("ROS_EMU_MEM");
+	string RosBootTest::ROS_BOOT_CMD = _T("ROS_BOOT_CMD");
 
 //---------------------------------------------------------------------------------------
 	RosBootTest::RosBootTest() : m_MaxTime(0.0), m_DelayRead(0)
@@ -102,10 +103,18 @@ namespace Sysreg_
         string::size_type pos;
  
         bool bootfromcd = false;
-
+	bool bootcmdprovided = false;
         if (m_CDImage != _T("") )
         {
             bootfromcd = true;    
+        }
+        
+        if (m_BootCmd != _T("") )
+        {
+        	///
+        	/// boot cmd is provided already
+        	///
+        	bootcmdprovided = true;
         }
 
 #ifdef __LINUX__
@@ -129,6 +138,7 @@ namespace Sysreg_
                 return false;
             }
             string qemuimgdir = qemupath;
+            m_HDDImage = _T("ros.img");
 #ifdef __LINUX___            
                 qemuimgdir += _T("qemu-img");
 #else
@@ -138,33 +148,92 @@ namespace Sysreg_
             /// FIXME
             /// call qemu-img to create the tool
             ///
-            cerr << "Creating HDD Image ..." << endl;
+            cerr << "Creating HDD Image ..." << qemuimgdir << endl;
         }
-
-        if (m_MaxMem == "")
+        
+        if (!bootcmdprovided)
         {
-            // default to 64M
-            m_MaxMem = "64";
-        }
-        if (bootfromcd)
-        {
-            m_BootCmd = m_EmuPath + _T(" -serial pipe:qemu -L ") + qemupath + _T(" -m ") + m_MaxMem + _T(" -hda ") + m_HDDImage +  _T(" -boot d -cdrom ") + m_CDImage;
-        }
-        else
-        {
-            m_BootCmd = m_EmuPath + _T(" -L ") + qemupath + _T(" -m ") + m_MaxMem + _T(" -boot c -serial pipe:sysreg");
-        }
-
-        if (m_KillEmulator == _T("yes"))
-        {
+        	if (m_MaxMem == "")
+        	{
+            		// default to 64M
+            		m_MaxMem = "64";
+        	}
+		string pipe;
 #ifdef __LINUX__
-            m_BootCmd += _T(" -pidfile pid.txt");
+		pipe = _T("stdio");
+		m_Src = _T("");
+#else		
+		pipe = _T("pipe:qemu");
+		m_Src = _T("\\\\.\\pipe\\qemu");
+#endif	 
+        
+
+        	if (bootfromcd)
+        	{
+            		m_BootCmd = m_EmuPath + _T(" -serial ") + pipe + _T(" -m ") + m_MaxMem + _T(" -hda ") + m_HDDImage +  _T(" -boot d -cdrom ") + m_CDImage;
+        	}
+        	else
+        	{
+            		m_BootCmd = m_EmuPath + _T(" -L ") + qemupath + _T(" -m ") + m_MaxMem + _T(" -boot c -serial ") + pipe;
+        	}
+
+        	if (m_KillEmulator == _T("yes"))
+        	{
+#ifdef __LINUX__
+            		m_BootCmd += _T(" -pidfile pid.txt");
 #endif
-        }
-        else
-        {
-            m_BootCmd += _T(" -no-reboot ");
-        }
+        	}
+        	else
+        	{
+            		m_BootCmd += _T(" -no-reboot ");
+        	}
+	}
+	else
+	{
+		string::size_type pos = m_BootCmd.find(_T("-serial"));
+		if (pos != string::npos)
+		{
+			string pipe = m_BootCmd.substr(pos + 7, m_BootCmd.size() - pos -7);
+			pos = pipe.find(_T("pipe:"));
+			if (pos == 0)
+			{
+#ifdef __LINUX__
+				cerr << "Error: popen doesnot support reading from pipe" << endl;
+				return false;
+#else
+				pipe = pipe.substr(pos + 5, pipe.size() - pos - 5);
+				pos = pipe.find(_T(" "));
+				if (pos != string::npos)
+				{
+					m_Src = _T("\\\\.\\pipe\\") + pipe.substr(0, pos);	
+				}
+				else
+				{
+					m_Src = _T("\\\\.\\pipe\\" + pipe;
+				}
+#endif				
+			}
+			else
+			{
+				pos = pipe.find(_T("stdio"));
+				if (pos == 0)
+				{
+#ifdef __LINUX__
+					m_Src = m_BootCmd;
+#else					
+					cerr << "Error: sysreg  doesnot support reading stdio" << endl;
+					return false;	
+#endif				
+				
+				}
+				
+				
+			}
+			
+		}
+	
+	
+	}
 
         cerr << "Opening Data Source:" << m_BootCmd << endl;
 
@@ -174,8 +243,6 @@ namespace Sysreg_
         m_Src = m_BootCmd;
 #else
         m_DataSource = new NamedPipeReader();
-        m_Src = _T("\\\\.\\pipe\\qemu");
-
         if (!executeBootCmd())
         {
             cerr << "Error: failed to launch emulator with: " << m_BootCmd << endl;
@@ -217,9 +284,26 @@ namespace Sysreg_
         conf_parser.getStringValue (RosBootTest::ROS_CRITICAL_IMAGE, m_CriticalImage);
         conf_parser.getStringValue (RosBootTest::ROS_EMU_KILL, m_KillEmulator);
         conf_parser.getStringValue (RosBootTest::ROS_EMU_MEM, m_MaxMem);
+        conf_parser.getStringValue (RosBootTest::ROS_BOOT_CMD, m_BootCmd);
 
         return true;
     }
+//---------------------------------------------------------------------------------------
+	void RosBootTest::cleanup()
+	{
+        	m_DataSource->closeSource();
+		if (m_KillEmulator == "yes")
+		{
+        		OsSupport::sleep(3 * CLOCKS_PER_SEC);
+        		if (m_Pid)
+        		{
+		    		OsSupport::terminateProcess (m_Pid);
+        		}
+        	}	
+		delete m_DataSource;
+
+	}
+    
 //---------------------------------------------------------------------------------------
 	bool RosBootTest::execute(ConfigParser &conf_parser) 
 	{
@@ -252,28 +336,24 @@ namespace Sysreg_
             cerr << "Error: ROS_EMU_TYPE value is not supported:" << m_EmuType << "=" << EMU_TYPE_QEMU << endl;
             return false;
         }
-
+#ifndef __LINUX__
         OsSupport::sleep(500);
+#endif
 
+	assert(m_DataSource != 0);
         if (!m_DataSource->openSource(m_Src))
         {
             cerr << "Error: failed to open data source with " << m_Src << endl;
+            cleanup();
             return false;
         }
 
-        OsSupport::sleep(3000); 
-
+#ifndef __LINUX__
+        OsSupport::sleep(3000); //FIXME
+#endif
         bool ret = analyzeDebugData();
+	cleanup();
 
-        m_DataSource->closeSource();
-	if (m_KillEmulator == "yes")
-	{
-        	OsSupport::sleep(3 * CLOCKS_PER_SEC);
-        	if (m_Pid)
-        	{
-		    OsSupport::terminateProcess (m_Pid);
-        	}
-        }
 	return ret;
 }
 //---------------------------------------------------------------------------------------

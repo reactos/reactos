@@ -35,21 +35,21 @@ namespace Sysreg_
 	{
 	public:
 
-        static string ROS_EMU_TYPE;
-        static string EMU_TYPE_QEMU;
-        static string EMU_TYPE_VMWARE;
-        static string ROS_EMU_PATH;
-        static string ROS_HDD_IMAGE;
-        static string ROS_CD_IMAGE;
-	    static string ROS_MAX_TIME;
-        static string ROS_LOG_FILE;
-        static string ROS_SYM_DIR;
-	    static string ROS_DELAY_READ;
-	    static string ROS_SYSREG_CHECKPOINT;
-	    static string ROS_CRITICAL_IMAGE;
-	    static string ROS_EMU_KILL;
-	    static string ROS_EMU_MEM;
-
+		static string ROS_EMU_TYPE;
+		static string EMU_TYPE_QEMU;
+		static string EMU_TYPE_VMWARE;
+		static string ROS_EMU_PATH;
+		static string ROS_HDD_IMAGE;
+		static string ROS_CD_IMAGE;
+		static string ROS_MAX_TIME;
+		static string ROS_LOG_FILE;
+		static string ROS_SYM_DIR;
+		static string ROS_DELAY_READ;
+		static string ROS_SYSREG_CHECKPOINT;
+		static string ROS_CRITICAL_IMAGE;
+		static string ROS_EMU_KILL;
+		static string ROS_EMU_MEM;
+		static string ROS_BOOT_CMD;
 
 //---------------------------------------------------------------------------------------
 ///
@@ -92,7 +92,7 @@ namespace Sysreg_
     bool readConfigurationValues(ConfigParser & conf_parser);
     bool configureQemu();
     bool configureVmWare();
-
+    void cleanup();
 //---------------------------------------------------------------------------------------
 ///
 /// dumpCheckpoints

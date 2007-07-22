@@ -31,6 +31,11 @@ namespace System_
 
 	}
 
+	bool NamedPipeReader::isSourceOpen()
+	{
+		return true;
+	}
+
 //---------------------------------------------------------------------------------------
 
 	bool NamedPipeReader::openSource(const string & PipeCmd)
