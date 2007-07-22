@@ -83,7 +83,9 @@
       FT_Int  last;  /* index of last point in contour */
 
 
-      last  = outline->contours[n];
+      last = outline->contours[n];
+      if ( last < 0 )
+        goto Invalid_Outline;
       limit = outline->points + last;
 
       v_start = outline->points[first];

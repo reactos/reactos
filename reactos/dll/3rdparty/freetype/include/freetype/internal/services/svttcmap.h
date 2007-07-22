@@ -52,6 +52,7 @@ FT_BEGIN_HEADER
   typedef struct  TT_CMapInfo_
   {
     FT_ULong language;
+    FT_Long  format;
 
   } TT_CMapInfo;
 

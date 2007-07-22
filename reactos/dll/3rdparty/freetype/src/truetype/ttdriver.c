@@ -29,9 +29,11 @@
 #endif
 
 #include FT_SERVICE_TRUETYPE_ENGINE_H
+#include FT_SERVICE_TRUETYPE_GLYF_H
 
 #include "ttdriver.h"
 #include "ttgload.h"
+#include "ttpload.h"
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 #include "ttgxvar.h"
@@ -313,6 +315,11 @@
 #endif /* TT_USE_BYTECODE_INTERPRETER */
   };
 
+  static const FT_Service_TTGlyfRec  tt_service_truetype_glyf =
+  {
+    (TT_Glyf_GetLocationFunc)tt_face_get_location
+  };
+
   static const FT_ServiceDescRec  tt_services[] =
   {
     { FT_SERVICE_ID_XF86_NAME,       FT_XF86_FORMAT_TRUETYPE },
@@ -320,6 +327,7 @@
     { FT_SERVICE_ID_MULTI_MASTERS,   &tt_service_gx_multi_masters },
 #endif
     { FT_SERVICE_ID_TRUETYPE_ENGINE, &tt_service_truetype_engine },
+    { FT_SERVICE_ID_TT_GLYF,         &tt_service_truetype_glyf },
     { NULL, NULL }
   };
 

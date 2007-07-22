@@ -693,21 +693,14 @@
       size->GS = tt_default_graphics_state;
 
       error = tt_size_run_prep( size );
+      if ( !error )
+          size->cvt_ready = 1;
     }
   Exit:
     return error;
   }
 
-#else /* !TT_USE_BYTECODE_INTERPRETER */
-
-  FT_LOCAL_DEF( FT_Error )
-  tt_size_ready_bytecode( TT_Size  size )
-  {
-    FT_UNUSED( size );
-    return 0;
-  }
-
-#endif /* !TT_USE_BYTECODE_INTERPRETER */
+#endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
   /*************************************************************************/

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM parser (body).                                                   */
 /*                                                                         */
-/*  Copyright 2006 by                                                      */
+/*  Copyright 2006, 2007 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -642,14 +642,12 @@
       case AFM_TOKEN_ENDFONTMETRICS:
         fi->NumTrackKern = n + 1;
         return PSaux_Err_Ok;
-        break;
 
       case AFM_TOKEN_UNKNOWN:
         break;
 
       default:
         goto Fail;
-        break;
       }
     }
 
@@ -761,7 +759,6 @@
 
       default:
         goto Fail;
-        break;
       }
     }
 
@@ -804,7 +801,6 @@
 
       default:
         goto Fail;
-        break;
       }
     }
 
@@ -921,7 +917,7 @@
 
       case AFM_TOKEN_STARTCHARMETRICS:
         {
-          FT_Int  n;
+          FT_Int  n = 0;
 
 
           if ( afm_parser_read_int( parser, &n ) )
@@ -942,7 +938,6 @@
 
       case AFM_TOKEN_ENDFONTMETRICS:
         return PSaux_Err_Ok;
-        break;
 
       default:
         break;

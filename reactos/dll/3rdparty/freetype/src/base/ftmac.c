@@ -105,6 +105,10 @@
                             FSSpec*      pathSpec,
                             FT_Long*     face_index )
   {
+    FT_UNUSED( fontName );
+    FT_UNUSED( pathSpec );
+    FT_UNUSED( face_index );
+
     return FT_Err_Unimplemented_Feature;
   }
 
@@ -118,6 +122,12 @@
   FT_ATSFontGetFileReference( ATSFontRef  ats_font_id,
                               FSRef*      ats_font_ref )
   {
+#if __LP64__
+    FT_UNUSED( ats_font_id );
+    FT_UNUSED( ats_font_ref );
+
+    return fnfErr;
+#else
     OSStatus  err;
     FSSpec    spec;
 
@@ -127,6 +137,7 @@
       err = FSpMakeFSRef( &spec, ats_font_ref );
 
     return err;
+#endif
   }
 
 
@@ -204,11 +215,12 @@
                                 FT_Long*     face_index )
   {
 #if __LP64__
+    FT_UNUSED( fontName );
+    FT_UNUSED( pathSpec );
+    FT_UNUSED( face_index );
 
     return FT_Err_Unimplemented_Feature;
-
 #else
-
     FSRef     ref;
     FT_Error  err;
 
@@ -222,7 +234,6 @@
       return FT_Err_Unknown_File_Format;
 
     return FT_Err_Ok;
-
 #endif
   }
 
@@ -447,10 +458,10 @@
 
 
   static  FT_Error
-  lookup_lwfn_by_fond( const UInt8*     path_fond,
-                       const StringPtr  base_lwfn,
-                       UInt8*           path_lwfn,
-                       int              path_size )
+  lookup_lwfn_by_fond( const UInt8*      path_fond,
+                       ConstStr255Param  base_lwfn,
+                       UInt8*            path_lwfn,
+                       size_t            path_size )
   {
     FSRef  ref, par_ref;
     int    dirname_len;
@@ -472,12 +483,8 @@
     if ( ft_strlen( (char *)path_lwfn ) + 1 + base_lwfn[0] > path_size )
       return FT_Err_Invalid_Argument;
 
-    /* now we have absolute dirname in lookup_path */
-    if ( path_lwfn[0] == '/' )
-      ft_strcat( (char *)path_lwfn, "/" );
-    else
-      ft_strcat( (char *)path_lwfn, ":" );
-
+    /* now we have absolute dirname in path_lwfn */
+    ft_strcat( (char *)path_lwfn, "/" );
     dirname_len = ft_strlen( (char *)path_lwfn );
     ft_strcat( (char *)path_lwfn, (char *)base_lwfn + 1 );
     path_lwfn[dirname_len + base_lwfn[0]] = '\0';
@@ -507,7 +514,6 @@
 
     have_sfnt = have_lwfn = 0;
 
-    HLock( fond );
     parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, 0 );
 
     if ( lwfn_file_name[0] )
@@ -523,7 +529,6 @@
     else
       num_faces = count_faces_scalable( *fond );
 
-    HUnlock( fond );
     return num_faces;
   }
 
@@ -810,9 +815,7 @@
       return error;
     }
 
-    HLock( sfnt );
     ft_memcpy( sfnt_data, *sfnt, sfnt_size );
-    HUnlock( sfnt );
     ReleaseResource( sfnt );
 
     is_cff = sfnt_size > 4 && sfnt_data[0] == 'O' &&
@@ -894,9 +897,7 @@
     if ( ResError() != noErr || fond_type != 'FOND' )
       return FT_Err_Invalid_File_Format;
 
-    HLock( fond );
     parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, face_index );
-    HUnlock( fond );
 
     if ( lwfn_file_name[0] )
     {
@@ -1073,6 +1074,14 @@
                            FT_Long        face_index,
                            FT_Face*       aface )
   {
+#if __LP64__
+    FT_UNUSED( library );
+    FT_UNUSED( spec );
+    FT_UNUSED( face_index );
+    FT_UNUSED( aface );
+
+    return FT_Err_Unimplemented_Feature;
+#else
     FSRef  ref;
 
 
@@ -1080,6 +1089,7 @@
       return FT_Err_Invalid_Argument;
     else
       return FT_New_Face_From_FSRef( library, &ref, face_index, aface );
+#endif
   }
 
 

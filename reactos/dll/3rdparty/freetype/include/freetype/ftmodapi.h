@@ -316,7 +316,7 @@ FT_BEGIN_HEADER
   /**************************************************************************
    *
    * @section:
-   *   ttengine
+   *   truetype_engine
    *
    * @title:
    *   The TrueType Engine

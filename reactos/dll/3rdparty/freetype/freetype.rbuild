@@ -31,6 +31,7 @@
 			<file>ftgxval.c</file>
 			<file>ftmm.c</file>
 			<file>ftotval.c</file>
+			<file>ftpatent.c</file>
 			<file>ftpfr.c</file>
 			<file>ftstroke.c</file>
 			<file>ftsynth.c</file>

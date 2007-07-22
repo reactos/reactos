@@ -98,7 +98,11 @@
 
         stream_len = stream->size - FT_STREAM_POS();
         if ( stream_len == 0 )
+        {
+          FT_TRACE2(( "cid_parser_new: no `StartData' keyword found\n" ));
+          error = CID_Err_Unknown_File_Format;
           goto Exit;
+        }
 
         read_len = FT_MIN( read_len, stream_len );
         if ( FT_STREAM_READ( p, read_len ) )
@@ -165,7 +169,10 @@
     while ( cur < limit )
     {
       if ( parser->root.error )
-        break;
+      {
+        error = parser->root.error;
+        goto Exit;
+      }
 
       if ( cur[0] == 'S' && ft_strncmp( (char*)cur, "StartData", 9 ) == 0 )
       {
