@@ -32,10 +32,9 @@ MENU_WINEMINE MENU DISCARDABLE
 }
 
 DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Najr˝chlejöÌ hæadaËi mÌn"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     GROUPBOX        "Najlepöie Ëasy", IDNONE,  10,  10, 140,  45
     LTEXT           "ZaËiatoËnÌk",    IDNONE,  20,  20,  40,   8
@@ -51,10 +50,9 @@ EXSTYLE DS_SHELLFONT
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Blahoûel·m!"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT           "Zadajte svoje meno, prosÌm!", IDIGNORE,  10,  10, 150,  10
     EDITTEXT                                   IDC_EDITNAME,  25,  20, 110,  12
@@ -62,10 +60,9 @@ EXSTYLE DS_SHELLFONT
 }
 
 DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "VlastnÈ pole"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT           "V˝öka",  IDNONE,   5,   5,  30,  10
     LTEXT           "äÌrka",  IDNONE,   5,  35,  30,  10
@@ -77,15 +74,14 @@ EXSTYLE DS_SHELLFONT
     PUSHBUTTON      "Zruöiù", IDCANCEL,  40,  50,  50,  15
 }
 DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "»o je hra MÌny (WineMine)"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
     LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
     LTEXT                     "pod licenciou Wine", IDNONE,  35,  35, 100,  10
     LTEXT                     "Preloûil Kario",     IDNONE,  35,  45, 100,  10
-    ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
+    ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
     DEFPUSHBUTTON                             "Ok", IDOK,    50,  60,  55,  15
 }
