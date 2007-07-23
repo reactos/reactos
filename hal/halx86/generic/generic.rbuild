@@ -10,6 +10,7 @@
 	<file>dma.c</file>
 	<file>drive.c</file>
 	<file>misc.c</file>
+	<file>olpcpci.c</file>
 	<file>pci.c</file>
 	<file>portio.c</file>
 	<file>profil.c</file>

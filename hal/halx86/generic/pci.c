@@ -19,6 +19,10 @@ ULONG HalpMinPciBus, HalpMaxPciBus;
 KSPIN_LOCK HalpPCIConfigLock;
 PCI_CONFIG_HANDLER PCIConfigHandler;
 
+#define NB_SLOT 0x1      /* Northbridge - GX chip - Device 1 */
+#define SB_SLOT 0xf      /* Southbridge - CS5536 chip - Device F */
+#define OLPC_SIMULATED(bus, devfn)  ( ( (bus) == 0 ) && ( (devfn.u.bits.DeviceNumber == NB_SLOT) || (devfn.u.bits.DeviceNumber == SB_SLOT) ) )
+
 /* PCI Operation Matrix */
 UCHAR PCIDeref[4][4] =
 {
@@ -106,6 +110,10 @@ BUS_HANDLER HalpFakePciBusHandler =
     NULL,
     NULL
 };
+
+VOID NTAPI pci_olpc_read(ULONG bus, PCI_SLOT_NUMBER devfn, ULONG reg, ULONG len, PUCHAR value);
+VOID NTAPI pci_olpc_write(ULONG bus, PCI_SLOT_NUMBER devfn, ULONG reg, ULONG len, PUCHAR value);
+
 
 /* TYPE 1 FUNCTIONS **********************************************************/
 
@@ -234,11 +242,26 @@ HalpPCIConfig(IN PBUS_HANDLER BusHandler,
         /* Find out the type of read/write we need to do */
         i = PCIDeref[Offset % sizeof(ULONG)][Length % sizeof(ULONG)];
 
-        /* Do the read/write and return the number of bytes */
-        i = ConfigIO[i]((PPCIPBUSDATA)BusHandler->BusData,
-                        State,
-                        Buffer,
-                        Offset);
+        if (OLPC_SIMULATED(BusHandler->BusNumber, Slot))
+        {
+            /* Convert 0->ulong, 1->char, 2->short */
+            if (i == 0)
+                i = 4;
+
+            /* FIXME: Not really a good way to know if it's read or write... */
+            if (ConfigIO == PCIConfigHandler.ConfigRead)
+                pci_olpc_read(BusHandler->BusNumber, Slot, Offset, i, (PUCHAR)Buffer);
+            else
+                pci_olpc_write(BusHandler->BusNumber, Slot, Offset, i, (PUCHAR)Buffer);
+        }
+        else
+        {
+            /* Do the read/write and return the number of bytes */
+            i = ConfigIO[i]((PPCIPBUSDATA)BusHandler->BusData,
+                            State,
+                            Buffer,
+                            Offset);
+        }
 
         /* Increment the buffer position and offset, and decrease the length */
         Offset += i;
