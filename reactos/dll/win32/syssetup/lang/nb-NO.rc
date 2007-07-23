@@ -194,8 +194,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_WINEFILE    "Start Winefile"
-    IDS_CMT_IBROWSER	"Start iBrowser"
     IDS_CMT_DOWNLOADER  "Last ned og innstaller forskjellige applikasjoner"
 END
 

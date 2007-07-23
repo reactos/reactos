@@ -180,8 +180,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_WINEFILE    "Запустити Winefile"
-    IDS_CMT_IBROWSER	"Запустити iBrowser"
     IDS_CMT_DOWNLOADER  "Download and install various applications"
 END
 
