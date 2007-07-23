@@ -193,11 +193,9 @@ SetProcNameString(HWND hwnd,
 		HeapFree(GetProcessHeap(),
 				 0,
 				 lpBuf);
-		
-		return Ret;
 	}
 
-	return 0;
+	return Ret;
 }
 
 static  VOID
@@ -251,7 +249,6 @@ GetSystemInformation(HWND hwnd)
 	TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
 	MEMORYSTATUSEX MemStat;
 	TCHAR Buf[32];
-	INT Ret = 0;
 	INT CurMachineLine = IDC_MACHINELINE1;
 
 
@@ -266,22 +263,21 @@ GetSystemInformation(HWND hwnd)
 					 KEY_READ,
 					 &hKey) == ERROR_SUCCESS)
 	{
-		SetRegTextData(hwnd, 
-					   hKey, 
-					   _T("VendorIdentifier"), 
+		SetRegTextData(hwnd,
+					   hKey,
+					   _T("VendorIdentifier"),
 					   CurMachineLine);
 		CurMachineLine++;
 	    
-		Ret = SetProcNameString(hwnd, 
-								hKey, 
-								_T("ProcessorNameString"), 
-								CurMachineLine,
-								CurMachineLine+1);
-		CurMachineLine += Ret;
+		CurMachineLine += SetProcNameString(hwnd,
+											hKey,
+											_T("ProcessorNameString"),
+											CurMachineLine,
+											CurMachineLine + 1);
 	    
-		SetProcSpeed(hwnd, 
-					 hKey, 
-					 _T("~MHz"), 
+		SetProcSpeed(hwnd,
+					 hKey,
+					 _T("~MHz"),
 					 CurMachineLine);
 		CurMachineLine++;
 	}
@@ -316,7 +312,6 @@ GetSystemInformation(HWND hwnd)
 				if (MemStat.ullTotalPhys > 1024 * 1024)
 				{
 					/* We're dealing with PBs or more */
-
 					MemStat.ullTotalPhys /= 1024;
 					i++;
 
@@ -336,15 +331,13 @@ GetSystemInformation(HWND hwnd)
 
 		if (LoadString(hApplet, uStrId[i], szStr, sizeof(szStr) / sizeof(szStr[0])))
 		{
-			Ret = _stprintf(Buf, _T("%.2f %s"), dTotalPhys, szStr);
+			if( _stprintf(Buf, _T("%.2f %s"), dTotalPhys, szStr) )
+			{
+				SetDlgItemText(hwnd,
+							   CurMachineLine,
+							   Buf);
+			}
 		}
-	}
-
-	if (Ret)
-	{
-		SetDlgItemText(hwnd,
-					   CurMachineLine,
-					   Buf);
 	}
 }
 
