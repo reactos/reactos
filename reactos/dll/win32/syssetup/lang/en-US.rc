@@ -185,8 +185,8 @@ BEGIN
     IDS_LOCALESUBTITLE   "You can customize ReactOS for different regions and languages."
     IDS_DATETIMETITLE    "Date and Time"
     IDS_DATETIMESUBTITLE "Set the correct date and time for your computer."
-    IDS_PROCESSTITLE     "Process page title"
-    IDS_PROCESSSUBTITLE  "Process page subtitle"
+    IDS_PROCESSTITLE     "Registering Components"
+    IDS_PROCESSSUBTITLE  "Please wait..."
 END
 
 STRINGTABLE
