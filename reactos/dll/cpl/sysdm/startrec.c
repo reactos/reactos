@@ -29,9 +29,9 @@ void SetTimeout(HWND hwndDlg, int Timeout)
 /* Property page dialog callback */
 INT_PTR CALLBACK
 StartRecDlgProc(HWND hwndDlg,
-                UINT uMsg,
-                WPARAM wParam,
-                LPARAM lParam)
+				UINT uMsg,
+				WPARAM wParam,
+				LPARAM lParam)
 {
 	TCHAR *szSystemDrive;
 	TCHAR szDefaultOS[MAX_PATH];
@@ -40,7 +40,7 @@ StartRecDlgProc(HWND hwndDlg,
 	int iTimeout;
 
 	UNREFERENCED_PARAMETER(lParam);
-	
+
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
@@ -89,7 +89,7 @@ FailGetSysDrive:
 					HeapFree(GetProcessHeap(), 0, szSystemDrive);
 				}
 			}
-   
+
 			SetDlgItemText(hwndDlg, IDC_STRRECDUMPFILE, _T("%SystemRoot%\\MiniDump"));
 
 			/* load settings from freeldr.ini */
@@ -143,6 +143,6 @@ FailGetSysDrive:
 			}
 		}
 		break;
-  }
-  return FALSE;
+	}
+	return FALSE;
 }
