@@ -12,76 +12,76 @@
 /* Property page dialog callback */
 static INT_PTR CALLBACK
 RenameProfDlgProc(HWND hwndDlg,
-				  UINT uMsg,
-				  WPARAM wParam,
-				  LPARAM lParam)
+                  UINT uMsg,
+                  WPARAM wParam,
+                  LPARAM lParam)
 {
-	UNREFERENCED_PARAMETER(lParam);
-	UNREFERENCED_PARAMETER(wParam);
-	UNREFERENCED_PARAMETER(hwndDlg);
-	switch(uMsg)
-	{
-		case WM_INITDIALOG:
-		{
-			MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
-		}
-		break;
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
+        }
+        break;
 
-		case WM_COMMAND:
-		{
-			if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
-			{
-				EndDialog(hwndDlg,
-						  LOWORD(wParam));
-				return TRUE;
-			}
-		}
-		break;
-	}
-	return FALSE;
+        case WM_COMMAND:
+        {
+            if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
+            {
+                EndDialog(hwndDlg,
+                          LOWORD(wParam));
+                return TRUE;
+            }
+        }
+        break;
+    }
+    return FALSE;
 }
 
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
 HardProfDlgProc(HWND hwndDlg,
-				UINT uMsg,
-				WPARAM wParam,
-				LPARAM lParam)
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
 {
-	UNREFERENCED_PARAMETER(lParam);
-	UNREFERENCED_PARAMETER(wParam);
-	UNREFERENCED_PARAMETER(hwndDlg);
-	switch(uMsg)
-	{
-		case WM_INITDIALOG:
-		{
-			MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
-		}
-		break;
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
+        }
+        break;
 
-		case WM_COMMAND:
-		{
-			switch (LOWORD(wParam))
-			{
-				case IDC_HRDPROFRENAME:
-				{
-					DialogBox(hApplet,
-							  MAKEINTRESOURCE(IDD_RENAMEPROFILE),
-							  hwndDlg,
-							  (DLGPROC)RenameProfDlgProc);
-				}
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_HRDPROFRENAME:
+                {
+                    DialogBox(hApplet,
+                              MAKEINTRESOURCE(IDD_RENAMEPROFILE),
+                              hwndDlg,
+                              (DLGPROC)RenameProfDlgProc);
+                }
 
-				case IDOK:
-				case IDCANCEL:
-				{
-					EndDialog(hwndDlg,
-							  LOWORD(wParam));
-					return TRUE;
-				}
-			}
-		}
-		break;
-	}
-	return FALSE;
+                case IDOK:
+                case IDCANCEL:
+                {
+                    EndDialog(hwndDlg,
+                              LOWORD(wParam));
+                    return TRUE;
+                }
+            }
+        }
+        break;
+    }
+    return FALSE;
 }
