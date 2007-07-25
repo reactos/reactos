@@ -79,7 +79,7 @@ CAPTION "Èo je hra Míny (WineMine)"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
     LTEXT                     "pod licenciou Wine", IDNONE,  35,  35, 100,  10
     LTEXT                     "Preložil Kario",     IDNONE,  35,  45, 100,  10
     ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
