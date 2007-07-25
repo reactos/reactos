@@ -522,6 +522,9 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 	          ProjectNode.GetProjectFilename ().c_str () );
 	string xmlbuildFilenames;
 	int numberOfExistingFiles = 0;
+	struct stat statbuf;
+	time_t SystemTime, lastWriteTime;
+
 	for ( size_t i = 0; i < ProjectNode.xmlbuildfiles.size (); i++ )
 	{
 		XMLInclude& xmlbuildfile = *ProjectNode.xmlbuildfiles[i];
@@ -530,6 +533,28 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 		numberOfExistingFiles++;
 		if ( xmlbuildFilenames.length () > 0 )
 			xmlbuildFilenames += " ";
+
+		FILE* f = fopen ( xmlbuildfile.topIncludeFilename.c_str (), "rb" );
+		if ( !f )
+		throw FileNotFoundException ( NormalizeFilename ( xmlbuildfile.topIncludeFilename ) );
+
+		if ( fstat ( fileno ( f ), &statbuf ) != 0 )
+		{
+			fclose ( f );
+			throw AccessDeniedException ( NormalizeFilename ( xmlbuildfile.topIncludeFilename ) );
+		}
+
+		lastWriteTime = statbuf.st_mtime;
+		SystemTime = time(NULL);
+
+		if (SystemTime != -1)
+		{
+			if (difftime (lastWriteTime, SystemTime) > 0)
+				throw InvalidDateException ( NormalizeFilename ( xmlbuildfile.topIncludeFilename ) );
+		}
+
+		fclose ( f );
+		
 		xmlbuildFilenames += NormalizeFilename ( xmlbuildfile.topIncludeFilename );
 		if ( numberOfExistingFiles % 5 == 4 || i == ProjectNode.xmlbuildfiles.size () - 1 )
 		{

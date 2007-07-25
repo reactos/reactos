@@ -73,6 +73,12 @@ public:
 	std::string Filename;
 };
 
+class InvalidDateException : public Exception
+{
+public:
+	InvalidDateException ( const std::string& filename );
+	std::string Filename;
+};
 
 class RequiredAttributeNotFoundException : public XMLInvalidBuildFileException
 {

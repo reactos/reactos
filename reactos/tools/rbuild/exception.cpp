@@ -64,6 +64,13 @@ InvalidOperationException::InvalidOperationException (
 {
 }
 
+InvalidDateException::InvalidDateException ( const string& filename)
+	: Exception ( "File '%s' has an invalid date.",
+	             filename.c_str() )
+{
+	Filename = filename;
+}
+
 InvalidOperationException::InvalidOperationException (
 	const char* filename,
 	const int linenumber,
