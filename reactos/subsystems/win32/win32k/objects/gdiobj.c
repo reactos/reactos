@@ -77,7 +77,6 @@ GDI_OBJ_INFO ObjInfo[] =
   {GDI_OBJECT_TYPE_BRUSH,       sizeof(GDIBRUSHOBJ),   BRUSH_Cleanup},
   {GDI_OBJECT_TYPE_PEN,         sizeof(GDIBRUSHOBJ),   GDI_CleanupDummy},
   {GDI_OBJECT_TYPE_FONT,        sizeof(TEXTOBJ),       GDI_CleanupDummy},
-  {GDI_OBJECT_TYPE_DCE,         sizeof(DCE),           DCE_Cleanup},
   {GDI_OBJECT_TYPE_DIRECTDRAW,  sizeof(DD_DIRECTDRAW), DD_Cleanup},
   {GDI_OBJECT_TYPE_DD_SURFACE,  sizeof(DD_SURFACE),    DDSURF_Cleanup},
   {GDI_OBJECT_TYPE_EXTPEN,      sizeof(GDIBRUSHOBJ),   EXTPEN_Cleanup},
