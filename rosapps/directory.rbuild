@@ -44,6 +44,11 @@
 	<xi:include href="lib/directory.rbuild" />
 </directory>
 -->
+
+<directory name="magnify">
+	<xi:include href="magnify/magnify.rbuild" />
+</directory>
+
 <directory name="mc">
 	<xi:include href="mc/mc.rbuild" />
 </directory>
