@@ -188,7 +188,7 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
     CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+    CONTROL         "rig./bot. up",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
     CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
@@ -396,4 +396,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

@@ -1,3 +1,5 @@
+// Revised by Caemyr (Olaf Siejka) - 07.2007
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_PROPPAGENETWORK DIALOG DISCARDABLE  0, 0, 246, 228
@@ -26,7 +28,7 @@ BEGIN
  PUSHBUTTON "&Odinstaluj", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
  PUSHBUTTON "&W³aœciwoœci", IDC_PROPERTIES, 174, 130, 65, 14
  GROUPBOX "Opis", -1, 9, 153, 230, 46, BS_GROUPBOX
- LTEXT "Tutaj opis komponentu...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+ LTEXT "Opis komponentu:", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
  CHECKBOX "Pokazuj ikonê w zasobniku systemowym kiedy po³¹czony", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP
 END
 
@@ -56,7 +58,7 @@ END
 
 IDD_CARDSUPPORT DIALOG DISCARDABLE  0, 0, 200,180
 STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Wsparcie"
+CAPTION "Szczegó³y"
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Status po³¹czenia", -1, 9, 8, 200, 88, BS_GROUPBOX
@@ -110,8 +112,8 @@ BEGIN
   IDS_ERROR "B³¹d"
   IDS_ENTER_VALID_IPADDRESS "Musisz wpisaæ poprawny adres IP"
   IDS_ENTER_VALID_SUBNET "Musisz wpisaæ poprawn¹ maskê podsieci"
-  IDS_CANNOT_LOAD_CONFIG "Nie mo¿na odczytaæ obecnej konfiguracji"
+  IDS_CANNOT_LOAD_CONFIG "Nie mo¿na odczytaæ bierz¹cej konfiguracji"
   IDS_CANNOT_CREATE_PROPSHEET "Nie mo¿na utworzyæ przegl¹du ustawieñ"
   IDS_OUT_OF_MEMORY "Brak wolnej pamiêci"
-  IDS_CANNOT_SAVE_CHANGES "Nie mo¿na zapisaæ zmian których dokona³eœ"
+  IDS_CANNOT_SAVE_CHANGES "Nie mo¿na zapisaæ dokonanych zmian!"
 END

@@ -458,7 +458,7 @@ VER [/C][/R][/W]\n\n\
   /R  Wyœwietla informacje o redystrybucji.\n\
   /W  Wyœwietla informacje o gwarancji."
 
-STRING_VERSION_HELP2, " jest rozpowszechniana BEZ ¯ADNEJ GWARANCJI; szczegó³y\n\
+STRING_VERSION_HELP2, " jest rozpowszechniany BEZ ¯ADNEJ GWARANCJI; szczegó³y\n\
 dostêpne - wpisz: `ver /w'. To jest darmowe oprogramowanie, i mo¿na je\n\
 rozpowszechniaæ pod pewnymi warunkami: wpisz `ver /r'. Lista podziêkowañ pod\n\
 parametrem: `ver /c'."
