@@ -1,0 +1,10 @@
+/* Translation by Vytis 'CMan' Girdþijauskas cman@cman.us */
+
+#include "resource.h"
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "LoadLibrary nepavyko paleisti '%s'"
+IDS_MissingEntry,   "Trûksta áëjimo taðko:%s\nIn %s"
+}

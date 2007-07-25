@@ -1,0 +1,14 @@
+/* Translation by Vytis 'CMan' Girdþijauskas cman@cman.us */
+
+#include "resource.h"
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+
+IDS_Copy, "ReactOS bylø iðplëtimo pagalbinë programa. Versija 1.0\n\
+Copyright Victor Schneider 1997\n\n\
+Naudojimas: %s ðaltinio_byla [iðvesties_byla]\n"
+
+IDS_FAILS "LZCopy nepavyko: graþino %ld\n"
+}
