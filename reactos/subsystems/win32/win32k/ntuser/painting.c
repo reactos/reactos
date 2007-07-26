@@ -1109,102 +1109,84 @@ CLEANUP:
 
 
 static
-DWORD FASTCALL
-UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
-             const RECT *lprcClip, HRGN hrgnUpdate, LPRECT lprcUpdate)
+INT FASTCALL
+UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
+             const RECT *prcClip, HRGN hrgnUpdate, LPRECT prcUpdate)
 {
-   RECT rSrc, rClipped_src, rClip, rDst, offset;
-   PDC DC;
+   PDC pDC;
+   RECT rcScroll, rcSrc, rcDst;
+   INT Result;
 
-   /*
-    * Compute device clipping region (in device coordinates).
-    */
-
-   DC = DC_LockDc(hDC);
-   if (NULL == DC)
+   IntGdiGetClipBox(hDC, &rcScroll);
+   if (prcScroll)
    {
-      return FALSE;
+      IntGdiIntersectRect(&rcScroll, &rcScroll, prcScroll);
    }
-   if (lprcScroll)
-      rSrc = *lprcScroll;
-   else
-      IntGdiGetClipBox(hDC, &rSrc);
-   IntLPtoDP(DC, (LPPOINT)&rSrc, 2);
-
-   if (lprcClip)
-      rClip = *lprcClip;
-   else
-      IntGdiGetClipBox(hDC, &rClip);
-   IntLPtoDP(DC, (LPPOINT)&rClip, 2);
-
-   IntGdiIntersectRect(&rClipped_src, &rSrc, &rClip);
-
-   rDst = rClipped_src;
-   IntGdiSetRect(&offset, 0, 0, dx, dy);
-   IntLPtoDP(DC, (LPPOINT)&offset, 2);
-   IntGdiOffsetRect(&rDst, offset.right - offset.left,  offset.bottom - offset.top);
-   IntGdiIntersectRect(&rDst, &rDst, &rClip);
-
-   /*
-    * Copy bits, if possible.
-    */
-
-   if (rDst.bottom > rDst.top && rDst.right > rDst.left)
+   if (prcClip)
    {
-      RECT rDst_lp = rDst, rSrc_lp = rDst;
-
-      IntGdiOffsetRect(&rSrc_lp, offset.left - offset.right, offset.top - offset.bottom);
-      IntDPtoLP(DC, (LPPOINT)&rDst_lp, 2);
-      IntDPtoLP(DC, (LPPOINT)&rSrc_lp, 2);
-      DC_UnlockDc(DC);
-
-      if (!NtGdiBitBlt(hDC, rDst_lp.left, rDst_lp.top, rDst_lp.right - rDst_lp.left,
-                       rDst_lp.bottom - rDst_lp.top, hDC, rSrc_lp.left, rSrc_lp.top,
-                       SRCCOPY, 0, 0))
-         return FALSE;
-   }
-   else
-   {
-      DC_UnlockDc(DC);
+      IntGdiIntersectRect(&rcScroll, &rcScroll, prcClip);
    }
 
-   /*
-    * Compute update areas.  This is the clipped source or'ed with the
-    * unclipped source translated minus the clipped src translated (rDst)
-    * all clipped to rClip.
-    */
+   rcDst = rcScroll;
+   IntGdiOffsetRect(&rcDst, dx, dy);
+   IntGdiIntersectRect(&rcDst, &rcDst, &rcScroll);
+   rcSrc = rcDst;
+   IntGdiOffsetRect(&rcSrc, -dx, -dy);
 
-   if (hrgnUpdate || lprcUpdate)
+   if (!NtGdiBitBlt(hDC, rcDst.left, rcDst.top,
+                    rcDst.right - rcDst.left, rcDst.bottom - rcDst.top,
+                    hDC, rcSrc.left, rcSrc.top, SRCCOPY, 0, 0))
    {
-      HRGN hRgn = hrgnUpdate, hRgn2;
+      return ERROR;
+   }
 
-      if (hRgn)
-         NtGdiSetRectRgn(hRgn, rClipped_src.left, rClipped_src.top, rClipped_src.right, rClipped_src.bottom);
-      else
-         hRgn = NtGdiCreateRectRgn(rClipped_src.left, rClipped_src.top, rClipped_src.right, rClipped_src.bottom);
+   /* Calculate the region that was invalidated by moving or 
+      could not be copied, because it was not visible */
+   if (hrgnUpdate || prcUpdate)
+   {
+      HRGN hrgnOwn, hrgnVisible, hrgnDst;
 
-      hRgn2 = UnsafeIntCreateRectRgnIndirect(&rSrc);
-      NtGdiOffsetRgn(hRgn2, offset.right - offset.left,  offset.bottom - offset.top);
-      NtGdiCombineRgn(hRgn, hRgn, hRgn2, RGN_OR);
-
-      NtGdiSetRectRgn(hRgn2, rDst.left, rDst.top, rDst.right, rDst.bottom);
-      NtGdiCombineRgn(hRgn, hRgn, hRgn2, RGN_DIFF);
-
-      NtGdiSetRectRgn(hRgn2, rClip.left, rClip.top, rClip.right, rClip.bottom);
-      NtGdiCombineRgn(hRgn, hRgn, hRgn2, RGN_AND);
-
-      if (lprcUpdate)
+      pDC = DC_LockDc(hDC);
+      if (!pDC)
       {
-         NtGdiGetRgnBox(hRgn, lprcUpdate);
-
-         /* Put the lprcUpdate in logical coordinate */
-         NtGdiDPtoLP(hDC, (LPPOINT)lprcUpdate, 2);
+         return FALSE;
       }
+      hrgnVisible = pDC->w.hVisRgn;  // pDC->w.hGCClipRgn?
+      DC_UnlockDc(pDC);
+
+      if (hrgnUpdate)
+      {
+         hrgnOwn = hrgnUpdate;
+         if (!NtGdiSetRectRgn(hrgnOwn, rcScroll.left, rcScroll.top, rcScroll.right, rcScroll.bottom))
+         {
+            return ERROR;
+         }
+      }
+      else
+      {
+         hrgnOwn = UnsafeIntCreateRectRgnIndirect(&rcScroll);
+      }
+
+      hrgnDst = UnsafeIntCreateRectRgnIndirect(&rcSrc);
+      NtGdiCombineRgn(hrgnDst, hrgnDst, hrgnVisible, RGN_AND);
+      NtGdiOffsetRgn(hrgnDst, dx, dy);
+      Result = NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnDst, RGN_DIFF);
+      NtGdiDeleteObject(hrgnDst);
+
+      if (prcUpdate)
+      {
+         NtGdiGetRgnBox(hrgnOwn, prcUpdate);
+      }
+
       if (!hrgnUpdate)
-         NtGdiDeleteObject(hRgn);
-      NtGdiDeleteObject(hRgn2);
+      {
+         NtGdiDeleteObject(hrgnOwn);
+      }
    }
-   return TRUE;
+   else
+      Result = NULLREGION;
+
+   return Result;
 }
 
 
@@ -1218,21 +1200,78 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
  */
 
 DWORD STDCALL
-NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
-               const RECT *lprcClip, HRGN hrgnUpdate, LPRECT lprcUpdate)
+NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
+               const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate)
 {
    DECLARE_RETURN(DWORD);
+   RECT rcScroll, rcClip, rcUpdate;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    DPRINT("Enter NtUserScrollDC\n");
    UserEnterExclusive();
 
-   RETURN( UserScrollDC(hDC, dx, dy, lprcScroll, lprcClip, hrgnUpdate, lprcUpdate));
+   _SEH_TRY
+   {
+      if (prcUnsafeScroll)
+      {
+         ProbeForRead(prcUnsafeScroll, sizeof(*prcUnsafeScroll), 1);
+         rcScroll = *prcUnsafeScroll;
+      }
+      if (prcUnsafeClip)
+      {
+         ProbeForRead(prcUnsafeClip, sizeof(*prcUnsafeClip), 1);
+         rcClip = *prcUnsafeClip;
+      }
+      if (prcUnsafeUpdate)
+      {
+         ProbeForWrite(prcUnsafeUpdate, sizeof(*prcUnsafeUpdate), 1);
+      }
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      RETURN(FALSE);
+   }
+
+   if (UserScrollDC(hDC, dx, dy, 
+                    prcUnsafeScroll? &rcScroll : 0,
+                    prcUnsafeClip? &rcClip : 0, hrgnUpdate,
+                    prcUnsafeUpdate? &rcUpdate : NULL) == ERROR)
+   {
+      /* FIXME: SetLastError? */
+      RETURN(FALSE);
+   }
+
+   if (prcUnsafeUpdate)
+   {
+      _SEH_TRY
+      {
+         *prcUnsafeUpdate = rcUpdate;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END
+      if (!NT_SUCCESS(Status))
+      {
+         /* FIXME: SetLastError? */
+         /* FIXME: correct? We have already scrolled! */
+         RETURN(FALSE);
+      }
+   }
+
+   RETURN(TRUE);
 
 CLEANUP:
    DPRINT("Leave NtUserScrollDC, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-
 }
 
 /*
@@ -1243,18 +1282,16 @@ CLEANUP:
  */
 
 DWORD STDCALL
-NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
-                     const RECT *UnsafeClipRect, HRGN hrgnUpdate, LPRECT rcUpdate, UINT flags)
+NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
+                     const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate, UINT flags)
 {
-   RECT rc, cliprc, caretrc, rect, clipRect;
+   RECT rcScroll, rcClip, rcCaret, rcUpdate;
    INT Result;
    PWINDOW_OBJECT Window = NULL, CaretWnd;
    HDC hDC;
-   HRGN hrgnTemp;
+   HRGN hrgnOwn = NULL, hrgnTemp;
    HWND hwndCaret;
-   BOOL bUpdate = (rcUpdate || hrgnUpdate || flags & (SW_INVALIDATE | SW_ERASE));
-   BOOL bOwnRgn = TRUE;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(DWORD);
    USER_REFERENCE_ENTRY Ref, CaretRef;
 
@@ -1269,52 +1306,59 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
    }
    UserRefObjectCo(Window, &Ref);
 
-   IntGetClientRect(Window, &rc);
+   IntGetClientRect(Window, &rcScroll);
 
-   if (NULL != UnsafeRect)
+   _SEH_TRY
    {
-      Status = MmCopyFromCaller(&rect, UnsafeRect, sizeof(RECT));
-      if (! NT_SUCCESS(Status))
+      if (prcUnsafeScroll)
       {
-         SetLastNtError(Status);
-         RETURN( ERROR);
+         ProbeForRead(prcUnsafeScroll, sizeof(*prcUnsafeScroll), 1);
+         IntGdiIntersectRect(&rcScroll, &rcScroll, prcUnsafeScroll);
       }
-      IntGdiIntersectRect(&rc, &rc, &rect);
+
+      if (prcUnsafeClip)
+      {
+         ProbeForRead(prcUnsafeClip, sizeof(*prcUnsafeClip), 1);
+         IntGdiIntersectRect(&rcClip, &rcScroll, prcUnsafeClip);
+      }
+      else
+         rcClip = rcScroll;
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END
+
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      RETURN(ERROR);
    }
 
-   if (NULL != UnsafeClipRect)
-   {
-      Status = MmCopyFromCaller(&clipRect, UnsafeClipRect, sizeof(RECT));
-      if (! NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         RETURN( ERROR);
-      }
-      IntGdiIntersectRect(&cliprc, &rc, &clipRect);
-   }
-   else
-      cliprc = rc;
-
-   if (cliprc.right <= cliprc.left || cliprc.bottom <= cliprc.top ||
+   if (rcClip.right <= rcClip.left || rcClip.bottom <= rcClip.top ||
          (dx == 0 && dy == 0))
    {
-      RETURN( NULLREGION);
+      RETURN(NULLREGION);
    }
-
-   caretrc = rc;
-   hwndCaret = co_IntFixCaret(Window, &caretrc, flags);
 
    if (hrgnUpdate)
-      bOwnRgn = FALSE;
-   else if (bUpdate)
-      hrgnUpdate = NtGdiCreateRectRgn(0, 0, 0, 0);
+      hrgnOwn = hrgnUpdate;
+   else
+      hrgnOwn = NtGdiCreateRectRgn(0, 0, 0, 0);
 
    hDC = UserGetDCEx(Window, 0, DCX_CACHE | DCX_USESTYLE);
-   if (hDC)
+   if (!hDC)
    {
-      UserScrollDC(hDC, dx, dy, &rc, &cliprc, hrgnUpdate, rcUpdate);
-      UserReleaseDC(Window, hDC, FALSE);
+      /* FIXME: SetLastError? */
+      RETURN(ERROR);
    }
+
+   rcCaret = rcScroll;
+   hwndCaret = co_IntFixCaret(Window, &rcCaret, flags);
+
+   Result = UserScrollDC(hDC, dx, dy, &rcScroll, &rcClip, hrgnOwn, prcUnsafeUpdate? &rcUpdate : NULL);
+   UserReleaseDC(Window, hDC, FALSE);
 
    /*
     * Take into account the fact that some damage may have occurred during
@@ -1322,76 +1366,90 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
     */
 
    hrgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
-   Result = co_UserGetUpdateRgn(Window, hrgnTemp, FALSE);
-   if (Result != NULLREGION)
+   if (co_UserGetUpdateRgn(Window, hrgnTemp, FALSE) != NULLREGION)
    {
-      HRGN hrgnClip = UnsafeIntCreateRectRgnIndirect(&cliprc);
+      HRGN hrgnClip = UnsafeIntCreateRectRgnIndirect(&rcClip);
       NtGdiOffsetRgn(hrgnTemp, dx, dy);
       NtGdiCombineRgn(hrgnTemp, hrgnTemp, hrgnClip, RGN_AND);
       co_UserRedrawWindow(Window, NULL, hrgnTemp, RDW_INVALIDATE | RDW_ERASE);
       NtGdiDeleteObject(hrgnClip);
    }
-
    NtGdiDeleteObject(hrgnTemp);
 
    if (flags & SW_SCROLLCHILDREN)
    {
-      HWND *List = IntWinListChildren(Window);
-      if (List)
+      PWINDOW_OBJECT Child;
+      RECT rcChild;
+      POINT ClientOrigin;
+      USER_REFERENCE_ENTRY WndRef;
+      RECT rcDummy;
+
+      IntGetClientOrigin(Window, &ClientOrigin);
+      for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
       {
-         int i;
-         RECT r, dummy;
-         POINT ClientOrigin;
-         PWINDOW_OBJECT Wnd;
-         USER_REFERENCE_ENTRY WndRef;
+         rcChild = Child->WindowRect;
+         rcChild.left -= ClientOrigin.x;
+         rcChild.top -= ClientOrigin.y;
+         rcChild.right -= ClientOrigin.x;
+         rcChild.bottom -= ClientOrigin.y;
 
-         IntGetClientOrigin(Window, &ClientOrigin);
-         for (i = 0; List[i]; i++)
+         if (! prcUnsafeScroll || IntGdiIntersectRect(&rcDummy, &rcChild, &rcScroll))
          {
-            if (!(Wnd = UserGetWindowObject(List[i])))
-               continue;
-
-            r = Wnd->WindowRect;
-            r.left -= ClientOrigin.x;
-            r.top -= ClientOrigin.y;
-            r.right -= ClientOrigin.x;
-            r.bottom -= ClientOrigin.y;
-
-            if (! UnsafeRect || IntGdiIntersectRect(&dummy, &r, &rc))
-            {
-               UserRefObjectCo(Wnd, &WndRef);
-               co_WinPosSetWindowPos(Wnd, 0, r.left + dx, r.top + dy, 0, 0,
-                                     SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE |
-                                     SWP_NOREDRAW);
-               UserDerefObjectCo(Wnd);
-            }
-
+            UserRefObjectCo(Child, &WndRef);
+            co_WinPosSetWindowPos(Child, 0, rcChild.left + dx, rcChild.top + dy, 0, 0,
+                                  SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE |
+                                  SWP_NOREDRAW);
+            UserDerefObjectCo(Child);
          }
-         ExFreePool(List);
       }
    }
 
    if (flags & (SW_INVALIDATE | SW_ERASE))
-      co_UserRedrawWindow(Window, NULL, hrgnUpdate, RDW_INVALIDATE | RDW_ERASE |
+   {
+      co_UserRedrawWindow(Window, NULL, hrgnOwn, RDW_INVALIDATE | RDW_ERASE |
                           ((flags & SW_ERASE) ? RDW_ERASENOW : 0) |
                           ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : 0));
-
-   if (bOwnRgn && hrgnUpdate)
-      NtGdiDeleteObject(hrgnUpdate);
+   }
 
    if ((CaretWnd = UserGetWindowObject(hwndCaret)))
    {
       UserRefObjectCo(CaretWnd, &CaretRef);
 
-      co_IntSetCaretPos(caretrc.left + dx, caretrc.top + dy);
+      co_IntSetCaretPos(rcCaret.left + dx, rcCaret.top + dy);
       co_UserShowCaret(CaretWnd);
 
       UserDerefObjectCo(CaretWnd);
    }
 
+   if (prcUnsafeUpdate)
+   {
+      _SEH_TRY
+      {
+         /* Probe here, to not fail on invalid pointer before scrolling */
+         ProbeForWrite(prcUnsafeUpdate, sizeof(*prcUnsafeUpdate), 1);
+         *prcUnsafeUpdate = rcUpdate;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END
+
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         RETURN(ERROR);
+      }
+   }
+
    RETURN(Result);
 
 CLEANUP:
+   if (hrgnOwn && !hrgnUpdate)
+   {
+      NtGdiDeleteObject(hrgnOwn);
+   }
+
    if (Window)
       UserDerefObjectCo(Window);
 
