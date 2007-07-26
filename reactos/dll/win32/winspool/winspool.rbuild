@@ -1,4 +1,4 @@
-<module name="winspool" type="win32dll" extension=".drv" baseaddress="${BASEADDRESS_WINSPOOL}" installbase="system32" installname="winspool.drv">
+<module name="winspool" type="win32dll" extension=".drv" baseaddress="${BASEADDRESS_WINSPOOL}" installbase="system32" installname="winspool.drv" allowwarnings="true">
 	<importlibrary definition="winspool.def" />
 	<include base="winspool">.</include>
 	<define name="__USE_W32API" />

@@ -17,6 +17,7 @@
 #define NDEBUG
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define QUERY_SIZE 0
 
@@ -343,7 +344,7 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     }
     else
     {
-        DPRINT1("SetClipboardData failed\n");
+        ERR("SetClipboardData failed\n");
     }
             
     return ret;

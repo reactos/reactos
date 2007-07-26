@@ -14,6 +14,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 BOOL ControlsInitialized = FALSE;
 
@@ -30,7 +31,7 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PSENDASYNCPROC_CALLBACK_ARGUMENTS CallbackArgs;
 
-  DPRINT("User32CallSendAsyncProcKernel()\n");
+  TRACE("User32CallSendAsyncProcKernel()\n");
   CallbackArgs = (PSENDASYNCPROC_CALLBACK_ARGUMENTS)Arguments;
   if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
     {
@@ -303,7 +304,7 @@ CreateWindowExA(DWORD dwExStyle,
         {
             if (dwStyle & WS_POPUP)
             {
-                DPRINT1("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
+                WARN("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
                 return(0);
             }
             dwStyle |= (WS_CHILD | WS_CLIPSIBLINGS);
@@ -322,7 +323,7 @@ CreateWindowExA(DWORD dwExStyle,
             /* Restore current maximized child */
             if((dwStyle & WS_VISIBLE) && IsZoomed(top_child))
             {
-                DPRINT("Restoring current maximized child %p\n", top_child);
+                TRACE("Restoring current maximized child %p\n", top_child);
                 SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
                 ShowWindow(top_child, SW_RESTORE);
                 SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
@@ -415,7 +416,7 @@ CreateWindowExW(DWORD dwExStyle,
         {
             if (dwStyle & WS_POPUP)
             {
-                DPRINT1("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
+                WARN("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
                 return(0);
             }
             dwStyle |= (WS_CHILD | WS_CLIPSIBLINGS);
@@ -434,7 +435,7 @@ CreateWindowExW(DWORD dwExStyle,
             /* Restore current maximized child */
             if((dwStyle & WS_VISIBLE) && IsZoomed(top_child))
             {
-                DPRINT("Restoring current maximized child %p\n", top_child);
+                TRACE("Restoring current maximized child %p\n", top_child);
                 SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
                 ShowWindow(top_child, SW_RESTORE);
                 SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );

@@ -244,7 +244,7 @@ static BOOL DoLink(LPCSTR pSrcFile, LPCSTR pDstFile)
     		goto fail;
 	    }
 
-        DPRINT1("shortcut point to %s\n", pSrcFile);
+        TRACE("shortcut point to %s\n", pSrcFile);
 
 		hres = IShellLinkA_SetPath(psl, pSrcFile);
 
@@ -270,12 +270,12 @@ static BOOL DoLink(LPCSTR pSrcFile, LPCSTR pDstFile)
 	    hres = IPersistFile_SaveCompleted(pPf, widelink);
 	    IPersistFile_Release(pPf);
 	    IShellLinkA_Release(psl);
-	    DPRINT1("shortcut %s has been created, result=%08lx\n", pDstFile, hres);
+	    TRACE("shortcut %s has been created, result=%08lx\n", pDstFile, hres);
 		ret = TRUE;
 	}
 	else
 	{
-	    DPRINT1("CoCreateInstance failed, hres=%08lx\n", hres);
+	    ERR("CoCreateInstance failed, hres=%08lx\n", hres);
 	}
 
  fail:
@@ -330,7 +330,7 @@ static BOOL MakeLink(IContextMenu2 *iface)
 	      IShellFolder_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&ppfdst);
 	      IShellFolder_QueryInterface(psfFrom, &IID_IPersistFolder2, (LPVOID*)&ppfsrc);
 
-	      DPRINT1("[%p,%p]\n",ppfdst,ppfsrc);
+	      TRACE("[%p,%p]\n",ppfdst,ppfsrc);
 
 	      /* do the link/s */
 	      /* hack to get desktop path */
@@ -363,7 +363,7 @@ static BOOL MakeLink(IContextMenu2 *iface)
 	        {
                 _ILSimpleGetText (apidl[i], filename, MAX_PATH);
                 
-                DPRINT1("filename %s\n", filename);
+                TRACE("filename %s\n", filename);
 
 	            lstrcpyA(linkFilename, szDstPath);
 	            PathAddBackslashA(linkFilename);
@@ -371,13 +371,13 @@ static BOOL MakeLink(IContextMenu2 *iface)
                 lstrcatA(linkFilename, filename);
                 lstrcatA(linkFilename, ".lnk");
                 
-                DPRINT1("linkFilename %s\n", linkFilename);
+                TRACE("linkFilename %s\n", linkFilename);
 
                 lstrcpyA(srcFilename, szSrcPath);
                 PathAddBackslashA(srcFilename);
 	            lstrcatA(srcFilename, filename);
 
-	            DPRINT1("srcFilename %s\n", srcFilename);
+	            TRACE("srcFilename %s\n", srcFilename);
 
 	            ret = DoLink(srcFilename, linkFilename);
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Winlogon
- * FILE:            services/winlogon/wlx.c
+ * FILE:            base/system/winlogon/wlx.c
  * PURPOSE:         Logon
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Ge van Geldorp (gvg@reactos.com)
@@ -15,8 +15,14 @@
 //#define YDEBUG
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
+
+/* GLOBALS ******************************************************************/
+
 static DLGPROC PreviousWindowProc;
 static UINT_PTR IdTimer;
+
+/* FUNCTIONS ****************************************************************/
 
 static BOOL CALLBACK
 DefaultWlxWindowProc(

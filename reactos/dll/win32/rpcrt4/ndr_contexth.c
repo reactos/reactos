@@ -25,6 +25,8 @@
 #include "rpc_binding.h"
 #include "ndr_contexth.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(rpcrt4);
+
 static SContextHandle *CtxList = NULL;
 
 static CRITICAL_SECTION CtxList_cs;

@@ -33,7 +33,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(scrollbar);
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -729,7 +729,7 @@ IntScrollHandleKbdEvent(
   WPARAM wParam /* [in] Variable input including enable state */,
   LPARAM lParam /* [in] Variable input including input point */)
 {
-  DPRINT("Wnd=%p wParam=%d lParam=%ld\n", Wnd, wParam, lParam);
+  TRACE("Wnd=%p wParam=%d lParam=%ld\n", Wnd, wParam, lParam);
 
   /* hide caret on first KEYDOWN to prevent flicker */
   if (0 == (lParam & PFD_DOUBLEBUFFER_DONTCARE))
@@ -1079,7 +1079,7 @@ static void IntScrollCreateScrollBar(
   Info.nTrackPos = 0;
   NtUserSetScrollInfo(Wnd, SB_CTL, &Info, FALSE);
 
-  DPRINT("hwnd=%p lpCreate=%p\n", Wnd, lpCreate);
+  TRACE("hwnd=%p lpCreate=%p\n", Wnd, lpCreate);
 
 #if 0 /* FIXME */
   if (lpCreate->style & WS_DISABLED)
@@ -1445,14 +1445,14 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       case 0x00ed:
       case 0x00ee:
       case 0x00ef:
-        DPRINT("unknown Win32 msg %04x wp=%08x lp=%08lx\n",
+        WARN("unknown Win32 msg %04x wp=%08x lp=%08lx\n",
 		Msg, wParam, lParam );
         break;
 
       default:
         if (WM_USER <= Msg)
           {
-            DPRINT("unknown msg %04x wp=%04x lp=%08lx\n", Msg, wParam, lParam);
+            WARN("unknown msg %04x wp=%04x lp=%08lx\n", Msg, wParam, lParam);
           }
         return DefWindowProcW(Wnd, Msg, wParam, lParam );
     }
@@ -1503,7 +1503,7 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 INT STDCALL
 GetScrollPos(HWND Wnd, INT Bar)
 {
-  DPRINT("Wnd=%p Bar=%d\n", Wnd, Bar);
+  TRACE("Wnd=%p Bar=%d\n", Wnd, Bar);
 
   /* Refer SB_CTL requests to the window */
   if (SB_CTL == Bar)
@@ -1522,7 +1522,7 @@ GetScrollPos(HWND Wnd, INT Bar)
 BOOL STDCALL
 GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
 {
-  DPRINT("Wnd=%x Bar=%d Min=%p Max=%p\n", Wnd, Bar, MinPos, MaxPos);
+  TRACE("Wnd=%x Bar=%d Min=%p Max=%p\n", Wnd, Bar, MinPos, MaxPos);
 
   /* Refer SB_CTL requests to the window */
   if (SB_CTL == Bar)

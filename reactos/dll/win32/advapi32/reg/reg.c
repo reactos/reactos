@@ -17,6 +17,8 @@
 #define NDEBUG
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(advapi32);
+
 /* DEFINES ******************************************************************/
 
 #define MAX_DEFAULT_HANDLES   6
@@ -1668,7 +1670,7 @@ RegDeleteTreeA(IN HKEY hKey,
 LONG WINAPI
 RegDisableReflectionKey(IN HKEY hBase)
 {
-    DPRINT1("RegDisableReflectionKey(0x%p) UNIMPLEMENTED!\n", hBase);
+    FIXME("RegDisableReflectionKey(0x%p) UNIMPLEMENTED!\n", hBase);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -1681,7 +1683,7 @@ RegDisableReflectionKey(IN HKEY hBase)
 LONG WINAPI
 RegEnableReflectionKey(IN HKEY hBase)
 {
-    DPRINT1("RegEnableReflectionKey(0x%p) UNIMPLEMENTED!\n", hBase);
+    FIXME("RegEnableReflectionKey(0x%p) UNIMPLEMENTED!\n", hBase);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -3697,8 +3699,8 @@ LONG WINAPI
 RegQueryReflectionKey(IN HKEY hBase,
                       OUT BOOL* bIsReflectionDisabled)
 {
-    DPRINT1("RegQueryReflectionKey(0x%p, 0x%p) UNIMPLEMENTED!\n",
-            hBase, bIsReflectionDisabled);
+    FIXME("RegQueryReflectionKey(0x%p, 0x%p) UNIMPLEMENTED!\n",
+          hBase, bIsReflectionDisabled);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -4860,8 +4862,8 @@ RegLoadMUIStringW(IN HKEY hKey,
                   IN ULONG Reserved,
                   IN LPCWSTR pszDirectory  OPTIONAL)
 {
-    DPRINT1("RegLoadMUIStringW(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
-            hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
+    FIXME("RegLoadMUIStringW(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+          hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -4879,8 +4881,8 @@ RegLoadMUIStringA(IN HKEY hKey,
                   IN ULONG Reserved,
                   IN LPCSTR pszDirectory  OPTIONAL)
 {
-    DPRINT1("RegLoadMUIStringA(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
-            hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
+    FIXME("RegLoadMUIStringA(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+          hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 

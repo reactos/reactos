@@ -30,8 +30,11 @@
 
 #include <w32k.h>
 
-//#define YDEBUG
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
+#define TRACE DPRINT
+#define WARN DPRINT1
+#define ERR DPRINT1
 
 /* WINDOWCLASS ***************************************************************/
 

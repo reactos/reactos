@@ -14,6 +14,8 @@
 #include <wine/debug.h>
 #include <debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(advapi32);
+
 /*
  * @implemented
  */

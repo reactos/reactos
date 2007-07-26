@@ -31,6 +31,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -96,7 +97,7 @@ GetUserObjectInformationA(
   LPWSTR buffer;
   BOOL ret = TRUE;
 
-  DPRINT("GetUserObjectInformationA(%x %d %x %d %x)\n", hObj, nIndex,
+  TRACE("GetUserObjectInformationA(%x %d %x %d %x)\n", hObj, nIndex,
          pvInfo, nLength, lpnLengthNeeded);
 
   if (nIndex != UOI_NAME && nIndex != UOI_TYPE)
@@ -143,7 +144,7 @@ GetUserObjectInformationW(
   DWORD nLength,
   LPDWORD lpnLengthNeeded)
 {
-  DPRINT("GetUserObjectInformationW(%x %d %x %d %x)\n", hObj, nIndex,
+  TRACE("GetUserObjectInformationW(%x %d %x %d %x)\n", hObj, nIndex,
          pvInfo, nLength, lpnLengthNeeded);
   return NtUserGetObjectInformation(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
 }

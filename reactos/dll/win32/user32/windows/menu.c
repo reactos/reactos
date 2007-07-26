@@ -14,6 +14,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* internal popup menu window messages */
 #define MM_SETMENUHANDLE (WM_USER + 0)
@@ -363,7 +364,7 @@ MenuGetBitmapItemSize(PROSMENUITEMINFO lpitem, SIZE *Size, HWND WndOwner)
           case (INT_PTR) HBMMENU_POPUP_MAXIMIZE:
           case (INT_PTR) HBMMENU_POPUP_MINIMIZE:
           default:
-            DPRINT("Magic menu bitmap not implemented\n");
+            FIXME("Magic menu bitmap not implemented\n");
             return;
         }
     }
@@ -474,7 +475,7 @@ MenuDrawBitmapItem(HDC Dc, PROSMENUITEMINFO Item, const RECT *Rect,
           case (INT_PTR) HBMMENU_POPUP_MAXIMIZE:
           case (INT_PTR) HBMMENU_POPUP_MINIMIZE:
           default:
-            DPRINT("Magic menu bitmap not implemented\n");
+            FIXME("Magic menu bitmap not implemented\n");
             return;
         }
       InflateRect(&r, -1, -1);
@@ -606,7 +607,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       dis.hwndItem   = (HWND) MenuInfo->Self;
       dis.hDC        = Dc;
       dis.rcItem     = Rect;
-      DPRINT("Ownerdraw: owner=%p itemID=%d, itemState=%d, itemAction=%d, "
+      TRACE("Ownerdraw: owner=%p itemID=%d, itemState=%d, itemAction=%d, "
 	      "hwndItem=%p, hdc=%p, rcItem={%ld,%ld,%ld,%ld}\n", Wnd,
 	      dis.itemID, dis.itemState, dis.itemAction, dis.hwndItem,
 	      dis.hDC, dis.rcItem.left, dis.rcItem.top, dis.rcItem.right,
@@ -629,7 +630,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       return;
     }
 
-  DPRINT("rect={%ld,%ld,%ld,%ld}\n", Item->Rect.left, Item->Rect.top,
+  TRACE("rect={%ld,%ld,%ld,%ld}\n", Item->Rect.left, Item->Rect.top,
                                      Item->Rect.right, Item->Rect.bottom);
 
   if (MenuBar && 0 != (Item->fType & MF_SEPARATOR))
@@ -887,7 +888,7 @@ MenuDrawPopupMenu(HWND Wnd, HDC Dc, HMENU Menu)
   ROSMENUITEMINFO ItemInfo;
   UINT u;
 
-  DPRINT("wnd=%x dc=%x menu=%x\n", Wnd, Dc, Menu);
+  TRACE("wnd=%x dc=%x menu=%x\n", Wnd, Dc, Menu);
 
   GetClientRect(Wnd, &Rect);
 
@@ -935,7 +936,7 @@ MenuDrawPopupMenu(HWND Wnd, HDC Dc, HMENU Menu)
 static LRESULT WINAPI
 PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-  DPRINT("hwnd=%x msg=0x%04x wp=0x%04x lp=0x%08lx\n", Wnd, Message, wParam, lParam);
+  TRACE("hwnd=%x msg=0x%04x wp=0x%04x lp=0x%08lx\n", Wnd, Message, wParam, lParam);
 
   switch(Message)
     {
@@ -1192,7 +1193,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
   INT itemheight = 0;
   UINT CheckBitmapWidth = GetSystemMetrics(SM_CXMENUCHECK);
 
-  DPRINT("dc=%x owner=%x (%d,%d)\n", Dc, WndOwner, OrgX, OrgY);
+  TRACE("dc=%x owner=%x (%d,%d)\n", Dc, WndOwner, OrgX, OrgY);
 
   MenuCharSize.cx = GdiGetCharDimensions( Dc, NULL, &MenuCharSize.cy );
 
@@ -1231,7 +1232,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
           ItemInfo->Rect.bottom += mis.itemHeight;
         }
 
-      DPRINT("id=%04x size=%dx%d\n", ItemInfo->wID, mis.itemWidth, mis.itemHeight);
+      TRACE("id=%04x size=%dx%d\n", ItemInfo->wID, mis.itemWidth, mis.itemHeight);
       return;
     }
 
@@ -1350,7 +1351,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
      itemheight = max( itemheight, GetSystemMetrics(SM_CYMENU)-1);
   }
   ItemInfo->Rect.bottom += itemheight;
-  DPRINT("(%ld,%ld)-(%ld,%ld)\n", ItemInfo->Rect.left, ItemInfo->Rect.top, ItemInfo->Rect.right, ItemInfo->Rect.bottom);
+  TRACE("(%ld,%ld)-(%ld,%ld)\n", ItemInfo->Rect.left, ItemInfo->Rect.top, ItemInfo->Rect.right, ItemInfo->Rect.bottom);
 }
 
 /***********************************************************************
@@ -1478,7 +1479,7 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
       return;
     }
 
-  DPRINT("left=%ld top=%ld right=%ld bottom=%ld\n",
+  TRACE("left=%ld top=%ld right=%ld bottom=%ld\n",
          Rect->left, Rect->top, Rect->right, Rect->bottom);
   MenuInfo->Width = Rect->right - Rect->left;
   MenuInfo->Height = 0;
@@ -1513,7 +1514,7 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
               break;
             }
 
-          DPRINT("calling MENU_CalcItemSize org=(%d, %d)\n", OrgX, OrgY);
+          TRACE("calling MENU_CalcItemSize org=(%d, %d)\n", OrgX, OrgY);
           MenuCalcItemSize(Dc, &ItemInfo, MenuInfo, WndOwner, OrgX, OrgY, TRUE);
           if (! MenuSetRosMenuItemInfo(MenuInfo->Self, i, &ItemInfo))
             {
@@ -1644,7 +1645,7 @@ DrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font)
       return GetSystemMetrics(SM_CYMENU);
     }
 
-  DPRINT("(%x, %x, %p, %x, %x)\n", Wnd, DC, Rect, Menu, Font);
+  TRACE("(%x, %x, %p, %x, %x)\n", Wnd, DC, Rect, Menu, Font);
 
   FontOld = SelectObject(DC, Font);
 
@@ -1727,7 +1728,7 @@ UINT MenuDrawMenuBar(HDC DC, LPRECT Rect, HWND Wnd, BOOL SuppressDraw)
 static BOOL FASTCALL
 MenuInitTracking(HWND Wnd, HMENU Menu, BOOL Popup, UINT Flags)
 {
-  DPRINT("Wnd=%p Menu=%p\n", Wnd, Menu);
+  TRACE("Wnd=%p Menu=%p\n", Wnd, Menu);
 
   HideCaret(0);
 
@@ -1783,7 +1784,7 @@ MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id,
   ROSMENUITEMINFO ItemInfo;
   UINT Width, Height;
 
-  DPRINT("owner=%x hmenu=%x id=0x%04x x=0x%04x y=0x%04x xa=0x%04x ya=0x%04x\n",
+  TRACE("owner=%x hmenu=%x id=0x%04x x=0x%04x y=0x%04x xa=0x%04x ya=0x%04x\n",
          WndOwner, Menu, Id, X, Y, XAnchor, YAnchor);
 
   if (! MenuGetRosMenuInfo(&MenuInfo, Menu))
@@ -1934,7 +1935,7 @@ MenuSelectItem(HWND WndOwner, PROSMENUINFO MenuInfo, UINT Index,
   ROSMENUINFO TopMenuInfo;
   int Pos;
 
-  DPRINT("owner=%x menu=%p index=0x%04x select=0x%04x\n", WndOwner, MenuInfo, Index, SendMenuSelect);
+  TRACE("owner=%x menu=%p index=0x%04x select=0x%04x\n", WndOwner, MenuInfo, Index, SendMenuSelect);
 
   if (NULL == MenuInfo || 0 == MenuInfo->MenuItemCount || NULL == MenuInfo->Wnd)
     {
@@ -2038,7 +2039,7 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
   ROSMENUITEMINFO ItemInfo;
   INT OrigPos;
 
-  DPRINT("hwnd=%x menu=%x off=0x%04x\n", WndOwner, MenuInfo, Offset);
+  TRACE("hwnd=%x menu=%x off=0x%04x\n", WndOwner, MenuInfo, Offset);
 
   /* Prevent looping */
   if (0 == MenuInfo->MenuItemCount || 0 == Offset)
@@ -2165,7 +2166,7 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
   HDC Dc;
   HMENU Ret;
 
-  DPRINT("owner=%x menu=%p 0x%04x\n", WndOwner, MenuInfo, SelectFirst);
+  TRACE("owner=%x menu=%p 0x%04x\n", WndOwner, MenuInfo, SelectFirst);
 
   if (NO_SELECTED_ITEM == MenuInfo->FocusedItem)
     {
@@ -2286,7 +2287,7 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SendMenuSelect)
   ROSMENUINFO SubMenuInfo;
   ROSMENUITEMINFO ItemInfo;
 
-  DPRINT("owner=%x menu=%x 0x%04x\n", WndOwner, MenuInfo, SendMenuSelect);
+  TRACE("owner=%x menu=%x 0x%04x\n", WndOwner, MenuInfo, SendMenuSelect);
 
   if (NULL != MenuInfo && NULL != TopPopup && NO_SELECTED_ITEM != MenuInfo->FocusedItem)
     {
@@ -2323,7 +2324,7 @@ MenuSwitchTracking(MTRACKER* Mt, PROSMENUINFO PtMenuInfo, UINT Index)
 {
   ROSMENUINFO TopMenuInfo;
 
-  DPRINT("%x menu=%x 0x%04x\n", Mt, PtMenuInfo->Self, Index);
+  TRACE("%x menu=%x 0x%04x\n", Mt, PtMenuInfo->Self, Index);
 
   if (MenuGetRosMenuInfo(&TopMenuInfo, Mt->TopMenu) &&
       Mt->TopMenu != PtMenuInfo->Self &&
@@ -2358,7 +2359,7 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
   ROSMENUITEMINFO ItemInfo;
   UINT wID;
 
-  DPRINT("%p menu=%p\n", Mt, MenuInfo);
+  TRACE("%p menu=%p\n", Mt, MenuInfo);
 
   if (0 == MenuInfo->MenuItemCount || NO_SELECTED_ITEM == MenuInfo->FocusedItem)
     {
@@ -2372,7 +2373,7 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
       return -1;
     }
 
-  DPRINT("%p %08x %p\n", MenuInfo, ItemInfo.wID, ItemInfo.hSubMenu);
+  TRACE("%p %08x %p\n", MenuInfo, ItemInfo.wID, ItemInfo.hSubMenu);
 
   if (0 == (ItemInfo.fType & MF_POPUP))
     {
@@ -2424,7 +2425,7 @@ MenuButtonDown(MTRACKER* Mt, HMENU PtMenu, UINT Flags)
   ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO Item;
 
-  DPRINT("%x PtMenu=%p\n", Mt, PtMenu);
+  TRACE("%x PtMenu=%p\n", Mt, PtMenu);
 
   if (NULL != PtMenu)
     {
@@ -2487,7 +2488,7 @@ MenuButtonUp(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
   ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO ItemInfo;
 
-  DPRINT("%p hmenu=%x\n", Mt, PtMenu);
+  TRACE("%p hmenu=%x\n", Mt, PtMenu);
 
   if (NULL != PtMenu)
     {
@@ -2720,7 +2721,7 @@ MenuGetStartOfPrevColumn(PROSMENUINFO MenuInfo)
     }
 
   MenuCleanupAllRosMenuItemInfo(MenuItems);
-  DPRINT("ret %d.\n", i );
+  TRACE("ret %d.\n", i );
 
   return i;
 }
@@ -2787,7 +2788,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
       NextMenu.hwndNext = NULL;
       SendMessageW(Mt->OwnerWnd, WM_NEXTMENU, Vk, (LPARAM) &NextMenu);
 
-      DPRINT("%p [%p] -> %p [%p]\n",
+      TRACE("%p [%p] -> %p [%p]\n",
              Mt->CurrentMenu, Mt->OwnerWnd, NextMenu.hmenuNext, NextMenu.hwndNext );
 
       if (NULL == NextMenu.hmenuNext || NULL == NextMenu.hwndNext)
@@ -2843,7 +2844,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
                   /* FIXME: Not sure what to do here;
                    * perhaps try to track NewMenu as a popup? */
 
-                  DPRINT(" -- got confused.\n");
+                  WARN(" -- got confused.\n");
                   return FALSE;
                 }
             }
@@ -3046,7 +3047,7 @@ MenuKeyRight(MTRACKER *Mt, UINT Flags)
   ROSMENUINFO CurrentMenuInfo;
   UINT NextCol;
 
-  DPRINT("MenuKeyRight called, cur %p, top %p.\n",
+  TRACE("MenuKeyRight called, cur %p, top %p.\n",
          Mt->CurrentMenu, Mt->TopMenu);
 
   if (! MenuGetRosMenuInfo(&MenuInfo, Mt->TopMenu))
@@ -3078,7 +3079,7 @@ MenuKeyRight(MTRACKER *Mt, UINT Flags)
   /* Check to see if there's another column */
   if (NO_SELECTED_ITEM != (NextCol = MenuGetStartOfNextColumn(&CurrentMenuInfo)))
     {
-      DPRINT("Going to %d.\n", NextCol);
+      TRACE("Going to %d.\n", NextCol);
       if (MenuGetRosMenuInfo(&MenuInfo, Mt->CurrentMenu))
         {
           MenuSelectItem(Mt->OwnerWnd, &MenuInfo, NextCol, TRUE, 0);
@@ -3131,7 +3132,7 @@ MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
   LRESULT MenuChar;
   UINT i;
 
-  DPRINT("\tlooking for '%c' (0x%02x) in [%p]\n", (char) Key, Key, MenuInfo);
+  TRACE("\tlooking for '%c' (0x%02x) in [%p]\n", (char) Key, Key, MenuInfo);
 
   if (NULL == MenuInfo || ! IsMenu(MenuInfo->Self))
     {
@@ -3212,7 +3213,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
   Mt.Pt.x = x;
   Mt.Pt.y = y;
 
-  DPRINT("Menu=%x Flags=0x%08x (%d,%d) Wnd=%x (%ld,%ld)-(%ld,%ld)\n",
+  TRACE("Menu=%x Flags=0x%08x (%d,%d) Wnd=%x (%ld,%ld)-(%ld,%ld)\n",
          Menu, Flags, x, y, Wnd, Rect ? Rect->left : 0, Rect ? Rect->top : 0,
          Rect ? Rect->right : 0, Rect ? Rect->bottom : 0);
 
@@ -3560,7 +3561,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
 static BOOL FASTCALL
 MenuExitTracking(HWND Wnd)
 {
-  DPRINT("hwnd=%p\n", Wnd);
+  TRACE("hwnd=%p\n", Wnd);
 
   SendMessageW(Wnd, WM_EXITMENULOOP, 0, 0);
   ShowCaret(0);
@@ -3574,7 +3575,7 @@ MenuTrackMouseMenuBar(HWND Wnd, ULONG Ht, POINT Pt)
   HMENU Menu = (HTSYSMENU == Ht) ? NtUserGetSystemMenu(Wnd, FALSE) : GetMenu(Wnd);
   UINT Flags = TPM_ENTERIDLEEX | TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
-  DPRINT("wnd=%p ht=0x%04x (%ld,%ld)\n", Wnd, Ht, Pt.x, Pt.y);
+  TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", Wnd, Ht, Pt.x, Pt.y);
 
   if (IsMenu(Menu))
     {
@@ -3600,7 +3601,7 @@ MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar)
     ROSMENUINFO MenuInfo;
     UINT wFlags = TPM_ENTERIDLEEX | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
-    DPRINT("hwnd %p wParam 0x%04x wChar 0x%04x\n", hWnd, wParam, wChar);
+    TRACE("hwnd %p wParam 0x%04x wChar 0x%04x\n", hWnd, wParam, wChar);
 
     /* find window that has a menu */
 
@@ -3857,7 +3858,7 @@ CheckMenuRadioItem(HMENU hmenu,
 
   mi.cbSize = sizeof(MENUINFO);
 
-  DPRINT("CheckMenuRadioItem\n");
+  TRACE("CheckMenuRadioItem\n");
 
   if(idFirst > idLast) return ret;
 

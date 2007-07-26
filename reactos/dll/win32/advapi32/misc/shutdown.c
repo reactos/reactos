@@ -11,7 +11,7 @@
  */
 
 #include <advapi32.h>
-#include <wine/debug.h>
+#include <debug.h>
 
 #define USZ {0,0,0}
 
@@ -150,9 +150,7 @@ BOOL WINAPI InitiateSystemShutdownExW( LPWSTR lpMachineName, LPWSTR lpMessage,
          DWORD dwTimeout, BOOL bForceAppsClosed, BOOL bRebootAfterShutdown,
          DWORD dwReason)
 {
-     FIXME("%s %s %ld %d %d %ld\n", debugstr_w(lpMachineName),
-            debugstr_w(lpMessage), dwTimeout, bForceAppsClosed,
-            bRebootAfterShutdown, dwReason);
+     UNIMPLEMENTED;
      return TRUE;
 } 
 

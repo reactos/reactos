@@ -14,6 +14,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #ifndef WM_SETVISIBLE
 #define WM_SETVISIBLE 9
@@ -964,7 +965,7 @@ static void DefWndPrint( HWND hwnd, HDC hdc, ULONG uFlags)
        (uFlags & PRF_OWNED)    ||
        (uFlags & PRF_NONCLIENT) )
   {
-    DPRINT1("WM_PRINT message with unsupported flags\n");
+    FIXME("WM_PRINT message with unsupported flags\n");
   }
 
   /*
@@ -1688,7 +1689,7 @@ DefWindowProcA(HWND hWnd,
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
         case WM_IME_SETCONTEXT:
-            DPRINT1("FIXME: WM_IME_* conversion isn't implemented yet!");
+            FIXME("FIXME: WM_IME_* conversion isn't implemented yet!");
         /* fall through */
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
@@ -1764,7 +1765,7 @@ DefWindowProcW(HWND hWnd,
         case WM_IME_SETCONTEXT:
         {
             /* FIXME */
-            DPRINT1("FIXME: WM_IME_SETCONTEXT is not implemented!");
+            FIXME("FIXME: WM_IME_SETCONTEXT is not implemented!");
             Result = 0;
             break;
         }

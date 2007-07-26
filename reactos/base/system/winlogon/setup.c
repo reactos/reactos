@@ -1,36 +1,19 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS winlogon
- * FILE:            subsys/system/winlogon/setup.h
+ * PROJECT:         ReactOS Winlogon
+ * FILE:            base/system/winlogon/setup.c
  * PURPOSE:         Setup support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
 #include "winlogon.h"
 
-#define NDEBUG
-#include <debug.h>
+//#define YDEBUG
+#include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -116,7 +99,7 @@ RunSetup (VOID)
   DWORD dwSize;
   DWORD dwExitCode;
 
-  DPRINT ("RunSetup() called\n");
+  TRACE ("RunSetup() called\n");
 
   dwError = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 			   L"SYSTEM\\Setup",
@@ -154,7 +137,7 @@ RunSetup (VOID)
       return FALSE;
     }
 
-  DPRINT ("Winlogon: Should run '%S' now.\n", CommandLine);
+  TRACE ("Should run '%S' now.\n", CommandLine);
 
   StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.lpReserved = NULL;
@@ -164,7 +147,7 @@ RunSetup (VOID)
   StartupInfo.cbReserved2 = 0;
   StartupInfo.lpReserved2 = 0;
 
-  DPRINT ("Winlogon: Creating new setup process\n");
+  TRACE ("Creating new setup process\n");
 
   Result = CreateProcessW (NULL,
 			   CommandLine,
@@ -178,7 +161,7 @@ RunSetup (VOID)
 			   &ProcessInformation);
   if (!Result)
     {
-      DPRINT ("Winlogon: Failed to run setup process\n");
+      TRACE ("Failed to run setup process\n");
       return FALSE;
     }
 
@@ -195,7 +178,7 @@ RunSetup (VOID)
       SetSetupType (0);
     }
 
-  DPRINT ("Winlogon: RunSetup() done.\n");
+  TRACE ("RunSetup() done.\n");
 
   return TRUE;
 }

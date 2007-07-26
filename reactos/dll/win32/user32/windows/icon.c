@@ -31,7 +31,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -242,7 +242,7 @@ CreateIconFromResourceEx(
   }
   */
 
-  DPRINT("dwVersion, cxDesired, cyDesired are all ignored in this implementation!\n");
+  TRACE("dwVersion, cxDesired, cyDesired are all ignored in this implementation!\n");
 
   if (! fIcon)
     {
@@ -505,7 +505,7 @@ CURSORICON_FindBestIcon(LPVOID dir,
         }
     }
 
-    DPRINT("Best Icon: ResId: %d, bits : %d\n", BestEntry, BestBits);
+    TRACE("Best Icon: ResId: %d, bits : %d\n", BestEntry, BestBits);
 
     return BestEntry;
 }
@@ -561,7 +561,7 @@ CURSORICON_FindBestCursor(LPVOID dir,
         }
     }
 
-    DPRINT("Best Cursor: ResId: %d, bits : %d\n", BestEntry, BestBits);
+    TRACE("Best Cursor: ResId: %d, bits : %d\n", BestEntry, BestBits);
 
     return BestEntry;
 }
@@ -678,7 +678,7 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
             retVal = entry->nID;
     }
     else
-        DPRINT1("%s() : Invalid resource directory\n", __FUNCTION__);
+        WARN("%s() : Invalid resource directory\n", __FUNCTION__);
 
     return retVal;
 }

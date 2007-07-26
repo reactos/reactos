@@ -3,7 +3,7 @@
  *
  * Copyright 1995 Martin von Loewis
  * Copyright 1998 David Lee Lambert
- * Copyright 2000 Julio CÃ©sar GÃ¡zquez
+ * Copyright 2000 Julio César Gázquez
  * Copyright 2003 Jon Griffiths
  *
  * This library is free software; you can redistribute it and/or
@@ -32,10 +32,12 @@
 
 #include "wine/config.h"
 #include "wine/unicode.h"
-#include "wine/debug.h"
+#define NDEBUG
+#include <debug.h>
 
-
-WINE_DEFAULT_DEBUG_CHANNEL(nls);
+#define TRACE DPRINT
+#define WARN DPRINT1
+#define FIXME DPRINT1
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */
 #define TIME_TIMEVARSONLY 0x0200  /* only time stuff: hHmst */
