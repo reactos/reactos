@@ -98,23 +98,20 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-	WNDCLASSEX wcex;
+	WNDCLASS wc;
 
-	wcex.cbSize = sizeof(WNDCLASSEX);
+	wc.style            = CS_HREDRAW | CS_VREDRAW; 
+	wc.lpfnWndProc      = WndProc;
+	wc.cbClsExtra       = 0;
+	wc.cbWndExtra       = 0;
+	wc.hInstance        = hInstance;
+	wc.hIcon            = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON));
+	wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground    = (HBRUSH)(COLOR_WINDOW+1);
+	wc.lpszMenuName     = MAKEINTRESOURCE(IDC_MAGNIFIER);
+	wc.lpszClassName    = szWindowClass;
 
-	wcex.style			= CS_HREDRAW | CS_VREDRAW; 
-	wcex.lpfnWndProc	= WndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAGNIFIER));
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_MAGNIFIER);
-	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-	return RegisterClassEx(&wcex);
+	return RegisterClass(&wc);
 }
 
 //
@@ -463,7 +460,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				SendDlgItemMessage(hDlg,IDC_FOLLOWMOUSECHECK,BM_SETCHECK , wParam ,0);
 
 			if (bFollowFocus)
-				SendDlgItemMessage(hDlg,IDC_FOLOWKEYBOARDCHECK,BM_SETCHECK , wParam ,0);
+				SendDlgItemMessage(hDlg,IDC_FOLLOWKEYBOARDCHECK,BM_SETCHECK , wParam ,0);
 
 			if (bFollowCaret)
 				SendDlgItemMessage(hDlg,IDC_FOLLOWTEXTEDITINGCHECK,BM_SETCHECK , wParam ,0);
@@ -513,8 +510,8 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			case IDC_FOLLOWMOUSECHECK:
 				bFollowMouse = IsDlgButtonChecked (hDlg, IDC_FOLLOWMOUSECHECK);
 				break;
-			case IDC_FOLOWKEYBOARDCHECK:
-				bFollowFocus = IsDlgButtonChecked (hDlg, IDC_FOLOWKEYBOARDCHECK);
+			case IDC_FOLLOWKEYBOARDCHECK:
+				bFollowFocus = IsDlgButtonChecked (hDlg, IDC_FOLLOWKEYBOARDCHECK);
 				break;
 			case IDC_FOLLOWTEXTEDITINGCHECK:
 				bFollowCaret = IsDlgButtonChecked (hDlg, IDC_FOLLOWTEXTEDITINGCHECK);

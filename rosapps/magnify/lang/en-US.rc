@@ -1,62 +1,4 @@
-// Microsoft Visual C++ generated resource script.
-//
-#include "resource.h"
-
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-#define APSTUDIO_HIDDEN_SYMBOLS
-#include "windows.h"
-#undef APSTUDIO_HIDDEN_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// Neutral resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
-#ifdef _WIN32
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON                ICON                    "res/magnify.ico"
-#endif    // Neutral resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_MAGNIFIER           ICON                    "res/Magnify.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDC_MAGNIFIER MENU 
 BEGIN
@@ -69,33 +11,21 @@ BEGIN
     END
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
 IDC_MAGNIFIER ACCELERATORS 
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON            IDI_MAGNIFIER,IDC_MYICON,14,9,20,20
+    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
     LTEXT           "Magnifier Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
-    PUSHBUTTON      "Ok",IDOK,162,48,50,14
+    PUSHBUTTON      "OK",IDOK,162,48,50,14
 END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
@@ -105,12 +35,12 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Exit",IDOK,96,161,50,14
     PUSHBUTTON      "Help",IDOK,38,161,50,14
-    LTEXT           "Magnification level :",IDC_STATIC,6,12,68,8
+    LTEXT           "Magnification level:",IDC_STATIC,6,12,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Tracking",IDC_STATIC,7,25,139,59
     GROUPBOX        "Presentation",IDC_STATIC,7,87,139,57
     CONTROL         "Follow mouse cursor",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
-    CONTROL         "Follow keyboard focus",IDC_FOLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "Follow keyboard focus",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
     CONTROL         "Follow text editing",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
     CONTROL         "Invert colors",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
     CONTROL         "Start Minimized",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
@@ -123,91 +53,13 @@ CAPTION "ReactOS Magnifier"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
-    ICON            IDI_MAGNIFIER,IDC_STATIC,7,17,20,20
-    LTEXT           "Magnifier is intended to provide a minium level of funcionality for users with slight visual impairments. Most users with visual impairments will need a magnigication utility with higher funcionality for deily use.",IDC_STATIC,36,7,207,33
-    CONTROL         "Do not show this message again",IDC_SHOWWARNINGCHECK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
+    LTEXT           "Magnifier is intended to provide a minimum level of functionality for users with slight visual impairments. Most users with visual impairments will need a magnification utility with higher funcionality for daily use.",IDC_STATIC,36,7,207,33
+    CONTROL         "Do not show this message again",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
-
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
-BEGIN
-    IDD_DIALOGOPTIONS, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 146
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 175
-    END
-
-    IDD_WARNINGDIALOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 243
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 90
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
 
 STRINGTABLE 
 BEGIN
     IDS_APP_TITLE           "Magnifier"
     IDC_MAGNIFIER           "MAGNIFIER"
 END
-
-#endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
