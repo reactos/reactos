@@ -12,6 +12,8 @@
 #include "precomp.h"
 
 static TCHAR m_szFreeldrIni[MAX_PATH + 15];
+static TCHAR szBootLdrSection[12];
+static TCHAR szBootLdrDefault[10];
 
 void SetTimeout(HWND hwndDlg, int Timeout)
 {
@@ -72,6 +74,7 @@ StartRecDlgProc(HWND hwndDlg,
 FailGetSysDrive:
                     HeapFree(GetProcessHeap(), 0, szSystemDrive);
                     szSystemDrive = NULL;
+                    return FALSE;
                 }
 
                 if (szSystemDrive != NULL)
@@ -84,22 +87,32 @@ FailGetSysDrive:
                         {
                             _tcscpy(m_szFreeldrIni, szSystemDrive);
                             _tcscat(m_szFreeldrIni, _T("\\boot.ini"));
+                            _tcscpy(szBootLdrSection, _T("boot loader"));
+                            _tcscpy(szBootLdrDefault, _T("default"));
+                        }
+                        else
+                        {
+                            _tcscpy(szBootLdrSection, _T("FREELOADER"));
+                            _tcscpy(szBootLdrDefault, _T("DefaultOS"));
                         }
                     }
                     HeapFree(GetProcessHeap(), 0, szSystemDrive);
                 }
             }
 
+            if (m_szFreeldrIni == NULL)
+                return FALSE;
+
             SetDlgItemText(hwndDlg, IDC_STRRECDUMPFILE, _T("%SystemRoot%\\MiniDump"));
 
             /* load settings from freeldr.ini */
-            GetPrivateProfileString(_T("boot loader"), _T("default"), NULL, szDefaultOS, MAX_PATH, m_szFreeldrIni);
+            GetPrivateProfileString(szBootLdrSection, szBootLdrDefault, NULL, szDefaultOS, MAX_PATH, m_szFreeldrIni);
             GetPrivateProfileString(_T("operating systems"), szDefaultOS, NULL, szDefaultOSName, MAX_PATH, m_szFreeldrIni);
             SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_ADDSTRING, (WPARAM)0, (LPARAM)szDefaultOSName);
             SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 
             /* timeout */
-            iTimeout = GetPrivateProfileInt(_T("boot loader"), _T("timeout"), 0, m_szFreeldrIni);
+            iTimeout = GetPrivateProfileInt(szBootLdrSection, _T("timeout"), 0, m_szFreeldrIni);
             SetTimeout(hwndDlg, iTimeout);
             if (iTimeout != 0)
                 SendDlgItemMessage(hwndDlg, IDC_STRECLIST, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
@@ -124,7 +137,7 @@ FailGetSysDrive:
                     else
                         iTimeout = 0;
                     _stprintf(szTimeout, _T("%i"), iTimeout);
-                    WritePrivateProfileString(_T("boot loader"), _T("timeout"), szTimeout, m_szFreeldrIni);
+                    WritePrivateProfileString(szBootLdrSection, _T("timeout"), szTimeout, m_szFreeldrIni);
                 }
                 case IDCANCEL:
                 {
