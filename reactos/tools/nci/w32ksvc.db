@@ -28,7 +28,6 @@ NtGdiCreateDIBitmap			6
 NtGdiCreateDIBBrush			6
 NtGdiCreateDIBSection			9
 NtGdiCreateEllipticRgn			4
-NtGdiCreateEllipticRgnIndirect		1
 NtGdiCreateEnhMetaFile			4
 NtGdiCreateHalftonePalette		1
 NtGdiCreateHatchBrushInternal		3
