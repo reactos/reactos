@@ -206,11 +206,6 @@ NtGdiCreateDIBitmap (
 	UINT			Usage
 	);
 
-/* Use NtGdiCreateEllipticRgn and expand the lprect-> */
-HRGN
-STDCALL
-NtGdiCreateEllipticRgnIndirect(CONST PRECT  rc);
-
 /* Metafiles are user mode */
 HDC
 STDCALL
