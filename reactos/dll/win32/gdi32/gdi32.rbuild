@@ -46,6 +46,7 @@
 		<file>font.c</file>
 		<file>linedda.c</file>
 		<file>metafile.c</file>
+		<file>pen.c</file>
 		<file>region.c</file>
 		<file>text.c</file>
 		<file>utils.c</file>

@@ -37,8 +37,7 @@ NtGdiCreateHatchBrushInternal		3
 NtGdiCreateMetaFile			1
 NtGdiCreatePalette			1
 NtGdiCreatePatternBrushInternal	3
-NtGdiCreatePen				3
-NtGdiCreatePenIndirect			1
+NtGdiCreatePen				4
 NtGdiCreatePolygonRgn			3
 NtGdiCreatePolyPolygonRgn		4
 NtGdiCreateRectRgn			4
