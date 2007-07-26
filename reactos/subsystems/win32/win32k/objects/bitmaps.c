@@ -554,16 +554,6 @@ NtGdiCreateCompatibleBitmap(
 	return Bmp;
 }
 
-HBITMAP STDCALL
-NtGdiCreateDiscardableBitmap(
-	HDC  hDC,
-	INT  Width,
-	INT  Height)
-{
-	/* FIXME: this probably should do something else */
-	return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
-}
-
 BOOL STDCALL
 NtGdiExtFloodFill(
 	HDC  hDC,
