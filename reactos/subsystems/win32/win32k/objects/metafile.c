@@ -293,27 +293,28 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
                            LPCWSTR  Description)
 {
    PDC Dc;   
-   HDC ret = NULL;       
+   HDC ret = NULL;
    DWORD length = 0;
    HDC tempHDC;
    DWORD MemSize;
+   DWORD dwDesiredAccess;
   
    tempHDC = hDCRef;
    if (hDCRef == NULL)
    {
-	   /* FIXME ??
-	    * Shall we create hdc NtGdiHdcCompatible hdc ?? 
-		*/
-	   UNICODE_STRING DriverName;
-	   RtlInitUnicodeString(&DriverName, L"DISPLAY");              
-	   //IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+       /* FIXME ??
+        * Shall we create hdc NtGdiHdcCompatible hdc ?? 
+        */
+       UNICODE_STRING DriverName;
+       RtlInitUnicodeString(&DriverName, L"DISPLAY");
+       //IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
            tempHDC = NtGdiOpenDCW( &DriverName,
                                           NULL,
                                           NULL,
                                              0,  // DCW 0 and ICW 1.
                                           NULL,
                                   (PVOID) NULL,
-                                  (PVOID) NULL );                                                                                                                                 
+                                  (PVOID) NULL );
    }
 
    GDIOBJ_SetOwnership(GdiHandleTable, tempHDC, PsGetCurrentProcess());
@@ -407,45 +408,44 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
       DPRINT1("Trying Create EnhMetaFile\n");
 
       /* disk based metafile */	  
-      DWORD dwDesiredAccess = GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES;      
+      dwDesiredAccess = GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES;
       OBJECT_ATTRIBUTES ObjectAttributes;
       IO_STATUS_BLOCK IoStatusBlock;
-	  IO_STATUS_BLOCK Iosb;	 
+      IO_STATUS_BLOCK Iosb;
       UNICODE_STRING NtPathU;
-      NTSTATUS Status;      	     
+      NTSTATUS Status;
       ULONG FileAttributes = (FILE_ATTRIBUTE_VALID_FLAGS & ~FILE_ATTRIBUTE_DIRECTORY);
-     
-	  if (!RtlDosPathNameToNtPathName_U (File, &NtPathU, NULL, NULL))
-      {        
+
+      if (!RtlDosPathNameToNtPathName_U (File, &NtPathU, NULL, NULL))
+      {
          DC_UnlockDc(Dc);
          if (hDCRef == NULL)
          {
-             NtGdiDeleteObjectApp(tempHDC);        
-         }       
+             NtGdiDeleteObjectApp(tempHDC);
+         }
          DPRINT1("Can not Create EnhMetaFile\n");
          SetLastWin32Error(ERROR_PATH_NOT_FOUND);
          return NULL;
       }
-	  
 
-	  InitializeObjectAttributes(&ObjectAttributes, &NtPathU, 0, NULL, NULL);
+      InitializeObjectAttributes(&ObjectAttributes, &NtPathU, 0, NULL, NULL);
       
       Status = NtCreateFile (&Dc->hFile, dwDesiredAccess, &ObjectAttributes, &IoStatusBlock,
-			                NULL, FileAttributes, 0, FILE_OVERWRITE_IF, FILE_NON_DIRECTORY_FILE,
-						    NULL, 0);
+                             NULL, FileAttributes, 0, FILE_OVERWRITE_IF, FILE_NON_DIRECTORY_FILE,
+                             NULL, 0);
 
       RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
    
       if (!NT_SUCCESS(Status))
-      {   
-	     Dc->hFile = NULL;
-		 DC_UnlockDc(Dc);
+      {
+         Dc->hFile = NULL;
+         DC_UnlockDc(Dc);
          if (hDCRef == NULL)
          {
-             NtGdiDeleteObjectApp(tempHDC);        
+             NtGdiDeleteObjectApp(tempHDC);
          }  
-		 DPRINT1("Create EnhMetaFile fail\n");
-		 SetLastWin32Error(ERROR_INVALID_HANDLE);	
+         DPRINT1("Create EnhMetaFile fail\n");
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
          return NULL;
       }
 
@@ -462,20 +462,20 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
       }
 
       if (NT_SUCCESS(Status))
-      {                		  		  
-		  ret = tempHDC;		  
-		  DC_UnlockDc(Dc);		  
+      {
+          ret = tempHDC;
+          DC_UnlockDc(Dc);
       }
       else
       {
           Dc->hFile = NULL;
-		  DPRINT1("Write to EnhMetaFile fail\n");        
-		  SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
-		  ret = NULL;                                	     		  
-		  DC_UnlockDc(Dc);
+          DPRINT1("Write to EnhMetaFile fail\n");
+          SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+          ret = NULL;
+          DC_UnlockDc(Dc);
           if (hDCRef == NULL) 
           {
-             NtGdiDeleteObjectApp(tempHDC);        
+             NtGdiDeleteObjectApp(tempHDC);
           }
       }
     }
@@ -483,8 +483,8 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
     {
       DC_UnlockDc(Dc);
     }
-   
-    return ret;  
+
+    return ret;
 }
 
 
