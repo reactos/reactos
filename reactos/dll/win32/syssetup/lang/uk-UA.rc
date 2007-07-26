@@ -1,7 +1,7 @@
 /*
  * PROJECT:     System setup
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/syssetup/syssetup_Uk.rc
+ * FILE:        dll/win32/syssetup/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for syssetup
  * TRANSLATOR:  Artem Reznikov
  */
@@ -165,7 +165,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Підтвердження"
-    IDS_ACKSUBTITLE      "The shoulders ReactOS stands on and license information"
+    IDS_ACKSUBTITLE      "Інформація про розробників ReactOS і лізензійна угода"
     IDS_OWNERTITLE       "Налаштування приналежності програм"
     IDS_OWNERSUBTITLE    "Ці особисті відомості вказують на приналежність програм ReactOS."
     IDS_COMPUTERTITLE    "Ім'я комп'ютера та пароль адміністратора"
@@ -174,13 +174,13 @@ BEGIN
     IDS_LOCALESUBTITLE   "Ви можете налаштувати ReactOS для різних регіонів і мов."
     IDS_DATETIMETITLE    "Дата й час"
     IDS_DATETIMESUBTITLE "Встановити правильні дату і час для Вашого комп'ютера."
-    IDS_PROCESSTITLE     "Process page title"
-    IDS_PROCESSSUBTITLE  "Process page subtitle"
+    IDS_PROCESSTITLE     "Реєстрація компонентів"
+    IDS_PROCESSSUBTITLE  "Зачекайте, будь ласка..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Download and install various applications"
+    IDS_CMT_DOWNLOADER  "Завантаження і установка різних додатків"
 END
 
 STRINGTABLE
@@ -193,14 +193,14 @@ BEGIN
     IDS_CMT_REGEDIT     "Запустити Редактор реєстра"
     IDS_CMT_WORDPAD     "Запустити Редактор документів"
     IDS_CMT_SCREENSHOT  "Зробити знімок екрана"
-    IDS_CMT_DEVMGMT     "Launch Device Manager"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
+    IDS_CMT_DEVMGMT     "Запустити Диспетчер пристроїв"
+    IDS_CMT_SERVMAN     "Запустити Диспетчер керування службами"
 END
 
 STRINGTABLE
 BEGIN
     IDS_GAMES		    "Ігри"
-    IDS_CMT_SOLITAIRE	"Solitaire"
+    IDS_CMT_SOLITAIRE	"Косинка"
     IDS_CMT_WINEMINE	"Сапер"
 END
 
@@ -209,11 +209,11 @@ BEGIN
     IDS_REACTOS_SETUP		    "Установка ReactOS"
     IDS_UNKNOWN_ERROR           "Невідома помилка"
     IDS_REGISTERING_COMPONENTS  "Реєстрація компонентів..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
-    IDS_REGSVR_FAILED           "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
-    IDS_TIMEOUT			        "Timeout during registration"
+    IDS_LOADLIBRARY_FAILED	    "Помилка LoadLibrary: "
+    IDS_GETPROCADDR_FAILED	    "Помилка GetProcAddr: "
+    IDS_REGSVR_FAILED           "Помилка DllRegisterServer: "
+    IDS_DLLINSTALL_FAILED	    "Помилка DllInstall: "
+    IDS_TIMEOUT			        "Таймаут під час реєстрації"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -235,18 +235,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Setup cannot continue until you enter your name."
-    IDS_WZD_SETCOMPUTERNAME  "Setup failed to set the computer name."
-    IDS_WZD_COMPUTERNAME  "Setup cannot continue until you enter the name of your computer."
-    IDS_WZD_PASSWORDEMPTY  "You must enter a password !"
-    IDS_WZD_PASSWORDMATCH  "The passwords you entered do not match. Please enter the desired password again."
-    IDS_WZD_PASSWORDCHAR  "The password you entered contains invalid characters. Please enter a cleaned password."
-    IDS_WZD_LOCALTIME    "Setup was unable to set the local time."
+    IDS_WZD_NAME         "Для продовження установки необхідно ввести ваше ім'я."
+    IDS_WZD_SETCOMPUTERNAME  "Програмі інсталяції не вдалося встановити ім'я комп'ютера."
+    IDS_WZD_COMPUTERNAME  "Для продовження установки необхідно ввести ім'я комп'ютера."
+    IDS_WZD_PASSWORDEMPTY  "Ви маєте ввести пароль !"
+    IDS_WZD_PASSWORDMATCH  "Паролі, які ви ввели, не співпадають. Будь ласка введіть бажаний пароль знову."
+    IDS_WZD_PASSWORDCHAR  "Пароль, який ви ввели, містить заборонені символи. Будь ласка введіть очищений пароль."
+    IDS_WZD_LOCALTIME    "Програмі інсталяції не вдалося встановити місцевий час."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Installing devices..."
+    IDS_STATUS_INSTALL_DEV "Установка пристроїв..."
 END
 
 /* EOF */
