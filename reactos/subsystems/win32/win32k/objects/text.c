@@ -3648,13 +3648,22 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   return TRUE;
 }
 
-INT STDCALL
-NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
+W32KAPI
+INT
+APIENTRY
+NtGdiGetTextFaceW(
+    IN HDC hDC,
+    IN INT Count,
+    OUT OPTIONAL LPWSTR FaceName,
+    IN BOOL bAliasName
+)
 {
    PDC Dc;
    HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
+
+   /* FIXME: Handle bAliasName */
 
    Dc = DC_LockDc(hDC);
    if (Dc == NULL)

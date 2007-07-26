@@ -605,13 +605,6 @@ NtGdiGetTextCharset(HDC  hDC);
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
 
-/* Rename to NtGdiGetTextFaceW, add FALSE at the end. */
-int
-STDCALL
-NtGdiGetTextFace(HDC  hDC,
-                     int  Count,
-                     LPWSTR  FaceName);
-
 /* Use NtGdiGetTextMetricsW with 0 at the end */
 BOOL
 STDCALL

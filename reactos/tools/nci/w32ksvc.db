@@ -152,7 +152,7 @@ NtGdiGetTextColor			1
 NtGdiGetTextExtentExW		8
 NtGdiGetTextExtent		5
 NtGdiGetTextExtentPoint32		4
-NtGdiGetTextFace			3
+NtGdiGetTextFaceW			4
 NtGdiGetTextMetrics			2
 NtGdiGetViewportExtEx			2
 NtGdiGetViewportOrgEx			2

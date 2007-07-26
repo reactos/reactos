@@ -308,12 +308,12 @@ ExtTextOutW(
 int
 STDCALL
 GetTextFaceW(
-	HDC	a0,
-	int	a1,
-	LPWSTR	a2
+	HDC	hDC,
+	int	nCount,
+	LPWSTR	lpFaceName
 	)
 {
-	return NtGdiGetTextFace(a0, a1, a2);
+	return NtGdiGetTextFaceW(hDC, nCount, lpFaceName, FALSE);
 }
 
 
