@@ -84,3 +84,20 @@ StretchBlt(
    return NtGdiBitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest,
                       nHeightDest, hdcSrc, nXOriginSrc, nYOriginSrc, dwRop, 0, 0);
 }
+
+/*
+ * @implemented
+ */
+HBITMAP WINAPI
+CreateBitmapIndirect(const BITMAP *pbm)
+{
+   if (pbm)
+   {
+      return NtGdiCreateBitmap(pbm->bmWidth,
+                               pbm->bmHeight,
+                               pbm->bmPlanes,
+                               pbm->bmBitsPixel,
+                               pbm->bmBits);
+   }
+   return NULL;
+}

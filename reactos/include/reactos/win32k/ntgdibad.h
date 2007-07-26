@@ -194,13 +194,6 @@ NtGdiCopyMetaFile (
 	LPCWSTR		File
 	);
 
-/* Use NtGdiCreateBitmap and expand the pbm-> */
-HBITMAP
-STDCALL
-NtGdiCreateBitmapIndirect (
-	CONST BITMAP	* BM
-	);
-
 /* Use NtGdiCreateDIBitmapInternal */
 HBITMAP
 STDCALL

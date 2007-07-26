@@ -48,7 +48,7 @@ CopyEnhMetaFileW@8
 CopyMetaFileA@8
 CopyMetaFileW@8
 CreateBitmap@20=NtGdiCreateBitmap@20
-CreateBitmapIndirect@4=NtGdiCreateBitmapIndirect@4
+CreateBitmapIndirect@4
 CreateBrushIndirect@4
 CreateColorSpaceA@4
 CreateColorSpaceW@4

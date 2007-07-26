@@ -21,7 +21,6 @@ NtGdiCombineTransform			3
 NtGdiCopyEnhMetaFile			2
 NtGdiCopyMetaFile			2
 NtGdiCreateBitmap			5
-NtGdiCreateBitmapIndirect		1
 NtGdiCreateColorSpace			1
 NtGdiCreateCompatibleBitmap		3
 NtGdiCreateCompatibleDC			1
