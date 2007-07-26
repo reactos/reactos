@@ -13,7 +13,7 @@ STRINGTABLE DISCARDABLE
 
 IDS_USAGE, "Použitie: shutdown [-?] [-l | -s | -r] [-f]\n\n\
   Žiadne argumenty\tZobrazí sa táto správa\n\
-  -?\tZobrazí túto správu\n\
+  -?\t\t\tZobrazí túto správu\n\
   -l\t\t\tOdhlási používate¾a\n\
   -s\t\t\tVypne poèítaè\n\
   -r\t\t\tReštartuje poèítaè\n\
