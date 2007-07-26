@@ -242,44 +242,6 @@ NtGdiCreatePen(
 }
 
 HPEN STDCALL
-NtGdiCreatePenIndirect(CONST PLOGPEN LogPen)
-{
-   LOGPEN SafeLogPen = {0};
-   NTSTATUS Status = STATUS_SUCCESS;
-
-   _SEH_TRY
-   {
-     ProbeForRead(LogPen,
-                  sizeof(LOGPEN),
-                  1);
-     SafeLogPen = *LogPen;
-   }
-   _SEH_HANDLE
-   {
-     Status = _SEH_GetExceptionCode();
-   }
-   _SEH_END;
-
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      return 0;
-   }
-
-   return IntGdiExtCreatePen(SafeLogPen.lopnStyle,
-                             SafeLogPen.lopnWidth.x,
-                             BS_SOLID,
-                             SafeLogPen.lopnColor,
-                             0,
-                             0,
-                             0,
-                             NULL,
-                             0,
-                             TRUE,
-                             0);
-}
-
-HPEN STDCALL
 NtGdiExtCreatePen(
    DWORD dwPenStyle,
    DWORD ulWidth,

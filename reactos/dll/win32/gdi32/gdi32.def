@@ -79,8 +79,8 @@ CreateMetaFileA@4
 CreateMetaFileW@4
 CreatePalette@4=NtGdiCreatePalette@4
 CreatePatternBrush@4
-CreatePen@12=NtGdiCreatePen@12
-CreatePenIndirect@4=NtGdiCreatePenIndirect@4
+CreatePen@12
+CreatePenIndirect@4
 CreatePolyPolygonRgn@16=NtGdiCreatePolyPolygonRgn@16
 CreatePolygonRgn@12=NtGdiCreatePolygonRgn@12
 CreateRectRgn@16=NtGdiCreateRectRgn@16
