@@ -101,3 +101,12 @@ CreateBitmapIndirect(const BITMAP *pbm)
    }
    return NULL;
 }
+
+HBITMAP WINAPI
+CreateDiscardableBitmap(
+   HDC  hDC,
+   INT  Width,
+   INT  Height)
+{
+   return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
+}
