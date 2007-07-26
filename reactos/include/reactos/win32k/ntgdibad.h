@@ -605,17 +605,6 @@ NtGdiGetTextCharset(HDC  hDC);
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
 
-/* Rename to NtGdiGetTextExtentExW. Add 0 at the end. */
-BOOL
-STDCALL
-NtGdiGetTextExtentExPoint(HDC  hDC,
-                               LPCWSTR String,
-                               int  Count,
-                               int  MaxExtent,
-                               LPINT  Fit,
-                               LPINT  Dx,
-                               LPSIZE  Size);
-
 /* Rename to NtGdiGetTextFaceW, add FALSE at the end. */
 int
 STDCALL
