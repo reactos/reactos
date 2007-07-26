@@ -43,7 +43,7 @@ TextOutW(
 	LPCWSTR  lpString,
 	int  cbString)
 {
-  return NtGdiTextOut(hdc, nXStart, nYStart, lpString, cbString);
+  return NtGdiExtTextOut(hdc, nXStart, nYStart, 0, NULL, lpString, cbString, NULL);
 }
 
 

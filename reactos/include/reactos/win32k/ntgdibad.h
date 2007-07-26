@@ -1116,15 +1116,6 @@ NtGdiStretchDIBits (
 	DWORD			ROP
 	);
 
-/* Use NtGdiExtTextOutW with 0, 0 at the end. */
-BOOL
-STDCALL
-NtGdiTextOut(HDC  hDC,
-                  int  XStart,
-                  int  YStart,
-                  LPCWSTR  String,
-                  int  Count);
-
 /* Needs to be done in user-mode. */
 BOOL
 STDCALL

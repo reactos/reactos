@@ -3844,17 +3844,6 @@ NtGdiSetTextJustification(HDC  hDC,
   return FALSE;
 }
 
-BOOL STDCALL
-NtGdiTextOut(
-   HDC hDC,
-   INT XStart,
-   INT YStart,
-   LPCWSTR String,
-   INT Count)
-{
-   return NtGdiExtTextOut(hDC, XStart, YStart, 0, NULL, String, Count, NULL);
-}
-
 DWORD STDCALL
 NtGdiGetFontData(
    HDC hDC,
