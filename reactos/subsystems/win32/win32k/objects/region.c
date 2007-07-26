@@ -2044,31 +2044,6 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
    return NULL;
 }
 
-HRGN STDCALL
-NtGdiCreateRectRgnIndirect(CONST PRECT rc)
-{
-  RECT SafeRc = {0};
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  _SEH_TRY
-  {
-    ProbeForRead(rc,
-                 sizeof(RECT),
-                 1);
-    SafeRc = *rc;
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-  if (!NT_SUCCESS(Status))
-    {
-      return(NULL);
-    }
-  return(UnsafeIntCreateRectRgnIndirect(&SafeRc));
-}
-
 HRGN
 STDCALL
 NtGdiCreateRoundRectRgn(INT left, INT top, INT right, INT bottom,

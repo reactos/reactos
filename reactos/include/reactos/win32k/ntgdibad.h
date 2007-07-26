@@ -245,11 +245,6 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                                INT  Count,
                                INT  PolyFillMode);
 
-/* Use NtGdiCreateRectRgn with expanded paraemters. */
-HRGN
-STDCALL
-NtGdiCreateRectRgnIndirect(CONST PRECT  rc);
-
 /* Use NtGdiTransformPoints with GdiDpToLp. */
 BOOL
 STDCALL
@@ -332,16 +327,6 @@ NtGdiExtTextOut(HDC  hdc,
                      LPCWSTR  lpString,
                      UINT  cbCount,
                      CONST INT  *lpDx);
-
-/* Use NtGdiExtFloodFill with FLOODFILLBORDER. */
-BOOL
-STDCALL
-NtGdiFloodFill (
-	HDC		hDC,
-	INT		XStart,
-	INT		YStart,
-	COLORREF	Fill
-	);
 
 /* Should be done in user-mode. */
 BOOL

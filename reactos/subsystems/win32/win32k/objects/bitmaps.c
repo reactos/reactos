@@ -569,16 +569,6 @@ NtGdiExtFloodFill(
 }
 
 BOOL STDCALL
-NtGdiFloodFill(
-	HDC  hDC,
-	INT  XStart,
-	INT  YStart,
-	COLORREF  Fill)
-{
-	return NtGdiExtFloodFill(hDC, XStart, YStart, Fill, FLOODFILLBORDER );
-}
-
-BOOL STDCALL
 NtGdiGetBitmapDimensionEx(
 	HBITMAP  hBitmap,
 	LPSIZE  Dimension)

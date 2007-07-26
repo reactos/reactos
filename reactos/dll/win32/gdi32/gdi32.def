@@ -84,7 +84,7 @@ CreatePenIndirect@4
 CreatePolyPolygonRgn@16=NtGdiCreatePolyPolygonRgn@16
 CreatePolygonRgn@12=NtGdiCreatePolygonRgn@12
 CreateRectRgn@16=NtGdiCreateRectRgn@16
-CreateRectRgnIndirect@4=NtGdiCreateRectRgnIndirect@4
+CreateRectRgnIndirect@4
 CreateRoundRectRgn@24=NtGdiCreateRoundRectRgn@24
 CreateScalableFontResourceA@16
 CreateScalableFontResourceW@16
@@ -234,7 +234,7 @@ FillPath@4
 FillRgn@12=NtGdiFillRgn@12
 FixBrushOrgEx@16
 FlattenPath@4
-FloodFill@16=NtGdiFloodFill@16
+FloodFill@16
 FontIsLinked@4
 FONTOBJ_cGetAllGlyphHandles@8
 FONTOBJ_cGetGlyphs@20

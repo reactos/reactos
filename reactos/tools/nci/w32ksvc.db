@@ -38,7 +38,6 @@ NtGdiCreatePen				4
 NtGdiCreatePolygonRgn			3
 NtGdiCreatePolyPolygonRgn		4
 NtGdiCreateRectRgn			4
-NtGdiCreateRectRgnIndirect		1
 NtGdiCreateRoundRectRgn			6
 NtGdiCreateScalableFontResource		4
 NtGdiCreateSolidBrush			2
@@ -73,7 +72,6 @@ NtGdiExtTextOut				8
 NtGdiFillPath				1
 NtGdiFillRgn				3
 NtGdiFlattenPath			1
-NtGdiFloodFill				4
 NtGdiFrameRgn				5
 NtGdiGdiComment				3
 NtGdiFlush				0
