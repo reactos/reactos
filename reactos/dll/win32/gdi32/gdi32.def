@@ -62,7 +62,7 @@ CreateDIBSection@24
 CreateDIBitmap@24=NtGdiCreateDIBitmap@24
 CreateDiscardableBitmap@12
 CreateEllipticRgn@16=NtGdiCreateEllipticRgn@16
-CreateEllipticRgnIndirect@4=NtGdiCreateEllipticRgnIndirect@4
+CreateEllipticRgnIndirect@4
 CreateEnhMetaFileA@16
 CreateEnhMetaFileW@16
 CreateFontA@56
