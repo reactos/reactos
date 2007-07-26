@@ -206,15 +206,6 @@ NtGdiCreateDIBitmap (
 	UINT			Usage
 	);
 
-/* Use NtGdiCreateCompatibleBitmap */
-HBITMAP
-STDCALL
-NtGdiCreateDiscardableBitmap (
-	HDC	hDC,
-	INT	Width,
-	INT	Height
-	);
-
 /* Use NtGdiCreateEllipticRgn and expand the lprect-> */
 HRGN
 STDCALL
