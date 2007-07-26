@@ -169,8 +169,8 @@ GetTextExtentExPointW(
 	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtentExPoint (
-    hdc, lpszStr, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
+  return NtGdiGetTextExtentExW (
+    hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 }
 
 
@@ -198,8 +198,8 @@ GetTextExtentExPointA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    rc = NtGdiGetTextExtentExPoint (
-      hdc, lpszStrW, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
+    rc = NtGdiGetTextExtentExW (
+      hdc, lpszStrW, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 
     HEAP_free ( lpszStrW );
   }

@@ -149,7 +149,7 @@ NtGdiGetSystemPaletteUse		1
 NtGdiGetTextAlign			1
 NtGdiGetTextCharsetInfo			3
 NtGdiGetTextColor			1
-NtGdiGetTextExtentExPoint		7
+NtGdiGetTextExtentExW		8
 NtGdiGetTextExtent		5
 NtGdiGetTextExtentPoint32		4
 NtGdiGetTextFace			3
