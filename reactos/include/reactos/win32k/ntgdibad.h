@@ -230,11 +230,6 @@ NtGdiCreatePalette (
 	CONST PLOGPALETTE	lgpl
 	);
 
-/* Use NtGdiCreatePen with -> as parameters. */
-HPEN STDCALL
-NtGdiCreatePenIndirect(
-   CONST PLOGPEN LogBrush);
-
 /* Use NtGdiPolyPolyDraw with PolyPolyRgn. */
 HRGN
 STDCALL
