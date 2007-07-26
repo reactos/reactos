@@ -27,7 +27,6 @@ NtGdiCreateCompatibleDC			1
 NtGdiCreateDIBitmap			6
 NtGdiCreateDIBBrush			6
 NtGdiCreateDIBSection			9
-NtGdiCreateDiscardableBitmap		3
 NtGdiCreateEllipticRgn			4
 NtGdiCreateEllipticRgnIndirect		1
 NtGdiCreateEnhMetaFile			4
