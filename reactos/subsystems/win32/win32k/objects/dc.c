@@ -1811,42 +1811,44 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
     return FALSE;
   }
 
-  if(abs(SaveLevel) > dc->saveLevel || SaveLevel == 0)
+  if (SaveLevel < 0)
+      SaveLevel = dc->saveLevel + SaveLevel + 1;
+
+  if(SaveLevel < 0 || dc->saveLevel<SaveLevel)
   {
     DC_UnlockDc(dc);
     return FALSE;
   }
-
-  /* FIXME this calc are not 100% correct I think ??*/
-  if (SaveLevel < 0) SaveLevel = dc->saveLevel + SaveLevel + 1;
   
   success=TRUE;
   while (dc->saveLevel >= SaveLevel)
   {
      HDC hdcs = DC_GetNextDC (dc);
 
-	 dcs = DC_LockDc (hdcs);
+     dcs = DC_LockDc (hdcs);
      if (dcs == NULL)
      {
         DC_UnlockDc(dc);
         return FALSE;
      }
 
-	 DC_SetNextDC (dc, DC_GetNextDC (dcs));
-	 dcs->hNext = 0;
-		 
-	 if (--dc->saveLevel < SaveLevel)
-	 {
-		 DC_UnlockDc( dc );
+     DC_SetNextDC (dc, DC_GetNextDC (dcs));
+     dcs->hNext = 0;
+
+     if (--dc->saveLevel < SaveLevel)
+     {
+         DC_UnlockDc( dc );
          DC_UnlockDc( dcs );
 
-	     NtGdiSetDCState(hDC, hdcs);
-         //if (!PATH_AssignGdiPath( &dc->path, &dcs->path ))
-		 /* FIXME: This might not be quite right, since we're 
-		  * returning FALSE but still destroying the saved DC state 
-		  */
-	     success=FALSE;
-	     dc = DC_LockDc(hDC);
+         NtGdiSetDCState(hDC, hdcs);
+
+        if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
+        {
+          /* FIXME: This might not be quite right, since we're
+           * returning FALSE but still destroying the saved DC state */
+          success = FALSE;
+        }
+         dc = DC_LockDc(hDC);
          if(!dc)
          {
             return FALSE;
