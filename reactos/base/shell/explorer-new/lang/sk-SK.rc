@@ -4,7 +4,7 @@ IDM_TRAYWND MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Za&mkn˙&#357; panel ˙loh", ID_LOCKTASKBAR
+        MENUITEM "Za&mkn˙ù panel ˙loh", ID_LOCKTASKBAR
         MENUITEM "&Vlastnosti", ID_SHELL_CMD_PROPERTIES
     END
 END
@@ -18,7 +18,7 @@ BEGIN
         BEGIN
             MENUITEM "(Pr·zdne)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "O&b&#318;˙benÈ poloûky", IDM_FAVORITES
+        POPUP "O&bæ˙benÈ poloûky", IDM_FAVORITES
         BEGIN
             MENUITEM "(Pr·zdne)", -1, MFT_STRING, MFS_GRAYED
         END
@@ -30,23 +30,23 @@ BEGIN
         BEGIN
             MENUITEM "&Ovl·daci panel", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM SEPARATOR
-            MENUITEM "&Zabezpe&#269;enie systÈmu ReactOS...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "Sie&#357;ovÈ pripoje&nia", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Tla&#269;iarne a faxy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&ZabezpeËenie systÈmu ReactOS...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "SieùovÈ pripoje&nia", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&TlaËiarne a faxy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "P&anel ˙loh a ponuka ätart", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&H&#318;ada&#357;", IDM_SEARCH
+        POPUP "&Hæadaù", IDM_SEARCH
         BEGIN
             MENUITEM SEPARATOR
         END
         MENUITEM "&Pomoc a technick· podpora", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Sp&usti&#357;...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "Sp&ustiù...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
-        MENUITEM "&Synchronizova&#357;", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "O&dhl·si&#357; pouûÌvate&#318;a %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Odpoji&#357;...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Vybr&a&#357; po&#269;Ìta&#269; z doku", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Vypn˙&#357;...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Synchronizovaù", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "O&dhl·siù pouûÌvateæa %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Odpojiù...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Vybr&aù poËÌtaË z doku", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Vypn˙ù...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -54,6 +54,6 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_START             "ätart"
     IDS_PROPERTIES        "Vl&astnosti"
-    IDS_OPEN_ALL_USERS    "&Otvori&#357; profil All Users"
-    IDS_EXPLORE_ALL_USERS "&Presk˙ma&#357; profil All Users"
+    IDS_OPEN_ALL_USERS    "&Otvoriù profil All Users"
+    IDS_EXPLORE_ALL_USERS "&Presk˙maù profil All Users"
 END
