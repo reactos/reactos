@@ -1,4 +1,4 @@
-<module name="version" type="win32dll" baseaddress="${BASEADDRESS_VERSION}" installbase="system32" installname="version.dll" allowwarnings="true">
+<module name="version" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_VERSION}" installbase="system32" installname="version.dll" allowwarnings="true">
 	<importlibrary definition="version.spec.def" />
 	<include base="version">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
