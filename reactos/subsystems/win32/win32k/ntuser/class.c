@@ -2207,16 +2207,6 @@ InvalidParameter:
 
                 /* Undocumented behavior! Return the class atom as a BOOL! */
                 Ret = (BOOL)ClassAtom;
-
-                if (!(Class->Global || Class->System) && hInstance == NULL)
-                {
-                    if (CapturedClassName.Length == 0)
-                       WARN("Tried to get information of a non-existing class atom 0x%p\n", CapturedClassName.Buffer);
-                    else
-                       WARN("Tried to get information of a non-existing class \"%wZ\"\n", &CapturedClassName);
-                    SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-                    Ret = FALSE;
-                }
             }
          }
          else
