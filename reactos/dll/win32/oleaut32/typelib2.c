@@ -43,7 +43,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
-#include "winreg.h"
 #include "winuser.h"
 
 #include "wine/unicode.h"

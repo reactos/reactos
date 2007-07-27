@@ -34,8 +34,6 @@
 #include "objbase.h"
 #include "oleauto.h"
 #include "winerror.h"
-#include "winreg.h"
-#include "winnls.h"         /* for PRIMARYLANGID */
 
 #include "wine/debug.h"
 
