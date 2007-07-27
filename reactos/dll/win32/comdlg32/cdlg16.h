@@ -23,7 +23,6 @@
 #ifndef _WINE_DLL_CDLG16_H
 #define _WINE_DLL_CDLG16_H
 
-#define COM_NO_WINDOWS_H
 #include "dlgs.h"
 #include "wine/windef16.h"
 #include "wine/winbase16.h"

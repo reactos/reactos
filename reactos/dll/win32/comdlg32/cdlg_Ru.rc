@@ -141,7 +141,7 @@ FONT 8, "MS Shell Dlg"
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Образец",grp2,98,72,120,36,WS_GROUP
     CTEXT           "АаБбAaBb",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Scr&ipt (translate):",stc7 ,98,114,80,9
+    LTEXT           "На&бор символов:",stc7 ,98,114,80,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -156,17 +156,17 @@ FONT 8, "MS Shell Dlg"
  LTEXT "До&полнительные цвета:",  1089, 4,   106, 140, 10
  LTEXT "Цвет|За&ливка",  1090, 150, 151,  48, 10
  LTEXT   "Крас&ный:", 726 /*1094*/,254,126,32,10
- EDITTEXT 706, 288,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Зеленый:",727/*1095*/,254,140,32,10
- EDITTEXT 707, 288,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 706, 288,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Зелёный:",727/*1095*/,254,140,32,10
+ EDITTEXT 707, 288,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "С&иний:",728 /*1096*/,264,154,24,10
- EDITTEXT 708, 288,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 708, 288,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "О&ттенок:" ,723 /*1091*/,202,126,30,10
- EDITTEXT 703, 234,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 703, 234,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "&Контраст:" ,724 /*1092*/,199,140,34,10
- EDITTEXT 704, 234,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 704, 234,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "&Яркость:" ,725 /*1093*/,202,154,30,10
- EDITTEXT 705, 234,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 705, 234,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
  CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
@@ -210,7 +210,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "З&аменить на:", -1, 4, 26, 48, 8
  EDITTEXT 1153, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Только слово целиком", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "С &учетом регистра", 1041, 5, 62, 104, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "С &учётом регистра", 1041, 5, 62, 104, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
  DEFPUSHBUTTON "&Найти далее", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "&Заменить", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
@@ -232,22 +232,22 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Печать в фай&л", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
     PUSHBUTTON      "&Свойства",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Имя:",         stc6,  16, 20,  36,8
-    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Статус:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Эмулирован",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Тип:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Эмулирован",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Место:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Эмулировано", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примечание:",   stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Эмулировано",   stc13, 60, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "&Имя:",         stc6,  16, 20,  46,8
+    COMBOBOX                          cmb4,  64, 18, 140,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Статус:",        stc8,  16, 36,  46,10, SS_NOPREFIX
+    LTEXT           "Эмулирован",    stc12, 64, 36, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Тип:",          stc7,  16, 48,  46,10, SS_NOPREFIX
+    LTEXT           "Эмулирован",     stc11, 64, 48, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Место:",         stc10, 16, 60,  46,10, SS_NOPREFIX
+    LTEXT           "Эмулировано", stc14, 64, 60, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Примечание:",   stc9,  16, 72,  46,10, SS_NOPREFIX
+    LTEXT           "Эмулировано",   stc13, 64, 72, 100,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Копии",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Число &копий:",stc5,168,108,68,8
-    ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "&Разбить",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,230,130,40,12
-    EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
+    ICON            "",               ico3, 162,124,  60,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "&Разбить",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,230,130,42,12
+    EDITTEXT                          edt3, 230,106,  42,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Печатать",    grp1,   8,92,  144,64, WS_GROUP
     CONTROL         "&Все",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
@@ -278,7 +278,7 @@ BEGIN
     LTEXT           "Тип:",          stc7,  16, 48,  36,10, SS_NOPREFIX
     LTEXT           "Эмулирован",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Место:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Эмулировано", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Эмулировано", stc14, 52, 60, 36,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Заметки:",       stc9,  16, 72,  36,10, SS_NOPREFIX
     LTEXT           "Эмулированы",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
@@ -339,7 +339,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"Имя &файла:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
 
-    LTEXT	"Файлы &типа",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
+    LTEXT	"&Тип файлов:",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
     CONTROL	"Только для &чтения",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
@@ -399,14 +399,14 @@ STRINGTABLE DISCARDABLE
     PD32_TOO_LARGE_COPIES                 "Такое большое количество копий не \
 может быть напечатано Вашим принтером.\nВведите значение между 1 и %d"
     PD32_PRINT_ERROR                      "Произошла ошибка принтера"
-    PD32_NO_DEFAULT_PRINTER               "Нет принтера, устаовленного по умолчанию"
+    PD32_NO_DEFAULT_PRINTER               "Нет принтера, установленного по умолчанию"
     PD32_CANT_FIND_PRINTER                "Не удалось найти принтер"
     PD32_OUT_OF_MEMORY                    "Мало памяти"
     PD32_GENERIC_ERROR                    "Произошла(и) ошибка(и)"
     PD32_DRIVER_UNKNOWN                   "Неизвестный драйвер принтера"
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Отсутствуют принтеры в системе. \
+Проверьте, что хотя бы один принтер установлен и система печати запущена. \
+"
 
     PD32_DEFAULT_PRINTER                  "Принтер по умолчанию; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d документов в очереди"
@@ -440,4 +440,34 @@ Please install one and retry."
     PD32_PRINTER_STATUS_DOOR_OPEN         "Крышка принтера открыта; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Неизвестный сервер принтера; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Питание в безопасном режиме; "
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Чёрный"
+    IDS_COLOR_MAROON    "Тёмно-бордовый"
+    IDS_COLOR_GREEN     "Зелёный"
+    IDS_COLOR_OLIVE     "Оливковый"
+    IDS_COLOR_NAVY      "Тёмно-синий"
+    IDS_COLOR_PURPLE    "Пурпурный"
+    IDS_COLOR_TEAL      "Морской волны"
+    IDS_COLOR_GRAY      "Серый"
+    IDS_COLOR_SILVER    "Серебряный"
+    IDS_COLOR_RED       "Красный"
+    IDS_COLOR_LIME      "Лимонный"
+    IDS_COLOR_YELLOW    "Жёлтый"
+    IDS_COLOR_BLUE      "Синий"
+    IDS_COLOR_FUCHSIA   "Ярко-розовый"
+    IDS_COLOR_AQUA      "Голубой"
+    IDS_COLOR_WHITE     "Белый"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Выберите шрифт размером %d - %d пунктов."
+    IDS_SAVE_BUTTON "&Сохранить"
+    IDS_SAVE_IN     "Сохранить &в:"
+    IDS_SAVE        "Сохранить"
+    IDS_SAVE_AS     "Сохранить как"
+    IDS_OPEN_FILE   "Открыть файл"
 }

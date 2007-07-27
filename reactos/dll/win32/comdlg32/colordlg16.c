@@ -197,7 +197,7 @@ static LRESULT CC_WMCommand16( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD not
     HDC hdc;
     COLORREF *cr;
     LCCPRIV lpp = (LCCPRIV)GetWindowLongPtrW(hDlg, DWLP_USER);
-    TRACE("CC_WMCommand wParam=%x lParam=%lx\n", wParam, lParam);
+    TRACE("CC_WMCommand wParam=%lx lParam=%lx\n", wParam, lParam);
     switch (wParam)
     {
           case 0x2c2:  /* edit notify RGB */
@@ -400,7 +400,7 @@ BOOL16 WINAPI ChooseColor16( LPCHOOSECOLOR16 lpChCol )
     HANDLE16 hDlgTmpl16 = 0, hResource16 = 0;
     HGLOBAL16 hGlobal16 = 0;
     BOOL16 bRet = FALSE;
-    LPCVOID template;
+    LPVOID template;
     FARPROC16 ptr;
 
     TRACE("ChooseColor\n");
@@ -447,7 +447,7 @@ BOOL16 WINAPI ChooseColor16( LPCHOOSECOLOR16 lpChCol )
         if (!hGlobal16)
         {
             COMDLG32_SetCommDlgExtendedError(CDERR_MEMALLOCFAILURE);
-            ERR("alloc failure for %ld bytes\n", size);
+            ERR("alloc failure for %d bytes\n", size);
             return FALSE;
         }
         template = GlobalLock16(hGlobal16);
@@ -458,7 +458,7 @@ BOOL16 WINAPI ChooseColor16( LPCHOOSECOLOR16 lpChCol )
             GlobalFree16(hGlobal16);
             return FALSE;
         }
-        ConvertDialog32To16((LPVOID)template32, size, (LPVOID)template);
+        ConvertDialog32To16(template32, size, template);
         hDlgTmpl16 = hGlobal16;
     }
 

@@ -26,7 +26,6 @@
 #include <stdarg.h>
 #endif
 
-#define COM_NO_WINDOWS_H
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -156,5 +155,16 @@ BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl);
 
 /* Functions used by the EDIT box */
 void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd);
+
+/**************************************************************************
+*   External Prototypes
+*/
+extern const char FileOpenDlgInfosStr[];
+
+extern IShellFolder*    GetShellFolderFromPidl(LPITEMIDLIST pidlAbs);
+extern LPITEMIDLIST     GetParentPidl(LPITEMIDLIST pidl);
+
+extern int     FILEDLG95_LOOKIN_SelectItem(HWND hwnd,LPITEMIDLIST pidl);
+extern LRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
 
 #endif /*SHBROWSER_H*/

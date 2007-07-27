@@ -46,7 +46,7 @@ typedef struct tagFD16_PRIVATE
  *                              FD16_MapOfnStruct16          [internal]
  *      map a 16 bits structure to an Unicode one
  */
-static void FD16_MapOfnStruct16(LPOPENFILENAME16 ofn16, LPOPENFILENAMEW ofnW, BOOL open)
+static void FD16_MapOfnStruct16(const OPENFILENAME16 *ofn16, LPOPENFILENAMEW ofnW, BOOL open)
 {
     OPENFILENAMEA ofnA;
     /* first convert to linear pointers */
@@ -85,11 +85,11 @@ static void FD16_MapOfnStruct16(LPOPENFILENAME16 ofn16, LPOPENFILENAMEW ofnW, BO
  * by a 16 bits application
  *
  */
-static BOOL FD16_GetTemplate(PFD31_DATA lfs)
+static BOOL FD16_GetTemplate(const FD31_DATA *lfs)
 {
     PFD16_PRIVATE priv = (PFD16_PRIVATE) lfs->private1632;
     LPOPENFILENAME16 ofn16 = priv->ofn16;
-    LPCVOID template;
+    LPVOID template;
     HGLOBAL16 hGlobal16 = 0;
 
     if (ofn16->Flags & OFN_ENABLETEMPLATEHANDLE)
@@ -135,7 +135,7 @@ static BOOL FD16_GetTemplate(PFD31_DATA lfs)
         if (!hGlobal16)
         {
             COMDLG32_SetCommDlgExtendedError(CDERR_MEMALLOCFAILURE);
-            ERR("alloc failure for %ld bytes\n", size);
+            ERR("alloc failure for %d bytes\n", size);
             return FALSE;
         }
         template = GlobalLock16(hGlobal16);
@@ -146,7 +146,7 @@ static BOOL FD16_GetTemplate(PFD31_DATA lfs)
             GlobalFree16(hGlobal16);
             return FALSE;
         }
-        ConvertDialog32To16((LPVOID)template32, size, (LPVOID)template);
+        ConvertDialog32To16(template32, size, template);
         priv->hDlgTmpl16 = hGlobal16;
         priv->hGlobal16 = hGlobal16;
     }
@@ -183,7 +183,7 @@ static BOOL CALLBACK FD16_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
  *
  *      called from the common 16/32 code to call the appropriate hook
  */
-static BOOL CALLBACK FD16_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
+static BOOL CALLBACK FD16_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
                                  LPARAM lParam)
 {
     PFD16_PRIVATE priv = (PFD16_PRIVATE) lfs->private1632;
@@ -202,7 +202,7 @@ static BOOL CALLBACK FD16_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wPara
  *                              FD31_UpdateResult            [internal]
  *          update the real client structures
  */
-static void CALLBACK FD16_UpdateResult(PFD31_DATA lfs)
+static void CALLBACK FD16_UpdateResult(const FD31_DATA *lfs)
 {
     PFD16_PRIVATE priv = (PFD16_PRIVATE) lfs->private1632;
     LPOPENFILENAMEW ofnW = lfs->ofnW;
@@ -238,7 +238,7 @@ static void CALLBACK FD16_UpdateResult(PFD31_DATA lfs)
  *                              FD16_UpdateFileTitle         [internal]
  *          update the real client structures
  */
-static void CALLBACK FD16_UpdateFileTitle(PFD31_DATA lfs)
+static void CALLBACK FD16_UpdateFileTitle(const FD31_DATA *lfs)
 {
     PFD16_PRIVATE priv = (PFD16_PRIVATE) lfs->private1632;
     LPOPENFILENAMEW ofnW = lfs->ofnW;
@@ -257,7 +257,7 @@ static void CALLBACK FD16_UpdateFileTitle(PFD31_DATA lfs)
  *                              FD16_SendLbGetCurSel         [internal]
  *          retrieve selected listbox item
  */
-static LRESULT CALLBACK FD16_SendLbGetCurSel(PFD31_DATA lfs)
+static LRESULT CALLBACK FD16_SendLbGetCurSel(const FD31_DATA *lfs)
 {
     return SendDlgItemMessageW(lfs->hwnd, lst1, LB_GETCURSEL16, 0, 0);
 }
@@ -267,7 +267,7 @@ static LRESULT CALLBACK FD16_SendLbGetCurSel(PFD31_DATA lfs)
  *                              FD16_Destroy          [internal]
  *      called from the common 16/32 code to cleanup 32 bit data
  */
-static void CALLBACK FD16_Destroy(PFD31_DATA lfs)
+static void CALLBACK FD16_Destroy(const FD31_DATA *lfs)
 {
     PFD16_PRIVATE priv = (PFD16_PRIVATE) lfs->private1632;
 
@@ -299,7 +299,7 @@ static void FD16_SetupCallbacks(PFD31_CALLBACKS callbacks)
  *                              FD16_MapDrawItemStruct       [internal]
  *      map a 16 bits drawitem struct to 32
  */
-static void FD16_MapDrawItemStruct(LPDRAWITEMSTRUCT16 lpdis16, LPDRAWITEMSTRUCT lpdis)
+static void FD16_MapDrawItemStruct(const DRAWITEMSTRUCT16 *lpdis16, LPDRAWITEMSTRUCT lpdis)
 {
     lpdis->CtlType = lpdis16->CtlType;
     lpdis->CtlID = lpdis16->CtlID;
@@ -512,4 +512,13 @@ BOOL16 WINAPI GetSaveFileName16(
 
     TRACE("return lpstrFile='%s' !\n", (char *)MapSL(lpofn->lpstrFile));
     return bRet;
+}
+
+
+/***********************************************************************
+ *	GetFileTitle		(COMMDLG.27)
+ */
+short WINAPI GetFileTitle16(LPCSTR lpFile, LPSTR lpTitle, UINT16 cbBuf)
+{
+	return GetFileTitleA(lpFile, lpTitle, cbBuf);
 }

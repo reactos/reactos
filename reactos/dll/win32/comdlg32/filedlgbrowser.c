@@ -19,7 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#define COBJMACROS
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winreg.h"
+
+#define NO_SHLWAPI_STREAM
+#include "shlwapi.h"
+#include "filedlgbrowser.h"
+#include "cdlg.h"
+#include "shlguid.h"
+#include "servprov.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
@@ -55,20 +76,7 @@ static const IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl;
 *   Local Prototypes
 */
 
-static HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, IShellView *ppshv);
-
-/**************************************************************************
-*   External Prototypes
-*/
-extern const char *FileOpenDlgInfosStr;
-
-extern IShellFolder*    GetShellFolderFromPidl(LPITEMIDLIST pidlAbs);
-extern LPITEMIDLIST     GetParentPidl(LPITEMIDLIST pidl);
-extern LPITEMIDLIST     GetPidlFromName(IShellFolder *psf,LPCSTR lpcstrFileName);
-
-extern int     FILEDLG95_LOOKIN_SelectItem(HWND hwnd,LPITEMIDLIST pidl);
-extern LRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
-
+static HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, const IShellView *ppshv);
 
 /*
  *   Helper functions
@@ -117,7 +125,7 @@ static void COMDLG32_DumpSBSPFlags(UINT uflags)
     }
 }
 
-static void COMDLG32_UpdateCurrentDir(FileOpenDlgInfos *fodInfos)
+static void COMDLG32_UpdateCurrentDir(const FileOpenDlgInfos *fodInfos)
 {
     LPSHELLFOLDER psfDesktop;
     STRRET strret;
@@ -143,7 +151,7 @@ static void COMDLG32_UpdateCurrentDir(FileOpenDlgInfos *fodInfos)
 /* copied from shell32 to avoid linking to it */
 static HRESULT COMDLG32_StrRetToStrNW (LPVOID dest, DWORD len, LPSTRRET src, LPCITEMIDLIST pidl)
 {
-	TRACE("dest=%p len=0x%lx strret=%p pidl=%p stub\n",dest,len,src,pidl);
+	TRACE("dest=%p len=0x%x strret=%p pidl=%p stub\n",dest,len,src,pidl);
 
 	switch (src->uType)
 	{
@@ -254,7 +262,7 @@ static ULONG WINAPI IShellBrowserImpl_AddRef(IShellBrowser * iface)
     IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p,%lu)\n", This, ref - 1);
+    TRACE("(%p,%u)\n", This, ref - 1);
 
     return ref;
 }
@@ -267,7 +275,7 @@ static ULONG WINAPI IShellBrowserImpl_Release(IShellBrowser * iface)
     IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p,%lu)\n", This, ref + 1);
+    TRACE("(%p,%u)\n", This, ref + 1);
 
     if (!ref)
     {
@@ -368,7 +376,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
         }
         /* create an absolute pidl */
         pidlTmp = COMDLG32_PIDL_ILCombine(fodInfos->ShellInfos.pidlAbsCurrent,
-                                                        (LPITEMIDLIST)pidl);
+                                                        (LPCITEMIDLIST)pidl);
     }
     else if(wFlags & SBSP_PARENT)
     {
@@ -380,7 +388,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     else /* SBSP_ABSOLUTE is 0x0000 */
     {
         /* An absolute pidl (relative from the desktop) */
-        pidlTmp =  COMDLG32_PIDL_ILClone((LPITEMIDLIST)pidl);
+        pidlTmp =  COMDLG32_PIDL_ILClone((LPCITEMIDLIST)pidl);
         psfTmp = GetShellFolderFromPidl(pidlTmp);
     }
 
@@ -467,7 +475,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
 
     return hRes;
 error:
-    ERR("Failed with error 0x%08lx\n", hRes);
+    ERR("Failed with error 0x%08x\n", hRes);
     return hRes;
 }
 
@@ -512,7 +520,7 @@ static HRESULT WINAPI IShellBrowserImpl_GetViewStateStream(IShellBrowser *iface,
 {
     IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
 
-    FIXME("(%p 0x%08lx %p)\n", This, grfMode, ppStrm);
+    FIXME("(%p 0x%08x %p)\n", This, grfMode, ppStrm);
 
     /* Feature not implemented */
     return E_NOTIMPL;
@@ -601,7 +609,7 @@ static HRESULT WINAPI IShellBrowserImpl_SendControlMsg(IShellBrowser *iface,
     IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
     LRESULT lres;
 
-    TRACE("(%p)->(0x%08x 0x%08x 0x%08x 0x%08lx %p)\n", This, id, uMsg, wParam, lParam, pret);
+    TRACE("(%p)->(0x%08x 0x%08x 0x%08lx 0x%08lx %p)\n", This, id, uMsg, wParam, lParam, pret);
 
     switch (id)
     {
@@ -822,7 +830,11 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnStateChange(ICommDlgBr
 	    {
 		FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
 		if(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG)
-		    SetDlgItemTextA(fodInfos->ShellInfos.hwndOwner,IDOK,"&Save");
+		{
+		    WCHAR szSave[16];
+		    LoadStringW(COMDLG32_hInstance, IDS_SAVE_BUTTON, szSave, sizeof(szSave)/sizeof(WCHAR));
+		    SetDlgItemTextW(fodInfos->ShellInfos.hwndOwner, IDOK, szSave);
+		}
             }
             break;
         case CDBOSC_SELCHANGE:
@@ -883,7 +895,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
 /**************************************************************************
 *  IShellBrowserImpl_ICommDlgBrowser_OnSelChange
 */
-static HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, IShellView *ppshv)
+static HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, const IShellView *ppshv)
 {
     FileOpenDlgInfos *fodInfos;
 
