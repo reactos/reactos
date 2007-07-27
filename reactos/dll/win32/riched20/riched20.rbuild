@@ -10,6 +10,7 @@
 	<define name="WINVER">0x501</define>
 	<library>wine</library>
 	<library>ole32</library>
+	<library>imm32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

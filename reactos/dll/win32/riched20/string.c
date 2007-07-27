@@ -130,7 +130,7 @@ ME_String *ME_VSplitString(ME_String *orig, int charidx)
 
   s = ME_MakeString(orig->szData+charidx);
   orig->nLen = charidx;
-  orig->szData[charidx] = L'\0';
+  orig->szData[charidx] = '\0';
   return s;
 }
 
@@ -347,6 +347,8 @@ ME_CallWordBreakProc(ME_TextEditor *editor, ME_String *str, INT start, INT code)
 
 LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz)
 {
+  assert(psz != NULL);
+
   if (unicode)
     return (LPWSTR)psz;
   else {
