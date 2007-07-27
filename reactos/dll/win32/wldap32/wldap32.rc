@@ -22,7 +22,6 @@
 #include "winbase.h"
 #include "winuser.h"
 
-#include "wldap32_Bg.rc"
 #include "wldap32_De.rc"
 #include "wldap32_En.rc"
 #include "wldap32_Es.rc"
