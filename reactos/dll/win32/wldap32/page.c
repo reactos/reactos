@@ -152,9 +152,7 @@ static ULONG create_page_control( ULONG pagesize, struct WLDAP32_berval *cookie,
 ULONG CDECL ldap_create_page_controlW( WLDAP32_LDAP *ld, ULONG pagesize,
     struct WLDAP32_berval *cookie, UCHAR critical, PLDAPControlW *control )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
-
     TRACE( "(%p, 0x%08x, %p, 0x%02x, %p)\n", ld, pagesize, cookie,
            critical, control );
 
@@ -163,8 +161,9 @@ ULONG CDECL ldap_create_page_controlW( WLDAP32_LDAP *ld, ULONG pagesize,
 
     return create_page_control( pagesize, cookie, critical, control );
 
+#else
+    return LDAP_NOT_SUPPORTED;
 #endif
-    return ret;
 }
 
 ULONG CDECL ldap_get_next_page( WLDAP32_LDAP *ld, PLDAPSearch search, ULONG pagesize,

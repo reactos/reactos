@@ -375,8 +375,9 @@ WLDAP32_LDAPMessage * CDECL WLDAP32_ldap_first_entry( WLDAP32_LDAP *ld, WLDAP32_
     if (!ld || !res) return NULL;
     return ldap_first_entry( ld, res );
 
-#endif
+#else
     return NULL;
+#endif
 }
 
 /***********************************************************************
@@ -401,8 +402,9 @@ WLDAP32_LDAPMessage * CDECL WLDAP32_ldap_first_reference( WLDAP32_LDAP *ld, WLDA
     if (!ld) return NULL;
     return ldap_first_reference( ld, res );
 
-#endif
+#else
     return NULL;
+#endif
 }
 
 /***********************************************************************
@@ -536,8 +538,9 @@ WLDAP32_LDAPMessage * CDECL WLDAP32_ldap_next_entry( WLDAP32_LDAP *ld, WLDAP32_L
     if (!ld || !entry) return NULL;
     return ldap_next_entry( ld, entry );
 
-#endif
+#else
     return NULL;
+#endif
 }
 
 /***********************************************************************
@@ -565,8 +568,9 @@ WLDAP32_LDAPMessage * CDECL WLDAP32_ldap_next_reference( WLDAP32_LDAP *ld, WLDAP
     if (!ld || !entry) return NULL;
     return ldap_next_reference( ld, entry );
 
-#endif
+#else
     return NULL;
+#endif
 }
 
 /***********************************************************************

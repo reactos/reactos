@@ -190,9 +190,7 @@ static char **bv2str_array( struct berval **bv )
         str[i] = bv2str( *p );
         if (!str[i])
         {
-            for (--i; i >= 0; i--)
-                HeapFree( GetProcessHeap(), 0, str[i] );
-
+            while (i > 0) HeapFree( GetProcessHeap(), 0, str[--i] );
             HeapFree( GetProcessHeap(), 0, str );
             return NULL;
         } 
@@ -274,8 +272,9 @@ struct WLDAP32_berval ** CDECL ldap_get_values_lenA( WLDAP32_LDAP *ld,
     strfreeW( attrW );
     return ret;
 
-#endif
+#else
     return NULL;
+#endif
 }
 
 /***********************************************************************
@@ -316,8 +315,9 @@ struct WLDAP32_berval ** CDECL ldap_get_values_lenW( WLDAP32_LDAP *ld,
     strfreeU( attrU );
     return (struct WLDAP32_berval **)ret;
 
-#endif
+#else
     return NULL;
+#endif
 }
 
 /***********************************************************************
