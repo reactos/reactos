@@ -1241,7 +1241,7 @@ PAGER_StyleChanged(PAGER_INFO *infoPtr, WPARAM wStyleType, const STYLESTRUCT *lp
 {
     DWORD oldStyle = infoPtr->dwStyle;
 
-    TRACE("(styletype=%x, styleOld=0x%08x, styleNew=0x%08x)\n",
+    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
           wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;

@@ -1192,8 +1192,13 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 
         hOldBrush = SelectObject (hImageDC, CreateSolidBrush (colour));
         PatBlt( hImageDC, 0, 0, cx, cy, PATCOPY );
-        BitBlt( hImageDC, 0, 0, cx, cy, hMaskListDC, pt.x, pt.y, SRCAND );
-        BitBlt( hImageDC, 0, 0, cx, cy, hImageListDC, pt.x, pt.y, SRCPAINT );
+        if (himl->hbmMask)
+        {
+            BitBlt( hImageDC, 0, 0, cx, cy, hMaskListDC, pt.x, pt.y, SRCAND );
+            BitBlt( hImageDC, 0, 0, cx, cy, hImageListDC, pt.x, pt.y, SRCPAINT );
+        }
+        else
+            BitBlt( hImageDC, 0, 0, cx, cy, hImageListDC, pt.x, pt.y, SRCCOPY);
         DeleteObject (SelectObject (hImageDC, hOldBrush));
     }
 
@@ -2558,7 +2563,7 @@ BOOL WINAPI
 ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
 {
     HDC     hdcBitmap;
-    HBITMAP hbmNewBitmap;
+    HBITMAP hbmNewBitmap, hbmOld;
     INT     nNewCount, nCopyCount;
 
     TRACE("%p %d\n",himl,iImageCount);
@@ -2583,8 +2588,9 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
 
     if (hbmNewBitmap != 0)
     {
-        SelectObject (hdcBitmap, hbmNewBitmap);
+        hbmOld = SelectObject (hdcBitmap, hbmNewBitmap);
         imagelist_copy_images( himl, himl->hdcImage, hdcBitmap, 0, nCopyCount, 0 );
+        SelectObject (hdcBitmap, hbmOld);
 
 	/* FIXME: delete 'empty' image space? */
 
@@ -2602,8 +2608,9 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
         hbmNewBitmap = CreateBitmap (sz.cx, sz.cy, 1, 1, NULL);
         if (hbmNewBitmap != 0)
         {
-            SelectObject (hdcBitmap, hbmNewBitmap);
+            hbmOld = SelectObject (hdcBitmap, hbmNewBitmap);
             imagelist_copy_images( himl, himl->hdcMask, hdcBitmap, 0, nCopyCount, 0 );
+            SelectObject (hdcBitmap, hbmOld);
 
 	    /* FIXME: delete 'empty' image space? */
 

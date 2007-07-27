@@ -478,7 +478,7 @@ UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC superClassWndProc = (WNDPROC)GetPropW(hwnd, BUDDY_SUPERCLASS_WNDPROC);
 
-    TRACE("hwnd=%p, wndProc=%p, uMsg=%04x, wParam=%08x, lParam=%08lx\n",
+    TRACE("hwnd=%p, wndProc=%p, uMsg=%04x, wParam=%08lx, lParam=%08lx\n",
           hwnd, superClassWndProc, uMsg, wParam, lParam);
 
     if (uMsg == WM_KEYDOWN) {
@@ -794,7 +794,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
     static const WCHAR themeClass[] = {'S','p','i','n',0};
     HTHEME theme;
 
-    TRACE("hwnd=%p msg=%04x wparam=%08x lparam=%08lx\n", hwnd, message, wParam, lParam);
+    TRACE("hwnd=%p msg=%04x wparam=%08lx lparam=%08lx\n", hwnd, message, wParam, lParam);
 
     if (!infoPtr && (message != WM_CREATE))
         return DefWindowProcW (hwnd, message, wParam, lParam);
@@ -970,7 +970,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    return infoPtr->Base;
 
 	case UDM_SETBASE:
-	    TRACE("UpDown Ctrl new base(%d), hwnd=%p\n", wParam, hwnd);
+	    TRACE("UpDown Ctrl new base(%ld), hwnd=%p\n", wParam, hwnd);
 	    if (wParam==10 || wParam==16) {
 		temp = infoPtr->Base;
 		infoPtr->Base = wParam;
@@ -1052,7 +1052,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 
 	default:
 	    if ((message >= WM_USER) && (message < WM_APP))
-	     	ERR("unknown msg %04x wp=%04x lp=%08lx\n", message, wParam, lParam);
+		ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam);
 	    return DefWindowProcW (hwnd, message, wParam, lParam);
     }
 

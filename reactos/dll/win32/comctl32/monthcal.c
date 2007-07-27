@@ -825,7 +825,7 @@ MONTHCAL_SetColor(MONTHCAL_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
   int prev = -1;
 
-  TRACE("%d: color %08lx\n", wParam, lParam);
+  TRACE("%ld: color %08lx\n", wParam, lParam);
 
   switch((int)wParam) {
     case MCSC_BACKGROUND:
@@ -876,7 +876,7 @@ MONTHCAL_SetMonthDelta(MONTHCAL_INFO *infoPtr, WPARAM wParam)
 {
   int prev = infoPtr->delta;
 
-  TRACE("delta %d\n", wParam);
+  TRACE("delta %ld\n", wParam);
 
   infoPtr->delta = (int)wParam;
   return prev;
@@ -950,7 +950,7 @@ MONTHCAL_SetRange(MONTHCAL_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     SYSTEMTIME *lprgSysTimeArray=(SYSTEMTIME *)lParam;
     FILETIME ft_min, ft_max;
 
-    TRACE("%x %lx\n", wParam, lParam);
+    TRACE("%lx %lx\n", wParam, lParam);
 
     if ((wParam & GDTR_MIN && !MONTHCAL_ValidateTime(lprgSysTimeArray[0])) ||
         (wParam & GDTR_MAX && !MONTHCAL_ValidateTime(lprgSysTimeArray[1])))
@@ -1019,7 +1019,7 @@ MONTHCAL_SetDayState(const MONTHCAL_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
   int i, iMonths = (int)wParam;
   MONTHDAYSTATE *dayStates = (LPMONTHDAYSTATE)lParam;
 
-  TRACE("%x %lx\n", wParam, lParam);
+  TRACE("%lx %lx\n", wParam, lParam);
   if(iMonths!=infoPtr->monthRange) return 0;
 
   for(i=0; i<iMonths; i++)
@@ -1076,7 +1076,7 @@ MONTHCAL_GetMaxSelCount(const MONTHCAL_INFO *infoPtr)
 static LRESULT
 MONTHCAL_SetMaxSelCount(MONTHCAL_INFO *infoPtr, WPARAM wParam)
 {
-  TRACE("%x\n", wParam);
+  TRACE("%lx\n", wParam);
 
   if(GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & MCS_MULTISELECT)  {
     infoPtr->maxSelCount = wParam;
@@ -1585,7 +1585,7 @@ MONTHCAL_Timer(MONTHCAL_INFO *infoPtr, WPARAM wParam)
 {
   BOOL redraw = FALSE;
 
-  TRACE("%d\n", wParam);
+  TRACE("%ld\n", wParam);
 
   switch(wParam) {
   case MC_NEXTMONTHTIMER:
@@ -1941,7 +1941,7 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   MONTHCAL_INFO *infoPtr;
 
-  TRACE("hwnd=%p msg=%x wparam=%x lparam=%lx\n", hwnd, uMsg, wParam, lParam);
+  TRACE("hwnd=%p msg=%x wparam=%lx lparam=%lx\n", hwnd, uMsg, wParam, lParam);
 
   infoPtr = MONTHCAL_GetInfoPtr(hwnd);
   if (!infoPtr && (uMsg != WM_CREATE))
@@ -2059,7 +2059,7 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   default:
     if ((uMsg >= WM_USER) && (uMsg < WM_APP))
-      ERR( "unknown msg %04x wp=%08x lp=%08lx\n", uMsg, wParam, lParam);
+      ERR( "unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
   }
 }

@@ -1720,7 +1720,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     RECT rect;
     LRESULT lret;
 
-    TRACE("hwnd=%p msg=%x wparam=%x lParam=%lx, info_ptr=%p\n",
+    TRACE("hwnd=%p msg=%x wparam=%lx lParam=%lx, info_ptr=%p\n",
 	  hwnd, uMsg, wParam, lParam, infoPtr);
 
     if (!infoPtr) return 0;
@@ -1921,7 +1921,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     POINT pt;
     WCHAR edit_text[260];
 
-    TRACE("hwnd=%p msg=%x wparam=%x lParam=%lx, info_ptr=%p\n",
+    TRACE("hwnd=%p msg=%x wparam=%lx lParam=%lx, info_ptr=%p\n",
 	  hwnd, uMsg, wParam, lParam, infoPtr);
 
     if (!infoPtr) return 0;
@@ -2159,7 +2159,7 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     COMBOEX_INFO *infoPtr = COMBOEX_GetInfoPtr (hwnd);
 
-    TRACE("hwnd=%p msg=%x wparam=%x lParam=%lx\n", hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd=%p msg=%x wparam=%lx lParam=%lx\n", hwnd, uMsg, wParam, lParam);
 
     if (!infoPtr) {
 	if (uMsg == WM_CREATE)
@@ -2307,7 +2307,7 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
-		ERR("unknown msg %04x wp=%08x lp=%08lx\n",uMsg,wParam,lParam);
+		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",uMsg,wParam,lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }

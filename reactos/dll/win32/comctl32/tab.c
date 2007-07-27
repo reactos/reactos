@@ -863,7 +863,7 @@ static LRESULT TAB_AdjustRect(const TAB_INFO *infoPtr, WPARAM fLarger, LPRECT pr
     DWORD lStyle = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     LONG *iRightBottom, *iLeftTop;
 
-    TRACE ("hwnd=%p fLarger=%d (%d,%d)-(%d,%d)\n", infoPtr->hwnd, fLarger, prc->left, prc->top, prc->right, prc->bottom);
+    TRACE ("hwnd=%p fLarger=%ld (%d,%d)-(%d,%d)\n", infoPtr->hwnd, fLarger, prc->left, prc->top, prc->right, prc->bottom);
 
     if(lStyle & TCS_VERTICAL)
     {
@@ -2681,12 +2681,9 @@ static inline LRESULT TAB_SetMinTabWidth (TAB_INFO *infoPtr, INT cx)
 
   TRACE("(%p,%d)\n", infoPtr, cx);
 
-  if (infoPtr) {
-    oldcx = infoPtr->tabMinWidth;
-    infoPtr->tabMinWidth = cx;
-  }
+  oldcx = infoPtr->tabMinWidth;
+  infoPtr->tabMinWidth = cx;
   TAB_SetItemBounds(infoPtr);
-
   return oldcx;
 }
 
@@ -3124,7 +3121,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
 
-    TRACE("hwnd=%p msg=%x wParam=%x lParam=%lx\n", hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd=%p msg=%x wParam=%lx lParam=%lx\n", hwnd, uMsg, wParam, lParam);
     if (!infoPtr && (uMsg != WM_CREATE))
       return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 
@@ -3294,7 +3291,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     default:
       if (uMsg >= WM_USER && uMsg < WM_APP)
-	WARN("unknown msg %04x wp=%08x lp=%08lx\n",
+	WARN("unknown msg %04x wp=%08lx lp=%08lx\n",
 	     uMsg, wParam, lParam);
       break;
     }

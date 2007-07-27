@@ -503,7 +503,7 @@ static INT get_notifycode(const TREEVIEW_INFO *infoPtr, INT code)
 static LRESULT
 TREEVIEW_SendRealNotify(const TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("wParam=%d, lParam=%ld\n", wParam, lParam);
+    TRACE("wParam=%ld, lParam=%ld\n", wParam, lParam);
     return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, wParam, lParam);
 }
 
@@ -1746,7 +1746,7 @@ TREEVIEW_SetImageList(TREEVIEW_INFO *infoPtr, WPARAM wParam, HIMAGELIST himlNew)
     int oldHeight = infoPtr->normalImageHeight;
 
 
-    TRACE("%x,%p\n", wParam, himlNew);
+    TRACE("%lx,%p\n", wParam, himlNew);
 
     switch (wParam)
     {
@@ -3573,7 +3573,7 @@ TREEVIEW_Edit_SubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TREEVIEW_Command(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("%x %ld\n", wParam, lParam);
+    TRACE("%lx %ld\n", wParam, lParam);
 
     switch (HIWORD(wParam))
     {
@@ -4657,7 +4657,7 @@ TREEVIEW_VScroll(TREEVIEW_INFO *infoPtr, WPARAM wParam)
 
     int nScrollCode = LOWORD(wParam);
 
-    TRACE("wp %x\n", wParam);
+    TRACE("wp %lx\n", wParam);
 
     if (!(infoPtr->uInternalStatus & TV_VSCROLL))
 	return 0;
@@ -4727,7 +4727,7 @@ TREEVIEW_HScroll(TREEVIEW_INFO *infoPtr, WPARAM wParam)
     int scrollX = infoPtr->scrollX;
     int nScrollCode = LOWORD(wParam);
 
-    TRACE("wp %x\n", wParam);
+    TRACE("wp %lx\n", wParam);
 
     if (!(infoPtr->uInternalStatus & TV_HSCROLL))
 	return FALSE;
@@ -4965,7 +4965,9 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     TREEVIEW_NotifyFormat(infoPtr, infoPtr->hwndNotify, NF_REQUERY);
 
     if (!(infoPtr->dwStyle & TVS_NOTOOLTIPS))
-	infoPtr->hwndToolTip = COMCTL32_CreateToolTip(hwnd);
+        infoPtr->hwndToolTip = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, WS_POPUP,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+            hwnd, 0, 0, 0);
 
     if (infoPtr->dwStyle & TVS_CHECKBOXES)
         initialize_checkboxes(infoPtr);
@@ -5068,7 +5070,7 @@ TREEVIEW_KeyDown(TREEVIEW_INFO *infoPtr, WPARAM wParam)
 
     TREEVIEW_ITEM *prevItem = infoPtr->selectedItem;
 
-    TRACE("%x\n", wParam);
+    TRACE("%lx\n", wParam);
 
     if (prevItem == NULL)
 	return FALSE;
@@ -5316,7 +5318,7 @@ TREEVIEW_Size(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     }
     else
     {
-	FIXME("WM_SIZE flag %x %lx not handled\n", wParam, lParam);
+	FIXME("WM_SIZE flag %lx %lx not handled\n", wParam, lParam);
     }
 
     TREEVIEW_Invalidate(infoPtr, NULL);
@@ -5326,7 +5328,7 @@ TREEVIEW_Size(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TREEVIEW_StyleChanged(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("(%x %lx)\n", wParam, lParam);
+    TRACE("(%lx %lx)\n", wParam, lParam);
 
     if (wParam == GWL_STYLE)
     {
@@ -5434,7 +5436,7 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TREEVIEW_INFO *infoPtr = TREEVIEW_GetInfoPtr(hwnd);
 
-    TRACE("hwnd %p msg %04x wp=%08x lp=%08lx\n", hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd %p msg %04x wp=%08lx lp=%08lx\n", hwnd, uMsg, wParam, lParam);
 
     if (infoPtr) TREEVIEW_VerifyTree(infoPtr);
     else
@@ -5701,7 +5703,7 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     default:
 	/* This mostly catches MFC and Delphi messages. :( */
 	if ((uMsg >= WM_USER) && (uMsg < WM_APP))
-	    TRACE("Unknown msg %04x wp=%08x lp=%08lx\n", uMsg, wParam, lParam);
+	    TRACE("Unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
 def:
 	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
     }

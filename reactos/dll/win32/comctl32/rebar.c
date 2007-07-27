@@ -2345,7 +2345,7 @@ REBAR_MaximizeBand (const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         extra = REBAR_ShrinkBandsLTR(infoPtr, next_band(infoPtr, uBand), iRowEnd, extra, TRUE);
     lpBand->cxEffective += extraOrig - extra;
     lpBand->cx = lpBand->cxEffective;
-    TRACE("(%d, %ld): Wanted size %d, obtained %d (shrink %d, %d)\n", wParam, lParam, cxDesired, lpBand->cx, extraOrig, extra);
+    TRACE("(%ld, %ld): Wanted size %d, obtained %d (shrink %d, %d)\n", wParam, lParam, cxDesired, lpBand->cx, extraOrig, extra);
     REBAR_SetRowRectsX(infoPtr, iRowBegin, iRowEnd);
 
     if (infoPtr->dwStyle & CCS_VERT)
@@ -2386,11 +2386,11 @@ REBAR_MinimizeBand (const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     if (iPrev < 0 || infoPtr->bands[iPrev].iRow != lpBand->iRow) {
         int iNext = next_band(infoPtr, uBand);
         if (iNext < infoPtr->uNumBands && infoPtr->bands[iNext].iRow == lpBand->iRow) {
-            TRACE("(%d): Minimizing the first band in row is by maximizing the second\n", wParam);
+            TRACE("(%ld): Minimizing the first band in row is by maximizing the second\n", wParam);
             REBAR_MaximizeBand(infoPtr, iNext, FALSE);
         }
         else
-            TRACE("(%d): Only one band in row - nothing to do\n", wParam);
+            TRACE("(%ld): Only one band in row - nothing to do\n", wParam);
         return TRUE;
     }
 
@@ -2802,7 +2802,7 @@ REBAR_PushChevron(const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         NMREBARCHEVRON nmrbc;
         REBAR_BAND *lpBand = &infoPtr->bands[wParam];
 
-        TRACE("Pressed chevron on band %d\n", wParam);
+        TRACE("Pressed chevron on band %ld\n", wParam);
 
         /* redraw chevron in pushed state */
         lpBand->fDraw |= DRAW_CHEVRONPUSHED;
@@ -3317,7 +3317,7 @@ REBAR_SetRedraw (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 REBAR_Size (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("wParam=%x, lParam=%lx\n", wParam, lParam);
+    TRACE("wParam=%lx, lParam=%lx\n", wParam, lParam);
 
     /* avoid auto resize infinite recursion */
     if (infoPtr->fStatus & AUTO_RESIZE) {
@@ -3395,7 +3395,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     REBAR_INFO *infoPtr = REBAR_GetInfoPtr (hwnd);
 
-    TRACE("hwnd=%p msg=%x wparam=%x lparam=%lx\n",
+    TRACE("hwnd=%p msg=%x wparam=%lx lparam=%lx\n",
 	  hwnd, uMsg, wParam, lParam);
     if (!infoPtr && (uMsg != WM_NCCREATE))
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
@@ -3611,7 +3611,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
-		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
+		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
 		     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
