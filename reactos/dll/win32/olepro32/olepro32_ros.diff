@@ -1,9 +1,0 @@
-Index: olepro32.rbuild
-===================================================================
---- olepro32.rbuild	(revision 23782)
-+++ olepro32.rbuild	(working copy)
-@@ -1,3 +1,3 @@
-+<module name="olepro32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_OLEPRO32}" installbase="system32" installname="olepro32.dll" allowwarnings="true">
--<module name="olepro32" type="win32dll" baseaddress="${BASEADDRESS_OLEPRO32}" installbase="system32" installname="olepro32.dll" allowwarnings="true">
- 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
- 	<importlibrary definition="olepro32.spec.def" />
