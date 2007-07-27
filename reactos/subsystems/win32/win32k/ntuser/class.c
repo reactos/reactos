@@ -592,7 +592,7 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
 
                 while (*PrevLink != BaseClass)
                 {
-                    ASSERT(BaseClass != NULL);
+                    ASSERT(*PrevLink != NULL);
                     PrevLink = &BaseClass->Next;
                 }
 
@@ -1112,7 +1112,27 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
             goto FoundClass;
         }
 
-        /* Step 3: try to find a system class */
+        /* Step 3: try to find any local class registered by user32 */
+        Class = IntFindClass(Atom,
+                             pi->hModUser,
+                             &pi->LocalClassList,
+                             Link);
+        if (Class != NULL)
+        {
+            goto FoundClass;
+        }
+
+        /* Step 4: try to find any global class registered by user32 */
+        Class = IntFindClass(Atom,
+                             pi->hModUser,
+                             &pi->GlobalClassList,
+                             Link);
+        if (Class != NULL)
+        {
+            goto FoundClass;
+        }
+
+        /* Step 5: try to find a system class */
         Class = IntFindClass(Atom,
                              NULL,
                              &pi->SystemClassList,
@@ -1771,10 +1791,13 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
                  IN BOOL Ansi,
                  HINSTANCE hInstance)
 {
+    PW32PROCESSINFO pi;
+
     lpwcx->style = Class->Style;
 
+    pi = GetW32ProcessInfo();
     lpwcx->lpfnWndProc = IntGetClassWndProc(Class,
-                                            GetW32ProcessInfo(),
+                                            pi,
                                             Ansi,
                                             FALSE);
 
@@ -1789,9 +1812,7 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
     else
         lpwcx->lpszMenuName = Class->MenuName;
 
-    if (hInstance)
-        lpwcx->hInstance = hInstance;
-    else if (Class->Global)
+    if (Class->hInstance == pi->hModUser)
         lpwcx->hInstance = NULL;
     else
         lpwcx->hInstance = Class->hInstance;
@@ -2119,7 +2140,7 @@ NtUserGetClassInfo(
         /* probe the paramters */
         CapturedClassName = ProbeForReadUnicodeString(ClassName);
 
-        if (IS_ATOM(CapturedClassName.Buffer))
+        if (CapturedClassName.Length == 0)
             TRACE("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
         else
             TRACE("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
@@ -2162,6 +2183,9 @@ InvalidParameter:
                                     NULL);
         if (ClassAtom != (RTL_ATOM)0)
         {
+            if (hInstance == NULL)
+                hInstance = pi->hModUser;
+
             Ret = UserGetClassInfo(Class,
                                    lpWndClassEx,
                                    Ansi,
@@ -2186,7 +2210,10 @@ InvalidParameter:
 
                 if (!(Class->Global || Class->System) && hInstance == NULL)
                 {
-                    WARN("Tried to get information of a non-existing class\n");
+                    if (CapturedClassName.Length == 0)
+                       WARN("Tried to get information of a non-existing class atom 0x%p\n", CapturedClassName.Buffer);
+                    else
+                       WARN("Tried to get information of a non-existing class \"%wZ\"\n", &CapturedClassName);
                     SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
                     Ret = FALSE;
                 }
@@ -2194,7 +2221,10 @@ InvalidParameter:
          }
          else
          {
-            WARN("Tried to get information of a non-existing class\n");
+            if (CapturedClassName.Length == 0)
+               WARN("Tried to get information of a non-existing class atom 0x%p\n", CapturedClassName.Buffer);
+            else
+               WARN("Tried to get information of a non-existing class \"%wZ\"\n", &CapturedClassName);
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
          }
     }

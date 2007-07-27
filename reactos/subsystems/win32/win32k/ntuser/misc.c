@@ -407,6 +407,26 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
          RETURN( (DWORD)UserGetKeyboardLayout(Param));
+
+      case ONEPARAM_ROUTINE_REGISTERUSERMODULE:
+      {
+          PW32THREADINFO ti;
+
+          ti = GetW32ThreadInfo();
+          if (ti == NULL)
+          {
+              DPRINT1("Cannot register user32 module instance!\n");
+              SetLastWin32Error(ERROR_INVALID_PARAMETER);
+              RETURN(FALSE);
+          }
+
+          if (InterlockedCompareExchangePointer(&ti->kpi->hModUser,
+                                                (HINSTANCE)Param,
+                                                NULL) == NULL)
+          {
+              RETURN(TRUE);
+          }
+      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
