@@ -656,7 +656,7 @@ UINT WINAPI UFromSz(LPCSTR lpszStr)
         while (*lpszStr >= '0' && *lpszStr <= '9')
         {
             ulRet = ulRet * 10 + (*lpszStr - '0');
-            lpszStr = CharNextA(lpszStr);
+            lpszStr++;
         }
     }
     return ulRet;
