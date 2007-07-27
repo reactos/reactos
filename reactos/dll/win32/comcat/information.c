@@ -39,7 +39,7 @@ static struct class_categories *COMCAT_PrepareClassCategories(
 static HRESULT COMCAT_IsClassOfCategories(
     HKEY key, struct class_categories const* class_categories);
 static LPENUMGUID COMCAT_CLSID_IEnumGUID_Construct(
-    struct class_categories const* class_categories);
+    struct class_categories *class_categories);
 static LPENUMGUID COMCAT_CATID_IEnumGUID_Construct(
     REFCLSID rclsid, LPCWSTR impl_req);
 
@@ -608,7 +608,7 @@ typedef struct
 {
     const IEnumGUIDVtbl *lpVtbl;
     LONG  ref;
-    const struct class_categories *categories;
+    struct class_categories *categories;
     HKEY  key;
     DWORD next_index;
 } CLSID_IEnumGUIDImpl;
@@ -775,8 +775,7 @@ static const IEnumGUIDVtbl COMCAT_CLSID_IEnumGUID_Vtbl =
     COMCAT_CLSID_IEnumGUID_Clone
 };
 
-static LPENUMGUID COMCAT_CLSID_IEnumGUID_Construct(
-    struct class_categories const* categories)
+static LPENUMGUID COMCAT_CLSID_IEnumGUID_Construct(struct class_categories *categories)
 {
     CLSID_IEnumGUIDImpl *This;
 
