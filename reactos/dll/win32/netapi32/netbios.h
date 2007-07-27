@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #ifndef __WINE_NETBIOS_H__
 #define __WINE_NETBIOS_H__
@@ -92,7 +92,7 @@ void NetBIOSEnumAdapters(ULONG transport, NetBIOSEnumAdaptersCallback cb,
  * This function is intended for use by a transport, if the session is closed
  * by some error in the transport layer.
  */
-void NetBIOSHangupSession(PNCB ncb);
+void NetBIOSHangupSession(const NCB *ncb);
 
 /**
  * Functions a transport implementation must implement
@@ -132,7 +132,7 @@ typedef void (*NetBIOSCleanup)(void);
  * some calls (recv) will block indefinitely, so a reset, shutdown, etc. will
  * never occur.
  */
-#define NCB_CANCELLED(pncb) *(PBOOL)((pncb)->ncb_reserve)
+#define NCB_CANCELLED(pncb) *(const BOOL *)((pncb)->ncb_reserve)
 
 typedef UCHAR (*NetBIOSAstat)(void *adapter, PNCB ncb);
 typedef UCHAR (*NetBIOSFindName)(void *adapter, PNCB ncb);

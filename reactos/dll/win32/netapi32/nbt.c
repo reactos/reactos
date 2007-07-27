@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * I am heavily indebted to Chris Hertel's excellent Implementing CIFS,
  * http://ubiqx.org/cifs/ , for whatever understanding I have of NBT.
@@ -288,7 +288,7 @@ typedef BOOL (*NetBTAnswerCallback)(void *data, WORD answerCount,
  * Returns NRC_GOODRET on timeout or a valid response received, something else
  * on error.
  */
-static UCHAR NetBTWaitForNameResponse(NetBTAdapter *adapter, SOCKET fd,
+static UCHAR NetBTWaitForNameResponse(const NetBTAdapter *adapter, SOCKET fd,
  DWORD waitUntil, NetBTAnswerCallback answerCallback, void *data)
 {
     BOOL found = FALSE;
@@ -424,7 +424,7 @@ static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
          queryData->cacheEntry->numAddresses < answerCount)
         {
             queryData->cacheEntry->addresses[queryData->cacheEntry->
-             numAddresses++] = *(PDWORD)(rData + 2);
+             numAddresses++] = *(const DWORD *)(rData + 2);
             ret = queryData->cacheEntry->numAddresses < answerCount;
         }
         else
@@ -444,7 +444,7 @@ static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
  * Returns NRC_GOODRET on success, though this may not mean the name was
  * resolved--check whether *cacheEntry is NULL.
  */
-static UCHAR NetBTNameWaitLoop(NetBTAdapter *adapter, SOCKET fd, PNCB ncb,
+static UCHAR NetBTNameWaitLoop(const NetBTAdapter *adapter, SOCKET fd, const NCB *ncb,
  DWORD sendTo, BOOL broadcast, DWORD timeout, DWORD maxQueries,
  NBNameCacheEntry **cacheEntry)
 {
@@ -1028,7 +1028,7 @@ static UCHAR NetBTCall(void *adapt, PNCB ncb, void **sess)
                     ret = NRC_CMDTMO;
                 else
                 {
-                    static UCHAR fakedCalledName[] = "*SMBSERVER";
+                    static const UCHAR fakedCalledName[] = "*SMBSERVER";
                     const UCHAR *calledParty = cacheEntry->nbname[0] == '*'
                      ? fakedCalledName : cacheEntry->nbname;
 
@@ -1050,6 +1050,7 @@ static UCHAR NetBTCall(void *adapt, PNCB ncb, void **sess)
                     {
                         session->fd = fd;
                         InitializeCriticalSection(&session->cs);
+                        session->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": NetBTSession.cs");
                         *sess = session;
                     }
                     else
@@ -1111,7 +1112,7 @@ static UCHAR NetBTSend(void *adapt, void *sess, PNCB ncb)
     }
     else if (bytesSent < NBSS_HDRSIZE + ncb->ncb_length)
     {
-        FIXME("Only sent %ld bytes (of %d), hanging up session\n", bytesSent,
+        FIXME("Only sent %d bytes (of %d), hanging up session\n", bytesSent,
          NBSS_HDRSIZE + ncb->ncb_length);
         NetBIOSHangupSession(ncb);
         ret = NRC_SABORT;
@@ -1243,6 +1244,7 @@ static UCHAR NetBTHangup(void *adapt, void *sess)
     closesocket(session->fd);
     session->fd = INVALID_SOCKET;
     session->bytesPending = 0;
+    session->cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&session->cs);
     HeapFree(GetProcessHeap(), 0, session);
 
@@ -1272,7 +1274,7 @@ static void NetBTCleanup(void)
     }
 }
 
-static UCHAR NetBTRegisterAdapter(PMIB_IPADDRROW ipRow)
+static UCHAR NetBTRegisterAdapter(const MIB_IPADDRROW *ipRow)
 {
     UCHAR ret;
     NetBTAdapter *adapter;
