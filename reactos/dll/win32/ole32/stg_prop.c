@@ -1617,7 +1617,7 @@ end:
 }
 
 static HRESULT PropertyStorage_WritePropertyToStream(PropertyStorage_impl *This,
- DWORD propNum, DWORD propid, PROPVARIANT *var, DWORD *sectionOffset)
+ DWORD propNum, DWORD propid, const PROPVARIANT *var, DWORD *sectionOffset)
 {
     HRESULT hr;
     LARGE_INTEGER seek;
@@ -1717,7 +1717,7 @@ static HRESULT PropertyStorage_WritePropertyToStream(PropertyStorage_impl *This,
         FILETIME temp;
 
         StorageUtl_WriteULargeInteger((BYTE *)&temp, 0,
-         (ULARGE_INTEGER *)&var->u.filetime);
+         (const ULARGE_INTEGER *)&var->u.filetime);
         hr = IStream_Write(This->stm, &temp, sizeof(FILETIME), &count);
         bytesWritten = count;
         break;
@@ -1775,8 +1775,8 @@ static BOOL PropertyStorage_PropertiesWriter(const void *key, const void *value,
     assert(value);
     assert(extra);
     assert(closure);
-    c->hr = PropertyStorage_WritePropertyToStream(This,
-     c->propNum++, (DWORD)key, (PROPVARIANT *)value, c->sectionOffset);
+    c->hr = PropertyStorage_WritePropertyToStream(This, c->propNum++,
+     (DWORD)key, value, c->sectionOffset);
     return SUCCEEDED(c->hr);
 }
 

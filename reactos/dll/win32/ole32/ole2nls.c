@@ -31,11 +31,8 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "winerror.h"
 #include "winnls.h"
-#include "winreg.h"
 #include "winuser.h"
-#include "winver.h"
 
 #include "wine/winbase16.h"
 

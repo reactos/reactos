@@ -32,7 +32,6 @@
 #include "wine/debug.h"
 #include "ole2.h"
 #include "olestd.h"
-#include "winreg.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

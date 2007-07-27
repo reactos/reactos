@@ -1011,18 +1011,26 @@ FileMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** p
 int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable)
 {
     static const WCHAR bSlash[] = {'\\',0};
-    WCHAR word[MAX_PATH];
-    int i=0,j,tabIndex=0;
+    LPOLESTR word;
+    int i=0,j,tabIndex=0, ret=0;
     LPOLESTR *strgtable ;
 
     int len=lstrlenW(str);
 
     TRACE("%s, %p\n", debugstr_w(str), *stringTable);
 
-    strgtable =CoTaskMemAlloc(len*sizeof(LPOLESTR));
+    strgtable = CoTaskMemAlloc(len*sizeof(WCHAR));
 
     if (strgtable==NULL)
 	return E_OUTOFMEMORY;
+
+    word = CoTaskMemAlloc((len + 1)*sizeof(WCHAR));
+
+    if (word==NULL)
+    {
+        ret = E_OUTOFMEMORY;
+        goto lend;
+    }
 
     while(str[i]!=0){
 
@@ -1031,7 +1039,10 @@ int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable)
             strgtable[tabIndex]=CoTaskMemAlloc(2*sizeof(WCHAR));
 
             if (strgtable[tabIndex]==NULL)
-	    	return E_OUTOFMEMORY;
+            {
+                ret = E_OUTOFMEMORY;
+                goto lend;
+            }
 
             strcpyW(strgtable[tabIndex++],bSlash);
 
@@ -1048,7 +1059,10 @@ int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable)
             strgtable[tabIndex]=CoTaskMemAlloc(sizeof(WCHAR)*(j+1));
 
             if (strgtable[tabIndex]==NULL)
-                return E_OUTOFMEMORY;
+            {
+                ret = E_OUTOFMEMORY;
+                goto lend;
+            }
 
             strcpyW(strgtable[tabIndex++],word);
         }
@@ -1057,7 +1071,21 @@ int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable)
 
     *stringTable=strgtable;
 
-    return tabIndex;
+    ret = tabIndex;
+
+lend:
+    if (ret < 0)
+    {
+        for (i = 0; i < tabIndex; i++)
+            CoTaskMemFree(strgtable[i]);
+
+        CoTaskMemFree(strgtable);
+    }
+
+    if (word)
+        CoTaskMemFree(word);
+
+    return ret;
 }
 
 /******************************************************************************

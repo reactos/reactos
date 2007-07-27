@@ -36,7 +36,6 @@
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
-#include "winreg.h"
 #include "winternl.h"
 #include "winerror.h"
 #include "wine/winbase16.h"
@@ -553,7 +552,7 @@ STORAGE_get_small_block(stream_access16 *str,int blocknr,BYTE *sblock) {
  * STORAGE_put_small_block [INTERNAL]
  */
 static BOOL
-STORAGE_put_small_block(stream_access16 *str,int blocknr,BYTE *sblock) {
+STORAGE_put_small_block(stream_access16 *str,int blocknr,const BYTE *sblock) {
 	BYTE				block[BIGSIZE];
 	int				bigblocknr;
 	struct storage_pps_entry	root;
@@ -655,7 +654,7 @@ STORAGE_get_pps_entry(stream_access16*str,int n,struct storage_pps_entry *pstde)
  *		STORAGE_put_pps_entry	[Internal]
  */
 static int
-STORAGE_put_pps_entry(stream_access16*str,int n,struct storage_pps_entry *pstde) {
+STORAGE_put_pps_entry(stream_access16*str,int n,const struct storage_pps_entry *pstde) {
 	int	blocknr;
 	BYTE	block[BIGSIZE];
 	struct storage_pps_entry *stde = (struct storage_pps_entry*)(((LPBYTE)block)+128*(n&3));

@@ -465,8 +465,18 @@ static const ISupportErrorInfoVtbl ISupportErrorInfoImpl_VTable =
 
   ISupportErrorInfoImpl_InterfaceSupportsErrorInfo
 };
+
 /***********************************************************************
  *		CreateErrorInfo (OLE32.@)
+ *
+ * Creates an object used to set details for an error info object.
+ *
+ * PARAMS
+ *  pperrinfo [O]. Address where error info creation object will be stored.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
  */
 HRESULT WINAPI CreateErrorInfo(ICreateErrorInfo **pperrinfo)
 {
@@ -483,6 +493,21 @@ HRESULT WINAPI CreateErrorInfo(ICreateErrorInfo **pperrinfo)
 
 /***********************************************************************
  *		GetErrorInfo (OLE32.@)
+ *
+ * Retrieves the error information object for the current thread.
+ *
+ * PARAMS
+ *  dwReserved [I]. Reserved. Must be zero.
+ *  pperrinfo  [O]. Address where error information object will be stored on return.
+ *
+ * RETURNS
+ *  Success: S_OK if an error information object was set for the current thread.
+ *           S_FALSE if otherwise.
+ *  Failure: E_INVALIDARG if dwReserved is not zero.
+ *
+ * NOTES
+ *  This function causes the current error info object for the thread to be
+ *  cleared if one was set beforehand.
  */
 HRESULT WINAPI GetErrorInfo(ULONG dwReserved, IErrorInfo **pperrinfo)
 {
@@ -511,6 +536,16 @@ HRESULT WINAPI GetErrorInfo(ULONG dwReserved, IErrorInfo **pperrinfo)
 
 /***********************************************************************
  *		SetErrorInfo (OLE32.@)
+ *
+ * Sets the error information object for the current thread.
+ *
+ * PARAMS
+ *  dwReserved [I] Reserved. Must be zero.
+ *  perrinfo   [I] Error info object.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: E_INVALIDARG if dwReserved is not zero.
  */
 HRESULT WINAPI SetErrorInfo(ULONG dwReserved, IErrorInfo *perrinfo)
 {

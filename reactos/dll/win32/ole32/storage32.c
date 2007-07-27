@@ -91,7 +91,7 @@ static StorageInternalImpl* StorageInternalImpl_Construct(StorageImpl* ancestorS
                                                           DWORD openFlags, ULONG rootTropertyIndex);
 static void StorageImpl_Destroy(StorageBaseImpl* iface);
 static BOOL StorageImpl_ReadBigBlock(StorageImpl* This, ULONG blockIndex, void* buffer);
-static BOOL StorageImpl_WriteBigBlock(StorageImpl* This, ULONG blockIndex, void* buffer);
+static BOOL StorageImpl_WriteBigBlock(StorageImpl* This, ULONG blockIndex, const void* buffer);
 static void StorageImpl_SetNextBlockInChain(StorageImpl* This, ULONG blockIndex, ULONG nextBlock);
 static HRESULT StorageImpl_LoadFileHeader(StorageImpl* This);
 static void StorageImpl_SaveFileHeader(StorageImpl* This);
@@ -279,7 +279,7 @@ static HRESULT StorageImpl_ReadAt(StorageImpl* This,
 
 static HRESULT StorageImpl_WriteAt(StorageImpl* This,
   ULARGE_INTEGER offset,
-  void*          buffer,
+  const void*    buffer,
   const ULONG    size,
   ULONG*         bytesWritten)
 {
@@ -753,6 +753,7 @@ static HRESULT WINAPI StorageBaseImpl_Stat(
       grfStatFlag);
 
     pstatstg->grfMode = This->openFlags;
+    pstatstg->grfStateBits = This->stateBits;
 
     res = S_OK;
     goto end;
@@ -2352,8 +2353,9 @@ static HRESULT WINAPI StorageImpl_SetStateBits(
   DWORD         grfStateBits,/* [in] */
   DWORD         grfMask)     /* [in] */
 {
-  FIXME("not implemented!\n");
-  return E_NOTIMPL;
+  StorageImpl* const This = (StorageImpl*)iface;
+  This->base.stateBits = (This->base.stateBits & ~grfMask) | (grfStateBits & grfMask);
+  return S_OK;
 }
 
 /*
@@ -3371,9 +3373,9 @@ BOOL StorageImpl_ReadProperty(
  * Write the specified property into the property chain
  */
 BOOL StorageImpl_WriteProperty(
-  StorageImpl* This,
-  ULONG          index,
-  StgProperty*   buffer)
+  StorageImpl*          This,
+  ULONG                 index,
+  const StgProperty*    buffer)
 {
   BYTE           currentProperty[PROPSET_BLOCK_SIZE];
   ULARGE_INTEGER offsetInPropSet;
@@ -3490,9 +3492,9 @@ static BOOL StorageImpl_ReadDWordFromBigBlock(
 }
 
 static BOOL StorageImpl_WriteBigBlock(
-  StorageImpl* This,
-  ULONG          blockIndex,
-  void*          buffer)
+  StorageImpl*  This,
+  ULONG         blockIndex,
+  const void*   buffer)
 {
   ULARGE_INTEGER ulOffset;
   DWORD  wrote;
@@ -4223,16 +4225,13 @@ static StorageInternalImpl* StorageInternalImpl_Construct(
   /*
    * Allocate space for the new storage object
    */
-  newStorage = HeapAlloc(GetProcessHeap(), 0, sizeof(StorageInternalImpl));
+  newStorage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(StorageInternalImpl));
 
   if (newStorage!=0)
   {
-    memset(newStorage, 0, sizeof(StorageInternalImpl));
-
     /*
      * Initialize the stream list
      */
-
     list_init(&newStorage->base.strmHead);
 
     /*
@@ -4338,9 +4337,9 @@ void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value)
 }
 
 void StorageUtl_CopyPropertyToSTATSTG(
-  STATSTG*     destination,
-  StgProperty* source,
-  int          statFlags)
+  STATSTG*              destination,
+  const StgProperty*    source,
+  int                   statFlags)
 {
   /*
    * The copy of the string occurs only when the flag is not set
@@ -4644,10 +4643,6 @@ HRESULT BlockChainStream_WriteAt(BlockChainStream* This,
     return STG_E_DOCFILECORRUPT;
   }
 
-  /*
-   * Here, I'm casting away the constness on the buffer variable
-   * This is OK since we don't intend to modify that buffer.
-   */
   *bytesWritten   = 0;
   bufferWalker = (const BYTE*)buffer;
 
@@ -4668,7 +4663,7 @@ HRESULT BlockChainStream_WriteAt(BlockChainStream* This,
 
     StorageImpl_WriteAt(This->parentStorage,
          ulOffset,
-         (BYTE*)bufferWalker,
+         bufferWalker,
          bytesToWrite,
          &bytesWrittenAt);
 
@@ -5683,6 +5678,10 @@ HRESULT WINAPI StgCreateDocfile(
   if (reserved != 0)
     return STG_E_INVALIDPARAMETER;
 
+  /* if no share mode given then DENY_NONE is the default */
+  if (STGM_SHARE_MODE(grfMode) == 0)
+      grfMode |= STGM_SHARE_DENY_NONE;
+
   /*
    * Validate the STGM flags
    */
@@ -5699,14 +5698,6 @@ HRESULT WINAPI StgCreateDocfile(
     goto end;
   }
 
-  /* if no share mode given then DENY_NONE is the default */     
-  if (STGM_SHARE_MODE(grfMode) == 0)
-    grfMode |= STGM_SHARE_DENY_NONE;
-
-  /* must have at least one access mode */
-  if (STGM_ACCESS_MODE(grfMode) == 0)
-    goto end;
-  
   /* in direct mode, can only use SHARE_EXCLUSIVE */
   if (!(grfMode & STGM_TRANSACTED) && (STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE))
     goto end;
@@ -6869,7 +6860,7 @@ static HRESULT OLECONVERT_SaveOLE10(OLECONVERT_OLESTREAM_DATA *pData, LPOLESTREA
  *
  *
  */
-static void OLECONVERT_GetOLE20FromOLE10(LPSTORAGE pDestStorage, BYTE *pBuffer, DWORD nBufferLength)
+static void OLECONVERT_GetOLE20FromOLE10(LPSTORAGE pDestStorage, const BYTE *pBuffer, DWORD nBufferLength)
 {
     HRESULT hRes;
     HANDLE hFile;
@@ -7419,7 +7410,7 @@ static void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, 
  *     Might need to verify the data and return appropriate error message
  *
  */
-static void OLECONVERT_CreateOle10NativeStream(LPSTORAGE pStorage, BYTE *pData, DWORD dwDataLength)
+static void OLECONVERT_CreateOle10NativeStream(LPSTORAGE pStorage, const BYTE *pData, DWORD dwDataLength)
 {
     HRESULT hRes;
     IStream *pStream;

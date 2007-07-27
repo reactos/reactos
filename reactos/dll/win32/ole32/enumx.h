@@ -29,6 +29,6 @@ extern HRESULT WINAPI enumx_Skip(enumx_impl *, ULONG);
 extern HRESULT WINAPI enumx_Reset(enumx_impl *);
 extern HRESULT WINAPI enumx_Clone(enumx_impl *, enumx_impl **);
 extern enumx_impl *enumx_allocate(REFIID, const void *, ULONG);
-extern void *enumx_add_element(enumx_impl *, void *);
+extern void *enumx_add_element(enumx_impl *, const void *);
 
 #endif

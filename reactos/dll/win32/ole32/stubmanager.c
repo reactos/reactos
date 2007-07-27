@@ -364,7 +364,7 @@ HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub
 {
     /* FIXME: hack for IRemUnknown */
     if (ipid->Data2 == 0xffff)
-        *stub_apt = apartment_findfromoxid(*(OXID *)ipid->Data4, TRUE);
+        *stub_apt = apartment_findfromoxid(*(const OXID *)ipid->Data4, TRUE);
     else
         *stub_apt = apartment_findfromtid(ipid->Data2);
     if (!*stub_apt)

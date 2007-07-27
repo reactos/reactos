@@ -35,7 +35,6 @@
 #include "winuser.h"
 #include "objbase.h"
 #include "ole2.h"
-#include "ole2ver.h"
 #include "rpc.h"
 #include "winerror.h"
 #include "winreg.h"
