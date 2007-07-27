@@ -2,7 +2,7 @@ Native Development Kit README
         NDK 1.00
 -----------------------------
 
-0. PREABMLE
+0. PREAMBLE
 
 0.1 COPYRIGHT
 
@@ -20,7 +20,7 @@ Phone: 	(514)581-7156
 
 1.1 OPEN SOURCE USAGE
 
-Open Source Projects may choose to use one of either the two following licenses:
+Open Source Projects may choose to use the following licenses:
 
 GNU GENERAL PUBLIC LICENSE Version 2, June 1991
 
@@ -28,23 +28,35 @@ GNU GENERAL PUBLIC LICENSE Version 2, June 1991
 
 GNU LESSER GENERAL PUBLIC LICENSE Version 2.1, February 1999
 
+                OR
+
+EITHER of the aforementioned licenses AND (at your option)
+any later version of the above said licenses
+
+1.2 LICENSE LIMITATIONS
+
 The choice is yours to make based on the license which is most compatible with your
 software.
 
 You MUST read GPL.TXT or LGPL.TXT after your decision. Violating your chosen license
 voids your usage rights of the NDK and will lead to legal action on the part of the
-author.
+author. Using this software with any later version of the GNU GPL or LGPL in no way
+changes your obligations under the versions listed above. You MUST still release the 
+NDK and its changes under the terms of the original licenses (either GPLv2 or LGPLv2.1)
+as listed above. This DOES NOT AFFECT the license of a software package released under
+a later version and ONLY serves to clarify that using the NDK with a later version is
+permitted provided the aforementioned terms are met.
 
 If your Open Source product does not use a license which is compatible with the ones
 listed above, please contact the author to reach a mutual agreement to find a better
 solution for your product. Alternatively, you may choose to use the Proprietary Usage
-license displayed below in section 1.2
+license displayed below in section 1.3
 
 If you are unsure of whether or not your product qualifies as an Open Source product,
 please contact the Free Software Foundation, or visit their website at www.fsf.org.
 
 
-1.2 PROPRIETARY USAGE
+1.3 PROPRIETARY USAGE
 
 Because it may be undesirable or impossible to adapt this software to your commercial
 and/or proprietary product(s) and/or service(s) using a (L)GPL license, proprietary
