@@ -211,9 +211,7 @@ CreateShortcut(int csidl, LPCTSTR folder, UINT nIdName, LPCTSTR command, UINT nI
     if (!LoadString(hDllInstance, nIdTitle, title, sizeof(title)/sizeof(title[0])))
         return FALSE;
 
-    // FIXME: we should pass 'command' straight in here, but shell32 doesn't 
-    // expand it, and explorer uses ShellExecuteEx anyway instead of calling 
-    // shell32's  STDMETHODCALLTYPE Resolve / IShellLinkW_fnResolve
+    // FIXME: we should pass 'command' straight in here, but shell32 doesn't expand it
     return SUCCEEDED(CreateShellLink(path, exeName, _T(""), lpWorkingDir, NULL, 0, title));
 }
 
