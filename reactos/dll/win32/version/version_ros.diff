@@ -64,6 +64,26 @@ Index: info.c
      }
      else 
      {
+@@ -784,6 +784,9 @@
+     TRACE("(%p,%s,%p,%p)\n",
+                 pBlock, debugstr_a(lpSubBlock), lplpBuffer, puLen );
+ 
++    if (!pBlock)
++        return FALSE;
++
+     if ( !VersionInfoIs16( info ) )
+     {
+         BOOL ret;
+@@ -836,6 +839,9 @@
+     TRACE("(%p,%s,%p,%p)\n",
+                 pBlock, debugstr_w(lpSubBlock), lplpBuffer, puLen );
+ 
++    if (!pBlock)
++        return FALSE;
++
+     if ( VersionInfoIs16( info ) )
+     {
+         BOOL ret;
 Index: install.c
 ===================================================================
 --- install.c	(revision 23123)
