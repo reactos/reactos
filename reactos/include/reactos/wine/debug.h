@@ -101,6 +101,14 @@ static inline const char *debugstr_guid( const struct _GUID *id ) { return wine_
 #define WARN_ON(ch)  1
 #endif
 
+#define WINE_WARN         DPRINT
+#define WINE_WARN_(ch)    DPRINT
+#ifdef NDEBUG
+#define WINE_WARN_ON(ch) 0
+#else
+#define WINE_WARN_ON(ch) 1
+#endif
+
 #ifdef FIXME
 #undef FIXME
 #endif

@@ -33,8 +33,6 @@
 #define BUTTON_CX               6
 #define BUTTON_CY               6
 
-#define WINE_WARN DPRINT
-
 #ifndef RC_INVOKED
 
 #include <stdarg.h>
