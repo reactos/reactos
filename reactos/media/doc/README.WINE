@@ -37,14 +37,14 @@ reactos/dll/win32/cabinet         # Autosync
 reactos/dll/win32/clusapi         # Autosync
 reactos/dll/win32/comcat          # Autosync
 reactos/dll/win32/comctl32        # Autosync
-reactos/dll/win32/comdlg32        # Synced to Wine-0_9_16
-reactos/dll/win32/crypt32         # Autosync
+reactos/dll/win32/comdlg32        # Autosync
+reactos/dll/win32/crypt32         # Out of sync
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/dbghelp         #
-reactos/dll/win32/hhctrl.ocx      # Synced to wine-0_9_35
+reactos/dll/win32/hhctrl.ocx      # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
-reactos/dll/win32/imm32           # Autosync
+reactos/dll/win32/imm32           # Out of sync
 reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/lz32            # Autosync
@@ -52,20 +52,20 @@ reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
 reactos/dll/win32/msimg32         # Autosync
-reactos/dll/win32/msi             # Autosync
+reactos/dll/win32/msi             # Out of sync
 reactos/dll/win32/msvcrt20        # Out of sync
 reactos/dll/win32/msvfw32         # Autosync
-reactos/dll/win32/netapi32        # Synced to Wine-0_9_5
+reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/objsel          # Autosync
 reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.
 reactos/dll/win32/odbccp32        # Autosync
-reactos/dll/win32/ole32           # Synced to Wine-0_9_5
+reactos/dll/win32/ole32           # Autosync
 reactos/dll/win32/oleacc          # Autosync
-reactos/dll/win32/oleaut32        # Synced to Wine-0_9_10
+reactos/dll/win32/oleaut32        # Autosync
 reactos/dll/win32/oledlg          # Autosync
 reactos/dll/win32/olepro32        # Autosync
-reactos/dll/win32/powrprof        # Synced to Wine-0_9_14
-reactos/dll/win32/riched20        # Synced to Wine-0_9_5
+reactos/dll/win32/powrprof        # Autosync
+reactos/dll/win32/riched20        # Autosync
 reactos/dll/win32/riched32        # Autosync
 reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_10
 reactos/dll/win32/sensapi         # Autosync
@@ -75,11 +75,11 @@ reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Synced to Wine-0_9_5
 reactos/dll/win32/twain_32        # Out of sync
-reactos/dll/win32/urlmon          # Synced to Wine-0_9_10
+reactos/dll/win32/urlmon          # Autosync
 reactos/dll/win32/uxtheme         # Autosync
-reactos/dll/win32/version         # Synced at 20060509
+reactos/dll/win32/version         # Autosync
 reactos/dll/win32/wininet         # Synced to Wine-0_9_10
-reactos/dll/win32/wintrust        # Autosync
+reactos/dll/win32/wintrust        # Out of sync
 reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
 reactos/dll/win32/winmm/wavemap   # Forked at Wine-20050628
@@ -158,7 +158,7 @@ Update process for autosync DLLs
   (available at http://www.sysinternals.com/Utilities/Junction.html )
 - Cd to the directory containing wineimport.cmd
 - Run
-  "wineimport.cmd fullprocessing {path_to_your_rectos_directory} {name_of_the_wine_dll}"
+  "wineimport.cmd fullprocessing {path_to_your_reactos_directory} {name_of_the_wine_dll}"
 - In case of error, you can
   1) add missing definitions to ReactOS headers
   2) fix {name_of_the_wine_dll}_ros.diff patch file, by removing outdated changes
