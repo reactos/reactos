@@ -221,6 +221,18 @@ extern HINSTANCE hInstance;
 #define REGPART_RENAME "\\Rename"
 #define REG_VERSIONCONFLICT "Software\\Microsoft\\VersionConflictManager"
 
+inline static WCHAR *strdupAtoW( const char *str )
+{
+    WCHAR *ret = NULL;
+    if (str)
+    {
+        DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+            MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
+    }
+    return ret;
+}
+
 /* string substitutions */
 
 struct inf_file;

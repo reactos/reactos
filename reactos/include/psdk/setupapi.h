@@ -1312,6 +1312,8 @@ WINSETUPAPI BOOL WINAPI SetupGetBinaryField(PINFCONTEXT,DWORD,PBYTE,DWORD,LPDWOR
 WINSETUPAPI DWORD WINAPI SetupGetFieldCount(PINFCONTEXT);
 WINSETUPAPI DWORD WINAPI SetupGetFileCompressionInfoA(PCSTR,PSTR*,PDWORD,PDWORD,PUINT);
 WINSETUPAPI DWORD WINAPI SetupGetFileCompressionInfoW(PCWSTR,PWSTR*,PDWORD,PDWORD,PUINT);
+WINSETUPAPI BOOL WINAPI SetupGetFileCompressionInfoExA(PCSTR,PSTR,DWORD,PDWORD,PDWORD,PDWORD,PUINT);
+WINSETUPAPI BOOL WINAPI SetupGetFileCompressionInfoExW(PCWSTR,PWSTR,DWORD,PDWORD,PDWORD,PDWORD,PUINT);
 WINSETUPAPI BOOL WINAPI SetupGetInfFileListA(PCSTR,DWORD,PSTR,DWORD,PDWORD);
 WINSETUPAPI BOOL WINAPI SetupGetInfFileListW(PCWSTR,DWORD,PWSTR,DWORD,PDWORD);
 WINSETUPAPI BOOL WINAPI SetupGetInfInformationA(LPCVOID,DWORD,PSP_INF_INFORMATION,DWORD,PDWORD);
@@ -1524,6 +1526,7 @@ WINSETUPAPI BOOL WINAPI UnmapAndCloseFile(HANDLE, HANDLE, PVOID);
 #define SetupFreeSourceList	SetupFreeSourceListW
 #define SetupGetBackupInformation	SetupGetBackupInformationW
 #define SetupGetFileCompressionInfo	SetupGetFileCompressionInfoW
+#define SetupGetFileCompressionInfoEx	SetupGetFileCompressionInfoExW
 #define SetupGetInfFileList	SetupGetInfFileListW
 #define SetupGetInfInformation	SetupGetInfInformationW
 #define SetupGetLineByIndex	SetupGetLineByIndexW
@@ -1645,6 +1648,7 @@ WINSETUPAPI BOOL WINAPI UnmapAndCloseFile(HANDLE, HANDLE, PVOID);
 #define SetupFreeSourceList	SetupFreeSourceListA
 #define SetupGetBackupInformation	SetupGetBackupInformationA
 #define SetupGetFileCompressionInfo	SetupGetFileCompressionInfoA
+#define SetupGetFileCompressionInfoEx	SetupGetFileCompressionInfoExA
 #define SetupGetInfFileList	SetupGetInfFileListA
 #define SetupGetInfInformation	SetupGetInfInformationA
 #define SetupGetLineByIndex	SetupGetLineByIndexA

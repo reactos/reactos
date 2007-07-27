@@ -118,6 +118,23 @@ INT WINAPI SetupPromptReboot(HSPFILEQ FileQueue, HWND Owner, BOOL ScanOnly)
     return -1;
 }
 
+/***********************************************************************
+ *      SetupSetSourceListA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
+{
+    FIXME("0x%08lx %p %d\n", flags, list, count);
+    return FALSE;
+}
+
+/***********************************************************************
+ *      SetupSetSourceListW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
+{
+    FIXME("0x%08lx %p %d\n", flags, list, count);
+    return FALSE;
+}
 
 /***********************************************************************
  *		SetupTerminateFileLog(SETUPAPI.@)
@@ -128,6 +145,14 @@ BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
     return TRUE;
 }
 
+/***********************************************************************
+ *		RegistryDelnode(SETUPAPI.@)
+ */
+BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
+{
+    FIXME("%08lx %08lx: stub\n", x, y);
+    return FALSE;
+}
 
 /***********************************************************************
  *      SetupCloseLog(SETUPAPI.@)
