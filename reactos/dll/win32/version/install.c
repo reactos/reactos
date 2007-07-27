@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * TODO
  *   o Check the installation functions.
@@ -208,7 +208,7 @@ DWORD WINAPI VerFindFileA(
         *lpuCurDirLen = curDirSizeReq;
     }
 
-    TRACE("ret = %lu (%s%s%s) curdir=%s destdir=%s\n", retval,
+    TRACE("ret = %u (%s%s%s) curdir=%s destdir=%s\n", retval,
           (retval & VFF_CURNEDEST) ? "VFF_CURNEDEST " : "",
           (retval & VFF_FILEINUSE) ? "VFF_FILEINUSE " : "",
           (retval & VFF_BUFFTOOSMALL) ? "VFF_BUFFTOOSMALL " : "",
@@ -299,7 +299,7 @@ DWORD WINAPI VerFindFileW( DWORD flags,LPWSTR lpszFilename,LPWSTR lpszWinDir,
         *lpuCurDirLen = curDirSizeReq;
     }
 
-    TRACE("ret = %lu (%s%s%s) curdir=%s destdir=%s\n", retval,
+    TRACE("ret = %u (%s%s%s) curdir=%s destdir=%s\n", retval,
           (retval & VFF_CURNEDEST) ? "VFF_CURNEDEST " : "",
           (retval & VFF_FILEINUSE) ? "VFF_FILEINUSE " : "",
           (retval & VFF_BUFFTOOSMALL) ? "VFF_BUFFTOOSMALL " : "",
@@ -338,7 +338,7 @@ _fetch_versioninfo(LPSTR fn,VS_FIXEDFILEINFO **vffi) {
 	    if ((*vffi)->dwSignature == 0x004f0049) /* hack to detect unicode */
 	    	*vffi = (VS_FIXEDFILEINFO*)(buf+0x28);
 	    if ((*vffi)->dwSignature != VS_FFI_SIGNATURE)
-	    	WARN("Bad VS_FIXEDFILEINFO signature 0x%08lx\n",(*vffi)->dwSignature);
+                WARN("Bad VS_FIXEDFILEINFO signature 0x%08x\n",(*vffi)->dwSignature);
 	    return buf;
 	}
     }
@@ -453,7 +453,8 @@ DWORD WINAPI VerInstallFileA(
 	if (buf1) {
 	    buf2 = _fetch_versioninfo(tmpfn,&tmpvffi);
 	    if (buf2) {
-	    	char	*tbuf1,*tbuf2;
+		char	*tbuf1,*tbuf2;
+		static const CHAR trans_array[] = "\\VarFileInfo\\Translation";
 		UINT	len1,len2;
 
 		len1=len2=40;
@@ -470,8 +471,8 @@ DWORD WINAPI VerInstallFileA(
 		    (destvffi->dwFileSubtype!=tmpvffi->dwFileSubtype)
 		)
 		    xret |= VIF_MISMATCH|VIF_DIFFTYPE;
-		if (VerQueryValueA(buf1,"\\VarFileInfo\\Translation",(LPVOID*)&tbuf1,&len1) &&
-		    VerQueryValueA(buf2,"\\VarFileInfo\\Translation",(LPVOID*)&tbuf2,&len2)
+		if (VerQueryValueA(buf1,trans_array,(LPVOID*)&tbuf1,&len1) &&
+		    VerQueryValueA(buf2,trans_array,(LPVOID*)&tbuf2,&len2)
 		) {
                     /* Do something with tbuf1 and tbuf2
 		     * generates DIFFLANG|MISMATCH
