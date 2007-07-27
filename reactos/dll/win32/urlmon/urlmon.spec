@@ -26,13 +26,14 @@
 @ stdcall CreateAsyncBindCtxEx(ptr long ptr ptr ptr long)
 @ stdcall CreateFormatEnumerator(long ptr ptr)
 @ stdcall CreateURLMoniker(ptr wstr ptr)
+@ stdcall CreateURLMonikerEx(ptr wstr ptr long)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllInstall(long wstr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllRegisterServerEx()
 @ stdcall -private DllUnregisterServer()
-@ stdcall Extract(long ptr) cabinet.Extract
+@ stdcall Extract(long ptr)
 @ stdcall FaultInIEFeature(long ptr ptr long)
 @ stub FindMediaType
 @ stub FindMediaTypeClass

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Jacek Caban
+ * Copyright 2005-2007 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -34,9 +34,46 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
-typedef struct ProtocolStream ProtocolStream;
+typedef struct Binding Binding;
+
+struct _task_header_t;
+
+typedef void (*task_proc_t)(Binding*, struct _task_header_t*);
+
+typedef struct _task_header_t {
+    task_proc_t proc;
+    struct _task_header_t *next;
+} task_header_t;
 
 typedef struct {
+    const IHttpNegotiate2Vtbl *lpHttpNegotiate2Vtbl;
+
+    LONG ref;
+
+    IHttpNegotiate *http_negotiate;
+    IHttpNegotiate2 *http_negotiate2;
+} HttpNegotiate2Wrapper;
+
+typedef struct {
+    const IStreamVtbl *lpStreamVtbl;
+
+    LONG ref;
+
+    IInternetProtocol *protocol;
+
+    BYTE buf[1024*8];
+    DWORD buf_size;
+    BOOL init_buf;
+    HRESULT hres;
+} ProtocolStream;
+
+typedef enum {
+    BEFORE_DOWNLOAD,
+    DOWNLOADING,
+    END_DOWNLOAD
+} download_state_t;
+
+struct Binding {
     const IBindingVtbl               *lpBindingVtbl;
     const IInternetProtocolSinkVtbl  *lpInternetProtocolSinkVtbl;
     const IInternetBindInfoVtbl      *lpInternetBindInfoVtbl;
@@ -48,22 +85,24 @@ typedef struct {
     IInternetProtocol *protocol;
     IServiceProvider *service_provider;
     ProtocolStream *stream;
+    HttpNegotiate2Wrapper *httpneg2_wrapper;
 
     BINDINFO bindinfo;
     DWORD bindf;
     LPWSTR mime;
     LPWSTR url;
-} Binding;
+    BOOL report_mime;
+    DWORD continue_call;
+    BOOL request_locked;
+    download_state_t download_state;
 
-struct ProtocolStream {
-    const IStreamVtbl *lpStreamVtbl;
+    DWORD apartment_thread;
+    HWND notif_hwnd;
 
-    LONG ref;
+    STGMEDIUM stgmed;
 
-    IInternetProtocol *protocol;
-
-    BYTE buf[1024*8];
-    DWORD buf_size;
+    task_header_t *task_queue_head, *task_queue_tail;
+    CRITICAL_SECTION section;
 };
 
 #define BINDING(x)   ((IBinding*)               &(x)->lpBindingVtbl)
@@ -72,78 +111,301 @@ struct ProtocolStream {
 #define SERVPROV(x)  ((IServiceProvider*)       &(x)->lpServiceProviderVtbl)
 
 #define STREAM(x) ((IStream*) &(x)->lpStreamVtbl)
+#define HTTPNEG2(x) ((IHttpNegotiate2*) &(x)->lpHttpNegotiate2Vtbl)
 
-static HRESULT WINAPI HttpNegotiate_QueryInterface(IHttpNegotiate2 *iface,
-                                                   REFIID riid, void **ppv)
+#define WM_MK_CONTINUE   (WM_USER+101)
+
+static void push_task(Binding *binding, task_header_t *task, task_proc_t proc)
 {
+    task->proc = proc;
+    task->next = NULL;
+
+    EnterCriticalSection(&binding->section);
+
+    if(binding->task_queue_tail)
+        binding->task_queue_tail->next = task;
+    else
+        binding->task_queue_tail = binding->task_queue_head = task;
+
+    LeaveCriticalSection(&binding->section);
+}
+
+static task_header_t *pop_task(Binding *binding)
+{
+    task_header_t *ret;
+
+    EnterCriticalSection(&binding->section);
+
+    ret = binding->task_queue_head;
+    if(ret) {
+        binding->task_queue_head = ret->next;
+        if(!binding->task_queue_head)
+            binding->task_queue_tail = NULL;
+    }
+
+    LeaveCriticalSection(&binding->section);
+
+    return ret;
+}
+
+static void fill_stream_buffer(ProtocolStream *This)
+{
+    DWORD read = 0;
+
+    if(sizeof(This->buf) == This->buf_size)
+        return;
+
+    This->hres = IInternetProtocol_Read(This->protocol, This->buf+This->buf_size,
+            sizeof(This->buf)-This->buf_size, &read);
+    This->buf_size += read;
+    if(read > 0)
+        This->init_buf = TRUE;
+}
+
+static LRESULT WINAPI notif_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if(msg == WM_MK_CONTINUE) {
+        Binding *binding = (Binding*)lParam;
+        task_header_t *task;
+
+        while((task = pop_task(binding))) {
+            binding->continue_call++;
+            task->proc(binding, task);
+            binding->continue_call--;
+        }
+
+        IBinding_Release(BINDING(binding));
+        return 0;
+    }
+
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
+}
+
+static HWND get_notif_hwnd(void)
+{
+    static ATOM wnd_class = 0;
+    HWND hwnd;
+
+    static const WCHAR wszURLMonikerNotificationWindow[] =
+        {'U','R','L',' ','M','o','n','i','k','e','r',' ',
+         'N','o','t','i','f','i','c','a','t','i','o','n',' ','W','i','n','d','o','w',0};
+
+    if(!wnd_class) {
+        static WNDCLASSEXW wndclass = {
+            sizeof(wndclass), 0,
+            notif_wnd_proc, 0, 0,
+            NULL, NULL, NULL, NULL, NULL,
+            wszURLMonikerNotificationWindow,
+            NULL        
+        };
+
+        wndclass.hInstance = URLMON_hInstance;
+
+        wnd_class = RegisterClassExW(&wndclass);
+        if (!wnd_class && GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
+            wnd_class = 1;
+    }
+
+    hwnd = CreateWindowExW(0, wszURLMonikerNotificationWindow,
+                           wszURLMonikerNotificationWindow, 0, 0, 0, 0, 0, HWND_MESSAGE,
+                           NULL, URLMON_hInstance, NULL);
+
+    TRACE("hwnd = %p\n", hwnd);
+
+    return hwnd;
+}
+
+static void dump_BINDINFO(BINDINFO *bi)
+{
+    static const char * const BINDINFOF_str[] = {
+        "#0",
+        "BINDINFOF_URLENCODESTGMEDDATA",
+        "BINDINFOF_URLENCODEDEXTRAINFO"
+    };
+
+    static const char * const BINDVERB_str[] = {
+        "BINDVERB_GET",
+        "BINDVERB_POST",
+        "BINDVERB_PUT",
+        "BINDVERB_CUSTOM"
+    };
+
+    TRACE("\n"
+            "BINDINFO = {\n"
+            "    %d, %s,\n"
+            "    {%d, %p, %p},\n"
+            "    %s,\n"
+            "    %s,\n"
+            "    %s,\n"
+            "    %d, %08x, %d, %d\n"
+            "    {%d %p %x},\n"
+            "    %s\n"
+            "    %p, %d\n"
+            "}\n",
+
+            bi->cbSize, debugstr_w(bi->szExtraInfo),
+            bi->stgmedData.tymed, bi->stgmedData.u.hGlobal, bi->stgmedData.pUnkForRelease,
+            bi->grfBindInfoF > BINDINFOF_URLENCODEDEXTRAINFO
+                ? "unknown" : BINDINFOF_str[bi->grfBindInfoF],
+            bi->dwBindVerb > BINDVERB_CUSTOM
+                ? "unknown" : BINDVERB_str[bi->dwBindVerb],
+            debugstr_w(bi->szCustomVerb),
+            bi->cbstgmedData, bi->dwOptions, bi->dwOptionsFlags, bi->dwCodePage,
+            bi->securityAttributes.nLength,
+            bi->securityAttributes.lpSecurityDescriptor,
+            bi->securityAttributes.bInheritHandle,
+            debugstr_guid(&bi->iid),
+            bi->pUnk, bi->dwReserved
+            );
+}
+
+#define HTTPNEG2_THIS(iface) DEFINE_THIS(HttpNegotiate2Wrapper, HttpNegotiate2, iface)
+
+static HRESULT WINAPI HttpNegotiate2Wrapper_QueryInterface(IHttpNegotiate2 *iface,
+                                                          REFIID riid, void **ppv)
+{
+    HttpNegotiate2Wrapper *This = HTTPNEG2_THIS(iface);
+
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(IID_IUnknown %p)\n", ppv);
-        *ppv = iface;
+        *ppv = HTTPNEG2(This);
     }else if(IsEqualGUID(&IID_IHttpNegotiate, riid)) {
         TRACE("(IID_IHttpNegotiate %p)\n", ppv);
-        *ppv = iface;
+        *ppv = HTTPNEG2(This);
     }else if(IsEqualGUID(&IID_IHttpNegotiate2, riid)) {
         TRACE("(IID_IHttpNegotiate2 %p)\n", ppv);
-        *ppv = iface;
+        *ppv = HTTPNEG2(This);
     }
 
     if(*ppv) {
-        IHttpNegotiate2_AddRef(iface);
+        IHttpNegotiate2_AddRef(HTTPNEG2(This));
         return S_OK;
     }
 
-    WARN("Unsupported interface %s\n", debugstr_guid(riid));
+    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI HttpNegotiate_AddRef(IHttpNegotiate2 *iface)
+static ULONG WINAPI HttpNegotiate2Wrapper_AddRef(IHttpNegotiate2 *iface)
 {
-    URLMON_LockModule();
-    return 2;
+    HttpNegotiate2Wrapper *This = HTTPNEG2_THIS(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
 }
 
-static ULONG WINAPI HttpNegotiate_Release(IHttpNegotiate2 *iface)
+static ULONG WINAPI HttpNegotiate2Wrapper_Release(IHttpNegotiate2 *iface)
 {
-    URLMON_UnlockModule();
-    return 1;
+    HttpNegotiate2Wrapper *This = HTTPNEG2_THIS(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref) {
+        if (This->http_negotiate)
+            IHttpNegotiate_Release(This->http_negotiate);
+        if (This->http_negotiate2)
+            IHttpNegotiate2_Release(This->http_negotiate2);
+        HeapFree(GetProcessHeap(), 0, This);
+
+        URLMON_UnlockModule();
+    }
+
+    return ref;
 }
 
-static HRESULT WINAPI HttpNegotiate_BeginningTransaction(IHttpNegotiate2 *iface,
+static HRESULT WINAPI HttpNegotiate2Wrapper_BeginningTransaction(IHttpNegotiate2 *iface,
         LPCWSTR szURL, LPCWSTR szHeaders, DWORD dwReserved, LPWSTR *pszAdditionalHeaders)
 {
-    FIXME("(%s %s %ld %p)\n", debugstr_w(szURL), debugstr_w(szHeaders), dwReserved,
+    HttpNegotiate2Wrapper *This = HTTPNEG2_THIS(iface);
+
+    TRACE("(%p)->(%s %s %d %p)\n", This, debugstr_w(szURL), debugstr_w(szHeaders), dwReserved,
           pszAdditionalHeaders);
-    return E_NOTIMPL;
+
+    if(This->http_negotiate)
+        return IHttpNegotiate_BeginningTransaction(This->http_negotiate, szURL, szHeaders,
+                                                   dwReserved, pszAdditionalHeaders);
+
+    *pszAdditionalHeaders = NULL;
+    return S_OK;
 }
 
-static HRESULT WINAPI HttpNegotiate_OnResponse(IHttpNegotiate2 *iface, DWORD dwResponseCode,
+static HRESULT WINAPI HttpNegotiate2Wrapper_OnResponse(IHttpNegotiate2 *iface, DWORD dwResponseCode,
         LPCWSTR szResponseHeaders, LPCWSTR szRequestHeaders,
         LPWSTR *pszAdditionalRequestHeaders)
 {
-    FIXME("(%ld %s %s %p)\n", dwResponseCode, debugstr_w(szResponseHeaders),
+    HttpNegotiate2Wrapper *This = HTTPNEG2_THIS(iface);
+    LPWSTR szAdditionalRequestHeaders = NULL;
+    HRESULT hres = S_OK;
+
+    TRACE("(%p)->(%d %s %s %p)\n", This, dwResponseCode, debugstr_w(szResponseHeaders),
           debugstr_w(szRequestHeaders), pszAdditionalRequestHeaders);
-    return E_NOTIMPL;
+
+    /* IHttpNegotiate2_OnResponse expects pszAdditionalHeaders to be non-NULL when it is
+     * implemented as part of IBindStatusCallback, but it is NULL when called directly from
+     * IProtocol */
+    if(!pszAdditionalRequestHeaders)
+        pszAdditionalRequestHeaders = &szAdditionalRequestHeaders;
+
+    if(This->http_negotiate)
+    {
+        hres = IHttpNegotiate_OnResponse(This->http_negotiate, dwResponseCode, szResponseHeaders,
+                                         szRequestHeaders, pszAdditionalRequestHeaders);
+        if(pszAdditionalRequestHeaders == &szAdditionalRequestHeaders &&
+           szAdditionalRequestHeaders)
+            CoTaskMemFree(szAdditionalRequestHeaders);
+    }
+    else
+    {
+        *pszAdditionalRequestHeaders = NULL;
+    }
+
+    return hres;
 }
 
-static HRESULT WINAPI HttpNegotiate_GetRootSecurityId(IHttpNegotiate2 *iface,
+static HRESULT WINAPI HttpNegotiate2Wrapper_GetRootSecurityId(IHttpNegotiate2 *iface,
         BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved)
 {
-    FIXME("(%p %p %ld)\n", pbSecurityId, pcbSecurityId, dwReserved);
-    return E_NOTIMPL;
+    HttpNegotiate2Wrapper *This = HTTPNEG2_THIS(iface);
+
+    TRACE("(%p)->(%p %p %ld)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
+
+    if (This->http_negotiate2)
+        return IHttpNegotiate2_GetRootSecurityId(This->http_negotiate2, pbSecurityId,
+                                                 pcbSecurityId, dwReserved);
+
+    /* That's all we have to do here */
+    return E_FAIL;
 }
 
-static const IHttpNegotiate2Vtbl HttpNegotiate2Vtbl = {
-    HttpNegotiate_QueryInterface,
-    HttpNegotiate_AddRef,
-    HttpNegotiate_Release,
-    HttpNegotiate_BeginningTransaction,
-    HttpNegotiate_OnResponse,
-    HttpNegotiate_GetRootSecurityId
+#undef HTTPNEG2_THIS
+
+static const IHttpNegotiate2Vtbl HttpNegotiate2WrapperVtbl = {
+    HttpNegotiate2Wrapper_QueryInterface,
+    HttpNegotiate2Wrapper_AddRef,
+    HttpNegotiate2Wrapper_Release,
+    HttpNegotiate2Wrapper_BeginningTransaction,
+    HttpNegotiate2Wrapper_OnResponse,
+    HttpNegotiate2Wrapper_GetRootSecurityId
 };
 
-static IHttpNegotiate2 HttpNegotiate = { &HttpNegotiate2Vtbl };
+static HttpNegotiate2Wrapper *create_httpneg2_wrapper(void)
+{
+    HttpNegotiate2Wrapper *ret = HeapAlloc(GetProcessHeap(), 0, sizeof(HttpNegotiate2Wrapper));
+
+    ret->lpHttpNegotiate2Vtbl = &HttpNegotiate2WrapperVtbl;
+    ret->ref = 1;
+    ret->http_negotiate = NULL;
+    ret->http_negotiate2 = NULL;
+
+    URLMON_LockModule();
+
+    return ret;
+}
 
 #define STREAM_THIS(iface) DEFINE_THIS(ProtocolStream, Stream, iface)
 
@@ -179,7 +441,7 @@ static ULONG WINAPI ProtocolStream_AddRef(IStream *iface)
     ProtocolStream *This = STREAM_THIS(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%ld\n", This, ref);
+    TRACE("(%p) ref=%d\n", This, ref);
 
     return ref;
 }
@@ -189,7 +451,7 @@ static ULONG WINAPI ProtocolStream_Release(IStream *iface)
     ProtocolStream *This = STREAM_THIS(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%ld\n", This, ref);
+    TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
         IInternetProtocol_Release(This->protocol);
@@ -207,7 +469,7 @@ static HRESULT WINAPI ProtocolStream_Read(IStream *iface, void *pv,
     ProtocolStream *This = STREAM_THIS(iface);
     DWORD read = 0, pread = 0;
 
-    TRACE("(%p)->(%p %ld %p)\n", This, pv, cb, pcbRead);
+    TRACE("(%p)->(%p %d %p)\n", This, pv, cb, pcbRead);
 
     if(This->buf_size) {
         read = cb;
@@ -227,8 +489,13 @@ static HRESULT WINAPI ProtocolStream_Read(IStream *iface, void *pv,
         return S_OK;
     }
 
-    IInternetProtocol_Read(This->protocol, (PBYTE)pv+read, cb-read, &pread);
+    This->hres = IInternetProtocol_Read(This->protocol, (PBYTE)pv+read, cb-read, &pread);
     *pcbRead = read + pread;
+
+    if(This->hres == E_PENDING)
+        return E_PENDING;
+    else if(FAILED(This->hres))
+        FIXME("Read failed: %08x\n", This->hres);
 
     return read || pread ? S_OK : S_FALSE;
 }
@@ -238,7 +505,7 @@ static HRESULT WINAPI ProtocolStream_Write(IStream *iface, const void *pv,
 {
     ProtocolStream *This = STREAM_THIS(iface);
 
-    TRACE("(%p)->(%p %ld %p)\n", This, pv, cb, pcbWritten);
+    TRACE("(%p)->(%p %d %p)\n", This, pv, cb, pcbWritten);
 
     return STG_E_ACCESSDENIED;
 }
@@ -247,14 +514,14 @@ static HRESULT WINAPI ProtocolStream_Seek(IStream *iface, LARGE_INTEGER dlibMove
                                          DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
     ProtocolStream *This = STREAM_THIS(iface);
-    FIXME("(%p)->(%ld %08lx %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+    FIXME("(%p)->(%d %08x %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI ProtocolStream_SetSize(IStream *iface, ULARGE_INTEGER libNewSize)
 {
     ProtocolStream *This = STREAM_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, libNewSize.u.LowPart);
+    FIXME("(%p)->(%d)\n", This, libNewSize.u.LowPart);
     return E_NOTIMPL;
 }
 
@@ -262,7 +529,7 @@ static HRESULT WINAPI ProtocolStream_CopyTo(IStream *iface, IStream *pstm,
         ULARGE_INTEGER cb, ULARGE_INTEGER *pcbRead, ULARGE_INTEGER *pcbWritten)
 {
     ProtocolStream *This = STREAM_THIS(iface);
-    FIXME("(%p)->(%p %ld %p %p)\n", This, pstm, cb.u.LowPart, pcbRead, pcbWritten);
+    FIXME("(%p)->(%p %d %p %p)\n", This, pstm, cb.u.LowPart, pcbRead, pcbWritten);
     return E_NOTIMPL;
 }
 
@@ -270,7 +537,7 @@ static HRESULT WINAPI ProtocolStream_Commit(IStream *iface, DWORD grfCommitFlags
 {
     ProtocolStream *This = STREAM_THIS(iface);
 
-    TRACE("(%p)->(%08lx)\n", This, grfCommitFlags);
+    TRACE("(%p)->(%08x)\n", This, grfCommitFlags);
 
     return E_NOTIMPL;
 }
@@ -288,7 +555,7 @@ static HRESULT WINAPI ProtocolStream_LockRegion(IStream *iface, ULARGE_INTEGER l
                                                ULARGE_INTEGER cb, DWORD dwLockType)
 {
     ProtocolStream *This = STREAM_THIS(iface);
-    FIXME("(%p)->(%ld %ld %ld)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+    FIXME("(%p)->(%d %d %d)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
     return E_NOTIMPL;
 }
 
@@ -296,7 +563,7 @@ static HRESULT WINAPI ProtocolStream_UnlockRegion(IStream *iface,
         ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType)
 {
     ProtocolStream *This = STREAM_THIS(iface);
-    FIXME("(%p)->(%ld %ld %ld)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+    FIXME("(%p)->(%d %d %d)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
     return E_NOTIMPL;
 }
 
@@ -304,7 +571,7 @@ static HRESULT WINAPI ProtocolStream_Stat(IStream *iface, STATSTG *pstatstg,
                                          DWORD dwStatFlag)
 {
     ProtocolStream *This = STREAM_THIS(iface);
-    FIXME("(%p)->(%p %08lx)\n", This, pstatstg, dwStatFlag);
+    FIXME("(%p)->(%p %08x)\n", This, pstatstg, dwStatFlag);
     return E_NOTIMPL;
 }
 
@@ -343,6 +610,8 @@ static ProtocolStream *create_stream(IInternetProtocol *protocol)
     ret->lpStreamVtbl = &ProtocolStreamVtbl;
     ret->ref = 1;
     ret->buf_size = 0;
+    ret->init_buf = FALSE;
+    ret->hres = S_OK;
 
     IInternetProtocol_AddRef(protocol);
     ret->protocol = protocol;
@@ -350,15 +619,6 @@ static ProtocolStream *create_stream(IInternetProtocol *protocol)
     URLMON_LockModule();
 
     return ret;
-}
-
-static void fill_stream_buffer(ProtocolStream *This)
-{
-    DWORD read = 0;
-
-    IInternetProtocol_Read(This->protocol, This->buf+This->buf_size,
-                           sizeof(This->buf)-This->buf_size, &read);
-    This->buf_size += read;
 }
 
 static HRESULT WINAPI Binding_QueryInterface(IBinding *iface, REFIID riid, void **ppv)
@@ -398,7 +658,7 @@ static ULONG WINAPI Binding_AddRef(IBinding *iface)
     Binding *This = BINDING_THIS(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%ld\n", This, ref);
+    TRACE("(%p) ref=%d\n", This, ref);
 
     return ref;
 }
@@ -408,9 +668,11 @@ static ULONG WINAPI Binding_Release(IBinding *iface)
     Binding *This = BINDING_THIS(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%ld\n", This, ref);
+    TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
+        if (This->notif_hwnd)
+            DestroyWindow( This->notif_hwnd );
         if(This->callback)
             IBindStatusCallback_Release(This->callback);
         if(This->protocol)
@@ -419,8 +681,12 @@ static ULONG WINAPI Binding_Release(IBinding *iface)
             IServiceProvider_Release(This->service_provider);
         if(This->stream)
             IStream_Release(STREAM(This->stream));
+        if(This->httpneg2_wrapper)
+            IHttpNegotiate2_Release(HTTPNEG2(This->httpneg2_wrapper));
 
         ReleaseBindInfo(&This->bindinfo);
+        This->section.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->section);
         HeapFree(GetProcessHeap(), 0, This->mime);
         HeapFree(GetProcessHeap(), 0, This->url);
 
@@ -456,7 +722,7 @@ static HRESULT WINAPI Binding_Resume(IBinding *iface)
 static HRESULT WINAPI Binding_SetPriority(IBinding *iface, LONG nPriority)
 {
     Binding *This = BINDING_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, nPriority);
+    FIXME("(%p)->(%d)\n", This, nPriority);
     return E_NOTIMPL;
 }
 
@@ -510,12 +776,92 @@ static ULONG WINAPI InternetProtocolSink_Release(IInternetProtocolSink *iface)
     return IBinding_Release(BINDING(This));
 }
 
+typedef struct {
+    task_header_t header;
+    PROTOCOLDATA *data;
+} switch_task_t;
+
+static void switch_proc(Binding *binding, task_header_t *t)
+{
+    switch_task_t *task = (switch_task_t*)t;
+
+    IInternetProtocol_Continue(binding->protocol, task->data);
+
+    HeapFree(GetProcessHeap(), 0, task);
+}
+
 static HRESULT WINAPI InternetProtocolSink_Switch(IInternetProtocolSink *iface,
         PROTOCOLDATA *pProtocolData)
 {
     Binding *This = PROTSINK_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pProtocolData);
-    return E_NOTIMPL;
+    switch_task_t *task;
+
+    TRACE("(%p)->(%p)\n", This, pProtocolData);
+
+    task = HeapAlloc(GetProcessHeap(), 0, sizeof(switch_task_t));
+    task->data = pProtocolData;
+
+    push_task(This, &task->header, switch_proc);
+
+    IBinding_AddRef(BINDING(This));
+    PostMessageW(This->notif_hwnd, WM_MK_CONTINUE, 0, (LPARAM)This);
+
+    return S_OK;
+}
+
+typedef struct {
+    task_header_t header;
+
+    Binding *binding;
+    ULONG progress;
+    ULONG progress_max;
+    ULONG status_code;
+    LPWSTR status_text;
+} on_progress_task_t;
+
+static void on_progress_proc(Binding *binding, task_header_t *t)
+{
+    on_progress_task_t *task = (on_progress_task_t*)t;
+
+    IBindStatusCallback_OnProgress(binding->callback, task->progress,
+            task->progress_max, task->status_code, task->status_text);
+
+    HeapFree(GetProcessHeap(), 0, task->status_text);
+    HeapFree(GetProcessHeap(), 0, task);
+}
+
+static void on_progress(Binding *This, ULONG progress, ULONG progress_max,
+                        ULONG status_code, LPCWSTR status_text)
+{
+    on_progress_task_t *task;
+
+    if(GetCurrentThreadId() == This->apartment_thread && !This->continue_call) {
+        IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
+                                       status_code, status_text);
+        return;
+    }
+
+    task = HeapAlloc(GetProcessHeap(), 0, sizeof(on_progress_task_t));
+
+    task->progress = progress;
+    task->progress_max = progress_max;
+    task->status_code = status_code;
+
+    if(status_text) {
+        DWORD size = (strlenW(status_text)+1)*sizeof(WCHAR);
+
+        task->status_text = HeapAlloc(GetProcessHeap(), 0, size);
+        memcpy(task->status_text, status_text, size);
+    }else {
+        task->status_text = NULL;
+    }
+
+    push_task(This, &task->header, on_progress_proc);
+
+    if(GetCurrentThreadId() != This->apartment_thread) {
+        IBinding_AddRef(BINDING(This));
+        PostMessageW(This->notif_hwnd, WM_MK_CONTINUE, 0, (LPARAM)This);
+    }
 }
 
 static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink *iface,
@@ -523,9 +869,18 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
 {
     Binding *This = PROTSINK_THIS(iface);
 
-    TRACE("(%p)->(%lu %s)\n", This, ulStatusCode, debugstr_w(szStatusText));
+    TRACE("(%p)->(%u %s)\n", This, ulStatusCode, debugstr_w(szStatusText));
 
     switch(ulStatusCode) {
+    case BINDSTATUS_FINDINGRESOURCE:
+        on_progress(This, 0, 0, BINDSTATUS_FINDINGRESOURCE, szStatusText);
+        break;
+    case BINDSTATUS_CONNECTING:
+        on_progress(This, 0, 0, BINDSTATUS_CONNECTING, szStatusText);
+        break;
+    case BINDSTATUS_BEGINDOWNLOADDATA:
+        fill_stream_buffer(This->stream);
+        break;
     case BINDSTATUS_MIMETYPEAVAILABLE: {
         int len = strlenW(szStatusText)+1;
         This->mime = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
@@ -533,73 +888,147 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
         break;
     }
     case BINDSTATUS_SENDINGREQUEST:
-        IBindStatusCallback_OnProgress(This->callback, 0, 0, BINDSTATUS_SENDINGREQUEST,
-                                       szStatusText);
+        on_progress(This, 0, 0, BINDSTATUS_SENDINGREQUEST, szStatusText);
         break;
     case BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE:
-        IBindStatusCallback_OnProgress(This->callback, 0, 0,
-                                       BINDSTATUS_MIMETYPEAVAILABLE, szStatusText);
+        This->report_mime = FALSE;
+        on_progress(This, 0, 0, BINDSTATUS_MIMETYPEAVAILABLE, szStatusText);
         break;
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:
         break;
+    case BINDSTATUS_DIRECTBIND:
+        This->report_mime = FALSE;
+        break;
     default:
-        FIXME("Unhandled status code %ld\n", ulStatusCode);
+        FIXME("Unhandled status code %d\n", ulStatusCode);
         return E_NOTIMPL;
     };
 
     return S_OK;
 }
 
+static void report_data(Binding *This, DWORD bscf, ULONG progress, ULONG progress_max)
+{
+    FORMATETC formatetc = {0, NULL, 1, -1, TYMED_ISTREAM};
+
+    TRACE("(%p)->(%d %u %u)\n", This, bscf, progress, progress_max);
+
+    if(This->download_state == END_DOWNLOAD)
+        return;
+
+    if(GetCurrentThreadId() != This->apartment_thread)
+        FIXME("called from worked hread\n");
+
+    if(This->report_mime) {
+        LPWSTR mime;
+
+        This->report_mime = FALSE;
+
+        fill_stream_buffer(This->stream);
+
+        FindMimeFromData(NULL, This->url, This->stream->buf,
+                         min(This->stream->buf_size, 255), This->mime, 0, &mime, 0);
+
+        IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
+                BINDSTATUS_MIMETYPEAVAILABLE, mime);
+    }
+
+    if(This->download_state == BEFORE_DOWNLOAD) {
+        fill_stream_buffer(This->stream);
+
+        This->download_state = DOWNLOADING;
+        IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
+                BINDSTATUS_BEGINDOWNLOADDATA, This->url);
+    }
+
+    if(This->stream->hres == S_FALSE || (bscf & BSCF_LASTDATANOTIFICATION)) {
+        IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
+                BINDSTATUS_ENDDOWNLOADDATA, This->url);
+    }
+
+    if(!This->request_locked) {
+        HRESULT hres = IInternetProtocol_LockRequest(This->protocol, 0);
+        This->request_locked = SUCCEEDED(hres);
+    }
+
+    fill_stream_buffer(This->stream);
+
+    IBindStatusCallback_OnDataAvailable(This->callback, bscf, This->stream->buf_size,
+            &formatetc, &This->stgmed);
+
+    if(This->stream->hres == S_FALSE) {
+        This->download_state = END_DOWNLOAD;
+        IBindStatusCallback_OnStopBinding(This->callback, S_OK, NULL);
+    }
+}
+
+typedef struct {
+    task_header_t header;
+    DWORD bscf;
+    ULONG progress;
+    ULONG progress_max;
+} report_data_task_t;
+
+static void report_data_proc(Binding *binding, task_header_t *t)
+{
+    report_data_task_t *task = (report_data_task_t*)t;
+
+    report_data(binding, task->bscf, task->progress, task->progress_max);
+
+    HeapFree(GetProcessHeap(), 0, task);
+}
+
 static HRESULT WINAPI InternetProtocolSink_ReportData(IInternetProtocolSink *iface,
         DWORD grfBSCF, ULONG ulProgress, ULONG ulProgressMax)
 {
     Binding *This = PROTSINK_THIS(iface);
-    STGMEDIUM stgmed;
-    FORMATETC formatetc;
 
-    TRACE("(%p)->(%ld %lu %lu)\n", This, grfBSCF, ulProgress, ulProgressMax);
+    TRACE("(%p)->(%d %u %u)\n", This, grfBSCF, ulProgress, ulProgressMax);
 
-    if(grfBSCF & BSCF_FIRSTDATANOTIFICATION) {
-        if(This->mime)
-            IBindStatusCallback_OnProgress(This->callback, ulProgress, ulProgressMax,
-                                           BINDSTATUS_MIMETYPEAVAILABLE, This->mime);
-        IBindStatusCallback_OnProgress(This->callback, ulProgress, ulProgressMax,
-                                       BINDSTATUS_BEGINDOWNLOADDATA, This->url);
+    if(GetCurrentThreadId() != This->apartment_thread)
+        FIXME("called from worked hread\n");
+
+    if(This->continue_call) {
+        report_data_task_t *task = HeapAlloc(GetProcessHeap(), 0, sizeof(report_data_task_t));
+        task->bscf = grfBSCF;
+        task->progress = ulProgress;
+        task->progress_max = ulProgressMax;
+
+        push_task(This, &task->header, report_data_proc);
+    }else {
+        report_data(This, grfBSCF, ulProgress, ulProgressMax);
     }
 
-    if(grfBSCF & BSCF_LASTDATANOTIFICATION)
-        IBindStatusCallback_OnProgress(This->callback, ulProgress, ulProgressMax,
-                                       BINDSTATUS_ENDDOWNLOADDATA, This->url);
-
-    if(grfBSCF & BSCF_FIRSTDATANOTIFICATION)
-        IInternetProtocol_LockRequest(This->protocol, 0);
-
-    fill_stream_buffer(This->stream);
-
-    stgmed.tymed = TYMED_ISTREAM;
-    stgmed.u.pstm = STREAM(This->stream);
-
-    formatetc.cfFormat = 0; /* FIXME */
-    formatetc.ptd = NULL;
-    formatetc.dwAspect = 1;
-    formatetc.lindex = -1;
-    formatetc.tymed = TYMED_ISTREAM;
-
-    IBindStatusCallback_OnDataAvailable(This->callback, grfBSCF, This->stream->buf_size,
-            &formatetc, &stgmed);
-
-    if(grfBSCF & BSCF_LASTDATANOTIFICATION)
-        IBindStatusCallback_OnStopBinding(This->callback, S_OK, NULL);
-
     return S_OK;
+}
+
+static void report_result_proc(Binding *binding, task_header_t *t)
+{
+    IInternetProtocol_Terminate(binding->protocol, 0);
+
+    if(binding->request_locked) {
+        IInternetProtocol_UnlockRequest(binding->protocol);
+        binding->request_locked = FALSE;
+    }
+
+    HeapFree(GetProcessHeap(), 0, t);
 }
 
 static HRESULT WINAPI InternetProtocolSink_ReportResult(IInternetProtocolSink *iface,
         HRESULT hrResult, DWORD dwError, LPCWSTR szResult)
 {
     Binding *This = PROTSINK_THIS(iface);
-    FIXME("(%p)->(%08lx %ld %s)\n", This, hrResult, dwError, debugstr_w(szResult));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%08x %d %s)\n", This, hrResult, dwError, debugstr_w(szResult));
+
+    if(GetCurrentThreadId() == This->apartment_thread && !This->continue_call) {
+        IInternetProtocol_Terminate(This->protocol, 0);
+    }else {
+        task_header_t *task = HeapAlloc(GetProcessHeap(), 0, sizeof(task_header_t));
+        push_task(This, task, report_result_proc);
+    }
+
+    return S_OK;
 }
 
 #undef PROTSINK_THIS
@@ -649,6 +1078,9 @@ static HRESULT WINAPI InternetBindInfo_GetBindInfo(IInternetBindInfo *iface,
     if(pbindinfo->szExtraInfo || pbindinfo->szCustomVerb)
         FIXME("copy strings\n");
 
+    if(pbindinfo->stgmedData.pUnkForRelease)
+        IUnknown_AddRef(pbindinfo->stgmedData.pUnkForRelease);
+
     if(pbindinfo->pUnk)
         IUnknown_AddRef(pbindinfo->pUnk);
 
@@ -660,7 +1092,7 @@ static HRESULT WINAPI InternetBindInfo_GetBindString(IInternetBindInfo *iface,
 {
     Binding *This = BINDINF_THIS(iface);
 
-    TRACE("(%p)->(%ld %p %ld %p)\n", This, ulStringType, ppwzStr, cEl, pcElFetched);
+    TRACE("(%p)->(%d %p %d %p)\n", This, ulStringType, ppwzStr, cEl, pcElFetched);
 
     switch(ulStringType) {
     case BINDSTRING_ACCEPT_MIMES: {
@@ -691,7 +1123,7 @@ static HRESULT WINAPI InternetBindInfo_GetBindString(IInternetBindInfo *iface,
     }
     }
 
-    FIXME("not supported string type %ld\n", ulStringType);
+    FIXME("not supported string type %d\n", ulStringType);
     return E_NOTIMPL;
 }
 
@@ -742,8 +1174,20 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface,
     }
 
     if(IsEqualGUID(&IID_IHttpNegotiate, guidService)
-       || IsEqualGUID(&IID_IHttpNegotiate2, guidService))
-        return IHttpNegotiate2_QueryInterface(&HttpNegotiate, riid, ppv);
+       || IsEqualGUID(&IID_IHttpNegotiate2, guidService)) {
+        if(!This->httpneg2_wrapper) {
+            WARN("HttpNegotiate2Wrapper expected to be non-NULL\n");
+        } else {
+            if(IsEqualGUID(&IID_IHttpNegotiate, guidService))
+                IBindStatusCallback_QueryInterface(This->callback, riid,
+                                                   (void **)&This->httpneg2_wrapper->http_negotiate);
+            else
+                IBindStatusCallback_QueryInterface(This->callback, riid,
+                                                   (void **)&This->httpneg2_wrapper->http_negotiate2);
+
+            return IHttpNegotiate2_QueryInterface(HTTPNEG2(This->httpneg2_wrapper), riid, ppv);
+        }
+    }
 
     WARN("unknown service %s\n", debugstr_guid(guidService));
     return E_NOTIMPL;
@@ -773,7 +1217,6 @@ static HRESULT get_callback(IBindCtx *pbc, IBindStatusCallback **callback)
 
 static HRESULT get_protocol(Binding *This, LPCWSTR url)
 {
-    IUnknown *unk = NULL;
     IClassFactory *cf = NULL;
     HRESULT hres;
 
@@ -789,12 +1232,7 @@ static HRESULT get_protocol(Binding *This, LPCWSTR url)
             return S_OK;
     }
 
-    hres = get_protocol_iface(url, &unk);
-    if(FAILED(hres))
-        return hres;
-
-    hres = IUnknown_QueryInterface(unk, &IID_IClassFactory, (void**)&cf);
-    IUnknown_Release(unk);
+    hres = get_protocol_handler(url, NULL, &cf);
     if(FAILED(hres))
         return hres;
 
@@ -804,13 +1242,45 @@ static HRESULT get_protocol(Binding *This, LPCWSTR url)
     return hres;
 }
 
+static BOOL is_urlmon_protocol(LPCWSTR url)
+{
+    static const WCHAR wszCdl[] = {'c','d','l'};
+    static const WCHAR wszFile[] = {'f','i','l','e'};
+    static const WCHAR wszFtp[]  = {'f','t','p'};
+    static const WCHAR wszGopher[] = {'g','o','p','h','e','r'};
+    static const WCHAR wszHttp[] = {'h','t','t','p'};
+    static const WCHAR wszHttps[] = {'h','t','t','p','s'};
+    static const WCHAR wszMk[]   = {'m','k'};
+
+    static const struct {
+        LPCWSTR scheme;
+        int len;
+    } protocol_list[] = {
+        {wszCdl,    sizeof(wszCdl)   /sizeof(WCHAR)},
+        {wszFile,   sizeof(wszFile)  /sizeof(WCHAR)},
+        {wszFtp,    sizeof(wszFtp)   /sizeof(WCHAR)},
+        {wszGopher, sizeof(wszGopher)/sizeof(WCHAR)},
+        {wszHttp,   sizeof(wszHttp)  /sizeof(WCHAR)},
+        {wszHttps,  sizeof(wszHttps) /sizeof(WCHAR)},
+        {wszMk,     sizeof(wszMk)    /sizeof(WCHAR)}
+    };
+
+    int i, len = strlenW(url);
+
+    for(i=0; i < sizeof(protocol_list)/sizeof(protocol_list[0]); i++) {
+        if(len >= protocol_list[i].len
+           && !memcmp(url, protocol_list[i].scheme, protocol_list[i].len*sizeof(WCHAR)))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 static HRESULT Binding_Create(LPCWSTR url, IBindCtx *pbc, REFIID riid, Binding **binding)
 {
     Binding *ret;
     int len;
     HRESULT hres;
-
-    static const WCHAR wszFile[] = {'f','i','l','e',':'};
 
     if(!IsEqualGUID(&IID_IStream, riid)) {
         FIXME("Unsupported riid %s\n", debugstr_guid(riid));
@@ -832,12 +1302,23 @@ static HRESULT Binding_Create(LPCWSTR url, IBindCtx *pbc, REFIID riid, Binding *
     ret->protocol = NULL;
     ret->service_provider = NULL;
     ret->stream = NULL;
+    ret->httpneg2_wrapper = NULL;
     ret->mime = NULL;
     ret->url = NULL;
+    ret->apartment_thread = GetCurrentThreadId();
+    ret->notif_hwnd = get_notif_hwnd();
+    ret->report_mime = TRUE;
+    ret->continue_call = 0;
+    ret->request_locked = FALSE;
+    ret->download_state = BEFORE_DOWNLOAD;
+    ret->task_queue_head = ret->task_queue_tail = NULL;
 
     memset(&ret->bindinfo, 0, sizeof(BINDINFO));
     ret->bindinfo.cbSize = sizeof(BINDINFO);
     ret->bindf = 0;
+
+    InitializeCriticalSection(&ret->section);
+    ret->section.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": Binding.section");
 
     hres = get_callback(pbc, &ret->callback);
     if(FAILED(hres)) {
@@ -858,22 +1339,28 @@ static HRESULT Binding_Create(LPCWSTR url, IBindCtx *pbc, REFIID riid, Binding *
 
     hres = IBindStatusCallback_GetBindInfo(ret->callback, &ret->bindf, &ret->bindinfo);
     if(FAILED(hres)) {
-        WARN("GetBindInfo failed: %08lx\n", hres);
+        WARN("GetBindInfo failed: %08x\n", hres);
         IBinding_Release(BINDING(ret));
         return hres;
     }
 
+    dump_BINDINFO(&ret->bindinfo);
+
     ret->bindf |= BINDF_FROMURLMON;
 
-    len = strlenW(url)+1;
-
-    if(len < sizeof(wszFile)/sizeof(WCHAR) || memcmp(wszFile, url, sizeof(wszFile)))
+    if(!is_urlmon_protocol(url))
         ret->bindf |= BINDF_NEEDFILE;
 
+    len = strlenW(url)+1;
     ret->url = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
     memcpy(ret->url, url, len*sizeof(WCHAR));
 
     ret->stream = create_stream(ret->protocol);
+    ret->stgmed.tymed = TYMED_ISTREAM;
+    ret->stgmed.u.pstm = STREAM(ret->stream);
+    ret->stgmed.pUnkForRelease = (IUnknown*)BINDING(ret); /* NOTE: Windows uses other IUnknown */
+
+    ret->httpneg2_wrapper = create_httpneg2_wrapper();
 
     *binding = ret;
     return S_OK;
@@ -892,7 +1379,7 @@ HRESULT start_binding(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv)
 
     hres = IBindStatusCallback_OnStartBinding(binding->callback, 0, BINDING(binding));
     if(FAILED(hres)) {
-        WARN("OnStartBinding failed: %08lx\n", hres);
+        WARN("OnStartBinding failed: %08x\n", hres);
         IBindStatusCallback_OnStopBinding(binding->callback, 0x800c0008, NULL);
         IBinding_Release(BINDING(binding));
         return hres;
@@ -900,17 +1387,28 @@ HRESULT start_binding(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv)
 
     hres = IInternetProtocol_Start(binding->protocol, url, PROTSINK(binding),
              BINDINF(binding), 0, 0);
-    IInternetProtocol_Terminate(binding->protocol, 0);
 
-    if(SUCCEEDED(hres)) {
-        IInternetProtocol_UnlockRequest(binding->protocol);
-    }else {
-        WARN("Start failed: %08lx\n", hres);
+    if(FAILED(hres)) {
+        WARN("Start failed: %08x\n", hres);
+
+        IInternetProtocol_Terminate(binding->protocol, 0);
         IBindStatusCallback_OnStopBinding(binding->callback, S_OK, NULL);
+        IBinding_Release(BINDING(binding));
+
+        return hres;
     }
 
-    IStream_AddRef(STREAM(binding->stream));
-    *ppv = binding->stream;
+    if(binding->stream->init_buf) {
+        if(binding->request_locked)
+            IInternetProtocol_UnlockRequest(binding->protocol);
+
+        IStream_AddRef(STREAM(binding->stream));
+        *ppv = binding->stream;
+
+        hres = S_OK;
+    }else {
+        hres = MK_S_ASYNCHRONOUS;
+    }
 
     IBinding_Release(BINDING(binding));
 
