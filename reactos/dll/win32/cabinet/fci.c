@@ -173,7 +173,11 @@ HFCI __cdecl FCICreate(
   int err;
   PFCI_Int p_fci_internal;
 
-  if ((!perf) || (!pfnalloc) || (!pfnfree) || (!pfnopen) || (!pfnread) ||
+  if (!perf) {
+    SetLastError(ERROR_BAD_ARGUMENTS);
+    return NULL;
+  }
+  if ((!pfnalloc) || (!pfnfree) || (!pfnopen) || (!pfnread) ||
       (!pfnwrite) || (!pfnclose) || (!pfnseek) || (!pfndelete) ||
       (!pfnfcigtf) || (!pccab)) {
     perf->erfOper = FCIERR_NONE;

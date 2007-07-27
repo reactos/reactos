@@ -446,7 +446,7 @@ static char *FDI_read_string(HFDI hfdi, INT_PTR hf, long cabsize)
   unsigned int i;
   cab_UBYTE *buf = NULL;
 
-  TRACE("(hfdi == ^%p, hf == %d)\n", hfdi, hf);
+  TRACE("(hfdi == ^%p, hf == %ld)\n", hfdi, hf);
 
   do {
     if (len > maxlen) len = maxlen;
@@ -501,7 +501,7 @@ static BOOL FDI_read_entries(
   cab_UBYTE buf[64], block_resv;
   char *prevname = NULL, *previnfo = NULL, *nextname = NULL, *nextinfo = NULL;
 
-  TRACE("(hfdi == ^%p, hf == %d, pfdici == ^%p)\n", hfdi, hf, pfdici);
+  TRACE("(hfdi == ^%p, hf == %ld, pfdici == ^%p)\n", hfdi, hf, pfdici);
 
   /* 
    * FIXME: I just noticed that I am memorizing the initial file pointer
@@ -757,7 +757,7 @@ BOOL __cdecl FDIIsCabinet(
 {
   BOOL rv;
 
-  TRACE("(hfdi == ^%p, hf == ^%d, pfdici == ^%p)\n", hfdi, hf, pfdici);
+  TRACE("(hfdi == ^%p, hf == ^%ld, pfdici == ^%p)\n", hfdi, hf, pfdici);
 
   if (!REALLY_IS_FDI(hfdi)) {
     ERR("REALLY_IS_FDI failed on ^%p\n", hfdi);
@@ -2690,6 +2690,7 @@ BOOL __cdecl FDICopy(
         PFDI_INT(hfdi)->perf->erfOper = FDIERROR_USER_ABORT;
         PFDI_INT(hfdi)->perf->erfType = 0;
         PFDI_INT(hfdi)->perf->fError = TRUE;
+        filehf = 0;
         goto bail_and_fail;
       }
     }
