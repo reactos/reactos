@@ -54,7 +54,7 @@ STRING_ERROR_LABEL     "Eine unzulässige Volumebezeichnung wurde für diesen Date
 
 STRING_YN_FORMAT       "\nACHTUNG, beim Formatieren werden ALLE Daten auf dem Datenträger %C: gelöscht!\nMit Formatierung fortfahren? (Ja/Nein)? "
 
-STRING_YES_NO_FAQ      "J/N"
+STRING_YES_NO_FAQ      "JN"
 
 STRING_VERIFYING       "Prüfen"
 
