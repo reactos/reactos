@@ -190,7 +190,7 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 		size_t len = fread (buffer, 1, sizeof(buffer), file);
 		done = len < sizeof(buffer);
 
-		if(len > 0 && !XML_Parse(parser, buffer, len, done)) 
+		if(!XML_Parse(parser, buffer, len, done)) 
 		{
 			MessageBoxW(0,Strings[IDS_XMLERROR_2],0,0);
 			return FALSE;
