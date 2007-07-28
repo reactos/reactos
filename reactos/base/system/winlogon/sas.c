@@ -137,7 +137,7 @@ SetDefaultLanguage(
 	/* Convert Value to a Lcid */
 	ValueString.Length = ValueString.MaximumLength = (USHORT)dwSize;
 	ValueString.Buffer = Value;
-	Status = RtlUnicodeStringToInteger(&ValueString, 16, &Lcid);
+	Status = RtlUnicodeStringToInteger(&ValueString, 16, (PULONG)&Lcid);
 	if (!NT_SUCCESS(Status))
 	{
 		TRACE("RtlUnicodeStringToInteger() failed with status 0x%08lx\n", Status);
