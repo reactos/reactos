@@ -76,10 +76,10 @@ InfpFindNextLine(
 BOOL WINAPI
 InfpGetBinaryField(
 	IN PINFCONTEXT Context,
-	IN DWORD FieldIndex,
+    IN ULONG FieldIndex,
 	IN OUT BYTE* ReturnBuffer,
-	IN DWORD ReturnBufferSize,
-	OUT LPDWORD RequiredSize)
+	IN ULONG ReturnBufferSize,
+	OUT PULONG RequiredSize)
 {
 	return InfGetBinaryField(Context, FieldIndex, ReturnBuffer, ReturnBufferSize, RequiredSize);
 }
@@ -108,10 +108,10 @@ InfpGetIntField(
 BOOL WINAPI
 InfpGetMultiSzFieldW(
 	IN PINFCONTEXT Context,
-	IN DWORD FieldIndex,
+	IN ULONG FieldIndex,
 	IN OUT PWSTR ReturnBuffer,
-	IN DWORD ReturnBufferSize,
-	OUT LPDWORD RequiredSize)
+	IN ULONG ReturnBufferSize,
+	OUT PULONG RequiredSize)
 {
 	return InfGetMultiSzField(Context, FieldIndex, ReturnBuffer, ReturnBufferSize, RequiredSize);
 }
@@ -119,10 +119,10 @@ InfpGetMultiSzFieldW(
 BOOL WINAPI
 InfpGetStringFieldW(
 	IN PINFCONTEXT Context,
-	IN DWORD FieldIndex,
+	IN ULONG FieldIndex,
 	IN OUT PWSTR ReturnBuffer,
-	IN DWORD ReturnBufferSize,
-	OUT PDWORD RequiredSize)
+	IN ULONG ReturnBufferSize,
+	OUT PULONG RequiredSize)
 {
 	return InfGetStringField(Context, FieldIndex, ReturnBuffer, ReturnBufferSize, RequiredSize);
 }

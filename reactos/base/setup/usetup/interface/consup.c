@@ -62,7 +62,7 @@ VOID
 CONSOLE_ConInKey(
 	OUT PINPUT_RECORD Buffer)
 {
-	ULONG Read;
+	DWORD Read;
 
 	while (TRUE)
 	{
@@ -78,7 +78,7 @@ VOID
 CONSOLE_ConOutChar(
 	IN CHAR c)
 {
-	ULONG Written;
+	DWORD Written;
 
 	WriteConsole(
 		StdOutput,
@@ -92,7 +92,7 @@ VOID
 CONSOLE_ConOutPuts(
 	IN LPCSTR szText)
 {
-	ULONG Written;
+	DWORD Written;
 
 	WriteConsole(
 		StdOutput,
@@ -113,7 +113,7 @@ CONSOLE_ConOutPrintf(
 	IN LPCSTR szFormat, ...)
 {
 	CHAR szOut[256];
-	ULONG dwWritten;
+	DWORD dwWritten;
 	va_list arg_ptr;
 
 	va_start(arg_ptr, szFormat);
@@ -177,7 +177,7 @@ VOID
 CONSOLE_ClearScreen(VOID)
 {
 	COORD coPos;
-	ULONG Written;
+	DWORD Written;
 
 	coPos.X = 0;
 	coPos.Y = 0;
@@ -204,7 +204,7 @@ CONSOLE_SetStatusText(
 	CHAR Buffer[128];
 	va_list ap;
 	COORD coPos;
-	ULONG Written;
+	DWORD Written;
 
 	va_start(ap, fmt);
 	vsprintf(Buffer, fmt, ap);
@@ -243,7 +243,7 @@ CONSOLE_InvertTextXY(
 	IN SHORT row)
 {
 	COORD coPos;
-	ULONG Written;
+	DWORD Written;
 
 	for (coPos.Y = y; coPos.Y < y + row; coPos.Y++)
 	{
@@ -266,7 +266,7 @@ CONSOLE_NormalTextXY(
 	IN SHORT row)
 {
 	COORD coPos;
-	ULONG Written;
+	DWORD Written;
 
 	for (coPos.Y = y; coPos.Y < y + row; coPos.Y++)
 	{
@@ -288,7 +288,7 @@ CONSOLE_SetTextXY(
 	IN LPCSTR Text)
 {
 	COORD coPos;
-	ULONG Written;
+	DWORD Written;
 
 	coPos.X = x;
 	coPos.Y = y;
@@ -310,7 +310,7 @@ CONSOLE_SetInputTextXY(
 {
 	COORD coPos;
 	SHORT Length;
-	ULONG Written;
+	DWORD Written;
 
 	coPos.X = x;
 	coPos.Y = y;
@@ -360,8 +360,8 @@ CONSOLE_SetUnderlinedTextXY(
 	IN LPCSTR Text)
 {
 	COORD coPos;
-	ULONG Length;
-	ULONG Written;
+	DWORD Length;
+	DWORD Written;
 
 	coPos.X = x;
 	coPos.Y = y;
@@ -391,8 +391,8 @@ CONSOLE_SetInvertedTextXY(
 	IN LPCSTR Text)
 {
 	COORD coPos;
-	ULONG Length;
-	ULONG Written;
+	DWORD Length;
+	DWORD Written;
 
 	coPos.X = x;
 	coPos.Y = y;
@@ -421,8 +421,8 @@ CONSOLE_SetHighlightedTextXY(
 	IN LPCSTR Text)
 {
 	COORD coPos;
-	ULONG Length;
-	ULONG Written;
+	DWORD Length;
+	DWORD Written;
 
 	coPos.X = x;
 	coPos.Y = y;
@@ -453,7 +453,7 @@ CONSOLE_PrintTextXY(
 	CHAR buffer[512];
 	va_list ap;
 	COORD coPos;
-	ULONG Written;
+	DWORD Written;
 
 	va_start(ap, fmt);
 	vsprintf(buffer, fmt, ap);
@@ -481,7 +481,7 @@ CONSOLE_PrintTextXYN(
 	va_list ap;
 	COORD coPos;
 	SHORT Length;
-	ULONG Written;
+	DWORD Written;
 
 	va_start(ap, fmt);
 	vsprintf(buffer, fmt, ap);

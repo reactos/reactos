@@ -13,7 +13,7 @@ static VOID
 DrawBorder(PPROGRESSBAR Bar)
 {
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   SHORT i;
 
   /* draw upper left corner */
@@ -94,7 +94,7 @@ static VOID
 DrawThickBorder(PPROGRESSBAR Bar)
 {
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   SHORT i;
 
   /* draw upper left corner */
@@ -176,11 +176,11 @@ DrawProgressBar(PPROGRESSBAR Bar)
 {
   CHAR TextBuffer[8];
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   PROGRESSBAR BarBorder = *Bar;
 
   /* Print percentage */
-  sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
+  sprintf(TextBuffer, "%-3u%%", Bar->Percent);
 
   coPos.X = Bar->Left + (Bar->Width - 2) / 2;
   coPos.Y = Bar->Top;
@@ -292,7 +292,7 @@ ProgressNextStep(PPROGRESSBAR Bar)
 {
   CHAR TextBuffer[8];
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   ULONG NewPercent;
   ULONG NewPos;
 
@@ -310,7 +310,7 @@ ProgressNextStep(PPROGRESSBAR Bar)
     {
       Bar->Percent = NewPercent;
 
-      sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
+      sprintf(TextBuffer, "%-3u%%", Bar->Percent);
 
       coPos.X = Bar->Left + (Bar->Width - 2) / 2;
       coPos.Y = Bar->Top;
@@ -368,7 +368,7 @@ ProgressSetStep (PPROGRESSBAR Bar,
 {
   CHAR TextBuffer[8];
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   ULONG NewPercent;
   ULONG NewPos;
 
@@ -385,7 +385,7 @@ ProgressSetStep (PPROGRESSBAR Bar,
     {
       Bar->Percent = NewPercent;
 
-      sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
+      sprintf(TextBuffer, "%-3u%%", Bar->Percent);
 
       coPos.X = Bar->Left + (Bar->Width - 2) / 2;
       coPos.Y = Bar->Top;

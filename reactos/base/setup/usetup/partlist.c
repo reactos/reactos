@@ -893,7 +893,7 @@ CreatePartitionList (SHORT Left,
   OBJECT_ATTRIBUTES ObjectAttributes;
   SYSTEM_DEVICE_INFORMATION Sdi;
   IO_STATUS_BLOCK Iosb;
-  ULONG ReturnSize;
+  SIZE_T ReturnSize;
   NTSTATUS Status;
   ULONG DiskNumber;
   WCHAR Buffer[MAX_PATH];
@@ -1049,7 +1049,7 @@ static VOID
 PrintEmptyLine (PPARTLIST List)
 {
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   USHORT Width;
   USHORT Height;
 
@@ -1085,7 +1085,7 @@ PrintPartitionData (PPARTLIST List,
 {
   CHAR LineBuffer[128];
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   USHORT Width;
   USHORT Height;
 
@@ -1240,7 +1240,7 @@ PrintDiskData (PPARTLIST List,
   PPARTENTRY PartEntry;
   CHAR LineBuffer[128];
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   USHORT Width;
   USHORT Height;
   ULARGE_INTEGER DiskSize;
@@ -1271,7 +1271,7 @@ PrintDiskData (PPARTLIST List,
   if (DiskEntry->DriverName.Length > 0)
     {
       sprintf (LineBuffer,
-	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S",
+	       "%6lu %s  Harddisk %u  (Port=%hu, Bus=%hu, Id=%hu) on %S",
 	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
@@ -1283,7 +1283,7 @@ PrintDiskData (PPARTLIST List,
   else
     {
       sprintf (LineBuffer,
-	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+	       "%6lu %s  Harddisk %u  (Port=%hu, Bus=%hu, Id=%hu)",
 	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
@@ -1341,7 +1341,7 @@ DrawPartitionList (PPARTLIST List)
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry = NULL;
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   SHORT i;
   SHORT CurrentDiskLine;
   SHORT CurrentPartLine;
