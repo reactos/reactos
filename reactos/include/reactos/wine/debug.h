@@ -25,7 +25,7 @@
 #define	inline __inline
 #endif
 
-unsigned long DbgPrint(const char *Format,...);
+ULONG DbgPrint(const char *Format,...);
 
 struct _GUID;
 
