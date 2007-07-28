@@ -144,10 +144,10 @@ GetFileSystem(
 }
 
 // This is based on SysInternal's ChkDsk app
-static BOOLEAN CALLBACK
+static BOOLEAN NTAPI
 ChkdskCallback(
     IN CALLBACKCOMMAND Command,
-    IN DWORD Modifier,
+    IN ULONG Modifier,
     IN PVOID Argument)
 {
     PDWORD      Percent;
