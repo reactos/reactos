@@ -180,7 +180,7 @@ DrawProgressBar(PPROGRESSBAR Bar)
   PROGRESSBAR BarBorder = *Bar;
 
   /* Print percentage */
-  sprintf(TextBuffer, "%-3u%%", Bar->Percent);
+  sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
 
   coPos.X = Bar->Left + (Bar->Width - 2) / 2;
   coPos.Y = Bar->Top;
@@ -310,7 +310,7 @@ ProgressNextStep(PPROGRESSBAR Bar)
     {
       Bar->Percent = NewPercent;
 
-      sprintf(TextBuffer, "%-3u%%", Bar->Percent);
+      sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
 
       coPos.X = Bar->Left + (Bar->Width - 2) / 2;
       coPos.Y = Bar->Top;
@@ -385,7 +385,7 @@ ProgressSetStep (PPROGRESSBAR Bar,
     {
       Bar->Percent = NewPercent;
 
-      sprintf(TextBuffer, "%-3u%%", Bar->Percent);
+      sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
 
       coPos.X = Bar->Left + (Bar->Width - 2) / 2;
       coPos.Y = Bar->Top;

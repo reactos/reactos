@@ -1543,7 +1543,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 				 coPos,
 				 &Written);
 
-  sprintf (Buffer, "MB (max. %u MB)", MaxSize);
+  sprintf (Buffer, "MB (max. %lu MB)", MaxSize);
   coPos.X = iLeft + PARTITION_SIZE_INPUT_FIELD_LENGTH + 1;
   coPos.Y = iTop;
   WriteConsoleOutputCharacterA (StdOutput,
@@ -1552,7 +1552,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 				coPos,
 				&Written);
 
-  sprintf(Buffer, "%u", MaxSize);
+  sprintf(Buffer, "%lu", MaxSize);
   Index = strlen(Buffer);
   DrawInputField (PARTITION_SIZE_INPUT_FIELD_LENGTH,
 		  iLeft,
@@ -2465,7 +2465,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     {
         DPRINT("ChkdskPartition() failed with status 0x%08lx\n", Status);
         sprintf(Buffer, "Setup failed to verify the selected partition.\n"
-          "(Status 0x%08x).\n", Status);
+          "(Status 0x%08lx).\n", Status);
         PopupError(Buffer,
           "ENTER = Reboot computer",
           Ir, POPUP_WAIT_ENTER);

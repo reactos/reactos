@@ -1271,7 +1271,7 @@ PrintDiskData (PPARTLIST List,
   if (DiskEntry->DriverName.Length > 0)
     {
       sprintf (LineBuffer,
-	       "%6lu %s  Harddisk %u  (Port=%hu, Bus=%hu, Id=%hu) on %S",
+	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S",
 	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
@@ -1283,7 +1283,7 @@ PrintDiskData (PPARTLIST List,
   else
     {
       sprintf (LineBuffer,
-	       "%6lu %s  Harddisk %u  (Port=%hu, Bus=%hu, Id=%hu)",
+	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
 	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
