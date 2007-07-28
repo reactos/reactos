@@ -2735,7 +2735,16 @@ MingwAddImplicitLibraries( Module &module )
 	Library* pLibrary;
 
 	if ( !module.isDefaultEntryPoint )
+	{
+		if ( module.GetEntryPoint(false) == "0" )
+		{
+			pLibrary = new Library ( module, "mingw_common" );
+			module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() , pLibrary );
+			pLibrary = new Library ( module, "msvcrt" );
+			module.non_if_data.libraries.push_back ( pLibrary );
+		}
 		return;
+	}
 
 	if ( module.IsDLL () )
 	{
