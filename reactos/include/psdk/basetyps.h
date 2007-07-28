@@ -77,7 +77,11 @@
 #include <guiddef.h>
 
 #ifndef _ERROR_STATUS_T_DEFINED
+#if defined(__NO_LLP64__)
+typedef unsigned int error_status_t;
+#else
 typedef unsigned long error_status_t;
+#endif
 #define _ERROR_STATUS_T_DEFINED
 #endif
 
