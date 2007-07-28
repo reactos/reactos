@@ -95,7 +95,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, "\
           "die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, "\
-          "wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 26
+          "wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
     LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen",
           IDC_STATIC, 53, 57, 188, 15
