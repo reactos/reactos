@@ -58,7 +58,7 @@ typedef struct _PAGEFILE
 typedef struct _VIRTMEM
 {
     HWND   hSelf;
-    HWND   hListView;
+    HWND   hListBox;
     LPTSTR szPagingFiles;
     TCHAR  szDrive[10];
     INT    Count;

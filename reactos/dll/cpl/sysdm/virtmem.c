@@ -89,8 +89,9 @@ ParseMemSettings(PVIRTMEM pVirtMem)
 {
     TCHAR szDrives[1024];    // all drives
     LPTSTR DrivePtr = szDrives;
-    TCHAR szDrive[MAX_PATH]; // single drive
+    TCHAR szDrive[4]; // single drive
     TCHAR szVolume[MAX_PATH];
+    TCHAR *szDisplayString;
     INT InitialSize = 0;
     INT MaxSize = 0;
     INT DriveLen;
@@ -99,9 +100,12 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     DriveLen = GetLogicalDriveStrings(1023,
                                       szDrives);
 
+    szDisplayString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH * 2 + 70) * sizeof(TCHAR));
+    if (szDisplayString == NULL)
+        return;
+
     while (DriveLen != 0)
     {
-        LVITEM Item;
         INT Len;
 
         Len = lstrlen(DrivePtr) + 1;
@@ -134,12 +138,8 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 lstrcpy(pVirtMem->Pagefile[PgCnt].szDrive, szDrive);
             }
 
-            /* fill out the listview */
-            ZeroMemory(&Item, sizeof(Item));
-            Item.mask = LVIF_TEXT;
-            Item.iItem = ListView_GetItemCount(pVirtMem->hListView);
-            Item.pszText = szDrive;
-            (void)ListView_InsertItem(pVirtMem->hListView, &Item);
+            _tcscpy(szDisplayString, szDrive);
+            _tcscat(szDisplayString, _T("\t"));
 
             /* set a volume label if there is one */
             if (GetVolumeInformation(DrivePtr,
@@ -154,12 +154,8 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 if (szVolume[0] != _T('\0'))
                 {
                     TCHAR szVol[MAX_PATH + 2];
-
                     _stprintf(szVol, _T("[%s]"), szVolume);
-
-                    Item.iSubItem = 1;
-                    Item.pszText = szVol;
-                    (void)ListView_InsertItem(pVirtMem->hListView, &Item);
+                    _tcscat(szDisplayString, szVol);
                 }
             }
 
@@ -168,18 +164,19 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 TCHAR szSize[64];
 
                 _stprintf(szSize, _T("%i - %i"), InitialSize, MaxSize);
-
-                Item.iSubItem = 2;
-                Item.pszText = szSize;
-                (void)ListView_InsertItem(pVirtMem->hListView, &Item);
+                _tcscat(szDisplayString, _T("\t"));
+                _tcscat(szDisplayString, szSize);
             }
 
+            SendMessage(pVirtMem->hListBox, LB_ADDSTRING, (WPARAM)0, (LPARAM)szDisplayString);
             PgCnt++;
         }
 
         DrivePtr += Len;
     }
 
+    SendMessage(pVirtMem->hListBox, LB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+    HeapFree(GetProcessHeap(), 0, szDisplayString);
     pVirtMem->Count = PgCnt;
 }
 
@@ -245,31 +242,10 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
 
 
 static VOID
-SetListViewColumns(HWND hwndListView)
+SetListBoxColumns(HWND hwndListBox)
 {
-    RECT rect;
-    LV_COLUMN lvc;
-
-    GetClientRect(hwndListView, &rect);
-
-    (void)ListView_SetExtendedListViewStyle(hwndListView,
-                                            LVS_EX_FULLROWSELECT);
-
-    ZeroMemory(&lvc, sizeof(lvc));
-    lvc.mask = LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
-    lvc.fmt = LVCFMT_LEFT;
-
-    lvc.cx = (INT)((rect.right - rect.left) * 0.1);
-    lvc.iSubItem = 0;
-    (void)ListView_InsertColumn(hwndListView, 0, &lvc);
-
-    lvc.cx = (INT)((rect.right - rect.left) * 0.3);
-    lvc.iSubItem = 1;
-    (void)ListView_InsertColumn(hwndListView, 1, &lvc);
-
-    lvc.cx = (INT)((rect.right - rect.left) * 0.6);
-    lvc.iSubItem = 2;
-    (void)ListView_InsertColumn(hwndListView, 2, &lvc);
+    INT tabs[2] = {30, 170};
+    SendMessage(hwndListBox, LB_SETTABSTOPS, (WPARAM)2, (LPARAM)(LPINT) &tabs[0]);
 }
 
 
@@ -481,10 +457,10 @@ OnInitDialog(HWND hwnd)
     }
 
     pVirtMem->hSelf = hwnd;
-    pVirtMem->hListView = GetDlgItem(hwnd, IDC_PAGEFILELIST);
+    pVirtMem->hListBox = GetDlgItem(hwnd, IDC_PAGEFILELIST);
     pVirtMem->bSave = FALSE;
 
-    SetListViewColumns(pVirtMem->hListView);
+    SetListBoxColumns(pVirtMem->hListBox);
 
     /* Load the pagefile systems from the reg */
     if (ReadPageFileSettings(pVirtMem))
