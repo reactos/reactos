@@ -42,8 +42,7 @@ static VOID
 IntFreeClassMenuName(IN OUT PWINDOWCLASS Class)
 {
     /* free the menu name, if it was changed and allocated */
-    if (Class->MenuName != NULL && !IS_INTRESOURCE(Class->MenuName) &&
-        Class->MenuName != (PWSTR)(Class + 1))
+    if (Class->MenuName != NULL && Class->MenuNameIsString)
     {
         UserHeapFree(Class->MenuName);
         Class->MenuName = NULL;
@@ -416,8 +415,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
     {
         /* The window is created on a different desktop, we need to
            clone the class object to the desktop heap of the window! */
-        ClassSize = (SIZE_T)BaseClass->ClassExtraDataOffset +
-                    (SIZE_T)BaseClass->ClsExtra;
+        ClassSize = sizeof(*BaseClass) + (SIZE_T)BaseClass->ClsExtra;
 
         Class = DesktopHeapAlloc(Desktop,
                                  ClassSize);
@@ -651,8 +649,7 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
     ASSERT(Class->Windows == 0);
     ASSERT(Class->Clone == NULL);
 
-    ClassSize = (SIZE_T)Class->ClassExtraDataOffset +
-                (SIZE_T)Class->ClsExtra;
+    ClassSize = sizeof(*Class) + (SIZE_T)Class->ClsExtra;
 
     /* allocate the new base class on the shared heap */
     NewClass = UserHeapAlloc(ClassSize);
@@ -664,15 +661,6 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
 
         NewClass->Desktop = NULL;
         NewClass->Base = NewClass;
-
-        if (Class->MenuName == (PWSTR)(Class + 1))
-        {
-            ULONG_PTR AnsiDelta = (ULONG_PTR)Class->AnsiMenuName - (ULONG_PTR)Class->MenuName;
-
-            /* fixup the self-relative MenuName pointers */
-            NewClass->MenuName = (PWSTR)(NewClass + 1);
-            NewClass->AnsiMenuName = (PSTR)((ULONG_PTR)NewClass->MenuName + AnsiDelta);
-        }
 
         if (!NewClass->System && NewClass->CallProc != NULL &&
             !NewClass->GlobalCallProc)
@@ -833,6 +821,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     SIZE_T ClassSize;
     PWINDOWCLASS Class = NULL;
     RTL_ATOM Atom;
+    PWSTR pszMenuName = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("lpwcx=%p ClassName=%wZ MenuName=%wZ wpExtra=%p dwFlags=%08x Desktop=%p pi=%p\n",
@@ -845,11 +834,13 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         return NULL;
     }
 
-    ClassSize = sizeof(WINDOWCLASS) + lpwcx->cbClsExtra;
+    ClassSize = sizeof(*Class) + lpwcx->cbClsExtra;
     if (MenuName->Length != 0)
     {
-        ClassSize += MenuName->Length + sizeof(UNICODE_NULL);
-        ClassSize += RtlUnicodeStringToAnsiSize(MenuName);
+        pszMenuName = UserHeapAlloc(MenuName->Length + sizeof(UNICODE_NULL) +
+                                    RtlUnicodeStringToAnsiSize(MenuName));
+        if (pszMenuName == NULL)
+            goto NoMem;
     }
 
     if (Desktop != NULL)
@@ -868,7 +859,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     if (Class != NULL)
     {
         RtlZeroMemory(Class,
-                      sizeof(ClassSize));
+                      ClassSize);
 
         Class->Desktop = Desktop;
         Class->Base = Class;
@@ -883,9 +874,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
 
         _SEH_TRY
         {
-            PWSTR strBuf;
-            PSTR strBufA;
-            ANSI_STRING AnsiString;
+            PWSTR pszMenuNameBuffer = pszMenuName;
 
             /* need to protect with SEH since accessing the WNDCLASSEX structure
                and string buffers might raise an exception! We don't want to
@@ -901,26 +890,29 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             Class->hbrBackground = lpwcx->hbrBackground;
 
             /* make a copy of the string */
-            strBuf = (PWSTR)(Class + 1);
-            if (MenuName->Length != 0)
+            if (pszMenuNameBuffer != NULL)
             {
-                Class->MenuName = strBuf;
+                Class->MenuNameIsString = TRUE;
+
+                Class->MenuName = pszMenuNameBuffer;
                 RtlCopyMemory(Class->MenuName,
                               MenuName->Buffer,
                               MenuName->Length);
+                Class->MenuName[MenuName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                strBuf += (MenuName->Length / sizeof(WCHAR)) + 1;
+                pszMenuNameBuffer += (MenuName->Length / sizeof(WCHAR)) + 1;
             }
             else
                 Class->MenuName = MenuName->Buffer;
 
             /* save an ansi copy of the string */
-            strBufA = (PSTR)strBuf;
-            if (MenuName->Length != 0)
+            if (pszMenuNameBuffer != NULL)
             {
-                Class->AnsiMenuName = strBufA;
+                ANSI_STRING AnsiString;
+
+                Class->AnsiMenuName = (PSTR)pszMenuNameBuffer;
                 AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(MenuName);
-                AnsiString.Buffer = strBufA;
+                AnsiString.Buffer = Class->AnsiMenuName;
                 Status = RtlUnicodeStringToAnsiString(&AnsiString,
                                                       MenuName,
                                                       FALSE);
@@ -931,14 +923,9 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                     /* life would've been much prettier if ntoskrnl exported RtlRaiseStatus()... */
                     _SEH_LEAVE;
                 }
-
-                strBufA += AnsiString.Length + 1;
             }
             else
                 Class->AnsiMenuName = (PSTR)MenuName->Buffer;
-
-            /* calculate the offset of the extra data */
-            Class->ClassExtraDataOffset = (ULONG_PTR)strBufA - (ULONG_PTR)Class;
 
             if (!(dwFlags & REGISTERCLASS_ANSI))
                 Class->Unicode = TRUE;
@@ -958,6 +945,9 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
 
             SetLastNtError(Status);
 
+            if (pszMenuName != NULL)
+                UserHeapFree(pszMenuName);
+
             DesktopHeapFree(Desktop,
                             Class);
             Class = NULL;
@@ -967,7 +957,11 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     }
     else
     {
+NoMem:
         DPRINT1("Failed to allocate class on Desktop 0x%p\n", Desktop);
+
+        if (pszMenuName != NULL)
+            UserHeapFree(pszMenuName);
 
         IntDeregisterClassAtom(Atom);
 
@@ -1423,7 +1417,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
             return 0;
         }
 
-        Data = (PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset + Index);
+        Data = (PULONG_PTR)((ULONG_PTR)(Class + 1) + Index);
 
         /* FIXME - Data might be a unaligned pointer! Might be a problem on
                    certain architectures, maybe using RtlCopyMemory is a
@@ -1550,6 +1544,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
                 IntFreeClassMenuName(Class);
                 Class->MenuName = strBufW;
                 Class->AnsiMenuName = AnsiString.Buffer;
+                Class->MenuNameIsString = TRUE;
 
                 /* update the clones */
                 Class = Class->Clone;
@@ -1557,6 +1552,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
                 {
                     Class->MenuName = strBufW;
                     Class->AnsiMenuName = AnsiString.Buffer;
+                    Class->MenuNameIsString = TRUE;
 
                     Class = Class->Next;
                 }
@@ -1578,6 +1574,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
         IntFreeClassMenuName(Class);
         Class->MenuName = MenuName->Buffer;
         Class->AnsiMenuName = (PSTR)MenuName->Buffer;
+        Class->MenuNameIsString = FALSE;
 
         /* update the clones */
         Class = Class->Clone;
@@ -1585,6 +1582,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
         {
             Class->MenuName = MenuName->Buffer;
             Class->AnsiMenuName = (PSTR)MenuName->Buffer;
+            Class->MenuNameIsString = FALSE;
 
             Class = Class->Next;
         }
@@ -1619,7 +1617,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
             return 0;
         }
 
-        Data = (PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset + Index);
+        Data = (PULONG_PTR)((ULONG_PTR)(Class + 1) + Index);
 
         /* FIXME - Data might be a unaligned pointer! Might be a problem on
                    certain architectures, maybe using RtlCopyMemory is a
@@ -1631,7 +1629,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
         Class = Class->Clone;
         while (Class != NULL)
         {
-            *(PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset + Index) = NewLong;
+            *(PULONG_PTR)((ULONG_PTR)(Class + 1) + Index) = NewLong;
             Class = Class->Next;
         }
 
@@ -1961,7 +1959,7 @@ NtUserGetClassLong(IN HWND hWnd,
                                   Offset,
                                   Ansi);
 
-        if (Ret != 0 && Offset == GCLP_MENUNAME && !IS_INTRESOURCE(Ret))
+        if (Ret != 0 && Offset == GCLP_MENUNAME && Window->Class->MenuNameIsString)
         {
             Ret = (ULONG_PTR)DesktopHeapAddressToUser(Window->Class->Desktop,
                                                       (PVOID)Ret);
@@ -2196,8 +2194,7 @@ InvalidParameter:
                 lpWndClassEx->lpszClassName = CapturedClassName.Buffer;
                 /* FIXME - handle Class->Desktop == NULL!!!!! */
 
-                if (Class->MenuName != NULL &&
-                    !IS_INTRESOURCE(Class->MenuName))
+                if (Class->MenuName != NULL && Class->MenuNameIsString)
                 {
                     lpWndClassEx->lpszMenuName = DesktopHeapAddressToUser(Class->Desktop,
                                                                           (Ansi ?

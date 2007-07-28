@@ -47,14 +47,13 @@ typedef struct _WINDOWCLASS
     PWSTR MenuName;
     PSTR AnsiMenuName;
 
-    ULONG_PTR ClassExtraDataOffset;
-
     UINT Destroying : 1;
     UINT Unicode : 1;
     UINT System : 1;
     UINT Global : 1;
     UINT GlobalCallProc : 1;
     UINT GlobalCallProc2 : 1;
+    UINT MenuNameIsString : 1;
 } WINDOWCLASS, *PWINDOWCLASS;
 
 typedef struct _W32PROCESSINFO
