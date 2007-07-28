@@ -881,7 +881,7 @@ PNP_GetClassName(handle_t BindingHandle,
     WCHAR szKeyName[MAX_PATH];
     CONFIGRET ret = CR_SUCCESS;
     HKEY hKey = NULL;
-    ULONG ulSize;
+    DWORD dwSize;
 
     UNREFERENCED_PARAMETER(BindingHandle);
     UNREFERENCED_PARAMETER(Flags);
@@ -901,20 +901,20 @@ PNP_GetClassName(handle_t BindingHandle,
                       &hKey))
         return CR_REGISTRY_ERROR;
 
-    ulSize = *Length * sizeof(WCHAR);
+    dwSize = *Length * sizeof(WCHAR);
     if (RegQueryValueExW(hKey,
                          L"Class",
                          NULL,
                          NULL,
                          (LPBYTE)Buffer,
-                         &ulSize))
+                         &dwSize))
     {
         *Length = 0;
         ret = CR_REGISTRY_ERROR;
     }
     else
     {
-        *Length = ulSize / sizeof(WCHAR);
+        *Length = dwSize / sizeof(WCHAR);
     }
 
     RegCloseKey(hKey);
@@ -1345,9 +1345,9 @@ PNP_HwProfFlags(handle_t BindingHandle,
 CONFIGRET
 PNP_AddEmptyLogConf(handle_t BindingHandle,
                     wchar_t *DeviceInstance,
-                    ULONG ulPriority,
-                    ULONG *pulLogConfTag,
-                    ULONG ulFlags)
+                    unsigned long ulPriority,
+                    unsigned long *pulLogConfTag,
+                    unsigned long ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
 
@@ -1370,9 +1370,9 @@ PNP_AddEmptyLogConf(handle_t BindingHandle,
 CONFIGRET
 PNP_FreeLogConf(handle_t BindingHandle,
                 wchar_t *DeviceInstance,
-                ULONG ulType,
-                ULONG ulLogConfTag,
-                ULONG ulFlags)
+                unsigned long ulType,
+                unsigned long ulLogConfTag,
+                unsigned long ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
 
@@ -1395,9 +1395,9 @@ PNP_FreeLogConf(handle_t BindingHandle,
 CONFIGRET
 PNP_GetFirstLogConf(handle_t BindingHandle,
                     wchar_t *DeviceInstance,
-                    ULONG ulPriority,
-                    ULONG *pulLogConfTag,
-                    ULONG ulFlags)
+                    unsigned long ulPriority,
+                    unsigned long *pulLogConfTag,
+                    unsigned long ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
 
@@ -1420,10 +1420,10 @@ PNP_GetFirstLogConf(handle_t BindingHandle,
 CONFIGRET
 PNP_GetNextLogConf(handle_t BindingHandle,
                    wchar_t *DeviceInstance,
-                   ULONG ulLogConfType,
-                   ULONG ulCurrentTag,
-                   ULONG *pulNextTag,
-                   ULONG ulFlags)
+                   unsigned long ulLogConfType,
+                   unsigned long ulCurrentTag,
+                   unsigned long *pulNextTag,
+                   unsigned long ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
 
@@ -1447,10 +1447,10 @@ PNP_GetNextLogConf(handle_t BindingHandle,
 CONFIGRET
 PNP_GetLogConfPriority(handle_t BindingHandle,
                        wchar_t *DeviceInstance,
-                       ULONG ulLogConfType,
-                       ULONG ulCurrentTag,
-                       ULONG *pPriority,
-                       ULONG ulFlags)
+                       unsigned long ulLogConfType,
+                       unsigned long ulCurrentTag,
+                       unsigned long *pPriority,
+                       unsigned long ulFlags)
 {
     CONFIGRET ret = CR_SUCCESS;
 
