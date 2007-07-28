@@ -397,6 +397,13 @@ CreateListView(PMAIN_WND_INFO Info)
                                 4,
                                 &lvc);
 
+    /* check the details view menu item */
+    CheckMenuRadioItem(GetMenu(Info->hMainWnd),
+                       ID_VIEW_LARGE,
+                       ID_VIEW_DETAILS,
+                       ID_VIEW_DETAILS,
+                       MF_BYCOMMAND);
+
     return TRUE;
 }
 
@@ -659,21 +666,41 @@ MainWndCommand(PMAIN_WND_INFO Info,
         case ID_VIEW_LARGE:
             SetListViewStyle(Info->hListView,
                              LVS_ICON);
+            CheckMenuRadioItem(GetMenu(Info->hMainWnd),
+                               ID_VIEW_LARGE,
+                               ID_VIEW_DETAILS,
+                               ID_VIEW_LARGE,
+                               MF_BYCOMMAND);
         break;
 
         case ID_VIEW_SMALL:
             SetListViewStyle(Info->hListView,
                              LVS_SMALLICON);
+            CheckMenuRadioItem(GetMenu(Info->hMainWnd),
+                               ID_VIEW_LARGE,
+                               ID_VIEW_DETAILS,
+                               ID_VIEW_SMALL,
+                               MF_BYCOMMAND);
         break;
 
         case ID_VIEW_LIST:
             SetListViewStyle(Info->hListView,
                              LVS_LIST);
+            CheckMenuRadioItem(GetMenu(Info->hMainWnd),
+                               ID_VIEW_LARGE,
+                               ID_VIEW_DETAILS,
+                               ID_VIEW_LIST,
+                               MF_BYCOMMAND);
         break;
 
         case ID_VIEW_DETAILS:
             SetListViewStyle(Info->hListView,
                              LVS_REPORT);
+            CheckMenuRadioItem(GetMenu(Info->hMainWnd),
+                               ID_VIEW_LARGE,
+                               ID_VIEW_DETAILS,
+                               ID_VIEW_DETAILS,
+                               MF_BYCOMMAND);
         break;
 
         case ID_VIEW_CUST:
