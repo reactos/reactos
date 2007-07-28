@@ -32,11 +32,11 @@ NTSTATUS
 NTAPI
 RtlCreateTimer(HANDLE TimerQueue,
                PHANDLE phNewTimer,
-	       WAITORTIMERCALLBACKFUNC Callback,
-	       PVOID Parameter,
-	       DWORD DueTime,
-	       DWORD Period,
-	       ULONG Flags)
+               WAITORTIMERCALLBACKFUNC Callback,
+               PVOID Parameter,
+               ULONG DueTime,
+               ULONG Period,
+               ULONG Flags)
 {
   DPRINT1("RtlCreateTimer: stub\n");
   return STATUS_NOT_IMPLEMENTED;

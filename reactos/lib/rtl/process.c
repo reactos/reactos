@@ -72,8 +72,8 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
 {
     NTSTATUS Status;
     PVOID BaseAddress = NULL;
-    ULONG EnviroSize;
-    ULONG Size;
+    SIZE_T EnviroSize;
+    SIZE_T Size;
     PWCHAR Environment = 0;
     DPRINT("RtlpInitEnvironment (hProcess: %p, Peb: %p Params: %p)\n",
             ProcessHandle, Peb, ProcessParameters);

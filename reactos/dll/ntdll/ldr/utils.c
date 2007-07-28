@@ -1991,7 +1991,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
     NTSTATUS Status;
     PLDR_DATA_TABLE_ENTRY tmpModule;
     HANDLE SectionHandle;
-    ULONG ViewSize;
+    SIZE_T ViewSize;
     PVOID ImageBase;
     PIMAGE_NT_HEADERS NtHeaders;
     BOOLEAN MappedAsDataFile;
@@ -2963,7 +2963,7 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
   FILE_STANDARD_INFORMATION FileInfo;
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE SectionHandle;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   PVOID BaseAddress;
   BOOLEAN Result;
   NTSTATUS Status;

@@ -80,7 +80,7 @@ RtlSubAuthoritySid(IN PSID Sid_,
 
   PAGED_CODE_RTL();
 
-  return &Sid->SubAuthority[SubAuthority];
+  return (PULONG)&Sid->SubAuthority[SubAuthority];
 }
 
 

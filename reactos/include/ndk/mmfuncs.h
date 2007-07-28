@@ -261,8 +261,8 @@ NtReadVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
     OUT PVOID Buffer,
-    IN ULONG NumberOfBytesToRead,
-    OUT PULONG NumberOfBytesRead
+    IN SIZE_T NumberOfBytesToRead,
+    OUT PSIZE_T NumberOfBytesRead
 );
 
 NTSTATUS
@@ -270,7 +270,7 @@ NTAPI
 NtResetWriteWatch(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
-    IN ULONG RegionSize
+    IN SIZE_T RegionSize
 );
 
 NTSYSCALLAPI
@@ -279,8 +279,8 @@ NTAPI
 NtUnlockVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
-    IN ULONG  NumberOfBytesToUnlock,
-    OUT PULONG NumberOfBytesUnlocked OPTIONAL
+    IN SIZE_T  NumberOfBytesToUnlock,
+    OUT PSIZE_T NumberOfBytesUnlocked OPTIONAL
 );
 
 NTSYSCALLAPI
@@ -369,8 +369,8 @@ NTAPI
 ZwLockVirtualMemory(
     HANDLE ProcessHandle,
     PVOID BaseAddress,
-    ULONG NumberOfBytesToLock,
-    PULONG NumberOfBytesLocked
+    SIZE_T NumberOfBytesToLock,
+    PSIZE_T NumberOfBytesLocked
 );
 
 NTSYSAPI
@@ -439,8 +439,8 @@ ZwReadVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
     OUT PVOID Buffer,
-    IN ULONG NumberOfBytesToRead,
-    OUT PULONG NumberOfBytesRead
+    IN SIZE_T NumberOfBytesToRead,
+    OUT PSIZE_T NumberOfBytesRead
 );
 
 NTSYSAPI
@@ -449,8 +449,8 @@ NTAPI
 ZwUnlockVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID BaseAddress,
-    IN ULONG  NumberOfBytesToUnlock,
-    OUT PULONG NumberOfBytesUnlocked OPTIONAL
+    IN SIZE_T  NumberOfBytesToUnlock,
+    OUT PSIZE_T NumberOfBytesUnlocked OPTIONAL
 );
 
 NTSYSAPI

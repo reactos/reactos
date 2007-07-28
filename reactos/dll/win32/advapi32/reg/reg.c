@@ -2240,7 +2240,7 @@ RegEnumKeyExA (HKEY hKey,
 	DWORD NameLength;
 	DWORD ClassLength = 0;
 	DWORD BufferSize;
-	DWORD ResultSize;
+	ULONG ResultSize;
 	HANDLE KeyHandle;
 	NTSTATUS Status;
 
@@ -2541,7 +2541,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
 {
 	HANDLE KeyHandle;
     NTSTATUS status;
-    DWORD total_size;
+    ULONG total_size;
     char buffer[256], *buf_ptr = buffer;
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
     static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );
@@ -2587,7 +2587,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
 
         if (is_string(info->Type))
         {
-            DWORD len;
+            ULONG len;
             RtlUnicodeToMultiByteSize( &len, (WCHAR *)(buf_ptr + info->DataOffset),
                                        total_size - info->DataOffset );
             if (data && len)
@@ -2612,7 +2612,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
 
         if (value && !status)
         {
-            DWORD len;
+            ULONG len;
 
             RtlUnicodeToMultiByteSize( &len, info->Name, info->NameLength );
             if (len >= *val_count)
@@ -2668,7 +2668,7 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
 {
 	HANDLE KeyHandle;
     NTSTATUS status;
-    DWORD total_size;
+    ULONG total_size;
     char buffer[256], *buf_ptr = buffer;
     KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
     static const int info_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name );

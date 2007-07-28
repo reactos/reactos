@@ -576,7 +576,7 @@ RtlReAllocateHeap(
     HANDLE Heap,
     ULONG Flags,
     PVOID Ptr,
-    ULONG Size
+    SIZE_T Size
 );
 
 NTSYSAPI

@@ -25,7 +25,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
    MEMORY_BASIC_INFORMATION MemInfo;
    PVOID EnvPtr = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG RegionSize = PAGE_SIZE;
+   SIZE_T RegionSize = PAGE_SIZE;
 
    if (Inherit == TRUE)
    {
@@ -96,7 +96,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
 VOID NTAPI
 RtlDestroyEnvironment(PWSTR Environment)
 {
-   ULONG Size = 0;
+   SIZE_T Size = 0;
 
    NtFreeVirtualMemory(NtCurrentProcess(),
                        (PVOID)&Environment,
@@ -275,7 +275,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
    int hole_len, new_len, env_len = 0;
    WCHAR *new_env = 0, *env_end = 0, *wcs, *env, *val = 0, *tail = 0, *hole = 0;
    PWSTR head = NULL;
-   ULONG size = 0, new_size;
+   SIZE_T size = 0, new_size;
    LONG f = 1;
    NTSTATUS Status = STATUS_SUCCESS;
 

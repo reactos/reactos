@@ -55,7 +55,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 {
    NTSTATUS Status = STATUS_SUCCESS;
    PRTL_USER_PROCESS_PARAMETERS Param = NULL;
-   ULONG RegionSize = 0;
+   SIZE_T RegionSize = 0;
    ULONG Length = 0;
    PWCHAR Dest;
    UNICODE_STRING EmptyString;
@@ -222,7 +222,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 NTSTATUS NTAPI
 RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 {
-   ULONG RegionSize = 0;
+   SIZE_T RegionSize = 0;
 
    return ZwFreeVirtualMemory (NtCurrentProcess (),
 			(PVOID)ProcessParameters,

@@ -810,6 +810,8 @@ RtlUpcaseUnicodeToOemN (PCHAR OemString,
    ULONG Size = 0;
    ULONG i;
 
+   ASSERT(NlsUnicodeToOemTable != NULL);
+
    if (NlsMbOemCodePageTag == FALSE)
    {
       /* single-byte code page */

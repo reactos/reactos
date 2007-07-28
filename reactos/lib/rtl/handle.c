@@ -35,7 +35,7 @@ VOID NTAPI
 RtlDestroyHandleTable(PRTL_HANDLE_TABLE HandleTable)
 {
    PVOID ArrayPointer;
-   ULONG ArraySize;
+   SIZE_T ArraySize;
 
    /* free handle array */
    if (HandleTable->CommittedHandles)
@@ -61,7 +61,7 @@ RtlAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
    NTSTATUS Status;
    PRTL_HANDLE_TABLE_ENTRY retval;
    PVOID ArrayPointer;
-   ULONG ArraySize;
+   SIZE_T ArraySize;
 
    pp_new = &HandleTable->FreeHandles;
 
