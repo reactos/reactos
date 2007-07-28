@@ -984,7 +984,7 @@ IntMouseInput(MOUSEINPUT *mi)
    {
       LARGE_INTEGER LargeTickCount;
       KeQueryTickCount(&LargeTickCount);
-      mi->time = LargeTickCount.u.LowPart;
+      mi->time = MsqCalculateMessageTime(&LargeTickCount);
    }
 
    SwapButtons = CurInfo->SwapButtons;

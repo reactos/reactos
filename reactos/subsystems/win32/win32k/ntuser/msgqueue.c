@@ -163,7 +163,7 @@ MsqInsertSystemMessage(MSG* Msg)
    }
 
    KeQueryTickCount(&LargeTickCount);
-   Msg->time = LargeTickCount.u.LowPart;
+   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
    
    /*
     * If we got WM_MOUSEMOVE and there are already messages in the
@@ -694,7 +694,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    Msg.lParam = lParam;
 
    KeQueryTickCount(&LargeTickCount);
-   Msg.time = LargeTickCount.u.LowPart;
+   Msg.time = MsqCalculateMessageTime(&LargeTickCount);
    /* We can't get the Msg.pt point here since we don't know thread
       (and thus the window station) the message will end up in yet. */
 
@@ -770,7 +770,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    Mesg.wParam = wParam;
    Mesg.lParam = lParam;
    KeQueryTickCount(&LargeTickCount);
-   Mesg.time = LargeTickCount.u.LowPart;
+   Mesg.time = MsqCalculateMessageTime(&LargeTickCount);
    IntGetCursorLocation(WinSta, &Mesg.pt);
    MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
    ObmDereferenceObject(Window);
@@ -1787,7 +1787,7 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Msg->wParam = (WPARAM) Timer->IDEvent;
    Msg->lParam = (LPARAM) Timer->TimerFunc;
    KeQueryTickCount(&LargeTickCount);
-   Msg->time = LargeTickCount.u.LowPart;
+   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
    IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
                         &Msg->pt);
 
