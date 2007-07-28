@@ -231,7 +231,7 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
                           0,
                           REG_MULTI_SZ,
                           (LPBYTE) szPagingFiles,
-                          (DWORD) nPos * sizeof(TCHAR)))
+                          (DWORD) nPos * sizeof(TCHAR)) == ERROR_SUCCESS)
         {
             bErr = FALSE;
         }
