@@ -38,7 +38,10 @@
 #endif
 
 #if defined(WINNT) || !defined(WIN32)
+#ifndef _HRESULT_DEFINED
+#define _HRESULT_DEFINED
   typedef long HRESULT;
+#endif
 #endif
 
 #ifdef __cplusplus
