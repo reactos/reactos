@@ -294,7 +294,7 @@ KeybHardwareProc(IN HWND hwndDlg,
 
 
 LONG APIENTRY
-KeyboardApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     PROPSHEETPAGE psp[2];
     PROPSHEETHEADER psh;

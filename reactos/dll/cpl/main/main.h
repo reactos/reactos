@@ -30,7 +30,7 @@ extern HINSTANCE hApplet;
 /* keyboard.c */
 
 LONG APIENTRY
-KeyboardApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 /* main.c */
 
@@ -43,7 +43,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 /* mouse.c */
 
 LONG APIENTRY
-MouseApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+MouseApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 #endif /* __CPL_MAIN_H */
 

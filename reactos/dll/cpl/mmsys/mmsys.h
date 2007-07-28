@@ -24,8 +24,8 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 LONG APIENTRY
 MmSysApplet(HWND hwnd,
             UINT uMsg,
-            LONG wParam,
-            LONG lParam);
+            LPARAM wParam,
+            LPARAM lParam);
 
 #endif /* __CPL_MMSYS_H */
 

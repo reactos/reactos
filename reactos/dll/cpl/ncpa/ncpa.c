@@ -336,9 +336,9 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					IP_ADAPTER_INFO Adapters[64];
 					IP_ADAPTER_INFO *pAdapter;
 					TCHAR *tpszCfgInstanceID;
-					DWORD dwSize = sizeof(Adapters);
+					ULONG ulSize = sizeof(Adapters);
 					memset(&Adapters,0x00,sizeof(Adapters));
-					if(GetAdaptersInfo(Adapters,&dwSize)!=ERROR_SUCCESS)
+					if(GetAdaptersInfo(Adapters,&ulSize)!=ERROR_SUCCESS)
 						break;;
 					pAdapter = Adapters;
 					tpszCfgInstanceID = (TCHAR*)pPage->lParam;

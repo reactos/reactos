@@ -21,7 +21,7 @@
 #define NUM_APPLETS     (1)
 #define NUM_SHEETS       3
 
-LONG APIENTRY Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+static LONG APIENTRY Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 HINSTANCE hApplet;
 
@@ -45,9 +45,9 @@ InitPropSheetPage(PROPSHEETPAGE *PsPage, WORD IdDlg, DLGPROC DlgProc)
 }
 
 /* Create applets */
-LONG
+static LONG
 APIENTRY
-Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     PROPSHEETPAGE PsPage[NUM_SHEETS];
     PROPSHEETHEADER psh;

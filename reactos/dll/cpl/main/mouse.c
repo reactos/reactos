@@ -1796,7 +1796,7 @@ WheelProc(IN HWND hwndDlg,
 
 
 LONG APIENTRY
-MouseApplet(HWND hwnd, UINT uMsg, LONG lParam1, LONG lParam2)
+MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh;

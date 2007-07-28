@@ -12,7 +12,7 @@
 
 #define NUM_APPLETS 1
 
-LONG APIENTRY UsrmgrApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+static LONG APIENTRY UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 HINSTANCE hApplet = 0;
 
@@ -41,8 +41,8 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 
 
 /* Display Applet */
-LONG APIENTRY
-UsrmgrApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+static LONG APIENTRY
+UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     PROPSHEETPAGE psp[3];
     PROPSHEETHEADER psh;
