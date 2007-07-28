@@ -193,7 +193,7 @@ MonthCalUpdate(IN PMONTHCALWND infoPtr)
         rcClient.left = 0;
         rcClient.top = infoPtr->CellSize.cy;
         rcClient.right = infoPtr->ClientSize.cx;
-        rcClient.bottom = infoPtr->ClientSize.cy - rcClient.top;
+        rcClient.bottom = infoPtr->ClientSize.cy;
 
         InvalidateRect(infoPtr->hSelf,
                        &rcClient,
