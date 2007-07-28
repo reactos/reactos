@@ -7,7 +7,7 @@ extern bool	fGameStarted;
 
 #define OPTION_THREE_CARDS   8
 
-extern INT nOptions;
+extern DWORD dwOptions;
 
 void CreateSol();
 void NewGame(void);

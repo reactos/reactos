@@ -21,8 +21,8 @@ BEGIN
     AUTORADIOBUTTON "Изтегли &една", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Изтегли &три", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Показване на времето", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX    "Лента &състояние", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Показване на времето", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Лента &състояние", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP | WS_DISABLED
 
     DEFPUSHBUTTON   "Добре", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Отказ", IDCANCEL, 101, 97, 50, 14
@@ -48,7 +48,7 @@ BEGIN
     BEGIN
         MENUITEM "&Раздаване\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Тесте...",                    IDM_GAME_DECK
+        MENUITEM "&Тесте...",                    IDM_GAME_DECK, GRAYED
         MENUITEM "&Настройки...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "Из&ход",                       IDM_GAME_EXIT

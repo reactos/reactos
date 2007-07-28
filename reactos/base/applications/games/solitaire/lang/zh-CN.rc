@@ -22,8 +22,8 @@ BEGIN
     AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP | WS_DISABLED
 
     DEFPUSHBUTTON   "确定", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "取消", IDCANCEL, 101, 97, 50, 14
@@ -49,7 +49,7 @@ BEGIN
     BEGIN
         MENUITEM "发牌(&D)\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "背面图案(&C)...",                IDM_GAME_DECK
+        MENUITEM "背面图案(&C)...",                IDM_GAME_DECK, GRAYED
         MENUITEM "选项(&O)...",                    IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)",                       IDM_GAME_EXIT

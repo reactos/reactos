@@ -21,8 +21,8 @@ BEGIN
     AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP | WS_DISABLED
 
     DEFPUSHBUTTON   "Aceptar", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Cancelar", IDCANCEL, 101, 97, 50, 14
@@ -48,7 +48,7 @@ BEGIN
     BEGIN
         MENUITEM "&Repartir\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Barajar...",                    IDM_GAME_DECK
+        MENUITEM "&Barajar...",                    IDM_GAME_DECK, GRAYED
         MENUITEM "&Opciones...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Salir",                       IDM_GAME_EXIT
