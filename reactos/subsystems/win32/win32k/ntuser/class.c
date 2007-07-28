@@ -1961,8 +1961,7 @@ NtUserGetClassLong(IN HWND hWnd,
 
         if (Ret != 0 && Offset == GCLP_MENUNAME && Window->Class->MenuNameIsString)
         {
-            Ret = (ULONG_PTR)DesktopHeapAddressToUser(Window->Class->Desktop,
-                                                      (PVOID)Ret);
+            Ret = (ULONG_PTR)UserHeapAddressToUser((PVOID)Ret);
         }
     }
 
@@ -2196,10 +2195,9 @@ InvalidParameter:
 
                 if (Class->MenuName != NULL && Class->MenuNameIsString)
                 {
-                    lpWndClassEx->lpszMenuName = DesktopHeapAddressToUser(Class->Desktop,
-                                                                          (Ansi ?
-                                                                              (PVOID)Class->AnsiMenuName :
-                                                                              (PVOID)Class->MenuName));
+                    lpWndClassEx->lpszMenuName = UserHeapAddressToUser(Ansi ?
+                                                                           (PVOID)Class->AnsiMenuName :
+                                                                           (PVOID)Class->MenuName);
                 }
 
                 /* Undocumented behavior! Return the class atom as a BOOL! */
