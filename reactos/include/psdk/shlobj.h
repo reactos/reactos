@@ -1105,8 +1105,6 @@ typedef struct _SHChangeProductKeyAsIDList {
 ULONG WINAPI SHChangeNotifyRegister(HWND hwnd, int fSources, LONG fEvents, UINT wMsg,
                                     int cEntries, SHChangeNotifyEntry *pshcne);
 BOOL WINAPI SHChangeNotifyDeregister(ULONG ulID);
-HANDLE WINAPI SHChangeNotification_Lock(HANDLE hChangeNotification, DWORD dwProcessId,
-                                        LPITEMIDLIST **pppidl, LONG *plEvent);
 BOOL WINAPI SHChangeNotification_Unlock(HANDLE hLock);
 
 HRESULT WINAPI SHGetRealIDL(IShellFolder *psf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST * ppidlReal);
