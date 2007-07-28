@@ -308,7 +308,7 @@ HvpCreateHiveFreeCellList(
 HCELL_INDEX CMAPI
 HvAllocateCell(
    PHHIVE RegistryHive,
-   ULONG Size,
+   SIZE_T Size,
    HV_STORAGE_TYPE Storage)
 {
    PHCELL FreeCell;
