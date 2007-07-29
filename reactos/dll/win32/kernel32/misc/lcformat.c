@@ -410,7 +410,7 @@ NLS_GetDateTimeFormatW_InvalidFlags:
 
   if (!lpTime)
   {
-    GetSystemTime(&st); /* Default to current time */
+    GetLocalTime(&st); /* Default to current time */
     lpTime = &st;
   }
   else
