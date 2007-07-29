@@ -66,7 +66,6 @@ copy (TCHAR source[MAX_PATH],
 	DWORD  dwAttrib;
 	DWORD  dwRead;
 	DWORD  dwWritten;
-	DWORD  i;
 	BOOL   bEof = FALSE;
 	TCHAR TrueDest[MAX_PATH];
 	TCHAR TempSrc[MAX_PATH];
@@ -168,7 +167,6 @@ copy (TCHAR source[MAX_PATH],
 	}
 
 
-
 	if (!IsExistingFile (dest))
 	{
 #ifdef _DEBUG
@@ -231,7 +229,9 @@ copy (TCHAR source[MAX_PATH],
         nErrorLevel = 1;
 		return 0;
 	}
-	buffer = (LPBYTE)malloc (BUFF_SIZE);
+
+	/* A page-aligned buffer usually give more speed */
+	buffer = (LPBYTE)VirtualAlloc(NULL, BUFF_SIZE, MEM_COMMIT, PAGE_READWRITE);
 	if (buffer == NULL)
 	{
 		CloseHandle (hFileDest);
@@ -247,16 +247,13 @@ copy (TCHAR source[MAX_PATH],
 		ReadFile (hFileSrc, buffer, BUFF_SIZE, &dwRead, NULL);
 		if (lpdwFlags & COPY_ASCII)
 		{
-			for (i = 0; i < dwRead; i++)
+			LPBYTE pEof = memchr(buffer, 0x1A, dwRead);
+			if (pEof != NULL)
 			{
-				/* we're dealing with ASCII files! */
-				if (((LPSTR)buffer)[i] == 0x1A)
-				{
-					bEof = TRUE;
-					break;
-				}
+				bEof = TRUE;
+				dwRead = pEof-buffer+1;
+				break;
 			}
-			dwRead = i;
 		}
  
 		if (dwRead == 0)
@@ -274,25 +271,24 @@ copy (TCHAR source[MAX_PATH],
 			return 0;
 		}
 	}
-	while (dwRead && !bEof);
+	while (!bEof);
  
 #ifdef _DEBUG
 	DebugPrintf (_T("setting time\n"));
 #endif
 	SetFileTime (hFileDest, &srctime, NULL, NULL);
  
-	if (lpdwFlags & COPY_ASCII)
+	if ((lpdwFlags & COPY_ASCII) && !bEof)
 	{
 		/* we're dealing with ASCII files! */
-		((LPSTR)buffer)[0] = 0x1A;
-		((LPSTR)buffer)[1] = '\0';
+		buffer[0] = 0x1A;
 #ifdef _DEBUG
 		DebugPrintf (_T("appending ^Z\n"));
 #endif
 		WriteFile (hFileDest, buffer, sizeof(CHAR), &dwWritten, NULL);
 	}
  
-	free (buffer);
+	VirtualFree (buffer, 0, MEM_RELEASE);
 	CloseHandle (hFileDest);
 	CloseHandle (hFileSrc);
  
@@ -317,8 +313,6 @@ copy (TCHAR source[MAX_PATH],
 
 	if(lpdwFlags & COPY_DECRYPT)
 	   DeleteFile(TempSrc);
-
-
 
 	return 1;
 }
@@ -877,7 +871,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	LoadString(CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg, nFiles);
 	
-	CloseHandle(hFile);		
+	FindClose(hFile);		
   if (arg!=NULL) 
       free(arg);
 
