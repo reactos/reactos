@@ -98,7 +98,6 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     INT DriveLen;
     INT PgCnt = 0;
 
-    ZeroMemory(szDrives, sizeof(szDrives));
     DriveLen = GetLogicalDriveStrings(1023,
                                       szDrives);
 
