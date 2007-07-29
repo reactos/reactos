@@ -18,6 +18,7 @@
 typedef struct _GLOBAL_DATA
 {
     STICKYKEYS stickyKeys;
+    STICKYKEYS oldStickyKeys;
     FILTERKEYS filterKeys;
     TOGGLEKEYS toggleKeys;
 } GLOBAL_DATA, *PGLOBAL_DATA;
@@ -30,9 +31,125 @@ StickyKeysDlgProc(HWND hwndDlg,
                   WPARAM wParam,
                   LPARAM lParam)
 {
+    PGLOBAL_DATA pGlobalData;
+
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            pGlobalData = (PGLOBAL_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            memcpy(&pGlobalData->oldStickyKeys,
+                   &pGlobalData->stickyKeys,
+                   sizeof(STICKYKEYS));
+
+            CheckDlgButton(hwndDlg,
+                           IDC_STICKY_ACTIVATE_CHECK,
+                           pGlobalData->stickyKeys.dwFlags & SKF_HOTKEYACTIVE ? BST_CHECKED : BST_UNCHECKED);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_STICKY_LOCK_CHECK,
+                           pGlobalData->stickyKeys.dwFlags & SKF_TRISTATE ? BST_CHECKED : BST_UNCHECKED);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_STICKY_UNLOCK_CHECK,
+                           pGlobalData->stickyKeys.dwFlags & SKF_TWOKEYSOFF ? BST_CHECKED : BST_UNCHECKED);
+
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_STICKY_ACTIVATE_CHECK:
+                    pGlobalData->stickyKeys.dwFlags ^= SKF_HOTKEYACTIVE;
+                    break;
+
+                case IDC_STICKY_LOCK_CHECK:
+                    pGlobalData->stickyKeys.dwFlags ^= SKF_TRISTATE;
+                    break;
+
+                case IDC_STICKY_UNLOCK_CHECK:
+                    pGlobalData->stickyKeys.dwFlags ^= SKF_TWOKEYSOFF;
+                    break;
+
+                case IDOK:
+                    EndDialog(hwndDlg,
+                              (pGlobalData->stickyKeys.dwFlags != pGlobalData->oldStickyKeys.dwFlags));
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, FALSE);
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+FilterKeysDlgProc(HWND hwndDlg,
+                  UINT uMsg,
+                  WPARAM wParam,
+                  LPARAM lParam)
+{
+    PGLOBAL_DATA pGlobalData;
+
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pGlobalData = (PGLOBAL_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, TRUE);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, FALSE);
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+ToggleKeysDlgProc(HWND hwndDlg,
+                  UINT uMsg,
+                  WPARAM wParam,
+                  LPARAM lParam)
+{
+    PGLOBAL_DATA pGlobalData;
+
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pGlobalData = (PGLOBAL_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
             break;
 
         case WM_COMMAND:
@@ -57,16 +174,8 @@ StickyKeysDlgProc(HWND hwndDlg,
 
 
 static VOID
-OnInitDialog(IN HWND hwndDlg)
+OnInitDialog(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
-    PGLOBAL_DATA pGlobalData;
-
-    pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
-    if (pGlobalData == NULL)
-        return;
-
-    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
-
     /* Get sticky keys information */
     pGlobalData->stickyKeys.cbSize = sizeof(STICKYKEYS);
     if (!SystemParametersInfo(SPI_GETSTICKYKEYS,
@@ -76,9 +185,6 @@ OnInitDialog(IN HWND hwndDlg)
     {
         return;
     }
-
-    if (pGlobalData->stickyKeys.dwFlags & SKF_STICKYKEYSON)
-        SendDlgItemMessage(hwndDlg, IDC_STICKY_BOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
 
     /* Get filter keys information */
     pGlobalData->filterKeys.cbSize = sizeof(FILTERKEYS);
@@ -90,9 +196,6 @@ OnInitDialog(IN HWND hwndDlg)
         return;
     }
 
-    if (pGlobalData->filterKeys.dwFlags & FKF_FILTERKEYSON)
-        SendDlgItemMessage(hwndDlg, IDC_FILTER_BOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
-
     /* Get toggle keys information */
     pGlobalData->toggleKeys.cbSize = sizeof(TOGGLEKEYS);
     if (!SystemParametersInfo(SPI_GETTOGGLEKEYS,
@@ -103,8 +206,17 @@ OnInitDialog(IN HWND hwndDlg)
         return;
     }
 
-    if (pGlobalData->toggleKeys.dwFlags & TKF_TOGGLEKEYSON)
-        SendDlgItemMessage(hwndDlg, IDC_TOGGLE_BOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+    CheckDlgButton(hwndDlg,
+                   IDC_STICKY_BOX,
+                   pGlobalData->stickyKeys.dwFlags & SKF_STICKYKEYSON ? BST_CHECKED : BST_UNCHECKED);
+
+    CheckDlgButton(hwndDlg,
+                   IDC_FILTER_BOX,
+                   pGlobalData->filterKeys.dwFlags & FKF_FILTERKEYSON ? BST_CHECKED : BST_UNCHECKED);
+
+    CheckDlgButton(hwndDlg,
+                   IDC_TOGGLE_BOX,
+                   pGlobalData->toggleKeys.dwFlags & TKF_TOGGLEKEYSON ? BST_CHECKED : BST_UNCHECKED);
 }
 
 
@@ -123,37 +235,57 @@ KeyboardPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            OnInitDialog(hwndDlg);
+            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            if (pGlobalData == NULL)
+                return FALSE;
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+            OnInitDialog(hwndDlg, pGlobalData);
             return TRUE;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_STICKY_BOX:
+                    pGlobalData->stickyKeys.dwFlags ^= SKF_STICKYKEYSON;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_STICKY_BUTTON:
                     if (DialogBoxParam(hApplet,
-                                   MAKEINTRESOURCE(IDD_STICKYKEYSOPTIONS),
-                                   hwndDlg,
-                                   (DLGPROC)StickyKeysDlgProc,
-                                   (LPARAM)pGlobalData))
+                                       MAKEINTRESOURCE(IDD_STICKYKEYSOPTIONS),
+                                       hwndDlg,
+                                       (DLGPROC)StickyKeysDlgProc,
+                                       (LPARAM)pGlobalData))
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_FILTER_BOX:
+                    pGlobalData->filterKeys.dwFlags ^= FKF_FILTERKEYSON;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_FILTER_BUTTON:
+                    if (DialogBoxParam(hApplet,
+                                       MAKEINTRESOURCE(IDD_FILTERKEYSOPTIONS),
+                                       hwndDlg,
+                                       (DLGPROC)FilterKeysDlgProc,
+                                       (LPARAM)pGlobalData))
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_TOGGLE_BOX:
+                    pGlobalData->toggleKeys.dwFlags ^= TKF_TOGGLEKEYSON;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 case IDC_TOGGLE_BUTTON:
+                    if (DialogBoxParam(hApplet,
+                                       MAKEINTRESOURCE(IDD_TOGGLEKEYSOPTIONS),
+                                       hwndDlg,
+                                       (DLGPROC)ToggleKeysDlgProc,
+                                       (LPARAM)pGlobalData))
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
                 default:
