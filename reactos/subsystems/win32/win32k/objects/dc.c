@@ -1127,8 +1127,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
       SelObject = dc->w.hBrush;
       break;
     case OBJ_PAL:
-      DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_PAL not supported yet!\n");
-      SelObject = NULL;
+      SelObject = dc->w.hPalette;
       break;
     case OBJ_FONT:
       SelObject = dc->w.hFont;
