@@ -9,8 +9,8 @@ STRINGTABLE {
 
 MENU_WINEMINE MENU DISCARDABLE
 {
-    POPUP "На&стройки" {
-        MENUITEM "&Нов",           IDM_NEW
+    POPUP "&Игра" {
+        MENUITEM "&Нова",           IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Mark Question", IDM_MARKQ
         MENUITEM SEPARATOR
@@ -22,14 +22,14 @@ MENU_WINEMINE MENU DISCARDABLE
         MENUITEM "Из&ход",          IDM_EXIT
     }
     POPUP "&Сведения" {
-        MENUITEM "&Fastest Times",    IDM_TIMES
-        MENUITEM "&About",         IDM_ABOUT
+        MENUITEM "&Най- къси времена",    IDM_TIMES
+        MENUITEM "&За",         IDM_ABOUT
     }
 }
 
 DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Fastest Times"
+CAPTION "Най- къси времена"
 FONT 8, "MS Shell Dlg"
 {
     GROUPBOX        "Най- къси времена", IDNONE,  10,  10, 140,  45

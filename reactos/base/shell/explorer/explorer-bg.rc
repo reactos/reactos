@@ -156,15 +156,15 @@ IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Търсене на приложение от пусковия изборник"
+CAPTION "Търсене на приложение"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Пре&сяване:",IDC_STATIC,7,9,18,8
-    EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
+    LTEXT           "Пре&сяване:",IDC_STATIC,2,9,41,8
+    EDITTEXT        IDC_FILTER,43,7,100,14,ES_AUTOHSCROLL
     CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
                     WS_TABSTOP,7,25,186,33
-    PUSHBUTTON      "&Проверка на попълненията",IDC_CHECK_ENTRIES,143,7,50,14
+    PUSHBUTTON      "&Проверка",IDC_CHECK_ENTRIES,143,2,50,20
 END
 
 IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
@@ -199,7 +199,7 @@ BEGIN
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
                     WS_TABSTOP,159,121,46,44
     CONTROL         "Показване на &версията",ID_DESKTOP_VERSION,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,120,10
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
@@ -207,12 +207,12 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Свойства на задачната лента"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "показване на &часовника",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,152,52,10
-    CONTROL         "&показване на неизползваните уведомителни значки",
+    CONTROL         "Показване на &часовника",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,152,100,10
+    CONTROL         "&Показване на неползваните значки",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,174,111,10
-    PUSHBUTTON      "Из&вестяване...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+                    WS_TABSTOP,7,174,143,10
+    PUSHBUTTON      "Из&вестяване...",ID_CONFIG_NOTIFYAREA,153,173,52,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
@@ -239,17 +239,17 @@ BEGIN
     EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
     GROUPBOX        "&Начин на изобразяване",IDC_LABEL4,7,96,157,28
     CONTROL         "&показване",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
-                    WS_TABSTOP,15,108,33,10
-    CONTROL         "&скриване",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
-                    108,29,10
+                    WS_TABSTOP,8,108,49,10
+    CONTROL         "&скриване",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,56,
+                    108,45,10
     CONTROL         "с&амоскриване",IDC_NOTIFY_AUTOHIDE,"Button",
-                    BS_AUTORADIOBUTTON,112,108,43,10
+                    BS_AUTORADIOBUTTON,100,108,61,10
     ICON            "",IDC_PICTURE,173,101,21,20
-    LTEXT           "&Последна промяна:",IDC_LABEL6,7,132,43,8
+    LTEXT           "&Променено на:",IDC_LABEL6,3,132,54,8
     EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
                     ES_READONLY
-    CONTROL         "&показване на скритите",ID_SHOW_HIDDEN_ICONS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+    CONTROL         "&показване на скрити",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,2,154,85,10
     DEFPUSHBUTTON   "&Добре",IDOK,91,153,50,14,WS_GROUP
     PUSHBUTTON      "&Отказ" ,IDCANCEL,151,153,50,14
 END
@@ -262,17 +262,17 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Изберете работен облик за изследователя:",
                     IDC_STATIC,7,7,160,8
-    CONTROL         "&МПИ (Многопрозоречен изглед)",IDC_MDI,"Button",
+    CONTROL         "&МДИ (Многодокументен изглед)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
-    CONTROL         "&ЕПИ (Многопрозоречен изглед)",IDC_SDI,"Button",
+    CONTROL         "&ЕДИ (Еднодокументен изглед)",IDC_SDI,"Button",
                     BS_AUTORADIOBUTTON,7,62,118,10
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
     CONTROL         "Отваряне на подпапките в от&делни прозорци",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,90,135,10
+                    WS_TABSTOP,7,90,180,10
     LTEXT           "Тази настройка вече ще бъде използвана по подразбиране за всички прозорци на изследователя.",
-                    IDC_STATIC,7,111,174,22
+                    IDC_STATIC,7,108,174,25
     DEFPUSHBUTTON   "&Добре",IDOK,29,136,50,14,WS_GROUP
     PUSHBUTTON      "&Отказ" ,IDCANCEL,106,136,50,14
 END
@@ -330,7 +330,7 @@ BEGIN
     IDS_START               "Пуск"
     IDS_LOGOFF              "Изход..."
     IDS_SHUTDOWN            "Изключване..."
-    IDS_LAUNCH              "изпълняване..."
+    IDS_LAUNCH              "Изпълняване..."
     IDS_START_HELP          "Помощ"
     IDS_SEARCH_FILES        "Търсене"
     IDS_DOCUMENTS           "Книжа"
