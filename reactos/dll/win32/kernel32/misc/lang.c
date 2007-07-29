@@ -1504,8 +1504,7 @@ IsValidLocale(LCID Locale,
     }
 
   ValueData = (PWSTR)&KeyInfo->Data[0];
-  if ((dwFlags & LCID_INSTALLED) &&
-      (KeyInfo->Type == REG_SZ) &&
+  if ((KeyInfo->Type == REG_SZ) &&
       (KeyInfo->DataLength == 2 * sizeof(WCHAR)) &&
       (ValueData[0] == L'1'))
     {
@@ -1847,5 +1846,6 @@ VerLanguageNameW (
 {
     return GetLocaleInfoW( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
 }
+
 
 
