@@ -1121,6 +1121,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
   switch(ObjectType)
   {
     case OBJ_PEN:
+    case OBJ_EXTPEN:
       SelObject = dc->w.hPen;
       break;
     case OBJ_BRUSH:
