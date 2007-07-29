@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+static BOOL OnSelChange(PVIRTMEM pVirtMem);
 static LPCTSTR lpKey = _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
 
 static BOOL
@@ -89,7 +90,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
 {
     TCHAR szDrives[1024];    // all drives
     LPTSTR DrivePtr = szDrives;
-    TCHAR szDrive[4]; // single drive
+    TCHAR szDrive[3]; // single drive
     TCHAR szVolume[MAX_PATH];
     TCHAR *szDisplayString;
     INT InitialSize = 0;
@@ -97,10 +98,11 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     INT DriveLen;
     INT PgCnt = 0;
 
+    ZeroMemory(&szDrives, sizeof(szDrives) * sizeof(TCHAR));
     DriveLen = GetLogicalDriveStrings(1023,
                                       szDrives);
 
-    szDisplayString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH * 2 + 70) * sizeof(TCHAR));
+    szDisplayString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH * 2 + 69) * sizeof(TCHAR));
     if (szDisplayString == NULL)
         return;
 
@@ -178,6 +180,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     SendMessage(pVirtMem->hListBox, LB_SETCURSEL, (WPARAM)0, (LPARAM)0);
     HeapFree(GetProcessHeap(), 0, szDisplayString);
     pVirtMem->Count = PgCnt;
+    OnSelChange(pVirtMem);
 }
 
 
@@ -338,13 +341,10 @@ OnSet(PVIRTMEM pVirtMem)
 
 
 static BOOL
-OnSelChange(PVIRTMEM pVirtMem,
-            LPNMLISTVIEW pnmv)
+OnSelChange(PVIRTMEM pVirtMem)
 {
     TCHAR szCustVals[255];
     INT Index;
-
-    UNREFERENCED_PARAMETER(pnmv);
 
     Index = (INT)SendDlgItemMessage(pVirtMem->hSelf,
                                     IDC_PAGEFILELIST,
@@ -519,22 +519,15 @@ VirtMemDlgProc(HWND hwndDlg,
                 case IDC_SET:
                     OnSet(pVirtMem);
                     return TRUE;
-            }
-        }
-        break;
 
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmhdr = (LPNMHDR)lParam;
-
-            switch (pnmhdr->code)
-            {
-                case LVN_ITEMCHANGED:
-                {
-                    LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
-
-                    OnSelChange(pVirtMem, pnmv);
-                }
+                case IDC_PAGEFILELIST:
+                    switch HIWORD(wParam)
+                    {
+                        case LBN_SELCHANGE:
+                            OnSelChange(pVirtMem);
+                            return TRUE;
+                    }
+                    break;
             }
         }
         break;
