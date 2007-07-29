@@ -615,3 +615,4 @@ NtGdiDdUnlock                           2
 NtGdiDdUnlockD3D                        2
 NtGdiDdUpdateOverlay                    3
 NtGdiDdWaitForVerticalBlank             2
+NtGdiGetRandomRgn				    3

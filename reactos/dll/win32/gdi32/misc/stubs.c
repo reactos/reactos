@@ -1295,21 +1295,6 @@ GetGlyphOutlineWow(
 }
 
 
-/*
- * @unimplemented
- */
-INT
-STDCALL
-GetRandomRgn(
-	HDC	a0,
-	HRGN	a1,
-	INT	a2
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 /*

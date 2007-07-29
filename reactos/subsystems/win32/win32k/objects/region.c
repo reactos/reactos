@@ -2344,6 +2344,67 @@ UnsafeIntGetRgnBox(PROSRGNDATA  Rgn,
 }
 
 
+/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw */
+INT STDCALL
+NtGdiGetRandomRgn(HDC hDC, HRGN hDest, INT iCode)
+{
+    PDC pDC;
+    HRGN hSrc = NULL;
+    POINT org;
+
+    if ((hDC == NULL) || (hDest == NULL))
+    {
+        return -1;
+    }
+    if ((iCode<1 ) || (iCode>4 ))
+    {
+        return -1;
+    }
+
+    pDC = DC_LockDc(hDC);
+    if (pDC == NULL)
+    {
+        return -1;
+    }
+
+    switch (iCode)
+    {
+        case 1:
+            hSrc = pDC->w.hClipRgn;
+            break;
+        case 2:
+            //hSrc = dc->hMetaRgn;
+            DPRINT1("hMetaRgn not implement\n");
+            DC_UnlockDc(pDC);
+            return -1;
+            break;
+        case 3:
+            DPRINT1("waring : hMetaRgn not implement\n");
+            //hSrc = dc->hMetaClipRgn;
+            if(!hSrc)
+            {
+                hSrc = pDC->w.hClipRgn;
+            }
+            //if(!hSrc) rgn = dc->hMetaRgn;
+            break;
+        case 4:
+            hSrc = pDC->w.hVisRgn;
+    }
+    if (hSrc)
+    {
+        NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY);
+    }
+    if (iCode ==  SYSRGN)
+    {
+        IntGdiGetDCOrgEx(pDC, &org);
+        NtGdiOffsetRgn(hDest, org.x, org.y );
+    }
+
+   DC_UnlockDc(pDC);
+
+    return (hSrc != 0);
+}
+
 INT STDCALL
 NtGdiGetRgnBox(HRGN  hRgn,
 	      LPRECT  pRect)
@@ -2428,13 +2489,13 @@ NtGdiOffsetRgn(HRGN  hRgn,
   DPRINT("NtGdiOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
 
   if( !rgn ){
-	  DPRINT("NtGdiOffsetRgn: hRgn error\n");
-	  return ERROR;
+        DPRINT("NtGdiOffsetRgn: hRgn error\n");
+        return ERROR;
   }
 
   if(XOffset || YOffset) {
     int nbox = rgn->rdh.nCount;
-	PRECT pbox = (PRECT)rgn->Buffer;
+    PRECT pbox = (PRECT)rgn->Buffer;
 
     if(nbox && pbox) {
       while(nbox--) {
@@ -2475,7 +2536,7 @@ NtGdiPaintRgn(HDC  hDC,
   BITMAPOBJ *BitmapObj;
 
   if( !dc )
-	return FALSE;
+    return FALSE;
 
   if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
   {
