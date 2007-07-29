@@ -98,7 +98,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     INT DriveLen;
     INT PgCnt = 0;
 
-    ZeroMemory(&szDrives, sizeof(szDrives) * sizeof(TCHAR));
+    ZeroMemory(szDrives, sizeof(szDrives));
     DriveLen = GetLogicalDriveStrings(1023,
                                       szDrives);
 
@@ -116,7 +116,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
         DrivePtr = _tcsupr(DrivePtr);
 
         /* copy the 'X:' portion */
-        lstrcpyn(szDrive, DrivePtr, 3);
+        lstrcpyn(szDrive, DrivePtr, sizeof(szDrive) / sizeof(TCHAR));
 
         if(GetDriveType(DrivePtr) == DRIVE_FIXED)
         {
@@ -247,8 +247,8 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
 static VOID
 SetListBoxColumns(HWND hwndListBox)
 {
-    INT tabs[2] = {30, 170};
-    SendMessage(hwndListBox, LB_SETTABSTOPS, (WPARAM)2, (LPARAM)(LPINT) &tabs[0]);
+    const INT tabs[2] = {30, 170};
+    SendMessage(hwndListBox, LB_SETTABSTOPS, (WPARAM)2, (LPARAM)&tabs[0]);
 }
 
 
