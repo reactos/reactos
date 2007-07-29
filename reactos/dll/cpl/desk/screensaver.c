@@ -381,7 +381,7 @@ AddScreenSavers(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
             hModule = LoadLibraryEx(filename,
                                     NULL,
-                                    DONT_RESOLVE_DLL_REFERENCES);
+                                    DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
             if (hModule)
             {
                LoadString(hModule,
@@ -392,7 +392,7 @@ AddScreenSavers(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
             }
             else
             {
-               _tcscpy(ScreenSaverItem->szDisplayName, _T("err"));
+               _tcscpy(ScreenSaverItem->szDisplayName, _T("Unknown"));
             }
 
             _tcscpy(ScreenSaverItem->szFilename, filename);
