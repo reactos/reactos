@@ -6,9 +6,6 @@
  * TRANSLATOR:  Artem Reznikov
  */
 
-#include "windows.h"
-#include "../resource.h"
-
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
