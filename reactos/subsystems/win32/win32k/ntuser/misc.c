@@ -939,6 +939,7 @@ IntSystemParametersInfo(
    static BOOL GradientCaptions = TRUE;
    static UINT FocusBorderHeight = 1;
    static UINT FocusBorderWidth = 1;
+   static ANIMATIONINFO anim;
 
    if (!bInitialized)
    {
@@ -1403,6 +1404,18 @@ IntSystemParametersInfo(
             ASSERT(pvParam);
             *((NONCLIENTMETRICSW*)pvParam) = pMetrics;
             break;
+         }
+      case SPI_GETANIMATION:
+         {
+            ASSERT(pvParam);
+            *(( ANIMATIONINFO*)pvParam) = anim;
+            break;
+         }
+      case SPI_SETANIMATION:
+         {
+            ASSERT(pvParam);
+            anim = *((ANIMATIONINFO*)pvParam);
+            bChanged = TRUE;
          }
       case SPI_SETNONCLIENTMETRICS:
          {
