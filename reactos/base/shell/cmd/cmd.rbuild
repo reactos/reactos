@@ -63,7 +63,7 @@
 		<file>window.c</file>
 	</compilationunit>
 </module>
-<module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" usewrc="false">
+<module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" >
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd">.</include>
 	<define name="__USE_W32API" />
