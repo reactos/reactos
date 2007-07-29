@@ -513,12 +513,15 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                   HKEY hKey = NULL;
                   LPNMTVDISPINFO ptvdi;
                   LONG lResult;
+                  TCHAR szBuffer[MAX_PATH];
 
                   ptvdi = (LPNMTVDISPINFO) lParam;
                   if (ptvdi->item.pszText)
                   {
+                    keyPath = GetItemPath(pChildWnd->hTreeWnd, TreeView_GetParent(pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
+                    _sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("%s\\%s"), keyPath, ptvdi->item.pszText);
                     keyPath = GetItemPath(pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
-                    if (RegOpenKeyEx(hRootKey, keyPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+                    if (RegOpenKeyEx(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
                     {
                       lResult = REG_OPENED_EXISTING_KEY;
                       RegCloseKey(hKey);
