@@ -24,7 +24,7 @@ AdvancedPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        break;
+            break;
 
         case WM_COMMAND:
         {
@@ -76,11 +76,10 @@ AdvancedPageProc(HWND hwndDlg,
                                  SW_SHOWNORMAL);
                 }
                 break;
-
             }
         }
-      break;
 
+        break;
     }
     return FALSE;
 }

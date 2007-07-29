@@ -37,8 +37,8 @@ RenameProfDlgProc(HWND hwndDlg,
             }
         }
         break;
-  }
-  return FALSE;
+    }
+    return FALSE;
 }
 
 
@@ -80,9 +80,8 @@ HardProfDlgProc(HWND hwndDlg,
                     return TRUE;
                 }
             }
-
         }
         break;
-  }
-  return FALSE;
+    }
+    return FALSE;
 }

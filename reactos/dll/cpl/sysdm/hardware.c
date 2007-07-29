@@ -84,4 +84,3 @@ HardwarePageProc(HWND hwndDlg,
 
     return FALSE;
 }
-

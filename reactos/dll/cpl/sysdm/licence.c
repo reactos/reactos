@@ -55,11 +55,10 @@ LicenceDlgProc(HWND hDlg,
                            IDC_LICENCEEDIT,
                            LicenseText);
 
-            SendDlgItemMessage(hDlg,
-                               IDC_LICENCEEDIT,
-                               EM_SETSEL,
-                               -1,
-                               0);
+            PostMessage(GetDlgItem(hDlg, IDC_LICENCEEDIT),
+                        EM_SETSEL,
+                        -1,
+                        0);
 
             return TRUE;
         }

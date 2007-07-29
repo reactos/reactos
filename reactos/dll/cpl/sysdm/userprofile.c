@@ -55,6 +55,6 @@ UserProfileDlgProc(HWND hwndDlg,
             }
             break;
         }
-  }
-  return FALSE;
+    }
+    return FALSE;
 }

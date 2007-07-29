@@ -53,7 +53,6 @@ ReadPageFileSettings(PVIRTMEM pVirtMem)
                     bRet = TRUE;
                 }
             }
-
         }
     }
 
@@ -559,7 +558,6 @@ VirtMemDlgProc(HWND hwndDlg,
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
 
                     OnSelChange(pVirtMem, pnmv);
-
                 }
             }
         }

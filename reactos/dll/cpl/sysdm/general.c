@@ -5,7 +5,7 @@
  * PURPOSE:     General System Information
  * COPYRIGHT:   Copyright Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
- *              Copyright 2006 Colin Finck <mail@colinfinck.de>
+ *              Copyright 2006-2007 Colin Finck <mail@colinfinck.de>
  *
  */
 
@@ -23,27 +23,27 @@ typedef struct _IMGINFO
 void
 ShowLastWin32Error(HWND hWndOwner)
 {
-  LPTSTR lpMsg;
-  DWORD LastError;
+    LPTSTR lpMsg;
+    DWORD LastError;
 
-  LastError = GetLastError();
+    LastError = GetLastError();
 
-  if((LastError == 0) ||
-      !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+    if((LastError == 0) ||
+        !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                        FORMAT_MESSAGE_FROM_SYSTEM,
-                     NULL,
-                     LastError,
-                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                     (LPTSTR)&lpMsg,
-                     0,
-                     NULL))
-  {
-    return;
-  }
+                       NULL,
+                       LastError,
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                       (LPTSTR)&lpMsg,
+                       0,
+                       NULL))
+    {
+        return;
+    }
 
-  MessageBox(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
+    MessageBox(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
 
-  LocalFree((LPVOID)lpMsg);
+    LocalFree((LPVOID)lpMsg);
 }
 
 
@@ -145,56 +145,57 @@ SetProcNameString(HWND hwnd,
                             (PBYTE)lpBuf,
                             &BufSize) == ERROR_SUCCESS)
         {
-        	  if(BufSize > ((30 + 1) * sizeof(TCHAR)))
-        	  {
-              /* Wrap the Processor Name String like XP does:                           *
-               *   - Take the first 30 characters and look for the last space.          *
-               *     Then wrap the string after this space.                             *
-               *   - If no space is found, wrap the string after character 30.          *
-               *                                                                        *
-               * For example the Processor Name String of a Pentium 4 is right-aligned. *
-               * With this wrapping the first line looks centered.                      */
+            if(BufSize > ((30 + 1) * sizeof(TCHAR)))
+            {
+                /* Wrap the Processor Name String like XP does:                           *
+                *   - Take the first 30 characters and look for the last space.          *
+                *     Then wrap the string after this space.                             *
+                *   - If no space is found, wrap the string after character 30.          *
+                *                                                                        *
+                * For example the Processor Name String of a Pentium 4 is right-aligned. *
+                * With this wrapping the first line looks centered.                      */
 
-              _tcsncpy(szBuf, lpBuf, 30);
-              szLastSpace = _tcsrchr(szBuf, ' ');
-              
-              if(szLastSpace == 0)
-                LastSpace = 30;
-              else
-                LastSpace = (szLastSpace - szBuf);
-              
-              _tcsncpy(szBuf, lpBuf, LastSpace);
-              szBuf[LastSpace] = 0;
-              
-              SetDlgItemText(hwnd,
-                             uID1,
-                             szBuf);
-        	  	
-              SetDlgItemText(hwnd,
-                             uID2,
-                             lpBuf+LastSpace+1);
-        	  	
-              /* Return the number of used lines */
-              Ret = 2;
+                _tcsncpy(szBuf, lpBuf, 30);
+                szBuf[30] = 0;
+                szLastSpace = _tcsrchr(szBuf, ' ');
+
+                if(szLastSpace == 0)
+                    LastSpace = 30;
+                else
+                {
+                    LastSpace = (szLastSpace - szBuf);
+                    szBuf[LastSpace] = 0;
+                }
+
+                _tcsncpy(szBuf, lpBuf, LastSpace);
+
+                SetDlgItemText(hwnd,
+                               uID1,
+                               szBuf);
+
+                SetDlgItemText(hwnd,
+                               uID2,
+                               lpBuf+LastSpace+1);
+
+                /* Return the number of used lines */
+                Ret = 2;
             }
             else
             {
-              SetDlgItemText(hwnd,
+                SetDlgItemText(hwnd,
                              uID1,
                              lpBuf);
-              
-              Ret = 1;
+
+                Ret = 1;
             }
         }
 
         HeapFree(GetProcessHeap(),
                  0,
                  lpBuf);
-        
-        return Ret;
     }
-    
-    return 0;
+
+    return Ret;
 }
 
 static  VOID
@@ -218,12 +219,12 @@ SetProcSpeed(HWND hwnd,
                                 (PVOID)&ppi,
                                 sizeof(ppi)) == STATUS_SUCCESS &&
          ppi.CurrentMhz != 0) ||
-        RegQueryValueEx(hKey,
-                        Value,
-                        NULL,
-                        &Type,
-                        (PBYTE)&ppi.CurrentMhz,
-                        &BufSize) == ERROR_SUCCESS)
+         RegQueryValueEx(hKey,
+                         Value,
+                         NULL,
+                         &Type,
+                         (PBYTE)&ppi.CurrentMhz,
+                         &BufSize) == ERROR_SUCCESS)
     {
         if (ppi.CurrentMhz < 1000)
         {
@@ -248,7 +249,6 @@ GetSystemInformation(HWND hwnd)
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
     MEMORYSTATUSEX MemStat;
     TCHAR Buf[32];
-    INT Ret = 0;
     INT CurMachineLine = IDC_MACHINELINE1;
 
 
@@ -263,22 +263,21 @@ GetSystemInformation(HWND hwnd)
                      KEY_READ,
                      &hKey) == ERROR_SUCCESS)
     {
-        SetRegTextData(hwnd, 
-                       hKey, 
-                       _T("VendorIdentifier"), 
+        SetRegTextData(hwnd,
+                       hKey,
+                       _T("VendorIdentifier"),
                        CurMachineLine);
         CurMachineLine++;
         
-        Ret = SetProcNameString(hwnd, 
-                                hKey, 
-                                _T("ProcessorNameString"), 
-                                CurMachineLine,
-                                CurMachineLine+1);
-        CurMachineLine += Ret;
+        CurMachineLine += SetProcNameString(hwnd,
+                                            hKey,
+                                            _T("ProcessorNameString"),
+                                            CurMachineLine,
+                                            CurMachineLine + 1);
         
-        SetProcSpeed(hwnd, 
-                     hKey, 
-                     _T("~MHz"), 
+        SetProcSpeed(hwnd,
+                     hKey,
+                     _T("~MHz"),
                      CurMachineLine);
         CurMachineLine++;
     }
@@ -313,7 +312,6 @@ GetSystemInformation(HWND hwnd)
                 if (MemStat.ullTotalPhys > 1024 * 1024)
                 {
                     /* We're dealing with PBs or more */
-
                     MemStat.ullTotalPhys /= 1024;
                     i++;
 
@@ -333,15 +331,13 @@ GetSystemInformation(HWND hwnd)
 
         if (LoadString(hApplet, uStrId[i], szStr, sizeof(szStr) / sizeof(szStr[0])))
         {
-            Ret = _stprintf(Buf, _T("%.2f %s"), dTotalPhys, szStr);
+            if( _stprintf(Buf, _T("%.2f %s"), dTotalPhys, szStr) )
+            {
+                SetDlgItemText(hwnd,
+                               CurMachineLine,
+                               Buf);
+            }
         }
-    }
-
-    if (Ret)
-    {
-        SetDlgItemText(hwnd,
-                       CurMachineLine,
-                       Buf);
     }
 }
 
@@ -434,8 +430,3 @@ GeneralPageProc(HWND hwndDlg,
 
     return FALSE;
 }
-
-
-
-
-
