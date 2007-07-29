@@ -310,7 +310,7 @@ OnSet(PVIRTMEM pVirtMem)
                           field to the previous value */
                 SetDlgItemInt(pVirtMem->hSelf,
                               IDC_INITIALSIZE,
-                              Value,
+                              pVirtMem->Pagefile[Index].InitialValue,
                               FALSE);
             }
             else
@@ -326,7 +326,7 @@ OnSet(PVIRTMEM pVirtMem)
                           field to the previous value */
                 SetDlgItemInt(pVirtMem->hSelf,
                               IDC_MAXSIZE,
-                              Value,
+                              pVirtMem->Pagefile[Index].MaxValue,
                               FALSE);
             }
             else
