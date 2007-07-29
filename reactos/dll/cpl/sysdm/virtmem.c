@@ -283,6 +283,8 @@ static VOID
 OnSet(PVIRTMEM pVirtMem)
 {
     INT Index;
+    UINT Value;
+    BOOL bTranslated;
 
     pVirtMem->bSave = TRUE;
 
@@ -294,28 +296,41 @@ OnSet(PVIRTMEM pVirtMem)
 
     if(Index < pVirtMem->Count)
     {
-        TCHAR szText[255];
-
         /* check if custom settings are checked */
-        if(SendDlgItemMessage(pVirtMem->hSelf,
-                              IDC_CUSTOM,
-                              BM_GETCHECK,
-                              0,
-                              0) == BST_CHECKED)
+        if(IsDlgButtonChecked(pVirtMem->hSelf,
+                              IDC_CUSTOM) == BST_CHECKED)
         {
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_INITIALSIZE,
-                               WM_GETTEXT,
-                               254,
-                               (LPARAM)szText);
-            pVirtMem->Pagefile[Index].InitialValue = _ttoi(szText);
+            Value = GetDlgItemInt(pVirtMem->hSelf,
+                                  IDC_INITIALSIZE,
+                                  &bTranslated,
+                                  FALSE);
+            if (!bTranslated)
+            {
+                /* FIXME: Show error message instead of setting the edit
+                          field to the previous value */
+                SetDlgItemInt(pVirtMem->hSelf,
+                              IDC_INITIALSIZE,
+                              Value,
+                              FALSE);
+            }
+            else
+                pVirtMem->Pagefile[Index].InitialValue = Value;
 
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_MAXSIZE,
-                               WM_GETTEXT,
-                               254,
-                               (LPARAM)szText);
-            pVirtMem->Pagefile[Index].MaxValue = _ttoi(szText);
+            Value = GetDlgItemInt(pVirtMem->hSelf,
+                                  IDC_MAXSIZE,
+                                  &bTranslated,
+                                  FALSE);
+            if (!bTranslated)
+            {
+                /* FIXME: Show error message instead of setting the edit
+                          field to the previous value */
+                SetDlgItemInt(pVirtMem->hSelf,
+                              IDC_MAXSIZE,
+                              Value,
+                              FALSE);
+            }
+            else
+                pVirtMem->Pagefile[Index].MaxValue = Value;
         }
         else
         {
@@ -323,11 +338,8 @@ OnSet(PVIRTMEM pVirtMem)
             pVirtMem->Pagefile[Index].InitialValue = pVirtMem->Pagefile[Index].MaxValue = 0;
 
             // check to see if this drive is used for a paging file
-            if (SendDlgItemMessage(pVirtMem->hSelf,
-                                   IDC_NOPAGEFILE,
-                                   BM_GETCHECK,
-                                   0,
-                                   0) == BST_UNCHECKED)
+            if (IsDlgButtonChecked(pVirtMem->hSelf,
+                                   IDC_NOPAGEFILE) == BST_UNCHECKED)
             {
                 pVirtMem->Pagefile[Index].bUsed = TRUE;
             }
@@ -343,7 +355,6 @@ OnSet(PVIRTMEM pVirtMem)
 static BOOL
 OnSelChange(PVIRTMEM pVirtMem)
 {
-    TCHAR szCustVals[255];
     INT Index;
 
     Index = (INT)SendDlgItemMessage(pVirtMem->hSelf,
@@ -362,25 +373,19 @@ OnSelChange(PVIRTMEM pVirtMem)
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_MAXSIZE), TRUE);
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_INITIALSIZE), TRUE);
 
-            _itot(pVirtMem->Pagefile[Index].InitialValue , szCustVals, 10);
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_INITIALSIZE,
-                               WM_SETTEXT,
-                               0,
-                               (LPARAM)szCustVals);
+            SetDlgItemInt(pVirtMem->hSelf,
+                          IDC_INITIALSIZE,
+                          pVirtMem->Pagefile[Index].InitialValue,
+                          FALSE);
 
-            _itot(pVirtMem->Pagefile[Index].MaxValue, szCustVals, 10);
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_MAXSIZE,
-                               WM_SETTEXT,
-                               0,
-                               (LPARAM)szCustVals);
+            SetDlgItemInt(pVirtMem->hSelf,
+                          IDC_MAXSIZE,
+                          pVirtMem->Pagefile[Index].MaxValue,
+                          FALSE);
 
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_CUSTOM,
-                               BM_SETCHECK,
-                               1,
-                               0);
+            CheckDlgButton(pVirtMem->hSelf,
+                           IDC_CUSTOM,
+                           BST_CHECKED);
         }
         else
         {
@@ -391,19 +396,15 @@ OnSelChange(PVIRTMEM pVirtMem)
             /* is it system managed */
             if(pVirtMem->Pagefile[Index].bUsed)
             {
-                SendDlgItemMessage(pVirtMem->hSelf,
-                                   IDC_SYSMANSIZE,
-                                   BM_SETCHECK,
-                                   1,
-                                   0);
+                CheckDlgButton(pVirtMem->hSelf,
+                               IDC_SYSMANSIZE,
+                               BST_CHECKED);
             }
             else
             {
-                SendDlgItemMessage(pVirtMem->hSelf,
-                                   IDC_NOPAGEFILE,
-                                   BM_SETCHECK,
-                                   1,
-                                   0);
+                CheckDlgButton(pVirtMem->hSelf,
+                               IDC_NOPAGEFILE,
+                               BST_CHECKED);
             }
         }
     }
