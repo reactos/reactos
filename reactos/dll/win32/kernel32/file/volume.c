@@ -99,7 +99,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
      }
 
 
-   if (count * 4 * sizeof(char) <= nBufferLength)
+   if (count * 4 <= nBufferLength)
      {
 	LPSTR p = lpBuffer;
 
@@ -113,7 +113,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 	  }
 	*p = '\0';
      }
-    return (count * 4 * sizeof(char));
+    return (count * 4);
 }
 
 
@@ -136,7 +136,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 	   count++;
      }
 
-    if (count * 4 * sizeof(WCHAR) <=  nBufferLength)
+    if (count * 4 <=  nBufferLength)
     {
         LPWSTR p = lpBuffer;
         for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
@@ -149,7 +149,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
             }
         *p = (WCHAR)'\0';
     }
-    return (count * 4 * sizeof(WCHAR));
+    return (count * 4);
 }
 
 
