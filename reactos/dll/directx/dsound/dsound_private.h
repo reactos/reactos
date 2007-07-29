@@ -19,6 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "dxroslayer/dxros_layer.h"
+
 /* Linux does not support better timing than 10ms */
 #define DS_TIME_RES 10  /* Resolution of multimedia timer */
 #define DS_TIME_DEL 10  /* Delay of multimedia timer callback, and duration of HEL fragment */

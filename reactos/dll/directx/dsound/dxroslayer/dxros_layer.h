@@ -55,8 +55,8 @@
 /* dxroslayers prototypes */
 void dxGetGuidFromString( char *in_str, GUID *guid );
 
-DWORD dxrosdrv_drv_querydsounddesc(int type, HWAVEOUT hwo_out,HWAVEIN  hwo_in, PDSDRIVERDESC pDESC);
+DWORD dxrosdrv_drv_querydsounddescss(int type, HWAVEOUT hwo_out,HWAVEIN  hwo_in, PDSDRIVERDESC pDESC);
 DWORD dxrosdrv_drv_querydsoundiface(HWAVEIN wDevID, PIDSDRIVER* drv);
 
-DWORD RosWineWineWaveOutMessage(HWAVEOUT  hwo, UINT , DWORD_PTR , DWORD_PTR );
-DWORD RosWineWineWaveInMessage(HWAVEIN  , UINT , DWORD_PTR , DWORD_PTR );
+DWORD RosWineWaveOutMessage(HWAVEOUT  hwo, UINT, DWORD_PTR, DWORD_PTR);
+DWORD RosWineWaveInMessage(HWAVEIN, UINT, DWORD_PTR, DWORD_PTR);

@@ -85,7 +85,7 @@ DWORD RosWineWaveOutMessage(HWAVEOUT  hwo, UINT uMsg, DWORD_PTR dwParam1, DWORD_
 	            break;
 
                 case DRV_QUERYDSOUNDIFACE:
-                msg = dxrosdrv_drv_querydsoundiface((HWAVEIN)hwo, (PIDSDRIVER)dwParam1);
+                msg = dxrosdrv_drv_querydsoundiface((HWAVEIN)hwo, (PIDSDRIVER*)dwParam1);
 				break;
 	            				
                 default :
@@ -104,7 +104,7 @@ DWORD RosWineWaveInMessage(HWAVEIN  hwo, UINT uMsg, DWORD_PTR dwParam1, DWORD_PT
 	             break;
 
                  case DRV_QUERYDSOUNDIFACE:                 
-                 msg = dxrosdrv_drv_querydsoundiface(hwo, (PIDSDRIVER)dwParam1);                
+                 msg = dxrosdrv_drv_querydsoundiface(hwo, (PIDSDRIVER*)dwParam1);                
                  break; 
 	             
                  default :
