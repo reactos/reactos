@@ -79,21 +79,17 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
   dc->w.flags &= ~DC_DIRTY;
 
   if (dc->w.hVisRgn == NULL)
-    {
-      dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-      GDIOBJ_CopyOwnership(GdiHandleTable, hdc, dc->w.hVisRgn);
-    }
-  else
-    {
-      NtGdiOffsetRgn(dc->w.hVisRgn, dc->w.DCOrgX, dc->w.DCOrgY);
-    }
+  {
+    dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+    GDIOBJ_CopyOwnership(GdiHandleTable, hdc, dc->w.hVisRgn);
+  }
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
-    {
-      NtGdiOffsetRgn(dc->w.hVisRgn, -dc->w.DCOrgX, -dc->w.DCOrgY);
-      CLIPPING_UpdateGCRegion(dc);
-    }
+  {
+    NtGdiOffsetRgn(dc->w.hVisRgn, -dc->w.DCOrgX, -dc->w.DCOrgY);
+    CLIPPING_UpdateGCRegion(dc);
+  }
   DC_UnlockDc(dc);
 
   return retval;
