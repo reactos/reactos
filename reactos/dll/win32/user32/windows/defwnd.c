@@ -1493,14 +1493,9 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_NOTIFYFORMAT:
         {
-            if (IsWindowUnicode(hWnd))
-            {
-                return(NFR_UNICODE);
-            }
-            else
-            {
-                return(NFR_ANSI);
-            }
+            if (lParam == NF_QUERY)
+                return IsWindowUnicode(hWnd) ? NFR_UNICODE : NFR_ANSI;
+            break;
         }
 
         case WM_SETICON:
