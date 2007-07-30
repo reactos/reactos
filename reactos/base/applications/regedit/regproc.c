@@ -1606,6 +1606,9 @@ LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
     LPTSTR lpNewSubKey = NULL;
     LONG Ret = 0;
 
+	if (!lpSubKey)
+		return Ret;
+
     s = _tcsrchr(lpSubKey, _T('\\'));
     if (s)
     {

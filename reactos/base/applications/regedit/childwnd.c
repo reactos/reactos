@@ -512,7 +512,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                   HKEY hRootKey;
                   HKEY hKey = NULL;
                   LPNMTVDISPINFO ptvdi;
-                  LONG lResult;
+                  LONG lResult = ERROR_SUCCESS;
                   TCHAR szBuffer[MAX_PATH];
 
                   ptvdi = (LPNMTVDISPINFO) lParam;
@@ -531,7 +531,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     {
                       lResult = RegRenameKey(hRootKey, keyPath, ptvdi->item.pszText);
                     }
-                    return lResult == ERROR_SUCCESS;
+                    return lResult;
                   }
                 }
             default:
