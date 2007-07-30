@@ -387,7 +387,7 @@ GetWindowThreadProcessId@8
 GetWindowWord@8
 GrayStringA@36
 GrayStringW@36
-HideCaret@4
+HideCaret@4=NtUserHideCaret@4
 HiliteMenuItem@16
 IMPGetIMEA@8
 IMPGetIMEW@8
@@ -662,7 +662,7 @@ SetWindowsHookA@8
 SetWindowsHookExA@16
 SetWindowsHookExW@16
 SetWindowsHookW@8
-ShowCaret@4
+ShowCaret@4=NtUserShowCaret@4
 ShowCursor@4
 ShowOwnedPopups@8
 ShowScrollBar@12

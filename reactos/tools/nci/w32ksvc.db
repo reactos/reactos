@@ -411,6 +411,7 @@ NtUserGetWindowPlacement                2
 NtUserGetWindowLong                     3
 NtUserGetWindowRect			2
 NtUserGetWOWClass                       2
+NtUserHideCaret                         1
 NtUserHiliteMenuItem                    4
 NtUserImpersonateDdeClientWindow        2
 NtUserInitializeClientPfnArrays         4
@@ -517,7 +518,7 @@ NtUserSetWindowsHookEx                  6
 NtUserSetWindowStationUser              4
 NtUserSetWindowWord                     3
 NtUserSetWinEventHook                   8
-NtUserShowCaret                         2
+NtUserShowCaret                         1
 NtUserShowScrollBar                     3
 NtUserShowWindow                        2
 NtUserShowWindowAsync                   2

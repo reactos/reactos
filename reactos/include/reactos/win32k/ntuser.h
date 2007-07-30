@@ -1867,8 +1867,12 @@ NtUserSetWinEventHook(
 BOOL
 NTAPI
 NtUserShowCaret(
-  HWND hWnd,
-  BOOL bShow);
+  HWND hWnd);
+
+BOOL
+NTAPI
+NtUserHideCaret(
+  HWND hWnd);
 
 DWORD
 NTAPI

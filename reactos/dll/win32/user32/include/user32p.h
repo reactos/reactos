@@ -119,8 +119,13 @@
 
 #define NtUserShowCursor(bShow) \
   NtUserCallOneParam((DWORD)bShow, ONEPARAM_ROUTINE_SHOWCURSOR)
-  
-  
+
+#define ShowCaret(hwnd) \
+  NtUserShowCaret(hwnd)
+
+#define HideCaret(hwnd) \
+  NtUserHideCaret(hwnd)
+
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
