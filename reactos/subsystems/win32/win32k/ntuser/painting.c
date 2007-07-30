@@ -870,11 +870,13 @@ CLEANUP:
  */
 
 BOOL STDCALL
-NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs)
+NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
 {
+   NTSTATUS Status = STATUS_SUCCESS;
    PWINDOW_OBJECT Window;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
+   HDC hdc = NULL;
 
    DPRINT("Enter NtUserEndPaint\n");
    UserEnterExclusive();
@@ -884,7 +886,22 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs)
       RETURN(FALSE);
    }
 
-   UserReleaseDC(Window, lPs->hdc, TRUE);
+   _SEH_TRY
+   {
+      ProbeForRead(pUnsafePs, sizeof(*pUnsafePs), 1);
+      hdc = pUnsafePs->hdc;
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END
+   if (!NT_SUCCESS(Status))
+   {
+      RETURN(FALSE);
+   }
+
+   UserReleaseDC(Window, hdc, TRUE);
 
    UserRefObjectCo(Window, &Ref);
    co_UserShowCaret(Window);
