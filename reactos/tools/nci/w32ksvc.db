@@ -417,6 +417,8 @@ NtUserInitializeClientPfnArrays         4
 NtUserInitTask                          11
 NtUserInsertMenuItem			4
 NtUserInternalGetWindowText             3
+NtUserInvalidateRect                    3
+NtUserInvalidateRgn                     3
 NtUserIsClipboardFormatAvailable        1
 NtUserKillSystemTimer                   2
 NtUserKillTimer                         2
