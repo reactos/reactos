@@ -130,7 +130,7 @@ DATE [/T][dátum]\n\n\
   /T    Csak megjeleníti\n\n\
 Írd be a DATE parancsot paraméter nélkül, hogy megjelenítse a rendszer dátumot és bekérjen egy újat.\n\
 Nyomj ENTERT-t, ha nem akarsz változtatni.\n"
-				
+
 STRING_DEL_HELP1, "Eltávolít egy vagy több állományt.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attribútumok]] állomány ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attribútumok]] állomány ...\n\
@@ -372,7 +372,7 @@ Ha ez nem elég, használd a MOVE parancsot."
 STRING_REN_HELP2, "    %lu állomány átnevezve\n"
 
 STRING_REN_HELP3, "    %lu állomány átnevezve\n"
-		 
+
 STRING_SHIFT_HELP, "Eltolja a helyettesíthetõ paraméterek pozícióját a batch állományban.\n\n\
 SHIFT [DOWN]"
 
@@ -466,7 +466,7 @@ STRING_VERSION_HELP6, "\nA FreeDOS készítõi:\n"
 STRING_VERSION_HELP7, "\nA ReactOS készítõi:\n"
 
 STRING_VOL_HELP1, " A (%c) meghajtóban lévõ kötet: %s\n"
-STRING_VOL_HELP2, " A (%c) meghajtóban lévõ kötetnek nincs címkéje"
+STRING_VOL_HELP2, " A (%c) meghajtóban lévõ kötetnek nincs címkéje\n"
 STRING_VOL_HELP3, " A kötet sorozatszáma %04X-%04X\n"
 STRING_VOL_HELP4, "A kötet címkéjének és sorozatszámának megjelenítése, ha léteznek.\n\nVOL [meghajtó:]"
 
@@ -575,7 +575,7 @@ STRING_ERROR_ERROR1,         "Ismeretlen hiba! Hiba kód: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Szintaxis hiba"
 STRING_FOR_ERROR1,           "az 'in' után hiányzik a feltétel."
 STRING_FOR_ERROR2,           "nincs zárójel megadva."
-STRING_FOR_ERROR3,           "a 'do' hiányzik." 
+STRING_FOR_ERROR3,           "a 'do' hiányzik."
 STRING_FOR_ERROR4,           "nincs parancs a  'do' után."
 STRING_FREE_ERROR1,          "Érvénytelen meghajtó"
 STRING_FREE_ERROR2,          "nincs cimkézve"

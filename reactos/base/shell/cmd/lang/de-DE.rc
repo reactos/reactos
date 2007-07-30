@@ -479,8 +479,8 @@ STRING_VERSION_HELP6, "\nFreeDOS Version programmiert von:\n"
 
 STRING_VERSION_HELP7, "\nReactOS Version programmiert von:\n"
 
-STRING_VOL_HELP1, " Datenträger im Laufwerk %c: ist %s"
-STRING_VOL_HELP2, " Datenträger im Laufwerk %c: hat keine Bezeichnung"
+STRING_VOL_HELP1, " Datenträger im Laufwerk %c ist %s\n"
+STRING_VOL_HELP2, " Datenträger im Laufwerk %c hat keine Bezeichnung.\n"
 STRING_VOL_HELP3, " Datenträger-Seriennummer: %04X-%04X\n"
 STRING_VOL_HELP4, "Zeigt die Laufwerksvolumebezeichnung und die Seriennummer an, falls diese existieren.\n\nVOL [drive:]"
 

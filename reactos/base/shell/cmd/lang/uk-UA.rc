@@ -141,7 +141,7 @@ DATE [/T][date]\n\n\
   /T    display only\n\n\
 Type DATE without parameters to display the current date setting and\n\
 a prompt for a new one.  Press ENTER to keep the same date.\n"
-				
+
 STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
@@ -390,7 +390,7 @@ the MOVE command for that purpose.\n"
 STRING_REN_HELP2, "    %lu file renamed\n"
 
 STRING_REN_HELP3, "    %lu files renamed\n"
-		 
+
 STRING_SHIFT_HELP, "Changes the position of replaceable parameters in a batch file.\n\n\
 SHIFT [DOWN]"
 
@@ -483,8 +483,8 @@ STRING_VERSION_HELP6, "\nFreeDOS version written by:\n"
 
 STRING_VERSION_HELP7, "\nReactOS version written by:\n"
 
-STRING_VOL_HELP1, " Volume in drive %c: is %s"
-STRING_VOL_HELP2, " Volume in drive %c: has no label"
+STRING_VOL_HELP1, " Volume in drive %c is %s\n"
+STRING_VOL_HELP2, " Volume in drive %c has no label.\n"
 STRING_VOL_HELP3, " Volume Serial Number is %04X-%04X\n"
 STRING_VOL_HELP4, "Displays the disk volume label and serial number, if they exist.\n\nVOL [drive:]"
 
@@ -599,7 +599,7 @@ STRING_ERROR_ERROR1,         "Unknown error! Error code: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntax error"
 STRING_FOR_ERROR1,           "'in' missing in for statement."
 STRING_FOR_ERROR2,           "no brackets found."
-STRING_FOR_ERROR3,           "'do' missing." 
+STRING_FOR_ERROR3,           "'do' missing."
 STRING_FOR_ERROR4,           "no command after 'do'."
 STRING_FREE_ERROR1,          "Invalid drive"
 STRING_FREE_ERROR2,          "unlabeled"

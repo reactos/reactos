@@ -138,7 +138,7 @@ DATE [/T][data]\n\n\
   /T    tylko wyœwietlenie\n\n\
 Wpisz DATE bez ¿adnych parametrów by wyœwietliæ obecn¹ datê i\n\
 zapytaæ o now¹. Naciœniêcie ENTER od razu, pozostawia obecn¹.\n"
-				
+
 STRING_DEL_HELP1,  "Kasuje jeden lub wiêcej plików.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\
@@ -387,7 +387,7 @@ do tego komendy MOVE.\n"
 STRING_REN_HELP2, "   zmieniono nazwê %lu pliku\n"
 
 STRING_REN_HELP3, "   zmieniono nazwy %lu plików\n"
-		 
+
 STRING_SHIFT_HELP, "Zmienia pozycjê parametru w pliku wsadowym.\n\n\
 SHIFT [DOWN]"
 
@@ -479,8 +479,8 @@ STRING_VERSION_HELP6, "\nwersja FreeDOS, napisana przez:\n"
 
 STRING_VERSION_HELP7, "\nwersja ReactOS, napisana przez:\n"
 
-STRING_VOL_HELP1, " Wolumin w napêdzie %c: ma etykietê: %s"
-STRING_VOL_HELP2, " Wolumin w napêdzie %c: nie posiada etykiety"
+STRING_VOL_HELP1, " Wolumin w napêdzie %c ma etykietê: %s"
+STRING_VOL_HELP2, " Wolumin w napêdzie %c nie posiada etykiety.\n"
 STRING_VOL_HELP3, " Numer Seryjny Woluminu to: %04X-%04X\n"
 STRING_VOL_HELP4, "Wyœwietla etykietê woluminu w danym napêdzie(o ile istnieje) i jego numer seryjny.\n\nVOL [napêd:]"
 
@@ -595,7 +595,7 @@ STRING_ERROR_ERROR1,         "Nieznany b³¹d! Kod b³êdu: 0x%lx\n"
 STRING_ERROR_ERROR2,         "B³¹d sk³adni"
 STRING_FOR_ERROR1,           "Brak 'in' dla twierdzenia."
 STRING_FOR_ERROR2,           "Nawias nie zosta³ znaleziony."
-STRING_FOR_ERROR3,           "Brakuje 'do'." 
+STRING_FOR_ERROR3,           "Brakuje 'do'."
 STRING_FOR_ERROR4,           "Brak komendy po 'do'."
 STRING_FREE_ERROR1,          "Nieprawid³owa litera napêdu"
 STRING_FREE_ERROR2,          "brak"

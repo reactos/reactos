@@ -137,7 +137,7 @@ DATE [/T][date]\n\n\
   /T    Sólo la muestra\n\n\
 Escribe DATE sin parámetros para mostrar la fecha actual y establecer\n\
 una nueva fecha. Pulsa INTRO para mantener la misma fecha.\n"
-				
+
 STRING_DEL_HELP1,  "Borra uno o mas archivos.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]atributos]] archivo ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]atributos]] archivo ...\n\
@@ -387,7 +387,7 @@ el comando MOVE para este propósito.\n"
 STRING_REN_HELP2, "    %lu archivos renombrados.\n"
 
 STRING_REN_HELP3, "    %lu archivos renombrados.\n"
-		 
+
 STRING_SHIFT_HELP, "Cambia la posición de los parámetros remplazables en un \n\
 archivo por lotes.\n\n\
 SHIFT [ABAJO]"
@@ -481,8 +481,8 @@ STRING_VERSION_HELP6, "\nFreeDOS version escrita por:\n"
 
 STRING_VERSION_HELP7, "\nReactOS version escrita por:\n"
 
-STRING_VOL_HELP1, " El volumen en la unidad %c: es %s"
-STRING_VOL_HELP2, " El volumen en la unidad %c: no tiene etiqueta"
+STRING_VOL_HELP1, " El volumen en la unidad %c es %s\n"
+STRING_VOL_HELP2, " El volumen en la unidad %c no tiene etiqueta.\n"
 STRING_VOL_HELP3, " El número de serie del volumen es %04X-%04X\n"
 STRING_VOL_HELP4, "Muestra la etiqueta del volumen del disco y el número de serie si existen.\n\nVOL [unidad:]"
 
@@ -595,7 +595,7 @@ STRING_ERROR_ERROR1,         "¡Error desconocido! Códige de error: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Error de sintaxsis"
 STRING_FOR_ERROR1,           "Falta 'in' para la declaración."
 STRING_FOR_ERROR2,           "No se encontraron las parénteris."
-STRING_FOR_ERROR3,           "Falta 'do'." 
+STRING_FOR_ERROR3,           "Falta 'do'."
 STRING_FOR_ERROR4,           "No hay comando después de 'do'."
 STRING_FREE_ERROR1,          "Unidad errónea."
 STRING_FREE_ERROR2,          "Sin etiqueta"
@@ -647,4 +647,5 @@ STRING_EXPECTED_NUMBER_OR_VARIABLE,"Se esperaba un número o nombre de variable.\
 STRING_SYNTAX_COMMAND_INCORRECT,   "La sintaxis del comando es incorrecta.\n"
 
 }
+
 

@@ -133,7 +133,7 @@ DATO [/T][dato]\n\n\
   /T    Vis bare\n\n\
 Skriv DATO uten parametere for å vise gjeldende datoinnstillinger og\n\
 spørsmål om ny dato.  Trykk ENTER for å beholde samme dato.\n"
-				
+
 STRING_DEL_HELP1,  "Slett en eller flere filer.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributter]] fil ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributter]] fil ...\n\
@@ -381,7 +381,7 @@ MOVE kommando for det formålet.\n"
 STRING_REN_HELP2, "    %lu fil endret navn\n"
 
 STRING_REN_HELP3, "    %lu filer endret navn\n"
-		 
+
 STRING_SHIFT_HELP, "Endre posisjon for erstattelig parameter i et satsvis fil.\n\n\
 SHIFT [NED]"
 
@@ -473,10 +473,10 @@ STRING_VERSION_HELP6, "\nFreeDOS versjon skrevet av:\n"
 
 STRING_VERSION_HELP7, "\nReactOS versjon skrevet av:\n"
 
-STRING_VOL_HELP1, " Volumet i stasjon %c: er %s"
-STRING_VOL_HELP2, " Volumet i stasjon %c: er uten navn"
-STRING_VOL_HELP3, " Volumserienummer er %04X-%04X\n"
-STRING_VOL_HELP4, "Viser volumets navn og serienummer, hvis det eksisterer.\n\nVOL [stasjon:]"
+STRING_VOL_HELP1, " Volumet i stasjon %c er %s\n"
+STRING_VOL_HELP2, " Volumet i stasjon %c har ingen navn.\n"
+STRING_VOL_HELP3, " Volumet Serie nummer er %04X-%04X\n"
+STRING_VOL_HELP4, "Vis disk volumet merke og serie nummer, hvis det eksisterer.\n\nVOL [stasjon:]"
 
 STRING_WINDOW_HELP1, "endre konsoll vindu aspekt\n\n\
 WINDOW [/POS[=]venstre,topp,bredde,høyde]\n\
@@ -589,12 +589,12 @@ STRING_ERROR_ERROR1,         "Ukjent feil! Feilkode: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntaks feil"
 STRING_FOR_ERROR1,           "'in' tapt i FOR kommando."
 STRING_FOR_ERROR2,           "ingen brakett funnet."
-STRING_FOR_ERROR3,           "'do' mangler." 
-STRING_FOR_ERROR4,           "ingen kommando etter 'do'."
-STRING_FREE_ERROR1,          "Ugyldig stasjon"
-STRING_FREE_ERROR2,          "umerket"
-STRING_GOTO_ERROR1,          "Ingen merke spesifisert for GOTO"
-STRING_GOTO_ERROR2,          "Merke '%s' ikke funnet\n"
+STRING_FOR_ERROR3,           "'gjøre' tapt."
+STRING_FOR_ERROR4,           "ingen kommando etter 'gjøre'."
+STRING_FREE_ERROR1,          "Ugyldig driver"
+STRING_FREE_ERROR2,          "utmerket"
+STRING_GOTO_ERROR1,          "Ingen merke spesifisert for GÅTIL"
+STRING_GOTO_ERROR2,          "merke '%s' ikke funnet\n"
 
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Feil]\n"
