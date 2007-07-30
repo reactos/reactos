@@ -257,7 +257,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
     }
 
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
-  NtGdiSelectVisRgn(hNewDC, hVisRgn);
+  IntGdiSelectVisRgn(hNewDC, hVisRgn);
   NtGdiDeleteObject(hVisRgn);
 
   DC_InitDC(hNewDC);
@@ -914,7 +914,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
     hVisRgn = NtGdiCreateRectRgn(0, 0, NewDC->GDIInfo->ulHorzRes,
                                  NewDC->GDIInfo->ulVertRes);
-    NtGdiSelectVisRgn(hNewDC, hVisRgn);
+    IntGdiSelectVisRgn(hNewDC, hVisRgn);
     NtGdiDeleteObject(hVisRgn);
 
     /*  Initialize the DC state  */
@@ -2044,7 +2044,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       DC_UnlockDc ( dc );
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
       BITMAPOBJ_UnlockBitmap( pb );
-      NtGdiSelectVisRgn ( hDC, hVisRgn );
+      IntGdiSelectVisRgn ( hDC, hVisRgn );
       NtGdiDeleteObject ( hVisRgn );
 
       return objOrg;

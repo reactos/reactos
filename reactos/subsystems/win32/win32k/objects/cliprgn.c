@@ -60,7 +60,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 }
 
 INT STDCALL
-NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
+IntGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 {
   int retval;
   DC *dc;
