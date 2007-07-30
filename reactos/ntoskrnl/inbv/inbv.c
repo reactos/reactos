@@ -572,7 +572,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
             InbvSolidColorFill(0, 421, 639, 479, 1);
 
             /* Get resources */
-            Bitmap = InbvGetResourceAddress(14);
+            Bitmap = InbvGetResourceAddress(6);
             Header = InbvGetResourceAddress(15);
         }
 
