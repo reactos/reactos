@@ -226,7 +226,6 @@ MingwModuleHandler::InstanciateHandler (
 			handler = new MingwWin32OCXModuleHandler ( module );
 			break;
 		case KernelModeDriver:
-        case ExportDriver: // maybe change this later
 			handler = new MingwKernelModeDriverModuleHandler ( module );
 			break;
 		case BootLoader:
@@ -1626,7 +1625,19 @@ MingwModuleHandler::GenerateLinkerCommand (
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	string targetName ( module.GetTargetName () );
 
-	if ( module.IsDLL () )
+	if ( !module.IsDLL () )
+	{
+		fprintf ( fMakefile,
+		          "\t%s %s %s -o %s %s %s %s\n",
+		          linker.c_str (),
+		          linkerParameters.c_str (),
+		          linkerScriptArgument.c_str (),
+		          target.c_str (),
+		          objectsMacro.c_str (),
+		          libsMacro.c_str (),
+		          GetLinkerMacro ().c_str () );
+	}
+	else if ( module.HasImportLibrary () )
 	{
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
@@ -1661,6 +1672,12 @@ MingwModuleHandler::GenerateLinkerCommand (
 	}
 	else
 	{
+		/* XXX: need to workaround binutils bug, which exports
+		 * all functions in a dll if no .def file or an empty
+		 * one has been provided... */
+		/* See bug 1244 */
+		//printf ( "%s will have all its functions exported\n",
+		//         module.GetTargetName ().c_str () );
 		fprintf ( fMakefile,
 		          "\t%s %s %s -o %s %s %s %s\n",
 		          linker.c_str (),
@@ -1670,12 +1687,6 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
-
-#if 0 // causes crashes sometimes
-		fprintf ( fMakefile,
-		          "\t${objcopy} -R .edata %s\n",
-		          target.c_str () );
-#endif
 	}
 
 	GenerateBuildMapCode ();

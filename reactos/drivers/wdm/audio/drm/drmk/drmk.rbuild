@@ -1,4 +1,4 @@
-<module name="drmk" type="exportdriver" installbase="system32/drivers" installname="drmk.sys" allowwarnings="true">
+<module name="drmk" type="kernelmodedriver" installbase="system32/drivers" installname="drmk.sys" allowwarnings="true">
 	<include base="drmk">.</include>
 	<include base="drmk">..</include>
 	<include base="drmk">../include</include>

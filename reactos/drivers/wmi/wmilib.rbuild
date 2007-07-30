@@ -1,4 +1,4 @@
-<module name="wmilib" type="exportdriver" installbase="system32/drivers" installname="wmilib.sys">
+<module name="wmilib" type="kernelmodedriver" installbase="system32/drivers" installname="wmilib.sys">
 	<importlibrary definition="wmilib.def" />
 	<include base="wmilib">.</include>
 	<library>ntoskrnl</library>
