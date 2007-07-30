@@ -1062,10 +1062,6 @@ NtGdiUpdateICMRegKey(DWORD  Reserved,
 /* These shouldn't even be called NtGdi */
 HDC STDCALL  NtGdiGetDCState(HDC  hDC);
 WORD STDCALL NtGdiSetHookFlags(HDC hDC, WORD Flags);
-INT
-STDCALL
-NtGdiSelectVisRgn(HDC hdc,
-                     HRGN hrgn);
 VOID STDCALL NtGdiSetDCState ( HDC hDC, HDC hDCSave );
 
 /* All this Should be in user-mode, not NtUser calls. Especially not in GDI! */
