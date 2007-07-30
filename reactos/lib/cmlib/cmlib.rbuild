@@ -4,7 +4,6 @@
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="NASSERT" />
-	<define name="__NO_LLP64__" />
 	<pch>cmlib.h</pch>
     <library>rtl</library>
 	<file>cminit.c</file>

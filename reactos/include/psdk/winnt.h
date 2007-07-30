@@ -102,13 +102,8 @@ typedef char CHAR;
 typedef short SHORT;
 #ifndef LONG_DEFINED
 #define LONG_DEFINED
-#if defined(__NO_LLP64__)
-    typedef int LONG;
-    typedef unsigned int ULONG,*PULONG;
-#else
     typedef long LONG;
     typedef unsigned long ULONG,*PULONG;
-#endif
 #endif//LONG_DEFINED
 typedef char CCHAR, *PCCHAR;
 typedef unsigned char UCHAR,*PUCHAR;
@@ -3849,10 +3844,9 @@ typedef struct _PROCESSOR_POWER_INFORMATION {
 	ULONG MaxIdleState;
 	ULONG CurrentIdleState;
 } PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
-
-typedef DWORD EXECUTION_STATE;
 #endif
 
+typedef DWORD EXECUTION_STATE;
 typedef enum _POWER_INFORMATION_LEVEL {
 	SystemPowerPolicyAc,
 	SystemPowerPolicyDc,
