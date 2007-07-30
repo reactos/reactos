@@ -47,21 +47,12 @@ VIS_ComputeVisibleRegion(
 
    if (ClientArea)
    {
-      if (!(ClipRgn = VIS_ComputeVisibleRegion(Window, FALSE, ClipChildren, ClipSiblings)))
-      {
-         return NULL;
-      }
-      if (!(VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect)))
-      {
-         NtGdiDeleteObject(VisRgn);
-         return NULL;
-      }
-      NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
-      NtGdiDeleteObject(ClipRgn);
-      return VisRgn;
+      VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
    }
-
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+   else
+   {
+      VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+   }
 
    /*
     * Walk through all parent windows and for each clip the visble region
