@@ -337,12 +337,6 @@ NtGdiGdiComment (
 	CONST LPBYTE	Data
 	);
 
-/* Should be done in user-mode. */
-DWORD STDCALL NtGdiGdiGetBatchLimit (VOID);
-
-/* Should be done in user-mode. */
-DWORD STDCALL NtGdiGdiSetBatchLimit (DWORD  Limit);
-
 /* Use NtGdiGetDCDword with GdiGetArcDirection. */
 INT
 STDCALL

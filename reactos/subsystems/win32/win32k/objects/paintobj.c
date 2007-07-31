@@ -31,22 +31,6 @@ NtGdiFlush(VOID)
 }
 
 DWORD
-STDCALL
-NtGdiGdiGetBatchLimit(VOID)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-DWORD
-STDCALL
-NtGdiGdiSetBatchLimit(DWORD  Limit)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-DWORD
 APIENTRY
 NtGdiGetBoundsRect(
     IN HDC hdc,

@@ -75,12 +75,10 @@ NtGdiFlattenPath			1
 NtGdiFrameRgn				5
 NtGdiGdiComment				3
 NtGdiFlush				0
-NtGdiGdiGetBatchLimit			0
 #NtGdiGdiPlayDCScript			?
 #NtGdiGdiPlayJournal			?
 #NtGdiGdiPlayScript			?
 #NtGdiGdiPlaySpoolStream		?
-NtGdiGdiSetBatchLimit			1
 NtGdiGetArcDirection			1
 NtGdiGetAspectRatioFilterEx		2
 NtGdiGetBitmapBits			3
