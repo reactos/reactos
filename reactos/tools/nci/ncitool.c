@@ -21,7 +21,7 @@
 /* DEFINES  ****************************************************************/
 
 #define INPUT_BUFFER_SIZE 255
-#define Arguments 8
+#define Arguments 7
 
 /******* Table Indexes ************/
 #define MAIN_INDEX 0x0
@@ -39,8 +39,7 @@
 /* And finally, the stub files. */
 #define NtosUserStubs 4
 #define NtosKernelStubs 5
-#define Win32kGdiStubs 6
-#define Win32kUserStubs 7
+#define Win32kStubs 6
 
 /********** Stub Code ************/
 
@@ -333,11 +332,11 @@ GetNameAndArgumentsFromDb(char Line[],
  *
  *     KernelModeFile - Kernelmode Stub Files to which to write the stubs.
  *
- *     Index - Name of System Call for which to add the stub.
+ *     Index - Number of first syscall
  *
- *     UserFiles - Number of bytes on the stack to return after doing the system call.
+ *     UserFiles - Number of Usermode Stub Files to create
  *
- *     NeedsZw - Service Descriptor Table ID for this System Call.
+ *     NeedsZw - Write Zw prefix?
  *
  * Returns:
  *     None.
@@ -579,14 +578,9 @@ int main(int argc, char* argv[])
                     argv[NtosKernelStubs + ArgOffset]);
     fputs("#include <ndk/asm.h>\n\n", Files[NtosKernelStubs]);
 
-    WriteFileHeader(Files[Win32kGdiStubs], 
+    WriteFileHeader(Files[Win32kStubs], 
                     "System Call Stubs for Native API", 
-                    argv[Win32kGdiStubs + ArgOffset]);
-    
-    WriteFileHeader(Files[Win32kUserStubs], 
-                    "System Call Stubs for Native API", 
-                    argv[Win32kUserStubs + ArgOffset]);
-
+                    argv[Win32kStubs + ArgOffset]);
 
     /* Create the System Stubs */
     CreateStubs(Files[NativeSystemDb],
@@ -598,10 +592,10 @@ int main(int argc, char* argv[])
 
     /* Create the Graphics Stubs */
     CreateStubs(Files[NativeGuiDb], 
-                &Files[Win32kGdiStubs], 
+                &Files[Win32kStubs], 
                 NULL, 
                 WIN32K_INDEX, 
-                2,
+                1,
                 0);
 
     /* Rewind the databases */

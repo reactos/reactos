@@ -44,8 +44,7 @@ clean: nci_clean
 # WIN32K.SYS
 WIN32K_SVC_DB = subsystems$(SEP)win32$(SEP)win32k$(SEP)w32ksvc.db
 WIN32K_SERVICE_TABLE = subsystems$(SEP)win32$(SEP)win32k$(SEP)include$(SEP)napi.h
-WIN32K_GDI_STUBS = lib$(SEP)win32ksys$(SEP)$(ARCH)$(SEP)win32k.S
-WIN32K_USER_STUBS = lib$(SEP)win32ksys$(SEP)$(ARCH)$(SEP)win32k.S
+WIN32K_STUBS = lib$(SEP)win32ksys$(SEP)$(ARCH)$(SEP)win32k.S
 
 
 
@@ -78,8 +77,7 @@ $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 		$(WIN32K_SERVICE_TABLE) \
 		$(NTDLL_STUBS) \
 		$(KERNEL_STUBS) \
-		$(WIN32K_GDI_STUBS) \
-		$(WIN32K_USER_STUBS)
+		$(WIN32K_STUBS)
 
 .PHONY: nci_service_files_clean
 nci_service_files_clean:
