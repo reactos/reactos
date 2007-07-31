@@ -139,8 +139,8 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
                     hSubMenu = CreatePopupMenu();
                     if (hSubMenu != NULL)
                     {
-                        /*GuiConsoleAppendMenuItems(hSubMenu,
-                                                  Items[i].SubMenu);*/
+                        GuiConsoleAppendMenuItems(hSubMenu,
+                                                  Items[i].SubMenu);
 
                         if (!AppendMenuW(hMenu,
                                          MF_STRING | MF_POPUP,
@@ -148,7 +148,6 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
                                          szMenuString))
                         {
                             DestroyMenu(hSubMenu);
-                            DPRINT1("DestroyMenu \n");
                         }
                     }
                 }
@@ -180,13 +179,8 @@ GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
                           FALSE);
     if (hMenu != NULL)
     {
-        DPRINT1("adding menu\n");
         GuiConsoleAppendMenuItems(hMenu,
                                   GuiConsoleMainMenuItems);
-    }
-    else
-    {
-      DPRINT1("This should never happen, GetSystemMenu == NULL \n");
     }
 }
 
@@ -242,12 +236,10 @@ GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle,
   RtlFreeUnicodeString(&SidName);
 
   CloseHandle(hProcessToken);
-  CloseHandle(hProcess);
-
-  //if (hProcHandle)
-  //  *hProcHandle = hProcess;
-  //else
-  //  CloseHandle(hProcess);
+  if (hProcHandle)
+    *hProcHandle = hProcess;
+  else
+    CloseHandle(hProcess);
 
   if (res != ERROR_SUCCESS)
     return FALSE;
@@ -284,26 +276,21 @@ GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSu
   
   DPRINT("GuiConsoleOpenUserSettings entered\n");
 
-  DPRINT1("ProcessId %d\n",ProcessId);
-
   if (!GuiConsoleOpenUserRegistryPathPerProcessId(ProcessId, &hProcess, &hKey, samDesired))
     {
-      DPRINT1("GuiConsoleOpenUserRegistryPathPerProcessId failed\n"); 
+      DPRINT("GuiConsoleOpenUserRegistryPathPerProcessId failed\n"); 
       return FALSE;
     }
-  
-  hProcess = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessId );
-
 
   /* FIXME we do not getting the process name so no menu will be loading, why ?*/
   fLength = GetProcessImageFileNameW(hProcess, szProcessName, sizeof(GuiData->szProcessName) / sizeof(WCHAR));
   CloseHandle(hProcess);
 
-  DPRINT1("szProcessName3 : %S\n",szProcessName);
+  //DPRINT1("szProcessName3 : %S\n",szProcessName);
 
   if (!fLength)
     {
-      DPRINT1("GetProcessImageFileNameW failed(0x%x)ProcessId %d\n", GetLastError(),hProcess);
+      DPRINT("GetProcessImageFileNameW failed(0x%x)ProcessId %d\n", GetLastError(),hProcess);
       return FALSE;
     }
   /*
@@ -671,8 +658,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   if (Console->ProcessList.Flink != &Console->ProcessList)
     {
       ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
-      DPRINT1("PtrToUlong(ProcessData->ProcessId) == %d",PtrToUlong(ProcessData->ProcessId));
-
       if (GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ, FALSE))
         {
           GuiConsoleReadUserSettings(hKey, Console, GuiData, Console->ActiveBuffer);
@@ -1278,20 +1263,13 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
-  HMENU menu;
 
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   KillTimer(hWnd, 1);
   Console->PrivateData = NULL;
   DeleteCriticalSection(&GuiData->Lock);
-
-  menu = GetSystemMenu(hWnd, TRUE);
-  if (menu == NULL)
-  {
-      DPRINT1("This should never happen, GetSystemMenu == NULL \n");
-  }
-
+  GetSystemMenu(hWnd, TRUE);
   if (GuiData->ConsoleLibrary)
     FreeLibrary(GuiData->ConsoleLibrary);
 
