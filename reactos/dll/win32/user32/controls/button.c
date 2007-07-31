@@ -400,7 +400,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if (unicode) DefWindowProcW( hWnd, WM_SETTEXT, wParam, lParam );
         else DefWindowProcA( hWnd, WM_SETTEXT, wParam, lParam );
         if (btn_type == BS_GROUPBOX) /* Yes, only for BS_GROUPBOX */
-            InvalidateRect( hWnd, NULL, TRUE );
+            NtUserInvalidateRect( hWnd, NULL, TRUE );
         else
             paint_button( hWnd, btn_type, ODA_DRAWENTIRE );
         return 1; /* success. FIXME: check text length */
@@ -436,7 +436,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_SYSCOLORCHANGE:
-        InvalidateRect( hWnd, NULL, FALSE );
+        NtUserInvalidateRect( hWnd, NULL, FALSE );
         break;
 
 #ifndef __REACTOS__
@@ -473,8 +473,8 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             return 0;
         }
         oldHbitmap = (HBITMAP)SetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET, lParam );
-	InvalidateRect( hWnd, NULL, FALSE );
-	return (LRESULT)oldHbitmap;
+        NtUserInvalidateRect( hWnd, NULL, FALSE );
+        return (LRESULT)oldHbitmap;
 
     case BM_GETIMAGE:
         return GetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET );

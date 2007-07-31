@@ -5386,7 +5386,7 @@ static void EDIT_UpdateText(EDITSTATE *es, LPRECT rc, BOOL bErase)
         es->flags &= ~EF_UPDATE;
         EDIT_NOTIFY_PARENT(es, EN_UPDATE);
     }
-    InvalidateRect(es->hwndSelf, rc, bErase);
+    NtUserInvalidateRect(es->hwndSelf, rc, bErase);
 }
 
 /********************************************************************

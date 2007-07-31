@@ -1357,7 +1357,7 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
               Rect.bottom = Rect.top + ThumbSize;
             }
           HideCaret(Wnd);
-          InvalidateRect(Wnd, &Rect, FALSE);
+          NtUserInvalidateRect(Wnd, &Rect, FALSE);
           DestroyCaret();
         }
         break;

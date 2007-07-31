@@ -42,13 +42,14 @@ nci_clean:
 clean: nci_clean
 
 # WIN32K.SYS
-WIN32K_SVC_DB = $(NCI_BASE_)w32ksvc.db
+WIN32K_SVC_DB = subsystems$(SEP)win32$(SEP)win32k$(SEP)w32ksvc.db
 WIN32K_SERVICE_TABLE = subsystems$(SEP)win32$(SEP)win32k$(SEP)include$(SEP)napi.h
 WIN32K_GDI_STUBS = dll$(SEP)win32$(SEP)gdi32$(SEP)misc$(SEP)$(ARCH)$(SEP)win32k.S
 WIN32K_USER_STUBS = dll$(SEP)win32$(SEP)user32$(SEP)misc$(SEP)$(ARCH)$(SEP)win32k.S
 
+
 # NTOSKRNL.EXE
-KERNEL_SVC_DB = $(NCI_BASE_)sysfuncs.lst
+KERNEL_SVC_DB = ntoskrnl$(SEP)sysfuncs.lst
 KERNEL_SERVICE_TABLE = ntoskrnl$(SEP)include$(SEP)internal$(SEP)napi.h
 NTDLL_STUBS = dll$(SEP)ntdll$(SEP)$(ARCH)$(SEP)napi.S
 KERNEL_STUBS = ntoskrnl$(SEP)ex$(SEP)$(ARCH)$(SEP)zw.S
@@ -67,6 +68,7 @@ $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 	${mkdir} ntoskrnl$(SEP)ex$(SEP)$(ARCH) 2>$(NUL)
 	${mkdir} dll$(SEP)win32$(SEP)gdi32$(SEP)misc$(SEP)$(ARCH) 2>$(NUL)
 	${mkdir} dll$(SEP)win32$(SEP)user32$(SEP)misc$(SEP)$(ARCH) 2>$(NUL)
+	${mkdir} lib$(SEP)win32ksys$(SEP)$(ARCH) 2>$(NUL)
 	$(Q)$(NCI_TARGET) -arch $(ARCH) \
 		$(KERNEL_SVC_DB) \
 		$(WIN32K_SVC_DB) \

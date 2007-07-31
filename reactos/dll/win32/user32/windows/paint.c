@@ -147,18 +147,6 @@ GetUpdateRgn(
 }
 
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-InvalidateRect(
-  HWND hWnd,
-  CONST RECT *lpRect,
-  BOOL bErase)
-{
-  return NtUserInvalidateRect(hWnd, lpRect, bErase);
-}
 
 
 /*
