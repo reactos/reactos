@@ -15,6 +15,8 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>imm32</library>
+	<library>win32ksys</library>
+
 	<directory name="include">
 		<pch>user32.h</pch>
 	</directory>
@@ -46,21 +48,6 @@
 		<file>winhelp.c</file>
 		<file>winsta.c</file>
 		<file>wsprintf.c</file>
-		<if property="ARCH" value="i386">
-			<directory name="i386">
-				<file>win32k.S</file>
-			</directory>
-		</if>
-		<if property="ARCH" value="powerpc">
-			<directory name="powerpc">
-				<file>win32k.S</file>
-			</directory>
-		</if>
-		<if property="ARCH" value="mips">
-			<directory name="mips">
-				<file>win32k.S</file>
-			</directory>
-		</if>
 	</directory>
 	<directory name="windows">
 		<file>accel.c</file>

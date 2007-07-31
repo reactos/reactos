@@ -40,5 +40,9 @@
     <directory name="smlib">
         <xi:include href="smlib/smlib.rbuild" />
     </directory>
+    <directory name="win32ksys">
+        <xi:include href="win32ksys/win32ksys.rbuild" />
+    </directory>
+
 </group>
 

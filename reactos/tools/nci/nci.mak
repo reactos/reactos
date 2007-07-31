@@ -44,8 +44,9 @@ clean: nci_clean
 # WIN32K.SYS
 WIN32K_SVC_DB = subsystems$(SEP)win32$(SEP)win32k$(SEP)w32ksvc.db
 WIN32K_SERVICE_TABLE = subsystems$(SEP)win32$(SEP)win32k$(SEP)include$(SEP)napi.h
-WIN32K_GDI_STUBS = dll$(SEP)win32$(SEP)gdi32$(SEP)misc$(SEP)$(ARCH)$(SEP)win32k.S
-WIN32K_USER_STUBS = dll$(SEP)win32$(SEP)user32$(SEP)misc$(SEP)$(ARCH)$(SEP)win32k.S
+WIN32K_GDI_STUBS = lib$(SEP)win32ksys$(SEP)$(ARCH)$(SEP)win32k.S
+WIN32K_USER_STUBS = lib$(SEP)win32ksys$(SEP)$(ARCH)$(SEP)win32k.S
+
 
 
 # NTOSKRNL.EXE
@@ -69,6 +70,7 @@ $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 	${mkdir} dll$(SEP)win32$(SEP)gdi32$(SEP)misc$(SEP)$(ARCH) 2>$(NUL)
 	${mkdir} dll$(SEP)win32$(SEP)user32$(SEP)misc$(SEP)$(ARCH) 2>$(NUL)
 	${mkdir} lib$(SEP)win32ksys$(SEP)$(ARCH) 2>$(NUL)
+
 	$(Q)$(NCI_TARGET) -arch $(ARCH) \
 		$(KERNEL_SVC_DB) \
 		$(WIN32K_SVC_DB) \

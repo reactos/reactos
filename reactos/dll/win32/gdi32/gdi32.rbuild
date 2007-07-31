@@ -9,6 +9,8 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<library>win32ksys</library>
+
 	<directory name="include">
 		<pch>precomp.h</pch>
 	</directory>
@@ -22,22 +24,7 @@
 		<file>stubs.c</file>
 		<file>stubsa.c</file>
 		<file>stubsw.c</file>
-		<file>wingl.c</file>
-		<if property="ARCH" value="i386">
-			<directory name="i386">
-				<file>win32k.S</file>
-			</directory>
-		</if>
-		<if property="ARCH" value="powerpc">
-			<directory name="powerpc">
-				<file>win32k.S</file>
-			</directory>
-		</if>
-		<if property="ARCH" value="mips">
-			<directory name="mips">
-				<file>win32k.S</file>
-			</directory>
-		</if>
+		<file>wingl.c</file>		
 	</directory>
 	<directory name="objects">
 		<file>bitmap.c</file>
