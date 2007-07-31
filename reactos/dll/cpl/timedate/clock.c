@@ -25,7 +25,7 @@ typedef struct _CLOCKDATA
 
 #define TWOPI (2 * 3.14159)
 
-static const TCHAR szClockWndClass[] = TEXT("ClockWndClass");
+static const WCHAR szClockWndClass[] = L"ClockWndClass";
 
 
 static VOID
@@ -144,13 +144,13 @@ ClockWndProc(HWND hwnd,
     HDC hdc;
     PAINTSTRUCT ps;
 
-    pClockData = (PCLOCKDATA)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    pClockData = (PCLOCKDATA)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_CREATE:
             pClockData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CLOCKDATA));
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pClockData);
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pClockData);
 
             pClockData->hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
             pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
@@ -206,10 +206,10 @@ ClockWndProc(HWND hwnd,
             break;
 
         default:
-            DefWindowProc(hwnd,
-                          uMsg,
-                          wParam,
-                          lParam);
+            DefWindowProcW(hwnd,
+                           uMsg,
+                           wParam,
+                           lParam);
     }
 
     return TRUE;
@@ -219,22 +219,22 @@ ClockWndProc(HWND hwnd,
 BOOL
 RegisterClockControl(VOID)
 {
-    WNDCLASSEX wc = {0};
+    WNDCLASSEXW wc = {0};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(WNDCLASSEXW);
     wc.lpfnWndProc = ClockWndProc;
     wc.hInstance = hApplet;
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wc.lpszClassName = szClockWndClass;
 
-    return RegisterClassEx(&wc) != (ATOM)0;
+    return RegisterClassExW(&wc) != (ATOM)0;
 }
 
 
 VOID
 UnregisterClockControl(VOID)
 {
-    UnregisterClass(szClockWndClass,
-                    hApplet);
+    UnregisterClassW(szClockWndClass,
+                     hApplet);
 }

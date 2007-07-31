@@ -59,7 +59,7 @@ GetLargerTimeZoneEntry(DWORD Index)
 static VOID
 CreateTimeZoneList(VOID)
 {
-    TCHAR szKeyName[256];
+    WCHAR szKeyName[256];
     DWORD dwIndex;
     DWORD dwNameSize;
     DWORD dwValueSize;
@@ -70,33 +70,33 @@ CreateTimeZoneList(VOID)
     PTIMEZONE_ENTRY Entry;
     PTIMEZONE_ENTRY Current;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones"),
-                     0,
-                     KEY_ENUMERATE_SUB_KEYS,
-                     &hZonesKey))
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones",
+                      0,
+                      KEY_ENUMERATE_SUB_KEYS,
+                      &hZonesKey))
         return;
 
     dwIndex = 0;
     while (TRUE)
     {
-        dwNameSize = 256 * sizeof(TCHAR);
-        lError = RegEnumKeyEx(hZonesKey,
-                              dwIndex,
-                              szKeyName,
-                              &dwNameSize,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL);
+        dwNameSize = 256 * sizeof(WCHAR);
+        lError = RegEnumKeyExW(hZonesKey,
+                               dwIndex,
+                               szKeyName,
+                               &dwNameSize,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
         if (lError != ERROR_SUCCESS && lError != ERROR_MORE_DATA)
             break;
 
-        if (RegOpenKeyEx(hZonesKey,
-                         szKeyName,
-                         0,
-                         KEY_QUERY_VALUE,
-                         &hZoneKey))
+        if (RegOpenKeyEx (hZonesKey,
+                          szKeyName,
+                          0,
+                          KEY_QUERY_VALUE,
+                          &hZoneKey))
             break;
 
         Entry = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEZONE_ENTRY));
@@ -106,61 +106,61 @@ CreateTimeZoneList(VOID)
             break;
         }
 
-        dwValueSize = 64 * sizeof(TCHAR);
-        if (RegQueryValueEx(hZoneKey,
-                            _T("Display"),
-                            NULL,
-                            NULL,
-                            (LPBYTE)&Entry->Description,
-                            &dwValueSize))
+        dwValueSize = 64 * sizeof(WCHAR);
+        if (RegQueryValueExW(hZoneKey,
+                             L"Display",
+                             NULL,
+                             NULL,
+                             (LPBYTE)&Entry->Description,
+                             &dwValueSize))
         {
             RegCloseKey(hZoneKey);
             break;
         }
 
-        dwValueSize = 33 * sizeof(TCHAR);
-        if (RegQueryValueEx(hZoneKey,
-                            _T("Std"),
-                            NULL,
-                            NULL,
-                            (LPBYTE)&Entry->StandardName,
-                            &dwValueSize))
+        dwValueSize = 33 * sizeof(WCHAR);
+        if (RegQueryValueExW(hZoneKey,
+                             L"Std",
+                             NULL,
+                             NULL,
+                             (LPBYTE)&Entry->StandardName,
+                             &dwValueSize))
         {
             RegCloseKey(hZoneKey);
             break;
         }
 
-        dwValueSize = 33 * sizeof(TCHAR);
-        if (RegQueryValueEx(hZoneKey,
-                            _T("Dlt"),
-                            NULL,
-                            NULL,
-                            (LPBYTE)&Entry->DaylightName,
-                            &dwValueSize))
+        dwValueSize = 33 * sizeof(WCHAR);
+        if (RegQueryValueExW(hZoneKey,
+                             L"Dlt",
+                             NULL,
+                             NULL,
+                             (LPBYTE)&Entry->DaylightName,
+                             &dwValueSize))
         {
             RegCloseKey(hZoneKey);
             break;
         }
 
         dwValueSize = sizeof(DWORD);
-        if (RegQueryValueEx(hZoneKey,
-                            _T("Index"),
-                            NULL,
-                            NULL,
-                            (LPBYTE)&Entry->Index,
-                            &dwValueSize))
+        if (RegQueryValueExW(hZoneKey,
+                             L"Index",
+                             NULL,
+                             NULL,
+                             (LPBYTE)&Entry->Index,
+                             &dwValueSize))
         {
             RegCloseKey(hZoneKey);
             break;
         }
 
         dwValueSize = sizeof(TZ_INFO);
-        if (RegQueryValueEx(hZoneKey,
-                            _T("TZI"),
-                            NULL,
-                            NULL,
-                            (LPBYTE)&Entry->TimezoneInfo,
-                            &dwValueSize))
+        if (RegQueryValueExW(hZoneKey,
+                             L"TZI",
+                             NULL,
+                             NULL,
+                             (LPBYTE)&Entry->TimezoneInfo,
+                             &dwValueSize))
         {
             RegCloseKey(hZoneKey);
             break;
@@ -252,22 +252,22 @@ ShowTimeZoneList(HWND hwnd)
     Entry = TimeZoneListHead;
     while (Entry != NULL)
     {
-        SendMessage(hwnd,
-                    CB_ADDSTRING,
-                    0,
-                    (LPARAM)Entry->Description);
+        SendMessageW(hwnd,
+                     CB_ADDSTRING,
+                     0,
+                     (LPARAM)Entry->Description);
 
-        if (!_tcscmp(Entry->StandardName, TimeZoneInfo.StandardName))
+        if (!wcscmp(Entry->StandardName, TimeZoneInfo.StandardName))
             dwIndex = i;
 
         i++;
         Entry = Entry->Next;
     }
 
-    SendMessage(hwnd,
-                CB_SETCURSEL,
-                (WPARAM)dwIndex,
-                0);
+    SendMessageW(hwnd,
+                 CB_SETCURSEL,
+                 (WPARAM)dwIndex,
+                 0);
 }
 
 
@@ -279,10 +279,10 @@ SetLocalTimeZone(HWND hwnd)
     DWORD dwIndex;
     DWORD i;
 
-    dwIndex = (DWORD)SendMessage(hwnd,
-                                 CB_GETCURSEL,
-                                 0,
-                                 0);
+    dwIndex = (DWORD)SendMessageW(hwnd,
+                                  CB_GETCURSEL,
+                                  0,
+                                  0);
 
     i = 0;
     Entry = TimeZoneListHead;
@@ -295,9 +295,9 @@ SetLocalTimeZone(HWND hwnd)
         Entry = Entry->Next;
     }
 
-    _tcscpy(TimeZoneInformation.StandardName,
+    wcscpy(TimeZoneInformation.StandardName,
             Entry->StandardName);
-    _tcscpy(TimeZoneInformation.DaylightName,
+    wcscpy(TimeZoneInformation.DaylightName,
             Entry->DaylightName);
 
     TimeZoneInformation.Bias = Entry->TimezoneInfo.Bias;
@@ -321,28 +321,28 @@ GetAutoDaylightInfo(HWND hwnd)
 {
     HKEY hKey;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation"),
-                     0,
-                     KEY_QUERY_VALUE,
-                     &hKey))
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey))
         return;
 
     /* if the call fails (non zero), the reg value isn't available,
      * which means it shouldn't be disabled, so we should check the button.
      */
-    if (RegQueryValueEx(hKey,
-                        _T("DisableAutoDaylightTimeSet"),
-                        NULL,
-                        NULL,
-                        NULL,
-                        NULL))
+    if (RegQueryValueExW(hKey,
+                         L"DisableAutoDaylightTimeSet",
+                         NULL,
+                         NULL,
+                         NULL,
+                         NULL))
     {
-        SendMessage(hwnd, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+        SendMessageW(hwnd, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
     }
     else
     {
-        SendMessage(hwnd, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+        SendMessageW(hwnd, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
     }
 
     RegCloseKey(hKey);
@@ -355,26 +355,26 @@ SetAutoDaylightInfo(HWND hwnd)
     HKEY hKey;
     DWORD dwValue = 1;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     _T("SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation"),
-                     0,
-                     KEY_SET_VALUE,
-                     &hKey))
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+                      0,
+                      KEY_SET_VALUE,
+                      &hKey))
         return;
 
-    if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
+    if (SendMessageW(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
     {
-        RegSetValueEx(hKey,
-                      _T("DisableAutoDaylightTimeSet"),
-                      0,
-                      REG_DWORD,
-                      (LPBYTE)&dwValue,
-                      sizeof(DWORD));
+        RegSetValueExW(hKey,
+                       L"DisableAutoDaylightTimeSet",
+                       0,
+                       REG_DWORD,
+                       (LPBYTE)&dwValue,
+                       sizeof(DWORD));
     }
     else
     {
-        RegDeleteValue(hKey,
-                       _T("DisableAutoDaylightTimeSet"));
+        RegDeleteValueW(hKey,
+                       L"DisableAutoDaylightTimeSet");
     }
 
     RegCloseKey(hKey);
@@ -396,10 +396,10 @@ TimeZonePageProc(HWND hwndDlg,
             CreateTimeZoneList();
             ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
             GetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
-            hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_WORLD), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDC_WORLD), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             if (hBitmap != NULL)
             {
-                GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+                GetObjectW(hBitmap, sizeof(BITMAP), &bitmap);
 
                 cxSource = bitmap.bmWidth;
                 cySource = bitmap.bmHeight;

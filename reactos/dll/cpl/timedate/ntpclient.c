@@ -23,7 +23,7 @@ typedef struct _INFO
 
 static BOOL
 InitConnection(PINFO pInfo,
-                     LPSTR lpAddress)
+               LPSTR lpAddress)
 {
     WSADATA wsaData;
     HOSTENT *he;
