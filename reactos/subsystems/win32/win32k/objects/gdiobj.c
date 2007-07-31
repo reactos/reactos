@@ -1477,4 +1477,26 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
     return MappedView;
 }
 
+W32KAPI
+HANDLE
+APIENTRY
+NtGdiCreateClientObj(
+    IN ULONG ulType
+    )
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+W32KAPI
+BOOL
+APIENTRY
+NtGdiDeleteClientObj(
+    IN HANDLE h
+    )
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
 /* EOF */

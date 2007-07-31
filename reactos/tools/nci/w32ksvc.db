@@ -21,6 +21,7 @@ NtGdiCombineTransform			3
 NtGdiCopyEnhMetaFile			2
 NtGdiCopyMetaFile			2
 NtGdiCreateBitmap			5
+NtGdiCreateClientObj			1
 NtGdiCreateColorSpace			1
 NtGdiCreateCompatibleBitmap		3
 NtGdiCreateCompatibleDC			1
@@ -42,6 +43,7 @@ NtGdiCreateRoundRectRgn			6
 NtGdiCreateScalableFontResource		4
 NtGdiCreateSolidBrush			2
 NtGdiDPtoLP				3
+NtGdiDeleteClientObj			1
 NtGdiDeleteColorSpace			1
 NtGdiDeleteObjectApp			1
 NtGdiDeleteEnhMetaFile			1
