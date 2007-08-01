@@ -898,7 +898,6 @@ PrintSummary(LPTSTR szPath,
    }
    else
    {
-
       /* Print File Summary */
       /* Condition to print summary is:
       If we are not in bare format and if we have results! */
@@ -908,7 +907,6 @@ PrintSummary(LPTSTR szPath,
          ConOutPrintfPaging(FALSE,szMsg,ulFiles, szBuffer);
       else
          ConOutPrintf(szMsg,ulFiles, szBuffer);
-
    }
 
 	/* Print total directories and freespace */
@@ -1785,9 +1783,10 @@ INT
 CommandDir(LPTSTR first, LPTSTR rest)
 {
 	TCHAR	dircmd[256];	/* A variable to store the DIRCMD enviroment variable */
-	TCHAR	volume[MAX_PATH];
+	TCHAR	path[MAX_PATH];
 	TCHAR	prev_volume[MAX_PATH];
 	LPTSTR*	params = NULL;
+	LPTSTR	pszFilePart;
 	INT		entries = 0;
 	UINT	loop = 0;
 	DIRSWITCHFLAGS stFlags;
@@ -1881,13 +1880,20 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		ChangedVolume = TRUE;
 
 		if (!stFlags.bBareFormat &&
-		    GetVolumePathName(params[loop], volume, sizeof(volume) / sizeof(TCHAR)))
+		    GetVolumePathName(params[loop], path, sizeof(path) / sizeof(TCHAR)))
 		{
-			if (!_tcscmp(volume, prev_volume))
+			if (!_tcscmp(path, prev_volume))
 				ChangedVolume = FALSE;
 			else
-				_tcscpy(prev_volume, volume);
+				_tcscpy(prev_volume, path);
 		}
+		else if (GetFullPathName(params[loop], sizeof(path) / sizeof(TCHAR), path, &pszFilePart) != 0)
+		{
+			if (pszFilePart != NULL)
+				*pszFilePart = _T('\0');
+		}
+		else
+			_tcscpy(path, params[loop]);
 
 		if (ChangedVolume && !stFlags.bBareFormat) {
 			if (!PrintDirectoryHeader (params[loop], &stFlags)) {
@@ -1904,7 +1910,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		}
 
 		/* print the footer */
-		PrintSummary(params[loop],
+		PrintSummary(path,
 			recurse_file_cnt,
 			recurse_dir_cnt,
 			recurse_bytes,
