@@ -145,3 +145,15 @@ GdiReleaseDC(HDC hdc)
 	return 0;
 }
 
+INT STDCALL
+ExtEscape(
+	HDC hDC,
+	int nEscape,
+	int cbInput,
+	LPCSTR lpszInData,
+	int cbOutput,
+	LPSTR lpszOutData
+)
+{
+	return NtGdiExtEscape(hDC, NULL, 0, nEscape, cbInput, (LPSTR)lpszInData, cbOutput, lpszOutData);
+}

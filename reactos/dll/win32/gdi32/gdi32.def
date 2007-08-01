@@ -225,7 +225,7 @@ EudcUnloadLinkW@8
 ExcludeClipRect@20=NtGdiExcludeClipRect@20
 ExtCreatePen@20
 ExtCreateRegion@12=NtGdiExtCreateRegion@12
-ExtEscape@24=NtGdiExtEscape@24
+ExtEscape@24
 ExtFloodFill@20=NtGdiExtFloodFill@20
 ExtSelectClipRgn@12=NtGdiExtSelectClipRgn@12
 ExtTextOutA@32
@@ -467,7 +467,7 @@ InvertRgn@8=NtGdiInvertRgn@8
 LPtoDP@12=NtGdiLPtoDP@12
 LineDDA@24
 LineTo@12=NtGdiLineTo@12
-MaskBlt@48=NtGdiMaskBlt@48
+MaskBlt@48
 MirrorRgn@8
 ModifyWorldTransform@12=NtGdiModifyWorldTransform@12
 MoveToEx@16=NtGdiMoveToEx@16
@@ -490,7 +490,7 @@ PlayEnhMetaFile@12
 PlayEnhMetaFileRecord@16
 PlayMetaFile@8
 PlayMetaFileRecord@16
-PlgBlt@40=NtGdiPlgBlt@40
+PlgBlt@40
 PolyBezier@12=NtGdiPolyBezier@12
 PolyBezierTo@12=NtGdiPolyBezierTo@12
 PolyDraw@16=NtGdiPolyDraw@16

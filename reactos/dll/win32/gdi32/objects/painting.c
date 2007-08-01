@@ -903,3 +903,61 @@ FloodFill(
 {
     return NtGdiExtFloodFill(hDC, nXStart, nYStart, crFill, FLOODFILLBORDER);
 }
+
+BOOL WINAPI
+MaskBlt(
+	HDC hdcDest,
+	INT nXDest,
+	INT nYDest,
+	INT nWidth,
+	INT nHeight,
+	HDC hdcSrc,
+	INT nXSrc,
+	INT nYSrc,
+	HBITMAP hbmMask,
+	INT xMask,
+	INT yMask,
+	DWORD dwRop)
+{
+	return NtGdiMaskBlt(hdcDest,
+	                    nXDest,
+	                    nYDest,
+	                    nWidth,
+	                    nHeight,
+	                    hdcSrc,
+	                    nXSrc,
+	                    nYSrc,
+	                    hbmMask,
+	                    xMask,
+	                    yMask,
+	                    dwRop,
+	                    0);
+}
+
+
+BOOL
+WINAPI
+PlgBlt(
+	HDC hdcDest,
+	const POINT *lpPoint,
+	HDC hdcSrc,
+	INT nXSrc,
+	INT nYSrc,
+	INT nWidth,
+	INT nHeight,
+	HBITMAP hbmMask,
+	INT xMask,
+	INT yMask)
+{
+	return NtGdiPlgBlt(hdcDest,
+	                   (LPPOINT)lpPoint,
+	                   hdcSrc,
+	                   nXSrc,
+	                   nYSrc,
+	                   nWidth,
+	                   nHeight,
+	                   hbmMask,
+	                   xMask,
+	                   yMask,
+	                   0);
+}
