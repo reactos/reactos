@@ -864,7 +864,8 @@ PrintSummary(LPTSTR szPath,
 	     ULONG ulFiles,
 	     ULONG ulDirs,
 	     ULARGE_INTEGER u64Bytes,
-	     LPDIRSWITCHFLAGS lpFlags)
+	     LPDIRSWITCHFLAGS lpFlags,
+	     BOOL TotalSummary)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szBuffer[64];
@@ -886,7 +887,7 @@ PrintSummary(LPTSTR szPath,
 	/* Print recursive specific results */
 	
     /* Take this code offline to fix /S does not print duoble info */
-   if (lpFlags->bRecursive)
+   if (TotalSummary && lpFlags->bRecursive)
    {
       ConvertULargeInteger(u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
       LoadString(CMD_ModuleHandle, STRING_DIR_HELP5, szMsg, RC_STRING_MAX_SIZE);
@@ -901,22 +902,18 @@ PrintSummary(LPTSTR szPath,
       /* Print File Summary */
       /* Condition to print summary is:
       If we are not in bare format and if we have results! */
-      if (ulFiles > 0)
-      {
-         ConvertULargeInteger(u64Bytes, szBuffer, 20, lpFlags->bTSeperator);
-         LoadString(CMD_ModuleHandle, STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
-         if(lpFlags->bPause)
-            ConOutPrintfPaging(FALSE,szMsg,ulFiles, szBuffer);
-         else
-            ConOutPrintf(szMsg,ulFiles, szBuffer);
-
-      }
+      ConvertULargeInteger(u64Bytes, szBuffer, 20, lpFlags->bTSeperator);
+      LoadString(CMD_ModuleHandle, STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
+      if(lpFlags->bPause)
+         ConOutPrintfPaging(FALSE,szMsg,ulFiles, szBuffer);
+      else
+         ConOutPrintf(szMsg,ulFiles, szBuffer);
 
    }
 
-	if (ulDirs != 2)
+	/* Print total directories and freespace */
+	if (!lpFlags->bRecursive || (TotalSummary && lpFlags->bRecursive))
 	{
-		/* Print total directories and freespace */
 		GetUserDiskFreeSpace(szPath, &uliFree);
 		ConvertULargeInteger(uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
 		LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
@@ -1693,6 +1690,16 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	/* Print Data */
 	DirPrintFiles(ptrFileArray, dwCount, szFullPath, lpFlags);
 
+	if (lpFlags->bRecursive)
+	{
+		PrintSummary(szFullPath,
+			dwCountFiles,
+			dwCountDirs,
+			u64CountBytes,
+			lpFlags,
+			FALSE);
+	}
+
 	/* Free array */
 	cmd_free(ptrFileArray);
 	if (CheckCtrlBreak(BREAK_INPUT))
@@ -1901,7 +1908,8 @@ CommandDir(LPTSTR first, LPTSTR rest)
 			recurse_file_cnt,
 			recurse_dir_cnt,
 			recurse_bytes,
-			&stFlags);
+			&stFlags,
+			TRUE);
 	}
 
 	ret = 0;
