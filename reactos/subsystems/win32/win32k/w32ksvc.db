@@ -166,7 +166,7 @@ NtGdiIntersectClipRect			5
 NtGdiInvertRgn				2
 NtGdiLPtoDP				3
 NtGdiLineTo				3
-NtGdiMaskBlt				12
+NtGdiMaskBlt				13
 NtGdiModifyWorldTransform		3
 NtGdiMoveToEx				4
 NtGdiOffsetClipRgn			3
@@ -182,7 +182,7 @@ NtGdiPlayEnhMetaFile			3
 NtGdiPlayEnhMetaFileRecord		4
 NtGdiPlayMetaFile			2
 NtGdiPlayMetaFileRecord			4
-NtGdiPlgBlt				10
+NtGdiPlgBlt				11
 NtGdiPolyBezier				3
 NtGdiPolyBezierTo			3
 NtGdiPolyDraw				4
@@ -240,7 +240,7 @@ NtGdiSetMetaRgn				1
 NtGdiSetMiterLimit			3
 NtGdiSetPaletteEntries			4
 NtGdiSetPixel				4
-NtGdiSetPixelFormat			3
+NtGdiSetPixelFormat			2
 NtGdiSetPixelV				4
 NtGdiSetPolyFillMode			2
 NtGdiSetROP2				2
