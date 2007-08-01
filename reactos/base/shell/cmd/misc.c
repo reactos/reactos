@@ -473,7 +473,12 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	}
 
 	if (!dwRead && !len)
+	{
+#ifdef _UNICODE
+		cmd_free(lpString);
+#endif
 		return FALSE;
+	}
 
 	lpString[len++] = _T('\0');
 #ifdef _UNICODE
