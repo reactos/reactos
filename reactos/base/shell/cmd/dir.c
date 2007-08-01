@@ -1320,6 +1320,20 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
 	}
 	else if (pszFilePart != NULL)
 		*pszFilePart = _T('\0');
+	else
+	{
+		len = _tcslen(szTemp);
+		if (len > 0 && szTemp[len - 1] != _T('\\') &&
+		    GetFileAttributes(szTemp) == INVALID_FILE_ATTRIBUTES &&
+		    GetLastError() == ERROR_PATH_NOT_FOUND)
+		{
+			/* Special case for some fake dos devices, such as con:
+			   GetFullPathName doesn't return a pszFilePart pointer
+			   so we're going to fix this ourselves */
+			while (len > 0 && szTemp[len - 1] != _T('\\'))
+				szTemp[--len] = _T('\0');
+		}
+	}
 
 	len = _tcslen(szTemp);
 	if ((len != 3 || szTemp[len - 2] != _T(':')) && szTemp[len - 1] == _T('\\'))
