@@ -1,6 +1,6 @@
 #include <precomp.h>
 
-#ifdef _DEBUG
+#ifdef _DEBUG_MEM
 
 #define REDZONE_SIZE  32
 #define REDZONE_LEFT 0x78
@@ -63,6 +63,7 @@ redzone_err(const char *msg, palloc_info info, void *ptr, const char *file, int 
     DbgPrint("     Block: 0x%p Size: %lu\n", ptr, info->size);
     DbgPrint("     Allocated from %s:%d\n", info->file, info->line);
     DbgPrint("     Detected at: %s:%d\n", file, line);
+    ASSERT(FALSE);
     ExitProcess(1);
 }
 
@@ -129,6 +130,16 @@ cmd_free_dbg(void *ptr, const char *file, int line)
     }
 
     free(ptr);
+}
+
+void
+cmd_checkbuffer_dbg(void *ptr, const char *file, int line)
+{
+    if (ptr != NULL)
+    {
+        ptr = get_base_ptr(ptr);
+        check_redzone(ptr, file, line);
+    }
 }
 
 void

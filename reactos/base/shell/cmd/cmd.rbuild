@@ -6,6 +6,7 @@
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
+	<define name="_DEBUG_MEM" />
 	<pch>precomp.h</pch>
 	<compilationunit name="unit.c">
 		<file>alias.c</file>
