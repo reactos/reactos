@@ -1611,7 +1611,7 @@ ShowCommands (VOID)
  *
  */
 static VOID
-Initialize (int argc, TCHAR* argv[])
+Initialize (int argc, const TCHAR* argv[])
 {
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
@@ -1673,7 +1673,7 @@ Initialize (int argc, TCHAR* argv[])
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CMD_HELP8);
-		ExitProcess(0);
+		cmd_exit(0);
 	}
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
 
@@ -1720,11 +1720,11 @@ Initialize (int argc, TCHAR* argv[])
 					}
 
 					ParseCommandLine(commandline);
-					ExitProcess (ProcessInput (TRUE));
+					cmd_exit (ProcessInput (TRUE));
 				}
 				else
 				{
-					ExitProcess (0);
+					cmd_exit (0);
 				}
 			}
 			else if (!_tcsicmp (argv[i], _T("/k")))
@@ -1789,7 +1789,7 @@ Initialize (int argc, TCHAR* argv[])
 }
 
 
-static VOID Cleanup (int argc, TCHAR *argv[])
+static VOID Cleanup (int argc, const TCHAR *argv[])
 {
 	/* run cmdexit.bat */
 	if (IsExistingFile (_T("cmdexit.bat")))
@@ -1836,20 +1836,11 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 /*
  * main function
  */
-#ifdef _UNICODE
-int _main(void)
-#else
-int _main (int argc, char *argv[])
-#endif
+int _tmain (int argc, const TCHAR *argv[])
 {
 	TCHAR startPath[MAX_PATH];
 	CONSOLE_SCREEN_BUFFER_INFO Info;
 	INT nExitCode;
-#ifdef _UNICODE
-	PWCHAR * argv;
-	int argc=0;
-	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-#endif
 
 	GetCurrentDirectory(MAX_PATH,startPath);
 	_tchdir(startPath);
@@ -1882,6 +1873,7 @@ int _main (int argc, char *argv[])
 	/* do the cleanup */
 	Cleanup(argc, argv);
 
+	cmd_exit(nExitCode);
 	return(nExitCode);
 }
 

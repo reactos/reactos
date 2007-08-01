@@ -17,6 +17,9 @@ cmd_free_dbg(void *ptr, const char *file, int line);
 void
 cmd_checkbuffer_dbg(void *ptr, const char *file, int line);
 
+void
+cmd_exit(int code);
+
 #else
 
 #define cmd_alloc(size) malloc(size)

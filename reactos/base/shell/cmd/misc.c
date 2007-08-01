@@ -204,7 +204,9 @@ BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry)
 	{
 		return FALSE;
 	}
+    cmd_checkbuffer(q);
 	_tcscpy (q, entry);
+    cmd_checkbuffer(q);
 
 	oldarg = *arg;
 	*arg = cmd_realloc (oldarg, (*ac + 2) * sizeof (LPTSTR));
@@ -213,10 +215,13 @@ BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry)
 		*arg = oldarg;
 		return FALSE;
 	}
-
+cmd_checkbuffer(*arg);
 	/* save new entry */
 	(*arg)[*ac] = q;
+cmd_checkbuffer(*arg);
 	(*arg)[++(*ac)] = NULL;
+
+	cmd_checkbuffer(*arg);
 
 	return TRUE;
 }

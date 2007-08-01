@@ -13,6 +13,9 @@ typedef struct
     int line;
 } alloc_info, *palloc_info;
 
+static size_t allocations = 0;
+static size_t allocated_memory = 0;
+
 static void *
 get_base_ptr(void *ptr)
 {
@@ -92,7 +95,11 @@ cmd_alloc_dbg(size_t size, const char *file, int line)
 
     newptr = malloc(calculate_size_with_redzone(size));
     if (newptr != NULL)
+    {
+        allocations++;
+        allocated_memory += size;
         newptr = write_redzone(newptr, size, file, line);
+    }
 
     return newptr;
 }
@@ -100,6 +107,7 @@ cmd_alloc_dbg(size_t size, const char *file, int line)
 void *
 cmd_realloc_dbg(void *ptr, size_t size, const char *file, int line)
 {
+    size_t prev_size;
     void *newptr = NULL;
 
     if (ptr == NULL)
@@ -111,11 +119,15 @@ cmd_realloc_dbg(void *ptr, size_t size, const char *file, int line)
     }
 
     ptr = get_base_ptr(ptr);
+    prev_size = ((palloc_info)ptr)->size;
     check_redzone(ptr, file, line);
 
     newptr = realloc(ptr, calculate_size_with_redzone(size));
     if (newptr != NULL)
+    {
+        allocated_memory += size - prev_size;
         newptr = write_redzone(newptr, size, file, line);
+    }
 
     return newptr;
 }
@@ -127,6 +139,8 @@ cmd_free_dbg(void *ptr, const char *file, int line)
     {
         ptr = get_base_ptr(ptr);
         check_redzone(ptr, file, line);
+        allocations--;
+        allocated_memory -= ((palloc_info)ptr)->size;
     }
 
     free(ptr);
@@ -145,6 +159,11 @@ cmd_checkbuffer_dbg(void *ptr, const char *file, int line)
 void
 cmd_exit(int code)
 {
+    if (allocations != 0 || allocated_memory != 0)
+    {
+        DbgPrint("CMD: Leaking %lu bytes of memory in %lu blocks! Exit code: %d\n", allocated_memory, allocations, code);
+    }
+
     ExitProcess(code);
 }
 
