@@ -46,9 +46,9 @@
 #define CARD_WIDTH		71
 #define CARD_HEIGHT		96
 */
-/* Oxymoron's card dimensions */
-#define CARD_WIDTH		73
-#define CARD_HEIGHT		97
+/* MacSolitaireX's card dimensions */
+#define CARD_WIDTH		72
+#define CARD_HEIGHT		96
 
 #define ISREDCARD(x)	(x >= 13 && x <= 39)
 
