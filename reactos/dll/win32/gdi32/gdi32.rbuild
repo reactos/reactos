@@ -27,6 +27,7 @@
 		<file>wingl.c</file>		
 	</directory>
 	<directory name="objects">
+		<file>arc.c</file>
 		<file>bitmap.c</file>
 		<file>brush.c</file>
 		<file>dc.c</file>
