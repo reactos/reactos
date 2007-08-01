@@ -1954,10 +1954,11 @@ CommandDir(LPTSTR first, LPTSTR rest)
 	TCHAR	cDrive;
 	TCHAR	szPath[MAX_PATH];
 	TCHAR	szFilespec[MAX_PATH];
-	LPTSTR*	params;
+	LPTSTR*	params = NULL;
 	INT		entries = 0;
 	UINT	loop = 0;
 	DIRSWITCHFLAGS stFlags;
+	INT	ret = 1;
 
 	/* Initialize variables */
 	cDrive = 0;
@@ -1992,21 +1993,21 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		if (!DirReadParam(dircmd, &params, &entries, &stFlags))
 		{
 			nErrorLevel = 1;
-			return 1;
+			goto cleanup;
 		}
 
 	/* read the parameters */
 	if (!DirReadParam(rest, &params, &entries, &stFlags) || CheckCtrlBreak(BREAK_INPUT))
 	{
 		nErrorLevel = 1;
-		return 1;
+		goto cleanup;
 	}
 
 	/* default to current directory */
 	if(entries == 0) {
 		if(!add_entry(&entries, &params, _T("."))) {
 			nErrorLevel = 1;
-			return 1;
+			goto cleanup;
 		}
 	}
 
@@ -2016,7 +2017,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		if (DirParsePathspec (params[loop], szPath, szFilespec) || CheckCtrlBreak(BREAK_INPUT))
 		{
 			nErrorLevel = 1;
-			return 1;
+			goto cleanup;
 		}
 
 	/* <Debug :>
@@ -2047,7 +2048,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		if(cDrive != szPath[0] && !stFlags.bBareFormat) {
 			if (!PrintDirectoryHeader (szPath, &stFlags)) {
 				nErrorLevel = 1;
-				return 1;
+				goto cleanup;
 			}
 
 			cDrive = szPath[0];
@@ -2058,7 +2059,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		if (DirList (szPath, szFilespec, &stFlags))
 		{
 			nErrorLevel = 1;
-			return 1;
+			goto cleanup;
 		}
 	}
 
@@ -2068,8 +2069,13 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		recurse_dir_cnt,
 		recurse_bytes,
 		&stFlags);
-	
-	return 0;
+
+	ret = 0;
+
+cleanup:
+	freep(params);
+
+	return ret;
 }
 
 #endif
