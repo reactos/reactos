@@ -875,7 +875,8 @@ PrintSummary(LPTSTR szPath,
 	/* Here we check if we didn't find anything */
 	if (!(ulFiles + ulDirs))
 	{
-		error_file_not_found();
+		if (!lpFlags->bRecursive || (TotalSummary && lpFlags->bRecursive))
+			error_file_not_found();
 		return 1;
 	}
 
