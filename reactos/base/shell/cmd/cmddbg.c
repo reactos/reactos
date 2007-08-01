@@ -62,7 +62,7 @@ redzone_err(const char *msg, palloc_info info, void *ptr, const char *file, int 
     DbgPrint("CMD: %s\n", msg);
     DbgPrint("     Block: 0x%p Size: %lu\n", ptr, info->size);
     DbgPrint("     Allocated from %s:%d\n", info->file, info->line);
-    DbgPrint("     Called from: %s:%d\n", file, line);
+    DbgPrint("     Detected at: %s:%d\n", file, line);
     ExitProcess(1);
 }
 
