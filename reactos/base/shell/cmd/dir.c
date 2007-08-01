@@ -364,10 +364,10 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 					cCurSwitch = _T(' ');
 					if(ptrStart && ptrEnd)
 					{		
-						temp = cmd_alloc((ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+						temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
 						if(!temp)
 							return FALSE;
-						memcpy(temp, ptrStart, (ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+						memcpy(temp, ptrStart, ((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
 						temp[(ptrEnd - ptrStart + 1)] = _T('\0');
 						if(!add_entry(entries, params, temp))
 						{
@@ -396,10 +396,10 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				/* Process a character for parameter */
 				if ((cCurSwitch == _T(' ')) && ptrStart && ptrEnd)
 				{		
-					temp = cmd_alloc((ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+					temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
 					if(!temp)
 						return FALSE;
-					memcpy(temp, ptrStart, (ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+					memcpy(temp, ptrStart, ((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
 					temp[(ptrEnd - ptrStart + 1)] = _T('\0');
 					if(!add_entry(entries, params, temp))
 					{
