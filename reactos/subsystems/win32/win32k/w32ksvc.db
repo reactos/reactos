@@ -66,7 +66,7 @@ NtGdiEscape				5
 NtGdiExcludeClipRect			5
 NtGdiExtCreatePen			11
 NtGdiExtCreateRegion			3
-NtGdiExtEscape				6
+NtGdiExtEscape				8
 NtGdiExtFloodFill			5
 NtGdiExtGetObjectW			3
 NtGdiExtSelectClipRgn			3
