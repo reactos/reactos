@@ -869,7 +869,6 @@ PrintSummary(LPTSTR szPath,
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szBuffer[64];
 	ULARGE_INTEGER uliFree;
-	TCHAR szRoot[] = _T("A:\\");
 
 
 	/* Here we check if we didn't find anything */
@@ -914,15 +913,18 @@ PrintSummary(LPTSTR szPath,
       }
 
    }
-	/* Print total directories and freespace */
-	szRoot[0] = szPath[0];
-	GetUserDiskFreeSpace(szRoot, &uliFree);
-	ConvertULargeInteger(uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
-	LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-	if(lpFlags->bPause)
-	   ConOutPrintfPaging(FALSE,szMsg,ulDirs, szBuffer);
-	else
-	   ConOutPrintf(szMsg,ulDirs, szBuffer);
+
+	if (ulDirs != 2)
+	{
+		/* Print total directories and freespace */
+		GetUserDiskFreeSpace(szPath, &uliFree);
+		ConvertULargeInteger(uliFree, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
+		LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
+		if(lpFlags->bPause)
+			ConOutPrintfPaging(FALSE,szMsg,ulDirs, szBuffer);
+		else
+			ConOutPrintf(szMsg,ulDirs, szBuffer);
+	}
 
 	return 0;
 }
@@ -1565,6 +1567,15 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 		pszFilePart = NULL;
 	}
 
+	/* If no wildcard or file was specified and this is a directory, then
+	   display all files in it */
+	wfdFileInfo.dwFileAttributes = GetFileAttributes(szFullPath);
+	if (wfdFileInfo.dwFileAttributes != INVALID_FILE_ATTRIBUTES &&
+	    (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+	{
+		_tcscat(szFullPath, _T("\\*"));
+	}
+
 	/* Prepare the linked list, first node is allocated */
 	ptrStartNode = cmd_alloc(sizeof(DIRFINDLISTNODE));
 	if (ptrStartNode == NULL)
@@ -1767,19 +1778,14 @@ INT
 CommandDir(LPTSTR first, LPTSTR rest)
 {
 	TCHAR	dircmd[256];	/* A variable to store the DIRCMD enviroment variable */
-	TCHAR	cDrive;
-	TCHAR	szPath[MAX_PATH];
+	TCHAR	volume[MAX_PATH];
+	TCHAR	prev_volume[MAX_PATH];
 	LPTSTR*	params = NULL;
 	INT		entries = 0;
 	UINT	loop = 0;
 	DIRSWITCHFLAGS stFlags;
 	INT	ret = 1;
-
-	/* Initialize variables */
-	cDrive = 0;
-	recurse_dir_cnt = 0L;
-	recurse_file_cnt = 0L;
-	recurse_bytes.QuadPart = 0;
+	BOOL ChangedVolume;
 
 	/* Initialize Switch Flags < Default switches are setted here!> */
 	stFlags.b4Digit = TRUE;
@@ -1825,7 +1831,8 @@ CommandDir(LPTSTR first, LPTSTR rest)
 			goto cleanup;
 		}
 	}
-	szPath[0] = _T('\0');
+
+	prev_volume[0] = _T('\0');
 
 	for(loop = 0; loop < entries; loop++)
 	{
@@ -1835,7 +1842,9 @@ CommandDir(LPTSTR first, LPTSTR rest)
 			goto cleanup;
 		}
 
-		_tcscpy(szPath, params[loop]);
+		recurse_dir_cnt = 0L;
+		recurse_file_cnt = 0L;
+		recurse_bytes.QuadPart = 0;
 
 	/* <Debug :>
 	   Uncomment this to show the final state of switch flags*/
@@ -1861,16 +1870,24 @@ CommandDir(LPTSTR first, LPTSTR rest)
 		}
 	#endif
 
-		/* Print the drive header if the drive changed */
-		if(cDrive != params[loop][0] && !stFlags.bBareFormat) {
+		/* Print the drive header if the volume changed */
+		ChangedVolume = TRUE;
+
+		if (!stFlags.bBareFormat &&
+		    GetVolumePathName(params[loop], volume, sizeof(volume) / sizeof(TCHAR)))
+		{
+			if (!_tcscmp(volume, prev_volume))
+				ChangedVolume = FALSE;
+			else
+				_tcscpy(prev_volume, volume);
+		}
+
+		if (ChangedVolume && !stFlags.bBareFormat) {
 			if (!PrintDirectoryHeader (params[loop], &stFlags)) {
 				nErrorLevel = 1;
 				goto cleanup;
 			}
-
-			cDrive = params[loop][0];
 		}
-		
 
 		/* do the actual dir */
 		if (DirList (params[loop], &stFlags))
@@ -1879,14 +1896,13 @@ CommandDir(LPTSTR first, LPTSTR rest)
 			goto cleanup;
 		}
 
+		/* print the footer */
+		PrintSummary(params[loop],
+			recurse_file_cnt,
+			recurse_dir_cnt,
+			recurse_bytes,
+			&stFlags);
 	}
-
-	/* print the footer */
-	PrintSummary(szPath, // FIXME: root of initial dir?
-		recurse_file_cnt,
-		recurse_dir_cnt,
-		recurse_bytes,
-		&stFlags);
 
 	ret = 0;
 
