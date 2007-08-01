@@ -31,7 +31,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 /*
@@ -126,7 +125,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* OK all is correct, build a bcontext.... */
-	lpNew = (LPBATCH_CONTEXT)malloc (sizeof (BATCH_CONTEXT));
+	lpNew = (LPBATCH_CONTEXT)cmd_alloc (sizeof (BATCH_CONTEXT));
 
 	lpNew->prev = bc;
 	bc = lpNew;

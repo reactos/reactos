@@ -22,8 +22,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
-#include <reactos/resource.h>
 
 
 VOID ShortVersion (VOID)

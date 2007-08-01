@@ -138,7 +138,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 #ifdef INCLUDE_CMD_CHDIR
 
@@ -154,7 +153,7 @@ VOID InitLastPath (VOID)
 VOID FreeLastPath (VOID)
 {
 	if (lpLastPath)
-		free (lpLastPath);
+		cmd_free (lpLastPath);
 }
 
 /* help functions for getting current path from drive 
@@ -766,11 +765,11 @@ INT CommandShowCommandsDetail (LPTSTR cmd, LPTSTR param)
 	/* If a param was send, display help of correspondent command */
 	if (_tcslen(param))
 	{
-		LPTSTR NewCommand = malloc((_tcslen(param)+4)*sizeof(TCHAR));
+		LPTSTR NewCommand = cmd_alloc((_tcslen(param)+4)*sizeof(TCHAR));
 		_tcscpy(NewCommand, param);
 		_tcscat(NewCommand, _T(" /?"));
 		DoCommand(NewCommand);
-		free(NewCommand);
+		cmd_free(NewCommand);
 	}
 	/* Else, display detailed commands list */
 	else

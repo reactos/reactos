@@ -31,6 +31,8 @@
 
 #include "cmdver.h"
 
+#include "cmddbg.h"
+
 #define BREAK_BATCHFILE 1
 #define BREAK_OUTOFBATCH 2
 #define BREAK_INPUT 3

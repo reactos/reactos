@@ -18,7 +18,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 /* a list of all the internal commands, associating their command names */

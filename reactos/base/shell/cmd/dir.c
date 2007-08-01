@@ -135,7 +135,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 #ifdef INCLUDE_CMD_DIR
 
@@ -365,19 +364,19 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 					cCurSwitch = _T(' ');
 					if(ptrStart && ptrEnd)
 					{		
-						temp = malloc((ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+						temp = cmd_alloc((ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
 						if(!temp)
 							return FALSE;
 						memcpy(temp, ptrStart, (ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
 						temp[(ptrEnd - ptrStart + 1)] = _T('\0');
 						if(!add_entry(entries, params, temp))
 						{
-							free(temp);
+							cmd_free(temp);
 							freep(*params);
 							return FALSE;
 						}
 
-						free(temp);
+						cmd_free(temp);
 
 						ptrStart = NULL;
 						ptrEnd = NULL;
@@ -397,19 +396,19 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				/* Process a character for parameter */
 				if ((cCurSwitch == _T(' ')) && ptrStart && ptrEnd)
 				{		
-					temp = malloc((ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
+					temp = cmd_alloc((ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
 					if(!temp)
 						return FALSE;
 					memcpy(temp, ptrStart, (ptrEnd - ptrStart) + 2 * sizeof (TCHAR));
 					temp[(ptrEnd - ptrStart + 1)] = _T('\0');
 					if(!add_entry(entries, params, temp))
 					{
-						free(temp);
+						cmd_free(temp);
 						freep(*params);
 						return FALSE;
 					}
 
-					free(temp);
+					cmd_free(temp);
 
 					ptrStart = NULL;
 					ptrEnd = NULL;
@@ -568,19 +567,19 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	/* Terminate the parameters */
 	if(ptrStart && ptrEnd)
 	{
-		temp = malloc((ptrEnd - ptrStart + 2) * sizeof(TCHAR));
+		temp = cmd_alloc((ptrEnd - ptrStart + 2) * sizeof(TCHAR));
 		if(!temp)
 			return FALSE;
 		memcpy(temp, ptrStart, (ptrEnd - ptrStart + 1) * sizeof(TCHAR));
 		temp[(ptrEnd - ptrStart + 1)] = _T('\0');
 		if(!add_entry(entries, params, temp))
 		{
-			free(temp);
+			cmd_free(temp);
 			freep(*params);
 			return FALSE;
 		}
 
-		free(temp);
+		cmd_free(temp);
 
 		ptrStart = NULL;
 		ptrEnd = NULL;
@@ -1770,7 +1769,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	_tcscat (szFullFileSpec, szFilespec);
 
 	/* Prepare the linked list, first node is allocated */
-	ptrStartNode = malloc(sizeof(DIRFINDLISTNODE));
+	ptrStartNode = cmd_alloc(sizeof(DIRFINDLISTNODE));
 	if (ptrStartNode == NULL)
 	{
 #ifdef _DEBUG
@@ -1790,7 +1789,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 			if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
 				== (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
 			{
-				ptrNextNode->ptrNext = malloc(sizeof(DIRFINDLISTNODE));
+				ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
 				if (ptrNextNode->ptrNext == NULL)
 				{
 #ifdef _DEBUG
@@ -1799,14 +1798,14 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 					while (ptrStartNode)
 					{
 						ptrNextNode = ptrStartNode->ptrNext;
-						free(ptrStartNode);
+						cmd_free(ptrStartNode);
 						ptrStartNode = ptrNextNode;
 						dwCount --;
 					}
 					return 1;
 				}
 
-				/* If malloc fails we go to next file in hope it works,
+				/* If cmd_alloc fails we go to next file in hope it works,
 				   without braking the linked list! */
 				if (ptrNextNode->ptrNext)
 				{
@@ -1850,7 +1849,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	ptrNextNode->ptrNext = NULL;
 
 	/* Calculate and allocate space need for making an array of pointers */
-	ptrFileArray = malloc(sizeof(LPWIN32_FIND_DATA) * dwCount);
+	ptrFileArray = cmd_alloc(sizeof(LPWIN32_FIND_DATA) * dwCount);
 	if (ptrFileArray == NULL)
 	{
 #ifdef _DEBUG
@@ -1859,7 +1858,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 		while (ptrStartNode)
 		{
 			ptrNextNode = ptrStartNode->ptrNext;
-			free(ptrStartNode);
+			cmd_free(ptrStartNode);
 			ptrStartNode = ptrNextNode;
 			dwCount --;
 		}		
@@ -1887,7 +1886,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	DirPrintFiles(ptrFileArray, dwCount, szFullPath, lpFlags);
 
 	/* Free array */
-	free(ptrFileArray);
+	cmd_free(ptrFileArray);
 	if (CheckCtrlBreak(BREAK_INPUT))
 		return 1;
 
@@ -1933,7 +1932,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 	while (ptrStartNode)
 	{
 		ptrNextNode = ptrStartNode->ptrNext;
-		free(ptrStartNode);
+		cmd_free(ptrStartNode);
 		ptrStartNode = ptrNextNode;
 		dwCount --;
 	}

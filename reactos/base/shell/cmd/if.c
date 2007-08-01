@@ -31,7 +31,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 #define X_EXEC 1

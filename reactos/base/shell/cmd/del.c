@@ -46,7 +46,6 @@
 */
 
 #include <precomp.h>
-#include "resource.h"
 
 #ifdef INCLUDE_CMD_DEL
 

@@ -21,7 +21,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)

@@ -1,5 +1,4 @@
 #include <precomp.h>
-#include "resource.h"
 
 #ifdef _UNICODE
 extern int _main (void);

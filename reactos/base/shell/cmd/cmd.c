@@ -142,8 +142,6 @@
  */
 
 #include <precomp.h>
-#include <malloc.h>
-#include "resource.h"
 
 #ifndef NT_SUCCESS
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
@@ -351,10 +349,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 #endif
 
 	/* we need biger buffer that First, Rest, Full are already
-	   need rewrite some code to use realloc when it need instead
+	   need rewrite some code to use cmd_realloc when it need instead
 	   of add 512bytes extra */
 
-	first = malloc ( (_tcslen(First) + 512) * sizeof(TCHAR));
+	first = cmd_alloc ( (_tcslen(First) + 512) * sizeof(TCHAR));
 	if (first == NULL)
 	{
 		error_out_of_memory();
@@ -362,31 +360,31 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		return ;
 	}
 
-	rest = malloc ( (_tcslen(Rest) + 512) * sizeof(TCHAR));
+	rest = cmd_alloc ( (_tcslen(Rest) + 512) * sizeof(TCHAR));
 	if (rest == NULL)
 	{
-		free (first);
+		cmd_free (first);
 		error_out_of_memory();
                 nErrorLevel = 1;
 		return ;
 	}
 
-	full = malloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
+	full = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
 	if (full == NULL)
 	{
-		free (first);
-		free (rest);
+		cmd_free (first);
+		cmd_free (rest);
 		error_out_of_memory();
                 nErrorLevel = 1;
 		return ;
 	}
 
-	szFullName = malloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
+	szFullName = cmd_alloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
 	if (full == NULL)
 	{
-		free (first);
-		free (rest);
-		free (full);
+		cmd_free (first);
+		cmd_free (rest);
+		cmd_free (full);
 		error_out_of_memory();
                 nErrorLevel = 1;
 		return ;
@@ -455,10 +453,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 
 		if (!working) ConErrResPuts (STRING_FREE_ERROR1);
 
-		free (first);
-		free (rest);
-		free (full);
-		free (szFullName);
+		cmd_free (first);
+		cmd_free (rest);
+		cmd_free (full);
+		cmd_free (szFullName);
                 nErrorLevel = 1;
 		return;
 	}
@@ -468,10 +466,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	if (!SearchForExecutable (first, szFullName))
 	{
 			error_bad_command ();
-			free (first);
-			free (rest);
-			free (full);
-			free (szFullName);
+			cmd_free (first);
+			cmd_free (rest);
+			cmd_free (full);
+			cmd_free (szFullName);
                         nErrorLevel = 1;
 			return;
 
@@ -572,10 +570,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	OutputCodePage = GetConsoleOutputCP();
 	SetConsoleTitle (szWindowTitle);
 
-	free(first);
-	free(rest);
-	free(full);
-	free (szFullName);
+	cmd_free(first);
+	cmd_free(rest);
+	cmd_free(full);
+	cmd_free (szFullName);
 }
 
 
@@ -602,7 +600,7 @@ DoCommand (LPTSTR line)
 	DebugPrintf (_T("DoCommand: (\'%s\')\n"), line);
 #endif /* DEBUG */
 
-	com = malloc( (_tcslen(line) +512)*sizeof(TCHAR) );
+	com = cmd_alloc( (_tcslen(line) +512)*sizeof(TCHAR) );
 	if (com == NULL)
 	{
 		error_out_of_memory();
@@ -646,7 +644,7 @@ DoCommand (LPTSTR line)
 		if(_tcslen(com) > MAX_PATH)
 		{
 			error_bad_command();
-			free(com);
+			cmd_free(com);
 			return;
 		}
 		*/
@@ -700,7 +698,7 @@ DoCommand (LPTSTR line)
 			}
 		}
 	}
-	free(com);
+	cmd_free(com);
 }
 
 
@@ -1124,8 +1122,8 @@ GrowIfNecessary ( UINT needed, LPTSTR* ret, UINT* retlen )
 		return TRUE;
 	*retlen = needed;
 	if ( *ret )
-		free ( *ret );
-	*ret = (LPTSTR)malloc ( *retlen * sizeof(TCHAR) );
+		cmd_free ( *ret );
+	*ret = (LPTSTR)cmd_alloc ( *retlen * sizeof(TCHAR) );
 	if ( !*ret )
 		SetLastError ( ERROR_OUTOFMEMORY );
 	return *ret != NULL;

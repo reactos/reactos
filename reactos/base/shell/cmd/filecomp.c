@@ -21,7 +21,6 @@
  */
 
 #include <precomp.h>
-#include "cmd.h"
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 
@@ -490,8 +489,8 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	FileName * File2;
 	INT ret;
 
-	File1 = malloc(sizeof(FileName));
-	File2 = malloc(sizeof(FileName));
+	File1 = cmd_alloc(sizeof(FileName));
+	File2 = cmd_alloc(sizeof(FileName));
 	if(!File1 || !File2)
 		return 0;
 
@@ -501,8 +500,8 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	 /* ret = _tcsicmp(File1->Name, File2->Name); */
 	 ret = lstrcmpi(File1->Name, File2->Name);
 
-	free(File1);
-	free(File2);
+	cmd_free(File1);
+	cmd_free(File2);
 	return ret;
  }
 
@@ -628,7 +627,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 		}
 
 		/* Add the file to the list of files */
-		FileList = realloc(FileList, ++FileListSize * sizeof(FileName));
+		FileList = cmd_realloc(FileList, ++FileListSize * sizeof(FileName));
  
 		if(FileList == NULL) 
 		{
@@ -651,7 +650,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	{
 		_tcscpy(strOut,szOrginal);
 		if(FileList != NULL) 
-			free(FileList);
+			cmd_free(FileList);
 		return;
 
 	}
@@ -741,7 +740,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	EndLength = _tcslen(strOut);
 	DiffLength = EndLength - StartLength;
 	if(FileList != NULL) 
-		free(FileList);
+		cmd_free(FileList);
 	
 }
 #endif

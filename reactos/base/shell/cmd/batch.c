@@ -39,7 +39,7 @@
  *        Implementation of FOR command
  *
  *    20-Jul-1998 (John P Price <linux-guru@gcfl.net>)
- *        added error checking after malloc calls
+ *        added error checking after cmd_alloc calls
  *
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
@@ -59,7 +59,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 /* The stack of current batch contexts.
@@ -114,7 +113,7 @@ LPTSTR FindArg (INT n)
 
 LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 {
-	LPTSTR dp = (LPTSTR)malloc ((_tcslen(s1) + _tcslen(s2) + 3) * sizeof (TCHAR));
+	LPTSTR dp = (LPTSTR)cmd_alloc ((_tcslen(s1) + _tcslen(s2) + 3) * sizeof (TCHAR));
 
 	/* JPP 20-Jul-1998 added error checking */
 	if (dp == NULL)
@@ -188,19 +187,19 @@ VOID ExitBatch (LPTSTR msg)
 		}
 
 		if (bc->params)
-			free(bc->params);
+			cmd_free(bc->params);
 
 		if (bc->forproto)
-			free(bc->forproto);
+			cmd_free(bc->forproto);
 
 		if (bc->ffind)
-			free(bc->ffind);
+			cmd_free(bc->ffind);
 
 		/* Preserve echo state across batch calls */
 		bEcho = bc->bEcho;
 
 		bc = bc->prev;
-		free(t);
+		cmd_free(t);
 	}
 
 	if (msg && *msg)
@@ -241,7 +240,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	if (bc == NULL)
 	{
 		/* No curent batch file, create a new context */
-		LPBATCH_CONTEXT n = (LPBATCH_CONTEXT)malloc (sizeof(BATCH_CONTEXT));
+		LPBATCH_CONTEXT n = (LPBATCH_CONTEXT)cmd_alloc (sizeof(BATCH_CONTEXT));
 
 		if (n == NULL)
 		{
@@ -260,7 +259,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 		/* Then we are transferring to another batch */
 		CloseHandle (bc->hBatchFile);
 		bc->hBatchFile = INVALID_HANDLE_VALUE;
-		free (bc->params);
+		cmd_free (bc->params);
 	}
 
 	bc->hBatchFile = hFile;
@@ -275,7 +274,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
     //
     // Allocate enough memory to hold the params and copy them over without modifications
     //
-    bc->raw_params = (TCHAR*) malloc((_tcslen(param)+1) * sizeof(TCHAR));
+    bc->raw_params = (TCHAR*) cmd_alloc((_tcslen(param)+1) * sizeof(TCHAR));
     if (bc->raw_params != NULL)
     {
         memset (bc->raw_params, 0, _tcslen(bc->raw_params) * sizeof(TCHAR));
@@ -378,7 +377,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 				else
 				{
 					/*  For first find, allocate a find first block */
-					if ((bc->ffind = (LPWIN32_FIND_DATA)malloc (sizeof (WIN32_FIND_DATA))) == NULL)
+					if ((bc->ffind = (LPWIN32_FIND_DATA)cmd_alloc (sizeof (WIN32_FIND_DATA))) == NULL)
 					{
 						error_out_of_memory();
 						return NULL;
@@ -392,7 +391,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 				if (fv == NULL)
 				{
 					/* Null indicates no more files.. */
-					free (bc->ffind);      /* free the buffer */
+					cmd_free (bc->ffind);      /* free the buffer */
 					bc->ffind = NULL;
 					bc->shiftlevel++;     /* On to next list element */
 					continue;

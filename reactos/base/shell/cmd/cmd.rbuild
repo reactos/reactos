@@ -17,6 +17,7 @@
 		<file>choice.c</file>
 		<file>cls.c</file>
 		<file>cmd.c</file>
+		<file>cmddbg.c</file>
 		<file>cmdinput.c</file>
 		<file>cmdtable.c</file>
 		<file>color.c</file>
