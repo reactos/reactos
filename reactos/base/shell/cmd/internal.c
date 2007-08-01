@@ -463,7 +463,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR dir;		/* pointer to the directory to change to */
 	LPTSTR place;	/* used to search for the \ when no space is used */
-	LPTSTR *p = NULL;
+	LPTSTR new_dir, *p = NULL;
 	INT argc;
 	nErrorLevel = 0;
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -482,7 +482,13 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 				break;
 
 		if (*place)
-			dir = place;
+		{
+			argc = 0;
+			if (add_entry(&argc, &p, place))
+				dir = place;
+			else
+				dir = NULL;
+		}
 		else
 			/* signal that there are no parameters */
 			dir = NULL;
@@ -512,7 +518,14 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 
 	/* Add a \ at the end of the path is there isnt on already */
 	if (dir[_tcslen (dir) - 1] != _T('\\'))
-		_tcscat(dir,_T("\\"));
+	{
+		new_dir = cmd_realloc(dir, (_tcslen (dir) + 2) * sizeof(TCHAR));
+		if (new_dir != NULL)
+		{
+			p[0] = dir = new_dir;
+			_tcscat(dir,_T("\\"));
+		}
+	}
 
     if (!MakeFullPath(dir))
     {
