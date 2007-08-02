@@ -473,6 +473,19 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
    return TRUE;
 }
 
+
+BOOL
+APIENTRY
+NtGdiTransformPoints( HDC hdc,
+                      PPOINT UnsafePtsIn,
+                      PPOINT UnsafePtOut,
+                      INT Count,
+                      INT iMode )
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
 BOOL
 STDCALL
 NtGdiModifyWorldTransform(HDC hDC,
