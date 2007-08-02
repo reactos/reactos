@@ -986,8 +986,10 @@ ReplaceExtension (
 
 extern std::string
 GetSubPath (
+	const Project& project,
 	const std::string& location,
 	const std::string& path,
+	const XMLAttribute* root,
 	const std::string& att_value );
 
 extern std::string

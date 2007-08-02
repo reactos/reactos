@@ -118,8 +118,10 @@ ReplaceExtension (
 
 string
 GetSubPath (
+	const Project& project,
 	const string& location,
 	const string& path,
+	const XMLAttribute* root,
 	const string& att_value )
 {
 	if ( !att_value.size() )
@@ -132,7 +134,26 @@ GetSubPath (
 			"<directory> tag has invalid characters in 'name' attribute" );
 	if ( !path.size() )
 		return att_value;
-	return FixSeparator(path + cSep + att_value);
+
+	string path_prefix;
+	if ( root )
+	{
+		if ( root->value == "intermediate" )
+			path_prefix = Environment::GetIntermediatePath() + cSep;
+		else if ( root->value == "output" )
+			path_prefix = Environment::GetOutputPath() + cSep;
+		else
+		{
+			throw InvalidAttributeValueException (
+				location,
+				"root",
+				root->value );
+		}
+	}
+	else
+		path_prefix = "";
+
+	return FixSeparator(path_prefix + path + cSep + att_value);
 }
 
 string
@@ -617,8 +638,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "directory" )
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
+		const XMLAttribute* base = e.GetAttribute ( "root", false );
 		assert(att);
-		subpath = GetSubPath ( e.location, path, att->value );
+		subpath = GetSubPath ( this->project, e.location, path, base, att->value );
 	}
 	else if ( e.name == "include" )
 	{
