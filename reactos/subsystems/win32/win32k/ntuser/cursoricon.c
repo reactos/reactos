@@ -1552,7 +1552,7 @@ UserDrawIconEx(
             }
 
             /* get icon bits */
-            NtGdiGetBitmapBits(hbmOff, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+            IntGetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
 
             /* premultiply with the alpha channel value */
             for (i = 0; i < cyHeight; i++)
@@ -1581,7 +1581,7 @@ UserDrawIconEx(
             }
 
             /* set icon bits */
-            NtGdiSetBitmapBits(hbmOff, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+            IntSetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
             ExFreePool(pBits);
 
             GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);

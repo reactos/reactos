@@ -406,7 +406,7 @@ NtGdiCreateBitmap(
     INT  Height,
     UINT  Planes,
     UINT  BitsPixel,
-    IN OPTIONAL LPBYTE Bits)
+    IN OPTIONAL LPBYTE pUnsafeBits)
 {
    PBITMAPOBJ bmp;
    HBITMAP hBitmap;
@@ -432,7 +432,7 @@ NtGdiCreateBitmap(
    hBitmap = IntCreateBitmap(Size, WidthBytes,
                              BitmapFormat(BitsPixel, BI_RGB),
                              (Height < 0 ? BMF_TOPDOWN : 0) |
-                             (NULL == Bits ? 0 : BMF_NOZEROINIT), NULL);
+                             (NULL == pUnsafeBits ? 0 : BMF_NOZEROINIT), NULL);
    if (!hBitmap)
    {
       DPRINT("NtGdiCreateBitmap: returned 0\n");
@@ -450,18 +450,21 @@ NtGdiCreateBitmap(
    }
    
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-   BITMAPOBJ_UnlockBitmap( bmp );
 
-   /*
-    * NOTE: It's ugly practice, but we are using the object even
-    * after unlocking. Since the handle is currently known only
-    * to us it should be safe.
-    */
-
-   if (NULL != Bits)
+   if (NULL != pUnsafeBits)
    {
-      NtGdiSetBitmapBits(hBitmap, bmp->SurfObj.cjBits, Bits);
+      _SEH_TRY
+      {
+         ProbeForRead(pUnsafeBits, bmp->SurfObj.cjBits, 1);
+         IntSetBitmapBits(bmp, bmp->SurfObj.cjBits, pUnsafeBits);
+      }
+      _SEH_HANDLE
+      {
+      }
+      _SEH_END
    }
+
+   BITMAPOBJ_UnlockBitmap( bmp );
 
    return hBitmap;
 }
@@ -911,42 +914,102 @@ NtGdiPlgBlt(
 	return FALSE;
 }
 
-LONG STDCALL
-NtGdiSetBitmapBits(
-	HBITMAP  hBitmap,
-	DWORD  Bytes,
-	IN PBYTE Bits)
-{
-	LONG height, ret;
-	PBITMAPOBJ bmp;
 
-	bmp = BITMAPOBJ_LockBitmap(hBitmap);
-	if (bmp == NULL || Bits == NULL)
+LONG STDCALL
+IntGetBitmapBits(
+	PBITMAPOBJ bmp,
+	DWORD Bytes,
+	OUT PBYTE Bits)
+{
+	LONG ret;
+
+	ASSERT(Bits);
+
+	/* Don't copy more bytes than the buffer has */
+	Bytes = min(Bytes, bmp->SurfObj.cjBits);
+
+#if 0
+	/* FIXME: Call DDI CopyBits here if available  */
+	if(bmp->DDBitmap)
+	{
+		DPRINT("Calling device specific BitmapBits\n");
+		if(bmp->DDBitmap->funcs->pBitmapBits)
+		{
+			ret = bmp->DDBitmap->funcs->pBitmapBits(hbitmap, bits, count, DDB_GET);
+		}
+		else
+		{
+			ERR_(bitmap)("BitmapBits == NULL??\n");
+			ret = 0;
+		}
+	}
+	else
+#endif
+	{
+		RtlCopyMemory(Bits, bmp->SurfObj.pvBits, Bytes);
+		ret = Bytes;
+	}
+	return ret;
+}
+
+LONG STDCALL
+NtGdiGetBitmapBits(HBITMAP  hBitmap,
+                   ULONG  Bytes,
+                   OUT OPTIONAL PBYTE pUnsafeBits)
+{
+	PBITMAPOBJ  bmp;
+	LONG  ret;
+
+	if (pUnsafeBits != NULL && Bytes == 0)
 	{
 		return 0;
 	}
 
-	if (Bytes < 0)
+	bmp = BITMAPOBJ_LockBitmap (hBitmap);
+	if (!bmp)
 	{
-		DPRINT ("(%ld): Negative number of bytes passed???\n", Bytes );
-		Bytes = -Bytes;
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		return 0;
 	}
 
-	/* Only get entire lines */
-	height = Bytes / abs(bmp->SurfObj.lDelta);
-	if (height > bmp->SurfObj.sizlBitmap.cy)
+	/* If the bits vector is null, the function should return the read size */
+	if (pUnsafeBits == NULL)
 	{
-		height = bmp->SurfObj.sizlBitmap.cy;
+		ret = bmp->SurfObj.cjBits;
+		BITMAPOBJ_UnlockBitmap (bmp);
+		return ret;
 	}
-	Bytes = height * abs(bmp->SurfObj.lDelta);
-	DPRINT ("(%08x, bytes:%ld, bits:%p) %dx%d %d colors fetched height: %ld\n",
-		hBitmap,
-		Bytes,
-		Bits,
-		bmp->SurfObj.sizlBitmap.cx,
-		bmp->SurfObj.sizlBitmap.cy,
-		1 << BitsPerFormat(bmp->SurfObj.iBitmapFormat),
-		height);
+
+	/* Don't copy more bytes than the buffer has */
+	Bytes = min(Bytes, bmp->SurfObj.cjBits);
+
+	_SEH_TRY
+	{
+		ProbeForWrite(pUnsafeBits, Bytes, 1);
+		ret = IntGetBitmapBits(bmp, Bytes, pUnsafeBits);
+	}
+	_SEH_HANDLE
+	{
+		ret = 0;
+	}
+	_SEH_END
+
+	BITMAPOBJ_UnlockBitmap (bmp);
+
+	return  ret;
+}
+
+
+LONG STDCALL
+IntSetBitmapBits(
+	PBITMAPOBJ bmp,
+	DWORD  Bytes,
+	IN PBYTE Bits)
+{
+	LONG ret;
+
+	/* Don't copy more bytes than the buffer has */
+	Bytes = min(Bytes, bmp->SurfObj.cjBits);
 
 #if 0
 	/* FIXME: call DDI specific function here if available  */
@@ -966,9 +1029,45 @@ NtGdiSetBitmapBits(
 	else
 #endif
 	{
-		memcpy(bmp->SurfObj.pvBits, Bits, Bytes);
+		RtlCopyMemory(bmp->SurfObj.pvBits, Bits, Bytes);
 		ret = Bytes;
 	}
+
+	return ret;
+}
+
+
+LONG STDCALL
+NtGdiSetBitmapBits(
+	HBITMAP  hBitmap,
+	DWORD  Bytes,
+	IN PBYTE pUnsafeBits)
+{
+	LONG ret;
+	PBITMAPOBJ bmp;
+
+	if (pUnsafeBits == NULL || Bytes == 0)
+	{
+		return 0;
+	}
+
+	bmp = BITMAPOBJ_LockBitmap(hBitmap);
+	if (bmp == NULL)
+	{
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		return 0;
+	}
+
+	_SEH_TRY
+	{
+		ProbeForRead(pUnsafeBits, Bytes, 1);
+		ret = IntSetBitmapBits(bmp, Bytes, pUnsafeBits);
+	}
+	_SEH_HANDLE
+	{
+		ret = 0;
+	}
+	_SEH_END
 
 	BITMAPOBJ_UnlockBitmap(bmp);
 
@@ -1464,7 +1563,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 {
 	HBITMAP  res;
 	BITMAP  bm;
-	BITMAPOBJ *Bitmap;
+	BITMAPOBJ *Bitmap, *resBitmap;
 
 	if (hBitmap == NULL)
 	{
@@ -1491,10 +1590,15 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	{
 		PBYTE buf;
 
-		buf = ExAllocatePoolWithTag (PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
-		NtGdiGetBitmapBits (hBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
-		NtGdiSetBitmapBits (res, bm.bmWidthBytes * abs(bm.bmHeight), buf);
-		ExFreePool (buf);
+		resBitmap = GDIOBJ_LockObj(GdiHandleTable, res, GDI_OBJECT_TYPE_BITMAP);
+		if (resBitmap)
+		{
+			buf = ExAllocatePoolWithTag (PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
+			IntGetBitmapBits (Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
+			IntSetBitmapBits (resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
+			ExFreePool (buf);
+			GDIOBJ_UnlockObjByPtr(GdiHandleTable, resBitmap);
+		}
 	}
 
 	GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);

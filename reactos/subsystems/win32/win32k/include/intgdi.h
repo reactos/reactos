@@ -259,5 +259,9 @@ WORD STDCALL IntGdiSetHookFlags(HDC hDC, WORD Flags);
 
 VOID STDCALL IntGdiSetDCState ( HDC hDC, HDC hDCSave );
 
+LONG STDCALL IntSetBitmapBits(PBITMAPOBJ bmp, DWORD  Bytes, IN PBYTE Bits);
+
+LONG STDCALL IntGetBitmapBits(PBITMAPOBJ bmp, DWORD Bytes, OUT PBYTE Bits);
+
 #endif /* _WIN32K_INTGDI_H */
 
