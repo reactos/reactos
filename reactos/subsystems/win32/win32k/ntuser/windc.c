@@ -130,7 +130,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
     if (NULL == defaultDCstate) // Ultra HAX! Dedicated to GvG!
       { // This is a cheesy way to do this. 
         // But, due to the right way of creating gdi handles there is no choice.
-      defaultDCstate = NtGdiGetDCState(pDce->hDC);
+      defaultDCstate = IntGdiGetDCState(pDce->hDC);
       DC_SetOwnership( defaultDCstate, NULL);
     }
     

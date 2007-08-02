@@ -1230,7 +1230,7 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
 }
 
 HDC STDCALL
-NtGdiGetDCState(HDC  hDC)
+IntGdiGetDCState(HDC  hDC)
 {
   PDC  newdc, dc;
   HDC hnewdc;
@@ -1874,7 +1874,7 @@ NtGdiSaveDC(HDC  hDC)
 
   DPRINT("NtGdiSaveDC(%lx)\n", hDC);
 
-  if (!(hdcs = NtGdiGetDCState(hDC)))
+  if (!(hdcs = IntGdiGetDCState(hDC)))
   {
     return 0;
   }

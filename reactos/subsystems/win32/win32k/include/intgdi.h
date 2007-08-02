@@ -253,5 +253,7 @@ IntCreateCompatibleBitmap(PDC Dc,
                           INT Width,
                           INT Height);
 
+HDC STDCALL IntGdiGetDCState(HDC  hDC);
+
 #endif /* _WIN32K_INTGDI_H */
 
