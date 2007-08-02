@@ -101,6 +101,7 @@ LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 VOID DoCommand (LPTSTR line);
+int cmd_main (int argc, const TCHAR *argv[]);
 
 extern HANDLE CMD_ModuleHandle;
 

@@ -1836,7 +1836,7 @@ static VOID Cleanup (int argc, const TCHAR *argv[])
 /*
  * main function
  */
-int _tmain (int argc, const TCHAR *argv[])
+int cmd_main (int argc, const TCHAR *argv[])
 {
 	TCHAR startPath[MAX_PATH];
 	CONSOLE_SCREEN_BUFFER_INFO Info;

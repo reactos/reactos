@@ -1,14 +1,12 @@
-<module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" unicode="yes">
+<module name="cmd_base" type="objectlibrary">
 	<include base="ReactOS">include/reactos/wine</include>
-	<include base="cmd">.</include>
+	<include base="cmd_base">.</include>
 	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="_DEBUG_MEM" />
-	<library>kernel32</library>
-	<library>advapi32</library>
-	<library>shell32</library>
-	<library>user32</library>
+	<define name="UNICODE" />
+	<define name="_UNICODE" />
 	<pch>precomp.h</pch>
 	<compilationunit name="unit.c">
 		<file>alias.c</file>
@@ -66,5 +64,18 @@
 		<file>where.c</file>
 		<file>window.c</file>
 	</compilationunit>
+</module>
+<module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" unicode="yes">
+	<include base="ReactOS">include/reactos/wine</include>
+	<include base="cmd">.</include>
+	<define name="__USE_W32API" />
+	<define name="ANONYMOUSUNIONS" />
+	<define name="_WIN32_WINNT">0x0501</define>
+	<library>cmd_base</library>
+	<library>kernel32</library>
+	<library>advapi32</library>
+	<library>shell32</library>
+	<library>user32</library>
 	<file>cmd.rc</file>
+	<file>main.c</file>
 </module>
