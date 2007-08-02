@@ -135,8 +135,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	 return 1;
 	}
 
-	param =cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
-	if (rest == NULL)
+	param = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
+	if (param == NULL)
 	{
 	 if(comspec != NULL)
 		cmd_free(comspec);
