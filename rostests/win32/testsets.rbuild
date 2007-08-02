@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <group>
-<directory name="cmd">
-	<xi:include href="cmd/cmd_test.rbuild" />
-</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32_test.rbuild" />
 </directory>
