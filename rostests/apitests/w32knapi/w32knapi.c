@@ -15,7 +15,7 @@ InitOsVersion()
 	GetVersionExW(&osv);
 	pszRos =  osv.szCSDVersion + wcslen(osv.szCSDVersion) + 1;
 	/* make sure the string is zero terminated */
-	pszRos[127] = 0;
+	osv.szCSDVersion[127] = 0;
 	/* Is ReactOS? */
 	if (wcsstr(pszRos, L"ReactOS") != NULL)
 	{
