@@ -244,7 +244,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    if (dce->DCXFlags & DCX_CACHE)
    {
       /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
-      NtGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
+      IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
       if( dce->pProcess ) // Attempt to fix Dc_Attr problem.
         DC_SetOwnership( defaultDCstate, dce->pProcess);

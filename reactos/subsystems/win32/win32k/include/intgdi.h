@@ -255,5 +255,7 @@ IntCreateCompatibleBitmap(PDC Dc,
 
 HDC STDCALL IntGdiGetDCState(HDC  hDC);
 
+WORD STDCALL IntGdiSetHookFlags(HDC hDC, WORD Flags);
+
 #endif /* _WIN32K_INTGDI_H */
 

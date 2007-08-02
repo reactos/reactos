@@ -2067,7 +2067,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 }
 
 WORD STDCALL
-NtGdiSetHookFlags(HDC hDC, WORD Flags)
+IntGdiSetHookFlags(HDC hDC, WORD Flags)
 {
   WORD wRet;
   DC *dc = DC_LockDc(hDC);
