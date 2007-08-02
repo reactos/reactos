@@ -591,7 +591,7 @@ SyscallTable_XP_2600[] =
 	{L"NtUserUserHandleGrantAccess", 0x1247,3},
 	{L"NtUserValidateHandleSecure", 0x1248,1},
 	{L"NtUserValidateRect", 0x1249,2},
-	{L"Nt_Unknown", 0x124a, 3},
+	{L"NtUserValidateTimerCallback", 0x124a, 3},
 	{L"NtUserVkKeyScanEx", 0x124b,3},
 	{L"NtUserWaitForInputIdle", 0x124c,3},
 	{L"NtUserWaitForMsgAndEvent", 0x124d,1},
