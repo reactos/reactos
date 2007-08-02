@@ -118,45 +118,6 @@ NtGdiAnimatePalette (
 	CONST PPALETTEENTRY	ppe
 	);
 
-/* Use NtGdiArcInternal with GdiTypeArc */
-BOOL
-STDCALL
-NtGdiArc(HDC  hDC,
-              int  LeftRect,
-              int  TopRect,
-              int  RightRect, 
-              int  BottomRect,
-              int  XStartArc,
-              int  YStartArc,
-              int  XEndArc,  
-              int  YEndArc);
-
-/* Use NtGdiArcInternal with GdiTypeArcTo */
-BOOL
-STDCALL
-NtGdiArcTo(HDC  hDC,
-                int  LeftRect,
-                int  TopRect,
-                int  RightRect,
-                int  BottomRect,
-                int  XRadial1,
-                int  YRadial1,
-                int  XRadial2,
-                int  YRadial2);
-
-/* Use NtGdiArcInternal with GdiTypeChord */
-BOOL
-STDCALL
-NtGdiChord(HDC  hDC,
-                int  LeftRect,
-                int  TopRect,
-                int  RightRect,
-                int  BottomRect,
-                int  XRadial1,
-                int  YRadial1,
-                int  XRadial2,
-                int  YRadial2);
-
 /* Metafiles are user mode */
 HENHMETAFILE
 STDCALL
