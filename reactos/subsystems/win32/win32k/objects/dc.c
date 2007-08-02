@@ -1327,7 +1327,7 @@ IntGdiGetDCState(HDC  hDC)
 
 VOID
 STDCALL
-NtGdiSetDCState ( HDC hDC, HDC hDCSave )
+IntGdiSetDCState ( HDC hDC, HDC hDCSave )
 {
   PDC  dc, dcs;
 
@@ -1840,7 +1840,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
          DC_UnlockDc( dc );
          DC_UnlockDc( dcs );
 
-         NtGdiSetDCState(hDC, hdcs);
+         IntGdiSetDCState(hDC, hdcs);
 
         if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
         {

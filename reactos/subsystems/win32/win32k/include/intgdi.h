@@ -257,5 +257,7 @@ HDC STDCALL IntGdiGetDCState(HDC  hDC);
 
 WORD STDCALL IntGdiSetHookFlags(HDC hDC, WORD Flags);
 
+VOID STDCALL IntGdiSetDCState ( HDC hDC, HDC hDCSave );
+
 #endif /* _WIN32K_INTGDI_H */
 

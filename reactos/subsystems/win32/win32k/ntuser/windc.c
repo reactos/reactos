@@ -251,7 +251,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
       else
         DC_SetOwnership( defaultDCstate, PsGetCurrentProcess());
 
-      NtGdiSetDCState(dce->hDC, defaultDCstate);
+      IntGdiSetDCState(dce->hDC, defaultDCstate);
       DC_SetOwnership( defaultDCstate, NULL); // Return default dc state to inaccessible mode.
 
       dce->DCXFlags &= ~DCX_DCEBUSY;
