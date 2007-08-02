@@ -149,22 +149,6 @@ IntGdiPolyPolygon(DC      *dc,
 
 /******************************************************************************/
 
-BOOL
-STDCALL
-NtGdiChord(HDC  hDC,
-                int  LeftRect,
-                int  TopRect,
-                int  RightRect,
-                int  BottomRect,
-                int  XRadial1,
-                int  YRadial1,
-                int  XRadial2,
-                int  YRadial2)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
 /*
  * NtGdiEllipse
  *

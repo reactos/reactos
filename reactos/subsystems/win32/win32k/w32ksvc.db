@@ -5,13 +5,10 @@ NtGdiAddFontResource			2
 NtGdiAlphaBlend				11
 NtGdiAngleArc				6
 NtGdiAnimatePalette			4
-NtGdiArc				9
 NtGdiArcInternal			10
-NtGdiArcTo				9
 NtGdiBeginPath				1
 NtGdiBitBlt				11
 NtGdiCancelDC				1
-NtGdiChord				9
 NtGdiCloseEnhMetaFile			1
 NtGdiCloseFigure			1
 NtGdiCloseMetaFile			1

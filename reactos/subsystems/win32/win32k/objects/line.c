@@ -284,29 +284,6 @@ IntGdiGetArcDirection(DC *dc)
   return dc->w.ArcDirection;
 }
 
-BOOL FASTCALL
-IntGdiArc(DC  *dc,
-          int LeftRect,
-          int TopRect,
-          int RightRect,
-          int BottomRect,
-          int XStartArc,
-          int YStartArc,
-          int XEndArc,
-          int YEndArc)
-{
-  if(PATH_IsPathOpen(dc->w.path))
-  {
-    return PATH_Arc(dc, LeftRect, TopRect, RightRect, BottomRect,
-                    XStartArc, YStartArc, XEndArc, YEndArc, GdiTypeArc );
-  }
-
-  // FIXME
-//   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
-//          XStartArc, YStartArc, XEndArc, YEndArc);
-
-  return TRUE;
-}
 
 BOOL FASTCALL
 IntGdiPolyPolyline(DC      *dc,
@@ -348,102 +325,6 @@ NtGdiAngleArc(
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiArc(HDC  hDC,
-        int  LeftRect,
-        int  TopRect,
-        int  RightRect,
-        int  BottomRect,
-        int  XStartArc,
-        int  YStartArc,
-        int  XEndArc,
-        int  YEndArc)
-{
-  DC *dc;
-  BOOL Ret;
-
-  dc = DC_LockDc (hDC);
-  if(!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-  if (dc->IsIC)
-  {
-    DC_UnlockDc(dc);
-    /* Yes, Windows really returns TRUE in this case */
-    return TRUE;
-  }
-
-  Ret = IntGdiArc(dc,
-                  LeftRect,
-                  TopRect,
-                  RightRect,
-                  BottomRect,
-                  XStartArc,
-                  YStartArc,
-                  XEndArc,
-                  YEndArc);
-
-  DC_UnlockDc( dc );
-  return Ret;
-}
-
-BOOL
-STDCALL
-NtGdiArcTo(HDC  hDC,
-          int  LeftRect,
-          int  TopRect,
-          int  RightRect,
-          int  BottomRect,
-          int  XRadial1,
-          int  YRadial1,
-          int  XRadial2,
-          int  YRadial2)
-{
-  BOOL result;
-  DC *dc;
-
-  dc = DC_LockDc (hDC);
-  if(!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-  if (dc->IsIC)
-  {
-    DC_UnlockDc(dc);
-    /* Yes, Windows really returns TRUE in this case */
-    return TRUE;
-  }
-
-  // Line from current position to starting point of arc
-  if ( !IntGdiLineTo(dc, XRadial1, YRadial1) )
-  {
-    DC_UnlockDc(dc);
-    return FALSE;
-  }
-
-  //dc = DC_LockDc(hDC);
-
-  //if(!dc) return FALSE;
-
-  // Then the arc is drawn.
-  result = IntGdiArc(dc, LeftRect, TopRect, RightRect, BottomRect,
-                     XRadial1, YRadial1, XRadial2, YRadial2);
-
-  //DC_UnlockDc(dc);
-
-  // If no error occured, the current position is moved to the ending point of the arc.
-  if(result)
-    IntGdiMoveToEx(dc, XRadial2, YRadial2, NULL);
-
-  DC_UnlockDc(dc);
-
-  return result;
 }
 
 INT
