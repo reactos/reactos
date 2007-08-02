@@ -88,8 +88,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000422","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000422","Layout Text",0x00000000,"Ukrainian"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000455","Layout File",0x00000000,"kbdbur.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000455","Layout Text",0x00000000,"Burmese"
-;HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000414","Layout File",0x00000000,"kbdno.dll"
-;HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000414","Layout Text",0x00000000,"Norwegian"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000414","Layout File",0x00000000,"kbdno.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000414","Layout Text",0x00000000,"Norwegian"
 
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
