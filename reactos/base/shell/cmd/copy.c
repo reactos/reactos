@@ -872,7 +872,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	
 	FindClose(hFile);		
   if (arg!=NULL) 
-      cmd_free(arg);
+      freep(arg);
 
 	return 0;
 }
