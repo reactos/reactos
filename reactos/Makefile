@@ -49,6 +49,10 @@
 #
 # Accepted environment variables:
 #
+#    ROS_ARCH
+#        This variable specifies the name of the architecture to build ReactOS for.
+#        The variable defaults to i386.
+#
 #    ROS_PREFIX
 #        This variable specifies the prefix of the MinGW installation. On Windows
 #        a prefix is usually not needed, but on linux it is usually "mingw32". If
@@ -323,13 +327,19 @@ else # mingw32-windows
 	endif
 endif
 
+ifneq ($(ROS_ARCH),)
+  ARCH := $(ROS_ARCH)
+else
+  ARCH := i386
+endif
+
 ifneq ($(ROS_INTERMEDIATE),)
   INTERMEDIATE := $(ROS_INTERMEDIATE)
 else
   ifneq ($(ROS_CDOUTPUT),)
     INTERMEDIATE := obj-$(ROS_CDOUTPUT)
   else
-    INTERMEDIATE := obj-i386
+    INTERMEDIATE := obj-$(ARCH)
   endif
 endif
 INTERMEDIATE_ := $(INTERMEDIATE)$(SEP)
@@ -340,7 +350,7 @@ else
   ifneq ($(ROS_CDOUTPUT),)
     OUTPUT := output-$(ROS_CDOUTPUT)
   else
-    OUTPUT := output-i386
+    OUTPUT := output-$(ARCH)
   endif
 endif
 OUTPUT_ := $(OUTPUT)$(SEP)
@@ -392,7 +402,6 @@ include lib/lib.mak
 include tools/tools.mak
 include boot/freeldr/bootsect/bootsect.mak
 -include $(ROS_AUTOMAKE)
-include tools/nci/nci.mak
 
 PREAUTO := \
 	$(BIN2C_TARGET) \
@@ -402,17 +411,17 @@ PREAUTO := \
 	$(BUGCODES_RC) \
 	$(ERRCODES_H) \
 	$(ERRCODES_RC) \
-	$(GENDIB_DIB_FILES)
+	$(GENDIB_DIB_FILES) \
+	$(NCI_SERVICE_FILES)
 
 POSTAUTO : \
 	psdk \
-	$(IDL_FILES) \
-	$(NCI_SERVICE_FILES)
+	$(IDL_FILES)
 
 $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	${mkdir} $(INTERMEDIATE_)media$(SEP)inf 2>$(NUL)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) mingw
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -rReactOS-$(ARCH).rbuild mingw
 	@$(MAKE) POSTAUTO
 
 world: all bootcd livecd

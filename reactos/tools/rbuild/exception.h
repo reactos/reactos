@@ -39,6 +39,13 @@ private:
 };
 
 
+class MissingArgumentException : public Exception
+{
+public:
+	MissingArgumentException ( const std::string& argument );
+};
+
+
 class InvalidOperationException : public Exception
 {
 public:

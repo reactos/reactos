@@ -51,6 +51,13 @@ void Exception::SetMessageV ( const char* message, va_list args )
 }
 
 
+MissingArgumentException::MissingArgumentException ( const string& argument )
+	: Exception ( "Argument '%s' is missing",
+	              argument.c_str () )
+{
+}
+
+
 OutOfMemoryException::OutOfMemoryException ()
 	: Exception ( "Out of memory" )
 {

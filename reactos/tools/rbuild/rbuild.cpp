@@ -33,7 +33,7 @@ using std::string;
 using std::vector;
 
 static string BuildSystem;
-static string RootXmlFile = "ReactOS.rbuild";
+static string RootXmlFile;
 static Configuration configuration;
 
 bool
@@ -239,12 +239,11 @@ main ( int argc, char** argv )
 	if ( !ParseArguments ( argc, argv ) )
 	{
 		printf ( "Generates project files for buildsystems\n\n" );
-		printf ( "  rbuild [switches] buildsystem\n\n" );
+		printf ( "  rbuild [switches] -r{rootfile.rbuild} buildsystem\n\n" );
 		printf ( "Switches:\n" );
 		printf ( "  -v            Be verbose.\n" );
 		printf ( "  -c            Clean as you go. Delete generated files as soon as they are not\n" );
 		printf ( "                needed anymore.\n" );
-		printf ( "  -r{file.rbuild}  Name of the root rbuild file. Default is ReactOS.rbuild.\n" );
 		printf ( "  -dd           Disable automatic dependencies.\n" );
 		printf ( "  -dm{module}   Check only automatic dependencies for this module.\n" );
 		printf ( "  -ud           Disable multiple source files per compilation unit.\n" );
@@ -267,6 +266,9 @@ main ( int argc, char** argv )
 	}
 	try
 	{
+		if ( RootXmlFile.length () == 0 )
+			throw MissingArgumentException ( "-r" );
+
 		string projectFilename ( RootXmlFile );
 
 		printf ( "Reading build files..." );
