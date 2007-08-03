@@ -215,16 +215,6 @@ GetClassLongA(HWND hWnd, int nIndex)
             return hBrush;
          }
 
-      case GCL_MENUNAME:
-         {
-            PUNICODE_STRING Name;
-            Name = (PUNICODE_STRING)NtUserGetClassLong(hWnd, nIndex, TRUE);
-            if (IS_INTRESOURCE(Name))
-               return (DWORD)Name;
-            else
-               return (DWORD)heap_string_poolA(Name->Buffer, Name->Length);
-         }
-
       default:
          return NtUserGetClassLong(hWnd, nIndex, TRUE);
    }
@@ -246,16 +236,6 @@ GetClassLongW ( HWND hWnd, int nIndex )
             if (hBrush != 0 && hBrush < 0x4000)
                hBrush = (DWORD)GetSysColorBrush((ULONG)hBrush - 1);
             return hBrush;
-         }
-
-      case GCL_MENUNAME:
-         {
-            PUNICODE_STRING Name;
-            Name = (PUNICODE_STRING)NtUserGetClassLong(hWnd, nIndex, FALSE);
-            if (IS_INTRESOURCE(Name))
-               return (DWORD)Name;
-            else
-               return (DWORD)heap_string_poolW(Name->Buffer, Name->Length);
          }
 
       default:
