@@ -14,6 +14,7 @@
     </if>
     <include base="cmlib">.</include>
     <include base="ntoskrnl">include</include>
+    <include base="ntoskrnl" root="intermediate"></include>
     <include base="ReactOS">include/reactos/drivers</include>
     <library>csq</library>
     <library>hal</library>
@@ -121,23 +122,15 @@
         <file>dbgkutil.c</file>
         <file>dbgkobj.c</file>
     </directory>
+    <directory name="ex" root="intermediate">
+        <file>zw.S</file>
+    </directory>
     <directory name="ex">
         <if property="ARCH" value="i386">
             <directory name="i386">
                 <file>interlck_asm.S</file>
                 <file>fastinterlck_asm.S</file>
                 <file>ioport.S</file>
-                <file>zw.S</file>
-            </directory>
-        </if>
-        <if property="ARCH" value="powerpc">
-            <directory name="powerpc">
-                <file>zw.S</file>
-            </directory>
-        </if>
-        <if property="ARCH" value="mips">
-            <directory name="mips">
-                <file>zw.S</file>
             </directory>
         </if>
             <file>atom.c</file>

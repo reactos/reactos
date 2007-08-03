@@ -43,16 +43,16 @@ clean: nci_clean
 
 # WIN32K.SYS
 WIN32K_SVC_DB = subsystems$(SEP)win32$(SEP)win32k$(SEP)w32ksvc.db
-WIN32K_SERVICE_TABLE = subsystems$(SEP)win32$(SEP)win32k$(SEP)include$(SEP)napi.h
-WIN32K_STUBS = lib$(SEP)win32ksys$(SEP)$(ARCH)$(SEP)win32k.S
+WIN32K_SERVICE_TABLE = $(INTERMEDIATE_)subsystems$(SEP)win32$(SEP)win32k$(SEP)include$(SEP)napi.h
+WIN32K_STUBS = $(INTERMEDIATE_)lib$(SEP)win32ksys$(SEP)win32k.S
 
 
 
 # NTOSKRNL.EXE
 KERNEL_SVC_DB = ntoskrnl$(SEP)sysfuncs.lst
-KERNEL_SERVICE_TABLE = ntoskrnl$(SEP)include$(SEP)internal$(SEP)napi.h
-NTDLL_STUBS = dll$(SEP)ntdll$(SEP)$(ARCH)$(SEP)napi.S
-KERNEL_STUBS = ntoskrnl$(SEP)ex$(SEP)$(ARCH)$(SEP)zw.S
+KERNEL_SERVICE_TABLE = $(INTERMEDIATE_)ntoskrnl$(SEP)include$(SEP)internal$(SEP)napi.h
+NTDLL_STUBS = $(INTERMEDIATE_)dll$(SEP)ntdll$(SEP)napi.S
+KERNEL_STUBS = $(INTERMEDIATE_)ntoskrnl$(SEP)ex$(SEP)zw.S
 
 NCI_SERVICE_FILES = \
 	$(KERNEL_SERVICE_TABLE) \
@@ -64,11 +64,11 @@ NCI_SERVICE_FILES = \
 
 $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 	$(ECHO_NCI)
-	${mkdir} dll$(SEP)ntdll$(SEP)$(ARCH) 2>$(NUL)
-	${mkdir} ntoskrnl$(SEP)ex$(SEP)$(ARCH) 2>$(NUL)
-	${mkdir} dll$(SEP)win32$(SEP)gdi32$(SEP)misc$(SEP)$(ARCH) 2>$(NUL)
-	${mkdir} dll$(SEP)win32$(SEP)user32$(SEP)misc$(SEP)$(ARCH) 2>$(NUL)
-	${mkdir} lib$(SEP)win32ksys$(SEP)$(ARCH) 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)ntoskrnl$(SEP)include$(SEP)internal 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)dll$(SEP)ntdll 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)ntoskrnl$(SEP)ex$(SEP) 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)subsystems$(SEP)win32$(SEP)win32k$(SEP)include 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)lib$(SEP)win32ksys 2>$(NUL)
 
 	$(Q)$(NCI_TARGET) -arch $(ARCH) \
 		$(KERNEL_SVC_DB) \

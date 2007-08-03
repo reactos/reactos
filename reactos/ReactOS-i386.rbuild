@@ -65,6 +65,7 @@
   <include>include/GL</include>
   <include>include/ndk</include>
   <include>include/reactos</include>
+  <include root="intermediate">include/reactos</include>
   <include>include/reactos/libs</include>
 
   <directory name="base">

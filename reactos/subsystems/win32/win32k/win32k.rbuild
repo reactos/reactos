@@ -12,16 +12,19 @@
 	<define name="_WIN32K_" />
 	<pch>w32k.h</pch>
 
+	<directory name="dib" root="intermediate">
+		<file>dib8gen.c</file>
+		<file>dib16gen.c</file>
+		<file>dib32gen.c</file>
+	</directory>
+
 	<directory name="dib">
 		<file>dib1bpp.c</file>
 		<file>dib4bpp.c</file>
 		<file>dib8bpp.c</file>
-		<file>dib8gen.c</file>
 		<file>dib16bpp.c</file>
-		<file>dib16gen.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
-		<file>dib32gen.c</file>
 		<file>dib.c</file>
 
 		<if property="ARCH" value="i386">

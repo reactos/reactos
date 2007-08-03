@@ -240,7 +240,7 @@ Project::WriteConfigurationFile ()
 
 	s = s + sprintf ( s, "#endif /* __INCLUDE_CONFIG_H */\n" );
 
-	FileSupportCode::WriteIfChanged ( buf, "include" + sSep + "roscfg.h" );
+	FileSupportCode::WriteIfChanged ( buf, Environment::GetIntermediatePath() + sSep + "include" + sSep + "roscfg.h" );
 
 	free ( buf );
 }

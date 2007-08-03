@@ -117,6 +117,7 @@
 <module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
 	<importlibrary definition="kernel32.def" />
 	<include base="kernel32">.</include>
+	<include base="kernel32" root="intermediate">.</include>
 	<include base="kernel32">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />

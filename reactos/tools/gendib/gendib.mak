@@ -41,7 +41,7 @@ gendib_clean:
 	-@$(rm) $(GENDIB_TARGET) $(GENDIB_OBJECTS) 2>$(NUL)
 clean: gendib_clean
 
-GENDIB_DIB_DIR = subsystems$(SEP)win32$(SEP)win32k$(SEP)dib
+GENDIB_DIB_DIR = $(INTERMEDIATE_)subsystems$(SEP)win32$(SEP)win32k$(SEP)dib
 
 GENDIB_DIB_FILES = \
 	$(GENDIB_DIB_DIR)$(SEP)dib32gen.c \
@@ -49,5 +49,6 @@ GENDIB_DIB_FILES = \
 	$(GENDIB_DIB_DIR)$(SEP)dib8gen.c
 
 $(GENDIB_DIB_FILES): $(GENDIB_TARGET)
+	${mkdir} $(GENDIB_DIB_DIR) 2>$(NUL)
 	$(ECHO_GENDIB)
 	$(Q)$(GENDIB_TARGET) $(GENDIB_DIB_DIR)

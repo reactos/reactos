@@ -391,11 +391,11 @@ endif
 
 NTOSKRNL_MC = ntoskrnl$(SEP)ntoskrnl.mc
 KERNEL32_MC = dll$(SEP)win32$(SEP)kernel32$(SEP)kernel32.mc
-BUILDNO_H = include$(SEP)reactos$(SEP)buildno.h
-BUGCODES_H = include$(SEP)reactos$(SEP)bugcodes.h
-BUGCODES_RC = ntoskrnl$(SEP)bugcodes.rc
-ERRCODES_H = include$(SEP)reactos$(SEP)errcodes.h
-ERRCODES_RC = dll$(SEP)win32$(SEP)kernel32$(SEP)errcodes.rc
+BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
+BUGCODES_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)bugcodes.h
+BUGCODES_RC = $(INTERMEDIATE_)ntoskrnl$(SEP)bugcodes.rc
+ERRCODES_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)errcodes.h
+ERRCODES_RC = $(INTERMEDIATE_)dll$(SEP)win32$(SEP)kernel32$(SEP)errcodes.rc
 
 
 include lib/lib.mak
@@ -414,15 +414,10 @@ PREAUTO := \
 	$(GENDIB_DIB_FILES) \
 	$(NCI_SERVICE_FILES)
 
-POSTAUTO : \
-	psdk \
-	$(IDL_FILES)
-
 $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	${mkdir} $(INTERMEDIATE_)media$(SEP)inf 2>$(NUL)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -rReactOS-$(ARCH).rbuild mingw
-	@$(MAKE) POSTAUTO
 
 world: all bootcd livecd
 
@@ -494,10 +489,14 @@ msvc: $(RBUILD_TARGET)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) msvc
 
 $(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)
+	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)ntoskrnl 2>$(NUL)
 	$(ECHO_WMC)
 	$(Q)$(WMC_TARGET) -i -H $(BUGCODES_H) -o $(BUGCODES_RC) $(NTOSKRNL_MC)
 
 $(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
+	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
+	${mkdir} $(INTERMEDIATE_)dll$(SEP)win32$(SEP)kernel32 2>$(NUL)
 	$(ECHO_WMC)
 	$(Q)$(WMC_TARGET) -i -U -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
 

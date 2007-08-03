@@ -46,5 +46,6 @@ buildno_clean:
 clean: buildno_clean
 
 $(BUILDNO_H): $(BUILDNO_TARGET)
+	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
 	$(ECHO_BUILDNO)
 	$(Q)$(BUILDNO_TARGET) $(BUILDNO_QUIET) $(BUILDNO_H)
