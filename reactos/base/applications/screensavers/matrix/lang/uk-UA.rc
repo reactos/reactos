@@ -67,7 +67,7 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Напів&жирний шрифт",IDC_BOLD,"Button",BS_AUTOCHECKBOX | 
                     BS_MULTILINE | WS_TABSTOP,247,134,46,10
-    CTEXT           "Заставка \"Матриця\" www.catch22.org.uk",IDC_ABOUT,140,
+    CTEXT           "Заставка ""Матриця"" www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
 END
 
