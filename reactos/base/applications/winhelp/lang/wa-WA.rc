@@ -20,11 +20,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifdef LANG_WALON
+LANGUAGE LANG_WALON, SUBLANG_DEFAULT
 
 /* Menu */
 
-MAIN_MENU MENU LANGUAGE LANG_WALON, SUBLANG_DEFAULT
+MAIN_MENU MENU
 {
  POPUP "&Fitchî" {
   MENUITEM "&Drovî...", MNID_FILE_OPEN
@@ -55,7 +55,7 @@ MAIN_MENU MENU LANGUAGE LANG_WALON, SUBLANG_DEFAULT
 
 /* Strings */
 
-STRINGTABLE DISCARDABLE LANGUAGE LANG_WALON, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
 {
 STID_WINE_HELP, 	"Aidance di WINE"
 STID_WHERROR, 		"AROKE"
@@ -72,5 +72,3 @@ STID_ALL_FILES, 	"Tos les fitchîs (*.*)"
 STID_HELP_FILES_HLP, 	"Fitchîs d' aide (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 }
-
-#endif  /* LANG_WALON */

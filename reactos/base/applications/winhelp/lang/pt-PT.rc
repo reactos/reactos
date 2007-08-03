@@ -25,37 +25,6 @@
 
 /* Menu */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
-
-MAIN_MENU MENU
-{
- POPUP "&Arquivo" {
-  MENUITEM "&Abrir...", MNID_FILE_OPEN
-  MENUITEM SEPARATOR
-  MENUITEM "&Imprimir", MNID_FILE_PRINT
-  MENUITEM "&Configurar Impressora...", MNID_FILE_SETUP
-   MENUITEM SEPARATOR
-  MENUITEM "Sai&r", MNID_FILE_EXIT
- }
- POPUP "&Editar" {
-   MENUITEM "&Copiar...", MNID_EDIT_COPYDLG
-   MENUITEM SEPARATOR
-   MENUITEM "&Anotar...", MNID_EDIT_ANNOTATE
- }
- POPUP "In&dicador" {
-   MENUITEM "&Definir...", MNID_BKMK_DEFINE
- }
- POPUP "Aj&uda" {
-   MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
-   MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
-   MENUITEM "&Informações...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Sobre WINE", MNID_HELP_WINE
-#endif
- }
-}
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 MAIN_MENU MENU
@@ -88,28 +57,6 @@ MAIN_MENU MENU
 }
 
 /* Strings */
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
-
-STRINGTABLE DISCARDABLE
-{
-STID_WINE_HELP, 	"Ajuda WINE"
-STID_WHERROR, 		"ERRO"
-STID_WARNING,  		"AVISO"
-STID_INFO,  		"Informação"
-STID_NOT_IMPLEMENTED, 	"Não implementado"
-STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do arquivo de ajuda '%s'"
-STID_CONTENTS, 		"&Conteúdo"
-STID_SEARCH, 		"&Procurar"
-STID_BACK, 		"&Voltar"
-STID_HISTORY, 		"&Histórico"
-STID_TOPICS,		"&Tópicos"
-STID_ALL_FILES, 	"Todos os arquivos (*.*)"
-STID_HELP_FILES_HLP, 	"Arquivos de ajuda (*.hlp)"
-STID_FILE_NOT_FOUND_s   "Cannot find '%s'. Do you want to find this file yourself?"
-}
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE DISCARDABLE
 {
