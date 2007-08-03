@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "发牌(&D)\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "背面图案(&C)...",                IDM_GAME_DECK, GRAYED
+        MENUITEM "背面图案(&C)...",                IDM_GAME_DECK
         MENUITEM "选项(&O)...",                    IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)",                       IDM_GAME_EXIT

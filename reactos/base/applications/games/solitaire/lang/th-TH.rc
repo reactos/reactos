@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "แ&จกไพ่\tF2",                 IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "แ&ต่งไพ่...",                 IDM_GAME_DECK, GRAYED
+        MENUITEM "แ&ต่งไพ่...",                 IDM_GAME_DECK
         MENUITEM "&ตัวเลือก...",                IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&ออก",                        IDM_GAME_EXIT

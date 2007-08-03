@@ -61,7 +61,7 @@ BEGIN
     BEGIN
         MENUITEM "&Раздаване\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Тесте...",                    IDM_GAME_DECK, GRAYED
+        MENUITEM "&Тесте...",                    IDM_GAME_DECK
         MENUITEM "&Настройки...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "Из&ход",                       IDM_GAME_EXIT

@@ -63,7 +63,7 @@ BEGIN
     BEGIN
         MENUITEM "&Rozdaù\tF2",                  IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&BalÌËek...",                  IDM_GAME_DECK, GRAYED
+        MENUITEM "&BalÌËek...",                  IDM_GAME_DECK
         MENUITEM "&Moûnosti...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "Sk&onËiù",                     IDM_GAME_EXIT

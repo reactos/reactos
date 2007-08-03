@@ -61,7 +61,7 @@ BEGIN
     BEGIN
         MENUITEM "&Роздати карти\tF2",          IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Колода...",                  IDM_GAME_DECK, GRAYED
+        MENUITEM "&Колода...",                  IDM_GAME_DECK
         MENUITEM "&Параметри...",               IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "В&ихід",                      IDM_GAME_EXIT

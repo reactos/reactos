@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Giliran\tF2",                  IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Dek...",                       IDM_GAME_DECK, GRAYED
+        MENUITEM "&Dek...",                       IDM_GAME_DECK
         MENUITEM "&Opsi...",                      IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Keluar",                       IDM_GAME_EXIT

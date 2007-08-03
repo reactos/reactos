@@ -61,7 +61,7 @@ BEGIN
     BEGIN
         MENUITEM "&Donne\tF2",                  IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Jeux...",                    IDM_GAME_DECK, GRAYED
+        MENUITEM "&Jeux...",                    IDM_GAME_DECK
         MENUITEM "&Options...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Quitter",                    IDM_GAME_EXIT

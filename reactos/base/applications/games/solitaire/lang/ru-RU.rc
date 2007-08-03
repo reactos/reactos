@@ -56,7 +56,7 @@ BEGIN
     BEGIN
         MENUITEM "Н&овая игра\tF2",             IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Покрыть...",                 IDM_GAME_DECK, GRAYED
+        MENUITEM "&Покрыть...",                 IDM_GAME_DECK
         MENUITEM "&Настройки...",               IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Выход",                      IDM_GAME_EXIT

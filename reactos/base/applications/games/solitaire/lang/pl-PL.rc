@@ -60,7 +60,7 @@ BEGIN
     BEGIN
         MENUITEM "&Rozdaj\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Talia...",                    IDM_GAME_DECK, GRAYED
+        MENUITEM "&Talia...",                    IDM_GAME_DECK
         MENUITEM "&Opcje...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Zakoñcz",                       IDM_GAME_EXIT

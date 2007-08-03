@@ -61,7 +61,7 @@ BEGIN
     BEGIN
         MENUITEM "&Deal\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "De&ck...",                    IDM_GAME_DECK, GRAYED
+        MENUITEM "De&ck...",                    IDM_GAME_DECK
         MENUITEM "&Επιλογές...",                IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "Έ&ξοδος",                     IDM_GAME_EXIT
