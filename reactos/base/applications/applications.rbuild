@@ -25,6 +25,9 @@
 <directory name="hostname">
 	<xi:include href="hostname/hostname.rbuild" />
 </directory>
+<directory name="logoff">
+	<xi:include href="logoff/logoff.rbuild" />
+</directory>
 <directory name="msconfig">
 	<xi:include href="msconfig/msconfig.rbuild" />
 </directory>
