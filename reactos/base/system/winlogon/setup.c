@@ -85,8 +85,8 @@ SetSetupType (DWORD dwSetupType)
 }
 
 
-BOOL
-RunSetup (VOID)
+static DWORD WINAPI
+RunSetupThreadProc (IN LPVOID lpParameter)
 {
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFOW StartupInfo;
@@ -183,5 +183,14 @@ RunSetup (VOID)
   return TRUE;
 }
 
+
+BOOL
+RunSetup (VOID)
+{
+	HANDLE hThread;
+
+	hThread = CreateThread(NULL, 0, RunSetupThreadProc, NULL, 0, NULL);
+	return hThread != NULL;
+}
 
 /* EOF */

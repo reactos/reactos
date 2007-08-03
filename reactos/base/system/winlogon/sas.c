@@ -794,8 +794,13 @@ InitializeSAS(
 	WNDCLASSEXW swc;
 	BOOL ret = FALSE;
 
-	/* register SAS window class.
-	 * WARNING! MAKE SURE WE ARE IN THE WINLOGON DESKTOP! */
+	if (!SwitchDesktop(Session->WinlogonDesktop))
+	{
+		ERR("WL: Failed to switch to winlogon desktop\n");
+		goto cleanup;
+	}
+
+	/* Register SAS window class */
 	swc.cbSize = sizeof(WNDCLASSEXW);
 	swc.style = CS_SAVEBITS;
 	swc.lpfnWndProc = SASWindowProc;
@@ -814,7 +819,7 @@ InitializeSAS(
 		goto cleanup;
 	}
 
-	/* create invisible SAS window */
+	/* Create invisible SAS window */
 	Session->SASWindow = CreateWindowExW(
 		0,
 		WINLOGON_SAS_CLASS,
