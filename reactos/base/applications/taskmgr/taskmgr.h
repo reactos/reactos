@@ -77,34 +77,10 @@ typedef struct
 
 	/* Processes page settings */
 	BOOL	ShowProcessesFromAllUsers; /* Server-only? */
-	BOOL	Column_ImageName;
-	BOOL	Column_PID;
-	BOOL	Column_CPUUsage;
-	BOOL	Column_CPUTime;
-	BOOL	Column_MemoryUsage;
-	BOOL	Column_MemoryUsageDelta;
-	BOOL	Column_PeakMemoryUsage;
-	BOOL	Column_PageFaults;
-	BOOL	Column_USERObjects;
-	BOOL	Column_IOReads;
-	BOOL	Column_IOReadBytes;
-	BOOL	Column_SessionID; /* Server-only? */
-	BOOL	Column_UserName; /* Server-only? */
-	BOOL	Column_PageFaultsDelta;
-	BOOL	Column_VirtualMemorySize;
-	BOOL	Column_PagedPool;
-	BOOL	Column_NonPagedPool;
-	BOOL	Column_BasePriority;
-	BOOL	Column_HandleCount;
-	BOOL	Column_ThreadCount;
-	BOOL	Column_GDIObjects;
-	BOOL	Column_IOWrites;
-	BOOL	Column_IOWriteBytes;
-	BOOL	Column_IOOther;
-	BOOL	Column_IOOtherBytes;
-	int	ColumnOrderArray[25];
-	int	ColumnSizeArray[25];
-	int	SortColumn;
+	BOOL	Columns[COLUMN_NMAX];
+	int		ColumnOrderArray[COLUMN_NMAX];
+	int		ColumnSizeArray[COLUMN_NMAX];
+	int		SortColumn;
 	BOOL	SortAscending;
 
 	/* Performance page settings */

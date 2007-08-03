@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#include "column.h"
 #include "taskmgr.h"
 #include "perfdata.h"
 #include "perfpage.h"
@@ -22,7 +23,6 @@
 #include "proclist.h"
 #include "affinity.h"
 #include "applpage.h"
-#include "column.h"
 #include "dbgchnl.h"
 #include "debug.h"
 #include "endproc.h"

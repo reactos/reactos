@@ -698,60 +698,12 @@ void LoadSettings(void)
 
     /* Processes page settings */
     TaskManagerSettings.ShowProcessesFromAllUsers = FALSE; /* Server-only? */
-    TaskManagerSettings.Column_ImageName = TRUE;
-    TaskManagerSettings.Column_PID = TRUE;
-    TaskManagerSettings.Column_CPUUsage = TRUE;
-    TaskManagerSettings.Column_CPUTime = TRUE;
-    TaskManagerSettings.Column_MemoryUsage = TRUE;
-    TaskManagerSettings.Column_MemoryUsageDelta = FALSE;
-    TaskManagerSettings.Column_PeakMemoryUsage = FALSE;
-    TaskManagerSettings.Column_PageFaults = FALSE;
-    TaskManagerSettings.Column_USERObjects = FALSE;
-    TaskManagerSettings.Column_IOReads = FALSE;
-    TaskManagerSettings.Column_IOReadBytes = FALSE;
-    TaskManagerSettings.Column_SessionID = FALSE; /* Server-only? */
-    TaskManagerSettings.Column_UserName = FALSE; /* Server-only? */
-    TaskManagerSettings.Column_PageFaultsDelta = FALSE;
-    TaskManagerSettings.Column_VirtualMemorySize = FALSE;
-    TaskManagerSettings.Column_PagedPool = FALSE;
-    TaskManagerSettings.Column_NonPagedPool = FALSE;
-    TaskManagerSettings.Column_BasePriority = FALSE;
-    TaskManagerSettings.Column_HandleCount = FALSE;
-    TaskManagerSettings.Column_ThreadCount = FALSE;
-    TaskManagerSettings.Column_GDIObjects = FALSE;
-    TaskManagerSettings.Column_IOWrites = FALSE;
-    TaskManagerSettings.Column_IOWriteBytes = FALSE;
-    TaskManagerSettings.Column_IOOther = FALSE;
-    TaskManagerSettings.Column_IOOtherBytes = FALSE;
 
-    for (i = 0; i < 25; i++) {
+    for (i = 0; i < COLUMN_NMAX; i++) {
+        TaskManagerSettings.Columns[i] = ColumnPresets[i].bDefaults;
         TaskManagerSettings.ColumnOrderArray[i] = i;
+        TaskManagerSettings.ColumnSizeArray[i] = ColumnPresets[i].size;
     }
-    TaskManagerSettings.ColumnSizeArray[0] = 105;
-    TaskManagerSettings.ColumnSizeArray[1] = 50;
-    TaskManagerSettings.ColumnSizeArray[2] = 107;
-    TaskManagerSettings.ColumnSizeArray[3] = 70;
-    TaskManagerSettings.ColumnSizeArray[4] = 35;
-    TaskManagerSettings.ColumnSizeArray[5] = 70;
-    TaskManagerSettings.ColumnSizeArray[6] = 70;
-    TaskManagerSettings.ColumnSizeArray[7] = 100;
-    TaskManagerSettings.ColumnSizeArray[8] = 70;
-    TaskManagerSettings.ColumnSizeArray[9] = 70;
-    TaskManagerSettings.ColumnSizeArray[10] = 70;
-    TaskManagerSettings.ColumnSizeArray[11] = 70;
-    TaskManagerSettings.ColumnSizeArray[12] = 70;
-    TaskManagerSettings.ColumnSizeArray[13] = 70;
-    TaskManagerSettings.ColumnSizeArray[14] = 60;
-    TaskManagerSettings.ColumnSizeArray[15] = 60;
-    TaskManagerSettings.ColumnSizeArray[16] = 60;
-    TaskManagerSettings.ColumnSizeArray[17] = 60;
-    TaskManagerSettings.ColumnSizeArray[18] = 60;
-    TaskManagerSettings.ColumnSizeArray[19] = 70;
-    TaskManagerSettings.ColumnSizeArray[20] = 70;
-    TaskManagerSettings.ColumnSizeArray[21] = 70;
-    TaskManagerSettings.ColumnSizeArray[22] = 70;
-    TaskManagerSettings.ColumnSizeArray[23] = 70;
-    TaskManagerSettings.ColumnSizeArray[24] = 70;
 
     TaskManagerSettings.SortColumn = 1;
     TaskManagerSettings.SortAscending = TRUE;
