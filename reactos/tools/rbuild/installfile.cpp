@@ -23,8 +23,8 @@
 using std::string;
 
 InstallFile::InstallFile ( const Project& project_,
-	                       const XMLElement& installfileNode,
-	                       const string& path )
+                           const XMLElement& installfileNode,
+                           const string& path )
 	: project ( project_ ),
 	  node ( installfileNode )
 {
@@ -40,7 +40,24 @@ InstallFile::InstallFile ( const Project& project_,
 	else
 		newname = node.value;
 	name = node.value;
-	this->path = path;
+
+	att = node.GetAttribute ( "root", false );
+	if ( att != NULL)
+	{
+		if ( att->value == "intermediate" )
+			this->path = Environment::GetIntermediatePath () + sSep + path;
+		else if ( att->value == "output" )
+			this->path = Environment::GetOutputPath () + sSep + path;
+		else
+		{
+			throw InvalidAttributeValueException (
+				node.location,
+				"root",
+				att->value );
+		}
+	}
+	else
+		this->path = path;
 }
 
 InstallFile::~InstallFile ()
