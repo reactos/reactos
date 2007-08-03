@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<module name="sol" type="win32gui" installbase="system32" installname="solitaire.exe" unicode="no" allowwarnings="yes" stdlib="host">
+<module name="sol" type="win32gui" installbase="system32" installname="sol.exe" unicode="no" allowwarnings="yes" stdlib="host">
 	<include base="sol">.</include>
 	<include base="sol">cardlib</include>
 	<linkerflag>-lstdc++</linkerflag>
