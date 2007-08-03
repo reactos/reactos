@@ -334,7 +334,7 @@ int CardButton::OnLButtonUp(HWND hwnd, int x, int y)
     return 0;
 }
 
-#define _countof(array) (sizeof(array)/sizeof(array[0]))
+//#define _countof(array) (sizeof(array)/sizeof(array[0]))
 
 CardButton *CardWindow::CreateButton(int id, TCHAR *szText, UINT uStyle, bool fVisible, int x, int y, int width, int height)
 {

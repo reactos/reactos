@@ -46,6 +46,7 @@ public:
 	void	 SetBackColor(COLORREF cr);
 	COLORREF GetBackColor();
 	void	 SetBackCardIdx(UINT uBackIdx);
+	UINT	 GetBackCardIdx();
 	void	 SetBackImage(HBITMAP hBitmap);
 
 	void EmptyStacks(void);

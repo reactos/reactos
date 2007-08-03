@@ -20,6 +20,11 @@
 #define IDC_OPT_DRAWTHREE               1202
 #define IDC_OPT_SHOWTIME                1203
 #define IDC_OPT_STATUSBAR               1204
+#define IDD_CARDBACK                    1250
+#define IDC_CARDBACK1                   1251
+#define IDC_CARDBACK2                   1252
+#define IDC_CARDBACK3                   1253
+#define IDC_CARDBACK4                   1254
 
 /* Strings */
 #define IDS_SOL_NAME                    1300

@@ -735,6 +735,11 @@ void CardWindow::SetBackCardIdx(UINT uBackIdx)
 
 }
 
+UINT CardWindow::GetBackCardIdx()
+{
+    return nBackCardIdx;
+}
+
 void CardWindow::PaintCardRgn(HDC hdc, int dx, int dy, int width, int height, int sx, int sy)
 {
     RECT rect;

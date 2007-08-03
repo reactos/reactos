@@ -6,6 +6,10 @@ extern TCHAR szAppName[];
 extern bool	fGameStarted;
 
 #define OPTION_THREE_CARDS   8
+#define CARDBACK_START IDC_CARDBACK1
+#define CARDBACK_END IDC_CARDBACK4
+#define NUM_CARDBACKS (CARDBACK_END - CARDBACK_START + 1)
+#define CARDBACK_RES_START 53
 
 extern DWORD dwOptions;
 

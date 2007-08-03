@@ -263,7 +263,7 @@ HPALETTE MakePaletteFromCols(COLORREF cols[], int nNumColours)
     lp = (LOGPALETTE *)HeapAlloc(
         GetProcessHeap(), 0, sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * nNumColours);
 
-    lp->palNumEntries = nNumColours;
+    lp->palNumEntries = (WORD)nNumColours;
     lp->palVersion    = 0x300;
 
     //copy the colours into the logical palette format
