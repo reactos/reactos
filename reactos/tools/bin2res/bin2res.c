@@ -48,7 +48,7 @@
 extern int mkstemps(char *template, int suffix_len);
 
 int process_resources(const char* input_file_name, const char* specific_file_name, 
-		      const char* relative_path,
+		      const char* relative_path, const char* output_path,
 		      int inserting, int force_processing, int verbose);
 
 static const char* help =
@@ -172,7 +172,7 @@ char* get_filename_with_full_path(char* output, const char* filename, const char
 }
 
 void process_includes(const char* input_file_name, const char* specific_file_name, 
-		     const char* relative_path,
+		     const char* relative_path, const char* output_path,
 		     int inserting, int force_processing, int verbose)
 {
     char filename[PATH_MAX];
@@ -187,14 +187,14 @@ void process_includes(const char* input_file_name, const char* specific_file_nam
 	if (!(include_file_name = parse_include(buffer))) continue;
 	if ( verbose ) printf ( "Processing included file %s\n", include_file_name);
 	process_resources(get_filename_with_full_path(filename, include_file_name, relative_path),
-	                  specific_file_name, relative_path,
+	                  specific_file_name, relative_path, output_path,
 		          inserting, force_processing, verbose);
     }
     fclose(fin);
 }
 
 int process_resources(const char* input_file_name, const char* specific_file_name, 
-		      const char* relative_path,
+		      const char* relative_path, const char* output_path,
 		      int inserting, int force_processing, int verbose)
 {
     char filename[PATH_MAX];
@@ -237,15 +237,17 @@ int process_resources(const char* input_file_name, const char* specific_file_nam
 	    if (inserting) fputc(c, ftmp);
 	if (c == EOF) break;
 
-	if (!(fres = fopen(get_filename_with_full_path(filename, res_file_name, relative_path),
-	    inserting ? "rb" : "wb"))) break;
 	if (inserting)
 	{
+	    if (!(fres = fopen(get_filename_with_full_path(filename, res_file_name, relative_path),
+	    "rb"))) break;
 	    if (!insert_hexdump(ftmp, fres)) break;
 	    while ( (c = fgetc(fin)) != EOF && c != '}') /**/;
 	}
 	else
 	{
+	    if (!(fres = fopen(get_filename_with_full_path(filename, res_file_name, output_path),
+	    "wb"))) break;
 	    if (!extract_hexdump(fres, fin)) break;
 	}
 	fclose(fres);
@@ -272,7 +274,7 @@ int process_resources(const char* input_file_name, const char* specific_file_nam
     }
     else
     {
-	process_includes(input_file_name, specific_file_name, relative_path,
+	process_includes(input_file_name, specific_file_name, relative_path, output_path,
 		         inserting, force_processing, verbose);
     }
 
@@ -302,8 +304,9 @@ int main(int argc, char **argv)
     const char* input_file_name = 0;
     const char* specific_file_name = 0;
     const char* relative_path = 0;
+    const char* output_path = 0;
 
-    while((optc = getopt(argc, argv, "axi:o:b:fhv")) != EOF)
+    while((optc = getopt(argc, argv, "axi:o:b:O:fhv")) != EOF)
     {
 	switch(optc)
 	{
@@ -319,6 +322,10 @@ int main(int argc, char **argv)
 	    optc = ((optc == 'i') ? 'a' : 'x');
 	    if (convert_dir && convert_dir != optc) usage();
 	    convert_dir = optc;
+	break;
+	case 'O':
+	    if (output_path) usage();
+	    output_path = fix_path_sep(optarg);
 	break;
 	case 'b':
 	    if (relative_path) usage();
@@ -345,6 +352,7 @@ int main(int argc, char **argv)
     if (!convert_dir) usage();
 
     if (!process_resources(input_file_name, specific_file_name, relative_path,
+			   output_path ? output_path : relative_path,
 			   convert_dir == 'a', force_overwrite, verbose))
     {
 	perror("Processing failed");
