@@ -30,7 +30,6 @@ CardRegion::CardRegion(CardWindow &parent, int Id, bool visible, int x, int y, i
     fVisible     = visible;
 
     nThreedCount = 1;
-    nBackCardIdx = 53;
 
     Update();                //Update this stack's size+card count
 

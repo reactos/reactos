@@ -493,13 +493,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_CLOSE:
-        ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
-        if(ret == IDOK)
-        {
-            WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);
-            DestroyWindow(hwnd);
-        }
-
+        DestroyWindow(hwnd);
         return 0;
     }
 
