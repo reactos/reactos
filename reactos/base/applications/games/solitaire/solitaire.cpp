@@ -119,7 +119,7 @@ VOID SaveSettings(VOID)
 //
 //    Main entry point
 //
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdShow)
+int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCmdShow)
 {
     HWND        hwnd;
     MSG            msg;
@@ -421,7 +421,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     switch(iMsg)
     {
     case WM_CREATE:
-        hwndStatus = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, "Ready", hwnd, 0);
+        hwndStatus = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, _T("Ready"), hwnd, 0);
 
         //SendMessage(hwndStatus, SB_SIMPLE, (WPARAM)TRUE, 0);
 

@@ -88,11 +88,11 @@ void LoadCardBitmaps(void)
     //If Windows NT/2000/XP
     if(GetVersion() < 0x80000000)
     {
-        hCardDll = LoadLibrary("cards.dll");
+        hCardDll = LoadLibrary(TEXT("cards.dll"));
 
         if(hCardDll == 0)
         {
-            MessageBox(0, "Error loading cards.dll (32bit)", "Shed", MB_OK | MB_ICONEXCLAMATION);
+            MessageBox(0, TEXT("Error loading cards.dll (32bit)"), TEXT("Shed"), MB_OK | MB_ICONEXCLAMATION);
             PostQuitMessage(0);
             return;
         }

@@ -117,6 +117,6 @@ bool operator <= (const Card &lhs, const Card &rhs)
 void PaintRect(HDC hdc, RECT *rect, COLORREF colour)
 {
     COLORREF oldcr = SetBkColor(hdc, colour);
-    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, rect, "", 0, 0);
+    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, rect, TEXT(""), 0, 0);
     SetBkColor(hdc, oldcr);
 }
