@@ -418,6 +418,7 @@ $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	${mkdir} $(INTERMEDIATE_)media$(SEP)inf 2>$(NUL)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -rReactOS-$(ARCH).rbuild mingw
+	@$(MAKE) psdk
 
 world: all bootcd livecd
 
