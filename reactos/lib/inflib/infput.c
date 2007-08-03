@@ -83,7 +83,7 @@ Output(POUTPUTBUFFER OutBuf, PCTSTR Text)
       *OutBuf->Current++ = (char) *Text++;
       OutBuf->FreeSize--;
     }
-  OutBuf->Current[1] = '\0';
+  *OutBuf->Current = '\0';
 }
 
 INFSTATUS
