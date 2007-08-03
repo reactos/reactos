@@ -43,8 +43,8 @@ Output(POUTPUTBUFFER OutBuf, PCTSTR Text)
       DPRINT("Out of free space. TotalSize %lu FreeSize %lu Length %u\n",
              OutBuf->TotalSize, OutBuf->FreeSize, Length);
       /* Round up to next SIZE_INC */
-      NewSize = OutBuf->TotalSize - OutBuf->FreeSize +
-                (((Length + 1) + (SIZE_INC - 1)) /
+      NewSize = OutBuf->TotalSize +
+                (((Length + 1) - OutBuf->FreeSize + (SIZE_INC - 1)) /
                  SIZE_INC) * SIZE_INC;
       DPRINT("NewSize %lu\n", NewSize);
       NewBuf = MALLOC(NewSize);
