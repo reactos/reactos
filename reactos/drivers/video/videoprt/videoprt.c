@@ -1100,6 +1100,8 @@ VideoPortEnumerateChildren(
    ULONG Status;
    VIDEO_CHILD_ENUM_INFO ChildEnumInfo;
    VIDEO_CHILD_TYPE ChildType;
+   BOOLEAN bHaveLastMonitorID = FALSE;
+   UCHAR LastMonitorID[10];
    UCHAR ChildDescriptor[256];
    ULONG ChildId;
    ULONG Unused;
@@ -1131,7 +1133,37 @@ VideoPortEnumerateChildren(
                   ChildDescriptor,
                   &ChildId,
                   &Unused);
-      if (Status == VIDEO_ENUM_INVALID_DEVICE)
+      if (Status == VIDEO_ENUM_MORE_DEVICES)
+      {
+         if (ChildType == Monitor)
+         {
+            // Check if the EDID is valid
+            if (ChildDescriptor[0] == 0x00 &&
+                ChildDescriptor[1] == 0xFF &&
+                ChildDescriptor[2] == 0xFF &&
+                ChildDescriptor[3] == 0xFF &&
+                ChildDescriptor[4] == 0xFF &&
+                ChildDescriptor[5] == 0xFF &&
+                ChildDescriptor[6] == 0xFF &&
+                ChildDescriptor[7] == 0x00)
+            {
+               if (bHaveLastMonitorID)
+               {
+                  // Compare the previous monitor ID with the current one, break the loop if they are identical
+                  if (RtlCompareMemory(LastMonitorID, &ChildDescriptor[8], sizeof(LastMonitorID)) == sizeof(LastMonitorID))
+                  {
+                     DPRINT("Found identical Monitor ID two times, stopping enumeration\n");
+                     break;
+                  }
+               }
+
+               // Copy 10 bytes from the EDID, which can be used to uniquely identify the monitor
+               RtlCopyMemory(LastMonitorID, &ChildDescriptor[8], sizeof(LastMonitorID));
+               bHaveLastMonitorID = TRUE;
+            }
+         }
+      }
+      else if (Status == VIDEO_ENUM_INVALID_DEVICE)
       {
          DPRINT("Child device %d is invalid!\n", ChildEnumInfo.ChildIndex);
          continue;
@@ -1141,7 +1173,7 @@ VideoPortEnumerateChildren(
          DPRINT("End of child enumeration! (%d children enumerated)\n", i - 1);
          break;
       }
-      else if (Status != VIDEO_ENUM_MORE_DEVICES)
+      else
       {
          DPRINT("HwGetVideoChildDescriptor returned unknown status code 0x%x!\n", Status);
          break;
