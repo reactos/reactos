@@ -415,7 +415,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     static int nWidth, nHeight;
     int nStatusHeight = 0;//20;
     int parts[] = { 100, -1 };
-    UINT ret;
 
     MINMAXINFO *mmi;
 
