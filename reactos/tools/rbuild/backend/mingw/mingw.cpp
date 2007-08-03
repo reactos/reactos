@@ -233,12 +233,12 @@ MingwBackend::ProcessNormal ()
 	GenerateHeader ();
 	GenerateGlobalVariables ();
 	GenerateXmlBuildFilesMacro ();
+	UnpackWineResources ();
 	ProcessModules ();
 	GenerateInstallTarget ();
 	GenerateTestTarget ();
 	GenerateDirectoryTargets ();
 	GenerateDirectories ();
-	UnpackWineResources ();
 	GenerateTestSupportCode ();
 	GenerateCompilationUnitSupportCode ();
 	GenerateSysSetup ();

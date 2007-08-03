@@ -103,8 +103,10 @@ WineResource::UnpackResourcesInModule ( Module& module,
 		         module.name.c_str () );
 	}
 
-	string outputDirectory = module.GetBasePath ();
-	    string parameters = ssprintf ( "-b %s -f -x %s",
+	string relativeDirectory = module.GetBasePath ();
+	string outputDirectory = Environment::GetIntermediatePath() + sSep + module.GetBasePath ();
+	string parameters = ssprintf ( "-b %s -O %s -f -x %s",
+	                               NormalizeFilename ( relativeDirectory ).c_str (),
 	                               NormalizeFilename ( outputDirectory ).c_str (),
 	                               NormalizeFilename ( resourceFilename ).c_str () );
 	string command = FixSeparatorForSystemCommand(bin2res) + " " + parameters;
@@ -114,4 +116,7 @@ WineResource::UnpackResourcesInModule ( Module& module,
 		throw InvocationFailedException ( command,
 		                                  exitcode );
 	}
+	module.non_if_data.includes.push_back( new Include ( module.project,
+	                                                     module.GetBasePath (),
+	                                                     "$(INTERMEDIATE)" ) );
 }
