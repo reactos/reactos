@@ -21,6 +21,7 @@ typedef struct _GLOBAL_DATA
     STICKYKEYS oldStickyKeys;
     FILTERKEYS filterKeys;
     TOGGLEKEYS toggleKeys;
+    BOOL bKeyboardPref;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 
@@ -57,6 +58,13 @@ StickyKeysDlgProc(HWND hwndDlg,
                            IDC_STICKY_UNLOCK_CHECK,
                            pGlobalData->stickyKeys.dwFlags & SKF_TWOKEYSOFF ? BST_CHECKED : BST_UNCHECKED);
 
+            CheckDlgButton(hwndDlg,
+                           IDC_STICKY_SOUND_CHECK,
+                           pGlobalData->stickyKeys.dwFlags & SKF_AUDIBLEFEEDBACK ? BST_CHECKED : BST_UNCHECKED);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_STICKY_STATUS_CHECK,
+                           pGlobalData->stickyKeys.dwFlags & SKF_INDICATOR ? BST_CHECKED : BST_UNCHECKED);
             break;
 
         case WM_COMMAND:
@@ -72,6 +80,14 @@ StickyKeysDlgProc(HWND hwndDlg,
 
                 case IDC_STICKY_UNLOCK_CHECK:
                     pGlobalData->stickyKeys.dwFlags ^= SKF_TWOKEYSOFF;
+                    break;
+
+                case IDC_STICKY_SOUND_CHECK:
+                    pGlobalData->stickyKeys.dwFlags ^= SKF_AUDIBLEFEEDBACK;
+                    break;
+
+                case IDC_STICKY_STATUS_CHECK:
+                    pGlobalData->stickyKeys.dwFlags ^= SKF_INDICATOR;
                     break;
 
                 case IDOK:
@@ -206,6 +222,15 @@ OnInitDialog(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         return;
     }
 
+    /* Get keyboard preference information */
+    if (!SystemParametersInfo(SPI_GETKEYBOARDPREF,
+                              0,
+                              &pGlobalData->bKeyboardPref,
+                              0))
+    {
+        return;
+    }
+
     CheckDlgButton(hwndDlg,
                    IDC_STICKY_BOX,
                    pGlobalData->stickyKeys.dwFlags & SKF_STICKYKEYSON ? BST_CHECKED : BST_UNCHECKED);
@@ -217,6 +242,10 @@ OnInitDialog(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     CheckDlgButton(hwndDlg,
                    IDC_TOGGLE_BOX,
                    pGlobalData->toggleKeys.dwFlags & TKF_TOGGLEKEYSON ? BST_CHECKED : BST_UNCHECKED);
+
+    CheckDlgButton(hwndDlg,
+                   IDC_KEYBOARD_EXTRA,
+                   pGlobalData->bKeyboardPref ? BST_CHECKED : BST_UNCHECKED);
 }
 
 
@@ -288,6 +317,11 @@ KeyboardPageProc(HWND hwndDlg,
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
 
+                case IDC_KEYBOARD_EXTRA:
+                    pGlobalData->bKeyboardPref = !pGlobalData->bKeyboardPref;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+
                 default:
                     break;
             }
@@ -310,6 +344,11 @@ KeyboardPageProc(HWND hwndDlg,
                 SystemParametersInfo(SPI_SETTOGGLEKEYS,
                                      sizeof(TOGGLEKEYS),
                                      &pGlobalData->toggleKeys,
+                                     SPIF_UPDATEINIFILE | SPIF_SENDCHANGE /*0*/);
+
+                SystemParametersInfo(SPI_SETKEYBOARDPREF,
+                                     pGlobalData->bKeyboardPref,
+                                     NULL,
                                      SPIF_UPDATEINIFILE | SPIF_SENDCHANGE /*0*/);
 
                 return TRUE;
