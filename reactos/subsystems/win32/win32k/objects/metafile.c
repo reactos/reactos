@@ -255,14 +255,6 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
   return hmf;
 }
 
-HMETAFILE
-STDCALL
-NtGdiCloseMetaFile(HDC  hDC)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
 HENHMETAFILE
 STDCALL
 NtGdiCopyEnhMetaFile(HENHMETAFILE  Src,
@@ -272,14 +264,6 @@ NtGdiCopyEnhMetaFile(HENHMETAFILE  Src,
   return 0;
 }
 
-HMETAFILE
-STDCALL
-NtGdiCopyMetaFile(HMETAFILE  Src,
-                            LPCWSTR  File)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
 //
 //
 // Rewrite is in progress, this function is subject to change at any time.
@@ -487,28 +471,9 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
     return ret;
 }
 
-
-
-
-HDC
-STDCALL
-NtGdiCreateMetaFile(LPCWSTR  File)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
 BOOL
 STDCALL
 NtGdiDeleteEnhMetaFile(HENHMETAFILE  emf)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiDeleteMetaFile(HMETAFILE  mf)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -521,17 +486,6 @@ NtGdiEnumEnhMetaFile(HDC  hDC,
                           ENHMFENUMPROC  EnhMetaFunc,
                           LPVOID  Data,
                           CONST LPRECT  Rect)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiEnumMetaFile(HDC  hDC,
-                       HMETAFILE  mf,
-                       MFENUMPROC  MetaFunc,
-                       LPARAM  lParam)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -595,36 +549,6 @@ NtGdiGetEnhMetaFilePaletteEntries(HENHMETAFILE  hemf,
   return 0;
 }
 
-HMETAFILE
-STDCALL
-NtGdiGetMetaFile(LPCWSTR  MetaFile)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-UINT
-STDCALL
-NtGdiGetMetaFileBitsEx(HMETAFILE  hmf,
-                            UINT  Size,
-                            LPVOID  Data)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-UINT
-STDCALL
-NtGdiGetWinMetaFileBits(HENHMETAFILE  hemf,
-                             UINT  BufSize,
-                             LPBYTE  Buffer,
-                             INT  MapMode,
-                             HDC  Ref)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
 BOOL
 STDCALL
 NtGdiPlayEnhMetaFile(HDC  hDC,
@@ -646,51 +570,10 @@ NtGdiPlayEnhMetaFileRecord(HDC  hDC,
   return FALSE;
 }
 
-BOOL
-STDCALL
-NtGdiPlayMetaFile(HDC  hDC,
-                       HMETAFILE  hmf)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiPlayMetaFileRecord(HDC  hDC,
-                             LPHANDLETABLE  Handletable,
-                             LPMETARECORD  MetaRecord,
-                             UINT  Handles)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
 HENHMETAFILE
 STDCALL
 NtGdiSetEnhMetaFileBits(UINT  BufSize,
                                      CONST PBYTE  Data)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-HMETAFILE
-STDCALL
-NtGdiSetMetaFileBitsEx(UINT  Size,
-                                 CONST PBYTE  Data)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-HENHMETAFILE
-STDCALL
-NtGdiSetWinMetaFileBits(UINT  BufSize,
-                                     CONST PBYTE  Buffer,
-                                     HDC  Ref,
-//                                     CONST METAFILEPICT *mfp)
-				     PVOID mfp)
 {
   UNIMPLEMENTED;
   return 0;

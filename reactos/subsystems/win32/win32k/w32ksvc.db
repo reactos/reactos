@@ -11,12 +11,10 @@ NtGdiBitBlt				11
 NtGdiCancelDC				1
 NtGdiCloseEnhMetaFile			1
 NtGdiCloseFigure			1
-NtGdiCloseMetaFile			1
 NtGdiColorMatchToTarget			3
 NtGdiCombineRgn				4
 NtGdiCombineTransform			3
 NtGdiCopyEnhMetaFile			2
-NtGdiCopyMetaFile			2
 NtGdiCreateBitmap			5
 NtGdiCreateClientObj			1
 NtGdiCreateColorSpace			1
@@ -29,7 +27,6 @@ NtGdiCreateEllipticRgn			4
 NtGdiCreateEnhMetaFile			4
 NtGdiCreateHalftonePalette		1
 NtGdiCreateHatchBrushInternal		3
-NtGdiCreateMetaFile			1
 NtGdiCreatePalette			1
 NtGdiCreatePatternBrushInternal	3
 NtGdiCreatePen				4
@@ -44,7 +41,6 @@ NtGdiDeleteClientObj			1
 NtGdiDeleteColorSpace			1
 NtGdiDeleteObjectApp			1
 NtGdiDeleteEnhMetaFile			1
-NtGdiDeleteMetaFile			1
 NtGdiDeleteObject			1
 NtGdiDescribePixelFormat		4
 #NtGdiDeviceCapabilitiesEx		?
@@ -56,7 +52,6 @@ NtGdiEndPath				1
 NtGdiEnumEnhMetaFile			5
 NtGdiEnumFonts				4
 NtGdiEnumICMProfiles			3
-NtGdiEnumMetaFile			4
 NtGdiEnumObjects			4
 NtGdiEqualRgn				2
 NtGdiEscape				5
@@ -120,9 +115,6 @@ NtGdiGetICMProfile			3
 NtGdiGetKerningPairs			3
 NtGdiGetLogColorSpace			3
 NtGdiGetMapMode				1
-NtGdiGetMetaFile			1
-NtGdiGetMetaFileBitsEx			3
-NtGdiGetMetaRgn				2
 NtGdiGetMiterLimit			2
 NtGdiGetNearestColor			2
 NtGdiGetNearestPaletteIndex		2
@@ -153,7 +145,6 @@ NtGdiGetTextFaceW			4
 NtGdiGetTextMetricsW			3
 NtGdiGetViewportExtEx			2
 NtGdiGetViewportOrgEx			2
-NtGdiGetWinMetaFileBits			5
 NtGdiGetWindowExtEx			2
 NtGdiGetWindowOrgEx			2
 NtGdiGetWorldTransform			2
@@ -177,8 +168,6 @@ NtGdiPathToRegion			1
 NtGdiPie				9
 NtGdiPlayEnhMetaFile			3
 NtGdiPlayEnhMetaFileRecord		4
-NtGdiPlayMetaFile			2
-NtGdiPlayMetaFileRecord			4
 NtGdiPlgBlt				11
 NtGdiPolyBezier				3
 NtGdiPolyBezierTo			3
@@ -232,7 +221,6 @@ NtGdiSetICMMode				2
 NtGdiSetICMProfile			2
 NtGdiSetMapMode				2
 NtGdiSetMapperFlags			2
-NtGdiSetMetaFileBitsEx			2
 NtGdiSetMetaRgn				1
 NtGdiSetMiterLimit			3
 NtGdiSetPaletteEntries			4
@@ -250,7 +238,6 @@ NtGdiSetTextColor			2
 NtGdiSetTextJustification		3
 NtGdiSetViewportExtEx			4
 NtGdiSetViewportOrgEx			4
-#NtGdiSetWinMetaFileBits		1
 NtGdiSetWindowExtEx			4
 NtGdiSetWindowOrgEx			4
 NtGdiSetWorldTransform			2

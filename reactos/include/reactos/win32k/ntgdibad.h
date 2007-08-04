@@ -125,13 +125,6 @@ NtGdiCloseEnhMetaFile (
 	HDC	hDC
 	);
 
-/* Metafiles are user mode */
-HMETAFILE
-STDCALL
-NtGdiCloseMetaFile (
-	HDC	hDC
-	);
-
 /* Does not exist */
 BOOL
 STDCALL
@@ -144,14 +137,6 @@ HENHMETAFILE
 STDCALL
 NtGdiCopyEnhMetaFile (
 	HENHMETAFILE	Src,
-	LPCWSTR		File
-	);
-
-/* Metafiles are user mode */
-HMETAFILE
-STDCALL
-NtGdiCopyMetaFile (
-	HMETAFILE	Src,
 	LPCWSTR		File
 	);
 
@@ -175,13 +160,6 @@ NtGdiCreateEnhMetaFile (
 	LPCWSTR		File,
 	CONST LPRECT	Rect,
 	LPCWSTR		Description
-	);
-
-/* Metafiles are user mode */
-HDC
-STDCALL
-NtGdiCreateMetaFile (
-	LPCWSTR		File
 	);
 
 /* Use NtGdiCreatePaletteInternal with palNumEntries at the end. */
@@ -222,13 +200,6 @@ NtGdiDeleteEnhMetaFile (
 	HENHMETAFILE	emf
 	);
 
-/* Meta are user-mode. */
-BOOL
-STDCALL
-NtGdiDeleteMetaFile (
-	HMETAFILE	mf
-	);
-
 /* Should be done in user-mode. */
 BOOL STDCALL  NtGdiDeleteObject(HGDIOBJ hObject);
 
@@ -257,16 +228,6 @@ STDCALL
 NtGdiEnumICMProfiles(HDC    hDC,
                     LPWSTR lpstrBuffer,
                     UINT   cch );
-
-/* Meta are user-mode. */
-BOOL
-STDCALL
-NtGdiEnumMetaFile (
-	HDC		hDC,
-	HMETAFILE	mf,
-	MFENUMPROC	MetaFunc,
-	LPARAM		lParam
-	);
 
 /* Should be done in user-mode. */
 INT
@@ -483,30 +444,6 @@ NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
 /* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetMapMode(HDC  hDC);
 
-/* Meta files are user-mode. */
-HMETAFILE
-STDCALL
-NtGdiGetMetaFile (
-	LPCWSTR	MetaFile
-	);
-
-/* Meta files are user-mode. */
-UINT
-STDCALL
-NtGdiGetMetaFileBitsEx (
-	HMETAFILE	hmf,
-	UINT		Size,
-	LPVOID		Data
-	);
-
-/* Meta files are user-mode. */
-int
-STDCALL
-NtGdiGetMetaRgn (
-	HDC	hDC,
-	HRGN	hrgn
-	);
-
 /* Use NtGdiDoPalette with GdiPalGetEntries. */
 UINT
 STDCALL
@@ -565,17 +502,6 @@ BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
 
 /* Needs to be done in user-mode. */
 BOOL STDCALL  NtGdiGetViewportOrgEx(HDC  hDC, LPPOINT viewportOrg);
-
-/* Metafiles are user-mode. */
-UINT
-STDCALL
-NtGdiGetWinMetaFileBits (
-	HENHMETAFILE	hemf,
-	UINT		BufSize,
-	LPBYTE		Buffer,
-	INT		MapMode,
-	HDC		Ref
-	);
 
 /* Needs to be done in user-mode. */
 BOOL STDCALL  NtGdiGetWindowExtEx(HDC  hDC, LPSIZE windowExt);
@@ -664,24 +590,6 @@ NtGdiPlayEnhMetaFileRecord (
 	LPHANDLETABLE		Handletable,
 	CONST ENHMETARECORD	* EnhMetaRecord,
 	UINT			Handles
-	);
-
-/* Metafiles are user-mode. */
-BOOL
-STDCALL
-NtGdiPlayMetaFile (
-	HDC		hDC,
-	HMETAFILE	hmf
-	);
-
-/* Metafiles are user-mode. */
-BOOL
-STDCALL
-NtGdiPlayMetaFileRecord (
-	HDC		hDC,
-	LPHANDLETABLE	Handletable,
-	LPMETARECORD	MetaRecord,
-	UINT		Handles
 	);
 
 /* Use NtGdiPolyPolyDraw with GdiPolyBezier. */
@@ -893,13 +801,6 @@ STDCALL
 NtGdiSetMapperFlags(HDC  hDC,
                           DWORD  Flag);
 
-/* Metafiles are user-mode. */
-HMETAFILE
-STDCALL
-NtGdiSetMetaFileBitsEx (
-	UINT		Size,
-	CONST PBYTE	Data
-	);
 
 /* Use NtGdiDoPalette with GdiPalSetEntries, TRUE. */
 UINT
