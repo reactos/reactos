@@ -1,4 +1,4 @@
-#include "..\apitest.h"
+#include "../apitest.h"
 
 /* include the tests */
 

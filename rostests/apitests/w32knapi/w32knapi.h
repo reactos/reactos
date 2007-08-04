@@ -1,7 +1,7 @@
 #ifndef _W32KNAPI_H
 #define _W32KNAPI_H
 
-#include "..\apitest.h"
+#include "../apitest.h"
 #include <ddk/winddi.h>
 
 #define OS_UNSUPPORTED 0

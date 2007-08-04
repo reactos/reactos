@@ -1,4 +1,4 @@
-#include "..\w32knapi.h"
+#include "../w32knapi.h"
 #if 0
 W32KAPI
 BOOL STDCALL 
