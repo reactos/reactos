@@ -3,7 +3,7 @@
 
 extern CardWindow SolWnd;
 extern TCHAR szAppName[];
-extern bool	fGameStarted;
+extern bool fGameStarted;
 
 #define OPTION_THREE_CARDS   8
 #define CARDBACK_START IDC_CARDBACK1

@@ -121,6 +121,8 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragca
         }
     }
 
+    fGameStarted = true;
+
     TRACE("EXIT RowStackDropProc(true)\n");
     return true;
 }
@@ -248,6 +250,7 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
         {
             pSuitStack[i]->Flash(11, 100);
         }
+        fGameStarted = false;
     }
     TRACE("EXIT SuitStackAddProc()\n");
 }
@@ -273,6 +276,8 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
     
     if(pDest != 0)
     {
+        fGameStarted = true;
+
         //stackobj.MoveCards(pDest, 1, true);
         //use the SimulateDrag funcion, because we get the
         //AddProc callbacks called for us on the destination stacks...

@@ -415,6 +415,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     static int nWidth, nHeight;
     int nStatusHeight = 0;//20;
     int parts[] = { 100, -1 };
+    int ret;
 
     MINMAXINFO *mmi;
 
@@ -492,7 +493,20 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_CLOSE:
-        DestroyWindow(hwnd);
+        if (fGameStarted == false)
+        {
+            DestroyWindow(hwnd);
+            return 0;
+        }
+        else
+        {
+            ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
+            if (ret == IDOK)
+            {
+                WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);
+                DestroyWindow(hwnd);
+            }
+        }
         return 0;
     }
 
