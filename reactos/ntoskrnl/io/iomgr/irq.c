@@ -74,6 +74,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     RtlZeroMemory(IoInterrupt, sizeof(IO_INTERRUPT));
 
     /* Now create all the interrupts */
+    Affinity = ProcessorEnableMask & KeActiveProcessors;
     for (Count = 0; Affinity; Count++, Affinity >>= 1)
     {
         /* Check if it's enabled for this CPU */
