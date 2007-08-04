@@ -28,6 +28,9 @@
 <directory name="cards">
 	<xi:include href="cards/cards.rbuild" />
 </directory>
+<directory name="cardsbav">
+	<xi:include href="cardsbav/cardsbav.rbuild" />
+</directory>
 <directory name="cfgmgr32">
 	<xi:include href="cfgmgr32/cfgmgr32.rbuild" />
 </directory>
