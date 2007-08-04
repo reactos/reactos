@@ -134,8 +134,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     }
 
     /* Set the sizes of our reply message */
-    Message->Request.u1.s1.DataLength = sizeof(LPCP_CONNECTION_MESSAGE) +
-                                    ConnectionInfoLength;
+    Message->Request.u1.s1.DataLength = (CSHORT)ConnectionInfoLength +
+                                         sizeof(LPCP_CONNECTION_MESSAGE);
     Message->Request.u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
                                      Message->Request.u1.s1.DataLength;
 

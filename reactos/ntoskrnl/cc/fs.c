@@ -239,6 +239,6 @@ CcUninitializeCacheMap (
 	UNIMPLEMENTED;
 	return FALSE;
 #else
-    return CcRosReleaseFileCache(FileObject);
+    return NT_SUCCESS(CcRosReleaseFileCache(FileObject));
 #endif
 }

@@ -102,7 +102,7 @@ CmpCompressedNameSize(IN PWCHAR Name,
      * that it will remain that way forever, so -never- assume this code
      * below internally!
      */
-    return Length * sizeof(WCHAR);
+    return (USHORT)Length * sizeof(WCHAR);
 }
 
 LONG

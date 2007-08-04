@@ -170,7 +170,8 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
         if (Mask != NewMask)
         {
             /* Update it */
-            KeGetCurrentThread()->DispatcherHeader.DebugActive = NewMask;
+            KeGetCurrentThread()->DispatcherHeader.DebugActive =
+                (BOOLEAN)NewMask;
         }
     }
 

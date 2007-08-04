@@ -372,7 +372,7 @@ InbvSolidColorFill(IN ULONG Left,
         if (InbvBootDriverInstalled)
         {
             /* Call bootvid */
-            VidSolidColorFill(Left, Top, Width, Height, Color);
+            VidSolidColorFill(Left, Top, Width, Height, (UCHAR)Color);
         }
 
         /* FIXME: Headless */

@@ -65,7 +65,7 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
             ModuleInfo->ImageSize = LdrEntry->SizeOfImage;
             ModuleInfo->Flags = LdrEntry->Flags;
             ModuleInfo->LoadCount = LdrEntry->LoadCount;
-            ModuleInfo->LoadOrderIndex = ModuleCount;
+            ModuleInfo->LoadOrderIndex = (USHORT)ModuleCount;
             ModuleInfo->InitOrderIndex = 0;
 
             /* Setup name */
@@ -231,7 +231,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
 {
   ANSI_STRING AName;
   UNICODE_STRING WName;
-  BOOLEAN Result;
+  ARC_STATUS Result;
   PCH Value;
   ANSI_STRING AValue;
   UNICODE_STRING WValue;
@@ -417,7 +417,7 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
                                                 TRUE);
           if(NT_SUCCESS(Status))
           {
-            BOOLEAN Result = HalSetEnvironmentVariable(AName.Buffer,
+            ARC_STATUS Result = HalSetEnvironmentVariable(AName.Buffer,
                                                        AValue.Buffer);
 
             Status = (Result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
@@ -766,7 +766,7 @@ QSI_DEF(SystemProcessInformation)
 			SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL;
 			SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000LL;
 			SpiCur->ImageName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
-			SpiCur->ImageName.MaximumLength = inLen;
+			SpiCur->ImageName.MaximumLength = (USHORT)inLen;
 			SpiCur->ImageName.Buffer = (void*)(pCur+curSize);
 
 			// copy name to the end of the struct
@@ -1058,7 +1058,7 @@ QSI_DEF(SystemHandleInformation)
 
             for (Count = 0; HandleCount > 0 ; HandleCount--)
                {
-                 Shi->Handles[i].UniqueProcessId = (ULONG)pr->UniqueProcessId;
+                 Shi->Handles[i].UniqueProcessId = (USHORT)(ULONG)pr->UniqueProcessId;
                  Count++;
                  i++;
                }

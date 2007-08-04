@@ -338,8 +338,8 @@ IopLogWorker(IN PVOID Parameter)
                         if (NT_SUCCESS(Status))
                         {
                             /* Success, update the information */
-                            ObjectNameInfo->Name.Length = 100 -
-                                                          DriverNameLength;
+                            ObjectNameInfo->Name.Length = (USHORT)100 -
+                                                           DriverNameLength;
                         }
                     }
                 }
@@ -434,7 +434,8 @@ IopLogWorker(IN PVOID Parameter)
 
         /* Update size */
         InterlockedExchangeAdd(&IopTotalLogSize,
-                               -(LogEntry->Size - sizeof(ERROR_LOG_ENTRY)));
+                               -(LONG)(LogEntry->Size -
+                                       sizeof(ERROR_LOG_ENTRY)));
     }
 
     /* Free the LPC Message */
@@ -557,7 +558,7 @@ IoFreeErrorLogEntry(IN PVOID ElEntry)
 
     /* Decrease total allocation size and free the entry */
     InterlockedExchangeAdd(&IopTotalLogSize,
-                           -(LogEntry->Size - sizeof(ERROR_LOG_ENTRY)));
+                           -(LONG)(LogEntry->Size - sizeof(ERROR_LOG_ENTRY)));
     ExFreePool(LogEntry);
 }
 

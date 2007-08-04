@@ -36,28 +36,28 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     PIO_INTERRUPT IoInterrupt;
     PKSPIN_LOCK SpinLockUsed;
     BOOLEAN FirstRun = TRUE;
-    ULONG count;
-    LONG i;
+    CCHAR Count = 0;
+    KAFFINITY Affinity;
     PAGED_CODE();
 
     /* Assume failure */
     *InterruptObject = NULL;
 
-    /* Convert the Mask */
-    ProcessorEnableMask &= ((1 << KeNumberProcessors) - 1);
-
-    /* Make sure at least one CPU is on it */
-    if (!ProcessorEnableMask) return STATUS_INVALID_PARAMETER;
-
-    /* Determine the allocation */
-    for (i = 0, count = 0; i < KeNumberProcessors; i++)
+    /* Get the affinity */
+    Affinity = ProcessorEnableMask & KeActiveProcessors;
+    while (Affinity)
     {
-        if (ProcessorEnableMask & (1 << i)) count++;
+        /* Increase count */
+        if (Affinity & 1) Count++;
+        Affinity >>= 1;
     }
+
+    /* Make sure we have a valid CPU count */
+    if (!Count) return STATUS_INVALID_PARAMETER;
 
     /* Allocate the array of I/O Interrupts */
     IoInterrupt = ExAllocatePoolWithTag(NonPagedPool,
-                                        (count - 1)* sizeof(KINTERRUPT) +
+                                        (Count - 1) * sizeof(KINTERRUPT) +
                                         sizeof(IO_INTERRUPT),
                                         TAG_KINTERRUPT);
     if (!IoInterrupt) return STATUS_INSUFFICIENT_RESOURCES;
@@ -74,10 +74,10 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
     RtlZeroMemory(IoInterrupt, sizeof(IO_INTERRUPT));
 
     /* Now create all the interrupts */
-    for (i = 0; i < KeNumberProcessors; i++)
+    for (Count = 0; Affinity; Count++, Affinity >>= 1)
     {
         /* Check if it's enabled for this CPU */
-        if (ProcessorEnableMask & (1 << i))
+        if (Affinity & 1)
         {
             /* Check which one we will use */
             InterruptUsed = FirstRun ? &IoInterrupt->FirstInterrupt : Interrupt;
@@ -92,7 +92,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
                                   SynchronizeIrql,
                                   InterruptMode,
                                   ShareVector,
-                                  i,
+                                  Count,
                                   FloatingSave);
 
             /* Connect it */
@@ -122,7 +122,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
             else
             {
                 /* Move on to the next one */
-                IoInterrupt->Interrupt[i] = Interrupt++;
+                IoInterrupt->Interrupt[(UCHAR)Count] = Interrupt++;
             }
         }
     }

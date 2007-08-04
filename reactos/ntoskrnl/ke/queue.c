@@ -358,7 +358,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 {
                     /* Check if the timer expired */
                     InterruptTime.QuadPart = KeQueryInterruptTime();
-                    if (InterruptTime.QuadPart >= Timer->DueTime.QuadPart)
+                    if ((ULONG64)InterruptTime.QuadPart >= Timer->DueTime.QuadPart)
                     {
                         /* It did, so we don't need to wait */
                         QueueEntry = (PLIST_ENTRY)STATUS_TIMEOUT;

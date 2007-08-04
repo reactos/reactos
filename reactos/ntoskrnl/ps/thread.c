@@ -703,7 +703,7 @@ BOOLEAN
 NTAPI
 PsGetThreadHardErrorsAreDisabled(IN PETHREAD Thread)
 {
-    return Thread->HardErrorsAreDisabled;
+    return Thread->HardErrorsAreDisabled ? TRUE : FALSE;
 }
 
 /*
@@ -823,7 +823,7 @@ BOOLEAN
 NTAPI
 PsIsThreadImpersonating(IN PETHREAD Thread)
 {
-    return Thread->ActiveImpersonationInfo;
+    return Thread->ActiveImpersonationInfo ? TRUE : FALSE;
 }
 
 /*

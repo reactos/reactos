@@ -512,7 +512,7 @@ IopParseDevice(IN PVOID ParseObject,
             StackLoc->Parameters.Create.EaLength = OpenPacket->EaLength;
 
             /* Set the flags */
-            StackLoc->Flags = OpenPacket->Options;
+            StackLoc->Flags = (UCHAR)OpenPacket->Options;
             StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ?
                                 SL_CASE_SENSITIVE: 0;
             break;
@@ -764,7 +764,8 @@ IopParseDevice(IN PVOID ParseObject,
         FileObject->DeviceObject = NULL;
 
         /* Save this now because the FO might go away */
-        OpenCancelled = FileObject->Flags & FO_FILE_OPEN_CANCELLED;
+        OpenCancelled = FileObject->Flags & FO_FILE_OPEN_CANCELLED ?
+                        TRUE : FALSE;
 
         /* Clear the file object in the open packet */
         OpenPacket->FileObject = NULL;
@@ -1370,9 +1371,10 @@ IopQueryNameFile(IN PVOID ObjectBody,
 
     /* Setup the length and maximum length */
     FileLength = (ULONG_PTR)p - (ULONG_PTR)ObjectNameInfo;
-    ObjectNameInfo->Name.Length = FileLength - sizeof(OBJECT_NAME_INFORMATION);
-    ObjectNameInfo->Name.MaximumLength = ObjectNameInfo->Name.Length +
-                                         sizeof(UNICODE_NULL);
+    ObjectNameInfo->Name.Length = (USHORT)FileLength -
+                                          sizeof(OBJECT_NAME_INFORMATION);
+    ObjectNameInfo->Name.MaximumLength = (USHORT)ObjectNameInfo->Name.Length +
+                                                 sizeof(UNICODE_NULL);
 
     /* Free buffer and return */
     ExFreePool(LocalInfo);
@@ -1745,8 +1747,8 @@ IoCreateFile(OUT PHANDLE FileHandle,
     OpenPacket.OriginalAttributes = *ObjectAttributes;
     OpenPacket.AllocationSize = SafeAllocationSize;
     OpenPacket.CreateOptions = CreateOptions;
-    OpenPacket.FileAttributes = FileAttributes;
-    OpenPacket.ShareAccess = ShareAccess;
+    OpenPacket.FileAttributes = (USHORT)FileAttributes;
+    OpenPacket.ShareAccess = (USHORT)ShareAccess;
     OpenPacket.EaBuffer = SystemEaBuffer;
     OpenPacket.EaLength = EaLength;
     OpenPacket.Options = Options;
@@ -2078,7 +2080,7 @@ STDCALL
 IoIsFileOriginRemote(IN PFILE_OBJECT FileObject)
 {
     /* Return the flag status */
-    return (FileObject->Flags & FO_REMOTE_ORIGIN);
+    return FileObject->Flags & FO_REMOTE_ORIGIN ? TRUE : FALSE;
 }
 
 /*

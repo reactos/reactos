@@ -300,7 +300,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
         }
 
         /* Open device key */
-        KeyName.Length = KeyName.MaximumLength = DeviceBi->NameLength;
+        KeyName.Length = KeyName.MaximumLength = (USHORT)DeviceBi->NameLength;
         KeyName.Buffer = DeviceBi->Name;
         InitializeObjectAttributes(
             &ObjectAttributes,
@@ -370,7 +370,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 goto cleanup;
             }
 
-            KeyName.Length = KeyName.MaximumLength = ReferenceBi->NameLength;
+            KeyName.Length = KeyName.MaximumLength = (USHORT)ReferenceBi->NameLength;
             KeyName.Buffer = ReferenceBi->Name;
             if (RtlEqualUnicodeString(&KeyName, &Control, TRUE))
             {
@@ -475,7 +475,7 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 Status = STATUS_UNSUCCESSFUL;
                 goto cleanup;
             }
-            KeyName.Length = KeyName.MaximumLength = bip->DataLength - 4 * sizeof(WCHAR);
+            KeyName.Length = KeyName.MaximumLength = (USHORT)bip->DataLength - 4 * sizeof(WCHAR);
             KeyName.Buffer = &((PWSTR)bip->Data)[4];
             if (KeyName.Length && KeyName.Buffer[KeyName.Length / sizeof(WCHAR)] == UNICODE_NULL)
             {
@@ -976,7 +976,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         return STATUS_INVALID_PARAMETER_1;
     }
     GuidString.Buffer = StartPosition;
-    GuidString.MaximumLength = GuidString.Length = (ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition;
+    GuidString.MaximumLength = GuidString.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition);
 
     /* Get pointer to the PDO */
     Status = IoGetDeviceObjectPointer(

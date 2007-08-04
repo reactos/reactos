@@ -180,8 +180,8 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     if (ReplyMessage)
     {
         /* Validate its length */
-        if ((ReplyMessage->u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
-            ReplyMessage->u1.s1.TotalLength)
+        if (((ULONG)ReplyMessage->u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
+            (ULONG)ReplyMessage->u1.s1.TotalLength)
         {
             /* Fail */
             return STATUS_INVALID_PARAMETER;
@@ -204,8 +204,9 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     if (ReplyMessage)
     {
         /* Validate its length in respect to the port object */
-        if ((ReplyMessage->u1.s1.TotalLength > Port->MaxMessageLength) ||
-            (ReplyMessage->u1.s1.TotalLength <= ReplyMessage->u1.s1.DataLength))
+        if (((ULONG)ReplyMessage->u1.s1.TotalLength > Port->MaxMessageLength) ||
+            ((ULONG)ReplyMessage->u1.s1.TotalLength <=
+             (ULONG)ReplyMessage->u1.s1.DataLength))
         {
             /* Too large, fail */
             ObDereferenceObject(Port);
@@ -408,9 +409,9 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         Message = NULL;
 
         /* Setup the receive message */
-        ReceiveMessage->u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
-                                            ConnectionInfoLength;
-        ReceiveMessage->u1.s1.DataLength = ConnectionInfoLength;
+        ReceiveMessage->u1.s1.TotalLength = (CSHORT)(sizeof(LPCP_MESSAGE) +
+                                                     ConnectionInfoLength);
+        ReceiveMessage->u1.s1.DataLength = (CSHORT)ConnectionInfoLength;
         RtlCopyMemory(ReceiveMessage + 1,
                       ConnectMessage + 1,
                       ConnectionInfoLength);

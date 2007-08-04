@@ -455,7 +455,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Setup the unicode string */
-    RtlInitEmptyUnicodeString(&CmpLoadOptions, Buffer, Length);
+    RtlInitEmptyUnicodeString(&CmpLoadOptions, Buffer, (USHORT)Length);
 
     /* Add the load options and null-terminate */
     RtlAnsiStringToUnicodeString(&CmpLoadOptions, &LoadString, FALSE);

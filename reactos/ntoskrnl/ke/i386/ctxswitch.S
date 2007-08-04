@@ -10,7 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <roscfg.h>
+//#include <roscfg.h>
 #include <ndk/asm.h>
 .intel_syntax noprefix
 

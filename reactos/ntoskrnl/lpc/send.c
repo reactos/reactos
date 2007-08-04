@@ -60,8 +60,8 @@ LpcRequestPort(IN PVOID PortObject,
     if (LpcMessage->u2.s2.DataInfoOffset) return STATUS_INVALID_PARAMETER;
 
     /* Validate message sizes */
-    if ((LpcMessage->u1.s1.TotalLength > Port->MaxMessageLength) ||
-        (LpcMessage->u1.s1.TotalLength <= LpcMessage->u1.s1.DataLength))
+    if (((ULONG)LpcMessage->u1.s1.TotalLength > Port->MaxMessageLength) ||
+        ((ULONG)LpcMessage->u1.s1.TotalLength <= (ULONG)LpcMessage->u1.s1.DataLength))
     {
         /* Fail */
         return STATUS_PORT_MESSAGE_TOO_LONG;
@@ -241,8 +241,8 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     MessageType = LpcRequest->u2.s2.Type;
 
     /* Validate the length */
-    if ((LpcRequest->u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
-         LpcRequest->u1.s1.TotalLength)
+    if (((ULONG)LpcRequest->u1.s1.DataLength + sizeof(PORT_MESSAGE)) >
+         (ULONG)LpcRequest->u1.s1.TotalLength)
     {
         /* Fail */
         return STATUS_INVALID_PARAMETER;
@@ -258,8 +258,8 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Validate the message length */
-    if ((LpcRequest->u1.s1.TotalLength > Port->MaxMessageLength) ||
-        (LpcRequest->u1.s1.TotalLength <= LpcRequest->u1.s1.DataLength))
+    if (((ULONG)LpcRequest->u1.s1.TotalLength > Port->MaxMessageLength) ||
+        ((ULONG)LpcRequest->u1.s1.TotalLength <= (ULONG)LpcRequest->u1.s1.DataLength))
     {
         /* Fail */
         ObDereferenceObject(Port);

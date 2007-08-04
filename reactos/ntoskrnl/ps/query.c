@@ -815,7 +815,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
                 (Priority < THREAD_BASE_PRIORITY_MIN))
             {
                 /* These ones are OK */
-                if ((Priority != THREAD_BASE_PRIORITY_LOWRT + 1) ||
+                if ((Priority != THREAD_BASE_PRIORITY_LOWRT + 1) &&
                     (Priority != THREAD_BASE_PRIORITY_IDLE - 1))
                 {
                     /* Check if the process is real time */

@@ -287,7 +287,7 @@ QueryStringCallback(
 	String->Buffer = ExAllocatePoolWithTag(PagedPool, ValueLength, TAG_PNP_ROOT);
 	if (String->Buffer == NULL)
 		return STATUS_NO_MEMORY;
-	String->Length = String->MaximumLength = ValueLength;
+	String->Length = String->MaximumLength = (USHORT)ValueLength;
 	RtlCopyMemory(String->Buffer, ValueData, ValueLength);
 	if (ValueLength > 0 && String->Buffer[ValueLength / sizeof(WCHAR) - 1] == L'\0')
 		String->Length -= sizeof(WCHAR);

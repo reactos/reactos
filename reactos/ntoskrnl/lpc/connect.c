@@ -352,8 +352,8 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     ConnectMessage->SectionToMap = SectionToMap;
 
     /* Set the data for the connection request message */
-    Message->Request.u1.s1.DataLength = sizeof(LPCP_CONNECTION_MESSAGE) +
-                                        ConnectionInfoLength;
+    Message->Request.u1.s1.DataLength = (CSHORT)ConnectionInfoLength + 
+                                         sizeof(LPCP_CONNECTION_MESSAGE);
     Message->Request.u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
                                          Message->Request.u1.s1.DataLength;
     Message->Request.u2.s2.Type = LPC_CONNECTION_REQUEST;

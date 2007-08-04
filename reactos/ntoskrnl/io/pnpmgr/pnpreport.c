@@ -10,9 +10,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NDEBUG
 #include <ntoskrnl.h>
-#include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -40,7 +40,7 @@ MmSetMemoryPriorityProcess(IN PEPROCESS Process,
     }
 
     /* Save the old priority and update it */
-    OldPriority = Process->Vm.Flags.MemoryPriority;
+    OldPriority = (UCHAR)Process->Vm.Flags.MemoryPriority;
     Process->Vm.Flags.MemoryPriority = MemoryPriority;
 
     /* Return the old priority */
@@ -331,7 +331,7 @@ MmCreatePeb(PEPROCESS Process)
     Peb->OSMinorVersion = NtMinorVersion;
     Peb->OSBuildNumber = (USHORT)(NtBuildNumber & 0x3FFF);
     Peb->OSPlatformId = 2; /* VER_PLATFORM_WIN32_NT */
-    Peb->OSCSDVersion = CmNtCSDVersion;
+    Peb->OSCSDVersion = (USHORT)CmNtCSDVersion;
 
     /* Heap and Debug Data */
     Peb->NumberOfProcessors = KeNumberProcessors;

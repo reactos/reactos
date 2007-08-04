@@ -533,8 +533,8 @@ IopQueryBusDescription(
 
       /* Enumerate the Bus. */
       BusString.Buffer = BasicInformation->Name;
-      BusString.Length = BasicInformation->NameLength;
-      BusString.MaximumLength = BasicInformation->NameLength;
+      BusString.Length = (USHORT)BasicInformation->NameLength;
+      BusString.MaximumLength = (USHORT)BasicInformation->NameLength;
 
       /* Open a handle to the Root Registry Key */
       InitializeObjectAttributes(

@@ -1362,7 +1362,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     {
         /* Dereference it as many times as required */
         InterlockedExchangeAdd(&ObjectHeader->PointerCount,
-                               -AdditionalReferences);
+                               -(LONG)AdditionalReferences);
     }
 
     /* Decrement the handle count and detach */
@@ -1457,6 +1457,9 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
+    /* Save the object header */
+    NewEntry.Object = ObjectHeader;
+
     /* Check if this is a kernel handle */
     if (HandleAttributes & OBJ_KERNEL_HANDLE)
     {
@@ -1529,9 +1532,6 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
     /* Now we can release the object */
     if (Context) ObpCleanupDirectoryLookup(Context);
-
-    /* Save the object header */
-    NewEntry.Object = ObjectHeader;
 
     /* Save the access mask */
     NewEntry.GrantedAccess = GrantedAccess;
@@ -1617,7 +1617,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         {
             /* Dereference it many times */
             InterlockedExchangeAdd(&ObjectHeader->PointerCount,
-                                  -(AdditionalReferences - 1));
+                                  -(LONG)(AdditionalReferences - 1));
         }
 
         /* Dereference the object one last time */

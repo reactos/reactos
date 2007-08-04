@@ -143,7 +143,7 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
 
     /* If the caller didn't ask, assume 32 frames */
-    if (!FrameCount) FrameCount = 32;
+    if (!FrameCount || FrameCount > 32) FrameCount = 32;
 
     /* Get the current frames */
     FrameCount = RtlCaptureStackBackTrace(2, FrameCount, (PVOID*)Frames, NULL);

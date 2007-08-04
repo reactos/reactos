@@ -216,10 +216,11 @@ KiInitMachineDependent(VOID)
                                               CurrentSample->TSCStart;
 
                     /* Compute CPU Speed */
-                    CurrentSample->MHz = ((CurrentSample->TSCDelta *
-                                           CurrentSample->PerfFreq.QuadPart +
-                                           500000) /
-                                          (CurrentSample->PerfDelta * 1000000));
+                    CurrentSample->MHz = (ULONG)((CurrentSample->TSCDelta *
+                                                  CurrentSample->
+                                                  PerfFreq.QuadPart + 500000) /
+                                                 (CurrentSample->PerfDelta *
+                                                  1000000));
 
                     /* Check if this isn't the first sample */
                     if (Sample)

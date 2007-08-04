@@ -323,8 +323,8 @@ IoCreateDriverList(VOID)
 	  if (KeyInfo->NameLength < MAX_PATH * sizeof(WCHAR))
 	    {
 
-	      SubKeyName.Length = KeyInfo->NameLength;
-	      SubKeyName.MaximumLength = KeyInfo->NameLength + sizeof(WCHAR);
+	      SubKeyName.Length = (USHORT)KeyInfo->NameLength;
+	      SubKeyName.MaximumLength = (USHORT)KeyInfo->NameLength + sizeof(WCHAR);
 	      SubKeyName.Buffer = KeyInfo->Name;
 	      SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = 0;
 

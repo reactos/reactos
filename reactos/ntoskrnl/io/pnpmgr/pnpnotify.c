@@ -10,9 +10,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NDEBUG
 #include <ntoskrnl.h>
-#include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IopInitPnpNotificationImplementation)

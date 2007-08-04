@@ -58,7 +58,7 @@ BOOLEAN PspDoingGiveBacks;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-ULONG
+USHORT
 NTAPI
 NameToOrdinal(IN PCHAR Name,
               IN PVOID DllBase,

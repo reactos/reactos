@@ -308,7 +308,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
     /* Save the current base priority and update it */
     OldPriority = Process->BasePriority;
-    Process->BasePriority = Priority;
+    Process->BasePriority = (SCHAR)Priority;
 
     /* Calculate the priority delta */
     Delta = Priority - OldPriority;
@@ -364,7 +364,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
                 }
 
                 /* Update priority and quantum */
-                Thread->BasePriority = NewPriority;
+                Thread->BasePriority = (SCHAR)NewPriority;
                 Thread->Quantum = Thread->QuantumReset;
 
                 /* Disable decrements and update priority */
@@ -426,7 +426,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
                 }
 
                 /* Update priority and quantum */
-                Thread->BasePriority = NewPriority;
+                Thread->BasePriority = (SCHAR)NewPriority;
                 Thread->Quantum = Thread->QuantumReset;
 
                 /* Disable decrements and update priority */

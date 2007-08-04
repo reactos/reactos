@@ -765,7 +765,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
      * because that's only padding for the DevObjExt and not part of the Object.
      */
     CreatedDeviceObject->Type = IO_TYPE_DEVICE;
-    CreatedDeviceObject->Size = sizeof(DEVICE_OBJECT) + DeviceExtensionSize;
+    CreatedDeviceObject->Size = (USHORT)sizeof(DEVICE_OBJECT) + DeviceExtensionSize;
 
     /* The kernel extension is after the driver internal extension */
     DeviceObjectExtension = (PDEVOBJ_EXTENSION)
@@ -1402,7 +1402,7 @@ IoStartNextPacketByKey(IN PDEVICE_OBJECT DeviceObject,
         IopStartNextPacketByKeyEx(DeviceObject,
                                   Key,
                                   DOE_SIO_WITH_KEY |
-                                  (Cancelable) ? DOE_SIO_CANCELABLE : 0);
+                                  (Cancelable ? DOE_SIO_CANCELABLE : 0));
     }
     else
     {
@@ -1431,7 +1431,7 @@ IoStartNextPacket(IN PDEVICE_OBJECT DeviceObject,
         IopStartNextPacketByKeyEx(DeviceObject,
                                   0,
                                   DOE_SIO_NO_KEY |
-                                  (Cancelable) ? DOE_SIO_CANCELABLE : 0);
+                                  (Cancelable ? DOE_SIO_CANCELABLE : 0));
     }
     else
     {
