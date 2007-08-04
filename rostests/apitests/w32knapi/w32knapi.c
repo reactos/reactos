@@ -142,6 +142,7 @@ WinMain(HINSTANCE hInstance,
         int       nCmdShow)
 {
 	g_hInstance = hInstance;
+	
 
 	printf("Win32k native API test\n");
 
@@ -155,7 +156,5 @@ WinMain(HINSTANCE hInstance,
 
 	printf("\n");
 
-	TestMain(L"w32knapi", L"win32k.sys Nt-Api");
-
-	return 0;
+	return TestMain(L"w32knapi", L"win32k.sys Nt-Api");
 }

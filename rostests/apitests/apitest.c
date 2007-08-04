@@ -156,14 +156,14 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 		printf(" regressions: %d\n", orfailed);
 	}
 
-	if (ti.bRegress)
-		return ti.rfailed;
-
 	if (bStatus)
 	{
 		write(hFile, szFileFooter, strlen(szFileFooter));
 		close(hFile);
 	}
+
+	if (ti.bRegress)
+		return ti.rfailed;
 
 	return ti.failed;
 }
