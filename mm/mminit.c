@@ -485,7 +485,7 @@ MmInit3(VOID)
    /*
     * Initialise the modified page writer.
     */
-   if (!strstr(KeLoaderBlock->LoadOptions, "MININT")) MmInitMpwThread();
+   MmInitMpwThread();
 
    /* FIXME: Read parameters from memory */
    MmInitSectionImplementation2();

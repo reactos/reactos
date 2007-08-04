@@ -479,9 +479,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
                MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_USED;
                MmPageArray[j].Flags.Zero = 0;
                MmPageArray[j].Flags.Consumer = MC_NPPOOL;
-	       /* Reference count 2, because we're having ReferenceCount track
-		  MapCount as well. */
-               MmPageArray[j].ReferenceCount = 2;
+               MmPageArray[j].ReferenceCount = 1;
                MmPageArray[j].MapCount = 1;
                InsertTailList(&UsedPageListHeads[MC_NPPOOL],
                               &MmPageArray[j].ListEntry);
@@ -521,7 +519,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
          MmPageArray[i].Flags.Type = MM_PHYSICAL_PAGE_USED;
          MmPageArray[i].Flags.Zero = 0;
          MmPageArray[i].Flags.Consumer = MC_NPPOOL;
-         MmPageArray[i].ReferenceCount = 2;
+         MmPageArray[i].ReferenceCount = 1;
          MmPageArray[i].MapCount = 1;
          InsertTailList(&UsedPageListHeads[MC_NPPOOL],
                         &MmPageArray[i].ListEntry);
@@ -590,7 +588,6 @@ MmMarkPageMapped(PFN_TYPE Pfn)
          KEBUGCHECK(0);
       }
       MmPageArray[Pfn].MapCount++;
-      MmPageArray[Pfn].ReferenceCount++;
       KeReleaseSpinLock(&PageListLock, oldIrql);
    }
 }
@@ -615,7 +612,6 @@ MmMarkPageUnmapped(PFN_TYPE Pfn)
          KEBUGCHECK(0);
       }
       MmPageArray[Pfn].MapCount--;
-      MmPageArray[Pfn].ReferenceCount--;
       KeReleaseSpinLock(&PageListLock, oldIrql);
    }
 }

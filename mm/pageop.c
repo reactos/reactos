@@ -48,7 +48,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
    }
    if (PageOp->MArea)
    {
-      (void)InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
+      InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
    }
    PrevPageOp = MmPageOpHashTable[PageOp->Hash];
    if (PrevPageOp == PageOp)
