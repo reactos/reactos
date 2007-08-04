@@ -31,6 +31,7 @@
 		<file>bitmap.c</file>
 		<file>brush.c</file>
 		<file>dc.c</file>
+		<file>enhmfile.c</file>
 		<file>font.c</file>
 		<file>linedda.c</file>
 		<file>metafile.c</file>
