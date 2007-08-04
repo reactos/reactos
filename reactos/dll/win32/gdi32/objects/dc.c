@@ -544,6 +544,12 @@ GetDCBrushColor(
 	HDC hdc
 )
 {
+#if 0
+  PDC_ATTR Dc_Attr;
+ 
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
+  return (COLORREF) Dc_Attr->ulPenClr;
+#endif
   return NtUserGetDCBrushColor(hdc);
 }
 
@@ -556,6 +562,12 @@ GetDCPenColor(
 	HDC hdc
 )
 {
+#if 0
+  PDC_ATTR Dc_Attr;
+ 
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
+  return (COLORREF) Dc_Attr->ulPenClr;
+#endif
   return NtUserGetDCPenColor(hdc);
 }
 
@@ -569,6 +581,24 @@ SetDCBrushColor(
 	COLORREF crColor
 )
 {
+#if 0
+  PDC_ATTR Dc_Attr;
+  COLORREF OldColor = CLR_INVALID;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+  else
+  {
+    OldColor = (COLORREF) Dc_Attr->ulBrushClr;
+    Dc_Attr->ulBrushClr = (ULONG) crColor;
+
+    if ( Dc_Attr->crBrushClr != crColor ) // if same, don't force a copy.
+    {
+       Dc_Attr->ulDirty_ |= DIRTY_FILL;
+       Dc_Attr->crBrushClr = crColor;
+    }
+  }
+  return OldColor;
+#endif
   return NtUserSetDCBrushColor(hdc, crColor);
 }
 
@@ -582,6 +612,24 @@ SetDCPenColor(
 	COLORREF crColor
 )
 {
+#if 0
+  PDC_ATTR Dc_Attr;
+  COLORREF OldColor = CLR_INVALID;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+  else
+  {
+     OldColor = (COLORREF) Dc_Attr->ulPenClr;
+     Dc_Attr->ulPenClr = (ULONG) crColor;
+
+    if ( Dc_Attr->crPenClr != crColor )
+    {
+       Dc_Attr->ulDirty_ |= DIRTY_LINE;
+       Dc_Attr->crPenClr = crColor;
+    }
+  }
+  return OldColor;
+#endif
   return NtUserSetDCPenColor(hdc, crColor);
 }
 

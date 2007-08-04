@@ -18,7 +18,6 @@
           __asm fistp out
 #endif
 
-#if 0 /* FIXME: enable this as soon as we have working usermode gdi */
 LONG
 FASTCALL
 EFtoF( EFLOAT_S * efp)
@@ -93,14 +92,26 @@ BOOL
 STDCALL
 DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
 {
+#if 0
   INT i;
   PDC_ATTR Dc_Attr;
  
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
-  for ( i = 0; i < Count; i++ )
-    CoordCnvP ( &Dc_Attr->mxDevicetoWorld, &Points[i] );
+  if (Dc_Attr->flXform & ( DEVICE_TO_WORLD_INVALID | // Force a full recalibration!
+                           PAGE_XLATE_CHANGED      | // Changes or Updates have been made,
+                           PAGE_EXTENTS_CHANGED    | // do processing in kernel space.
+                           WORLD_XFORM_CHANGED )
+#endif
+    return NtGdiTransformPoints( hDC, Points, Points, Count, 0); // Last is 0 or 2
+#if 0
+  else
+  {
+    for ( i = 0; i < Count; i++ )
+      CoordCnvP ( &Dc_Attr->mxDevicetoWorld, &Points[i] );
+  }
   return TRUE;
+#endif
 }
 
 
@@ -108,16 +119,28 @@ BOOL
 STDCALL
 LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 {
+#if 0
   INT i;
   PDC_ATTR Dc_Attr;
  
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
-  for ( i = 0; i < Count; i++ )
-    CoordCnvP ( &Dc_Attr->mxWorldToDevice, &Points[i] );
+  if (Dc_Attr->flXform & ( PAGE_XLATE_CHANGED   |  // Check for Changes and Updates
+                           PAGE_EXTENTS_CHANGED |
+                           WORLD_XFORM_CHANGED )
+#endif
+    return NtGdiTransformPoints( hDC, Points, Points, Count, 0);
+#if 0
+  else
+  {
+    for ( i = 0; i < Count; i++ )
+      CoordCnvP ( &Dc_Attr->mxWorldToDevice, &Points[i] );
+  }
   return TRUE;
+#endif
 }
 
+#if 0 /* FIXME: enable this as soon as we have working usermode gdi */
 
 // Will move to dc.c
 HGDIOBJ
