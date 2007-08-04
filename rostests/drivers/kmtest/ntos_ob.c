@@ -23,6 +23,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include "kmtest.h"
 
 //#define NDEBUG
