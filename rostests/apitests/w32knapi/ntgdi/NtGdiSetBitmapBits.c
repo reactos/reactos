@@ -10,7 +10,7 @@ NtGdiSetBitmapBits(
 }
 
 
-BOOL
+INT
 Test_NtGdiSetBitmapBits(PTESTINFO pti)
 {
 	BYTE Bits[50] = {0,1,2,3,4,5,6,7,8,9};
@@ -70,5 +70,5 @@ Test_NtGdiSetBitmapBits(PTESTINFO pti)
 
 	DeleteObject(hBitmap);
 
-	return TRUE;
+	return APISTATUS_NORMAL;
 }

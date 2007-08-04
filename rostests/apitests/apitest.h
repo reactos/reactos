@@ -4,11 +4,16 @@
 #define WINVER 0x501
 
 #include <stdlib.h>
-
 #include <stdarg.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <windows.h>
 
+#define APISTATUS_NORMAL 0
+#define APISTATUS_NOT_FOUND 1
+#define APISTATUS_UNIMPLEMENTED 2
+#define APISTATUS_ASSERTION_FAILED 3
+#define APISTATUS_REGRESSION 4
 
 /* type definitions */
 
@@ -18,9 +23,10 @@ typedef struct tagTESTINFO
 	INT failed;
 	INT rfailed;
 	BOOL bRegress;
+	INT nApiStatus;
 } TESTINFO, *PTESTINFO;
 
-typedef BOOL (*TESTPROC)(PTESTINFO);
+typedef INT (*TESTPROC)(PTESTINFO);
 
 typedef struct tagTEST
 {
@@ -77,7 +83,14 @@ typedef struct tagTEST
 	}
 
 
-int TestMain(LPWSTR pszExe);
+#define ASSERT(x) \
+	if (!(x)) \
+	{ \
+			printf("Assertion failed in %s:%d (%s)\n", __FILE__, __LINE__, #x);\
+			return APISTATUS_ASSERTION_FAILED; \
+	}
+
+int TestMain(LPWSTR pszExe, LPWSTR pszModule);
 extern TESTENTRY TestList[];
 INT NumTests(void);
 BOOL IsFunctionPresent(LPWSTR lpszFunction);

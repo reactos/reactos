@@ -10,7 +10,7 @@ NtGdiDdCreateDirectDrawObject(
 	return (HANDLE)Syscall(L"NtGdiDdCreateDirectDrawObject", 1, &hdc);
 }
 
-BOOL
+INT
 Test_NtGdiDdCreateDirectDrawObject(PTESTINFO pti)
 {
     HDC hdc=CreateDCW(L"Display",NULL,NULL,NULL);
@@ -21,5 +21,5 @@ Test_NtGdiDdCreateDirectDrawObject(PTESTINFO pti)
     
     DeleteDC(hdc);
 
-    return TRUE;
+    return APISTATUS_NORMAL;
 }

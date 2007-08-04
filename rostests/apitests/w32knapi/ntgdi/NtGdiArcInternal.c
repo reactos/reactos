@@ -1,7 +1,5 @@
 #include "../w32knapi.h"
 
-typedef int ARCTYPE;
-
 BOOL
 STDCALL
 NtGdiArcInternal(
@@ -19,7 +17,7 @@ NtGdiArcInternal(
 	return (BOOL)Syscall(L"NtGdiArcInternal", 10, &arctype);
 }
 
-BOOL
+INT
 Test_NtGdiArcInternal(PTESTINFO pti)
 {
 	HDC hDC = CreateDCW(L"Display",NULL,NULL,NULL);
@@ -53,5 +51,5 @@ Test_NtGdiArcInternal(PTESTINFO pti)
 
 	DeleteDC(hDC);
 
-	return TRUE;
+	return APISTATUS_NORMAL;
 }

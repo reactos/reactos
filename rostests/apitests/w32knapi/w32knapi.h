@@ -2,7 +2,14 @@
 #define _W32KNAPI_H
 
 #include "../apitest.h"
+
 #include <ddk/winddi.h>
+#include <ddk/ntddk.h>
+
+/* Public Win32K Headers */
+#include <win32k/callback.h>
+#include <win32k/ntusrtyp.h>
+#include <win32k/ntgdityp.h>
 
 #define OS_UNSUPPORTED 0
 #define OS_REACTOS	1

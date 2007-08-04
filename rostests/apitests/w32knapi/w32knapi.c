@@ -155,7 +155,7 @@ WinMain(HINSTANCE hInstance,
 
 	printf("\n");
 
-	TestMain(L"w32knapi.exe");
+	TestMain(L"w32knapi", L"win32k.sys Nt-Api");
 
 	return 0;
 }

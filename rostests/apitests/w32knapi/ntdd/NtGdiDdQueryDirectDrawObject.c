@@ -19,9 +19,9 @@ NtGdiDdQueryDirectDrawObject(
 	return (HANDLE)Syscall("NtGdiDdQueryDirectDrawObject", 11, &hDirectDrawLocal);
 }
 #endif
-BOOL
+INT
 Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 {
 
-    return TRUE;
+    return APISTATUS_NORMAL;
 }

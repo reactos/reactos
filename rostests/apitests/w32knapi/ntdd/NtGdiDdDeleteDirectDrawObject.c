@@ -10,10 +10,10 @@ NtGdiDdDeleteDirectDrawObject(
 	return (BOOL)Syscall(L"NtGdiDdDeleteDirectDrawObject", 1, &hDirectDrawLocal);
 }
 
-BOOL
+INT
 Test_NtGdiDdDeleteDirectDrawObject(PTESTINFO pti)
 {
     TEST(NtGdiDdDeleteDirectDrawObject(NULL) == 0);
 
-    return TRUE;
+    return APISTATUS_NORMAL;
 }
