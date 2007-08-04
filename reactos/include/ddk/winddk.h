@@ -9942,6 +9942,11 @@ PsGetCurrentThreadId(
   VOID);
 
 NTKERNELAPI
+HANDLE
+NTAPI
+PsGetProcessId(PEPROCESS Process);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetVersion(

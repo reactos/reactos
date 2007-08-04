@@ -72,6 +72,20 @@ Author:
 //
 #define OBJ_NAME_PATH_SEPARATOR                 L'\\'
 
+//
+// Object Information Classes for NtQueryInformationObject
+//
+typedef enum _OBJECT_INFORMATION_CLASS
+{
+    ObjectBasicInformation,
+    ObjectNameInformation,
+    ObjectTypeInformation,
+    ObjectTypesInformation,
+    ObjectHandleFlagInformation,
+    ObjectSessionInformation,
+    MaxObjectInfoClass
+} OBJECT_INFORMATION_CLASS;
+
 #else
 
 //
@@ -145,18 +159,6 @@ typedef enum _OB_OPEN_REASON
 #define DOSDEVICE_DRIVE_REMOTE                  4
 #define DOSDEVICE_DRIVE_CDROM                   5
 #define DOSDEVICE_DRIVE_RAMDISK                 6
-
-//
-// Object Information Classes for NtQueryInformationObject
-//
-typedef enum _OBJECT_INFORMATION_CLASS
-{
-    ObjectBasicInformation,
-    ObjectNameInformation,
-    ObjectTypeInformation,
-    ObjectAllTypesInformation,
-    ObjectHandleInformation
-} OBJECT_INFORMATION_CLASS;
 
 //
 // Dump Control Structure for Object Debugging
@@ -297,7 +299,7 @@ typedef struct _OBJECT_TYPE_INFORMATION
     ULONG DefaultNonPagedPoolCharge;
 } OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
 
-#ifndef NTOS_MODE_USER
+#ifdef NTOS_MODE_USER
 
 typedef struct _OBJECT_BASIC_INFORMATION
 {
@@ -313,6 +315,8 @@ typedef struct _OBJECT_BASIC_INFORMATION
     ULONG SecurityDescriptorLength;
     LARGE_INTEGER CreateTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
+
+#else
 
 typedef struct _OBJECT_CREATE_INFORMATION
 {

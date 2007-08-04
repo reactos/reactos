@@ -100,7 +100,7 @@ PopGetSysButton(
 	IN PVOID Context)
 {
 	PSYS_BUTTON_CONTEXT SysButtonContext = Context;
-	PIO_WORKITEM CurrentWorkItem = SysButtonContext->WorkItem;;
+	PIO_WORKITEM CurrentWorkItem = SysButtonContext->WorkItem;
 	PIRP Irp;
 
 	/* Get button pressed (IOCTL_GET_SYS_BUTTON_EVENT) */

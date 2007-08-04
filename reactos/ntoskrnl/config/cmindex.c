@@ -722,7 +722,7 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
                 HvReleaseCell(Hive, CellToRelease);
 
                 /* Make sure we found something valid */
-                if (Found < 0) break;
+                if (Found & 0x80000000) break;
 
                 /* Get the new Index Root and set the new cell to be released */
                 if (SubKey == HCELL_NIL) continue;
@@ -749,7 +749,7 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
                 HvReleaseCell(Hive, CellToRelease);
 
                 /* Make sure we found a valid index */
-                if (Found < 0) break;
+                if (Found & 0x80000000) break;
             }
             else
             {

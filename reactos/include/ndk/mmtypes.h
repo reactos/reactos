@@ -58,6 +58,7 @@ Author:
 #define MEM_PHYSICAL                                        0x400000
 #define MEM_ROTATE                                          0x800000
 #define MEM_IMAGE                                           SEC_IMAGE
+#define MEM_DOS_LIM                                         0x40000000
 
 //
 // Section Flags for NtCreateSection

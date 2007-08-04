@@ -609,13 +609,31 @@ typedef enum _FILE_STORAGE_TYPE {
     StorageTypeStream
 } FILE_STORAGE_TYPE;
 
-typedef enum _OBJECT_INFO_CLASS {
-    ObjectBasicInfo,
-    ObjectNameInfo,
-    ObjectTypeInfo,
-    ObjectAllTypesInfo,
-    ObjectProtectionInfo
-} OBJECT_INFO_CLASS;
+typedef enum _OBJECT_INFORMATION_CLASS
+{
+    ObjectBasicInformation,
+    ObjectNameInformation,
+    ObjectTypeInformation,
+    ObjectTypesInformation,
+    ObjectHandleFlagInformation,
+    ObjectSessionInformation,
+    MaxObjectInfoClass
+} OBJECT_INFORMATION_CLASS;
+
+typedef struct _OBJECT_BASIC_INFORMATION
+{
+    ULONG Attributes;
+    ACCESS_MASK GrantedAccess;
+    ULONG HandleCount;
+    ULONG PointerCount;
+    ULONG PagedPoolCharge;
+    ULONG NonPagedPoolCharge;
+    ULONG Reserved[ 3 ];
+    ULONG NameInfoSize;
+    ULONG TypeInfoSize;
+    ULONG SecurityDescriptorSize;
+    LARGE_INTEGER CreationTime;
+} OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
 
 typedef struct _KAPC_STATE {
     LIST_ENTRY  ApcListHead[2];

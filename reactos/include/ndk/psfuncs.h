@@ -118,11 +118,6 @@ PsRevertThreadToSelf(
 // Misc. Functions
 //
 NTKERNELAPI
-HANDLE
-NTAPI
-PsGetProcessId(PEPROCESS Process);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupProcessThreadByCid(

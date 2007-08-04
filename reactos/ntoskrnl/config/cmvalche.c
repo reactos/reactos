@@ -512,7 +512,8 @@ CmpQueryKeyValueData(IN PKEY_OBJECT KeyObject,
                 Info->KeyValueFullInformation.DataOffset = AlignedData;
 
                 /* Only the data remains to be copied */
-                SizeLeft = max(0, Length - AlignedData);
+                SizeLeft = (((LONG)Length - (LONG)AlignedData) < 0) ?
+                           0 : (Length - AlignedData);
                 Size = KeySize;
 
                 /* Check if the caller has no space for it */

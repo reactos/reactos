@@ -1411,7 +1411,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
      * Make sure this isn't a generic type query, since the caller doesn't
      * have to give a handle for it
      */
-    if (ObjectInformationClass != ObjectAllTypesInformation)
+    if (ObjectInformationClass != ObjectTypesInformation)
     {
         /* Reference the object */
         Status = ObReferenceObjectByHandle(ObjectHandle,
@@ -1463,27 +1463,27 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 }
 
                 /* Copy quota information */
-                BasicInfo->PagedPoolUsage = 0; /* FIXME*/
-                BasicInfo->NonPagedPoolUsage = 0; /* FIXME*/
+                BasicInfo->PagedPoolCharge = 0; /* FIXME*/
+                BasicInfo->NonPagedPoolCharge = 0; /* FIXME*/
 
                 /* Copy name information */
-                BasicInfo->NameInformationLength = 0; /* FIXME*/
-                BasicInfo->TypeInformationLength = 0; /* FIXME*/
+                BasicInfo->NameInfoSize = 0; /* FIXME*/
+                BasicInfo->TypeInfoSize = 0; /* FIXME*/
 
                 /* Copy security information */
-                BasicInfo->SecurityDescriptorLength = 0; /* FIXME*/
+                BasicInfo->SecurityDescriptorSize = 0; /* FIXME*/
 
                 /* Check if this is a symlink */
                 if (ObjectHeader->Type == ObSymbolicLinkType)
                 {
                     /* Return the creation time */
-                    BasicInfo->CreateTime.QuadPart =
+                    BasicInfo->CreationTime.QuadPart =
                         ((POBJECT_SYMBOLIC_LINK)Object)->CreationTime.QuadPart;
                 }
                 else
                 {
                     /* Otherwise return 0 */
-                    BasicInfo->CreateTime.QuadPart = (ULONGLONG)0;
+                    BasicInfo->CreationTime.QuadPart = (ULONGLONG)0;
                 }
 
                 /* Break out with success */
@@ -1513,13 +1513,13 @@ NtQueryObject(IN HANDLE ObjectHandle,
                 break;
 
             /* Information about all types */
-            case ObjectAllTypesInformation:
+            case ObjectTypesInformation:
                 DPRINT1("NOT IMPLEMENTED!\n");
                 Status = STATUS_NOT_IMPLEMENTED;
                 break;
 
             /* Information about the handle flags */
-            case ObjectHandleInformation:
+            case ObjectHandleFlagInformation:
 
                 /* Validate length */
                 InfoLength = sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION);
@@ -1609,7 +1609,7 @@ NtSetInformationObject(IN HANDLE ObjectHandle,
     PAGED_CODE();
 
     /* Validate the information class */
-    if (ObjectInformationClass != ObjectHandleInformation)
+    if (ObjectInformationClass != ObjectHandleFlagInformation)
     {
         /* Invalid class */
         return STATUS_INVALID_INFO_CLASS;

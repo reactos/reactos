@@ -358,7 +358,6 @@ extern LCID PsDefaultSystemLocaleId;
 extern LIST_ENTRY PspReaperListHead;
 extern WORK_QUEUE_ITEM PspReaperWorkItem;
 extern BOOLEAN PspReaping;
-extern PEPROCESS PsInitialSystemProcess;
 extern PEPROCESS PsIdleProcess;
 extern LIST_ENTRY PsActiveProcessHead;
 extern KGUARDED_MUTEX PspActiveProcessMutex;

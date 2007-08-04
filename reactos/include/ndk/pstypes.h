@@ -37,16 +37,6 @@ Author:
 #define USER_SHARED_DATA                        (0x7FFE0000)
 
 //
-// Kernel Exports
-//
-#ifndef NTOS_MODE_USER
-
-//extern NTSYSAPI struct _EPROCESS* PsInitialSystemProcess;
-//extern NTSYSAPI POBJECT_TYPE PsProcessType;
-
-#endif
-
-//
 // Global Flags
 //
 #define FLG_STOP_ON_EXCEPTION                   0x00000001
@@ -423,7 +413,7 @@ typedef enum _PSW32THREADCALLOUTTYPE
 //
 struct _W32THREAD;
 struct _W32PROCESS;
-struct _ETHREAD;
+//struct _ETHREAD;
 struct _WIN32_POWEREVENT_PARAMETERS;
 struct _WIN32_POWERSTATE_PARAMETERS;
 struct _WIN32_JOBCALLOUT_PARAMETERS;
@@ -1148,7 +1138,7 @@ typedef struct _ETHREAD
     KSEMAPHORE AlpcWaitSemaphore;
     ULONG CacheManagerCount;
 #endif
-} ETHREAD;
+} ETHREAD, *PETHREAD;
 
 //
 // Executive Process (EPROCESS)
@@ -1344,7 +1334,7 @@ typedef struct _EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
-} EPROCESS;
+} EPROCESS, *PEPROCESS;
 
 //
 // Job Token Filter Data

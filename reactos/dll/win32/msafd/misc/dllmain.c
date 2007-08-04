@@ -1903,7 +1903,7 @@ BOOLEAN SockCreateOrReferenceAsyncThread(VOID)
 		HandleFlags.ProtectFromClose = TRUE;
 		HandleFlags.Inherit = FALSE;
 		Status = NtSetInformationObject(SockAsyncCompletionPort,
-						ObjectHandleInformation,
+						ObjectHandleFlagInformation,
 						&HandleFlags,
 						sizeof(HandleFlags));
 	}
@@ -2014,7 +2014,7 @@ BOOLEAN SockGetAsyncSelectHelperAfdHandle(VOID)
 	HandleFlags.ProtectFromClose = TRUE;
 	HandleFlags.Inherit = FALSE;
 	Status = NtSetInformationObject(SockAsyncCompletionPort,
-					ObjectHandleInformation,
+					ObjectHandleFlagInformation,
 					&HandleFlags,
 					sizeof(HandleFlags));
 
