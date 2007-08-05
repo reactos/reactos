@@ -33,37 +33,7 @@ CancelDC(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-HMETAFILE
-STDCALL
-CloseMetaFile(
-	HDC	a0
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeleteMetaFile(
-	HMETAFILE	a0
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
+  
 
 /*
  * @unimplemented

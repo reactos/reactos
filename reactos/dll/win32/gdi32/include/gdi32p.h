@@ -35,12 +35,12 @@ typedef INT
 
 /* TYPES *********************************************************************/
 
-// Based on wmfapi.h and Wine. This is the DC_ATTR for a MetaDC file.
+// Based on wmfapi.h and Wine.
 typedef struct tagMETAFILEDC {
   PVOID      pvMetaBuffer;
   HANDLE     hFile;
   DWORD      Size;
-  PMETAHEADER mf;
+  METAHEADER mh;
   UINT       handles_size, cur_handles;
   HGDIOBJ   *handles;
 
@@ -49,9 +49,17 @@ typedef struct tagMETAFILEDC {
   HGDIOBJ    Brush;
   HGDIOBJ    Palette;
   HGDIOBJ    Font;
+  
+  WCHAR      Filename[MAX_PATH+2];
   // Add more later.
 } METAFILEDC,*PMETAFILEDC;
 
+// Metafile Entry handle
+typedef struct tagMF_ENTRY {
+  LIST_ENTRY   List;
+  HGDIOBJ      hmDC;             // Handle return from NtGdiCreateClientObj.
+  PMETAFILEDC pmfDC;
+} MF_ENTRY, *PMF_ENTRY;
 
 typedef struct tagENHMETAFILE {
   PVOID      pvMetaBuffer;
