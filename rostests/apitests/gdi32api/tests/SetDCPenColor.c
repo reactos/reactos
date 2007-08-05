@@ -6,7 +6,7 @@ Test_SetDCPenColor(PTESTINFO pti)
 	HDC hScreenDC, hDC;
 
 	// Test an incorrect DC
-	TEST(SetDCPenColor(0, RGB(0,0,0)) == CLR_INVALID);
+	RTEST(SetDCPenColor(0, RGB(0,0,0)) == CLR_INVALID);
 
 	// Get the Screen DC
 	hScreenDC = GetDC(NULL);
@@ -34,7 +34,7 @@ Test_SetDCPenColor(PTESTINFO pti)
 
 	// Test CLR_INVALID, it sets CLR_INVALID!
 	SetDCPenColor(hDC, CLR_INVALID);
-	TEST(SetDCPenColor(hDC, RGB(0,0,0)) == CLR_INVALID);
+	RTEST(SetDCPenColor(hDC, RGB(0,0,0)) == CLR_INVALID);
 
 	// Delete the DC
 	DeleteDC(hDC);

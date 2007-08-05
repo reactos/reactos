@@ -18,11 +18,11 @@ Test_SetSysColors(PTESTINFO pti)
 	}
 
 	TEST((UINT)SetSysColors(0, nElements, crColors) == 1);
-	TEST((UINT)SetSysColors(1, nElements, crColors) == 1);
-	TEST((UINT)SetSysColors(2, nElements, crColors) == 1);
+	RTEST((UINT)SetSysColors(1, nElements, crColors) == 1);
+	RTEST((UINT)SetSysColors(2, nElements, crColors) == 1);
 	
 	/* try more than NUM_SYSCOLORS */
-	TEST((UINT)SetSysColors(55, nElements, crColors) == 1);
+	RTEST((UINT)SetSysColors(55, nElements, crColors) == 1);
 
 	/* restore old SysColors */
 	SetSysColors(NUM_SYSCOLORS, nElements, crOldColors);

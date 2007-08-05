@@ -22,36 +22,36 @@ Test_CreatePen(PTESTINFO pti)
 	/* PS_GEOMETRIC | PS_DASHDOT = 0x00001011 will become PS_SOLID */
 	logpen.lopnStyle = 22;
 	hPen = CreatePen(PS_GEOMETRIC | PS_DASHDOT, 5, RGB(1,2,3));
-	TEST(hPen);
+	RTEST(hPen);
 	GetObject(hPen, sizeof(logpen), &logpen);
-	TEST(logpen.lopnStyle == PS_SOLID);
+	RTEST(logpen.lopnStyle == PS_SOLID);
 	DeleteObject(hPen);
 
 	/* PS_USERSTYLE will become PS_SOLID */
 	logpen.lopnStyle = 22;
 	hPen = CreatePen(PS_USERSTYLE, 5, RGB(1,2,3));
-	TEST(hPen);
+	RTEST(hPen);
 	GetObject(hPen, sizeof(logpen), &logpen);
-	TEST(logpen.lopnStyle == PS_SOLID);
+	RTEST(logpen.lopnStyle == PS_SOLID);
 	DeleteObject(hPen);
 
 	/* PS_ALTERNATE will become PS_SOLID */
 	logpen.lopnStyle = 22;
 	hPen = CreatePen(PS_ALTERNATE, 5, RGB(1,2,3));
-	TEST(hPen);
+	RTEST(hPen);
 	GetObject(hPen, sizeof(logpen), &logpen);
-	TEST(logpen.lopnStyle == PS_SOLID);
+	RTEST(logpen.lopnStyle == PS_SOLID);
 	DeleteObject(hPen);
 
 	/* PS_INSIDEFRAME is ok */
 	logpen.lopnStyle = 22;
 	hPen = CreatePen(PS_INSIDEFRAME, 5, RGB(1,2,3));
-	TEST(hPen);
+	RTEST(hPen);
 	GetObject(hPen, sizeof(logpen), &logpen);
-	TEST(logpen.lopnStyle == PS_INSIDEFRAME);
+	RTEST(logpen.lopnStyle == PS_INSIDEFRAME);
 	DeleteObject(hPen);
 
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	return APISTATUS_NORMAL;
 }

@@ -14,14 +14,14 @@ Test_ExtCreatePen(PTESTINFO pti)
 	if (!hPen) return FALSE;
 
 	/* Test if we have an EXTPEN */
-	TEST(GDI_HANDLE_GET_TYPE(hPen) == GDI_OBJECT_TYPE_EXTPEN);
+	RTEST(GDI_HANDLE_GET_TYPE(hPen) == GDI_OBJECT_TYPE_EXTPEN);
 	DeleteObject(hPen);
 
 	/* test userstyles */
 	hPen = ExtCreatePen(PS_GEOMETRIC | PS_USERSTYLE, 5, &logbrush, 17, (CONST DWORD*)&dwStyles);
-	TEST(hPen == 0);
+	RTEST(hPen == 0);
 	hPen = ExtCreatePen(PS_GEOMETRIC | PS_USERSTYLE, 5, &logbrush, 16, (CONST DWORD*)&dwStyles);
-	TEST(hPen != 0);
+	RTEST(hPen != 0);
 
 	DeleteObject(hPen);
 

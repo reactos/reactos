@@ -13,7 +13,7 @@ Test_CreateCompatibleDC(PTESTINFO pti)
 	}
 
 	hDC = CreateCompatibleDC(hDCScreen);
-	TEST(hDC != NULL);
+	RTEST(hDC != NULL);
 
 	// Test if first selected pen is BLACK_PEN (? or same as screen DC's pen?)
 	TEST(SelectObject(hDC, GetStockObject(DC_PEN)) == GetStockObject(BLACK_PEN));
@@ -27,7 +27,7 @@ Test_CreateCompatibleDC(PTESTINFO pti)
 	DeleteDC(hDC);
 	hDC = CreateCompatibleDC(hDCScreen);
 	hDC2 = CreateCompatibleDC(hOldDC);
-	TEST(hDC2 == NULL);
+	RTEST(hDC2 == NULL);
 	if (hDC2 != NULL) DeleteDC(hDC2);
 
 	// cleanup

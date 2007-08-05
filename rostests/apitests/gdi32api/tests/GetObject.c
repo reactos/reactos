@@ -276,18 +276,18 @@ Test_ExtPen(PTESTINFO pti)
 	TEST(extlogpen.elpPenStyle == (PS_GEOMETRIC | PS_DASH));
 	TEST(extlogpen.elpWidth == 5);
 	TEST(extlogpen.elpBrushStyle == 0);
-	TEST(extlogpen.elpColor == RGB(1,2,3));
-	TEST(extlogpen.elpHatch == 22);
-	TEST(extlogpen.elpNumEntries == 0);
+	RTEST(extlogpen.elpColor == RGB(1,2,3));
+	RTEST(extlogpen.elpHatch == 22);
+	RTEST(extlogpen.elpNumEntries == 0);
 	DeleteObject(hPen);
 
 	/* A maximum of 16 Styles is allowed */
 	hPen = ExtCreatePen(PS_GEOMETRIC | PS_USERSTYLE, 5, &logbrush, 16, (CONST DWORD*)&dwStyles);
-	TEST(GetObject(hPen, 0, NULL) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD));
-	TEST(GetObject(hPen, sizeof(EXTLOGPEN) + 15*sizeof(DWORD), &elpUserStyle) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD));
-	TEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[0] == 0);
-	TEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[1] == 1);
-	TEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[15] == 15);
+	RTEST(GetObject(hPen, 0, NULL) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD));
+	RTEST(GetObject(hPen, sizeof(EXTLOGPEN) + 15*sizeof(DWORD), &elpUserStyle) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD));
+	RTEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[0] == 0);
+	RTEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[1] == 1);
+	RTEST(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[15] == 15);
 	DeleteObject(hPen);
 
 	return TRUE;
