@@ -122,7 +122,8 @@ typedef struct _DC
   HPALETTE PalIndexed;
 
   WIN_DC_INFO  w;
-
+  DC_ATTR Dc_Attr;
+  
   HANDLE hFile;  
   LPENHMETAHEADER emh;
 
