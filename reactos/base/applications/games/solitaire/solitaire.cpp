@@ -206,6 +206,9 @@ BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         CheckRadioButton(hDlg, IDC_OPT_DRAWONE, IDC_OPT_DRAWTHREE,
                          (dwOptions & OPTION_THREE_CARDS) ? IDC_OPT_DRAWTHREE : IDC_OPT_DRAWONE);
 
+        CheckDlgButton(hDlg,
+                       IDC_OPT_STATUSBAR,
+                       (dwOptions & OPTION_SHOW_STATUS) ? BST_CHECKED : BST_UNCHECKED);
         return TRUE;
 
     case WM_COMMAND:
@@ -215,6 +218,11 @@ BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             dwOptions &= ~OPTION_THREE_CARDS;
             if (IsDlgButtonChecked(hDlg, IDC_OPT_DRAWTHREE) == BST_CHECKED)
                 dwOptions |= OPTION_THREE_CARDS;
+
+            if (IsDlgButtonChecked(hDlg, IDC_OPT_STATUSBAR) == BST_CHECKED)
+                dwOptions |= OPTION_SHOW_STATUS;
+            else
+                dwOptions &= ~OPTION_SHOW_STATUS;
 
             EndDialog(hDlg, TRUE);
             return TRUE;
@@ -231,11 +239,34 @@ BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID ShowGameOptionsDlg(HWND hwnd)
 {
     DWORD dwOldOptions = dwOptions;
+    RECT rcMain, rcStatus;
+    int nWidth, nHeight, nStatusHeight;
 
     if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc))
     {
         if ((dwOldOptions & OPTION_THREE_CARDS) != (dwOptions & OPTION_THREE_CARDS))
             NewGame();
+
+        if ((dwOldOptions & OPTION_SHOW_STATUS) != (dwOptions & OPTION_SHOW_STATUS))
+        {
+            GetClientRect(hwndMain, &rcMain);
+            nHeight = rcMain.bottom - rcMain.top;
+            nWidth = rcMain.right - rcMain.left;
+
+            if (dwOptions & OPTION_SHOW_STATUS)
+            {
+                ShowWindow(hwndStatus, SW_SHOW);
+                GetWindowRect(hwndStatus, &rcStatus);
+                nStatusHeight = rcStatus.bottom - rcStatus.top;
+                MoveWindow(SolWnd, 0, 0, nWidth, nHeight-nStatusHeight, TRUE);
+                MoveWindow(hwndStatus, 0, nHeight-nStatusHeight, nWidth, nHeight, TRUE);
+            }
+            else
+            {
+                ShowWindow(hwndStatus, SW_HIDE);
+                MoveWindow(SolWnd, 0, 0, nWidth, nHeight, TRUE);
+            }
+        }
     }
 }
 
@@ -413,9 +444,10 @@ VOID ShowDeckOptionsDlg(HWND hwnd)
 LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
     static int nWidth, nHeight;
-    int nStatusHeight = 0;//20;
     int parts[] = { 100, -1 };
     int ret;
+    RECT rc;
+    int nStatusHeight = 0;
 
     MINMAXINFO *mmi;
 
@@ -428,8 +460,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
         SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
         SendMessage(hwndStatus, SB_SETTEXT, 0 | SBT_NOBORDERS, (LPARAM)"");
-
-        ShowWindow(hwndStatus, SW_HIDE);
 
         SolWnd.Create(hwnd, WS_EX_CLIENTEDGE, WS_CHILD|WS_VISIBLE, 0, 0, 0, 0);
 
@@ -449,8 +479,17 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         nWidth  = LOWORD(lParam);
         nHeight = HIWORD(lParam);
 
-        MoveWindow(SolWnd, 0, 0, nWidth, nHeight-nStatusHeight, TRUE);
-        //MoveWindow(hwndStatus, 0, nHeight-nStatusHeight, nWidth, nHeight, TRUE);
+        if (dwOptions & OPTION_SHOW_STATUS)
+        {
+            GetWindowRect(hwndStatus, &rc);
+            nStatusHeight = rc.bottom - rc.top;
+            MoveWindow(SolWnd, 0, 0, nWidth, nHeight-nStatusHeight, TRUE);
+            MoveWindow(hwndStatus, 0, nHeight-nStatusHeight, nWidth, nHeight, TRUE);
+        }
+        else
+        {
+            MoveWindow(SolWnd, 0, 0, nWidth, nHeight, TRUE);
+        }
         //parts[0] = nWidth - 256;
         //SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
         return 0;

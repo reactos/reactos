@@ -5,6 +5,7 @@ extern CardWindow SolWnd;
 extern TCHAR szAppName[];
 extern bool fGameStarted;
 
+#define OPTION_SHOW_STATUS   4
 #define OPTION_THREE_CARDS   8
 #define CARDBACK_START IDC_CARDBACK1
 #define CARDBACK_END IDC_CARDBACK4
