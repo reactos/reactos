@@ -611,7 +611,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * Retrieve the page from the cache segment that we actually want.
        */
       (*Page) = MmGetPhysicalAddress((char*)BaseAddress +
-                                     FileOffset - BaseOffset).QuadPart >> PAGE_SHIFT;
+                                     FileOffset - BaseOffset).LowPart >> PAGE_SHIFT;
 
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, TRUE);
    }

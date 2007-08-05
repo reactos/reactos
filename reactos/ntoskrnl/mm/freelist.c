@@ -183,8 +183,8 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 
    KeAcquireSpinLock(&PageListLock, &oldIrql);
 
-   last = min(HighestAcceptableAddress.QuadPart / PAGE_SIZE, MmPageArraySize - 1);
-   boundary = BoundaryAddressMultiple.QuadPart / PAGE_SIZE;
+   last = min(HighestAcceptableAddress.LowPart / PAGE_SIZE, MmPageArraySize - 1);
+   boundary = BoundaryAddressMultiple.LowPart / PAGE_SIZE;
 
    for (j = 0; j < 2; j++)
    {
@@ -195,7 +195,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
        * pages above the 16MB area because the caller has specify an upper limit. 
        * The second try uses the specified lower limit.
        */
-      for (i = j == 0 ? 0x100000 / PAGE_SIZE : LowestAcceptableAddress.QuadPart / PAGE_SIZE; i <= last; )
+      for (i = j == 0 ? 0x100000 / PAGE_SIZE : LowestAcceptableAddress.LowPart / PAGE_SIZE; i <= last; )
       {
          if (MmPageArray[i].Flags.Type == MM_PHYSICAL_PAGE_FREE)
          {
@@ -1017,8 +1017,8 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
    if (NumberOfPages == 0)
       return 0;
 
-   LowestPage = LowestAddress.QuadPart / PAGE_SIZE;
-   HighestPage = HighestAddress.QuadPart / PAGE_SIZE;
+   LowestPage = LowestAddress.LowPart / PAGE_SIZE;
+   HighestPage = HighestAddress.LowPart / PAGE_SIZE;
    if ((HighestAddress.u.LowPart % PAGE_SIZE) != 0)
       HighestPage++;
 

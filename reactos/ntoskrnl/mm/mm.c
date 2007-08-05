@@ -273,7 +273,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SHARED_DATA:
-	    Pfn = MmSharedDataPagePhysicalAddress.QuadPart >> PAGE_SHIFT;
+            Pfn = MmSharedDataPagePhysicalAddress.LowPart >> PAGE_SHIFT;
             Status =
                MmCreateVirtualMapping(PsGetCurrentProcess(),
                                       (PVOID)PAGE_ROUND_DOWN(Address),

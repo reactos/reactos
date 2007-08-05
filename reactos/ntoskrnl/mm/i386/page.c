@@ -625,7 +625,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 
    if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
    {
-      PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
+      PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.LowPart));
       if (PageDir == NULL)
       {
          KEBUGCHECK(0);

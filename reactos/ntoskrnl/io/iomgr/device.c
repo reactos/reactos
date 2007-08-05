@@ -765,7 +765,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
      * because that's only padding for the DevObjExt and not part of the Object.
      */
     CreatedDeviceObject->Type = IO_TYPE_DEVICE;
-    CreatedDeviceObject->Size = (USHORT)sizeof(DEVICE_OBJECT) + DeviceExtensionSize;
+    CreatedDeviceObject->Size = sizeof(DEVICE_OBJECT) + (USHORT)DeviceExtensionSize;
 
     /* The kernel extension is after the driver internal extension */
     DeviceObjectExtension = (PDEVOBJ_EXTENSION)

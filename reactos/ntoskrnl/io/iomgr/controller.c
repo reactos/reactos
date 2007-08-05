@@ -92,7 +92,7 @@ IoCreateController(IN ULONG Size)
     /* Zero the Object and set its data */
     RtlZeroMemory(Controller, sizeof(CONTROLLER_OBJECT) + Size);
     Controller->Type = IO_TYPE_CONTROLLER;
-    Controller->Size = (CSHORT)sizeof(CONTROLLER_OBJECT) + Size;
+    Controller->Size = sizeof(CONTROLLER_OBJECT) + (CSHORT)Size;
     Controller->ControllerExtension = (Controller + 1);
 
     /* Initialize its Queue */

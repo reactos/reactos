@@ -165,7 +165,7 @@ typedef struct
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    LONGLONG FileOffset;		/* start offset into the file for image sections */		     
+    LONG FileOffset;		/* start offset into the file for image sections */		     
     ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
     ULONG RawLength;		/* length of the segment which is part of the mapped file */
     ULONG Length;			/* absolute length of the segment */
@@ -184,8 +184,8 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
     ULONG_PTR StackReserve;
     ULONG_PTR StackCommit;
     ULONG_PTR EntryPoint;
-    ULONG Subsystem;
-    ULONG ImageCharacteristics;
+    USHORT Subsystem;
+    USHORT ImageCharacteristics;
     USHORT MinorSubsystemVersion;
     USHORT MajorSubsystemVersion;
     USHORT Machine;

@@ -1094,7 +1094,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         }
 
         /* Update length */
-        CmCSDVersionString.MaximumLength = (USHORT)sizeof(Buffer) - Remaining;
+        CmCSDVersionString.MaximumLength = sizeof(Buffer) - (USHORT)Remaining;
     }
 
     /* Check if we have an RC number */
