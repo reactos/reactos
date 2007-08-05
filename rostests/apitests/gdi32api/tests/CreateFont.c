@@ -1,4 +1,4 @@
-#include "..\gdi32api.h"
+#include "../gdi32api.h"
 
 #define INVALIDFONT "ThisFontDoesNotExist"
 

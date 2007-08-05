@@ -1,4 +1,4 @@
-#include "..\gdi32api.h"
+#include "../gdi32api.h"
 
 INT
 Test_CreateRectRgn(PTESTINFO pti)
