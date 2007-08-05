@@ -1,0 +1,99 @@
+/*
+ *  ReactOS Bavarian Cards
+ *
+ *  Copyright (C) 2007  Filip Navara <xnavara@volny.org>
+ *                      Daniel Reimer <reimer.daniel@freenet.de>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include <windows.h>
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"Bavarian Cardplaying Helper DLL\0"
+#define REACTOS_STR_INTERNAL_NAME	"cardsbav\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"cardsbav.dll\0"
+#include <reactos/version.rc>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 BITMAP "res/EichelAs.bmp"
+2 BITMAP "res/Eichel2.bmp"
+3 BITMAP "res/Eichel3.bmp"
+4 BITMAP "res/Eichel4.bmp"
+5 BITMAP "res/Eichel5.bmp"
+6 BITMAP "res/Eichel6.bmp"
+7 BITMAP "res/Eichel7.bmp"
+8 BITMAP "res/Eichel8.bmp"
+9 BITMAP "res/Eichel9.bmp"
+10 BITMAP "res/Eichel10.bmp"
+11 BITMAP "res/EichelUnter.bmp"
+12 BITMAP "res/EichelOber.bmp"
+13 BITMAP "res/EichelKoenig.bmp"
+14 BITMAP "res/SchellenAs.bmp"
+15 BITMAP "res/Schellen2.bmp"
+16 BITMAP "res/Schellen3.bmp"
+17 BITMAP "res/Schellen4.bmp"
+18 BITMAP "res/Schellen5.bmp"
+19 BITMAP "res/Schellen6.bmp"
+20 BITMAP "res/Schellen7.bmp"
+21 BITMAP "res/Schellen8.bmp"
+22 BITMAP "res/Schellen9.bmp"
+23 BITMAP "res/Schellen10.bmp"
+24 BITMAP "res/SchellenUnter.bmp"
+25 BITMAP "res/SchellenOber.bmp"
+26 BITMAP "res/SchellenKoenig.bmp"
+27 BITMAP "res/HerzAs.bmp"
+28 BITMAP "res/Herz2.bmp"
+29 BITMAP "res/Herz3.bmp"
+30 BITMAP "res/Herz4.bmp"
+31 BITMAP "res/Herz5.bmp"
+32 BITMAP "res/Herz6.bmp"
+33 BITMAP "res/Herz7.bmp"
+34 BITMAP "res/Herz8.bmp"
+35 BITMAP "res/Herz9.bmp"
+36 BITMAP "res/Herz10.bmp"
+37 BITMAP "res/HerzUnter.bmp"
+38 BITMAP "res/HerzOber.bmp"
+39 BITMAP "res/HerzKoenig.bmp"
+40 BITMAP "res/GrasAs.bmp"
+41 BITMAP "res/Gras2.bmp"
+42 BITMAP "res/Gras3.bmp"
+43 BITMAP "res/Gras4.bmp"
+44 BITMAP "res/Gras5.bmp"
+45 BITMAP "res/Gras6.bmp"
+46 BITMAP "res/Gras7.bmp"
+47 BITMAP "res/Gras8.bmp"
+48 BITMAP "res/Gras9.bmp"
+49 BITMAP "res/Gras10.bmp"
+50 BITMAP "res/GrasUnter.bmp"
+51 BITMAP "res/GrasOber.bmp"
+52 BITMAP "res/GrasKoenig.bmp"
+53 BITMAP "res/FreeCard.bmp"
+54 BITMAP "res/Ruecken.bmp"
+55 BITMAP "res/Ruecken.bmp"
+56 BITMAP "res/Ruecken.bmp"
+57 BITMAP "res/Ruecken.bmp"
+58 BITMAP "res/Ruecken.bmp"
+59 BITMAP "res/Ruecken.bmp"
+60 BITMAP "res/Ruecken.bmp"
+61 BITMAP "res/Ruecken.bmp"
+62 BITMAP "res/Ruecken.bmp"
+63 BITMAP "res/Ruecken.bmp"
+64 BITMAP "res/Ruecken.bmp"
+65 BITMAP "res/Ruecken.bmp"
+66 BITMAP "res/Joker.bmp"
+67 BITMAP "res/XSign.bmp"
+68 BITMAP "res/OSign.bmp"
