@@ -20,7 +20,9 @@ typedef struct _GLOBAL_DATA
     STICKYKEYS stickyKeys;
     STICKYKEYS oldStickyKeys;
     FILTERKEYS filterKeys;
+    FILTERKEYS oldFilterKeys;
     TOGGLEKEYS toggleKeys;
+    TOGGLEKEYS oldToggleKeys;
     BOOL bKeyboardPref;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
@@ -166,13 +168,26 @@ ToggleKeysDlgProc(HWND hwndDlg,
             pGlobalData = (PGLOBAL_DATA)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
+            memcpy(&pGlobalData->oldToggleKeys,
+                   &pGlobalData->toggleKeys,
+                   sizeof(STICKYKEYS));
+
+            CheckDlgButton(hwndDlg,
+                           IDC_TOGGLE_ACTIVATE_CHECK,
+                           pGlobalData->toggleKeys.dwFlags & TKF_HOTKEYACTIVE ? BST_CHECKED : BST_UNCHECKED);
+
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_TOGGLE_ACTIVATE_CHECK:
+                    pGlobalData->toggleKeys.dwFlags ^= TKF_HOTKEYACTIVE;
+                    break;
+
                 case IDOK:
-                    EndDialog(hwndDlg, TRUE);
+                    EndDialog(hwndDlg,
+                              (pGlobalData->toggleKeys.dwFlags != pGlobalData->oldToggleKeys.dwFlags));
                     break;
 
                 case IDCANCEL:
