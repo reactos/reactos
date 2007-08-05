@@ -306,7 +306,7 @@ NtGdiStretchBlt@48
 NtGdiStrokeAndFillPath@4
 NtGdiStrokePath@4
 NtGdiSwapBuffers@4
-;NtGdiTransformPoints@20
+NtGdiTransformPoints@20
 NtGdiTransparentBlt@44
 ;NtGdiUnloadPrinterDriver@8
 ;NtGdiUMPDEngFreeUserMem@4

@@ -1,5 +1,5 @@
 #include "../w32knapi.h"
-#if 0
+
 W32KAPI
 BOOL STDCALL 
 NtGdiDdQueryDirectDrawObject(
@@ -16,9 +16,9 @@ NtGdiDdQueryDirectDrawObject(
     DWORD *puFourCC
 )
 {
-	return (HANDLE)Syscall("NtGdiDdQueryDirectDrawObject", 11, &hDirectDrawLocal);
+	return (BOOL)Syscall(L"NtGdiDdQueryDirectDrawObject", 11, &hDirectDrawLocal);
 }
-#endif
+
 INT
 Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 {

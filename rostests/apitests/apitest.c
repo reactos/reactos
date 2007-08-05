@@ -20,10 +20,10 @@ WriteFileHeader(UINT hFile, LPWSTR pszModule)
 {
 	char szHeader[100];
 
-	write(hFile, szFileHeader, strlen(szFileHeader));
+	_write(hFile, szFileHeader, strlen(szFileHeader));
 	sprintf(szHeader, "<H1>Test results for %ls</H1>", pszModule);
-	write(hFile, szHeader, strlen(szHeader));
-	write(hFile, szTableHeader, strlen(szTableHeader));
+	_write(hFile, szHeader, strlen(szHeader));
+	_write(hFile, szTableHeader, strlen(szTableHeader));
 	return TRUE;
 }
 
@@ -56,7 +56,7 @@ WriteRow(UINT hFile, LPWSTR pszFunction, PTESTINFO pti)
 	sprintf(szLine + strlen(szLine), "<td>%d / %d / %d</td><td>%d</td></tr>\n",
 	        pti->passed+pti->failed, pti->passed, pti->failed, pti->rfailed);
 
-	write(hFile, szLine, strlen(szLine));
+	_write(hFile, szLine, strlen(szLine));
 	return TRUE;
 }
 
@@ -86,15 +86,15 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 	/* Get options */
 	for (i = 1; i < argc; i++)
 	{
-		if (wcsicmp(argv[i], L"-r") == 0)
+		if (_wcsicmp(argv[i], L"-r") == 0)
 		{
 			ti.bRegress = TRUE;
 		}
-		else if (wcsicmp(argv[i], L"all") == 0)
+		else if (_wcsicmp(argv[i], L"all") == 0)
 		{
 			bAll = TRUE;
 		}
-		else if (wcsicmp(argv[i], L"status") == 0)
+		else if (_wcsicmp(argv[i], L"status") == 0)
 		{
 			bAll = TRUE;
 			bStatus = TRUE;
@@ -106,7 +106,7 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 		ti.bRegress = TRUE;
 		char szOutputFile[MAX_PATH];
 		wsprintf(szOutputFile, "%ls.html", pszName);
-		hFile = open(szOutputFile, O_CREAT | O_TRUNC | O_RDWR, 00700);
+		hFile = _open(szOutputFile, O_CREAT | O_TRUNC | O_RDWR, 00700);
 		if (hFile == -1)
 		{
 			printf("Could not create output file.\n");
@@ -119,7 +119,7 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 	{
 		for (j = 1; j < argc; j++)
 		{
-			if (bAll || wcsicmp(argv[j], TestList[i].Test) == 0)
+			if (bAll || _wcsicmp(argv[j], TestList[i].Test) == 0)
 			{
 				ti.passed = 0;
 				ti.failed = 0;
@@ -158,8 +158,8 @@ TestMain(LPWSTR pszName, LPWSTR pszModule)
 
 	if (bStatus)
 	{
-		write(hFile, szFileFooter, strlen(szFileFooter));
-		close(hFile);
+		_write(hFile, szFileFooter, strlen(szFileFooter));
+		_close(hFile);
 	}
 
 	if (ti.bRegress)

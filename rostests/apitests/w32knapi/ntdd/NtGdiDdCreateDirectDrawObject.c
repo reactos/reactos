@@ -13,13 +13,14 @@ NtGdiDdCreateDirectDrawObject(
 INT
 Test_NtGdiDdCreateDirectDrawObject(PTESTINFO pti)
 {
-    HDC hdc=CreateDCW(L"Display",NULL,NULL,NULL);
+	HDC hdc = CreateDCW(L"Display",NULL,NULL,NULL);
+	ASSERT1(hdc != NULL);
 
-    RTEST(NtGdiDdCreateDirectDrawObject(NULL) == NULL);
+	RTEST(NtGdiDdCreateDirectDrawObject(NULL) == NULL);
 
-    TEST(NtGdiDdCreateDirectDrawObject(hdc) != NULL);
+	TEST(NtGdiDdCreateDirectDrawObject(hdc) != NULL);
     
-    DeleteDC(hdc);
+	DeleteDC(hdc);
 
-    return APISTATUS_NORMAL;
+	return APISTATUS_NORMAL;
 }

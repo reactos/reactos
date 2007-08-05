@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <windows.h>
 
+#define open _open
+
 #define APISTATUS_NORMAL 0
 #define APISTATUS_NOT_FOUND 1
 #define APISTATUS_UNIMPLEMENTED 2
@@ -83,7 +85,7 @@ typedef struct tagTEST
 	}
 
 
-#define ASSERT(x) \
+#define ASSERT1(x) \
 	if (!(x)) \
 	{ \
 			printf("Assertion failed in %s:%d (%s)\n", __FILE__, __LINE__, #x);\

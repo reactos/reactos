@@ -13,7 +13,7 @@ NtGdiDdDeleteDirectDrawObject(
 INT
 Test_NtGdiDdDeleteDirectDrawObject(PTESTINFO pti)
 {
-    TEST(NtGdiDdDeleteDirectDrawObject(NULL) == 0);
+	TEST(NtGdiDdDeleteDirectDrawObject(NULL) == 0);
 
-    return APISTATUS_NORMAL;
+	return APISTATUS_NORMAL;
 }
