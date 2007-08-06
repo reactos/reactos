@@ -42,8 +42,11 @@
 #include "mshtmhst.h"
 #include "docobj.h"
 #include "exdisp.h"
+#include "htiframe.h"
+#include "urlhist.h"
 
 #include "hlink.h"
+#include "mlang.h"
 #include "shlguid.h"
 #include "shlobj.h"
 #include "shldisp.h"
