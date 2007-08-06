@@ -100,7 +100,7 @@ IntGdiLineTo(DC  *dc,
       Bounds.bottom = max(Points[0].y, Points[1].y);
 
       /* get BRUSHOBJ from current pen. */
-      PenBrushObj = PENOBJ_LockPen( dc->w.hPen );
+      PenBrushObj = PENOBJ_LockPen( dc->Dc_Attr.hpen );
       /* FIXME - PenBrushObj can be NULL!!!! Don't assert here! */
       ASSERT(PenBrushObj);
 
@@ -113,7 +113,7 @@ IntGdiLineTo(DC  *dc,
                            Points[0].x, Points[0].y,
                            Points[1].x, Points[1].y,
                            &Bounds,
-                           ROP2_TO_MIX(dc->w.ROPmode));
+                           ROP2_TO_MIX(dc->Dc_Attr.jROP2));
       }
 
       BITMAPOBJ_UnlockBitmap ( BitmapObj );
@@ -204,7 +204,7 @@ IntGdiPolyline(DC      *dc,
       return PATH_Polyline(dc, pt, Count);
 
    /* Get BRUSHOBJ from current pen. */
-   PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
+   PenBrushObj = PENOBJ_LockPen(dc->Dc_Attr.hpen);
    /* FIXME - PenBrushObj can be NULL! Don't assert here! */
    ASSERT(PenBrushObj);
 
@@ -230,7 +230,7 @@ IntGdiPolyline(DC      *dc,
          IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
          Ret = IntEngPolyline(&BitmapObj->SurfObj, dc->CombinedClip,
                               &PenBrushInst.BrushObject, Points, Count,
-                              ROP2_TO_MIX(dc->w.ROPmode));
+                              ROP2_TO_MIX(dc->Dc_Attr.jROP2));
 
          BITMAPOBJ_UnlockBitmap(BitmapObj);
          EngFreeMem(Points);

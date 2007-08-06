@@ -140,7 +140,7 @@ NtGdiBitBlt(
 
 	if (UsesPattern)
 	{
-		BrushObj = BRUSHOBJ_LockBrush(DCDest->w.hBrush);
+		BrushObj = BRUSHOBJ_LockBrush(DCDest->Dc_Attr.hbrush);
 		if (NULL == BrushObj)
 		{
 			if (UsesSource && hDCSrc != hDCDest)
@@ -185,11 +185,11 @@ NtGdiBitBlt(
 		{
 			if (DCDest->w.bitsPerPixel == 1)
 			{
-				XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->w.backgroundColor);
+				XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->Dc_Attr.crBackgroundClr);
 			}
 			else if (DCSrc->w.bitsPerPixel == 1)
 			{
-				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->w.backgroundColor, DCSrc->w.textColor);
+				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->Dc_Attr.crBackgroundClr, DCSrc->Dc_Attr.crForegroundClr);
 			}
 			else
 			{
@@ -1315,7 +1315,7 @@ NtGdiStretchBlt(
 
 	if (UsesPattern)
 	{
-		BrushObj = BRUSHOBJ_LockBrush(DCDest->w.hBrush);
+		BrushObj = BRUSHOBJ_LockBrush(DCDest->Dc_Attr.hbrush);
 		if (NULL == BrushObj)
 		{
 			if (UsesSource && hDCSrc != hDCDest)
@@ -1481,11 +1481,11 @@ NtGdiAlphaBlend(
 	{
 		if (DCDest->w.bitsPerPixel == 1)
 		{
-			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->w.backgroundColor);
+			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->Dc_Attr.crBackgroundClr);
 		}
 		else if (DCSrc->w.bitsPerPixel == 1)
 		{
-			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->w.backgroundColor, DCSrc->w.textColor);
+			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->Dc_Attr.crBackgroundClr, DCSrc->Dc_Attr.crForegroundClr);
 		}
 		else
 		{

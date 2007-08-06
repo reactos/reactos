@@ -244,11 +244,11 @@ NtGdiCreateCompatibleDC(HDC hDC)
 
   NewDC->PalIndexed = OrigDC->PalIndexed;
   NewDC->w.hPalette = OrigDC->w.hPalette;
-  NewDC->w.textColor = OrigDC->w.textColor;
-  NewDC->w.textAlign = OrigDC->w.textAlign;
-  NewDC->w.backgroundColor = OrigDC->w.backgroundColor;
-  NewDC->w.backgroundMode = OrigDC->w.backgroundMode;
-  NewDC->w.ROPmode = OrigDC->w.ROPmode;
+  NewDC->Dc_Attr.crForegroundClr = OrigDC->Dc_Attr.crForegroundClr;
+  NewDC->Dc_Attr.lTextAlign = OrigDC->Dc_Attr.lTextAlign;
+  NewDC->Dc_Attr.crBackgroundClr = OrigDC->Dc_Attr.crBackgroundClr;
+  NewDC->Dc_Attr.jBkMode = OrigDC->Dc_Attr.jBkMode;
+  NewDC->Dc_Attr.jROP2 = OrigDC->Dc_Attr.jROP2;
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
   if (NULL != DisplayDC)
@@ -908,7 +908,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   {
     NewDC->PalIndexed = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
-    NewDC->w.ROPmode = R2_COPYPEN;
+    NewDC->Dc_Attr.jROP2 = R2_COPYPEN;
 
     DC_UnlockDc( NewDC );
 
@@ -1098,8 +1098,8 @@ NtGdiEnumObjects(
   return 0;
 }
 
-DC_GET_VAL( COLORREF, NtGdiGetBkColor, w.backgroundColor )
-DC_GET_VAL( INT, NtGdiGetBkMode, w.backgroundMode )
+DC_GET_VAL( COLORREF, NtGdiGetBkColor, Dc_Attr.crBackgroundClr )
+DC_GET_VAL( INT, NtGdiGetBkMode, Dc_Attr.jBkMode )
 DC_GET_VAL_EX( GetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT, x, y )
 DC_GET_VAL( HRGN, NtGdiGetClipRgn, w.hClipRgn )
 
@@ -1122,16 +1122,16 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
   {
     case OBJ_PEN:
     case OBJ_EXTPEN:
-      SelObject = dc->w.hPen;
+      SelObject = dc->Dc_Attr.hpen;
       break;
     case OBJ_BRUSH:
-      SelObject = dc->w.hBrush;
+      SelObject = dc->Dc_Attr.hbrush;
       break;
     case OBJ_PAL:
       SelObject = dc->w.hPalette;
       break;
     case OBJ_FONT:
-      SelObject = dc->w.hFont;
+      SelObject = dc->Dc_Attr.hlfntNew;
       break;
     case OBJ_BITMAP:
       SelObject = dc->w.hBitmap;
@@ -1221,9 +1221,9 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
     return CLR_INVALID;
   }
 
-  oldColor = dc->w.backgroundColor;
-  dc->w.backgroundColor = color;
-  hBrush = dc->w.hBrush;
+  oldColor = dc->Dc_Attr.crBackgroundClr;
+  dc->Dc_Attr.crBackgroundClr = color;
+  hBrush = dc->Dc_Attr.hbrush;
   DC_UnlockDc(dc);
   NtGdiSelectObject(hDC, hBrush);
   return oldColor;
@@ -1253,9 +1253,9 @@ IntGdiGetDCState(HDC  hDC)
   ASSERT( newdc );
 
   newdc->w.flags            = dc->w.flags | DC_SAVED;
-  newdc->w.hPen             = dc->w.hPen;
-  newdc->w.hBrush           = dc->w.hBrush;
-  newdc->w.hFont            = dc->w.hFont;
+  newdc->Dc_Attr.hpen             = dc->Dc_Attr.hpen;
+  newdc->Dc_Attr.hbrush           = dc->Dc_Attr.hbrush;
+  newdc->Dc_Attr.hlfntNew            = dc->Dc_Attr.hlfntNew;
   newdc->w.hBitmap          = dc->w.hBitmap;
   newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
 #if 0
@@ -1265,23 +1265,23 @@ IntGdiGetDCState(HDC  hDC)
   newdc->w.hPalette         = dc->w.hPalette;
   newdc->w.totalExtent      = dc->w.totalExtent;
   newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
-  newdc->w.ROPmode          = dc->w.ROPmode;
-  newdc->w.polyFillMode     = dc->w.polyFillMode;
-  newdc->w.stretchBltMode   = dc->w.stretchBltMode;
-  newdc->w.relAbsMode       = dc->w.relAbsMode;
-  newdc->w.backgroundMode   = dc->w.backgroundMode;
-  newdc->w.backgroundColor  = dc->w.backgroundColor;
-  newdc->w.textColor        = dc->w.textColor;
+  newdc->Dc_Attr.jROP2          = dc->Dc_Attr.jROP2;
+  newdc->Dc_Attr.jFillMode     = dc->Dc_Attr.jFillMode;
+  newdc->Dc_Attr.jStretchBltMode   = dc->Dc_Attr.jStretchBltMode;
+  newdc->Dc_Attr.lRelAbs       = dc->Dc_Attr.lRelAbs;
+  newdc->Dc_Attr.jBkMode   = dc->Dc_Attr.jBkMode;
+  newdc->Dc_Attr.crBackgroundClr  = dc->Dc_Attr.crBackgroundClr;
+  newdc->Dc_Attr.crForegroundClr        = dc->Dc_Attr.crForegroundClr;
   newdc->w.brushOrgX        = dc->w.brushOrgX;
   newdc->w.brushOrgY        = dc->w.brushOrgY;
-  newdc->w.textAlign        = dc->w.textAlign;
-  newdc->w.charExtra        = dc->w.charExtra;
+  newdc->Dc_Attr.lTextAlign        = dc->Dc_Attr.lTextAlign;
+  newdc->Dc_Attr.lTextExtra        = dc->Dc_Attr.lTextExtra;
   newdc->w.breakTotalExtra  = dc->w.breakTotalExtra;
   newdc->w.breakCount       = dc->w.breakCount;
   newdc->w.breakExtra       = dc->w.breakExtra;
   newdc->w.breakRem         = dc->w.breakRem;
-  newdc->w.MapMode          = dc->w.MapMode;
-  newdc->w.GraphicsMode     = dc->w.GraphicsMode;
+  newdc->Dc_Attr.iMapMode          = dc->Dc_Attr.iMapMode;
+  newdc->Dc_Attr.iGraphicsMode     = dc->Dc_Attr.iGraphicsMode;
 #if 0
   /* Apparently, the DC origin is not changed by [GS]etDCState */
   newdc->w.DCOrgX           = dc->w.DCOrgX;
@@ -1348,23 +1348,23 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
 #endif
 
         dc->w.totalExtent      = dcs->w.totalExtent;
-        dc->w.ROPmode          = dcs->w.ROPmode;
-        dc->w.polyFillMode     = dcs->w.polyFillMode;
-        dc->w.stretchBltMode   = dcs->w.stretchBltMode;
-        dc->w.relAbsMode       = dcs->w.relAbsMode;
-        dc->w.backgroundMode   = dcs->w.backgroundMode;
-        dc->w.backgroundColor  = dcs->w.backgroundColor;
-        dc->w.textColor        = dcs->w.textColor;
+        dc->Dc_Attr.jROP2          = dcs->Dc_Attr.jROP2;
+        dc->Dc_Attr.jFillMode     = dcs->Dc_Attr.jFillMode;
+        dc->Dc_Attr.jStretchBltMode   = dcs->Dc_Attr.jStretchBltMode;
+        dc->Dc_Attr.lRelAbs       = dcs->Dc_Attr.lRelAbs;
+        dc->Dc_Attr.jBkMode   = dcs->Dc_Attr.jBkMode;
+        dc->Dc_Attr.crBackgroundClr  = dcs->Dc_Attr.crBackgroundClr;
+        dc->Dc_Attr.crForegroundClr        = dcs->Dc_Attr.crForegroundClr;
         dc->w.brushOrgX        = dcs->w.brushOrgX;
         dc->w.brushOrgY        = dcs->w.brushOrgY;
-        dc->w.textAlign        = dcs->w.textAlign;
-        dc->w.charExtra        = dcs->w.charExtra;
+        dc->Dc_Attr.lTextAlign        = dcs->Dc_Attr.lTextAlign;
+        dc->Dc_Attr.lTextExtra        = dcs->Dc_Attr.lTextExtra;
         dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;
         dc->w.breakCount       = dcs->w.breakCount;
         dc->w.breakExtra       = dcs->w.breakExtra;
         dc->w.breakRem         = dcs->w.breakRem;
-        dc->w.MapMode          = dcs->w.MapMode;
-        dc->w.GraphicsMode     = dcs->w.GraphicsMode;
+        dc->Dc_Attr.iMapMode          = dcs->Dc_Attr.iMapMode;
+        dc->Dc_Attr.iGraphicsMode     = dcs->Dc_Attr.iGraphicsMode;
 #if 0
         /* Apparently, the DC origin is not changed by [GS]etDCState */
         dc->w.DCOrgX           = dcs->w.DCOrgX;
@@ -1424,11 +1424,11 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
 #endif
 
         NtGdiSelectObject( hDC, dcs->w.hBitmap );
-        NtGdiSelectObject( hDC, dcs->w.hBrush );
-        NtGdiSelectObject( hDC, dcs->w.hFont );
-        NtGdiSelectObject( hDC, dcs->w.hPen );
-        NtGdiSetBkColor( hDC, dcs->w.backgroundColor);
-        NtGdiSetTextColor( hDC, dcs->w.textColor);
+        NtGdiSelectObject( hDC, dcs->Dc_Attr.hbrush );
+        NtGdiSelectObject( hDC, dcs->Dc_Attr.hlfntNew );
+        NtGdiSelectObject( hDC, dcs->Dc_Attr.hpen );
+        NtGdiSetBkColor( hDC, dcs->Dc_Attr.crBackgroundClr);
+        NtGdiSetTextColor( hDC, dcs->Dc_Attr.crForegroundClr);
 
         NtGdiSelectPalette( hDC, dcs->w.hPalette, FALSE );
 
@@ -1665,8 +1665,8 @@ NtGdiGetDeviceCaps(HDC  hDC,
   return ret;
 }
 
-DC_GET_VAL( INT, NtGdiGetMapMode, w.MapMode )
-DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
+DC_GET_VAL( INT, NtGdiGetMapMode, Dc_Attr.iMapMode )
+DC_GET_VAL( INT, NtGdiGetPolyFillMode, Dc_Attr.jFillMode )
 
 INT
 FASTCALL
@@ -1773,11 +1773,11 @@ NtGdiExtGetObjectW(IN HANDLE hGdiObj,
     return iRetCount;
 }
 
-DC_GET_VAL( INT, NtGdiGetRelAbs, w.relAbsMode )
-DC_GET_VAL( INT, NtGdiGetROP2, w.ROPmode )
-DC_GET_VAL( INT, NtGdiGetStretchBltMode, w.stretchBltMode )
-DC_GET_VAL( UINT, NtGdiGetTextAlign, w.textAlign )
-DC_GET_VAL( COLORREF, NtGdiGetTextColor, w.textColor )
+DC_GET_VAL( INT, NtGdiGetRelAbs, Dc_Attr.lRelAbs )
+DC_GET_VAL( INT, NtGdiGetROP2, Dc_Attr.jROP2 )
+DC_GET_VAL( INT, NtGdiGetStretchBltMode, Dc_Attr.jStretchBltMode )
+DC_GET_VAL( UINT, NtGdiGetTextAlign, Dc_Attr.lTextAlign )
+DC_GET_VAL( COLORREF, NtGdiGetTextColor, Dc_Attr.crForegroundClr )
 DC_GET_VAL_EX( GetViewportExtEx, vportExtX, vportExtY, SIZE, cx, cy )
 DC_GET_VAL_EX( GetViewportOrgEx, vportOrgX, vportOrgY, POINT, x, y )
 DC_GET_VAL_EX( GetWindowExtEx, wndExtX, wndExtY, SIZE, cx, cy )
@@ -1968,8 +1968,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         break;
       }
 
-      objOrg = (HGDIOBJ)dc->w.hPen;
-      dc->w.hPen = hGDIObj;
+      objOrg = (HGDIOBJ)dc->Dc_Attr.hpen;
+      dc->Dc_Attr.hpen = hGDIObj;
       if (dc->XlatePen != NULL)
         EngDeleteXlate(dc->XlatePen);
       dc->XlatePen = XlateObj;
@@ -1991,8 +1991,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         break;
       }
 
-      objOrg = (HGDIOBJ)dc->w.hBrush;
-      dc->w.hBrush = hGDIObj;
+      objOrg = (HGDIOBJ)dc->Dc_Attr.hbrush;
+      dc->Dc_Attr.hbrush = hGDIObj;
       if (dc->XlateBrush != NULL)
         EngDeleteXlate(dc->XlateBrush);
       dc->XlateBrush = XlateObj;
@@ -2001,8 +2001,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     case GDI_OBJECT_TYPE_FONT:
       if(NT_SUCCESS(TextIntRealizeFont((HFONT)hGDIObj)))
       {
-        objOrg = (HGDIOBJ)dc->w.hFont;
-        dc->w.hFont = (HFONT) hGDIObj;
+        objOrg = (HGDIOBJ)dc->Dc_Attr.hlfntNew;
+        dc->Dc_Attr.hlfntNew = (HFONT) hGDIObj;
       }
       break;
 
@@ -2038,8 +2038,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       /* Reselect brush and pen to regenerate the XLATEOBJs. */
-      NtGdiSelectObject ( hDC, dc->w.hBrush );
-      NtGdiSelectObject ( hDC, dc->w.hPen );
+      NtGdiSelectObject ( hDC, dc->Dc_Attr.hbrush );
+      NtGdiSelectObject ( hDC, dc->Dc_Attr.hpen );
 
       DC_UnlockDc ( dc );
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
@@ -2099,11 +2099,11 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
   return wRet;
 }
 
-DC_SET_MODE( NtGdiSetBkMode, w.backgroundMode, TRANSPARENT, OPAQUE )
-DC_SET_MODE( NtGdiSetPolyFillMode, w.polyFillMode, ALTERNATE, WINDING )
-// DC_SET_MODE( NtGdiSetRelAbs, w.relAbsMode, ABSOLUTE, RELATIVE )
-DC_SET_MODE( NtGdiSetROP2, w.ROPmode, R2_BLACK, R2_WHITE )
-DC_SET_MODE( NtGdiSetStretchBltMode, w.stretchBltMode, BLACKONWHITE, HALFTONE )
+DC_SET_MODE( NtGdiSetBkMode, Dc_Attr.jBkMode, TRANSPARENT, OPAQUE )
+DC_SET_MODE( NtGdiSetPolyFillMode, Dc_Attr.jFillMode, ALTERNATE, WINDING )
+// DC_SET_MODE( NtGdiSetRelAbs, Dc_Attr.lRelAbs, ABSOLUTE, RELATIVE )
+DC_SET_MODE( NtGdiSetROP2, Dc_Attr.jROP2, R2_BLACK, R2_WHITE )
+DC_SET_MODE( NtGdiSetStretchBltMode, Dc_Attr.jStretchBltMode, BLACKONWHITE, HALFTONE )
 
 //  ----------------------------------------------------  Private Interface
 
@@ -2202,7 +2202,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->w.vport2WorldValid = TRUE;
 //  DC_Attr->flXform = DEVICE_TO_PAGE_INVALID; // More research.
 
-  NewDC->w.MapMode = MM_TEXT;
+  NewDC->Dc_Attr.iMapMode = MM_TEXT;
 //  DC_Attr->iMapMode = MM_TEXT;
 
   NewDC->wndExtX = 1.0f;
@@ -2210,16 +2210,16 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->vportExtX = 1.0f;
   NewDC->vportExtY = 1.0f;
 
-  NewDC->w.textColor = 0;
+  NewDC->Dc_Attr.crForegroundClr = 0;
 //  NewDC->pDc_Attr->ulForegroundClr = 0; // Already Zero
 //  NewDC->pDc_Attr->crForegroundClr = 0;
 
-  NewDC->w.backgroundColor = 0xffffff;
+  NewDC->Dc_Attr.crBackgroundClr = 0xffffff;
 //  DC_Attr->ulBackgroundClr = 0xffffff;
 //  DC_Attr->crBackgroundClr = 0xffffff;
 
-  NewDC->w.hFont = NtGdiGetStockObject(SYSTEM_FONT);
-  TextIntRealizeFont(NewDC->w.hFont);
+  NewDC->Dc_Attr.hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
+  TextIntRealizeFont(NewDC->Dc_Attr.hlfntNew);
 //  DC_Attr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
   
   NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);

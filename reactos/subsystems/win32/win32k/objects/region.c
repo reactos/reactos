@@ -1855,7 +1855,7 @@ BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   if(!dc)
     return ret;
 
-  if(dc->w.MapMode == MM_TEXT) // Requires only a translation
+  if(dc->Dc_Attr.iMapMode == MM_TEXT) // Requires only a translation
   {
     if(NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
       goto done;
@@ -2570,7 +2570,7 @@ NtGdiPaintRgn(HDC  hDC,
                                       (PRECTL)visrgn->Buffer,
                                       (PRECTL)&visrgn->rdh.rcBound );
   ASSERT( ClipRegion );
-  pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
+  pBrush = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
   ASSERT(pBrush);
   IntGdiInitBrushInstance(&BrushInst, pBrush, dc->XlateBrush);
 

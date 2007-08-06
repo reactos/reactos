@@ -26,9 +26,6 @@ typedef struct _WIN_DC_INFO
   HRGN  hClipRgn;     /* Clip region (may be 0) */
   HRGN  hVisRgn;      /* Visible region (must never be 0) */
   HRGN  hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
-  HPEN  hPen;
-  HBRUSH  hBrush;
-  HFONT  hFont;
   HBITMAP  hBitmap;
   HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
@@ -39,19 +36,9 @@ typedef struct _WIN_DC_INFO
     GdiPath       path;
 /* #endif */
 
-  WORD  ROPmode;
-  WORD  polyFillMode;
-  WORD  stretchBltMode;
-  WORD  relAbsMode;
-  WORD  backgroundMode;
-  COLORREF  backgroundColor;
-  COLORREF  textColor;
-
   short  brushOrgX;
   short  brushOrgY;
 
-  WORD  textAlign;         /* Text alignment from SetTextAlign() */
-  short  charExtra;         /* Spacing from SetTextCharacterExtra() */
   short  breakTotalExtra;   /* Total extra space for justification */
   short  breakCount;        /* Break char. count */
   short  breakExtra;        /* breakTotalExtra / breakCount */
@@ -60,8 +47,6 @@ typedef struct _WIN_DC_INFO
   RECT   totalExtent;
   BYTE   bitsPerPixel;
 
-  INT  MapMode;
-  INT  GraphicsMode;      /* Graphics mode */
   INT  DCOrgX;            /* DC origin */
   INT  DCOrgY;
 
@@ -92,6 +77,8 @@ typedef struct _DC
   HDC  hSelf;
   HDC  hNext;
   PDC_ATTR pDc_Attr;
+  INT  DC_Type;
+  INT  DC_Flags;
   DHPDEV  PDev;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
   PGDIINFO  GDIInfo;

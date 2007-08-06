@@ -1697,7 +1697,7 @@ NtGdiExtTextOut(
    {
       goto fail;
    }
-   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor), 0);
+   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->Dc_Attr.crForegroundClr), 0);
    if ( !hBrushFg )
    {
       goto fail;
@@ -1708,9 +1708,9 @@ NtGdiExtTextOut(
       goto fail;
    }
    IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
-   if ((fuOptions & ETO_OPAQUE) || dc->w.backgroundMode == OPAQUE)
+   if ((fuOptions & ETO_OPAQUE) || dc->Dc_Attr.jBkMode == OPAQUE)
    {
-      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor), 0);
+      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->Dc_Attr.crBackgroundClr), 0);
       if ( !hBrushBg )
       {
          goto fail;
@@ -1758,13 +1758,13 @@ NtGdiExtTextOut(
    }
    else
    {
-      if (dc->w.backgroundMode == OPAQUE)
+      if (dc->Dc_Attr.jBkMode == OPAQUE)
       {
          fuOptions |= ETO_OPAQUE;
       }
    }
 
-   TextObj = TEXTOBJ_LockText(dc->w.hFont);
+   TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
    if(TextObj == NULL)
    {
       goto fail;
@@ -1827,9 +1827,9 @@ NtGdiExtTextOut(
     * Process the vertical alignment and determine the yoff.
     */
 
-   if (dc->w.textAlign & TA_BASELINE)
+   if (dc->Dc_Attr.lTextAlign & TA_BASELINE)
       yoff = 0;
-   else if (dc->w.textAlign & TA_BOTTOM)
+   else if (dc->Dc_Attr.lTextAlign & TA_BOTTOM)
       yoff = -face->size->metrics.descender >> 6;
    else /* TA_TOP */
       yoff = face->size->metrics.ascender >> 6;
@@ -1841,7 +1841,7 @@ NtGdiExtTextOut(
     * Process the horizontal alignment and modify XStart accordingly.
     */
 
-   if (dc->w.textAlign & (TA_RIGHT | TA_CENTER))
+   if (dc->Dc_Attr.lTextAlign & (TA_RIGHT | TA_CENTER))
    {
       ULONGLONG TextWidth = 0;
       LPCWSTR TempText = String;
@@ -1905,7 +1905,7 @@ NtGdiExtTextOut(
 
       previous = 0;
 
-      if (dc->w.textAlign & TA_RIGHT)
+      if (dc->Dc_Attr.lTextAlign & TA_RIGHT)
       {
          RealXStart -= TextWidth;
       }
@@ -2205,7 +2205,7 @@ NtGdiGetCharABCWidths(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   hFont = dc->w.hFont;
+   hFont = dc->Dc_Attr.hlfntNew;
    TextObj = TEXTOBJ_LockText(hFont);
    DC_UnlockDc(dc);
 
@@ -2349,7 +2349,7 @@ NtGdiGetCharWidth32(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   hFont = dc->w.hFont;
+   hFont = dc->Dc_Attr.hlfntNew;
    TextObj = TEXTOBJ_LockText(hFont);
    DC_UnlockDc(dc);
 
@@ -2515,7 +2515,7 @@ NtGdiGetGlyphOutline(
       return GDI_ERROR;
    }
   eM11 = dc->w.xformWorld2Vport.eM11;
-  hFont = dc->w.hFont;
+  hFont = dc->Dc_Attr.hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
   DC_UnlockDc(dc);
   if (!TextObj)
@@ -3138,7 +3138,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
-  hFont = dc->w.hFont;
+  hFont = dc->Dc_Attr.hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
   DC_UnlockDc(dc);
   if (TextObj == NULL)
@@ -3217,7 +3217,7 @@ NtGdiGetTextCharsetInfo(
          SetLastWin32Error(ERROR_INVALID_HANDLE);
          return Ret;
     }
-  hFont = Dc->w.hFont;
+  hFont = Dc->Dc_Attr.hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
   DC_UnlockDc( Dc );
   if ( TextObj == NULL)
@@ -3493,7 +3493,7 @@ NtGdiGetTextExtentExW(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
-  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+  TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
   if ( TextObj )
   {
     Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
@@ -3621,7 +3621,7 @@ NtGdiGetTextExtentPoint32(HDC hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
-  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+  TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
   if ( TextObj != NULL )
   {
     Result = TextIntGetTextExtentPoint (
@@ -3671,7 +3671,7 @@ NtGdiGetTextFaceW(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   hFont = Dc->w.hFont;
+   hFont = Dc->Dc_Attr.hlfntNew;
    DC_UnlockDc(Dc);
 
    TextObj = TEXTOBJ_LockText(hFont);
@@ -3721,7 +3721,7 @@ NtGdiGetTextMetricsW(
     return FALSE;
   }
 
-  TextObj = TEXTOBJ_LockText(dc->w.hFont);
+  TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
   if (NULL != TextObj)
     {
       FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -3842,8 +3842,8 @@ NtGdiSetTextAlign(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return GDI_ERROR;
     }
-  prevAlign = dc->w.textAlign;
-  dc->w.textAlign = Mode;
+  prevAlign = dc->Dc_Attr.lTextAlign;
+  dc->Dc_Attr.lTextAlign = Mode;
   DC_UnlockDc( dc );
   return  prevAlign;
 }
@@ -3863,9 +3863,9 @@ NtGdiSetTextColor(HDC hDC,
     return CLR_INVALID;
   }
 
-  oldColor = dc->w.textColor;
-  dc->w.textColor = color;
-  hBrush = dc->w.hBrush;
+  oldColor = dc->Dc_Attr.crForegroundClr;
+  dc->Dc_Attr.crForegroundClr = color;
+  hBrush = dc->Dc_Attr.hbrush;
   DC_UnlockDc( dc );
   NtGdiSelectObject(hDC, hBrush);
   return  oldColor;
@@ -3901,7 +3901,7 @@ NtGdiGetFontData(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return GDI_ERROR;
    }
-   hFont = Dc->w.hFont;
+   hFont = Dc->Dc_Attr.hlfntNew;
    TextObj = TEXTOBJ_LockText(hFont);
    DC_UnlockDc(Dc);
 
@@ -4196,8 +4196,8 @@ NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set)
        return Ret;
   }
   DPRINT("TextCharacterExtra %d", CharExtra);
-  Ret = dc->w.charExtra;
-  if( Set ) dc->w.charExtra = CharExtra;
+  Ret = dc->Dc_Attr.lTextExtra;
+  if( Set ) dc->Dc_Attr.lTextExtra = CharExtra;
   DC_UnlockDc(dc);
   return (Ret);
 }

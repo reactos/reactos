@@ -578,7 +578,7 @@ FillPolygon(
   if (NULL == list)
     return FALSE;
 
-  if ( WINDING == dc->w.polyFillMode )
+  if ( WINDING == dc->Dc_Attr.jFillMode )
     FillScanLine = POLYGONFILL_FillScanLineWinding;
   else /* default */
     FillScanLine = POLYGONFILL_FillScanLineAlternate;

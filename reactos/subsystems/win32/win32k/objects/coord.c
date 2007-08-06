@@ -255,7 +255,7 @@ FASTCALL
 IntGetGraphicsMode ( PDC dc )
 {
   ASSERT ( dc );
-  return dc->w.GraphicsMode;
+  return dc->Dc_Attr.iGraphicsMode;
 }
 
 BOOL
@@ -309,7 +309,7 @@ NtGdiGetGraphicsMode ( HDC hDC )
     return 0;
   }
 
-  GraphicsMode = dc->w.GraphicsMode;
+  GraphicsMode = dc->Dc_Attr.iGraphicsMode;
 
   DC_UnlockDc(dc);
   return GraphicsMode;
@@ -680,8 +680,8 @@ NtGdiSetGraphicsMode(HDC  hDC,
       return 0;
     }
 
-  ret = dc->w.GraphicsMode;
-  dc->w.GraphicsMode = Mode;
+  ret = dc->Dc_Attr.iGraphicsMode;
+  dc->Dc_Attr.iGraphicsMode = Mode;
   DC_UnlockDc(dc);
   return  ret;
 }
@@ -701,11 +701,11 @@ NtGdiSetMapMode(HDC  hDC,
     return 0;
   }
 
-  PrevMapMode = dc->w.MapMode;
+  PrevMapMode = dc->Dc_Attr.iMapMode;
 
-  if (MapMode != dc->w.MapMode || (MapMode != MM_ISOTROPIC && MapMode != MM_ANISOTROPIC))
+  if (MapMode != dc->Dc_Attr.iMapMode || (MapMode != MM_ISOTROPIC && MapMode != MM_ANISOTROPIC))
   {
-    dc->w.MapMode = MapMode;
+    dc->Dc_Attr.iMapMode = MapMode;
 
     switch (MapMode)
     {
@@ -780,7 +780,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
     return FALSE;
   }
 
-  switch (dc->w.MapMode)
+  switch (dc->Dc_Attr.iMapMode)
     {
       case MM_HIENGLISH:
       case MM_HIMETRIC:
@@ -812,7 +812,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
 		 dc->vportExtX = XExtent;
          dc->vportExtY = YExtent;
 
-         if (dc->w.MapMode == MM_ISOTROPIC)
+         if (dc->Dc_Attr.iMapMode == MM_ISOTROPIC)
              IntFixIsotropicMapping(dc);
       }
       _SEH_HANDLE
@@ -903,7 +903,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
       return FALSE;
     }
 
-  switch (dc->w.MapMode)
+  switch (dc->Dc_Attr.iMapMode)
     {
       case MM_HIENGLISH:
       case MM_HIMETRIC:
@@ -1024,7 +1024,7 @@ NtGdiSetWorldTransform(HDC  hDC,
   }
 
   /* Check that graphics mode is GM_ADVANCED */
-  if ( dc->w.GraphicsMode != GM_ADVANCED )
+  if ( dc->Dc_Attr.iGraphicsMode != GM_ADVANCED )
   {
     DC_UnlockDc(dc);
     return  FALSE;

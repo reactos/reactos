@@ -134,7 +134,7 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
       if (Pattern->SurfObj.iBitmapFormat == BMF_1BPP)
       {
          if (Dc->w.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(Dc->w.hPalette, Dc->w.textColor, Dc->w.backgroundColor);
+            Result = IntEngCreateSrcMonoXlate(Dc->w.hPalette, Dc->Dc_Attr.crForegroundClr, Dc->Dc_Attr.crBackgroundClr);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {
@@ -823,7 +823,7 @@ NtGdiPatBlt(
       return TRUE;
    }
 
-   BrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+   BrushObj = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
    if (BrushObj == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
