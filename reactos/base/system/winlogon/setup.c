@@ -53,38 +53,6 @@ GetSetupType(VOID)
 }
 
 
-static BOOL
-SetSetupType (DWORD dwSetupType)
-{
-  DWORD dwError;
-  HKEY hKey;
-
-  dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-			 L"SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
-			 0,
-			 KEY_SET_VALUE,
-			 &hKey);
-  if (dwError != ERROR_SUCCESS)
-    {
-      return FALSE;
-    }
-
-  dwError = RegSetValueExW (hKey,
-			   L"SetupType", //TEXT("SetupType"),
-			   0,
-			   REG_DWORD,
-			   (LPBYTE)&dwSetupType,
-			   sizeof(DWORD));
-  RegCloseKey (hKey);
-  if (dwError != ERROR_SUCCESS)
-    {
-      return FALSE;
-    }
-
-  return TRUE;
-}
-
-
 static DWORD WINAPI
 RunSetupThreadProc (IN LPVOID lpParameter)
 {
@@ -172,11 +140,6 @@ RunSetupThreadProc (IN LPVOID lpParameter)
 
   CloseHandle (ProcessInformation.hThread);
   CloseHandle (ProcessInformation.hProcess);
-
-  if (dwExitCode == 0)
-    {
-      SetSetupType (0);
-    }
 
   TRACE ("RunSetup() done.\n");
 

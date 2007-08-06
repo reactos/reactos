@@ -623,6 +623,35 @@ CreateShortcuts(VOID)
     return TRUE;
 }
 
+static BOOL
+SetSetupType(DWORD dwSetupType)
+{
+    DWORD dwError;
+    HKEY hKey;
+
+    dwError = RegOpenKeyExW(
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\Setup",
+        0,
+        KEY_SET_VALUE,
+        &hKey);
+    if (dwError != ERROR_SUCCESS)
+        return FALSE;
+
+    dwError = RegSetValueExW(
+        hKey,
+        L"SetupType",
+        0,
+        REG_DWORD,
+        (LPBYTE)&dwSetupType,
+        sizeof(DWORD));
+    RegCloseKey(hKey);
+    if (dwError != ERROR_SUCCESS)
+        return FALSE;
+
+    return TRUE;
+}
+
 DWORD WINAPI
 InstallReactOS(HINSTANCE hInstance)
 {
@@ -721,6 +750,7 @@ InstallReactOS(HINSTANCE hInstance)
     InstallWizard();
 
     SetupCloseInfFile(hSysSetupInf);
+    SetSetupType(0);
 
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS done");
     TerminateSetupActionLog();
