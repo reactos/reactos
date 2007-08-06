@@ -434,6 +434,8 @@ void SetUserWallpaper(void)
                        &Size) == ERROR_SUCCESS
        && Type == REG_SZ)
     {
+      ExpandEnvironmentStrings(szWallpaper, szWallpaper, MAX_PATH);
+
       /* Load and change the wallpaper */
       SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_SENDCHANGE);
     }
