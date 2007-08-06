@@ -2575,8 +2575,8 @@ NtGdiPaintRgn(HDC  hDC,
   ASSERT(pBrush);
   IntGdiInitBrushInstance(&BrushInst, pBrush, dc->XlateBrush);
 
-  BrushOrigin.x = dc->w.brushOrgX;
-  BrushOrigin.y = dc->w.brushOrgY;
+  BrushOrigin.x = dc->Dc_Attr.ptlBrushOrigin.x;
+  BrushOrigin.y = dc->Dc_Attr.ptlBrushOrigin.y;
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
   /* FIXME - Handle BitmapObj == NULL !!!! */
 

@@ -1100,7 +1100,7 @@ NtGdiEnumObjects(
 
 DC_GET_VAL( COLORREF, NtGdiGetBkColor, Dc_Attr.crBackgroundClr )
 DC_GET_VAL( INT, NtGdiGetBkMode, Dc_Attr.jBkMode )
-DC_GET_VAL_EX( GetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT, x, y )
+DC_GET_VAL_EX( GetBrushOrgEx, Dc_Attr.ptlBrushOrigin.x, Dc_Attr.ptlBrushOrigin.y, POINT, x, y )
 DC_GET_VAL( HRGN, NtGdiGetClipRgn, w.hClipRgn )
 
 HGDIOBJ STDCALL
@@ -1272,8 +1272,8 @@ IntGdiGetDCState(HDC  hDC)
   newdc->Dc_Attr.jBkMode   = dc->Dc_Attr.jBkMode;
   newdc->Dc_Attr.crBackgroundClr  = dc->Dc_Attr.crBackgroundClr;
   newdc->Dc_Attr.crForegroundClr        = dc->Dc_Attr.crForegroundClr;
-  newdc->w.brushOrgX        = dc->w.brushOrgX;
-  newdc->w.brushOrgY        = dc->w.brushOrgY;
+  newdc->Dc_Attr.ptlBrushOrigin.x        = dc->Dc_Attr.ptlBrushOrigin.x;
+  newdc->Dc_Attr.ptlBrushOrigin.y        = dc->Dc_Attr.ptlBrushOrigin.y;
   newdc->Dc_Attr.lTextAlign        = dc->Dc_Attr.lTextAlign;
   newdc->Dc_Attr.lTextExtra        = dc->Dc_Attr.lTextExtra;
   newdc->w.breakTotalExtra  = dc->w.breakTotalExtra;
@@ -1355,8 +1355,8 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
         dc->Dc_Attr.jBkMode   = dcs->Dc_Attr.jBkMode;
         dc->Dc_Attr.crBackgroundClr  = dcs->Dc_Attr.crBackgroundClr;
         dc->Dc_Attr.crForegroundClr        = dcs->Dc_Attr.crForegroundClr;
-        dc->w.brushOrgX        = dcs->w.brushOrgX;
-        dc->w.brushOrgY        = dcs->w.brushOrgY;
+        dc->Dc_Attr.ptlBrushOrigin.x        = dcs->Dc_Attr.ptlBrushOrigin.x;
+        dc->Dc_Attr.ptlBrushOrigin.y        = dcs->Dc_Attr.ptlBrushOrigin.y;
         dc->Dc_Attr.lTextAlign        = dcs->Dc_Attr.lTextAlign;
         dc->Dc_Attr.lTextExtra        = dcs->Dc_Attr.lTextExtra;
         dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;

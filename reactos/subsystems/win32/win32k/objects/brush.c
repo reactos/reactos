@@ -717,8 +717,8 @@ NtGdiSetBrushOrgEx(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
    {
       NTSTATUS Status = STATUS_SUCCESS;
       POINT SafePoint;
-      SafePoint.x = dc->w.brushOrgX;
-      SafePoint.y = dc->w.brushOrgY;
+      SafePoint.x = dc->Dc_Attr.ptlBrushOrigin.x;
+      SafePoint.y = dc->Dc_Attr.ptlBrushOrigin.y;
       _SEH_TRY
       {
          ProbeForWrite(Point,
@@ -740,8 +740,8 @@ NtGdiSetBrushOrgEx(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
       }
    }
 
-   dc->w.brushOrgX = XOrg;
-   dc->w.brushOrgY = YOrg;
+   dc->Dc_Attr.ptlBrushOrigin.x = XOrg;
+   dc->Dc_Attr.ptlBrushOrigin.y = YOrg;
    DC_UnlockDc(dc);
 
    return TRUE;
