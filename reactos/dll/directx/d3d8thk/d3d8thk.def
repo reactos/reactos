@@ -2,7 +2,7 @@ LIBRARY d3d8thk
 EXPORTS
 	OsThunkD3dContextCreate@16 = DdEntry1@16
 	OsThunkD3dContextDestroy@4 = DdEntry2@4
-	OsThunkD3dContextDestroyAll@0 = DdEntry3@0
+	OsThunkD3dContextDestroyAll@4 = DdEntry3@4
 	OsThunkD3dDrawPrimitives2@28 = DdEntry5@28
 	OsThunkD3dValidateTextureStageState@4 = DdEntry4@4
 	OsThunkDdAddAttachedSurface@12 = DdEntry7@12

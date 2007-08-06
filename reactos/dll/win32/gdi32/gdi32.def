@@ -100,7 +100,7 @@ DeviceCapabilitiesExA@20
 DeviceCapabilitiesExW@20
 DdEntry1@16=NtGdiD3dContextCreate@16
 DdEntry2@4=NtGdiD3dContextDestroy@4
-DdEntry3@0=NtGdiD3dContextDestroyAll@0
+DdEntry3@4=NtGdiD3dContextDestroyAll@4
 DdEntry4@4=NtGdiD3dValidateTextureStageState@4
 DdEntry5@28=NtGdiD3dDrawPrimitives2@28
 DdEntry6@4=NtGdiDdGetDriverState@4

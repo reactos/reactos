@@ -21,9 +21,12 @@ BOOL STDCALL OsThunkD3dContextCreate(
 DWORD STDCALL OsThunkD3dContextDestroy(      
     PD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
 );
+
+DWORD STDCALL
+    OsThunkD3dContextDestroyAll(PD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData);
 */
 
-DWORD STDCALL OsThunkD3dContextDestroyAll(VOID);
+DWORD STDCALL OsThunkD3dContextDestroyAll(LPVOID);
 
 /* FIXME PD3DNTHAL_DRAWPRIMITIVES2DATA, PD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA missing
 DWORD STDCALL OsThunkD3dDrawPrimitives2(      
@@ -41,7 +44,7 @@ DWORD STDCALL OsThunkD3dValidateTextureStageState(
 );
 */
 
-DWORD STDCALL OsThunkDdAddAttachedSurface(      
+DWORD STDCALL OsThunkDdAddAttachedSurface( 
     HANDLE hSurface,
     HANDLE hSurfaceAttached,
     PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
@@ -49,7 +52,7 @@ DWORD STDCALL OsThunkDdAddAttachedSurface(
 
 DWORD STDCALL OsThunkDdAlphaBlt(VOID);
 
-BOOL STDCALL OsThunkDdAttachSurface(      
+BOOL STDCALL OsThunkDdAttachSurface(
     HANDLE hSurfaceFrom,
     HANDLE hSurfaceTo
 );
