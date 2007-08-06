@@ -1509,17 +1509,25 @@ If::ProcessXML()
 Property::Property ( const XMLElement& node_,
                      const Project& project_,
                      const Module* module_ )
-	: node(node_), project(project_), module(module_)
+	: project(project_), module(module_)
 {
 	const XMLAttribute* att;
 
-	att = node.GetAttribute ( "name", true );
+	att = node_.GetAttribute ( "name", true );
 	assert(att);
 	name = att->value;
 
-	att = node.GetAttribute ( "value", true );
+	att = node_.GetAttribute ( "value", true );
 	assert(att);
 	value = att->value;
+}
+
+Property::Property ( const Project& project_,
+                     const Module* module_,
+                     const std::string& name_,
+                     const std::string& value_ )
+	: project(project_), module(module_), name(name_), value(value_)
+{
 }
 
 void

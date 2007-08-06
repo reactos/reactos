@@ -215,7 +215,8 @@ public:
 	IfableData non_if_data;
 
 	Project ( const Configuration& configuration,
-	          const std::string& filename );
+	          const std::string& filename,
+	          const std::map<std::string, std::string>* properties = NULL );
 	~Project ();
 	void SetBackend ( Backend* backend ) { _backend = backend; }
 	Backend& GetBackend() { return *_backend; }
@@ -590,7 +591,6 @@ public:
 class Property
 {
 public:
-	const XMLElement& node;
 	const Project& project;
 	const Module* module;
 	std::string name, value;
@@ -598,6 +598,11 @@ public:
 	Property ( const XMLElement& node_,
 	           const Project& project_,
 	           const Module* module_ );
+
+	Property ( const Project& project_,
+	           const Module* module_,
+	           const std::string& name_,
+	           const std::string& value_ );
 
 	void ProcessXML();
 };

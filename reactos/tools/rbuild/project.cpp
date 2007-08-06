@@ -103,13 +103,29 @@ FileLocation::FileLocation ( Directory* directory,
 
 
 Project::Project ( const Configuration& configuration,
-                   const string& filename )
+                   const string& filename,
+                   const std::map<std::string, std::string>* properties )
 	: xmlfile (filename),
 	  node (NULL),
 	  head (NULL),
 	  configuration (configuration)
 {
 	_backend = NULL;
+
+	if ( properties )
+	{
+		std::map<string, string>::const_iterator it;
+		for (it = properties->begin (); it != properties->end (); it++)
+		{
+			const Property *existing = LookupProperty( it->first );
+			if ( !existing )
+			{
+				Property* property = new Property ( *this, NULL, it->first, it->second );
+				non_if_data.properties.push_back (property );
+			}
+		}
+	}
+
 	ReadXml();
 }
 
