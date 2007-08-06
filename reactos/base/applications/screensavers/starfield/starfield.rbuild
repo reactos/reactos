@@ -1,0 +1,13 @@
+<module name="starfield" type="win32scr" installbase="system32" installname="starfield.scr">
+	<define name="__USE_W32API" />
+	<define name="__REACTOS__" />
+	<define name="UNICODE" />
+	<define name="_UNICODE" />
+
+	<library>kernel32</library>
+	<library>user32</library>
+	<library>gdi32</library>
+
+	<file>screensaver.c</file>
+	<file>starfield.rc</file>
+</module>

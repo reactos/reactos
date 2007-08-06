@@ -18,4 +18,8 @@
 	<xi:include href="scrnsave/scrnsave.rbuild" />
 </directory>
 
+<directory name="starfield">
+	<xi:include href="starfield/starfield.rbuild" />
+</directory>
+
 </group>
