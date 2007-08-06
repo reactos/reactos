@@ -34,7 +34,7 @@ NtGdiCombineTransform                            3
 NtGdiCreateBitmap                                5
 NtGdiCreateClientObj                             1
 NtGdiCreateColorSpace                            1
-NtGdiCreateColorTransform                        8
+# NtGdiCreateColorTransform                        8
 NtGdiCreateCompatibleBitmap                      3
 NtGdiCreateCompatibleDC                          1
 NtGdiCreateDIBBrush                              6
@@ -270,7 +270,7 @@ NtGdiSelectClipPath                              2
 # NtGdiSelectPen                                   2
 # NtGdiSetBitmapAttributes                         2
 NtGdiSetBitmapBits                               3
-NtGdiSetBitmapDimension                          4
+# NtGdiSetBitmapDimension                          4
 NtGdiSetBoundsRect                               3
 # NtGdiSetBrushAttributes                          2
 # NtGdiSetBrushOrg                                 4
