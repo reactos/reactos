@@ -1041,6 +1041,10 @@ HRESULT WINAPI DllInstall(BOOL,LPCWSTR) DECLSPEC_HIDDEN;
 
 BOOL WINAPI IsOS(DWORD);
 
+/* SHSetTimerQueueTimer definitions */
+#define TPS_EXECUTEIO    0x00000001
+#define TPS_LONGEXECTIME 0x00000008
+
 #include <poppack.h> 
 
 #ifdef __cplusplus

@@ -302,6 +302,8 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW);
 void WINAPI SHFreeNameMappings(HANDLE);
 DWORD WINAPI SHGetFileInfoA(LPCSTR,DWORD,SHFILEINFOA*,UINT,UINT);
 DWORD WINAPI SHGetFileInfoW(LPCWSTR,DWORD,SHFILEINFOW*,UINT,UINT);
+BOOL WINAPI SHGetNewLinkInfoA(LPCSTR,LPCSTR,LPSTR,BOOL*,UINT);
+BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR,LPCWSTR,LPWSTR,BOOL*,UINT);
 HRESULT WINAPI SHQueryRecycleBinA(LPCSTR, LPSHQUERYRBINFO);
 HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR, LPSHQUERYRBINFO);
 HRESULT WINAPI SHEmptyRecycleBinA(HWND,LPCSTR,DWORD);
@@ -325,6 +327,7 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define ShellExecuteEx ShellExecuteExW
 #define SHFileOperation SHFileOperationW
 #define SHGetFileInfo SHGetFileInfoW
+#define SHGetNewLinkInfo SHGetNewLinkInfoW
 #define SHQueryRecycleBin SHQueryRecycleBinW
 #define SHEmptyRecycleBin SHEmptyRecycleBinW
 
@@ -346,6 +349,7 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define ShellExecuteEx ShellExecuteExA
 #define SHFileOperation SHFileOperationA
 #define SHGetFileInfo SHGetFileInfoA
+#define SHGetNewLinkInfo SHGetNewLinkInfoA
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #endif
