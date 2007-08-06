@@ -12,16 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
-VOID
-NTAPI
-KiSetupStackAndInitializeKernel(IN PKPROCESS InitProcess,
-                                IN PKTHREAD InitThread,
-                                IN PVOID IdleStack,
-                                IN PKPRCB Prcb,
-                                IN CCHAR Number,
-                                IN PLOADER_PARAMETER_BLOCK LoaderBlock);
-
 /* GLOBALS *******************************************************************/
 
 /* Spinlocks used only on X86 */
@@ -765,41 +755,11 @@ AppCpuInit:
     /* Align stack and make space for the trap frame and NPX frame */
     InitialStack &= ~(KTRAP_FRAME_ALIGN - 1);
 
-    /* NOTE: We cannot setup the stack using inline assembly and then later assume
-             that the compiler is smart enough to figure out how the stack layout
-             changed! This is to avoid generating wrong code. We cannot directly
-             call KiInitializeKernel from here! */
-
+    /* Switch to new kernel stack and start kernel bootstrapping */
     KiSetupStackAndInitializeKernel(&KiInitialProcess.Pcb,
                                     InitialThread,
                                     (PVOID)InitialStack,
                                     (PKPRCB)__readfsdword(KPCR_PRCB),
                                     (CCHAR)Cpu,
                                     KeLoaderBlock);
-
-    /* NOTE: KiSetupStackAndInitializeKernel never returns! Do NOT add any code here! */
-    ASSERT(FALSE);
-}
-
-VOID
-NTAPI
-KiSystemStartupFinal(VOID)
-{
-    /* NOTE: This routine is called after setting up the stack in KiSystemStartup!
-             This code cannot be moved to KiSystemStartup because it cannot be assumed
-             that the compiler can generate working code after modifying ESP/EBP
-             using inline assembly! */
-
-    /* Set the priority of this thread to 0 */
-    KeGetCurrentThread()->Priority = 0;
-
-    /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
-    _enable();
-    KfLowerIrql(DISPATCH_LEVEL);
-
-    /* Set the right wait IRQL */
-    KeGetCurrentThread()->WaitIrql = DISPATCH_LEVEL;
-
-    /* Jump into the idle loop */
-    KiIdleLoop();
 }

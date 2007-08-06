@@ -37,7 +37,6 @@
                 <file>cpu.c</file>
                 <file>ctxswitch.S</file>
                 <file>exp.c</file>
-                <file>init.S</file>
                 <file>irqobj.c</file>
                 <file>kiinit.c</file>
                 <file>ldt.c</file>

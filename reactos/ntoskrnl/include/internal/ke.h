@@ -831,6 +831,17 @@ KiFlushNPXState(
 
 VOID
 NTAPI
+KiSetupStackAndInitializeKernel(
+    IN PKPROCESS InitProcess,
+    IN PKTHREAD InitThread,
+    IN PVOID IdleStack,
+    IN PKPRCB Prcb,
+    IN CCHAR Number,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
 KiInitSpinLocks(
     IN PKPRCB Prcb,
     IN CCHAR Number

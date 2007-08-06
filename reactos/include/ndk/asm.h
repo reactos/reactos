@@ -113,6 +113,7 @@ Author:
 #define KTHREAD_WAIT_IRQL                       0x4E
 #define KTHREAD_NEXT_PROCESSOR                  0x40
 #define KTHREAD_WAIT_REASON                     0x5A
+#define KTHREAD_PRIORITY                        0x5B
 #define KTHREAD_SWAP_BUSY                       0x5D
 #define KTHREAD_SERVICE_TABLE                   0x118
 #define KTHREAD_PREVIOUS_MODE                   0xD7
@@ -609,5 +610,6 @@ Author:
 #define PRIMARY_VECTOR_BASE                     0x30 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
+
 
 
