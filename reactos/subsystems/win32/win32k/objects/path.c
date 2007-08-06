@@ -1606,7 +1606,7 @@ end:
     dc->Dc_Attr.ptlWindowOrg.y = ptWindowOrg.y;
     
     dc->Dc_Attr.szlViewportExt.cx = szViewportExt.cx;
-    dc->Dc_Attr.szlViewportExt.cx = szViewportExt.cy;
+    dc->Dc_Attr.szlViewportExt.cy = szViewportExt.cy;
     dc->Dc_Attr.ptlViewportOrg.x = ptViewportOrg.x;
     dc->Dc_Attr.ptlViewportOrg.y = ptViewportOrg.y;
 
