@@ -1,5 +1,17 @@
 <module name="psdk" type="idlheader">
+	<file>activscp.idl</file>
+	<file>control.idl</file>
+	<file>dispex.idl</file>
 	<file>docobj.idl</file>
+	<file>downloadmgr.idl</file>
+	<file>hlink.idl</file>
+	<file>htiframe.idl</file>
+	<file>iads.idl</file>
+	<file>indexsrv.idl</file>
+	<file>mimeinfo.idl</file>
+	<file>mlang.idl</file>
+	<file>mshtml.idl</file>
+	<file>msxml.idl</file>
 	<file>oaidl.idl</file>
 	<file>objidl.idl</file>
 	<file>objsafe.idl</file>
