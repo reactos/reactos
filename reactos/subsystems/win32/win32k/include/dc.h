@@ -89,15 +89,6 @@ typedef struct _DC
   UNICODE_STRING    DriverName;
   HANDLE  DeviceDriver;
 
-  INT  wndOrgX;          /* Window origin */
-  INT  wndOrgY;
-  INT  wndExtX;          /* Window extent */
-  INT  wndExtY;
-  INT  vportOrgX;        /* Viewport origin */
-  INT  vportOrgY;
-  INT  vportExtX;        /* Viewport extent */
-  INT  vportExtY;
-
   CLIPOBJ *CombinedClip;
 
   XLATEOBJ *XlateBrush;

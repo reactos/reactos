@@ -1860,7 +1860,8 @@ BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
     if(NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
       goto done;
 
-    NtGdiOffsetRgn(hDest, dc->vportOrgX - dc->wndOrgX, dc->vportOrgY - dc->wndOrgY);
+    NtGdiOffsetRgn(hDest, dc->Dc_Attr.ptlViewportOrg.x - dc->Dc_Attr.ptlWindowOrg.x,
+                                       dc->Dc_Attr.ptlViewportOrg.y - dc->Dc_Attr.ptlWindowOrg.y);
     ret = TRUE;
     goto done;
   }

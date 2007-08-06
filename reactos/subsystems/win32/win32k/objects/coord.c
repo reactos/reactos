@@ -37,18 +37,18 @@
 void FASTCALL
 IntFixIsotropicMapping(PDC dc)
 {
-  ULONG xdim = EngMulDiv(dc->vportExtX, dc->GDIInfo->ulHorzSize, dc->GDIInfo->ulHorzRes) / dc->wndExtX;
-  ULONG ydim = EngMulDiv(dc->vportExtY, dc->GDIInfo->ulVertSize, dc->GDIInfo->ulVertRes) / dc->wndExtY;
+  ULONG xdim = EngMulDiv(dc->Dc_Attr.szlViewportExt.cx, dc->GDIInfo->ulHorzSize, dc->GDIInfo->ulHorzRes) / dc->Dc_Attr.szlWindowExt.cx;
+  ULONG ydim = EngMulDiv(dc->Dc_Attr.szlViewportExt.cy, dc->GDIInfo->ulVertSize, dc->GDIInfo->ulVertRes) / dc->Dc_Attr.szlWindowExt.cy;
 
   if (xdim > ydim)
   {
-    dc->vportExtX = dc->vportExtX * abs(ydim / xdim);
-    if (!dc->vportExtX) dc->vportExtX = 1;
+    dc->Dc_Attr.szlViewportExt.cx = dc->Dc_Attr.szlViewportExt.cx * abs(ydim / xdim);
+    if (!dc->Dc_Attr.szlViewportExt.cx) dc->Dc_Attr.szlViewportExt.cx = 1;
   }
   else
   {
-    dc->vportExtY = dc->vportExtY * abs(xdim / ydim);
-    if (!dc->vportExtY) dc->vportExtY = 1;
+    dc->Dc_Attr.szlViewportExt.cy = dc->Dc_Attr.szlViewportExt.cy * abs(xdim / ydim);
+    if (!dc->Dc_Attr.szlViewportExt.cy) dc->Dc_Attr.szlViewportExt.cy = 1;
   }
 }
 
@@ -550,8 +550,8 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
             ProbeForWrite(UnsafePoint,
                           sizeof(POINT),
                           1);
-            UnsafePoint->x = dc->vportOrgX;
-            UnsafePoint->y = dc->vportOrgY;
+            UnsafePoint->x = dc->Dc_Attr.ptlViewportOrg.x;
+            UnsafePoint->y = dc->Dc_Attr.ptlViewportOrg.y;
         }
         _SEH_HANDLE
         {
@@ -567,8 +567,8 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
 	  }
     }
 
-  dc->vportOrgX += XOffset;
-  dc->vportOrgY += YOffset;
+  dc->Dc_Attr.ptlViewportOrg.x += XOffset;
+  dc->Dc_Attr.ptlViewportOrg.y += YOffset;
   DC_UpdateXforms(dc);
 
   DC_UnlockDc(dc);
@@ -600,8 +600,8 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
          ProbeForWrite(Point,
                        sizeof(POINT),
                        1);
-         Point->x = dc->wndOrgX;
-         Point->y = dc->wndOrgY;
+         Point->x = dc->Dc_Attr.ptlWindowOrg.x;
+         Point->y = dc->Dc_Attr.ptlWindowOrg.y;
       }
       _SEH_HANDLE
       {
@@ -617,8 +617,8 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
       }
     }
 
-  dc->wndOrgX += XOffset;
-  dc->wndOrgY += YOffset;
+  dc->Dc_Attr.ptlWindowOrg.x += XOffset;
+  dc->Dc_Attr.ptlWindowOrg.y += YOffset;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
@@ -710,46 +710,46 @@ NtGdiSetMapMode(HDC  hDC,
     switch (MapMode)
     {
       case MM_TEXT:
-        dc->wndExtX = 1;
-        dc->wndExtY = 1;
-        dc->vportExtX = 1;
-        dc->vportExtY = 1;
+        dc->Dc_Attr.szlWindowExt.cx = 1;
+        dc->Dc_Attr.szlWindowExt.cy = 1;
+        dc->Dc_Attr.szlViewportExt.cx = 1;
+        dc->Dc_Attr.szlViewportExt.cy = 1;
         break;
 
       case MM_LOMETRIC:
       case MM_ISOTROPIC:
-        dc->wndExtX = dc->GDIInfo->ulHorzSize * 10;
-        dc->wndExtY = dc->GDIInfo->ulVertSize * 10;
-        dc->vportExtX = dc->GDIInfo->ulHorzRes;
-        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        dc->Dc_Attr.szlWindowExt.cx = dc->GDIInfo->ulHorzSize * 10;
+        dc->Dc_Attr.szlWindowExt.cy = dc->GDIInfo->ulVertSize * 10;
+        dc->Dc_Attr.szlViewportExt.cx = dc->GDIInfo->ulHorzRes;
+        dc->Dc_Attr.szlViewportExt.cy = -dc->GDIInfo->ulVertRes;
         break;
 
       case MM_HIMETRIC:
-        dc->wndExtX = dc->GDIInfo->ulHorzSize * 100;
-        dc->wndExtY = dc->GDIInfo->ulVertSize * 100;
-        dc->vportExtX = dc->GDIInfo->ulHorzRes;
-        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        dc->Dc_Attr.szlWindowExt.cx = dc->GDIInfo->ulHorzSize * 100;
+        dc->Dc_Attr.szlWindowExt.cy = dc->GDIInfo->ulVertSize * 100;
+        dc->Dc_Attr.szlViewportExt.cx = dc->GDIInfo->ulHorzRes;
+        dc->Dc_Attr.szlViewportExt.cy = -dc->GDIInfo->ulVertRes;
         break;
 
       case MM_LOENGLISH:
-        dc->wndExtX = EngMulDiv(1000, dc->GDIInfo->ulHorzSize, 254);
-        dc->wndExtY = EngMulDiv(1000, dc->GDIInfo->ulVertSize, 254);
-        dc->vportExtX = dc->GDIInfo->ulHorzRes;
-        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        dc->Dc_Attr.szlWindowExt.cx = EngMulDiv(1000, dc->GDIInfo->ulHorzSize, 254);
+        dc->Dc_Attr.szlWindowExt.cy = EngMulDiv(1000, dc->GDIInfo->ulVertSize, 254);
+        dc->Dc_Attr.szlViewportExt.cx = dc->GDIInfo->ulHorzRes;
+        dc->Dc_Attr.szlViewportExt.cy = -dc->GDIInfo->ulVertRes;
         break;
 
       case MM_HIENGLISH:
-        dc->wndExtX = EngMulDiv(10000, dc->GDIInfo->ulHorzSize, 254);
-        dc->wndExtY = EngMulDiv(10000, dc->GDIInfo->ulVertSize, 254);
-        dc->vportExtX = dc->GDIInfo->ulHorzRes;
-        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        dc->Dc_Attr.szlWindowExt.cx = EngMulDiv(10000, dc->GDIInfo->ulHorzSize, 254);
+        dc->Dc_Attr.szlWindowExt.cy = EngMulDiv(10000, dc->GDIInfo->ulVertSize, 254);
+        dc->Dc_Attr.szlViewportExt.cx = dc->GDIInfo->ulHorzRes;
+        dc->Dc_Attr.szlViewportExt.cy = -dc->GDIInfo->ulVertRes;
         break;
 
       case MM_TWIPS:
-        dc->wndExtX = EngMulDiv(14400, dc->GDIInfo->ulHorzSize, 254);
-        dc->wndExtY = EngMulDiv(14400, dc->GDIInfo->ulVertSize, 254);
-        dc->vportExtX = dc->GDIInfo->ulHorzRes;
-        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        dc->Dc_Attr.szlWindowExt.cx = EngMulDiv(14400, dc->GDIInfo->ulHorzSize, 254);
+        dc->Dc_Attr.szlWindowExt.cy = EngMulDiv(14400, dc->GDIInfo->ulVertSize, 254);
+        dc->Dc_Attr.szlViewportExt.cx = dc->GDIInfo->ulHorzRes;
+        dc->Dc_Attr.szlViewportExt.cy = -dc->GDIInfo->ulVertRes;
         break;
 
       case MM_ANISOTROPIC:
@@ -806,11 +806,11 @@ NtGdiSetViewportExtEx(HDC  hDC,
          ProbeForWrite(Size,
                        sizeof(SIZE),
                        1);
-         Size->cx = dc->vportExtX;
-         Size->cy = dc->vportExtY;
+         Size->cx = dc->Dc_Attr.szlViewportExt.cx;
+         Size->cy = dc->Dc_Attr.szlViewportExt.cy;
 
-		 dc->vportExtX = XExtent;
-         dc->vportExtY = YExtent;
+		 dc->Dc_Attr.szlViewportExt.cx = XExtent;
+         dc->Dc_Attr.szlViewportExt.cy = YExtent;
 
          if (dc->Dc_Attr.iMapMode == MM_ISOTROPIC)
              IntFixIsotropicMapping(dc);
@@ -861,8 +861,8 @@ NtGdiSetViewportOrgEx(HDC  hDC,
          ProbeForWrite(Point,
                        sizeof(POINT),
                        1);
-         Point->x = dc->vportOrgX;
-         Point->y = dc->vportOrgY;
+         Point->x = dc->Dc_Attr.ptlViewportOrg.x;
+         Point->y = dc->Dc_Attr.ptlViewportOrg.y;
       }
       _SEH_HANDLE
       {
@@ -878,8 +878,8 @@ NtGdiSetViewportOrgEx(HDC  hDC,
       }
     }
 
-  dc->vportOrgX = X;
-  dc->vportOrgY = Y;
+  dc->Dc_Attr.ptlViewportOrg.x = X;
+  dc->Dc_Attr.ptlViewportOrg.y = Y;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
@@ -924,8 +924,8 @@ NtGdiSetWindowExtEx(HDC  hDC,
          ProbeForWrite(Size,
                        sizeof(SIZE),
                        1);
-         Size->cx = dc->wndExtX;
-         Size->cy = dc->wndExtY;
+         Size->cx = dc->Dc_Attr.szlWindowExt.cx;
+         Size->cy = dc->Dc_Attr.szlWindowExt.cy;
       }
       _SEH_HANDLE
       {
@@ -941,8 +941,8 @@ NtGdiSetWindowExtEx(HDC  hDC,
       }
     }
 
-  dc->wndExtX = XExtent;
-  dc->wndExtY = YExtent;
+  dc->Dc_Attr.szlWindowExt.cx = XExtent;
+  dc->Dc_Attr.szlWindowExt.cy = YExtent;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
@@ -975,8 +975,8 @@ NtGdiSetWindowOrgEx(HDC  hDC,
          ProbeForWrite(Point,
                        sizeof(POINT),
                        1);
-         Point->x = dc->wndOrgX;
-         Point->y = dc->wndOrgY;
+         Point->x = dc->Dc_Attr.ptlWindowOrg.x;
+         Point->y = dc->Dc_Attr.ptlWindowOrg.y;
       }
       _SEH_HANDLE
       {
@@ -992,8 +992,8 @@ NtGdiSetWindowOrgEx(HDC  hDC,
       }
     }
 
-  dc->wndOrgX = X;
-  dc->wndOrgY = Y;
+  dc->Dc_Attr.ptlWindowOrg.x = X;
+  dc->Dc_Attr.ptlWindowOrg.y = Y;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);

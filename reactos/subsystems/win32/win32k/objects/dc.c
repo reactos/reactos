@@ -216,14 +216,14 @@ NtGdiCreateCompatibleDC(HDC hDC)
 
   /* DriverName is copied in the AllocDC routine  */
   NewDC->DeviceDriver = OrigDC->DeviceDriver;
-  NewDC->wndOrgX = OrigDC->wndOrgX;
-  NewDC->wndOrgY = OrigDC->wndOrgY;
-  NewDC->wndExtX = OrigDC->wndExtX;
-  NewDC->wndExtY = OrigDC->wndExtY;
-  NewDC->vportOrgX = OrigDC->vportOrgX;
-  NewDC->vportOrgY = OrigDC->vportOrgY;
-  NewDC->vportExtX = OrigDC->vportExtX;
-  NewDC->vportExtY = OrigDC->vportExtY;
+  NewDC->Dc_Attr.ptlWindowOrg.x = OrigDC->Dc_Attr.ptlWindowOrg.x;
+  NewDC->Dc_Attr.ptlWindowOrg.y = OrigDC->Dc_Attr.ptlWindowOrg.y;
+  NewDC->Dc_Attr.szlWindowExt.cx = OrigDC->Dc_Attr.szlWindowExt.cx;
+  NewDC->Dc_Attr.szlWindowExt.cy = OrigDC->Dc_Attr.szlWindowExt.cy;
+  NewDC->Dc_Attr.ptlViewportOrg.x = OrigDC->Dc_Attr.ptlViewportOrg.x;
+  NewDC->Dc_Attr.ptlViewportOrg.y = OrigDC->Dc_Attr.ptlViewportOrg.y;
+  NewDC->Dc_Attr.szlViewportExt.cx = OrigDC->Dc_Attr.szlViewportExt.cx;
+  NewDC->Dc_Attr.szlViewportExt.cy = OrigDC->Dc_Attr.szlViewportExt.cy;
 
   /* Create default bitmap */
   if (!(hBitmap = NtGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
@@ -1294,14 +1294,14 @@ IntGdiGetDCState(HDC  hDC)
   newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
   newdc->w.xformVport2World = dc->w.xformVport2World;
   newdc->w.vport2WorldValid = dc->w.vport2WorldValid;
-  newdc->wndOrgX            = dc->wndOrgX;
-  newdc->wndOrgY            = dc->wndOrgY;
-  newdc->wndExtX            = dc->wndExtX;
-  newdc->wndExtY            = dc->wndExtY;
-  newdc->vportOrgX          = dc->vportOrgX;
-  newdc->vportOrgY          = dc->vportOrgY;
-  newdc->vportExtX          = dc->vportExtX;
-  newdc->vportExtY          = dc->vportExtY;
+  newdc->Dc_Attr.ptlWindowOrg.x            = dc->Dc_Attr.ptlWindowOrg.x;
+  newdc->Dc_Attr.ptlWindowOrg.y            = dc->Dc_Attr.ptlWindowOrg.y;
+  newdc->Dc_Attr.szlWindowExt.cx            = dc->Dc_Attr.szlWindowExt.cx;
+  newdc->Dc_Attr.szlWindowExt.cy            = dc->Dc_Attr.szlWindowExt.cy;
+  newdc->Dc_Attr.ptlViewportOrg.x          = dc->Dc_Attr.ptlViewportOrg.x;
+  newdc->Dc_Attr.ptlViewportOrg.y          = dc->Dc_Attr.ptlViewportOrg.y;
+  newdc->Dc_Attr.szlViewportExt.cx          = dc->Dc_Attr.szlViewportExt.cx;
+  newdc->Dc_Attr.szlViewportExt.cy          = dc->Dc_Attr.szlViewportExt.cy;
 
   newdc->hSelf = hnewdc;
   newdc->saveLevel = 0;
@@ -1379,14 +1379,14 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
         dc->w.xformVport2World = dcs->w.xformVport2World;
         dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
 
-        dc->wndOrgX            = dcs->wndOrgX;
-        dc->wndOrgY            = dcs->wndOrgY;
-        dc->wndExtX            = dcs->wndExtX;
-        dc->wndExtY            = dcs->wndExtY;
-        dc->vportOrgX          = dcs->vportOrgX;
-        dc->vportOrgY          = dcs->vportOrgY;
-        dc->vportExtX          = dcs->vportExtX;
-        dc->vportExtY          = dcs->vportExtY;
+        dc->Dc_Attr.ptlWindowOrg.x            = dcs->Dc_Attr.ptlWindowOrg.x;
+        dc->Dc_Attr.ptlWindowOrg.y            = dcs->Dc_Attr.ptlWindowOrg.y;
+        dc->Dc_Attr.szlWindowExt.cx            = dcs->Dc_Attr.szlWindowExt.cx;
+        dc->Dc_Attr.szlWindowExt.cy            = dcs->Dc_Attr.szlWindowExt.cy;
+        dc->Dc_Attr.ptlViewportOrg.x          = dcs->Dc_Attr.ptlViewportOrg.x;
+        dc->Dc_Attr.ptlViewportOrg.y          = dcs->Dc_Attr.ptlViewportOrg.y;
+        dc->Dc_Attr.szlViewportExt.cx          = dcs->Dc_Attr.szlViewportExt.cx;
+        dc->Dc_Attr.szlViewportExt.cy          = dcs->Dc_Attr.szlViewportExt.cy;
         dc->PalIndexed         = dcs->PalIndexed;
 
         if (!(dc->w.flags & DC_MEMORY))
@@ -1778,10 +1778,10 @@ DC_GET_VAL( INT, NtGdiGetROP2, Dc_Attr.jROP2 )
 DC_GET_VAL( INT, NtGdiGetStretchBltMode, Dc_Attr.jStretchBltMode )
 DC_GET_VAL( UINT, NtGdiGetTextAlign, Dc_Attr.lTextAlign )
 DC_GET_VAL( COLORREF, NtGdiGetTextColor, Dc_Attr.crForegroundClr )
-DC_GET_VAL_EX( GetViewportExtEx, vportExtX, vportExtY, SIZE, cx, cy )
-DC_GET_VAL_EX( GetViewportOrgEx, vportOrgX, vportOrgY, POINT, x, y )
-DC_GET_VAL_EX( GetWindowExtEx, wndExtX, wndExtY, SIZE, cx, cy )
-DC_GET_VAL_EX( GetWindowOrgEx, wndOrgX, wndOrgY, POINT, x, y )
+DC_GET_VAL_EX( GetViewportExtEx, Dc_Attr.szlViewportExt.cx, Dc_Attr.szlViewportExt.cy, SIZE, cx, cy )
+DC_GET_VAL_EX( GetViewportOrgEx, Dc_Attr.ptlViewportOrg.x, Dc_Attr.ptlViewportOrg.y, POINT, x, y )
+DC_GET_VAL_EX( GetWindowExtEx, Dc_Attr.szlWindowExt.cx, Dc_Attr.szlWindowExt.cy, SIZE, cx, cy )
+DC_GET_VAL_EX( GetWindowOrgEx, Dc_Attr.ptlWindowOrg.x, Dc_Attr.ptlWindowOrg.y, POINT, x, y )
 
 BOOL
 APIENTRY
@@ -2205,10 +2205,12 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->Dc_Attr.iMapMode = MM_TEXT;
 //  DC_Attr->iMapMode = MM_TEXT;
 
-  NewDC->wndExtX = 1.0f;
-  NewDC->wndExtY = 1.0f;
-  NewDC->vportExtX = 1.0f;
-  NewDC->vportExtY = 1.0f;
+
+//// HELP! FLOAT to INT !!!!!!!!!
+  NewDC->Dc_Attr.szlWindowExt.cx = 1.0f;
+  NewDC->Dc_Attr.szlWindowExt.cy = 1.0f;
+  NewDC->Dc_Attr.szlViewportExt.cx = 1.0f;
+  NewDC->Dc_Attr.szlViewportExt.cy = 1.0f;
 
   NewDC->Dc_Attr.crForegroundClr = 0;
 //  NewDC->pDc_Attr->ulForegroundClr = 0; // Already Zero
@@ -2313,14 +2315,14 @@ DC_UpdateXforms(PDC  dc)
   FLOAT  scaleX, scaleY;
 
   /* Construct a transformation to do the window-to-viewport conversion */
-  scaleX = (dc->wndExtX ? (FLOAT)dc->vportExtX / (FLOAT)dc->wndExtX : 0.0f);
-  scaleY = (dc->wndExtY ? (FLOAT)dc->vportExtY / (FLOAT)dc->wndExtY : 0.0f);
+  scaleX = (dc->Dc_Attr.szlWindowExt.cx ? (FLOAT)dc->Dc_Attr.szlViewportExt.cx / (FLOAT)dc->Dc_Attr.szlWindowExt.cx : 0.0f);
+  scaleY = (dc->Dc_Attr.szlWindowExt.cy ? (FLOAT)dc->Dc_Attr.szlViewportExt.cy / (FLOAT)dc->Dc_Attr.szlWindowExt.cy : 0.0f);
   xformWnd2Vport.eM11 = scaleX;
   xformWnd2Vport.eM12 = 0.0;
   xformWnd2Vport.eM21 = 0.0;
   xformWnd2Vport.eM22 = scaleY;
-  xformWnd2Vport.eDx  = (FLOAT)dc->vportOrgX - scaleX * (FLOAT)dc->wndOrgX;
-  xformWnd2Vport.eDy  = (FLOAT)dc->vportOrgY - scaleY * (FLOAT)dc->wndOrgY;
+  xformWnd2Vport.eDx  = (FLOAT)dc->Dc_Attr.ptlViewportOrg.x - scaleX * (FLOAT)dc->Dc_Attr.ptlWindowOrg.x;
+  xformWnd2Vport.eDy  = (FLOAT)dc->Dc_Attr.ptlViewportOrg.y - scaleY * (FLOAT)dc->Dc_Attr.ptlWindowOrg.y;
 
   /* Combine with the world transformation */
   IntGdiCombineTransform(&dc->w.xformWorld2Vport, &dc->w.xformWorld2Wnd, &xformWnd2Vport);

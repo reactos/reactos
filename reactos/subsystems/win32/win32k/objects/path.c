@@ -1487,10 +1487,10 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
 
     /* Set MM_TEXT */
     dc->Dc_Attr.iMapMode = MM_TEXT;
-    dc->vportOrgX = 0;
-    dc->vportOrgY = 0;
-    dc->wndOrgX = 0;
-    dc->wndOrgY = 0;
+    dc->Dc_Attr.ptlViewportOrg.x = 0;
+    dc->Dc_Attr.ptlViewportOrg.y = 0;
+    dc->Dc_Attr.ptlWindowOrg.x = 0;
+    dc->Dc_Attr.ptlWindowOrg.y = 0;
     graphicsMode = dc->Dc_Attr.iGraphicsMode;
     dc->Dc_Attr.iGraphicsMode = GM_ADVANCED;
     IntGdiModifyWorldTransform(dc, &xform, MWT_IDENTITY);
@@ -1600,15 +1600,15 @@ end:
 
     /* Restore the old mapping mode */
     dc->Dc_Attr.iMapMode =  mapMode;
-    dc->wndExtX = szWindowExt.cx;
-    dc->wndExtY = szWindowExt.cy;
-    dc->wndOrgX = ptWindowOrg.x;
-    dc->wndOrgY = ptWindowOrg.y;
+    dc->Dc_Attr.szlWindowExt.cx = szWindowExt.cx;
+    dc->Dc_Attr.szlWindowExt.cy = szWindowExt.cy;
+    dc->Dc_Attr.ptlWindowOrg.x = ptWindowOrg.x;
+    dc->Dc_Attr.ptlWindowOrg.y = ptWindowOrg.y;
     
-    dc->vportExtX = szViewportExt.cx;
-    dc->vportExtY = szViewportExt.cy;
-    dc->vportOrgX = ptViewportOrg.x;
-    dc->vportOrgY = ptViewportOrg.y;
+    dc->Dc_Attr.szlViewportExt.cx = szViewportExt.cx;
+    dc->Dc_Attr.szlViewportExt.cx = szViewportExt.cy;
+    dc->Dc_Attr.ptlViewportOrg.x = ptViewportOrg.x;
+    dc->Dc_Attr.ptlViewportOrg.y = ptViewportOrg.y;
 
     /* Restore the world transform */
     dc->w.xformWorld2Wnd = xform;
