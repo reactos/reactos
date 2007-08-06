@@ -628,6 +628,8 @@ InstallReactOS(HINSTANCE hInstance)
 {
     TCHAR szBuffer[MAX_PATH];
     DWORD LastError;
+    HANDLE token;
+    TOKEN_PRIVILEGES privs;
 
     InitializeSetupActionLog(FALSE);
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
@@ -722,6 +724,34 @@ InstallReactOS(HINSTANCE hInstance)
 
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS done");
     TerminateSetupActionLog();
+
+    /* Get shutdown privilege */
+    if (! OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+    {
+        DebugPrint("OpenProcessToken() failed!");
+        return 0;
+    }
+    if (!LookupPrivilegeValue(
+        NULL,
+        SE_SHUTDOWN_NAME,
+        &privs.Privileges[0].Luid))
+    {
+        DebugPrint("LookupPrivilegeValue() failed!");
+        return 0;
+    }
+    privs.PrivilegeCount = 1;
+    privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    if (AdjustTokenPrivileges(
+        token,
+        FALSE,
+        &privs,
+        0,
+        (PTOKEN_PRIVILEGES)NULL,
+        NULL) == 0)
+    {
+        DebugPrint("AdjustTokenPrivileges() failed!");
+        return 0;
+    }
 
     /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
     /// DO NOT REMOVE!!!
