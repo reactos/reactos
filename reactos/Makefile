@@ -380,7 +380,7 @@ else
 endif
 INSTALL_ := $(INSTALL)$(SEP)
 
-RBUILD_FLAGS := -rReactOS-$(ARCH).rbuild
+RBUILD_FLAGS := -rReactOS-$(ARCH).rbuild -DARCH=$(ARCH)
 
 $(INTERMEDIATE):
 	${mkdir} $@

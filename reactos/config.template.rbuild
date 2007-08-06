@@ -13,12 +13,6 @@
 
 
 <!--
-  Architecture to build for. Specify one of:
-    i386
--->
-<property name="ARCH" value="i386" />
-
-<!--
   Sub-architecture to build for. Specify one of:
     xbox
 -->

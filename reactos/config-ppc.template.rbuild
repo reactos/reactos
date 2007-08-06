@@ -13,12 +13,6 @@
 
 
 <!--
-  Architecture to build for. Specify one of:
-    i386
--->
-<property name="ARCH" value="powerpc" />
-
-<!--
   Sub-architecture to build for. Specify one of:
     xbox
 -->
