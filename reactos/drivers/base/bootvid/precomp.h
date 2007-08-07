@@ -1,3 +1,5 @@
+void _enable(void);
+void _disable(void);
 #include "ntddk.h"
 #include "arc/arc.h"
 #include "halfuncs.h"
