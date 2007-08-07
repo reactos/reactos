@@ -766,7 +766,7 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 	char separators[] = " ";
 	char *token;
 	char *prevtoken = NULL;
-	
+
 	string version;
 
 	token = strtok ( buffer, separators );
@@ -865,11 +865,11 @@ MingwBackend::GetBinutilsVersionDate ( const string& binutilsCommand )
 	}
 	buffer[i] = '\0';
 	pclose ( fp );
-	
+
 	char separators[] = " ";
 	char *token;
 	char *prevtoken = NULL;
-	
+
 	token = strtok ( buffer, separators );
 	while ( token != NULL )
 	{

@@ -119,12 +119,12 @@ public:
 	                  const std::string& parent );
 private:
 	bool mkdir_p ( const char* path );
-	std::string ReplaceVariable ( std::string name,
-	                              std::string value,
+	std::string ReplaceVariable ( const std::string& name,
+	                              const std::string& value,
 	                              std::string path );
 	std::string GetEnvironmentVariable ( const std::string& name );
 	void ResolveVariablesInPath ( char* buf,
-	                              std::string path );
+	                              const std::string& path );
 	bool CreateDirectory ( std::string path );
 };
 
@@ -354,6 +354,7 @@ private:
 	std::string entrypoint;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
+	                            const std::string& path_prefix,
 	                            ParseContext& parseContext );
 };
 
@@ -388,10 +389,10 @@ class Define
 public:
 	const Project& project;
 	const Module* module;
-    const XMLElement* node;
+	const XMLElement* node;
 	std::string name;
 	std::string value;
-    std::string backend;
+	std::string backend;
 
 	Define ( const Project& project,
 	         const XMLElement& defineNode );
@@ -413,6 +414,7 @@ class File
 {
 public:
 	std::string name;
+	std::string path_prefix;
 	bool first;
 	std::string switches;
 	bool isPreCompiledHeader;
@@ -422,7 +424,14 @@ public:
 	       std::string _switches,
 	       bool _isPreCompiledHeader );
 
+	File ( const std::string& _name,
+	       const std::string& _path_prefix,
+	       bool _first,
+	       std::string _switches,
+	       bool _isPreCompiledHeader );
+
 	void ProcessXML();
+	std::string GetFullPath () const;
 };
 
 
@@ -629,11 +638,11 @@ private:
 	void WriteHooksFile ( Module& module );
 	std::string GetStubsFilename ( Module& module );
 	char* WriteStubbedSymbolToStubsFile ( char* buffer,
-                                              const StubbedComponent& component,
+	                                      const StubbedComponent& component,
 	                                      const StubbedSymbol& symbol,
 	                                      int stubIndex );
 	char* WriteStubbedComponentToStubsFile ( char* buffer,
-                                                 const StubbedComponent& component,
+	                                         const StubbedComponent& component,
 	                                         int* stubIndex );
 	void WriteStubsFile ( Module& module );
 	std::string GetStartupFilename ( Module& module );
@@ -641,9 +650,9 @@ private:
 	std::string GetTestDispatcherName ( std::string filename );
 	bool IsTestFile ( std::string& filename ) const;
 	void GetSourceFilenames ( string_list& list,
-                                  Module& module ) const;
+	                          Module& module ) const;
 	char* WriteTestDispatcherPrototypesToStartupFile ( char* buffer,
-                                                           Module& module );
+	                                                   Module& module );
 	char* WriteRegisterTestsFunctionToStartupFile ( char* buffer,
 	                                                Module& module );
 	void WriteStartupFile ( Module& module );
@@ -740,18 +749,22 @@ public:
 private:
 	void GetModulesToCheck ( Module& module, std::vector<const Module*>& modules );
 	void CheckAutomaticDependencies ( const Module& module,
-                                          bool verbose );
+	                                  bool verbose );
 	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 	void GetIncludeDirectories ( std::vector<Include*>& includes,
 	                             const Module& module,
-                                     Include& currentDirectory,
-                                     bool searchCurrentDirectory );
+	                             Include& currentDirectory,
+	                             bool searchCurrentDirectory );
 	void GetModuleFiles ( const Module& module,
-                              std::vector<File*>& files ) const;
+	                          std::vector<File*>& files ) const;
 	void ParseFiles ();
 	void ParseFiles ( const Module& module );
 	void ParseFile ( const Module& module,
 	                 const File& file );
+	std::string ReplaceVariable ( const std::string& name,
+	                              const std::string& value,
+	                              std::string path );
+	std::string ResolveVariablesInPath ( const std::string& path );
 	std::map<std::string, SourceFile*> sourcefile_map;
 };
 
@@ -994,7 +1007,6 @@ GetSubPath (
 	const Project& project,
 	const std::string& location,
 	const std::string& path,
-	const XMLAttribute* root,
 	const std::string& att_value );
 
 extern std::string

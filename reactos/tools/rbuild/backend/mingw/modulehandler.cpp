@@ -466,7 +466,7 @@ MingwModuleHandler::GetSourceFilenames ( string_list& list,
 			FileLocation* sourceFileLocation = GetActualSourceFilename (
 				compilationUnits[i]->GetFilename ( backend->intermediateDirectory ) );
 			list.push_back ( PassThruCacheDirectory ( sourceFileLocation->filename,
-		                                                  sourceFileLocation->directory ) );
+			                                          sourceFileLocation->directory ) );
 		}
 	}
 	// intentionally make a copy so that we can append more work in
@@ -693,9 +693,9 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 		if ( parameters.length () > 0 )
 			parameters += " ";
 		if ( include.root == "intermediate" )
-			path_prefix = backend->intermediateDirectory->name + cSep;
+			path_prefix = "$(INTERMEDIATE)" + sSep;
 		else if (include.root == "output" )
-			path_prefix = backend->outputDirectory->name + cSep;
+			path_prefix = "$(OUTPUT)" + sSep;
 		else
 			path_prefix = "";
 
@@ -811,14 +811,14 @@ MingwModuleHandler::GenerateMacro (
 		       include.baseModule->type == RpcClient ||
 		       include.baseModule->type == IdlHeader) )
 			includeDirectory = PassThruCacheDirectory ( NormalizeFilename ( include.directory ),
-	                                                            backend->intermediateDirectory );
+			                                            backend->intermediateDirectory );
 		else
 			includeDirectory = include.directory;
 
 		if ( include.root == "intermediate" )
-			path_prefix = backend->intermediateDirectory->name + cSep;
+			path_prefix = "$(INTERMEDIATE)" + sSep;
 		else if (include.root == "output" )
-			path_prefix = backend->outputDirectory->name + cSep;
+			path_prefix = "$(OUTPUT)" + sSep;
 		else
 			path_prefix = "";
 
@@ -1281,13 +1281,12 @@ MingwModuleHandler::GenerateWidlCommandsEmbeddedTypeLib (
 	          GetDirectory ( EmbeddedTypeLibFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
-	          //"\t%s %s %s -t -T $@ %s\n",
-			  "\t%s %s %s -t -T %s %s\n",
+	          "\t%s %s %s -t -T %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
 	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
-		      EmbeddedTypeLibFilename.c_str(),
-			  filename.c_str () );
+	          EmbeddedTypeLibFilename.c_str(),
+	          filename.c_str () );
 }
 
 void
@@ -2003,8 +2002,9 @@ MingwModuleHandler::GenerateOtherMacros ()
 
 	fprintf (
 		fMakefile,
-		"%s += $(PROJECT_WIDLFLAGS)\n",
-		widlflagsMacro.c_str () );
+		"%s += $(PROJECT_WIDLFLAGS) -I%s\n",
+		widlflagsMacro.c_str (),
+		module.GetBasePath ().c_str () );
 
 	fprintf (
 		fMakefile,

@@ -336,10 +336,31 @@ void
 AutomaticDependency::ParseFile ( const Module& module,
                                  const File& file )
 {
-	string normalizedFilename = NormalizeFilename ( file.name );
+	string normalizedFilename = NormalizeFilename ( file.GetFullPath () );
 	RetrieveFromCacheOrParse ( module,
 	                           normalizedFilename,
 	                           NULL );
+}
+
+string
+AutomaticDependency::ReplaceVariable ( const string& name,
+                                       const string& value,
+                                       string path )
+{
+	size_t i = path.find ( name );
+	if ( i != string::npos )
+		return path.replace ( i, name.length (), value );
+	else
+		return path;
+}
+
+string
+AutomaticDependency::ResolveVariablesInPath ( const string& path )
+{
+	string s = ReplaceVariable ( "$(INTERMEDIATE)", Environment::GetIntermediatePath (), path );
+	s = ReplaceVariable ( "$(OUTPUT)", Environment::GetOutputPath (), s );
+	s = ReplaceVariable ( "$(INSTALL)", Environment::GetInstallPath (), s );
+	return s;
 }
 
 bool
@@ -423,7 +444,7 @@ AutomaticDependency::RetrieveFromCacheOrParse ( const Module& module,
 	{
 		sourceFile = new SourceFile ( this,
 		                              module,
-		                              filename,
+		                              ResolveVariablesInPath ( filename ),
 		                              parentSourceFile,
 		                              false );
 		sourcefile_map[filename] = sourceFile;

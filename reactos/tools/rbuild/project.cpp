@@ -391,9 +391,8 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "directory" )
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
-		const XMLAttribute* base = e.GetAttribute ( "root", false );
 		assert(att);
-		subpath = GetSubPath ( *this, e.location, path, base, att->value );
+		subpath = GetSubPath ( *this, e.location, path, att->value );
 	}
 	else if ( e.name == "include" )
 	{

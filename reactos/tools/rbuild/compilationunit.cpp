@@ -98,7 +98,10 @@ CompilationUnit::GetFilename ( Directory* intermediateDirectory ) const
 	if ( files.size () == 0 || files.size () > 1 )
 		return new FileLocation ( intermediateDirectory, name );
 	File* file = files[0];
-	return new FileLocation ( NULL, file->name );
+	if (file->path_prefix.length() > 0)
+		return new FileLocation ( intermediateDirectory, file->name );
+	else
+		return new FileLocation ( NULL, file->name );
 }
 
 std::string

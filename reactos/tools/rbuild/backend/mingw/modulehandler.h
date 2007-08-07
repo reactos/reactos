@@ -98,7 +98,7 @@ protected:
 	void GetModuleDependencies ( string_list& dependencies );
 	std::string GetAllDependencies () const;
 	void GetSourceFilenames ( string_list& list,
-                                  bool includeGeneratedFiles ) const;
+	                          bool includeGeneratedFiles ) const;
 	void GetSourceFilenamesWithoutGeneratedFiles ( string_list& list ) const;
 	std::string GetObjectFilename ( const FileLocation* sourceFileLocation,
 	                                string_list* pclean_files ) const;
@@ -213,7 +213,7 @@ private:
 	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
 	std::string GetRpcServerHeaderFilename ( std::string basename ) const;
 	std::string GetRpcClientHeaderFilename ( std::string basename ) const;
-    std::string GetIdlHeaderFilename ( std::string basename ) const;
+	std::string GetIdlHeaderFilename ( std::string basename ) const;
 	std::string GetModuleCleanTarget ( const Module& module ) const;
 	void GetReferencedObjectLibraryModuleCleanTargets ( std::vector<std::string>& moduleNames ) const;
 public:
@@ -334,8 +334,8 @@ public:
 	MingwWin32DLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-    std::string TypeSpecificLinkerFlags() { return module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
-    void AddImplicitLibraries ( Module& module );
+	std::string TypeSpecificLinkerFlags() { return module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32DLLModuleTarget ();
 };
@@ -347,8 +347,8 @@ public:
 	MingwWin32OCXModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
-    std::string TypeSpecificLinkerFlags() { return module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
-    void AddImplicitLibraries ( Module& module );
+	std::string TypeSpecificLinkerFlags() { return module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32OCXModuleTarget ();
 };
@@ -361,7 +361,7 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificLinkerFlags() { return module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
-    void AddImplicitLibraries ( Module& module );
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32CUIModuleTarget ();
 };
@@ -374,7 +374,7 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificLinkerFlags() { return module.useHostStdlib ? "-nostartfiles -lgcc" : "-nostartfiles -nostdlib -lgcc"; }
-    void AddImplicitLibraries ( Module& module );
+	void AddImplicitLibraries ( Module& module );
 private:
 	void GenerateWin32GUIModuleTarget ();
 };

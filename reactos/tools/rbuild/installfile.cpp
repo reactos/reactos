@@ -45,9 +45,9 @@ InstallFile::InstallFile ( const Project& project_,
 	if ( att != NULL)
 	{
 		if ( att->value == "intermediate" )
-			this->path = Environment::GetIntermediatePath () + sSep + path;
+			this->path = "$(INTERMEDIATE)" + sSep + path;
 		else if ( att->value == "output" )
-			this->path = Environment::GetOutputPath () + sSep + path;
+			this->path = "$(OUTPUT)" + sSep + path;
 		else
 		{
 			throw InvalidAttributeValueException (

@@ -121,7 +121,6 @@ GetSubPath (
 	const Project& project,
 	const string& location,
 	const string& path,
-	const XMLAttribute* root,
 	const string& att_value )
 {
 	if ( !att_value.size() )
@@ -135,25 +134,7 @@ GetSubPath (
 	if ( !path.size() )
 		return att_value;
 
-	string path_prefix;
-	if ( root )
-	{
-		if ( root->value == "intermediate" )
-			path_prefix = Environment::GetIntermediatePath() + cSep;
-		else if ( root->value == "output" )
-			path_prefix = Environment::GetOutputPath() + cSep;
-		else
-		{
-			throw InvalidAttributeValueException (
-				location,
-				"root",
-				root->value );
-		}
-	}
-	else
-		path_prefix = "";
-
-	return FixSeparator(path_prefix + path + cSep + att_value);
+	return FixSeparator(path + cSep + att_value);
 }
 
 string
@@ -540,7 +521,7 @@ Module::ProcessXML()
 	for ( i = 0; i < node.subElements.size(); i++ )
 	{
 		ParseContext parseContext;
-		ProcessXMLSubElement ( *node.subElements[i], path, parseContext );
+		ProcessXMLSubElement ( *node.subElements[i], path, "", parseContext );
 	}
 	for ( i = 0; i < invocations.size(); i++ )
 		invocations[i]->ProcessXML ();
@@ -564,12 +545,14 @@ Module::ProcessXML()
 void
 Module::ProcessXMLSubElement ( const XMLElement& e,
                                const string& path,
+                               const string& path_prefix,
                                ParseContext& parseContext )
 {
 	If* pOldIf = parseContext.ifData;
 	CompilationUnit* pOldCompilationUnit = parseContext.compilationUnit;
 	bool subs_invalid = false;
 	string subpath ( path );
+	string subpath_prefix ( "" );
 	if ( e.name == "file" && e.value.size () > 0 )
 	{
 		bool first = false;
@@ -601,6 +584,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				cplusplus = true;
 		}
 		File* pFile = new File ( FixSeparator ( path + cSep + e.value ),
+		                         path_prefix,
 		                         first,
 		                         switches,
 		                         false );
@@ -638,9 +622,23 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "directory" )
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
-		const XMLAttribute* base = e.GetAttribute ( "root", false );
+		const XMLAttribute* root = e.GetAttribute ( "root", false );
 		assert(att);
-		subpath = GetSubPath ( this->project, e.location, path, base, att->value );
+		if ( root )
+		{
+			if ( root->value == "intermediate" )
+				subpath_prefix = "$(INTERMEDIATE)";
+			else if ( root->value == "output" )
+				subpath_prefix = "$(OUTPUT)";
+			else
+			{
+				throw InvalidAttributeValueException (
+					e.location,
+					"root",
+					root->value );
+			}
+		}
+		subpath = GetSubPath ( this->project, e.location, path, att->value );
 	}
 	else if ( e.name == "include" )
 	{
@@ -809,7 +807,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			e.name.c_str() );
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath, parseContext );
+		ProcessXMLSubElement ( *e.subElements[i], subpath, subpath_prefix, parseContext );
 	parseContext.ifData = pOldIf;
 	parseContext.compilationUnit = pOldCompilationUnit;
 }
@@ -1206,10 +1204,26 @@ Module::InvokeModule () const
 }
 
 
-File::File ( const string& _name, bool _first,
+File::File ( const string& _name,
+             bool _first,
              std::string _switches,
              bool _isPreCompiledHeader )
 	: name(_name),
+	  path_prefix(""),
+	  first(_first),
+	  switches(_switches),
+	  isPreCompiledHeader(_isPreCompiledHeader)
+{
+}
+
+
+File::File ( const string& _name,
+             const string& _path_prefix,
+             bool _first,
+             std::string _switches,
+             bool _isPreCompiledHeader )
+	: name(_name),
+	  path_prefix(_path_prefix),
 	  first(_first),
 	  switches(_switches),
 	  isPreCompiledHeader(_isPreCompiledHeader)
@@ -1219,6 +1233,15 @@ File::File ( const string& _name, bool _first,
 void
 File::ProcessXML()
 {
+}
+
+
+std::string File::GetFullPath () const
+{
+	if ( path_prefix.length () > 0 )
+		return path_prefix + sSep + name;
+	else
+		return name;
 }
 
 

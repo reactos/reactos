@@ -53,6 +53,14 @@ Directory::Add ( const char* subdir )
 	}
 
 	const char* p = strpbrk ( subdir, "/\\" );
+	if ( subdir == p || ( *subdir && subdir[1] == ':' ) )
+	{
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__,
+		                                  "Invalid relative path '%s'",
+		                                  subdir );
+	}
+
 	if ( !p )
 		p = subdir + strlen(subdir);
 	string s ( subdir, p-subdir );
@@ -109,8 +117,8 @@ Directory::CreateDirectory ( string path )
 }
 
 string
-Directory::ReplaceVariable ( string name,
-                             string value,
+Directory::ReplaceVariable ( const string& name,
+                             const string& value,
                              string path )
 {
 	size_t i = path.find ( name );
@@ -122,7 +130,7 @@ Directory::ReplaceVariable ( string name,
 
 void
 Directory::ResolveVariablesInPath ( char* buf,
-                                    string path )
+                                    const string& path )
 {
 	string s = ReplaceVariable ( "$(INTERMEDIATE)", Environment::GetIntermediatePath (), path );
 	s = ReplaceVariable ( "$(OUTPUT)", Environment::GetOutputPath (), s );
@@ -140,7 +148,10 @@ Directory::GenerateTree ( const string& parent,
 	{
 		char buf[256];
 		
-		path = parent + sSep + name;
+		if ( name.size () > 0 )
+			path = parent + sSep + name;
+		else
+			path = parent;
 		ResolveVariablesInPath ( buf, path );
 		if ( CreateDirectory ( buf ) && verbose )
 			printf ( "Created %s\n", buf );
