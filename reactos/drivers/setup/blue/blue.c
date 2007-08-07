@@ -255,7 +255,7 @@ ScrAcquireOwnership(PDEVICE_EXTENSION DeviceExtension)
     DeviceExtension->Rows = 30;
 #endif
 
-    DPRINT1 ("%d Columns  %d Rows %d Scanlines\n",
+    DPRINT ("%d Columns  %d Rows %d Scanlines\n",
             DeviceExtension->Columns,
             DeviceExtension->Rows,
             DeviceExtension->ScanLines);

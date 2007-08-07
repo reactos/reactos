@@ -168,6 +168,12 @@ enum msidbComponentAttributes
     msidbComponentAttributes64bit = 0x00000100
 };
 
+enum msidbODBCDataSourceRegistration
+{
+    msidbODBCDataSourceRegistrationPerMachine = 0x00000000,
+    msidbODBCDataSourceRegistrationPerUser = 0x00000001
+};
+
 enum msidbRegistryRoot
 {
     msidbRegistryRootClassesRoot = 0,

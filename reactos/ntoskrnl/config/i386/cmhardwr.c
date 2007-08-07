@@ -304,7 +304,13 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                          NULL,
                          REG_OPTION_NON_VOLATILE,
                          &Disposition);
-    if (!NT_SUCCESS(Status) && !ExpInTextModeSetup) return Status;
+    if (ExpInTextModeSetup)
+    {
+        if (!NT_SUCCESS(Status))
+            BiosHandle = NULL;
+    }
+    else if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Create the CPU Key, and check if it already existed */
     RtlInitUnicodeString(&KeyName, L"CentralProcessor");
@@ -623,29 +629,32 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             /* Free the string */
             RtlFreeUnicodeString(&Data);
 
-            /* Get the BIOS Date Identifier */
-            RtlCopyMemory(Buffer, (PCHAR)BaseAddress + (16*PAGE_SIZE - 11), 8);
-            Buffer[8] = ANSI_NULL;
-
-            /* Convert it to unicode */
-            RtlInitAnsiString(&TempString, Buffer);
-            Status = RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
-            if (NT_SUCCESS(Status))
+            if (BiosHandle)
             {
-                /* Save it to the registry */
-                Status = NtSetValueKey(BiosHandle,
-                                       &ValueName,
-                                       0,
-                                       REG_SZ,
-                                       Data.Buffer,
-                                       Data.Length + sizeof(UNICODE_NULL));
+                /* Get the BIOS Date Identifier */
+                RtlCopyMemory(Buffer, (PCHAR)BaseAddress + (16*PAGE_SIZE - 11), 8);
+                Buffer[8] = ANSI_NULL;
 
-                /* Free the string */
-                RtlFreeUnicodeString(&Data);
+                /* Convert it to unicode */
+                RtlInitAnsiString(&TempString, Buffer);
+                Status = RtlAnsiStringToUnicodeString(&Data, &TempString, TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Save it to the registry */
+                    Status = NtSetValueKey(BiosHandle,
+                                           &ValueName,
+                                           0,
+                                           REG_SZ,
+                                           Data.Buffer,
+                                           Data.Length + sizeof(UNICODE_NULL));
+
+                    /* Free the string */
+                    RtlFreeUnicodeString(&Data);
+                }
+
+                /* Close the bios information handle */
+                NtClose(BiosHandle);
             }
-
-            /* Close the bios information handle */
-            NtClose(BiosHandle);
         }
 
         /* Get the BIOS Version */

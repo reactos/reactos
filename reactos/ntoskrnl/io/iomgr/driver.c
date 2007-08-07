@@ -787,7 +787,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    if (!NT_SUCCESS(Status))
    {
       IopFreeDeviceNode(DeviceNode);
-      CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return Status;
    }
 
@@ -1253,6 +1252,7 @@ try_again:
     if (!NT_SUCCESS(Status))
     {
         /* If it didn't work, then kill the object */
+        DPRINT1("'%wZ' initialization failed, status (0x%08lx)\n", DriverName, Status);
         ObMakeTemporaryObject(DriverObject);
         ObDereferenceObject(DriverObject);
     }

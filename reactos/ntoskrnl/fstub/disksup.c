@@ -461,7 +461,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     if (!NT_SUCCESS(Status))
     {
         hKey = NULL;
-        DPRINT1("ZwCreateKey failed for %wZ, status=%x\n", &UnicodeString1, Status);
+        DPRINT("ZwCreateKey failed for %wZ, status=%x\n", &UnicodeString1, Status);
     }
 
     /* Create PhysicalDrive links */

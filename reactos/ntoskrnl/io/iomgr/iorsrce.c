@@ -698,7 +698,7 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
       *       a conflict is detected with another driver.
       */
 {
-   DPRINT1("IoReportResourceUsage is unimplemented\n");
+   UNIMPLEMENTED;
    *ConflictDetected = FALSE;
    return STATUS_SUCCESS;
 }

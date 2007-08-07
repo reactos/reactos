@@ -481,10 +481,6 @@ for(;;);
 
 
   /* Load keyboard driver */
-#if 0
-  if (!LoadDriver(SourcePath, "keyboard.sys"))
-    return;
-#endif
   if (!LoadDriver(SourcePath, "i8042prt.sys"))
     return;
   if (!LoadDriver(SourcePath, "kbdclass.sys"))

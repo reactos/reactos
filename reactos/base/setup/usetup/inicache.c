@@ -1032,7 +1032,7 @@ IniCacheSave(PINICACHE Cache,
     }
   BufferSize++; /* Null-terminator */
 
-  DPRINT1("BufferSize: %lu\n", BufferSize);
+  DPRINT("BufferSize: %lu\n", BufferSize);
 
   /* Allocate file buffer */
   Buffer = (CHAR*) RtlAllocateHeap(ProcessHeap,

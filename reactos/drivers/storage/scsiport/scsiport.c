@@ -806,7 +806,7 @@ SpiInitOpenKeys(PCONFIGURATION_INFO ConfigInfo, PUNICODE_STRING RegistryPath)
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Unable to open driver's registry key %wZ, status 0x%08x\n", RegistryPath, Status);
+        DPRINT("Unable to open driver's registry key %wZ, status 0x%08x\n", RegistryPath, Status);
         ConfigInfo->ServiceKey = NULL;
     }
 
@@ -835,18 +835,21 @@ SpiInitOpenKeys(PCONFIGURATION_INFO ConfigInfo, PUNICODE_STRING RegistryPath)
         }
     }
 
-    /* Open the Device key */
-    RtlInitUnicodeString(&KeyName, L"Device");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ConfigInfo->ServiceKey,
-                               NULL);
+    if (ConfigInfo->ServiceKey != NULL)
+    {
+        /* Open the Device key */
+        RtlInitUnicodeString(&KeyName, L"Device");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ConfigInfo->ServiceKey,
+                                   NULL);
 
-    /* We don't check for failure here - not needed */
-    ZwOpenKey(&ConfigInfo->DeviceKey,
-              KEY_READ,
-              &ObjectAttributes);
+        /* We don't check for failure here - not needed */
+        ZwOpenKey(&ConfigInfo->DeviceKey,
+                  KEY_READ,
+                  &ObjectAttributes);
+    }
 }
 
 

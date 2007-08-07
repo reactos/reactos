@@ -1249,7 +1249,7 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
                                   hWnd, Msg, wParam, lParam);
        else
        {
-         DPRINT("CallWindowProcA: can not dereference WndProcHandle\n");
+         WARN("CallWindowProcA: can not dereference WndProcHandle\n");
          return 0;
        }
     }
@@ -1282,7 +1282,7 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
                                 hWnd, Msg, wParam, lParam);
        else
        {
-         DPRINT("CallWindowProcW: can not dereference WndProcHandle\n");
+         WARN("CallWindowProcW: can not dereference WndProcHandle\n");
          return 0;
        }
   }

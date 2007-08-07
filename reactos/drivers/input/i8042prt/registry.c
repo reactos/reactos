@@ -194,13 +194,13 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 		 * set them manually anyway...
 		 */
 		RTL_QUERY_REGISTRY_TABLE *Current = Parameters;
-		DPRINT1 ("Can't read registry: %x\n", Status);
+		DPRINT ("Can't read registry: %x\n", Status);
 		while (Current->Name) {
 			*((PULONG)Current->EntryContext) =
 			                       *((PULONG)Current->DefaultData);
 			Current++;
 		}
-		DPRINT1 ("Manually set defaults\n");
+		DPRINT ("Manually set defaults\n");
 
 	}
 
