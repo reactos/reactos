@@ -523,6 +523,11 @@ msvc8: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs8.00 -voversionconfiguration msvc
 
+.PHONY: msvc9
+msvc9: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs9.00 -voversionconfiguration msvc
+
 .PHONY: msvc6_clean
 msvc6_clean: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
@@ -542,6 +547,11 @@ msvc71_clean: $(RBUILD_TARGET)
 msvc8_clean: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs8.00 -voversionconfiguration msvc
+
+.PHONY: msvc9_clean
+msvc9_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs9.00 -voversionconfiguration msvc
 
 .PHONY: msvc_clean
 msvc_clean: $(RBUILD_TARGET)

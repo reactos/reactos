@@ -417,6 +417,12 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			if (module.GetEntryPoint(false) == "0")
 				fprintf ( OUT, "AdditionalOptions=\"/noentry\"" );
 
+			if (configuration.VSProjectVersion == "9.00")
+			{
+				fprintf ( OUT, "\t\t\t\tRandomizedBaseAddress=\"0\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tDataExecutionPrevention=\"0\"\r\n" );
+			}
+
 			if (module.importLibrary != NULL)
 				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", module.importLibrary->definition.c_str());
 			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
@@ -776,6 +782,9 @@ MSVCBackend::_get_solution_version ( void )
 
 	if (configuration.VSProjectVersion == "8.00")
 		version = "9.00";
+
+	if (configuration.VSProjectVersion == "9.00")
+		version = "10.00";
 
 	return version;
 }

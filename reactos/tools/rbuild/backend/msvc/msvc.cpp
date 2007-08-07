@@ -285,6 +285,8 @@ std::string MSVCBackend::_get_vc_dir ( void ) const
 		return "vc70";
 	else if ( configuration.VSProjectVersion == "7.10" )
 		return "vc71";
+	else if ( configuration.VSProjectVersion == "9.00" )
+		return "vc9";
 	else /* must be VS2005 */
 		return "vc8";
 
