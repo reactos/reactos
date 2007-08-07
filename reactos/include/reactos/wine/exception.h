@@ -193,8 +193,6 @@ static __inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGIS
 
 #ifndef USE_COMPILER_EXCEPTIONS
 
-extern VOID NTAPI RtlUnwind(PVOID,PVOID,PEXCEPTION_RECORD,PVOID);
-
 static __inline EXCEPTION_DISPOSITION
 __wine_exception_handler( struct _EXCEPTION_RECORD *record, void *frame,
                           struct _CONTEXT *context, void *pdispatcher )
