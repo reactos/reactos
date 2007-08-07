@@ -24,11 +24,15 @@
 #include <ndk/ntndk.h>
 
 /* Internal RTL header */
-#include <reactos/helper.h>
 #include "rtlp.h"
 
+/* PSEH Support */
+#include <reactos/helper.h>
 #include <pseh/pseh.h>
+
+#ifndef _MSC_VER
 #include <intrin.h>
+#endif
 
 #endif /* RTL_H */
 
