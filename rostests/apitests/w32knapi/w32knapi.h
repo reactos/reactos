@@ -10,6 +10,7 @@
 #include <win32k/callback.h>
 #include <win32k/ntusrtyp.h>
 #include <win32k/ntgdityp.h>
+#include <win32k/ntgdihdl.h>
 
 #define OS_UNSUPPORTED 0
 #define OS_REACTOS	1

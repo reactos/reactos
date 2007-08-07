@@ -49,37 +49,6 @@ InitOsVersion()
 	return FALSE;
 }
 
-
-static BOOL
-RosSyscall(LPWSTR lpszFunction, int cParams, void* pParams, DWORD* pResult)
-{
-	DWORD ret;
-	char szFunctionName[MAX_PATH];
-	int ParamSize = cParams * 4;
-
-	sprintf(szFunctionName, "%ls", lpszFunction);
-	FARPROC proc = (FARPROC)GetProcAddress(g_hModule, szFunctionName);
-	if (!proc)
-	{
-		printf("Couldn't find proc: %s\n", szFunctionName);
-		return FALSE;
-	}
-
-	asm volatile
-	(
-		"subl %%eax, %%esp;"	// calculate new stack pos
-		"movl %%esp, %%edi;"	// destination is stackpointer
-		"cld;"					// clear direction flag
-		"rep movsd;"			// copy params to the stack
-		"call *%%edx"			// call function
-		: "=a" (ret)
-		: "c" (cParams), "a" (ParamSize), "S"(pParams), "d"(proc)
-	);
-
-	*pResult = ret;
-	return TRUE;
-}
-
 static PSYSCALL_ENTRY
 GetSyscallEntry(LPWSTR lpszFunction)
 {
@@ -95,31 +64,60 @@ GetSyscallEntry(LPWSTR lpszFunction)
 	return NULL;
 }
 
-static BOOL
-WinSyscall(LPWSTR pszFunction, void* pParams, void* pResult)
+static DWORD STDCALL
+WinSyscall(INT nSyscalNum, PVOID pFirstParam)
 {
-	PSYSCALL_ENTRY pEntry = GetSyscallEntry(pszFunction);
+	DWORD ret;
+	asm volatile ("int $0x2e\n" : "=a"(ret): "a" (nSyscalNum), "d" (pFirstParam));
+	return ret;
+}
+
+static DWORD STDCALL
+RosSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
+{
 	DWORD ret;
 
-	asm volatile ("int $0x2e\n" : "=a"(ret): "a" (pEntry->nSyscallNum), "d" (pParams));\
-	*((DWORD*)pResult) = ret;
-	return FALSE;
+	asm volatile 
+	(
+		"pushfl;"				// Save flags
+		"movl %%ecx, %%eax;"
+		"shl $2, %%eax;"		// Calculate param size
+		"subl %%eax, %%esp;"	// Calculate new stack pos
+		"movl %%esp, %%edi;"	// Destination is stackpointer
+		"cld;"					// Clear direction flag
+		"rep movsd;"			// Copy params to the stack
+		"call *%%edx;"			// Call function
+		"popfl;"				// Restore flags
+		: "=a" (ret)
+		: "S" (pFirstParam), "c" (cParams), "d"(proc)
+		: "%edi"
+	);
+
+	return ret;
 }
 
 DWORD
 Syscall(LPWSTR pszFunction, int cParams, void* pParams)
 {
-    DWORD dwRet = 0;
-
-	if (g_nOs == OS_REACTOS)
+ 	if (g_nOs == OS_REACTOS)
 	{
-		RosSyscall(pszFunction, cParams, pParams, &dwRet);
+		char szFunctionName[MAX_PATH];
+
+		sprintf(szFunctionName, "%ls", pszFunction);
+		FARPROC proc = (FARPROC)GetProcAddress(g_hModule, szFunctionName);
+		if (!proc)
+		{
+			printf("Couldn't find proc: %s\n", szFunctionName);
+			return FALSE;
+		}
+
+		return RosSyscall(proc, cParams, pParams);
 	}
 	else
 	{
-		WinSyscall(pszFunction, pParams, &dwRet);
+		PSYSCALL_ENTRY pEntry = GetSyscallEntry(pszFunction);
+		return WinSyscall(pEntry->nSyscallNum, pParams);
 	}
-	return dwRet;
 }
 
 BOOL

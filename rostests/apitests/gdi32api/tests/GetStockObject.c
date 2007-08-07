@@ -5,10 +5,10 @@ Test_GetStockObject(PTESTINFO pti)
 {
 	/* Test limits and error */
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetStockObject(0) != NULL);
+	RTEST(GetStockObject(0) != NULL);
 	TEST(GetStockObject(21) != NULL);
-	TEST(GetStockObject(-1) == NULL);
-	TEST(GetStockObject(9) == NULL);
+	RTEST(GetStockObject(-1) == NULL);
+	RTEST(GetStockObject(9) == NULL);
 	RTEST(GetStockObject(22) == NULL);
 	RTEST(GetLastError() == ERROR_SUCCESS);
 

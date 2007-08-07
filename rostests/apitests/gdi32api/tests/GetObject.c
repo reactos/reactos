@@ -258,24 +258,24 @@ Test_ExtPen(PTESTINFO pti)
 	TEST(GetObject(hPen, 0, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
 	TEST(GetObject((HANDLE)GDI_HANDLE_GET_INDEX(hPen), 0, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
 	TEST(GetObject(hPen, 5, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject(hPen, -5, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject(hPen, 0, &extlogpen) == 0);
-	TEST(GetObject(hPen, 4, &extlogpen) == 0);
+	RTEST(GetObject(hPen, -5, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject(hPen, 0, &extlogpen) == 0);
+	RTEST(GetObject(hPen, 4, &extlogpen) == 0);
 
 	/* Nothing should be filled */
-	TEST(extlogpen.elpPenStyle == 0x77777777);
-	TEST(extlogpen.elpWidth == 0x77777777);
+	RTEST(extlogpen.elpPenStyle == 0x77777777);
+	RTEST(extlogpen.elpWidth == 0x77777777);
 
-	TEST(GetObject(hPen, sizeof(EXTLOGPEN), &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject(hPen, sizeof(EXTLOGPEN)-sizeof(DWORD), &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject(hPen, sizeof(EXTLOGPEN)-sizeof(DWORD)-1, &extlogpen) == 0);
-	TEST(GetObject(hPen, sizeof(EXTLOGPEN)+2, &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject(hPen, -5, &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject(hPen, sizeof(EXTLOGPEN), &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject(hPen, sizeof(EXTLOGPEN)-sizeof(DWORD), &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject(hPen, sizeof(EXTLOGPEN)-sizeof(DWORD)-1, &extlogpen) == 0);
+	RTEST(GetObject(hPen, sizeof(EXTLOGPEN)+2, &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject(hPen, -5, &extlogpen) == sizeof(EXTLOGPEN)-sizeof(DWORD));
 
 	/* test if the fields are filled correctly */
-	TEST(extlogpen.elpPenStyle == (PS_GEOMETRIC | PS_DASH));
-	TEST(extlogpen.elpWidth == 5);
-	TEST(extlogpen.elpBrushStyle == 0);
+	RTEST(extlogpen.elpPenStyle == (PS_GEOMETRIC | PS_DASH));
+	RTEST(extlogpen.elpWidth == 5);
+	RTEST(extlogpen.elpBrushStyle == 0);
 	RTEST(extlogpen.elpColor == RGB(1,2,3));
 	RTEST(extlogpen.elpHatch == 22);
 	RTEST(extlogpen.elpNumEntries == 0);
