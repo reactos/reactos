@@ -36,11 +36,6 @@ typedef struct _WIN_DC_INFO
     GdiPath       path;
 /* #endif */
 
-  short  breakTotalExtra;   /* Total extra space for justification */
-  short  breakCount;        /* Break char. count */
-  short  breakExtra;        /* breakTotalExtra / breakCount */
-  short  breakRem;          /* breakTotalExtra % breakCount */
-
   RECT   totalExtent;
   BYTE   bitsPerPixel;
 

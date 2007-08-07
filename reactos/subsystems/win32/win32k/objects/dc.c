@@ -1302,10 +1302,8 @@ IntGdiGetDCState(HDC  hDC)
   newdc->Dc_Attr.ptlBrushOrigin.y        = dc->Dc_Attr.ptlBrushOrigin.y;
   newdc->Dc_Attr.lTextAlign        = dc->Dc_Attr.lTextAlign;
   newdc->Dc_Attr.lTextExtra        = dc->Dc_Attr.lTextExtra;
-  newdc->w.breakTotalExtra  = dc->w.breakTotalExtra;
-  newdc->w.breakCount       = dc->w.breakCount;
-  newdc->w.breakExtra       = dc->w.breakExtra;
-  newdc->w.breakRem         = dc->w.breakRem;
+  newdc->Dc_Attr.cBreak       = dc->Dc_Attr.cBreak;
+  newdc->Dc_Attr.lBreakExtra       = dc->Dc_Attr.lBreakExtra;
   newdc->Dc_Attr.iMapMode          = dc->Dc_Attr.iMapMode;
   newdc->Dc_Attr.iGraphicsMode     = dc->Dc_Attr.iGraphicsMode;
 #if 0
@@ -1385,10 +1383,8 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
         dc->Dc_Attr.ptlBrushOrigin.y        = dcs->Dc_Attr.ptlBrushOrigin.y;
         dc->Dc_Attr.lTextAlign        = dcs->Dc_Attr.lTextAlign;
         dc->Dc_Attr.lTextExtra        = dcs->Dc_Attr.lTextExtra;
-        dc->w.breakTotalExtra  = dcs->w.breakTotalExtra;
-        dc->w.breakCount       = dcs->w.breakCount;
-        dc->w.breakExtra       = dcs->w.breakExtra;
-        dc->w.breakRem         = dcs->w.breakRem;
+        dc->Dc_Attr.cBreak       = dcs->Dc_Attr.cBreak;
+        dc->Dc_Attr.lBreakExtra       = dcs->Dc_Attr.lBreakExtra;
         dc->Dc_Attr.iMapMode          = dcs->Dc_Attr.iMapMode;
         dc->Dc_Attr.iGraphicsMode     = dcs->Dc_Attr.iGraphicsMode;
 #if 0
