@@ -1419,8 +1419,8 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
         }
         DC_UnlockDc ( dc );
 #else
+        IntGdiExtSelectClipRgn(dc, dcs->w.hClipRgn, RGN_COPY);
         DC_UnlockDc ( dc );
-        NtGdiSelectClipRgn(hDC, dcs->w.hClipRgn);
 #endif
 
         NtGdiSelectObject( hDC, dcs->w.hBitmap );
@@ -2050,14 +2050,15 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       return objOrg;
 
     case GDI_OBJECT_TYPE_REGION:
-      DC_UnlockDc (dc);
       /*
        * The return value is one of the following values:
        *  SIMPLEREGION
        *  COMPLEXREGION
        *  NULLREGION
        */
-      return (HGDIOBJ) NtGdiSelectClipRgn(hDC, (HRGN) hGDIObj);
+      objectType = IntGdiExtSelectClipRgn(dc, (HRGN)hGDIObj, RGN_COPY);
+      DC_UnlockDc (dc);
+      return (HGDIOBJ)objectType;
 
     default:
       break;

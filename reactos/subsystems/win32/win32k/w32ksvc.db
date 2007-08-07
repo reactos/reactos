@@ -694,7 +694,6 @@ NtUserValidateHandleSecure              1
 NtGdiAlphaBlend                         11
 #
 #ReactOS specify syscall 
-NtGdiSelectClipRgn                      2
 NtGdiSelectObject                       2
 NtGdiSelectPalette                      3
 NtGdiSetAbortProc                       2

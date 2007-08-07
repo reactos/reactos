@@ -433,12 +433,6 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
    return Result;
 }
 
-INT STDCALL
-NtGdiSelectClipRgn(HDC hDC, HRGN hRgn)
-{
-   return NtGdiExtSelectClipRgn(hDC, hRgn, RGN_COPY);
-}
-
 int STDCALL NtGdiSetMetaRgn(HDC  hDC)
 {
   UNIMPLEMENTED;
