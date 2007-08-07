@@ -1,5 +1,7 @@
+#ifdef _MSC_VER
 void _enable(void);
 void _disable(void);
+#endif
 #include "ntddk.h"
 #include "arc/arc.h"
 #include "halfuncs.h"
