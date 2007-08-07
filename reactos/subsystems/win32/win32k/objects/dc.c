@@ -1210,18 +1210,22 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
       Ret = FALSE;
       break;
   }
-  _SEH_TRY
+
+  if (!Ret)
   {
-    ProbeForWrite(Point,
-                  sizeof(POINT),
-                  1);
-    *Point = SafePoint;
+    _SEH_TRY
+    {
+      ProbeForWrite(Point,
+                    sizeof(POINT),
+                    1);
+      *Point = SafePoint;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
   }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
 
   if(!NT_SUCCESS(Status))
   {
