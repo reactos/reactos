@@ -1176,6 +1176,8 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
     return FALSE;
   }
 
+  RtlZeroMemory(&SafePoint, sizeof(POINT));
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
