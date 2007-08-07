@@ -1162,11 +1162,12 @@ IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
 }
 
 BOOL STDCALL
-NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
+NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
 {
-  BOOL Ret;
+  BOOL Ret = TRUE;
   DC *dc;
   POINT SafePoint;
+  SIZE Size;
   NTSTATUS Status = STATUS_SUCCESS;
 
   if(!Point)
@@ -1182,8 +1183,33 @@ NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point)
     return FALSE;
   }
 
-  Ret = IntGdiGetDCOrgEx(dc, &SafePoint);
-
+  switch (iPoint)
+  {
+    case GdiGetViewPortExt:
+      IntGetViewportExtEx(dc, &Size);
+      SafePoint.x = Size.cx;
+      SafePoint.y = Size.cy;
+      break;
+    case GdiGetWindowExt:
+      IntGetWindowExtEx(dc, &Size);
+      SafePoint.x = Size.cx;
+      SafePoint.y = Size.cy;
+      break;
+    case GdiGetViewPortOrg:
+      IntGetViewportOrgEx(dc, &SafePoint);
+      break;
+    case GdiGetWindowOrg:
+      IntGetWindowOrgEx(dc, &SafePoint);
+      break;
+    case GdiGetDCOrg:
+      Ret = IntGdiGetDCOrgEx(dc, &SafePoint);
+      break;
+    case GdiGetAspectRatioFilter:
+    default:
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      break;
+  }
   _SEH_TRY
   {
     ProbeForWrite(Point,

@@ -366,7 +366,7 @@ GetColorSpace@4
 GetCurrentObject@8=NtGdiGetCurrentObject@8
 GetCurrentPositionEx@8=NtGdiGetCurrentPositionEx@8
 GetDCBrushColor@4
-GetDCOrgEx@8=NtGdiGetDCOrgEx@8
+GetDCOrgEx@8
 GetDCPenColor@4
 GetDIBColorTable@16=NtGdiGetDIBColorTable@16
 GetDIBits@28=NtGdiGetDIBits@28
@@ -454,11 +454,11 @@ GetTextFaceAliasW@12
 GetTextMetricsA@8
 GetTextMetricsW@8
 GetTransform@12
-GetViewportExtEx@8=NtGdiGetViewportExtEx@8
-GetViewportOrgEx@8=NtGdiGetViewportOrgEx@8
+GetViewportExtEx@8
+GetViewportOrgEx@8
 GetWinMetaFileBits@20
-GetWindowExtEx@8=NtGdiGetWindowExtEx@8
-GetWindowOrgEx@8=NtGdiGetWindowOrgEx@8
+GetWindowExtEx@8
+GetWindowOrgEx@8
 GetWorldTransform@8=NtGdiGetWorldTransform@8
 HT_Get8BPPFormatPalette@16
 HT_Get8BPPMaskPalette@24

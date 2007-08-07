@@ -100,22 +100,6 @@ ExtCreateRegion(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-GetAspectRatioFilterEx(
-	HDC	a0,
-	LPSIZE	a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 GetBoundsRect(

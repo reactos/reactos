@@ -356,9 +356,34 @@ GetDCDWord( HDC hDC, INT u, DWORD Result )
 }
 
 
+BOOL
+STDCALL
+GetAspectRatioFilterEx(
+                HDC hdc,
+                LPSIZE lpAspectRatio
+                      )
+{
+  return NtGdiGetDCPoint( hdc, GdiGetAspectRatioFilter, (LPPOINT) lpAspectRatio );
+}
+
+
 /*
  * @implemented
-*/
+ */
+BOOL
+STDCALL
+GetDCOrgEx(
+    HDC hdc,
+    LPPOINT lpPoint
+    )
+{
+  return NtGdiGetDCPoint( hdc, GdiGetDCOrg, lpPoint );
+}
+
+
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 GetDCOrg(
@@ -367,7 +392,7 @@ GetDCOrg(
 {
   // Officially obsolete by Microsoft
   POINT Pt;
-  if (!NtGdiGetDCOrgEx(hdc, &Pt))
+  if (!GetDCOrgEx(hdc, &Pt))
     return 0;
   return(MAKELONG(Pt.x, Pt.y));
 }
@@ -779,5 +804,91 @@ GetStockObject(
       }// Returns Null anyway.
   }
   return Ret;                    
+}
+
+
+BOOL
+STDCALL
+GetViewportExtEx(
+             HDC hdc,
+             LPSIZE lpSize
+                )
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+ 
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+
+  if ( Dc_Attr->flXform & PAGE_EXTENTS_CHANGED ) // Something was updated, go to kernel.
+#endif
+  return NtGdiGetDCPoint( hdc, GdiGetViewPortExt, (LPPOINT) lpSize );
+#if 0
+  else
+  {
+     lpSize->cx = Dc_Attr->szlViewportExt.cx;
+     lpSize->cy = Dc_Attr->szlViewportExt.cy;
+  }
+  return TRUE;
+#endif
+}
+
+
+BOOL
+STDCALL
+GetViewportOrgEx(
+             HDC hdc,
+             LPPOINT lpPoint
+                )
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+ 
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  lpPoint->x = Dc_Attr->ptlViewportOrg.x;
+  lpPoint->x = Dc_Attr->ptlViewportOrg.x;
+  return TRUE;
+#endif
+  // Do it this way for now.
+  return NtGdiGetDCPoint( hdc, GdiGetViewPortOrg, lpPoint );
+}
+
+
+BOOL
+STDCALL
+GetWindowExtEx(
+           HDC hdc,
+           LPSIZE lpSize
+              )
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+ 
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  lpSize->cx = Dc_Attr->szlWindowExt.cx;
+  lpSize->cy = Dc_Attr->szlWindowExt.cy;
+  return TRUE;
+#endif
+  // Do it this way for now.
+  return NtGdiGetDCPoint( hdc, GdiGetWindowExt, (LPPOINT) lpSize );
+}
+
+
+BOOL
+STDCALL
+GetWindowOrgEx(
+           HDC hdc,
+           LPPOINT lpPoint
+              )
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+ 
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  lpPoint->x = Dc_Attr->ptlWindowOrg.x;
+  lpPoint->x = Dc_Attr->ptlWindowOrg.x;
+  return TRUE;
+#endif
+  // Do it this way for now.
+  return NtGdiGetDCPoint( hdc, GdiGetWindowOrg, lpPoint );
 }
 

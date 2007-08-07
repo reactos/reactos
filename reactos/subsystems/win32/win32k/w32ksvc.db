@@ -176,7 +176,7 @@ NtGdiGetColorAdjustment                          2
 # NtGdiGetDCDword                                  3
 # NtGdiGetDCforBitmap                              1
 # NtGdiGetDCObject                                 2
-# NtGdiGetDCPoint                                  3
+NtGdiGetDCPoint                                  3
 NtGdiGetDeviceCaps                               2
 NtGdiGetDeviceGammaRamp                          2
 # NtGdiGetDeviceCapsAll                            2
@@ -799,7 +799,6 @@ NtGdiGetClipRgn                         1
 NtGdiGetColorSpace                      1
 NtGdiGetCurrentObject                   2
 NtGdiGetCurrentPositionEx               2
-NtGdiGetDCOrgEx                         2
 NtGdiGetDIBColorTable                   4
 NtGdiGetDIBits                          7
 NtGdiGetEnhMetaFile                     1
@@ -825,10 +824,6 @@ NtGdiGetSystemPaletteEntries            4
 NtGdiGetTextAlign                       1
 NtGdiGetTextColor                       1
 NtGdiGetTextExtentPoint32               4
-NtGdiGetViewportExtEx                   2
-NtGdiGetViewportOrgEx                   2
-NtGdiGetWindowExtEx                     2
-NtGdiGetWindowOrgEx                     2
 NtGdiGetWorldTransform                  2
 NtGdiLPtoDP                             3
 NtGdiMoveToEx                           4
