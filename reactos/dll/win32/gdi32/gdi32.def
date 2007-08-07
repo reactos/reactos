@@ -524,7 +524,7 @@ ScaleViewportExtEx@24
 ScaleWindowExtEx@24
 SelectBrushLocal@8
 SelectClipPath@8
-SelectClipRgn@8=NtGdiSelectClipRgn@8
+SelectClipRgn@8
 SelectFontLocal@8
 SelectObject@8=NtGdiSelectObject@8
 SelectPalette@12=NtGdiSelectPalette@12

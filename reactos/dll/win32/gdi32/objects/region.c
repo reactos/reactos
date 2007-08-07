@@ -4,6 +4,19 @@
 /*
  * @implemented
  */
+int STDCALL
+SelectClipRgn(
+        HDC     hdc,
+        HRGN    hrgn
+)
+{
+    return NtGdiExtSelectClipRgn(hdc, hrgn, RGN_COPY);
+}
+
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 GetClipRgn(
