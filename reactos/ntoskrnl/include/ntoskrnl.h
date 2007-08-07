@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* Version Data */
-#include <ntverp.h>
+#include <psdk/ntverp.h>
 #define _WIN32_WINNT _WIN32_WINNT_WS03
 #define NTDDI_VERSION NTDDI_WS03SP1
 

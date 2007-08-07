@@ -12,9 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-//#include <ntoskrnl/cm/newcm.h>
 #include "ntoskrnl/cm/cm.h"
-#include "ntverp.h"
 #include "ntstrsafe.h"
 
 typedef struct _INIT_BUFFER
