@@ -152,7 +152,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
     {
         KEBUGCHECK (0);
     }
-    RtlZeroMemory(iBcb, sizeof (INTERNAL_BCB));
+    memset (iBcb, 0, sizeof (INTERNAL_BCB));
 
     iBcb->Bcb = Bcb;
     iBcb->Index = Index;

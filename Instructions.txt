@@ -1,2 +1,2 @@
 To build this branch apply the patch to trunk. And replace ntoskrnl/mm, ntoskrnl/cc with the folders from here. 
-This branch currently applies against: r25313
+This branch currently applies against: 0.3.1 branch - r25940

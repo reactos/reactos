@@ -203,9 +203,8 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
             {
                 CurrentLength = Length;
             }
-            RtlCopyMemory(Buffer,
-                          (PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress + Offset.u.LowPart % CACHE_VIEW_SIZE),
-                          CurrentLength);
+            memcpy (Buffer,
+                    (PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress + Offset.u.LowPart % CACHE_VIEW_SIZE), CurrentLength);
             Buffer = (PVOID) ((ULONG_PTR) Buffer + CurrentLength);
             Length -= CurrentLength;
             Offset.QuadPart += CurrentLength;
@@ -213,7 +212,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
         else
         {
             CurrentLength = Length > CACHE_VIEW_SIZE ? CACHE_VIEW_SIZE : Length;
-            RtlCopyMemory(Buffer, Bcb->CacheView[Index]->BaseAddress, CurrentLength);
+            memcpy (Buffer, Bcb->CacheView[Index]->BaseAddress, CurrentLength);
             Buffer = (PVOID) ((ULONG_PTR) Buffer + CurrentLength);
             Length -= CurrentLength;
             Offset.QuadPart += CurrentLength;
@@ -356,8 +355,8 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
             {
                 CurrentLength = Length;
             }
-            RtlCopyMemory((PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress + Offset.u.LowPart % CACHE_VIEW_SIZE),
-                          Buffer, CurrentLength);
+            memcpy ((PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress + Offset.u.LowPart % CACHE_VIEW_SIZE),
+                    Buffer, CurrentLength);
             Buffer = (PVOID) ((ULONG_PTR) Buffer + CurrentLength);
             Length -= CurrentLength;
             Offset.QuadPart += CurrentLength;
@@ -365,7 +364,7 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
         else
         {
             CurrentLength = Length > CACHE_VIEW_SIZE ? CACHE_VIEW_SIZE : Length;
-            RtlCopyMemory(Bcb->CacheView[Index]->BaseAddress, Buffer, CurrentLength);
+            memcpy (Bcb->CacheView[Index]->BaseAddress, Buffer, CurrentLength);
             Buffer = (PVOID) ((ULONG_PTR) Buffer + CurrentLength);
             Length -= CurrentLength;
             Offset.QuadPart += CurrentLength;
@@ -603,15 +602,15 @@ CcZeroData (IN PFILE_OBJECT FileObject,
                 {
                     CurrentLength = Length;
                 }
-                RtlZeroMemory((PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress + Offset.u.LowPart % CACHE_VIEW_SIZE),
-                              CurrentLength);
+                memset ((PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress + Offset.u.LowPart % CACHE_VIEW_SIZE), 0,
+                        CurrentLength);
                 Length -= CurrentLength;
                 Offset.QuadPart += CurrentLength;
             }
             else
             {
                 CurrentLength = Length > CACHE_VIEW_SIZE ? CACHE_VIEW_SIZE : Length;
-                RtlZeroMemory(Bcb->CacheView[Index]->BaseAddress, CurrentLength);
+                memset (Bcb->CacheView[Index]->BaseAddress, 0, CurrentLength);
                 Length -= CurrentLength;
                 Offset.QuadPart += CurrentLength;
             }
