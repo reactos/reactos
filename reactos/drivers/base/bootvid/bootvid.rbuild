@@ -9,4 +9,5 @@
 	<file>bootdata.c</file>
 	<file>vga.c</file>
 	<file>bootvid.rc</file>
+        <pch>precomp.h</pch>
 </module>
