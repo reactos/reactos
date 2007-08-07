@@ -662,14 +662,6 @@ BOOL
 STDCALL
 NtGdiRemoveFontResource(LPCWSTR  FileName);
 
-/* Use NtGdiExtSelectClipRgn with RGN_COPY. */
-int
-STDCALL
-NtGdiSelectClipRgn (
-	HDC	hDC,
-	HRGN	hrgn
-	);
-
 /* Should be done in user-mode. */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 
