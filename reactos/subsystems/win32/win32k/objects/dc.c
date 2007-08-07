@@ -1213,7 +1213,7 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
       break;
   }
 
-  if (!Ret)
+  if (Ret)
   {
     _SEH_TRY
     {
