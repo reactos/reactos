@@ -2885,6 +2885,16 @@ typedef struct _RTL_CRITICAL_SECTION {
 } RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION;
 #endif
 
+NTSYSAPI
+VOID
+NTAPI
+RtlUnwind (
+    IN PVOID TargetFrame OPTIONAL,
+    IN PVOID TargetIp OPTIONAL,
+    IN PEXCEPTION_RECORD ExceptionRecord OPTIONAL,
+    IN PVOID ReturnValue
+    );
+
 #define RTL_SRWLOCK_INIT {0}
 typedef struct _RTL_SRWLOCK
 {

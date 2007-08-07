@@ -140,7 +140,7 @@ __inline static void list_init( struct list *list )
 }
 
 /* count the elements of a list */
-inline static unsigned int list_count( const struct list *list )
+__inline static unsigned int list_count( const struct list *list )
 {
     unsigned count = 0;
     const struct list *ptr;
