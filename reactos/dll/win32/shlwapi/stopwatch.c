@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  * These functions probably never need to be implemented unless we
@@ -55,7 +55,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
  * NOTES
  *  If this function returns 0, no further StopWatch functions should be called.
  */
-DWORD WINAPI StopWatchMode()
+DWORD WINAPI StopWatchMode(void)
 {
   FIXME("() stub!\n");
   return 0;
@@ -72,7 +72,7 @@ DWORD WINAPI StopWatchMode()
  * RETURNS
  *  Nothing.
  */
-void WINAPI StopWatchFlush()
+void WINAPI StopWatchFlush(void)
 {
   FIXME("() stub!\n");
 }
@@ -96,7 +96,7 @@ void WINAPI StopWatchFlush()
 DWORD WINAPI StopWatchW(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
                         DWORD dwMode, DWORD dwTimeStamp)
 {
-    FIXME("(%ld,%s,%ld,%ld,%ld) stub!\n", dwClass, debugstr_w(lpszStr),
+    FIXME("(%d,%s,%d,%d,%d) stub!\n", dwClass, debugstr_w(lpszStr),
         dwUnknown, dwMode, dwTimeStamp);
   return ERROR_SUCCESS;
 }
@@ -174,7 +174,7 @@ void WINAPI StopWatch_MarkFrameStart(LPCSTR lpszName)
  */
 void WINAPI StopWatch_MarkJavaStop(LPCWSTR lpszEvent, HWND hWnd, DWORD dwReserved)
 {
-  FIXME("(%s,%p,0x%08lx) stub!\n", debugstr_w(lpszEvent), hWnd, dwReserved);
+  FIXME("(%s,%p,0x%08x) stub!\n", debugstr_w(lpszEvent), hWnd, dwReserved);
 }
 
 /*************************************************************************
@@ -188,7 +188,7 @@ void WINAPI StopWatch_MarkJavaStop(LPCWSTR lpszEvent, HWND hWnd, DWORD dwReserve
  * RETURNS
  *  The low 32 bits of the current performance counter reading.
  */
-DWORD WINAPI GetPerfTime()
+DWORD WINAPI GetPerfTime(void)
 {
   static LONG64 iCounterFreq = 0;
   LARGE_INTEGER iCounter;
@@ -218,7 +218,7 @@ DWORD WINAPI GetPerfTime()
  */
 DWORD WINAPI StopWatch_SetMsgLastLocation(DWORD dwUnknown)
 {
-  FIXME("(%ld) stub!\n", dwUnknown);
+  FIXME("(%d) stub!\n", dwUnknown);
 
   return dwUnknown;
 }

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "windef.h"
@@ -27,16 +27,19 @@
 
 #include "shlwapi_De.rc"
 #include "shlwapi_En.rc"
+#include "shlwapi_Eo.rc"
 #include "shlwapi_Es.rc"
 #include "shlwapi_Fi.rc"
+#include "shlwapi_Fr.rc"
 #include "shlwapi_Hu.rc"
+#include "shlwapi_It.rc"
+#include "shlwapi_Ja.rc"
 #include "shlwapi_Ko.rc"
 #include "shlwapi_Nl.rc"
 #include "shlwapi_No.rc"
-#include "shlwapi_It.rc"
-#include "shlwapi_Ja.rc"
 #include "shlwapi_Pl.rc"
 #include "shlwapi_Pt.rc"
 #include "shlwapi_Ru.rc"
+#include "shlwapi_Tr.rc"
 #include "shlwapi_Sv.rc"
 #include "shlwapi_Uk.rc"

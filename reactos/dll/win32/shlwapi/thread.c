@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdarg.h>
 #include <string.h>
@@ -26,34 +26,21 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
-#include "wine/debug.h"
+#include "winuser.h"
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_PATH
 #define NO_SHLWAPI_GDI
 #define NO_SHLWAPI_STREAM
 #define NO_SHLWAPI_USER
 #include "shlwapi.h"
+#include "shlobj.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-/* Get a function pointer from a DLL handle */
-#define GET_FUNC(func, module, name, fail) \
-  do { \
-    if (!func) { \
-      if (!SHLWAPI_h##module && !(SHLWAPI_h##module = LoadLibraryA(#module ".dll"))) return fail; \
-      if (!(func = (void*)GetProcAddress(SHLWAPI_h##module, name))) return fail; \
-    } \
-  } while (0)
-
-/* DLL handles for late bound calls */
-extern HMODULE SHLWAPI_hshell32;
-
-/* Function pointers for GET_FUNC macro; these need to be global because of gcc bug */
-static HRESULT (WINAPI *pSHGetInstanceExplorer)(IUnknown**);
-
 extern DWORD SHLWAPI_ThreadRef_index;  /* Initialised in shlwapi_main.c */
 
-DWORD WINAPI SHStringFromGUIDA(REFGUID,LPSTR,INT);
+INT WINAPI SHStringFromGUIDA(REFGUID,LPSTR,INT);
 
 /**************************************************************************
  *      _CreateAllAccessSecurityAttributes       [SHLWAPI.356]
@@ -81,7 +68,7 @@ LPSECURITY_ATTRIBUTES WINAPI _CreateAllAccessSecurityAttributes(
   /* This function is used within SHLWAPI only to create security attributes
    * for shell semaphores. */
 
-  TRACE("(%p,%p,%08lx)\n", lpAttr, lpSec, p3);
+  TRACE("(%p,%p,%08x)\n", lpAttr, lpSec, p3);
 
   if (!(GetVersion() & 0x80000000))  /* NT */
   {
@@ -118,9 +105,7 @@ HRESULT WINAPI _SHGetInstanceExplorer(IUnknown **lppUnknown)
 {
   /* This function is used within SHLWAPI only to hold the IE reference
    * for threads created with the CTF_PROCESS_REF flag set. */
-
-  GET_FUNC(pSHGetInstanceExplorer, shell32, "SHGetInstanceExplorer", E_FAIL);
-  return pSHGetInstanceExplorer(lppUnknown);
+    return SHGetInstanceExplorer(lppUnknown);
 }
 
 /* Internal thread information structure */
@@ -180,7 +165,7 @@ HRESULT WINAPI SHSetThreadRef(IUnknown *lpUnknown)
 {
   TRACE("(%p)\n", lpUnknown);
 
-  if (!lpUnknown || SHLWAPI_ThreadRef_index  == 0xffffffff)
+  if (!lpUnknown || SHLWAPI_ThreadRef_index  == TLS_OUT_OF_INDEXES)
     return E_NOINTERFACE;
 
   TlsSetValue(SHLWAPI_ThreadRef_index, lpUnknown);
@@ -282,7 +267,7 @@ BOOL WINAPI SHCreateThread(LPTHREAD_START_ROUTINE pfnThreadProc, VOID *pData,
   SHLWAPI_THREAD_INFO ti;
   BOOL bCalled = FALSE;
 
-  TRACE("(%p,%p,0x%lX,%p)\n", pfnThreadProc, pData, dwFlags, pfnCallback);
+  TRACE("(%p,%p,0x%X,%p)\n", pfnThreadProc, pData, dwFlags, pfnCallback);
 
   /* Set up data to pass to the new thread (On our stack) */
   ti.pfnThreadProc = pfnThreadProc;
@@ -419,7 +404,7 @@ HANDLE WINAPI _SHGlobalCounterCreateNamedW(LPCWSTR lpszName, DWORD iInitial)
   SECURITY_ATTRIBUTES sAttr, *pSecAttr;
   HANDLE hRet;
 
-  TRACE("(%s,%ld)\n", debugstr_w(lpszName), iInitial);
+  TRACE("(%s,%d)\n", debugstr_w(lpszName), iInitial);
 
   /* Create Semaphore name */
   memcpy(szBuff, szPrefix, (iPrefixLen + 1) * sizeof(WCHAR));
@@ -450,7 +435,7 @@ HANDLE WINAPI _SHGlobalCounterCreateNamedA(LPCSTR lpszName, DWORD iInitial)
 {
   WCHAR szBuff[MAX_PATH];
 
-  TRACE("(%s,%ld)\n", debugstr_a(lpszName), iInitial);
+  TRACE("(%s,%d)\n", debugstr_a(lpszName), iInitial);
 
   if (lpszName)
     MultiByteToWideChar(0, 0, lpszName, -1, szBuff, MAX_PATH);

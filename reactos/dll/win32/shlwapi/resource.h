@@ -15,10 +15,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #ifndef WINE_SHLWAPI_RESOURCE_H
 #define WINE_SHLWAPI_RESOURCE_H
+
+#define IDS_BYTES_FORMAT 64
+#define IDS_TIME_INTERVAL_HOURS 65
+#define IDS_TIME_INTERVAL_MINUTES 66
+#define IDS_TIME_INTERVAL_SECONDS 67
 
 /* These numbers match native ID's and shouldn't be abitrarily changed */
 #define IDD_ERR_DIALOG    0x1200

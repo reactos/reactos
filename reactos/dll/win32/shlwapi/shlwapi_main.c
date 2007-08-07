@@ -16,31 +16,21 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
-#include "winerror.h"
-#include "wine/debug.h"
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 HINSTANCE shlwapi_hInstance = 0;
-HMODULE SHLWAPI_hshell32 = 0;
-HMODULE SHLWAPI_hwinmm = 0;
-HMODULE SHLWAPI_hcomdlg32 = 0;
-HMODULE SHLWAPI_hcomctl32 = 0;
-HMODULE SHLWAPI_hmpr = 0;
-HMODULE SHLWAPI_hmlang = 0;
-HMODULE SHLWAPI_hurlmon = 0;
-HMODULE SHLWAPI_hversion = 0;
-
 DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 
 /*************************************************************************
@@ -65,7 +55,7 @@ DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
-	TRACE("%p 0x%lx %p\n", hinstDLL, fdwReason, fImpLoad);
+	TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, fImpLoad);
 	switch (fdwReason)
 	{
 	  case DLL_PROCESS_ATTACH:
@@ -74,14 +64,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
 	    break;
 	  case DLL_PROCESS_DETACH:
-	    if (SHLWAPI_hshell32)  FreeLibrary(SHLWAPI_hshell32);
-	    if (SHLWAPI_hwinmm)    FreeLibrary(SHLWAPI_hwinmm);
-	    if (SHLWAPI_hcomdlg32) FreeLibrary(SHLWAPI_hcomdlg32);
-	    if (SHLWAPI_hcomctl32) FreeLibrary(SHLWAPI_hcomctl32);
-	    if (SHLWAPI_hmpr)      FreeLibrary(SHLWAPI_hmpr);
-	    if (SHLWAPI_hmlang)    FreeLibrary(SHLWAPI_hmlang);
-	    if (SHLWAPI_hurlmon)   FreeLibrary(SHLWAPI_hurlmon);
-	    if (SHLWAPI_hversion)  FreeLibrary(SHLWAPI_hversion);
 	    if (SHLWAPI_ThreadRef_index != TLS_OUT_OF_INDEXES) TlsFree(SHLWAPI_ThreadRef_index);
 	    break;
 	}
@@ -115,16 +97,16 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
   {
   case sizeof(DLLVERSIONINFO2):
     pdvi2->dwFlags = 0;
-    pdvi2->ullVersion = MAKEDLLVERULL(5, 0, 2314, 0);
+    pdvi2->ullVersion = MAKEDLLVERULL(6, 0, 2800, 1612);
     /* Fall through */
   case sizeof(DLLVERSIONINFO):
-    pdvi2->info1.dwMajorVersion = 5;
+    pdvi2->info1.dwMajorVersion = 6;
     pdvi2->info1.dwMinorVersion = 0;
-    pdvi2->info1.dwBuildNumber = 2314;
-    pdvi2->info1.dwPlatformID = 1000;
+    pdvi2->info1.dwBuildNumber = 2800;
+    pdvi2->info1.dwPlatformID = DLLVER_PLATFORM_WINDOWS;
     return S_OK;
  }
  if (pdvi)
-   WARN("pdvi->cbSize = %ld, unhandled\n", pdvi2->info1.cbSize);
+   WARN("pdvi->cbSize = %d, unhandled\n", pdvi2->info1.cbSize);
  return E_INVALIDARG;
 }

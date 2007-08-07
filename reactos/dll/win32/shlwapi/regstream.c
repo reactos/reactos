@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -79,7 +79,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 	ISHRegStream *This = (ISHRegStream *)iface;
 	ULONG refCount = InterlockedIncrement(&This->ref);
 	
-	TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
+	TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
 	return refCount;
 }
@@ -92,7 +92,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
 	ISHRegStream *This = (ISHRegStream *)iface;
 	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
+	TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
 
 	if (!refCount)
 	{
@@ -119,7 +119,7 @@ static HRESULT WINAPI IStream_fnRead (IStream * iface, void* pv, ULONG cb, ULONG
 
 	DWORD dwBytesToRead, dwBytesLeft;
 
-	TRACE("(%p)->(%p,0x%08lx,%p)\n",This, pv, cb, pcbRead);
+	TRACE("(%p)->(%p,0x%08x,%p)\n",This, pv, cb, pcbRead);
 
 	if (!pv)
 	  return STG_E_INVALIDPOINTER;
@@ -382,7 +382,7 @@ IStream * WINAPI SHOpenRegStream2A(HKEY hKey, LPCSTR pszSubkey,
   LPBYTE lpBuff = NULL;
   DWORD dwLength, dwType;
 
-  TRACE("(%p,%s,%s,0x%08lx)\n", hKey, pszSubkey, pszValue, dwMode);
+  TRACE("(%p,%s,%s,0x%08x)\n", hKey, pszSubkey, pszValue, dwMode);
 
   /* Open the key, read in binary data and create stream */
   if (!RegOpenKeyExA (hKey, pszSubkey, 0, KEY_READ, &hStrKey) &&
@@ -410,7 +410,7 @@ IStream * WINAPI SHOpenRegStream2W(HKEY hKey, LPCWSTR pszSubkey,
   LPBYTE lpBuff = NULL;
   DWORD dwLength, dwType;
 
-  TRACE("(%p,%s,%s,0x%08lx)\n", hKey, debugstr_w(pszSubkey),
+  TRACE("(%p,%s,%s,0x%08x)\n", hKey, debugstr_w(pszSubkey),
         debugstr_w(pszValue), dwMode);
 
   /* Open the key, read in binary data and create stream */
@@ -448,7 +448,7 @@ IStream * WINAPI SHOpenRegStreamA(HKEY hkey, LPCSTR pszSubkey,
 {
   IStream *iStream;
 
-  TRACE("(%p,%s,%s,0x%08lx)\n", hkey, pszSubkey, pszValue, dwMode);
+  TRACE("(%p,%s,%s,0x%08x)\n", hkey, pszSubkey, pszValue, dwMode);
 
   iStream = SHOpenRegStream2A(hkey, pszSubkey, pszValue, dwMode);
   return iStream ? iStream : (IStream *)&rsDummyRegStream;
@@ -464,7 +464,7 @@ IStream * WINAPI SHOpenRegStreamW(HKEY hkey, LPCWSTR pszSubkey,
 {
   IStream *iStream;
 
-  TRACE("(%p,%s,%s,0x%08lx)\n", hkey, debugstr_w(pszSubkey),
+  TRACE("(%p,%s,%s,0x%08x)\n", hkey, debugstr_w(pszSubkey),
         debugstr_w(pszValue), dwMode);
   iStream = SHOpenRegStream2W(hkey, pszSubkey, pszValue, dwMode);
   return iStream ? iStream : (IStream *)&rsDummyRegStream;
@@ -491,7 +491,7 @@ IStream * WINAPI SHCreateMemStream(LPBYTE lpbData, DWORD dwDataLen)
 {
   IStream *iStrmRet = NULL;
 
-  TRACE("(%p,%ld)\n", lpbData, dwDataLen);
+  TRACE("(%p,%d)\n", lpbData, dwDataLen);
 
   if (lpbData)
   {

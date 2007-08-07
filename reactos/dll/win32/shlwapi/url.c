@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -23,7 +23,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
@@ -36,6 +35,7 @@
 #include "shlwapi.h"
 #include "wine/debug.h"
 
+HMODULE WINAPI MLLoadLibraryW(LPCWSTR,HMODULE,DWORD);
 BOOL    WINAPI MLFreeLibrary(HMODULE);
 HRESULT WINAPI MLBuildResURLW(LPCWSTR,HMODULE,DWORD,LPCWSTR,LPWSTR,DWORD);
 
@@ -44,31 +44,28 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /* The following schemes were identified in the native version of
  * SHLWAPI.DLL version 5.50
  */
-typedef struct {
+static const struct {
     URL_SCHEME  scheme_number;
-    LPCSTR scheme_name;
-} SHL_2_inet_scheme;
-
-static const SHL_2_inet_scheme shlwapi_schemes[] = {
-  {URL_SCHEME_FTP,        "ftp"},
-  {URL_SCHEME_HTTP,       "http"},
-  {URL_SCHEME_GOPHER,     "gopher"},
-  {URL_SCHEME_MAILTO,     "mailto"},
-  {URL_SCHEME_NEWS,       "news"},
-  {URL_SCHEME_NNTP,       "nntp"},
-  {URL_SCHEME_TELNET,     "telnet"},
-  {URL_SCHEME_WAIS,       "wais"},
-  {URL_SCHEME_FILE,       "file"},
-  {URL_SCHEME_MK,         "mk"},
-  {URL_SCHEME_HTTPS,      "https"},
-  {URL_SCHEME_SHELL,      "shell"},
-  {URL_SCHEME_SNEWS,      "snews"},
-  {URL_SCHEME_LOCAL,      "local"},
-  {URL_SCHEME_JAVASCRIPT, "javascript"},
-  {URL_SCHEME_VBSCRIPT,   "vbscript"},
-  {URL_SCHEME_ABOUT,      "about"},
-  {URL_SCHEME_RES,        "res"},
-  {0, 0}
+    WCHAR scheme_name[12];
+} shlwapi_schemes[] = {
+  {URL_SCHEME_FTP,        {'f','t','p',0}},
+  {URL_SCHEME_HTTP,       {'h','t','t','p',0}},
+  {URL_SCHEME_GOPHER,     {'g','o','p','h','e','r',0}},
+  {URL_SCHEME_MAILTO,     {'m','a','i','l','t','o',0}},
+  {URL_SCHEME_NEWS,       {'n','e','w','s',0}},
+  {URL_SCHEME_NNTP,       {'n','n','t','p',0}},
+  {URL_SCHEME_TELNET,     {'t','e','l','n','e','t',0}},
+  {URL_SCHEME_WAIS,       {'w','a','i','s',0}},
+  {URL_SCHEME_FILE,       {'f','i','l','e',0}},
+  {URL_SCHEME_MK,         {'m','k',0}},
+  {URL_SCHEME_HTTPS,      {'h','t','t','p','s',0}},
+  {URL_SCHEME_SHELL,      {'s','h','e','l','l',0}},
+  {URL_SCHEME_SNEWS,      {'s','n','e','w','s',0}},
+  {URL_SCHEME_LOCAL,      {'l','o','c','a','l',0}},
+  {URL_SCHEME_JAVASCRIPT, {'j','a','v','a','s','c','r','i','p','t',0}},
+  {URL_SCHEME_VBSCRIPT,   {'v','b','s','c','r','i','p','t',0}},
+  {URL_SCHEME_ABOUT,      {'a','b','o','u','t',0}},
+  {URL_SCHEME_RES,        {'r','e','s',0}},
 };
 
 typedef struct {
@@ -119,14 +116,27 @@ static const unsigned char HashDataLookup[256] = {
  0x25, 0x45, 0x27, 0x75, 0x92, 0xB8, 0xA3, 0xC8, 0xDE, 0xEB, 0xF8, 0xF3, 0xDB,
  0x0A, 0x98, 0x83, 0x7B, 0xE5, 0xCB, 0x4C, 0x78, 0xD1 };
 
+static DWORD get_scheme_code(LPCWSTR scheme, DWORD scheme_len)
+{
+    int i;
+
+    for(i=0; i < sizeof(shlwapi_schemes)/sizeof(shlwapi_schemes[0]); i++) {
+        if(scheme_len == strlenW(shlwapi_schemes[i].scheme_name)
+           && !memcmp(scheme, shlwapi_schemes[i].scheme_name, scheme_len*sizeof(WCHAR)))
+            return shlwapi_schemes[i].scheme_number;
+    }
+
+    return URL_SCHEME_UNKNOWN;
+}
+
 static BOOL URL_JustLocation(LPCWSTR str)
 {
-    while(*str && (*str == L'/')) str++;
+    while(*str && (*str == '/')) str++;
     if (*str) {
-	while (*str && ((*str == L'-') ||
-			(*str == L'.') ||
+        while (*str && ((*str == '-') ||
+                        (*str == '.') ||
 			isalnumW(*str))) str++;
-	if (*str == L'/') return FALSE;
+        if (*str == '/') return FALSE;
     }
     return TRUE;
 }
@@ -147,8 +157,8 @@ static BOOL URL_JustLocation(LPCWSTR str)
  */
 HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
 {
-    DWORD cnt;
-    const SHL_2_inet_scheme *inet_pro;
+    WCHAR scheme[INTERNET_MAX_SCHEME_LENGTH];
+    DWORD cnt, len;
 
     y->nScheme = URL_SCHEME_INVALID;
     if (y->cbSize != sizeof(*y)) return E_INVALIDARG;
@@ -180,17 +190,10 @@ HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
     /* found scheme, set length of remainder */
     y->cchSuffix = lstrlenA(y->pszSuffix);
 
-    /* see if known scheme and return indicator number */
-    y->nScheme = URL_SCHEME_UNKNOWN;
-    inet_pro = shlwapi_schemes;
-    while (inet_pro->scheme_name) {
-	if (!strncasecmp(inet_pro->scheme_name, y->pszProtocol,
-		    min(y->cchProtocol, lstrlenA(inet_pro->scheme_name)))) {
-	    y->nScheme = inet_pro->scheme_number;
-	    break;
-	}
-	inet_pro++;
-    }
+    len = MultiByteToWideChar(CP_ACP, 0, y->pszProtocol, y->cchProtocol,
+                              scheme, sizeof(scheme)/sizeof(WCHAR));
+    y->nScheme = get_scheme_code(scheme, len);
+
     return S_OK;
 }
 
@@ -202,21 +205,18 @@ HRESULT WINAPI ParseURLA(LPCSTR x, PARSEDURLA *y)
 HRESULT WINAPI ParseURLW(LPCWSTR x, PARSEDURLW *y)
 {
     DWORD cnt;
-    const SHL_2_inet_scheme *inet_pro;
-    LPSTR cmpstr;
-    INT len;
 
     y->nScheme = URL_SCHEME_INVALID;
     if (y->cbSize != sizeof(*y)) return E_INVALIDARG;
     /* FIXME: leading white space generates error of 0x80041001 which
      *        is undefined
      */
-    if (*x <= L' ') return 0x80041001;
+    if (*x <= ' ') return 0x80041001;
     cnt = 0;
     y->cchProtocol = 0;
     y->pszProtocol = x;
     while (*x) {
-	if (*x == L':') {
+        if (*x == ':') {
 	    y->cchProtocol = cnt;
 	    cnt = -1;
 	    y->pszSuffix = x+1;
@@ -228,29 +228,15 @@ HRESULT WINAPI ParseURLW(LPCWSTR x, PARSEDURLW *y)
 
     /* check for no scheme in string start */
     /* (apparently schemes *must* be larger than a single character)  */
-    if ((*x == L'\0') || (y->cchProtocol <= 1)) {
+    if ((*x == '\0') || (y->cchProtocol <= 1)) {
 	y->pszProtocol = NULL;
 	return 0x80041001;
     }
 
     /* found scheme, set length of remainder */
     y->cchSuffix = lstrlenW(y->pszSuffix);
+    y->nScheme = get_scheme_code(y->pszProtocol, y->cchProtocol);
 
-    /* see if known scheme and return indicator number */
-    len = WideCharToMultiByte(0, 0, y->pszProtocol, y->cchProtocol, 0, 0, 0, 0);
-    cmpstr = HeapAlloc(GetProcessHeap(), 0, len);
-    WideCharToMultiByte(0, 0, y->pszProtocol, y->cchProtocol, cmpstr, len, 0, 0);
-    y->nScheme = URL_SCHEME_UNKNOWN;
-    inet_pro = shlwapi_schemes;
-    while (inet_pro->scheme_name) {
-	if (!strncasecmp(inet_pro->scheme_name, cmpstr,
-		    min(len, lstrlenA(inet_pro->scheme_name)))) {
-	    y->nScheme = inet_pro->scheme_number;
-	    break;
-	}
-	inet_pro++;
-    }
-    HeapFree(GetProcessHeap(), 0, cmpstr);
     return S_OK;
 }
 
@@ -284,7 +270,7 @@ HRESULT WINAPI UrlCanonicalizeA(LPCSTR pszUrl, LPSTR pszCanonicalized,
     LPWSTR base, canonical;
     DWORD ret, len, len2;
 
-    TRACE("(%s %p %p 0x%08lx) using W version\n",
+    TRACE("(%s %p %p 0x%08x) using W version\n",
 	  debugstr_a(pszUrl), pszCanonicalized,
 	  pcchCanonicalized, dwFlags);
 
@@ -330,152 +316,180 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     LPWSTR lpszUrlCpy, wk1, wk2, mp, mp2, root;
     INT nByteLen, state;
     DWORD nLen, nWkLen;
-    WCHAR slash = dwFlags & URL_FILE_USE_PATHURL ? '\\' : '/';
+    WCHAR slash = '/';
 
-    TRACE("(%s %p %p 0x%08lx)\n", debugstr_w(pszUrl), pszCanonicalized,
+    static const WCHAR wszFile[] = {'f','i','l','e',':'};
+
+    TRACE("(%s %p %p 0x%08x)\n", debugstr_w(pszUrl), pszCanonicalized,
 	  pcchCanonicalized, dwFlags);
 
     if(!pszUrl || !pszCanonicalized || !pcchCanonicalized)
 	return E_INVALIDARG;
 
+    if(!*pszUrl) {
+        *pszCanonicalized = 0;
+        return S_OK;
+    }
+
     nByteLen = (lstrlenW(pszUrl) + 1) * sizeof(WCHAR); /* length in bytes */
-    lpszUrlCpy = HeapAlloc(GetProcessHeap(), 0, nByteLen);
+    lpszUrlCpy = HeapAlloc(GetProcessHeap(), 0, INTERNET_MAX_URL_LENGTH);
 
-    if (dwFlags & URL_DONT_SIMPLIFY)
-        memcpy(lpszUrlCpy, pszUrl, nByteLen);
-    else {
+    if((dwFlags & URL_FILE_USE_PATHURL) && nByteLen >= sizeof(wszFile)
+            && !memcmp(wszFile, pszUrl, sizeof(wszFile)))
+        slash = '\\';
 
-	/*
-	 * state =
-	 *         0   initial  1,3
-	 *         1   have 2[+] alnum  2,3
-	 *         2   have scheme (found :)  4,6,3
-	 *         3   failed (no location)
-	 *         4   have //  5,3
-	 *         5   have 1[+] alnum  6,3
-	 *         6   have location (found /) save root location
-	 */
+    /*
+     * state =
+     *         0   initial  1,3
+     *         1   have 2[+] alnum  2,3
+     *         2   have scheme (found :)  4,6,3
+     *         3   failed (no location)
+     *         4   have //  5,3
+     *         5   have 1[+] alnum  6,3
+     *         6   have location (found /) save root location
+     */
 
-	wk1 = (LPWSTR)pszUrl;
-	wk2 = lpszUrlCpy;
-	state = 0;
-	while (*wk1) {
-	    switch (state) {
-	    case 0:
-		if (!isalnumW(*wk1)) {state = 3; break;}
-		*wk2++ = *wk1++;
-		if (!isalnumW(*wk1)) {state = 3; break;}
-		*wk2++ = *wk1++;
-		state = 1;
-		break;
-	    case 1:
-		*wk2++ = *wk1;
-		if (*wk1++ == L':') state = 2;
-		break;
-	    case 2:
-		if (*wk1 != L'/') {state = 3; break;}
-		*wk2++ = *wk1++;
-		if (*wk1 != L'/') {state = 6; break;}
-		*wk2++ = *wk1++;
-                if((dwFlags & URL_FILE_USE_PATHURL) && *wk1 == '/')
-                    wk1++;
-		state = 4;
-		break;
-	    case 3:
-		nWkLen = strlenW(wk1);
-		memcpy(wk2, wk1, (nWkLen + 1) * sizeof(WCHAR));
-                mp = wk2;
-		wk1 += nWkLen;
-		wk2 += nWkLen;
+    wk1 = (LPWSTR)pszUrl;
+    wk2 = lpszUrlCpy;
+    state = 0;
 
-                while(mp < wk2) {
-                    if(*mp == '/' || *mp == '\\')
-                        *mp = slash;
-                    mp++;
-                }
-		break;
-	    case 4:
-                if (!isalnumW(*wk1) && (*wk1 != L'-') && (*wk1 != L'.') && (*wk1 != ':'))
-                    {state = 3; break;}
-                while(isalnumW(*wk1) || (*wk1 == L'-') || (*wk1 == L'.') || (*wk1 == ':'))
-                    *wk2++ = *wk1++;
-                state = 5;
+    if(pszUrl[1] == ':') { /* Assume path */
+        static const WCHAR wszFilePrefix[] = {'f','i','l','e',':','/','/','/'};
+
+        memcpy(wk2, wszFilePrefix, sizeof(wszFilePrefix));
+        wk2 += sizeof(wszFilePrefix)/sizeof(WCHAR);
+        if (dwFlags & URL_FILE_USE_PATHURL)
+        {
+            slash = '\\';
+            --wk2;
+        }
+        else
+            dwFlags |= URL_ESCAPE_UNSAFE;
+        state = 5;
+    }
+
+    while (*wk1) {
+        switch (state) {
+        case 0:
+            if (!isalnumW(*wk1)) {state = 3; break;}
+            *wk2++ = *wk1++;
+            if (!isalnumW(*wk1)) {state = 3; break;}
+            *wk2++ = *wk1++;
+            state = 1;
+            break;
+        case 1:
+            *wk2++ = *wk1;
+            if (*wk1++ == ':') state = 2;
+            break;
+        case 2:
+            if (*wk1 != '/') {state = 3; break;}
+            *wk2++ = *wk1++;
+            if (*wk1 != '/') {state = 6; break;}
+            *wk2++ = *wk1++;
+            if(*wk1 == '/' && (dwFlags & URL_FILE_USE_PATHURL))
+                wk1++;
+            state = 4;
+            break;
+        case 3:
+            nWkLen = strlenW(wk1);
+            memcpy(wk2, wk1, (nWkLen + 1) * sizeof(WCHAR));
+            mp = wk2;
+            wk1 += nWkLen;
+            wk2 += nWkLen;
+
+            while(mp < wk2) {
+                if(*mp == '/' || *mp == '\\')
+                    *mp = slash;
+                mp++;
+            }
+            break;
+        case 4:
+            if (!isalnumW(*wk1) && (*wk1 != '-') && (*wk1 != '.') && (*wk1 != ':'))
+                {state = 3; break;}
+            while(isalnumW(*wk1) || (*wk1 == '-') || (*wk1 == '.') || (*wk1 == ':'))
+                *wk2++ = *wk1++;
+            state = 5;
+            if (!*wk1)
+                *wk2++ = slash;
+            break;
+        case 5:
+            if (*wk1 != '/' && *wk1 != '\\') {state = 3; break;}
+            while(*wk1 == '/' || *wk1 == '\\') {
+                *wk2++ = slash;
+                wk1++;
+            }
+            state = 6;
+            break;
+        case 6:
+            if(dwFlags & URL_DONT_SIMPLIFY) {
+                state = 3;
                 break;
-            case 5:
-                if (*wk1 != '/' && *wk1 != '\\') {state = 3; break;}
-                while(*wk1 == '/') {
-                    *wk2++ = slash;
-                    wk1++;
+            }
+ 
+            /* Now at root location, cannot back up any more. */
+            /* "root" will point at the '/' */
+
+            root = wk2-1;
+            while (*wk1) {
+                mp = strchrW(wk1, '/');
+                mp2 = strchrW(wk1, '\\');
+                if(mp2 && (!mp || mp2 < mp))
+                    mp = mp2;
+                if (!mp) {
+                    nWkLen = strlenW(wk1);
+                    memcpy(wk2, wk1, (nWkLen + 1) * sizeof(WCHAR));
+                    wk1 += nWkLen;
+                    wk2 += nWkLen;
+                    continue;
                 }
-                state = 6;
-		break;
-	    case 6:
-		/* Now at root location, cannot back up any more. */
-		/* "root" will point at the '/' */
-		root = wk2-1;
-		while (*wk1) {
-		    TRACE("wk1=%c\n", (CHAR)*wk1);
+                nLen = mp - wk1;
+                if(nLen) {
+                    memcpy(wk2, wk1, nLen * sizeof(WCHAR));
+                    wk2 += nLen;
+                    wk1 += nLen;
+                }
+                *wk2++ = slash;
+                wk1++;
 
-                    mp = strchrW(wk1, '/');
-                    mp2 = strchrW(wk1, '\\');
-                    if(mp2 && mp2 < mp)
-                        mp = mp2;
-		    if (!mp) {
-			nWkLen = strlenW(wk1);
-			memcpy(wk2, wk1, (nWkLen + 1) * sizeof(WCHAR));
-			wk1 += nWkLen;
-			wk2 += nWkLen;
-			continue;
-		    }
-                    nLen = mp - wk1;
-                    if(nLen) {
-                        memcpy(wk2, wk1, nLen * sizeof(WCHAR));
-                        wk2 += nLen;
-                        wk1 += nLen;
+                if (*wk1 == '.') {
+                    TRACE("found '/.'\n");
+                    if (wk1[1] == '/' || wk1[1] == '\\') {
+                        /* case of /./ -> skip the ./ */
+                        wk1 += 2;
                     }
-                    *wk2++ = slash;
-                    wk1++;
-
-		    if (*wk1 == L'.') {
-			TRACE("found '/.'\n");
-                        if (wk1[1] == '/' || wk1[1] == '\\') {
-			    /* case of /./ -> skip the ./ */
-			    wk1 += 2;
-			}
-                        else if (wk1[1] == '.') {
-			    /* found /..  look for next / */
-			    TRACE("found '/..'\n");
-                            if (wk1[2] == '/' || wk1[2] == '\\' ||wk1[2] == '?'
-                                    || wk1[2] == '#' || !wk1[2]) {
-				/* case /../ -> need to backup wk2 */
-				TRACE("found '/../'\n");
-				*(wk2-1) = L'\0';  /* set end of string */
-                                mp = strrchrW(root, slash);
-				if (mp && (mp >= root)) {
-				    /* found valid backup point */
-				    wk2 = mp + 1;
-                                    if(wk1[2] != '/' && wk1[2] != '\\')
-				        wk1 += 2;
-				    else
-				        wk1 += 3;
-				}
-				else {
-                                    /* did not find point, restore '/' */
-                                    *(wk2-1) = slash;
-				}
-			    }
-			}
-		    }
-		}
-		*wk2 = L'\0';
-		break;
-	    default:
-		FIXME("how did we get here - state=%d\n", state);
-                HeapFree(GetProcessHeap(), 0, lpszUrlCpy);
-		return E_INVALIDARG;
-	    }
-	}
-	*wk2 = L'\0';
+                    else if (wk1[1] == '.') {
+                        /* found /..  look for next / */
+                        TRACE("found '/..'\n");
+                        if (wk1[2] == '/' || wk1[2] == '\\' ||wk1[2] == '?'
+                            || wk1[2] == '#' || !wk1[2]) {
+                            /* case /../ -> need to backup wk2 */
+                            TRACE("found '/../'\n");
+                            *(wk2-1) = '\0';  /* set end of string */
+                            mp = strrchrW(root, slash);
+                            if (mp && (mp >= root)) {
+                                /* found valid backup point */
+                                wk2 = mp + 1;
+                                if(wk1[2] != '/' && wk1[2] != '\\')
+                                    wk1 += 2;
+                                else
+                                    wk1 += 3;
+                            }
+                            else {
+                                /* did not find point, restore '/' */
+                                *(wk2-1) = slash;
+                            }
+                        }
+                    }
+                }
+            }
+            *wk2 = '\0';
+            break;
+        default:
+            FIXME("how did we get here - state=%d\n", state);
+            HeapFree(GetProcessHeap(), 0, lpszUrlCpy);
+            return E_INVALIDARG;
+        }
+        *wk2 = '\0';
 	TRACE("Simplified, orig <%s>, simple <%s>\n",
 	      debugstr_w(pszUrl), debugstr_w(lpszUrlCpy));
     }
@@ -537,7 +551,7 @@ HRESULT WINAPI UrlCombineA(LPCSTR pszBase, LPCSTR pszRelative,
     LPWSTR base, relative, combined;
     DWORD ret, len, len2;
 
-    TRACE("(base %s, Relative %s, Combine size %ld, flags %08lx) using W version\n",
+    TRACE("(base %s, Relative %s, Combine size %d, flags %08x) using W version\n",
 	  debugstr_a(pszBase),debugstr_a(pszRelative),
 	  pcchCombined?*pcchCombined:0,dwFlags);
 
@@ -590,7 +604,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     static const WCHAR single_slash[] = {'/','\0'};
     HRESULT ret;
 
-    TRACE("(base %s, Relative %s, Combine size %ld, flags %08lx)\n",
+    TRACE("(base %s, Relative %s, Combine size %d, flags %08x)\n",
 	  debugstr_w(pszBase),debugstr_w(pszRelative),
 	  pcchCombined?*pcchCombined:0,dwFlags);
 
@@ -605,7 +619,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 			    sizeof(WCHAR));
     mbase = preliminary + INTERNET_MAX_URL_LENGTH;
     mrelative = mbase + INTERNET_MAX_URL_LENGTH;
-    *preliminary = L'\0';
+    *preliminary = '\0';
 
     /* Canonicalize the base input prior to looking for the scheme */
     myflags = dwFlags & (URL_DONT_SIMPLIFY | URL_UNESCAPE);
@@ -624,16 +638,31 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	process_case = 1;
     }
     else do {
+        /* mk is a special case */
+        if(base.nScheme == URL_SCHEME_MK) {
+            static const WCHAR wsz[] = {':',':',0};
+
+            WCHAR *ptr = strstrW(base.pszSuffix, wsz);
+            if(ptr) {
+                int delta;
+
+                ptr += 2;
+                delta = ptr-base.pszSuffix;
+                base.cchProtocol += delta;
+                base.pszSuffix += delta;
+                base.cchSuffix -= delta;
+            }
+        }
 
 	/* get size of location field (if it exists) */
 	work = (LPWSTR)base.pszSuffix;
 	sizeloc = 0;
-	if (*work++ == L'/') {
-	    if (*work++ == L'/') {
+        if (*work++ == '/') {
+            if (*work++ == '/') {
 		/* At this point have start of location and
 		 * it ends at next '/' or end of string.
 		 */
-		while(*work && (*work != L'/')) work++;
+                while(*work && (*work != '/')) work++;
 		sizeloc = (DWORD)(work - base.pszSuffix);
 	    }
 	}
@@ -641,11 +670,12 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	/* Change .sizep2 to not have the last leaf in it,
 	 * Note: we need to start after the location (if it exists)
 	 */
-	work = strrchrW((base.pszSuffix+sizeloc), L'/');
+        work = strrchrW((base.pszSuffix+sizeloc), '/');
 	if (work) {
 	    len = (DWORD)(work - base.pszSuffix + 1);
 	    base.cchSuffix = len;
 	}
+
 	/*
 	 * At this point:
 	 *    .pszSuffix   points to location (starting with '//')
@@ -661,7 +691,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	    TRACE("no scheme detected in Relative\n");
 	    relative.pszSuffix = mrelative;  /* case 3,4,5 depends on this */
 	    relative.cchSuffix = strlenW(mrelative);
-	    if (*pszRelative  == L':') {
+            if (*pszRelative  == ':') {
 		/* case that is either left alone or uses pszBase */
 		if (dwFlags & URL_PLUGGABLE_PROTOCOL) {
 		    process_case = 5;
@@ -670,23 +700,23 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 		process_case = 1;
 		break;
 	    }
-	    if (isalnum(*mrelative) && (*(mrelative + 1) == L':')) {
+            if (isalnum(*mrelative) && (*(mrelative + 1) == ':')) {
 		/* case that becomes "file:///" */
 		strcpyW(preliminary, myfilestr);
 		process_case = 1;
 		break;
 	    }
-	    if ((*mrelative == L'/') && (*(mrelative+1) == L'/')) {
+            if ((*mrelative == '/') && (*(mrelative+1) == '/')) {
 		/* pszRelative has location and rest */
 		process_case = 3;
 		break;
 	    }
-	    if (*mrelative == L'/') {
+            if (*mrelative == '/') {
 		/* case where pszRelative is root to location */
 		process_case = 4;
 		break;
 	    }
-	    process_case = (*base.pszSuffix == L'/') ? 5 : 3;
+            process_case = (*base.pszSuffix == '/') ? 5 : 3;
 	    break;
 	}
 
@@ -695,12 +725,12 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	    (strncmpW(base.pszProtocol, relative.pszProtocol, base.cchProtocol) == 0)) {
 
 	    /* since the schemes are the same */
-	    if ((*relative.pszSuffix == L'/') && (*(relative.pszSuffix+1) == L'/')) {
+            if ((*relative.pszSuffix == '/') && (*(relative.pszSuffix+1) == '/')) {
 		/* case where pszRelative replaces location and following */
 		process_case = 3;
 		break;
 	    }
-	    if (*relative.pszSuffix == L'/') {
+            if (*relative.pszSuffix == '/') {
 		/* case where pszRelative is root to location */
 		process_case = 4;
 		break;
@@ -709,7 +739,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	    process_case = 5;
 	    break;
 	}
-	if ((*relative.pszSuffix == L'/') && (*(relative.pszSuffix+1) == L'/')) {
+        if ((*relative.pszSuffix == '/') && (*(relative.pszSuffix+1) == '/')) {
 	    /* case where pszRelative replaces scheme, location,
 	     * and following and handles PLUGGABLE
 	     */
@@ -761,7 +791,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
         memcpy(preliminary, base.pszProtocol, (base.cchProtocol+1+sizeloc)*sizeof(WCHAR));
 	work = preliminary + base.cchProtocol + 1 + sizeloc;
 	if (dwFlags & URL_PLUGGABLE_PROTOCOL)
-	    *(work++) = L'/';
+            *(work++) = '/';
 	strcpyW(work, relative.pszSuffix);
 	break;
 
@@ -772,23 +802,23 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
         memcpy(preliminary, base.pszProtocol,
                (base.cchProtocol+1+base.cchSuffix)*sizeof(WCHAR));
 	work = preliminary + base.cchProtocol+1+base.cchSuffix - 1;
-	if (*work++ != L'/')
-	    *(work++) = L'/';
+        if (*work++ != '/')
+            *(work++) = '/';
 	strcpyW(work, relative.pszSuffix);
 	break;
 
     default:
-	FIXME("How did we get here????? process_case=%ld\n", process_case);
+	FIXME("How did we get here????? process_case=%d\n", process_case);
 	ret = E_INVALIDARG;
     }
 
     if (ret == S_OK) {
 	/* Reuse mrelative as temp storage as its already allocated and not needed anymore */
-	ret = UrlCanonicalizeW(preliminary, mrelative, pcchCombined, dwFlags);
+	ret = UrlCanonicalizeW(preliminary, mrelative, pcchCombined, (dwFlags & ~URL_FILE_USE_PATHURL));
 	if(SUCCEEDED(ret) && pszCombined) {
 	    lstrcpyW(pszCombined, mrelative);
 	}
-	TRACE("return-%ld len=%ld, %s\n",
+	TRACE("return-%d len=%d, %s\n",
 	      process_case, *pcchCombined, debugstr_w(pszCombined));
     }
     HeapFree(GetProcessHeap(), 0, preliminary);
@@ -819,13 +849,13 @@ HRESULT WINAPI UrlEscapeA(
     }
     if(ret == S_OK) {
         RtlUnicodeToMultiByteSize(&lenA, escapedW, lenW * sizeof(WCHAR));
-        if(*pcchEscaped > lenA) {
+        if(pszEscaped && *pcchEscaped > lenA) {
             RtlUnicodeToMultiByteN(pszEscaped, *pcchEscaped - 1, &lenA, escapedW, lenW * sizeof(WCHAR));
             pszEscaped[lenA] = 0;
             *pcchEscaped = lenA;
         } else {
             *pcchEscaped = lenA + 1;
-            ret = E_POINTER;
+            ret = E_INVALIDARG;
         }
     }
     if(escapedW != bufW) HeapFree(GetProcessHeap(), 0, escapedW);
@@ -945,17 +975,17 @@ HRESULT WINAPI UrlEscapeW(
     DWORD slashes = 0;
     static const WCHAR localhost[] = {'l','o','c','a','l','h','o','s','t',0};
 
-    TRACE("(%s %p %p 0x%08lx)\n", debugstr_w(pszUrl), pszEscaped,
+    TRACE("(%s %p %p 0x%08x)\n", debugstr_w(pszUrl), pszEscaped,
 	  pcchEscaped, dwFlags);
 
-    if(!pszUrl || !pszEscaped || !pcchEscaped)
-	return E_INVALIDARG;
+    if(!pszUrl || !pcchEscaped)
+        return E_INVALIDARG;
 
     if(dwFlags & ~(URL_ESCAPE_SPACES_ONLY |
 		   URL_ESCAPE_SEGMENT_ONLY |
 		   URL_DONT_ESCAPE_EXTRA_INFO |
 		   URL_ESCAPE_PERCENT))
-        FIXME("Unimplemented flags: %08lx\n", dwFlags);
+        FIXME("Unimplemented flags: %08x\n", dwFlags);
 
     /* fix up flags */
     if (dwFlags & URL_ESCAPE_SPACES_ONLY)
@@ -1053,7 +1083,7 @@ HRESULT WINAPI UrlEscapeW(
             if(cur == '\\' && (int_flags & WINE_URL_BASH_AS_SLASH) && !stop_escaping) cur = '/';
 
             if(URL_NeedEscapeW(cur, dwFlags, int_flags) && stop_escaping == FALSE) {
-                next[0] = L'%';
+                next[0] = '%';
                 next[1] = hexDigits[(cur >> 4) & 0xf];
                 next[2] = hexDigits[cur & 0xf];
                 len = 3;
@@ -1115,10 +1145,10 @@ HRESULT WINAPI UrlUnescapeA(
     DWORD needed;
     BOOL stop_unescaping = FALSE;
 
-    TRACE("(%s, %p, %p, 0x%08lx)\n", debugstr_a(pszUrl), pszUnescaped,
+    TRACE("(%s, %p, %p, 0x%08x)\n", debugstr_a(pszUrl), pszUnescaped,
 	  pcchUnescaped, dwFlags);
 
-    if(!pszUrl || !pszUnescaped || !pcchUnescaped)
+    if(!pszUrl || (!pszUnescaped && !(dwFlags & URL_UNESCAPE_INPLACE)) || !pcchUnescaped)
 	return E_INVALIDARG;
 
     if(dwFlags & URL_UNESCAPE_INPLACE)
@@ -1182,7 +1212,7 @@ HRESULT WINAPI UrlUnescapeW(
     DWORD needed;
     BOOL stop_unescaping = FALSE;
 
-    TRACE("(%s, %p, %p, 0x%08lx)\n", debugstr_w(pszUrl), pszUnescaped,
+    TRACE("(%s, %p, %p, 0x%08x)\n", debugstr_w(pszUrl), pszUnescaped,
 	  pcchUnescaped, dwFlags);
 
     if(!pszUrl || (!pszUnescaped && !(dwFlags & URL_UNESCAPE_INPLACE))|| !pcchUnescaped)
@@ -1195,10 +1225,10 @@ HRESULT WINAPI UrlUnescapeW(
 
     for(src = pszUrl, needed = 0; *src; src++, needed++) {
         if(dwFlags & URL_DONT_UNESCAPE_EXTRA_INFO &&
-	   (*src == L'#' || *src == L'?')) {
+           (*src == '#' || *src == '?')) {
 	    stop_unescaping = TRUE;
 	    next = *src;
-	} else if(*src == L'%' && isxdigitW(*(src + 1)) && isxdigitW(*(src + 2))
+        } else if(*src == '%' && isxdigitW(*(src + 1)) && isxdigitW(*(src + 2))
 		  && stop_unescaping == FALSE) {
 	    INT ih;
 	    WCHAR buf[5] = {'0','x',0};
@@ -1215,7 +1245,7 @@ HRESULT WINAPI UrlUnescapeW(
     }
 
     if(dwFlags & URL_UNESCAPE_INPLACE || needed < *pcchUnescaped) {
-        *dst = L'\0';
+        *dst = '\0';
 	ret = S_OK;
     } else {
         needed++; /* add one for the '\0' */
@@ -1294,7 +1324,7 @@ LPCWSTR WINAPI UrlGetLocationW(
     if (strncmpW(base.pszProtocol, fileW, min(4,base.cchProtocol)) == 0) return NULL;
 
     /* Look for '#' and return its addr */
-    return strchrW(base.pszSuffix, L'#');
+    return strchrW(base.pszSuffix, '#');
 }
 
 /*************************************************************************
@@ -1436,7 +1466,7 @@ HRESULT WINAPI UrlHashW(LPCWSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
 {
   char szUrl[MAX_PATH];
 
-  TRACE("(%s,%p,%ld)\n",debugstr_w(pszUrl), lpDest, nDestLen);
+  TRACE("(%s,%p,%d)\n",debugstr_w(pszUrl), lpDest, nDestLen);
 
   if (IsBadStringPtrW(pszUrl, -1) || IsBadWritePtr(lpDest, nDestLen))
     return E_INVALIDARG;
@@ -1445,7 +1475,7 @@ HRESULT WINAPI UrlHashW(LPCWSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
    * return the same digests for the same URL.
    */
   WideCharToMultiByte(0, 0, pszUrl, -1, szUrl, MAX_PATH, 0, 0);
-  HashData((BYTE*)szUrl, (int)strlen(szUrl), lpDest, nDestLen);
+  HashData((const BYTE*)szUrl, (int)strlen(szUrl), lpDest, nDestLen);
   return S_OK;
 }
 
@@ -1469,7 +1499,7 @@ HRESULT WINAPI UrlApplySchemeA(LPCSTR pszIn, LPSTR pszOut, LPDWORD pcchOut, DWOR
     LPWSTR in, out;
     DWORD ret, len, len2;
 
-    TRACE("(in %s, out size %ld, flags %08lx) using W version\n",
+    TRACE("(in %s, out size %d, flags %08x) using W version\n",
 	  debugstr_a(pszIn), *pcchOut, dwFlags);
 
     in = HeapAlloc(GetProcessHeap(), 0,
@@ -1558,8 +1588,8 @@ static HRESULT URL_ApplyDefault(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut)
 			-1, reg_path, MAX_PATH);
     RegOpenKeyExW(HKEY_LOCAL_MACHINE, reg_path, 0, 1, &newkey);
     data_len = MAX_PATH;
-    value[0] = L'@';
-    value[1] = L'\0';
+    value[0] = '@';
+    value[1] = '\0';
     RegQueryValueExW(newkey, value, 0, &dwType, (LPBYTE)data, &data_len);
     RegCloseKey(newkey);
     if (strlenW(data) + strlenW(pszIn) + 1 > *pcchOut) {
@@ -1584,11 +1614,11 @@ HRESULT WINAPI UrlApplySchemeW(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut, DW
     DWORD res1;
     HRESULT ret;
 
-    TRACE("(in %s, out size %ld, flags %08lx)\n",
+    TRACE("(in %s, out size %d, flags %08x)\n",
 	  debugstr_w(pszIn), *pcchOut, dwFlags);
 
     if (dwFlags & URL_APPLY_GUESSFILE) {
-	FIXME("(%s %p %p(%ld) 0x%08lx): stub URL_APPLY_GUESSFILE not implemented\n",
+	FIXME("(%s %p %p(%d) 0x%08x): stub URL_APPLY_GUESSFILE not implemented\n",
 	      debugstr_w(pszIn), pszOut, pcchOut, *pcchOut, dwFlags);
 	strcpyW(pszOut, pszIn);
 	*pcchOut = strlenW(pszOut);
@@ -1615,7 +1645,7 @@ HRESULT WINAPI UrlApplySchemeW(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut, DW
 	    }
 	    strcpyW(pszOut, pszIn);
 	    *pcchOut = strlenW(pszOut);
-	    TRACE("valid scheme, returing copy\n");
+	    TRACE("valid scheme, returning copy\n");
 	    return S_OK;
 	}
     }
@@ -1824,9 +1854,9 @@ static LPCWSTR  URL_ScanID(LPCWSTR start, LPDWORD size, WINE_URL_SCAN_TYPE type)
 	while (cont) {
 	    if ( (islowerW(*start) && isalphaW(*start)) ||
 		 isdigitW(*start) ||
-		 (*start == L'+') ||
-		 (*start == L'-') ||
-		 (*start == L'.')) {
+                 (*start == '+') ||
+                 (*start == '-') ||
+                 (*start == '.')) {
 		start++;
 		(*size)++;
 	    }
@@ -1840,26 +1870,26 @@ static LPCWSTR  URL_ScanID(LPCWSTR start, LPDWORD size, WINE_URL_SCAN_TYPE type)
 	    if ( isalphaW(*start) ||
 		 isdigitW(*start) ||
 		 /* user/password only characters */
-		 (*start == L';') ||
-		 (*start == L'?') ||
-		 (*start == L'&') ||
-		 (*start == L'=') ||
+                 (*start == ';') ||
+                 (*start == '?') ||
+                 (*start == '&') ||
+                 (*start == '=') ||
 		 /* *extra* characters */
-		 (*start == L'!') ||
-		 (*start == L'*') ||
-		 (*start == L'\'') ||
-		 (*start == L'(') ||
-		 (*start == L')') ||
-		 (*start == L',') ||
+                 (*start == '!') ||
+                 (*start == '*') ||
+                 (*start == '\'') ||
+                 (*start == '(') ||
+                 (*start == ')') ||
+                 (*start == ',') ||
 		 /* *safe* characters */
-		 (*start == L'$') ||
-		 (*start == L'_') ||
-		 (*start == L'+') ||
-		 (*start == L'-') ||
-		 (*start == L'.')) {
+                 (*start == '$') ||
+                 (*start == '_') ||
+                 (*start == '+') ||
+                 (*start == '-') ||
+                 (*start == '.')) {
 		start++;
 		(*size)++;
-	    } else if (*start == L'%') {
+            } else if (*start == '%') {
 		if (isxdigitW(*(start+1)) &&
 		    isxdigitW(*(start+2))) {
 		    start += 3;
@@ -1885,8 +1915,8 @@ static LPCWSTR  URL_ScanID(LPCWSTR start, LPDWORD size, WINE_URL_SCAN_TYPE type)
     case HOST:
 	while (cont) {
 	    if (isalnumW(*start) ||
-		(*start == L'-') ||
-		(*start == L'.') ) {
+                (*start == '-') ||
+                (*start == '.') ) {
 		start++;
 		(*size)++;
 	    }
@@ -1898,7 +1928,7 @@ static LPCWSTR  URL_ScanID(LPCWSTR start, LPDWORD size, WINE_URL_SCAN_TYPE type)
 	FIXME("unknown type %d\n", type);
 	return (LPWSTR)&alwayszero;
     }
-    /* TRACE("scanned %ld characters next char %p<%c>\n",
+    /* TRACE("scanned %d characters next char %p<%c>\n",
      *size, start, *start); */
     return start;
 }
@@ -1913,28 +1943,28 @@ static LONG URL_ParseUrl(LPCWSTR pszUrl, WINE_PARSE_URL *pl)
     memset(pl, 0, sizeof(WINE_PARSE_URL));
     pl->pScheme = pszUrl;
     work = URL_ScanID(pl->pScheme, &pl->szScheme, SCHEME);
-    if (!*work || (*work != L':')) goto ErrorExit;
+    if (!*work || (*work != ':')) goto ErrorExit;
     work++;
-    if ((*work != L'/') || (*(work+1) != L'/')) goto ErrorExit;
+    if ((*work != '/') || (*(work+1) != '/')) goto ErrorExit;
     pl->pUserName = work + 2;
     work = URL_ScanID(pl->pUserName, &pl->szUserName, USERPASS);
-    if (*work == L':' ) {
+    if (*work == ':' ) {
 	/* parse password */
 	work++;
 	pl->pPassword = work;
 	work = URL_ScanID(pl->pPassword, &pl->szPassword, USERPASS);
-	if (*work != L'@') {
+        if (*work != '@') {
 	    /* what we just parsed must be the hostname and port
 	     * so reset pointers and clear then let it parse */
 	    pl->szUserName = pl->szPassword = 0;
 	    work = pl->pUserName - 1;
 	    pl->pUserName = pl->pPassword = 0;
 	}
-    } else if (*work == L'@') {
+    } else if (*work == '@') {
 	/* no password */
 	pl->szPassword = 0;
 	pl->pPassword = 0;
-    } else if (!*work || (*work == L'/') || (*work == L'.')) {
+    } else if (!*work || (*work == '/') || (*work == '.')) {
 	/* what was parsed was hostname, so reset pointers and let it parse */
 	pl->szUserName = pl->szPassword = 0;
 	work = pl->pUserName - 1;
@@ -1945,18 +1975,18 @@ static LONG URL_ParseUrl(LPCWSTR pszUrl, WINE_PARSE_URL *pl)
     work++;
     pl->pHostName = work;
     work = URL_ScanID(pl->pHostName, &pl->szHostName, HOST);
-    if (*work == L':') {
+    if (*work == ':') {
 	/* parse port */
 	work++;
 	pl->pPort = work;
 	work = URL_ScanID(pl->pPort, &pl->szPort, PORT);
     }
-    if (*work == L'/') {
+    if (*work == '/') {
 	/* see if query string */
-	pl->pQuery = strchrW(work, L'?');
+        pl->pQuery = strchrW(work, '?');
 	if (pl->pQuery) pl->szQuery = strlenW(pl->pQuery);
     }
-    TRACE("parse successful: scheme=%p(%ld), user=%p(%ld), pass=%p(%ld), host=%p(%ld), port=%p(%ld), query=%p(%ld)\n",
+    TRACE("parse successful: scheme=%p(%d), user=%p(%d), pass=%p(%d), host=%p(%d), port=%p(%d), query=%p(%d)\n",
 	  pl->pScheme, pl->szScheme,
 	  pl->pUserName, pl->szUserName,
 	  pl->pPassword, pl->szPassword,
@@ -2032,7 +2062,7 @@ HRESULT WINAPI UrlGetPartW(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut,
     DWORD size, schsize;
     LPCWSTR addr, schaddr;
 
-    TRACE("(%s %p %p(%ld) %08lx %08lx)\n",
+    TRACE("(%s %p %p(%d) %08x %08x)\n",
 	  debugstr_w(pszIn), pszOut, pcchOut, *pcchOut, dwPart, dwFlags);
 
     ret = URL_ParseUrl(pszIn, &pl);
@@ -2098,7 +2128,7 @@ HRESULT WINAPI UrlGetPartW(LPCWSTR pszIn, LPWSTR pszOut, LPDWORD pcchOut,
             pszOut[size] = 0;
 	    *pcchOut = size;
 	}
-	TRACE("len=%ld %s\n", *pcchOut, debugstr_w(pszOut));
+	TRACE("len=%d %s\n", *pcchOut, debugstr_w(pszOut));
     }
     return ret;
 }
@@ -2205,7 +2235,7 @@ HRESULT WINAPI UrlCreateFromPathW(LPCWSTR pszPath, LPWSTR pszUrl, LPDWORD pcchUr
     WCHAR three_slashesW[] = {'/','/','/',0};
     PARSEDURLW parsed_url;
 
-    TRACE("(%s, %p, %p, 0x%08lx)\n", debugstr_w(pszPath), pszUrl, pcchUrl, dwReserved);
+    TRACE("(%s, %p, %p, 0x%08x)\n", debugstr_w(pszPath), pszUrl, pcchUrl, dwReserved);
 
     /* Validate arguments */
     if (dwReserved != 0)
@@ -2312,7 +2342,7 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
 #define szResLen ((sizeof(szRes) - sizeof(WCHAR))/sizeof(WCHAR))
   HRESULT hRet = E_FAIL;
 
-  TRACE("(%s,%p,0x%08lx,%s,%p,%ld)\n", debugstr_w(lpszLibName), hMod, dwFlags,
+  TRACE("(%s,%p,0x%08x,%s,%p,%d)\n", debugstr_w(lpszLibName), hMod, dwFlags,
         debugstr_w(lpszRes), lpszDest, dwDestLen);
 
   if (!lpszLibName || !hMod || hMod == INVALID_HANDLE_VALUE || !lpszRes ||

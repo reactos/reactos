@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdarg.h>
 
@@ -170,7 +170,7 @@ HRESULT WINAPI AssocQueryKeyW(ASSOCF cfFlags, ASSOCKEY assockey, LPCWSTR pszAsso
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%8lx,0x%8x,%s,%s,%p)\n", cfFlags, assockey, debugstr_w(pszAssoc),
+  TRACE("(0x%8x,0x%8x,%s,%s,%p)\n", cfFlags, assockey, debugstr_w(pszAssoc),
         debugstr_w(pszExtra), phkeyOut);
 
   lpAssoc = IQueryAssociations_Constructor();
@@ -211,7 +211,7 @@ HRESULT WINAPI AssocQueryKeyA(ASSOCF cfFlags, ASSOCKEY assockey, LPCSTR pszAssoc
   WCHAR szExtraW[MAX_PATH], *lpszExtraW = NULL;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%8lx,0x%8x,%s,%s,%p)\n", cfFlags, assockey, debugstr_a(pszAssoc),
+  TRACE("(0x%8x,0x%8x,%s,%s,%p)\n", cfFlags, assockey, debugstr_a(pszAssoc),
         debugstr_a(pszExtra), phkeyOut);
 
   if (SHLWAPI_ParamAToW(pszAssoc, szAssocW, MAX_PATH, &lpszAssocW) &&
@@ -220,10 +220,10 @@ HRESULT WINAPI AssocQueryKeyA(ASSOCF cfFlags, ASSOCKEY assockey, LPCSTR pszAssoc
     hRet = AssocQueryKeyW(cfFlags, assockey, lpszAssocW, lpszExtraW, phkeyOut);
   }
 
-  if (lpszAssocW && lpszAssocW != szAssocW)
+  if (lpszAssocW != szAssocW)
     HeapFree(GetProcessHeap(), 0, lpszAssocW);
 
-  if (lpszExtraW && lpszExtraW != szExtraW)
+  if (lpszExtraW != szExtraW)
     HeapFree(GetProcessHeap(), 0, lpszExtraW);
 
   return hRet;
@@ -240,7 +240,7 @@ HRESULT WINAPI AssocQueryStringW(ASSOCF cfFlags, ASSOCSTR str, LPCWSTR pszAssoc,
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%8lx,0x%8x,%s,%s,%p,%p)\n", cfFlags, str, debugstr_w(pszAssoc),
+  TRACE("(0x%8x,0x%8x,%s,%s,%p,%p)\n", cfFlags, str, debugstr_w(pszAssoc),
         debugstr_w(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
@@ -286,7 +286,7 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
   WCHAR szExtraW[MAX_PATH], *lpszExtraW = NULL;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%8lx,0x%8x,%s,%s,%p,%p)\n", cfFlags, str, debugstr_a(pszAssoc),
+  TRACE("(0x%8x,0x%8x,%s,%s,%p,%p)\n", cfFlags, str, debugstr_a(pszAssoc),
         debugstr_a(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
@@ -312,14 +312,14 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
         WideCharToMultiByte(CP_ACP,0,szReturnW,-1,pszOut,dwLenOut,0,0);
       *pcchOut = dwLenOut;
 
-      if (lpszReturnW && lpszReturnW != szReturnW)
+      if (lpszReturnW != szReturnW)
         HeapFree(GetProcessHeap(), 0, lpszReturnW);
     }
   }
 
-  if (lpszAssocW && lpszAssocW != szAssocW)
+  if (lpszAssocW != szAssocW)
     HeapFree(GetProcessHeap(), 0, lpszAssocW);
-  if (lpszExtraW && lpszExtraW != szExtraW)
+  if (lpszExtraW != szExtraW)
     HeapFree(GetProcessHeap(), 0, lpszExtraW);
   return hRet;
 }
@@ -336,7 +336,7 @@ HRESULT WINAPI AssocQueryStringByKeyW(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%8lx,0x%8x,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
+  TRACE("(0x%8x,0x%8x,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
         debugstr_w(pszExtra), pszOut, pcchOut);
 
   lpAssoc = IQueryAssociations_Constructor();
@@ -376,11 +376,11 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
                                       LPCSTR pszExtra, LPSTR pszOut,
                                       DWORD *pcchOut)
 {
-  WCHAR szExtraW[MAX_PATH], *lpszExtraW;
+  WCHAR szExtraW[MAX_PATH], *lpszExtraW = szExtraW;
   WCHAR szReturnW[MAX_PATH], *lpszReturnW = szReturnW;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%8lx,0x%8x,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
+  TRACE("(0x%8x,0x%8x,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
         debugstr_a(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
@@ -406,7 +406,7 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
     }
   }
 
-  if (lpszExtraW && lpszExtraW != szExtraW)
+  if (lpszExtraW != szExtraW)
     HeapFree(GetProcessHeap(), 0, lpszExtraW);
   return hRet;
 }
@@ -469,7 +469,7 @@ static ULONG WINAPI IQueryAssociations_fnAddRef(IQueryAssociations *iface)
   IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
   ULONG refCount = InterlockedIncrement(&This->ref);
   
-  TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
+  TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
   return refCount;
 }
@@ -484,7 +484,7 @@ static ULONG WINAPI IQueryAssociations_fnRelease(IQueryAssociations *iface)
   IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
   ULONG refCount = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
+  TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
 
   if (!refCount)
   {
@@ -522,7 +522,7 @@ static HRESULT WINAPI IQueryAssociations_fnInit(
     IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
     HRESULT hr;
 
-    TRACE("(%p)->(%ld,%s,%p,%p)\n", iface,
+    TRACE("(%p)->(%d,%s,%p,%p)\n", iface,
                                     cfFlags,
                                     debugstr_w(pszAssoc),
                                     hkeyProgid,
@@ -530,7 +530,7 @@ static HRESULT WINAPI IQueryAssociations_fnInit(
     if (hWnd != NULL)
         FIXME("hwnd != NULL not supported\n");
     if (cfFlags != 0)
-    	FIXME("unsupported flags: %lx\n", cfFlags);
+    	FIXME("unsupported flags: %x\n", cfFlags);
     if (pszAssoc != NULL)
     {
         hr = RegOpenKeyExW(HKEY_CLASSES_ROOT,
@@ -591,7 +591,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetString(
 {
   IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
-  FIXME("(%p,0x%8lx,0x%8x,%s,%p,%p)-stub!\n", This, cfFlags, str,
+  FIXME("(%p,0x%8x,0x%8x,%s,%p,%p)-stub!\n", This, cfFlags, str,
         debugstr_w(pszExtra), pszOut, pcchOut);
   return E_NOTIMPL;
 }
@@ -621,7 +621,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetKey(
 {
   IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
-  FIXME("(%p,0x%8lx,0x%8x,%s,%p)-stub!\n", This, cfFlags, assockey,
+  FIXME("(%p,0x%8x,0x%8x,%s,%p)-stub!\n", This, cfFlags, assockey,
         debugstr_w(pszExtra), phkeyOut);
   return E_NOTIMPL;
 }
@@ -653,7 +653,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetData(
 {
   IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
-  FIXME("(%p,0x%8lx,0x%8x,%s,%p,%p)-stub!\n", This, cfFlags, assocdata,
+  FIXME("(%p,0x%8x,0x%8x,%s,%p,%p)-stub!\n", This, cfFlags, assocdata,
         debugstr_w(pszExtra), pvOut, pcbOut);
   return E_NOTIMPL;
 }
@@ -688,7 +688,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetEnum(
 {
   IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
-  FIXME("(%p,0x%8lx,0x%8x,%s,%s,%p)-stub!\n", This, cfFlags, assocenum,
+  FIXME("(%p,0x%8x,0x%8x,%s,%s,%p)-stub!\n", This, cfFlags, assocenum,
         debugstr_w(pszExtra), debugstr_guid(riid), ppvOut);
   return E_NOTIMPL;
 }

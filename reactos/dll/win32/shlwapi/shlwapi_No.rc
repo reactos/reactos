@@ -1,7 +1,7 @@
 /*
  * Norwegian Bokmål resources for shlwapi
  *
- * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005-2006 Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,10 +15,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 IDD_ERR_DIALOG DIALOG MOVEABLE DISCARDABLE 0, 0, 220, 60
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -32,4 +32,12 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON L"&Avbryt" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON L"&Ja" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON L"&Nei" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_BYTES_FORMAT    "%ld byte"
+    IDS_TIME_INTERVAL_HOURS    " hr"
+    IDS_TIME_INTERVAL_MINUTES  " min"
+    IDS_TIME_INTERVAL_SECONDS  " sec"
 }

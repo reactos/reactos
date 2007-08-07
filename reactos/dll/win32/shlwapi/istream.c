@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdarg.h>
 #include <string.h>
@@ -83,7 +83,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
   ISHFileStream *This = (ISHFileStream *)iface;
   ULONG refCount = InterlockedIncrement(&This->ref);
   
-  TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
+  TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
   return refCount;
 }
@@ -96,7 +96,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
   ISHFileStream *This = (ISHFileStream *)iface;
   ULONG refCount = InterlockedDecrement(&This->ref); 
 
-  TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
+  TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
   
   if (!refCount)
   {
@@ -117,14 +117,14 @@ static HRESULT WINAPI IStream_fnRead(IStream *iface, void* pv, ULONG cb, ULONG* 
   ISHFileStream *This = (ISHFileStream *)iface;
   DWORD dwRead = 0;
 
-  TRACE("(%p,%p,0x%08lx,%p)\n", This, pv, cb, pcbRead);
+  TRACE("(%p,%p,0x%08x,%p)\n", This, pv, cb, pcbRead);
 
   if (!pv)
     return STG_E_INVALIDPOINTER;
 
   if (!ReadFile(This->hFile, pv, cb, &dwRead, NULL))
   {
-    ERR("error %ld reading file\n", GetLastError());
+    ERR("error %d reading file\n", GetLastError());
     return HRESULT_FROM_WIN32(GetLastError());
   }
   if (pcbRead)
@@ -140,7 +140,7 @@ static HRESULT WINAPI IStream_fnWrite(IStream *iface, const void* pv, ULONG cb, 
   ISHFileStream *This = (ISHFileStream *)iface;
   DWORD dwWritten = 0;
 
-  TRACE("(%p,%p,0x%08lx,%p)\n", This, pv, cb, pcbWritten);
+  TRACE("(%p,%p,0x%08x,%p)\n", This, pv, cb, pcbWritten);
 
   if (!pv)
     return STG_E_INVALIDPOINTER;
@@ -171,7 +171,7 @@ static HRESULT WINAPI IStream_fnSeek(IStream *iface, LARGE_INTEGER dlibMove,
   ISHFileStream *This = (ISHFileStream *)iface;
   DWORD dwPos;
 
-  TRACE("(%p,%ld,%ld,%p)\n", This, dlibMove.u.LowPart, dwOrigin, pNewPos);
+  TRACE("(%p,%d,%d,%p)\n", This, dlibMove.u.LowPart, dwOrigin, pNewPos);
 
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
   dwPos = SetFilePointer(This->hFile, dlibMove.u.LowPart, NULL, dwOrigin);
@@ -193,7 +193,7 @@ static HRESULT WINAPI IStream_fnSetSize(IStream *iface, ULARGE_INTEGER libNewSiz
 {
   ISHFileStream *This = (ISHFileStream *)iface;
 
-  TRACE("(%p,%ld)\n", This, libNewSize.u.LowPart);
+  TRACE("(%p,%d)\n", This, libNewSize.u.LowPart);
 
   IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
   if( ! SetFilePointer( This->hFile, libNewSize.QuadPart, NULL, FILE_BEGIN ) )
@@ -216,7 +216,7 @@ static HRESULT WINAPI IStream_fnCopyTo(IStream *iface, IStream* pstm, ULARGE_INT
   ULONGLONG ulSize;
   HRESULT hRet = S_OK;
 
-  TRACE("(%p,%p,%ld,%p,%p)\n", This, pstm, cb.u.LowPart, pcbRead, pcbWritten);
+  TRACE("(%p,%p,%d,%p,%p)\n", This, pstm, cb.u.LowPart, pcbRead, pcbWritten);
 
   if (pcbRead)
     pcbRead->QuadPart = 0;
@@ -262,7 +262,7 @@ static HRESULT WINAPI IStream_fnCommit(IStream *iface, DWORD grfCommitFlags)
 {
   ISHFileStream *This = (ISHFileStream *)iface;
 
-  TRACE("(%p,%ld)\n", This, grfCommitFlags);
+  TRACE("(%p,%d)\n", This, grfCommitFlags);
   /* Currently unbuffered: This function is not needed */
   return S_OK;
 }
@@ -285,7 +285,7 @@ static HRESULT WINAPI IStream_fnLockUnlockRegion(IStream *iface, ULARGE_INTEGER 
                                                  ULARGE_INTEGER cb, DWORD dwLockType)
 {
   ISHFileStream *This = (ISHFileStream *)iface;
-  TRACE("(%p,%ld,%ld,%ld)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
+  TRACE("(%p,%d,%d,%d)\n", This, libOffset.u.LowPart, cb.u.LowPart, dwLockType);
   return E_NOTIMPL;
 }
 
@@ -299,7 +299,7 @@ static HRESULT WINAPI IStream_fnStat(IStream *iface, STATSTG* lpStat,
   BY_HANDLE_FILE_INFORMATION fi;
   HRESULT hRet = S_OK;
 
-  TRACE("(%p,%p,%ld)\n", This, lpStat, grfStatFlag);
+  TRACE("(%p,%p,%d)\n", This, lpStat, grfStatFlag);
 
   if (!grfStatFlag)
     hRet = STG_E_INVALIDPOINTER;
@@ -410,7 +410,7 @@ HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR lpszPath, DWORD dwMode,
   DWORD dwAccess, dwShare, dwCreate;
   HANDLE hFile;
 
-  TRACE("(%s,%ld,0x%08lX,%d,%p,%p)\n", debugstr_w(lpszPath), dwMode,
+  TRACE("(%s,%d,0x%08X,%d,%p,%p)\n", debugstr_w(lpszPath), dwMode,
         dwAttributes, bCreate, lpTemplate, lppStream);
 
   if (!lpszPath || !lppStream || lpTemplate)
@@ -498,7 +498,7 @@ HRESULT WINAPI SHCreateStreamOnFileEx(LPCWSTR lpszPath, DWORD dwMode,
 HRESULT WINAPI SHCreateStreamOnFileW(LPCWSTR lpszPath, DWORD dwMode,
                                    IStream **lppStream)
 {
-  TRACE("(%s,%ld,%p)\n", debugstr_w(lpszPath), dwMode, lppStream);
+  TRACE("(%s,%d,%p)\n", debugstr_w(lpszPath), dwMode, lppStream);
 
   if (!lpszPath || !lppStream)
     return E_INVALIDARG;
@@ -525,7 +525,7 @@ HRESULT WINAPI SHCreateStreamOnFileA(LPCSTR lpszPath, DWORD dwMode,
 {
   WCHAR szPath[MAX_PATH];
 
-  TRACE("(%s,%ld,%p)\n", debugstr_a(lpszPath), dwMode, lppStream);
+  TRACE("(%s,%d,%p)\n", debugstr_a(lpszPath), dwMode, lppStream);
 
   if (!lpszPath)
     return E_INVALIDARG;
@@ -553,7 +553,7 @@ HRESULT WINAPI SHLWAPI_184(IStream *lpStream, LPVOID lpvDest, ULONG ulSize)
   ULONG ulRead;
   HRESULT hRet;
 
-  TRACE("(%p,%p,%ld)\n", lpStream, lpvDest, ulSize);
+  TRACE("(%p,%p,%d)\n", lpStream, lpvDest, ulSize);
 
   hRet = IStream_Read(lpStream, lpvDest, ulSize, &ulRead);
 
@@ -625,7 +625,7 @@ HRESULT WINAPI SHLWAPI_212(IStream *lpStream, LPCVOID lpvSrc, ULONG ulSize)
   ULONG ulWritten;
   HRESULT hRet;
 
-  TRACE("(%p,%p,%ld)\n", lpStream, lpvSrc, ulSize);
+  TRACE("(%p,%p,%d)\n", lpStream, lpvSrc, ulSize);
 
   hRet = IStream_Write(lpStream, lpvSrc, ulSize, &ulWritten);
 
