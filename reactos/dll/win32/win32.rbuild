@@ -115,6 +115,9 @@
 <directory name="mapi32">
 	<xi:include href="mapi32/mapi32.rbuild" />
 </directory>
+<directory name="mlang">
+	<xi:include href="mlang/mlang.rbuild" />
+</directory>
 <directory name="mmdrv">
 	<xi:include href="mmdrv/mmdrv.rbuild" />
 </directory>

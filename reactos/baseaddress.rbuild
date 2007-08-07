@@ -26,6 +26,7 @@
   <property name="BASEADDRESS_CONSOLE" value="0x6E4D0000" />
   <property name="BASEADDRESS_DESK" value="0x65080000" />
   <property name="BASEADDRESS_APPWIZ" value="0x65100000" />
+  <property name="BASEADDRESS_MLANG" value="0x65140000" />
   <property name="BASEADDRESS_ACCESS" value="0x65180000" />
   <property name="BASEADDRESS_WSHTCPIP" value="0x677b0000" />
   <property name="BASEADDRESS_CRYPT32" value="0x67ab0000" />
