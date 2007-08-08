@@ -466,9 +466,6 @@ INT STDCALL  NtGdiGetPolyFillMode(HDC  hDC);
 INT STDCALL  NtGdiGetROP2(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
-INT STDCALL  NtGdiGetRelAbs(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
 INT
 STDCALL
 NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set);

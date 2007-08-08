@@ -300,7 +300,7 @@ GetRelAbs(
          DWORD dwIgnore
            )
 {
-  return NtGdiGetRelAbs(hdc);
+  return GetDCDWord( hdc, GdiGetRelAbs, 0);
 }
 
 
@@ -334,7 +334,7 @@ GetAndSetDCDWord( HDC hDC, INT u, DWORD dwIn, DWORD Unk1, DWORD Unk2, DWORD Unk3
        }
     }
   }
-// Ret = NtGdiGetAndSetDCDword( hDC, u, dwIn, (DWORD*) &u );                
+  Ret = NtGdiGetAndSetDCDword( hDC, u, dwIn, (DWORD*) &u );                
   if (Ret) 
      return u;
   else 
@@ -350,7 +350,7 @@ DWORD
 STDCALL
 GetDCDWord( HDC hDC, INT u, DWORD Result )
 {
-  BOOL Ret = TRUE; //NtGdiGetDCDword( hDC, u, (DWORD*) &u );
+  BOOL Ret = NtGdiGetDCDword( hDC, u, (DWORD*) &u );
   if (!Ret) return Result;
   else return u;
 }

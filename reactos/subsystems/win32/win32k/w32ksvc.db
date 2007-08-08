@@ -816,7 +816,6 @@ NtGdiGetPaletteEntries                  4
 NtGdiGetPixelFormat                     1
 NtGdiGetPolyFillMode                    1
 NtGdiGetROP2                            1
-NtGdiGetRelAbs                          1
 NtGdiGetSetTextCharExtra                3
 NtGdiGetStretchBltMode                  1
 NtGdiGetSystemPaletteEntries            4

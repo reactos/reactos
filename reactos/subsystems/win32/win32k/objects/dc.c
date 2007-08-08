@@ -1800,7 +1800,6 @@ NtGdiExtGetObjectW(IN HANDLE hGdiObj,
     return iRetCount;
 }
 
-DC_GET_VAL( INT, NtGdiGetRelAbs, Dc_Attr.lRelAbs )
 DC_GET_VAL( INT, NtGdiGetROP2, Dc_Attr.jROP2 )
 DC_GET_VAL( INT, NtGdiGetStretchBltMode, Dc_Attr.jStretchBltMode )
 DC_GET_VAL( UINT, NtGdiGetTextAlign, Dc_Attr.lTextAlign )
@@ -2159,6 +2158,7 @@ NtGdiGetDCDword(
     case GdiGetJournal:
       break;
     case GdiGetRelAbs:
+      SafeResult = dc->Dc_Attr.lRelAbs;
       break;
     case GdiGetBreakExtra:
       break;
