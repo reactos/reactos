@@ -2349,22 +2349,15 @@ UnsafeIntGetRgnBox(PROSRGNDATA  Rgn,
 INT STDCALL
 NtGdiGetRandomRgn(HDC hDC, HRGN hDest, INT iCode)
 {
+    INT ret = 0;
     PDC pDC;
     HRGN hSrc = NULL;
     POINT org;
 
-    if ((hDC == NULL) || (hDest == NULL))
-    {
-        return -1;
-    }
-    if ((iCode<1 ) || (iCode>4 ))
-    {
-        return -1;
-    }
-
     pDC = DC_LockDc(hDC);
     if (pDC == NULL)
     {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return -1;
     }
 
@@ -2375,12 +2368,12 @@ NtGdiGetRandomRgn(HDC hDC, HRGN hDest, INT iCode)
             break;
         case 2:
             //hSrc = dc->hMetaRgn;
-            DPRINT1("hMetaRgn not implement\n");
+            DPRINT1("hMetaRgn not implemented\n");
             DC_UnlockDc(pDC);
             return -1;
             break;
         case 3:
-            DPRINT1("waring : hMetaRgn not implement\n");
+            DPRINT1("hMetaRgn not implemented\n");
             //hSrc = dc->hMetaClipRgn;
             if(!hSrc)
             {
@@ -2390,20 +2383,30 @@ NtGdiGetRandomRgn(HDC hDC, HRGN hDest, INT iCode)
             break;
         case 4:
             hSrc = pDC->w.hVisRgn;
+            break;
+        default:
+            hSrc = 0;
     }
     if (hSrc)
     {
-        NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY);
+        if(NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
+        {
+        	ret = -1;
+        }
+        else
+        {
+        	ret = 1;
+        }
     }
-    if (iCode ==  SYSRGN)
+    if (iCode == SYSRGN)
     {
         IntGdiGetDCOrgEx(pDC, &org);
         NtGdiOffsetRgn(hDest, org.x, org.y );
     }
 
-   DC_UnlockDc(pDC);
+    DC_UnlockDc(pDC);
 
-    return (hSrc != 0);
+    return ret;
 }
 
 INT STDCALL
