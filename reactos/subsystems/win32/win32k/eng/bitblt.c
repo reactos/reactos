@@ -248,6 +248,50 @@ CallDibBitBlt(SURFOBJ* OutputObj,
 
 INT __cdecl abs(INT nm);
 
+
+BOOL STDCALL 
+NtGdiEngBitBlt(
+                IN SURFOBJ  *psoTrg,
+                IN SURFOBJ  *psoSrc,
+                IN SURFOBJ  *psoMask,
+                IN CLIPOBJ  *pco,
+                IN XLATEOBJ  *pxlo,
+                IN RECTL  *prclTrg,
+                IN POINTL  *pptlSrc,
+                IN POINTL  *pptlMask,
+                IN BRUSHOBJ  *pbo,
+                IN POINTL  *pptlBrush,
+                IN ROP4  rop4    )
+{
+    RECTL  rclTrg;
+    POINTL ptlSrc;
+    POINTL ptlMask;
+    POINTL ptlBrush;
+
+    _SEH_TRY
+    {
+        ProbeForRead(prclTrg, sizeof(RECTL), 1);
+        RtlCopyMemory(&rclTrg,prclTrg, sizeof(POINTL));
+
+        ProbeForRead(pptlSrc, sizeof(RECTL), 1);
+        RtlCopyMemory(&ptlSrc, pptlSrc, sizeof(POINTL));
+
+        ProbeForRead(pptlMask, sizeof(RECTL), 1);
+        RtlCopyMemory(&ptlMask, pptlMask, sizeof(POINTL));
+
+        ProbeForRead(pptlBrush, sizeof(RECTL), 1);
+        RtlCopyMemory(&ptlBrush, pptlBrush, sizeof(POINTL));
+
+    }
+    _SEH_HANDLE
+    {
+        _SEH_YIELD(return FALSE);
+    }
+    _SEH_END;
+
+    return  EngBitBlt(psoTrg, psoSrc, psoMask, pco, pxlo, &rclTrg, &ptlSrc, &ptlMask, pbo, &ptlBrush, rop4);
+}
+
 /*
  * @implemented
  */

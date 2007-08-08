@@ -2548,26 +2548,7 @@ EngAssociateSurface(IN HSURF Surface,
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngBitBlt(SURFOBJ *Dest,
-	  SURFOBJ *Source,
-	  SURFOBJ *Mask,
-	  CLIPOBJ *ClipRegion,
-	  XLATEOBJ *ColorTranslation,
-	  RECTL *DestRect,
-	  POINTL *SourcePoint,
-	  POINTL *MaskRect,
-	  BRUSHOBJ *Brush,
-	  POINTL *BrushOrigin,
-	  ROP4 rop4)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
