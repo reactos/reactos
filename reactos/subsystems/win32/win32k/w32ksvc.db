@@ -795,7 +795,6 @@ NtGdiGetCharacterPlacement              6
 NtGdiGetCharWidth32                     4
 NtGdiGetCharWidthFloat                  4
 NtGdiGetClipBox                         2
-NtGdiGetClipRgn                         1
 NtGdiGetColorSpace                      1
 NtGdiGetCurrentObject                   2
 NtGdiGetCurrentPositionEx               2

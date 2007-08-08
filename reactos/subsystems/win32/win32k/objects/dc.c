@@ -1101,7 +1101,6 @@ NtGdiEnumObjects(
 DC_GET_VAL( COLORREF, NtGdiGetBkColor, Dc_Attr.crBackgroundClr )
 DC_GET_VAL( INT, NtGdiGetBkMode, Dc_Attr.jBkMode )
 DC_GET_VAL_EX( GetBrushOrgEx, Dc_Attr.ptlBrushOrigin.x, Dc_Attr.ptlBrushOrigin.y, POINT, x, y )
-DC_GET_VAL( HRGN, NtGdiGetClipRgn, w.hClipRgn )
 
 HGDIOBJ STDCALL
 NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
