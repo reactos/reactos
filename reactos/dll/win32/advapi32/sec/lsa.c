@@ -217,10 +217,10 @@ LsaFreeMemory(PVOID Buffer)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaLookupNames(
     LSA_HANDLE PolicyHandle,
     ULONG Count,
@@ -228,7 +228,39 @@ LsaLookupNames(
     PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
     PLSA_TRANSLATED_SID *Sids)
 {
-  return STATUS_NOT_IMPLEMENTED;
+    PLSA_TRANSLATED_SID2 Sids2;
+    LSA_TRANSLATED_SID *TranslatedSids;
+    ULONG i;
+    NTSTATUS Status;
+
+    /* Call LsaLookupNames2, which supersedes this function */
+    Status = LsaLookupNames2(PolicyHandle, Count, 0, Names, ReferencedDomains, &Sids2);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Translate the returned structure */
+    TranslatedSids = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count * sizeof(LSA_TRANSLATED_SID));
+    if (!TranslatedSids)
+    {
+        LsaFreeMemory(Sids2);
+        return SCESTATUS_NOT_ENOUGH_RESOURCE;
+    }
+    RtlZeroMemory(Sids, Count * sizeof(PLSA_TRANSLATED_SID));
+    for (i = 0; i < Count; i++)
+    {
+        TranslatedSids[i].Use = Sids2[i].Use;
+        if (Sids2[i].Use != SidTypeInvalid && Sids2[i].Use != SidTypeUnknown)
+        {
+            TranslatedSids[i].DomainIndex = Sids2[i].DomainIndex;
+            if (Sids2[i].Use != SidTypeDomain)
+                TranslatedSids[i].RelativeId = *GetSidSubAuthority(Sids2[i].Sid, 0);
+        }
+    }
+    LsaFreeMemory(Sids2);
+
+    *Sids = TranslatedSids;
+
+    return Status;
 }
 
 /*
@@ -251,7 +283,7 @@ LsaLookupNames2(
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+WINAPI
 LsaLookupSids(
     LSA_HANDLE PolicyHandle,
     ULONG Count,
@@ -259,7 +291,33 @@ LsaLookupSids(
     PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
     PLSA_TRANSLATED_NAME *Names)
 {
-  return STATUS_NONE_MAPPED;
+    static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
+    PLSA_REFERENCED_DOMAIN_LIST LocalDomains;
+    PLSA_TRANSLATED_NAME LocalNames;
+
+    DPRINT1("LsaLookupSids(): stub. Always returning 'Administrator'\n");
+    if (Count != 1)
+        return STATUS_NONE_MAPPED;
+    LocalDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_TRANSLATED_SID));
+    if (!LocalDomains)
+        return SCESTATUS_NOT_ENOUGH_RESOURCE;
+    LocalNames = RtlAllocateHeap(RtlGetProcessHeap(), 0,  sizeof(LSA_TRANSLATED_NAME) + UserName.MaximumLength);
+    if (!LocalNames)
+    {
+        LsaFreeMemory(LocalDomains);
+        return SCESTATUS_NOT_ENOUGH_RESOURCE;
+    }
+    LocalDomains[0].Entries = 0;
+    LocalDomains[0].Domains = NULL;
+    LocalNames[0].Use = SidTypeWellKnownGroup;
+    LocalNames[0].Name.Buffer = (LPWSTR)((ULONG_PTR)(LocalNames) + sizeof(LSA_TRANSLATED_NAME));
+    LocalNames[0].Name.Length = UserName.Length;
+    LocalNames[0].Name.MaximumLength = UserName.MaximumLength;
+    RtlCopyMemory(LocalNames[0].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
+
+    *ReferencedDomains = LocalDomains;
+    *Names = LocalNames;
+    return STATUS_SUCCESS;
 }
 
 /******************************************************************************
