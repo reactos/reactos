@@ -162,7 +162,7 @@ EndFormPage@4
 EndPage@4
 EndPath@4
 EngAcquireSemaphore@4
-EngAlphaBlend@28
+EngAlphaBlend@28=NtGdiEngAlphaBlend@28;
 EngAssociateSurface@12
 EngBitBlt@44
 EngCheckAbort@4

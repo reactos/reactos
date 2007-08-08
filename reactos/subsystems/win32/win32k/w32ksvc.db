@@ -626,7 +626,7 @@ NtUserYieldTask                                  0
 # NtGdiEngStrokeAndFillPath                       10
 # NtGdiEngPaint                                    5
 # NtGdiEngLineTo                                   9
-# NtGdiEngAlphaBlend                               7
+NtGdiEngAlphaBlend                               7
 # NtGdiEngGradientFill                            10
 # NtGdiEngTransparentBlt                           8
 # NtGdiEngTextOut                                 10

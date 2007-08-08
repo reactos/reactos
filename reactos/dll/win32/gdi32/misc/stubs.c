@@ -2534,16 +2534,6 @@ EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL 
-EngAlphaBlend(SURFOBJ *psoDest,SURFOBJ *psoSrc,CLIPOBJ *pco,XLATEOBJ *pxlo,RECTL *prclDest,RECTL *prclSrc,BLENDOBJ *pBlendObj)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented

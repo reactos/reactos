@@ -892,6 +892,37 @@ IntEngStretchBlt(SURFOBJ *DestSurf,
     return ret;
 }
 
+
+BOOL
+STDCALL
+NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
+                   IN SURFOBJ *Source,
+                   IN CLIPOBJ *ClipRegion,
+                   IN XLATEOBJ *ColorTranslation,
+                   IN PRECTL upDestRect,
+                   IN PRECTL upSourceRect,
+                   IN BLENDOBJ *BlendObj)
+{
+    RECTL DestRect;
+    RECTL SourceRect;
+
+    _SEH_TRY
+    {
+        ProbeForRead(upDestRect, sizeof(RECTL), 1);
+        RtlCopyMemory(&DestRect,upDestRect, sizeof(RECTL));
+        ProbeForRead(upSourceRect, sizeof(RECTL), 1);
+        RtlCopyMemory(&Source, upSourceRect, sizeof(RECTL));
+
+    }
+    _SEH_HANDLE
+    {
+        _SEH_YIELD(return FALSE);
+    }
+    _SEH_END;
+
+    return EngAlphaBlend(Dest, Source, ClipRegion, ColorTranslation, &DestRect, &SourceRect, BlendObj);
+}
+
 BOOL
 STDCALL
 EngAlphaBlend(IN SURFOBJ *Dest,
