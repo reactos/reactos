@@ -278,12 +278,6 @@ IntGdiPolylineTo(DC      *dc,
   return ret;
 }
 
-INT FASTCALL
-IntGdiGetArcDirection(DC *dc)
-{
-  return dc->w.ArcDirection;
-}
-
 
 BOOL FASTCALL
 IntGdiPolyPolyline(DC      *dc,
@@ -327,25 +321,6 @@ NtGdiAngleArc(
   return FALSE;
 }
 
-INT
-STDCALL
-NtGdiGetArcDirection(HDC  hDC)
-{
-  PDC dc = DC_LockDc (hDC);
-  int ret = 0; // default to failure
-
-  if ( dc )
-  {
-    ret = IntGdiGetArcDirection ( dc );
-    DC_UnlockDc(dc);
-  }
-  else
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-  }
-
-  return ret;
-}
 
 BOOL
 STDCALL
@@ -956,24 +931,4 @@ NtGdiPolyPolyline(HDC            hDC,
   return Ret;
 }
 
-int
-STDCALL
-NtGdiSetArcDirection(HDC  hDC,
-                    int  ArcDirection)
-{
-  PDC  dc;
-  INT  nOldDirection = 0; // default to FAILURE
-
-  dc = DC_LockDc (hDC);
-  if ( !dc ) return 0;
-
-  if ( ArcDirection == AD_COUNTERCLOCKWISE || ArcDirection == AD_CLOCKWISE )
-  {
-    nOldDirection = dc->w.ArcDirection;
-    dc->w.ArcDirection = ArcDirection;
-  }
-
-  DC_UnlockDc( dc );
-  return nOldDirection;
-}
 /* EOF */

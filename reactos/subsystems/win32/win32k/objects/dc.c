@@ -2161,20 +2161,31 @@ NtGdiGetDCDword(
       SafeResult = dc->Dc_Attr.lRelAbs;
       break;
     case GdiGetBreakExtra:
+      SafeResult = dc->Dc_Attr.lBreakExtra;
       break;
     case GdiGerCharBreak:
+      SafeResult = dc->Dc_Attr.cBreak;
       break;
     case GdiGetArcDirection:
+      SafeResult = dc->w.ArcDirection;
       break;
     case GdiGetEMFRestorDc:
       break;
     case GdiGetFontLanguageInfo:
       break;
     case GdiGetIsMemDc:
+      {
+        if (dc->w.flags & DC_MEMORY)
+          SafeResult = DC_TYPE_MEMORY;  // = dc->DC_Type;
+        else
+          SafeResult = DC_TYPE_DIRECT;
+      }
       break;
     case GdiGetMapMode:
+      SafeResult = dc->Dc_Attr.iMapMode;
       break;
     case GdiGetTextCharExtra:
+      SafeResult = dc->Dc_Attr.lTextExtra;
       break;
     default:
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2241,18 +2252,34 @@ NtGdiGetAndSetDCDword(
     case GdtGetSetCopyCount:
       break;
     case GdiGetSetTextAlign:
+      SafeResult = dc->Dc_Attr.lTextAlign;
+      dc->Dc_Attr.lTextAlign = dwIn;
+      dc->Dc_Attr.flTextAlign = dwIn;
       break;
     case GdiGetSetRelAbs:
+      SafeResult = dc->Dc_Attr.lRelAbs;
+      dc->Dc_Attr.lRelAbs = dwIn;
       break;
     case GdiGetSetTextCharExtra:
+      SafeResult = dc->Dc_Attr.lTextExtra;
+      dc->Dc_Attr.lTextExtra = dwIn;
       break;
     case GdiGetSetSelectFont:
       break;
     case GdiGetSetMapperFlagsInternal:
       break;
     case GdiGetSetMapMode:
+      SafeResult = dc->Dc_Attr.iMapMode;
+      dc->Dc_Attr.iMapMode = dwIn;
       break;
     case GdiGetSetArcDirection:
+      if (dwIn != AD_COUNTERCLOCKWISE && dwIn != AD_CLOCKWISE)
+      {
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         Ret = FALSE;
+      }                        
+      SafeResult = dc->w.ArcDirection;
+      dc->w.ArcDirection = dwIn;
       break;
     default:
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2290,7 +2317,6 @@ NtGdiGetAndSetDCDword(
 
 DC_SET_MODE( NtGdiSetBkMode, Dc_Attr.jBkMode, TRANSPARENT, OPAQUE )
 DC_SET_MODE( NtGdiSetPolyFillMode, Dc_Attr.jFillMode, ALTERNATE, WINDING )
-// DC_SET_MODE( NtGdiSetRelAbs, Dc_Attr.lRelAbs, ABSOLUTE, RELATIVE )
 DC_SET_MODE( NtGdiSetROP2, Dc_Attr.jROP2, R2_BLACK, R2_WHITE )
 DC_SET_MODE( NtGdiSetStretchBltMode, Dc_Attr.jStretchBltMode, BLACKONWHITE, HALFTONE )
 

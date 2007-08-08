@@ -290,6 +290,22 @@ DeleteObject(HGDIOBJ hObject)
 }
 
 
+INT
+STDCALL
+GetArcDirection( HDC hdc )
+{
+  return GetDCDWord( hdc, GdiGetArcDirection, 0);
+}
+
+
+INT
+STDCALL
+SetArcDirection( HDC hdc, INT nDirection )
+{
+  return GetAndSetDCDWord( hdc, GdiGetSetArcDirection, nDirection, 0, 0, 0 );
+}
+
+
 /*
  * @implemented
  */
@@ -301,6 +317,20 @@ GetRelAbs(
            )
 {
   return GetDCDWord( hdc, GdiGetRelAbs, 0);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+SetRelAbs(
+	HDC hdc,
+	INT Mode
+	)
+{
+  return GetAndSetDCDWord( hdc, GdiGetSetRelAbs, Mode, 0, 0, 0 );
 }
 
 

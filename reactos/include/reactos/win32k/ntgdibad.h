@@ -259,11 +259,6 @@ NtGdiGdiComment (
 	CONST LPBYTE	Data
 	);
 
-/* Use NtGdiGetDCDword with GdiGetArcDirection. */
-INT
-STDCALL
-NtGdiGetArcDirection ( HDC hDC );
-
 /* Should be done in user-mode. */
 BOOL
 STDCALL
@@ -464,11 +459,6 @@ INT STDCALL  NtGdiGetPolyFillMode(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetROP2(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
-INT
-STDCALL
-NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set);
 
 /* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetStretchBltMode(HDC  hDC);
@@ -676,12 +666,6 @@ INT
 STDCALL
 NtGdiSetAbortProc(HDC  hDC,
                       ABORTPROC  AbortProc);
-
-/* Use NtGdiGetAndSetDCDword with GdiGetSetArcDirection. */
-int
-STDCALL
-NtGdiSetArcDirection(HDC  hDC,
-                         int  ArcDirection);
 
 /* Use NtGdiSetBitmapDimension. */
 BOOL

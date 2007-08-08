@@ -334,7 +334,7 @@ GdiStartPageEMF@4
 GdiSwapBuffers@4
 GdiTransparentBlt@44=NtGdiTransparentBlt@44
 GdiValidateHandle@4
-GetArcDirection@4=NtGdiGetArcDirection@4
+GetArcDirection@4
 GetAspectRatioFilterEx@8
 GetBitmapAttributes@4
 GetBitmapBits@12=NtGdiGetBitmapBits@12
@@ -529,7 +529,7 @@ SelectFontLocal@8
 SelectObject@8=NtGdiSelectObject@8
 SelectPalette@12=NtGdiSelectPalette@12
 SetAbortProc@8
-SetArcDirection@8=NtGdiSetArcDirection@8
+SetArcDirection@8
 SetBitmapAttributes@8
 SetBitmapBits@12=NtGdiSetBitmapBits@12
 SetBitmapDimensionEx@16=NtGdiSetBitmapDimensionEx@16

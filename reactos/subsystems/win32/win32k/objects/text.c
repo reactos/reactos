@@ -4180,28 +4180,6 @@ FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
 }
 
 
-/* Remove this HAX! after the below function is done in GDI32.DLL! */
-INT
-STDCALL
-NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set)
-{
-  /* Ulta-Ugly Hax! */
-  INT Ret = 0x80000000;
-
-  PDC dc = DC_LockDc ( hDC );
-  if (!dc)
-  {
-       DPRINT("TextCharacterExtra %d", CharExtra);
-       SetLastWin32Error(ERROR_INVALID_HANDLE);
-       return Ret;
-  }
-  DPRINT("TextCharacterExtra %d", CharExtra);
-  Ret = dc->Dc_Attr.lTextExtra;
-  if( Set ) dc->Dc_Attr.lTextExtra = CharExtra;
-  DC_UnlockDc(dc);
-  return (Ret);
-}
-
 static BOOL FASTCALL
 IntGetFullFileName(
     POBJECT_NAME_INFORMATION NameInfo,

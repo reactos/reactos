@@ -176,19 +176,6 @@ GetSystemPaletteUse(HDC hDc)
 /*
  * @unimplemented
  */
-int
-STDCALL
-GetTextCharacterExtra(
-	HDC	hDc
-	)
-{
-	return NtGdiGetSetTextCharExtra( hDc, 0, FALSE);
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 GetFontLanguageInfo(
@@ -310,20 +297,6 @@ SetSystemPaletteUse(
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-SetTextCharacterExtra(
-	HDC	hDC,
-	int	CharExtra
-	)
-{
-	return NtGdiGetSetTextCharExtra( hDC, CharExtra, TRUE);
 }
 
 
@@ -1267,22 +1240,6 @@ DWORD
 STDCALL
 SetFontEnumeration(
 	DWORD	a0
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetRelAbs(
-	DWORD	a0,
-	DWORD	a1
 	)
 {
 	UNIMPLEMENTED;

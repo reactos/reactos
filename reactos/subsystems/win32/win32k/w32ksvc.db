@@ -697,7 +697,6 @@ NtGdiAlphaBlend                         11
 NtGdiSelectObject                       2
 NtGdiSelectPalette                      3
 NtGdiSetAbortProc                       2
-NtGdiSetArcDirection                    2
 NtGdiSetBitmapDimensionEx               4
 NtGdiSetBkColor                         2
 NtGdiSetBkMode                          2
@@ -783,7 +782,6 @@ NtGdiEnumICMProfiles                    3
 NtGdiEscape                             5
 NtGdiExtTextOut                         8
 NtGdiGdiComment                         3
-NtGdiGetArcDirection                    1
 NtGdiGetAspectRatioFilterEx             2
 NtGdiGetBitmapDimensionEx               2
 NtGdiGetBkColor                         1
@@ -816,7 +814,6 @@ NtGdiGetPaletteEntries                  4
 NtGdiGetPixelFormat                     1
 NtGdiGetPolyFillMode                    1
 NtGdiGetROP2                            1
-NtGdiGetSetTextCharExtra                3
 NtGdiGetStretchBltMode                  1
 NtGdiGetSystemPaletteEntries            4
 NtGdiGetTextAlign                       1

@@ -40,9 +40,6 @@ VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double
 BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath);
 BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2);
 
-INT FASTCALL
-IntGdiGetArcDirection(DC *dc);
-
 VOID FASTCALL
 IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
 
@@ -750,7 +747,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
 
   ASSERT ( dc );
 
-  clockwise = ( IntGdiGetArcDirection(dc) == AD_CLOCKWISE );
+  clockwise = ( dc->w.ArcDirection == AD_CLOCKWISE );
 
   /* Check that path is open */
   if ( dc->w.path.state != PATH_Open )
