@@ -24,14 +24,7 @@ GetClipRgn(
         HRGN    hrgn
         )
 {
-	HRGN rgn = NtGdiGetClipRgn(hdc);
-	if(rgn)
-	{
-		if(NtGdiCombineRgn(hrgn, rgn, 0, RGN_COPY) != ERROR) return 1;
-		else
-			return -1;
-	}
-	else	return 0;
+	return NtGdiGetRandomRgn(hdc, hrgn, 1);
 }
 
 
