@@ -3,6 +3,10 @@
 	<xi:include href="avtest/avtest.rbuild" />
 </directory>
 -->
+<directory name="cardsbav">
+	<xi:include href="cardsbav/cardsbav.rbuild" />
+</directory>
+
 <directory name="cmdutils">
 	<xi:include href="cmdutils/cmdutils.rbuild" />
 </directory>
