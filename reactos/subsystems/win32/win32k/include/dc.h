@@ -41,11 +41,6 @@ typedef struct _WIN_DC_INFO
 
   INT  DCOrgX;            /* DC origin */
   INT  DCOrgY;
-
-#if 0
-    FARPROC     lpfnPrint;         /* AbortProc for Printing */
-#endif
-
   INT  ArcDirection;
 
   XFORM  xformWorld2Wnd;    /* World-to-window transformation */
