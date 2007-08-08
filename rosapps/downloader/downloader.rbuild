@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <installfile base="system32">downloader.xml</installfile>    
-<module name="downloader" type="win32gui" installbase="system32" installname="downloader.exe">
+<module name="downloader" type="win32gui" installbase="system32" installname="downloader.exe" unicode="yes">
 	<include base="downloader">.</include>
 	<include base="expat">.</include>
 
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="__USE_W32API" />
 	<define name="WINVER">0x0501</define>
 	<define name="_WIN32_IE>0x0600</define>

@@ -1,9 +1,7 @@
-<module name="gettype" type="win32cui" installbase="system32" installname="gettype.exe">
+<module name="gettype" type="win32cui" installbase="system32" installname="gettype.exe" unicode="yes">
 	<include base="gettype">.</include>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="__USE_W32API" />
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<library>kernel32</library>
 	<library>shell32</library>
 	<library>mpr</library>
