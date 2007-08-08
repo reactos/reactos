@@ -161,7 +161,7 @@ NtGdiFlush                                       0
 # NtGdiForceUFIMapping                             2
 NtGdiFrameRgn                                    5
 # NtGdiFullscreenControl                           5
-# NtGdiGetAndSetDCDword                            4
+NtGdiGetAndSetDCDword                            4
 # NtGdiGetAppClipBox                               2
 NtGdiGetBitmapBits                               3
 # NtGdiGetBitmapDimension                          2
@@ -173,7 +173,7 @@ NtGdiGetCharSet                                  1
 # NtGdiGetCharWidthInfo                            2
 NtGdiGetColorAdjustment                          2
 # NtGdiGetColorSpaceforBitmap                      1
-# NtGdiGetDCDword                                  3
+NtGdiGetDCDword                                  3
 # NtGdiGetDCforBitmap                              1
 # NtGdiGetDCObject                                 2
 NtGdiGetDCPoint                                  3

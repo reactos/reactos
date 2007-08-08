@@ -35,11 +35,11 @@ IntGdiMoveToEx(DC      *dc,
 
   if ( Point )
   {
-    Point->x = dc->w.CursPosX;
-    Point->y = dc->w.CursPosY;
+    Point->x = dc->Dc_Attr.ptlCurrent.x;
+    Point->y = dc->Dc_Attr.ptlCurrent.y;
   }
-  dc->w.CursPosX = X;
-  dc->w.CursPosY = Y;
+  dc->Dc_Attr.ptlCurrent.x = X;
+  dc->Dc_Attr.ptlCurrent.y = Y;
 
   PathIsOpen = PATH_IsPathOpen(dc->w.path);
 
@@ -67,8 +67,8 @@ IntGdiLineTo(DC  *dc,
       if (Ret)
 	  {
 	    // FIXME - PATH_LineTo should maybe do this...
-	    dc->w.CursPosX = XEnd;
-	    dc->w.CursPosY = YEnd;
+	    dc->Dc_Attr.ptlCurrent.x = XEnd;
+	    dc->Dc_Attr.ptlCurrent.y = YEnd;
 	  }
       return Ret;
     }
@@ -81,8 +81,8 @@ IntGdiLineTo(DC  *dc,
           return FALSE;
         }
 
-      Points[0].x = dc->w.CursPosX;
-      Points[0].y = dc->w.CursPosY;
+      Points[0].x = dc->Dc_Attr.ptlCurrent.x;
+      Points[0].y = dc->Dc_Attr.ptlCurrent.y;
       Points[1].x = XEnd;
       Points[1].y = YEnd;
 
@@ -122,8 +122,8 @@ IntGdiLineTo(DC  *dc,
 
   if (Ret)
     {
-      dc->w.CursPosX = XEnd;
-      dc->w.CursPosY = YEnd;
+      dc->Dc_Attr.ptlCurrent.x = XEnd;
+      dc->Dc_Attr.ptlCurrent.y = YEnd;
     }
 
   return Ret;
@@ -172,8 +172,8 @@ IntGdiPolyBezierTo(DC      *dc,
     npt = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * (Count + 1), TAG_BEZIER);
     if ( npt )
     {
-      npt[0].x = dc->w.CursPosX;
-      npt[0].y = dc->w.CursPosY;
+      npt[0].x = dc->Dc_Attr.ptlCurrent.x;
+      npt[0].y = dc->Dc_Attr.ptlCurrent.y;
       memcpy(npt + 1, pt, sizeof(POINT) * Count);
       ret = IntGdiPolyBezier(dc, npt, Count+1);
       ExFreePool(npt);
@@ -181,8 +181,8 @@ IntGdiPolyBezierTo(DC      *dc,
   }
   if ( ret )
   {
-    dc->w.CursPosX = pt[Count-1].x;
-    dc->w.CursPosY = pt[Count-1].y;
+    dc->Dc_Attr.ptlCurrent.x = pt[Count-1].x;
+    dc->Dc_Attr.ptlCurrent.y = pt[Count-1].y;
   }
 
   return ret;
@@ -262,8 +262,8 @@ IntGdiPolylineTo(DC      *dc,
     POINT *pts = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * (Count + 1), TAG_SHAPE);
     if ( pts )
     {
-      pts[0].x = dc->w.CursPosX;
-      pts[0].y = dc->w.CursPosY;
+      pts[0].x = dc->Dc_Attr.ptlCurrent.x;
+      pts[0].y = dc->Dc_Attr.ptlCurrent.y;
       memcpy( pts + 1, pt, sizeof(POINT) * Count);
       ret = IntGdiPolyline(dc, pts, Count + 1);
       ExFreePool(pts);
@@ -271,8 +271,8 @@ IntGdiPolylineTo(DC      *dc,
   }
   if ( ret )
   {
-    dc->w.CursPosX = pt[Count-1].x;
-    dc->w.CursPosY = pt[Count-1].y;
+    dc->Dc_Attr.ptlCurrent.x = pt[Count-1].x;
+    dc->Dc_Attr.ptlCurrent.y = pt[Count-1].y;
   }
 
   return ret;
@@ -636,8 +636,8 @@ NtGdiPolyDraw(
         }
     
         /* if no moveto occurs, we will close the figure here */
-        lastmove.x = dc->w.CursPosX;
-        lastmove.y = dc->w.CursPosY;
+        lastmove.x = dc->Dc_Attr.ptlCurrent.x;
+        lastmove.y = dc->Dc_Attr.ptlCurrent.y;
     
         /* now let's draw */
         for( i = 0; i < cCount; i++ )
@@ -645,16 +645,16 @@ NtGdiPolyDraw(
             if( lpbTypes[i] == PT_MOVETO )
             {
                 IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL );
-                lastmove.x = dc->w.CursPosX;
-                lastmove.y = dc->w.CursPosY;
+                lastmove.x = dc->Dc_Attr.ptlCurrent.x;
+                lastmove.y = dc->Dc_Attr.ptlCurrent.y;
             }
             else if( lpbTypes[i] & PT_LINETO )
                 IntGdiLineTo( dc, lppt[i].x, lppt[i].y );
             else if( lpbTypes[i] & PT_BEZIERTO )
             {
                 POINT pts[4];
-                pts[0].x = dc->w.CursPosX;
-                pts[0].y = dc->w.CursPosY;
+                pts[0].x = dc->Dc_Attr.ptlCurrent.x;
+                pts[0].y = dc->Dc_Attr.ptlCurrent.y;
                 RtlCopyMemory(pts + 1, &lppt[i], sizeof(POINT) * 3);
                 IntGdiPolyBezier(dc, pts, 4);
                 i += 2;

@@ -46,8 +46,6 @@ typedef struct _WIN_DC_INFO
     FARPROC     lpfnPrint;         /* AbortProc for Printing */
 #endif
 
-  INT  CursPosX;          /* Current position */
-  INT  CursPosY;
   INT  ArcDirection;
 
   XFORM  xformWorld2Wnd;    /* World-to-window transformation */

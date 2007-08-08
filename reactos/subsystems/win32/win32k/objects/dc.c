@@ -1150,7 +1150,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
   return SelObject;
 }
 
-DC_GET_VAL_EX ( GetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT, x, y )
+DC_GET_VAL_EX ( GetCurrentPositionEx, Dc_Attr.ptlCurrent.x, Dc_Attr.ptlCurrent.y, POINT, x, y )
 
 BOOL FASTCALL
 IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
@@ -1317,8 +1317,8 @@ IntGdiGetDCState(HDC  hDC)
   newdc->w.DCOrgX           = dc->w.DCOrgX;
   newdc->w.DCOrgY           = dc->w.DCOrgY;
 #endif
-  newdc->w.CursPosX         = dc->w.CursPosX;
-  newdc->w.CursPosY         = dc->w.CursPosY;
+  newdc->Dc_Attr.ptlCurrent.x         = dc->Dc_Attr.ptlCurrent.x;
+  newdc->Dc_Attr.ptlCurrent.y         = dc->Dc_Attr.ptlCurrent.y;
   newdc->w.ArcDirection     = dc->w.ArcDirection;
   newdc->w.xformWorld2Wnd   = dc->w.xformWorld2Wnd;
   newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
@@ -1398,8 +1398,8 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
         dc->w.DCOrgX           = dcs->w.DCOrgX;
         dc->w.DCOrgY           = dcs->w.DCOrgY;
 #endif
-        dc->w.CursPosX         = dcs->w.CursPosX;
-        dc->w.CursPosY         = dcs->w.CursPosY;
+        dc->Dc_Attr.ptlCurrent.x         = dcs->Dc_Attr.ptlCurrent.x;
+        dc->Dc_Attr.ptlCurrent.y         = dcs->Dc_Attr.ptlCurrent.y;
         dc->w.ArcDirection     = dcs->w.ArcDirection;
 
         dc->w.xformWorld2Wnd   = dcs->w.xformWorld2Wnd;
@@ -2127,6 +2127,167 @@ IntGdiSetHookFlags(HDC hDC, WORD Flags)
 
   return wRet;
 }
+
+
+BOOL
+STDCALL
+NtGdiGetDCDword(
+             HDC hDC,
+             UINT u,
+             DWORD *Result
+               )
+{
+  BOOL Ret = TRUE;
+  DC *dc;
+  DWORD SafeResult = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if(!Result)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+
+  switch (u)
+  {
+    case GdiGetJournal:
+      break;
+    case GdiGetRelAbs:
+      break;
+    case GdiGetBreakExtra:
+      break;
+    case GdiGerCharBreak:
+      break;
+    case GdiGetArcDirection:
+      break;
+    case GdiGetEMFRestorDc:
+      break;
+    case GdiGetFontLanguageInfo:
+      break;
+    case GdiGetIsMemDc:
+      break;
+    case GdiGetMapMode:
+      break;
+    case GdiGetTextCharExtra:
+      break;
+    default:
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      break;
+  }
+
+  if (Ret)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(Result,
+                    sizeof(DWORD),
+                    1);
+      *Result = SafeResult;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    DC_UnlockDc(dc);
+    return FALSE;
+  }
+
+  DC_UnlockDc(dc);
+  return Ret;
+}
+                                        
+BOOL
+STDCALL
+NtGdiGetAndSetDCDword(
+                  HDC hDC,
+                  UINT u,
+                  DWORD dwIn,
+                  DWORD *Result
+                     )
+{
+  BOOL Ret = TRUE;
+  DC *dc;
+  DWORD SafeResult = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if(!Result)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+
+  switch (u)
+  {
+    case GdtGetSetCopyCount:
+      break;
+    case GdiGetSetTextAlign:
+      break;
+    case GdiGetSetRelAbs:
+      break;
+    case GdiGetSetTextCharExtra:
+      break;
+    case GdiGetSetSelectFont:
+      break;
+    case GdiGetSetMapperFlagsInternal:
+      break;
+    case GdiGetSetMapMode:
+      break;
+    case GdiGetSetArcDirection:
+      break;
+    default:
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      Ret = FALSE;
+      break;
+  }
+
+  if (Ret)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(Result,
+                    sizeof(DWORD),
+                    1);
+      *Result = SafeResult;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    DC_UnlockDc(dc);
+    return FALSE;
+  }
+
+  DC_UnlockDc(dc);
+  return Ret;
+}
+
 
 DC_SET_MODE( NtGdiSetBkMode, Dc_Attr.jBkMode, TRANSPARENT, OPAQUE )
 DC_SET_MODE( NtGdiSetPolyFillMode, Dc_Attr.jFillMode, ALTERNATE, WINDING )
