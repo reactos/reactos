@@ -722,17 +722,38 @@ InstallReactOS(HINSTANCE hInstance)
         }
     }
 
-    /* Create the Administrator profile */
-    if (!CreateUserProfileW(AdminSid, L"Administrator"))
-    {
-        DebugPrint("CreateUserProfileW() failed!");
-        RtlFreeSid(AdminSid);
-        RtlFreeSid(DomainSid);
-        return 0;
-    }
-
     RtlFreeSid(AdminSid);
     RtlFreeSid(DomainSid);
+
+    /* ROS HACK, as long as NtUnloadKey is not implemented */
+    {
+        NTSTATUS Status = NtUnloadKey(NULL);
+        if (Status == STATUS_NOT_IMPLEMENTED)
+        {
+            /* Create the Administrator profile */
+            PROFILEINFOW ProfileInfo;
+            HANDLE hToken;
+            BOOL ret;
+#define LOGON32_LOGON_NETWORK 3
+            ret = LogonUserW(L"Administrator", L"", L"", LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, &hToken);
+            if (!ret)
+            {
+                DebugPrint("LogonUserW() failed!");
+                return 0;
+            }
+            ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
+            ProfileInfo.dwSize = sizeof(PROFILEINFOW);
+            ProfileInfo.lpUserName = L"Administrator";
+            ProfileInfo.dwFlags = PI_NOUI;
+            LoadUserProfileW(hToken, &ProfileInfo);
+            CloseHandle(hToken);
+        }
+        else
+        {
+            DPRINT1("ROS HACK not needed anymore. Please remove it\n");
+        }
+    }
+    /* END OF ROS HACK */
 
     CreateTempDir(L"TEMP");
     CreateTempDir(L"TMP");
