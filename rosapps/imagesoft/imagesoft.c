@@ -4,9 +4,9 @@ HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
 int WINAPI
-WinMain(HINSTANCE hThisInstance,
+_tWinMain(HINSTANCE hThisInstance,
         HINSTANCE hPrevInstance,
-        LPSTR lpCmdLine,
+        LPTSTR lpCmdLine,
         int nCmdShow)
 {
     LPTSTR lpAppName, lpVersion, lpTitle;

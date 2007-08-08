@@ -444,8 +444,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc (hwnd, Message, wParam, lParam);
 }
 
-INT WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
-					LPSTR lpCmdLine, INT nCmdShow)
+INT WINAPI wWinMain (HINSTANCE hInstance, HINSTANCE hPrevInst,
+					LPTSTR lpCmdLine, INT nCmdShow)
 {
 	int i;
 	WNDCLASSEXW WndClass = {0};

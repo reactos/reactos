@@ -226,7 +226,7 @@ GetBasicInfo(LPOSVERSIONINFOEX osvi, TCHAR * HostName, TCHAR * OSName, TCHAR * V
 }
 
 INT
-main (VOID)
+_tmain (VOID)
 {
 	DWORD Operations = 0;
 	INT ret = 255;
