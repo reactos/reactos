@@ -459,6 +459,7 @@ HvInitialize(
    Hive->FileFlush = FileFlush;
    Hive->StorageTypeCount = 2;
    Hive->Cluster = 1;
+   Hive->Version = HV_MINOR_VER;
 
    switch (Operation)
    {
