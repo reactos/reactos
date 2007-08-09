@@ -1142,6 +1142,14 @@ CmpComputeHashKey(
 
 BOOLEAN
 NTAPI
+CmpAddSubKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Parent,
+    IN HCELL_INDEX Child
+);
+
+BOOLEAN
+NTAPI
 CmpRemoveSubKey(
     IN PHHIVE Hive,
     IN HCELL_INDEX ParentKey,
@@ -1345,8 +1353,8 @@ extern EX_PUSH_LOCK CmpHiveListHeadLock, CmpLoadHiveLock;
 extern LIST_ENTRY CmpHiveListHead;
 extern POBJECT_TYPE CmpKeyObjectType;
 extern ERESOURCE CmpRegistryLock;
-extern PCM_KEY_HASH_TABLE_ENTRY *CmpCacheTable;
-extern PCM_NAME_HASH_TABLE_ENTRY *CmpNameCacheTable;
+extern PCM_KEY_HASH_TABLE_ENTRY CmpCacheTable;
+extern PCM_NAME_HASH_TABLE_ENTRY CmpNameCacheTable;
 extern KGUARDED_MUTEX CmpDelayedCloseTableLock;
 extern CMHIVE CmControlHive;
 extern WCHAR CmDefaultLanguageId[];
@@ -1371,6 +1379,7 @@ extern ULONG CmpBootType;
 extern HANDLE CmpRegistryRootHandle;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN InitIsWinPEMode;
+extern ULONG CmpHashTableSize;
 
 //
 // Inlined functions

@@ -62,7 +62,7 @@ CmpIsKeyValueBig(IN PHHIVE Hive,
 #define GET_HASH_INDEX(ConvKey)                                     \
     GET_HASH_KEY(ConvKey) % CmpHashTableSize
 #define GET_HASH_ENTRY(Table, ConvKey)                              \
-    (*Table[GET_HASH_INDEX(ConvKey)])
+    (Table[GET_HASH_INDEX(ConvKey)])
 
 //
 // Returns whether or not the cell is cached
@@ -115,6 +115,62 @@ CmpIsKeyValueBig(IN PHHIVE Hive,
 }
 
 //
+// Exclusively acquires a KCB by index
+//
+#define CmpAcquireKcbLockExclusiveByIndex(i)                        \
+{                                                                   \
+    ExAcquirePushLockExclusive(&CmpCacheTable[(i)].Lock);           \
+    CmpCacheTable[(i)].Owner = KeGetCurrentThread();                \
+}
+
+//
+// Exclusively acquires a KCB by key
+//
+#define CmpAcquireKcbLockExclusiveByKey(k)                          \
+{                                                                   \
+    ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpCacheTable,       \
+                                              (k)).Lock);           \
+    GET_HASH_ENTRY(CmpCacheTable,                                   \
+                   (k)).Owner = KeGetCurrentThread();               \
+}
+
+
+//
+// Shared acquires a KCB
+//
+#define CmpAcquireKcbLockShared(k)                                  \
+{                                                                   \
+    ExAcquirePushLockShared(&GET_HASH_ENTRY(CmpCacheTable,          \
+                                            (k)->ConvKey).Lock);    \
+}
+
+//
+// Shared acquires a KCB by index
+//
+#define CmpAcquireKcbLockSharedByIndex(i)                           \
+{                                                                   \
+    ExAcquirePushLockShared(&CmpCacheTable[(i)].Lock);              \
+}
+
+//
+// Tries to convert a KCB lock
+//
+FORCEINLINE
+BOOLEAN
+CmpTryToConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
+{
+    ASSERT(CmpIsKcbLockedExclusive(k) == FALSE);
+    if (ExConvertPushLockSharedToExclusive(
+            &GET_HASH_ENTRY(CmpCacheTable, k->ConvKey).Lock))
+    {
+        GET_HASH_ENTRY(CmpCacheTable,
+                       k->ConvKey).Owner = KeGetCurrentThread();
+        return TRUE;
+    }
+    return FALSE;
+}
+
+//
 // Releases an exlusively or shared acquired KCB
 //
 #define CmpReleaseKcbLock(k)                                        \
@@ -122,6 +178,25 @@ CmpIsKeyValueBig(IN PHHIVE Hive,
     GET_HASH_ENTRY(CmpCacheTable, (k)->ConvKey).Owner = NULL;       \
     ExReleasePushLock(&GET_HASH_ENTRY(CmpCacheTable,                \
                                       (k)->ConvKey).Lock);          \
+}
+
+//
+// Releases an exlusively or shared acquired KCB by index
+//
+#define CmpReleaseKcbLockByIndex(i)                                 \
+{                                                                   \
+    CmpCacheTable[(i)].Owner = NULL;                                \
+    ExReleasePushLock(&CmpCacheTable[(i)].Lock);                    \
+}
+
+//
+// Releases an exlusively or shared acquired KCB by key
+//
+#define CmpReleaseKcbLockByKey(k)                                   \
+{                                                                   \
+    GET_HASH_ENTRY(CmpCacheTable, (k)).Owner = NULL;                \
+    ExReleasePushLock(&GET_HASH_ENTRY(CmpCacheTable,                \
+                                      (k)).Lock);                   \
 }
 
 //
