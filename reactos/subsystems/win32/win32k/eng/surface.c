@@ -533,6 +533,17 @@ EngEraseSurface(SURFOBJ *Surface,
 #define GDIBdyToHdr(body)                                                      \
   ((PGDIOBJHDR)(body) - 1)
 
+
+/*
+ * @implemented
+ */
+SURFOBJ * STDCALL
+NtGdiEngLockSurface(IN HSURF Surface)
+{
+    return EngLockSurface(Surface);
+}
+
+
 /*
  * @implemented
  */

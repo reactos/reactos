@@ -616,9 +616,9 @@ NtUserYieldTask                                  0
 # NtGdiEngDeleteSurface                            1
 # NtGdiEngEraseSurface                             3
 # NtGdiEngUnlockSurface                            1
-# NtGdiEngLockSurface                              1
+NtGdiEngLockSurface                              1
 NtGdiEngBitBlt                                  11
-# NtGdiEngStretchBlt                              11
+NtGdiEngStretchBlt                              11
 # NtGdiEngPlgBlt                                  11
 # NtGdiEngMarkBandingSurface                       1
 # NtGdiEngStrokePath                               8

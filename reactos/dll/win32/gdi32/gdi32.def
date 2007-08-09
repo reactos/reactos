@@ -189,7 +189,7 @@ EngGetPrinterDataFileName@4
 EngGradientFill@40
 EngLineTo@36
 EngLoadModule@4
-EngLockSurface@4
+EngLockSurface@4=NtGdiEngLockSurface@4
 EngMarkBandingSurface@4
 EngMultiByteToUnicodeN@20
 EngMultiByteToWideChar@20
@@ -198,7 +198,7 @@ EngPlgBlt@44
 EngQueryEMFInfo@8
 EngQueryLocalTime@4
 EngReleaseSemaphore@4
-EngStretchBlt@44
+EngStretchBlt@44=NtGdiEngStretchBlt@44
 EngStretchBltROP@52
 EngStrokeAndFillPath@40
 EngStrokePath@32

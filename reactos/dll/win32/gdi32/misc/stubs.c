@@ -2842,16 +2842,6 @@ EngLoadModule(LPWSTR pwsz)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-SURFOBJ * STDCALL
-EngLockSurface(IN HSURF Surface)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
@@ -2947,16 +2937,7 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL 
-EngStretchBlt(SURFOBJ *psoDest,SURFOBJ *psoSrc,SURFOBJ *psoMask,CLIPOBJ *pco,XLATEOBJ *pxlo,COLORADJUSTMENT *pca,POINTL *pptlHTOrg,RECTL *prclDest,RECTL *prclSrc,POINTL *pptlMask,ULONG iMode)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
