@@ -671,21 +671,22 @@ KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName)
 }
 
 VOID
-STDCALL
+NTAPI
 KdbDebugPrint(PCH Message, ULONG Length)
 {
+    /* Nothing here */
 }
 
 
 /*! \brief Initializes the KDB symbols implementation.
  *
- * \param NtoskrnlModuleObject  LDR_DATA_TABLE_ENTRY of ntoskrnl.exe
- * \param LdrHalModuleObject    LDR_DATA_TABLE_ENTRY of hal.sys
+ * \param DispatchTable         Pointer to the KD dispatch table
+ * \param BootPhase             Phase of initialization
  */
 VOID
-STDCALL
-KdpKdbgInit(PKD_DISPATCH_TABLE DispatchTable,
-            ULONG BootPhase)
+NTAPI
+KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
+              ULONG BootPhase)
 {
     PCHAR p1, p2;
     int Found;

@@ -263,6 +263,7 @@
             <directory name="wrappers">
                 <file>bochs.c</file>
                 <file>gdbstub.c</file>
+		<file>kdbg.c</file>
             </directory>
             <file>kdinit.c</file>
             <file>kdio.c</file>
