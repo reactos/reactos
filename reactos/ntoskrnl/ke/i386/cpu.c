@@ -47,7 +47,7 @@ KGDTENTRY KiBootGdt[256] =
 };
 
 /* GDT Descriptor */
-KDESCRIPTOR KiGdtDescriptor = {sizeof(KiBootGdt), (ULONG)KiBootGdt};
+KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt), (ULONG)KiBootGdt};
 
 /* CPU Features and Flags */
 ULONG KeI386CpuType;
@@ -705,8 +705,8 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     //
     // Restore GDT, IDT, LDT and TSS
     //
-    Ke386SetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr.Base);
-    Ke386SetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr.Base);
+    Ke386SetGlobalDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Gdtr.Limit);
+    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Idtr.Limit);
     Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
@@ -732,8 +732,8 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     Ke386SetDr7(0);
 
     /* Save GDT, IDT, LDT and TSS */
-    Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr.Base);
-    Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr.Base);
+    Ke386GetGlobalDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Gdtr.Limit);
+    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Idtr.Limit);
     Ke386GetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386GetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
@@ -832,14 +832,14 @@ KiI386PentiumLockErrataFixup(VOID)
     _disable();
 
     /* Get the current IDT and copy it */
-    Ke386GetInterruptDescriptorTable(IdtDescriptor);
+    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
     RtlCopyMemory(NewIdt2,
                   (PVOID)IdtDescriptor.Base,
                   IdtDescriptor.Limit + 1);
     IdtDescriptor.Base = (ULONG)NewIdt2;
 
     /* Set the new IDT */
-    Ke386SetInterruptDescriptorTable(IdtDescriptor);
+    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
     ((PKIPCR)KeGetPcr())->IDT = NewIdt2;
 
     /* Restore interrupts */

@@ -356,8 +356,8 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     PKGDTENTRY TssEntry;
 
     /* Load the GDT and IDT */
-    Ke386SetGlobalDescriptorTable(KiGdtDescriptor);
-    Ke386SetInterruptDescriptorTable(KiIdtDescriptor);
+    Ke386SetGlobalDescriptorTable(*(PKDESCRIPTOR)&KiGdtDescriptor.Limit);
+    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&KiIdtDescriptor.Limit);
 
     /* Initialize the boot TSS */
     Tss = &KiBootTss;

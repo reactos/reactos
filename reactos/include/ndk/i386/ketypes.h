@@ -261,14 +261,12 @@ typedef struct _KIDTENTRY
     USHORT ExtendedOffset;
 } KIDTENTRY, *PKIDTENTRY;
 
-#include <pshpack2.h>
 typedef struct _DESCRIPTOR
 {
+    USHORT Pad;
     USHORT Limit;
     ULONG Base;
-    USHORT Padding;
 } KDESCRIPTOR, *PKDESCRIPTOR;
-#include <poppack.h>
 
 #ifndef NTOS_MODE_USER
 //

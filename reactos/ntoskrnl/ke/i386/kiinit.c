@@ -619,8 +619,8 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
     USHORT Tr = 0, Fs;
 
     /* Get GDT and IDT descriptors */
-    Ke386GetGlobalDescriptorTable(GdtDescriptor);
-    Ke386GetInterruptDescriptorTable(IdtDescriptor);
+    Ke386GetGlobalDescriptorTable(*(PKDESCRIPTOR)&GdtDescriptor.Limit);
+    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
 
     /* Save IDT and GDT */
     *Gdt = (PKGDTENTRY)GdtDescriptor.Base;

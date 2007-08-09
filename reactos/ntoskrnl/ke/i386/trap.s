@@ -80,6 +80,7 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
 .globl _KiIdtDescriptor
 _KiIdtDescriptor:
+    .short 0
     .short 0x800
     .long _KiIdt
 
