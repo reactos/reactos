@@ -1565,6 +1565,7 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	HBITMAP  res;
 	BITMAP  bm;
 	BITMAPOBJ *Bitmap, *resBitmap;
+	SIZEL Size;
 
 	if (hBitmap == NULL)
 	{
@@ -1582,11 +1583,14 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 	if (Bitmap->SurfObj.lDelta >= 0)
 		bm.bmHeight = -bm.bmHeight;
 
-	res = NtGdiCreateBitmap(bm.bmWidth,
-	                        bm.bmHeight,
-	                        bm.bmPlanes,
-	                        bm.bmBitsPixel,
-	                        bm.bmBits);
+	Size.cx = abs(bm.bmWidth);
+	Size.cy = abs(bm.bmHeight);
+	res = IntCreateBitmap(Size,
+	                      bm.bmWidthBytes,
+	                      BitmapFormat(bm.bmBitsPixel * bm.bmPlanes, BI_RGB),
+	                      (bm.bmHeight < 0 ? BMF_TOPDOWN : 0) | BMF_NOZEROINIT,
+	                      NULL);
+
 	if(res)
 	{
 		PBYTE buf;
