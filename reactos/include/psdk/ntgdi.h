@@ -1097,7 +1097,8 @@ NtGdiAlphaBlend(
     IN LONG SrcY,
     IN LONG SrcCx,
     IN LONG SrcCy,
-    IN BLENDFUNCTION BlendFunction
+    IN BLENDFUNCTION BlendFunction,
+    IN HANDLE hcmXform
 );
 
 W32KAPI

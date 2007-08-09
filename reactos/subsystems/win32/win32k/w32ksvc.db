@@ -13,7 +13,7 @@ NtGdiAbortPath                                   1
 # NtGdiAddFontMemResourceEx                        5
 # NtGdiRemoveMergeFont                             2
 # NtGdiAddRemoteMMInstanceToDC                     3
-# NtGdiAlphaBlend                                 12 Wrong number of param ?
+NtGdiAlphaBlend                                 12
 NtGdiAngleArc                                    6
 # NtGdiAnyLinkedFonts                              0
 # NtGdiFontIsLinked                                1
@@ -280,7 +280,7 @@ NtGdiSetDeviceGammaRamp                          2
 # NtGdiSetDIBitsToDeviceInternal                  16
 # NtGdiSetFontEnumeration                          1
 # NtGdiSetFontXform                                3
-# NtGdiSetIcmMode                                  3 Wrong number of param ?
+NtGdiSetIcmMode                                  3
 # NtGdiSetLinkedUFIs                               3
 # NtGdiSetMagicColors                              3
 NtGdiSetMetaRgn                                  1
@@ -676,7 +676,6 @@ NtGdiEngAlphaBlend                               7
 #
 #
 # Wrong number of param ?
-NtGdiSetICMMode                         2
 NtUserCreateWindowEx                    14
 NtUserCreateWindowStation               6
 NtUserEnumDisplayMonitors               5
@@ -691,7 +690,6 @@ NtUserSetCursorIconData                 6
 NtUserSetWinEventHook                   8
 NtUserUnregisterClass                   2
 NtUserValidateHandleSecure              1
-NtGdiAlphaBlend                         11
 #
 #ReactOS specify syscall 
 NtGdiSelectObject                       2

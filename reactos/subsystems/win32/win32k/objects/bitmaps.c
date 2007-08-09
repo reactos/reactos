@@ -1394,7 +1394,8 @@ NtGdiAlphaBlend(
 	LONG  YOriginSrc,
 	LONG  WidthSrc,
 	LONG  HeightSrc,
-	BLENDFUNCTION  BlendFunc)
+	BLENDFUNCTION  BlendFunc,
+	HANDLE hcmXform)
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;

@@ -1592,7 +1592,7 @@ UserDrawIconEx(
             BlendFunc.AlphaFormat = AC_SRC_ALPHA;
 
             NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
-                            hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc);
+                            hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc, 0);
         }
         else
         {

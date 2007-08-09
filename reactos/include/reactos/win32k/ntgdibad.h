@@ -748,12 +748,6 @@ NtGdiSetGraphicsMode (
 	int	Mode
 	);
 
-/* Use NtGdiSetIcmMode. */
-INT
-STDCALL
-NtGdiSetICMMode(HDC  hDC,
-                    INT  EnableICM);
-
 /* Should be done in user-mode. */
 BOOL
 STDCALL

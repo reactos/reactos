@@ -33,6 +33,41 @@ HANDLE CurrentProcessId = NULL;
 DWORD GDI_BatchLimit = 1;
 
 
+BOOL
+STDCALL
+GdiAlphaBlend(
+            HDC hDCDst,
+            int DstX,
+            int DstY,
+            int DstCx,
+            int DstCy,
+            HDC hDCSrc,
+            int SrcX,
+            int SrcY,
+            int SrcCx,
+            int SrcCy,
+            BLENDFUNCTION BlendFunction
+            )
+{
+   if ( hDCSrc == NULL ) return FALSE;
+
+   if (GDI_HANDLE_GET_TYPE(hDCSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
+      
+   return NtGdiAlphaBlend(
+                      hDCDst,
+                        DstX,
+                        DstY,
+                       DstCx,
+                       DstCy,
+                      hDCSrc,
+                        SrcX,
+                        SrcY,
+                       SrcCx,
+                       SrcCy,
+               BlendFunction,
+                           0 );
+}
+
 /*
  * @implemented
  */
