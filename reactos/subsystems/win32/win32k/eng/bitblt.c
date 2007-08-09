@@ -955,7 +955,7 @@ NtGdiEngAlphaBlend(IN SURFOBJ *Dest,
         ProbeForRead(upDestRect, sizeof(RECTL), 1);
         RtlCopyMemory(&DestRect,upDestRect, sizeof(RECTL));
         ProbeForRead(upSourceRect, sizeof(RECTL), 1);
-        RtlCopyMemory(&Source, upSourceRect, sizeof(RECTL));
+        RtlCopyMemory(&SourceRect, upSourceRect, sizeof(RECTL));
 
     }
     _SEH_HANDLE
