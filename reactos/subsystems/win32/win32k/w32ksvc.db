@@ -694,7 +694,6 @@ NtUserValidateHandleSecure              1
 #ReactOS specify syscall 
 NtGdiSelectObject                       2
 NtGdiSelectPalette                      3
-NtGdiSetAbortProc                       2
 NtGdiSetBitmapDimensionEx               4
 NtGdiSetBkColor                         2
 NtGdiSetBkMode                          2
@@ -777,7 +776,6 @@ NtGdiDeleteObject                       1
 NtGdiEnumEnhMetaFile                    5
 NtGdiEnumFonts                          4
 NtGdiEnumICMProfiles                    3
-NtGdiEscape                             5
 NtGdiExtTextOut                         8
 NtGdiGdiComment                         3
 NtGdiGetAspectRatioFilterEx             2

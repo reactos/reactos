@@ -290,15 +290,6 @@ freeout:
 }
 
 INT
-STDCALL
-NtGdiSetAbortProc(HDC  hDC,
-                      ABORTPROC  AbortProc)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-INT
 APIENTRY
 NtGdiStartDoc(
     IN HDC hdc,

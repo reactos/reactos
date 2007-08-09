@@ -229,15 +229,6 @@ NtGdiEnumICMProfiles(HDC    hDC,
                     LPWSTR lpstrBuffer,
                     UINT   cch );
 
-/* Should be done in user-mode. */
-INT
-STDCALL
-NtGdiEscape(HDC  hDC,
-                INT  Escape,
-                INT  InSize,
-                LPCSTR  InData,
-                LPVOID  OutData);
-
 /* Use NtGdiExtTextOutW with 0, 0 at the end. */
 BOOL
 STDCALL
@@ -660,12 +651,6 @@ NtGdiSelectPalette (
 	HPALETTE	hpal,
 	BOOL		ForceBackground
 	);
-
-/* Should be done in user-mode. */
-INT
-STDCALL
-NtGdiSetAbortProc(HDC  hDC,
-                      ABORTPROC  AbortProc);
 
 /* Use NtGdiSetBitmapDimension. */
 BOOL

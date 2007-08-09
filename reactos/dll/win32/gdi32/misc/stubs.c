@@ -77,7 +77,9 @@ int
 STDCALL
 Escape(HDC hdc, INT escape, INT in_count, LPCSTR in_data, LPVOID out_data)
 {
-    return NtGdiEscape(hdc,escape,in_count,in_data,out_data);
+        UNIMPLEMENTED;
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return 0;
 }
 
 /*
