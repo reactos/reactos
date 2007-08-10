@@ -66,6 +66,7 @@ MF_DeleteMFDC ( HGDIOBJ hMDC )
        RemoveEntryList(&pMFME->List);
        LocalFree ( pMFME );
        hMFCount--;
+       if (!hMFCount) hMF_List = NULL;
        return TRUE;
     }
     pMFME = (PMF_ENTRY) pMFME->List.Flink;
