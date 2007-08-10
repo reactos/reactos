@@ -821,7 +821,6 @@ NtGdiMoveToEx                           4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
 NtGdiPaintRgn                           2
-NtGdiPie                                9
 NtGdiPlayEnhMetaFile                    3
 NtGdiPlayEnhMetaFileRecord              4
 NtGdiPolyBezier                         3
