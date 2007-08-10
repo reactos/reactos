@@ -27,6 +27,7 @@ typedef struct
 
 extern HINSTANCE g_hInstance;
 extern SYCALL_ENTRY SyscallTable_XP_2600[];
+extern SYCALL_ENTRY SyscallTable_2K_2195[];
 extern HMODULE g_hModule;
 extern INT g_nOsVer;
 

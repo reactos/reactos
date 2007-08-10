@@ -44,6 +44,14 @@ InitOsVersion()
 		return TRUE;
 	}
 
+	if (osv.dwMajorVersion == 5 && osv.dwMinorVersion == 0 && osv.dwBuildNumber == 2195)
+	{
+		printf("Running on Windows 2000, build 2195\n");
+		g_nOs = OS_WINDOWS;
+		g_SyscallTable = SyscallTable_2K_2195;
+		return TRUE;
+	}
+
 	printf("Unsupported OS\n");
 
 	return FALSE;
