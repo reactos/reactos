@@ -129,8 +129,8 @@
 #define DC_DIBSECTION                       0x00004000
 #define DC_LAST_CLIPRGN_VALID               0x00008000
 #define DC_PRIMARY_DISPLAY                  0x00010000
-#define DC_MODE_DIRTY                       0x00020000
-#define DC_FONTTEXT_DIRTY                   0x00040000
+#define DC_MODE_DIRTY                       0x00200000
+#define DC_FONTTEXT_DIRTY                   0x00400000
 
 /* DC_ATTR LCD Flags */
 #define LDC_LDC           0x00000001 // (init) local DC other than a normal DC

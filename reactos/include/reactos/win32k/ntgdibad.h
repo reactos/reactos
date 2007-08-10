@@ -538,19 +538,6 @@ STDCALL
 NtGdiPaintRgn(HDC  hDC,
                    HRGN  hRgn);
 
-/* Use NtGdiArcInternal with GdiTypePie. */
-BOOL
-STDCALL
-NtGdiPie(HDC  hDC,
-              int  LeftRect,
-              int  TopRect,
-              int  RightRect,
-              int  BottomRect,
-              int  XRadial1,
-              int  YRadial1,
-              int  XRadial2,
-              int  YRadial2);
-
 /* Metafiles are user-mode. */
 BOOL
 STDCALL

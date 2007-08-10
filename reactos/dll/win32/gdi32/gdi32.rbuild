@@ -30,6 +30,7 @@
 		<file>arc.c</file>
 		<file>bitmap.c</file>
 		<file>brush.c</file>
+		<file>coord.c</file>
 		<file>dc.c</file>
 		<file>enhmfile.c</file>
 		<file>font.c</file>

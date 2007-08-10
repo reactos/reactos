@@ -148,7 +148,6 @@ Chord(
 }
 
 
-#if 0
 /*
  * @unimplemented
  */
@@ -166,6 +165,7 @@ Pie(
 	int	a8
 	)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -187,7 +187,8 @@ Pie(
       return FALSE;
     }
  }
+#endif
  return NtGdiArcInternal(GdiTypePie, hDC, a1, a2, a3, a4, a5, a6, a7, a8);
 }
-#endif
+
 

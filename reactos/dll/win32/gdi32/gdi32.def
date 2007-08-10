@@ -485,7 +485,7 @@ PATHOBJ_vEnumStartClipLines@16
 PATHOBJ_vGetBounds@8
 PolyPatBlt@20=NtGdiPolyPatBlt@20
 PathToRegion@4
-Pie@36=NtGdiPie@36
+Pie@36
 PlayEnhMetaFile@12
 PlayEnhMetaFileRecord@16
 PlayMetaFile@8
