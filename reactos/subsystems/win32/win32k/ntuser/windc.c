@@ -137,10 +137,12 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
     pDce->hwndCurrent = (Window ? Window->hSelf : NULL);
     pDce->hClipRgn = NULL;
     pDce->pProcess = NULL;
-    
+
+    KeEnterCriticalRegion();    
     pDce->next = FirstDce;
     FirstDce = pDce;
-  
+    KeLeaveCriticalRegion();
+      
     if (Type == DCE_WINDOW_DC) //Window DCE have ownership.
      {
        DC_SetOwnership(pDce->hDC, PsGetCurrentProcess());
@@ -434,7 +436,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       DCE* DceEmpty = NULL;
       DCE* DceUnused = NULL;
-
+      KeEnterCriticalRegion();
       for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
       {
          if ((Dce->DCXFlags & (DCX_CACHE | DCX_DCEBUSY)) == DCX_CACHE)
@@ -456,7 +458,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
             }
          }
       }
-
+      KeLeaveCriticalRegion();
 
       if (Dce == NULL)
       {
@@ -566,7 +568,7 @@ BOOL FASTCALL
 DCE_Cleanup(PDCE pDce)
 {
    PDCE PrevInList;
-
+   KeEnterCriticalRegion();
    if (pDce == FirstDce)
    {
       FirstDce = pDce->next;
@@ -584,7 +586,7 @@ DCE_Cleanup(PDCE pDce)
       }
       assert(NULL != PrevInList);
    }
-
+   KeLeaveCriticalRegion();
    return NULL != PrevInList;
 }
 
@@ -592,15 +594,16 @@ HWND FASTCALL
 IntWindowFromDC(HDC hDc)
 {
    DCE *Dce;
-
+   KeEnterCriticalRegion();
    for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
    {
       if(Dce->hDC == hDc)
       {
+         KeLeaveCriticalRegion();
          return Dce->hwndCurrent;
       }
    }
-
+   KeLeaveCriticalRegion();
    return 0;
 }
 
@@ -614,12 +617,12 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
    dce = FirstDce;
 
    DPRINT("%p %p\n", Window, hDc);
-
+   KeEnterCriticalRegion();
    while (dce && (dce->hDC != hDc))
    {
       dce = dce->next;
    }
-
+   KeLeaveCriticalRegion();
    if (dce && (dce->DCXFlags & DCX_DCEBUSY))
    {
       nRet = DceReleaseDC(dce, EndPaint);
@@ -654,7 +657,7 @@ PDCE FASTCALL
 DceFreeDCE(PDCE pdce, BOOLEAN Force)
   {
      DCE *ret;
-  
+
    if (NULL == pdce)
      {
         return NULL;
@@ -694,6 +697,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
    DCE *pDCE;
 
    pDCE = FirstDce;
+   KeEnterCriticalRegion();
    while (pDCE)
    {
       if (pDCE->hwndCurrent == Window->hSelf)
@@ -734,15 +738,18 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
       }
       pDCE = pDCE->next;
    }
+   KeLeaveCriticalRegion();
 }
 
 VOID FASTCALL
 DceEmptyCache()
 {
+   KeEnterCriticalRegion();
    while (FirstDce != NULL)
    {
       FirstDce = DceFreeDCE(FirstDce, TRUE);
    }
+   KeLeaveCriticalRegion();
 }
 
 VOID FASTCALL
@@ -758,7 +765,6 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
    {
       return;
    }
-
    pDCE = FirstDce;
    while (pDCE)
    {
@@ -825,10 +831,8 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
 //            UserDerefObject(CurrentWindow);
          }
       }
-
       pDCE = pDCE->next;
    }
-
 }
 
 
