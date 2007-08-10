@@ -366,7 +366,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     }
     else
     {
-        RtlpCreateUnicodeString(&KeyObject->Name, Start, NonPagedPool);
+        RtlCreateUnicodeString(&KeyObject->Name, Start);
     }
 
     KeyObject->KeyCell->Parent = KeyObject->ParentKey->KeyCellOffset;

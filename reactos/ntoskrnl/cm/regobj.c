@@ -331,7 +331,7 @@ Next:
 
     if (current)
     {
-        RtlpCreateUnicodeString (RemainingPath, current, NonPagedPool);
+        RtlCreateUnicodeString(RemainingPath, current);
     }
 
     RtlFreeUnicodeString (&PathString);
