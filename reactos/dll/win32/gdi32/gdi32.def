@@ -89,7 +89,7 @@ CreateRoundRectRgn@24=NtGdiCreateRoundRectRgn@24
 CreateScalableFontResourceA@16
 CreateScalableFontResourceW@16
 CreateSolidBrush@4
-DPtoLP@12=NtGdiDPtoLP@12
+DPtoLP@12
 DeleteColorSpace@4
 DeleteDC@4=NtGdiDeleteObjectApp@4
 DeleteEnhMetaFile@4
@@ -464,7 +464,7 @@ HT_Get8BPPFormatPalette@16
 HT_Get8BPPMaskPalette@24
 IntersectClipRect@20=NtGdiIntersectClipRect@20
 InvertRgn@8=NtGdiInvertRgn@8
-LPtoDP@12=NtGdiLPtoDP@12
+LPtoDP@12
 LineDDA@24
 LineTo@12=NtGdiLineTo@12
 MaskBlt@48

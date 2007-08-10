@@ -157,99 +157,6 @@ IntDPtoLP ( PDC dc, LPPOINT Points, INT Count )
     CoordDPtoLP ( dc, &Points[i] );
 }
 
-/*!
- * Converts points from device coordinates into logical coordinates. Conversion depends on the mapping mode,
- * world transfrom, viewport origin settings for the given device context.
- * \param	hDC		device context.
- * \param	Points	an array of POINT structures (in/out).
- * \param	Count	number of elements in the array of POINT structures.
- * \return  TRUE 	if success.
-*/
-BOOL STDCALL
-NtGdiDPtoLP(HDC  hDC,
-	   LPPOINT  UnsafePoints,
-	   int  Count)
-{
-   PDC dc;
-   NTSTATUS Status = STATUS_SUCCESS;
-   LPPOINT Points;
-   ULONG Size;
-
-   dc = DC_LockDc(hDC);
-   if (!dc)
-   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
-     return FALSE;
-   }
-
-   if (!UnsafePoints || Count <= 0)
-   {
-     DC_UnlockDc(dc);
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-     return FALSE;
-   }
-
-   Size = Count * sizeof(POINT);
-
-   Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
-   if(!Points)
-   {
-     DC_UnlockDc(dc);
-     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-     return FALSE;
-   }
-
-   _SEH_TRY
-   {
-      ProbeForWrite(UnsafePoints,
-                    Size,
-                    1);
-      RtlCopyMemory(Points,
-                    UnsafePoints,
-                    Size);
-   }
-   _SEH_HANDLE
-   {
-      Status = _SEH_GetExceptionCode();
-   }
-   _SEH_END;
-   
-   if(!NT_SUCCESS(Status))
-   {
-     DC_UnlockDc(dc);
-     ExFreePool(Points);
-     SetLastNtError(Status);
-     return FALSE;
-   }
-
-   IntDPtoLP(dc, Points, Count);
-
-   _SEH_TRY
-   {
-      /* pointer was already probed! */
-      RtlCopyMemory(UnsafePoints,
-                    Points,
-                    Size);
-   }
-   _SEH_HANDLE
-   {
-      Status = _SEH_GetExceptionCode();
-   }
-   _SEH_END;
-
-   if(!NT_SUCCESS(Status))
-   {
-     DC_UnlockDc(dc);
-     ExFreePool(Points);
-     SetLastNtError(Status);
-     return FALSE;
-   }
-
-   DC_UnlockDc(dc);
-   ExFreePool(Points);
-   return TRUE;
-}
-
 int
 FASTCALL
 IntGetGraphicsMode ( PDC dc )
@@ -390,8 +297,13 @@ IntLPtoDP ( PDC dc, LPPOINT Points, INT Count )
  * \param	Count	number of elements in the array of POINT structures.
  * \return  TRUE 	if success.
 */
-BOOL STDCALL
-NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
+BOOL
+APIENTRY
+NtGdiTransformPoints( HDC hDC,
+                      PPOINT UnsafePtsIn,
+                      PPOINT UnsafePtOut,
+                      INT Count,
+                      INT iMode )
 {
    PDC dc;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -405,7 +317,7 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
      return FALSE;
    }
 
-   if (!UnsafePoints || Count <= 0)
+   if (!UnsafePtsIn || !UnsafePtOut || Count <= 0)
    {
      DC_UnlockDc(dc);
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -424,11 +336,14 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 
    _SEH_TRY
    {
-      ProbeForWrite(UnsafePoints,
+      ProbeForWrite(UnsafePtOut,
+                    Size,
+                    1);
+      ProbeForRead(UnsafePtsIn,
                     Size,
                     1);
       RtlCopyMemory(Points,
-                    UnsafePoints,
+                    UnsafePtsIn,
                     Size);
    }
    _SEH_HANDLE
@@ -445,12 +360,28 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
      return FALSE;
    }
 
-   IntLPtoDP(dc, Points, Count);
+   switch (iMode)
+   {
+      case GdiDpToLp:
+        IntDPtoLP(dc, Points, Count);
+        break;
+      case GdiLpToDp:
+        IntLPtoDP(dc, Points, Count);
+        break;
+      case 2: // Not supported yet. Need testing.
+      default:
+      {
+        DC_UnlockDc(dc);
+        ExFreePool(Points);
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+      }
+   }
 
    _SEH_TRY
    {
       /* pointer was already probed! */
-      RtlCopyMemory(UnsafePoints,
+      RtlCopyMemory(UnsafePtOut,
                     Points,
                     Size);
    }
@@ -471,19 +402,6 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
    DC_UnlockDc(dc);
    ExFreePool(Points);
    return TRUE;
-}
-
-
-BOOL
-APIENTRY
-NtGdiTransformPoints( HDC hdc,
-                      PPOINT UnsafePtsIn,
-                      PPOINT UnsafePtOut,
-                      INT Count,
-                      INT iMode )
-{
-   UNIMPLEMENTED;
-   return FALSE;
 }
 
 BOOL

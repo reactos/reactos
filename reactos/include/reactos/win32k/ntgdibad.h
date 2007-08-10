@@ -184,15 +184,6 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                                INT  Count,
                                INT  PolyFillMode);
 
-/* Use NtGdiTransformPoints with GdiDpToLp. */
-BOOL
-STDCALL
-NtGdiDPtoLP (
-	HDC	hDC,
-	LPPOINT	Points,
-	int	Count
-	);
-
 /* Meta are user-mode. */
 BOOL
 STDCALL
@@ -493,15 +484,6 @@ STDCALL
 NtGdiGetWorldTransform (
 	HDC	hDC,
 	LPXFORM	Xform
-	);
-
-/* Use NtGdiTransformPoints with GdiDpToLp */
-BOOL
-STDCALL
-NtGdiLPtoDP (
-	HDC	hDC,
-	LPPOINT	Points,
-	int	Count
 	);
 
 /* Needs to be done in user-mode. */

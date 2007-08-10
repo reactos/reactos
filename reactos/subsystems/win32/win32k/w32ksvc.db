@@ -770,7 +770,6 @@ NtGdiCreatePalette                      1
 NtGdiCreatePolygonRgn                   3
 NtGdiCreatePolyPolygonRgn               4
 NtGdiCreateScalableFontResource         4
-NtGdiDPtoLP                             3
 NtGdiDeleteEnhMetaFile                  1
 NtGdiDeleteObject                       1
 NtGdiEnumEnhMetaFile                    5
@@ -816,7 +815,6 @@ NtGdiGetTextAlign                       1
 NtGdiGetTextColor                       1
 NtGdiGetTextExtentPoint32               4
 NtGdiGetWorldTransform                  2
-NtGdiLPtoDP                             3
 NtGdiMoveToEx                           4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4

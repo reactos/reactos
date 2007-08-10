@@ -103,7 +103,7 @@ DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
                            PAGE_EXTENTS_CHANGED    | // do processing in kernel space.
                            WORLD_XFORM_CHANGED )
 #endif
-    return NtGdiTransformPoints( hDC, Points, Points, Count, 0); // Last is 0 or 2
+    return NtGdiTransformPoints( hDC, Points, Points, Count, GdiDpToLp); // DPtoLP mode.
 #if 0
   else
   {
@@ -129,7 +129,7 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
                            PAGE_EXTENTS_CHANGED |
                            WORLD_XFORM_CHANGED )
 #endif
-    return NtGdiTransformPoints( hDC, Points, Points, Count, 0);
+    return NtGdiTransformPoints( hDC, Points, Points, Count, GdiLpToDp); // LPtoDP mode
 #if 0
   else
   {
