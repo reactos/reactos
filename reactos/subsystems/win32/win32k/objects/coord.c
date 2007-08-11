@@ -192,6 +192,11 @@ IntGdiModifyWorldTransform(PDC pDc,
        IntGdiCombineTransform(&pDc->w.xformWorld2Wnd, &pDc->w.xformWorld2Wnd, lpXForm);
        break;
 
+     case MWT_MAX+1: // Must be MWT_SET????
+       pDc->w.xformWorld2Wnd = *lpXForm; // Do it like Wine.
+       DC_UpdateXforms(pDc);             // Good wine port here too.
+       break;
+
      default:
        SetLastWin32Error(ERROR_INVALID_PARAMETER);
        return FALSE;
