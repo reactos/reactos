@@ -18,8 +18,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 ULONG			BytesPerSector;			/* Number of bytes per sector */

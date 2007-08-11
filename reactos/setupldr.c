@@ -19,6 +19,7 @@
  */
 
 #include <freeldr.h>
+#include <debug.h>
 
 ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel

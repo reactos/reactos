@@ -121,7 +121,7 @@ static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNu
 	}
 
 	// If we get here then the read failed
-	DiskError("Disk Read Failed", RegsOut.b.ah);
+	DiskError("Disk Read Failed in LBA mode", RegsOut.b.ah);
 
 	return FALSE;
 }
@@ -244,7 +244,7 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNu
 		// If we retried 3 times then fail
 		if (RetryCount >= 3)
 		{
-			DiskError("Disk Read Failed", RegsOut.b.ah);
+			DiskError("Disk Read Failed in CHS mode, after retrying 3 times", RegsOut.b.ah);
 			return FALSE;
 		}
 

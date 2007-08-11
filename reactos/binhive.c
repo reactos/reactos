@@ -21,8 +21,6 @@
 
 #include <freeldr.h>
 #include <cmlib.h>
-
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

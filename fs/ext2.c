@@ -18,8 +18,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 GEOMETRY			Ext2DiskGeometry;				// Ext2 file system disk geometry

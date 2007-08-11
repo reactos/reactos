@@ -19,8 +19,6 @@
  */
 
 #include <freeldr.h>
-
-#define NDEBUG
 #include <debug.h>
 
 BOOLEAN AcpiPresent = FALSE;
@@ -28,49 +26,49 @@ BOOLEAN AcpiPresent = FALSE;
 static BOOLEAN
 FindAcpiBios(VOID)
 {
-  PUCHAR Ptr;
+    PUCHAR Ptr;
 
-  /* Find the 'Root System Descriptor Table Pointer' */
-  Ptr = (PUCHAR)0xE0000;
-  while ((ULONG)Ptr < 0x100000)
+    /* Find the 'Root System Descriptor Table Pointer' */
+    Ptr = (PUCHAR)0xE0000;
+    while ((ULONG)Ptr < 0x100000)
     {
-      if (!memcmp(Ptr, "RSD PTR ", 8))
-	{
-	  DbgPrint((DPRINT_HWDETECT, "ACPI supported\n"));
+        if (!memcmp(Ptr, "RSD PTR ", 8))
+        {
+            DbgPrint((DPRINT_HWDETECT, "ACPI supported\n"));
 
-	  return TRUE;
-	}
+            return TRUE;
+        }
 
-      Ptr = (PUCHAR)((ULONG)Ptr + 0x10);
+        Ptr = (PUCHAR)((ULONG)Ptr + 0x10);
     }
 
-  DbgPrint((DPRINT_HWDETECT, "ACPI not supported\n"));
+    DbgPrint((DPRINT_HWDETECT, "ACPI not supported\n"));
 
-  return FALSE;
+    return FALSE;
 }
 
 
 VOID
 DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
-  WCHAR Buffer[80];
-  FRLDRHKEY BiosKey;
-  LONG Error;
+    WCHAR Buffer[80];
+    FRLDRHKEY BiosKey;
+    LONG Error;
 
-  if (FindAcpiBios())
+    if (FindAcpiBios())
     {
-      AcpiPresent = TRUE;
-      /* Create new bus key */
-      swprintf(Buffer,
-	      L"MultifunctionAdapter\\%u", *BusNumber);
-      Error = RegCreateKey(SystemKey,
-			   Buffer,
-			   &BiosKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-	  return;
-	}
+        AcpiPresent = TRUE;
+        /* Create new bus key */
+        swprintf(Buffer,
+                 L"MultifunctionAdapter\\%u", *BusNumber);
+        Error = RegCreateKey(SystemKey,
+                             Buffer,
+                             &BiosKey);
+        if (Error != ERROR_SUCCESS)
+        {
+            DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+            return;
+        }
 
 #if 0
       /* Set 'Component Information' */
@@ -80,20 +78,20 @@ DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
                               0xFFFFFFFF);
 #endif
 
-      /* Increment bus number */
-      (*BusNumber)++;
+        /* Increment bus number */
+        (*BusNumber)++;
 
-      /* Set 'Identifier' value */
-      Error = RegSetValue(BiosKey,
-			  L"Identifier",
-			  REG_SZ,
-			  (PCHAR)L"ACPI BIOS",
-			  10 * sizeof(WCHAR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-	  return;
-	}
+        /* Set 'Identifier' value */
+        Error = RegSetValue(BiosKey,
+                            L"Identifier",
+                            REG_SZ,
+                            (PCHAR)L"ACPI BIOS",
+                            10 * sizeof(WCHAR));
+        if (Error != ERROR_SUCCESS)
+        {
+            DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+            return;
+        }
 
     }
 }

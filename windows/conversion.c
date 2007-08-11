@@ -11,8 +11,6 @@
 #include <freeldr.h>
 
 //#include <ndk/ldrtypes.h>
-
-#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS **************************************************************/

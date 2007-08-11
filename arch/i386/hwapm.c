@@ -47,7 +47,7 @@ FindApmBios(VOID)
       return TRUE;
     }
 
-  printf("No APM BIOS found\n");
+  DbgPrint((DPRINT_HWDETECT, "No APM BIOS found\n"));
 
   return FALSE;
 }

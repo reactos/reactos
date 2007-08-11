@@ -11,8 +11,6 @@
 #include <freeldr.h>
 
 #include <ndk/asm.h>
-
-#define NDEBUG
 #include <debug.h>
 
 extern ULONG TotalNLSSize;
