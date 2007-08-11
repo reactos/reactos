@@ -44,6 +44,9 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	VIDEOMEMORY vmList;
 	//DWORD NumFourCC = 0;
 	//DWORD FourCC = 0;
+	DEVMODE devmode;
+	HDC hdc;
+
 
 	/* clear data */
 	memset(&vmList,0,sizeof(VIDEOMEMORY));
@@ -54,7 +57,12 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	memset(&HalInfo,0,sizeof(DD_HALINFO));
 	memset(CallBackFlags,0,sizeof(DWORD)*3);
 
-	HDC hdc = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
+
+
+	/* Get currenet display mode */
+	EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
+
+	hdc = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
 	ASSERT1(hdc != NULL);
 
 	hDirectDraw = (HANDLE) Syscall(L"NtGdiDdCreateDirectDrawObject", 1, &hdc);
@@ -111,6 +119,59 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puNumFourCC == NULL);
 	RTEST(puFourCC == NULL);
 	ASSERT1(pHalInfo != NULL);
+
+	if ((pHalInfo->dwSize != sizeof(DD_HALINFO)) &&
+		(pHalInfo->dwSize != sizeof(DD_HALINFO_V4)))
+	{
+		RTEST(pHalInfo->dwSize != sizeof(DD_HALINFO));
+		ASSERT1(pHalInfo->dwSize != sizeof(DD_HALINFO));
+	}
+
+
+
+	if (pHalInfo->dwSize == sizeof(DD_HALINFO))
+	{
+		/*the offset, in bytes, to primary surface in the display memory  */
+		RTEST(pHalInfo->vmiData.fpPrimary != 0 );
+
+		/* unsuse always 0 */
+		RTEST(pHalInfo->vmiData.dwFlags == 0 );
+
+		/* fixme check the res */
+
+
+		RTEST(pHalInfo->vmiData.dwDisplayWidth == devmode.dmPelsWidth );
+		RTEST(pHalInfo->vmiData.dwDisplayHeight == devmode.dmPelsHeight ); 
+		/* FIXME 
+			RTEST(pHalInfo->vmiData.lDisplayPitch == 0x1700;
+		*/
+		RTEST(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT) ); 
+		ASSERT1(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT));
+
+
+		/* No fourcc are use on primary screen */
+		RTEST(pHalInfo->vmiData.ddpfDisplay.dwFourCC == 0 );
+
+		/* Count RGB Bits 8/16/24/32 */
+		RTEST(pHalInfo->vmiData.ddpfDisplay.dwRGBBitCount == devmode.dmBitsPerPel );
+
+		/* FIXME RGB mask */
+		//RTEST(pHalInfo->vmiData.ddpfDisplay.dwRBitMask  ==  0 );
+		//RTEST(pHalInfo->vmiData.ddpfDisplay.dwGBitMask ==  0 );
+		//RTEST(pHalInfo->vmiData.ddpfDisplay.dwBBitMask == 0 );
+		/* primary never set the alpha blend mask */
+		RTEST(pHalInfo->vmiData.ddpfDisplay.dwRGBAlphaBitMask ==  0 );
+
+		/* FIXME do not known how test follow thing, for it is diffent for each drv */
+		// pHalInfo->vmiData->dwOffscreenAlign               : 0x00000100
+		// pHalInfo->vmiData->dwOverlayAlign                 : 0x00000010
+		// pHalInfo->vmiData->dwTextureAlign                 : 0x00000020
+		// pHalInfo->vmiData->dwZBufferAlign                 : 0x00001000
+		// pHalInfo->vmiData->dwAlphaAlign                   : 0x00000000
+
+		/* the primary display address */
+		RTEST(pHalInfo->vmiData.pvPrimary != 0x00000000 );
+	}
 
 	/* Cleanup ReactX setup */
 	DeleteDC(hdc);
