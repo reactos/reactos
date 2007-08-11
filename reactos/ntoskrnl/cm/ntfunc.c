@@ -138,7 +138,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             OUT PULONG Disposition)
 {
     UNICODE_STRING RemainingPath = {0};
-    BOOLEAN FreeRemainingPath = TRUE;
     ULONG LocalDisposition;
     PKEY_OBJECT KeyObject;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -303,53 +302,27 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     DPRINT("RemainingPath %S  ParentObject 0x%p\n", RemainingPath.Buffer, Object);
 
-    Status = ObCreateObject(PreviousMode,
-                            CmpKeyObjectType,
-                            NULL,
-                            PreviousMode,
-                            NULL,
-                            sizeof(KEY_OBJECT),
-                            0,
-                             0,
-                            (PVOID*)&KeyObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ObCreateObject() failed!\n");
-        PostCreateKeyInfo.Object = NULL;
-        PostCreateKeyInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-
-        goto Cleanup;
-    }
-
-    KeyObject->ParentKey = Object;
-    KeyObject->RegistryHive = KeyObject->ParentKey->RegistryHive;
-    KeyObject->Flags = 0;
-    KeyObject->SubKeyCounts = 0;
-    KeyObject->SizeOfSubKeys = 0;
-    KeyObject->SubKeys = NULL;
-
     /* Acquire hive lock */
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
-    InsertTailList(&CmiKeyObjectListHead, &KeyObject->ListEntry);
-
-  /* add key to subkeys of parent if needed */
-    Status = CmiAddSubKey(KeyObject->RegistryHive,
-                          KeyObject->ParentKey,
-                          KeyObject,
-                          &RemainingPath,
-                          TitleIndex,
-                          &CapturedClass,
-                          CreateOptions);
+    /* Create the key */
+    Status = CmpDoCreate(&((PKEY_OBJECT)Object)->RegistryHive->Hive,
+                         ((PKEY_OBJECT)Object)->KeyCellOffset,
+                         NULL,
+                         &RemainingPath,
+                         KernelMode,
+                         Class,
+                         CreateOptions,
+                         (PKEY_OBJECT)Object,
+                         NULL,
+                         (PVOID*)&KeyObject);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
         /* Release hive lock */
         ExReleaseResourceLite(&CmpRegistryLock);
         KeLeaveCriticalRegion();
-        ObDereferenceObject(KeyObject);
 
         PostCreateKeyInfo.Object = NULL;
         PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
@@ -359,15 +332,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         goto Cleanup;
     }
 
-    if (Start == RemainingPath.Buffer)
-    {
-        KeyObject->Name = RemainingPath;
-        FreeRemainingPath = FALSE;
-    }
-    else
-    {
-        RtlCreateUnicodeString(&KeyObject->Name, Start);
-    }
+    InsertTailList(&CmiKeyObjectListHead, &KeyObject->ListEntry);
+    RtlCreateUnicodeString(&KeyObject->Name, Start);
 
     KeyObject->KeyCell->Parent = KeyObject->ParentKey->KeyCellOffset;
     KeyObject->KeyCell->SecurityKeyOffset = KeyObject->ParentKey->KeyCell->SecurityKeyOffset;
@@ -437,7 +403,7 @@ Cleanup:
                                      PreviousMode);
     }
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-    if (FreeRemainingPath) RtlFreeUnicodeString(&RemainingPath);
+    RtlFreeUnicodeString(&RemainingPath);
     if (Object != NULL) ObDereferenceObject(Object);
 
     return Status;
