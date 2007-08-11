@@ -1272,8 +1272,11 @@ MingwModuleHandler::GenerateWidlCommandsEmbeddedTypeLib (
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string basename = GetBasename ( filename );
-	string EmbeddedTypeLibFilename = basename + ".tlb";
-	
+
+	string EmbeddedTypeLibFilename = PassThruCacheDirectory (
+		basename + ".tlb",
+		backend->intermediateDirectory );
+
 	fprintf ( fMakefile,
 	          "%s: %s $(WIDL_TARGET) | %s\n",
 	          GetTargetMacro ( module ).c_str (),
