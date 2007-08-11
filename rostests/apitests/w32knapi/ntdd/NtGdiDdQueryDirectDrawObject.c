@@ -35,6 +35,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	DWORD *puFourCC = NULL;
 
 	DD_HALINFO HalInfo;
+	DD_HALINFO oldHalInfo;
 	DWORD CallBackFlags[4];
 	D3DNTHAL_CALLBACKS D3dCallbacks;
 	D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
@@ -137,9 +138,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 		/* unsuse always 0 */
 		RTEST(pHalInfo->vmiData.dwFlags == 0 );
 
-		/* fixme check the res */
-
-
+		/* Check the res */
 		RTEST(pHalInfo->vmiData.dwDisplayWidth == devmode.dmPelsWidth );
 		RTEST(pHalInfo->vmiData.dwDisplayHeight == devmode.dmPelsHeight ); 
 		/* FIXME 
@@ -147,6 +146,9 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 		*/
 		RTEST(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT) ); 
 		ASSERT1(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT));
+
+		/* Fail on 8bit screen deep */
+		RTEST(pHalInfo->vmiData.ddpfDisplay.dwFlags  == DDPF_RGB);
 
 
 		/* No fourcc are use on primary screen */
@@ -159,6 +161,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 		//RTEST(pHalInfo->vmiData.ddpfDisplay.dwRBitMask  ==  0 );
 		//RTEST(pHalInfo->vmiData.ddpfDisplay.dwGBitMask ==  0 );
 		//RTEST(pHalInfo->vmiData.ddpfDisplay.dwBBitMask == 0 );
+
 		/* primary never set the alpha blend mask */
 		RTEST(pHalInfo->vmiData.ddpfDisplay.dwRGBAlphaBitMask ==  0 );
 
@@ -170,8 +173,57 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 		// pHalInfo->vmiData->dwAlphaAlign                   : 0x00000000
 
 		/* the primary display address */
-		RTEST(pHalInfo->vmiData.pvPrimary != 0x00000000 );
+		/* test see if it in kmode memory or not */
+		RTEST(pHalInfo->vmiData.pvPrimary != 0 );
+		
+		/* Test see if we got any hardware acclartions for 2d or 3d */
+		//RTEST(pHalInfo->ddCaps.dwSize == sizeof(DDCORECAPS));
+
+		/* Testing see if we got any hw support for 
+		 * This test can fail on video card that does not support 2d/overlay/3d 
+		 */
+		RTEST( pHalInfo->ddCaps.dwCaps != 0);
+		RTEST( pHalInfo->ddCaps.ddsCaps.dwCaps != 0);
+
+		/* if this fail we do not have a dx driver install acodring ms, some version of windows it
+		 * is okay this fail and drv does then only support basic dx 
+		 */
+		RTEST( (pHalInfo->dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0 );
+
+		if (pHalInfo->ddCaps.ddsCaps.dwCaps  & DDSCAPS_3DDEVICE )
+		{
+			RTEST( pHalInfo->lpD3DGlobalDriverData != 0);
+			RTEST( pHalInfo->lpD3DHALCallbacks != 0);
+			RTEST( pHalInfo->lpD3DBufCallbacks != 0);
+		}
 	}
+
+	/* FIXME DD_HALINFO_V4 test */
+
+    RtlCopyMemory(&oldHalInfo, &HalInfo, sizeof(DD_HALINFO));
+
+	pHalInfo = &HalInfo;
+	pCallBackFlags = CallBackFlags;
+	RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
+										pCallBackFlags, puD3dCallbacks, 
+										puD3dDriverData, puD3dBufferCallbacks, 
+										puD3dTextureFormats, puNumHeaps, 
+										puvmList, puNumFourCC,
+										puFourCC)== FALSE);
+	RTEST(pHalInfo != NULL);
+	RTEST(pCallBackFlags != NULL);
+	RTEST(puD3dCallbacks == NULL);
+	RTEST(puD3dDriverData == NULL);
+	RTEST(puD3dBufferCallbacks == NULL);
+	RTEST(puD3dTextureFormats == NULL);
+	RTEST(puNumFourCC == NULL);
+	RTEST(puFourCC == NULL);
+	ASSERT1(pHalInfo != NULL);
+
+	/* We do not retesting DD_HALINFO, instead we compare it */
+	RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
+
 
 	/* Cleanup ReactX setup */
 	DeleteDC(hdc);
