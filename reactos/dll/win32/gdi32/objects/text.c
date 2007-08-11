@@ -436,7 +436,7 @@ SetTextCharacterExtra(
 #if 0
   if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
   {
-    return 0; //call MFDRV META_SETTEXTCHAREXTRA
+    return MFDRV_SetTextCharacterExtra( hDC, CharExtra ); // Wine port.
   }
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return cExtra;
 
