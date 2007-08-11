@@ -270,10 +270,10 @@ NtGdiSelectClipPath                              2
 # NtGdiSelectPen                                   2
 # NtGdiSetBitmapAttributes                         2
 NtGdiSetBitmapBits                               3
-# NtGdiSetBitmapDimension                          4
+NtGdiSetBitmapDimension                          4
 NtGdiSetBoundsRect                               3
 # NtGdiSetBrushAttributes                          2
-# NtGdiSetBrushOrg                                 4
+NtGdiSetBrushOrg                                 4
 NtGdiSetColorAdjustment                          2
 NtGdiSetColorSpace                               2
 NtGdiSetDeviceGammaRamp                          2
@@ -694,10 +694,8 @@ NtUserValidateHandleSecure              1
 #ReactOS specify syscall 
 NtGdiSelectObject                       2
 NtGdiSelectPalette                      3
-NtGdiSetBitmapDimensionEx               4
 NtGdiSetBkColor                         2
 NtGdiSetBkMode                          2
-NtGdiSetBrushOrgEx                      4
 NtGdiSetDIBColorTable                   4
 NtGdiSetDIBits                          7
 NtGdiSetDIBitsToDevice                  12

@@ -532,12 +532,12 @@ SetAbortProc@8
 SetArcDirection@8
 SetBitmapAttributes@8
 SetBitmapBits@12=NtGdiSetBitmapBits@12
-SetBitmapDimensionEx@16=NtGdiSetBitmapDimensionEx@16
+SetBitmapDimensionEx@16=NtGdiSetBitmapDimension@16
 SetBkColor@8=NtGdiSetBkColor@8
 SetBkMode@8=NtGdiSetBkMode@8
 SetBoundsRect@12
 SetBrushAttributes@8
-SetBrushOrgEx@16=NtGdiSetBrushOrgEx@16
+SetBrushOrgEx@16=NtGdiSetBrushOrg@16
 SetColorAdjustment@8
 SetColorSpace@8
 SetDCBrushColor@8

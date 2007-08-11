@@ -694,9 +694,9 @@ NtGdiCreateSolidBrush(COLORREF Color,
 }
 
 /*
- * NtGdiSetBrushOrgEx
+ * NtGdiSetBrushOrg
  *
- * The NtGdiSetBrushOrgEx function sets the brush origin that GDI assigns to
+ * The NtGdiSetBrushOrg function sets the brush origin that GDI assigns to
  * the next brush an application selects into the specified device context.
  *
  * Status
@@ -704,7 +704,7 @@ NtGdiCreateSolidBrush(COLORREF Color,
  */
 
 BOOL STDCALL
-NtGdiSetBrushOrgEx(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
+NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 {
    PDC dc = DC_LockDc(hDC);
    if (dc == NULL)

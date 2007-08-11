@@ -1075,7 +1075,7 @@ NtGdiSetBitmapBits(
 }
 
 BOOL STDCALL
-NtGdiSetBitmapDimensionEx(
+NtGdiSetBitmapDimension(
 	HBITMAP  hBitmap,
 	INT  Width,
 	INT  Height,

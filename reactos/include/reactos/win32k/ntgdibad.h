@@ -621,29 +621,11 @@ NtGdiSelectPalette (
 	BOOL		ForceBackground
 	);
 
-/* Use NtGdiSetBitmapDimension. */
-BOOL
-STDCALL
-NtGdiSetBitmapDimensionEx (
-	HBITMAP	hBitmap,
-	INT	Width,
-	INT	Height,
-	LPSIZE	Size
-	);
-
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 COLORREF STDCALL NtGdiSetBkColor (HDC hDC, COLORREF Color);
 
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 INT STDCALL  NtGdiSetBkMode(HDC  hDC, INT  backgroundMode);
-
-/* Use NtGdiSetBrushOrg. */
-BOOL STDCALL
-NtGdiSetBrushOrgEx(
-   HDC hDC,
-   INT XOrg,
-   INT YOrg,
-   LPPOINT Point);
 
 /* Use NtGdiDoPalette with GdiPalSetColorTable, TRUE. */
 UINT
