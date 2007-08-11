@@ -116,7 +116,7 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		return TRUE;
 
 	/* Loop through all entries */
-	for (;(ImportTable->Name != 0) && (ImportTable->FirstThunk != NULL);ImportTable++)
+	for (;(ImportTable->Name != 0) && (ImportTable->FirstThunk != 0);ImportTable++)
 	{
 		/* Get pointer to the name */
 		ImportName = (PCH)VaToPa(RVA(ScanDTE->DllBase, ImportTable->Name));
@@ -520,7 +520,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			/* AddressOfData in thunk entry will become a virtual address (from relative) */
 			//DbgPrint((DPRINT_WINDOWS, "WinLdrpBindImportName(): ThunkData->u1.AOD was %p\n", ThunkData->u1.AddressOfData));
 			ThunkData->u1.AddressOfData =
-				(PIMAGE_IMPORT_BY_NAME)RVA(ImageBase, ThunkData->u1.AddressOfData);
+				(ULONG)RVA(ImageBase, ThunkData->u1.AddressOfData);
 			//DbgPrint((DPRINT_WINDOWS, "WinLdrpBindImportName(): ThunkData->u1.AOD became %p\n", ThunkData->u1.AddressOfData));
 		}
 
@@ -532,7 +532,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		//	NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals));
 
 		/* Get the hint, convert it to a physical pointer */
-		Hint = ((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Hint;
+		Hint = ((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Hint;
 		//DbgPrint((DPRINT_WINDOWS, "HintIndex %d\n", Hint));
 
 		/* If Hint is less than total number of entries in the export directory,
@@ -540,7 +540,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		if (
 			(Hint < ExportDirectory->NumberOfNames) &&
 			(
-			strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),
+			strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]),
 			       (PCHAR)VaToPa( RVA(DllBase, NameTable[Hint])) ) == 0
 			)
 			)
@@ -566,7 +566,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 				Middle = (Low + High) >> 1;
 
 				/* Compare the names */
-				Result = strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),
+				Result = strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]),
 					(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
 
 				/*DbgPrint((DPRINT_WINDOWS, "Binary search: comparing Import '__', Export '%s'\n",*/
@@ -622,11 +622,11 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	FunctionTable = (PULONG)VaToPa(RVA(DllBase, ExportDirectory->AddressOfFunctions));
 
 	/* Save a pointer to the function */
-	ThunkData->u1.Function = (PULONG)RVA(DllBase, FunctionTable[Ordinal]);
+	ThunkData->u1.Function = (ULONG)RVA(DllBase, FunctionTable[Ordinal]);
 
 	/* Is it a forwarder? (function pointer isn't within the export directory) */
-	if (((ULONG)VaToPa(ThunkData->u1.Function) > (ULONG)ExportDirectory) &&
-		((ULONG)VaToPa(ThunkData->u1.Function) < ((ULONG)ExportDirectory + ExportSize)))
+	if (((ULONG)VaToPa((PVOID)ThunkData->u1.Function) > (ULONG)ExportDirectory) &&
+		((ULONG)VaToPa((PVOID)ThunkData->u1.Function) < ((ULONG)ExportDirectory + ExportSize)))
 	{
 		PLDR_DATA_TABLE_ENTRY DataTableEntry;
 		CHAR ForwardDllName[255];
@@ -634,7 +634,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		ULONG RefExportSize;
 
 		/* Save the name of the forward dll */
-		RtlCopyMemory(ForwardDllName, (PCHAR)VaToPa(ThunkData->u1.Function), sizeof(ForwardDllName));
+		RtlCopyMemory(ForwardDllName, (PCHAR)VaToPa((PVOID)ThunkData->u1.Function), sizeof(ForwardDllName));
 
 		/* Strip out its extension */
 		*strchr(ForwardDllName,'.') = '\0';
@@ -665,7 +665,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			BOOLEAN Status;
 
 			/* Get pointer to the import name */
-			ImportName = strchr((PCHAR)VaToPa(ThunkData->u1.Function), '.') + 1;
+			ImportName = strchr((PCHAR)VaToPa((PVOID)ThunkData->u1.Function), '.') + 1;
 
 			/* Create a IMAGE_IMPORT_BY_NAME structure, pointing to the local Buffer */
 			ImportByName = (PIMAGE_IMPORT_BY_NAME)Buffer;
@@ -677,7 +677,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			ImportByName->Hint = 0;
 
 			/* And finally point ThunkData's AddressOfData to that structure */
-			RefThunkData.u1.AddressOfData = ImportByName;
+			RefThunkData.u1.AddressOfData = (ULONG)ImportByName;
 
 			/* And recursively call ourselves */
 			Status = WinLdrpBindImportName(
@@ -797,7 +797,7 @@ WinLdrpScanImportAddressTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		return FALSE;
 
 	/* Go through each entry in the thunk table and bind it */
-	while (((PIMAGE_THUNK_DATA)VaToPa(ThunkData))->u1.AddressOfData != NULL)
+	while (((PIMAGE_THUNK_DATA)VaToPa(ThunkData))->u1.AddressOfData != 0)
 	{
 		/* Bind it */
 		Status = WinLdrpBindImportName(

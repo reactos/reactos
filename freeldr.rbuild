@@ -6,7 +6,7 @@
 	<library>freeldr_arch</library>
 	<library>freeldr_main</library>
 	<library>rossym</library>
-	<library>string</library>
+	<library>libcntpr</library>
 	<library>cmlib</library>
 	<library>rtl</library>
 </module>
