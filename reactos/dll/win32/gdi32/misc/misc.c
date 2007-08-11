@@ -121,6 +121,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
       return TRUE;
     }
   }
+  SetLastError(ERROR_INVALID_PARAMETER);
   return FALSE;
 }
 

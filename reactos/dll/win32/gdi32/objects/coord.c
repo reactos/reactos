@@ -140,3 +140,53 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 #endif
 }
 
+
+BOOL
+STDCALL
+SetWorldTransform( HDC hDC, CONST XFORM *Xform )
+{
+      return ModifyWorldTransform( hDC, Xform, MWT_MAX+1); // MWT_SETXFORM?
+}
+
+
+BOOL
+STDCALL
+ModifyWorldTransform(
+                  HDC hDC,
+                CONST XFORM *Xform,
+                DWORD iMode
+                    )
+{
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return FALSE;
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hDC);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if (iMode ==  MWT_MAX+1) 
+          if (!EMFDRV_SetWorldTransform( hDC, Xform) ) return FALSE;
+        return EMFDRV_ModifyWorldTransform( hDC, Xform, iMode); // Ported from wine.
+      }
+      return FALSE;
+    }
+  }
+  PDC_ATTR Dc_Attr;
+ 
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
+
+  /* Check that graphics mode is GM_ADVANCED */
+  if ( Dc_Attr->iGraphicsMode != GM_ADVANCED ) return FALSE;  
+#endif
+  return NtGdiModifyWorldTransform(hDC, (CONST LPXFORM) Xform, iMode);
+}
+
