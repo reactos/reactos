@@ -9,8 +9,8 @@
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>
 	<library>user32</library>
+	<library>advapi32</library>
 	<library>comctl32</library>
-	<library>msvcrt</library>
 	<file>access.c</file>
 	<file>display.c</file>
 	<file>general.c</file>
