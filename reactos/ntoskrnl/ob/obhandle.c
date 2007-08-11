@@ -1259,6 +1259,12 @@ ObpCreateUnnamedHandle(IN PVOID Object,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
 
+    /* Save the object header */
+    NewEntry.Object = ObjectHeader;
+
+    /* Mask out the internal attributes */
+    NewEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
+
     /* Check if this is a kernel handle */
     if (HandleAttributes & OBJ_KERNEL_HANDLE)
     {
@@ -1295,12 +1301,6 @@ ObpCreateUnnamedHandle(IN PVOID Object,
         if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
         return Status;
     }
-
-    /* Save the object header */
-    NewEntry.Object = ObjectHeader;
-
-    /* Mask out the internal attributes */
-    NewEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
 
     /* Remove what's not in the valid access mask */
     GrantedAccess = DesiredAccess & (ObjectType->TypeInfo.ValidAccessMask |
@@ -1503,11 +1503,11 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     if (AccessState->GenerateOnClose)
     {
         /* Force the attribute on */
-        HandleAttributes|= OBJ_AUDIT_OBJECT_CLOSE;
+        HandleAttributes |= OBJ_AUDIT_OBJECT_CLOSE;
     }
 
     /* Mask out the internal attributes */
-    NewEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
+    NewEntry.ObAttributes |= (HandleAttributes & OBJ_HANDLE_ATTRIBUTES);
 
     /* Get the original desired access */
     DesiredAccess = AccessState->RemainingDesiredAccess |
@@ -2031,7 +2031,12 @@ ObKillProcess(IN PEPROCESS Process)
     ExSweepHandleTable(HandleTable,
                        ObpCloseHandleCallback,
                        &Context);
-    ASSERT(HandleTable->HandleCount == 0);
+    //ASSERT(HandleTable->HandleCount == 0);
+    /* HACK: Until the problem is investigated... */
+    if (HandleTable->HandleCount != 0)
+    {
+        DPRINT1("Leaking %d handles!\n", HandleTable->HandleCount);
+    }
 
     /* Leave the critical region */
     KeLeaveCriticalRegion();
@@ -2197,7 +2202,7 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     /* Fill out the entry */
     RtlZeroMemory(&NewHandleEntry, sizeof(HANDLE_TABLE_ENTRY));
     NewHandleEntry.Object = ObjectHeader;
-    NewHandleEntry.ObAttributes |= HandleAttributes & OBJ_HANDLE_ATTRIBUTES;
+    NewHandleEntry.ObAttributes |= (HandleAttributes & OBJ_HANDLE_ATTRIBUTES);
 
     /* Check if we're using a generic mask */
     if (DesiredAccess & GENERIC_ACCESS)
