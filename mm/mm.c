@@ -23,7 +23,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifdef DEBUG
+#ifdef DBG
 ULONG			AllocationCount = 0;
 
 VOID		VerifyHeap(VOID);
@@ -31,7 +31,7 @@ VOID		DumpMemoryAllocMap(VOID);
 VOID		IncrementAllocationCount(VOID);
 VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
-#endif // DEBUG
+#endif // DBG
 
 /*
  * Hack alert
@@ -115,12 +115,12 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	}
 		
 
-#ifdef DEBUG
+#ifdef DBG
 	IncrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d. AllocCount: %d\n", MemorySize, PagesNeeded, FirstFreePageFromEnd, AllocationCount));
 	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
 	//VerifyHeap();
-#endif // DEBUG
+#endif // DBG
 
 	// Now return the pointer
 	return MemPointer;
@@ -181,12 +181,12 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)(StartPageNumber * MM_PAGE_SIZE);
 
-#ifdef DEBUG
+#ifdef DBG
 	IncrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d. AllocCount: %d\n", MemorySize, PagesNeeded, StartPageNumber, AllocationCount));
 	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
 	//VerifyHeap();
-#endif // DEBUG
+#endif // DBG
 
 	// Now return the pointer
 	return MemPointer;
@@ -236,12 +236,12 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)(FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-#ifdef DEBUG
+#ifdef DBG
 	IncrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d. AllocCount: %d\n", MemorySize, PagesNeeded, FirstFreePageFromEnd, AllocationCount));
 	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
 	//VerifyHeap();
-#endif // DEBUG
+#endif // DBG
 
 	// Now return the pointer
 	return MemPointer;
@@ -254,21 +254,21 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 	ULONG							Idx;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
-#ifdef DEBUG
+#ifdef DBG
 
 	// Make sure we didn't get a bogus pointer
 	if (MemoryPointer >= (PVOID)(TotalPagesInLookupTable * MM_PAGE_SIZE))
 	{
 		BugCheck((DPRINT_MEMORY, "Bogus memory pointer (0x%x) passed to MmFreeMemory()\n", MemoryPointer));
 	}
-#endif // DEBUG
+#endif // DBG
 
 	// Find out the page number of the first
 	// page of memory they allocated
 	PageNumber = MmGetPageNumberFromAddress(MemoryPointer);
 	PageCount = RealPageLookupTable[PageNumber].PageAllocationLength;
 
-#ifdef DEBUG
+#ifdef DBG
 	// Make sure we didn't get a bogus pointer
 	if ((PageCount < 1) || (PageCount > (TotalPagesInLookupTable - PageNumber)))
 	{
@@ -305,14 +305,14 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 
 	FreePagesInLookupTable += PageCount;
 
-#ifdef DEBUG
+#ifdef DBG
 	DecrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Freed %d pages of memory starting at page %d. AllocationCount: %d\n", PageCount, PageNumber, AllocationCount));
 	//VerifyHeap();
-#endif // DEBUG
+#endif // DBG
 }
 
-#ifdef DEBUG
+#ifdef DBG
 VOID VerifyHeap(VOID)
 {
 	ULONG							Idx;
@@ -488,7 +488,7 @@ VOID MemAllocTest(VOID)
 	printf("MemPtr5: 0x%x\n", (int)MemPtr5);
 	MachConsGetCh();
 }
-#endif // DEBUG
+#endif // DBG
 
 ULONG GetSystemMemorySize(VOID)
 {

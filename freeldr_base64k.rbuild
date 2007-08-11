@@ -2,9 +2,6 @@
 	<include base="freeldr_base64k">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />
-<!--	
-	<define name="DEBUG" />
--->
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
 	<compilerflag>-ffreestanding</compilerflag>

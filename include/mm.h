@@ -37,7 +37,7 @@ typedef struct
 	ULONG		Reserved;
 } PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
-#if  defined(__i386__) || defined(_PPC_)
+#if  defined(__i386__) || defined(_PPC_) || defined(_MIPS_)
 
 #define MM_PAGE_SIZE	4096
 #define MM_PAGE_MASK	0xFFF
@@ -46,12 +46,11 @@ typedef struct
 #define MM_SIZE_TO_PAGES(a)  \
 	( ((a) >> MM_PAGE_SHIFT) + ((a) & MM_PAGE_MASK ? 1 : 0) )
 
+#endif // defined __i386__ or _PPC_ or _MIPS_
 //
 // This is the zone which is used by the OS loader
 //
 #define LOADER_HIGH_ZONE ((16*1024*1024) >> MM_PAGE_SHIFT) //16Mb page
-
-#endif // defined __i386__ or _PPC_
 
 typedef struct
 {
@@ -73,7 +72,7 @@ extern	ULONG		TotalPagesInLookupTable;
 extern	ULONG		FreePagesInLookupTable;
 extern	ULONG		LastFreePageHint;
 
-#ifdef DEBUG
+#ifdef DBG
 PUCHAR	MmGetSystemMemoryMapTypeString(ULONG Type);
 #endif
 

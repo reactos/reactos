@@ -21,7 +21,7 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
-#ifdef DEBUG
+#ifdef DBG
 
 	#define DPRINT_NONE		0x00000000  // No debug print
 	#define DPRINT_WARNING		0x00000001  // OR this with DebugPrintMask to enable debugger messages and other misc stuff
@@ -72,7 +72,7 @@ void	INSTRUCTION_BREAKPOINT4(unsigned long addr);
 void	MEMORY_READWRITE_BREAKPOINT4(unsigned long addr);
 void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
-#endif
+#endif // defined __i386__
 
 #else
 
@@ -82,7 +82,7 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 
-#endif // defined DEBUG
+#endif // defined DBG
 
 #define UNIMPLEMENTED()   BugCheck((DPRINT_WARNING, "This function is unimplemented!\n"))
 

@@ -2,9 +2,6 @@
 	<include base="freeldr_startup">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />
-<!--	
-	<define name="DEBUG" />
--->	
 	<compilerflag>-ffreestanding</compilerflag>
 	<compilerflag>-fno-builtin</compilerflag>
 	<compilerflag>-fno-inline</compilerflag>

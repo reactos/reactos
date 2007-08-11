@@ -21,7 +21,7 @@
 
 #include <debug.h>
 
-#ifdef DEBUG
+#ifdef DBG
 
 //#define DEBUG_ALL
 //#define DEBUG_INIFILE
@@ -356,4 +356,4 @@ VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 	}
 }
 
-#endif // defined DEBUG
+#endif // defined DBG

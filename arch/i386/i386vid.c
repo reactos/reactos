@@ -162,10 +162,8 @@ USHORT BiosIsVesaSupported(VOID)
 {
 	REGS			Regs;
 	PVESA_SVGA_INFO	SvgaInfo = (PVESA_SVGA_INFO)BIOSCALLBUFFER;
-#ifdef DEBUG
 	//USHORT*			VideoModes;
 	//USHORT			Index;
-#endif // defined DEBUG
 
 	DbgPrint((DPRINT_UI, "BiosIsVesaSupported()\n"));
 
@@ -210,7 +208,6 @@ USHORT BiosIsVesaSupported(VOID)
 		return 0x0000;
 	}
 
-#ifdef DEBUG
 	DbgPrint((DPRINT_UI, "Supported.\n"));
 	DbgPrint((DPRINT_UI, "SvgaInfo->Signature[4] = %c%c%c%c\n", SvgaInfo->Signature[0], SvgaInfo->Signature[1], SvgaInfo->Signature[2], SvgaInfo->Signature[3]));
 	DbgPrint((DPRINT_UI, "SvgaInfo->VesaVersion = v%d.%d\n", ((SvgaInfo->VesaVersion >> 8) & 0xFF), (SvgaInfo->VesaVersion & 0xFF)));
@@ -242,8 +239,6 @@ USHORT BiosIsVesaSupported(VOID)
 	//}
 
 	DbgPrint((DPRINT_UI, "\n"));
-	//getch();
-#endif // defined DEBUG
 
 	return SvgaInfo->VesaVersion;
 }

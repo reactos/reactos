@@ -165,37 +165,35 @@ BOOLEAN DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT B
 
 	memcpy(Buffer, Ptr, BufferSize);
 
-#ifdef DEBUG
-        DbgPrint((DPRINT_DISK, "size of buffer:                          %x\n", Ptr[0]));
-        DbgPrint((DPRINT_DISK, "information flags:                       %x\n", Ptr[1]));
-        DbgPrint((DPRINT_DISK, "number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]));
-        DbgPrint((DPRINT_DISK, "number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]));
-        DbgPrint((DPRINT_DISK, "number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]));
-        DbgPrint((DPRINT_DISK, "total number of sectors on drive:        %I64u\n", *(unsigned long long*)&Ptr[8]));
-        DbgPrint((DPRINT_DISK, "bytes per sector:                        %u\n", Ptr[12]));
-        if (Ptr[0] >= 0x1e)
+    DbgPrint((DPRINT_DISK, "size of buffer:                          %x\n", Ptr[0]));
+    DbgPrint((DPRINT_DISK, "information flags:                       %x\n", Ptr[1]));
+    DbgPrint((DPRINT_DISK, "number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]));
+    DbgPrint((DPRINT_DISK, "number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]));
+    DbgPrint((DPRINT_DISK, "number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]));
+    DbgPrint((DPRINT_DISK, "total number of sectors on drive:        %I64u\n", *(unsigned long long*)&Ptr[8]));
+    DbgPrint((DPRINT_DISK, "bytes per sector:                        %u\n", Ptr[12]));
+    if (Ptr[0] >= 0x1e)
+    {
+        DbgPrint((DPRINT_DISK, "EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]));
+        if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
         {
-            DbgPrint((DPRINT_DISK, "EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]));
-            if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
-            {
-               PUCHAR SpecPtr = (PUCHAR)((Ptr[13] << 4) + Ptr[14]);
-               DbgPrint((DPRINT_DISK, "SpecPtr:                                 %x\n", SpecPtr));
-               DbgPrint((DPRINT_DISK, "physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]));
-               DbgPrint((DPRINT_DISK, "disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]));
-               DbgPrint((DPRINT_DISK, "drive flags:                             %x\n", SpecPtr[4]));
-               DbgPrint((DPRINT_DISK, "proprietary information:                 %x\n", SpecPtr[5]));
-               DbgPrint((DPRINT_DISK, "IRQ for drive:                           %u\n", SpecPtr[6]));
-               DbgPrint((DPRINT_DISK, "sector count for multi-sector transfers: %u\n", SpecPtr[7]));
-               DbgPrint((DPRINT_DISK, "DMA control:                             %x\n", SpecPtr[8]));
-               DbgPrint((DPRINT_DISK, "programmed I/O control:                  %x\n", SpecPtr[9]));
-               DbgPrint((DPRINT_DISK, "drive options:                           %x\n", *(PUSHORT)&SpecPtr[10]));
-            }
+           PUCHAR SpecPtr = (PUCHAR)((Ptr[13] << 4) + Ptr[14]);
+           DbgPrint((DPRINT_DISK, "SpecPtr:                                 %x\n", SpecPtr));
+           DbgPrint((DPRINT_DISK, "physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]));
+           DbgPrint((DPRINT_DISK, "disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]));
+           DbgPrint((DPRINT_DISK, "drive flags:                             %x\n", SpecPtr[4]));
+           DbgPrint((DPRINT_DISK, "proprietary information:                 %x\n", SpecPtr[5]));
+           DbgPrint((DPRINT_DISK, "IRQ for drive:                           %u\n", SpecPtr[6]));
+           DbgPrint((DPRINT_DISK, "sector count for multi-sector transfers: %u\n", SpecPtr[7]));
+           DbgPrint((DPRINT_DISK, "DMA control:                             %x\n", SpecPtr[8]));
+           DbgPrint((DPRINT_DISK, "programmed I/O control:                  %x\n", SpecPtr[9]));
+           DbgPrint((DPRINT_DISK, "drive options:                           %x\n", *(PUSHORT)&SpecPtr[10]));
         }
-        if (Ptr[0] >= 0x42)
-        {
-            DbgPrint((DPRINT_DISK, "signature:                             %x\n", Ptr[15]));
-        }
-#endif
+    }
+    if (Ptr[0] >= 0x42)
+    {
+        DbgPrint((DPRINT_DISK, "signature:                             %x\n", Ptr[15]));
+    }
 
 	return TRUE;
 }
