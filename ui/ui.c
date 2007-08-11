@@ -269,6 +269,7 @@ BOOLEAN SetupUiInitialize(VOID)
 			0,
 			ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
+    UiDrawTime = FALSE;
     UiStatusBarBgColor = 7;
 	UserInterfaceUp = TRUE;
     

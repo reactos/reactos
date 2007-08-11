@@ -50,6 +50,7 @@ extern BOOLEAN UiCenterMenu;
 extern BOOLEAN UiMenuBox;
 extern BOOLEAN UiMinimal;
 extern CHAR UiTimeText[];
+extern BOOLEAN UiDrawTime;
 
 extern	const CHAR	UiMonthNames[12][15];
 
