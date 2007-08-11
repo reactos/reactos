@@ -991,8 +991,8 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
   PartialDescriptor->Type = CmResourceTypeInterrupt;
   PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
   PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-  PartialDescriptor->u.Interrupt.Level = 0;
-  PartialDescriptor->u.Interrupt.Vector = 6;
+  PartialDescriptor->u.Interrupt.Level = 6;
+  PartialDescriptor->u.Interrupt.Vector = 0;
   PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
   /* Set DMA channel */
