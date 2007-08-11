@@ -607,6 +607,43 @@ PolyPolyline(HDC hDC, const POINT* Point, const DWORD* Counts, DWORD Polys)
 }
 #endif
 
+
+BOOL
+STDCALL
+ExtFloodFill(
+       HDC hDC,
+       int nXStart, 
+       int nYStart,
+       COLORREF crFill,
+       UINT fuFillType
+             )
+{
+#if 0
+// Handle something other than a normal dc object.
+ if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+ {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_ExtFloodFill( hDC, nXStart, nYStart, crFill, fuFillType );
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hDC);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_ExtFloodFill( hDC, nXStart, nYStart, crFill, fuFillType );
+      }
+      return FALSE;
+    }
+ }
+#endif
+    return NtGdiExtFloodFill(hDC, nXStart, nYStart, crFill, fuFillType);
+}
+
+
 BOOL
 WINAPI
 FloodFill(
@@ -615,7 +652,7 @@ FloodFill(
     int nYStart,
     COLORREF crFill)
 {
-    return NtGdiExtFloodFill(hDC, nXStart, nYStart, crFill, FLOODFILLBORDER);
+    return ExtFloodFill(hDC, nXStart, nYStart, crFill, FLOODFILLBORDER);
 }
 
 BOOL WINAPI
