@@ -20,8 +20,9 @@ TESTENTRY TestList[] =
 {
 	/* DirectDraw */
 	{ L"NtGdiDdCreateDirectDrawObject", Test_NtGdiDdCreateDirectDrawObject },
-	{ L"NtGdiDdDeleteDirectDrawObject", Test_NtGdiDdDeleteDirectDrawObject },
 	{ L"NtGdiDdQueryDirectDrawObject", Test_NtGdiDdQueryDirectDrawObject },
+	{ L"NtGdiDdDeleteDirectDrawObject", Test_NtGdiDdDeleteDirectDrawObject },
+
 
 	/* ntgdi */
 	{ L"NtGdiArcInternal", Test_NtGdiArcInternal },

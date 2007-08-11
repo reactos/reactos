@@ -153,7 +153,7 @@ WinMain(HINSTANCE hInstance,
 	printf("Win32k native API test\n");
 
 	/* Convert to gui thread */
-	IsGUIThread(TRUE);
+	// IsGUIThread(TRUE); <- does not exists on win2k
 
 	if (!InitOsVersion())
 	{
