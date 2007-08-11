@@ -328,6 +328,15 @@ void wpp_add_include_path(const char *path)
 	char *tok;
 	char *cpy = pp_xstrdup(path);
 
+	/* check for absolute windows paths */
+	if (strchr(cpy, ':') != NULL)
+	{
+		nincludepath++;
+		includepath = pp_xrealloc(includepath, nincludepath * sizeof(*includepath));
+		includepath[nincludepath-1] = cpy;
+		return;
+	}
+
 	tok = strtok(cpy, INCLUDESEPARATOR);
 	while(tok)
 	{
