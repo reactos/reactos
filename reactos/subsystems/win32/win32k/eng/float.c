@@ -198,6 +198,43 @@ FLOATOBJ_AddFloat(
 #endif
 }
 
+VOID FASTCALL
+XForm2MatrixS( MATRIX_S * Matrix, PXFORM XForm)
+{
+gxf_long f;
+  f.f = XForm->eM11;
+  FtoEF( &Matrix->efM11, f.l);
+  f.f = XForm->eM12;
+  FtoEF( &Matrix->efM12, f.l);
+  f.f = XForm->eM21;
+  FtoEF( &Matrix->efM21, f.l);
+  f.f = XForm->eM22;
+  FtoEF( &Matrix->efM22, f.l);
+  f.f = XForm->eDx;
+  FtoEF( &Matrix->efDx, f.l);
+  f.f = XForm->eDy;
+  FtoEF( &Matrix->efDy, f.l);
+}
+
+VOID FASTCALL
+MatrixS2XForm( PXFORM XForm, MATRIX_S * Matrix)
+{
+gxf_long f;
+  f.l =  EFtoF(&Matrix->efM11);
+  XForm->eM11 = f.f;
+  f.l =  EFtoF(&Matrix->efM12);
+  XForm->eM12 = f.f;
+  f.l =  EFtoF(&Matrix->efM21);
+  XForm->eM21 = f.f;
+  f.l =  EFtoF(&Matrix->efM22);
+  XForm->eM22 = f.f;
+  f.l =  EFtoF(&Matrix->efDx);
+  XForm->eDx = f.f;
+  f.l =  EFtoF(&Matrix->efDy);
+  XForm->eDy = f.f;
+}
+
+
 VOID
 STDCALL
 FLOATOBJ_AddLong(

@@ -101,3 +101,7 @@ static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
     MulDiv((ty), (dc)->Dc_Attr.szlViewportExt.cy, (dc)->Dc_Attr.szlWindowExt.cy)
 
 #endif
+
+VOID FASTCALL XForm2MatrixS( MATRIX_S *, PXFORM);
+VOID FASTCALL MatrixS2XForm( PXFORM, MATRIX_S *);
+

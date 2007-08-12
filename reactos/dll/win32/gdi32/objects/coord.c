@@ -70,18 +70,20 @@ VOID FASTCALL
 CoordCnvP(MATRIX_S * mx, LPPOINT Point)
 {
   FLOAT x, y;
-  gxf_long a, b;
+  gxf_long a, b, c;
   
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
 
   a.l = EFtoF( &mx->efM11 );
   b.l = EFtoF( &mx->efM21 );
-  x = x * a.f + y * b.f + mx->fxDx;
+  c.l = EFtoF( &mx->efDx  );
+  x = x * a.f + y * b.f + c.f;
 
   a.l = EFtoF( &mx->efM12 );
   b.l = EFtoF( &mx->efM22 );
-  y = x * a.f + y * b.f + mx->fxDy;
+  c.l = EFtoF( &mx->efDy  );
+  y = x * a.f + y * b.f + c.f;
 
   FLOAT_TO_INT(x, Point->x );
   FLOAT_TO_INT(y, Point->y );
