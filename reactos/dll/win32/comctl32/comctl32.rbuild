@@ -9,6 +9,12 @@
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
+
+	<metadata
+		description = "Common controls used by ReactOS"
+		version = "Autosync"
+		owner = "Wine" />
+
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>

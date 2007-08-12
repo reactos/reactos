@@ -101,7 +101,7 @@ class FileLocation;
 class AutoRegister;
 
 class SourceFileTest;
-
+class Metadata;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -298,6 +298,7 @@ public:
 	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;
+	Metadata* metadata;
 	bool mangledSymbols;
 	bool underscoreSymbols;
 	bool isUnicode;
@@ -502,6 +503,24 @@ public:
 	void ProcessXML();
 };
 
+class Metadata
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	std::string name;
+	std::string description;
+	std::string version;
+	std::string copyright;
+	std::string url;
+	std::string date;
+	std::string owner;
+
+	Metadata ( const XMLElement& _node,
+	          const Module& _module );
+
+	void ProcessXML();
+};
 
 class ImportLibrary
 {

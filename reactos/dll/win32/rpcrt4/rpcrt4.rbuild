@@ -19,6 +19,12 @@
 	<library>advapi32</library>
 	<library>iphlpapi</library>
 	<library>pseh</library>
+
+	<metadata
+		description = "Support for the RPC layer of RPC over HTTP"
+		version = "Wine-0_9_10"
+		owner = "Wine" />
+
 	<file>cproxy.c</file>
 	<file>cpsf.c</file>
 	<file>cstub.c</file>

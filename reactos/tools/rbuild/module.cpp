@@ -250,6 +250,7 @@ Module::Module ( const Project& project,
 	: project (project),
 	  node (moduleNode),
 	  importLibrary (NULL),
+	  metadata (NULL),
 	  bootstrap (NULL),
 	  autoRegister(NULL),
 	  linkerScript (NULL),
@@ -657,6 +658,17 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		else
 			non_if_data.defines.push_back ( pDefine );
 		subs_invalid = true;
+	}
+	else if ( e.name == "metadata" )
+	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<metadata> is not a valid sub-element of <if>" );
+		}
+		metadata = new Metadata ( e, *this );
+		subs_invalid = false;
 	}
 	else if ( e.name == "invoke" )
 	{
@@ -1466,6 +1478,61 @@ Dependency::ProcessXML()
 			module.name.c_str(),
 			node.value.c_str() );
 	}
+}
+
+
+Metadata::Metadata ( const XMLElement& _node,
+                     const Module& _module )
+	: node (_node),
+	  module (_module)
+{
+	/* The module name */
+	const XMLAttribute* att = _node.GetAttribute ( "name", false );
+	if (att != NULL)
+		name = att->value;
+	else
+		name = module.name;
+
+	/* The module description */
+	att = _node.GetAttribute ( "description", false );
+	if (att != NULL)
+		description = att->value;
+	else
+		description = "";
+
+	/* The module version */
+	att = _node.GetAttribute ( "version", false );
+	if (att != NULL)
+		version = att->value;
+	else
+		version = "";
+
+	/* The module copyright */
+	att = _node.GetAttribute ( "copyright", false );
+	if (att != NULL)
+		copyright = att->value;
+	else
+		copyright = "";
+
+	att = _node.GetAttribute ( "url", false );
+	if (att != NULL)
+		url = att->value;
+	else
+		url = "";
+
+	/* When was this module updated */
+	att = _node.GetAttribute ( "date", false );
+	if (att != NULL)
+		date = att->value;
+	else
+		date = "?";
+
+	/* When was this module updated */
+	att = _node.GetAttribute ( "owner", false );
+	if (att != NULL)
+		owner = att->value;
+	else
+		owner = "ReactOS";
 }
 
 

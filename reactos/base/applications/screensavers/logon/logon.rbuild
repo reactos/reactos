@@ -12,6 +12,8 @@
 	<library>glu32</library>
 	<library>winmm</library>
 
+	<metadata description = "Default ReactOS Logo screensaver" />
+
 	<file>logon.c</file>
 	<file>logon.rc</file>
 </module>

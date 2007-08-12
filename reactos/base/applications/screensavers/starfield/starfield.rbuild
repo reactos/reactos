@@ -8,6 +8,8 @@
 	<library>user32</library>
 	<library>gdi32</library>
 
+	<metadata description = "Starfield simulation screensaver" />
+
 	<file>screensaver.c</file>
 	<file>starfield.rc</file>
 </module>

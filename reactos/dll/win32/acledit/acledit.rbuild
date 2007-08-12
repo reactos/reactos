@@ -5,6 +5,9 @@
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
+
+	<metadata description = "Access Control List Editor" />
+
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
