@@ -80,7 +80,7 @@ ProcessList_Update(HWND hListCtrl)
 
 		hProcess = 0;
 		/* FIXME: HACK: ROS crashes when using OpenProcess with PROCESS_VM_READ */
-		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessIds[i]);
+//		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessIds[i]);
 		if (hProcess)
 		{
 			GetModuleBaseName(hProcess, NULL, (LPWSTR)strText, MAX_PATH );
