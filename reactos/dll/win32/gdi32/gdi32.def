@@ -338,7 +338,7 @@ GetArcDirection@4
 GetAspectRatioFilterEx@8
 GetBitmapAttributes@4
 GetBitmapBits@12=NtGdiGetBitmapBits@12
-GetBitmapDimensionEx@8=NtGdiGetBitmapDimensionEx@8
+GetBitmapDimensionEx@8=NtGdiGetBitmapDimension@8
 GetBkColor@4=NtGdiGetBkColor@4
 GetBkMode@4=NtGdiGetBkMode@4
 GetBoundsRect@12

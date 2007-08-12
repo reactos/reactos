@@ -572,7 +572,7 @@ NtGdiExtFloodFill(
 }
 
 BOOL STDCALL
-NtGdiGetBitmapDimensionEx(
+NtGdiGetBitmapDimension(
 	HBITMAP  hBitmap,
 	LPSIZE  Dimension)
 {

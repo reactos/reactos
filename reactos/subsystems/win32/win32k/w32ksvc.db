@@ -164,7 +164,7 @@ NtGdiFrameRgn                                    5
 NtGdiGetAndSetDCDword                            4
 # NtGdiGetAppClipBox                               2
 NtGdiGetBitmapBits                               3
-# NtGdiGetBitmapDimension                          2
+NtGdiGetBitmapDimension                          2
 NtGdiGetBoundsRect                               3
 # NtGdiGetCharABCWidthsW                           6
 # NtGdiGetCharacterPlacementW                      6
@@ -776,7 +776,6 @@ NtGdiEnumICMProfiles                    3
 NtGdiExtTextOut                         8
 NtGdiGdiComment                         3
 NtGdiGetAspectRatioFilterEx             2
-NtGdiGetBitmapDimensionEx               2
 NtGdiGetBkColor                         1
 NtGdiGetBkMode                          1
 NtGdiGetBrushOrgEx                      2

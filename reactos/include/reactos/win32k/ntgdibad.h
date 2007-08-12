@@ -248,14 +248,6 @@ NtGdiGetAspectRatioFilterEx(HDC  hDC,
                                  LPSIZE  AspectRatio);
 
 /* Should be done in user-mode using shared GDI Objects. */
-BOOL
-STDCALL
-NtGdiGetBitmapDimensionEx (
-	HBITMAP	hBitmap,
-	LPSIZE	Dimension
-	);
-
-/* Should be done in user-mode using shared GDI Objects. */
 COLORREF STDCALL  NtGdiGetBkColor(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
