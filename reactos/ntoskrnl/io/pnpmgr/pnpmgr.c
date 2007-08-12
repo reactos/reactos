@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+//#define ENABLE_ACPI
+
 /* GLOBALS *******************************************************************/
 
 PDEVICE_NODE IopRootDeviceNode;
@@ -195,7 +197,7 @@ IopStartDevice(
       IRP_MN_START_DEVICE,
       &Stack);
 
-    KeLeaveCriticalRegion();
+   KeLeaveCriticalRegion();
 
    if (!NT_SUCCESS(Status))
    {
@@ -2688,9 +2690,11 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI BIOS");
    UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03\0");
    static ULONG DeviceIndexPci = 0;
-   /*const UNICODE_STRING IdentifierAcpi = RTL_CONSTANT_STRING(L"ACPI BIOS");
+#ifdef ENABLE_ACPI
+   const UNICODE_STRING IdentifierAcpi = RTL_CONSTANT_STRING(L"ACPI BIOS");
    UNICODE_STRING HardwareIdAcpi = RTL_CONSTANT_STRING(L"*PNP0C08\0");
-   static ULONG DeviceIndexAcpi = 0;*/
+   static ULONG DeviceIndexAcpi = 0;
+#endif
    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
    static ULONG DeviceIndexSerial = 0;
@@ -2950,11 +2954,13 @@ IopEnumerateDetectedDevices(
             pHardwareId = &HardwareIdPci;
             DeviceIndex = DeviceIndexPci++;
          }
-         /*else if (RtlCompareUnicodeString(&ValueName, &IdentifierAcpi, FALSE) == 0)
+#ifdef ENABLE_ACPI
+         else if (RtlCompareUnicodeString(&ValueName, &IdentifierAcpi, FALSE) == 0)
          {
             pHardwareId = &HardwareIdAcpi;
             DeviceIndex = DeviceIndexAcpi++;
-         }*/
+         }
+#endif
          else
          {
             /* Unknown device */
@@ -3016,33 +3022,35 @@ IopEnumerateDetectedDevices(
          ZwDeleteKey(hLevel2Key);
          goto nextdevice;
       }
+      /* Create 'LogConf' subkey */
+      InitializeObjectAttributes(&ObjectAttributes, &LogConfU, OBJ_KERNEL_HANDLE, hLevel2Key, NULL);
+      Status = ZwCreateKey(
+         &hLogConf,
+         KEY_SET_VALUE,
+         &ObjectAttributes,
+         0,
+         NULL,
+         REG_OPTION_VOLATILE,
+         NULL);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+         ZwDeleteKey(hLevel2Key);
+         goto nextdevice;
+      }
       if (BootResourcesLength > 0)
       {
          /* Save boot resources to 'LogConf\BootConfig' */
-         InitializeObjectAttributes(&ObjectAttributes, &LogConfU, OBJ_KERNEL_HANDLE, hLevel2Key, NULL);
-         Status = ZwCreateKey(
-            &hLogConf,
-            KEY_SET_VALUE,
-            &ObjectAttributes,
-            0,
-            NULL,
-            REG_OPTION_VOLATILE,
-            NULL);
-         if (!NT_SUCCESS(Status))
-         {
-            DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
-            ZwDeleteKey(hLevel2Key);
-            goto nextdevice;
-         }
          Status = ZwSetValueKey(hLogConf, &BootConfigU, 0, REG_FULL_RESOURCE_DESCRIPTOR, BootResources, BootResourcesLength);
-         ZwClose(hLogConf);
          if (!NT_SUCCESS(Status))
          {
             DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+            ZwClose(hLogConf);
             ZwDeleteKey(hLevel2Key);
             goto nextdevice;
          }
       }
+      ZwClose(hLogConf);
 
 nextdevice:
       if (BootResources && BootResources != ParentBootResources)
@@ -3076,8 +3084,9 @@ cleanup:
 static BOOLEAN INIT_FUNCTION
 IopIsAcpiComputer(VOID)
 {
+#ifndef ENABLE_ACPI
    return FALSE;
-#if 0
+#else
    UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
    UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
    UNICODE_STRING AcpiBiosIdentifier = RTL_CONSTANT_STRING(L"ACPI BIOS");
@@ -3219,12 +3228,13 @@ IopUpdateRootKey(VOID)
    UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
    UNICODE_STRING DeviceDescU = RTL_CONSTANT_STRING(L"DeviceDesc");
    UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
+   UNICODE_STRING LogConfU = RTL_CONSTANT_STRING(L"LogConf");
    UNICODE_STRING HalAcpiDevice = RTL_CONSTANT_STRING(L"ACPI_HAL");
    UNICODE_STRING HalAcpiId = RTL_CONSTANT_STRING(L"0000");
    UNICODE_STRING HalAcpiDeviceDesc = RTL_CONSTANT_STRING(L"HAL ACPI");
    UNICODE_STRING HalAcpiHardwareID = RTL_CONSTANT_STRING(L"*PNP0C08\0");
    OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE hRoot, hHalAcpiDevice, hHalAcpiId;
+   HANDLE hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
    NTSTATUS Status;
 
    InitializeObjectAttributes(&ObjectAttributes, &RootPathU, OBJ_KERNEL_HANDLE, NULL, NULL);
@@ -3255,6 +3265,13 @@ IopUpdateRootKey(VOID)
       Status = ZwSetValueKey(hHalAcpiId, &DeviceDescU, 0, REG_SZ, HalAcpiDeviceDesc.Buffer, HalAcpiDeviceDesc.MaximumLength);
       if (NT_SUCCESS(Status))
          Status = ZwSetValueKey(hHalAcpiId, &HardwareIDU, 0, REG_MULTI_SZ, HalAcpiHardwareID.Buffer, HalAcpiHardwareID.MaximumLength);
+      if (NT_SUCCESS(Status))
+      {
+          InitializeObjectAttributes(&ObjectAttributes, &LogConfU, OBJ_KERNEL_HANDLE, hHalAcpiId, NULL);
+          Status = ZwCreateKey(&hLogConf, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+          if (NT_SUCCESS(Status))
+              ZwClose(hLogConf);
+      }
       ZwClose(hHalAcpiId);
       return Status;
    }

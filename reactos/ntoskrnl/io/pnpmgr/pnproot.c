@@ -208,7 +208,7 @@ PnpRootCreateDevice(
   InsertTailList(
     &DeviceExtension->DeviceListHead,
     &Device->ListEntry);
-    DeviceExtension->DeviceListCount++;
+  DeviceExtension->DeviceListCount++;
 
   *PhysicalDeviceObject = Device->Pdo;
   DPRINT("Created PDO %p (%wZ\\%wZ)\n", *PhysicalDeviceObject, &Device->DeviceID, &Device->InstanceID);
