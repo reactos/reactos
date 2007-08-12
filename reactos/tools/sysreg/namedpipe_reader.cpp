@@ -31,6 +31,11 @@ namespace System_
 
 	}
 
+	bool NamedPipeReader::isSourceOpen()
+	{
+		return true;
+	}
+
 //---------------------------------------------------------------------------------------
 
 	bool NamedPipeReader::openSource(const string & PipeCmd)
@@ -41,7 +46,7 @@ namespace System_
 			return false;
 		}
 
-		h_Pipe = CreateFile(PipeCmd.c_str(),
+		h_Pipe = CreateFile("\\\\.\\pipe\\qemu", //PipeCmd.c_str(),
 			GENERIC_WRITE | GENERIC_READ,
 			0,
 			NULL,
@@ -51,7 +56,7 @@ namespace System_
 			NULL);
 
 		if(INVALID_HANDLE_VALUE == h_Pipe) {
-			cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << GetLastError() << endl;
+            cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << " Error:" << GetLastError() << endl;
 			h_Pipe = NULLVAL;
 			return false;
 		}
@@ -70,7 +75,7 @@ namespace System_
 
 	bool NamedPipeReader::closeSource() 
 	{
-		if (!h_Pipe)
+		if (h_Pipe == INVALID_HANDLE_VALUE)
 		{
 			cerr << "NamedPipeReader::closePipe> pipe is not open" << endl;
 			return false;

@@ -45,8 +45,8 @@ LsaEnumerateLogonSessions@8
 LsaGetLogonSessionData@8
 LsaRegisterPolicyChangeNotification@8
 LsaUnregisterPolicyChangeNotification@8
-;MakeSignature@16
-;QueryContextAttributesA@12
+MakeSignature@16
+QueryContextAttributesA@12
 QueryContextAttributesW@12
 ;QueryCredentialsAttributesA@12
 ;QueryCredentialsAttributesW@12
@@ -76,4 +76,4 @@ QueryContextAttributesW@12
 ;TranslateNameA@20
 ;TranslateNameW@20
 ;UnsealMessage
-;VerifySignature@16
+VerifySignature@16

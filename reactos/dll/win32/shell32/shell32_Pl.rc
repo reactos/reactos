@@ -1,6 +1,7 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2004 Piotr Caban
+ * Made normal by Artek Wiœniewski aart3k@gmail.com
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,8 +22,8 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "&Du¿e Ikony",	FCIDM_SHVIEW_BIGICON
-	MENUITEM "&Ma³e Ikony",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Du¿e ikony",	FCIDM_SHVIEW_BIGICON
+	MENUITEM "&Ma³e ikony",	FCIDM_SHVIEW_SMALLICON
 	MENUITEM "&Lista",		FCIDM_SHVIEW_LISTVIEW
 	MENUITEM "&Szczegó³y",		FCIDM_SHVIEW_REPORTVIEW
 END
@@ -36,8 +37,8 @@ BEGIN
 	BEGIN
 	  POPUP "&Widok"
 	  BEGIN
-	    MENUITEM "&Du¿e Ikony",	FCIDM_SHVIEW_BIGICON
-	    MENUITEM "&Ma³e Ikony",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "&Du¿e ikony",	FCIDM_SHVIEW_BIGICON
+	    MENUITEM "&Ma³e ikony",	FCIDM_SHVIEW_SMALLICON
 	    MENUITEM "&Lista",		FCIDM_SHVIEW_LISTVIEW
 	    MENUITEM "&Szczegó³y",	FCIDM_SHVIEW_REPORTVIEW
 	  END
@@ -53,7 +54,7 @@ BEGIN
 	  END
 	  MENUITEM "&Wyrównaj ikony",	FCIDM_SHVIEW_SNAPTOGRID
 	  MENUITEM SEPARATOR
-	  MENUITEM "&Odœwierz",		FCIDM_SHVIEW_REFRESH
+	  MENUITEM "&Odœwie¿",		FCIDM_SHVIEW_REFRESH
 	  MENUITEM SEPARATOR
 	  MENUITEM "W&klej",		FCIDM_SHVIEW_INSERT
 	  MENUITEM "Wklej s&krót",	FCIDM_SHVIEW_INSERTLINK
@@ -115,7 +116,7 @@ FONT 10, "MS Shell Dlg"
  ICON "", 1088, 10, 10, 14, 16
  LTEXT "", 100, 30, 10, 137, 10
  LTEXT "", 101, 30, 22, 137, 10
- LTEXT "Mo¿esz korzystaæ z ReactOS'a dziêki:", 98, 8, 55, 137, 10
+ LTEXT "ReactOS zawdziêcza swe istnienie nastêpuj¹cym osobom:", 98, 8, 55, 137, 10
 }
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
@@ -124,7 +125,7 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 {
  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
- LTEXT "Wpisz nazwê programu, katalogu, dokumentu, a ReactOS otworzy go dla ciebie.", 12289, 36, 11, 182, 18
+ LTEXT "Wpisz nazwê programu, katalogu, dokumentu, a ReactOS otworzy go dla Ciebie.", 12289, 36, 11, 182, 18
  LTEXT "&Otwórz:", 12305, 7, 39, 24, 10
  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -146,8 +147,8 @@ STRINGTABLE DISCARDABLE
 */
 STRINGTABLE DISCARDABLE
 {
-	IDS_VIEW_LARGE		"&Du¿e Ikony"
-	IDS_VIEW_SMALL		"&Ma³e Ikony"
+	IDS_VIEW_LARGE		"&Du¿e ikony"
+	IDS_VIEW_SMALL		"&Ma³e ikony"
 	IDS_VIEW_LIST		"&Lista"
 	IDS_VIEW_DETAILS	"&Szczegó³y"
 	IDS_SELECT		"Zaznacz"
@@ -156,12 +157,12 @@ STRINGTABLE DISCARDABLE
 
 STRINGTABLE DISCARDABLE
 {
-	IDS_CREATEFOLDER_DENIED "Nie mogê utworzyæ nowego katalogu: Brak dostêpu."
+	IDS_CREATEFOLDER_DENIED "Nie mo¿na utworzyæ nowego katalogu: Brak dostêpu."
 	IDS_CREATEFOLDER_CAPTION "B³¹d przy tworzeniu nowego katalogu."
-	IDS_DELETEITEM_CAPTION "PotwierdŸ usuniêcia pliku"
+	IDS_DELETEITEM_CAPTION "PotwierdŸ usuniêcie pliku"
 	IDS_DELETEFOLDER_CAPTION "PotwierdŸ usuniêcie katalogu"
 	IDS_DELETEITEM_TEXT "Czy jesteœ pewien, ¿e chcesz usun¹æ '%1'?"
-	IDS_DELETEMULTIPLE_TEXT "Czy jesteœ pewien, ¿e chcesz usun¹æ te %1 pliki?"
+	IDS_DELETEMULTIPLE_TEXT "Czy jesteœ pewien, ¿e chcesz usun¹æ %1 plików?"
 	IDS_OVERWRITEFILE_TEXT "Zast¹piæ plik %1?"
 	IDS_OVERWRITEFILE_CAPTION "PotwierdŸ zast¹pienie pliku"
 }
@@ -172,7 +173,7 @@ BEGIN
 	IDS_SHV_COLUMN1		"Plik"
 	IDS_SHV_COLUMN2		"Wielkoœæ"
 	IDS_SHV_COLUMN3		"Typ"
-	IDS_SHV_COLUMN4		"Modyfikacja"
+	IDS_SHV_COLUMN4		"Zmodyfikowano"
 	IDS_SHV_COLUMN5		"Atrybuty"
 	IDS_SHV_COLUMN6		"Wielkoœæ"
 	IDS_SHV_COLUMN7		"Dostêpna wielkoœæ"

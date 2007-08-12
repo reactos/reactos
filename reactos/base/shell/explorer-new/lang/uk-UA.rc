@@ -1,0 +1,67 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/shell/explorer-new/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS Explorer
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDM_TRAYWND MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Закріпити панель завдань", ID_LOCKTASKBAR
+        MENUITEM "В&ластивості", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Програми", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Обране", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "До&кументи", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "Н&астройка", IDM_SETTINGS
+        BEGIN
+            MENUITEM "П&анель керування", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM SEPARATOR
+            MENUITEM "&Безпека...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Мережні підключення", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "Пр&интери й факси", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "Панель &завдань і меню ""Пуск""", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        POPUP "З&найти", IDM_SEARCH
+        BEGIN
+            MENUITEM SEPARATOR
+        END
+        MENUITEM "&Довідка та підтримка", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Запуск про&грами...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "Син&хронізувати", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "Завер&шення сеансу %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "В&ідключити...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Відстикувати комп'&ютер", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Завершення роботи...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_START             "Пуск"
+    IDS_PROPERTIES        "В&ластивості"
+    IDS_OPEN_ALL_USERS    "&Всі користувачі"
+    IDS_EXPLORE_ALL_USERS "&Огляд Всіх користувачів"
+END

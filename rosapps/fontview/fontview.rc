@@ -1,9 +1,7 @@
+#include <windows.h>
+#include "resource.h"
 
-
-#include "lang/en-US.rc"
-#include "lang/de-DE.rc"
-#include "lang/ru-RU.rc"
-#include "lang/fr-FR.rc"
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
@@ -11,3 +9,10 @@ STRINGTABLE DISCARDABLE
 	IDS_CHARSUPPER, "ABCDEFGHIJKLMNOPQRSTUVMXYZ"
 	IDS_SPECIALCHARS, "0123456789.:,;(*!?')"
 }
+
+
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

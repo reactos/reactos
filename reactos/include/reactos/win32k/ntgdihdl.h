@@ -28,6 +28,12 @@
 #define GDI_HANDLE_UPPER_MASK (GDI_HANDLE_TYPE_MASK|GDI_HANDLE_STOCK_MASK|GDI_HANDLE_REUSE_MASK)
 #define GDI_HANDLE_REUSECNT_SHIFT 24
 
+#define GDI_ENTRY_STOCK_MASK 0x00000080
+#define GDI_ENTRY_REUSE_MASK 0x0000ff00
+#define GDI_ENTRY_REUSE_INC 0x00000100
+#define GDI_ENTRY_REUSECNT_SHIFT 8
+#define GDI_ENTRY_UPPER_SHIFT 16
+
 /*! \defgroup GDI object types
  *
  *  GDI object types
@@ -50,7 +56,6 @@
 /* Following object types made up for ROS */
 #define GDI_OBJECT_TYPE_ENHMETADC   0x00740000
 #define GDI_OBJECT_TYPE_MEMDC       0x00750000
-#define GDI_OBJECT_TYPE_DCE         0x00770000
 #define GDI_OBJECT_TYPE_DONTCARE    0x007f0000
 /** Not really an object type. Forces GDI_FreeObj to be silent. */
 #define GDI_OBJECT_TYPE_SILENT      0x80000000
@@ -74,6 +79,16 @@
 
 #define GDI_HANDLE_SET_STOCKOBJ(h) \
     ((h) = (HANDLE)(((ULONG_PTR)(h)) | GDI_HANDLE_STOCK_MASK))
+
+#define GDI_HANDLE_GET_UPPER(h)     \
+    (((ULONG_PTR)(h)) & GDI_HANDLE_UPPER_MASK)
+
+#define GDI_HANDLE_GET_REUSECNT(h)     \
+    (((ULONG_PTR)(h)) >> GDI_HANDLE_REUSECNT_SHIFT)
+
+#define GDI_ENTRY_GET_REUSECNT(e)     \
+    ((((ULONG_PTR)(e)) & GDI_ENTRY_REUSE_MASK) >> GDI_ENTRY_REUSECNT_SHIFT)
+
 
 /* DC_ATTR Dirty Flags */
 #define DIRTY_FILL                          0x00000001

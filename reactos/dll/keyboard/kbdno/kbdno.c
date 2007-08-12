@@ -169,15 +169,15 @@ ROSDATA MODIFIERS modifier_bits = {
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
   /* The numbers */
-  { VK_OEM_5,      NOCAPS, {0xbd,     0xa7} },
+  { VK_OEM_5,      NOCAPS, {'|',     0xa7} }, /* Button to the left of 1.  0xa7=§ */ 
   { '1',           NOCAPS, {'1',      '!'} },
   /* Ctrl-2 generates NUL */
   { VK_OEM_PLUS,   NOCAPS, {'+',      '?'} },
   { VK_OEM_6,      CAPS,   {0xe5,     0xc5} }, /* Å */
 
   /* Specials */
-  { VK_OEM_7,	     CAPS,   {0xf8,     0xd8} }, /* Ø */
-  { VK_OEM_3,	     CAPS,   {0xe6,     0xc6} }, /* Æ */
+  { VK_OEM_3,	     CAPS,   {0xf8,     0xd8} }, /* Ø */
+  { VK_OEM_7,	     CAPS,   {0xe6,     0xc6} }, /* Æ */
 
   { VK_OEM_COMMA,  CAPS,   {',',      ';'} },
   { VK_OEM_PERIOD, CAPS,   {'.',      ':'} },
@@ -245,7 +245,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { '8',         NOCAPS, {'8',      '(',      WCH_NONE, '['} },
   { '9',         NOCAPS, {'9',      ')',      WCH_NONE, ']'} },
   { '0',         NOCAPS, {'0',      '=',      WCH_NONE, '}'} },
-  { VK_OEM_4,    NOCAPS, {WCH_DEAD, WCH_DEAD, WCH_DEAD, '|'} },
+  { VK_OEM_4,    NOCAPS, {'\\', 0x60, WCH_NONE, 0xb4} }, //VK_OEM_4 is between +? and backspace
   { VK_EMPTY ,   NOCAPS, {0xb4,     '`',      '|',      WCH_NONE} },
 
   { 'E',         CAPS,   {'e',      'E',      0x05, 0x20ac} },
@@ -297,10 +297,10 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x1c, L"ENTER" },
   { 0x1d, L"CTRL" },
   { 0x2a, L"SHIFT" },
-  { 0x36, L"H\x00D8JRE SHIFT" },
+  { 0x36, L"H\x00D8YRE SHIFT" },
   { 0x37, L"NUM * (Numerisk del)" },
   { 0x38, L"ALT" },
-  { 0x39, L"MELLOMRUM" },
+  { 0x39, L"MELLOMROM" },
   { 0x3a, L"CAPS LOCK" },
   { 0x3b, L"F1" },
   { 0x3c, L"F2" },
@@ -347,10 +347,10 @@ ROSDATA VSC_LPWSTR key_names[] = {
 
 ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x1c, L"ENTER (Numerisk del)" },
-  { 0x1d, L"H\x00D8JRE CTRL" },
+  { 0x1d, L"H\x00D8YRE CTRL" },
   { 0x35, L"DIVISION (Numerisk del)" },
   { 0x37, L"PRINT SCREEN" },
-  { 0x38, L"H\x00D8JRE ALT" },
+  { 0x38, L"H\x00D8YRE ALT" },
   { 0x45, L"NUM LOCK" },
   { 0x46, L"BREAK" },
   { 0x47, L"HOME" },
@@ -358,7 +358,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x49, L"PAGE UP" },
   { 0x4b, L"VENSTRE PIL" },
 //{ 0x4c, L"Center" },
-  { 0x4d, L"H\x00D8JRE PIL" },
+  { 0x4d, L"H\x00D8YRE PIL" },
   { 0x4f, L"END" },
   { 0x50, L"PIL NED" },
   { 0x51, L"PAGE DOWN" },
@@ -367,7 +367,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x54, L"<ReactOS>" },
   { 0x56, L"HJELP" },
   { 0x5b, L"VENSTRE <ReactOS>" },
-  { 0x5c, L"H\x00D8JRE <ReactOS>" },
+  { 0x5c, L"H\x00D8YRE <ReactOS>" },
   { 0x5d, L"Program" },
   { 0, NULL }
 };

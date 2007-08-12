@@ -61,7 +61,7 @@ namespace System_
 ///                           w ... allows writing to the pipe
 /// @return bool
 
-		bool openSource(const string & PipeCmd);
+		virtual bool openSource(const string & PipeCmd);
 
 //---------------------------------------------------------------------------------------
 ///
@@ -71,7 +71,7 @@ namespace System_
 ///
 /// @return bool
 
-		bool closeSource();
+		virtual bool closeSource();
 
 //---------------------------------------------------------------------------------------
 ///
@@ -92,7 +92,7 @@ namespace System_
 /// Description: returns true if the pipe has reached end of file. The caller should call
 /// closePipe if this function returns true
 
-	bool isEof();
+	virtual bool isSourceOpen();
 
 protected:
 	FILE * m_File;

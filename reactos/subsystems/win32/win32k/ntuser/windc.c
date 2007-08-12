@@ -39,12 +39,23 @@
 /* NOTE - I think we should store this per window station (including gdi objects) */
 
 static PDCE FirstDce = NULL;
-static HDC defaultDCstate;
+static HDC defaultDCstate = NULL;
+//static INT DCECount = 0;
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
                               DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)
 
 /* FUNCTIONS *****************************************************************/
+
+HDC FASTCALL
+DceCreateDisplayDC(VOID)
+{
+    HDC hDC;
+    UNICODE_STRING DriverName;
+    RtlInitUnicodeString(&DriverName, L"DISPLAY");
+    hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+    return hDC;
+}
 
 VOID FASTCALL
 DceInit(VOID)
@@ -103,56 +114,65 @@ NtUserGetDC(HWND hWnd)
 PDCE FASTCALL
 DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
 {
-   HDCE DceHandle;
-   DCE* Dce;
-   UNICODE_STRING DriverName;
-
-   DceHandle = DCEOBJ_AllocDCE();
-   if(!DceHandle)
-      return NULL;
-
-   RtlInitUnicodeString(&DriverName, L"DISPLAY");
-
-   Dce = DCEOBJ_LockDCE(DceHandle);
-   /* No real locking, just get the pointer */
-   DCEOBJ_UnlockDCE(Dce);
-   Dce->Self = DceHandle;
-   Dce->hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
-   if (NULL == defaultDCstate)
-   {
-      defaultDCstate = NtGdiGetDCState(Dce->hDC);
-      DC_SetOwnership(defaultDCstate, NULL);
-   }
-   GDIOBJ_SetOwnership(GdiHandleTable, Dce->Self, NULL);
-   DC_SetOwnership(Dce->hDC, NULL);
-   Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
-   Dce->hClipRgn = NULL;
-
-   Dce->next = FirstDce;
-   FirstDce = Dce;
-
-   if (Type != DCE_CACHE_DC)
-   {
-      Dce->DCXFlags = DCX_DCEBUSY;
-      
-      if (Window)
-      {
-         if (Window->Style & WS_CLIPCHILDREN)
-         {
-            Dce->DCXFlags |= DCX_CLIPCHILDREN;
-         }
-         if (Window->Style & WS_CLIPSIBLINGS)
-         {
-            Dce->DCXFlags |= DCX_CLIPSIBLINGS;
-         }
-      }
-   }
-   else
-   {
-      Dce->DCXFlags = DCX_CACHE | DCX_DCEEMPTY;
-   }
-
-   return(Dce);
+    PDCE pDce;
+  
+    pDce = ExAllocatePoolWithTag(PagedPool, sizeof(DCE), TAG_PDCE);
+    if(!pDce)
+        return NULL;
+       
+    pDce->hDC = DceCreateDisplayDC();
+    if(!pDce->hDC)
+    {
+      ExFreePoolWithTag(pDce, TAG_PDCE);
+      return NULL;     
+    }
+  
+    if (NULL == defaultDCstate) // Ultra HAX! Dedicated to GvG!
+      { // This is a cheesy way to do this. 
+        // But, due to the right way of creating gdi handles there is no choice.
+      defaultDCstate = NtGdiGetDCState(pDce->hDC);
+      DC_SetOwnership( defaultDCstate, NULL);
+    }
+    
+    pDce->hwndCurrent = (Window ? Window->hSelf : NULL);
+    pDce->hClipRgn = NULL;
+    pDce->pProcess = NULL;
+    
+    pDce->next = FirstDce;
+    FirstDce = pDce;
+  
+    if (Type == DCE_WINDOW_DC) //Window DCE have ownership.
+     {
+       DC_SetOwnership(pDce->hDC, PsGetCurrentProcess());
+       pDce->pProcess = PsGetCurrentProcess();
+     }
+    else
+    {
+       DC_SetOwnership(pDce->hDC, NULL); // This hDC is inaccessible!
+    }
+  
+     if (Type != DCE_CACHE_DC)
+     {
+       pDce->DCXFlags = DCX_DCEBUSY;
+        
+        if (Window)
+        {
+           if (Window->Style & WS_CLIPCHILDREN)
+           {
+             pDce->DCXFlags |= DCX_CLIPCHILDREN;
+           }
+           if (Window->Style & WS_CLIPSIBLINGS)
+           {
+             pDce->DCXFlags |= DCX_CLIPSIBLINGS;
+           }
+        }
+     }
+     else
+     {
+       pDce->DCXFlags = DCX_CACHE | DCX_DCEEMPTY;
+     }
+  
+    return(pDce);
 }
 
 VOID static STDCALL
@@ -225,7 +245,15 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    {
       /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
       NtGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
+
+      if( dce->pProcess ) // Attempt to fix Dc_Attr problem.
+        DC_SetOwnership( defaultDCstate, dce->pProcess);
+      else
+        DC_SetOwnership( defaultDCstate, PsGetCurrentProcess());
+
       NtGdiSetDCState(dce->hDC, defaultDCstate);
+      DC_SetOwnership( defaultDCstate, NULL); // Return default dc state to inaccessible mode.
+
       dce->DCXFlags &= ~DCX_DCEBUSY;
       if (dce->DCXFlags & DCX_DCEDIRTY)
       {
@@ -237,7 +265,6 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          dce->DCXFlags |= DCX_DCEEMPTY;
       }
    }
-
    return 1;
 }
 
@@ -535,12 +562,10 @@ CLEANUP:
 }
 
 
-
-BOOL INTERNAL_CALL
-DCE_Cleanup(PVOID ObjectBody)
+BOOL FASTCALL
+DCE_Cleanup(PDCE pDce)
 {
    PDCE PrevInList;
-   PDCE pDce = (PDCE)ObjectBody;
 
    if (pDce == FirstDce)
    {
@@ -604,7 +629,8 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
 }
 
 
-
+// Win 3.1 throw back, hWnd should be ignored and not used.
+// Replace with NtUserCallOneParam ((DWORD) hDC, ONEPARAM_ROUTINE_RELEASEDC);
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc)
 {
@@ -625,39 +651,37 @@ CLEANUP:
  *           DceFreeDCE
  */
 PDCE FASTCALL
-DceFreeDCE(PDCE dce, BOOLEAN Force)
-{
-   DCE *ret;
-
-   if (NULL == dce)
-   {
-      return NULL;
-   }
-
-   ret = dce->next;
-
-#if 0 /* FIXME */
-
-   SetDCHook(dce->hDC, NULL, 0L);
-#endif
-
-   if(Force && !GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, dce->hDC))
-   {
-      GDIOBJ_SetOwnership(GdiHandleTable, dce->Self, PsGetCurrentProcess());
-      DC_SetOwnership(dce->hDC, PsGetCurrentProcess());
-   }
-
-   NtGdiDeleteObjectApp(dce->hDC);
-   if (dce->hClipRgn && ! (dce->DCXFlags & DCX_KEEPCLIPRGN))
-   {
-      NtGdiDeleteObject(dce->hClipRgn);
-   }
-
-   DCEOBJ_FreeDCE(dce->Self);
-
-   return ret;
+DceFreeDCE(PDCE pdce, BOOLEAN Force)
+  {
+     DCE *ret;
+  
+   if (NULL == pdce)
+     {
+        return NULL;
+     }
+  
+   ret = pdce->next;
+  
+  #if 0 /* FIXME */
+  
+   SetDCHook(pdce->hDC, NULL, 0L);
+  #endif
+  
+   if(Force && !GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, pdce->hDC))
+     {
+      DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
+     }
+  
+   NtGdiDeleteObjectApp(pdce->hDC);
+   if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
+     {
+      NtGdiDeleteObject(pdce->hClipRgn);
+     }
+  
+   DCE_Cleanup(pdce);
+   ExFreePoolWithTag(pdce, TAG_PDCE);
+     return ret;
 }
-
 
 /***********************************************************************
  *           DceFreeWindowDCE

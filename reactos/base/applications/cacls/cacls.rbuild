@@ -10,6 +10,6 @@
 	<library>user32</library>
 	<library>shell32</library>
 	<file>cacls.c</file>
-	<file>lang/cacls.rc</file>
+	<file>cacls.rc</file>
 	<pch>precomp.h</pch>
 </module>

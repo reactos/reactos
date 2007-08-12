@@ -36,7 +36,9 @@ namespace System_
 			cerr << "PipeReader::openPipe> pipe already open" << endl;
 			return false;
 		}
-		// 
+
+		cerr << "cmd>" << PipeCmd << endl;
+
 		m_File = popen(PipeCmd.c_str(), "r"); //AccessMode.c_str());
 		if (m_File)
 		{
@@ -72,7 +74,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool PipeReader::isEof()
+	bool PipeReader::isSourceOpen()
 	{
 		return feof(m_File);
 	}

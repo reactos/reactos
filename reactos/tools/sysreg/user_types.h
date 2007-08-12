@@ -33,6 +33,7 @@
  #define _fgetts fgets
  #define _tgetenv getenv
  #define _tmain main
+ #define _tcstol strtol
 #endif
 
 	typedef std::basic_string<TCHAR> string;

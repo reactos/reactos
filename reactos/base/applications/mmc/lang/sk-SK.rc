@@ -1,0 +1,29 @@
+/*
+ * PROJECT:     ReactOS Management Console
+ * FILE:        base/applications/mmc/lang/sk-SK.rc
+ * PURPOSE:     Slovak Language File for MMC
+ * TRANSLATOR:  Kario (kario@szm.sk)
+ * DATE OF TR:  24-07-2007
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+IDM_CONSOLEROOT MENU DISCARDABLE
+BEGIN
+    POPUP "&S˙bor"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&SkonËiù\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "&PomocnÌk"
+    BEGIN
+        MENUITEM "»&o je Konzola na spr·vu systÈmu ReactOS", ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE "Konzola na spr·vu systÈmu ReactOS"
+    IDS_CONSOLETITLE "Konzola%1!u!"
+END

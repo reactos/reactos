@@ -1,8 +1,5 @@
 // Russian language resource file (Dmitry Chapyshev, 2007-06-21)
 
-#include "windows.h"
-#include "../resource.h"
-
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE

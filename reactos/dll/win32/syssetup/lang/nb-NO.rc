@@ -28,9 +28,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Velkommen til ReactOS installasjon Veiviser.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Denne Veiviseren installerer ReactOS på din datamaskin. Veiviseren "\
-          "Må samle sammen nødvendig informasjon om deg og din datamaskin "\
+    LTEXT "Velkommen til ReactOS installasjon veiviser.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Denne veiviseren installerer ReactOS på din datamaskin. Veiviseren "\
+          "må samle sammen nødvendig informasjon om deg og din datamaskin "\
           "for å sette opp ReactOS skikkelig.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klikk Neste for å fortsette installasjonen.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -41,8 +41,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "ReactOS utviklerene anerkjenner de følgende Åpen kilde prosjektene, "\
-                    "(deler av) som ble brukt til og skape ReactOS:",
+    LTEXT           "ReactOS utviklerene anerkjenner de følgende Åpen kildekode prosjektene, "\
+                    "(deler av) som ble brukt til å skape ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -79,7 +79,7 @@ BEGIN
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Datamaskin navn:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
-    LTEXT "Installasjonen vil lage en bruker konto som blir kalt Administrator. "\
+    LTEXT "Installasjonen vil lage en brukerkonto som blir kalt Administrator. "\
           "Du kan bruke denne kontoen hvis du trenger full adgang til din datamaskin.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Skriv inn et Administrator passord som er 14 karakterer eller mindre.",
@@ -99,13 +99,13 @@ BEGIN
     LTEXT "Systemets språk og region burde samsvare med språket på programmene "\
           "du vil bruke. Instillingene for språk og region kontrollerer hvordan tall, "\
           "valutaer, og dato vises.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "For å forandre systemets språk og region instilling, Trykk på Tilpass.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Tilpass...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Tastatur oppsettet kontrollerer karakterene som kommer opp når du trykker.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "For å forandre tastatur oppsettet, trykk på Tilpass.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "T&ilpass...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
@@ -147,7 +147,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Fullfører ReactOS installasjonen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fullfører ReactOS installasjon Veiviser", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Fullfører ReactOS installasjons veiviser", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Installasjonen av ReactOS er fullført.\n\n" \
           "Når du trykker på fullfør, vil datamaskinen bli restartet.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
@@ -169,7 +169,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Please wait..."
+CAPTION "Vennligst vent..."
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -180,11 +180,11 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Annerkjennelser"
     IDS_ACKSUBTITLE      "Skuldrene ReactOS står på og lisens informasjon"
-    IDS_OWNERTITLE       "Personaliserer Dine Programmer"
-    IDS_OWNERSUBTITLE    "Installasjonen bruker denne informasjonen om deg selv til og personalisere ReactOS."
+    IDS_OWNERTITLE       "Personaliserer dine Programmer"
+    IDS_OWNERSUBTITLE    "Installasjonen bruker denne informasjonen om deg selv for å personalisere ReactOS."
     IDS_COMPUTERTITLE    "Datamaskin navn og Administrator passord"
-    IDS_COMPUTERSUBTITLE "Du må anngi et Navn og et Administrator Passord for din datamaskin."
-    IDS_LOCALETITLE      "Regionale instillinger"
+    IDS_COMPUTERSUBTITLE "Du må angi et navn og et administrator passord for din datamaskin."
+    IDS_LOCALETITLE      "Regionale innstillinger"
     IDS_LOCALESUBTITLE   "Du kan stille inn ReactOS for andre regioner og språk."
     IDS_DATETIMETITLE    "Dato og Tid"
     IDS_DATETIMESUBTITLE "Still inn dato og tid for din datamaskin."
@@ -194,9 +194,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_WINEFILE    "Start Winefile"
-    IDS_CMT_IBROWSER	"Start iBrowser"
-    IDS_CMT_DOWNLOADER  "Download and install various applications"
+    IDS_CMT_DOWNLOADER  "Last ned og innstaller forskjellige applikasjoner"
 END
 
 STRINGTABLE
@@ -208,9 +206,9 @@ BEGIN
     IDS_CMT_NOTEPAD     "Start Tekst Editor"
     IDS_CMT_REGEDIT     "Start Register Editor"
     IDS_CMT_WORDPAD     "Start Dokument Editor"
-    IDS_CMT_SCREENSHOT  "Ta Skjermbilde"
-    IDS_CMT_DEVMGMT     "Launch Device Manager"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
+    IDS_CMT_SCREENSHOT  "Ta skjermbilde"
+    IDS_CMT_DEVMGMT     "Start Enhetsbehandler"
+    IDS_CMT_SERVMAN     "Start Tjenestebehandler"
 END
 
 STRINGTABLE
@@ -223,13 +221,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP		    "ReactOS installasjon"
-    IDS_UNKNOWN_ERROR           "Ukjent Feil"
-    IDS_REGISTERING_COMPONENTS  "Registrerer Komponenter..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary Feilet: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr Feilet: "
-    IDS_REGSVR_FAILED           "DllRegisterServer Feilet: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall Feilet: "
-    IDS_TIMEOUT			        "Avbrudd i løpet av registrering"
+    IDS_UNKNOWN_ERROR           "Ukjent feil"
+    IDS_REGISTERING_COMPONENTS  "Registrerer komponenter..."
+    IDS_LOADLIBRARY_FAILED	    "LoadLibrary feilet: "
+    IDS_GETPROCADDR_FAILED	    "GetProcAddr feilet: "
+    IDS_REGSVR_FAILED           "DllRegisterServer feilet: "
+    IDS_DLLINSTALL_FAILED	    "DllInstall feilet: "
+    IDS_TIMEOUT			        "Tidsavbrudd under registrering"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -251,18 +249,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Setup cannot continue until you enter your name."
-    IDS_WZD_SETCOMPUTERNAME  "Setup failed to set the computer name."
-    IDS_WZD_COMPUTERNAME  "Setup cannot continue until you enter the name of your computer."
-    IDS_WZD_PASSWORDEMPTY  "You must enter a password !"
-    IDS_WZD_PASSWORDMATCH  "The passwords you entered do not match. Please enter the desired password again."
-    IDS_WZD_PASSWORDCHAR  "The password you entered contains invalid characters. Please enter a cleaned password."
-    IDS_WZD_LOCALTIME    "Setup was unable to set the local time."
+    IDS_WZD_NAME         "Installasjonen kan ikke fortsette uten ditt navn."
+    IDS_WZD_SETCOMPUTERNAME  "Installasjonen klarte ikke sette datamaskinnavnet."
+    IDS_WZD_COMPUTERNAME  "Installasjonen kan ikke fortsette før du taster inn navn for datamaskinen."
+    IDS_WZD_PASSWORDEMPTY  "Du må taste et passord!"
+    IDS_WZD_PASSWORDMATCH  "Passordene du tastet er ikke like. Vennligst tast inn på nytt."
+    IDS_WZD_PASSWORDCHAR  "Passordet du tastet inneholder ugyldige tegn. Vennligst tast inn et annet."
+    IDS_WZD_LOCALTIME    "Installasjonen klarte ikke å sette lokal tid."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Installing devices..."
+    IDS_STATUS_INSTALL_DEV "Installerer enheter..."
 END
 
 /* EOF */

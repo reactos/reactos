@@ -212,9 +212,7 @@ NtGdiGetPath(
 {
    INT ret = -1;
    GdiPath *pPath;
-   
-   DPRINT("Enter NtGdiGetPath\n");
-  
+
    DC *dc = DC_LockDc(hDC);
    if(!dc)
    {

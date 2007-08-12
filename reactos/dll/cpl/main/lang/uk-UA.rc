@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Main Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/main/Uk.rc
+ * FILE:        dll/cpl/main/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for ReactOS Main Control Panel Applet
  * TRANSLATOR:  Artem Reznikov
  */
@@ -162,7 +162,7 @@ BEGIN
   IDS_NWPEN "Рукописне введення"
   IDS_NO "Операція неможлива"
   IDS_SIZENS "Зміна вертикальних розмірів"
-  IDS_SIZEWE "Horizontal Resize"
+  IDS_SIZEWE "Зміна горизонтальних розмірів"
   IDS_SIZENWSE "Зміна розмірів по діагоналі 1"
   IDS_SIZENESW "Зміна розмірів по діагоналі 2"
   IDS_SIZEALL "Переміщення"
@@ -170,10 +170,10 @@ BEGIN
   IDS_HAND "Вибір посилання"
   IDS_NONE "(Немає)"
   IDS_SYSTEM_SCHEME "(системна схема)"
-  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
-  IDS_BROWSE_TITLE "Browse"
-  IDS_REMOVE_TITLE "Confirm Scheme Removal"
-  IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
-  IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
+  IDS_BROWSE_FILTER "Вказівники (*.ani, *.cur)\0*.ani;*.cur\0Анімовані вказівники (*.ani)\0*.ani\0Звичайні вказівники (*.cur)\0*.cur\0Усі файли\0*.*\0\0"
+  IDS_BROWSE_TITLE "Огляд"
+  IDS_REMOVE_TITLE "Підтвердження видалення схеми"
+  IDS_REMOVE_TEXT "Ви дійсно бажаєте видалити схему '%s' із системи?"
+  IDS_OVERWRITE_TITLE "Підтвердження заміни схеми"
+  IDS_OVERWRITE_TEXT "Вибрана схема вказівників уже використовується. Замінити вихідну схему?"
 END

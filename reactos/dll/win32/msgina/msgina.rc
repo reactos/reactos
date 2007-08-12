@@ -15,4 +15,4 @@ IDI_ROSLOGO BITMAP "resources/reactos.bmp"
 #include "lang/id-ID.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
-
+#include "lang/uk-UA.rc"

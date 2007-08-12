@@ -1,0 +1,467 @@
+/*
+ * Regedit resources
+ *
+ * Copyright 2002 Robert Dickenson
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+{
+    VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
+    "^F", ID_EDIT_FIND
+    VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
+    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
+}
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "&Αρχείο"
+    BEGIN
+        MENUITEM "Έ&ξοδος",                     ID_REGISTRY_EXIT
+    END
+    POPUP "&Βοήθεια"
+    BEGIN
+        MENUITEM "&Σχετικά ...",                ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "&Αρχείο"
+    BEGIN
+        MENUITEM "&Εισαγωγή ...", ID_REGISTRY_IMPORTREGISTRYFILE
+
+        MENUITEM "&Εξαγωγή...",   ID_REGISTRY_EXPORTREGISTRYFILE
+
+        MENUITEM SEPARATOR
+		MENUITEM "Φόρτωση Hive...",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Αφαίρεση Hive...",     		ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM SEPARATOR
+        MENUITEM "&Connect Network Registry...",
+                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
+
+        MENUITEM "&Disconnect Network Registry...",
+                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Εκτύπωση\tCtrl+P",           ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Έ&ξοδος",                     ID_REGISTRY_EXIT
+    END
+    POPUP "&Επεξεργασία"
+    BEGIN
+        MENUITEM "&Μετατροπή",                  ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "&Νέο"
+        BEGIN
+            MENUITEM "&Κλειδί",                     ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&Αλφαριθμητική Τιμή",         ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Δυαδική Τιμή",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Τιμή" ,                ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "&Multi-String Τιμή",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Expandable String Τιμή",	    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Δικαιώματα...",		ID_EDIT_PERMISSIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&ΔΙαγραφή\tDel",                ID_EDIT_DELETE
+        MENUITEM "&Μετονομασία",                  ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Αντιγραφή Ονόματος Κλειδιού",  ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Εύρεση\tCtrl+F",               ID_EDIT_FIND
+        MENUITEM "Εύρεση Ε&πόμενου\tF3",          ID_EDIT_FINDNEXT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Γραμμή &Κατάστασης",          ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Sp&lit",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Ανανέωση\tF5",               ID_VIEW_REFRESH
+    END
+    POPUP "&Αγαπημένα"
+    BEGIN
+        MENUITEM "&Προσθήκη στα Αγαπημένα",    ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "&Αφαίρεση Αγαπημένου",       ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "&Βοήθεια"
+    BEGIN
+        MENUITEM "&Θέματα Βοήθειας\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&Σχετικά με τον Registry Editor", ID_HELP_ABOUT
+    END
+END
+
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Μετατροπή",                    ID_EDIT_MODIFY
+	MENUITEM "Μετατροπή Δυαδικών Δεδομένων",  ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "&Διαγραφή\tDel",                ID_EDIT_DELETE
+	MENUITEM "&Μετονομασία",                  ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "&Νέο"
+        BEGIN
+            MENUITEM "&Κλειδί",                     ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&Αλφαριθμητική Τιμή",         ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Δυαδική Τιμή",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Τιμή" ,                ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "&Multi-String Τιμή",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Expandable String Τιμή", 	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "Expand/Collapse",                 ID_TREE_EXPANDBRANCH
+        POPUP "&Νέο"
+        BEGIN
+            MENUITEM "&Κλειδί",                     ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&Αλφαριθμητική Τιμή",         ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Δυαδική Τιμή",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Τιμή" ,                ID_EDIT_NEW_DWORDVALUE
+			MENUITEM "&Multi-String Τιμή",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "&Expandable String Τιμή", 	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+        END
+        MENUITEM "&Εύρεση",                         ID_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "&Διαγραφή",                       ID_TREE_DELETE
+        MENUITEM "&Μετονομασία",                    ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Εξαγωγή",                        ID_TREE_EXPORT
+        MENUITEM "&Δικαιώματα...",                  ID_TREE_PERMISSIONS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Αντιγραφή Ονόματος Κλειδιού",    ID_EDIT_COPYKEYNAME
+  END
+END
+
+
+/*
+ * Dialog
+ */
+
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Επεξεργασία Αλφαρηθμητικού"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Τιμή &Ονόματος:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Τιμή Δεδομένων:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "Ακύρωση",IDCANCEL,196,64,50,14
+END
+
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Επεξεργασία Multi-String"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Τιμή &Ονόματος:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Τιμή Δεδομένων:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Ακύρωση",IDCANCEL,196,154,50,14
+END
+
+IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Επεξεργασία Δυαδικής Τιμής"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Τιμή &Ονόματος:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Τιμή Δεδομένων:",IDC_STATIC,6,35,161,8
+    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Ακύρωση",IDCANCEL,196,154,50,14
+END
+
+
+IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Επεξεργασία DWORD"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Τιμή &Ονόματος:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Τιμή Δεδομένων:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
+    GROUPBOX        "Base",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "&Δεκαεξαδικό",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "Δε&καδικό",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
+    PUSHBUTTON      "Ακύρωση",IDCANCEL,196,82,50,14
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Όνομα"
+    IDS_LIST_COLUMN_TYPE    "Τύπος"
+    IDS_LIST_COLUMN_DATA    "Δεδομένα"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "Registry Editor"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "Περιέχει εντολές για εργασία σε όλη τη registry"
+    ID_EDIT_MENU            "Περιέχει εντολές για την επεξεργασία τιμών ή κλειδιών"
+    ID_VIEW_MENU            "Περιέχει εντολές για η ρύθμιση του παραθύρου της registry"
+    ID_FAVOURITES_MENU      "Περιέχει εντολές για την προσπέλαση ευρέως χρησιμοποιούμενων κλειδιών"
+    ID_HELP_MENU            "Περιέχει εντολές για την εμφάνμιση βοήθειας και λεπτομεριεών για τον registry editor"
+    ID_EDIT_NEW_MENU        "Περιέχει εντολές για τη δημηιουργία νέων τιμών ή κλειδιών"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "Τροποποιεί τα δεδομένα της τιμής"
+    ID_EDIT_NEW_KEY         "Προσθέτει νέο κλειδί"
+    ID_EDIT_NEW_STRINGVALUE "Προσθέτει μια νέα αλφαριθμητική τιμή"
+    ID_EDIT_NEW_BINARYVALUE "Προσθέτει μια νέα δυαδική τιμή"
+    ID_EDIT_NEW_DWORDVALUE  "Προσθέτιε μαι νέα double word τιμή"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Εισάγει ένα αρχείο κειμένου στη registry"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "Εξάγωη όλη ή ένα κομμάτι της registry σε ένα αρχείο κειμένου"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "Συνδέεεται στη registry ενός απομακρυσμένου υπολογιστή"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "Αποσυνδέεεται από τη registry ενός απομακρυσμένου υπολογιστή"
+    ID_REGISTRY_PRINT       "Εκτυπώνει όλο το κομμάτι της registry"
+/*    ID_HELP_HELPTOPICS      "Opens registry editor help" */
+    ID_HELP_ABOUT           "Εμφανίζει τις πληροφορίες προγράμματος, τον αριθμό έκδοσης και τα δικαιώματα"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "Κλείνει τον registry editor"
+    ID_FAVOURITES_ADDTOFAVOURITES "Προσθέτει κλειδιά στη λίστα αγαπημένων"
+    ID_FAVOURITES_REMOVEFAVOURITE "Removes keys from the favourites list"
+    ID_VIEW_STATUSBAR       "Εμφανίζει ή αποκρύπτει τη γραμμή κατάστασης"
+    ID_VIEW_SPLIT           "Αλλαγή τοποθεσίας ή διαχωρισμός σε 2 panes"
+    ID_VIEW_REFRESH         "Ανανεώνει το παράθυρο"
+    ID_EDIT_DELETE          "Διαγράφει την επιλογή"
+    ID_EDIT_RENAME          "Μετονομάζει την επιλογή"
+    ID_EDIT_COPYKEYNAME     "Αντιγράφει το όνομα του επιλεγμένου κλειδιού στο clipboard"
+    ID_EDIT_FIND            "Βρίσκει ένα αλφαριθμητικό κειμένου σε κλειδιά, τιμές και δεδομένα"
+    ID_EDIT_FINDNEXT        "Βρίσκει την επόμενη τοποθεσία του επιλεγμένου αλφαριθμητικού της προηγούμενης αναζήτησης"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "Σφάλμα"
+    IDS_WARNING		    "Προειδοποίηση"
+    IDS_BAD_KEY             "Can't query key '%s'"
+    IDS_BAD_VALUE           "Can't query value '%s'"
+    IDS_UNSUPPORTED_TYPE    "Δεν είναι δυνατή η επεξεργασία κλειδιών αυτού του τύπου (%ld)"
+    IDS_TOO_BIG_VALUE       "Η τιμή είναι πολύ μεγάλη (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
+    IDS_QUERY_DELETE_KEY_ONE    "Είστε σίγουροι ότιθέλετε να διαγράψετε αυτό το κλειδί;"
+    IDS_QUERY_DELETE_KEY_MORE   "Είστε σίγουροι ότιθέλετε να διαγράψετε αυτά τα κλειδιά;"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Επιβεβαίωση Διαγραφής Κλειδιού"
+    IDS_QUERY_DELETE_ONE    "Είστε σίγουροι ότιθέλετε να διαγράψετε αυτή την τιμή;"
+    IDS_QUERY_DELETE_MORE   "Είστε σίγουροι ότιθέλετε να διαγράψετε αυτές τις τιμές;"
+    IDS_QUERY_DELETE_CONFIRM "Επιβεβαίωση Διαγραφής Τιμής"
+    IDS_ERR_DELVAL_CAPTION  "Σφάλμα κατά τη Διαγραφή Τιμών"
+    IDS_ERR_DELETEVALUE     "Δεν ήτνα δυνατή η διαγραφή όλων των τιμών!"
+    IDS_ERR_RENVAL_CAPTION  "Σφάλμα κατά τη Μετονομασία Τιμών"
+    IDS_ERR_RENVAL_TOEMPTY  "Δεν είναι δυνατή η μετονομασία του %s. Το όνομα της συγκεκριμένης τιμής είναι άδειο. Δώστε άλλο όνομα και προσπαθήστε ξανά."
+    IDS_NEW_KEY             "Νέο Κλειδί #%d"
+    IDS_NEW_VALUE           "Νέα Τιμή #%d"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(δυαδική τιμή μηδενικού μεγέθους)"
+    IDS_DEFAULT_VALUE_NAME  "(Προεπιλεγμένο)"
+    IDS_VALUE_NOT_SET       "(η τιμή δεν έχει οριστεί)"
+    IDS_UNKNOWN_TYPE        "’γνωστος τύπος: (0x%lx)"
+    IDS_MY_COMPUTER         "Ο Υπολογιστής Μου"
+    IDS_IMPORT_REG_FILE     "Εισαγωγή Αρχείου Registry"
+    IDS_EXPORT_REG_FILE     "Εξαγωγή Αρχείου Registry"
+    IDS_INVALID_DWORD       "(μη έγκυρη DWORD τιμή)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "Registration αρχεία"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 Registration αρχεία (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "Όλα τα αρχεία (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "Πλήρης Έλεγχος"
+  IDS_ACCESS_READ               "Διάβασμα"
+  IDS_ACCESS_QUERYVALUE         "Query τιμή"
+  IDS_ACCESS_SETVALUE           "Ορισμός Τιμής"
+  IDS_ACCESS_CREATESUBKEY       "Δημιουργία Υποκλειδιού"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Απαρίθμηση Υποκλειδιών"
+  IDS_ACCESS_NOTIFY             "Ειδοποίηση"
+  IDS_ACCESS_CREATELINK         "Δημιουργία Συνδέσμου"
+  IDS_ACCESS_DELETE             "Διαγραφή"
+  IDS_ACCESS_WRITEDAC           "Εγγραφή DAC"
+  IDS_ACCESS_WRITEOWNER         "Εγγραφή Ιδιοκτήτη"
+  IDS_ACCESS_READCONTROL        "Read Control"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "Μόνο αυτό το κλειδί"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "Αυτό το κλειδί και τα υποκλειδιά"
+  IDS_INHERIT_SUBKEYSONLY        "Μόνο τα υποκλειδιά"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "&Expand"
+  IDS_COLLAPSE                   "&Collapse"
+  IDS_GOTO_SUGGESTED_KEY         "&Μετάβαση σε '%s'"
+  IDS_FINISHEDFIND               "Τέλος αναζήτησης στη registry."
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_EXPORTRANGE DIALOG DISCARDABLE  50, 50, 370, 50
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 8, "MS Shell Dlg"
+BEGIN
+   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
+   CONTROL "&Όλα",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
+END
+
+IDD_ADDFAVORITES DIALOG DISCARDABLE  0, 0, 186, 46
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Προσθήκη στα αγαπημένα"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Ακύρωση",IDCANCEL,129,24,50,14
+    LTEXT           "&Όνομα Αγαπημένου:",IDC_STATIC,7,7,70,10
+    EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
+END
+
+IDD_REMOVEFAVORITES DIALOG DISCARDABLE  0, 0, 164, 135
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Αφαίρεση Αγαπημένων"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
+    PUSHBUTTON      "Ακύρωση",IDCANCEL,7,114,50,14
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
+                    WS_BORDER | WS_TABSTOP,7,20,150,90
+    LTEXT           "Επιλογή Αγαπημένου(ων):",IDC_STATIC,7,7,99,12
+END
+
+IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Εύρεση"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Εύρεση Επόμενου",IDOK,197,7,50,14
+    PUSHBUTTON      "Ακύρωση",IDCANCEL,197,24,50,14
+    GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
+    LTEXT           "Εύ&ρεση τίνος:",IDC_STATIC,7,8,37,10
+    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
+    CONTROL         "&Κλειδιά",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,36,35,8
+    CONTROL         "&Τιμές",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,48,36,8
+    CONTROL         "&Δεδομένα",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,60,42,8
+    CONTROL         "Ταίριασμα &ολόκληρου του αλφαριθμητικού μόνο",IDC_MATCHSTRING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+    CONTROL         "Ταίριασμα &κεφαλαίων",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,83,48,90,12
+END
+
+IDD_FINDING DIALOGEX 0, 0, 145, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Εύρεση"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
+    PUSHBUTTON      "&Ακύρωση",IDCANCEL,93,29,45,14
+    LTEXT           "Γίνεται αναζήτηση στη registry...",IDC_STATIC,33,12,83,8
+END
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
+ *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *END
+ */
+
+/*****************************************************************/

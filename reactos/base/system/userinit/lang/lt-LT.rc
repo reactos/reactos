@@ -1,0 +1,11 @@
+/* Translation by Vytis 'CMan' Girdþijauskas cman@cman.us */
+
+#include "resource.h"
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+
+STRING_USERINIT_FAIL, "Userinit nepavyko paleisti aplinkos!\n"
+
+}

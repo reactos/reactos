@@ -1,0 +1,23 @@
+/*
+ * PROJECT:     ReactOS Shutdown Utility
+ * FILE:        base/applications/shutdown/lang/sk-SK.rc
+ * PURPOSE:     Slovak Language File for shutdown
+ * TRANSLATOR:  Kario (kario@szm.sk)
+ * DATE OF TR:  25-07-2007
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "Použitie: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  Žiadne argumenty\tZobrazí sa táto správa\n\
+  -?\t\t\tZobrazí túto správu\n\
+  -l\t\t\tOdhlási používate¾a\n\
+  -s\t\t\tVypne poèítaè\n\
+  -r\t\t\tReštartuje poèítaè\n\
+  -f\t\t\tDonúti spustené programy aby sa vypli bez upozornení.\n\
+    \t\t\tAk nebol zadaný žiadny iný parameter, tak aj odhlási\n\
+    \t\t\tpoužívate¾a."
+}

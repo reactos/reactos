@@ -68,7 +68,7 @@ BEGIN
     IDS_DEV_NO_VALID_LOG_CONF "ReactOS non può indicare le risorse per questo dispositivo."
     IDS_DEV_FAILED_INSTALL "I driver non sono installati."
     IDS_DEV_HARDWARE_DISABLED "Disabilitato perchè il BIOS del dispositivo non ha assegnato nessuna risorsa."
-    IDS_DEV_CANT_SHARE_IRQ "Questo dispositivo usa un Interrupt Request (IRQ) che è già in uso e non può essere condiviso.\nDevi cambiare l\'impostazione in conflitto o togliere il driver \"real-mode\" che provoca il conflitto."
+    IDS_DEV_CANT_SHARE_IRQ "Questo dispositivo usa un Interrupt Request (IRQ) che è già in uso e non può essere condiviso.\nDevi cambiare l'impostazione in conflitto o togliere il driver \"real-mode\" che provoca il conflitto."
     IDS_DEV_FAILED_ADD "Non funziona regolarmente a causa di $1 ."
     IDS_DEV_DISABLED_SERVICE "ReactOS non può installare i driver del dispositivo perchè non è possibile accedere al disco o alla rete dove si trovano i file di setup."
     IDS_DEV_TRANSLATION_FAILED "Il dispositivo non risponde ai suoi driver."

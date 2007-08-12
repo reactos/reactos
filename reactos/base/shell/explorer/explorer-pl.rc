@@ -174,27 +174,27 @@ FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Wybierz sposób uk³adania ikon:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+    CONTROL         "lewy/gór w dó³",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+    CONTROL         "lewy/gór w prw",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+    CONTROL         "prwy/gór w lewo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+    CONTROL         "prwy/gór w dó³",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+    CONTROL         "lewy/dol.w gór",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+    CONTROL         "lewy/dol.w praw",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+    CONTROL         "prwy/dol.w lewo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+    CONTROL         "prwy/dol.w gór",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+    CONTROL         "obustr. w dó³",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
-    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+    CONTROL         "na brzegach",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+    CONTROL         "dooko³a",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
                     WS_TABSTOP,159,121,46,44
@@ -366,13 +366,13 @@ BEGIN
     IDS_NETWORK             "Sieæ"
     IDS_CONNECTIONS         "Po³¹czenia sieciowe"
     IDS_DRIVES              "Dysk"
-    IDS_SEARCH_COMPUTER     "ZnajdŸ komputar..."
-    IDS_SETTINGS_MENU       "Settings menu"
+    IDS_SEARCH_COMPUTER     "ZnajdŸ komputer..."
+    IDS_SETTINGS_MENU       "Menu ustawieñ"
     IDS_CONTROL_PANEL       "Panel sterowania"
     IDS_PRINTERS            "Drukarki"
     IDS_BROWSE              "Przegl¹daj"
     IDS_SEARCH_PRG          "ZnajdŸ program..."
-    IDS_ALL_USERS           "All Users\\"
+    IDS_ALL_USERS           "Wszyscy\\"
     IDS_SEARCH              "Szukaj"
     IDS_ABOUT_EXPLORER      "ReactOS Explorer - &Informacje"
     IDS_LAUNCH_MANY_PROGRAMS 
@@ -396,4 +396,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

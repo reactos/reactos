@@ -1,0 +1,28 @@
+/*
+ * FILE:        dll/win32/netid/lang/sk-SK.rc
+ * PURPOSE:     Slovak Language File for ReactOS Network ID
+ * TRANSLATOR:  Kario <kario@szm.sk>
+ * DATE OF TR.: 25-07-2007
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "N·zov poËÌtaËa"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
+    LTEXT       "ReactOS pouûije nasleduj˙ce inform·cie pri identifik·cii poËÌtaËa v sieti.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "&Popis poËÌtaËa:", IDC_STATIC, 6, 40, 70, 9
+    EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT       "⁄pln˝ n·zov poËÌtaËa:", IDC_STATIC, 6, 68, 75, 9
+    LTEXT       "(Predvolen˝)", IDC_COMPUTERNAME, 98, 68, 144, 11
+    LTEXT       "Pracovn· skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 70, 9
+    LTEXT       "(pr·zdne)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
+    LTEXT       "Ak sa chcete pripojiù pomocou Sprievodcu identifik·ciou v sieti na domÈnu a vytvoriù lok·lne pouûÌvateæskÈ konto, kliknite na tlaËidlo Sieùov· identifik·cia.", IDC_STATIC, 6, 108, 160, 33
+    PUSHBUTTON  "&Sieùov· identifik·cia", IDC_NETWORK_ID, 176, 114, 72, 15
+    LTEXT       "Ak chcete zmeniù n·zov poËÌtaËa alebo sa pripojiù na domÈnu, kliknite na tlaËidlo Zmeniù.", IDC_STATIC, 6, 149, 160, 17
+    PUSHBUTTON  "Z&meniù...",IDC_NETWORK_PROPERTY, 176, 149, 72, 15
+    LTEXT       "Pozn·mka: Identifik·ciu poËÌtaËa mÙûu zmeniù len spr·vcovia poËÌtaËa.", IDC_STATIC, 6, 179, 244, 9
+END

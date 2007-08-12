@@ -588,7 +588,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
  *
  */
 
-static VOID
+VOID
 DoCommand (LPTSTR line)
 {
 	TCHAR *com = NULL;  /* the first word in the command */

@@ -100,7 +100,6 @@ SetupCopyFile(PWCHAR SourceFileName,
   static IO_STATUS_BLOCK IoStatusBlock;
   FILE_STANDARD_INFORMATION FileStandard;
   FILE_BASIC_INFORMATION FileBasic;
-  PUCHAR Buffer;
   ULONG RegionSize;
   UNICODE_STRING FileName;
   NTSTATUS Status;
@@ -108,8 +107,6 @@ SetupCopyFile(PWCHAR SourceFileName,
   HANDLE SourceFileSection;
   SIZE_T SourceSectionSize = 0;
   LARGE_INTEGER ByteOffset;
-
-  Buffer = NULL;
 
 #ifdef __REACTOS__
   RtlInitUnicodeString(&FileName,

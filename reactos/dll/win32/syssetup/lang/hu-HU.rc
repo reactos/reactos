@@ -203,8 +203,6 @@ END
 
 STRINGTABLE
 BEGIN
-   IDS_CMT_WINEFILE    "Winefile indítása"
-   IDS_CMT_IBROWSER    "iBrowser indítása"
    IDS_CMT_DOWNLOADER  "Download and install various applications"
 END
 

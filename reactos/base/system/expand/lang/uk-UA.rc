@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     ReactOS File Expansion Utility
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/expand/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Expand
+ * TRANSLATOR:  Artem Reznikov
+ */
+#include "resource.h"
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+
+IDS_Copy, "Програма розпаковки файлів ReactOS версія 1.0\n\
+Copyright Victor Schneider 1997\n\n\
+Usage: %s infile [outfile]\n"
+
+IDS_FAILS "Не вдалося виконати: return is %ld\n"
+}

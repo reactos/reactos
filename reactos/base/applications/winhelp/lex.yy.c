@@ -380,9 +380,9 @@ static char *yy_last_accepting_cpos;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 1 "macro.lex.l"
 #define INITIAL 0
-#line 2 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 2 "macro.lex.l"
 /*
  * Help Viewer
  *
@@ -406,7 +406,7 @@ char *yytext;
 #define YY_NO_UNPUT 1
 #define quote 1
 
-#line 26 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 26 "macro.lex.l"
 #include <assert.h>
 #include "macro.h"
 
@@ -574,7 +574,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 43 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 43 "macro.lex.l"
 
 
 #line 581 "lex.yy.c"
@@ -662,32 +662,32 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 45 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 45 "macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 10);	return INTEGER;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 46 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 46 "macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 16);	return INTEGER;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 48 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 48 "macro.lex.l"
 return MACRO_Lookup(yytext, &yylval);
 	YY_BREAK
 case 4:
-#line 51 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 51 "macro.lex.l"
 case 5:
-#line 52 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 52 "macro.lex.l"
 case 6:
-#line 53 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 53 "macro.lex.l"
 case 7:
-#line 54 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 54 "macro.lex.l"
 case 8:
-#line 55 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 55 "macro.lex.l"
 case 9:
 YY_RULE_SETUP
-#line 55 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 55 "macro.lex.l"
 {
     if (quote_stk_idx == 0 ||
         (yytext[0] == '\"' && quote_stack[quote_stk_idx - 1] != '\"') ||
@@ -720,31 +720,31 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 85 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 85 "macro.lex.l"
 *strptr++ = yytext[0];
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 86 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 86 "macro.lex.l"
 *strptr++ = yytext[1];
 	YY_BREAK
 case YY_STATE_EOF(quote):
-#line 87 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 87 "macro.lex.l"
 return 0;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 89 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 89 "macro.lex.l"
 
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 90 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 90 "macro.lex.l"
 return yytext[0];
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 91 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 91 "macro.lex.l"
 ECHO;
 	YY_BREAK
 #line 751 "lex.yy.c"
@@ -1633,7 +1633,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 91 "D:\\ReactOS\\trunk\\reactos\\base\\applications\\winhelp\\macro.lex.l"
+#line 91 "macro.lex.l"
 
 
 #if 0
