@@ -4,6 +4,9 @@
 <directory name="arp">
     <xi:include href="arp/arp.rbuild" />
 </directory>
+<directory name="dwnl">
+    <xi:include href="dwnl/dwnl.rbuild" />
+</directory>
 <directory name="finger">
     <xi:include href="finger/finger.rbuild" />
 </directory>
