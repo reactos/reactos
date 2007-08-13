@@ -63,7 +63,6 @@ UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData, IN BOOL bUpdateThumb)
 
 	for (index = 0; index < pGlobalData->CurrentDisplayDevice->ResolutionsCount; index++)
 	{
-
 		if (pGlobalData->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
 		    pGlobalData->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
 		{
@@ -87,6 +86,7 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 	HDC hDC;
 	PSETTINGS_ENTRY Current;
 	DWORD bpp, xres, yres, checkbpp;
+    DWORD curDispFreq;
 
 
 	/* Get current settings */
@@ -101,10 +101,24 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 	/* List all settings */
 	devmode.dmSize = (WORD)sizeof(DEVMODE);
 	devmode.dmDriverExtra = 0;
+
+	if (!EnumDisplaySettingsEx(DeviceName, ENUM_CURRENT_SETTINGS, &devmode, dwFlags))
+		return NULL;
+
+	curDispFreq = devmode.dmDisplayFrequency;
+
 	while (EnumDisplaySettingsEx(DeviceName, iMode, &devmode, dwFlags))
 	{
-		if (devmode.dmBitsPerPel==8 || devmode.dmBitsPerPel==16 || devmode.dmBitsPerPel==24 || devmode.dmBitsPerPel==32) checkbpp=1;
-		else checkbpp=0;
+		if ((devmode.dmBitsPerPel==8 ||
+			 devmode.dmBitsPerPel==16 ||
+			 devmode.dmBitsPerPel==24 ||
+			 devmode.dmBitsPerPel==32) &&
+			 devmode.dmDisplayFrequency==curDispFreq)
+		{
+			checkbpp=1;
+		}
+		else
+			checkbpp=0;
 
 		if (devmode.dmPelsWidth < 640 ||
 			devmode.dmPelsHeight < 480 || checkbpp == 0)
@@ -189,17 +203,22 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR D
 
 	newEntry->Resolutions = HeapAlloc(GetProcessHeap(), 0, ResolutionsCount * sizeof(RESOLUTION_INFO));
 	if (!newEntry->Resolutions) goto ByeBye;
+
 	newEntry->ResolutionsCount = ResolutionsCount;
+
 	/* Fill resolutions infos */
 	for (Current = newEntry->Settings, i = 0; Current != NULL; Current = Current->Flink)
-		if (Current->Flink == NULL || (Current->Flink != NULL &&
-		    ((Current->dmPelsWidth != Current->Flink->dmPelsWidth) || (Current->dmPelsHeight != Current->Flink->dmPelsHeight))))
+	{
+		if (Current->Flink == NULL ||
+			(Current->Flink != NULL &&
+			((Current->dmPelsWidth != Current->Flink->dmPelsWidth) ||
+			(Current->dmPelsHeight != Current->Flink->dmPelsHeight))))
 		{
 			newEntry->Resolutions[i].dmPelsWidth = Current->dmPelsWidth;
 			newEntry->Resolutions[i].dmPelsHeight = Current->dmPelsHeight;
 			i++;
 		}
-
+	}
 	descriptionSize = (_tcslen(Description) + 1) * sizeof(TCHAR);
 	description = HeapAlloc(GetProcessHeap(), 0, descriptionSize);
 	if (!description) goto ByeBye;
