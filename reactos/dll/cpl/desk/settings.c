@@ -177,7 +177,6 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR D
 	newEntry->InitialSettings.dmBitsPerPel = newEntry->CurrentSettings->dmBitsPerPel;
 
 	/* Count different resolutions */
-	/* Count different resolutions */
 	for (Current = newEntry->Settings; Current != NULL; Current = Current->Flink)
 	{
 		if (Current->Flink != NULL &&
