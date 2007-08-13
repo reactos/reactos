@@ -2,6 +2,7 @@
 #define __MSGINA_H
 
 #include <windows.h>
+#include <userenv.h>
 #include <winwlx.h>
 #include "resource.h"
 

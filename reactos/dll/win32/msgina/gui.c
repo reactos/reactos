@@ -77,7 +77,7 @@ StartupWindowThread(LPVOID lpParam)
 		return FALSE;
 	}
 	DialogBoxParam(
-		hDllInstance, 
+		hDllInstance,
 		MAKEINTRESOURCE(IDD_STATUSWINDOW_DLG),
 		GetDesktopWindow(),
 		StatusMessageWindowProc,

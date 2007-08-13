@@ -10,6 +10,7 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>gdi32</library>
+	<library>userenv</library>
 	<file>gui.c</file>
 	<file>msgina.c</file>
 	<file>stubs.c</file>
