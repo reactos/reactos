@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -24,11 +24,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 
-HMODULE NETAPI32_hModule = 0;
+static HMODULE NETAPI32_hModule;
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("%p,%lx,%p\n", hinstDLL, fdwReason, lpvReserved);
+    TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
@@ -49,6 +49,9 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     return TRUE;
 }
 
+/************************************************************
+ *                NetServerEnum (NETAPI32.@)
+ */
 NET_API_STATUS  WINAPI NetServerEnum(
   LPCWSTR servername,
   DWORD level,
@@ -61,20 +64,40 @@ NET_API_STATUS  WINAPI NetServerEnum(
   LPDWORD resume_handle
 )
 {
-    FIXME("Stub (%s %ld %p %ld %p %p %ld %s %p)\n", debugstr_w(servername),
+    FIXME("Stub (%s %d %p %d %p %p %d %s %p)\n", debugstr_w(servername),
      level, bufptr, prefmaxlen, entriesread, totalentries, servertype,
      debugstr_w(domain), resume_handle);
 
     return ERROR_NO_BROWSER_SERVERS_FOUND;
 }
 
+/************************************************************
+ *                NetServerEnumEx (NETAPI32.@)
+ */
+NET_API_STATUS WINAPI NetServerEnumEx(
+    LPCWSTR ServerName,
+    DWORD Level,
+    LPBYTE *Bufptr,
+    DWORD PrefMaxlen,
+    LPDWORD EntriesRead,
+    LPDWORD totalentries,
+    DWORD servertype,
+    LPCWSTR domain,
+    LPCWSTR FirstNameToReturn)
+{
+    FIXME("Stub (%s %d %p %d %p %p %d %s %p)\n", debugstr_w(ServerName),
+     Level, Bufptr, PrefMaxlen, EntriesRead, totalentries, servertype,
+     debugstr_w(domain), debugstr_w(FirstNameToReturn));
+                                                                                
+    return ERROR_NO_BROWSER_SERVERS_FOUND;
+}
 
 /************************************************************
  *                NetServerGetInfo  (NETAPI32.@)
  */
 NET_API_STATUS WINAPI NetServerGetInfo(LMSTR servername, DWORD level, LPBYTE* bufptr)
 {
-    FIXME("stub (%p, %ld, %p)\n", servername, level, bufptr);
+    FIXME("stub (%p, %d, %p)\n", servername, level, bufptr);
     return ERROR_ACCESS_DENIED;
 }
 
@@ -86,7 +109,7 @@ NET_API_STATUS WINAPI NetStatisticsGet(LPWSTR server, LPWSTR service,
                                        DWORD level, DWORD options,
                                        LPBYTE *bufptr)
 {
-    TRACE("(%p, %p, %ld, %ld, %p)\n", server, service, level, options, bufptr);
+    TRACE("(%p, %p, %d, %d, %p)\n", server, service, level, options, bufptr);
     return NERR_InternalError;
 }
 

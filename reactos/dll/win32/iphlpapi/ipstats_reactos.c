@@ -26,6 +26,8 @@
 #include "ipstats.h"
 #include "ifenum.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
+
 #ifndef TCPS_ESTABLISHED
 # define TCPS_ESTABLISHED TCP_ESTABLISHED
 #endif
@@ -81,7 +83,7 @@ BOOL isIpEntity( HANDLE tcpFile, TDIEntityID *ent ) {
           &returnedLen,
           NULL );
 
-    DPRINT("Ent: %04x:d -> %04x\n", 
+    TRACE("Ent: %04x:d -> %04x\n", 
            ent->tei_entity, ent->tei_instance, entityType );
 
     return NT_SUCCESS(status) && entityType == CL_NL_IP;
@@ -99,14 +101,14 @@ NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
 
     for( i = 0; i < numEntities; i++ ) {
         if( isIpEntity( tcpFile, &entitySet[i] ) ) {
-            DPRINT("Entity %d is an IP Entity\n", i);
+            TRACE("Entity %d is an IP Entity\n", i);
             if( numRoutes == index ) break;
             else numRoutes++;
         }
     }
 
     if( numRoutes == index && i < numEntities ) {
-        DPRINT("Index %d is entity #%d - %04x:%08x\n", index, i, 
+        TRACE("Index %d is entity #%d - %04x:%08x\n", index, i, 
                entitySet[i].tei_entity, entitySet[i].tei_instance );
         memcpy( ent, &entitySet[i], sizeof(*ent) );
         tdiFreeThingSet( entitySet );
@@ -125,7 +127,7 @@ NTSTATUS tdiGetMibForIpEntity
 
     memset( entry, 0, sizeof( *entry ) );
 
-    DPRINT("TdiGetMibForIpEntity(tcpFile %x,entityId %x)\n",
+    TRACE("TdiGetMibForIpEntity(tcpFile %x,entityId %x)\n",
            (DWORD)tcpFile, ent->tei_instance);
 
     req.ID.toi_class                = INFO_CLASS_PROTOCOL;
@@ -142,7 +144,7 @@ NTSTATUS tdiGetMibForIpEntity
                               &returnSize,
                               NULL );
 
-    DPRINT("TdiGetMibForIpEntity() => {\n"
+    TRACE("TdiGetMibForIpEntity() => {\n"
            "  ipsi_forwarding ............ %d\n"
            "  ipsi_defaultttl ............ %d\n"
            "  ipsi_inreceives ............ %d\n"
@@ -175,7 +177,7 @@ NTSTATUS tdiGetRoutesForIpEntity
 ( HANDLE tcpFile, TDIEntityID *ent, IPRouteEntry **routes, PDWORD numRoutes ) {
     NTSTATUS status = STATUS_SUCCESS;
 
-    DPRINT("TdiGetRoutesForIpEntity(tcpFile %x,entityId %x)\n",
+    TRACE("TdiGetRoutesForIpEntity(tcpFile %x,entityId %x)\n",
            (DWORD)tcpFile, ent->tei_instance);
 
     status = tdiGetSetOfThings( tcpFile,
@@ -196,7 +198,7 @@ NTSTATUS tdiGetIpAddrsForIpEntity
 ( HANDLE tcpFile, TDIEntityID *ent, IPAddrEntry **addrs, PDWORD numAddrs ) {
     NTSTATUS status;
 
-    DPRINT("TdiGetIpAddrsForIpEntity(tcpFile %x,entityId %x)\n",
+    TRACE("TdiGetIpAddrsForIpEntity(tcpFile %x,entityId %x)\n",
            (DWORD)tcpFile, ent->tei_instance);
 
     status = tdiGetSetOfThings( tcpFile, 
@@ -451,7 +453,7 @@ RouteTable *getRouteTable(void)
     if( !NT_SUCCESS(status) )
         return 0;
 
-    DPRINT("GETTING ROUTE TABLE\n");
+    TRACE("GETTING ROUTE TABLE\n");
 
     out_route_table = HeapAlloc( GetProcessHeap(), 0, 
                                  sizeof(RouteTable) + 
@@ -466,7 +468,7 @@ RouteTable *getRouteTable(void)
         getNthIpEntity( tcpFile, i, &ent );
         tdiGetMibForIpEntity( tcpFile, &ent, &snmpInfo );
 
-        DPRINT( "%d routes in instance %d\n", snmpInfo.ipsi_numroutes, i );
+        TRACE( "%d routes in instance %d\n", snmpInfo.ipsi_numroutes, i );
 
         tdiGetRoutesForIpEntity( tcpFile, &ent, &route_set, &numRoutes );
 
@@ -476,7 +478,7 @@ RouteTable *getRouteTable(void)
             return 0;
         }
 
-        DPRINT("Route set returned\n");
+        TRACE("Route set returned\n");
 #if 0
         HexDump( route_set, 
                  sizeof( IPRouteEntry ) * 
@@ -502,7 +504,7 @@ RouteTable *getRouteTable(void)
         routesAdded += snmpInfo.ipsi_numroutes;
     }
 
-    DPRINT("Return: %08x, %08x\n", status, out_route_table);
+    TRACE("Return: %08x, %08x\n", status, out_route_table);
 
     return out_route_table;
 }

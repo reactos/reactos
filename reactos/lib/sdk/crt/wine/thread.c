@@ -24,9 +24,7 @@
 #include <malloc.h>
 #include <process.h>
 
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
+#include <debug.h>
 
 void _amsg_exit (int errnum);
 /* Index to TLS */
@@ -92,7 +90,7 @@ unsigned long _beginthread(
 {
   _beginthread_trampoline_t* trampoline;
 
-  TRACE("(%p, %d, %p)\n", start_address, stack_size, arglist);
+  DPRINT("(%p, %d, %p)\n", start_address, stack_size, arglist);
 
   /* Allocate the trampoline here so that it is still valid when the thread
    * starts... typically after this function has returned.

@@ -18,10 +18,27 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-#include <precomp.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
+#include "winreg.h"
+#include "winternl.h"
+#include "commdlg.h"
+#include "shlwapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+
+#include "cdlg.h"
+#include "filedlg31.h"
 
 #define BUFFILE 512
 #define BUFFILEALLOC 512 * sizeof(WCHAR)
@@ -89,7 +106,7 @@ static void FD31_StripEditControl(HWND hwnd)
  *
  *      Call the appropriate hook
  */
-BOOL FD31_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
+BOOL FD31_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
                          LPARAM lParam)
 {
     return lfs->callbacks->CWP(lfs, wMsg, wParam, lParam);
@@ -98,7 +115,7 @@ BOOL FD31_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
 /***********************************************************************
  * 				FD31_ScanDir                 [internal]
  */
-static BOOL FD31_ScanDir(HWND hWnd, LPWSTR newPath)
+static BOOL FD31_ScanDir(HWND hWnd, LPCWSTR newPath)
 {
     WCHAR		buffer[BUFFILE];
     HWND 		hdlg, hdlgDir;
@@ -149,7 +166,7 @@ static BOOL FD31_ScanDir(HWND hWnd, LPWSTR newPath)
  * 				FD31_GetFileType		[internal]
  */
 
-static LPWSTR FD31_GetFileType(LPWSTR cfptr, LPWSTR fptr, WORD index)
+static LPCWSTR FD31_GetFileType(LPCWSTR cfptr, LPCWSTR fptr, const WORD index)
 {
   int n, i;
   i = 0;
@@ -169,14 +186,14 @@ static LPWSTR FD31_GetFileType(LPWSTR cfptr, LPWSTR fptr, WORD index)
 	  return fptr;
 	fptr += lstrlenW(fptr) + 1;
     }
-  return (LPWSTR) FILE_star; /* FIXME */
+  return FILE_star; /* FIXME */
 }
 
 /***********************************************************************
  *                              FD31_WMDrawItem              [internal]
  */
 LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
-       int savedlg, LPDRAWITEMSTRUCT lpdis)
+       int savedlg, const DRAWITEMSTRUCT *lpdis)
 {
     WCHAR *str;
     HICON hIcon;
@@ -281,7 +298,7 @@ LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
  *                              FD31_UpdateResult            [internal]
  *      update the displayed file name (with path)
  */
-static void FD31_UpdateResult(PFD31_DATA lfs, WCHAR *tmpstr)
+static void FD31_UpdateResult(const FD31_DATA *lfs, const WCHAR *tmpstr)
 {
     int lenstr2;
     LPOPENFILENAMEW ofnW = lfs->ofnW;
@@ -319,7 +336,7 @@ static void FD31_UpdateResult(PFD31_DATA lfs, WCHAR *tmpstr)
  *                              FD31_UpdateFileTitle         [internal]
  *      update the displayed file name (without path)
  */
-static void FD31_UpdateFileTitle(PFD31_DATA lfs)
+static void FD31_UpdateFileTitle(const FD31_DATA *lfs)
 {
   LONG lRet;
   LPOPENFILENAMEW ofnW = lfs->ofnW;
@@ -335,7 +352,7 @@ static void FD31_UpdateFileTitle(PFD31_DATA lfs)
 /***********************************************************************
  *                              FD31_DirListDblClick         [internal]
  */
-static LRESULT FD31_DirListDblClick( PFD31_DATA lfs )
+static LRESULT FD31_DirListDblClick( const FD31_DATA *lfs )
 {
   LONG lRet;
   HWND hWnd = lfs->hwnd;
@@ -373,7 +390,7 @@ static LRESULT FD31_DirListDblClick( PFD31_DATA lfs )
  *                              FD31_FileListSelect         [internal]
  *    called when a new item is picked in the file list
  */
-static LRESULT FD31_FileListSelect( PFD31_DATA lfs )
+static LRESULT FD31_FileListSelect( const FD31_DATA *lfs )
 {
     LONG lRet;
     HWND hWnd = lfs->hwnd;
@@ -406,7 +423,7 @@ static LRESULT FD31_FileListSelect( PFD31_DATA lfs )
  *      before accepting the file name, test if it includes wild cards
  *      tries to scan the directory and returns TRUE if no error.
  */
-static LRESULT FD31_TestPath( PFD31_DATA lfs, LPWSTR path )
+static LRESULT FD31_TestPath( const FD31_DATA *lfs, LPWSTR path )
 {
     HWND hWnd = lfs->hwnd;
     LPWSTR pBeginFileName, pstr2;
@@ -475,7 +492,7 @@ static LRESULT FD31_TestPath( PFD31_DATA lfs, LPWSTR path )
  *                              FD31_Validate               [internal]
  *   called on: click Ok button, Enter in edit, DoubleClick in file list
  */
-static LRESULT FD31_Validate( PFD31_DATA lfs, LPWSTR path, UINT control, INT itemIndex,
+static LRESULT FD31_Validate( const FD31_DATA *lfs, LPCWSTR path, UINT control, INT itemIndex,
                                  BOOL internalUse )
 {
     LONG lRet;
@@ -539,7 +556,7 @@ static LRESULT FD31_Validate( PFD31_DATA lfs, LPWSTR path, UINT control, INT ite
  *                              FD31_DiskChange             [internal]
  *    called when a new item is picked in the disk selection combo
  */
-static LRESULT FD31_DiskChange( PFD31_DATA lfs )
+static LRESULT FD31_DiskChange( const FD31_DATA *lfs )
 {
     LONG lRet;
     HWND hWnd = lfs->hwnd;
@@ -563,7 +580,7 @@ static LRESULT FD31_DiskChange( PFD31_DATA lfs )
  *                              FD31_FileTypeChange         [internal]
  *    called when a new item is picked in the file type combo
  */
-static LRESULT FD31_FileTypeChange( PFD31_DATA lfs )
+static LRESULT FD31_FileTypeChange( const FD31_DATA *lfs )
 {
     LONG lRet;
     LPWSTR pstr;
@@ -582,7 +599,7 @@ static LRESULT FD31_FileTypeChange( PFD31_DATA lfs )
  *                              FD31_WMCommand               [internal]
  */
 LRESULT FD31_WMCommand(HWND hWnd, LPARAM lParam, UINT notification,
-       UINT control, PFD31_DATA lfs )
+       UINT control, const FD31_DATA *lfs )
 {
     switch (control)
     {
@@ -678,7 +695,7 @@ static LPWSTR FD31_DupToW(LPCSTR str, DWORD size)
  *                              FD31_MapOfnStructA          [internal]
  *      map a 32 bits Ansi structure to an Unicode one
  */
-void FD31_MapOfnStructA(const LPOPENFILENAMEA ofnA, LPOPENFILENAMEW ofnW, BOOL open)
+void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL open)
 {
     UNICODE_STRING usBuffer;
 
@@ -706,12 +723,14 @@ void FD31_MapOfnStructA(const LPOPENFILENAMEA ofnA, LPOPENFILENAMEW ofnW, BOOL o
         ofnW->lpstrTitle = usBuffer.Buffer;
     } else {
         WCHAR buf[16];
+        LPWSTR title_tmp;
         int len;
         LoadStringW(COMDLG32_hInstance, open ? IDS_OPEN_FILE : IDS_SAVE_AS,
                     buf, sizeof(buf)/sizeof(WCHAR));
         len = lstrlenW(buf)+1;
-        ofnW->lpstrTitle = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
-        memcpy((void*)ofnW->lpstrTitle, buf, len*sizeof(WCHAR));
+        title_tmp = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        memcpy(title_tmp, buf, len * sizeof(WCHAR));
+        ofnW->lpstrTitle = title_tmp;
     }
     ofnW->Flags = ofnA->Flags;
     ofnW->nFileOffset = ofnA->nFileOffset;
@@ -725,7 +744,7 @@ void FD31_MapOfnStructA(const LPOPENFILENAMEA ofnA, LPOPENFILENAMEW ofnW, BOOL o
             ofnW->lpTemplateName = usBuffer.Buffer;
         }
         else /* numbered resource */
-            ofnW->lpTemplateName = (LPWSTR) ofnA->lpTemplateName;
+            ofnW->lpTemplateName = (LPCWSTR) ofnA->lpTemplateName;
     }
 }
 
@@ -734,7 +753,7 @@ void FD31_MapOfnStructA(const LPOPENFILENAMEA ofnA, LPOPENFILENAMEW ofnW, BOOL o
  *                              FD31_FreeOfnW          [internal]
  *      Undo all allocations done by FD31_MapOfnStructA
  */
-void FD31_FreeOfnW(LPOPENFILENAMEW ofnW)
+void FD31_FreeOfnW(OPENFILENAMEW *ofnW)
 {
    HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpstrFilter);
    HeapFree(GetProcessHeap(), 0, ofnW->lpstrCustomFilter);
@@ -808,7 +827,7 @@ LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
   lfs->hwnd = hWnd;
   ofn = lfs->ofnW;
 
-  TRACE("flags=%lx initialdir=%s\n", ofn->Flags, debugstr_w(ofn->lpstrInitialDir));
+  TRACE("flags=%x initialdir=%s\n", ofn->Flags, debugstr_w(ofn->lpstrInitialDir));
 
   SetWindowTextW( hWnd, ofn->lpstrTitle );
   /* read custom filter information */
@@ -853,8 +872,8 @@ LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
   	ofn->nFilterIndex = 1;
   SendDlgItemMessageW(hWnd, cmb1, CB_SETCURSEL, ofn->nFilterIndex - 1, 0);
   lstrcpynW(tmpstr, FD31_GetFileType(ofn->lpstrCustomFilter,
-	     (LPWSTR)ofn->lpstrFilter, ofn->nFilterIndex - 1),BUFFILE);
-  TRACE("nFilterIndex = %ld, SetText of edt1 to %s\n",
+	     ofn->lpstrFilter, ofn->nFilterIndex - 1),BUFFILE);
+  TRACE("nFilterIndex = %d, SetText of edt1 to %s\n",
   			ofn->nFilterIndex, debugstr_w(tmpstr));
   SetDlgItemTextW( hWnd, edt1, tmpstr );
   /* get drive list */

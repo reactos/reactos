@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Jacek Caban
+ * Copyright 2005-2006 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -29,14 +29,37 @@
 #include "urlmon_main.h"
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
-HRESULT get_protocol_iface(LPCWSTR url, IUnknown **ret)
+typedef struct name_space {
+    LPWSTR protocol;
+    IClassFactory *cf;
+    CLSID clsid;
+
+    struct name_space *next;
+} name_space;
+
+static name_space *name_space_list = NULL;
+
+static name_space *find_name_space(LPCWSTR protocol)
 {
-    WCHAR schema[64], str_clsid[64];
+    name_space *iter;
+
+    for(iter = name_space_list; iter; iter = iter->next) {
+        if(!strcmpW(iter->protocol, protocol))
+            return iter;
+    }
+
+    return NULL;
+}
+
+static HRESULT get_protocol_cf(LPCWSTR schema, DWORD schema_len, CLSID *pclsid, IClassFactory **ret)
+{
+    WCHAR str_clsid[64];
     HKEY hkey = NULL;
-    DWORD res, type, size, schema_len;
+    DWORD res, type, size;
     CLSID clsid;
     LPWSTR wszKey;
     HRESULT hres;
@@ -45,11 +68,6 @@ HRESULT get_protocol_iface(LPCWSTR url, IUnknown **ret)
         {'P','R','O','T','O','C','O','L','S','\\','H','a','n','d','l','e','r','\\'};
     static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
 
-    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(schema[0]),
-            &schema_len, 0);
-    if(FAILED(hres) || !schema_len)
-        return E_FAIL;
-
     wszKey = HeapAlloc(GetProcessHeap(), 0, sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
     memcpy(wszKey, wszProtocolsKey, sizeof(wszProtocolsKey));
     memcpy(wszKey + sizeof(wszProtocolsKey)/sizeof(WCHAR), schema, (schema_len+1)*sizeof(WCHAR));
@@ -57,7 +75,7 @@ HRESULT get_protocol_iface(LPCWSTR url, IUnknown **ret)
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkey);
     HeapFree(GetProcessHeap(), 0, wszKey);
     if(res != ERROR_SUCCESS) {
-        TRACE("Could not open key %s\n", debugstr_w(wszKey));
+        TRACE("Could not open protocol handler key\n");
         return E_FAIL;
     }
     
@@ -65,17 +83,81 @@ HRESULT get_protocol_iface(LPCWSTR url, IUnknown **ret)
     res = RegQueryValueExW(hkey, wszCLSID, NULL, &type, (LPBYTE)str_clsid, &size);
     RegCloseKey(hkey);
     if(res != ERROR_SUCCESS || type != REG_SZ) {
-        WARN("Could not get protocol CLSID res=%ld\n", res);
+        WARN("Could not get protocol CLSID res=%d\n", res);
         return E_FAIL;
     }
 
     hres = CLSIDFromString(str_clsid, &clsid);
     if(FAILED(hres)) {
-        WARN("CLSIDFromString failed: %08lx\n", hres);
+        WARN("CLSIDFromString failed: %08x\n", hres);
         return hres;
     }
 
-    return CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)ret);
+    if(pclsid)
+        *pclsid = clsid;
+
+    return CoGetClassObject(&clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IClassFactory, (void**)ret);
+}
+
+IInternetProtocolInfo *get_protocol_info(LPCWSTR url)
+{
+    IInternetProtocolInfo *ret = NULL;
+    IClassFactory *cf;
+    name_space *ns;
+    WCHAR schema[64];
+    DWORD schema_len;
+    HRESULT hres;
+
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(schema[0]),
+            &schema_len, 0);
+    if(FAILED(hres) || !schema_len)
+        return NULL;
+
+    ns = find_name_space(schema);
+    if(ns) {
+        hres = IClassFactory_QueryInterface(ns->cf, &IID_IInternetProtocolInfo, (void**)&ret);
+        if(SUCCEEDED(hres))
+            return ret;
+
+        hres = IClassFactory_CreateInstance(ns->cf, NULL, &IID_IInternetProtocolInfo, (void**)&ret);
+        if(SUCCEEDED(hres))
+            return ret;
+    }
+
+    hres = get_protocol_cf(schema, schema_len, NULL, &cf);
+    if(FAILED(hres))
+        return NULL;
+
+    hres = IClassFactory_QueryInterface(cf, &IID_IInternetProtocolInfo, (void**)&ret);
+    if(FAILED(hres))
+        IClassFactory_CreateInstance(cf, NULL, &IID_IInternetProtocolInfo, (void**)&ret);
+    IClassFactory_Release(cf);
+
+    return ret;
+}
+
+HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, IClassFactory **ret)
+{
+    name_space *ns;
+    WCHAR schema[64];
+    DWORD schema_len;
+    HRESULT hres;
+
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(schema[0]),
+            &schema_len, 0);
+    if(FAILED(hres) || !schema_len)
+        return schema_len ? hres : E_FAIL;
+
+    ns = find_name_space(schema);
+    if(ns) {
+        *ret = ns->cf;
+        IClassFactory_AddRef(*ret);
+        if(clsid)
+            *clsid = ns->clsid;
+        return S_OK;
+    }
+
+    return get_protocol_cf(schema, schema_len, clsid, ret);
 }
 
 static HRESULT WINAPI InternetSession_QueryInterface(IInternetSession *iface,
@@ -111,16 +193,64 @@ static HRESULT WINAPI InternetSession_RegisterNameSpace(IInternetSession *iface,
         IClassFactory *pCF, REFCLSID rclsid, LPCWSTR pwzProtocol, ULONG cPatterns,
         const LPCWSTR *ppwzPatterns, DWORD dwReserved)
 {
-    FIXME("(%p %s %s %ld %p %ld)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzProtocol),
-            cPatterns, ppwzPatterns, dwReserved);
-    return E_NOTIMPL;
+    name_space *new_name_space;
+    int size;
+
+    TRACE("(%p %s %s %d %p %d)\n", pCF, debugstr_guid(rclsid), debugstr_w(pwzProtocol),
+          cPatterns, ppwzPatterns, dwReserved);
+
+    if(cPatterns || ppwzPatterns)
+        FIXME("patterns not supported\n");
+    if(dwReserved)
+        WARN("dwReserved = %d\n", dwReserved);
+
+    if(!pCF || !pwzProtocol)
+        return E_INVALIDARG;
+
+    new_name_space = HeapAlloc(GetProcessHeap(), 0, sizeof(name_space));
+
+    size = (strlenW(pwzProtocol)+1)*sizeof(WCHAR);
+    new_name_space->protocol = HeapAlloc(GetProcessHeap(), 0, size);
+    memcpy(new_name_space->protocol, pwzProtocol, size);
+
+    IClassFactory_AddRef(pCF);
+    new_name_space->cf = pCF;
+    new_name_space->clsid = *rclsid;
+
+    new_name_space->next = name_space_list;
+    name_space_list = new_name_space;
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetSession_UnregisterNameSpace(IInternetSession *iface,
         IClassFactory *pCF, LPCWSTR pszProtocol)
 {
-    FIXME("(%p %s)\n", pCF, debugstr_w(pszProtocol));
-    return E_NOTIMPL;
+    name_space *iter, *last = NULL;
+
+    TRACE("(%p %s)\n", pCF, debugstr_w(pszProtocol));
+
+    if(!pCF || !pszProtocol)
+        return E_INVALIDARG;
+
+    for(iter = name_space_list; iter; iter = iter->next) {
+        if(iter->cf == pCF && !strcmpW(iter->protocol, pszProtocol))
+            break;
+        last = iter;
+    }
+
+    if(!iter)
+        return S_OK;
+
+    if(last)
+        last->next = iter->next;
+    else
+        name_space_list = iter->next;
+
+    IClassFactory_Release(iter->cf);
+    HeapFree(GetProcessHeap(), 0, iter->protocol);
+    HeapFree(GetProcessHeap(), 0, iter);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetSession_RegisterMimeFilter(IInternetSession *iface,
@@ -141,15 +271,19 @@ static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
         LPBC pBC, LPCWSTR szUrl, IUnknown *pUnkOuter, IUnknown **ppUnk,
         IInternetProtocol **ppOInetProt, DWORD dwOption)
 {
-    FIXME("(%p %s %p %p %p %08lx)\n", pBC, debugstr_w(szUrl), pUnkOuter, ppUnk,
+    TRACE("(%p %s %p %p %p %08x)\n", pBC, debugstr_w(szUrl), pUnkOuter, ppUnk,
             ppOInetProt, dwOption);
-    return E_NOTIMPL;
+
+    if(pBC || pUnkOuter || ppUnk || dwOption)
+        FIXME("Unsupported arguments\n");
+
+    return create_binding_protocol(szUrl, ppOInetProt);
 }
 
 static HRESULT WINAPI InternetSession_SetSessionOption(IInternetSession *iface,
         DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength, DWORD dwReserved)
 {
-    FIXME("(%08lx %p %ld %ld)\n", dwOption, pBuffer, dwBufferLength, dwReserved);
+    FIXME("(%08x %p %d %d)\n", dwOption, pBuffer, dwBufferLength, dwReserved);
     return E_NOTIMPL;
 }
 
@@ -186,13 +320,69 @@ static IInternetSession InternetSession = { &InternetSessionVtbl };
 HRESULT WINAPI CoInternetGetSession(DWORD dwSessionMode, IInternetSession **ppIInternetSession,
         DWORD dwReserved)
 {
-    TRACE("(%ld %p %ld)\n", dwSessionMode, ppIInternetSession, dwReserved);
+    TRACE("(%d %p %d)\n", dwSessionMode, ppIInternetSession, dwReserved);
 
     if(dwSessionMode)
-        ERR("dwSessionMode=%ld\n", dwSessionMode);
+        ERR("dwSessionMode=%d\n", dwSessionMode);
     if(dwReserved)
-        ERR("dwReserved=%ld\n", dwReserved);
+        ERR("dwReserved=%d\n", dwReserved);
 
+    IInternetSession_AddRef(&InternetSession);
     *ppIInternetSession = &InternetSession;
     return S_OK;
+}
+
+/**************************************************************************
+ *                 UrlMkGetSessionOption (URLMON.@)
+ */
+static BOOL get_url_encoding(HKEY root, DWORD *encoding)
+{
+    DWORD size = sizeof(DWORD), res, type;
+    HKEY hkey;
+
+    static const WCHAR wszKeyName[] = 
+        {'S','O','F','T','W','A','R','E',
+         '\\','M','i','c','r','o','s','o','f','t',
+         '\\','W','i','n','d','o','w','s',
+         '\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
+         '\\','I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0};
+    static const WCHAR wszUrlEncoding[] = {'U','r','l','E','n','c','o','d','i','n','g',0};
+
+    res = RegOpenKeyW(root, wszKeyName, &hkey);
+    if(res != ERROR_SUCCESS)
+        return FALSE;
+
+    res = RegQueryValueExW(hkey, wszUrlEncoding, NULL, &type, (LPBYTE)encoding, &size);
+    RegCloseKey(hkey);
+
+    return res == ERROR_SUCCESS;
+}
+
+HRESULT WINAPI UrlMkGetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength,
+                                     DWORD* pdwBufferLength, DWORD dwReserved)
+{
+    TRACE("(%x, %p, %d, %p)\n", dwOption, pBuffer, dwBufferLength, pdwBufferLength);
+
+    if(dwReserved)
+        WARN("dwReserved = %d\n", dwReserved);
+
+    switch(dwOption) {
+    case URLMON_OPTION_URL_ENCODING: {
+        DWORD encoding = 0;
+
+        if(!pBuffer || dwBufferLength < sizeof(DWORD) || !pdwBufferLength)
+            return E_INVALIDARG;
+
+        if(!get_url_encoding(HKEY_CURRENT_USER, &encoding))
+            get_url_encoding(HKEY_LOCAL_MACHINE, &encoding);
+
+        *pdwBufferLength = sizeof(DWORD);
+        *(DWORD*)pBuffer = encoding ? URL_ENCODING_DISABLE_UTF8 : URL_ENCODING_ENABLE_UTF8;
+        return S_OK;
+    }
+    default:
+        FIXME("unsupported option %x\n", dwOption);
+    }
+
+    return E_INVALIDARG;
 }

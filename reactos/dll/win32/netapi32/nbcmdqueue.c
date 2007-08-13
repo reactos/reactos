@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include "config.h"
 #include "wine/debug.h"
@@ -62,6 +62,7 @@ struct NBCmdQueue *NBCmdQueueCreate(HANDLE heap)
     {
         queue->heap = heap;
         InitializeCriticalSection(&queue->cs);
+        queue->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": NBCmdQueue.cs");
         queue->head = NULL;
     }
     return queue;
@@ -193,6 +194,7 @@ void NBCmdQueueDestroy(struct NBCmdQueue *queue)
     if (queue)
     {
         NBCmdQueueCancelAll(queue);
+        queue->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&queue->cs);
         HeapFree(queue->heap, 0, queue);
     }

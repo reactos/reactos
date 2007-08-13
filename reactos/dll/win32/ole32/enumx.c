@@ -189,7 +189,7 @@ enumx_impl *enumx_allocate(REFIID riid, const void *vtbl, ULONG elem_size)
  *
  * Add an element to the enumeration.
  */
-void *enumx_add_element(enumx_impl *enumx, void *data)
+void *enumx_add_element(enumx_impl *enumx, const void *data)
 {
     struct list *element;
 

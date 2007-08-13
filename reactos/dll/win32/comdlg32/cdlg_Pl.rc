@@ -183,22 +183,22 @@ FONT 8, "MS Shell Dlg"
 }
 
 
-FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 62
+FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 285, 62
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ZnajdŸ"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&ZnajdŸ:", -1, 4, 8, 42, 8
- EDITTEXT edt1, 35, 7, 160, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Uwzglêdniaj tylko ca³e wyrazy", chx1, 4, 26, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Uwzglêdniaj wielkoœæ liter", chx2, 4, 42, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "Kierunek", grp1, 127, 26, 68, 28
- CONTROL "W &górê", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 131, 38, 20, 12
- CONTROL "W &dó³", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 158, 38, 30, 12
+ EDITTEXT edt1, 35, 7, 169, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Uwzglêdniaj tylko ca³e wyrazy", chx1, 4, 26, 110, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Uwzglêdniaj wielkoœæ liter", chx2, 4, 42, 110, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Kierunek", grp1, 118, 26, 87, 28
+ CONTROL "W &górê", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 122, 38, 39, 12
+ CONTROL "W &dó³", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 166, 38, 36, 12
 
- DEFPUSHBUTTON "&ZnajdŸ nastêpny", IDOK, 202,  5, 69, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Anuluj", IDCANCEL	 , 202, 23, 69, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Pomoc", pshHelp	 , 202, 45, 69, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "&ZnajdŸ nastêpny", IDOK, 211,  5, 70, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Anuluj", IDCANCEL	 , 211, 23, 70, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Pomoc", pshHelp	 , 211, 45, 70, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -402,9 +402,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY       "Za ma³o pamiêci dla tej operacji."
     PD32_GENERIC_ERROR       "Podczas tej operacji wyst¹pi³ b³¹d."
     PD32_DRIVER_UNKNOWN      "Nieznany sterownik drukarki."
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Zanim bêdzie mo¿na wykonywaæ czynnoœci zwi¹zane \
+z drukowaniem takie jak ustawienie strony lub wydruk dokumentu nale¿y zainstalowaæ drukarkê. \
+Po zainstalowaniu spróbuj ponownie."
 
     PD32_DEFAULT_PRINTER                  "Domyœlna Drukarka; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "W kolejce znajduj¹ siê %d dokumenty"

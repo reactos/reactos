@@ -22,6 +22,7 @@
 #include "wine/config.h"
 #include "wine/port.h"
 
+#include <assert.h>
 #include <stdarg.h>
 
 #include "windef.h"

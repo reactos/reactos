@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -39,7 +39,7 @@ static HRESULT parse_schema(LPCWSTR url, DWORD flags, LPWSTR result, DWORD size,
     WCHAR *ptr;
     DWORD len = 0;
 
-    TRACE("(%s %08lx %p %ld %p)\n", debugstr_w(url), flags, result, size, rsize);
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
 
     if(flags)
         ERR("wrong flags\n");
@@ -61,20 +61,30 @@ static HRESULT parse_schema(LPCWSTR url, DWORD flags, LPWSTR result, DWORD size,
     return S_OK;
 }
 
-static IInternetProtocolInfo *get_protocol_info(LPCWSTR url)
+static HRESULT parse_canonicalize_url(LPCWSTR url, DWORD flags, LPWSTR result,
+        DWORD size, DWORD *rsize)
 {
-    IInternetProtocolInfo *ret = NULL;
-    IUnknown *unk;
+    IInternetProtocolInfo *protocol_info;
+    DWORD prsize = size;
     HRESULT hres;
 
-    hres = get_protocol_iface(url, &unk);
-    if(FAILED(hres))
-        return NULL;
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
 
-    IUnknown_QueryInterface(unk, &IID_IInternetProtocolInfo, (void**)&ret);
-    IUnknown_Release(unk);
+    protocol_info = get_protocol_info(url);
 
-    return ret;
+    if(protocol_info) {
+        hres = IInternetProtocolInfo_ParseUrl(protocol_info, url, PARSE_CANONICALIZE,
+                flags, result, size, rsize, 0);
+        IInternetProtocolInfo_Release(protocol_info);
+        if(SUCCEEDED(hres))
+            return hres;
+    }
+
+    hres = UrlCanonicalizeW(url, result, &prsize, flags);
+
+    if(rsize)
+        *rsize = prsize;
+    return hres;
 }
 
 static HRESULT parse_security_url(LPCWSTR url, DWORD flags, LPWSTR result, DWORD size, DWORD *rsize)
@@ -82,13 +92,14 @@ static HRESULT parse_security_url(LPCWSTR url, DWORD flags, LPWSTR result, DWORD
     IInternetProtocolInfo *protocol_info;
     HRESULT hres;
 
-    TRACE("(%s %08lx %p %ld %p)\n", debugstr_w(url), flags, result, size, rsize);
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
 
     protocol_info = get_protocol_info(url);
 
     if(protocol_info) {
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, url, PARSE_SECURITY_URL,
                 flags, result, size, rsize, 0);
+        IInternetProtocolInfo_Release(protocol_info);
         return hres;
     }
 
@@ -101,13 +112,14 @@ static HRESULT parse_encode(LPCWSTR url, DWORD flags, LPWSTR result, DWORD size,
     DWORD prsize;
     HRESULT hres;
 
-    TRACE("(%s %08lx %p %ld %p)\n", debugstr_w(url), flags, result, size, rsize);
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
 
     protocol_info = get_protocol_info(url);
 
     if(protocol_info) {
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, url, PARSE_ENCODE,
                 flags, result, size, rsize, 0);
+        IInternetProtocolInfo_Release(protocol_info);
         if(SUCCEEDED(hres))
             return hres;
     }
@@ -127,13 +139,14 @@ static HRESULT parse_path_from_url(LPCWSTR url, DWORD flags, LPWSTR result, DWOR
     DWORD prsize;
     HRESULT hres;
 
-    TRACE("(%s %08lx %p %ld %p)\n", debugstr_w(url), flags, result, size, rsize);
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
 
     protocol_info = get_protocol_info(url);
 
     if(protocol_info) {
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, url, PARSE_PATH_FROM_URL,
                 flags, result, size, rsize, 0);
+        IInternetProtocolInfo_Release(protocol_info);
         if(SUCCEEDED(hres))
             return hres;
     }
@@ -152,13 +165,14 @@ static HRESULT parse_security_domain(LPCWSTR url, DWORD flags, LPWSTR result,
     IInternetProtocolInfo *protocol_info;
     HRESULT hres;
 
-    TRACE("(%s %08lx %p %ld %p)\n", debugstr_w(url), flags, result, size, rsize);
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
 
     protocol_info = get_protocol_info(url);
 
     if(protocol_info) {
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, url, PARSE_SECURITY_DOMAIN,
                 flags, result, size, rsize, 0);
+        IInternetProtocolInfo_Release(protocol_info);
         if(SUCCEEDED(hres))
             return hres;
     }
@@ -173,9 +187,11 @@ HRESULT WINAPI CoInternetParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD
         LPWSTR pszResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved)
 {
     if(dwReserved)
-        WARN("dwReserved = %ld\n", dwReserved);
+        WARN("dwReserved = %d\n", dwReserved);
 
     switch(ParseAction) {
+    case PARSE_CANONICALIZE:
+        return parse_canonicalize_url(pwzUrl, dwFlags, pszResult, cchResult, pcchResult);
     case PARSE_SECURITY_URL:
         return parse_security_url(pwzUrl, dwFlags, pszResult, cchResult, pcchResult);
     case PARSE_ENCODE:
@@ -204,7 +220,7 @@ HRESULT WINAPI CoInternetCombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
     DWORD size = cchResult;
     HRESULT hres;
     
-    TRACE("(%s,%s,0x%08lx,%p,%ld,%p,%ld)\n", debugstr_w(pwzBaseUrl),
+    TRACE("(%s,%s,0x%08x,%p,%d,%p,%d)\n", debugstr_w(pwzBaseUrl),
           debugstr_w(pwzRelativeUrl), dwCombineFlags, pwzResult, cchResult, pcchResult,
           dwReserved);
 
@@ -213,6 +229,7 @@ HRESULT WINAPI CoInternetCombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
     if(protocol_info) {
         hres = IInternetProtocolInfo_CombineUrl(protocol_info, pwzBaseUrl, pwzRelativeUrl,
                 dwCombineFlags, pwzResult, cchResult, pcchResult, dwReserved);
+        IInternetProtocolInfo_Release(protocol_info);
         if(SUCCEEDED(hres))
             return hres;
     }
@@ -224,4 +241,26 @@ HRESULT WINAPI CoInternetCombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
         *pcchResult = size;
 
     return hres;
+}
+
+/**************************************************************************
+ *          CoInternetCompareUrl    (URLMON.@)
+ */
+HRESULT WINAPI CoInternetCompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags)
+{
+    IInternetProtocolInfo *protocol_info;
+    HRESULT hres;
+
+    TRACE("(%s,%s,%08x)\n", debugstr_w(pwzUrl1), debugstr_w(pwzUrl2), dwCompareFlags);
+
+    protocol_info = get_protocol_info(pwzUrl1);
+
+    if(protocol_info) {
+        hres = IInternetProtocolInfo_CompareUrl(protocol_info, pwzUrl1, pwzUrl2, dwCompareFlags);
+        IInternetProtocolInfo_Release(protocol_info);
+        if(SUCCEEDED(hres))
+            return hres;
+    }
+
+    return UrlCompareW(pwzUrl1, pwzUrl2, dwCompareFlags) ? S_FALSE : S_OK;
 }

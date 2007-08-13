@@ -172,7 +172,7 @@ SetupDiCreateDeviceInfoListExW(
     IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
-    struct DeviceInfoSet *list;
+    struct DeviceInfoSet *list = NULL;
     DWORD size;
     DWORD rc;
     CONFIGRET cr;
@@ -180,6 +180,12 @@ SetupDiCreateDeviceInfoListExW(
 
     TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
         debugstr_w(MachineName), Reserved);
+
+    if (Reserved != NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
 
     size = FIELD_OFFSET(struct DeviceInfoSet, szData);
     if (MachineName)
@@ -205,7 +211,7 @@ SetupDiCreateDeviceInfoListExW(
         rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &list->HKLM);
         if (rc != ERROR_SUCCESS)
         {
-            SetLastError(rc);
+            SetLastError(ERROR_INVALID_MACHINENAME);
             goto cleanup;
         }
 
@@ -493,7 +499,7 @@ CheckSectionValid(
         if (Fields[i])
         {
             Fields[i]++;
-            *(Fields[i] - 1) = L'\0';
+            *(Fields[i] - 1) = UNICODE_NULL;
         }
     }
     /* Take care of first 2 fields */
@@ -3422,7 +3428,7 @@ SetupDiInstallDevice(
     TRACE("Write information to driver key\n");
     TRACE("DriverDate      : '%u-%u-%u'\n", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
     TRACE("DriverDesc      : '%s'\n", debugstr_w(SelectedDriver->Info.Description));
-    TRACE("DriverVersion   : '%u.%u.%u.%u'\n", fullVersion.HighPart >> 16, fullVersion.HighPart & 0xffff, fullVersion.LowPart >> 16, fullVersion.LowPart & 0xffff);
+    TRACE("DriverVersion   : '%ld.%ld.%lu.%ld'\n", fullVersion.HighPart >> 16, fullVersion.HighPart & 0xffff, fullVersion.LowPart >> 16, fullVersion.LowPart & 0xffff);
     TRACE("InfPath         : '%s'\n", debugstr_w(SelectedDriver->InfFileDetails->FileName));
     TRACE("InfSection      : '%s'\n", debugstr_w(SelectedDriver->Details.SectionName));
     TRACE("InfSectionExt   : '%s'\n", debugstr_w(&SectionName[strlenW(SelectedDriver->Details.SectionName)]));

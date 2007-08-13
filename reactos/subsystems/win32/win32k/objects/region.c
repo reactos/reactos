@@ -2027,35 +2027,6 @@ NtGdiCreateEllipticRgn(INT Left,
       Right - Left, Bottom - Top);
 }
 
-HRGN
-STDCALL
-NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
-{
-  RECT SafeRect = {0};
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  _SEH_TRY
-  {
-    ProbeForRead(Rect,
-                 sizeof(RECT),
-                 1);
-    SafeRect = *Rect;
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return NULL;
-  }
-
-  return NtGdiCreateRoundRectRgn(SafeRect.left, SafeRect.top, SafeRect.right, SafeRect.bottom,
-                                 SafeRect.right - SafeRect.left, SafeRect.bottom - SafeRect.top);
-}
-
 HRGN STDCALL
 NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
@@ -2071,31 +2042,6 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 
    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
    return NULL;
-}
-
-HRGN STDCALL
-NtGdiCreateRectRgnIndirect(CONST PRECT rc)
-{
-  RECT SafeRc = {0};
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  _SEH_TRY
-  {
-    ProbeForRead(rc,
-                 sizeof(RECT),
-                 1);
-    SafeRc = *rc;
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-  if (!NT_SUCCESS(Status))
-    {
-      return(NULL);
-    }
-  return(UnsafeIntCreateRectRgnIndirect(&SafeRc));
 }
 
 HRGN

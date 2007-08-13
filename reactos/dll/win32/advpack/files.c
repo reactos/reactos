@@ -331,7 +331,6 @@ static HRESULT DELNODE_recurse_dirtree(LPWSTR fname, DWORD flags)
     DWORD fattrs = GetFileAttributesW(fname);
     HRESULT ret = E_FAIL;
 
-    static const WCHAR backslash[] = {'\\',0};
     static const WCHAR asterisk[] = {'*',0};
     static const WCHAR dot[] = {'.',0};
     static const WCHAR dotdot[] = {'.','.',0};
@@ -344,11 +343,7 @@ static HRESULT DELNODE_recurse_dirtree(LPWSTR fname, DWORD flags)
         int fname_len = lstrlenW(fname);
 
         /* Generate a path with wildcard suitable for iterating */
-        if (lstrcmpW(CharPrevW(fname, fname + fname_len), backslash))
-        {
-            lstrcpyW(fname + fname_len, backslash);
-            ++fname_len;
-        }
+        if (fname_len && fname[fname_len-1] != '\\') fname[fname_len++] = '\\';
         lstrcpyW(fname + fname_len, asterisk);
 
         if ((hFindFile = FindFirstFileW(fname, &w32fd)) != INVALID_HANDLE_VALUE)

@@ -21,16 +21,13 @@ NtGdiCombineTransform			3
 NtGdiCopyEnhMetaFile			2
 NtGdiCopyMetaFile			2
 NtGdiCreateBitmap			5
-NtGdiCreateBitmapIndirect		1
 NtGdiCreateColorSpace			1
 NtGdiCreateCompatibleBitmap		3
 NtGdiCreateCompatibleDC			1
 NtGdiCreateDIBitmap			6
 NtGdiCreateDIBBrush			6
 NtGdiCreateDIBSection			9
-NtGdiCreateDiscardableBitmap		3
 NtGdiCreateEllipticRgn			4
-NtGdiCreateEllipticRgnIndirect		1
 NtGdiCreateEnhMetaFile			4
 NtGdiCreateHalftonePalette		1
 NtGdiCreateHatchBrushInternal		3
@@ -41,7 +38,6 @@ NtGdiCreatePen				4
 NtGdiCreatePolygonRgn			3
 NtGdiCreatePolyPolygonRgn		4
 NtGdiCreateRectRgn			4
-NtGdiCreateRectRgnIndirect		1
 NtGdiCreateRoundRectRgn			6
 NtGdiCreateScalableFontResource		4
 NtGdiCreateSolidBrush			2
@@ -76,7 +72,6 @@ NtGdiExtTextOut				8
 NtGdiFillPath				1
 NtGdiFillRgn				3
 NtGdiFlattenPath			1
-NtGdiFloodFill				4
 NtGdiFrameRgn				5
 NtGdiGdiComment				3
 NtGdiFlush				0
@@ -154,10 +149,10 @@ NtGdiGetSystemPaletteUse		1
 NtGdiGetTextAlign			1
 NtGdiGetTextCharsetInfo			3
 NtGdiGetTextColor			1
-NtGdiGetTextExtentExPoint		7
+NtGdiGetTextExtentExW		8
 NtGdiGetTextExtent		5
 NtGdiGetTextExtentPoint32		4
-NtGdiGetTextFace			3
+NtGdiGetTextFaceW			4
 NtGdiGetTextMetrics			2
 NtGdiGetViewportExtEx			2
 NtGdiGetViewportOrgEx			2
@@ -269,7 +264,6 @@ NtGdiStretchDIBits			13
 NtGdiStrokeAndFillPath			1
 NtGdiStrokePath				1
 NtGdiSwapBuffers			1
-NtGdiTextOut				5
 NtGdiTransparentBlt			 11
 NtGdiTranslateCharsetInfo		3
 NtGdiUnrealizeObject			1

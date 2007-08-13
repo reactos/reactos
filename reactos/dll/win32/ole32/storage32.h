@@ -189,7 +189,7 @@ void           BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize)
 HRESULT        BIGBLOCKFILE_ReadAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
            void* buffer, ULONG size, ULONG* bytesRead);
 HRESULT        BIGBLOCKFILE_WriteAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
-           void* buffer, const ULONG size, ULONG* bytesRead);
+           const void* buffer, ULONG size, ULONG* bytesRead);
 
 /*************************************************************************
  * Ole Convert support
@@ -245,6 +245,11 @@ struct StorageBaseImpl
    * flags that this storage was opened or created with
    */
   DWORD openFlags;
+
+  /*
+   * State bits appear to only be preserved while running. No in the stream
+   */
+  DWORD stateBits;
 };
 
 /****************************************************************************
@@ -306,14 +311,14 @@ struct StorageImpl
 };
 
 BOOL StorageImpl_ReadProperty(
-            StorageImpl* This,
-	    ULONG          index,
-	    StgProperty*    buffer);
+            StorageImpl*    This,
+            ULONG           index,
+            StgProperty*    buffer);
 
 BOOL StorageImpl_WriteProperty(
-            StorageImpl* This,
-	    ULONG          index,
-	    StgProperty*   buffer);
+            StorageImpl*        This,
+            ULONG               index,
+            const StgProperty*  buffer);
 
 BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
                       StorageImpl* This,
@@ -418,9 +423,8 @@ void StorageUtl_WriteULargeInteger(BYTE* buffer, ULONG offset,
  const ULARGE_INTEGER *value);
 void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value);
 void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value);
-void StorageUtl_CopyPropertyToSTATSTG(STATSTG*     destination,
-					     StgProperty* source,
-					     int          statFlags);
+void StorageUtl_CopyPropertyToSTATSTG(STATSTG* destination, const StgProperty* source,
+ int statFlags);
 
 /****************************************************************************
  * BlockChainStream definitions.

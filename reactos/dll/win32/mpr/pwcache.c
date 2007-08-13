@@ -50,7 +50,7 @@ static inline CHAR ctox( CHAR x )
     return -1;
 }
 
-static LPSTR MPR_GetValueName( LPSTR pbResource, WORD cbResource, BYTE nType )
+static LPSTR MPR_GetValueName( LPCSTR pbResource, WORD cbResource, BYTE nType )
 {
     LPSTR name;
     DWORD  i;

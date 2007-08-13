@@ -56,7 +56,7 @@ typedef struct {
 	DWORD SpyedAllocationsLeft; /* number of spyed allocations left */
 	BOOL SpyReleasePending;     /* CoRevokeMallocSpy called with spyed allocations left*/
         LPVOID * SpyedBlocks;       /* root of the table */
-        int SpyedBlockTableLength;  /* size of the table*/
+        DWORD SpyedBlockTableLength;/* size of the table*/
 } _Malloc32;
 
 /* this is the static object instance */
@@ -73,7 +73,7 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 static CRITICAL_SECTION IMalloc32_SpyCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 /* resize the old table */
-static int SetSpyedBlockTableLength ( int NewLength )
+static int SetSpyedBlockTableLength ( DWORD NewLength )
 {
 	LPVOID *NewSpyedBlocks;
 
@@ -103,7 +103,9 @@ static int AddMemoryLocation(LPVOID * pMem)
             Current++;
 	    if (Current >= Malloc32.SpyedBlocks + Malloc32.SpyedBlockTableLength) {
 	        /* no more space in table, grow it */
+                DWORD old_length = Malloc32.SpyedBlockTableLength;
 	        if (!SetSpyedBlockTableLength( Malloc32.SpyedBlockTableLength + 0x1000 )) return 0;
+                Current = Malloc32.SpyedBlocks + old_length;
 	    }
 	};
 
@@ -114,7 +116,7 @@ static int AddMemoryLocation(LPVOID * pMem)
         return 1;
 }
 
-static int RemoveMemoryLocation(LPVOID * pMem)
+static int RemoveMemoryLocation(LPCVOID pMem)
 {
         LPVOID * Current;
 

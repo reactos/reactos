@@ -32,6 +32,24 @@ typedef enum {
     INSERT_CHILD
 } insert_type_t;
 
+static void free_content_item(ContentItem *item)
+{
+    ContentItem *next;
+
+    while(item) {
+        next = item->next;
+
+        free_content_item(item->child);
+
+        hhctrl_free(item->name);
+        hhctrl_free(item->local);
+        hhctrl_free(item->merge.chm_file);
+        hhctrl_free(item->merge.chm_index);
+
+        item = next;
+    }
+}
+
 typedef struct {
     char *buf;
     int size;
@@ -207,6 +225,9 @@ static ContentItem *insert_item(ContentItem *item, ContentItem *new_item, insert
     if(!item)
         return new_item;
 
+    if(!new_item)
+        return item;
+
     switch(insert_type) {
     case INSERT_NEXT:
         item->next = new_item;
@@ -265,6 +286,11 @@ static ContentItem *parse_sitemap_object(HHInfo *info, stream_t *stream, Content
         }else {
             WARN("Could not get %s::%s stream\n", debugstr_w(item->merge.chm_file),
                  debugstr_w(item->merge.chm_file));
+
+            if(!item->name) {
+                free_content_item(item);
+                item = NULL;
+            }
         }
 
     }
@@ -409,24 +435,6 @@ void InitContent(HHInfo *info)
 
     set_item_parents(NULL, info->content);
     fill_content_tree(info->tabs[TAB_CONTENTS].hwnd, NULL, info->content);
-}
-
-static void free_content_item(ContentItem *item)
-{
-    ContentItem *next;
-
-    while(item) {
-        next = item->next;
-
-        free_content_item(item->child);
-
-        hhctrl_free(item->name);
-        hhctrl_free(item->local);
-        hhctrl_free(item->merge.chm_file);
-        hhctrl_free(item->merge.chm_index);
-
-        item = next;
-    }
 }
 
 void ReleaseContent(HHInfo *info)

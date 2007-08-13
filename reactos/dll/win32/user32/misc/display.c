@@ -31,6 +31,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define SIZEOF_DEVMODEA_300 124
 #define SIZEOF_DEVMODEA_400 148
@@ -368,7 +369,7 @@ GetMonitorInfoA(
                                 NULL, NULL);
       if (res == 0)
         {
-          DPRINT("WideCharToMultiByte() failed!\n");
+          WARN("WideCharToMultiByte() failed!\n");
           return FALSE;
         }
     }

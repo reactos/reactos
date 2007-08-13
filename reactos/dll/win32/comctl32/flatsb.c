@@ -229,7 +229,7 @@ FlatSB_SetScrollRange(HWND hwnd, int nBar, INT min, INT max, BOOL bRedraw)
 static LRESULT
 FlatSB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("[%p] wParam=%04x lParam=%08lx\n", hwnd, wParam, lParam);
+    TRACE("[%p] wParam=%04lx lParam=%08lx\n", hwnd, wParam, lParam);
     return 0;
 }
 
@@ -237,7 +237,7 @@ FlatSB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 FlatSB_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    TRACE("[%p] wParam=%04x lParam=%08lx\n", hwnd, wParam, lParam);
+    TRACE("[%p] wParam=%04lx lParam=%08lx\n", hwnd, wParam, lParam);
     return 0;
 }
 
@@ -258,7 +258,7 @@ FlatSB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
-		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
+		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
                     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }

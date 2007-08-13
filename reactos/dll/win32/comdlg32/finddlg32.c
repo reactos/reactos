@@ -19,9 +19,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include <stdarg.h>
+#include <string.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "commdlg.h"
+#include "cderr.h"
+#include "dlgs.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+
+#include "cdlg.h"
+
 
 /*-----------------------------------------------------------------------*/
 
@@ -286,8 +299,8 @@ static INT_PTR CALLBACK COMDLG32_FindReplaceDlgProc(HWND hDlgWnd, UINT iMsg, WPA
  *		FALSE: Failure
  */
 static BOOL COMDLG32_FR_CheckPartial(
-	LPFINDREPLACEA pfr,	/* [in] Find structure */
-        BOOL Replace		/* [in] True if called as replace */
+	const FINDREPLACEA *pfr,	/* [in] Find structure */
+	BOOL Replace			/* [in] True if called as replace */
 ) {
 	if(!pfr)
         {
@@ -361,7 +374,7 @@ static HWND COMDLG32_FR_DoFindReplace(
         DWORD error;
         LPDLGTEMPLATEW rcs;
 
-	TRACE("hInst=%p, Flags=%08lx\n", pdata->fr.hInstance, pdata->fr.Flags);
+	TRACE("hInst=%p, Flags=%08x\n", pdata->fr.hInstance, pdata->fr.Flags);
 
         if(!(pdata->fr.Flags & FR_ENABLETEMPLATEHANDLE))
         {

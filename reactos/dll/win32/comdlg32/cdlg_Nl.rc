@@ -156,17 +156,17 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Aangepaste kleuren:",  1089, 4,   106, 140, 10
  LTEXT "Kleur |  &Effen",  1090, 157, 151,  48, 10
  LTEXT   "&Rood:", 726 /*1094*/,       256,126,24,10
- EDITTEXT 706, 275,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "&Groen:",727/*1095*/,        256,140,24,10
- EDITTEXT 707, 275,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "Blau&w:",728 /*1096*/,       256,154,24,10
- EDITTEXT 708, 275,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "Ti&nt:" ,723 /*1091*/,        196,126,22,10
- EDITTEXT 703, 226,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "&Intensiteit:" ,724 /*1092*/, 196,140,22,10
- EDITTEXT 704, 226,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "&Helderheid:" ,725 /*1093*/,  196,154,22,10
- EDITTEXT 705, 226,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
  CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
@@ -219,6 +219,29 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "&Help", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
+NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Openen"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"&Zoeken in",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"Bestands&naam:",IDC_FILENAMESTATIC,5,112,48,8, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
+
+    LTEXT	"Bestands&typen:",IDC_FILETYPESTATIC,5,128,48,8, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Openen met als kenmerk &Alleen-lezen",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+
+    DEFPUSHBUTTON	"&Openen",		 IDOK,222,110,50,14
+    PUSHBUTTON		"Annuleren",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Help",		 pshHelp,222,145,50,14
+}
 
 PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
@@ -260,7 +283,40 @@ FONT 8, "MS Shell Dlg"
     RTEXT           "&t/m:",           stc3, 100,124,  16,8
 }
 
+STRINGTABLE DISCARDABLE
+{
+    IDS_ABOUTBOX            "&Info over FolderPicker"
+    IDS_DOCUMENTFOLDERS     "Documenten Mappen"
+    IDS_PERSONAL            "Mijn Documenten"
+    IDS_FAVORITES           "Mijn Favorieten"
+    IDS_PATH                "Systeem Pad"
+    IDS_DESKTOP             "Bureaublad"
+    IDS_FONTS               "Lettertype"
+    IDS_MYCOMPUTER          "Deze Computer"
+}
 
+STRINGTABLE DISCARDABLE
+{
+    IDS_SYSTEMFOLDERS       "Systeem mappen"
+    IDS_LOCALHARDRIVES      "Lokale vaste schijven"
+    IDS_FILENOTFOUND        "Bestand niet gevonden"
+    IDS_VERIFYFILE          "Controleer of de juiste bestandnaam is opgegeven"
+    IDS_CREATEFILE          "Dit bestand bestaat nog niet\nWilt u het bestand aanmaken?"
+    IDS_OVERWRITEFILE       "Bestand bestaat al.\nWilt u het vervangen?"
+    IDS_INVALID_FILENAME_TITLE "De naam van het pad bevat ongeldige tekens"
+    IDS_INVALID_FILENAME    "De volgende tekens mogen niet in de bestandsnaam voorkomen:\n                          / : < > |"
+    IDS_PATHNOTEXISTING     "Het pad bestaat niet"
+    IDS_FILENOTEXISTING     "Kan het bestand niet vinden"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_UPFOLDER         "Bovenliggende map"
+    IDS_NEWFOLDER        "Nieuwe map aanmaken"
+    IDS_LISTVIEW         "Lijst"
+    IDS_REPORTVIEW       "Details"
+    IDS_TODESKTOP        "Ga naar Bureaublad"
+}
 
 STRINGTABLE DISCARDABLE
 {
@@ -322,4 +378,34 @@ wachtrij"
     PD32_PRINTER_STATUS_DOOR_OPEN         "De printer staat is open, "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Print server onbekend; "
     PD32_PRINTER_STATUS_POWER_SAVE        "Power safe mode; "
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+   IDS_COLOR_BLACK      "Zwart"
+   IDS_COLOR_MAROON     "Kastanjebruin"
+   IDS_COLOR_GREEN      "Groen"
+   IDS_COLOR_OLIVE      "Olijfgroen"
+   IDS_COLOR_NAVY       "Marineblauw"
+   IDS_COLOR_PURPLE     "Paars"
+   IDS_COLOR_TEAL       "Groenblauw"
+   IDS_COLOR_GRAY       "Grijs"
+   IDS_COLOR_SILVER     "Zilver"
+   IDS_COLOR_RED        "Rood"
+   IDS_COLOR_LIME       "Lichtgroen"
+   IDS_COLOR_YELLOW     "Geel"
+   IDS_COLOR_BLUE       "Blauw"
+   IDS_COLOR_FUCHSIA    "Fuchsiapaars"
+   IDS_COLOR_AQUA       "Zeeblauw"
+   IDS_COLOR_WHITE      "Wit"
+}
+
+STRINGTABLE DISCARDABLE
+{
+   IDS_FONT_SIZE        "Selecteer een lettertype tussen %d en %d punten."
+   IDS_SAVE_BUTTON      "&Opslaan"
+   IDS_SAVE_IN          "Op&slaan in:"
+   IDS_SAVE             "Opslaan"
+   IDS_SAVE_AS          "Opslaan als"
+   IDS_OPEN_FILE        "Open bestand"
 }

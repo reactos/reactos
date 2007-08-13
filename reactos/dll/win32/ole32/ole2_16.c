@@ -35,12 +35,8 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
 #include "ole2.h"
-#include "ole2ver.h"
 #include "winerror.h"
-#include "wownt32.h"
 
 #include "wine/winbase16.h"
 #include "wine/wingdi16.h"

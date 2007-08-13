@@ -1545,7 +1545,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 {
     SYSLINK_INFO *infoPtr;
 
-    TRACE("hwnd=%p msg=%04x wparam=%x lParam=%lx\n", hwnd, message, wParam, lParam);
+    TRACE("hwnd=%p msg=%04x wparam=%lx lParam=%lx\n", hwnd, message, wParam, lParam);
 
     infoPtr = (SYSLINK_INFO *)GetWindowLongPtrW(hwnd, 0);
 
@@ -1754,7 +1754,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 HandleDefaultMessage:
         if ((message >= WM_USER) && (message < WM_APP))
         {
-            ERR("unknown msg %04x wp=%04x lp=%08lx\n", message, wParam, lParam );
+            ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam );
         }
         return DefWindowProcW(hwnd, message, wParam, lParam);
     }

@@ -321,6 +321,9 @@ typedef struct tagME_TextEditor
   BOOL bHideSelection;
   BOOL AutoURLDetect_bEnable;
   WCHAR cPasswordMask;
+  BOOL bHaveFocus;
+  /*for IME */
+  int imeStartIndex;
 } ME_TextEditor;
 
 typedef struct tagME_Context

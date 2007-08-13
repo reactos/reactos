@@ -512,8 +512,7 @@ static HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
 /* release the install instance information */
 static void install_release(const ADVInfo *info)
 {
-    if (info->hinf && info->hinf != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(info->hinf);
+    SetupCloseInfFile(info->hinf);
 
     HeapFree(GetProcessHeap(), 0, info->inf_path);
     HeapFree(GetProcessHeap(), 0, info->inf_filename);

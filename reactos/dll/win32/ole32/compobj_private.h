@@ -158,6 +158,8 @@ struct apartment
   LONG remoting_started;   /* has the RPC system been started for this apartment? (LOCK) */
   struct list psclsids;    /* list of registered PS CLSIDs (CS cs) */
   struct list loaded_dlls; /* list of dlls loaded by this apartment (CS cs) */
+  DWORD host_apt_tid;      /* thread ID of apartment hosting objects of differing threading model (CS cs) */
+  HWND host_apt_hwnd;      /* handle to apartment window of host apartment (CS cs) */
 
   /* FIXME: OID's should be given out by RPCSS */
   OID oidc;                /* object ID counter, starts at 1, zero is invalid OID (CS cs) */
@@ -253,13 +255,13 @@ DWORD apartment_addref(struct apartment *apt);
 DWORD apartment_release(struct apartment *apt);
 HRESULT apartment_disconnectproxies(struct apartment *apt);
 void apartment_disconnectobject(struct apartment *apt, void *object);
-static inline HRESULT apartment_getoxid(struct apartment *apt, OXID *oxid)
+static inline HRESULT apartment_getoxid(const struct apartment *apt, OXID *oxid)
 {
     *oxid = apt->oxid;
     return S_OK;
 }
 HRESULT apartment_createwindowifneeded(struct apartment *apt);
-HWND apartment_getwindow(struct apartment *apt);
+HWND apartment_getwindow(const struct apartment *apt);
 void apartment_joinmta(void);
 
 

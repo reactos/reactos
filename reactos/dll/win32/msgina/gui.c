@@ -10,6 +10,8 @@
 //#define YDEBUG
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(msgina);
+
 typedef struct _DISPLAYSTATUSMSG
 {
 	PGINA_CONTEXT Context;

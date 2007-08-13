@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -49,32 +49,30 @@ HRESULT UMCreateStreamOnCacheFile(LPCWSTR pszURL,
 {
     IUMCacheStream* ucstr;
     HANDLE handle;
-    LPWSTR ext;
-    LPCWSTR c;
-    LPCWSTR eloc = 0;
+    DWORD size;
+    LPWSTR url, c, ext = NULL;
     HRESULT hr;
 
-    for (c = pszURL; *c && *c != '#' && *c != '?'; ++c)
+    size = (strlenW(pszURL)+1)*sizeof(WCHAR);
+    url = HeapAlloc(GetProcessHeap(), 0, size);
+    memcpy(url, pszURL, size);
+
+    for (c = url; *c && *c != '#' && *c != '?'; ++c)
     {
         if (*c == '.')
-           eloc = c + 1;
-        else if (*c == '/' || *c == '\\')
-           eloc = 0;
+            ext = c+1;
+        else if(*c == '/')
+            ext = NULL;
     }
 
-    if (!eloc)
-       eloc = c;
+    *c = 0;
 
-    ext = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * (c - eloc + 1));
-    memcpy(ext, eloc, sizeof(WCHAR) * (c - eloc));
-    ext[c - eloc] = 0;
-
-    if(!CreateUrlCacheEntryW(pszURL, dwSize, ext, pszFileName, 0))
+    if(!CreateUrlCacheEntryW(url, dwSize, ext, pszFileName, 0))
        hr = HRESULT_FROM_WIN32(GetLastError());
     else
        hr = 0;
 
-    HeapFree(GetProcessHeap(), 0, ext);
+    HeapFree(GetProcessHeap(), 0, url);
 
     if (hr)
        return hr;
@@ -193,7 +191,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
     IUMCacheStream *This = (IUMCacheStream *)iface;
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
+    TRACE("(%p)->(count=%u)\n", This, refCount - 1);
 
     return refCount;
 }
@@ -206,7 +204,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
     IUMCacheStream *This = (IUMCacheStream *)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
+    TRACE("(%p)->(count=%u)\n", This, refCount + 1);
 
     if (!refCount)
     {
@@ -228,7 +226,7 @@ static HRESULT WINAPI IStream_fnRead (IStream * iface,
     ULONG dwBytesRead;
     IUMCacheStream *This = (IUMCacheStream *)iface;
 
-    TRACE("(%p)->(%p,0x%08lx,%p)\n",This, pv, cb, pcbRead);
+    TRACE("(%p)->(%p,0x%08x,%p)\n",This, pv, cb, pcbRead);
 
     if ( !pv )
        return STG_E_INVALIDPOINTER;

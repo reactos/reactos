@@ -43,7 +43,7 @@ TextOutW(
 	LPCWSTR  lpString,
 	int  cbString)
 {
-  return NtGdiTextOut(hdc, nXStart, nYStart, lpString, cbString);
+  return NtGdiExtTextOut(hdc, nXStart, nYStart, 0, NULL, lpString, cbString, NULL);
 }
 
 
@@ -169,8 +169,8 @@ GetTextExtentExPointW(
 	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtentExPoint (
-    hdc, lpszStr, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
+  return NtGdiGetTextExtentExW (
+    hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 }
 
 
@@ -198,8 +198,8 @@ GetTextExtentExPointA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    rc = NtGdiGetTextExtentExPoint (
-      hdc, lpszStrW, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
+    rc = NtGdiGetTextExtentExW (
+      hdc, lpszStrW, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 
     HEAP_free ( lpszStrW );
   }
@@ -308,12 +308,12 @@ ExtTextOutW(
 int
 STDCALL
 GetTextFaceW(
-	HDC	a0,
-	int	a1,
-	LPWSTR	a2
+	HDC	hDC,
+	int	nCount,
+	LPWSTR	lpFaceName
 	)
 {
-	return NtGdiGetTextFace(a0, a1, a2);
+	return NtGdiGetTextFaceW(hDC, nCount, lpFaceName, FALSE);
 }
 
 

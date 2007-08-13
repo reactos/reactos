@@ -38,7 +38,7 @@ HRESULT WINAPI CreateStdAccessibleObject( HWND hwnd, LONG idObject,
 
 HRESULT WINAPI LresultFromObject( REFIID riid, WPARAM wParam, LPUNKNOWN pAcc )
 {
-    FIXME("%s %d %p\n", debugstr_guid(riid), wParam, pAcc );
+    FIXME("%s %ld %p\n", debugstr_guid(riid), wParam, pAcc );
     return E_NOTIMPL;
 }
 

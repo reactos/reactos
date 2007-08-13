@@ -811,6 +811,9 @@ DATETIME_Enable (DATETIME_INFO *infoPtr, BOOL bEnable)
         infoPtr->dwStyle &= ~WS_DISABLED;
     else
         infoPtr->dwStyle |= WS_DISABLED;
+
+    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+
     return 0;
 }
 
@@ -1146,7 +1149,7 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRU
 {
     static const WCHAR buttonW[] = { 'b', 'u', 't', 't', 'o', 'n', 0 };
 
-    TRACE("(styletype=%x, styleOld=0x%08x, styleNew=0x%08x)\n",
+    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
           wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
@@ -1245,7 +1248,7 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     DATETIME_INFO *infoPtr = ((DATETIME_INFO *)GetWindowLongPtrW (hwnd, 0));
     LRESULT ret;
 
-    TRACE ("%x, %x, %lx\n", uMsg, wParam, lParam);
+    TRACE ("%x, %lx, %lx\n", uMsg, wParam, lParam);
 
     if (!infoPtr && (uMsg != WM_CREATE) && (uMsg != WM_NCCREATE))
 	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
@@ -1346,7 +1349,7 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     default:
 	if ((uMsg >= WM_USER) && (uMsg < WM_APP))
-		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
+		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
 		     uMsg, wParam, lParam);
 	return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }

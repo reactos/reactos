@@ -944,10 +944,21 @@ static struct inf_file *parse_file( HANDLE handle, UINT *error_line, DWORD style
 
     if (!RtlIsTextUnicode( buffer, size, NULL ))
     {
-        WCHAR *new_buff = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) );
-        if (new_buff)
+        static const BYTE utf8_bom[3] = { 0xef, 0xbb, 0xbf };
+        WCHAR *new_buff;
+        UINT codepage = CP_ACP;
+        UINT offset = 0;
+
+        if (size > sizeof(utf8_bom) && !memcmp( buffer, utf8_bom, sizeof(utf8_bom) ))
         {
-            DWORD len = MultiByteToWideChar( CP_ACP, 0, buffer, size, new_buff, size );
+            codepage = CP_UTF8;
+            offset = sizeof(utf8_bom);
+        }
+
+        if ((new_buff = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) )))
+        {
+            DWORD len = MultiByteToWideChar( codepage, 0, (char *)buffer + offset,
+                                             size - offset, new_buff, size );
             err = parse_buffer( file, new_buff, new_buff + len, error_line );
             HeapFree( GetProcessHeap(), 0, new_buff );
         }
@@ -964,8 +975,6 @@ static struct inf_file *parse_file( HANDLE handle, UINT *error_line, DWORD style
     if (!err)  /* now check signature */
     {
         int version_index = find_section( file, Version );
-        if (version_index == -1 && (style & INF_STYLE_OLDNT))
-            goto done;
         if (version_index != -1)
         {
             struct line *line = find_line( file, version_index, Signature );
@@ -978,7 +987,7 @@ static struct inf_file *parse_file( HANDLE handle, UINT *error_line, DWORD style
             }
         }
         if (error_line) *error_line = 0;
-        err = ERROR_WRONG_INF_STYLE;
+        if (style & INF_STYLE_WIN4) err = ERROR_WRONG_INF_STYLE;
     }
 
  done:
@@ -1215,7 +1224,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
             /* Not enough memory */
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             SetupCloseInfFile((HINF)file);
-            return NULL;
+            return (HINF)INVALID_HANDLE_VALUE;
         }
         else if (!PARSER_GetInfClassW((HINF)file, &ClassGuid, ClassName, strlenW(class) + 1, NULL))
         {
@@ -1223,7 +1232,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
             HeapFree(GetProcessHeap(), 0, ClassName);
             SetLastError(ERROR_CLASS_MISMATCH);
             SetupCloseInfFile((HINF)file);
-            return NULL;
+            return (HINF)INVALID_HANDLE_VALUE;
         }
         else if (strcmpW(class, ClassName) != 0)
         {
@@ -1231,7 +1240,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
             HeapFree(GetProcessHeap(), 0, ClassName);
             SetLastError(ERROR_CLASS_MISMATCH);
             SetupCloseInfFile((HINF)file);
-            return NULL;
+            return (HINF)INVALID_HANDLE_VALUE;
         }
         HeapFree(GetProcessHeap(), 0, ClassName);
     }
@@ -1312,9 +1321,10 @@ void WINAPI SetupCloseInfFile( HINF hinf )
     struct inf_file *file = hinf;
     unsigned int i;
 
-    if (file != NULL)
+    if (file != NULL && file != INVALID_HANDLE_VALUE)
     {
-        for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
+        for (i = 0; i < file->nb_sections; i++)
+            HeapFree( GetProcessHeap(), 0, file->sections[i] );
         HeapFree( GetProcessHeap(), 0, file->filename );
         HeapFree( GetProcessHeap(), 0, file->sections );
         HeapFree( GetProcessHeap(), 0, file->fields );

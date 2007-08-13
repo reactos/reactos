@@ -39,7 +39,7 @@ Index: oleaut32_Ja.rc
 --- oleaut32_Ja.rc	(revision 23782)
 +++ oleaut32_Ja.rc	(working copy)
 @@ -0,0 +1,11 @@
-+LANGUAGE LANG_JAPANESE, SUBLANG_NEUTRAL
++LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 +
 +STRINGTABLE DISCARDABLE
 +{
@@ -109,3 +109,15 @@ Index: oleaut32.rc
  
  /*
   * FIXME:
+Index: oleaut32.rbuild
+===================================================================
+--- oleaut32.rbuild	(revision 23782)
++++ oleaut32.rbuild	(working copy)
+@@ -20,6 +20,7 @@
+ 	<library>comctl32</library>
+ 	<library>urlmon</library>
+ 	<library>uuid</library>
++	<library>pseh</library>
+ 	<file>connpt.c</file>
+ 	<file>dispatch.c</file>
+ 	<file>hash.c</file>

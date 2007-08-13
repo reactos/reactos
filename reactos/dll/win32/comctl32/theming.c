@@ -79,7 +79,7 @@ static LRESULT CALLBACK subclass_proc ## N (HWND wnd, UINT msg,             \
     ULONG_PTR refData;                                                      \
     SetPropW (wnd, (LPCWSTR)MAKEINTATOM(atSubclassProp), (HANDLE)N);        \
     refData = (ULONG_PTR)GetPropW (wnd, (LPCWSTR)MAKEINTATOM(atRefDataProp)); \
-    TRACE ("%d; (%p, %x, %x, %lx, %lx)\n", N, wnd, msg, wParam, lParam,     \
+    TRACE ("%d; (%p, %x, %lx, %lx, %lx)\n", N, wnd, msg, wParam, lParam,     \
         refData);                                                           \
     result = subclasses[N].subclassProc (wnd, msg, wParam, lParam, refData);\
     TRACE ("result = %lx\n", result);                                       \

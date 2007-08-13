@@ -3523,7 +3523,6 @@ HRESULT WINAPI VarCyFromR8(double dblIn, CY* pCyOut)
 
   if (result_fpstatus & 0x9) /* Overflow | Invalid */
     return DISP_E_OVERFLOW;
-  return S_OK;
 #else
   /* This version produces slightly different results for boundary cases */
   if (dblIn < -922337203685477.5807 || dblIn >= 922337203685477.5807)
@@ -7425,7 +7424,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
   /* Parse the string into our structure */
   while (*strIn)
   {
-    if (dp.dwCount > 6)
+    if (dp.dwCount >= 6)
       break;
 
     if (isdigitW(*strIn))

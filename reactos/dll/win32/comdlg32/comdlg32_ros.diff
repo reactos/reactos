@@ -1,439 +1,310 @@
-Index: colordlg.c
-===================================================================
---- colordlg.c	(revision 25649)
-+++ colordlg.c	(working copy)
-@@ -23,20 +23,7 @@
-    sometimes, especially when 2 instances of the
-    dialog are loaded at the same time */
- 
--#include <ctype.h>
--#include <stdlib.h>
--#include <stdarg.h>
--#include <stdio.h>
--#include <string.h>
--#include "windef.h"
--#include "winbase.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "commdlg.h"
--#include "dlgs.h"
--#include "wine/debug.h"
--#include "cderr.h"
--#include "cdlg.h"
-+#include <precomp.h>
- 
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
- 
-Index: filedlgbrowser.c
-===================================================================
---- filedlgbrowser.c	(revision 25649)
-+++ filedlgbrowser.c	(working copy)
-@@ -19,29 +19,8 @@
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
- 
--#include <stdarg.h>
--#include <stdio.h>
--#include <string.h>
-+#include <precomp.h>
- 
--#define COBJMACROS
--#define NONAMELESSUNION
--#define NONAMELESSSTRUCT
--
--#include "windef.h"
--#include "winbase.h"
--#include "winnls.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "winreg.h"
--
--#define NO_SHLWAPI_STREAM
--#include "shlwapi.h"
--#include "filedlgbrowser.h"
--#include "cdlg.h"
--#include "shlguid.h"
--#include "servprov.h"
--#include "wine/debug.h"
--
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
- 
- typedef struct
-Index: precomp.h
-===================================================================
---- precomp.h	(revision 0)
-+++ precomp.h	(revision 0)
-@@ -0,0 +1,76 @@
-+#ifndef PRECOMP_H__
-+#define PRECOMP_H__
-+
-+#include <ctype.h>
-+#include <stdlib.h>
-+#include <stdarg.h>
-+#include <stdio.h>
-+#include <string.h>
-+
-+#define COBJMACROS
-+#define NONAMELESSUNION
-+#define NONAMELESSSTRUCT
-+#define NO_SHLWAPI_STREAM
-+#define COM_NO_WINDOWS_H
-+#define _COMDLG32_
-+
-+#if defined (_MSC_VER)
-+#include <windef.h>
-+#include <winbase.h>
-+#include <wingdi.h>
-+#include <winuser.h>
-+#include <commdlg.h>
-+#include <shellapi.h>
-+#include <shlguid.h>
-+#include <shlobj.h>
-+#include <shlwapi.h>
-+#include <guiddef.h>
-+#include <dlgs.h>
-+#include <cderr.h>
-+#endif
-+
-+#include "wine/windef.h"
-+#include "winbase.h"
-+#include "wine/wingdi.h"
-+#include "wine/winuser.h"
-+#include "wine/commdlg.h"
-+#include "wine/shellapi.h"
-+
-+#if !defined (_MSC_VER)
-+#include "psdk/shlguid.h"
-+#include "psdk/shlobj.h"
-+#endif
-+
-+#include "wine/shlguid.h"
-+#include "wine/shlobj.h"
-+
-+#if !defined (_MSC_VER)
-+#include "psdk/shlguid.h"
-+#include "psdk/shlwapi.h"
-+#include "wine/shlwapi.h"
-+#endif
-+
-+#include "wine/winbase16.h"
-+#include "wine/winuser16.h"
-+#include "wine/guiddef.h"
-+#include "wine/dlgs.h"
-+#include "wine/debug.h"
-+#include "wine/unicode.h"
-+
-+#include <cderr.h>
-+#include <cdlg.h>
-+#include <winspool.h>
-+#include <winerror.h>
-+#include <winnls.h>
-+#include <winreg.h>
-+#include <winternl.h>
-+
-+//local headers
-+#include "cdlg.h"
-+#include "printdlg.h"
-+#include "filedlgbrowser.h"
-+#include "cdlg.h"
-+#include "servprov.h"
-+#include "filedlg31.h"
-+
-+#endif
-
-Property changes on: precomp.h
-___________________________________________________________________
-Name: svn:eol-style
-   + native
-
-Index: finddlg32.c
-===================================================================
---- finddlg32.c	(revision 25649)
-+++ finddlg32.c	(working copy)
-@@ -19,23 +19,10 @@
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
- 
--#include <stdarg.h>
--#include <string.h>
--#include "windef.h"
--#include "winbase.h"
--#include "winnls.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "commdlg.h"
--#include "cderr.h"
--#include "dlgs.h"
--#include "wine/debug.h"
-+#include <precomp.h>
- 
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
- 
--#include "cdlg.h"
--
--
- /*-----------------------------------------------------------------------*/
- 
- static UINT		FindReplaceMessage;
-Index: cdlg.h
-===================================================================
---- cdlg.h	(revision 25649)
-+++ cdlg.h	(working copy)
-@@ -21,9 +21,7 @@
- #ifndef _WINE_DLL_CDLG_H
- #define _WINE_DLL_CDLG_H
- 
--#define COM_NO_WINDOWS_H
--#include "dlgs.h"
--#include "wownt32.h"
-+#include <wownt32.h>
- 
- /* Common dialogs implementation globals */
- #define COMDLG32_Atom	((ATOM)0xa000)	/* MS uses this one to identify props */
-@@ -155,15 +153,6 @@
- 
- #define IDS_FAKEDOCTEXT  1300
- 
--#include "windef.h"
--#include "winbase.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "winnls.h"
--#include "commctrl.h"
--#include "shlobj.h"
--#include "shellapi.h"
--
- /* ITEMIDLIST */
- 
- extern LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILClone) (LPCITEMIDLIST);
-Index: cdlg32.c
-===================================================================
---- cdlg32.c	(revision 25649)
-+++ cdlg32.c	(working copy)
-@@ -19,21 +19,10 @@
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
- 
--#include <stdarg.h>
-+#include <precomp.h>
- 
--#include "windef.h"
--#include "winbase.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "commdlg.h"
--#include "cderr.h"
--#include "wine/debug.h"
--
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
- 
--#include "cdlg.h"
--
--
- HINSTANCE	COMDLG32_hInstance = 0;
- 
- static DWORD COMDLG32_TlsIndex = TLS_OUT_OF_INDEXES;
 Index: printdlg.c
 ===================================================================
---- printdlg.c	(revision 25649)
-+++ printdlg.c	(revision 25650)
-@@ -20,32 +20,11 @@
-  * License along with this library; if not, write to the Free Software
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
--#include <ctype.h>
--#include <stdlib.h>
--#include <stdarg.h>
--#include <stdio.h>
--#include <string.h>
+--- printdlg.c	(revision 23123)
++++ printdlg.c	(working copy)
+@@ -347,7 +347,7 @@
+ 	        lpdm->dmCollate =
+ 		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
+ 	    if (lpdm->dmFields & DM_COPIES)
+-	        lpdm->dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
++	        lpdm->u.s.dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
+ 	} else {
+ 	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
+ 	        lppd->Flags |= PD_COLLATE;
+@@ -425,7 +425,7 @@
+ 	        lpdm->dmCollate =
+ 		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
+ 	    if (lpdm->dmFields & DM_COPIES)
+-	        lpdm->dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
++	        lpdm->u.s.dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
+ 	} else {
+ 	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
+ 	        lppd->Flags |= PD_COLLATE;
+@@ -590,9 +590,9 @@
+                                       Sel, 0);
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                dm->u1.s1.dmPaperSize = oldWord;
++                dm->u.s.dmPaperSize = oldWord;
+             else
+-                dm->dmDefaultSource = oldWord;
++                dm->u.s.dmDefaultSource = oldWord;
+         }
+     }
+     else {
+@@ -602,9 +602,9 @@
+          */
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                oldWord = dm->u1.s1.dmPaperSize;
++                oldWord = dm->u.s.dmPaperSize;
+             else
+-                oldWord = dm->dmDefaultSource;
++                oldWord = dm->u.s.dmDefaultSource;
+         }
+     }
  
--#define NONAMELESSUNION
--#define NONAMELESSSTRUCT
--#include "windef.h"
--#include "winbase.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "winspool.h"
--#include "winerror.h"
-+#include <precomp.h>
+@@ -700,9 +700,9 @@
+                                       Sel, 0);
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                dm->u1.s1.dmPaperSize = oldWord;
++                dm->u.s.dmPaperSize = oldWord;
+             else
+-                dm->dmDefaultSource = oldWord;
++                dm->u.s.dmDefaultSource = oldWord;
+         }
+     }
+     else {
+@@ -712,9 +712,9 @@
+          */
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                oldWord = dm->u1.s1.dmPaperSize;
++                oldWord = dm->u.s.dmPaperSize;
+             else
+-                oldWord = dm->dmDefaultSource;
++                oldWord = dm->u.s.dmDefaultSource;
+         }
+     }
  
--#include "wine/debug.h"
--
--#include "commdlg.h"
--#include "dlgs.h"
--#include "cderr.h"
--
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+@@ -964,7 +964,7 @@
+ 	  if (lppd->hDevMode == 0)
+ 	      copies = lppd->nCopies;
+ 	  else
+-	      copies = lpdm->dmCopies;
++	      copies = lpdm->u.s.dmCopies;
+ 	  if(copies == 0) copies = 1;
+ 	  else if(copies < 0) copies = MAX_COPIES;
+ 	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
+@@ -986,7 +986,7 @@
+             ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
  
--#include "cdlg.h"
--#include "printdlg.h"
--
- /* Yes these constants are the same, but we're just copying win98 */
- #define UPDOWN_ID 0x270f
- #define MAX_COPIES 9999
-Index: fontdlg.c
-===================================================================
---- fontdlg.c	(revision 25649)
-+++ fontdlg.c	(working copy)
-@@ -19,20 +19,7 @@
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
+     } else { /* PD_PRINTSETUP */
+-      BOOL bPortrait = (lpdm->u1.s1.dmOrientation == DMORIENT_PORTRAIT);
++      BOOL bPortrait = (lpdm->u.s.dmOrientation == DMORIENT_PORTRAIT);
  
--#include <ctype.h>
--#include <stdlib.h>
--#include <stdarg.h>
--#include <stdio.h>
--#include <string.h>
--#include "windef.h"
--#include "winbase.h"
--#include "winnls.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "commdlg.h"
--#include "dlgs.h"
--#include "wine/debug.h"
--#include "cderr.h"
-+#include <precomp.h>
+       PRINTDLG_SetUpPaperComboBoxA(hDlg, cmb2,
+ 				  PrintStructures->lpPrinterInfo->pPrinterName,
+@@ -1113,7 +1113,7 @@
+ 	  if (lppd->hDevMode == 0)
+ 	      copies = lppd->nCopies;
+ 	  else
+-	      copies = lpdm->dmCopies;
++	      copies = lpdm->u.s.dmCopies;
+ 	  if(copies == 0) copies = 1;
+ 	  else if(copies < 0) copies = MAX_COPIES;
+ 	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
+@@ -1135,7 +1135,7 @@
+             ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
  
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+     } else { /* PD_PRINTSETUP */
+-      BOOL bPortrait = (lpdm->u1.s1.dmOrientation == DMORIENT_PORTRAIT);
++      BOOL bPortrait = (lpdm->u.s.dmOrientation == DMORIENT_PORTRAIT);
  
-Index: filedlg.c
-===================================================================
---- filedlg.c	(revision 25649)
-+++ filedlg.c	(working copy)
-@@ -46,40 +46,11 @@
-  *
-  */
+       PRINTDLG_SetUpPaperComboBoxW(hDlg, cmb2,
+ 				  PrintStructures->lpPrinterInfo->pPrinterName,
+@@ -1509,7 +1509,7 @@
+     case rad1: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++              lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hPortraitIcon));
+         }
+@@ -1518,7 +1518,7 @@
+     case rad2: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++              lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hLandscapeIcon));
+         }
+@@ -1542,7 +1542,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb2, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->u1.s1.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
++	      lpdm->u.s.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
+ 							    CB_GETITEMDATA,
+ 							    Sel, 0);
+       }
+@@ -1552,7 +1552,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->dmDefaultSource = SendDlgItemMessageA(hDlg, cmb3,
++	      lpdm->u.s.dmDefaultSource = SendDlgItemMessageA(hDlg, cmb3,
+ 							  CB_GETITEMDATA, Sel,
+ 							  0);
+       }
+@@ -1563,8 +1563,8 @@
+ 	case rad1:                         /* orientation */
+ 	case rad2:
+ 	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_PORTRAIT) {
+-		    lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_PORTRAIT) {
++		    lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+ 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+@@ -1573,8 +1573,8 @@
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+ 		}
+ 	    } else {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_LANDSCAPE) {
+-	            lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_LANDSCAPE) {
++	            lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+ 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hLandscapeIcon);
+@@ -1673,7 +1673,7 @@
+     case rad1: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++              lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+               SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hPortraitIcon));
+         }
+@@ -1682,7 +1682,7 @@
+     case rad2: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++              lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+               SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hLandscapeIcon));
+         }
+@@ -1706,7 +1706,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageW(hDlg, cmb2, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->u1.s1.dmPaperSize = SendDlgItemMessageW(hDlg, cmb2,
++	      lpdm->u.s.dmPaperSize = SendDlgItemMessageW(hDlg, cmb2,
+ 							    CB_GETITEMDATA,
+ 							    Sel, 0);
+       }
+@@ -1716,7 +1716,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageW(hDlg, cmb3, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->dmDefaultSource = SendDlgItemMessageW(hDlg, cmb3,
++	      lpdm->u.s.dmDefaultSource = SendDlgItemMessageW(hDlg, cmb3,
+ 							  CB_GETITEMDATA, Sel,
+ 							  0);
+       }
+@@ -1727,8 +1727,8 @@
+ 	case rad1:                         /* orientation */
+ 	case rad2:
+ 	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_PORTRAIT) {
+-		    lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_PORTRAIT) {
++		    lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+ 		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+@@ -1737,8 +1737,8 @@
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+ 		}
+ 	    } else {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_LANDSCAPE) {
+-	            lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_LANDSCAPE) {
++	            lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+ 		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hLandscapeIcon);
+@@ -2499,15 +2499,15 @@
  
--#include "config.h"
--#include "wine/port.h"
-+//#include "config.h"
-+//#include "wine/port.h"
+     /* Save paper orientation into device context */
+     if(pda->curdlg.ptPaperSize.x > pda->curdlg.ptPaperSize.y)
+-        dm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++        dm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+     else
+-        dm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++        dm->u.s.dmOrientation = DMORIENT_PORTRAIT;
  
--#include <ctype.h>
--#include <stdlib.h>
--#include <stdarg.h>
--#include <stdio.h>
--#include <string.h>
-+#include <precomp.h>
+     /* Save paper size into the device context */
+     paperword = SendDlgItemMessageA(hDlg,cmb2,CB_GETITEMDATA,
+         SendDlgItemMessageA(hDlg, cmb2, CB_GETCURSEL, 0, 0), 0);
+     if (paperword != CB_ERR)
+-        dm->u1.s1.dmPaperSize = paperword;
++        dm->u.s.dmPaperSize = paperword;
+     else
+         FIXME("could not get dialog text for papersize cmbbox?\n");
  
--#define COBJMACROS
--#define NONAMELESSUNION
--#define NONAMELESSSTRUCT
--
--#include "windef.h"
--#include "winbase.h"
--#include "winreg.h"
--#include "winternl.h"
--#include "winnls.h"
--#include "wine/unicode.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "winreg.h"
--#include "commdlg.h"
--#include "dlgs.h"
--#include "cdlg.h"
--#include "filedlg31.h"
--#include "wine/debug.h"
--#include "cderr.h"
--#include "shellapi.h"
--#include "shlguid.h"
--#include "shlobj.h"
--#include "filedlgbrowser.h"
--#include "shlwapi.h"
--
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+@@ -2515,7 +2515,7 @@
+     paperword = SendDlgItemMessageA(hDlg,cmb1,CB_GETITEMDATA,
+         SendDlgItemMessageA(hDlg, cmb1, CB_GETCURSEL, 0, 0), 0);
+     if (paperword != CB_ERR)
+-        dm->dmDefaultSource = paperword;
++        dm->u.s.dmDefaultSource = paperword;
+     else
+         FIXME("could not get dialog text for papersize cmbbox?\n");
  
- #define UNIMPLEMENTED_FLAGS \
-Index: comdlg32.rbuild
-===================================================================
---- comdlg32.rbuild	(revision 25649)
-+++ comdlg32.rbuild	(working copy)
-@@ -30,4 +30,5 @@
- 	<file>printdlg.c</file>
- 	<file>rsrc.rc</file>
- 	<file>comdlg32.spec</file>
-+	<pch>precomp.h</pch>
- </module>
-Index: filedlg31.c
-===================================================================
---- filedlg31.c	(revision 25649)
-+++ filedlg31.c	(working copy)
-@@ -18,33 +18,11 @@
-  * License along with this library; if not, write to the Free Software
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
--#include <ctype.h>
--#include <stdlib.h>
--#include <stdarg.h>
--#include <stdio.h>
--#include <string.h>
--#include "windef.h"
--#include "winbase.h"
--#include "winnls.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "wine/unicode.h"
--#include "wine/debug.h"
--#include "cderr.h"
--#include "winreg.h"
--#include "winternl.h"
--#include "winuser.h"
--#include "commdlg.h"
--#include "cderr.h"
--#include "winreg.h"
--#include "winternl.h"
--#include "shlwapi.h"
- 
-+#include <precomp.h>
-+
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
- 
--#include "cdlg.h"
--#include "filedlg31.h"
--
- #define BUFFILE 512
- #define BUFFILEALLOC 512 * sizeof(WCHAR)
- 
-Index: filetitle.c
-===================================================================
---- filetitle.c	(revision 25649)
-+++ filetitle.c	(working copy)
-@@ -19,22 +19,8 @@
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
-  */
- 
--#include <stdarg.h>
--#include <string.h>
-+#include <precomp.h>
- 
--#include "windef.h"
--#include "winbase.h"
--#include "winnls.h"
--#include "winreg.h"
--#include "winternl.h"
--#include "wingdi.h"
--#include "winuser.h"
--#include "commdlg.h"
--#include "cdlg.h"
--#include "cdlg16.h"
--#include "wine/unicode.h"
--#include "wine/debug.h"
--
- WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
- 
- /***********************************************************************
-@@ -49,11 +35,11 @@
-     LPWSTR lpWTitle;
- 
-     RtlCreateUnicodeStringFromAsciiz(&strWFile, lpFile);
--    lpWTitle = RtlAllocateHeap( GetProcessHeap(), 0, cbBuf*sizeof(WCHAR));
-+    lpWTitle = HeapAlloc( GetProcessHeap(), 0, cbBuf*sizeof(WCHAR));
-     ret = GetFileTitleW(strWFile.Buffer, lpWTitle, cbBuf);
-     if (!ret) WideCharToMultiByte( CP_ACP, 0, lpWTitle, -1, lpTitle, cbBuf, NULL, NULL );
-     RtlFreeUnicodeString( &strWFile );
--    RtlFreeHeap( GetProcessHeap(), 0, lpWTitle );
-+    HeapFree( GetProcessHeap(), 0, lpWTitle );
-     return ret;
- }
- 
+@@ -2809,7 +2809,7 @@
+     case cmb3:
+ 	if(msg == CBN_SELCHANGE){
+ 	    DEVMODEA *dm = GlobalLock(pda->pdlg.hDevMode);
+-	    dm->dmDefaultSource = SendDlgItemMessageA(hDlg, cmb3,CB_GETITEMDATA,
++	    dm->u.s.dmDefaultSource = SendDlgItemMessageA(hDlg, cmb3,CB_GETITEMDATA,
+                 SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0), 0);
+ 	    GlobalUnlock(pda->pdlg.hDevMode);
+ 	}
+@@ -2832,10 +2832,10 @@
+ 	                        DM_IN_BUFFER | DM_OUT_BUFFER | DM_IN_PROMPT);
+ 	    ClosePrinter(hPrinter);
+ 	    /* Changing paper */
+-	    PRINTDLG_PaperSizeA(&(pda->pdlg), dm->u1.s1.dmPaperSize, &(pda->curdlg.ptPaperSize));
++	    PRINTDLG_PaperSizeA(&(pda->pdlg), dm->u.s.dmPaperSize, &(pda->curdlg.ptPaperSize));
+ 	    pda->curdlg.ptPaperSize.x = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.x);
+ 	    pda->curdlg.ptPaperSize.y = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.y);
+-            if (dm->u1.s1.dmOrientation == DMORIENT_LANDSCAPE){
++            if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE){
+                 DWORD tmp = pda->curdlg.ptPaperSize.x;
+                 pda->curdlg.ptPaperSize.x = pda->curdlg.ptPaperSize.y;
+                 pda->curdlg.ptPaperSize.y = tmp;
+@@ -2849,7 +2849,7 @@
+ 	    count = SendDlgItemMessageA(hDlg, cmb2, CB_GETCOUNT, 0, 0);
+ 	    if(count != CB_ERR){ 
+                 for(i=0; i<count; ++i){
+-		    if(SendDlgItemMessageA(hDlg, cmb2, CB_GETITEMDATA, i, 0) == dm->u1.s1.dmPaperSize) {
++		    if(SendDlgItemMessageA(hDlg, cmb2, CB_GETITEMDATA, i, 0) == dm->u.s.dmPaperSize) {
+ 			SendDlgItemMessageA(hDlg, cmb2, CB_SETCURSEL, i, 0);
+ 			break;
+ 		    }
+@@ -3153,7 +3153,7 @@
+ 	}
+         /* Set orientation radiobutton properly */
+         dm = GlobalLock(pda->dlga->hDevMode);
+-        if (dm->u1.s1.dmOrientation == DMORIENT_LANDSCAPE)
++        if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE)
+             CheckRadioButton(hDlg, rad1, rad2, rad2);
+ 	else /* this is default if papersize is not set */
+             CheckRadioButton(hDlg, rad1, rad2, rad1);
+@@ -3198,8 +3198,8 @@
+         PRINTDLG_PS_ChangePrinterA(hDlg, pda);
+ 	dm = GlobalLock(pda->pdlg.hDevMode);
+ 	if(dm){
+-	    dm->dmDefaultSource = 15; /*FIXME: Automatic select. Does it always 15 at start? */
+-	    PRINTDLG_PaperSizeA(&(pda->pdlg), dm->u1.s1.dmPaperSize, &pda->curdlg.ptPaperSize);
++	    dm->u.s.dmDefaultSource = 15; /*FIXME: Automatic select. Does it always 15 at start? */
++	    PRINTDLG_PaperSizeA(&(pda->pdlg), dm->u.s.dmPaperSize, &pda->curdlg.ptPaperSize);
+             GlobalUnlock(pda->pdlg.hDevMode);
+ 	    pda->curdlg.ptPaperSize.x = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.x);
+ 	    pda->curdlg.ptPaperSize.y = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.y);
+@@ -3401,7 +3401,7 @@
+ 	DEVMODEA *dm;
+ 	
+ 	dm = GlobalLock(pdlg.hDevMode);
+-    	PRINTDLG_PaperSizeA(&pdlg, dm->u1.s1.dmPaperSize, &setupdlg->ptPaperSize);
++    	PRINTDLG_PaperSizeA(&pdlg, dm->u.s.dmPaperSize, &setupdlg->ptPaperSize);
+ 	GlobalUnlock(pdlg.hDevMode);
+ 	setupdlg->ptPaperSize.x=_c_10mm2size(setupdlg,setupdlg->ptPaperSize.x);
+ 	setupdlg->ptPaperSize.y=_c_10mm2size(setupdlg,setupdlg->ptPaperSize.y);

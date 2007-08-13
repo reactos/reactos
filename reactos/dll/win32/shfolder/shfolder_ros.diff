@@ -1,9 +1,0 @@
-Index: shfolder.rbuild
-===================================================================
---- shfolder.rbuild	(revision 23782)
-+++ shfolder.rbuild	(working copy)
-@@ -1,3 +1,3 @@
-+<module name="shfolder" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_SHFOLDER}" installbase="system32" installname="shfolder.dll" allowwarnings="true">
--<module name="shfolder" type="win32dll" baseaddress="${BASEADDRESS_SHFOLDER}" installbase="system32" installname="shfolder.dll" allowwarnings="true">
- 	<importlibrary definition="shfolder.spec.def" />
- 	<include base="shfolder">.</include>

@@ -194,13 +194,6 @@ NtGdiCopyMetaFile (
 	LPCWSTR		File
 	);
 
-/* Use NtGdiCreateBitmap and expand the pbm-> */
-HBITMAP
-STDCALL
-NtGdiCreateBitmapIndirect (
-	CONST BITMAP	* BM
-	);
-
 /* Use NtGdiCreateDIBitmapInternal */
 HBITMAP
 STDCALL
@@ -212,20 +205,6 @@ NtGdiCreateDIBitmap (
 	CONST BITMAPINFO	* bmi,
 	UINT			Usage
 	);
-
-/* Use NtGdiCreateCompatibleBitmap */
-HBITMAP
-STDCALL
-NtGdiCreateDiscardableBitmap (
-	HDC	hDC,
-	INT	Width,
-	INT	Height
-	);
-
-/* Use NtGdiCreateEllipticRgn and expand the lprect-> */
-HRGN
-STDCALL
-NtGdiCreateEllipticRgnIndirect(CONST PRECT  rc);
 
 /* Metafiles are user mode */
 HDC
@@ -251,11 +230,6 @@ NtGdiCreatePalette (
 	CONST PLOGPALETTE	lgpl
 	);
 
-/* Use NtGdiCreatePen with -> as parameters. */
-HPEN STDCALL
-NtGdiCreatePenIndirect(
-   CONST PLOGPEN LogBrush);
-
 /* Use NtGdiPolyPolyDraw with PolyPolyRgn. */
 HRGN
 STDCALL
@@ -270,11 +244,6 @@ NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                                CONST PINT  PolyCounts,
                                INT  Count,
                                INT  PolyFillMode);
-
-/* Use NtGdiCreateRectRgn with expanded paraemters. */
-HRGN
-STDCALL
-NtGdiCreateRectRgnIndirect(CONST PRECT  rc);
 
 /* Use NtGdiTransformPoints with GdiDpToLp. */
 BOOL
@@ -358,16 +327,6 @@ NtGdiExtTextOut(HDC  hdc,
                      LPCWSTR  lpString,
                      UINT  cbCount,
                      CONST INT  *lpDx);
-
-/* Use NtGdiExtFloodFill with FLOODFILLBORDER. */
-BOOL
-STDCALL
-NtGdiFloodFill (
-	HDC		hDC,
-	INT		XStart,
-	INT		YStart,
-	COLORREF	Fill
-	);
 
 /* Should be done in user-mode. */
 BOOL
@@ -645,24 +604,6 @@ NtGdiGetTextCharset(HDC  hDC);
 
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
-
-/* Rename to NtGdiGetTextExtentExW. Add 0 at the end. */
-BOOL
-STDCALL
-NtGdiGetTextExtentExPoint(HDC  hDC,
-                               LPCWSTR String,
-                               int  Count,
-                               int  MaxExtent,
-                               LPINT  Fit,
-                               LPINT  Dx,
-                               LPSIZE  Size);
-
-/* Rename to NtGdiGetTextFaceW, add FALSE at the end. */
-int
-STDCALL
-NtGdiGetTextFace(HDC  hDC,
-                     int  Count,
-                     LPWSTR  FaceName);
 
 /* Use NtGdiGetTextMetricsW with 0 at the end */
 BOOL
@@ -1115,15 +1056,6 @@ NtGdiStretchDIBits (
 	UINT			Usage,
 	DWORD			ROP
 	);
-
-/* Use NtGdiExtTextOutW with 0, 0 at the end. */
-BOOL
-STDCALL
-NtGdiTextOut(HDC  hDC,
-                  int  XStart,
-                  int  YStart,
-                  LPCWSTR  String,
-                  int  Count);
 
 /* Needs to be done in user-mode. */
 BOOL

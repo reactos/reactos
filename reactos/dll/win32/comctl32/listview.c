@@ -1771,6 +1771,9 @@ static void LISTVIEW_ShowFocusRect(const LISTVIEW_INFO *infoPtr, BOOL fShow)
 	DRAWITEMSTRUCT dis;
 	LVITEMW item;
 
+	HFONT hFont = infoPtr->hFont ? infoPtr->hFont : infoPtr->hDefaultFont;
+	HFONT hOldFont = SelectObject(hdc, hFont);
+
         item.iItem = infoPtr->nFocusedItem;
 	item.iSubItem = 0;
         item.mask = LVIF_PARAM;
@@ -1788,6 +1791,8 @@ static void LISTVIEW_ShowFocusRect(const LISTVIEW_INFO *infoPtr, BOOL fShow)
 	dis.itemData = item.lParam;
 
 	SendMessageW(infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
+
+	SelectObject(hdc, hOldFont);
     }
     else
     {
@@ -3263,7 +3268,7 @@ static BOOL LISTVIEW_GetItemAtPt(const LISTVIEW_INFO *infoPtr, LPLVITEMW lpLVIte
  * over the item for a certain period of time.
  *
  */
-static LRESULT LISTVIEW_MouseHover(LISTVIEW_INFO *infoPtr, WORD fwKyes, INT x, INT y)
+static LRESULT LISTVIEW_MouseHover(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, INT y)
 {
     if (infoPtr->dwLvExStyle & LVS_EX_TRACKSELECT)
     {
@@ -5146,7 +5151,7 @@ static BOOL LISTVIEW_GetColumnOrderArray(const LISTVIEW_INFO *infoPtr, INT iCoun
 static INT LISTVIEW_GetColumnWidth(const LISTVIEW_INFO *infoPtr, INT nColumn)
 {
     INT nColumnWidth = 0;
-    RECT rcHeader;
+    HDITEMW hdItem;
 
     TRACE("nColumn=%d\n", nColumn);
 
@@ -5157,9 +5162,19 @@ static INT LISTVIEW_GetColumnWidth(const LISTVIEW_INFO *infoPtr, INT nColumn)
 	nColumnWidth = infoPtr->nItemWidth;
 	break;
     case LVS_REPORT:
-	if (nColumn < 0 || nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns)) return 0;
-	LISTVIEW_GetHeaderRect(infoPtr, nColumn, &rcHeader);
-	nColumnWidth = rcHeader.right - rcHeader.left;
+	/* We are not using LISTVIEW_GetHeaderRect as this data is updated only after a HDM_ITEMCHANGED.
+	 * There is an application that subclasses the listview, calls LVM_GETCOLUMNWIDTH in the
+	 * HDM_ITEMCHANGED handler and goes into infinite recursion if it receives old data.
+	 *
+	 * TODO: should we do the same in LVM_GETCOLUMN?
+	 */
+	hdItem.mask = HDI_WIDTH;
+	if (!SendMessageW(infoPtr->hwndHeader, HDM_GETITEMW, nColumn, (LPARAM)&hdItem))
+	{
+	    WARN("(%p): HDM_GETITEMW failed for item %d\n", infoPtr->hwndSelf, nColumn);
+	    return 0;
+	}
+	nColumnWidth = hdItem.cxy;
 	break;
     }
 
@@ -9260,7 +9275,7 @@ static INT LISTVIEW_StyleChanged(LISTVIEW_INFO *infoPtr, WPARAM wStyleType,
     UINT uNewView = lpss->styleNew & LVS_TYPEMASK;
     UINT uOldView = lpss->styleOld & LVS_TYPEMASK;
 
-    TRACE("(styletype=%x, styleOld=0x%08x, styleNew=0x%08x)\n",
+    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
           wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
@@ -9346,7 +9361,7 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)GetWindowLongPtrW(hwnd, 0);
 
-  TRACE("(uMsg=%x wParam=%x lParam=%lx)\n", uMsg, wParam, lParam);
+  TRACE("(uMsg=%x wParam=%lx lParam=%lx)\n", uMsg, wParam, lParam);
 
   if (!infoPtr && (uMsg != WM_NCCREATE))
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -9850,7 +9865,7 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   default:
     if ((uMsg >= WM_USER) && (uMsg < WM_APP))
-      ERR("unknown msg %04x wp=%08x lp=%08lx\n", uMsg, wParam, lParam);
+      ERR("unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
 
   fwd_msg:
     /* call default window procedure */
@@ -9990,7 +10005,7 @@ static LRESULT EditLblWndProcT(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)GetWindowLongPtrW(GetParent(hwnd), 0);
     BOOL cancel = FALSE;
 
-    TRACE("(hwnd=%p, uMsg=%x, wParam=%x, lParam=%lx, isW=%d)\n",
+    TRACE("(hwnd=%p, uMsg=%x, wParam=%lx, lParam=%lx, isW=%d)\n",
 	  hwnd, uMsg, wParam, lParam, isW);
 
     switch (uMsg)

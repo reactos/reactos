@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Winlogon
- * FILE:            services/winlogon/winlogon.c
+ * FILE:            base/system/winlogon/winlogon.c
  * PURPOSE:         Logon
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Filip Navara
@@ -9,10 +9,13 @@
  */
 
 /* INCLUDES *****************************************************************/
+
 #include "winlogon.h"
 
 //#define YDEBUG
 #include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
 /* GLOBALS ******************************************************************/
 
@@ -425,7 +428,7 @@ WinMain(
 
 	if (!StartLsass())
 	{
-		DPRINT1("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
+		ERR("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
 		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, OptionOk, &HardErrorResponse);
 		ExitProcess(1);
 	}

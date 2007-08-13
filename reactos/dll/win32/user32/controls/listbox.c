@@ -21,6 +21,8 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DECLARE_DEBUG_CHANNEL(combo);
+WINE_DEFAULT_DEBUG_CHANNEL(listbox);
 
 /* Start of hack section -------------------------------- */
 

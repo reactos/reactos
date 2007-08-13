@@ -11,6 +11,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* DDE message exchange
  *
@@ -1143,7 +1144,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
   if (WndProc == NULL)
   {
-      DPRINT("IntCallWindowsProcW() called with WndProc = NULL!\n");
+      WARN("IntCallWindowsProcW() called with WndProc = NULL!\n");
       return FALSE;
   }
 
@@ -1185,7 +1186,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
   if (WndProc == NULL)
   {
-      DPRINT("IntCallWindowsProcA() called with WndProc = NULL!\n");
+      WARN("IntCallWindowsProcA() called with WndProc = NULL!\n");
       return FALSE;
   }
 

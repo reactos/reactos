@@ -12,7 +12,6 @@
 	<library>shell32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
-	<file>shfolder_main.c</file>
 	<file>version.rc</file>
 	<file>shfolder.spec</file>
 </module>

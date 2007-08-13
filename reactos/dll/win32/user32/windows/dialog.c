@@ -34,6 +34,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* MACROS/DEFINITIONS ********************************************************/
 
@@ -1182,7 +1183,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
     ((attrib & DDL_POSTMSGS) ? PostMessageW( hwnd, msg, wparam, lparam ) \
                              : SendMessageW( hwnd, msg, wparam, lparam ))
 
-//    DPRINT("%p '%s' %d %d %04x\n",
+//    TRACE("%p '%s' %d %d %04x\n",
 //          hDlg, spec ? spec : "NULL", idLBox, idStatic, attrib );
 
     /* If the path exists and is a directory, chdir to it */
@@ -1206,7 +1207,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
         }
     }
 
-    DPRINT( "mask=%s\n", spec );
+    TRACE( "mask=%s\n", spec );
 
     if (idLBox && ((hwnd = GetDlgItem( hDlg, idLBox )) != 0))
     {
@@ -1287,7 +1288,7 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
     BOOL ret;
     HWND listbox = GetDlgItem( hwnd, id );
 
-    DPRINT("%p '%s' %d\n", hwnd, str, id );
+    TRACE("%p '%s' %d\n", hwnd, str, id );
     if (!listbox) return FALSE;
 
     item = SendMessageW(listbox, combo ? CB_GETCURSEL : LB_GETCURSEL, 0, 0 );
@@ -1322,7 +1323,7 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
     }
     else lstrcpynW( str, ptr, len );
     HeapFree( GetProcessHeap(), 0, buffer );
-    DPRINT("Returning %d '%s'\n", ret, str );
+    TRACE("Returning %d '%s'\n", ret, str );
     return ret;
 }
 

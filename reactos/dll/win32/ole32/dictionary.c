@@ -126,8 +126,8 @@ void dictionary_insert(struct dictionary *d, const void *k, const void *v)
     }
     else
     {
-        struct dictionary_entry *elem = (struct dictionary_entry *)
-         HeapAlloc(GetProcessHeap(), 0, sizeof(struct dictionary_entry));
+        struct dictionary_entry *elem = HeapAlloc(GetProcessHeap(), 0,
+                                            sizeof(struct dictionary_entry));
 
         if (!elem)
             return;

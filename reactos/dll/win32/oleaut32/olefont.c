@@ -176,7 +176,7 @@ static inline OLEFontImpl *impl_from_IPersistStreamInit( IPersistStreamInit *ifa
  * Prototypes for the implementation functions for the IFont
  * interface
  */
-static OLEFontImpl* OLEFontImpl_Construct(LPFONTDESC fontDesc);
+static OLEFontImpl* OLEFontImpl_Construct(const FONTDESC *fontDesc);
 static void         OLEFontImpl_Destroy(OLEFontImpl* fontDesc);
 static ULONG        WINAPI OLEFontImpl_AddRef(IFont* iface);
 
@@ -2201,7 +2201,7 @@ static const IPersistStreamInitVtbl OLEFontImpl_IPersistStreamInit_VTable =
  * The caller of this method must release the object when it's
  * done with it.
  */
-static OLEFontImpl* OLEFontImpl_Construct(LPFONTDESC fontDesc)
+static OLEFontImpl* OLEFontImpl_Construct(const FONTDESC *fontDesc)
 {
   OLEFontImpl* newObject = 0;
 

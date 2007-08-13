@@ -29,6 +29,8 @@
 //#define YDEBUG
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(msgina);
+
 extern HINSTANCE hDllInstance;
 
 extern GINA_UI GinaGraphicalUI;

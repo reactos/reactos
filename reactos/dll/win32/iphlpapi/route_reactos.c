@@ -61,7 +61,7 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     TDIEntityID   id;
     DWORD         returnSize = 0;
     
-    DPRINT("Called.\n");
+    TRACE("Called.\n");
 
     if( NT_SUCCESS(status) )
         status = getNthIpEntity( tcpFile, 0, &id );
@@ -103,7 +103,7 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     if( tcpFile != INVALID_HANDLE_VALUE )
         closeTcpFile( tcpFile );
 
-    DPRINT("Returning: %08x (IOCTL was %08x)\n", status, IOCTL_TCP_SET_INFORMATION_EX);
+    TRACE("Returning: %08x (IOCTL was %08x)\n", status, IOCTL_TCP_SET_INFORMATION_EX);
 
     if( NT_SUCCESS(status) )
 	return NO_ERROR;
@@ -125,7 +125,7 @@ DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     TDIEntityID   id;
     DWORD         returnSize = 0;
     
-    DPRINT("Called.\n");
+    TRACE("Called.\n");
 
     if( NT_SUCCESS(status) )
         status = getNthIpEntity( tcpFile, 0, &id );
@@ -167,7 +167,7 @@ DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     if( tcpFile != INVALID_HANDLE_VALUE )
         closeTcpFile( tcpFile );
 
-    DPRINT("Returning: %08x (IOCTL was %08x)\n", status, IOCTL_TCP_SET_INFORMATION_EX);
+    TRACE("Returning: %08x (IOCTL was %08x)\n", status, IOCTL_TCP_SET_INFORMATION_EX);
 
     if( NT_SUCCESS(status) )
 	return NO_ERROR;

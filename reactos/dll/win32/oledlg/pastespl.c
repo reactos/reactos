@@ -516,7 +516,7 @@ static INT_PTR CALLBACK ps_dlg_proc(HWND hdlg, UINT msg, WPARAM wp, LPARAM lp)
     static const WCHAR prop_name[] = {'W','i','n','e','_','S','t','r','u','c','t','u','r','e',0};
     ps_struct_t *ps_struct;
 
-    TRACE("(%p, %04x, %08x, %08lx)\n", hdlg, msg, wp, lp);
+    TRACE("(%p, %04x, %08lx, %08lx)\n", hdlg, msg, wp, lp);
 
     ps_struct = GetPropW(hdlg, prop_name);
 

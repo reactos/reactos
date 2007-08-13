@@ -896,7 +896,7 @@ static HRESULT WINAPI ImplBIGBLOCKFILE_WriteAt(
 
         if (bytes_left)
         {
-            readPtr = (LPBYTE)readPtr + bytes_to_page;
+            readPtr = (const BYTE *)readPtr + bytes_to_page;
             page_index ++;
             offset_in_page = 0;
             if (bytes_left > PAGE_SIZE)
@@ -920,7 +920,7 @@ HRESULT     BIGBLOCKFILE_ReadAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
 }
 
 HRESULT    BIGBLOCKFILE_WriteAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
-                void* buffer, const ULONG size, ULONG* bytesRead)
+                const void* buffer, ULONG size, ULONG* bytesRead)
 {
     if (This->fileBased)
         return ImplBIGBLOCKFILE_WriteAt(This,offset,buffer,size,bytesRead);

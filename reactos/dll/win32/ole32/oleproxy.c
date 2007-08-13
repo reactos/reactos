@@ -53,7 +53,6 @@
 #include "ole2.h"
 #include "rpc.h"
 #include "winerror.h"
-#include "winreg.h"
 #include "wtypes.h"
 
 #include "compobj_private.h"

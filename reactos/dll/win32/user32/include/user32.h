@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
+#include <assert.h>
 #include <stdio.h>
 #include <math.h>
 

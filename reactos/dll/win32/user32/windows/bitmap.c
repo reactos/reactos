@@ -31,6 +31,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #include "pshpack1.h"
 
@@ -600,7 +601,7 @@ CopyImage(
 
             if (flags & LR_COPYFROMRESOURCE)
             {
-                DPRINT1("FIXME: The flag LR_COPYFROMRESOURCE is not implemented for bitmaps\n");
+                FIXME("FIXME: The flag LR_COPYFROMRESOURCE is not implemented for bitmaps\n");
             }
 
             if (desiredx == 0) desiredx = ds.dsBm.bmWidth;
@@ -771,7 +772,7 @@ CopyImage(
             /* FIXME: support loading the image as shared from an instance */
             if (!IconMsgDisplayed)
             {
-               DPRINT("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
+               FIXME("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
                IconMsgDisplayed = TRUE;
             }
             return CopyIcon(hnd);
@@ -784,13 +785,13 @@ CopyImage(
             /* FIXME: support loading the image as shared from an instance */
             if (!IconMsgDisplayed)
             {
-               DPRINT("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
+               FIXME("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
                IconMsgDisplayed = TRUE;
             }
             /* Should call CURSORICON_ExtCopy but more testing
              * needs to be done before we change this
              */
-            if (flags) DPRINT1("FIXME: Flags are ignored\n");
+            if (flags) FIXME("FIXME: Flags are ignored\n");
             return CopyCursor(hnd);
          }
    }

@@ -18,6 +18,7 @@
           __asm fistp out
 #endif
 
+#if 0 /* FIXME: enable this as soon as we have working usermode gdi */
 LONG
 FASTCALL
 EFtoF( EFLOAT_S * efp)
@@ -890,4 +891,15 @@ PolyPolyline(HDC hDC, const POINT* Point, const DWORD* Counts, DWORD Polys)
  }
  return NtGdiPolyPolyDraw( hDC , Point, Count, Polys, GdiPolyPolyLine );
 }
+#endif
 
+BOOL
+WINAPI
+FloodFill(
+    HDC hDC,
+    int nXStart,
+    int nYStart,
+    COLORREF crFill)
+{
+    return NtGdiExtFloodFill(hDC, nXStart, nYStart, crFill, FLOODFILLBORDER);
+}

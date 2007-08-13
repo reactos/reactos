@@ -12,6 +12,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define DESKTOP_CLASS_ATOM   MAKEINTATOMA(32769)  /* Desktop */
 static LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -35,7 +36,7 @@ LRESULT
 WINAPI 
 DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    DPRINT1("Desktop Class Atom!\n");
+    FIXME("Desktop Class Atom!\n");
     if (message == WM_NCCREATE) return TRUE;
     return 0;  /* all other messages are ignored */
 }
@@ -126,7 +127,7 @@ SystemParametersInfoA(UINT uiAction,
       case SPI_SETSOUNDSENTRY:
         {
             /* FIXME: Support this accessibility SPI actions */
-            DPRINT1("FIXME: Unsupported SPI Code: %lx \n",uiAction );
+            FIXME("FIXME: Unsupported SPI Code: %lx \n",uiAction );
             return FALSE;
         }
 
@@ -349,7 +350,7 @@ SystemParametersInfoW(UINT uiAction,
     case SPI_SETSOUNDSENTRY:
        {
            /* FIXME: Support this accessibility SPI actions */
-           DPRINT1("FIXME: Unsupported SPI Code: %lx \n",uiAction );
+           FIXME("FIXME: Unsupported SPI Code: %lx \n",uiAction );
            return FALSE;
        }
     case SPI_GETDESKWALLPAPER:

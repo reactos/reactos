@@ -204,7 +204,7 @@ static void SAFEARRAY_SetFeatures(VARTYPE vt, SAFEARRAY *psa)
 }
 
 /* Create an array */
-static SAFEARRAY* SAFEARRAY_Create(VARTYPE vt, UINT cDims, SAFEARRAYBOUND *rgsabound, ULONG ulSize)
+static SAFEARRAY* SAFEARRAY_Create(VARTYPE vt, UINT cDims, const SAFEARRAYBOUND *rgsabound, ULONG ulSize)
 {
   SAFEARRAY *psa = NULL;
   int i;

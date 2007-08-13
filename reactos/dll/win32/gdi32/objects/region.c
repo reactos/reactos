@@ -44,4 +44,31 @@ CreatePolyPolygonRgn( const POINT* Point,
                                           GdiPolyPolyRgn );
 }
 
+HRGN
+WINAPI
+CreateEllipticRgnIndirect(
+   const RECT *prc
+)
+{
+   if (prc)
+   {
+      return NtGdiCreateEllipticRgn(prc->left, prc->top, prc->right, prc->bottom);
+   }
+   return NULL;
+}
 
+HRGN
+WINAPI
+CreateRectRgnIndirect(
+    const RECT *prc
+)
+{
+    if (prc)
+    {
+        return NtGdiCreateRectRgn(prc->left,
+                                  prc->top,
+                                  prc->right,
+                                  prc->bottom);
+    }
+    return NULL;
+}

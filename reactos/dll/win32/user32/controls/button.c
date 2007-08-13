@@ -66,6 +66,7 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(button);
 
 /* GetWindowLong offsets for window extra information */
 #define STATE_GWL_OFFSET  0

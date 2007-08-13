@@ -20,7 +20,7 @@
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -402,8 +402,7 @@ Oppgi en verdi mellom %d og %d."
     PD32_GENERIC_ERROR                    "En feil har oppstått."
     PD32_DRIVER_UNKNOWN                   "Ukjent skriverdriver."
     PD32_NO_DEVICES                       "Du må installere en skriver før du \
-    kan gjøre skriver-relaterte oppgaver som å endre \
-    sideoppsettet og skrive ut et dokument. \
+    kan gjøre skriver-relaterte oppgaver som å endre \ sideoppsettet og skrive ut et dokument. \
     Installer en og prøv på nytt."
 
     PD32_DEFAULT_PRINTER                  "Standardskriver; "

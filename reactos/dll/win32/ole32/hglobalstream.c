@@ -39,7 +39,6 @@
 #include "objbase.h"
 #include "ole2.h"
 #include "winerror.h"
-#include "winreg.h"
 #include "winternl.h"
 
 #include "wine/debug.h"
@@ -234,6 +233,12 @@ static HRESULT WINAPI HGLOBALStreamImpl_Read(
    * Lock the buffer in position and copy the data.
    */
   supportBuffer = GlobalLock(This->supportHandle);
+  if (!supportBuffer)
+  {
+      WARN("read from invalid hglobal %p\n", This->supportHandle);
+      *pcbRead = 0;
+      return S_OK;
+  }
 
   memcpy(pv, (char *) supportBuffer+This->currentPosition.u.LowPart, bytesToReadFromBuffer);
 
@@ -294,6 +299,8 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
   if (cb == 0)
     goto out;
 
+  *pcbWritten = 0;
+
   newSize.u.HighPart = 0;
   newSize.u.LowPart = This->currentPosition.u.LowPart + cb;
 
@@ -315,6 +322,11 @@ static HRESULT WINAPI HGLOBALStreamImpl_Write(
    * Lock the buffer in position and copy the data.
    */
   supportBuffer = GlobalLock(This->supportHandle);
+  if (!supportBuffer)
+  {
+      WARN("write to invalid hglobal %p\n", This->supportHandle);
+      return S_OK;
+  }
 
   memcpy((char *) supportBuffer+This->currentPosition.u.LowPart, pv, cb);
 

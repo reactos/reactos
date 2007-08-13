@@ -210,7 +210,7 @@
 @ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
 @ stdcall GetVersionInfoFromImage(wstr ptr ptr)
 @ stub InfIsFromOemLocation
-@ stub InstallCatalog
+@ stdcall InstallCatalog(str str ptr)
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
 @ stdcall InstallHinfSectionA(long long str long)
 @ stdcall InstallHinfSectionW(long long wstr long)
@@ -230,7 +230,8 @@
 @ stub QueryMultiSzValueToArray
 @ stdcall QueryRegistryValue(long wstr ptr ptr ptr)
 @ stub ReadAsciiOrUnicodeTextFile
-@ stub RegistryDelnode
+@ stdcall RegistryDelnode(long long)
+# Yes, Microsoft really misspelled this one!
 @ stdcall RetreiveFileSecurity(wstr ptr)
 @ stub RetrieveServiceConfig
 @ stub SearchForInfFile
@@ -257,8 +258,8 @@
 @ stdcall SetupCopyOEMInfW(wstr wstr long long ptr long ptr ptr)
 @ stdcall SetupCreateDiskSpaceListA(ptr long long)
 @ stdcall SetupCreateDiskSpaceListW(ptr long long)
-@ stub SetupDecompressOrCopyFileA
-@ stub SetupDecompressOrCopyFileW
+@ stdcall SetupDecompressOrCopyFileA(str str ptr)
+@ stdcall SetupDecompressOrCopyFileW(wstr wstr ptr)
 @ stub SetupDefaultQueueCallback
 @ stdcall SetupDefaultQueueCallbackA(ptr long long long)
 @ stdcall SetupDefaultQueueCallbackW(ptr long long long)
@@ -399,8 +400,10 @@
 @ stub SetupGetBackupInformationW
 @ stdcall SetupGetBinaryField(ptr long ptr long ptr)
 @ stdcall SetupGetFieldCount(ptr)
-@ stub SetupGetFileCompressionInfoA
-@ stub SetupGetFileCompressionInfoW
+@ stdcall SetupGetFileCompressionInfoA(str ptr ptr ptr ptr)
+@ stdcall SetupGetFileCompressionInfoExA(str ptr long ptr ptr ptr ptr)
+@ stdcall SetupGetFileCompressionInfoExW(wstr ptr long ptr ptr ptr ptr)
+@ stdcall SetupGetFileCompressionInfoW(wstr ptr ptr ptr ptr)
 @ stdcall SetupGetFileQueueCount(long long ptr)
 @ stdcall SetupGetFileQueueFlags(long ptr)
 @ stdcall SetupGetInfFileListA(str long str long ptr)
@@ -417,16 +420,16 @@
 @ stdcall SetupGetLineTextW(ptr long wstr wstr ptr long ptr)
 @ stdcall SetupGetMultiSzFieldA(ptr long ptr long ptr)
 @ stdcall SetupGetMultiSzFieldW(ptr long ptr long ptr)
-@ stub SetupGetSourceFileLocationA
-@ stub SetupGetSourceFileLocationW
+@ stdcall SetupGetSourceFileLocationA(ptr ptr str ptr ptr long ptr)
+@ stdcall SetupGetSourceFileLocationW(ptr ptr wstr ptr ptr long ptr)
 @ stub SetupGetSourceFileSizeA
 @ stub SetupGetSourceFileSizeW
-@ stub SetupGetSourceInfoA
-@ stub SetupGetSourceInfoW
+@ stdcall SetupGetSourceInfoA(ptr long long ptr long ptr)
+@ stdcall SetupGetSourceInfoW(ptr long long ptr long ptr)
 @ stdcall SetupGetStringFieldA(ptr long ptr long ptr)
 @ stdcall SetupGetStringFieldW(ptr long ptr long ptr)
-@ stub SetupGetTargetPathA
-@ stub SetupGetTargetPathW
+@ stdcall SetupGetTargetPathA(ptr ptr str ptr long ptr)
+@ stdcall SetupGetTargetPathW(ptr ptr wstr ptr long ptr)
 @ stdcall SetupInitDefaultQueueCallback(long)
 @ stdcall SetupInitDefaultQueueCallbackEx(long long long long ptr)
 @ stdcall SetupInitializeFileLogA(str long)
@@ -465,8 +468,8 @@
 @ stub SetupQueryFileLogW
 @ stdcall SetupQueryInfFileInformationA(ptr long str long ptr)
 @ stdcall SetupQueryInfFileInformationW(ptr long wstr long ptr)
-@ stub SetupQueryInfOriginalFileInformationA
-@ stub SetupQueryInfOriginalFileInformationW
+@ stdcall SetupQueryInfOriginalFileInformationA(ptr long ptr ptr)
+@ stdcall SetupQueryInfOriginalFileInformationW(ptr long ptr ptr)
 @ stub SetupQueryInfVersionInformationA
 @ stub SetupQueryInfVersionInformationW
 @ stub SetupQuerySourceListA
@@ -513,8 +516,8 @@
 @ stdcall SetupSetFileQueueFlags(long long long)
 @ stub SetupSetPlatformPathOverrideA
 @ stub SetupSetPlatformPathOverrideW
-@ stub SetupSetSourceListA
-@ stub SetupSetSourceListW
+@ stdcall SetupSetSourceListA(long ptr long)
+@ stdcall SetupSetSourceListW(long ptr long)
 @ stdcall SetupTermDefaultQueueCallback(ptr)
 @ stdcall SetupTerminateFileLog(long)
 @ stub ShouldDeviceBeExcluded

@@ -2,7 +2,6 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="ole32.spec.def" />
 	<include base="ole32">.</include>
-	<include base="ole32" root="intermediate">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
 	<define name="__WINESRC__" />
@@ -54,5 +53,6 @@
 	<file>usrmarshal.c</file>
 	<file>ole32res.rc</file>
 	<file>dcom.idl</file>
+	<include base="ole32" root="intermediate">.</include>
 	<file>ole32.spec</file>
 </module>

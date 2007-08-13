@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * This implementation uses a linked list, because I don't have a decent
  * hash table implementation handy.  This is somewhat inefficient, but it's
@@ -21,11 +21,8 @@
 
 #include "config.h"
 #include "wine/port.h"
-#include "wine/debug.h"
 
 #include "nbnamecache.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 
 typedef struct _NBNameCacheNode
 {
@@ -107,6 +104,7 @@ struct NBNameCache *NBNameCacheCreate(HANDLE heap, DWORD entryExpireTimeMS)
     {
         cache->heap = heap;
         InitializeCriticalSection(&cache->cs);
+        cache->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": NBNameCache.cs");
         cache->entryExpireTimeMS = entryExpireTimeMS;
         cache->head = NULL;
     }
@@ -166,7 +164,7 @@ const NBNameCacheEntry *NBNameCacheFindEntry(struct NBNameCache *cache,
         NBNameCacheNode **node;
 
         EnterCriticalSection(&cache->cs);
-        node = NBNameCacheWalk(cache, (char*)name);
+        node = NBNameCacheWalk(cache, (const char *)name);
         if (node)
             ret = (*node)->entry;
         else
@@ -188,7 +186,7 @@ BOOL NBNameCacheUpdateNBName(struct NBNameCache *cache,
         NBNameCacheNode **node;
 
         EnterCriticalSection(&cache->cs);
-        node = NBNameCacheWalk(cache, (char*)name);
+        node = NBNameCacheWalk(cache, (const char *)name);
         if (node && *node && (*node)->entry)
         {
             memcpy((*node)->entry->nbname, nbname, NCBNAMSZ);
@@ -207,6 +205,7 @@ void NBNameCacheDestroy(struct NBNameCache *cache)
 {
     if (cache)
     {
+        cache->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&cache->cs);
         while (cache->head)
             NBNameCacheUnlinkNode(cache, &cache->head);

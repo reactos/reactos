@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -31,7 +31,7 @@
 # include <unistd.h>
 #endif
 
-//#define NONAMELESSUNION
+#define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "windef.h"
 #include "winbase.h"
@@ -40,14 +40,8 @@
 #include "wine/unicode.h"
 #include "wine/winbase16.h"
 #include "wine/winuser16.h"
-#include "winver.h"
 
 #include "wine/debug.h"
-
-/*
- * Quick and dirty hacking
- * -sedwards
- */
 
 /* winnt.h */
 #define IMAGE_FILE_RESOURCE_DIRECTORY		2
@@ -73,9 +67,9 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( const IMAGE_RESOURCE_DI
     while (min <= max)
     {
         pos = (min + max) / 2;
-        if (entry[pos].Id == id)
-            return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].OffsetToDirectory);
-        if (entry[pos].Id > id) max = pos - 1;
+        if (entry[pos].u1.s2.Id == id)
+            return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].u2.s3.OffsetToDirectory);
+        if (entry[pos].u1.s2.Id > id) max = pos - 1;
         else min = pos + 1;
     }
     return NULL;
@@ -94,7 +88,7 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_default( const IMAGE_RESOURCE_
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry;
 
     entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);
-    return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry->OffsetToDirectory);
+    return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry->u2.s3.OffsetToDirectory);
 }
 
 
@@ -132,11 +126,11 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( const IMAGE_RESOURCE_
         while (min <= max)
         {
             pos = (min + max) / 2;
-            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const char *)root + entry[pos].NameOffset);
+            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const char *)root + entry[pos].u1.s1.NameOffset);
             res = strncmpiW( nameW, str->NameString, str->Length );
             if (!res && namelen == str->Length)
             {
-                ret = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].OffsetToDirectory);
+                ret = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].u2.s3.OffsetToDirectory);
                 break;
             }
             if (res < 0) max = pos - 1;
@@ -413,7 +407,7 @@ DWORD WINAPI GetFileResourceSize16( LPCSTR lpszFileName, LPCSTR lpszResType,
     OFSTRUCT ofs;
     DWORD reslen;
 
-    TRACE("(%s,type=0x%lx,id=0x%lx,off=%p)\n",
+    TRACE("(%s,type=0x%x,id=0x%x,off=%p)\n",
                 debugstr_a(lpszFileName), (LONG)lpszResType, (LONG)lpszResId,
                 lpszResId );
 
@@ -425,6 +419,7 @@ DWORD WINAPI GetFileResourceSize16( LPCSTR lpszFileName, LPCSTR lpszResType,
     case IMAGE_OS2_SIGNATURE:
 #ifdef __REACTOS__
         ERR("OS2 Images not supported under ReactOS at this time.");
+        retv = 0;
 #else
         retv = find_ne_resource( lzfd, lpszResType, lpszResId,
                                  &reslen, lpdwFileOffset );
@@ -454,7 +449,7 @@ DWORD WINAPI GetFileResource16( LPCSTR lpszFileName, LPCSTR lpszResType,
     OFSTRUCT ofs;
     DWORD reslen = dwResLen;
 
-    TRACE("(%s,type=%p,id=%p,off=%ld,len=%ld,data=%p)\n",
+    TRACE("(%s,type=%p,id=%p,off=%d,len=%d,data=%p)\n",
 		debugstr_a(lpszFileName), lpszResType, lpszResId,
                 dwFileOffset, dwResLen, lpvData );
 
@@ -468,6 +463,7 @@ DWORD WINAPI GetFileResource16( LPCSTR lpszFileName, LPCSTR lpszResType,
         case IMAGE_OS2_SIGNATURE:
 #ifdef __REACTOS__
             ERR("OS2 Images not supported under ReactOS at this time.");
+            retv = 0;
 #else
             retv = find_ne_resource( lzfd, lpszResType, lpszResId,
                                      &reslen, &dwFileOffset );

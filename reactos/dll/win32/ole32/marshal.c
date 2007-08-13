@@ -283,6 +283,7 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
         {
             hr = IRemUnknown_RemQueryInterface(remunk, ipid, NORMALEXTREFS,
                                                nonlocal_mqis, iids, &qiresults);
+            IRemUnknown_Release(remunk);
             if (FAILED(hr))
                 ERR("IRemUnknown_RemQueryInterface failed with error 0x%08x\n", hr);
         }
@@ -297,7 +298,7 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
                 ULONG index = mapping[i];
                 HRESULT hrobj = qiresults[i].hResult;
                 if (hrobj == S_OK)
-                    hrobj = unmarshal_object(&qiresults[i].std, This->parent,
+                    hrobj = unmarshal_object(&qiresults[i].std, COM_CurrentApt(),
                                              This->dest_context,
                                              This->dest_context_data,
                                              pMQIs[index].pIID, &This->oxid_info,
@@ -375,22 +376,29 @@ static HRESULT WINAPI Proxy_MarshalInterface(
     if (SUCCEEDED(hr))
     {
         STDOBJREF stdobjref = ifproxy->stdobjref;
-        ULONG cPublicRefs = ifproxy->refs;
-        ULONG cPublicRefsOld;
 
-        /* optimization - share out proxy's public references if possible
-         * instead of making new proxy do a roundtrip through the server */
-        do
+        stdobjref.cPublicRefs = 0;
+
+        if ((mshlflags != MSHLFLAGS_TABLEWEAK) &&
+            (mshlflags != MSHLFLAGS_TABLESTRONG))
         {
-            ULONG cPublicRefsNew;
-            cPublicRefsOld = cPublicRefs;
-            stdobjref.cPublicRefs = cPublicRefs / 2;
-            cPublicRefsNew = cPublicRefs - stdobjref.cPublicRefs;
-            cPublicRefs = InterlockedCompareExchange(
-                (LONG *)&ifproxy->refs, cPublicRefsNew, cPublicRefsOld);
-        } while (cPublicRefs != cPublicRefsOld);
+            ULONG cPublicRefs = ifproxy->refs;
+            ULONG cPublicRefsOld;
+            /* optimization - share out proxy's public references if possible
+             * instead of making new proxy do a roundtrip through the server */
+            do
+            {
+                ULONG cPublicRefsNew;
+                cPublicRefsOld = cPublicRefs;
+                stdobjref.cPublicRefs = cPublicRefs / 2;
+                cPublicRefsNew = cPublicRefs - stdobjref.cPublicRefs;
+                cPublicRefs = InterlockedCompareExchange(
+                    (LONG *)&ifproxy->refs, cPublicRefsNew, cPublicRefsOld);
+            } while (cPublicRefs != cPublicRefsOld);
+        }
 
-        if (!stdobjref.cPublicRefs)
+        /* normal and table-strong marshaling need at least one reference */
+        if (!stdobjref.cPublicRefs && (mshlflags != MSHLFLAGS_TABLEWEAK))
         {
             IRemUnknown *remunk;
             hr = proxy_manager_get_remunknown(This, &remunk);
@@ -399,11 +407,17 @@ static HRESULT WINAPI Proxy_MarshalInterface(
                 HRESULT hrref = S_OK;
                 REMINTERFACEREF rif;
                 rif.ipid = ifproxy->stdobjref.ipid;
-                rif.cPublicRefs = NORMALEXTREFS;
+                rif.cPublicRefs = (mshlflags == MSHLFLAGS_TABLESTRONG) ? 1 : NORMALEXTREFS;
                 rif.cPrivateRefs = 0;
                 hr = IRemUnknown_RemAddRef(remunk, 1, &rif, &hrref);
+                IRemUnknown_Release(remunk);
                 if (hr == S_OK && hrref == S_OK)
-                    stdobjref.cPublicRefs = rif.cPublicRefs;
+                {
+                    /* table-strong marshaling doesn't give the refs to the
+                     * client that unmarshals the STDOBJREF */
+                    if (mshlflags != MSHLFLAGS_TABLESTRONG)
+                        stdobjref.cPublicRefs = rif.cPublicRefs;
+                }
                 else
                     ERR("IRemUnknown_RemAddRef returned with 0x%08x, hrref = 0x%08x\n", hr, hrref);
             }
@@ -455,6 +469,7 @@ static HRESULT WINAPI Proxy_MarshalInterface(
             }
             else
                 ERR("IRemUnknown_RemQueryInterface failed with error 0x%08x\n", hr);
+            IRemUnknown_Release(remunk);
         }
     }
 
@@ -565,6 +580,7 @@ static HRESULT ifproxy_get_public_ref(struct ifproxy * This)
             rif.cPublicRefs = NORMALEXTREFS;
             rif.cPrivateRefs = 0;
             hr = IRemUnknown_RemAddRef(remunk, 1, &rif, &hrref);
+            IRemUnknown_Release(remunk);
             if (hr == S_OK && hrref == S_OK)
                 InterlockedExchangeAdd((LONG *)&This->refs, NORMALEXTREFS);
             else
@@ -602,6 +618,7 @@ static HRESULT ifproxy_release_public_refs(struct ifproxy * This)
             rif.cPublicRefs = public_refs;
             rif.cPrivateRefs = 0;
             hr = IRemUnknown_RemRelease(remunk, 1, &rif);
+            IRemUnknown_Release(remunk);
             if (hr == S_OK)
                 InterlockedExchangeAdd((LONG *)&This->refs, -public_refs);
             else if (hr == RPC_E_DISCONNECTED)
@@ -947,16 +964,30 @@ static void proxy_manager_disconnect(struct proxy_manager * This)
 static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnknown **remunk)
 {
     HRESULT hr = S_OK;
+    struct apartment *apt;
+    BOOL called_in_original_apt;
 
     /* we don't want to try and unmarshal or use IRemUnknown if we don't want
      * lifetime management */
     if (This->sorflags & SORFP_NOLIFETIMEMGMT)
         return S_FALSE;
 
+    apt = COM_CurrentApt();
+    if (!apt)
+        return CO_E_NOTINITIALIZED;
+
+    called_in_original_apt = This->parent && (This->parent->oxid == apt->oxid);
+
     EnterCriticalSection(&This->cs);
-    if (This->remunk)
+    /* only return the cached object if called from the original apartment.
+     * in future, we might want to make the IRemUnknown proxy callable from any
+     * apartment to avoid these checks */
+    if (This->remunk && called_in_original_apt)
+    {
         /* already created - return existing object */
         *remunk = This->remunk;
+        IRemUnknown_AddRef(*remunk);
+    }
     else if (!This->parent)
         /* disconnected - we can't create IRemUnknown */
         hr = S_FALSE;
@@ -974,11 +1005,14 @@ static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnk
         stdobjref.ipid = This->oxid_info.ipidRemUnknown;
 
         /* do the unmarshal */
-        hr = unmarshal_object(&stdobjref, This->parent, This->dest_context,
+        hr = unmarshal_object(&stdobjref, COM_CurrentApt(), This->dest_context,
                               This->dest_context_data, &IID_IRemUnknown,
-                              &This->oxid_info, (void**)&This->remunk);
-        if (hr == S_OK)
-            *remunk = This->remunk;
+                              &This->oxid_info, (void**)remunk);
+        if (hr == S_OK && called_in_original_apt)
+        {
+            This->remunk = *remunk;
+            IRemUnknown_AddRef(This->remunk);
+        }
     }
     LeaveCriticalSection(&This->cs);
 

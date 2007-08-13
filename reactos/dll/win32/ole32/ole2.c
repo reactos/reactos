@@ -41,10 +41,8 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "winreg.h"
-#include "commctrl.h"
 #include "ole2.h"
 #include "ole2ver.h"
-#include "wownt32.h"
 
 #include "wine/unicode.h"
 #include "compobj_private.h"
@@ -149,7 +147,7 @@ extern void OLEClipbrd_Initialize(void);
 static void            OLEDD_Initialize(void);
 static DropTargetNode* OLEDD_FindDropTarget(
                          HWND hwndOfTarget);
-static void            OLEDD_FreeDropTarget(DropTargetNode*);
+static void            OLEDD_FreeDropTarget(DropTargetNode*, BOOL);
 static LRESULT WINAPI  OLEDD_DragTrackerWindowProc(
 			 HWND   hwnd,
 			 UINT   uMsg,
@@ -355,7 +353,7 @@ HRESULT WINAPI RevokeDragDrop(
   if (dropTargetInfo==NULL)
     return DRAGDROP_E_NOTREGISTERED;
 
-  OLEDD_FreeDropTarget(dropTargetInfo);
+  OLEDD_FreeDropTarget(dropTargetInfo, TRUE);
 
   return S_OK;
 }
@@ -1389,7 +1387,7 @@ static LRESULT CALLBACK OLEMenu_CallWndProc(INT code, WPARAM wParam, LPARAM lPar
   OleMenuHookItem *pHookItem = NULL;
   WORD fuFlags;
 
-  TRACE("%i, %04x, %08x\n", code, wParam, (unsigned)lParam );
+  TRACE("%i, %04lx, %08lx\n", code, wParam, lParam );
 
   /* Check if we're being asked to process the message */
   if ( HC_ACTION != code )
@@ -1494,7 +1492,7 @@ static LRESULT CALLBACK OLEMenu_GetMsgProc(INT code, WPARAM wParam, LPARAM lPara
   OleMenuHookItem *pHookItem = NULL;
   WORD wCode;
 
-  TRACE("%i, %04x, %08x\n", code, wParam, (unsigned)lParam );
+  TRACE("%i, %04lx, %08lx\n", code, wParam, lParam );
 
   /* Check if we're being asked to process a  messages */
   if ( HC_ACTION != code )
@@ -1713,9 +1711,8 @@ BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* l
 	return FALSE;
     }
     if((lpMsg->message != WM_KEYDOWN &&
-	lpMsg->message != WM_KEYUP &&
 	lpMsg->message != WM_SYSKEYDOWN &&
-	lpMsg->message != WM_SYSKEYUP &&
+	lpMsg->message != WM_SYSCHAR &&
 	lpMsg->message != WM_CHAR)) return FALSE;
     lpAccelTbl = HeapAlloc(GetProcessHeap(), 0, cAccelEntries * sizeof(ACCEL));
     if (NULL == lpAccelTbl)
@@ -1730,7 +1727,7 @@ BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* l
     }
 
     TRACE_(accel)("hAccel=%p, cAccelEntries=%d,"
-		"msg->hwnd=%p, msg->message=%04x, wParam=%08x, lParam=%08lx\n",
+		"msg->hwnd=%p, msg->message=%04x, wParam=%08lx, lParam=%08lx\n",
 		hAccel, cAccelEntries,
 		lpMsg->hwnd, lpMsg->message, lpMsg->wParam, lpMsg->lParam);
     for(i = 0; i < cAccelEntries; i++)
@@ -1742,7 +1739,7 @@ BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* l
 	{
 	    if(!(lpAccelTbl[i].fVirt & FALT) && !(lpAccelTbl[i].fVirt & FVIRTKEY))
 	    {
-		TRACE_(accel)("found accel for WM_CHAR: ('%c')\n", lpMsg->wParam & 0xff);
+		TRACE_(accel)("found accel for WM_CHAR: ('%c')\n", LOWORD(lpMsg->wParam) & 0xff);
 		goto found;
 	    }
 	}
@@ -1751,7 +1748,7 @@ BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* l
 	    if(lpAccelTbl[i].fVirt & FVIRTKEY)
 	    {
 		INT mask = 0;
-		TRACE_(accel)("found accel for virt_key %04x (scan %04x)\n",
+		TRACE_(accel)("found accel for virt_key %04lx (scan %04x)\n",
 				lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff);
 		if(GetKeyState(VK_SHIFT) & 0x8000) mask |= FSHIFT;
 		if(GetKeyState(VK_CONTROL) & 0x8000) mask |= FCONTROL;
@@ -1765,7 +1762,7 @@ BOOL WINAPI IsAccelerator(HACCEL hAccel, int cAccelEntries, LPMSG lpMsg, WORD* l
 		{
 		    if((lpAccelTbl[i].fVirt & FALT) && (lpMsg->lParam & 0x20000000))
 		    {						       /* ^^ ALT pressed */
-			TRACE_(accel)("found accel for Alt-%c\n", lpMsg->wParam & 0xff);
+			TRACE_(accel)("found accel for Alt-%c\n", LOWORD(lpMsg->wParam) & 0xff);
 			goto found;
 		    }
 		}
@@ -1897,10 +1894,10 @@ static void OLEDD_Initialize(void)
  *
  * Frees the drag and drop data structure
  */
-static void OLEDD_FreeDropTarget(DropTargetNode *dropTargetInfo)
+static void OLEDD_FreeDropTarget(DropTargetNode *dropTargetInfo, BOOL release_drop_target)
 {
   list_remove(&dropTargetInfo->entry);
-  IDropTarget_Release(dropTargetInfo->dropTarget);
+  if (release_drop_target) IDropTarget_Release(dropTargetInfo->dropTarget);
   HeapFree(GetProcessHeap(), 0, dropTargetInfo);
 }
 
@@ -1916,9 +1913,8 @@ void OLEDD_UnInitialize(void)
    */
   while (!list_empty(&targetListHead))
   {
-    DropTargetNode* curNode;
-    curNode = LIST_ENTRY(list_head(&targetListHead), DropTargetNode, entry);
-    OLEDD_FreeDropTarget(curNode);
+    DropTargetNode* curNode = LIST_ENTRY(list_head(&targetListHead), DropTargetNode, entry);
+    OLEDD_FreeDropTarget(curNode, FALSE);
   }
 }
 
@@ -2601,7 +2597,7 @@ BSTR WINAPI PropSysAllocString(LPCOLESTR str)
      * string.
      */
     stringBuffer = (WCHAR*)newBuffer;
-    stringBuffer[len] = L'\0';
+    stringBuffer[len] = '\0';
 
     return (LPWSTR)stringBuffer;
 }

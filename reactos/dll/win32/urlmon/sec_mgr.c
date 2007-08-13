@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -68,6 +68,8 @@ static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone)
                     'P','r','o','t','o','c','o','l','D','e','f','a','u','l','t','s',0};
     static const WCHAR wszFile[] = {'f','i','l','e',0};
 
+    *zone = -1;
+
     hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(WCHAR), &size, 0);
     if(FAILED(hres))
         return hres;
@@ -97,6 +99,7 @@ static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone)
 
     size = sizeof(DWORD);
     res = RegQueryValueExW(hkey, schema, NULL, NULL, (PBYTE)zone, &size);
+    RegCloseKey(hkey);
     if(res == ERROR_SUCCESS)
         return S_OK;
 
@@ -108,6 +111,7 @@ static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone)
 
     size = sizeof(DWORD);
     res = RegQueryValueExW(hkey, schema, NULL, NULL, (PBYTE)zone, &size);
+    RegCloseKey(hkey);
     if(res == ERROR_SUCCESS)
         return S_OK;
 
@@ -150,7 +154,7 @@ static ULONG WINAPI SecManagerImpl_AddRef(IInternetSecurityManager* iface)
     SecManagerImpl *This = SECMGR_THIS(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) ref=%lu\n", This, refCount);
+    TRACE("(%p) ref=%u\n", This, refCount);
 
     return refCount;
 }
@@ -160,7 +164,7 @@ static ULONG WINAPI SecManagerImpl_Release(IInternetSecurityManager* iface)
     SecManagerImpl *This = SECMGR_THIS(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) ref=%lu\n", This, refCount);
+    TRACE("(%p) ref=%u\n", This, refCount);
 
     /* destroy the object if there's no more reference on it */
     if (!refCount){
@@ -238,7 +242,7 @@ static HRESULT WINAPI SecManagerImpl_MapUrlToZone(IInternetSecurityManager *ifac
     DWORD size;
     HRESULT hres;
 
-    TRACE("(%p)->(%s %p %08lx)\n", iface, debugstr_w(pwszUrl), pdwZone, dwFlags);
+    TRACE("(%p)->(%s %p %08x)\n", iface, debugstr_w(pwszUrl), pdwZone, dwFlags);
 
     if(This->custom_manager) {
         hres = IInternetSecurityManager_MapUrlToZone(This->custom_manager,
@@ -251,7 +255,7 @@ static HRESULT WINAPI SecManagerImpl_MapUrlToZone(IInternetSecurityManager *ifac
         return E_INVALIDARG;
 
     if(dwFlags)
-        FIXME("not supported flags: %08lx\n", dwFlags);
+        FIXME("not supported flags: %08x\n", dwFlags);
 
     size = (strlenW(pwszUrl)+16) * sizeof(WCHAR);
     url = HeapAlloc(GetProcessHeap(), 0, size);
@@ -358,7 +362,7 @@ static HRESULT WINAPI SecManagerImpl_ProcessUrlAction(IInternetSecurityManager *
     SecManagerImpl *This = SECMGR_THIS(iface);
     HRESULT hres;
 
-    TRACE("(%p)->(%s %08lx %p %08lx %p %08lx %08lx %08lx)\n", iface, debugstr_w(pwszUrl), dwAction,
+    TRACE("(%p)->(%s %08x %p %08x %p %08x %08x %08x)\n", iface, debugstr_w(pwszUrl), dwAction,
           pPolicy, cbPolicy, pContext, cbContext, dwFlags, dwReserved);
 
     if(This->custom_manager) {
@@ -382,7 +386,7 @@ static HRESULT WINAPI SecManagerImpl_QueryCustomPolicy(IInternetSecurityManager 
     SecManagerImpl *This = SECMGR_THIS(iface);
     HRESULT hres;
 
-    TRACE("(%p)->(%s %s %p %p %p %08lx %08lx )\n", iface, debugstr_w(pwszUrl), debugstr_guid(guidKey),
+    TRACE("(%p)->(%s %s %p %p %p %08x %08x )\n", iface, debugstr_w(pwszUrl), debugstr_guid(guidKey),
           ppPolicy, pcbPolicy, pContext, cbContext, dwReserved);
 
     if(This->custom_manager) {
@@ -402,7 +406,7 @@ static HRESULT WINAPI SecManagerImpl_SetZoneMapping(IInternetSecurityManager *if
     SecManagerImpl *This = SECMGR_THIS(iface);
     HRESULT hres;
 
-    TRACE("(%p)->(%08lx %s %08lx)\n", iface, dwZone, debugstr_w(pwszPattern),dwFlags);
+    TRACE("(%p)->(%08x %s %08x)\n", iface, dwZone, debugstr_w(pwszPattern),dwFlags);
 
     if(This->custom_manager) {
         hres = IInternetSecurityManager_SetZoneMapping(This->custom_manager, dwZone,
@@ -421,7 +425,7 @@ static HRESULT WINAPI SecManagerImpl_GetZoneMappings(IInternetSecurityManager *i
     SecManagerImpl *This = SECMGR_THIS(iface);
     HRESULT hres;
 
-    TRACE("(%p)->(%08lx %p %08lx)\n", iface, dwZone, ppenumString,dwFlags);
+    TRACE("(%p)->(%08x %p %08x)\n", iface, dwZone, ppenumString,dwFlags);
 
     if(This->custom_manager) {
         hres = IInternetSecurityManager_GetZoneMappings(This->custom_manager, dwZone,
@@ -551,7 +555,7 @@ static ULONG WINAPI ZoneMgrImpl_AddRef(IInternetZoneManager* iface)
     ZoneMgrImpl* This = (ZoneMgrImpl*)iface;
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
+    TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
     return refCount;
 }
@@ -564,7 +568,7 @@ static ULONG WINAPI ZoneMgrImpl_Release(IInternetZoneManager* iface)
     ZoneMgrImpl* This = (ZoneMgrImpl*)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
+    TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
 
     if(!refCount) {
         HeapFree(GetProcessHeap(), 0, This);
@@ -581,7 +585,7 @@ static HRESULT WINAPI ZoneMgrImpl_GetZoneAttributes(IInternetZoneManager* iface,
                                                     DWORD dwZone,
                                                     ZONEATTRIBUTES* pZoneAttributes)
 {
-    FIXME("(%p)->(%ld %p) stub\n", iface, dwZone, pZoneAttributes);
+    FIXME("(%p)->(%d %p) stub\n", iface, dwZone, pZoneAttributes);
     return E_NOTIMPL;
 }
 
@@ -592,7 +596,7 @@ static HRESULT WINAPI ZoneMgrImpl_SetZoneAttributes(IInternetZoneManager* iface,
                                                     DWORD dwZone,
                                                     ZONEATTRIBUTES* pZoneAttributes)
 {
-    FIXME("(%p)->(%08lx %p) stub\n", iface, dwZone, pZoneAttributes);
+    FIXME("(%p)->(%08x %p) stub\n", iface, dwZone, pZoneAttributes);
     return E_NOTIMPL;
 }
 
@@ -606,7 +610,7 @@ static HRESULT WINAPI ZoneMgrImpl_GetZoneCustomPolicy(IInternetZoneManager* ifac
                                                       DWORD* pcbPolicy,
                                                       URLZONEREG ulrZoneReg)
 {
-    FIXME("(%p)->(%08lx %s %p %p %08x) stub\n", iface, dwZone, debugstr_guid(guidKey),
+    FIXME("(%p)->(%08x %s %p %p %08x) stub\n", iface, dwZone, debugstr_guid(guidKey),
                                                     ppPolicy, pcbPolicy, ulrZoneReg);
     return E_NOTIMPL;
 }
@@ -621,7 +625,7 @@ static HRESULT WINAPI ZoneMgrImpl_SetZoneCustomPolicy(IInternetZoneManager* ifac
                                                       DWORD cbPolicy,
                                                       URLZONEREG ulrZoneReg)
 {
-    FIXME("(%p)->(%08lx %s %p %08lx %08x) stub\n", iface, dwZone, debugstr_guid(guidKey),
+    FIXME("(%p)->(%08x %s %p %08x %08x) stub\n", iface, dwZone, debugstr_guid(guidKey),
                                                     ppPolicy, cbPolicy, ulrZoneReg);
     return E_NOTIMPL;
 }
@@ -640,7 +644,7 @@ static HRESULT WINAPI ZoneMgrImpl_GetZoneActionPolicy(IInternetZoneManager* ifac
 
     static const WCHAR wszFormat[] = {'%','l','X',0};
 
-    TRACE("(%p)->(%ld %08lx %p %ld %d)\n", iface, dwZone, dwAction, pPolicy,
+    TRACE("(%p)->(%d %08x %p %d %d)\n", iface, dwZone, dwAction, pPolicy,
             cbPolicy, urlZoneReg);
 
     if(!pPolicy)
@@ -658,7 +662,7 @@ static HRESULT WINAPI ZoneMgrImpl_GetZoneActionPolicy(IInternetZoneManager* ifac
     }else if(res == ERROR_FILE_NOT_FOUND) {
         hres = E_FAIL;
     }else if(res != ERROR_SUCCESS) {
-        ERR("RegQueryValue failed: %ld\n", res);
+        ERR("RegQueryValue failed: %d\n", res);
         hres = E_UNEXPECTED;
     }
 
@@ -677,7 +681,7 @@ static HRESULT WINAPI ZoneMgrImpl_SetZoneActionPolicy(IInternetZoneManager* ifac
                                                       DWORD cbPolicy,
                                                       URLZONEREG urlZoneReg)
 {
-    FIXME("(%p)->(%08lx %08lx %p %08lx %08x) stub\n", iface, dwZone, dwAction, pPolicy,
+    FIXME("(%p)->(%08x %08x %p %08x %08x) stub\n", iface, dwZone, dwAction, pPolicy,
                                                        cbPolicy, urlZoneReg);
     return E_NOTIMPL;
 }
@@ -692,7 +696,7 @@ static HRESULT WINAPI ZoneMgrImpl_PromptAction(IInternetZoneManager* iface,
                                                LPCWSTR pwszText,
                                                DWORD dwPromptFlags)
 {
-    FIXME("%p %08lx %p %s %s %08lx\n", iface, dwAction, hwndParent,
+    FIXME("%p %08x %p %s %s %08x\n", iface, dwAction, hwndParent,
           debugstr_w(pwszUrl), debugstr_w(pwszText), dwPromptFlags );
     return E_NOTIMPL;
 }
@@ -706,7 +710,7 @@ static HRESULT WINAPI ZoneMgrImpl_LogAction(IInternetZoneManager* iface,
                                             LPCWSTR pwszText,
                                             DWORD dwLogFlags)
 {
-    FIXME("(%p)->(%08lx %s %s %08lx) stub\n", iface, dwAction, debugstr_w(pwszUrl),
+    FIXME("(%p)->(%08x %s %s %08x) stub\n", iface, dwAction, debugstr_w(pwszUrl),
                                               debugstr_w(pwszText), dwLogFlags);
     return E_NOTIMPL;
 }
@@ -719,7 +723,7 @@ static HRESULT WINAPI ZoneMgrImpl_CreateZoneEnumerator(IInternetZoneManager* ifa
                                                        DWORD* pdwCount,
                                                        DWORD dwFlags)
 {
-    FIXME("(%p)->(%p %p %08lx) stub\n", iface, pdwEnum, pdwCount, dwFlags);
+    FIXME("(%p)->(%p %p %08x) stub\n", iface, pdwEnum, pdwCount, dwFlags);
     return E_NOTIMPL;
 }
 
@@ -731,7 +735,7 @@ static HRESULT WINAPI ZoneMgrImpl_GetZoneAt(IInternetZoneManager* iface,
                                             DWORD dwIndex,
                                             DWORD* pdwZone)
 {
-    FIXME("(%p)->(%08lx %08lx %p) stub\n", iface, dwEnum, dwIndex, pdwZone);
+    FIXME("(%p)->(%08x %08x %p) stub\n", iface, dwEnum, dwIndex, pdwZone);
     return E_NOTIMPL;
 }
 
@@ -741,7 +745,7 @@ static HRESULT WINAPI ZoneMgrImpl_GetZoneAt(IInternetZoneManager* iface,
 static HRESULT WINAPI ZoneMgrImpl_DestroyZoneEnumerator(IInternetZoneManager* iface,
                                                         DWORD dwEnum)
 {
-    FIXME("(%p)->(%08lx) stub\n", iface, dwEnum);
+    FIXME("(%p)->(%08x) stub\n", iface, dwEnum);
     return E_NOTIMPL;
 }
 
@@ -753,7 +757,7 @@ static HRESULT WINAPI ZoneMgrImpl_CopyTemplatePoliciesToZone(IInternetZoneManage
                                                              DWORD dwZone,
                                                              DWORD dwReserved)
 {
-    FIXME("(%p)->(%08lx %08lx %08lx) stub\n", iface, dwTemplate, dwZone, dwReserved);
+    FIXME("(%p)->(%08x %08x %08x) stub\n", iface, dwTemplate, dwZone, dwReserved);
     return E_NOTIMPL;
 }
 
@@ -799,7 +803,7 @@ HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 HRESULT WINAPI CoInternetCreateSecurityManager( IServiceProvider *pSP,
     IInternetSecurityManager **ppSM, DWORD dwReserved )
 {
-    TRACE("%p %p %ld\n", pSP, ppSM, dwReserved );
+    TRACE("%p %p %d\n", pSP, ppSM, dwReserved );
 
     if(pSP)
         FIXME("pSP not supported\n");
@@ -812,6 +816,6 @@ HRESULT WINAPI CoInternetCreateSecurityManager( IServiceProvider *pSP,
  */
 HRESULT WINAPI CoInternetCreateZoneManager(IServiceProvider* pSP, IInternetZoneManager** ppZM, DWORD dwReserved)
 {
-    TRACE("(%p %p %lx)\n", pSP, ppZM, dwReserved);
+    TRACE("(%p %p %x)\n", pSP, ppZM, dwReserved);
     return ZoneMgrImpl_Construct(NULL, (void**)ppZM);
 }

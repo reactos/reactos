@@ -66,9 +66,9 @@ static BOOL GuidToString(LPGUID Guid, LPWSTR String)
 
     lstrcpyW(&String[1], lpString);
 
-    String[0] = L'{';
-    String[MAX_GUID_STRING_LEN - 2] = L'}';
-    String[MAX_GUID_STRING_LEN - 1] = 0;
+    String[0] = '{';
+    String[MAX_GUID_STRING_LEN - 2] = '}';
+    String[MAX_GUID_STRING_LEN - 1] = UNICODE_NULL;
 
     RpcStringFreeW(&lpString);
 

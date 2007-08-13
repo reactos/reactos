@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
 
@@ -28,10 +28,10 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "winreg.h"
 #include "winver.h"
 #include "winternl.h"
 #include "winuser.h"
+#include "wine/winuser16.h"
 #include "wine/unicode.h"
 #include "winerror.h"
 #include "wine/debug.h"
@@ -46,7 +46,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ver);
  *      Added this function to clean up the code.
  *
  *****************************************************************************/
-static void print_vffi_debug(VS_FIXEDFILEINFO *vffi)
+static void print_vffi_debug(const VS_FIXEDFILEINFO *vffi)
 {
     BOOL    versioned_printer = FALSE;
 
@@ -69,7 +69,7 @@ static void print_vffi_debug(VS_FIXEDFILEINFO *vffi)
     {
         WORD mode = LOWORD(vffi->dwFileVersionMS);
         WORD ver_rev = HIWORD(vffi->dwFileVersionLS);
-        TRACE("fileversion=%lu.%u.%u.%u (%s.major.minor.release), ",
+        TRACE("fileversion=%u.%u.%u.%u (%s.major.minor.release), ",
             (vffi->dwFileVersionMS),
             HIBYTE(ver_rev), LOBYTE(ver_rev), LOWORD(vffi->dwFileVersionLS),
             (mode == 3) ? "Usermode" : ((mode <= 2) ? "Kernelmode" : "?") );
@@ -84,7 +84,7 @@ static void print_vffi_debug(VS_FIXEDFILEINFO *vffi)
           HIWORD(vffi->dwProductVersionMS),LOWORD(vffi->dwProductVersionMS),
           HIWORD(vffi->dwProductVersionLS),LOWORD(vffi->dwProductVersionLS));
 
-    TRACE("flagmask=0x%lx, flags=0x%lx %s%s%s%s%s%s\n",
+    TRACE("flagmask=0x%x, flags=0x%x %s%s%s%s%s%s\n",
           vffi->dwFileFlagsMask, vffi->dwFileFlags,
           (vffi->dwFileFlags & VS_FF_DEBUG) ? "DEBUG," : "",
           (vffi->dwFileFlags & VS_FF_PRERELEASE) ? "PRERELEASE," : "",
@@ -105,7 +105,7 @@ static void print_vffi_debug(VS_FIXEDFILEINFO *vffi)
     case VOS_NT:TRACE("NT,");break;
     case VOS_UNKNOWN:
     default:
-        TRACE("UNKNOWN(0x%lx),",vffi->dwFileOS&0xFFFF0000);break;
+        TRACE("UNKNOWN(0x%x),",vffi->dwFileOS&0xFFFF0000);break;
     }
 
     switch (LOWORD(vffi->dwFileOS))
@@ -130,7 +130,7 @@ static void print_vffi_debug(VS_FIXEDFILEINFO *vffi)
         {
             if(versioned_printer) /* NT3.x/NT4.0 or old w2k Driver  */
                 TRACE(",PRINTER");
-            TRACE(" (subtype=0x%lx)", vffi->dwFileSubtype);
+            TRACE(" (subtype=0x%x)", vffi->dwFileSubtype);
         }
         break;
     case VFT_DRV:
@@ -151,7 +151,7 @@ static void print_vffi_debug(VS_FIXEDFILEINFO *vffi)
         case VFT2_DRV_VERSIONED_PRINTER:TRACE("VERSIONED_PRINTER");break;
         case VFT2_UNKNOWN:
         default:
-            TRACE("UNKNOWN(0x%lx)",vffi->dwFileSubtype);break;
+            TRACE("UNKNOWN(0x%x)",vffi->dwFileSubtype);break;
         }
         break;
     case VFT_FONT:
@@ -161,18 +161,18 @@ static void print_vffi_debug(VS_FIXEDFILEINFO *vffi)
         case VFT2_FONT_RASTER:TRACE("RASTER");break;
         case VFT2_FONT_VECTOR:TRACE("VECTOR");break;
         case VFT2_FONT_TRUETYPE:TRACE("TRUETYPE");break;
-        default:TRACE("UNKNOWN(0x%lx)",vffi->dwFileSubtype);break;
+        default:TRACE("UNKNOWN(0x%x)",vffi->dwFileSubtype);break;
         }
         break;
     case VFT_VXD:TRACE("filetype=VXD");break;
     case VFT_STATIC_LIB:TRACE("filetype=STATIC_LIB");break;
     case VFT_UNKNOWN:
     default:
-        TRACE("filetype=Unknown(0x%lx)",vffi->dwFileType);break;
+        TRACE("filetype=Unknown(0x%x)",vffi->dwFileType);break;
     }
 
     TRACE("\n");
-    TRACE("filedate=0x%lx.0x%lx\n",vffi->dwFileDateMS,vffi->dwFileDateLS);
+    TRACE("filedate=0x%x.0x%x\n",vffi->dwFileDateMS,vffi->dwFileDateLS);
 }
 
 /***********************************************************************
@@ -207,7 +207,7 @@ typedef struct
 } VS_VERSION_INFO_STRUCT32;
 
 #define VersionInfoIs16( ver ) \
-    ( ((VS_VERSION_INFO_STRUCT16 *)ver)->szKey[0] >= ' ' )
+    ( ((const VS_VERSION_INFO_STRUCT16 *)ver)->szKey[0] >= ' ' )
 
 #define DWORD_ALIGN( base, ptr ) \
     ( (LPBYTE)(base) + ((((LPBYTE)(ptr) - (LPBYTE)(base)) + 3) & ~3) )
@@ -218,10 +218,10 @@ typedef struct
     DWORD_ALIGN( (ver), (ver)->szKey + strlenW((ver)->szKey) + 1 )
 
 #define VersionInfo16_Children( ver )  \
-    (VS_VERSION_INFO_STRUCT16 *)( VersionInfo16_Value( ver ) + \
+    (const VS_VERSION_INFO_STRUCT16 *)( VersionInfo16_Value( ver ) + \
                            ( ( (ver)->wValueLength + 3 ) & ~3 ) )
 #define VersionInfo32_Children( ver )  \
-    (VS_VERSION_INFO_STRUCT32 *)( VersionInfo32_Value( ver ) + \
+    (const VS_VERSION_INFO_STRUCT32 *)( VersionInfo32_Value( ver ) + \
                            ( ( (ver)->wValueLength * \
                                ((ver)->wType? 2 : 1) + 3 ) & ~3 ) )
 
@@ -238,7 +238,7 @@ typedef struct
  */
 static DWORD VERSION_GetFileVersionInfo_PE( LPCWSTR filename, DWORD datasize, LPVOID data )
 {
-    VS_FIXEDFILEINFO *vffi;
+    const VS_FIXEDFILEINFO *vffi;
     DWORD len;
     BYTE *buf;
     HMODULE hModule;
@@ -259,7 +259,7 @@ static DWORD VERSION_GetFileVersionInfo_PE( LPCWSTR filename, DWORD datasize, LP
     }
     hRsrc = FindResourceW(hModule,
 			  MAKEINTRESOURCEW(VS_VERSION_INFO),
-			  (LPCWSTR) VS_FILE_INFO);
+			  MAKEINTRESOURCEW(VS_FILE_INFO));
     if(!hRsrc)
     {
 	WARN("Could not find VS_VERSION_INFO in %s\n", debugstr_w(filename));
@@ -280,7 +280,7 @@ static DWORD VERSION_GetFileVersionInfo_PE( LPCWSTR filename, DWORD datasize, LP
 
     if ( vffi->dwSignature != VS_FFI_SIGNATURE )
     {
-        WARN("vffi->dwSignature is 0x%08lx, but not 0x%08lx!\n",
+        WARN("vffi->dwSignature is 0x%08x, but not 0x%08lx!\n",
                    vffi->dwSignature, VS_FFI_SIGNATURE );
 	len = 0xFFFFFFFF;
 	goto END;
@@ -314,7 +314,7 @@ END:
  */
 static DWORD VERSION_GetFileVersionInfo_16( LPCSTR filename, DWORD datasize, LPVOID data )
 {
-    VS_FIXEDFILEINFO *vffi;
+    const VS_FIXEDFILEINFO *vffi;
     DWORD len, offset;
     BYTE *buf;
     HMODULE16 hModule;
@@ -415,7 +415,7 @@ static DWORD VERSION_GetFileVersionInfo_16( LPCSTR filename, DWORD datasize, LPV
 
     if ( vffi->dwSignature != VS_FFI_SIGNATURE )
     {
-        WARN("vffi->dwSignature is 0x%08lx, but not 0x%08lx!\n",
+        WARN("vffi->dwSignature is 0x%08x, but not 0x%08lx!\n",
                    vffi->dwSignature, VS_FFI_SIGNATURE );
 	len = 0xFFFFFFFF;
 	goto END;
@@ -505,7 +505,7 @@ DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
          *
          * This extra buffer is used for ANSI to Unicode conversions in W-Calls.
          * info->wLength should be the same as len. Currently it isn't but that
-         * doesn't seem to be a problem (len is bigger then info->wLength).
+         * doesn't seem to be a problem (len is bigger than info->wLength).
          */
          len = (len - sizeof(VS_FIXEDFILEINFO)) * 4;
 #endif /* ! __REACTOS__ */
@@ -555,7 +555,7 @@ BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
     DWORD len;
     VS_VERSION_INFO_STRUCT32* vvis = (VS_VERSION_INFO_STRUCT32*)data;
 
-    TRACE("(%s,%ld,size=%ld,data=%p)\n",
+    TRACE("(%s,%d,size=%d,data=%p)\n",
                 debugstr_w(filename), handle, datasize, data );
 
     if (!data)
@@ -627,7 +627,7 @@ BOOL WINAPI GetFileVersionInfoA( LPCSTR filename, DWORD handle,
     UNICODE_STRING filenameW;
     BOOL retval;
 
-    TRACE("(%s,%ld,size=%ld,data=%p)\n",
+    TRACE("(%s,%d,size=%d,data=%p)\n",
                 debugstr_a(filename), handle, datasize, data );
 
     if(filename)
@@ -645,14 +645,14 @@ BOOL WINAPI GetFileVersionInfoA( LPCSTR filename, DWORD handle,
 /***********************************************************************
  *           VersionInfo16_FindChild             [internal]
  */
-static VS_VERSION_INFO_STRUCT16 *VersionInfo16_FindChild( VS_VERSION_INFO_STRUCT16 *info,
+static const VS_VERSION_INFO_STRUCT16 *VersionInfo16_FindChild( const VS_VERSION_INFO_STRUCT16 *info,
                                             LPCSTR szKey, UINT cbKey )
 {
-    VS_VERSION_INFO_STRUCT16 *child = VersionInfo16_Children( info );
+    const VS_VERSION_INFO_STRUCT16 *child = VersionInfo16_Children( info );
 
     while ((char *)child < (char *)info + info->wLength )
     {
-        if ( !strncasecmp( child->szKey, szKey, cbKey ) )
+        if (!strncasecmp( child->szKey, szKey, cbKey ) && !child->szKey[cbKey])
             return child;
 
 	if (!(child->wLength)) return NULL;
@@ -665,14 +665,14 @@ static VS_VERSION_INFO_STRUCT16 *VersionInfo16_FindChild( VS_VERSION_INFO_STRUCT
 /***********************************************************************
  *           VersionInfo32_FindChild             [internal]
  */
-static VS_VERSION_INFO_STRUCT32 *VersionInfo32_FindChild( VS_VERSION_INFO_STRUCT32 *info,
+static const VS_VERSION_INFO_STRUCT32 *VersionInfo32_FindChild( const VS_VERSION_INFO_STRUCT32 *info,
                                             LPCWSTR szKey, UINT cbKey )
 {
-    VS_VERSION_INFO_STRUCT32 *child = VersionInfo32_Children( info );
+    const VS_VERSION_INFO_STRUCT32 *child = VersionInfo32_Children( info );
 
     while ((char *)child < (char *)info + info->wLength )
     {
-        if ( !strncmpiW( child->szKey, szKey, cbKey ) )
+        if (!strncmpiW( child->szKey, szKey, cbKey ) && !child->szKey[cbKey])
             return child;
 
         child = VersionInfo32_Next( child );
@@ -686,7 +686,7 @@ static VS_VERSION_INFO_STRUCT32 *VersionInfo32_FindChild( VS_VERSION_INFO_STRUCT
  *
  *    Gets a value from a 16-bit NE resource
  */
-static BOOL WINAPI VersionInfo16_QueryValue( VS_VERSION_INFO_STRUCT16 *info, LPCSTR lpSubBlock,
+static BOOL WINAPI VersionInfo16_QueryValue( const VS_VERSION_INFO_STRUCT16 *info, LPCSTR lpSubBlock,
                                LPVOID *lplpBuffer, UINT *puLen )
 {
     while ( *lpSubBlock )
@@ -706,7 +706,12 @@ static BOOL WINAPI VersionInfo16_QueryValue( VS_VERSION_INFO_STRUCT16 *info, LPC
 
         /* We have a non-empty component: search info for key */
         info = VersionInfo16_FindChild( info, lpSubBlock, lpNextSlash-lpSubBlock );
-        if ( !info ) return FALSE;
+        if ( !info )
+        {
+            if (puLen) *puLen = 0 ;
+            SetLastError( ERROR_RESOURCE_TYPE_NOT_FOUND );
+            return FALSE;
+        }
 
         /* Skip path component */
         lpSubBlock = lpNextSlash;
@@ -725,7 +730,7 @@ static BOOL WINAPI VersionInfo16_QueryValue( VS_VERSION_INFO_STRUCT16 *info, LPC
  *
  *    Gets a value from a 32-bit PE resource
  */
-static BOOL WINAPI VersionInfo32_QueryValue( VS_VERSION_INFO_STRUCT32 *info, LPCWSTR lpSubBlock,
+static BOOL WINAPI VersionInfo32_QueryValue( const VS_VERSION_INFO_STRUCT32 *info, LPCWSTR lpSubBlock,
                                LPVOID *lplpBuffer, UINT *puLen )
 {
     TRACE("lpSubBlock : (%s)\n", debugstr_w(lpSubBlock));
@@ -747,7 +752,12 @@ static BOOL WINAPI VersionInfo32_QueryValue( VS_VERSION_INFO_STRUCT32 *info, LPC
 
         /* We have a non-empty component: search info for key */
         info = VersionInfo32_FindChild( info, lpSubBlock, lpNextSlash-lpSubBlock );
-        if ( !info ) return FALSE;
+        if ( !info )
+        {
+            if (puLen) *puLen = 0 ;
+            SetLastError( ERROR_RESOURCE_TYPE_NOT_FOUND );
+            return FALSE;
+        }
 
         /* Skip path component */
         lpSubBlock = lpNextSlash;
@@ -769,13 +779,13 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
 {
     static const char rootA[] = "\\";
     static const char varfileinfoA[] = "\\VarFileInfo\\Translation";
-    VS_VERSION_INFO_STRUCT16 *info = (VS_VERSION_INFO_STRUCT16 *)pBlock;
+    const VS_VERSION_INFO_STRUCT16 *info = (const VS_VERSION_INFO_STRUCT16 *)pBlock;
 
     TRACE("(%p,%s,%p,%p)\n",
                 pBlock, debugstr_a(lpSubBlock), lplpBuffer, puLen );
 
-	if (!pBlock)
-		return FALSE;
+    if (!pBlock)
+        return FALSE;
 
     if ( !VersionInfoIs16( info ) )
     {
@@ -797,8 +807,11 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
 
         if (ret && strcasecmp( lpSubBlock, rootA ) && strcasecmp( lpSubBlock, varfileinfoA ))
         {
+            /* Set lpBuffer so it points to the 'empty' area where we store
+             * the converted strings
+             */
             LPSTR lpBufferA = (LPSTR)pBlock + info->wLength + 4;
-            DWORD pos = (LPSTR)*lplpBuffer - (LPSTR)pBlock;
+            DWORD pos = (LPCSTR)*lplpBuffer - (LPCSTR)pBlock;
 
             len = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)*lplpBuffer, -1,
                                       lpBufferA + pos, info->wLength - pos, NULL, NULL);
@@ -821,13 +834,13 @@ BOOL WINAPI VerQueryValueW( LPCVOID pBlock, LPCWSTR lpSubBlock,
     static const WCHAR varfileinfoW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
                                           '\\','T','r','a','n','s','l','a','t','i','o','n', 0 };
 
-    VS_VERSION_INFO_STRUCT32 *info = (VS_VERSION_INFO_STRUCT32 *)pBlock;
+    const VS_VERSION_INFO_STRUCT32 *info = (const VS_VERSION_INFO_STRUCT32 *)pBlock;
 
     TRACE("(%p,%s,%p,%p)\n",
                 pBlock, debugstr_w(lpSubBlock), lplpBuffer, puLen );
 
-	if (!pBlock)
-		return FALSE;
+    if (!pBlock)
+        return FALSE;
 
     if ( VersionInfoIs16( info ) )
     {
@@ -849,8 +862,11 @@ BOOL WINAPI VerQueryValueW( LPCVOID pBlock, LPCWSTR lpSubBlock,
 
         if (ret && strcmpiW( lpSubBlock, rootW ) && strcmpiW( lpSubBlock, varfileinfoW ))
         {
+            /* Set lpBuffer so it points to the 'empty' area where we store
+             * the converted strings
+             */
             LPWSTR lpBufferW = (LPWSTR)((LPSTR)pBlock + info->wLength);
-            DWORD pos = (LPSTR)*lplpBuffer - (LPSTR)pBlock;
+            DWORD pos = (LPCSTR)*lplpBuffer - (LPCSTR)pBlock;
             DWORD max = (info->wLength - sizeof(VS_FIXEDFILEINFO)) * 4 - info->wLength;
 
             len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)*lplpBuffer, -1,

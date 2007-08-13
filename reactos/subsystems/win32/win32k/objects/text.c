@@ -3405,15 +3405,19 @@ TextIntGetTextExtentPoint(PDC dc,
   return TRUE;
 }
 
+W32KAPI
 BOOL
-STDCALL
-NtGdiGetTextExtentExPoint(HDC hDC,
-                         LPCWSTR UnsafeString,
-                         int Count,
-                         int MaxExtent,
-                         LPINT UnsafeFit,
-                         LPINT UnsafeDx,
-                         LPSIZE UnsafeSize)
+APIENTRY
+NtGdiGetTextExtentExW(
+    IN HDC hDC,
+    IN OPTIONAL LPWSTR UnsafeString,
+    IN ULONG Count,
+    IN ULONG MaxExtent,
+    OUT OPTIONAL PULONG UnsafeFit,
+    OUT OPTIONAL PULONG UnsafeDx,
+    OUT LPSIZE UnsafeSize,
+    IN FLONG fl
+)
 {
   PDC dc;
   LPWSTR String;
@@ -3423,6 +3427,8 @@ NtGdiGetTextExtentExPoint(HDC hDC,
   INT Fit;
   LPINT Dx;
   PTEXTOBJ TextObj;
+
+  /* FIXME: Handle fl */
 
   if (Count < 0)
     {
@@ -3558,7 +3564,7 @@ NtGdiGetTextExtent(HDC hdc,
                    LPSIZE psize,
                    UINT flOpts)
 {
-  return NtGdiGetTextExtentExPoint(hdc, lpwsz, cwc, 0, NULL, NULL, psize);
+  return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, 0, NULL, NULL, psize, 0);
 }
 
 BOOL
@@ -3642,13 +3648,22 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   return TRUE;
 }
 
-INT STDCALL
-NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
+W32KAPI
+INT
+APIENTRY
+NtGdiGetTextFaceW(
+    IN HDC hDC,
+    IN INT Count,
+    OUT OPTIONAL LPWSTR FaceName,
+    IN BOOL bAliasName
+)
 {
    PDC Dc;
    HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
+
+   /* FIXME: Handle bAliasName */
 
    Dc = DC_LockDc(hDC);
    if (Dc == NULL)
@@ -3842,17 +3857,6 @@ NtGdiSetTextJustification(HDC  hDC,
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-BOOL STDCALL
-NtGdiTextOut(
-   HDC hDC,
-   INT XStart,
-   INT YStart,
-   LPCWSTR String,
-   INT Count)
-{
-   return NtGdiExtTextOut(hDC, XStart, YStart, 0, NULL, String, Count, NULL);
 }
 
 DWORD STDCALL

@@ -22,20 +22,20 @@
 #define FD31_OFN_PROP "FILEDLG_OFN"
 
 /* Forward declare */
-typedef struct tagFD31_DATA *PFD31_DATA;
+typedef struct tagFD31_DATA FD31_DATA, *PFD31_DATA;
 
 typedef struct tagFD31_CALLBACKS
 {
     BOOL (CALLBACK *Init)(LPARAM lParam, PFD31_DATA lfs, DWORD data);
-    BOOL (CALLBACK *CWP)(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
-                        LPARAM lParam); /* CWP instead of CallWindowProc to avoid macro expansion */
-    void (CALLBACK *UpdateResult)(PFD31_DATA lfs);
-    void (CALLBACK *UpdateFileTitle)(PFD31_DATA lfs);
-    LRESULT (CALLBACK *SendLbGetCurSel)(PFD31_DATA lfs);
-    void (CALLBACK *Destroy)(PFD31_DATA lfs);
+    BOOL (CALLBACK *CWP)(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
+                         LPARAM lParam); /* CWP instead of CallWindowProc to avoid macro expansion */
+    void (CALLBACK *UpdateResult)(const FD31_DATA *lfs);
+    void (CALLBACK *UpdateFileTitle)(const FD31_DATA *lfs);
+    LRESULT (CALLBACK *SendLbGetCurSel)(const FD31_DATA *lfs);
+    void (CALLBACK *Destroy)(const FD31_DATA *lfs);
 } FD31_CALLBACKS, *PFD31_CALLBACKS;
 
-typedef struct tagFD31_DATA
+struct tagFD31_DATA
 {
     HWND hwnd; /* file dialog window handle */
     BOOL hook; /* TRUE if the dialog is hooked */
@@ -48,21 +48,21 @@ typedef struct tagFD31_DATA
                              a W copy for A/16 API */
     LPVOID private1632; /* 16/32 bit caller private data */
     PFD31_CALLBACKS callbacks; /* callbacks to handle 16/32 bit differences */
-} FD31_DATA;
+};
 
 extern BOOL FD31_Init(void);
 extern PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType,
                                     PFD31_CALLBACKS callbacks, DWORD data);
 extern void FD31_DestroyPrivate(PFD31_DATA lfs);
-extern void FD31_MapOfnStructA(LPOPENFILENAMEA ofnA, LPOPENFILENAMEW ofnW, BOOL open);
-extern void FD31_FreeOfnW(LPOPENFILENAMEW ofnW);
-extern BOOL FD31_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
+extern void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL open);
+extern void FD31_FreeOfnW(OPENFILENAMEW *ofnW);
+extern BOOL FD31_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
                                 LPARAM lParam);
 extern LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam);
 extern LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
-                            int savedlg, LPDRAWITEMSTRUCT lpdis);
+                            int savedlg, const DRAWITEMSTRUCT *lpdis);
 extern LRESULT FD31_WMCommand(HWND hWnd, LPARAM lParam, UINT notification,
-                              UINT control, PFD31_DATA lfs);
+                              UINT control, const FD31_DATA *lfs);
 extern int FD31_GetFldrHeight(void);
 
 #endif /* _WINE_DLL_FILEDLG31_H */

@@ -276,7 +276,7 @@ SetupDiBuildClassInfoListExW(
             TRACE("Guid: %s\n", debugstr_w(szKeyName));
             if (dwGuidListIndex < ClassGuidListSize)
             {
-                if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
+                if (szKeyName[0] == '{' && szKeyName[37] == '}')
                     szKeyName[37] = 0;
 
                 UuidFromStringW(&szKeyName[1],
@@ -472,7 +472,7 @@ SetupDiClassGuidsFromNameExW(
                     TRACE("Guid: %s\n", debugstr_w(szKeyName));
                     if (dwGuidListIndex < ClassGuidListSize)
                     {
-                        if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
+                        if (szKeyName[0] == '{' && szKeyName[37] == '}')
                             szKeyName[37] = 0;
 
                         UuidFromStringW(&szKeyName[1],

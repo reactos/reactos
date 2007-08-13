@@ -110,7 +110,7 @@
 	<directory name="thread">
 		<directory name="i386">
 			<file>fiber.S</file>
-            		<file>thread.S</file>
+			<file>thread.S</file>
 		</directory>
 	</directory>
 </module>

@@ -1554,9 +1554,9 @@ UserDrawCaptionText(HDC hDc,
    
    //FIXME: If string doesn't fit to rc, truncate it and add ellipsis.
    
-   NtGdiTextOut(hDc, lpRc->left, 
-      lpRc->top, Text->Buffer, 
-      Text->Length/sizeof(WCHAR));
+   NtGdiExtTextOut(hDc, lpRc->left, 
+      lpRc->top, 0, NULL, Text->Buffer, 
+      Text->Length/sizeof(WCHAR), NULL);
    
    NtGdiSetTextColor(hDc, OldTextColor);
    NtGdiSelectObject(hDc, hOldFont);

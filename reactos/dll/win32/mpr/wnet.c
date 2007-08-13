@@ -3,6 +3,7 @@
  *
  * Copyright 1999 Ulrich Weigand
  * Copyright 2004 Juan Lang
+ * Copyright 2007 Maarten Lankhorst
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -448,7 +449,7 @@ static PWNetEnumerator _createContextEnumerator(DWORD dwScope, DWORD dwType,
  * failure.
  */
 static DWORD _thunkNetResourceArrayWToA(const NETRESOURCEW *lpNetArrayIn,
- LPDWORD lpcCount, LPVOID lpBuffer, LPDWORD lpBufferSize)
+ const DWORD *lpcCount, LPVOID lpBuffer, const DWORD *lpBufferSize)
 {
     DWORD i, numToThunk, totalBytes, ret;
     LPSTR strNext;
@@ -533,7 +534,7 @@ static DWORD _thunkNetResourceArrayWToA(const NETRESOURCEW *lpNetArrayIn,
  * failure.
  */
 static DWORD _thunkNetResourceArrayAToW(const NETRESOURCEA *lpNetArrayIn,
- LPDWORD lpcCount, LPVOID lpBuffer, LPDWORD lpBufferSize)
+ const DWORD *lpcCount, LPVOID lpBuffer, const DWORD *lpBufferSize)
 {
     DWORD i, numToThunk, totalBytes, ret;
     LPWSTR strNext;
@@ -875,7 +876,7 @@ static DWORD _countProviderBytesW(PWNetProvider provider)
 }
 
 static DWORD _enumerateProvidersW(PWNetEnumerator enumerator, LPDWORD lpcCount,
- LPVOID lpBuffer, LPDWORD lpBufferSize)
+ LPVOID lpBuffer, const DWORD *lpBufferSize)
 {
     DWORD ret;
 
@@ -1526,9 +1527,9 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
 
     if (!lpLocalName)
         ret = WN_BAD_POINTER;
-    else if (!lpRemoteName)
-        ret = WN_BAD_POINTER;
     else if (!lpBufferSize)
+        ret = WN_BAD_POINTER;
+    else if (!lpRemoteName && *lpBufferSize)
         ret = WN_BAD_POINTER;
     else
     {
@@ -1622,9 +1623,9 @@ DWORD WINAPI WNetGetConnectionW( LPCWSTR lpLocalName,
 
     if (!lpLocalName)
         ret = WN_BAD_POINTER;
-    else if (!lpRemoteName)
-        ret = WN_BAD_POINTER;
     else if (!lpBufferSize)
+        ret = WN_BAD_POINTER;
+    else if (!lpRemoteName && *lpBufferSize)
         ret = WN_BAD_POINTER;
     else if (!lpLocalName[0])
         ret = WN_BAD_LOCALNAME;
@@ -1636,8 +1637,17 @@ DWORD WINAPI WNetGetConnectionW( LPCWSTR lpLocalName,
             {
             case DRIVE_REMOTE:
             {
-                WCHAR remote[MAX_PATH];
+                static const WCHAR unc[] = { 'u','n','c','\\' };
+                WCHAR rremote[MAX_PATH], *remote = rremote;
                 if (!QueryDosDeviceW( lpLocalName, remote, MAX_PATH )) remote[0] = 0;
+                else if (!strncmpW(remote, unc, 4))
+                {
+                    remote += 2;
+                    remote[0] = '\\';
+                }
+                else if (remote[0] != '\\' || remote[1] != '\\')
+                    FIXME("Don't know how to convert %s to an unc\n", debugstr_w(remote));
+
                 if (strlenW(remote) + 1 > *lpBufferSize)
                 {
                     *lpBufferSize = strlenW(remote) + 1;

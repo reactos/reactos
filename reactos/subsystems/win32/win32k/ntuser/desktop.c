@@ -31,8 +31,11 @@
 
 #include <w32k.h>
 
-//#define YDEBUG
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
+#define TRACE DPRINT
+#define WARN DPRINT1
+#define ERR DPRINT1
 
 static
 VOID
@@ -1502,7 +1505,7 @@ NtUserPaintDesktop(HDC hDC)
          align_old = NtGdiSetTextAlign(hDC, TA_RIGHT);
          mode_old = NtGdiSetBkMode(hDC, TRANSPARENT);
 
-         NtGdiTextOut(hDC, rect.right-16, rect.bottom-48, s_wszVersion, len);
+         NtGdiExtTextOut(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL);
 
          NtGdiSetBkMode(hDC, mode_old);
          NtGdiSetTextAlign(hDC, align_old);

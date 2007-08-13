@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            services/winlogon/sas.c
+ * PROJECT:         ReactOS Winlogon
+ * FILE:            base/system/winlogon/sas.c
  * PURPOSE:         Secure Attention Sequence
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)
@@ -9,10 +9,16 @@
  *                  Created 28/03/2004
  */
 
+/* INCLUDES *****************************************************************/
+
 #include "winlogon.h"
 
 //#define YDEBUG
 #include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
+
+/* GLOBALS ******************************************************************/
 
 #define WINLOGON_SAS_CLASS L"SAS Window class"
 #define WINLOGON_SAS_TITLE L"SAS window"
@@ -23,6 +29,8 @@
 #ifdef __USE_W32API
 extern BOOL STDCALL SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
 #endif
+
+/* FUNCTIONS ****************************************************************/
 
 static BOOL
 StartTaskManager(
