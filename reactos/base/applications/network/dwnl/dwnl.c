@@ -1,47 +1,41 @@
-#include <windows.h>
+#include <stdio.h>
 #include <urlmon.h>
 #include <tchar.h>
 
-HRESULT WINAPI URLDownloadToFileA(
-        LPUNKNOWN pCaller,
-        LPCSTR szURL,
-        LPCSTR szFileName,
-        DWORD dwReserved,
-        LPBINDSTATUSCALLBACK lpfnCB);
 
 // ToDo: Show status, get file name from webserver, better error reporting
 
-int tmain(int argc, TCHAR **argv)
+int _tmain(int argc, TCHAR **argv)
 {
+	TCHAR* filename = argv[1];
 	int i;
 
 	if(argc != 2)
 	{
-		_tprintf(TEXT("Usage: dwnl <url>"));
+		_tprintf(_T("Usage: dwnl <url>"));
 		return 2;
 	}
 
-	TCHAR* filename = argv[1];
-	for(i=_tcslen(argv[1]);i>0
-		&&filename[i]!='/'
-		&&filename[i]!='\\'
-		&&filename[i]!='?'
-		&&filename[i]!='*'
-		&&filename[i]!=':'
-		&&filename[i]!='\"'
-		&&filename[i]!='<'
-		&&filename[i]!='>'
-		&&filename[i]!='|';i--);
+	for(i=_tcslen(filename);i>0
+		&&filename[i]!=_T('/')
+		&&filename[i]!=_T('\\')
+		&&filename[i]!=_T('?')
+		&&filename[i]!=_T('*')
+		&&filename[i]!=_T(':')
+		&&filename[i]!=_T('\"')
+		&&filename[i]!=_T('<')
+		&&filename[i]!=_T('>')
+		&&filename[i]!=_T('|');i--);
 	filename = &argv[1][i+1];
 
-	_tprintf("Downloading %s... ", filename);
+	_tprintf(_T("Downloading %s... "), filename);
 
-	if(URLDownloadToFileA(NULL, argv[1], filename, 0, NULL) != S_OK)
+	if(URLDownloadToFile(NULL, argv[1], filename, 0, NULL) != S_OK)
 	{
-		_tprintf("Failed.\n");
+		_tprintf(_T("Failed.\n"));
 		return 1;
 	}
 
-	_tprintf("Finished.\n");
+	_tprintf(_T("Finished.\n"));
 	return 0;
 }
