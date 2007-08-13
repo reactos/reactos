@@ -766,7 +766,7 @@ GetUserProfileDirectoryW (HANDLE hToken,
   dwLength = wcslen (szImagePath) + 1;
   if (*lpcchSize < dwLength)
     {
-      DPRINT1 ("Buffer too small\n");
+      *lpcchSize = dwLength;
       SetLastError (ERROR_INSUFFICIENT_BUFFER);
       return FALSE;
     }
@@ -859,10 +859,18 @@ LoadUserProfileW(
         return TRUE;
     }
 
-    if (!GetProfilesDirectoryW(szUserHivePath, &dwLength))
+    if (lpProfileInfo->lpProfilePath)
     {
-        DPRINT1("GetProfilesDirectoryW() failed (error %ld)\n", GetLastError());
-        return FALSE;
+        wcscpy(szUserHivePath, lpProfileInfo->lpProfilePath);
+    }
+    else
+    {
+        /* FIXME: check if MS Windows allows lpProfileInfo->lpProfilePath to be NULL */
+        if (!GetProfilesDirectoryW(szUserHivePath, &dwLength))
+        {
+            DPRINT1("GetProfilesDirectoryW() failed (error %ld)\n", GetLastError());
+            return FALSE;
+        }
     }
 
     wcscat(szUserHivePath, L"\\");
