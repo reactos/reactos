@@ -10,7 +10,7 @@ END
 
 IDD_NOTICE_DLG DIALOGEX 0,0,186,59
 STYLE NOT WS_VISIBLE | DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Bienvenue √† ReactOS"
+CAPTION "Bienvenue ‡ ReactOS"
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "Appuyer sur les touches Control-Alt-Suppr",IDC_STATIC,16,18,144,14
@@ -23,7 +23,7 @@ FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     PUSHBUTTON      "OK",IDOK,51,122,50,14,BS_DEFPUSHBUTTON
     PUSHBUTTON      "Annuler",IDCANCEL,115,122,50,14
-    PUSHBUTTON      "√âteindre",IDC_SHUTDOWN,179,122,50,14
+    PUSHBUTTON      "…teindre",IDC_SHUTDOWN,179,122,50,14
     LTEXT           "Utilisateur:",IDC_STATIC,36,75,40,8
     LTEXT           "Mot de passe:",IDC_STATIC,36,93,42,8
     EDITTEXT        IDC_USERNAME,84,72,119,14,ES_AUTOHSCROLL
@@ -33,24 +33,24 @@ END
 
 IDD_LOGGEDON_DLG DIALOGEX 0,0,247,116
 STYLE NOT WS_VISIBLE | DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
-CAPTION "S√©curit√©"
+CAPTION "SÈcuritÈ"
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     PUSHBUTTON      "Annuler",IDCANCEL,170,95,70,14
-    PUSHBUTTON      "D√©connecter",IDC_LOGOFF,90,76,70,14
-    PUSHBUTTON      "√âteindre",IDC_SHUTDOWN,170,76,70,14
+    PUSHBUTTON      "DÈconnecter",IDC_LOGOFF,90,76,70,14
+    PUSHBUTTON      "…teindre",IDC_SHUTDOWN,170,76,70,14
     LTEXT           "Que voulez vous faire?",IDC_STATIC,86,53,87,8
     PUSHBUTTON      "Verrouiller l'ordinateur",IDC_LOCK,10,76,70,14
-    PUSHBUTTON      "Gestionnaire de t√¢ches",IDC_TASKMGR,90,95,70,14
+    PUSHBUTTON      "Gestionnaire de t‚ches",IDC_TASKMGR,90,95,70,14
     CONTROL         "",IDC_ROSLOGO,"Static",SS_BLACKFRAME,7,7,230,38
 END
 
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Bienvenue!"
-    IDS_LOCKEDSAS "Cet ordinateur est actuellement verrouill√©."
+    IDS_LOCKEDSAS "Cet ordinateur est actuellement verrouillÈ."
     IDS_PRESSCTRLALTDELETE "Presser Control+Alt+Suppr pour vous connecter."
     IDS_ASKFORUSER "Utilisateur: "
     IDS_ASKFORPASSWORD "Mot de passe: "
-    IDS_FORCELOGOFF "Cela d√©connectera l'utilisateur en cours et perdra les donn√©es non sauv√©es.  Continuer?"
+    IDS_FORCELOGOFF "Cela dÈconnectera l'utilisateur en cours et perdra les donnÈes non sauvÈes.  Continuer?"
 END
