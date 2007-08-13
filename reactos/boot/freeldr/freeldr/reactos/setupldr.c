@@ -166,7 +166,7 @@ VOID RunLoader(VOID)
   ULONG_PTR Base;
   ULONG Size;
   const char *SourcePath;
-  const char *LoadOptions;
+  const char *LoadOptions = "", *DbgLoadOptions = "";
   char szKernelName[256];
 
   HINF InfHandle;
@@ -249,8 +249,18 @@ VOID RunLoader(VOID)
       return;
     }
 
-  /* Get load options */
-  if (!InfFindFirstLine (InfHandle,
+#ifdef DBG
+  /* Get load options */  
+  if (InfFindFirstLine (InfHandle,
+			"SetupData",
+			"DbgOsLoadOptions",
+			&InfContext))
+    {
+	if (!InfGetDataField (&InfContext, 1, &DbgLoadOptions))
+	    DbgLoadOptions = "";
+    }
+#endif
+  if (!strlen(DbgLoadOptions) && !InfFindFirstLine (InfHandle,
 			 "SetupData",
 			 "OsLoadOptions",
 			 &InfContext))
@@ -283,8 +293,8 @@ VOID RunLoader(VOID)
 
   /* Set kernel command line */
   MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
-  strcat(strcat(strcat(reactos_kernel_cmdline, SourcePath), " "),
-         LoadOptions);
+  strcat(strcat(strcat(strcat(reactos_kernel_cmdline, SourcePath), " "),
+		LoadOptions), DbgLoadOptions);
 
   strcpy(SystemRoot, SourcePath);
   strcat(SystemRoot, "\\");
