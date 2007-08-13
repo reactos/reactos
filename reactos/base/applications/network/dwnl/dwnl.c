@@ -2,6 +2,12 @@
 #include <urlmon.h>
 #include <tchar.h>
 
+/* FIXME: add correct definitions to urlmon.idl */
+#ifdef UNICODE
+#define URLDownloadToFile URLDownloadToFileW
+#else
+#define URLDownloadToFile URLDownloadToFileA
+#endif
 
 // ToDo: Show status, get file name from webserver, better error reporting
 
