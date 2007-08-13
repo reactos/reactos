@@ -88,6 +88,7 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 	PSETTINGS_ENTRY Current;
 	DWORD bpp, xres, yres, checkbpp;
 
+
 	/* Get current settings */
 	*CurrentSettings = NULL;
 	hDC = CreateIC(NULL, DeviceName, NULL, NULL);
@@ -176,10 +177,17 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR D
 	newEntry->InitialSettings.dmBitsPerPel = newEntry->CurrentSettings->dmBitsPerPel;
 
 	/* Count different resolutions */
+	/* Count different resolutions */
 	for (Current = newEntry->Settings; Current != NULL; Current = Current->Flink)
+	{
 		if (Current->Flink != NULL &&
-		   ((Current->dmPelsWidth != Current->Flink->dmPelsWidth) || (Current->dmPelsHeight != Current->Flink->dmPelsHeight)))
+			((Current->dmPelsWidth != Current->Flink->dmPelsWidth) ||
+			(Current->dmPelsHeight != Current->Flink->dmPelsHeight)))
+		{
 			ResolutionsCount++;
+		}
+	}
+
 	newEntry->Resolutions = HeapAlloc(GetProcessHeap(), 0, ResolutionsCount * sizeof(RESOLUTION_INFO));
 	if (!newEntry->Resolutions) goto ByeBye;
 	newEntry->ResolutionsCount = ResolutionsCount;
