@@ -338,7 +338,7 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
     }
     else
     {
-        int numcards = min((nOptions & OPTION_THREE_CARDS) ? 3 : 1, cardstack.NumCards());
+        int numcards = min((dwOptions & OPTION_THREE_CARDS) ? 3 : 1, cardstack.NumCards());
 
         //make a "visible" copy of these cards
         CardStack temp;

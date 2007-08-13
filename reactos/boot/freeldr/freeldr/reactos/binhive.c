@@ -27,7 +27,7 @@
 
 static PVOID
 NTAPI
-CmpAllocate (ULONG Size, BOOLEAN Paged)
+CmpAllocate (SIZE_T Size, BOOLEAN Paged)
 {
   return MmAllocateMemory(Size);
 }

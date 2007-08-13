@@ -605,12 +605,6 @@ NtGdiGetTextCharset(HDC  hDC);
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
 
-/* Use NtGdiGetTextMetricsW with 0 at the end */
-BOOL
-STDCALL
-NtGdiGetTextMetrics(HDC  hDC,
-                         LPTEXTMETRICW  tm);
-
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
 
@@ -1068,10 +1062,6 @@ NtGdiUpdateICMRegKey(DWORD  Reserved,
 /* These shouldn't even be called NtGdi */
 HDC STDCALL  NtGdiGetDCState(HDC  hDC);
 WORD STDCALL NtGdiSetHookFlags(HDC hDC, WORD Flags);
-INT
-STDCALL
-NtGdiSelectVisRgn(HDC hdc,
-                     HRGN hrgn);
 VOID STDCALL NtGdiSetDCState ( HDC hDC, HDC hDCSave );
 
 /* All this Should be in user-mode, not NtUser calls. Especially not in GDI! */

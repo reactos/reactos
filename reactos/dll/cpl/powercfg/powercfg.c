@@ -18,7 +18,7 @@
 
 #define NUM_APPLETS	(1)
 
-LONG APIENTRY Applet1(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+static LONG APIENTRY Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK powershemesProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK alarmsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK advancedProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -80,8 +80,8 @@ PropSheetProc(
 }
 
 /* First Applet */
-LONG APIENTRY
-Applet1(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)	
+static LONG APIENTRY
+Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)	
 {
   PROPSHEETPAGE psp[5];
   PROPSHEETHEADER psh;

@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <internal/mtdll.h>
 
+#define NDEBUG
 #include <debug.h>
 
 /* MT */

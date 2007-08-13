@@ -138,7 +138,7 @@ DrawFileSystemList(
     PLIST_ENTRY ListEntry;
     PFILE_SYSTEM_ITEM Item;
     COORD coPos;
-    ULONG Written;
+    DWORD Written;
     ULONG Index = 0;
     CHAR Buffer[70];
 

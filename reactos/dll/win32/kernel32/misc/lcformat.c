@@ -92,6 +92,53 @@ static RTL_CRITICAL_SECTION_DEBUG NLS_FormatsCS_debug =
 static RTL_CRITICAL_SECTION NLS_FormatsCS = { &NLS_FormatsCS_debug, -1, 0, 0, 0, 0 };
 
 /**************************************************************************
+ * NLS_isSystemLocale <internal>
+ *
+ * Return TRUE, if locale is system-type
+ */
+BOOL NLS_isSystemLocale(LCID lcid)
+{
+    if(lcid == LOCALE_SYSTEM_DEFAULT ||
+       lcid == LOCALE_NEUTRAL ||
+       lcid == LOCALE_USER_DEFAULT)
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**************************************************************************
+ * NLS_isSystemLocale <internal>
+ *
+ * Return default system or user locale
+ */
+LCID NLS_getDefaultLocale(LCID lcid)
+{
+    LCID lcidTmp;
+
+    DPRINT("Called NLS_getDefaultLocale(0x%04lx)\n", lcid);
+
+    switch(lcid)
+    {
+        case LOCALE_SYSTEM_DEFAULT:
+            NtQueryDefaultLocale(FALSE, &lcidTmp);
+            return lcidTmp;
+        break;
+
+        case LOCALE_USER_DEFAULT:
+        case LOCALE_NEUTRAL:
+            NtQueryDefaultLocale(TRUE, &lcidTmp);
+            return lcidTmp;
+        break;
+
+        default:
+            DPRINT1("FIXME: unknown system lcid\n");
+    }
+
+    return lcid;
+}
+
+/**************************************************************************
  * NLS_GetLocaleNumber <internal>
  *
  * Get a numeric locale format value.
@@ -410,7 +457,7 @@ NLS_GetDateTimeFormatW_InvalidFlags:
 
   if (!lpTime)
   {
-    GetSystemTime(&st); /* Default to current time */
+    GetLocalTime(&st); /* Default to current time */
     lpTime = &st;
   }
   else
@@ -968,8 +1015,17 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
   TRACE("(0x%04lx,0x%08lx,%S,%p,%p,%d)\n", lcid, dwFlags, lpszValue,
         lpFormat, lpNumberStr, cchOut);
 
+  if(NLS_isSystemLocale(lcid))
+  {
+      lcid = NLS_getDefaultLocale(lcid);
+  }
+  else if(!IsValidLocale(lcid, 0))
+  {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+  }
+
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpNumberStr) ||
-      !IsValidLocale(lcid, 0) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep)))
   {
 GetNumberFormatW_Error:
@@ -1334,8 +1390,17 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
   TRACE("(0x%04lx,0x%08lx,%S,%p,%p,%d)\n", lcid, dwFlags, lpszValue,
         lpFormat, lpCurrencyStr, cchOut);
 
+  if(NLS_isSystemLocale(lcid))
+  {
+    lcid = NLS_getDefaultLocale(lcid);
+  }
+  else if(!IsValidLocale(lcid, 0))
+  {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+  }
+
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpCurrencyStr) ||
-      !IsValidLocale(lcid, 0) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep ||
       !lpFormat->lpCurrencySymbol || lpFormat->NegativeOrder > 15 ||
       lpFormat->PositiveOrder > 3)))

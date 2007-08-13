@@ -171,12 +171,10 @@ void SetupStatusBar(HWND hWnd, BOOL bResize)
 
 void UpdateStatusBar(void)
 {
-    TCHAR text[260];
-    DWORD size;
-
-    size = sizeof(text)/sizeof(TCHAR);
-    GetComputerName(text, &size);
-    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
+	NMHDR nmhdr;
+	ZeroMemory(&nmhdr, sizeof(NMHDR));
+    nmhdr.code = TVN_SELCHANGED;
+    SendMessage(g_pChildWnd->hWnd, WM_NOTIFY, (WPARAM)TREE_WINDOW, (LPARAM)&nmhdr);
 }
 
 static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)

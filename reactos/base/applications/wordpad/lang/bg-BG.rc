@@ -89,7 +89,7 @@ CAPTION "Нов"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
-  LTEXT "Вид на новия документ:", IDC_STATIC, 4, 3, 72, 9
+  LTEXT "Вид на новия документ:", IDC_STATIC, 4, 3, 130, 9
   LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
   PUSHBUTTON "&Добре", IDOK, 112, 16, 44, 13
   PUSHBUTTON "&Отказ", IDCANCEL, 112, 33, 44, 13

@@ -33,7 +33,7 @@
 #include "resource.h"
 #include "hdwwiz.h"
 
-LONG APIENTRY Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+static LONG APIENTRY Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 HINSTANCE hApplet = 0;
 
 /* Applets */
@@ -44,8 +44,8 @@ APPLET Applets[] =
 
 typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
 
-LONG APIENTRY
-Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+static LONG APIENTRY
+Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
 	HMODULE hNewDev = NULL;
 	PINSTALL_NEW_DEVICE InstallNewDevice;

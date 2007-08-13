@@ -420,17 +420,15 @@ _tmain(int argc, TCHAR *argv[])
 			}
 		}
 
+		LoadString( GetModuleHandle(NULL), STRING_YN_FORMAT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		_tprintf(szMsg, RootDirectory[0] );
+
+		LoadString( GetModuleHandle(NULL), STRING_YES_NO_FAQ, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+
 		while( 1 ) {
-
-			LoadString( GetModuleHandle(NULL), STRING_YN_FORMAT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-			_tprintf(szMsg, RootDirectory[0] );
-
-			LoadString( GetModuleHandle(NULL), STRING_YES_NO_FAQ, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-
-			if(_strnicmp(&input[0],&szMsg[0],1)) break;
-
-			if(_strnicmp(&input[0],&szMsg[1],1) ) {
-
+			_fgetts( input, sizeof(input)/2, stdin );
+			if(_strnicmp(&input[0],&szMsg[0],1) == 0) break;
+			if(_strnicmp(&input[0],&szMsg[1],1) == 0) {
 				_tprintf(_T("\n"));
 				return 0;
 			}

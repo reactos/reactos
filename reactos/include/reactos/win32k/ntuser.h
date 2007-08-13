@@ -47,19 +47,19 @@ typedef struct _WINDOWCLASS
     PWSTR MenuName;
     PSTR AnsiMenuName;
 
-    ULONG_PTR ClassExtraDataOffset;
-
     UINT Destroying : 1;
     UINT Unicode : 1;
     UINT System : 1;
     UINT Global : 1;
     UINT GlobalCallProc : 1;
     UINT GlobalCallProc2 : 1;
+    UINT MenuNameIsString : 1;
 } WINDOWCLASS, *PWINDOWCLASS;
 
 typedef struct _W32PROCESSINFO
 {
     PVOID UserHandleTable;
+    HINSTANCE hModUser;
     PWINDOWCLASS LocalClassList;
     PWINDOWCLASS GlobalClassList;
     PWINDOWCLASS SystemClassList;
@@ -458,7 +458,8 @@ NtUserCallNoParam(
 #define ONEPARAM_ROUTINE_MSQSETWAKEMASK       0x27
 #define ONEPARAM_ROUTINE_GETKEYBOARDTYPE      0x28
 #define ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT    0x29
-#define ONEPARAM_ROUTINE_SHOWCURSOR           0x30 
+#define ONEPARAM_ROUTINE_SHOWCURSOR           0x30
+#define ONEPARAM_ROUTINE_REGISTERUSERMODULE   0x31
 DWORD
 NTAPI
 NtUserCallOneParam(

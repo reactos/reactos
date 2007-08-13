@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+static BOOL OnSelChange(PVIRTMEM pVirtMem);
 static LPCTSTR lpKey = _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
 
 static BOOL
@@ -89,8 +90,9 @@ ParseMemSettings(PVIRTMEM pVirtMem)
 {
     TCHAR szDrives[1024];    // all drives
     LPTSTR DrivePtr = szDrives;
-    TCHAR szDrive[MAX_PATH]; // single drive
+    TCHAR szDrive[3]; // single drive
     TCHAR szVolume[MAX_PATH];
+    TCHAR *szDisplayString;
     INT InitialSize = 0;
     INT MaxSize = 0;
     INT DriveLen;
@@ -99,9 +101,12 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     DriveLen = GetLogicalDriveStrings(1023,
                                       szDrives);
 
+    szDisplayString = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH * 2 + 69) * sizeof(TCHAR));
+    if (szDisplayString == NULL)
+        return;
+
     while (DriveLen != 0)
     {
-        LVITEM Item;
         INT Len;
 
         Len = lstrlen(DrivePtr) + 1;
@@ -110,7 +115,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
         DrivePtr = _tcsupr(DrivePtr);
 
         /* copy the 'X:' portion */
-        lstrcpyn(szDrive, DrivePtr, 3);
+        lstrcpyn(szDrive, DrivePtr, sizeof(szDrive) / sizeof(TCHAR));
 
         if(GetDriveType(DrivePtr) == DRIVE_FIXED)
         {
@@ -134,12 +139,8 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 lstrcpy(pVirtMem->Pagefile[PgCnt].szDrive, szDrive);
             }
 
-            /* fill out the listview */
-            ZeroMemory(&Item, sizeof(Item));
-            Item.mask = LVIF_TEXT;
-            Item.iItem = ListView_GetItemCount(pVirtMem->hListView);
-            Item.pszText = szDrive;
-            (void)ListView_InsertItem(pVirtMem->hListView, &Item);
+            _tcscpy(szDisplayString, szDrive);
+            _tcscat(szDisplayString, _T("\t"));
 
             /* set a volume label if there is one */
             if (GetVolumeInformation(DrivePtr,
@@ -154,12 +155,8 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 if (szVolume[0] != _T('\0'))
                 {
                     TCHAR szVol[MAX_PATH + 2];
-
                     _stprintf(szVol, _T("[%s]"), szVolume);
-
-                    Item.iSubItem = 1;
-                    Item.pszText = szVol;
-                    (void)ListView_InsertItem(pVirtMem->hListView, &Item);
+                    _tcscat(szDisplayString, szVol);
                 }
             }
 
@@ -168,19 +165,21 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 TCHAR szSize[64];
 
                 _stprintf(szSize, _T("%i - %i"), InitialSize, MaxSize);
-
-                Item.iSubItem = 2;
-                Item.pszText = szSize;
-                (void)ListView_InsertItem(pVirtMem->hListView, &Item);
+                _tcscat(szDisplayString, _T("\t"));
+                _tcscat(szDisplayString, szSize);
             }
 
+            SendMessage(pVirtMem->hListBox, LB_ADDSTRING, (WPARAM)0, (LPARAM)szDisplayString);
             PgCnt++;
         }
 
         DrivePtr += Len;
     }
 
+    SendMessage(pVirtMem->hListBox, LB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+    HeapFree(GetProcessHeap(), 0, szDisplayString);
     pVirtMem->Count = PgCnt;
+    OnSelChange(pVirtMem);
 }
 
 
@@ -231,7 +230,7 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
                           0,
                           REG_MULTI_SZ,
                           (LPBYTE) szPagingFiles,
-                          (DWORD) nPos * sizeof(TCHAR)))
+                          (DWORD) nPos * sizeof(TCHAR)) == ERROR_SUCCESS)
         {
             bErr = FALSE;
         }
@@ -245,31 +244,10 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
 
 
 static VOID
-SetListViewColumns(HWND hwndListView)
+SetListBoxColumns(HWND hwndListBox)
 {
-    RECT rect;
-    LV_COLUMN lvc;
-
-    GetClientRect(hwndListView, &rect);
-
-    (void)ListView_SetExtendedListViewStyle(hwndListView,
-                                            LVS_EX_FULLROWSELECT);
-
-    ZeroMemory(&lvc, sizeof(lvc));
-    lvc.mask = LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
-    lvc.fmt = LVCFMT_LEFT;
-
-    lvc.cx = (INT)((rect.right - rect.left) * 0.1);
-    lvc.iSubItem = 0;
-    (void)ListView_InsertColumn(hwndListView, 0, &lvc);
-
-    lvc.cx = (INT)((rect.right - rect.left) * 0.3);
-    lvc.iSubItem = 1;
-    (void)ListView_InsertColumn(hwndListView, 1, &lvc);
-
-    lvc.cx = (INT)((rect.right - rect.left) * 0.6);
-    lvc.iSubItem = 2;
-    (void)ListView_InsertColumn(hwndListView, 2, &lvc);
+    const INT tabs[2] = {30, 170};
+    SendMessage(hwndListBox, LB_SETTABSTOPS, (WPARAM)2, (LPARAM)&tabs[0]);
 }
 
 
@@ -304,6 +282,8 @@ static VOID
 OnSet(PVIRTMEM pVirtMem)
 {
     INT Index;
+    UINT Value;
+    BOOL bTranslated;
 
     pVirtMem->bSave = TRUE;
 
@@ -315,28 +295,41 @@ OnSet(PVIRTMEM pVirtMem)
 
     if(Index < pVirtMem->Count)
     {
-        TCHAR szText[255];
-
         /* check if custom settings are checked */
-        if(SendDlgItemMessage(pVirtMem->hSelf,
-                              IDC_CUSTOM,
-                              BM_GETCHECK,
-                              0,
-                              0) == BST_CHECKED)
+        if(IsDlgButtonChecked(pVirtMem->hSelf,
+                              IDC_CUSTOM) == BST_CHECKED)
         {
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_INITIALSIZE,
-                               WM_GETTEXT,
-                               254,
-                               (LPARAM)szText);
-            pVirtMem->Pagefile[Index].InitialValue = _ttoi(szText);
+            Value = GetDlgItemInt(pVirtMem->hSelf,
+                                  IDC_INITIALSIZE,
+                                  &bTranslated,
+                                  FALSE);
+            if (!bTranslated)
+            {
+                /* FIXME: Show error message instead of setting the edit
+                          field to the previous value */
+                SetDlgItemInt(pVirtMem->hSelf,
+                              IDC_INITIALSIZE,
+                              pVirtMem->Pagefile[Index].InitialValue,
+                              FALSE);
+            }
+            else
+                pVirtMem->Pagefile[Index].InitialValue = Value;
 
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_MAXSIZE,
-                               WM_GETTEXT,
-                               254,
-                               (LPARAM)szText);
-            pVirtMem->Pagefile[Index].MaxValue = _ttoi(szText);
+            Value = GetDlgItemInt(pVirtMem->hSelf,
+                                  IDC_MAXSIZE,
+                                  &bTranslated,
+                                  FALSE);
+            if (!bTranslated)
+            {
+                /* FIXME: Show error message instead of setting the edit
+                          field to the previous value */
+                SetDlgItemInt(pVirtMem->hSelf,
+                              IDC_MAXSIZE,
+                              pVirtMem->Pagefile[Index].MaxValue,
+                              FALSE);
+            }
+            else
+                pVirtMem->Pagefile[Index].MaxValue = Value;
         }
         else
         {
@@ -344,11 +337,8 @@ OnSet(PVIRTMEM pVirtMem)
             pVirtMem->Pagefile[Index].InitialValue = pVirtMem->Pagefile[Index].MaxValue = 0;
 
             // check to see if this drive is used for a paging file
-            if (SendDlgItemMessage(pVirtMem->hSelf,
-                                   IDC_NOPAGEFILE,
-                                   BM_GETCHECK,
-                                   0,
-                                   0) == BST_UNCHECKED)
+            if (IsDlgButtonChecked(pVirtMem->hSelf,
+                                   IDC_NOPAGEFILE) == BST_UNCHECKED)
             {
                 pVirtMem->Pagefile[Index].bUsed = TRUE;
             }
@@ -362,13 +352,9 @@ OnSet(PVIRTMEM pVirtMem)
 
 
 static BOOL
-OnSelChange(PVIRTMEM pVirtMem,
-            LPNMLISTVIEW pnmv)
+OnSelChange(PVIRTMEM pVirtMem)
 {
-    TCHAR szCustVals[255];
     INT Index;
-
-    UNREFERENCED_PARAMETER(pnmv);
 
     Index = (INT)SendDlgItemMessage(pVirtMem->hSelf,
                                     IDC_PAGEFILELIST,
@@ -386,25 +372,19 @@ OnSelChange(PVIRTMEM pVirtMem,
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_MAXSIZE), TRUE);
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_INITIALSIZE), TRUE);
 
-            _itot(pVirtMem->Pagefile[Index].InitialValue , szCustVals, 10);
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_INITIALSIZE,
-                               WM_SETTEXT,
-                               0,
-                               (LPARAM)szCustVals);
+            SetDlgItemInt(pVirtMem->hSelf,
+                          IDC_INITIALSIZE,
+                          pVirtMem->Pagefile[Index].InitialValue,
+                          FALSE);
 
-            _itot(pVirtMem->Pagefile[Index].MaxValue, szCustVals, 10);
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_MAXSIZE,
-                               WM_SETTEXT,
-                               0,
-                               (LPARAM)szCustVals);
+            SetDlgItemInt(pVirtMem->hSelf,
+                          IDC_MAXSIZE,
+                          pVirtMem->Pagefile[Index].MaxValue,
+                          FALSE);
 
-            SendDlgItemMessage(pVirtMem->hSelf,
-                               IDC_CUSTOM,
-                               BM_SETCHECK,
-                               1,
-                               0);
+            CheckDlgButton(pVirtMem->hSelf,
+                           IDC_CUSTOM,
+                           BST_CHECKED);
         }
         else
         {
@@ -415,19 +395,15 @@ OnSelChange(PVIRTMEM pVirtMem,
             /* is it system managed */
             if(pVirtMem->Pagefile[Index].bUsed)
             {
-                SendDlgItemMessage(pVirtMem->hSelf,
-                                   IDC_SYSMANSIZE,
-                                   BM_SETCHECK,
-                                   1,
-                                   0);
+                CheckDlgButton(pVirtMem->hSelf,
+                               IDC_SYSMANSIZE,
+                               BST_CHECKED);
             }
             else
             {
-                SendDlgItemMessage(pVirtMem->hSelf,
-                                   IDC_NOPAGEFILE,
-                                   BM_SETCHECK,
-                                   1,
-                                   0);
+                CheckDlgButton(pVirtMem->hSelf,
+                               IDC_NOPAGEFILE,
+                               BST_CHECKED);
             }
         }
     }
@@ -481,10 +457,10 @@ OnInitDialog(HWND hwnd)
     }
 
     pVirtMem->hSelf = hwnd;
-    pVirtMem->hListView = GetDlgItem(hwnd, IDC_PAGEFILELIST);
+    pVirtMem->hListBox = GetDlgItem(hwnd, IDC_PAGEFILELIST);
     pVirtMem->bSave = FALSE;
 
-    SetListViewColumns(pVirtMem->hListView);
+    SetListBoxColumns(pVirtMem->hListBox);
 
     /* Load the pagefile systems from the reg */
     if (ReadPageFileSettings(pVirtMem))
@@ -543,22 +519,15 @@ VirtMemDlgProc(HWND hwndDlg,
                 case IDC_SET:
                     OnSet(pVirtMem);
                     return TRUE;
-            }
-        }
-        break;
 
-        case WM_NOTIFY:
-        {
-            LPNMHDR pnmhdr = (LPNMHDR)lParam;
-
-            switch (pnmhdr->code)
-            {
-                case LVN_ITEMCHANGED:
-                {
-                    LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
-
-                    OnSelChange(pVirtMem, pnmv);
-                }
+                case IDC_PAGEFILELIST:
+                    switch HIWORD(wParam)
+                    {
+                        case LBN_SELCHANGE:
+                            OnSelChange(pVirtMem);
+                            return TRUE;
+                    }
+                    break;
             }
         }
         break;

@@ -282,8 +282,11 @@ GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSu
       return FALSE;
     }
 
+  /* FIXME we do not getting the process name so no menu will be loading, why ?*/
   fLength = GetProcessImageFileNameW(hProcess, szProcessName, sizeof(GuiData->szProcessName) / sizeof(WCHAR));
   CloseHandle(hProcess);
+
+  //DPRINT1("szProcessName3 : %S\n",szProcessName);
 
   if (!fLength)
     {
@@ -1917,8 +1920,7 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
       Title = L"";
     }
 
-  /* FIXME: deadlock */
-  //SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM) Title);
+  SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM) Title);
 
   if (NULL != Buffer)
     {
@@ -2008,26 +2010,26 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
     GuiData = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
                         sizeof(GUI_CONSOLE_DATA));
     if (!GuiData)
-	  {
+      {
         DPRINT1("Win32Csr: Failed to create GUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
       }
 
     Console->PrivateData = (PVOID) GuiData;
     /*
-	 * we need to wait untill the GUI has been fully initialized
-	 * to retrieve custom settings i.e. WindowSize etc..
-	 * Ideally we could use SendNotifyMessage for this but its not
-	 * yet implemented.
-	 *
-	 */
+     * we need to wait untill the GUI has been fully initialized
+     * to retrieve custom settings i.e. WindowSize etc..
+     * Ideally we could use SendNotifyMessage for this but its not
+     * yet implemented.
+     *
+     */
     GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     /* create console */
     PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
 
     /* wait untill initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
-	DPRINT1("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
+    DPRINT1("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
     CloseHandle(GuiData->hGuiInitEvent);
     GuiData->hGuiInitEvent = NULL;
 

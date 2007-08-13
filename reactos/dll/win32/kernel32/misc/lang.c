@@ -125,8 +125,11 @@ EnumCalendarInfoW(
     return 0;
 }
 
-/*
- * @unimplemented
+/**************************************************************************
+ *              EnumDateFormatsExA    (KERNEL32.@)
+ *
+ * FIXME: MSDN mentions only LOCALE_USE_CP_ACP, should we handle
+ * LOCALE_NOUSEROVERRIDE here as well?
  */
 BOOL
 STDCALL
@@ -135,13 +138,64 @@ EnumDateFormatsExA(
     LCID                Locale,
     DWORD               dwFlags)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CALID cal_id;
+    char szBuf[256];
+
+    if (!lpDateFmtEnumProcEx)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!GetLocaleInfoW(Locale,
+                        LOCALE_ICALENDARTYPE|LOCALE_RETURN_NUMBER,
+                        (LPWSTR)&cal_id,
+                        sizeof(cal_id)/sizeof(WCHAR)))
+    {
+        return FALSE;
+    }
+
+    switch (dwFlags & ~LOCALE_USE_CP_ACP)
+    {
+        case 0:
+        case DATE_SHORTDATE:
+            if (GetLocaleInfoA(Locale,
+                LOCALE_SSHORTDATE | (dwFlags & LOCALE_USE_CP_ACP),
+                szBuf, 256))
+            {
+                lpDateFmtEnumProcEx(szBuf, cal_id);
+            }
+            break;
+
+        case DATE_LONGDATE:
+            if (GetLocaleInfoA(Locale,
+                LOCALE_SLONGDATE | (dwFlags & LOCALE_USE_CP_ACP),
+                szBuf, 256))
+            {
+                lpDateFmtEnumProcEx(szBuf, cal_id);
+            }
+            break;
+
+        case DATE_YEARMONTH:
+            if (GetLocaleInfoA(Locale,
+                LOCALE_SYEARMONTH | (dwFlags & LOCALE_USE_CP_ACP),
+                szBuf, 256))
+            {
+                lpDateFmtEnumProcEx(szBuf, cal_id);
+            }
+            break;
+
+        default:
+            // FIXME: Unknown date format
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+    return TRUE;
 }
 
 
-/*
- * @unimplemented
+/**************************************************************************
+ *              EnumDateFormatsExW    (KERNEL32.@)
  */
 BOOL
 STDCALL
@@ -150,8 +204,62 @@ EnumDateFormatsExW(
     LCID                Locale,
     DWORD               dwFlags)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CALID cal_id;
+    WCHAR wbuf[256]; // FIXME
+
+    if (!lpDateFmtEnumProcEx)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!GetLocaleInfoW(Locale,
+                        LOCALE_ICALENDARTYPE | LOCALE_RETURN_NUMBER,
+                        (LPWSTR)&cal_id,
+                        sizeof(cal_id)/sizeof(WCHAR)))
+    {
+        return FALSE;
+    }
+
+    switch (dwFlags & ~LOCALE_USE_CP_ACP)
+    {
+        case 0:
+        case DATE_SHORTDATE:
+            if (GetLocaleInfoW(Locale,
+                               LOCALE_SSHORTDATE | (dwFlags & LOCALE_USE_CP_ACP),
+                               wbuf,
+                               256))
+            {
+                lpDateFmtEnumProcEx(wbuf, cal_id);
+            }
+            break;
+
+        case DATE_LONGDATE:
+            if (GetLocaleInfoW(Locale,
+                               LOCALE_SLONGDATE | (dwFlags & LOCALE_USE_CP_ACP),
+                               wbuf,
+                               256))
+            {
+                lpDateFmtEnumProcEx(wbuf, cal_id);
+            }
+            break;
+
+        case DATE_YEARMONTH:
+            if (GetLocaleInfoW(Locale,
+                               LOCALE_SYEARMONTH | (dwFlags & LOCALE_USE_CP_ACP),
+                               wbuf,
+                               256))
+            {
+                lpDateFmtEnumProcEx(wbuf, cal_id);
+            }
+            break;
+
+        default:
+            // FIXME: Unknown date format
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+    return TRUE;
 }
 
 
@@ -1190,8 +1298,20 @@ GetUserGeoID(
 }
 
 
-/*
- * @unimplemented
+/******************************************************************************
+ *           IsValidLanguageGroup
+ *
+ * Determine if a language group is supported and/or installed.
+ *
+ * PARAMS
+ *  LanguageGroup [I] Language Group Id (LGRPID_ values from "winnls.h")
+ *  dwFlags [I] LGRPID_SUPPORTED=Supported, LGRPID_INSTALLED=Installed
+ *
+ * RETURNS
+ *  TRUE, if lgrpid is supported and/or installed, according to dwFlags.
+ *  FALSE otherwise.
+ *
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1199,8 +1319,85 @@ IsValidLanguageGroup(
     LGRPID  LanguageGroup,
     DWORD   dwFlags)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    static const WCHAR szFormat[] = { '%','x','\0' };
+    UNICODE_STRING szNlsKeyName = 
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls");
+    UNICODE_STRING szLangGroupsKeyName = 
+        RTL_CONSTANT_STRING(L"Language Groups");
+    const int MAX_VALUE_NAME = 16;
+    const int MAX_VALUE_SYMB = 128;
+
+    BOOL bNtQuery;
+    PKEY_VALUE_PARTIAL_INFORMATION kvpiInfo;
+
+    WCHAR szValueName[MAX_VALUE_NAME];
+    UNICODE_STRING ucsValueName;
+    DWORD dwRetSize;
+    PWSTR pwszValueData;
+
+    DWORD dwSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_VALUE_SYMB * sizeof(WCHAR);
+
+    OBJECT_ATTRIBUTES oaAttr;
+    HANDLE hkey, hRootKey;
+    BOOL bSupported = FALSE, bInstalled = FALSE;
+
+    DPRINT("IsValidLanguageGroup() called\n");
+
+    kvpiInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+			                  HEAP_ZERO_MEMORY,
+			                  dwSize);
+
+    switch (dwFlags)
+    {
+        case LGRPID_INSTALLED:
+        case LGRPID_SUPPORTED:
+
+            InitializeObjectAttributes(&oaAttr, &szNlsKeyName, 0, 0, NULL);
+            if(NtOpenKey(&hRootKey, KEY_ALL_ACCESS, &oaAttr) != STATUS_SUCCESS) return FALSE;
+
+            InitializeObjectAttributes(&oaAttr, &szLangGroupsKeyName, 0, hRootKey, NULL);
+            if(NtOpenKey(&hkey, KEY_ALL_ACCESS, &oaAttr) != STATUS_SUCCESS) return FALSE;
+
+            if(hRootKey) NtClose(hRootKey);
+
+            swprintf(szValueName, szFormat, (ULONG)LanguageGroup);
+            RtlInitUnicodeString(&ucsValueName, szValueName);
+
+            bNtQuery = NtQueryValueKey(hkey,
+                                       &ucsValueName,
+                                       KeyValuePartialInformation,
+                                       kvpiInfo,
+                                       dwSize,
+                                       &dwRetSize);
+            if(hkey) NtClose(hkey);
+
+            if(bNtQuery == STATUS_SUCCESS &&
+               kvpiInfo->DataLength == sizeof(DWORD))
+            {
+                pwszValueData = (PWSTR)&kvpiInfo->Data[0];
+                bSupported = TRUE;
+                if(pwszValueData[0] == L'1') bInstalled = TRUE;
+            }
+            else
+            {
+                DPRINT("NtQueryValueKey() failed (Status %lx)\n", bNtQuery);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, kvpiInfo);
+                return FALSE;
+            }
+
+        break;
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, kvpiInfo);
+
+    if((dwFlags == LGRPID_SUPPORTED && bSupported) ||
+       (dwFlags == LGRPID_INSTALLED && bInstalled))
+    {
+        DPRINT("Language group is supported and installed\n");
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 
@@ -1307,8 +1504,7 @@ IsValidLocale(LCID Locale,
     }
 
   ValueData = (PWSTR)&KeyInfo->Data[0];
-  if ((dwFlags & LCID_INSTALLED) &&
-      (KeyInfo->Type == REG_SZ) &&
+  if ((KeyInfo->Type == REG_SZ) &&
       (KeyInfo->DataLength == 2 * sizeof(WCHAR)) &&
       (ValueData[0] == L'1'))
     {
@@ -1650,4 +1846,6 @@ VerLanguageNameW (
 {
     return GetLocaleInfoW( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
 }
+
+
 

@@ -1,0 +1,12 @@
+/* $Id: bg-US.rc 26288 28.VI.2007 $ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "Слагане на РеактОС"
+    IDS_TEXT     "Не можете направо да сложите РеактОС от този компактен диск!\n\nПрезапуснете компютъра си с този КД, за да сложите РеактОС."
+END
+
+/* EOF */

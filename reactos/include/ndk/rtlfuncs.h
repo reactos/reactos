@@ -576,7 +576,7 @@ RtlReAllocateHeap(
     HANDLE Heap,
     ULONG Flags,
     PVOID Ptr,
-    ULONG Size
+    SIZE_T Size
 );
 
 NTSYSAPI
@@ -660,7 +660,7 @@ RtlAddAccessAllowedAceEx(
     IN OUT PACL pAcl,
     IN ULONG dwAceRevision,
     IN ULONG AceFlags,
-    IN ULONG AccessMask,
+    IN ACCESS_MASK AccessMask,
     IN PSID pSid
 );
 
@@ -671,7 +671,7 @@ RtlAddAccessAllowedObjectAce(
     IN OUT PACL pAcl,
     IN ULONG dwAceRevision,
     IN ULONG AceFlags,
-    IN ULONG AccessMask,
+    IN ACCESS_MASK AccessMask,
     IN GUID *ObjectTypeGuid  OPTIONAL,
     IN GUID *InheritedObjectTypeGuid  OPTIONAL,
     IN PSID pSid
@@ -705,7 +705,7 @@ RtlAddAccessDeniedObjectAce(
     IN OUT PACL pAcl,
     IN ULONG dwAceRevision,
     IN ULONG AceFlags,
-    IN ULONG AccessMask,
+    IN ACCESS_MASK AccessMask,
     IN GUID *ObjectTypeGuid  OPTIONAL,
     IN GUID *InheritedObjectTypeGuid  OPTIONAL,
     IN PSID pSid

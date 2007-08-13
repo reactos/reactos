@@ -313,7 +313,7 @@ NTSTATUS
 NTAPI
 DbgLoadImageSymbols(IN PANSI_STRING Name,
                     IN PVOID Base,
-                    IN ULONG ProcessId)
+                    IN ULONG_PTR ProcessId)
 {
     PIMAGE_NT_HEADERS NtHeader;
     KD_SYMBOLS_INFO SymbolInfo;

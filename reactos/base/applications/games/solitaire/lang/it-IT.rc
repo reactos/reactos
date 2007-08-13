@@ -22,8 +22,8 @@ BEGIN
     AUTORADIOBUTTON "Girane &Una", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Girane &Tre", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Visualizza il tempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
-    AUTOCHECKBOX    "&Barra di stato", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Visualizza il tempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "&Barra di stato", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP | WS_DISABLED
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Annulla", IDCANCEL, 101, 97, 50, 14
@@ -49,7 +49,7 @@ BEGIN
     BEGIN
         MENUITEM "&Dai carte\tF2",                    IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Maz&zo...",                         IDM_GAME_DECK
+        MENUITEM "Maz&zo...",                         IDM_GAME_DECK, GRAYED
         MENUITEM "O&pzioni...",                       IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Esci",                             IDM_GAME_EXIT

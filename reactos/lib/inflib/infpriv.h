@@ -88,8 +88,8 @@ extern PINFCACHESECTION InfpFindSection(PINFCACHE Cache,
                                         PCTSTR Section);
 
 extern INFSTATUS InfpBuildFileBuffer(PINFCACHE InfHandle,
-                                     char **Buffer,
-                                     unsigned long *BufferSize);
+                                     PCHAR *Buffer,
+                                     PULONG BufferSize);
 
 extern INFSTATUS InfpFindFirstLine(PINFCACHE InfHandle,
                                    PCTSTR Section,

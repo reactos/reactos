@@ -132,6 +132,11 @@ int FASTCALL
 IntGdiGetClipBox(HDC    hDC,
 			     LPRECT rc);
 
+INT
+STDCALL
+IntGdiSelectVisRgn(HDC hdc,
+                     HRGN hrgn);
+
 HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
 void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn);
 INT FASTCALL UnsafeIntGetRgnBox(PROSRGNDATA Rgn, LPRECT pRect);

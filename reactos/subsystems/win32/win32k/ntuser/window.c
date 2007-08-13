@@ -4376,7 +4376,7 @@ NtUserSetWindowRgn(
    RETURN( (INT)hRgn);
 
 CLEANUP:
-   DPRINT("Leave NtUserSystemParametersInfo, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserSetWindowRgn, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

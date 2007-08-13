@@ -19,7 +19,7 @@ TCHAR szAppName[128];
 TCHAR MsgQuit[128];
 TCHAR MsgAbout[128];
 TCHAR MsgWin[128];
-INT nOptions = 8;
+DWORD dwOptions = 8;
 
 CardWindow SolWnd;
 
@@ -28,10 +28,64 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
 void MakePath(TCHAR *szDest, UINT nDestLen, const TCHAR *szExt)
 {
     TCHAR *ptr;
-    
+
     ptr = szDest + GetModuleFileName(GetModuleHandle(0), szDest, nDestLen) - 1;
     while(*ptr-- != '.');
     lstrcpy(ptr + 1, szExt);
+}
+
+VOID LoadSettings(VOID)
+{
+    DWORD dwDisposition;
+    DWORD dwSize;
+    HKEY hKey;
+
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                       _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Solitaire"),
+                       0,
+                       NULL,
+                       REG_OPTION_NON_VOLATILE,
+                       KEY_READ,
+                       NULL,
+                       &hKey,
+                       &dwDisposition))
+        return;
+
+    dwSize = sizeof(DWORD);
+    RegQueryValueEx(hKey,
+                    _T("Options"),
+                    NULL,
+                    NULL,
+                    (LPBYTE)&dwOptions,
+                    &dwSize);
+
+    RegCloseKey(hKey);
+}
+
+VOID SaveSettings(VOID)
+{
+    DWORD dwDisposition;
+    HKEY hKey;
+
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                       _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Solitaire"),
+                       0,
+                       NULL,
+                       REG_OPTION_NON_VOLATILE,
+                       KEY_WRITE,
+                       NULL,
+                       &hKey,
+                       &dwDisposition))
+        return;
+
+    RegSetValueEx(hKey,
+                  _T("Options"),
+                  0,
+                  REG_DWORD,
+                  (CONST BYTE *)&dwOptions,
+                  sizeof(DWORD));
+
+    RegCloseKey(hKey);
 }
 
 //
@@ -76,11 +130,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
 
 //    InitCardLib();
 
-//    LoadSettings();
+    LoadSettings();
 
     //Construct the path to our help file
     MakePath(szHelpPath, MAX_PATH, _T(".hlp"));
-    
+
     hwnd = CreateWindow(szAppName,        // window class name
                 szAppName,                // window caption
                 WS_OVERLAPPEDWINDOW
@@ -110,15 +164,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
         }
     }
 
-//    SaveSettings();
+    SaveSettings();
 
     return msg.wParam;
 }
 
-VOID LoadSettings(VOID)
-{
-
-}
 
 BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -126,7 +176,7 @@ BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_INITDIALOG:
         CheckRadioButton(hDlg, IDC_OPT_DRAWONE, IDC_OPT_DRAWTHREE,
-                         (nOptions & OPTION_THREE_CARDS) ? IDC_OPT_DRAWTHREE : IDC_OPT_DRAWONE);
+                         (dwOptions & OPTION_THREE_CARDS) ? IDC_OPT_DRAWTHREE : IDC_OPT_DRAWONE);
 
         return TRUE;
 
@@ -134,9 +184,9 @@ BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         switch(LOWORD(wParam))
         {
         case IDOK:
-            nOptions &= ~OPTION_THREE_CARDS;
+            dwOptions &= ~OPTION_THREE_CARDS;
             if (IsDlgButtonChecked(hDlg, IDC_OPT_DRAWTHREE) == BST_CHECKED)
-                nOptions |= OPTION_THREE_CARDS;
+                dwOptions |= OPTION_THREE_CARDS;
 
             EndDialog(hDlg, TRUE);
             return TRUE;
@@ -152,13 +202,13 @@ BOOL CALLBACK OptionsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 VOID ShowGameOptionsDlg(HWND hwnd)
 {
-   INT nOldOptions = nOptions;
+    DWORD dwOldOptions = dwOptions;
 
-   if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc))
-   {
-      if ((nOldOptions & OPTION_THREE_CARDS) != (nOptions & OPTION_THREE_CARDS))
-          NewGame();
-   }
+    if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hwnd, OptionsDlgProc))
+    {
+        if ((dwOldOptions & OPTION_THREE_CARDS) != (dwOptions & OPTION_THREE_CARDS))
+            NewGame();
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -214,7 +264,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_COMMAND:
-    
         switch(LOWORD(wParam))
         {
         case IDM_GAME_NEW:
@@ -246,9 +295,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_CLOSE:
-        
         ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
-
         if(ret == IDOK)
         {
             WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);

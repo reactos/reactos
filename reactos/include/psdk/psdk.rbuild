@@ -3,6 +3,7 @@
 	<file>oaidl.idl</file>
 	<file>objidl.idl</file>
 	<file>objsafe.idl</file>
+	<file>ocidl.idl</file>
 	<file>ocmm.idl</file>
 	<file>oledb.idl</file>
 	<file>oleidl.idl</file>

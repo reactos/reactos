@@ -99,11 +99,11 @@ _mingw32_init_fmode (void)
 
 /* This function will be called when a trap occurs. Thanks to Jacob
    Navia for his contribution. */
-static CALLBACK long
+static LONG CALLBACK
 _gnu_exception_handler (EXCEPTION_POINTERS * exception_data)
 {
   void (*old_handler) (int);
-  long action = EXCEPTION_CONTINUE_SEARCH;
+  LONG action = EXCEPTION_CONTINUE_SEARCH;
   int reset_fpu = 0;
 
   switch (exception_data->ExceptionRecord->ExceptionCode)

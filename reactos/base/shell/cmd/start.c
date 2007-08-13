@@ -97,7 +97,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		return 1;
 	}
 	SetLastError(0);
-	size = GetEnvironmentVariable (_T("COMSPEC"), comspec, 512);
+	size = GetEnvironmentVariable (_T("COMSPEC"), comspec, MAX_PATH);
 	if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
 	{
 		RestWithoutArgs[0] = _T('c');
@@ -127,7 +127,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		_tcscat(RestWithoutArgs,_T("\""));
 	}
 
-	rest = malloc ( _tcslen(RestWithoutArgs) + 1 * sizeof(TCHAR)); 
+	rest = malloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
 	 if(comspec != NULL)
@@ -136,7 +136,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	 return 1;
 	}
 
-	param =malloc ( _tcslen(RestWithoutArgs) + 1 * sizeof(TCHAR)); 
+	param =malloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
 	 if(comspec != NULL)

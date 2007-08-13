@@ -399,7 +399,7 @@ void ShellDirectory::read_directory(int scan_flags)
 						attribs |= SFGAO_HASSUBFOLDER;
 						removeable = true;
 					} else if (!(scan_flags & SCAN_DONT_ACCESS)) {
-						DWORD attribs2 = SFGAO_READONLY;
+						SFGAOF attribs2 = SFGAO_READONLY;
 
 						HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs2);
 

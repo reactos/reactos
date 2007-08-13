@@ -88,7 +88,7 @@ static void SidToUserName(PSID Sid, LPTSTR szBuffer, DWORD BufferSize)
 
 void PerfDataRefresh(void)
 {
-    ULONG                            ulSize;
+    SIZE_T                            ulSize;
     NTSTATUS                          status;
     LPBYTE                            pBuffer;
     ULONG                            BufferSize;

@@ -153,7 +153,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     UINT i, k;
     PMIB_IPNETTABLE pIpNetTable = NULL;
     PMIB_IPADDRTABLE pIpAddrTable = NULL;
-    DWORD Size = 0;
+    ULONG Size = 0;
     struct in_addr inaddr, inaddr2;
     PTCHAR pszIpAddr;
     TCHAR szIntIpAddr[20];
@@ -413,7 +413,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
     PMIB_IPNETROW pDelHost = NULL;
     PMIB_IPNETTABLE pIpNetTable = NULL;
-    DWORD Size = 0;
+    ULONG Size = 0;
     DWORD dwIpAddr = 0;
     INT iRet;
     BOOL bFlushTable = FALSE;

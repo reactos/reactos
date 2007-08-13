@@ -407,6 +407,26 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
          RETURN( (DWORD)UserGetKeyboardLayout(Param));
+
+      case ONEPARAM_ROUTINE_REGISTERUSERMODULE:
+      {
+          PW32THREADINFO ti;
+
+          ti = GetW32ThreadInfo();
+          if (ti == NULL)
+          {
+              DPRINT1("Cannot register user32 module instance!\n");
+              SetLastWin32Error(ERROR_INVALID_PARAMETER);
+              RETURN(FALSE);
+          }
+
+          if (InterlockedCompareExchangePointer(&ti->kpi->hModUser,
+                                                (HINSTANCE)Param,
+                                                NULL) == NULL)
+          {
+              RETURN(TRUE);
+          }
+      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
@@ -919,6 +939,7 @@ IntSystemParametersInfo(
    static BOOL GradientCaptions = TRUE;
    static UINT FocusBorderHeight = 1;
    static UINT FocusBorderWidth = 1;
+   static ANIMATIONINFO anim;
 
    if (!bInitialized)
    {
@@ -1383,6 +1404,18 @@ IntSystemParametersInfo(
             ASSERT(pvParam);
             *((NONCLIENTMETRICSW*)pvParam) = pMetrics;
             break;
+         }
+      case SPI_GETANIMATION:
+         {
+            ASSERT(pvParam);
+            *(( ANIMATIONINFO*)pvParam) = anim;
+            break;
+         }
+      case SPI_SETANIMATION:
+         {
+            ASSERT(pvParam);
+            anim = *((ANIMATIONINFO*)pvParam);
+            bChanged = TRUE;
          }
       case SPI_SETNONCLIENTMETRICS:
          {

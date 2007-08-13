@@ -611,15 +611,15 @@ done:
  *
  * @implemented
  */
-DWORD NTAPI RtlGetFullPathName_U(
+ULONG NTAPI RtlGetFullPathName_U(
    const WCHAR* name,
    ULONG size,
    WCHAR* buffer,
    WCHAR** file_part)
 {
     WCHAR*      ptr;
-    DWORD       dosdev;
-    DWORD       reqsize;
+    ULONG       dosdev;
+    ULONG       reqsize;
 
     DPRINT("RtlGetFullPathName_U(%S %lu %p %p)\n", name, size, buffer, file_part);
 

@@ -2633,6 +2633,15 @@ NtGdiOffsetRgn(
 W32KAPI
 INT
 APIENTRY
+NtGdiGetRandomRgn(
+    IN HDC hDC, 
+    OUT HRGN hDest,
+    IN INT iCode
+);
+
+W32KAPI
+INT
+APIENTRY
 NtGdiGetRgnBox(
     IN HRGN hrgn,
     OUT LPRECT prcOut

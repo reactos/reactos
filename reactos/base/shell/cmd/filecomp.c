@@ -473,7 +473,8 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	_tcscpy(szSuffix,&strIN[SBreak]);	
   strIN[PBreak] = _T('\0');
 	_tcscpy(szPrefix,strIN);
-	if(szPrefix[_tcslen(szPrefix) - 2] == _T('\"'))
+	if (szPrefix[_tcslen(szPrefix) - 2] == _T('\"') &&
+        szPrefix[_tcslen(szPrefix) - 1] != _T(' '))
 	{
 		/* need to remove the " right before a \ at the end to
 		   allow the next stuff to stay inside one set of quotes
@@ -604,21 +605,17 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	}
 	/* search for the files it might be */
 	hFile = FindFirstFile (szSearchPath, &file);
- 
+ 	if(hFile == INVALID_HANDLE_VALUE)
+	{
+		/* Assemble the orginal string and return */
+		_tcscpy(strOut,szOrginal);
+		return;
+	}
+
 	/* aseemble a list of all files names */
 	do
 	{
-		if(hFile == INVALID_HANDLE_VALUE)
-		{
-			/* Assemble the orginal string and return */
-			_tcscpy(strOut,szOrginal);
-			CloseHandle(hFile);
-			if(FileList != NULL) 
-				free(FileList);
-			return;
-		}
- 
-		if(!_tcscmp (file.cFileName, _T(".")) ||
+ 		if(!_tcscmp (file.cFileName, _T(".")) ||
 			!_tcscmp (file.cFileName, _T("..")))
 			continue;
 		
@@ -631,36 +628,28 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 		}
 
 		/* Add the file to the list of files */
-      if(FileList == NULL) 
-      {
-			FileListSize = 1;
-			FileList = malloc(FileListSize * sizeof(FileName));
-      }
-      else
-      {
-			FileListSize++;
-			FileList = realloc(FileList, FileListSize * sizeof(FileName));
-      }
+		FileList = realloc(FileList, ++FileListSize * sizeof(FileName));
  
 		if(FileList == NULL) 
 		{
 			/* Assemble the orginal string and return */
 			_tcscpy(strOut,szOrginal);
-			CloseHandle(hFile);
+			FindClose(hFile);
 			ConOutFormatMessage (GetLastError());
 			return;
 		}
 		/* Copies the file name into the struct */
 		_tcscpy(FileList[FileListSize-1].Name,file.cFileName);
  
-	}while(FindNextFile(hFile,&file));
+	} while(FindNextFile(hFile,&file));
+
+    FindClose(hFile);
 
 	/* Check the size of the list to see if we
 	   found any matches */
 	if(FileListSize == 0)
 	{
 		_tcscpy(strOut,szOrginal);
-		CloseHandle(hFile);
 		if(FileList != NULL) 
 			free(FileList);
 		return;
@@ -751,7 +740,6 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	_tcscpy(LastReturned,strOut);
 	EndLength = _tcslen(strOut);
 	DiffLength = EndLength - StartLength;
-	CloseHandle(hFile);
 	if(FileList != NULL) 
 		free(FileList);
 	

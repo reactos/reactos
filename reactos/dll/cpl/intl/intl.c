@@ -35,8 +35,8 @@
 
 #define NUM_APPLETS	(1)
 
-LONG APIENTRY
-Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+static LONG APIENTRY
+Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 
 HINSTANCE hApplet = 0;
@@ -126,8 +126,8 @@ LONG ParseSetupInf()
   return 0;
 }
 
-LONG APIENTRY
-Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+static LONG APIENTRY
+Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
   PROPSHEETPAGE psp[6];
   PROPSHEETHEADER psh;

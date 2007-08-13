@@ -1,6 +1,6 @@
 ========================
 ReactOS Version 0.3.x
-Updated November 30, 2006
+Updated July 28, 2007
 ========================
 
 1. What is ReactOS?
@@ -16,20 +16,18 @@ Website: http://www.reactos.org/
 2. Relationship with the WINE project
 -------------------------------------
 
-ReactOS has always planned to work with the WINE project to share as much
-programming effort as possible. This will mainly concern User Mode DLLs and
-will happen once ReactOS's Kernel Mode areas are more complete, as those areas
-form the underlying infrastructure. Other areas of cooperation lie in
+ReactOS has always intended to work with the WINE project to share as much
+programming effort as possible. This mainly concerns User Mode DLLs and
+still happens to a degree today. Other areas of cooperation lie in
 applications and testing suites.
 
 
 3. Future compatibility
 -----------------------
 
-The ReactOS project, although currently focused on Windows NT 4.0
+The ReactOS project, although currently focused on Windows XP
 compatibility, is always keeping an eye toward compatibility with
-Windows 2000 (NT 5.0), Windows XP (NT 5.1), Windows Vista and future
-Windows NT releases.
+Windows Vista and future Windows NT releases.
 
 
 4. Supporting other System Applications
@@ -38,7 +36,7 @@ Windows NT releases.
 The Windows NT architecture allows for subsystems, as does the ReactOS
 architecture. A subsystem is an implementation of the APIs of another
 operating system, allowing ReactOS to run applications from other systems. We
-are already looking at subsystems for: Java, OS/2 and DOS and possibly others
+are already looking at subsystems for: Java, OS/2, and DOS and possibly others
 in the future.
 
 

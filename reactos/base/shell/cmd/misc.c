@@ -142,7 +142,7 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
 			_tcscat(TempPath, _T("\\"));
 			_tcscat(OutPath, FindFileData.cFileName);
 			_tcscat(OutPath, _T("\\"));
-			CloseHandle(hFind);
+			FindClose(hFind);
 		}
 	}
 }

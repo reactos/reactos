@@ -3688,26 +3688,32 @@ NtGdiGetTextFaceW(
    return Count;
 }
 
+W32KAPI
 BOOL
-STDCALL
-NtGdiGetTextMetrics(HDC hDC,
-                    LPTEXTMETRICW tm)
+APIENTRY
+NtGdiGetTextMetricsW(
+    IN HDC hDC,
+    OUT TMW_INTERNAL * pUnsafeTmwi,
+    IN ULONG cj
+)
 {
   PDC dc;
   PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
   NTSTATUS Status = STATUS_SUCCESS;
-  TEXTMETRICW SafeTm;
+  TMW_INTERNAL tmwi;
   FT_Face Face;
   TT_OS2 *pOS2;
   TT_HoriHeader *pHori;
   ULONG Error;
 
-  if (NULL == tm)
+  if (NULL == pUnsafeTmwi)
   {
     SetLastWin32Error(STATUS_INVALID_PARAMETER);
     return FALSE;
   }
+
+  /* FIXME: check cj ? */
 
   if(!(dc = DC_LockDc(hDC)))
   {
@@ -3736,7 +3742,9 @@ NtGdiGetTextMetrics(HDC hDC,
 	}
       else
 	{
-          memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+          memcpy(&tmwi.TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+          /* FIXME: Fill Diff member */
+          RtlZeroMemory(&tmwi.Diff, sizeof(tmwi.Diff));
 
           Status = STATUS_SUCCESS;
           IntLockFreeType;
@@ -3757,10 +3765,24 @@ NtGdiGetTextMetrics(HDC hDC,
           IntUnLockFreeType;
 
           if (NT_SUCCESS(Status))
-            {
-              FillTM(&SafeTm, FontGDI->face, pOS2, pHori);
-              Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
-            }
+          {
+              FillTM(&tmwi.TextMetric, FontGDI->face, pOS2, pHori);
+
+              if (cj > sizeof(TMW_INTERNAL))
+                cj = sizeof(TMW_INTERNAL);
+
+              Status = STATUS_SUCCESS;
+              _SEH_TRY
+              {
+                  ProbeForWrite(pUnsafeTmwi, cj, 1);
+                  RtlCopyMemory(pUnsafeTmwi,&tmwi,cj);
+              }
+              _SEH_HANDLE
+              {
+                  Status = _SEH_GetExceptionCode();
+              }
+              _SEH_END
+          }
 	}
       TEXTOBJ_UnlockText(TextObj);
     }

@@ -31,14 +31,14 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "Gli sviluppatori di ReactOS desiderano citare i seguenti progetti Open Source, "\
                     "che sono stati usati (in tutto o in parte) per creare ReactOS:",
-                    IDC_STATIC,15,7,286,19
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
+                    IDC_STATIC,20,7,286,19
+    LISTBOX         IDC_PROJECTS,20,30,280,75,LBS_NOSEL | LBS_HASSTRINGS | 
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "ReactOS è soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo "\
                     "(in tutto o in parte) è necessario rispettare la GPL",
-                    IDC_STATIC,15,110,227,19
+                    IDC_STATIC,20,110,227,19
     PUSHBUTTON      "&Mostra la GPL...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "Selezionare Avanti per proseguire con la configurazione.",IDC_STATIC,15,136,
+    LTEXT           "Selezionare Avanti per proseguire con la configurazione.",IDC_STATIC,20,136,
                     195,17
 END
 
@@ -49,10 +49,10 @@ CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Scrivere il proprio nome completo e il nome della propria ditta o organizzazione.",
-          IDC_STATIC, 44, 7, 242, 21
-    LTEXT "No&me:", IDC_STATIC, 44, 37, 120, 8
+          IDC_STATIC, 20, 7, 242, 21
+    LTEXT "No&me:", IDC_STATIC, 20, 37, 120, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizzazione:", IDC_STATIC, 44, 57, 120, 8
+    LTEXT "&Organizzazione:", IDC_STATIC, 20, 57, 120, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -64,18 +64,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Scrivere un nome per il computer che sia lungo al massimo 63 caratteri.\n"\
           "Se si è in rete, il nome del computer deve essere univoco.",
-          IDC_STATIC, 44, 7, 250, 24
-    LTEXT "Nome del &computer:", IDC_STATIC, 44, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+          IDC_STATIC, 20, 7, 250, 24
+    LTEXT "Nome del &computer:", IDC_STATIC, 20, 38, 75, 8
+    EDITTEXT IDC_COMPUTERNAME, 140, 35, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     LTEXT "Questa procedura creerà su questo computer un account utente chiamato Administrator. "\
           "Si potrà usare questo account se si necessita l'accesso completo al computer.",
-          IDC_STATIC, 44, 57, 250, 25
+          IDC_STATIC, 20, 57, 250, 25
     LTEXT "Scrivere una password per Administrator che sia lunga al massimo 14 caratteri.",
-          IDC_STATIC, 44, 87, 250, 8
-    LTEXT "Password per &Administrator:", IDC_STATIC, 44, 104, 95, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfermare la password:", IDC_STATIC, 44, 123, 95, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+          IDC_STATIC, 20, 87, 250, 8
+    LTEXT "Password per &Administrator:", IDC_STATIC, 20, 105, 95, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 140, 100, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfermare la password:", IDC_STATIC, 20, 125, 95, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 140, 120, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
@@ -86,17 +86,17 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Le impostazioni linguistiche del sistema devono coincidere con la lingua degli applicativi "\
           "che si desidera usare. Le impostazioni linguistiche dell'utente stabiliscono come appaiono "\
-          "i numeri, i valori monetari e le date.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+          "i numeri, i valori monetari e le date.", IDC_STATIC, 20, 7, 253, 20
+    LTEXT "", IDC_LOCALETEXT, 20, 29, 250, 16
     LTEXT "Per cambiare le impostazioni linguistiche del sistema o dell'utente, selezionare Personalizza.",
-          IDC_STATIC, 53, 50, 184, 8
-    PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 245, 47, 50, 14
+          IDC_STATIC, 20, 50, 184, 16
+    PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 250, 50, 50, 16
     LTEXT "Il formato della tastiera stabilisce i caratteri che appaiono quando si preme un tasto.",
-          IDC_STATIC, 53, 86, 253, 8
-    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
+          IDC_STATIC, 20, 86, 253, 16
+    LTEXT "", IDC_LAYOUTTEXT, 20, 100, 250, 16
     LTEXT "Per cambiare il formato della tastiera, selezionare Personalizza.",
-          IDC_STATIC, 53, 106, 184, 8
-    PUSHBUTTON "P&ersonalizza...", IDC_CUSTOMLAYOUT, 245, 102, 50, 14
+          IDC_STATIC, 20, 110, 184, 16
+    PUSHBUTTON "P&ersonalizza...", IDC_CUSTOMLAYOUT, 250, 110, 50, 16
 END
 
 
@@ -105,16 +105,16 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Data e ora", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Data e ora", IDC_STATIC, 20, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
-            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
+            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 17, 137, 10
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
-            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Fuso orario", IDC_STATIC, 53, 42, 253, 8
-    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 10
+    LTEXT "Fuso orario", IDC_STATIC, 20, 42, 253, 8
+    COMBOBOX IDC_TIMEZONELIST, 20, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     AUTOCHECKBOX "Cambia automaticamente con l'ora &legale",
-                 IDC_AUTODAYLIGHT, 53, 124, 201, 10
+                 IDC_AUTODAYLIGHT, 20, 124, 201, 10
 END
 
 
@@ -123,10 +123,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
-    LTEXT "", IDC_ITEM, 53, 29, 253, 20
+    LTEXT "", IDC_ACTIVITY, 20, 7, 253, 20
+    LTEXT "", IDC_ITEM, 20, 29, 253, 20
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32",
-            PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 53, 70, 253, 8
+            PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 70, 253, 8
 END
 
 

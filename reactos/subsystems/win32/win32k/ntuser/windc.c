@@ -337,7 +337,7 @@ noparent:
    }
 
    Dce->DCXFlags &= ~DCX_DCEDIRTY;
-   NtGdiSelectVisRgn(Dce->hDC, hRgnVisible);
+   IntGdiSelectVisRgn(Dce->hDC, hRgnVisible);
 
    if (Window != NULL)
    {

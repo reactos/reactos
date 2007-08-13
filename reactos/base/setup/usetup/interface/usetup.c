@@ -146,7 +146,7 @@ DrawBox(
 	IN SHORT Height)
 {
 	COORD coPos;
-	ULONG Written;
+	DWORD Written;
 
 	/* draw upper left corner */
 	coPos.X = xLeft;
@@ -246,7 +246,7 @@ PopupError(PCHAR Text,
   SHORT yTop;
   SHORT xLeft;
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   ULONG Length;
   ULONG MaxLength;
   ULONG Lines;
@@ -599,7 +599,7 @@ SetupStartPage(PINPUT_RECORD Ir)
   INFCONTEXT Context;
   PWCHAR Value;
   UINT ErrorLine;
-  ULONG ReturnSize;
+  SIZE_T ReturnSize;
 
   CONSOLE_SetStatusText("   Please wait...");
 
@@ -1486,7 +1486,7 @@ DrawInputField(ULONG FieldLength,
 {
   CHAR buf[100];
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
 
   coPos.X = Left;
   coPos.Y = Top;
@@ -1516,7 +1516,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 {
   INPUT_RECORD Ir;
   COORD coPos;
-  ULONG Written;
+  DWORD Written;
   CHAR Buffer[100];
   ULONG Index;
   CHAR ch;

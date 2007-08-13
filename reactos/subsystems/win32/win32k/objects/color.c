@@ -129,61 +129,134 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
 
 HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
 {
-   int i, r, g, b;
-   struct {
-      WORD Version;
-      WORD NumberOfEntries;
-      PALETTEENTRY aEntries[256];
-   } Palette;
+    int i, r, g, b;
+    struct {
+        WORD Version;
+        WORD NumberOfEntries;
+        PALETTEENTRY aEntries[256];
+        } Palette;
 
-   Palette.Version = 0x300;
-   Palette.NumberOfEntries = 256;
-   if (NtGdiGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries) == 0)
-   {
-      return 0;
-   }
+    Palette.Version = 0x300;
+    Palette.NumberOfEntries = 256;
+    if (NtGdiGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries) == 0)
+    {
+        /* from wine, more that 256 color math */
+        Palette.NumberOfEntries = 20;
+        for (i = 0; i < Palette.NumberOfEntries; i++)
+        {
+            Palette.aEntries[i].peRed=0xff;
+            Palette.aEntries[i].peGreen=0xff;
+            Palette.aEntries[i].peBlue=0xff;
+            Palette.aEntries[i].peFlags=0x00;
+        }
 
-   for (r = 0; r < 6; r++)
-      for (g = 0; g < 6; g++)
-         for (b = 0; b < 6; b++)
-         {
-            i = r + g*6 + b*36 + 10;
-            Palette.aEntries[i].peRed = r * 51;
-            Palette.aEntries[i].peGreen = g * 51;
-            Palette.aEntries[i].peBlue = b * 51;
-         }
+        Palette.aEntries[0].peRed=0x00;
+        Palette.aEntries[0].peBlue=0x00;
+        Palette.aEntries[0].peGreen=0x00;
 
-   for (i = 216; i < 246; i++)
-   {
-      int v = (i - 216) << 3;
-      Palette.aEntries[i].peRed = v;
-      Palette.aEntries[i].peGreen = v;
-      Palette.aEntries[i].peBlue = v;
-   }
+        /* the first 6 */
+        for (i=1; i <= 6; i++)
+        {
+            Palette.aEntries[i].peRed=(i%2)?0x80:0;
+            Palette.aEntries[i].peGreen=(i==2)?0x80:(i==3)?0x80:(i==6)?0x80:0;
+            Palette.aEntries[i].peBlue=(i>3)?0x80:0;
+        }
+
+        for (i=7;  i <= 12; i++)
+        {
+            switch(i)
+            {
+                case 7:
+                    Palette.aEntries[i].peRed=0xc0;
+                    Palette.aEntries[i].peBlue=0xc0;
+                    Palette.aEntries[i].peGreen=0xc0;
+                    break;
+                case 8:
+                    Palette.aEntries[i].peRed=0xc0;
+                    Palette.aEntries[i].peGreen=0xdc;
+                    Palette.aEntries[i].peBlue=0xc0;
+                    break;
+                case 9:
+                    Palette.aEntries[i].peRed=0xa6;
+                    Palette.aEntries[i].peGreen=0xca;
+                    Palette.aEntries[i].peBlue=0xf0;
+                    break;
+                case 10:
+                    Palette.aEntries[i].peRed=0xff;
+                    Palette.aEntries[i].peGreen=0xfb;
+                    Palette.aEntries[i].peBlue=0xf0;
+                    break;
+                case 11:
+                    Palette.aEntries[i].peRed=0xa0;
+                    Palette.aEntries[i].peGreen=0xa0;
+                    Palette.aEntries[i].peBlue=0xa4;
+                    break;
+            case 12:
+                Palette.aEntries[i].peRed=0x80;
+                Palette.aEntries[i].peGreen=0x80;
+                Palette.aEntries[i].peBlue=0x80;
+            }
+        }
+
+        for (i=13; i <= 18; i++)
+        {
+            Palette.aEntries[i].peRed=(i%2)?0xff:0;
+            Palette.aEntries[i].peGreen=(i==14)?0xff:(i==15)?0xff:(i==18)?0xff:0;
+            Palette.aEntries[i].peBlue=(i>15)?0xff:0x00;
+        }
+    }
+    else
+    {
+        /* 256 color table */
+        for (r = 0; r < 6; r++)
+            for (g = 0; g < 6; g++)
+                for (b = 0; b < 6; b++)
+                {
+                    i = r + g*6 + b*36 + 10;
+                    Palette.aEntries[i].peRed = r * 51;
+                    Palette.aEntries[i].peGreen = g * 51;
+                    Palette.aEntries[i].peBlue = b * 51;
+                }
+
+        for (i = 216; i < 246; i++)
+        {
+            int v = (i - 216) << 3;
+            Palette.aEntries[i].peRed = v;
+            Palette.aEntries[i].peGreen = v;
+            Palette.aEntries[i].peBlue = v;
+        }
+    }
 
    return NtGdiCreatePalette((LOGPALETTE *)&Palette);
 }
 
 HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
 {
-  PPALGDI PalGDI;
+    PPALGDI PalGDI;
 
-  HPALETTE NewPalette = PALETTE_AllocPalette(
-	  PAL_INDEXED,
-	  palette->palNumEntries,
-	  (PULONG)palette->palPalEntry,
-	  0, 0, 0);
-	  
-  if (NewPalette == NULL)
-      return NULL;
+    HPALETTE NewPalette = PALETTE_AllocPalette(
+                                                PAL_INDEXED,
+                                                palette->palNumEntries,
+                                                (PULONG)palette->palPalEntry,
+                                                0, 0, 0);
 
-  PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
-  /* FIXME - Handle PalGDI == NULL!!!! */
+    if (NewPalette == NULL)
+    {
+        return NULL;
+    }
 
-  PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
-  PalGDI->logicalToSystem = NULL;
-
-  PALETTE_UnlockPalette(PalGDI);
+    PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
+    if (PalGDI != NULL)
+    {
+        PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
+        PalGDI->logicalToSystem = NULL;
+        PALETTE_UnlockPalette(PalGDI);
+    }
+    else
+    {
+        /* FIXME - Handle PalGDI == NULL!!!! */
+        DPRINT1("waring PalGDI is NULL \n");
+    }
 
   return NewPalette;
 }

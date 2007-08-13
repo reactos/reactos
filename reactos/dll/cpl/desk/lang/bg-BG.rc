@@ -1,4 +1,4 @@
-/* Bulgarian translation*/
+/* Bulgarian translation */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
@@ -13,10 +13,10 @@ BEGIN
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
     LTEXT           "Изберете изображение за украса на работната си площ:",
-                    IDC_STATIC, 8, 103, 180, 9
+                    IDC_STATIC, 8, 103, 230, 9
     PUSHBUTTON      "&Обзор...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
     PUSHBUTTON      "&Цвят...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "Разположение:", IDC_STATIC, 188, 138, 40, 9
+    LTEXT           "Разположение:", IDC_STATIC, 188, 138, 55, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
@@ -33,18 +33,18 @@ BEGIN
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "На&стройки",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "Пре&глед",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Изчакване",IDC_WAITTEXT, 12, 125, 18, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
+    LTEXT           "&Изчакване",IDC_WAITTEXT, 10, 125, 38, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 47, 123, 30, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "минути", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Искане на парола при връщане към работа.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 105, 120, 120, 19
-    GROUPBOX        "&Енергоспестяващи възможности на монитора ви", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+                    WS_BORDER | WS_GROUP, 66, 123, 12, 13
+    LTEXT           "минути", IDC_MINTEXT, 80, 125, 26, 9
+    CONTROL         "Искане на парола при изход.",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 126, 19
+    GROUPBOX        "&Енергоспестяващи възможности на монитора", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
                     IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "Захранване...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "Захранване...", IDC_SCREENS_POWER_BUTTON, 176, 171, 60, 13
 END
 
 
@@ -55,7 +55,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Цветови набор", IDC_STATIC, 7, 140, 64, 7
+    LTEXT           "Цветови набор", IDC_STATIC, 7, 140, 64, 9
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Още", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
 END
@@ -72,7 +72,7 @@ BEGIN
     LTEXT "Част:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Размер", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 23, 9
+    LTEXT "&Размер", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 35, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
@@ -85,7 +85,7 @@ BEGIN
     LTEXT "Шрифт:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Размер на шрифта:", IDC_ADVAPPEARANCE_FONTSIZE_T, 140, 190, 43, 10
+    LTEXT   "Размер на шрифта:", IDC_ADVAPPEARANCE_FONTSIZE_T, 100, 190, 75, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
     LTEXT   "Цвят:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
@@ -108,8 +108,8 @@ BEGIN
     GROUPBOX        "&Разделителна способност",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
-    LTEXT           "Малка",1815,9,130,15,8,NOT WS_GROUP
-    LTEXT           "Голяма",1816,93,130,21,8,NOT WS_GROUP
+    LTEXT           "Малка",1815,9,130,22,8,NOT WS_GROUP
+    LTEXT           "Голяма",1816,89,130,25,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Цветове",1817,125,120,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |

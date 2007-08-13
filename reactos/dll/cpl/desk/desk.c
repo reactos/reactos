@@ -13,7 +13,7 @@
 
 #define NUM_APPLETS	(1)
 
-LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+static LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 extern INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern INT_PTR CALLBACK ScreenSaverPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -47,8 +47,8 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 
 
 /* Display Applet */
-LONG APIENTRY
-DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+static LONG APIENTRY
+DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     PROPSHEETPAGE psp[4];
     PROPSHEETHEADER psh;

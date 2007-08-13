@@ -133,7 +133,7 @@ NTAPI
 RtlpFreeUserStack(IN HANDLE Process,
                   IN PINITIAL_TEB InitialTeb)
 {
-    ULONG Dummy = 0;
+    SIZE_T Dummy = 0;
     NTSTATUS Status;
 
     /* Free the Stack */
@@ -242,7 +242,7 @@ RtlFreeUserThreadStack(HANDLE ProcessHandle,
 {
     NTSTATUS Status;
     THREAD_BASIC_INFORMATION ThreadBasicInfo;
-    ULONG Dummy, Size = 0;
+    SIZE_T Dummy, Size = 0;
     PVOID StackLocation;
 
     /* Query the Basic Info */

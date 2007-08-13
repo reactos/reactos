@@ -30,6 +30,5 @@ FONT 8, "MS Shell Dlg"
 
 STRINGTABLE
 BEGIN
- 1001	"Programmet kräver en ActiveX-komponent som inte är tillgänglig.\n"
-	"Vill du ladda ner och installera Mozillas ActiveX-komponent?"
+ 1001	"Programmet kräver en ActiveX-komponent som inte är tillgänglig.\nVill du ladda ner och installera Mozillas ActiveX-komponent?"
 END

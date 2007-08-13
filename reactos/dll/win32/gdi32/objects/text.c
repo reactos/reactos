@@ -86,14 +86,14 @@ GetTextMetricsA(
 	LPTEXTMETRICA	lptm
 	)
 {
-  TEXTMETRICW tmw;
+  TMW_INTERNAL tmwi;
 
-  if (! NtGdiGetTextMetrics(hdc, &tmw))
-    {
-      return FALSE;
-    }
+  if (! NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
+  {
+    return FALSE;
+  }
 
-  return TextMetricW2A(lptm, &tmw);
+  return TextMetricW2A(lptm, &tmwi.TextMetric);
 }
 
 
@@ -107,7 +107,15 @@ GetTextMetricsW(
 	LPTEXTMETRICW	lptm
 	)
 {
-  return NtGdiGetTextMetrics(hdc, lptm);
+  TMW_INTERNAL tmwi;
+
+  if (! NtGdiGetTextMetricsW(hdc, &tmwi, sizeof(TMW_INTERNAL)))
+  {
+    return FALSE;
+  }
+
+  *lptm = tmwi.TextMetric;
+  return TRUE;
 }
 
 

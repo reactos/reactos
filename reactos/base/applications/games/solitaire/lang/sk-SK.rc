@@ -23,8 +23,8 @@ BEGIN
     AUTORADIOBUTTON "çahaù &jednu", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "çahaù &tri", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "»a&sov˝ limit", IDC_OPT_SHOWTIME, 7 ,51 ,64 ,10, WS_TABSTOP
-    AUTOCHECKBOX    "Stavov˝ riad&ok", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "»a&sov˝ limit", IDC_OPT_SHOWTIME, 7 ,51 ,64 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "Stavov˝ riad&ok", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP | WS_DISABLED
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Zruöiù", IDCANCEL, 101, 97, 50, 14
@@ -50,7 +50,7 @@ BEGIN
     BEGIN
         MENUITEM "&Rozdaù\tF2",                  IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&BalÌËek...",                  IDM_GAME_DECK
+        MENUITEM "&BalÌËek...",                  IDM_GAME_DECK, GRAYED
         MENUITEM "&Moûnosti...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "Sk&onËiù",                     IDM_GAME_EXIT

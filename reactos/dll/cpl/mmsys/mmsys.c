@@ -92,8 +92,8 @@ HardwareDlgProc(HWND hwndDlg,
 LONG APIENTRY
 MmSysApplet(HWND hwnd,
             UINT uMsg,
-            LONG wParam,
-            LONG lParam)
+            LPARAM wParam,
+            LPARAM lParam)
 {
     PROPSHEETPAGE psp[1];
     PROPSHEETHEADER psh = {0};

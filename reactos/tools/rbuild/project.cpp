@@ -109,6 +109,7 @@ Project::Project ( const Configuration& configuration,
 	  head (NULL),
 	  configuration (configuration)
 {
+	_backend = NULL;
 	ReadXml();
 }
 

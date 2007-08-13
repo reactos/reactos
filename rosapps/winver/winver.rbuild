@@ -1,4 +1,4 @@
-<module name="winver" type="win32gui" installbase="system32" installname="winver.exe" usewrc="false">
+<module name="winver" type="win32gui" installbase="system32" installname="winver.exe" >
 	<include base="winver">.</include>
 	<define name="__USE_W32API" />
 	<define name="UNICODE" />
