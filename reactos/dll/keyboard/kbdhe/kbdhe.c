@@ -144,11 +144,11 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '8',         NOCAPS, {'8', '*'} },
   { '9',         NOCAPS, {'9', '('} },
   { '0',         NOCAPS, {'0', ')'} },
-
+  { 'Q',         NOCAPS, {';', ':'} },
+ 
   /* Specials */
   /* Ctrl-_ generates GR */
   { VK_OEM_PLUS    ,NOCAPS, {'=', '+'} },
-  //{ VK_OEM_1       ,NOCAPS, {';', ':'} },
   { VK_OEM_7       ,NOCAPS, {'\'','\"'} },
   { VK_OEM_3       ,NOCAPS, {'`', '~'} },
   { VK_OEM_COMMA   ,NOCAPS, {',', '<'} },
@@ -199,7 +199,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { 'N',         CAPS,   {0x3BD, 0x39D}  },
   { 'O',         CAPS,   {0x3BF, 0x39F}  },
   { 'P',         CAPS,   {0x3C0, 0x3A0}  },
-  { 'Q',         CAPS,   { ';' ,  ';' }  },
+//  { 'Q',         CAPS,   { ';' ,  ';' }  },
   { 'R',         CAPS,   {0x3C1, 0x3A1}  },
   { 'S',         CAPS,   {0x3C3, 0x3A3}  },
   { 'T',         CAPS,   {0x3C4, 0x3A4}  },
@@ -386,4 +386,3 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
-

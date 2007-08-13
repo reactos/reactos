@@ -15,3 +15,4 @@
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
+#include "lang/el-GR.rc"

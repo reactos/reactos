@@ -582,7 +582,7 @@ rosglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
 	}
 
 	/* I think this is only possible within one ICD */
-	if (src->icd != src->icd)
+	if (src->icd != dst->icd)
 	{
 		DBGPRINT( "Error: src and dst GLRC use different ICDs!" );
 		SetLastError( ERROR_INVALID_HANDLE );

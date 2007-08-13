@@ -34,11 +34,6 @@ void MakePath(TCHAR *szDest, UINT nDestLen, const TCHAR *szExt)
     lstrcpy(ptr + 1, szExt);
 }
 
-int main ( int argc, char** argv )
-{
-    return WinMain ( NULL, NULL, NULL, SW_SHOW );
-}
-
 //
 //    Main entry point
 //
@@ -46,7 +41,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
 {
     HWND        hwnd;
     MSG            msg;
-    WNDCLASSEX    wndclass;
+    WNDCLASS    wndclass;
     INITCOMMONCONTROLSEX ice;
     HACCEL        hAccelTable;
 
@@ -60,7 +55,6 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
     LoadString(hInst, IDS_SOL_WIN, MsgWin, sizeof(MsgWin) / sizeof(MsgWin[0]));
 
     //Window class for the main application parent window
-    wndclass.cbSize            = sizeof(wndclass);
     wndclass.style            = 0;//CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc    = WndProc;
     wndclass.cbClsExtra        = 0;
@@ -71,9 +65,8 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, PSTR szCmdLine, int iCmdSh
     wndclass.hbrBackground    = (HBRUSH)NULL;
     wndclass.lpszMenuName    = MAKEINTRESOURCE(IDR_MENU1);
     wndclass.lpszClassName    = szAppName;
-    wndclass.hIconSm        = (HICON)LoadImage(hInst, MAKEINTRESOURCE(IDI_SOLITAIRE), IMAGE_ICON, 16, 16, 0);
 
-    RegisterClassEx(&wndclass);
+    RegisterClass(&wndclass);
 
     ice.dwSize = sizeof(ice);
     ice.dwICC = ICC_BAR_CLASSES;

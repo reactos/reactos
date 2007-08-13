@@ -509,23 +509,59 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     /* get the iconlocation */
     if (SUCCEEDED(hr) && (flags & SHGFI_ICONLOCATION ))
     {
-        UINT uDummy,uFlags;
-
-        hr = IShellFolder_GetUIObjectOf(psfParent, 0, 1,
-               (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconA,
-               &uDummy, (LPVOID*)&pei);
-        if (SUCCEEDED(hr))
+        if (!(flags & SHGFI_USEFILEATTRIBUTES))
         {
-            hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
-                    szLocation, MAX_PATH, &iIndex, &uFlags);
-            psfi->iIcon = iIndex;
+            UINT uDummy,uFlags;
 
-            if (!(uFlags & GIL_NOTFILENAME))
-                lstrcpyW (psfi->szDisplayName, szLocation);
+            hr = IShellFolder_GetUIObjectOf(psfParent, 0, 1,
+                   (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconA,
+                   &uDummy, (LPVOID*)&pei);
+            if (SUCCEEDED(hr))
+            {
+                hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
+                        szLocation, MAX_PATH, &iIndex, &uFlags);
+                psfi->iIcon = iIndex;
+
+                if (!(uFlags & GIL_NOTFILENAME))
+                    lstrcpyW (psfi->szDisplayName, szLocation);
+                else
+                    ret = FALSE;
+
+                IExtractIconA_Release(pei);
+            }
+        }
+        else
+        {
+            if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                strcpyW(psfi->szDisplayName, swShell32Name);
+                psfi->iIcon = SIC_GetIconIndex(swShell32Name, -IDI_SHELL_FOLDER, 0);
+            }
             else
-                ret = FALSE;
+            {
+                WCHAR sTemp [MAX_PATH];
+                WCHAR * szExt;
+                DWORD dwNr=0;
+                static const WCHAR p1W[] = {'%','1',0};
 
-            IExtractIconA_Release(pei);
+                lstrcpynW(sTemp, szFullPath, MAX_PATH);
+
+                psfi->iIcon = 0;
+                szExt = (LPWSTR) PathFindExtensionW(sTemp);
+                if ( szExt &&
+                     HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&
+                     HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &dwNr))
+                {
+                    if (!lstrcmpW(p1W,sTemp))            /* icon is in the file */
+                        strcpyW(psfi->szDisplayName, szFullPath);
+                    else
+                        strcpyW(psfi->szDisplayName, sTemp);
+
+                    psfi->iIcon = SIC_GetIconIndex(psfi->szDisplayName, dwNr, 0);
+                    if (psfi->iIcon == -1)
+                        psfi->iIcon = 0;
+                }
+            }
         }
     }
 
