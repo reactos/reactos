@@ -1,0 +1,43 @@
+<Project name="TechBot.Library" standardNamespace="TechBot.Library" description="" newfilesearch="None" enableviewstate="True" version="1.1" projecttype="C#">
+  <Contents>
+    <File name=".\AssemblyInfo.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\Default.build" subtype="Code" buildaction="Nothing" dependson="" data="" />
+    <File name=".\TechBotService.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ServiceOutput.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\IrcService.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ApiCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ICommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\HelpCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\NtStatusCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\NumberParser.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\HresultCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\WinerrorCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\ErrorCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\SvnCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\BugCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\WmCommand.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+    <File name=".\MessageContext.cs" subtype="Code" buildaction="Compile" dependson="" data="" />
+  </Contents>
+  <References>
+    <Reference type="Project" refto="CHMLibrary" localcopy="True" />
+    <Reference type="Project" refto="TechBot.IRCLibrary" localcopy="True" />
+  </References>
+  <DeploymentInformation target="" script="" strategy="File" />
+  <Configuration runwithwarnings="True" name="Debug">
+    <CodeGeneration runtime="MsNet" compiler="Csc" compilerversion="" warninglevel="4" nowarn="" includedebuginformation="True" optimize="False" unsafecodeallowed="False" generateoverflowchecks="True" mainclass="" target="Library" definesymbols="" generatexmldocumentation="False" win32Icon="" noconfig="False" nostdlib="False" />
+    <Execution commandlineparameters="" consolepause="False" />
+    <Output directory="..\bin\Debug" assembly="TechBot.Library" executeScript="" executeBeforeBuild="" executeAfterBuild="" executeBeforeBuildArguments="" executeAfterBuildArguments="" />
+  </Configuration>
+  <Configurations active="Debug">
+    <Configuration runwithwarnings="True" name="Debug">
+      <CodeGeneration runtime="MsNet" compiler="Csc" compilerversion="" warninglevel="4" nowarn="" includedebuginformation="True" optimize="False" unsafecodeallowed="False" generateoverflowchecks="True" mainclass="" target="Library" definesymbols="" generatexmldocumentation="False" win32Icon="" noconfig="False" nostdlib="False" />
+      <Execution commandlineparameters="" consolepause="False" />
+      <Output directory="..\bin\Debug" assembly="TechBot.Library" executeScript="" executeBeforeBuild="" executeAfterBuild="" executeBeforeBuildArguments="" executeAfterBuildArguments="" />
+    </Configuration>
+    <Configuration runwithwarnings="True" name="Release">
+      <CodeGeneration runtime="MsNet" compiler="Csc" compilerversion="" warninglevel="4" nowarn="" includedebuginformation="False" optimize="True" unsafecodeallowed="False" generateoverflowchecks="False" mainclass="" target="Library" definesymbols="" generatexmldocumentation="False" win32Icon="" noconfig="False" nostdlib="False" />
+      <Execution commandlineparameters="" consolepause="False" />
+      <Output directory="..\bin\Release" assembly="TechBot.Library" executeScript="" executeBeforeBuild="" executeAfterBuild="" executeBeforeBuildArguments="" executeAfterBuildArguments="" />
+    </Configuration>
+  </Configurations>
+</Project>

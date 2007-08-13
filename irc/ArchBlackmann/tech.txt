@@ -1,0 +1,73 @@
+What do you think I am, your personal tech support?
+You *know* a %stru% is non-re-entrant, right?
+The answer to that is so simple, I'm not going to waste my time telling you.
+Well, of course... if you're not below DISPATCH_LEVEL, ros is gonna explode on ya when you try to do that ( duh! ).
+I don't think that functionality has been implemented, yet.
+What do you mean it crashed? It can't crash there!
+Wow. That's a new one.
+Ask %dev%, I bet he knows.. he knows everything...
+When's the last time you rebuilt?
+Have you tried a make clean?
+Is it plugged in?
+Well it works on *my* system :P
+Well don't do that, and you won't have that problem.
+Didn't we already fix that?
+Well... I don't know.. I just have that code disabled in my tree.
+Try surrounding it with parenthesis.
+Don't you know going around dereferncing null pointers all day can be hazardous to your health?
+Well, duh!
+There's a bit in cr3 for problems like that.
+Just add a field to the %stru% to keep track of it!
+Don't worry about it... the garbage collector in %module% will clean it up for you.
+Did I do that?
+Didn't %dev% fix that already?
+Yes, I think I've seen that bug before... no... that was another program.
+I could tell you, but then I'd have to unlink() you.
+Well if you'd get some sleep, maybe you'd figure it out... not all of us can keep the hours %dev% can...
+You did what? Uh oh... that can't be good.
+Well... I could tell you, but the answer's pretty complicated. Why don't you wait to read about it in the book I'm writing.
+Yeah, that's happened to me, before, too. All you have to do is wrap it in an SEH block and forget about it.
+Just put a NULL dereference in there and commit it. It helps get bugs fixed fast! (Not that I would know)
+ASSERT is your friend!
+I dunno.. but I bet %dev% could find it for you.
+I hereby declare that code is perfect. Your problem must be elsewhere.
+I wrote that code... it must be perfect.
+$#@!$ One of these days I'm gonna throw %module% out the window!!! Sorry, what were you saying?
+maybe I broke it in my last commit. Maybe I did it on purpose...
+Have you tried debugging it? I got a can of Raid...
+Just delete it, it can't be that important ( You should see all the useless cruft I got rid of in %module% )
+Try queueing a work item...
+My %stru% fell in love with some %stru% in %module%, and %module% has been hell since...
+Maybe the PEB is getting corrupted. Try allocating a new PEB and overwriting the old one. That's what I did last time I had a bug like that.
+Hmm.. that seems to have been introduced by my last commit... I bet CVS mixed up the bits during the commit.
+It can't possibly be my fault, so I don't care.
+I'm not experiencing that problem, perhaps it's all in your mind.
+Well... like a good friend of mine said... "Don't Panic!"
+It just shows you how far ReactOS has come along! A %period% ago a bug like that wouldn't have even been possible!
+Just surround the code with an #if 0/#endif block, it solves all my problems!
+You know.. if %dev% would just finish %module% for us, we wouldn't be having this problem.
+I say we move on to the next function, since we can't seem to figure this one out.
+Well, sure, that would have been my first guess, too.... TEN YEARS AGO :p
+yup, that sounds like a problem.
+If I wanted to talk about VB, I'd go bug Alex...
+ask %dev%
+Thank you for that amazingly keen insight, Commander Obvious.
+Sorry, can't help you right now, trying to track down this bug %dev% caused in %module%
+I dont know about that, but I just fixed a problem in %module% for %dev%
+How should I know? I'm still trying to figure out this main() thing... ooh! wanna see what I did in %module%?
+lol!
+*wink*
+;)
+42
+It's gonna take me over %period% to fix all %dev%'s bugs in %module% :(
+How could %func% return %status%!? It bet %dev% broke it! I didn't touch it... honest!  no.. really! (me hides)
+It's fine if you get %status% there ... just ignore the destruction, and call %func% instead.
+%dev% said %status% isn't really an error in this context because we expect %module% to be toast by now
+heh, I'm still trying to figure out why %func% is returning %status% when I call it from %module%...
+%dev% said it's okay to ignore that as long as you're below %irql%
+erm, what do you mean?
+damn, I do that all the time
+if you want a reply that sounds right, I'd say that %func% support for that is vital to the future of %module%
+Sounds like you're having a problem with %func%. I hate that thing... don't talk to me about it.
+Just return %status% and forget about it. Someone else will fix it, later.
+Blah blah blah... sheesh... can't you figure out *anything*?

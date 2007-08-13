@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<project name="TechBot.Library" default="build">
+
+	<property name="output.dir" value="..\bin" />
+
+	<target name="build" description="Build component">
+		<mkdir dir="${output.dir}" />
+		<csc target="library"
+			output="${output.dir}\TechBot.Library.dll"
+			optimize="true"
+			debug="true"
+			doc="${output.dir}\TechBot.Library.xml"
+			warninglevel="0">
+			<sources>
+				<include name="*.cs" />
+			</sources>
+			<references>
+				<include name="${output.dir}\CHMLibrary.dll" />
+				<include name="${output.dir}\TechBot.IRCLibrary.dll" />
+			</references>
+		</csc>
+	</target>
+
+</project>

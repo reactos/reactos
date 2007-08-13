@@ -1,0 +1,16 @@
+<Combine fileversion="1.0" name="TechBot.Console" description="">
+  <StartMode startupentry="TechBot.Console" single="True">
+    <Execute entry="TechBot.Console" type="None" />
+  </StartMode>
+  <Entries>
+    <Entry filename=".\.\TechBot.Console.prjx" />
+  </Entries>
+  <Configurations active="Debug">
+    <Configuration name="Release">
+      <Entry name="TechBot.Console" configurationname="Debug" build="False" />
+    </Configuration>
+    <Configuration name="Debug">
+      <Entry name="TechBot.Console" configurationname="Debug" build="False" />
+    </Configuration>
+  </Configurations>
+</Combine>
