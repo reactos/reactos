@@ -37,6 +37,7 @@ StartTaskManager(
 	IN OUT PWLSESSION Session)
 {
 	LPVOID lpEnvironment;
+	BOOL ret;
 
 	if (!Session->Gina.Functions.WlxStartApplication)
 		return FALSE;
@@ -49,11 +50,14 @@ StartTaskManager(
 		return FALSE;
 	}
 
-	return Session->Gina.Functions.WlxStartApplication(
+	ret = Session->Gina.Functions.WlxStartApplication(
 		Session->Gina.Context,
 		L"Default",
 		lpEnvironment,
 		L"taskmgr.exe");
+
+	DestroyEnvironmentBlock(lpEnvironment);
+	return ret;
 }
 
 BOOL
@@ -167,26 +171,41 @@ static BOOL
 HandleLogon(
 	IN OUT PWLSESSION Session)
 {
-	PROFILEINFOW ProfileInfo = { 0, };
+	PROFILEINFOW ProfileInfo;
 	LPVOID lpEnvironment = NULL;
 	BOOLEAN Old;
+	BOOL ret = FALSE;
 
+	/* Loading personal settings */
+	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
+	ProfileInfo.hProfile = INVALID_HANDLE_VALUE;
 	if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
 	{
+		if (Session->Profile == NULL
+		 || (Session->Profile->dwType != WLX_PROFILE_TYPE_V1_0
+		  && Session->Profile->dwType != WLX_PROFILE_TYPE_V2_0))
+		{
+			ERR("WL: Wrong profile\n");
+			goto cleanup;
+		}
+
 		/* Load the user profile */
+		ZeroMemory(&ProfileInfo, sizeof(PROFILEINFOW));
 		ProfileInfo.dwSize = sizeof(PROFILEINFOW);
 		ProfileInfo.dwFlags = 0;
 		ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
-		ProfileInfo.lpProfilePath = Session->Profile.pszProfile;
-		ProfileInfo.lpDefaultPath = Session->Profile.pszNetworkDefaultUserProfile;
-		ProfileInfo.lpServerName = Session->Profile.pszServerName;
-		ProfileInfo.lpPolicyPath = Session->Profile.pszPolicy;
-		ProfileInfo.hProfile = NULL;
+		ProfileInfo.lpProfilePath = Session->Profile->pszProfile;
+		if (Session->Profile->dwType >= WLX_PROFILE_TYPE_V2_0)
+		{
+			ProfileInfo.lpDefaultPath = Session->Profile->pszNetworkDefaultUserProfile;
+			ProfileInfo.lpServerName = Session->Profile->pszServerName;
+			ProfileInfo.lpPolicyPath = Session->Profile->pszPolicy;
+		}
 
 		if (!LoadUserProfileW(Session->UserToken, &ProfileInfo))
 		{
 			ERR("WL: LoadUserProfileW() failed\n");
-			return FALSE;
+			goto cleanup;
 		}
 	}
 
@@ -196,16 +215,12 @@ HandleLogon(
 		Session->UserToken,
 		TRUE))
 	{
-		ERR("WL: CreateEnvironmentBlock() failed\n");
-		if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
-		{
-			UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
-			CloseHandle(Session->UserToken);
-			Session->UserToken = NULL;
-		}
-		return FALSE;
+		WARN("WL: CreateEnvironmentBlock() failed\n");
+		goto cleanup;
 	}
-	/* FIXME: use Session->Profile.pszEnvironment */
+	/* FIXME: Append variables of Session->Profile->pszEnvironment */
+
+	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
 	/* FIXME: UpdatePerUserSystemParameters(0, TRUE); */
 
 	/* Get privilege */
@@ -213,19 +228,11 @@ HandleLogon(
 	/* FIXME: reverting to lower privileges after creating user shell? */
 	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
 
-	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
-	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
-
 	/* Set default language */
 	if (!SetDefaultLanguage(TRUE))
 	{
-		if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
-		{
-			UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
-			CloseHandle(Session->UserToken);
-			Session->UserToken = NULL;
-		}
-		return FALSE;
+		WARN("WL: SetDefaultLanguage() failed\n");
+		goto cleanup;
 	}
 
 	if (!Session->Gina.Functions.WlxActivateUserShell(
@@ -234,34 +241,36 @@ HandleLogon(
 		NULL, /* FIXME */
 		lpEnvironment))
 	{
-		if (0 == (Session->Options & WLX_LOGON_OPT_NO_PROFILE))
-		{
-			UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
-			CloseHandle(Session->UserToken);
-			Session->UserToken = NULL;
-		}
-		return FALSE;
+		//WCHAR StatusMsg[256];
+		WARN("WL: WlxActivateUserShell() failed\n");
+		//LoadStringW(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, sizeof(StatusMsg));
+		//MessageBoxW(0, StatusMsg, NULL, MB_ICONERROR);
+		goto cleanup;
 	}
-	   /*if(!GinaInst->Functions->WlxActivateUserShell(GinaInst->Context,
-                                                   L"WinSta0\\Default",
-                                                   NULL,
-                                                   NULL))
-   {
-     LoadString(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, 256 * sizeof(WCHAR));
-     MessageBox(0, StatusMsg, NULL, MB_ICONERROR);
-     SetEvent(hShutdownEvent);
-   }
-
-   WaitForSingleObject(hShutdownEvent, INFINITE);
-   CloseHandle(hShutdownEvent);
-
-   RemoveStatusMessage(Session);
-   */
 
 	if (!InitializeScreenSaver(Session))
 		WARN("WL: Failed to initialize screen saver\n");
 
-	return TRUE;
+	Session->hProfileInfo = ProfileInfo.hProfile;
+	ret = TRUE;
+
+cleanup:
+	HeapFree(GetProcessHeap(), 0, Session->Profile);
+	Session->Profile = NULL;
+	if (!ret
+	 && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
+	{
+		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
+	}
+	if (lpEnvironment)
+		DestroyEnvironmentBlock(lpEnvironment);
+	RemoveStatusMessage(Session);
+	if (!ret)
+	{
+	    Session->UserToken = NULL;
+	    CloseHandle(Session->UserToken);
+    }
+	return ret;
 }
 
 #define EWX_ACTION_MASK 0xffffffeb
@@ -347,7 +356,7 @@ HandleLogoff(
 		return STATUS_UNSUCCESSFUL;
 	}
 
-	//UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
+	//UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
 	//CloseHandle(Session->UserToken);
 	//UpdatePerUserSystemParameters(0, FALSE);
 	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
@@ -562,7 +571,6 @@ DispatchSAS(
 			{
 				PSID LogonSid = NULL; /* FIXME */
 
-				ZeroMemory(&Session->Profile, sizeof(Session->Profile));
 				Session->Options = 0;
 
 				wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOutSAS(

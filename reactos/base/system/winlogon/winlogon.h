@@ -134,6 +134,7 @@ typedef struct _WLSESSION
   HDESK ScreenSaverDesktop;
   LUID LogonId;
   HANDLE UserToken;
+  HANDLE hProfileInfo;
   DWORD LogonStatus;
   DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
 
@@ -153,7 +154,7 @@ typedef struct _WLSESSION
   /* Logon informations */
   DWORD Options;
   WLX_MPR_NOTIFY_INFO MprNotifyInfo;
-  WLX_PROFILE_V2_0 Profile;
+  WLX_PROFILE_V2_0 *Profile;
 } WLSESSION, *PWLSESSION;
 
 extern HINSTANCE hAppInstance;
