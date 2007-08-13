@@ -450,10 +450,10 @@ DoLoginTasks(
 		goto cleanup;
 	}
 	*pgContext->pAuthenticationId = Stats.AuthenticationId; 
-	pgContext->pNprNotifyInfo->pszUserName = DuplicationString(UserName);
-	pgContext->pNprNotifyInfo->pszDomain = DuplicationString(Domain);
-	pgContext->pNprNotifyInfo->pszPassword = DuplicationString(Password);
-	pgContext->pNprNotifyInfo->pszOldPassword = NULL;
+	pgContext->pMprNotifyInfo->pszUserName = DuplicationString(UserName);
+	pgContext->pMprNotifyInfo->pszDomain = DuplicationString(Domain);
+	pgContext->pMprNotifyInfo->pszPassword = DuplicationString(Password);
+	pgContext->pMprNotifyInfo->pszOldPassword = NULL;
 	*pgContext->pdwOptions = 0;
 	*pgContext->pProfile = pProfile;
 	return TRUE;
@@ -600,7 +600,7 @@ WlxLoggedOutSAS(
 	IN OUT PSID pLogonSid,
 	OUT PDWORD pdwOptions,
 	OUT PHANDLE phToken,
-	OUT PWLX_MPR_NOTIFY_INFO pNprNotifyInfo,
+	OUT PWLX_MPR_NOTIFY_INFO pMprNotifyInfo,
 	OUT PVOID *pProfile)
 {
 	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
@@ -613,7 +613,7 @@ WlxLoggedOutSAS(
 
 	pgContext->pAuthenticationId = pAuthenticationId;
 	pgContext->pdwOptions = pdwOptions;
-	pgContext->pNprNotifyInfo = pNprNotifyInfo;
+	pgContext->pMprNotifyInfo = pMprNotifyInfo;
 	pgContext->pProfile = pProfile;
 
 	if (0 == GetSystemMetrics(SM_REMOTESESSION) &&

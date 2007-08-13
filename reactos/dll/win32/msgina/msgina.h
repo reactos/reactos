@@ -25,7 +25,7 @@ typedef struct
 	HANDLE UserToken;
 	PLUID pAuthenticationId;
 	PDWORD pdwOptions;
-	PWLX_MPR_NOTIFY_INFO pNprNotifyInfo;
+	PWLX_MPR_NOTIFY_INFO pMprNotifyInfo;
 	PVOID *pProfile;
 
 	/* Current logo to display */
