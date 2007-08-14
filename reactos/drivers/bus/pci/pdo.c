@@ -74,7 +74,7 @@ PdoQueryId(
 
   switch (IrpSp->Parameters.QueryId.IdType) {
     case BusQueryDeviceID:
-      Status = RtlDuplicateUnicodeString(
+      Status = PciDuplicateUnicodeString(
         RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->DeviceID,
         &String);
@@ -85,7 +85,7 @@ PdoQueryId(
       break;
 
     case BusQueryHardwareIDs:
-      Status = RtlDuplicateUnicodeString(
+      Status = PciDuplicateUnicodeString(
         RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->HardwareIDs,
         &String);
@@ -94,7 +94,7 @@ PdoQueryId(
       break;
 
     case BusQueryCompatibleIDs:
-      Status = RtlDuplicateUnicodeString(
+      Status = PciDuplicateUnicodeString(
         RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->CompatibleIDs,
         &String);
@@ -103,7 +103,7 @@ PdoQueryId(
       break;
 
     case BusQueryInstanceID:
-      Status = RtlDuplicateUnicodeString(
+      Status = PciDuplicateUnicodeString(
         RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->InstanceID,
         &String);

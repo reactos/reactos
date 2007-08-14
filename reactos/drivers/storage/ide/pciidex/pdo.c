@@ -111,7 +111,7 @@ PciIdeXPdoQueryId(
 			return STATUS_NOT_SUPPORTED;
 	}
 
-	Status = RtlDuplicateUnicodeString(
+	Status = DuplicateUnicodeString(
 		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
 		&SourceString,
 		&String);

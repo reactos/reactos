@@ -158,6 +158,12 @@ PciCreateDeviceLocationString(
   PUNICODE_STRING DeviceLocation,
   PPCI_DEVICE Device);
 
+NTSTATUS
+PciDuplicateUnicodeString(
+  IN ULONG Flags,
+  IN PCUNICODE_STRING SourceString,
+  OUT PUNICODE_STRING DestinationString);
+
 /* pdo.c */
 
 NTSTATUS
