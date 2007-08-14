@@ -28,6 +28,7 @@
 #include <services/services.h>
 #include "svcctl_c.h"
 #include "lsa_c.h"
+#include "eventlogrpc_c.h"
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS
@@ -35,6 +36,16 @@
 #ifndef HAS_FN_PROGRESSA
 #define FN_PROGRESSA FN_PROGRESS
 #endif
+
+/* rpc.c */
+
+RPC_STATUS EvtBindRpc(LPCWSTR pszMachine,
+                      RPC_BINDING_HANDLE* BindingHandle);
+RPC_STATUS EvtUnbindRpc(RPC_BINDING_HANDLE *BindingHandle);
+
+BOOL
+EvtGetLocalHandle(RPC_BINDING_HANDLE *BindingHandle);
+RPC_STATUS EvtUnbindLocalHandle(void);
 
 /* Interface to ntmarta.dll **************************************************/
 

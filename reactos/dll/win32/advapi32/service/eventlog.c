@@ -97,10 +97,30 @@ CloseEventLog (HANDLE hEventLog)
  * RETURNS STD
  */
 BOOL WINAPI
-DeregisterEventSource (HANDLE hEventLog)
+DeregisterEventSource(
+    IN HANDLE hEventLog)
 {
-  DPRINT1("(%p): stub\n",hEventLog);
-  return TRUE;
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    LOGHANDLE Handle = (LOGHANDLE)hEventLog;
+    NTSTATUS Status;
+
+    DPRINT("%p\n", hEventLog);
+
+    if (!EvtGetLocalHandle(&BindingHandle))
+    {
+        SetLastError(ERROR_GEN_FAILURE);
+        return FALSE;
+    }
+
+    Status = ElfrDeregisterEventSource(
+        BindingHandle,
+        &Handle);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+    return TRUE;
 }
 
 
@@ -291,12 +311,44 @@ RegisterEventSourceA (LPCSTR lpUNCServerName,
  *    Failure: NULL
  */
 HANDLE WINAPI
-RegisterEventSourceW (LPCWSTR lpUNCServerName,
-		      LPCWSTR lpSourceName)
+RegisterEventSourceW(
+    IN LPCWSTR lpUNCServerName,
+    IN LPCWSTR lpSourceName)
 {
-  DPRINT1("(%S, %S): stub\n",
-	  lpUNCServerName, lpSourceName);
-  return (HANDLE)1;
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    LOGHANDLE Handle;
+    NTSTATUS Status;
+
+    DPRINT("%S, %S\n", lpUNCServerName, lpSourceName);
+
+    if (lpUNCServerName != NULL)
+    {
+        DPRINT1("lpUNCServerName argument not supported\n");
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return NULL;
+    }
+
+    if (!EvtGetLocalHandle(&BindingHandle))
+    {
+        SetLastError(ERROR_GEN_FAILURE);
+        return NULL;
+    }
+
+    Status = ElfrRegisterEventSourceW(
+        BindingHandle,
+        (LPWSTR)lpUNCServerName,
+        (LPWSTR)lpSourceName,
+        L"",
+        0,
+        0,
+        &Handle);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return NULL;
+    }
+
+    return (HANDLE)Handle;
 }
 
 
@@ -413,6 +465,10 @@ ReportEventW (HANDLE hEventLog,
 
         case EVENTLOG_WARNING_TYPE:
             DPRINT1("Warning: %S\n", lpStrings[i]);
+            break;
+
+        case EVENTLOG_INFORMATION_TYPE:
+            DPRINT1("Info: %S\n", lpStrings[i]);
             break;
 
         default:

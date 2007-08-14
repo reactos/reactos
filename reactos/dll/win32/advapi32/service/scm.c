@@ -2163,16 +2163,4 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
     return TRUE;
 }
 
-
-void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
-}
-
-
-void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
-{
-    HeapFree(GetProcessHeap(), 0, ptr);
-}
-
 /* EOF */

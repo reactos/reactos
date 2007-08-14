@@ -899,7 +899,7 @@ LookupAccountSidW (
 	PSID_NAME_USE peUse )
 {
 	LSA_UNICODE_STRING SystemName;
-        LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
+	LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
 	LSA_HANDLE PolicyHandle = NULL;
 	NTSTATUS Status;
 	PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;

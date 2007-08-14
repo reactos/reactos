@@ -4,6 +4,7 @@
 	<include base="advapi32">.</include>
 	<include base="scm_client">.</include>
 	<include base="lsa_client">.</include>
+	<include base="eventlog_client">.</include>
 	<define name="__USE_W32API" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_IE">0x0500</define>
@@ -12,6 +13,7 @@
 	<define name="_UNICODE"></define>
 	<library>scm_client</library>
 	<library>lsa_client</library>
+	<library>eventlog_client</library>
 	<library>ntdll</library>
 	<library>rpcrt4</library>
 	<library>wine</library>
@@ -49,6 +51,7 @@
 	</directory>
 	<directory name="service">
 			<file>eventlog.c</file>
+			<file>rpc.c</file>
 			<file>scm.c</file>
 			<file>sctrl.c</file>
 			<file>undoc.c</file>
