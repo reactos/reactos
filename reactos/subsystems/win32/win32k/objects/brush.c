@@ -326,7 +326,7 @@ IntGdiCreateDIBBrush(
    else
       DataPtr += PaletteEntryCount * sizeof(USHORT);
 
-   hPattern = NtGdiCreateBitmap(BitmapInfo->bmiHeader.biWidth,
+   hPattern = IntGdiCreateBitmap(BitmapInfo->bmiHeader.biWidth,
                                 BitmapInfo->bmiHeader.biHeight,
                                 BitmapInfo->bmiHeader.biPlanes,
                                 BitmapInfo->bmiHeader.biBitCount,
@@ -378,7 +378,7 @@ IntGdiCreateHatchBrush(
       return 0;
    }
 
-   hPattern = NtGdiCreateBitmap(8, 8, 1, 1, (LPBYTE)HatchBrushes[Style]);
+   hPattern = IntGdiCreateBitmap(8, 8, 1, 1, (LPBYTE)HatchBrushes[Style]);
    if (hPattern == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

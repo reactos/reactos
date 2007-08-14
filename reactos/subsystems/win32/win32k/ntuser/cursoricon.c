@@ -1308,7 +1308,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
       }
       else
       {
-         BitmapStretched = NtGdiCreateBitmap(WidthDest, HeightDest, 1, 1, NULL);
+         BitmapStretched = IntGdiCreateBitmap(WidthDest, HeightDest, 1, 1, NULL);
       }
       if (NULL == BitmapStretched)
       {

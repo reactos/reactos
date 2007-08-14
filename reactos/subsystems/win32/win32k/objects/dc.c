@@ -226,7 +226,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->Dc_Attr.szlViewportExt.cy = OrigDC->Dc_Attr.szlViewportExt.cy;
 
   /* Create default bitmap */
-  if (!(hBitmap = NtGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
+  if (!(hBitmap = IntGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
     {
       DC_UnlockDc( OrigDC );
       DC_UnlockDc( NewDC );

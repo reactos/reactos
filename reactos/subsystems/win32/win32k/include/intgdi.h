@@ -253,6 +253,14 @@ IntCreateCompatibleBitmap(PDC Dc,
                           INT Width,
                           INT Height);
 
+HBITMAP STDCALL
+IntGdiCreateBitmap(
+    INT  Width,
+    INT  Height,
+    UINT  Planes,
+    UINT  BitsPixel,
+    IN OPTIONAL LPBYTE pBits);
+
 HDC STDCALL IntGdiGetDCState(HDC  hDC);
 
 WORD STDCALL IntGdiSetHookFlags(HDC hDC, WORD Flags);

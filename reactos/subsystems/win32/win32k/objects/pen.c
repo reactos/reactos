@@ -99,27 +99,27 @@ IntGdiExtCreatePen(
 
       case PS_ALTERNATE:
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-         PenObject->hbmPattern = NtGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
+         PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
          break;
 
       case PS_DOT:
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-         PenObject->hbmPattern = NtGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
+         PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
          break;
 
       case PS_DASH:
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-         PenObject->hbmPattern = NtGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
+         PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
          break;
 
       case PS_DASHDOT:
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-         PenObject->hbmPattern = NtGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
+         PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
          break;
 
       case PS_DASHDOTDOT:
          PenObject->flAttrs |= GDIBRUSH_IS_BITMAP;
-         PenObject->hbmPattern = NtGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
+         PenObject->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
          break;
 
       case PS_INSIDEFRAME:

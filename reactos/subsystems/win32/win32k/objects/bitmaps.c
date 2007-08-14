@@ -32,12 +32,12 @@
 )
 
 HBITMAP STDCALL
-NtGdiCreateBitmap(
+IntGdiCreateBitmap(
     INT  Width,
     INT  Height,
     UINT  Planes,
     UINT  BitsPixel,
-    IN OPTIONAL LPBYTE pUnsafeBits)
+    IN OPTIONAL LPBYTE pBits)
 {
    PBITMAPOBJ bmp;
    HBITMAP hBitmap;
@@ -45,32 +45,33 @@ NtGdiCreateBitmap(
    LONG WidthBytes;
 
    /* NOTE: Windows also doesn't store nr. of planes separately! */
-   BitsPixel = BitsPixel * Planes;
-   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, BitsPixel);
+   BitsPixel = BITMAPOBJ_GetRealBitsPixel(BitsPixel * Planes);
 
    /* Check parameters */
-   if (0 == Height || 0 == Width)
+   if (BitsPixel == 0 || Width < 1 || Height < 1)
    {
-      Size.cx = Size.cy = 1;
+      DPRINT1("Width = %d, Height = %d BitsPixel = %d\n", Width, Height, BitsPixel);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
    }
-   else
-   {
-      Size.cx = abs(Width);
-      Size.cy = abs(Height);
-   }
+
+   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, BitsPixel);
+
+   Size.cx = Width;
+   Size.cy = Height;
 
    /* Create the bitmap object. */
    hBitmap = IntCreateBitmap(Size, WidthBytes,
                              BitmapFormat(BitsPixel, BI_RGB),
                              (Height < 0 ? BMF_TOPDOWN : 0) |
-                             (NULL == pUnsafeBits ? 0 : BMF_NOZEROINIT), NULL);
+                             (NULL == pBits ? 0 : BMF_NOZEROINIT), NULL);
    if (!hBitmap)
    {
-      DPRINT("NtGdiCreateBitmap: returned 0\n");
+      DPRINT("IntGdiCreateBitmap: returned 0\n");
       return 0;
    }
 
-   DPRINT("NtGdiCreateBitmap:%dx%d, %d BPP colors returning %08x\n",
+   DPRINT("IntGdiCreateBitmap:%dx%d, %d BPP colors returning %08x\n",
           Size.cx, Size.cy, BitsPixel, hBitmap);
 
    bmp = BITMAPOBJ_LockBitmap( hBitmap );
@@ -82,20 +83,41 @@ NtGdiCreateBitmap(
    
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
 
-   if (NULL != pUnsafeBits)
+   if (NULL != pBits)
    {
-      _SEH_TRY
-      {
-         ProbeForRead(pUnsafeBits, bmp->SurfObj.cjBits, 1);
-         IntSetBitmapBits(bmp, bmp->SurfObj.cjBits, pUnsafeBits);
-      }
-      _SEH_HANDLE
-      {
-      }
-      _SEH_END
+      IntSetBitmapBits(bmp, bmp->SurfObj.cjBits, pBits);
    }
 
    BITMAPOBJ_UnlockBitmap( bmp );
+
+   return hBitmap;
+}
+
+
+HBITMAP STDCALL
+NtGdiCreateBitmap(
+    INT  Width,
+    INT  Height,
+    UINT  Planes,
+    UINT  BitsPixel,
+    IN OPTIONAL LPBYTE pUnsafeBits)
+{
+   HBITMAP hBitmap;
+
+   _SEH_TRY
+   {
+      if (pUnsafeBits)
+      {
+         UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * Height;
+         ProbeForRead(pUnsafeBits, cjBits, 1);
+      }
+      hBitmap = IntGdiCreateBitmap(Width, Height, Planes, BitsPixel, pUnsafeBits);
+   }
+   _SEH_HANDLE
+   {
+      hBitmap = 0;
+   }
+   _SEH_END
 
    return hBitmap;
 }
@@ -152,11 +174,11 @@ IntCreateCompatibleBitmap(
 	/* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
 	if (0 == Width || 0 == Height)
 	{
-		Bmp = NtGdiCreateBitmap (1, 1, 1, 1, NULL);
+		Bmp = IntGdiCreateBitmap (1, 1, 1, 1, NULL);
 	}
 	else
 	{
-		Bmp = NtGdiCreateBitmap(Width, Height, 1, Dc->w.bitsPerPixel, NULL);
+		Bmp = IntGdiCreateBitmap(Width, Height, 1, Dc->w.bitsPerPixel, NULL);
 	}
 
 	return Bmp;
@@ -272,7 +294,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 			BITMAPINFO bi;
 			RtlMoveMemory ( &(bi.bmiHeader), &bih, sizeof(bih) );
 			hBmpTmp = NtGdiCreateDIBitmap ( hDC, &bi.bmiHeader, 0, NULL, &bi, DIB_RGB_COLORS );
-			//HBITMAP hBmpTmp = NtGdiCreateBitmap ( 1, 1, 1, 32, NULL);
+			//HBITMAP hBmpTmp = IntGdiCreateBitmap ( 1, 1, 1, 32, NULL);
 			if ( hBmpTmp )
 			{
 				HBITMAP hBmpOld = (HBITMAP)NtGdiSelectObject ( hDCTmp, hBmpTmp );
@@ -537,6 +559,29 @@ NtGdiSetPixelV(
 }
 
 /*  Internal Functions  */
+
+INT FASTCALL
+BITMAPOBJ_GetRealBitsPixel(INT nBitsPixel)
+{
+	if (nBitsPixel < 0)
+		return 0;
+	if (nBitsPixel <= 1)
+		return 1;
+	if (nBitsPixel <= 2)
+		return 2;
+	if (nBitsPixel <= 4)
+		return 4;
+	if (nBitsPixel <= 8)
+		return 8;
+	if (nBitsPixel <= 16)
+		return 16;
+	if (nBitsPixel <= 24)
+		return 24;
+	if (nBitsPixel <= 32)
+		return 32;
+
+	return 0;
+}
 
 INT FASTCALL
 BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp)
