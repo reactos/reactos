@@ -270,7 +270,6 @@ enum ModuleType
 	Alias = 19,
 	BootProgram = 20,
 	Win32SCR = 21,
-	ExportDriver = 22,
 	IdlHeader = 23,
 	IsoRegTest = 24,
 	LiveIsoRegTest = 25,
@@ -322,7 +321,7 @@ public:
 	bool allowWarnings;
 	bool enabled;
 	bool useHostStdlib;
-    bool isStartupLib;
+	bool isStartupLib;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -346,7 +345,7 @@ public:
 	void InvokeModule () const;
 	void ProcessXML ();
 	void GetSourceFilenames ( string_list& list,
-                                  bool includeGeneratedFiles ) const;
+	                          bool includeGeneratedFiles ) const;
 private:
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;

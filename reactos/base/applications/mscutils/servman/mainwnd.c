@@ -451,6 +451,12 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
         EnableMenuItem(hMainMenu,
                        ID_PROP,
                        MF_ENABLED);
+        EnableMenuItem(Info->hShortcutMenu,
+                       ID_PROP,
+                       MF_ENABLED);
+        SetMenuDefaultItem(Info->hShortcutMenu,
+                           ID_PROP,
+                           MF_BYCOMMAND);
     }
 
     /* activate delete menu item, if not already */
@@ -465,7 +471,6 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
                        ID_DELETE,
                        MF_ENABLED);
     }
-
 
     /* set selected service */
     Info->SelectedItem = pnmv->iItem;
@@ -487,8 +492,6 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
                 TB_SETSTATE,
                 ID_PROP,
                 (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
-
-
 }
 
 

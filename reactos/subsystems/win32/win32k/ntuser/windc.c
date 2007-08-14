@@ -130,7 +130,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
     if (NULL == defaultDCstate) // Ultra HAX! Dedicated to GvG!
       { // This is a cheesy way to do this. 
         // But, due to the right way of creating gdi handles there is no choice.
-      defaultDCstate = NtGdiGetDCState(pDce->hDC);
+      defaultDCstate = IntGdiGetDCState(pDce->hDC);
       DC_SetOwnership( defaultDCstate, NULL);
     }
     
@@ -244,14 +244,14 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    if (dce->DCXFlags & DCX_CACHE)
    {
       /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
-      NtGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
+      IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
       if( dce->pProcess ) // Attempt to fix Dc_Attr problem.
         DC_SetOwnership( defaultDCstate, dce->pProcess);
       else
         DC_SetOwnership( defaultDCstate, PsGetCurrentProcess());
 
-      NtGdiSetDCState(dce->hDC, defaultDCstate);
+      IntGdiSetDCState(dce->hDC, defaultDCstate);
       DC_SetOwnership( defaultDCstate, NULL); // Return default dc state to inaccessible mode.
 
       dce->DCXFlags &= ~DCX_DCEBUSY;

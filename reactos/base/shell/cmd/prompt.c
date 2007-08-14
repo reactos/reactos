@@ -47,7 +47,6 @@
  *        Remove all hardcode string to En.rc
  */
 #include <precomp.h>
-#include "resource.h"
 
 /*
  * print the command-line prompt

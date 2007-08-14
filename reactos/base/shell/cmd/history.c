@@ -139,8 +139,8 @@ VOID InitHistory(VOID)
 {
 	size=0;
 
-	Top = malloc(sizeof(HIST_ENTRY));
-	Bottom = malloc(sizeof(HIST_ENTRY));
+	Top = cmd_alloc(sizeof(HIST_ENTRY));
+	Bottom = cmd_alloc(sizeof(HIST_ENTRY));
 
 	Top->prev = Bottom;
 	Top->next = NULL;
@@ -161,8 +161,8 @@ VOID CleanHistory(VOID)
 	while (Bottom->next!=Top)
 		del(Bottom->next);
 
-	free(Top);
-	free(Bottom);
+	cmd_free(Top);
+	cmd_free(Bottom);
 }
 
 
@@ -204,13 +204,13 @@ VOID del(LPHIST_ENTRY item)
 
 	/*free string's mem*/
 	if (item->string)
-		free(item->string);
+		cmd_free(item->string);
 
 	/*set links in prev and next item*/
 	item->next->prev=item->prev;
 	item->prev->next=item->next;
 
-	free(item);
+	cmd_free(item);
 
 	size--;
 }
@@ -233,8 +233,8 @@ VOID add_before_last(LPTSTR string)
 		return;
 
 	/*allocte entry and string*/
-	tmp=malloc(sizeof(HIST_ENTRY));
-	tmp->string=malloc((_tcslen(string)+1)*sizeof(TCHAR));
+	tmp=cmd_alloc(sizeof(HIST_ENTRY));
+	tmp->string=cmd_alloc((_tcslen(string)+1)*sizeof(TCHAR));
 	_tcscpy(tmp->string,string);
 
 	/*set links*/
@@ -280,7 +280,7 @@ VOID add_at_bottom(LPTSTR string)
 
 
 	/*fill bottom with string, it will become Bottom->next*/
-	Bottom->string=malloc((_tcslen(string)+1)*sizeof(TCHAR));
+	Bottom->string=cmd_alloc((_tcslen(string)+1)*sizeof(TCHAR));
 	_tcscpy(Bottom->string,string);
 
 	/*save Bottom value*/
@@ -288,7 +288,7 @@ VOID add_at_bottom(LPTSTR string)
 
 
 	/*create new void Bottom*/
-	Bottom=malloc(sizeof(HIST_ENTRY));
+	Bottom=cmd_alloc(sizeof(HIST_ENTRY));
 	Bottom->next=tmp;
 	Bottom->prev=NULL;
 	Bottom->string=NULL;
@@ -401,7 +401,7 @@ VOID History (INT dir, LPTSTR commandline)
 	/*first time History is called allocate mem*/
 	if (!history)
 	{
-		history = malloc (history_size * sizeof (TCHAR));
+		history = cmd_alloc (history_size * sizeof (TCHAR));
 		lines[0] = history;
 		history[0] = 0;
 	}

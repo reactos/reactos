@@ -506,13 +506,23 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	    case NM_SETFOCUS:
 		pChildWnd->nFocusPanel = 0;
 		break;
+            case TVN_BEGINLABELEDIT:
+            {
+				LPNMTVDISPINFO ptvdi;
+				/* cancel label edit for rootkeys  */
+				ptvdi = (LPNMTVDISPINFO) lParam;
+                if (!TreeView_GetParent(pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
+					!TreeView_GetParent(pChildWnd->hTreeWnd, TreeView_GetParent(pChildWnd->hTreeWnd, ptvdi->item.hItem)))
+                  return TRUE;
+				break;
+			}
             case TVN_ENDLABELEDIT:
                 {
                   LPCTSTR keyPath;
                   HKEY hRootKey;
                   HKEY hKey = NULL;
                   LPNMTVDISPINFO ptvdi;
-                  LONG lResult;
+                  LONG lResult = ERROR_SUCCESS;
                   TCHAR szBuffer[MAX_PATH];
 
                   ptvdi = (LPNMTVDISPINFO) lParam;
@@ -531,7 +541,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     {
                       lResult = RegRenameKey(hRootKey, keyPath, ptvdi->item.pszText);
                     }
-                    return lResult == ERROR_SUCCESS;
+                    return lResult;
                   }
                 }
             default:

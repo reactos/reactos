@@ -570,8 +570,7 @@ InstallLiveCD(IN HINSTANCE hInstance)
     if (!res)
         goto cleanup;
 
-    /* Wait for process termination */
-    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+    return 0;
 
 cleanup:
     MessageBoxA(
@@ -728,6 +727,7 @@ InstallReactOS(HINSTANCE hInstance)
     /// DO NOT REMOVE!!!
     DbgPrint("SYSREG_CHECKPOINT:SYSSETUP_COMPLETE\n");
 
+    ExitWindowsEx(EWX_REBOOT, 0);
     return 0;
 }
 

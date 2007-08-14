@@ -29,7 +29,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 /*
@@ -56,7 +55,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 
     nErrorLevel = 0;
 
-	n = (LPBATCH_CONTEXT)malloc (sizeof (BATCH_CONTEXT));
+	n = (LPBATCH_CONTEXT)cmd_alloc (sizeof (BATCH_CONTEXT));
 
 	if (n == NULL)
 	{
@@ -91,7 +90,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 	if (bc->hBatchFile == INVALID_HANDLE_VALUE)
 	{
 		bc = bc->prev;
-		free (n);
+		cmd_free (n);
 	}
 
 	return 0;

@@ -33,7 +33,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 /*
@@ -200,15 +199,15 @@ BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry)
 	LPTSTR q;
 	LPTSTR *oldarg;
 
-	q = malloc ((_tcslen(entry) + 1) * sizeof (TCHAR));
+	q = cmd_alloc ((_tcslen(entry) + 1) * sizeof (TCHAR));
 	if (NULL == q)
 	{
 		return FALSE;
 	}
-	_tcscpy (q, entry);
 
+	_tcscpy (q, entry);
 	oldarg = *arg;
-	*arg = realloc (oldarg, (*ac + 2) * sizeof (LPTSTR));
+	*arg = cmd_realloc (oldarg, (*ac + 2) * sizeof (LPTSTR));
 	if (NULL == *arg)
 	{
 		*arg = oldarg;
@@ -233,7 +232,7 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
 	pathend = _tcsrchr (pattern, _T('\\'));
 	if (NULL != pathend)
 	{
-		dirpart = malloc((pathend - pattern + 2) * sizeof(TCHAR));
+		dirpart = cmd_alloc((pathend - pattern + 2) * sizeof(TCHAR));
 		if (NULL == dirpart)
 		{
 			return FALSE;
@@ -252,7 +251,7 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
 		{
 			if (NULL != dirpart)
 			{
-				fullname = malloc((_tcslen(dirpart) + _tcslen(FindData.cFileName) + 1) * sizeof(TCHAR));
+				fullname = cmd_alloc((_tcslen(dirpart) + _tcslen(FindData.cFileName) + 1) * sizeof(TCHAR));
 				if (NULL == fullname)
 				{
 					ok = FALSE;
@@ -261,7 +260,7 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
 				{
 					_tcscat (_tcscpy (fullname, dirpart), FindData.cFileName);
 					ok = add_entry(ac, arg, fullname);
-					free (fullname);
+					cmd_free (fullname);
 				}
 			}
 			else
@@ -278,7 +277,7 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
 
 	if (NULL != dirpart)
 	{
-		free (dirpart);
+		cmd_free (dirpart);
 	}
 
 	return ok;
@@ -298,7 +297,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 	INT  len;
 	BOOL bQuoted = FALSE;
 
-	arg = malloc (sizeof (LPTSTR));
+	arg = cmd_alloc (sizeof (LPTSTR));
 	if (!arg)
 		return NULL;
 	*arg = NULL;
@@ -338,7 +337,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 		/* a word was found */
 		if (s != start)
 		{
-			q = malloc (((len = s - start) + 1) * sizeof (TCHAR));
+			q = cmd_alloc (((len = s - start) + 1) * sizeof (TCHAR));
 			if (!q)
 			{
 				return NULL;
@@ -350,7 +349,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 			{
 				if (! expand(&ac, &arg, q))
 				{
-					free (q);
+					cmd_free (q);
 					freep (arg);
 					return NULL;
 				}
@@ -359,12 +358,12 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 			{
 				if (! add_entry(&ac, &arg, q))
 				{
-					free (q);
+					cmd_free (q);
 					freep (arg);
 					return NULL;
 				}
 			}
-			free (q);
+			cmd_free (q);
 		}
 
 		/* adjust string pointer if quoted (") */
@@ -400,9 +399,9 @@ VOID freep (LPTSTR *p)
 
 	q = p;
 	while (*q)
-		free(*q++);
+		cmd_free(*q++);
 
-	free(p);
+	cmd_free(p);
 }
 
 
@@ -457,7 +456,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	DWORD  dwRead;
 	INT len;
 #ifdef _UNICODE
-	lpString = malloc(nBufferLength);
+	lpString = cmd_alloc(nBufferLength);
 #else
 	lpString = lpBuffer;
 #endif
@@ -474,12 +473,17 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	}
 
 	if (!dwRead && !len)
+	{
+#ifdef _UNICODE
+		cmd_free(lpString);
+#endif
 		return FALSE;
+	}
 
 	lpString[len++] = _T('\0');
 #ifdef _UNICODE
 	MultiByteToWideChar(CP_ACP, 0, lpString, len, lpBuffer, len);
-	free(lpString);
+	cmd_free(lpString);
 #endif
 	return TRUE;
 }

@@ -1,4 +1,4 @@
-<module name="ks" type="exportdriver" installbase="system32/drivers" installname="ks.sys" allowwarnings="true">
+<module name="ks" type="kernelmodedriver" installbase="system32/drivers" installname="ks.sys" allowwarnings="true">
 	<include base="ks">.</include>
 	<include base="ks">..</include>
 	<include base="ks">../include</include>
@@ -7,7 +7,7 @@
 	<define name="__USE_W32API" />
 	<define name="BUILDING_KS" />
 	<define name="_NTDDK_" />
-    <define name="_COMDDK_" />
+	<define name="_COMDDK_" />
 	<file>ks.rc</file>
 	<file>allocators.c</file>
 	<file>clocks.c</file>

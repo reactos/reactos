@@ -181,7 +181,8 @@ InfpAddSection(PINFCACHE Cache,
     }
 
   /* Allocate and initialize the new section */
-  Size = sizeof(INFCACHESECTION) + (_tcslen (Name) * sizeof(TCHAR));
+  Size = FIELD_OFFSET(INFCACHESECTION,
+                      Name[_tcslen (Name) + 1]);
   Section = (PINFCACHESECTION)MALLOC (Size);
   if (Section == NULL)
     {
@@ -285,7 +286,8 @@ InfpAddFieldToLine(PINFCACHELINE Line,
   PINFCACHEFIELD Field;
   ULONG Size;
 
-  Size = sizeof(INFCACHEFIELD) + (_tcslen(Data) * sizeof(TCHAR));
+  Size = FIELD_OFFSET(INFCACHEFIELD,
+                      Data[_tcslen(Data) + 1]);
   Field = (PINFCACHEFIELD)MALLOC(Size);
   if (Field == NULL)
     {

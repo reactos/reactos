@@ -26,7 +26,6 @@
  *        Remove all hardcode string to En.rc
  */
 #include <precomp.h>
-#include "resource.h"
 
 #ifdef INCLUDE_CMD_PATH
 
@@ -52,7 +51,7 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		LPTSTR pszBuffer;
 		TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-		pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+		pszBuffer = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 		dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
@@ -62,12 +61,12 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)
 		{
-			pszBuffer = (LPTSTR)realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
+			pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
 			GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 		}
 
 		ConOutPrintf (_T("PATH=%s\n"), pszBuffer);
-		free (pszBuffer);
+		cmd_free (pszBuffer);
 
 		return 0;
 	}

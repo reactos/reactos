@@ -27,7 +27,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 
 INT CommandEcho (LPTSTR cmd, LPTSTR param)

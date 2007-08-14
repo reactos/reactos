@@ -138,7 +138,7 @@ DATE [/T][date]\n\n\
   /T    hanya menampilkan\n\n\
 Ketik DATE tanpa parameter untuk menampilkan setelan tanggal saat ini dan\n\
 meminta yang baru.  Tekan ENTER untuk membiarkan tanggal tetap sama.\n"
-				
+
 STRING_DEL_HELP1,  "Menghapus satu atau lebih file.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
@@ -389,7 +389,7 @@ tujuan anda. Gunakan perintah MOVE untuk keperluan itu.\n"
 STRING_REN_HELP2, "    %lu file diganti nama\n"
 
 STRING_REN_HELP3, "    %lu file diganti nama\n"
-		 
+
 STRING_SHIFT_HELP, "Mengubah posisi parameter yang bisa diganti dalam file batch.\n\n\
 SHIFT [DOWN]"
 
@@ -480,8 +480,8 @@ STRING_VERSION_HELP6, "\nVersi FreeDOS ditulis oleh:\n"
 
 STRING_VERSION_HELP7, "\nVersi ReactOS ditulis oleh:\n"
 
-STRING_VOL_HELP1, " Volume dalam drive %c: adalah %s"
-STRING_VOL_HELP2, " Volume dalam drive %c: tidak berlabel"
+STRING_VOL_HELP1, " Volume dalam drive %c adalah %s\n"
+STRING_VOL_HELP2, " Volume dalam drive %c tidak berlabel\n"
 STRING_VOL_HELP3, " Nomor Seri Volume adalah %04X-%04X\n"
 STRING_VOL_HELP4, "Menampilkan label dan nomor seri volume disk, jika ada.\n\nVOL [drive:]"
 
@@ -597,7 +597,7 @@ STRING_ERROR_ERROR1,         "Kesalahan tidak dikenal! Kode kesalahan: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Sintaks salah"
 STRING_FOR_ERROR1,           "'in' kurang dalam pernyataan for."
 STRING_FOR_ERROR2,           "tidak ada kurung ditemukan."
-STRING_FOR_ERROR3,           "'do' hilang." 
+STRING_FOR_ERROR3,           "'do' hilang."
 STRING_FOR_ERROR4,           "tidak ada perintah setelah 'do'."
 STRING_FREE_ERROR1,          "Drive tidak benar"
 STRING_FREE_ERROR2,          "tak berlabel"

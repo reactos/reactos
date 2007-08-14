@@ -157,7 +157,7 @@ InvalidateRect(
   CONST RECT *lpRect,
   BOOL bErase)
 {
-  return RedrawWindow( hWnd, lpRect, 0, RDW_INVALIDATE | (bErase ? RDW_ERASE : 0) ); 
+  return NtUserInvalidateRect(hWnd, lpRect, bErase);
 }
 
 
@@ -171,7 +171,7 @@ InvalidateRgn(
   HRGN hRgn,
   BOOL bErase)
 {
-  return RedrawWindow(hWnd, NULL, hRgn, RDW_INVALIDATE | (bErase ? RDW_ERASE : 0) ); 
+  return NtUserInvalidateRgn(hWnd, hRgn, bErase);
 }
 
 

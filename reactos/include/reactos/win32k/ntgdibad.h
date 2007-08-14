@@ -337,12 +337,6 @@ NtGdiGdiComment (
 	CONST LPBYTE	Data
 	);
 
-/* Should be done in user-mode. */
-DWORD STDCALL NtGdiGdiGetBatchLimit (VOID);
-
-/* Should be done in user-mode. */
-DWORD STDCALL NtGdiGdiSetBatchLimit (DWORD  Limit);
-
 /* Use NtGdiGetDCDword with GdiGetArcDirection. */
 INT
 STDCALL
@@ -1058,11 +1052,6 @@ NtGdiUpdateICMRegKey(DWORD  Reserved,
                           LPWSTR  CMID, 
                           LPWSTR  Filename,
                           UINT  Command);
-
-/* These shouldn't even be called NtGdi */
-HDC STDCALL  NtGdiGetDCState(HDC  hDC);
-WORD STDCALL NtGdiSetHookFlags(HDC hDC, WORD Flags);
-VOID STDCALL NtGdiSetDCState ( HDC hDC, HDC hDCSave );
 
 /* All this Should be in user-mode, not NtUser calls. Especially not in GDI! */
 DWORD

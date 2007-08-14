@@ -142,7 +142,7 @@ DATE [/T][date]\n\n\
 Taper DATE sans paramètre pour afficher la date courante\n\
 et une invite pour entrer la nouvelle date.\n\
 Appuyer sur ENTREE pour conserver la même date."
-				
+
 STRING_DEL_HELP1,  "Efface un ou plusieurs fichiers.\n\n\
 DEL [/N /P /T /Q /W /Y /Z] fichier ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] fichier ...\n\
@@ -481,8 +481,8 @@ STRING_VERSION_HELP6, "\nVersion FreeDOS écrite par:\n"
 
 STRING_VERSION_HELP7, "\nVersion ReactOS écrite par:\n"
 
-STRING_VOL_HELP1, " Le nom de volume du lecteur %c: est %s\n"
-STRING_VOL_HELP2, " Le volume dans le lecteur %c: n'a pas de nom\n"
+STRING_VOL_HELP1, " Le nom de volume du lecteur %c est %s\n"
+STRING_VOL_HELP2, " Le volume dans le lecteur %c n'a pas de nom\n"
 STRING_VOL_HELP3, " Le numéro de série du volume est %04X-%04X\n"
 STRING_VOL_HELP4, "Affiche le nom de volume et le numéro de série du disque s'ils existent.\n\nVOL [lecteur:]\n"
 

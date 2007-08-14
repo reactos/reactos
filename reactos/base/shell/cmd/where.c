@@ -151,11 +151,11 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 
 
 	/* load environment varable PATH into buffer */
-	pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+	pszBuffer = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 	if (dwBuffer > ENV_BUFFER_SIZE)
 	{
-		pszBuffer = (LPTSTR)realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
+		pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
 		GetEnvironmentVariable (_T("PATH"), pszBuffer, dwBuffer);
 	}
 
@@ -194,12 +194,12 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 #ifdef _DEBUG
 			DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);
 #endif
-			free (pszBuffer);
+			cmd_free (pszBuffer);
 			_tcscpy (pFullName, szPathBuffer);
 			return TRUE;
 		}
 	}
-	free (pszBuffer);
+	cmd_free (pszBuffer);
 	return FALSE;
 }
 
@@ -216,11 +216,11 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	DebugPrintf (_T("SearchForExecutable: \'%s\'\n"), pFileName);
 #endif
 	/* load environment varable PATHEXT */
-	pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+	pszBuffer = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszBuffer, ENV_BUFFER_SIZE);
 	if (dwBuffer > ENV_BUFFER_SIZE)
 	{
-		pszBuffer = (LPTSTR)realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
+		pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
 		GetEnvironmentVariable (_T("PATHEXT"), pszBuffer, dwBuffer);
 	}
 	else if (0 == dwBuffer)
@@ -244,13 +244,13 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 			{
 				if (0 == _tcsicmp(pCh, pExt))
 				{
-					free(pszBuffer);
-					free(pszBuffer2);
+					cmd_free(pszBuffer);
+					LocalFree(pszBuffer2);
 					return SearchForExecutableSingle(pFileName, pFullName, NULL);
 				}
 				pCh = _tcstok(NULL, _T(";"));
 			}
-			free(pszBuffer2);
+			LocalFree(pszBuffer2);
 		}
 	}
 
@@ -259,13 +259,13 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	{
 		if (SearchForExecutableSingle(pFileName, pFullName, pCh))
 		{
-			free(pszBuffer);
+			cmd_free(pszBuffer);
 			return TRUE;
 		}
 		pCh = _tcstok(NULL, _T(";"));
 	}
 
-	free(pszBuffer);
+	cmd_free(pszBuffer);
 	return FALSE;
 }
 

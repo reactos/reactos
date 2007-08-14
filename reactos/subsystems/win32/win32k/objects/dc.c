@@ -1230,7 +1230,7 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
 }
 
 HDC STDCALL
-NtGdiGetDCState(HDC  hDC)
+IntGdiGetDCState(HDC  hDC)
 {
   PDC  newdc, dc;
   HDC hnewdc;
@@ -1327,7 +1327,7 @@ NtGdiGetDCState(HDC  hDC)
 
 VOID
 STDCALL
-NtGdiSetDCState ( HDC hDC, HDC hDCSave )
+IntGdiSetDCState ( HDC hDC, HDC hDCSave )
 {
   PDC  dc, dcs;
 
@@ -1840,7 +1840,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
          DC_UnlockDc( dc );
          DC_UnlockDc( dcs );
 
-         NtGdiSetDCState(hDC, hdcs);
+         IntGdiSetDCState(hDC, hdcs);
 
         if (!PATH_AssignGdiPath( &dc->w.path, &dcs->w.path ))
         {
@@ -1874,7 +1874,7 @@ NtGdiSaveDC(HDC  hDC)
 
   DPRINT("NtGdiSaveDC(%lx)\n", hDC);
 
-  if (!(hdcs = NtGdiGetDCState(hDC)))
+  if (!(hdcs = IntGdiGetDCState(hDC)))
   {
     return 0;
   }
@@ -2067,7 +2067,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 }
 
 WORD STDCALL
-NtGdiSetHookFlags(HDC hDC, WORD Flags)
+IntGdiSetHookFlags(HDC hDC, WORD Flags)
 {
   WORD wRet;
   DC *dc = DC_LockDc(hDC);

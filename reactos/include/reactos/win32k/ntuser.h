@@ -1437,6 +1437,20 @@ NtUserRedrawWindow
  UINT flags
 );
 
+BOOL
+NTAPI
+NtUserInvalidateRect(
+    HWND hWnd,
+    CONST RECT *lpRect,
+    BOOL bErase);
+
+BOOL
+NTAPI
+NtUserInvalidateRgn(
+    HWND hWnd,
+    HRGN hRgn,
+    BOOL bErase);
+
 /* FIXME: These flag constans aren't what Windows uses. */
 #define REGISTERCLASS_ANSI	2
 #define REGISTERCLASS_SYSTEM	4
@@ -1853,8 +1867,12 @@ NtUserSetWinEventHook(
 BOOL
 NTAPI
 NtUserShowCaret(
-  HWND hWnd,
-  BOOL bShow);
+  HWND hWnd);
+
+BOOL
+NTAPI
+NtUserHideCaret(
+  HWND hWnd);
 
 DWORD
 NTAPI

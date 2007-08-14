@@ -612,7 +612,6 @@ MoveFileWithProgressW (
 		   {
 		     DWORD Attributes;
 
-		     FindClose(hFile);				 
 			 Attributes = GetFileAttributesW(lpDeleteFile);
              if (Attributes != INVALID_FILE_ATTRIBUTES)
              {	

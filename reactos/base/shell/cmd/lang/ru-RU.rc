@@ -141,7 +141,7 @@ DATE [/T][дата]\n\n\
   /T    Не запрашивать ввод новой даты\n\n\
 Команда DATE без параметров отображает текущую дату и запрашивает ввод\n\
 новой даты.  Для сохранения текущей даты нажмите клавишу ENTER.\n"
-				
+
 STRING_DEL_HELP1,  "Удаление одного или нескольких файлов.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]атрибуты]] имена_файлов ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]атрибуты]] имена_файлов ...\n\
@@ -394,7 +394,7 @@ REN [/E /N /P /Q /S /T] старое_имя ... новое_имя\n\n\
 STRING_REN_HELP2, "    %lu файл переименован\n"
 
 STRING_REN_HELP3, "    %lu файлов переименовано\n"
-		 
+
 STRING_SHIFT_HELP, "Изменение содержимого (сдвиг) подставляемых параметров для пакетного файла.\n\n\
 SHIFT [DOWN]"
 
@@ -487,8 +487,8 @@ STRING_VERSION_HELP6, "\nFreeDOS-версия написана:\n"
 
 STRING_VERSION_HELP7, "\nReactOS-версия написана:\n"
 
-STRING_VOL_HELP1, " Том в устройстве %c: имеет метку %s"
-STRING_VOL_HELP2, " Том в устройстве %c: не имеет метки"
+STRING_VOL_HELP1, " Том в устройстве %c имеет метку %s\n"
+STRING_VOL_HELP2, " Том в устройстве %c не имеет метки\n"
 STRING_VOL_HELP3, " Серийный номер тома: %04X-%04X\n"
 STRING_VOL_HELP4, "Выводит метку тома и серийный номер.\n\nVOL [диск:]"
 
@@ -602,7 +602,7 @@ STRING_ERROR_ERROR1,         "Неизвестная ошибка! Код ошибки: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Синтаксическая ошибка"
 STRING_FOR_ERROR1,           "'in' отсутствует в команде for."
 STRING_FOR_ERROR2,           "скобок необнаружено."
-STRING_FOR_ERROR3,           "'do' отсутсвует." 
+STRING_FOR_ERROR3,           "'do' отсутсвует."
 STRING_FOR_ERROR4,           "нет команды после 'do'."
 STRING_FREE_ERROR1,          "Неправильное имя диска"
 STRING_FREE_ERROR2,          "unlabeled"

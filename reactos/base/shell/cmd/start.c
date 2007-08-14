@@ -12,7 +12,6 @@
  */
 
 #include <precomp.h>
-#include "resource.h"
 
 #ifdef INCLUDE_CMD_START
 
@@ -90,7 +89,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	freep (arg);
 	
 	/* get comspec */
-	comspec = malloc ( MAX_PATH * sizeof(TCHAR));
+	comspec = cmd_alloc ( MAX_PATH * sizeof(TCHAR));
 	if (comspec == NULL)
 	{
 		error_out_of_memory();
@@ -109,7 +108,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	{
 		if (size > MAX_PATH)
 		{
-			comspec = realloc(comspec,size * sizeof(TCHAR) );
+			comspec = cmd_realloc(comspec,size * sizeof(TCHAR) );
 			if (comspec==NULL)
 			{
 				return 1;
@@ -127,21 +126,21 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		_tcscat(RestWithoutArgs,_T("\""));
 	}
 
-	rest = malloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
+	rest = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
 	 if(comspec != NULL)
-		free(comspec);
+		cmd_free(comspec);
 	 error_out_of_memory();
 	 return 1;
 	}
 
-	param =malloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
-	if (rest == NULL)
+	param = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
+	if (param == NULL)
 	{
 	 if(comspec != NULL)
-		free(comspec);
-	 free(rest);
+		cmd_free(comspec);
+	 cmd_free(rest);
 	 error_out_of_memory();
 	 return 1;
 	}
@@ -210,12 +209,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			ConErrResPuts (STRING_FREE_ERROR1);
 
 		if (rest != NULL) 
-		    free(rest);
+		    cmd_free(rest);
 
 	    if (param != NULL) 
-		    free(param);
+		    cmd_free(param);
 		 if (comspec != NULL)
-			 free(comspec);
+			 cmd_free(comspec);
 		return 0;
 	}
 	
@@ -226,13 +225,13 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		error_bad_command ();
 
 		if (rest != NULL) 
-		    free(rest);
+		    cmd_free(rest);
 
 	    if (param != NULL) 
-		    free(param);
+		    cmd_free(param);
 
 		 if (comspec != NULL)
-			 free(comspec);
+			 cmd_free(comspec);
 		return 1;
 	}
 	
@@ -314,13 +313,13 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 
 	if (rest != NULL) 
-	    free(rest);
+	    cmd_free(rest);
 
     if (param != NULL) 
-	    free(param);
+	    cmd_free(param);
 
 	 if (comspec != NULL)
-		 free(comspec);
+		 cmd_free(comspec);
 	return 0;
 }
 

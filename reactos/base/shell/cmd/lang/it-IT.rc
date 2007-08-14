@@ -133,7 +133,7 @@ DATE [/T][data]\n\n\
   /T    Visualizzazione\n\n\
 Scrivi  DATE senza parametri per visualizzare la data attuale e\n\
 chiedere quella nuova. Premi ENTER per mantenerla inalterata.\n"
-				
+
 STRING_DEL_HELP1,  "Cancella uno o più file.\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributi]] file ...\n\
@@ -394,7 +394,7 @@ Usare il comando MOVE.\n"
 STRING_REN_HELP2, "    %lu file rinominato\n"
 
 STRING_REN_HELP3, "    %lu files rinominati\n"
-		 
+
 STRING_SHIFT_HELP, "Cambia la posizione dei parametri in un batch.\n\n\
 SHIFT [DOWN]"
 
@@ -488,8 +488,8 @@ STRING_VERSION_HELP6, "\nVersione FreeDOS scritto da:\n"
 
 STRING_VERSION_HELP7, "\nVersione ReactOS scritto da:\n"
 
-STRING_VOL_HELP1, " Il Volume del disco %c: è %s"
-STRING_VOL_HELP2, " Il Volume del disco %c: non ha etichetta"
+STRING_VOL_HELP1, " Il Volume del disco %c è %s\n"
+STRING_VOL_HELP2, " Il Volume del disco %c non ha etichetta\n"
 STRING_VOL_HELP3, " Il numero diserie del Volume è %04X-%04X\n"
 STRING_VOL_HELP4, "Visualizza l'etichetta del volume del disco e il numero di serie se disponibili.\n\n\
 VOL [disco:]"
@@ -603,7 +603,7 @@ STRING_ERROR_ERROR1,         "Errore sconosciuto! Codice errore: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Errore di sintassi"
 STRING_FOR_ERROR1,           "'in' mancante nella istruzione for."
 STRING_FOR_ERROR2,           "Parentesi mancanti."
-STRING_FOR_ERROR3,           "'do' mancante." 
+STRING_FOR_ERROR3,           "'do' mancante."
 STRING_FOR_ERROR4,           "nessuno comando dopo 'do'."
 STRING_FREE_ERROR1,          "Disco non valido"
 STRING_FREE_ERROR2,          "non etichettato"

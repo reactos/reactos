@@ -32,7 +32,6 @@
  */
  
 #include <precomp.h>
-#include "resource.h"
  
 #ifdef INCLUDE_CMD_COPY
  
@@ -264,7 +263,7 @@ copy (TCHAR source[MAX_PATH],
 		{
 			ConOutResPuts(STRING_COPY_ERROR3);
  
-			free (buffer);
+			cmd_free (buffer);
 			CloseHandle (hFileDest);
 			CloseHandle (hFileSrc);
 			nErrorLevel = 1;
@@ -375,7 +374,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
   nErrorLevel = 0;
 
   /* Get the envor value if it exists */
-  evar = malloc(512 * sizeof(TCHAR));
+  evar = cmd_alloc(512 * sizeof(TCHAR));
   if (evar==NULL) size = 0;
   else
   {
@@ -383,7 +382,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
   }
   if (size > 512)
   {
-    evar = realloc(evar,size * sizeof(TCHAR) );
+    evar = cmd_realloc(evar,size * sizeof(TCHAR) );
     if (evar!=NULL)
     {             
       size = GetEnvironmentVariable (_T("COPYCMD"), evar, size);
@@ -449,7 +448,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
       }
     }
   }
-  free(evar);
+  cmd_free(evar);
 
 
   /*Split the user input into array*/
@@ -873,7 +872,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	
 	FindClose(hFile);		
   if (arg!=NULL) 
-      free(arg);
+      freep(arg);
 
 	return 0;
 }

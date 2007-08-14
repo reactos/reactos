@@ -17,10 +17,7 @@
  *        Fixed ConPrintfPaging
  */
 
-
-
 #include <precomp.h>
-#include "resource.h"
 
 
 #define OUTPUT_BUFFER_SIZE  4096
@@ -103,7 +100,7 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	PCHAR pBuf;
 
 #ifdef _UNICODE
-	pBuf = (PCHAR)malloc(dwLength);
+	pBuf = (PCHAR)cmd_alloc(dwLength);
 #else
 	pBuf = lpInput;
 #endif
@@ -129,7 +126,7 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	}
 
 #ifdef _UNICODE
-	free(pBuf);
+	cmd_free(pBuf);
 #endif
 
 	SetConsoleMode (hFile, dwOldMode);
@@ -169,7 +166,7 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 
 	len = _tcslen(szText);
 #ifdef _UNICODE
-	pBuf = malloc(len + 1);
+	pBuf = cmd_alloc(len + 1);
 	len = WideCharToMultiByte( OutputCodePage, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szText;
@@ -185,7 +182,7 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 	           &dwWritten,
 	           NULL);
 #ifdef _UNICODE
-	free(pBuf);
+	cmd_free(pBuf);
 #endif
 }
 
@@ -219,7 +216,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
-	pBuf = malloc(len + 1);
+	pBuf = cmd_alloc(len + 1);
 	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szOut;
@@ -233,7 +230,7 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 
 
 #ifdef _UNICODE
-	free(pBuf);
+	cmd_free(pBuf);
 #endif
 }
 
@@ -287,7 +284,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 
 	len = _vstprintf (szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
-	pBuf = malloc(len + 1);
+	pBuf = cmd_alloc(len + 1);
 	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
 #else
 	pBuf = szOut;
@@ -311,7 +308,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 			if(PagePrompt() != PROMPT_YES)
 			{
 #ifdef _UNICODE
-				free(pBuf);
+				cmd_free(pBuf);
 #endif
 				return 1;
 			}
@@ -323,7 +320,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 	}
 
 #ifdef _UNICODE
-	free(pBuf);
+	cmd_free(pBuf);
 #endif
 	return 0;
 }

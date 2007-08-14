@@ -1910,4 +1910,24 @@ NtUserDrawCaption(HWND hWnd,
 	return NtUserDrawCaptionTemp(hWnd, hDC, lpRc, 0, 0, NULL, uFlags);
 }
 
+BOOL
+NTAPI
+NtUserInvalidateRect(
+    HWND hWnd,
+    CONST RECT *lpUnsafeRect,
+    BOOL bErase)
+{
+    return NtUserRedrawWindow(hWnd, lpUnsafeRect, NULL, RDW_INVALIDATE | (bErase? RDW_ERASE : 0));
+}
+
+BOOL
+NTAPI
+NtUserInvalidateRgn(
+    HWND hWnd,
+    HRGN hRgn,
+    BOOL bErase)
+{
+    return NtUserRedrawWindow(hWnd, NULL, hRgn, RDW_INVALIDATE | (bErase? RDW_ERASE : 0));
+}
+
 /* EOF */
