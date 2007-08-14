@@ -16,30 +16,29 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
-
-#ifdef __midl
-
 [
 	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
-    version(0.0),
-    pointer_default(unique)
+	version(0.0),
+	pointer_default(unique)
+#ifndef __midl
+	,explicit_handle
+#endif
 ]
 
 interface eventlog
 {
-    cpp_quote("#ifdef __GNUC__")
-    cpp_quote("/* FIXME ReactOS SEH support, we need remove this when gcc support native seh */")
-    cpp_quote("#include <pseh/pseh.h>")
-    cpp_quote("#endif")
-
-
-	cpp_quote("#define RPC_ENABLED")
 	cpp_quote("#if 0")
+#ifdef __midl
 	typedef [handle, unique] wchar_t *LPWSTR;
 	typedef [handle, unique] char *LPSTR;
 	typedef unsigned int NTSTATUS;
-	
+#else
+	#define LPWSTR wchar_t *
+	#define LPSTR char *
+	#define NTSTATUS long
+#endif
+
+#ifdef __midl
 	typedef struct _UNICODE_STRING {
 		unsigned short Length;
 		unsigned short MaximumLength;
@@ -47,50 +46,81 @@ interface eventlog
 	} UNICODE_STRING, *PUNICODE_STRING;
 
 	typedef struct _ANSI_STRING {
-	    unsigned short Length;
-	    unsigned short MaximumLength;
-	    [size_is(MaximumLength), unique] char *Buffer;
+		unsigned short Length;
+		unsigned short MaximumLength;
+		[size_is(MaximumLength), unique] char *Buffer;
 	} ANSI_STRING, *PANSI_STRING;
+#else
+	#define PUNICODE_STRING wchar_t *
+	#define PANSI_STRING char *
+#endif
 	cpp_quote("#endif")
 
+#ifdef __midl
 	typedef [context_handle] struct _LOGHANDLE {
 		int pos;
 	} *LOGHANDLE;
 	typedef LOGHANDLE *PLOGHANDLE;
+#else
+	#define LOGHANDLE unsigned int
+	#define PLOGHANDLE unsigned int*
+	cpp_quote("typedef unsigned int LOGHANDLE, *PLOGHANDLE;");
+#endif
 
 	/* Function 0x00 */
 	NTSTATUS ElfrClearELFW(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] PUNICODE_STRING BackupName);
 
 	/* Function 0x01 */
 	NTSTATUS ElfrBackupELFW(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] PUNICODE_STRING BackupName);
 
 	/* Function 0x02 */
 	NTSTATUS ElfrCloseEL(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in,out] PLOGHANDLE Handle);
 
 	/* Function 0x03 */
 	NTSTATUS ElfrDeregisterEventSource(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in,out] PLOGHANDLE Handle);
 
 	/* Function 0x04 */
 	NTSTATUS ElfrNumberOfRecords(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
-		[out] long * NumberOfRecords);
+		[out] long *NumberOfRecords);
 
 	/* Function 0x05 */
 	NTSTATUS ElfrOldestRecord(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE LogHandle,
-		[out] long * OldestRecNumber);
+		[out] long *OldestRecNumber);
 
 	/* Function 0x06 */
-	NTSTATUS ElfrChangeNotify(); // FIXME
+	//NTSTATUS ElfrChangeNotify(); // FIXME
 
 	/* Function 0x07 */
 	NTSTATUS ElfrOpenELW(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in, unique] LPWSTR ServerName,
 		[in] PUNICODE_STRING FileName, 
 		[in] PUNICODE_STRING NullStr, 
@@ -100,6 +130,9 @@ interface eventlog
 
 	/* Function 0x08 */
 	NTSTATUS ElfrRegisterEventSourceW(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in, unique] LPWSTR ServerName,
 		[in] PUNICODE_STRING LogName, 
 		[in] PUNICODE_STRING NullStr, 
@@ -109,6 +142,9 @@ interface eventlog
 
 	/* Function 0x09 */
 	NTSTATUS ElfrOpenBELW(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in, unique] LPWSTR ServerName,
 		[in] PUNICODE_STRING BackupName, 
 		[in] long MajorVer,
@@ -117,16 +153,22 @@ interface eventlog
 
 	/* Function 0x0a */
 	NTSTATUS ElfrReadELW(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] long Flags,
 		[in] long Offset,
 		[in] long BufSize,
-		[out,size_is(BufSize)] char * Buffer,
-		[out] long * BytesRead,
-		[out] long * BytesNeeded);
+		[out,size_is(BufSize)] unsigned char *Buffer,
+		[out] long *BytesRead,
+		[out] long *BytesNeeded);
 
 	/* Function 0x0b */
 	NTSTATUS ElfrReportEventW(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] long Time,
 		[in] short Type,
@@ -135,25 +177,38 @@ interface eventlog
 		[in] short NumStrings,
 		[in] long DataSize,
 		[in] PUNICODE_STRING ComputerName,
-		[in, unique] char *SID,
+		[in, unique] unsigned char *SID,
+#ifdef __midl
 		[in, size_is(NumStrings), unique] PUNICODE_STRING Strings[*],
-		[in, size_is(DataSize), unique] unsigned char * Data,
+#else
+		[in, size_is(NumStrings), unique] PUNICODE_STRING *Strings,
+#endif
+		[in, size_is(DataSize), unique] unsigned char *Data,
 		[in] short Flags,
-		[in,out,unique] long * unknown1,
-		[in,out,unique] long * unknown2);
+		[in,out,unique] long *unknown1,
+		[in,out,unique] long *unknown2);
 
 	/* Function 0x0c */
 	NTSTATUS ElfrClearELFA(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in,unique] PANSI_STRING BackupName);
 
 	/* Function 0x0d */
 	NTSTATUS ElfrBackupELFA(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] PANSI_STRING BackupName);
 
 	/* Function 0x0e */
 	NTSTATUS ElfrOpenELA(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in, unique] LPSTR ServerName,
 		[in] PANSI_STRING LogName, 
 		[in] PANSI_STRING NullStr, 
@@ -163,6 +218,9 @@ interface eventlog
 
 	/* Function 0x0f */
 	NTSTATUS ElfrRegisterEventSourceA(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in, unique] LPSTR ServerName,
 		[in] PANSI_STRING LogName, 
 		[in] PANSI_STRING NullStr,
@@ -172,6 +230,9 @@ interface eventlog
 
 	/* Function 0x10 */
 	NTSTATUS ElfrOpenBELA(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in, unique] LPSTR ServerName,
 		[in] PANSI_STRING BakckupName, 
 		[in] long MajorVer,
@@ -180,16 +241,22 @@ interface eventlog
 
 	/* Function 0x11 */
 	NTSTATUS ElfrReadELA(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] long Flags,
 		[in] long Offset,
 		[in] long BufSize,
-		[out,size_is(BufSize)] unsigned char * Buffer,
+		[out,size_is(BufSize)] unsigned char *Buffer,
 		[out] long *BytesRead,
 		[out] long *BytesNeeded);
 
 	/* Function 0x12 */
 	NTSTATUS ElfrReportEventA(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] long Time,
 		[in] short Type,
@@ -198,51 +265,42 @@ interface eventlog
 		[in] short NumStrings,
 		[in] long DataSize,
 		[in] PANSI_STRING ComputerName,
-		[in, unique] unsigned char * SID,
+		[in, unique] unsigned char *SID,
+#ifdef __midl
 		[in, size_is(NumStrings), unique] PANSI_STRING Strings[*],
+#else
+		[in, size_is(NumStrings), unique] PANSI_STRING *Strings,
+#endif
 		[in, size_is(DataSize), unique] unsigned char *Data,
 		[in] short Flags,
-		[in,out,unique] long * unknown1,
-		[in,out,unique] long * unknown2);
+		[in,out,unique] long *unknown1,
+		[in,out,unique] long *unknown2);
 
 	/* Function 0x13 */
-	NTSTATUS ElfrRegisterClusterSvc(); //FIXME
+	//NTSTATUS ElfrRegisterClusterSvc(); //FIXME
 
 	/* Function 0x14 */
-	NTSTATUS ElfrDeregisterClusterSvc(); //FIXME
+	//NTSTATUS ElfrDeregisterClusterSvc(); //FIXME
 
 	/* Function 0x15 */
-	NTSTATUS ElfrWriteClusterEvents(); //FIXME
+	//NTSTATUS ElfrWriteClusterEvents(); //FIXME
 
 	/* Function 0x16 */
 	NTSTATUS ElfrGetLogInformation(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle,
 		[in] long InfoLevel,
-		[out, size_is(BufSize)] char *Buffer,
+		[out, size_is(BufSize)] unsigned char *Buffer,
 		[in] long BufSize,
 		[out] long *BytesNeeded);
 	
 	/* Function 0x17 */
 	NTSTATUS ElfrFlushEL(
+#ifndef __midl
+		handle_t BindingHandle,
+#endif
 		[in] LOGHANDLE Handle); 
 
 }
-
-#else
-    cpp_quote("#ifdef __GNUC__")
-    cpp_quote("/* FIXME ReactOS SEH support, we need remove this when gcc support native seh */")
-    cpp_quote("#include  <pseh/pseh.h>")
-    cpp_quote("#endif")
-
-[
-	uuid(82273FDC-E32A-18C3-3F78-827929DC23EA),
-    version(0.0),
-    explicit_handle
-]
-
-interface eventlog
-{
-	void func(handle_t h);
-}
-
-#endif // __midl
