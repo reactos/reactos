@@ -261,7 +261,7 @@ ObpInsertHandleCount(IN POBJECT_HEADER ObjectHeader)
 
         /* Add 4 more entries */
         i += 4;
-        Size = OldSize += ((i - 1) * sizeof(OBJECT_HANDLE_COUNT_ENTRY));
+        Size = OldSize + (4 * sizeof(OBJECT_HANDLE_COUNT_ENTRY));
     }
 
     /* Allocate the DB */
