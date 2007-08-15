@@ -176,7 +176,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
     ULONGLONG CurrentOffset;
     ULONGLONG ReadLength;
     ULONGLONG AlreadyRead;
-
+ 
     if (!Context->Record.IsNonResident)
     {
         if (Offset > Context->Record.Resident.ValueLength)
@@ -186,16 +186,18 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
         RtlCopyMemory(Buffer, (PCHAR)&Context->Record + Context->Record.Resident.ValueOffset + Offset, Length);
         return Length;
     }
-
+ 
     /*
      * Non-resident attribute
      */
-
+ 
     /*
      * I. Find the corresponding start data run.
      */
-
-    if (Context->CacheRunOffset == Offset)
+ 
+    AlreadyRead = 0;
+ 
+    if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * NtfsClusterSize)
     {
         DataRun = Context->CacheRun;
         LastLCN = Context->CacheRunLastLCN;
@@ -208,7 +210,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
         LastLCN = 0;
         DataRun = (PUCHAR)&Context->Record + Context->Record.NonResident.MappingPairsOffset;
         CurrentOffset = 0;
-
+ 
         while (1)
         {
             DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
@@ -223,70 +225,97 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
                 /* Sparse data run. */
                 DataRunStartLCN = -1;
             }
-
+ 
             if (Offset >= CurrentOffset &&
                 Offset < CurrentOffset + (DataRunLength * NtfsClusterSize))
             {
                 break;
             }
-
+ 
             if (*DataRun == 0)
             {
-                return 0;
+                return AlreadyRead;
             }
-
+ 
             CurrentOffset += DataRunLength * NtfsClusterSize;
         }
     }
-
+ 
     /*
      * II. Go through the run list and read the data
      */
-
-    AlreadyRead = 0;
-    while (Length > 0)
+ 
+    ReadLength = min(DataRunLength * NtfsClusterSize - (Offset - CurrentOffset), Length);
+    if (DataRunStartLCN == -1)
+    RtlZeroMemory(Buffer, ReadLength);
+    if (NtfsDiskRead(DataRunStartLCN * NtfsClusterSize + Offset - CurrentOffset, ReadLength, Buffer))
     {
-        ReadLength = min(DataRunLength * NtfsClusterSize, Length);
-        if (DataRunStartLCN == -1)
-            RtlZeroMemory(Buffer, ReadLength);
-	else if (!NtfsDiskRead(DataRunStartLCN * NtfsClusterSize + Offset - CurrentOffset, ReadLength, Buffer))
-	    break;
-	Length -= ReadLength;
-	Buffer += ReadLength;
-	AlreadyRead += ReadLength;
-
-	/* We finished this request, but there still data in this data run. */
-	if (Length == 0 && ReadLength != DataRunLength * NtfsClusterSize)
-	    break;
-
-	/*
-	 * Go to next run in the list.
-         */
-
-	if (*DataRun == 0)
-	    break;
-        DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
-        if (DataRunOffset != -1)
+        Length -= ReadLength;
+        Buffer += ReadLength;
+        AlreadyRead += ReadLength;
+ 
+        if (ReadLength == DataRunLength * NtfsClusterSize - (Offset - CurrentOffset))
         {
-            /* Normal data run. */
-            DataRunStartLCN = LastLCN + DataRunOffset;
-            LastLCN = DataRunStartLCN;
+            CurrentOffset += DataRunLength * NtfsClusterSize;
+            DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+            if (DataRunLength != -1)
+            {
+                DataRunStartLCN = LastLCN + DataRunOffset;
+                LastLCN = DataRunStartLCN;
+            }
+            else
+                DataRunStartLCN = -1;
+ 
+            if (*DataRun == 0)
+                return AlreadyRead;
         }
-        else
+ 
+        while (Length > 0)
         {
-            /* Sparse data run. */
-            DataRunStartLCN = -1;
-        }
-        CurrentOffset += DataRunLength * NtfsClusterSize;
-    }
-
+            ReadLength = min(DataRunLength * NtfsClusterSize, Length);
+            if (DataRunStartLCN == -1)
+                RtlZeroMemory(Buffer, ReadLength);
+            else if (!NtfsDiskRead(DataRunStartLCN * NtfsClusterSize, ReadLength, Buffer))
+                break;
+ 
+            Length -= ReadLength;
+            Buffer += ReadLength;
+            AlreadyRead += ReadLength;
+ 
+            /* We finished this request, but there still data in this data run. */
+            if (Length == 0 && ReadLength != DataRunLength * NtfsClusterSize)
+                break;
+ 
+            /*
+             * Go to next run in the list.
+             */
+ 
+            if (*DataRun == 0)
+                break;
+            CurrentOffset += DataRunLength * NtfsClusterSize;
+            DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+            if (DataRunOffset != -1)
+            {
+                /* Normal data run. */
+                DataRunStartLCN = LastLCN + DataRunOffset;
+                LastLCN = DataRunStartLCN;
+            }
+            else
+            {
+                /* Sparse data run. */
+                DataRunStartLCN = -1;
+            }
+        } /* while */
+ 
+    } /* if Disk */
+ 
     Context->CacheRun = DataRun;
     Context->CacheRunOffset = Offset + AlreadyRead;
     Context->CacheRunStartLCN = DataRunStartLCN;
     Context->CacheRunLength = DataRunLength;
     Context->CacheRunLastLCN = LastLCN;
     Context->CacheRunCurrentOffset = CurrentOffset;
-
+ 
     return AlreadyRead;
 }
 
