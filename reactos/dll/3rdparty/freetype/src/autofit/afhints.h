@@ -21,7 +21,6 @@
 
 #include "aftypes.h"
 
-#define xxAF_SORT_SEGMENTS
 
 FT_BEGIN_HEADER
 
@@ -172,9 +171,6 @@ FT_BEGIN_HEADER
     FT_Int        num_segments;
     FT_Int        max_segments;
     AF_Segment    segments;
-#ifdef AF_SORT_SEGMENTS
-    FT_Int        mid_segments;
-#endif
 
     FT_Int        num_edges;
     FT_Int        max_edges;
@@ -266,7 +262,6 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error)
   af_axis_hints_new_edge( AF_AxisHints  axis,
                           FT_Int        fpos,
-                          AF_Direction  dir,
                           FT_Memory     memory,
                           AF_Edge      *edge );
 
@@ -286,8 +281,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   af_glyph_hints_reload( AF_GlyphHints  hints,
-                         FT_Outline*    outline,
-                         FT_Bool        get_inflections );
+                         FT_Outline*    outline );
 
   FT_LOCAL( void )
   af_glyph_hints_save( AF_GlyphHints  hints,

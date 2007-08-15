@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font parser (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007 by Roberto Alameda.       */
+/*  Copyright 2002, 2003, 2004, 2005, 2006 by Roberto Alameda.             */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -393,7 +393,7 @@
           break;
         }
 
-        /* check whether we have found an entry */
+        /* check whether we've found an entry */
         if ( ft_isdigit( *cur ) || only_immediates )
         {
           FT_Int  charcode;
@@ -433,11 +433,7 @@
           }
         }
         else
-        {
           T1_Skip_PS_Token( parser );
-          if ( parser->root.error )
-            return;
-        }
 
         T1_Skip_Spaces( parser );
       }
@@ -494,7 +490,7 @@
 
     FT_Long     n, string_size, old_string_size, real_size;
     FT_Byte*    string_buf = NULL;
-    FT_Bool     allocated  = 0;
+    FT_Bool     alloc      = 0;
 
     T42_Load_Status  status;
 
@@ -549,7 +545,7 @@
         if ( FT_REALLOC( string_buf, old_string_size, string_size ) )
           goto Fail;
 
-        allocated = 1;
+        alloc = 1;
 
         parser->root.cursor = cur;
         (void)T1_ToBytes( parser, string_buf, string_size, &real_size, 1 );
@@ -559,14 +555,6 @@
 
       else if ( ft_isdigit( *cur ) )
       {
-        if ( allocated )
-        {
-          FT_ERROR(( "t42_parse_sfnts: "
-                     "can't handle mixed binary and hex strings!\n" ));
-          error = T42_Err_Invalid_File_Format;
-          goto Fail;
-        }
-
         string_size = T1_ToInt( parser );
 
         T1_Skip_PS_Token( parser );             /* `RD' */
@@ -584,23 +572,9 @@
         }
       }
 
-      if ( !string_buf )
-      {
-        FT_ERROR(( "t42_parse_sfnts: invalid data in sfnts array!\n" ));
-        error = T42_Err_Invalid_File_Format;
-        goto Fail;
-      }
-
       /* A string can have a trailing zero byte for padding.  Ignore it. */
       if ( string_buf[string_size - 1] == 0 && ( string_size % 2 == 1 ) )
         string_size--;
-
-      if ( !string_size )
-      {
-        FT_ERROR(( "t42_parse_sfnts: invalid string!\n" ));
-        error = T42_Err_Invalid_File_Format;
-        goto Fail;
-      }
 
       for ( n = 0; n < string_size; n++ )
       {
@@ -680,7 +654,7 @@
     parser->root.error = error;
 
   Exit:
-    if ( allocated )
+    if ( alloc )
       FT_FREE( string_buf );
   }
 

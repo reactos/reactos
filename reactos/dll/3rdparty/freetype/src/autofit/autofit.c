@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter module (body).                                           */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007 by                              */
+/*  Copyright 2003, 2004, 2005, 2006 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,15 +21,9 @@
 #include "afangles.c"
 #include "afglobal.c"
 #include "afhints.c"
-
 #include "afdummy.c"
 #include "aflatin.c"
-#ifdef FT_OPTION_AUTOFIT2
-#include "aflatin2.c"
-#endif
 #include "afcjk.c"
-#include "afindic.c"
-
 #include "afloader.c"
 #include "afmodule.c"
 

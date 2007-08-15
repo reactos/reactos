@@ -595,7 +595,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    This function is only useful to access SFNT tables that are loaded */
   /*    by the sfnt, truetype, and opentype drivers.  See @FT_Sfnt_Tag for */
-  /*    a list.                                                            */
+  /*    a list.                                                             */
   /*                                                                       */
   FT_EXPORT( void* )
   FT_Get_Sfnt_Table( FT_Face      face,
@@ -724,26 +724,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_EXPORT( FT_ULong )
   FT_Get_CMap_Language_ID( FT_CharMap  charmap );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_CMap_Format                                                 */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return TrueType/sfnt specific cmap format.                         */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    charmap ::                                                         */
-  /*      The target charmap.                                              */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The format of `charmap'.  If `charmap' doesn't belong to a         */
-  /*    TrueType/sfnt face, return -1.                                     */
-  /*                                                                       */
-  FT_EXPORT( FT_Long )
-  FT_Get_CMap_Format( FT_CharMap  charmap );
 
   /* */
 

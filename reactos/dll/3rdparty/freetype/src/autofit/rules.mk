@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2003, 2004, 2005, 2006, 2007 by
+# Copyright 2003, 2004, 2005, 2006 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -26,12 +26,11 @@ AUTOF_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(AUTOF_DIR))
 # AUTOF driver sources (i.e., C files)
 #
 AUTOF_DRV_SRC := $(AUTOF_DIR)/afangles.c \
-                 $(AUTOF_DIR)/afcjk.c    \
                  $(AUTOF_DIR)/afdummy.c  \
                  $(AUTOF_DIR)/afglobal.c \
                  $(AUTOF_DIR)/afhints.c  \
-                 $(AUTOF_DIR)/afindic.c  \
                  $(AUTOF_DIR)/aflatin.c  \
+                 $(AUTOF_DIR)/afcjk.c    \
                  $(AUTOF_DIR)/afloader.c \
                  $(AUTOF_DIR)/afmodule.c \
                  $(AUTOF_DIR)/afwarp.c

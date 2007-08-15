@@ -34,7 +34,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) base ;
   local  _sources =  system  init    glyph  mm      bdf
                      bbox    debug   xf86   type1   pfr
                      stroke  winfnt  otval  bitmap  synth
-                     gxval   lcdfil  gasp   patent
+                     gxval   lcdfil  gasp
                      ;
 
   Library  $(FT2_LIB) : ft$(_sources).c ;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType internal cache interface (specification).                   */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -233,11 +233,10 @@ FT_BEGIN_HEADER
                                                                          \
     {                                                                    \
       FTC_Manager  _manager = _cache->manager;                           \
-      void*        _nl      = &_manager->nodes_list;                     \
                                                                          \
                                                                          \
       if ( _node != _manager->nodes_list )                               \
-        FTC_MruNode_Up( (FTC_MruNode*)_nl,                               \
+        FTC_MruNode_Up( (FTC_MruNode*)&_manager->nodes_list,             \
                         (FTC_MruNode)_node );                            \
     }                                                                    \
     goto _Ok;                                                            \

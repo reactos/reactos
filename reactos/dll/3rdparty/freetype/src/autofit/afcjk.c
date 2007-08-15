@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (body).                  */
 /*                                                                         */
-/*  Copyright 2006, 2007 by                                                */
+/*  Copyright 2006 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -332,6 +332,7 @@
     AF_Segment    segment_limit = segments + axis->num_segments;
     AF_Segment    seg;
 
+    AF_Direction  up_dir;
     FT_Fixed      scale;
     FT_Pos        edge_distance_threshold;
 
@@ -340,6 +341,9 @@
 
     scale = ( dim == AF_DIMENSION_HORZ ) ? hints->x_scale
                                          : hints->y_scale;
+
+    up_dir = ( dim == AF_DIMENSION_HORZ ) ? AF_DIR_UP
+                                          : AF_DIR_RIGHT;
 
     /*********************************************************************/
     /*                                                                   */
@@ -427,7 +431,7 @@
 
         /* insert a new edge in the list and */
         /* sort according to the position    */
-        error = af_axis_hints_new_edge( axis, seg->pos, seg->dir, memory, &edge );
+        error = af_axis_hints_new_edge( axis, seg->pos, memory, &edge );
         if ( error )
           goto Exit;
 
@@ -1361,7 +1365,7 @@
     FT_UNUSED( metrics );
 
 
-    error = af_glyph_hints_reload( hints, outline, 0 );
+    error = af_glyph_hints_reload( hints, outline );
     if ( error )
       goto Exit;
 

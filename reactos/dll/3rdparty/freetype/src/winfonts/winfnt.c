@@ -4,10 +4,8 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
-/*  Copyright 2003 Huw D M Davies for Codeweavers                          */
-/*  Copyright 2007 Dmitry Timoshkov for Codeweavers                        */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -61,80 +59,6 @@
       FT_FRAME_SKIP_BYTES( 34 ),
       FT_FRAME_USHORT_LE ( resource_tab_offset ),
       FT_FRAME_USHORT_LE ( rname_tab_offset ),
-    FT_FRAME_END
-  };
-
-  static const FT_Frame_Field  winpe32_header_fields[] =
-  {
-#undef  FT_STRUCTURE
-#define FT_STRUCTURE  WinPE32_HeaderRec
-
-    FT_FRAME_START( 248 ),
-      FT_FRAME_ULONG_LE  ( magic ),   /* PE00 */
-      FT_FRAME_USHORT_LE ( machine ), /* 0x014c - i386 */
-      FT_FRAME_USHORT_LE ( number_of_sections ),
-      FT_FRAME_SKIP_BYTES( 12 ),
-      FT_FRAME_USHORT_LE ( size_of_optional_header ),
-      FT_FRAME_SKIP_BYTES( 2 ),
-      FT_FRAME_USHORT_LE ( magic32 ), /* 0x10b */
-      FT_FRAME_SKIP_BYTES( 110 ),
-      FT_FRAME_ULONG_LE  ( rsrc_virtual_address ),
-      FT_FRAME_ULONG_LE  ( rsrc_size ),
-      FT_FRAME_SKIP_BYTES( 104 ),
-    FT_FRAME_END
-  };
-
-  static const FT_Frame_Field  winpe32_section_fields[] =
-  {
-#undef  FT_STRUCTURE
-#define FT_STRUCTURE  WinPE32_SectionRec
-
-    FT_FRAME_START( 40 ),
-      FT_FRAME_BYTES     ( name, 8 ),
-      FT_FRAME_SKIP_BYTES( 4 ),
-      FT_FRAME_ULONG_LE  ( virtual_address ),
-      FT_FRAME_ULONG_LE  ( size_of_raw_data ),
-      FT_FRAME_ULONG_LE  ( pointer_to_raw_data ),
-      FT_FRAME_SKIP_BYTES( 16 ),
-    FT_FRAME_END
-  };
-
-  static const FT_Frame_Field  winpe_rsrc_dir_fields[] =
-  {
-#undef  FT_STRUCTURE
-#define FT_STRUCTURE  WinPE_RsrcDirRec
-
-    FT_FRAME_START( 16 ),
-      FT_FRAME_ULONG_LE ( characteristics ),
-      FT_FRAME_ULONG_LE ( time_date_stamp ),
-      FT_FRAME_USHORT_LE( major_version ),
-      FT_FRAME_USHORT_LE( minor_version ),
-      FT_FRAME_USHORT_LE( number_of_named_entries ),
-      FT_FRAME_USHORT_LE( number_of_id_entries ),
-    FT_FRAME_END
-  };
-
-  static const FT_Frame_Field  winpe_rsrc_dir_entry_fields[] =
-  {
-#undef  FT_STRUCTURE
-#define FT_STRUCTURE  WinPE_RsrcDirEntryRec
-
-    FT_FRAME_START( 8 ),
-      FT_FRAME_ULONG_LE( name ),
-      FT_FRAME_ULONG_LE( offset ),
-    FT_FRAME_END
-  };
-
-  static const FT_Frame_Field  winpe_rsrc_data_entry_fields[] =
-  {
-#undef  FT_STRUCTURE
-#define FT_STRUCTURE  WinPE_RsrcDataEntryRec
-
-    FT_FRAME_START( 16 ),
-      FT_FRAME_ULONG_LE( offset_to_data ),
-      FT_FRAME_ULONG_LE( size ),
-      FT_FRAME_ULONG_LE( code_page ),
-      FT_FRAME_ULONG_LE( reserved ),
     FT_FRAME_END
   };
 
@@ -290,8 +214,6 @@
       WinNE_HeaderRec  ne_header;
 
 
-      FT_TRACE2(( "MZ signature found\n" ));
-
       if ( FT_STREAM_SEEK( mz_header.lfanew )                       ||
            FT_STREAM_READ_FIELDS( winne_header_fields, &ne_header ) )
         goto Exit;
@@ -306,8 +228,6 @@
         FT_UShort  font_count  = 0;
         FT_ULong   font_offset = 0;
 
-
-        FT_TRACE2(( "NE signature found\n" ));
 
         if ( FT_STREAM_SEEK( res_offset )                    ||
              FT_FRAME_ENTER( ne_header.rname_tab_offset -
@@ -343,16 +263,7 @@
         if ( !font_count || !font_offset )
         {
           FT_TRACE2(( "this file doesn't contain any FNT resources!\n" ));
-          error = FNT_Err_Invalid_File_Format;
-          goto Exit;
-        }
-
-        /* loading `winfnt_header_fields' needs at least 118 bytes;    */
-        /* use this as a rough measure to check the expected font size */
-        if ( font_count * 118UL > stream->size )
-        {
-          FT_TRACE2(( "invalid number of faces\n" ));
-          error = FNT_Err_Invalid_File_Format;
+          error = FNT_Err_Unknown_File_Format;
           goto Exit;
         }
 
@@ -371,201 +282,15 @@
              FT_FRAME_ENTER( 12 )                            )
           goto Fail;
 
-        face->font->offset   = (FT_ULong)FT_GET_USHORT_LE() << size_shift;
-        face->font->fnt_size = (FT_ULong)FT_GET_USHORT_LE() << size_shift;
+        face->font->offset     = (FT_ULong)FT_GET_USHORT_LE() << size_shift;
+        face->font->fnt_size   = (FT_ULong)FT_GET_USHORT_LE() << size_shift;
+        face->font->size_shift = size_shift;
 
         stream->cursor += 8;
 
         FT_FRAME_EXIT();
 
         error = fnt_font_load( face->font, stream );
-      }
-      else if ( ne_header.magic == WINFNT_PE_MAGIC )
-      {
-        WinPE32_HeaderRec       pe32_header;
-        WinPE32_SectionRec      pe32_section;
-        WinPE_RsrcDirRec        root_dir, name_dir, lang_dir;
-        WinPE_RsrcDirEntryRec   dir_entry1, dir_entry2, dir_entry3;
-        WinPE_RsrcDataEntryRec  data_entry;
-
-        FT_Long    root_dir_offset, name_dir_offset, lang_dir_offset;
-        FT_UShort  i, j, k;
-
-
-        FT_TRACE2(( "PE signature found\n" ));
-
-        if ( FT_STREAM_SEEK( mz_header.lfanew )                           ||
-             FT_STREAM_READ_FIELDS( winpe32_header_fields, &pe32_header ) )
-          goto Exit;
-
-        FT_TRACE2(( "magic %04lx, machine %02x, number_of_sections %u, "
-                    "size_of_optional_header %02x\n"
-                    "magic32 %02x, rsrc_virtual_address %04lx, "
-                    "rsrc_size %04lx\n",
-                    pe32_header.magic, pe32_header.machine,
-                    pe32_header.number_of_sections,
-                    pe32_header.size_of_optional_header,
-                    pe32_header.magic32, pe32_header.rsrc_virtual_address,
-                    pe32_header.rsrc_size ));
-
-        if ( pe32_header.magic != WINFNT_PE_MAGIC /* check full signature */ ||
-             pe32_header.machine != 0x014c /* i386 */                        ||
-             pe32_header.size_of_optional_header != 0xe0 /* FIXME */         ||
-             pe32_header.magic32 != 0x10b                                    )
-        {
-          FT_TRACE2(( "this file has an invalid PE header\n" ));
-          error = FNT_Err_Invalid_File_Format;
-          goto Exit;
-        }
-
-        face->root.num_faces = 0;
-
-        for ( i = 0; i < pe32_header.number_of_sections; i++ )
-        {
-          if ( FT_STREAM_READ_FIELDS( winpe32_section_fields,
-                                      &pe32_section ) )
-            goto Exit;
-
-          FT_TRACE2(( "name %.8s, va %04lx, size %04lx, offset %04lx\n",
-                      pe32_section.name, pe32_section.virtual_address,
-                      pe32_section.size_of_raw_data,
-                      pe32_section.pointer_to_raw_data ));
-
-          if ( pe32_header.rsrc_virtual_address ==
-                 pe32_section.virtual_address )
-            goto Found_rsrc_section;
-        }
-
-        FT_TRACE2(( "this file doesn't contain any resources\n" ));
-        error = FNT_Err_Invalid_File_Format;
-        goto Exit;
-
-      Found_rsrc_section:
-        FT_TRACE2(( "found resources section %.8s\n", pe32_section.name ));
-
-        if ( FT_STREAM_SEEK( pe32_section.pointer_to_raw_data )        ||
-             FT_STREAM_READ_FIELDS( winpe_rsrc_dir_fields, &root_dir ) )
-          goto Exit;
-
-        root_dir_offset = pe32_section.pointer_to_raw_data;
-
-        for ( i = 0; i < root_dir.number_of_named_entries +
-                           root_dir.number_of_id_entries; i++ )
-        {
-          if ( FT_STREAM_SEEK( root_dir_offset + 16 + i * 8 )      ||
-               FT_STREAM_READ_FIELDS( winpe_rsrc_dir_entry_fields,
-                                      &dir_entry1 )                )
-            goto Exit;
-
-          if ( !(dir_entry1.offset & 0x80000000UL ) /* DataIsDirectory */ )
-          {
-            error = FNT_Err_Invalid_File_Format;
-            goto Exit;
-          }
-
-          dir_entry1.offset &= ~0x80000000UL;
-
-          name_dir_offset = pe32_section.pointer_to_raw_data +
-                            dir_entry1.offset;
-
-          if ( FT_STREAM_SEEK( pe32_section.pointer_to_raw_data +
-                               dir_entry1.offset )                       ||
-               FT_STREAM_READ_FIELDS( winpe_rsrc_dir_fields, &name_dir ) )
-            goto Exit;
-
-          for ( j = 0; j < name_dir.number_of_named_entries +
-                             name_dir.number_of_id_entries; j++ )
-          {
-            if ( FT_STREAM_SEEK( name_dir_offset + 16 + j * 8 )      ||
-                 FT_STREAM_READ_FIELDS( winpe_rsrc_dir_entry_fields,
-                                        &dir_entry2 )                )
-              goto Exit;
-
-            if ( !(dir_entry2.offset & 0x80000000UL ) /* DataIsDirectory */ )
-            {
-              error = FNT_Err_Invalid_File_Format;
-              goto Exit;
-            }
-
-            dir_entry2.offset &= ~0x80000000UL;
-
-            lang_dir_offset = pe32_section.pointer_to_raw_data +
-                                dir_entry2.offset;
-
-            if ( FT_STREAM_SEEK( pe32_section.pointer_to_raw_data +
-                                   dir_entry2.offset )                     ||
-                 FT_STREAM_READ_FIELDS( winpe_rsrc_dir_fields, &lang_dir ) )
-              goto Exit;
-
-            for ( k = 0; k < lang_dir.number_of_named_entries +
-                               lang_dir.number_of_id_entries; k++ )
-            {
-              if ( FT_STREAM_SEEK( lang_dir_offset + 16 + k * 8 )      ||
-                   FT_STREAM_READ_FIELDS( winpe_rsrc_dir_entry_fields,
-                                          &dir_entry3 )                )
-                goto Exit;
-
-              if ( dir_entry2.offset & 0x80000000UL /* DataIsDirectory */ )
-              {
-                error = FNT_Err_Invalid_File_Format;
-                goto Exit;
-              }
-
-              if ( dir_entry1.name == 8 /* RT_FONT */ )
-              {
-                if ( FT_STREAM_SEEK( root_dir_offset + dir_entry3.offset ) ||
-                     FT_STREAM_READ_FIELDS( winpe_rsrc_data_entry_fields,
-                                            &data_entry )                  )
-                  goto Exit;
-
-                FT_TRACE2(( "found font #%lu, offset %04lx, "
-                            "size %04lx, cp %lu\n",
-                            dir_entry2.name,
-                            pe32_section.pointer_to_raw_data +
-                              data_entry.offset_to_data -
-                              pe32_section.virtual_address,
-                            data_entry.size, data_entry.code_page ));
-
-                if ( face_index == face->root.num_faces )
-                {
-                  if ( FT_NEW( face->font ) )
-                    goto Exit;
-
-                  face->font->offset   = pe32_section.pointer_to_raw_data +
-                                           data_entry.offset_to_data -
-                                           pe32_section.virtual_address;
-                  face->font->fnt_size = data_entry.size;
-
-                  error = fnt_font_load( face->font, stream );
-                  if ( error )
-                  {
-                    FT_TRACE2(( "font #%lu load error %d\n",
-                                dir_entry2.name, error ));
-                    goto Fail;
-                  }
-                  else
-                    FT_TRACE2(( "font #%lu successfully loaded\n",
-                                dir_entry2.name ));
-                }
-
-                face->root.num_faces++;
-              }
-            }
-          }
-        }
-      }
-
-      if ( !face->root.num_faces )
-      {
-        FT_TRACE2(( "this file doesn't contain any RT_FONT resources\n" ));
-        error = FNT_Err_Invalid_File_Format;
-        goto Exit;
-      }
-
-      if ( face_index >= face->root.num_faces )
-      {
-        error = FNT_Err_Bad_Argument;
-        goto Exit;
       }
     }
 
@@ -661,16 +386,13 @@
   static void
   FNT_Face_Done( FNT_Face  face )
   {
-    if ( face )
-    {
-      FT_Memory  memory = FT_FACE_MEMORY( face );
+    FT_Memory  memory = FT_FACE_MEMORY( face );
 
 
-      fnt_font_done( face );
+    fnt_font_done( face );
 
-      FT_FREE( face->root.available_sizes );
-      face->root.num_fixed_sizes = 0;
-    }
+    FT_FREE( face->root.available_sizes );
+    face->root.num_fixed_sizes = 0;
   }
 
 
@@ -690,17 +412,11 @@
 
     /* try to load font from a DLL */
     error = fnt_face_get_dll_font( face, face_index );
-    if ( error == FNT_Err_Unknown_File_Format )
+    if ( error )
     {
       /* this didn't work; try to load a single FNT font */
       FNT_Font  font;
 
-
-      if ( face_index > 0 )
-      {
-        error = FNT_Err_Bad_Argument;
-        goto Exit;
-      }
 
       if ( FT_NEW( face->font ) )
         goto Exit;
@@ -712,10 +428,9 @@
       font->fnt_size = stream->size;
 
       error = fnt_font_load( font, stream );
+      if ( error )
+        goto Fail;
     }
-
-    if ( error )
-      goto Fail;
 
     /* we now need to fill the root FT_Face fields */
     /* with relevant information                   */
@@ -818,17 +533,11 @@
       root->num_glyphs = font->header.last_char -
                          font->header.first_char + 1 + 1;
 
-      if ( font->header.face_name_offset >= font->header.file_size )
-      {
-        FT_TRACE2(( "invalid family name offset!\n" ));
-        error = FNT_Err_Invalid_File_Format;
-        goto Fail;
-      }
-      family_size = font->header.file_size - font->header.face_name_offset;
       /* Some broken fonts don't delimit the face name with a final */
       /* NULL byte -- the frame is erroneously one byte too small.  */
       /* We thus allocate one more byte, setting it explicitly to   */
       /* zero.                                                      */
+      family_size = font->header.file_size - font->header.face_name_offset;
       if ( FT_ALLOC( font->family_name, family_size + 1 ) )
         goto Fail;
 
@@ -986,13 +695,6 @@
       bitmap->pitch      = pitch;
       bitmap->rows       = font->header.pixel_height;
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
-
-      if ( offset + pitch * bitmap->rows >= font->header.file_size )
-      {
-        FT_TRACE2(( "invalid bitmap width\n" ));
-        error = FNT_Err_Invalid_File_Format;
-        goto Exit;
-      }
 
       /* note: since glyphs are stored in columns and not in rows we */
       /*       can't use ft_glyphslot_set_bitmap                     */

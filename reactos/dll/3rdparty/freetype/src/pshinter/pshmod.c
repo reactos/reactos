@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript hinter module implementation (body).             */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2007 by                                          */
+/*  Copyright 2001, 2002 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -51,7 +51,6 @@
   ps_hinter_init( PS_Hinter_Module  module )
   {
     FT_Memory  memory = module->root.memory;
-    void*      ph     = &module->ps_hints;
 
 
     ps_hints_init( &module->ps_hints, memory );
@@ -59,10 +58,10 @@
     psh_globals_funcs_init( &module->globals_funcs );
 
     t1_hints_funcs_init( &module->t1_funcs );
-    module->t1_funcs.hints = (T1_Hints)ph;
+    module->t1_funcs.hints = (T1_Hints)&module->ps_hints;
 
     t2_hints_funcs_init( &module->t2_funcs );
-    module->t2_funcs.hints = (T2_Hints)ph;
+    module->t2_funcs.hints = (T2_Hints)&module->ps_hints;
 
     return 0;
   }

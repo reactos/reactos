@@ -8,7 +8,7 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2005, 2006, 2007 by David Turner.                            */
+/*  Copyright 2005, 2006 by David Turner.                                  */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -112,13 +112,13 @@
   typedef struct  _FT_LzwStateRec
   {
     FT_LzwPhase  phase;
-    FT_Int       in_eof;
 
-    FT_Byte      buf_tab[16];
-    FT_Int       buf_offset;
-    FT_Int       buf_size;
-    FT_Bool      buf_clear;
-    FT_Int       buf_total;
+    FT_Int       in_eof;
+    FT_Byte*     in_cursor;   /* current buffer pos   */
+    FT_Byte*     in_limit;    /* current buffer limit */
+
+    FT_UInt32    pad;         /* a pad value where incoming bits were read */
+    FT_Int       pad_bits;    /* number of meaningful bits in pad value    */
 
     FT_UInt      max_bits;    /* max code bits, from file header   */
     FT_Int       block_mode;  /* block mode flag, from file header */
@@ -138,6 +138,8 @@
     FT_Byte*     stack;       /* character stack */
     FT_UInt      stack_top;
     FT_UInt      stack_size;
+
+    FT_Byte      in_buff[FT_LZW_IN_BUFF_SIZE];       /* small read-buffer   */
     FT_Byte      stack_0[FT_LZW_DEFAULT_STACK_SIZE]; /* minimize heap alloc */
 
     FT_Stream    source;      /* source stream */

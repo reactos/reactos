@@ -1066,25 +1066,11 @@
     FT_Face     root   = (FT_Face)&face->root;
     FT_Fixed    temp[6];
     FT_Fixed    temp_scale;
-    FT_Int      result;
 
 
-    result = T1_ToFixedArray( parser, 6, temp, 3 );
-
-    if ( result < 0 )
-    {
-      parser->root.error = T1_Err_Invalid_File_Format;
-      return;
-    }
+    (void)T1_ToFixedArray( parser, 6, temp, 3 );
 
     temp_scale = FT_ABS( temp[3] );
-
-    if ( temp_scale == 0 )
-    {
-      FT_ERROR(( "parse_font_matrix: invalid font matrix\n" ));
-      parser->root.error = T1_Err_Invalid_File_Format;
-      return;
-    }
 
     /* Set Units per EM based on FontMatrix values.  We set the value to */
     /* 1000 / temp_scale, because temp_scale was already multiplied by   */
@@ -1267,11 +1253,7 @@
           }
         }
         else
-        {
           T1_Skip_PS_Token( parser );
-          if ( parser->root.error )
-            return;
-        }
 
         T1_Skip_Spaces( parser );
       }
@@ -1396,12 +1378,6 @@
       {
         FT_Byte*  temp;
 
-
-        if ( size <= face->type1.private_dict.lenIV )
-        {
-          error = T1_Err_Invalid_File_Format;
-          goto Fail;
-        }
 
         /* t1_decrypt() shouldn't write to base -- make temporary copy */
         if ( FT_ALLOC( temp, size ) )
@@ -1572,17 +1548,11 @@
           notdef_found = 1;
         }
 
-        if ( face->type1.private_dict.lenIV >= 0 &&
-             n < num_glyphs + TABLE_EXTEND       )
+        if ( face->type1.private_dict.lenIV >= 0   &&
+             n < num_glyphs + TABLE_EXTEND )
         {
           FT_Byte*  temp;
 
-
-          if ( size <= face->type1.private_dict.lenIV )
-          {
-            error = T1_Err_Invalid_File_Format;
-            goto Fail;
-          }
 
           /* t1_decrypt() shouldn't write to base -- make temporary copy */
           if ( FT_ALLOC( temp, size ) )

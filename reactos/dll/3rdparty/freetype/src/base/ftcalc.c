@@ -743,6 +743,7 @@
     }
     else /* general case */
     {
+
 #ifdef FT_LONG64
 
       FT_Int64  delta = (FT_Int64)in_x * out_y - (FT_Int64)in_y * out_x;

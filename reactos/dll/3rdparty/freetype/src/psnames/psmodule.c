@@ -32,7 +32,7 @@
 #ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
 
 
-#define VARIANT_BIT         0x80000000UL
+#define VARIANT_BIT         ( 1L << 31 )
 #define BASE_GLYPH( code )  ( (code) & ~VARIANT_BIT )
 
 
@@ -92,7 +92,7 @@
         if ( *p == '\0' )
           return value;
         if ( *p == '.' )
-          return value | VARIANT_BIT;
+          return value ^ VARIANT_BIT;
       }
     }
 
@@ -132,7 +132,7 @@
         if ( *p == '\0' )
           return value;
         if ( *p == '.' )
-          return value | VARIANT_BIT;
+          return value ^ VARIANT_BIT;
       }
     }
 
@@ -156,7 +156,7 @@
       if ( !dot )
         return ft_get_adobe_glyph_index( glyph_name, p );
       else
-        return ft_get_adobe_glyph_index( glyph_name, dot ) | VARIANT_BIT;
+        return ft_get_adobe_glyph_index( glyph_name, dot ) ^ VARIANT_BIT;
     }
   }
 

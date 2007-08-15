@@ -423,13 +423,13 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   tt_size_run_prep( TT_Size  size );
 
-  FT_LOCAL( FT_Error )
-  tt_size_ready_bytecode( TT_Size  size );
-
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
   FT_LOCAL( FT_Error )
   tt_size_reset( TT_Size  size );
+
+  FT_LOCAL( FT_Error )
+  tt_size_ready_bytecode( TT_Size  size );
 
 
   /*************************************************************************/

@@ -78,6 +78,15 @@
   /**********************************************************************/
 
 
+#include <ctype.h>
+
+#define ft_isalnum   isalnum
+#define ft_isdigit   isdigit
+#define ft_islower   islower
+#define ft_isupper   isupper
+#define ft_isxdigit  isxdigit
+
+
 #include <string.h>
 
 #define ft_memchr   memchr

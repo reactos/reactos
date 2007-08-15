@@ -621,10 +621,6 @@
     exec->pts.n_points   = 0;
     exec->pts.n_contours = 0;
 
-    exec->zp1 = exec->pts;
-    exec->zp2 = exec->pts;
-    exec->zp0 = exec->pts;
-
     exec->instruction_trap = FALSE;
 
     return TT_Err_Ok;
@@ -1131,7 +1127,16 @@
     1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1
   };
 
+  static
+  const FT_Vector  Null_Vector = {0,0};
+
+
 #undef PACK
+
+
+#undef  NULL_Vector
+#define NULL_Vector  (FT_Vector*)&Null_Vector
+
 
 #if 1
 
@@ -6152,13 +6157,6 @@
      */
     twilight = CUR.GS.gep0 == 0 || CUR.GS.gep1 == 0 || CUR.GS.gep2 == 0;
 
-    if ( BOUNDS( CUR.GS.rp1, CUR.zp0.n_points ) )
-    {
-      if ( CUR.pedantic_hinting )
-        CUR.error = TT_Err_Invalid_Reference;
-      return;
-    }
-
     if ( twilight )
       orus_base = &CUR.zp0.org[CUR.GS.rp1];
     else
@@ -6215,7 +6213,7 @@
                    ? TT_MULDIV( org_dist, cur_range, old_range )
                    : cur_dist;
 
-      CUR_Func_move( &CUR.zp2, (FT_UShort)point, new_dist - cur_dist );
+      CUR_Func_move( &CUR.zp2, point, new_dist - cur_dist );
     }
     CUR.GS.loop = 1;
     CUR.new_top = CUR.args;
@@ -6262,7 +6260,6 @@
     FT_Vector*  orgs;   /* original and current coordinate */
     FT_Vector*  curs;   /* arrays                          */
     FT_Vector*  orus;
-    FT_UInt     max_points;
 
   } IUP_WorkerRec, *IUP_Worker;
 
@@ -6301,10 +6298,6 @@
 
 
     if ( p1 > p2 )
-      return;
-
-    if ( BOUNDS( ref1, worker->max_points ) ||
-         BOUNDS( ref2, worker->max_points ) )
       return;
 
     orus1 = worker->orus[ref1].x;
@@ -6406,10 +6399,6 @@
     FT_UNUSED_ARG;
 
 
-    /* ignore empty outlines */
-    if ( CUR.pts.n_contours == 0 )
-      return;
-
     if ( CUR.opcode & 1 )
     {
       mask   = FT_CURVE_TAG_TOUCH_X;
@@ -6424,7 +6413,6 @@
       V.curs = (FT_Vector*)( (FT_Pos*)CUR.pts.cur + 1 );
       V.orus = (FT_Vector*)( (FT_Pos*)CUR.pts.orus + 1 );
     }
-    V.max_points = CUR.pts.n_points;
 
     contour = 0;
     point   = 0;

@@ -619,22 +619,7 @@
           error = SFNT_Err_Ok;
         }
         else
-        {
           error = SFNT_Err_Horiz_Header_Missing;
-
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-          /* If this is an incrementally loaded font and there are */
-          /* overriding metrics, tolerate a missing `hhea' table.  */
-          if ( face->root.internal->incremental_interface          &&
-               face->root.internal->incremental_interface->funcs->
-                 get_glyph_metrics                                 )
-          {
-            face->horizontal.number_Of_HMetrics = 0;
-            error = SFNT_Err_Ok;
-          }
-#endif
-
-        }
       }
 
       if ( error )

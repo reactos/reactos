@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007 by Roberto Alameda.       */
+/*  Copyright 2002, 2003, 2004, 2005, 2006 by Roberto Alameda.             */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -55,8 +55,6 @@
 
     error = t42_parse_dict( face, &loader,
                             parser->base_dict, parser->base_len );
-    if ( error )
-      goto Exit;
 
     if ( type1->font_type != 42 )
     {

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType abstract glyph cache (specification).                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2004, 2006, 2007 by                         */
+/*  Copyright 2000-2001, 2003, 2004, 2006 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -300,14 +300,11 @@ FT_BEGIN_HEADER
 
 #else /* !FTC_INLINE */
 
-#define FTC_GCACHE_LOOKUP_CMP( cache, famcmp, nodecmp, hash,          \
-                               gindex, query, node, error )           \
-   FT_BEGIN_STMNT                                                     \
-     void*  _n = &(node);                                             \
-                                                                      \
-                                                                      \
-     error = FTC_GCache_Lookup( FTC_GCACHE( cache ), hash, gindex,    \
-                                FTC_GQUERY( query ), (FTC_Node*)_n ); \
+#define FTC_GCACHE_LOOKUP_CMP( cache, famcmp, nodecmp, hash,               \
+                               gindex, query, node, error )                \
+   FT_BEGIN_STMNT                                                          \
+     error = FTC_GCache_Lookup( FTC_GCACHE( cache ), hash, gindex,         \
+                                FTC_GQUERY( query ), (FTC_Node*)&(node) ); \
    FT_END_STMNT
 
 #endif /* !FTC_INLINE */

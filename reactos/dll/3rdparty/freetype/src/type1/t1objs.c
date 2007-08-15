@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 objects manager (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -191,11 +191,13 @@
   FT_LOCAL_DEF( void )
   T1_Face_Done( T1_Face  face )
   {
+    FT_Memory  memory;
+    T1_Font    type1 = &face->type1;
+
+
     if ( face )
     {
-      FT_Memory  memory = face->root.memory;
-      T1_Font    type1  = &face->type1;
-
+      memory = face->root.memory;
 
 #ifndef T1_CONFIG_OPTION_NO_MM_SUPPORT
       /* release multiple masters information */

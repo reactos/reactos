@@ -92,14 +92,14 @@
     /* since the cast below also disables the compiler's */
     /* type check, we introduce a dummy variable, which  */
     /* will be optimized away                            */
-    volatile ft_jmp_buf* jump_buffer = &valid->jump_buffer;
+    volatile jmp_buf* jump_buffer = &valid->jump_buffer;
 
 
     valid->error = error;
 
     /* throw away volatileness; use `jump_buffer' or the  */
     /* compiler may warn about an unused local variable   */
-    ft_longjmp( *(ft_jmp_buf*) jump_buffer, 1 );
+    ft_longjmp( *(jmp_buf*) jump_buffer, 1 );
   }
 
 
@@ -787,9 +787,6 @@
     FT_Int  n;
 
 
-    if ( !face )
-      return;
-
     for ( n = 0; n < face->num_charmaps; n++ )
     {
       FT_CMap  cmap = FT_CMAP( face->charmaps[n] );
@@ -1201,7 +1198,7 @@
   {
     FT_Open_Args  args;
     FT_Error      error;
-    FT_Stream     stream = NULL;
+    FT_Stream     stream;
     FT_Memory     memory = library->memory;
 
 
@@ -2226,14 +2223,16 @@
   FT_Request_Metrics( FT_Face          face,
                       FT_Size_Request  req )
   {
+    FT_Driver_Class   clazz;
     FT_Size_Metrics*  metrics;
 
 
+    clazz   = face->driver->clazz;
     metrics = &face->size->metrics;
 
     if ( FT_IS_SCALABLE( face ) )
     {
-      FT_Long  w = 0, h = 0, scaled_w = 0, scaled_h = 0;
+      FT_Long  w, h, scaled_w = 0, scaled_h = 0;
 
 
       switch ( req->type )
@@ -2246,14 +2245,14 @@
         w = h = face->ascender - face->descender;
         break;
 
-      case FT_SIZE_REQUEST_TYPE_BBOX:
-        w = face->bbox.xMax - face->bbox.xMin;
-        h = face->bbox.yMax - face->bbox.yMin;
-        break;
-
       case FT_SIZE_REQUEST_TYPE_CELL:
         w = face->max_advance_width;
         h = face->ascender - face->descender;
+        break;
+
+      case FT_SIZE_REQUEST_TYPE_BBOX:
+        w = face->bbox.xMax - face->bbox.xMin;
+        h = face->bbox.yMax - face->bbox.yMin;
         break;
 
       case FT_SIZE_REQUEST_TYPE_SCALES:
@@ -2264,8 +2263,11 @@
         else if ( !metrics->y_scale )
           metrics->y_scale = metrics->x_scale;
         goto Calculate_Ppem;
+        break;
 
-      case FT_SIZE_REQUEST_TYPE_MAX:
+      default:
+        /* this never happens */
+        return;
         break;
       }
 
@@ -2433,14 +2435,11 @@
     if ( char_height < 1 * 64 )
       char_height = 1 * 64;
 
-    if ( !horz_resolution )
-      horz_resolution = vert_resolution = 72;
-
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = char_width;
     req.height         = char_height;
-    req.horiResolution = horz_resolution;
-    req.vertResolution = vert_resolution;
+    req.horiResolution = ( horz_resolution ) ? horz_resolution : 72;
+    req.vertResolution = ( vert_resolution ) ? vert_resolution : 72;
 
     return FT_Request_Size( face, &req );
   }
@@ -2552,6 +2551,7 @@
   {
     FT_Service_Kerning  service;
     FT_Error            error = FT_Err_Ok;
+    FT_Driver           driver;
 
 
     if ( !face )
@@ -2559,6 +2559,8 @@
 
     if ( !akerning )
       return FT_Err_Invalid_Argument;
+
+    driver = face->driver;
 
     FT_FACE_FIND_SERVICE( face, service, KERNING );
     if ( !service )
@@ -3025,30 +3027,6 @@
       return 0;
 
     return cmap_info.language;
-  }
-
-
-  /* documentation is in tttables.h */
-
-  FT_EXPORT_DEF( FT_Long )
-  FT_Get_CMap_Format( FT_CharMap  charmap )
-  {
-    FT_Service_TTCMaps  service;
-    FT_Face             face;
-    TT_CMapInfo         cmap_info;
-
-
-    if ( !charmap || !charmap->face )
-      return -1;
-
-    face = charmap->face;
-    FT_FACE_FIND_SERVICE( face, service, TT_CMAP );
-    if ( service == NULL )
-      return -1;
-    if ( service->get_cmap_info( charmap, &cmap_info ))
-      return -1;
-
-    return cmap_info.format;
   }
 
 
@@ -3725,9 +3703,8 @@
 
     /* allocate the render pool */
     library->raster_pool_size = FT_RENDER_POOL_SIZE;
-    if ( FT_RENDER_POOL_SIZE > 0 )
-      if ( FT_ALLOC( library->raster_pool, FT_RENDER_POOL_SIZE ) )
-        goto Fail;
+    if ( FT_ALLOC( library->raster_pool, FT_RENDER_POOL_SIZE ) )
+      goto Fail;
 
     /* That's ok now */
     *alibrary = library;

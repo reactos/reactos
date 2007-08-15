@@ -683,7 +683,7 @@
 	FT_QRENEW_ARRAY, FT_ALLOC_ARRAY, FT_REALLOC_ARRAY): Updated.
 
 	* include/freetype/internal/ftserv.h (FT_FACE_FIND_SERVICE,
-	FT_FACE_FIND_GLOBAL_SERVICE, FT_FACE_LOOKUP_SERVICE) [__cplusplus]:
+	FT_FACE_FIND_GLOBAL_SERVICE, FT_FACE_LOOKUP_SERVICE) [__cpluscplus]:
 	Provide macro versions which avoid compiler warnings.
 
 	* src/base/ftutil.c (ft_highpow2): New utility function.
@@ -1220,7 +1220,7 @@
 
 2004-11-16  Owen Taylor  <otaylor@redhat.com>
 
-	* builds/unix/freetype-config.in: Suppress -L$libdir for
+	* builds/unix/freetype-config.in: Supress -L$libdir for
 	/usr/lib64 as well as /usr/lib. (Reported by Dan Winship -
 	https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=139199)
 
@@ -1544,7 +1544,7 @@
 	(otl_pos_class_set_validate, otl_pos_class_rule_validate): Removed.
 	(otl_gpos_lookup7_validate): Complete code for format 2.
 	(otl_chain_pos_class_rule_validate,
-	otl_chain_pos_class_set_validate): Removed.
+	otl_chaim_pos_class_set_validate): Removed.
 	(otl_gpos_lookup8_validate): Don't call
 	otl_chain_pos_class_set_validate but
 	otl_chain_pos_rule_set_validate.
@@ -1738,7 +1738,7 @@
 
 	* src/otlayout/otlbase.c (otl_base_coord_validate): Fix call to
 	otl_device_table_validate.
-	(otl_base_script_validate): Add missing variable declarations.
+	(otl_base_scsript_validate): Add missing variable declarations.
 	(otl_base_script_list_validate): Fix call to
 	otl_base_script_validate.
 	(otl_axis_table_validate): Fix calls to otl_base_tag_list_validate
@@ -3292,7 +3292,7 @@
 
 2004-01-22  Werner Lemberg  <wl@gnu.org>
 
-	Add support for the hexadecimal representation of binary data
+	Add support for the hexadicimal representation of binary data
 	started with `StartData' in CID-keyed Type 1 fonts.
 
 	* include/freetype/internal/t1types.h (CID_FaceRec): Add new
@@ -4565,7 +4565,7 @@
 	is now of type `FT_Module_Requester'.
 	(SFNT_Get_Interface_Func, SFNT_Load_Table_Func): Function pointers
 	moved (in modified form) to...
-	* include/freetype/internal/services/sfnt.h: New file.
+	* include/freetype/internal/servies/sfnt.h: New file.
 
 	* include/freetype/tttables.h (FT_Get_Sfnt_Table_Func): Function
 	pointer moved (in modified form) to `services/sfnt.h'.
@@ -6391,7 +6391,7 @@
 	* include/freetype/internal/fnttypes.h (WinFNT_HeaderRec): Increase
 	size of `reserved2' to avoid memory overwrites.
 
-2003-01-08  Huw Davies  <huw@codeweavers.com>
+2003-01-08  Huw Dawies  <huw@codeweavers.com>
 
 	* src/winfonts/winfnt.c (winfnt_header_fields): Read 16 bytes into
 	`reserved2', not `reserved'.
@@ -6554,7 +6554,7 @@
 	src/otlayout/otlgsub.c, src/otlayout/otlgsub.h,
 	src/otlayout/otlparse.c, src/otlayout/otlparse.h,
 	src/otlayout/otlutils.h: Updating the OpenType Layout code, adding
-	support for the first GSUB lookups.  Nothing that really compiles
+	support fot the first GSUB lookups.  Nothing that really compiles
 	for now though.
 
 	* src/autohint/ahhint.c (ah_align_serif_edge): Disabled serif stem
@@ -8066,7 +8066,7 @@
 
 	* src/cache/ftccache.c (ftc_node_hash_unlink): Fixed a
 	bug that caused nasty memory overwrites.  The hash table's
-	buckets array wasn't correctly resized when shrunk.
+	buckets array wasn't correctly resized when shrinked.
 
 2002-06-08  Detlef Würkner  <TetiSoft@apg.lahn.de>
 
@@ -8236,7 +8236,7 @@
 	* include/freetype/config/ftheader.h (FT_XFREE86_H): New macro (not
 	documented yet).
 
-	* src/base/fttype1.c: New file, providing two new API functions
+	* src/base/fttype1.c: New file, provoding two new API functions
 	(FT_Get_PS_Font_Info and FT_Has_PS_Glyph_Names).
 	* include/freetype/t1tables.h: Updated.
 
@@ -9086,7 +9086,7 @@
 	SFNT/TrueType type definitions.
 
 	* include/freetype/freetype.h, include/freetype/internal/ftgloadr.h:
-	Updating type definitions for the glyph loader.
+	Updating type defintiions for the glyph loader.
 
 2002-03-13  Antoine Leca  <antoine@oriolnet.com>
 
@@ -9423,7 +9423,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2002, 2003, 2004, 2005, 2007 by
+Copyright 2002, 2003, 2004, 2005 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

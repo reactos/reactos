@@ -84,7 +84,7 @@
 
     for ( nn = 0; nn < num_tables; nn++ )
     {
-      FT_UInt    num_pairs, length, coverage;
+      FT_UInt    num_pairs, version, length, coverage;
       FT_Byte*   p_next;
       FT_UInt32  mask = 1UL << nn;
 
@@ -94,7 +94,7 @@
 
       p_next = p;
 
-      p += 2; /* skip version */
+      version  = FT_NEXT_USHORT( p );
       length   = FT_NEXT_USHORT( p );
       coverage = FT_NEXT_USHORT( p );
 

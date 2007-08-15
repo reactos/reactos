@@ -648,8 +648,8 @@ FT_BEGIN_HEADER
   {
     FT_ENC_TAG( FT_ENCODING_NONE, 0, 0, 0, 0 ),
 
-    FT_ENC_TAG( FT_ENCODING_MS_SYMBOL, 's', 'y', 'm', 'b' ),
-    FT_ENC_TAG( FT_ENCODING_UNICODE,   'u', 'n', 'i', 'c' ),
+    FT_ENC_TAG( FT_ENCODING_MS_SYMBOL,  's', 'y', 'm', 'b' ),
+    FT_ENC_TAG( FT_ENCODING_UNICODE,    'u', 'n', 'i', 'c' ),
 
     FT_ENC_TAG( FT_ENCODING_SJIS,    's', 'j', 'i', 's' ),
     FT_ENC_TAG( FT_ENCODING_GB2312,  'g', 'b', ' ', ' ' ),
@@ -2111,16 +2111,9 @@ FT_BEGIN_HEADER
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    If either the character width or height is zero, it is set equal   */
-  /*    to the other value.                                                */
-  /*                                                                       */
   /*    If either the horizontal or vertical resolution is zero, it is set */
-  /*    equal to the other value.                                          */
+  /*    to a default value of 72dpi.                                       */
   /*                                                                       */
-  /*    A character width or height smaller than 1pt is set to 1pt; if     */
-  /*    both resolution values are zero, they are set to 72dpi.            */
-  /*                                                                       */
-
   FT_EXPORT( FT_Error )
   FT_Set_Char_Size( FT_Face     face,
                     FT_F26Dot6  char_width,
@@ -2738,7 +2731,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Retrieve the ASCII name of a given glyph in a face.  This only     */
-  /*    works for those faces where @FT_HAS_GLYPH_NAMES(face) returns 1.   */
+  /*    works for those faces where @FT_HAS_GLYPH_NAMES(face) returns      */
+  /*    TRUE.                                                              */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face        :: A handle to a source face object.                   */
@@ -3329,7 +3323,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  3
-#define FREETYPE_PATCH  5
+#define FREETYPE_PATCH  4
 
 
   /*************************************************************************/
@@ -3366,62 +3360,6 @@ FT_BEGIN_HEADER
                       FT_Int      *amajor,
                       FT_Int      *aminor,
                       FT_Int      *apatch );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Face_CheckTrueTypePatents                                       */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Parse all bytecode instructions of a TrueType font file to check   */
-  /*    whether any of the patented opcodes are used.  This is only useful */
-  /*    if you want to be able to use the unpatented hinter with           */
-  /*    fonts that do *not* use these opcodes.                             */
-  /*                                                                       */
-  /*    Note that this function parses *all* glyph instructions in the     */
-  /*    font file, which may be slow.                                      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face :: A face handle.                                             */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    1 if this is a TrueType font that uses one of the patented         */
-  /*    opcodes, 0 otherwise.                                              */
-  /*                                                                       */
-  /* <Since>                                                               */
-  /*    2.3.5                                                              */
-  /*                                                                       */
-  FT_EXPORT( FT_Bool )
-  FT_Face_CheckTrueTypePatents( FT_Face  face );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Face_SetUnpatentedHinting                                       */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Enable or disable the unpatented hinter for a given face.          */
-  /*    Only enable it if you have determined that the face doesn't        */
-  /*    use any patented opcodes (see @FT_Face_CheckTrueTypePatents).      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face  :: A face handle.                                            */
-  /*                                                                       */
-  /*    value :: New boolean setting.                                      */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The old setting value.  This will always be false if this is not   */
-  /*    a SFNT font, or if the unpatented hinter is not compiled in this   */
-  /*    instance of the library.                                           */
-  /*                                                                       */
-  /* <Since>                                                               */
-  /*    2.3.5                                                              */
-  /*                                                                       */
-  FT_EXPORT( FT_Bool )
-  FT_Face_SetUnpatentedHinting( FT_Face  face,
-                                FT_Bool  value );
 
   /* */
 

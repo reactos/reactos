@@ -372,13 +372,12 @@
 
 
   /* this function is used to select the locals subrs array */
-  FT_LOCAL_DEF( FT_Error )
+  FT_LOCAL_DEF( void )
   cff_decoder_prepare( CFF_Decoder*  decoder,
                        FT_UInt       glyph_index )
   {
-    CFF_Font     cff   = (CFF_Font)decoder->builder.face->extra.data;
-    CFF_SubFont  sub   = &cff->top_font;
-    FT_Error     error = CFF_Err_Ok;
+    CFF_Font     cff = (CFF_Font)decoder->builder.face->extra.data;
+    CFF_SubFont  sub = &cff->top_font;
 
 
     /* manage CID fonts */
@@ -387,13 +386,6 @@
       FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select, glyph_index );
 
 
-      if ( fd_index >= cff->num_subfonts )
-      {
-        FT_TRACE4(( "cff_decoder_prepare: invalid CID subfont index\n" ));
-        error = CFF_Err_Invalid_File_Format;
-        goto Exit;
-      }
-        
       sub = cff->subfonts[fd_index];
     }
 
@@ -403,9 +395,6 @@
 
     decoder->glyph_width   = sub->private_dict.default_width;
     decoder->nominal_width = sub->private_dict.nominal_width;
-
-  Exit:
-    return error;
   }
 
 
@@ -2082,7 +2071,7 @@
             if ( idx >= decoder->num_locals )
             {
               FT_ERROR(( "cff_decoder_parse_charstrings:" ));
-              FT_ERROR(( " invalid local subr index\n" ));
+              FT_ERROR(( "  invalid local subr index\n" ));
               goto Syntax_Error;
             }
 
@@ -2260,11 +2249,9 @@
                                   &charstring, &charstring_len );
       if ( !error )
       {
-        error = cff_decoder_prepare( &decoder, glyph_index );
-        if ( !error )
-          error = cff_decoder_parse_charstrings( &decoder,
-                                                 charstring,
-                                                 charstring_len );
+        cff_decoder_prepare( &decoder, glyph_index );
+        error = cff_decoder_parse_charstrings( &decoder,
+                                               charstring, charstring_len );
 
         cff_free_glyph_data( face, &charstring, &charstring_len );
       }
@@ -2413,40 +2400,36 @@
                                   &charstring, &charstring_len );
       if ( !error )
       {
-        error = cff_decoder_prepare( &decoder, glyph_index );
-        if ( !error )
-        {
-          error = cff_decoder_parse_charstrings( &decoder,
-                                                 charstring,
-                                                 charstring_len );
+        cff_decoder_prepare( &decoder, glyph_index );
+        error = cff_decoder_parse_charstrings( &decoder,
+                                               charstring, charstring_len );
 
-          cff_free_glyph_data( face, &charstring, charstring_len );
+        cff_free_glyph_data( face, &charstring, charstring_len );
 
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-          /* Control data and length may not be available for incremental */
-          /* fonts.                                                       */
-          if ( face->root.internal->incremental_interface )
-          {
-            glyph->root.control_data = 0;
-            glyph->root.control_len = 0;
-          }
-          else
+        /* Control data and length may not be available for incremental   */
+        /* fonts.                                                         */
+        if ( face->root.internal->incremental_interface )
+        {
+          glyph->root.control_data = 0;
+          glyph->root.control_len = 0;
+        }
+        else
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
-          /* We set control_data and control_len if charstrings is loaded. */
-          /* See how charstring loads at cff_index_access_element() in     */
-          /* cffload.c.                                                    */
+        /* We set control_data and control_len if charstrings is loaded.  */
+        /* See how charstring loads at cff_index_access_element() in      */
+        /* cffload.c.                                                     */
+        {
+          CFF_Index csindex = &cff->charstrings_index;
+
+
+          if ( csindex->offsets )
           {
-            CFF_Index  csindex = &cff->charstrings_index;
-
-
-            if ( csindex->offsets )
-            {
-              glyph->root.control_data = csindex->bytes +
-                                           csindex->offsets[glyph_index] - 1;
-              glyph->root.control_len  = charstring_len;
-            }
+            glyph->root.control_data = csindex->bytes +
+                                         csindex->offsets[glyph_index] - 1;
+            glyph->root.control_len  = charstring_len;
           }
         }
       }
@@ -2479,27 +2462,25 @@
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
+    if ( cff->num_subfonts >= 1 )
+    {
+      FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select, glyph_index );
+
+
+      font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
+      font_offset = cff->subfonts[fd_index]->font_dict.font_offset;
+    }
+    else
+    {
+      font_matrix = cff->top_font.font_dict.font_matrix;
+      font_offset = cff->top_font.font_dict.font_offset;
+    }
+
+    /* Now, set the metrics -- this is rather simple, as   */
+    /* the left side bearing is the xMin, and the top side */
+    /* bearing the yMax.                                   */
     if ( !error )
     {
-      if ( cff->num_subfonts >= 1 )
-      {
-        FT_Byte  fd_index = cff_fd_select_get( &cff->fd_select,
-                                               glyph_index );
-
-
-        font_matrix = cff->subfonts[fd_index]->font_dict.font_matrix;
-        font_offset = cff->subfonts[fd_index]->font_dict.font_offset;
-      }
-      else
-      {
-        font_matrix = cff->top_font.font_dict.font_matrix;
-        font_offset = cff->top_font.font_dict.font_offset;
-      }
-
-      /* Now, set the metrics -- this is rather simple, as   */
-      /* the left side bearing is the xMin, and the top side */
-      /* bearing the yMax.                                   */
-
       /* For composite glyphs, return only left side bearing and */
       /* advance width.                                          */
       if ( load_flags & FT_LOAD_NO_RECURSE )
@@ -2566,16 +2547,11 @@
         glyph->root.outline.flags |= FT_OUTLINE_REVERSE_FILL;
 
         /* apply the font matrix */
-        if ( !( font_matrix.xx == 0x10000L &&
-                font_matrix.yy == 0x10000L &&
-                font_matrix.xy == 0        &&
-                font_matrix.yx == 0        ) )
-          FT_Outline_Transform( &glyph->root.outline, &font_matrix );
+        FT_Outline_Transform( &glyph->root.outline, &font_matrix );
 
-        if ( !( font_offset.x == 0 &&
-                font_offset.y == 0 ) )
-          FT_Outline_Translate( &glyph->root.outline,
-                                font_offset.x, font_offset.y );
+        FT_Outline_Translate( &glyph->root.outline,
+                              font_offset.x,
+                              font_offset.y );
 
         advance.x = metrics->horiAdvance;
         advance.y = 0;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR data structures (specification only).                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2005, 2007 by                                    */
+/*  Copyright 2002, 2003, 2005 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -335,10 +335,8 @@ FT_BEGIN_HEADER
   {
     FT_Byte           format;
 
-#if 0
     FT_UInt           num_x_control;
     FT_UInt           num_y_control;
-#endif
     FT_UInt           max_xy_control;
     FT_Pos*           x_control;
     FT_Pos*           y_control;

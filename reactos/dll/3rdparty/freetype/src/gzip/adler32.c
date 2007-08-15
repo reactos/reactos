@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: adler32.c,v 1.5 2007/06/01 06:56:17 wl Exp $ */
+/* @(#) $Id: adler32.c,v 1.4 2003/01/30 23:24:18 davidT Exp $ */
 
 #include "zlib.h"
 
@@ -34,12 +34,12 @@ ZEXPORT(uLong) adler32( /* adler, buf, len) */
         len -= k;
         while (k >= 16) {
             DO16(buf);
-            buf += 16;
+	    buf += 16;
             k -= 16;
         }
         if (k != 0) do {
             s1 += *buf++;
-            s2 += s1;
+	    s2 += s1;
         } while (--k);
         s1 %= BASE;
         s2 %= BASE;

@@ -302,9 +302,7 @@ FT_BEGIN_HEADER
   /* The size in bytes of the render pool used by the scan-line converter  */
   /* to do all of its work.                                                */
   /*                                                                       */
-  /* This must be greater than 4KByte if you use FreeType to rasterize     */
-  /* glyphs; otherwise, you may set it to zero to avoid unnecessary        */
-  /* allocation of the render pool.                                        */
+  /* This must be greater than 4KByte.                                     */
   /*                                                                       */
 #define FT_RENDER_POOL_SIZE  16384L
 
@@ -463,47 +461,12 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* If you define TT_CONFIG_OPTION_UNPATENTED_HINTING, a special version  */
-  /* of the TrueType bytecode interpreter is used that doesn't implement   */
-  /* any of the patented opcodes and algorithms.  Note that the            */
-  /* the TT_CONFIG_OPTION_UNPATENTED_HINTING macro is *ignored* if you     */
-  /* define TT_CONFIG_OPTION_BYTECODE_INTERPRETER; with other words,       */
-  /* either define TT_CONFIG_OPTION_BYTECODE_INTERPRETER or                */
-  /* TT_CONFIG_OPTION_UNPATENTED_HINTING but not both at the same time.    */
-  /*                                                                       */
-  /* This macro is only useful for a small number of font files (mostly    */
-  /* for Asian scripts) that require bytecode interpretation to properly   */
-  /* load glyphs.  For all other fonts, this produces unpleasant results,  */
-  /* thus the unpatented interpreter is never used to load glyphs from     */
-  /* TrueType fonts unless one of the following two options is used.       */
-  /*                                                                       */
-  /*   - The unpatented interpreter is explicitly activated by the user    */
-  /*     through the FT_PARAM_TAG_UNPATENTED_HINTING parameter tag         */
-  /*     when opening the FT_Face.                                         */
-  /*                                                                       */
-  /*   - FreeType detects that the FT_Face corresponds to one of the       */
-  /*     `trick' fonts (e.g., `Mingliu') it knows about.  The font engine  */
-  /*     contains a hard-coded list of font names and other matching       */
-  /*     parameters (see function `tt_face_init' in file                   */
-  /*     `src/truetype/ttobjs.c').                                         */
-  /*                                                                       */
-  /* Here a sample code snippet for using FT_PARAM_TAG_UNPATENTED_HINTING. */
-  /*                                                                       */
-  /*   {                                                                   */
-  /*     FT_Parameter  parameter;                                          */
-  /*     FT_Open_Args  open_args;                                          */
-  /*                                                                       */
-  /*                                                                       */
-  /*     parameter.tag = FT_PARAM_TAG_UNPATENTED_HINTING;                  */
-  /*                                                                       */
-  /*     open_args.flags      = FT_OPEN_PATHNAME | FT_OPEN_PARAMS;         */
-  /*     open_args.pathname   = my_font_pathname;                          */
-  /*     open_args.num_params = 1;                                         */
-  /*     open_args.params     = &parameter;                                */
-  /*                                                                       */
-  /*     error = FT_Open_Face( library, &open_args, index, &face );        */
-  /*     ...                                                               */
-  /*   }                                                                   */
+  /* Define TT_CONFIG_OPTION_UNPATENTED_HINTING (in addition to            */
+  /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER) to compile the unpatented      */
+  /* work-around hinting system.  Note that for the moment, the algorithm  */
+  /* is only used when selected at runtime through the parameter tag       */
+  /* FT_PARAM_TAG_UNPATENTED_HINTING; or when the debug hook               */
+  /* FT_DEBUG_HOOK_UNPATENTED_HINTING is globally activated.               */
   /*                                                                       */
 /* #define TT_CONFIG_OPTION_UNPATENTED_HINTING */
 
@@ -628,11 +591,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
 #define AF_CONFIG_OPTION_CJK
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* Compile autofit module with Indic script support.                     */
-  /*                                                                       */
-/* #define AF_CONFIG_OPTION_INDIC */
 
   /* */
 

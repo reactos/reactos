@@ -110,48 +110,40 @@
     FT_ULong   table_len;
     FT_Long    num_shorts, num_longs, num_shorts_checked;
 
-    TT_LongMetrics*    longs;
+    TT_LongMetrics *   longs;
     TT_ShortMetrics**  shorts;
     FT_Byte*           p;
 
 
     if ( vertical )
     {
-      void*   lm = &face->vertical.long_metrics;
-      void**  sm = &face->vertical.short_metrics;
-
-
       error = face->goto_table( face, TTAG_vmtx, stream, &table_len );
       if ( error )
         goto Fail;
 
       num_longs = face->vertical.number_Of_VMetrics;
       if ( (FT_ULong)num_longs > table_len / 4 )
-        num_longs = (FT_Long)( table_len / 4 );
+        num_longs = (FT_Long)(table_len / 4);
 
       face->vertical.number_Of_VMetrics = 0;
 
-      longs  = (TT_LongMetrics*)lm;
-      shorts = (TT_ShortMetrics**)sm;
+      longs  = (TT_LongMetrics *)&face->vertical.long_metrics;
+      shorts = (TT_ShortMetrics**)&face->vertical.short_metrics;
     }
     else
     {
-      void*   lm = &face->horizontal.long_metrics;
-      void**  sm = &face->horizontal.short_metrics;
-
-
       error = face->goto_table( face, TTAG_hmtx, stream, &table_len );
       if ( error )
         goto Fail;
 
       num_longs = face->horizontal.number_Of_HMetrics;
       if ( (FT_ULong)num_longs > table_len / 4 )
-        num_longs = (FT_Long)( table_len / 4 );
+        num_longs = (FT_Long)(table_len / 4);
 
       face->horizontal.number_Of_HMetrics = 0;
 
-      longs  = (TT_LongMetrics*)lm;
-      shorts = (TT_ShortMetrics**)sm;
+      longs  = (TT_LongMetrics *)&face->horizontal.long_metrics;
+      shorts = (TT_ShortMetrics**)&face->horizontal.short_metrics;
     }
 
     /* never trust derived values */
@@ -287,14 +279,11 @@
 
     if ( vertical )
     {
-      void  *v = &face->vertical;
-
-
       error = face->goto_table( face, TTAG_vhea, stream, 0 );
       if ( error )
         goto Fail;
 
-      header = (TT_HoriHeader*)v;
+      header = (TT_HoriHeader*)&face->vertical;
     }
     else
     {
@@ -359,10 +348,7 @@
 
     if ( vertical )
     {
-      void*  v = &face->vertical;
-
-
-      header     = (TT_HoriHeader*)v;
+      header     = (TT_HoriHeader*)&face->vertical;
       table_pos  = face->vert_metrics_offset;
       table_size = face->vert_metrics_size;
     }
@@ -429,9 +415,8 @@
                        FT_Short*   abearing,
                        FT_UShort*  aadvance )
   {
-    void*           v = &face->vertical;
-    void*           h = &face->horizontal;
-    TT_HoriHeader*  header = vertical ? (TT_HoriHeader*)v : h;
+    TT_HoriHeader*  header = vertical ? (TT_HoriHeader*)&face->vertical
+                                      :                 &face->horizontal;
     TT_LongMetrics  longs_m;
     FT_UShort       k = header->number_Of_HMetrics;
 

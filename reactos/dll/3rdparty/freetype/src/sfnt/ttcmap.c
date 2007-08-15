@@ -155,7 +155,6 @@
     FT_Byte*  p = cmap->data + 4;
 
 
-    cmap_info->format = 0;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
     return SFNT_Err_Ok;
@@ -528,7 +527,6 @@
     FT_Byte*  p = cmap->data + 4;
 
 
-    cmap_info->format = 2;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
     return SFNT_Err_Ok;
@@ -1305,7 +1303,6 @@
     FT_Byte*  p = cmap->data + 4;
 
 
-    cmap_info->format = 4;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
     return SFNT_Err_Ok;
@@ -1465,7 +1462,6 @@
     FT_Byte*  p = cmap->data + 4;
 
 
-    cmap_info->format = 6;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
     return SFNT_Err_Ok;
@@ -1719,7 +1715,6 @@
     FT_Byte*  p = cmap->data + 8;
 
 
-    cmap_info->format = 8;
     cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
 
     return SFNT_Err_Ok;
@@ -1868,7 +1863,6 @@
     FT_Byte*  p = cmap->data + 8;
 
 
-    cmap_info->format = 10;
     cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
 
     return SFNT_Err_Ok;
@@ -2185,7 +2179,6 @@
     FT_Byte*  p = cmap->data + 8;
 
 
-    cmap_info->format = 12;
     cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
 
     return SFNT_Err_Ok;
@@ -2306,8 +2299,7 @@
 
             valid.num_glyphs = (FT_UInt)face->max_profile.numGlyphs;
 
-            if ( ft_setjmp(
-              *((ft_jmp_buf*)&FT_VALIDATOR( &valid )->jump_buffer) ) == 0 )
+            if ( ft_setjmp( FT_VALIDATOR( &valid )->jump_buffer ) == 0 )
             {
               /* validate this cmap sub-table */
               error = clazz->validate( cmap, FT_VALIDATOR( &valid ) );

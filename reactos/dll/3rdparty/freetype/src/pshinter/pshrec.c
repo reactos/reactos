@@ -308,11 +308,11 @@
 
   /* set a new mask to a given bit range */
   static FT_Error
-  ps_mask_table_set_bits( PS_Mask_Table   table,
-                          const FT_Byte*  source,
-                          FT_UInt         bit_pos,
-                          FT_UInt         bit_count,
-                          FT_Memory       memory )
+  ps_mask_table_set_bits( PS_Mask_Table  table,
+                          FT_Byte*       source,
+                          FT_UInt        bit_pos,
+                          FT_UInt        bit_count,
+                          FT_Memory      memory )
   {
     FT_Error  error = 0;
     PS_Mask   mask;
@@ -330,7 +330,7 @@
 
     /* now, copy bits */
     {
-      FT_Byte*  read  = (FT_Byte*)source + ( bit_pos >> 3 );
+      FT_Byte*  read  = source + ( bit_pos >> 3 );
       FT_Int    rmask = 0x80 >> ( bit_pos & 7 );
       FT_Byte*  write = mask->bytes;
       FT_Int    wmask = 0x80;
@@ -628,7 +628,7 @@
       goto Exit;
 
     /* set bits in new mask */
-    error = ps_mask_table_set_bits( &dim->masks, source,
+    error = ps_mask_table_set_bits( &dim->masks, (FT_Byte*)source,
                                     source_pos, source_bits, memory );
 
   Exit:

@@ -244,14 +244,13 @@
     FT_Outline*     outline;
     TT_Face         face       = (TT_Face)load->face;
     FT_UShort       n_ins;
-    FT_Int          n_points;
+    FT_Int          n, n_points;
 
     FT_Byte         *flag, *flag_limit;
     FT_Byte         c, count;
     FT_Vector       *vec, *vec_limit;
     FT_Pos          x;
-    FT_Short        *cont, *cont_limit, prev_cont;
-    FT_Int          xy_size = 0;
+    FT_Short        *cont, *cont_limit;
 
 
     /* check that we can add the contours to the glyph */
@@ -264,29 +263,15 @@
     cont_limit = cont + n_contours;
 
     /* check space for contours array + instructions count */
-    if ( n_contours >= 0xFFF || p + ( n_contours + 1 ) * 2 > limit )
+    if ( n_contours >= 0xFFF || p + (n_contours + 1) * 2 > limit )
       goto Invalid_Outline;
 
-    cont[0] = prev_cont = FT_NEXT_USHORT( p );
-    for ( cont++; cont < cont_limit; cont++ )
-    {
+    for ( ; cont < cont_limit; cont++ )
       cont[0] = FT_NEXT_USHORT( p );
-      if ( cont[0] <= prev_cont )
-      {
-        /* unordered contours: this is invalid */
-        error = FT_Err_Invalid_Table;
-        goto Fail;
-      }
-      prev_cont = cont[0];
-    }
 
     n_points = 0;
     if ( n_contours > 0 )
-    {
       n_points = cont[-1] + 1;
-      if ( n_points < 0 )
-        goto Invalid_Outline;
-    }
 
     /* note that we will add four phantom points later */
     error = FT_GLYPHLOADER_CHECK_POINTS( gloader, n_points + 4, 0 );
@@ -313,8 +298,7 @@
 
     if ( n_ins > face->max_profile.maxSizeOfInstructions )
     {
-      FT_TRACE0(( "TT_Load_Simple_Glyph: Too many instructions (%d)\n",
-                  n_ins ));
+      FT_TRACE0(( "TT_Load_Simple_Glyph: Too many instructions!\n" ));
       error = TT_Err_Too_Many_Hints;
       goto Fail;
     }
@@ -373,25 +357,21 @@
     flag      = (FT_Byte*)outline->tags;
     x         = 0;
 
-    if ( p + xy_size > limit )
-      goto Invalid_Outline;
-
     for ( ; vec < vec_limit; vec++, flag++ )
     {
       FT_Pos  y = 0;
-      FT_Byte f = *flag;
 
 
-      if ( f & 2 )
+      if ( *flag & 2 )
       {
         if ( p + 1 > limit )
           goto Invalid_Outline;
 
         y = (FT_Pos)FT_NEXT_BYTE( p );
-        if ( ( f & 16 ) == 0 )
+        if ( ( *flag & 16 ) == 0 )
           y = -y;
       }
-      else if ( ( f & 16 ) == 0 )
+      else if ( ( *flag & 16 ) == 0 )
       {
         if ( p + 2 > limit )
           goto Invalid_Outline;
@@ -401,7 +381,6 @@
 
       x     += y;
       vec->x = x;
-      *flag  = f & ~( 2 | 16 );
     }
 
     /* reading the Y coordinates */
@@ -414,19 +393,18 @@
     for ( ; vec < vec_limit; vec++, flag++ )
     {
       FT_Pos  y = 0;
-      FT_Byte f = *flag;
 
 
-      if ( f & 4 )
+      if ( *flag & 4 )
       {
-        if ( p + 1 > limit )
+        if ( p  +1 > limit )
           goto Invalid_Outline;
 
         y = (FT_Pos)FT_NEXT_BYTE( p );
-        if ( ( f & 32 ) == 0 )
+        if ( ( *flag & 32 ) == 0 )
           y = -y;
       }
-      else if ( ( f & 32 ) == 0 )
+      else if ( ( *flag & 32 ) == 0 )
       {
         if ( p + 2 > limit )
           goto Invalid_Outline;
@@ -436,8 +414,11 @@
 
       x     += y;
       vec->y = x;
-      *flag  = f & FT_CURVE_TAG_ON;
     }
+
+    /* clear the touch tags */
+    for ( n = 0; n < n_points; n++ )
+      outline->tags[n] &= FT_CURVE_TAG_ON;
 
     outline->n_points   = (FT_UShort)n_points;
     outline->n_contours = (FT_Short) n_contours;
@@ -591,14 +572,13 @@
                    FT_UInt       start_point,
                    FT_UInt       start_contour )
   {
-    zone->n_points    = (FT_UShort)( load->outline.n_points - start_point );
-    zone->n_contours  = (FT_Short) ( load->outline.n_contours -
-                                       start_contour );
-    zone->org         = load->extra_points + start_point;
-    zone->cur         = load->outline.points + start_point;
-    zone->orus        = load->extra_points2 + start_point;
-    zone->tags        = (FT_Byte*)load->outline.tags + start_point;
-    zone->contours    = (FT_UShort*)load->outline.contours + start_contour;
+    zone->n_points   = (FT_UShort)( load->outline.n_points - start_point );
+    zone->n_contours = (FT_Short) ( load->outline.n_contours - start_contour );
+    zone->org        = load->extra_points + start_point;
+    zone->cur        = load->outline.points + start_point;
+    zone->orus       = load->extra_points2 + start_point;
+    zone->tags       = (FT_Byte*)load->outline.tags + start_point;
+    zone->contours   = (FT_UShort*)load->outline.contours + start_contour;
     zone->first_point = (FT_UShort)start_point;
   }
 
@@ -1004,8 +984,7 @@
       /* check it */
       if ( n_ins > ((TT_Face)loader->face)->max_profile.maxSizeOfInstructions )
       {
-        FT_TRACE0(( "TT_Process_Composite_Glyph: Too many instructions (%d)\n",
-                    n_ins ));
+        FT_TRACE0(( "Too many instructions (%d)\n", n_ins ));
 
         return TT_Err_Too_Many_Hints;
       }
@@ -1305,9 +1284,9 @@
     /* otherwise, load a composite! */
     else if ( loader->n_contours == -1 )
     {
-      FT_UInt   start_point;
-      FT_UInt   start_contour;
-      FT_ULong  ins_pos;  /* position of composite instructions, if any */
+      FT_UInt       start_point;
+      FT_UInt       start_contour;
+      FT_ULong      ins_pos;  /* position of composite instructions, if any */
 
 
       start_point   = gloader->base.outline.n_points;
@@ -1337,11 +1316,11 @@
         /* this provides additional offsets */
         /* for each component's translation */
 
-        if ( ( error = TT_Vary_Get_Glyph_Deltas(
-                         face,
-                         glyph_index,
-                         &deltas,
-                         gloader->current.num_subglyphs + 4 )) != 0 )
+        if ( (error = TT_Vary_Get_Glyph_Deltas(
+                        face,
+                        glyph_index,
+                        &deltas,
+                        gloader->current.num_subglyphs + 4 )) != 0 )
           goto Exit;
 
         subglyph = gloader->current.subglyphs + gloader->base.num_subglyphs;
@@ -1377,6 +1356,7 @@
       /* if the flag FT_LOAD_NO_RECURSE is set, we return the subglyph */
       /* `as is' in the glyph slot (the client application will be     */
       /* responsible for interpreting these data)...                   */
+      /*                                                               */
       if ( loader->load_flags & FT_LOAD_NO_RECURSE )
       {
         FT_GlyphLoader_Add( gloader );
@@ -1390,20 +1370,15 @@
       /*********************************************************************/
 
       {
-        FT_UInt           n, num_base_points;
-        FT_SubGlyph       subglyph       = 0;
+        FT_UInt      n, num_base_points;
+        FT_SubGlyph  subglyph       = 0;
 
-        FT_UInt           num_points     = start_point;
-        FT_UInt           num_subglyphs  = gloader->current.num_subglyphs;
-        FT_UInt           num_base_subgs = gloader->base.num_subglyphs;
+        FT_UInt      num_points     = start_point;
+        FT_UInt      num_subglyphs  = gloader->current.num_subglyphs;
+        FT_UInt      num_base_subgs = gloader->base.num_subglyphs;
 
-        FT_Stream         old_stream     = loader->stream;
+        FT_Stream    old_stream     = loader->stream;
 
-        TT_GraphicsState  saved_GS;
-
-
-        if ( loader->exec )
-          saved_GS = loader->exec->GS;
 
         FT_GlyphLoader_Add( gloader );
 
@@ -1412,10 +1387,6 @@
         {
           FT_Vector  pp[4];
 
-
-          /* reinitialize graphics state */
-          if ( loader->exec )
-            loader->exec->GS = saved_GS;
 
           /* Each time we call load_truetype_glyph in this loop, the   */
           /* value of `gloader.base.subglyphs' can change due to table */
@@ -1451,12 +1422,12 @@
           if ( num_points == num_base_points )
             continue;
 
-          /* gloader->base.outline consists of three parts:               */
-          /* 0 -(1)-> start_point -(2)-> num_base_points -(3)-> n_points. */
-          /*                                                              */
-          /* (1): exists from the beginning                               */
-          /* (2): components that have been loaded so far                 */
-          /* (3): the newly loaded component                              */
+          /* gloader->base.outline consists of three part:                  */
+          /* 0 -(1)-> start_point -(2)-> num_base_points -(3)-> n_points.   */
+          /*                                                                */
+          /* (1): exist from the beginning                                  */
+          /* (2): components that have been loaded so far                   */
+          /* (3): the newly loaded component                                */
           TT_Process_Composite_Component( loader, subglyph, start_point,
                                           num_base_points );
         }
@@ -1480,7 +1451,7 @@
     }
     else
     {
-      /* invalid composite count (negative but not -1) */
+      /* invalid composite count ( negative but not -1 ) */
       error = TT_Err_Invalid_Outline;
       goto Exit;
     }
@@ -1508,8 +1479,8 @@
 
 
   static FT_Error
-  compute_glyph_metrics( TT_Loader  loader,
-                         FT_UInt    glyph_index )
+  compute_glyph_metrics( TT_Loader   loader,
+                         FT_UInt     glyph_index )
   {
     FT_BBox       bbox;
     TT_Face       face = (TT_Face)loader->face;
@@ -1527,8 +1498,8 @@
     else
       bbox = loader->bbox;
 
-    /* get the device-independent horizontal advance; it is scaled later */
-    /* by the base layer.                                                */
+    /* get the device-independent horizontal advance.  It is scaled later */
+    /* by the base layer.                                                 */
     {
       FT_Pos  advance = loader->linear;
 
@@ -1788,11 +1759,11 @@
         tt_size_run_prep( size );
       }
 
-      /* see whether the cvt program has disabled hinting */
+      /* see if the cvt program has disabled hinting */
       if ( exec->GS.instruct_control & 1 )
         load_flags |= FT_LOAD_NO_HINTING;
 
-      /* load default graphics state -- if needed */
+      /* load default graphics state - if needed */
       if ( exec->GS.instruct_control & 2 )
         exec->GS = tt_default_graphics_state;
 
@@ -1803,7 +1774,7 @@
 
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
-    /* seek to the beginning of the glyph table -- for Type 42 fonts     */
+    /* seek to the beginning of the glyph table.  For Type 42 fonts      */
     /* the table might be accessed from a Postscript stream or something */
     /* else...                                                           */
 
@@ -1881,11 +1852,13 @@
                  FT_Int32      load_flags )
   {
     TT_Face       face;
+    FT_Stream     stream;
     FT_Error      error;
     TT_LoaderRec  loader;
 
 
     face   = (TT_Face)glyph->face;
+    stream = face->root.stream;
     error  = TT_Err_Ok;
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
@@ -1919,7 +1892,7 @@
     glyph->num_subglyphs = 0;
     glyph->outline.flags = 0;
 
-    /* main loading loop */
+    /* Main loading loop */
     error = load_truetype_glyph( &loader, glyph_index, 0 );
     if ( !error )
     {

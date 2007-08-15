@@ -1537,12 +1537,6 @@
 
       s = _bdf_list_join( &p->list, ' ', &slen );
 
-      if ( !s )
-      {
-        error = BDF_Err_Invalid_File_Format;
-        goto Exit;
-      }
-
       if ( FT_NEW_ARRAY( p->glyph_name, slen + 1 ) )
         goto Exit;
 
@@ -2123,13 +2117,6 @@
       _bdf_list_shift( &p->list, 1 );
 
       s = _bdf_list_join( &p->list, ' ', &slen );
-
-      if ( !s )
-      {
-        error = BDF_Err_Invalid_File_Format;
-        goto Exit;
-      }
-
       if ( FT_NEW_ARRAY( p->font->name, slen + 1 ) )
         goto Exit;
       FT_MEM_COPY( p->font->name, s, slen + 1 );
@@ -2314,19 +2301,11 @@
       {
         /* The ENDFONT field was never reached or did not exist. */
         if ( !( p->flags & _BDF_GLYPHS ) )
-        {
           /* Error happened while parsing header. */
           FT_ERROR(( "bdf_load_font: " ERRMSG2, lineno ));
-          error = BDF_Err_Corrupted_Font_Header;
-          goto Exit;
-        }
         else
-        {
           /* Error happened when parsing glyphs. */
           FT_ERROR(( "bdf_load_font: " ERRMSG3, lineno ));
-          error = BDF_Err_Corrupted_Font_Glyphs;
-          goto Exit;
-        }
       }
     }
 

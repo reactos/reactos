@@ -369,7 +369,7 @@
 
 	* src/cff/cffgload.c (CFF_Parse_CharStrings), src/psaux/t1decode.c
 	(T1_Decoder_Parse_Charstrings), src/pshinter/pshalgo2.c (*), Fixed a
-	bug where the X and Y axis where inverted in the postscript hinter.
+	bug where the X and Y axis where inversed in the postscript hinter.
 	This caused problem when displaying on non-square surfaces.
 
 	* src/pshinter/pshalgo2.c: s/vertical/dimension/.
@@ -790,7 +790,7 @@
 	* include/freetype/internal/ftmemory.h, src/base/ftdbgmem.c:
 	Improvements to the memory debugger to report more information in
 	case of errors.  Also, some allocations that occurred through REALLOC
-	couldn't be previously caught correctly.
+	couldn't be previously catched correctly.
 
 	* src/autohint/ahglyph.c (ah_outline_compute_segments,
 	ah_outline_compute_edges), src/raster/ftraster.c (ft_black_new),
@@ -862,7 +862,7 @@
 
 	* src/type1/t1load.c (parse_font_name, parse_subrs): Added a test
 	for when loading synthetic fonts to make sure that the font name
-	and subroutines are not loaded twice.  This is to remove a memory
+	and subrotuines are not loaded twice.  This is to remove a memory
 	leak that occurred because the original memory blocks for these
 	objects were not deallocated when the objects were parsed the
 	second time.
@@ -1157,7 +1157,7 @@
 	supports glyph names.
 
 	* include/freetype/internal/ftobjs.h (FT_Name_Index_Requester):
-	New function pointer type definition used in the function
+	New function pointer type defintion used in the function
 	FT_Get_Name_Index.
 
 	* include/freetype/freetype.h (FT_Get_Name_Index): Added
@@ -1618,7 +1618,7 @@
 	* builds/compiler/gcc-dev.mk: Add `-Wno-long-long' flag.
 
 	* include/freetype/internal/ftcalc.h: Define FT_SqrtFixed()
-	unconditionally.
+	uncoditionally.
 	* src/base/ftbbox.c: Include FT_INTERNAL_CALC_H.
 	Fix compiler warnings.
 	* src/base/ftcalc.c: Fix (potential) compiler warnings.
@@ -2207,7 +2207,7 @@
 	* src/autohint/ahhint.c (ah_hinter_load, ah_hinter_load_glyph):
 	Changed so that fonts with a non-standard FontMatrix render
 	correctly.  Previously, the first glyph rendered from such a
-	font did not have the transformation matrix applied.
+	font did not have the tranformation matrix applied.
 
 2000-12-17  Werner Lemberg  <wl@gnu.org>
 
@@ -2482,7 +2482,7 @@
 2000-11-29  ??? ???  <darin@eazel.com>
 
 	* include/freetype/internal/ftdebug.h: Replaced FT_CAT and FT_XCAT
-	with a direct solution (which also satisfies picky compilers).
+	with a direct solution (which also satifies picky compilers).
 
 2000-11-28  YAMANO-UCHI Hidetoshi  <mer@din.or.jp>
 
@@ -2597,7 +2597,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2000, 2001, 2002, 2007 by
+Copyright 2000, 2001, 2002 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

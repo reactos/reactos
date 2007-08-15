@@ -3,7 +3,6 @@ EXPORTS
   FTC_CMapCache_Lookup
   FTC_CMapCache_New
   FTC_ImageCache_Lookup
-  FTC_ImageCache_LookupScaler
   FTC_ImageCache_New
   FTC_Manager_Done
   FTC_Manager_LookupFace
@@ -13,7 +12,6 @@ EXPORTS
   FTC_Manager_Reset
   FTC_Node_Unref
   FTC_SBitCache_Lookup
-  FTC_SBitCache_LookupScaler
   FTC_SBitCache_New
   FT_Activate_Size
   FT_Add_Default_Modules
@@ -37,12 +35,9 @@ EXPORTS
   FT_Done_Glyph
   FT_Done_Library
   FT_Done_Size
-  FT_Face_CheckTrueTypePatents
-  FT_Face_SetUnpatentedHinting
   FT_FloorFix
   FT_Get_BDF_Charset_ID
   FT_Get_BDF_Property
-  FT_Get_CMap_Format
   FT_Get_CMap_Language_ID
   FT_Get_Char_Index
   FT_Get_Charmap_Index

@@ -297,8 +297,8 @@ FT_BEGIN_HEADER
    *     The source outline.
    *
    *   opened ::
-   *     A boolean.  If 1, the outline is treated as an open path instead
-   *     of a closed one.
+   *     A boolean.  If TRUE, the outline is treated as an open path
+   *     instead of a closed one.
    *
    * @return:
    *   FreeType error code.  0 means success.
@@ -334,7 +334,7 @@ FT_BEGIN_HEADER
    *     A pointer to the start vector.
    *
    *   open ::
-   *     A boolean.  If 1, the sub-path is treated as an open one.
+   *     A boolean.  If TRUE, the sub-path is treated as an open one.
    *
    * @return:
    *   FreeType error code.  0 means success.
@@ -649,7 +649,7 @@ FT_BEGIN_HEADER
    *     A stroker handle.
    *
    *   destroy ::
-   *     A Boolean.  If 1, the source glyph object is destroyed
+   *     A Boolean.  If TRUE, the source glyph object is destroyed
    *     on success.
    *
    * @return:
@@ -682,11 +682,11 @@ FT_BEGIN_HEADER
    *     A stroker handle.
    *
    *   inside ::
-   *     A Boolean.  If 1, return the inside border, otherwise
+   *     A Boolean.  If TRUE, return the inside border, otherwise
    *     the outside border.
    *
    *   destroy ::
-   *     A Boolean.  If 1, the source glyph object is destroyed
+   *     A Boolean.  If TRUE, the source glyph object is destroyed
    *     on success.
    *
    * @return:

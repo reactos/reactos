@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 1.6 2007/06/01 06:56:17 wl Exp $ */
+/* @(#) $Id: zutil.h,v 1.5 2006/04/29 07:31:16 wl Exp $ */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H
@@ -203,7 +203,7 @@ typedef unsigned long  ulg;
 
 
 typedef uLong (*check_func) OF((uLong check, const Bytef *buf,
-                                uInt len));
+				       uInt len));
 local voidpf zcalloc OF((voidpf opaque, unsigned items, unsigned size));
 local void   zcfree  OF((voidpf opaque, voidpf ptr));
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 Glyph Loader (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,12 +44,12 @@
     CID_FaceInfo   cid  = &face->cid;
     FT_Byte*       p;
     FT_UInt        fd_select;
-    FT_Stream      stream       = face->cid_stream;
-    FT_Error       error        = CID_Err_Ok;
-    FT_Byte*       charstring   = 0;
-    FT_Memory      memory       = face->root.memory;
+    FT_Stream      stream = face->cid_stream;
+    FT_Error       error  = 0;
+    FT_Byte*       charstring = 0;
+    FT_Memory      memory = face->root.memory;
     FT_ULong       glyph_length = 0;
-    PSAux_Service  psaux        = (PSAux_Service)face->psaux;
+    PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
@@ -111,11 +111,6 @@
       glyph_length = cid_get_offset( &p, (FT_Byte)cid->gd_bytes ) - off1;
       FT_FRAME_EXIT();
 
-      if ( fd_select >= (FT_UInt)cid->num_dicts )
-      {
-        error = CID_Err_Invalid_Offset;
-        goto Exit;
-      }
       if ( glyph_length == 0 )
         goto Exit;
       if ( FT_ALLOC( charstring, glyph_length ) )
@@ -155,7 +150,7 @@
 
       error = decoder->funcs.parse_charstrings(
                 decoder, charstring + cs_offset,
-                (FT_Int)glyph_length - cs_offset );
+                (FT_Int)glyph_length - cs_offset  );
     }
 
     FT_FREE( charstring );
