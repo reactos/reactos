@@ -294,21 +294,6 @@ CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot);
 
-NTSTATUS
-NTAPI
-CmpDoCreate(
-    IN PHHIVE Hive,
-    IN HCELL_INDEX Cell,
-    IN PACCESS_STATE AccessState,
-    IN PUNICODE_STRING Name,
-    IN KPROCESSOR_MODE AccessMode,
-    IN PUNICODE_STRING Class,
-    IN ULONG CreateOptions,
-    IN PKEY_OBJECT Parent,
-    IN PVOID OriginatingHive OPTIONAL,
-    OUT PVOID *Object
-);
-
 HCELL_INDEX
 NTAPI
 CmpFindValueByName(

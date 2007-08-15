@@ -263,19 +263,39 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     DPRINT("RemainingPath %wZ  ParentKey %p\n",
         &RemainingPath, ParentKey);
 
+    Status = ObCreateObject(KernelMode,
+                            CmpKeyObjectType,
+                            NULL,
+                            KernelMode,
+                            NULL,
+                            sizeof(KEY_OBJECT),
+                            0,
+                            0,
+                            (PVOID*)&NewKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
+        ObDereferenceObject (ParentKey);
+        RtlFreeUnicodeString(&RemainingPath);
+        return Status;
+    }
+
+    NewKey->Flags = 0;
+    NewKey->SubKeyCounts = 0;
+    NewKey->SubKeys = NULL;
+    NewKey->SizeOfSubKeys = 0;
+    InsertTailList(&CmiKeyObjectListHead, &NewKey->ListEntry);
+
     DPRINT ("SubName %S\n", SubName);
 
-    /* Create the key */
-    Status = CmpDoCreate(&ParentKey->RegistryHive->Hive,
-                         ParentKey->KeyCellOffset,
-                         NULL,
-                         &RemainingPath,
-                         KernelMode,
-                         NULL,
-                         REG_OPTION_VOLATILE,
-                         ParentKey,
-                         NULL,
-                         (PVOID*)&NewKey);
+    Status = CmiAddSubKey(ParentKey->RegistryHive,
+                          ParentKey,
+                          NewKey,
+                          &RemainingPath,
+                          0,
+                          NULL,
+                          REG_OPTION_VOLATILE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
