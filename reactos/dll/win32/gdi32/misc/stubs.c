@@ -551,14 +551,27 @@ SetWinMetaFileBits(
 BOOL
 STDCALL
 GdiComment(
-	HDC		a0,
-	UINT		a1,
-	CONST BYTE	*a2
+	HDC		hDC,
+	UINT		bytes,
+	CONST BYTE	*buffer
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_EMF)
+  {
+     PLDC pLDC = GdiGetLDC(hDC);
+     if ( !pLDC )
+     {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+     }
+     if (pLDC->iType == LDC_EMFLDC)
+     {          // Wine port
+         return EMFDRV_GdiComment( hDC, bytes, buffer );
+     }
+  }
+#endif
+  return FALSE;
 }
 
 
