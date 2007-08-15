@@ -231,7 +231,7 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Auswahl des Explorerfenster-Modus"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Please select your prefered explorer user interface:",
+    LTEXT           "Bitte wählen Sie ihr bevorzugtes Explorer Userinterface:",
                     IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
@@ -344,7 +344,7 @@ BEGIN
     IDS_PROGRAMS            "Programme"
     IDS_SETTINGS            "Einstellungen"
     IDS_EXPLORE             "Explore"
-    IDS_EMPTY               "(Empty)"
+    IDS_EMPTY               "(Leer)"
     IDS_RECENT              "Aktuelle Dokumente"
     IDS_ADMIN               "Verwaltung"
 END

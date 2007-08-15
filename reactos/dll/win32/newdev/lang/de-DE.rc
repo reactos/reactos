@@ -82,13 +82,13 @@ END
 IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Device installation"
+CAPTION "Geräteinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Installation complete",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "You need to reboot to finish the install of:",
+    LTEXT           "Installation vollständig",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Sie müssen den Computer neustarten, um folgende Installation abzuschließen:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Click Finish to close the wizard.",IDC_STATIC,120,174,
+    LTEXT           "Wählen Sie Beenden, um den Wizard zu schließen.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,148,53,147,12
 END
