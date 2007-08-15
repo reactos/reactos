@@ -491,7 +491,7 @@ MessageBoxTimeoutIndirectW(
     txtrect.right = GetSystemMetrics(SM_CXSCREEN) / 5 * 4;
     if(Icon)
       txtrect.right -= GetSystemMetrics(SM_CXICON) + MSGBOXEX_SPACING;
-    txtrect.top = txtrect.left = txtrect.bottom = 0;
+    txtrect.top = txtrect.left = txtrect.bottom = 5;
     SelectObject(hDC, hFont);
     if (textlen != 0)
     {
