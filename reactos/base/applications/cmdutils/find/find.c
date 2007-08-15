@@ -29,9 +29,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <windows.h>
 
 #include <io.h>
 #include <dos.h>
+
+#include "resource.h"
 
 
 /* Symbol definition */
@@ -117,17 +120,15 @@ find_str (char *sz, FILE *p, int invert_search,
   return (total_lines > 0 ? 1 : 0);
 }
 
-
 /* Show usage */
 void
 usage (void)
 {
-  fprintf (stderr, "FIND: Prints all lines of a file that contain a string\n");
-  fprintf (stderr, "FIND [ /C ] [ /I ] [ /N ] [ /V ] \"string\" [ file... ]\n");
-  fprintf (stderr, "  /C  Count the number of lines that contain string\n");
-  fprintf (stderr, "  /I  Ignore case\n");
-  fprintf (stderr, "  /N  Number the displayed lines, starting at 1\n");
-  fprintf (stderr, "  /V  Print lines that do not contain the string\n");
+	TCHAR lpUsage[4096];
+
+	LoadString( GetModuleHandle(NULL), IDS_USAGE, (LPTSTR)lpUsage, 4096);
+	CharToOem(lpUsage, lpUsage);
+	printf( lpUsage );
 }
 
 
@@ -137,6 +138,7 @@ main (int argc, char **argv)
 {
   char *opt, *needle = NULL;
   int ret = 0;
+  TCHAR lpMessage[4096];
 
   int invert_search = 0;		/* flag to invert the search */
   int count_lines = 0;			/* flag to whether/not count lines */
@@ -213,7 +215,9 @@ main (int argc, char **argv)
 	{
 	  /* We were not able to find a file. Display a message and
 	     set the exit status. */
-	  fprintf (stderr, "FIND: %s: No such file\n", *argv);
+	  LoadString( GetModuleHandle(NULL), IDS_NO_SUCH_FILE, (LPTSTR)lpMessage, 4096);
+	  CharToOem(lpMessage, lpMessage);
+	  fprintf (stderr, lpMessage, *argv);//
 	}
       else
         {
@@ -230,7 +234,9 @@ main (int argc, char **argv)
 	        }
  	      else
 	        {
-	          fprintf (stderr, "FIND: %s: Cannot open file\n",
+	          LoadString(GetModuleHandle(NULL), IDS_CANNOT_OPEN, (LPTSTR)lpMessage, 4096);
+	          CharToOem(lpMessage, lpMessage);
+	          fprintf (stderr, lpMessage,
 		           finddata.name);
                 }
 	    }
@@ -245,4 +251,5 @@ main (int argc, char **argv)
   */
   exit ( (ret ? 0 : 1) );
 }
+
 

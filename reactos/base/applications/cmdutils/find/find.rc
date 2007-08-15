@@ -4,3 +4,5 @@
 #define REACTOS_STR_INTERNAL_NAME	"find\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"find.exe\0"
 #include <reactos/version.rc>
+
+#include "rsrc.rc"

@@ -6,7 +6,7 @@ CAPTION "Общие"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT       "Операционная система:", IDC_STATIC, 4, 132, 80, 9
+    LTEXT       "Операционная система:", IDC_STATIC, 4, 132, 87, 9
     LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
     LTEXT       "Версия ", IDC_STATIC, 10, 153, 25, 9
     LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
@@ -29,17 +29,17 @@ BEGIN
     GROUPBOX    "Диспетчер устройств", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT       "Диспетчер устройств приводит список всего установленного оборудования на данном компьютере и позволяет изменить свойства любого устройства.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON  "&Диспетчер устройств...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
+    PUSHBUTTON  "&Диспетчер устройств...", IDC_HARDWARE_DEVICE_MANAGER, 144, 48, 100, 15
 
     GROUPBOX    "Мастер оборудования", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT       "Мастер оборудования помогает установить, востановить, отключить или извлечь любое устройство, а также настроить его.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON  "&Мастер оборудования...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    PUSHBUTTON  "&Мастер оборудования...", IDC_HARDWARE_WIZARD, 144, 120, 100, 15
 
     GROUPBOX    "Профили оборудования", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT       "Профили оборудования помогают устанавливать и хранить различные конфигурации оборудования.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "&Профили оборудования...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+    PUSHBUTTON  "&Профили оборудования...", IDC_HARDWARE_PROFILE, 144, 190, 100, 15
 END
 
 
@@ -48,7 +48,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Для изменения этих параметров требуются права Администратора.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT       "Для изменения этих параметров требуются права Администратора.", IDC_STATIC, 12, 5, 253, 8
     GROUPBOX    "Быстродействие", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Визуальные эффекты, использование процессора, оперативной и виртуальной памяти.", IDC_STATIC, 16, 29, 210, 20
     PUSHBUTTON  "&Параметры", IDC_PERFOR, 194, 48, 50, 15
@@ -87,7 +87,7 @@ BEGIN
     //RADIOBUTTON "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, 14, 158, 133, 8
     //RADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, 14, 173, 190, 8
     CONTROL     "&Дождаться явного указания от пользователя", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 190, 8
-    CONTROL     "&Выбрать первый профиль в списке, если выбор не сделан за", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 215, 8
+    CONTROL     "&Выбрать первый профиль в списке, если выбор не сделан за", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 225, 8
     LTEXT       "сек.", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -143,27 +143,27 @@ BEGIN
     LTEXT       "Операционная система по умолчанию:", IDC_STATIC, 14, 26, 145, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     //CHECKBOX    "О&тображать список операционных систем:", IDC_STRECLIST, 14, 56, 150, 8
-    CONTROL     "О&тображать список операционных систем:", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 155, 8
+    CONTROL     "О&тображать список операционных систем:", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 161, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "секунд", IDC_STATIC, 215, 56, 25, 8
+    LTEXT       "секунд", IDC_STATIC, 213, 56, 25, 8
     CONTROL     "Отображать &варианты востановления:", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
-    LTEXT       "секунд", IDC_STATIC, 215, 70, 25, 8
-    LTEXT       "Для редактирования вручную нажмите ""Изменить""", IDC_STATIC, 14, 90, 187, 8
+    LTEXT       "секунд", IDC_STATIC, 213, 70, 25, 8
+    LTEXT       "Для редактир. вручную нажмите ""Изменить""", IDC_STATIC, 14, 90, 187, 8
     PUSHBUTTON  "&Изменить", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Отказ системы", IDC_STATIC, 7, 111, 238, 140
     CONTROL     "Записать событие в системный &журнал", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 154, 10
-    CONTROL     "&Отправить административное оповещение", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 158, 10
-    CONTROL     "Выполнить &автоматическую перезагрузку", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 154, 10
+    CONTROL     "&Отправить административное оповещение", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 165, 10
+    CONTROL     "Выполнить &автоматическую перезагрузку", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 160, 10
 
     GROUPBOX    "Запись отладочной информации", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT       "Файл дампа памяти:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    CONTROL     "Заменять &существующий файл дампа", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 137, 10
+    CONTROL     "Заменять &существующий файл дампа", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 145, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Отмена", IDCANCEL, 195, 259, 50, 14
@@ -181,24 +181,24 @@ BEGIN
     GROUPBOX    "Размер файла подкачки для выбранного диска", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT       "Диск:", IDC_STATIC, 20, 80, 20, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT       "Доступное пространство:", IDC_STATIC, 20, 92, 160, 9
-    LTEXT       "", IDC_SPACEAVAIL, 104, 92, 104, 9
+    LTEXT       "Доступное пространство:", IDC_STATIC, 20, 92, 183, 9
+    LTEXT       "", IDC_SPACEAVAIL, 154, 92, 104, 9
     LTEXT       "Исходный размер (MB):", -1, 22, 118, 80, 9
     LTEXT       "Максимальный размер (MB):", -1, 22, 131, 105, 9
-    CONTROL     "&Другой размер", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 60, 9
-    CONTROL     "Размер по выбору системы", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 100, 9
+    CONTROL     "&Другой размер", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 65, 9
+    CONTROL     "Размер по выбору системы", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 105, 9
     CONTROL     "Без файла подкачки", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 85, 9
     EDITTEXT    IDC_INITIALSIZE, 120, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 120, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Установить", IDC_SET, 158, 155, 50, 13
 
     GROUPBOX    "Общий объем файла подкачки на всех дисках", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT       "Минимальный размер:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
-    LTEXT       "Рекомендуемый:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
-    LTEXT       "Текущий размер:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT       "Минимальный размер:", IDC_STATIC, 18, 188, 120, 9
+    LTEXT       "", IDC_MINIMUM, 145, 188, 60, 9
+    LTEXT       "Рекомендуемый:", IDC_STATIC, 18, 199, 120, 9
+    LTEXT       "", IDC_RECOMMENDED, 145, 197, 60, 9
+    LTEXT       "Текущий размер:", IDC_STATIC, 18, 210, 120, 9
+    LTEXT       "", IDC_CURRENT, 145, 208, 60, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
     PUSHBUTTON  "Отмена", IDCANCEL, 168, 232, 48, 13

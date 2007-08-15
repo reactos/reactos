@@ -12,6 +12,7 @@
 	<library>comctl32</library>
 	<library>msvcrt</library>
 	<library>devmgr</library>
+	<library>gdi32</library>
 	<file>mmsys.c</file>
 	<file>mmsys.rc</file>
 </module>

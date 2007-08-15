@@ -79,7 +79,7 @@ BEGIN
           "Можно выбрать систему исчисления, формат чисел и даты.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Для изменения языка системы нажмите ""Настроить"".",
-          IDC_STATIC, 53, 60, 184, 8
+          IDC_STATIC, 53, 60, 197, 8
     PUSHBUTTON "&Настроить...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
     LTEXT "Выбрав раскладку вы сможете вводить символы на вашем языке.",
           IDC_STATIC, 53, 86, 253, 8
@@ -211,18 +211,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "Command Prompt.lnk"
+    IDS_SHORT_CMD        "Командная строка.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
-    IDS_SHORT_SERVICE    "Service Manager.lnk"
-    IDS_SHORT_DEVICE     "Device Manager.lnk"
-    IDS_SHORT_CALC       "Calculator.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
+    IDS_SHORT_DOWNLOADER "Скачать !.lnk"
+    IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
+    IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
+    IDS_SHORT_CALC       "Калькулятор.lnk"
+    IDS_SHORT_REGEDIT    "Редактор реестра.lnk"
+    IDS_SHORT_NOTEPAD    "Блокнот.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
+    IDS_SHORT_SOLITAIRE  "Пасьянс.lnk"
+    IDS_SHORT_WINEMINE   "Сапер.lnk"
 END
 
 STRINGTABLE

@@ -45,7 +45,7 @@ CAPTION "О Диспетчере устройств"
 FONT 8,"Tahoma",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Диспетчер устройств v0.1\nCopyright (C) 2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Диспетчер устройств v0.1\nCopyright (C) 2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "Закрыть", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -53,7 +53,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE

@@ -67,7 +67,7 @@ CAPTION "О Менеджере служб"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Менеджер служб v0.5\nCopyright (C) 2005-2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Менеджер служб v0.5\nCopyright (C) 2005-2006\nот Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
   PUSHBUTTON "Закрыть", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE

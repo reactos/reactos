@@ -203,8 +203,8 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Завершить процесс",IDC_ENDPROCESS,167,189,74,14
-    CONTROL         "&Отображать процессы всех пользователей",IDC_SHOWALLPROCESSES,
+    PUSHBUTTON      "&Завершить процесс",IDC_ENDPROCESS,162,189,79,14
+    CONTROL         "&Процессы всех пользователей",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,153,10
 END
 
@@ -365,13 +365,13 @@ BEGIN
     CONTROL         "&Имя образа",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
     CONTROL         "PID (иденти&ф. процесса)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,92,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,95,10
     CONTROL         "&Загрузка ЦП",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,53,10
     CONTROL         "&Время ЦП",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
     CONTROL         "&Память - использование",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,72,93,10
+                    WS_TABSTOP,7,72,95,10
     CONTROL         "Память - изме&нение",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
     CONTROL         "Память - &максимум",IDC_PEAKMEMORYUSAGE,"Button",
@@ -389,7 +389,7 @@ BEGIN
     CONTROL         "Им&я пользователя",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,80,10
     CONTROL         "Ошибок &страницы - изменение",IDC_PAGEFAULTSDELTA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,114,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,28,120,10
     CONTROL         "Объем вирт&уальной памяти",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,39,110,10
     CONTROL         "Вы&гружаемый пул",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
@@ -411,7 +411,7 @@ BEGIN
     CONTROL         "Прочий ввод-вывод",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,138,90,10
     CONTROL         "Прочих байт при вводе-выводе",IDC_IOOTHERBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,115,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,122,10
 END
 
 
@@ -601,7 +601,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Установить для процесса приоритет Ниже среднего"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Установить для процесса Низкий приоритет"
-    IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 
@@ -682,4 +682,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

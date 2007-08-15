@@ -197,7 +197,7 @@ STRINGTABLE DISCARDABLE
     IDS_MYPICTURES              "Мои документы\\Мои рисунки"
     IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS        "Общие документы"
-    IDS_ADMINTOOLS              "Главное меню\\Программы\\Administrative Tools"
+    IDS_ADMINTOOLS              "Главное меню\\Программы\\Администрирование"
     IDS_COMMON_MUSIC            "Общие документы\\Моя музыка"
     IDS_COMMON_PICTURES         "Общие документы\\Мои рисунки"
     IDS_COMMON_VIDEO            "Общие документы\\Мои фильмы"
