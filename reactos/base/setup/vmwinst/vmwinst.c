@@ -18,7 +18,8 @@
  *
  * VMware is a registered trademark of VMware, Inc.
  */
-/*
+/* $Id$
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
  * FILE:        subsys/system/vmwinst/vmwinst.c
@@ -27,11 +28,9 @@
  */
 #include <windows.h>
 #include <commctrl.h>
-#include <newdev.h>
 #include <stdio.h>
 #include <string.h>
 #include "vmwinst.h"
-#include <debug.h>
 
 extern VOID CALLBACK InstallHinfSectionW(HWND hwnd, HINSTANCE ModuleHandle,
                                          PCWSTR CmdLineBuffer, INT nCmdShow);
@@ -42,14 +41,12 @@ BOOL StartVMwConfigWizard, DriverFilesFound, ActivateVBE = FALSE, UninstallDrive
 
 static WCHAR DestinationDriversPath[MAX_PATH+1];
 static WCHAR CDDrive = L'\0';
-static WCHAR PathToVideoDrivers60[MAX_PATH+1] = L"X:\\program files\\VMWare\\VMWare Tools\\Drivers\\video\\2k\\32bit\\";
 static WCHAR PathToVideoDrivers55[MAX_PATH+1] = L"X:\\program files\\VMware\\VMware Tools\\Drivers\\video\\winnt2k\\32Bit\\";
 static WCHAR PathToVideoDrivers45[MAX_PATH+1] = L"X:\\program files\\VMware\\VMware Tools\\Drivers\\video\\winnt2k\\";
 static WCHAR PathToVideoDrivers40[MAX_PATH+1] = L"X:\\video\\winnt2k\\";
 static WCHAR DestinationPath[MAX_PATH+1];
 static WCHAR *vmx_fb = L"vmx_fb.dll";
 static WCHAR *vmx_mode = L"vmx_mode.dll";
-static WCHAR *vmx_mode_v6 = L"vmx mode.dll";
 static WCHAR *vmx_svga = L"vmx_svga.sys";
 
 static WCHAR *SrcPath = PathToVideoDrivers45;
@@ -98,8 +95,27 @@ DetectVMware(int *Version)
   return FALSE;
 }
 
+BOOL
+ProcessMessage(void)
+{
+  MSG msg;
+  if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+  {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+void
+ProcessMessages(void)
+{
+  while(ProcessMessage());
+}
+
 /* try to open the file */
-static BOOL
+BOOL
 FileExists(WCHAR *Path, WCHAR *File)
 {
   WCHAR FileName[MAX_PATH + 1];
@@ -151,8 +167,54 @@ CenterWindow(HWND hWnd)
 }
 
 
+/* Copy file */
+BOOL
+InstallFile(WCHAR *Destination, WCHAR *File)
+{
+  static char Buffer[1024];
+  WCHAR SourceFileName[MAX_PATH + 1];
+  WCHAR DestFileName[MAX_PATH + 1];
+  HANDLE SourceFileHandle, DestFileHandle;
+  DWORD DataRead, DataWritten;
+
+  SourceFileName[0] = L'\0';
+  DestFileName[0] = L'\0';
+  wcscat(SourceFileName, SrcPath);
+  wcscat(SourceFileName, File);
+  wcscat(DestFileName, Destination);
+  wcscat(DestFileName, File);
+
+  SourceFileHandle = CreateFile(SourceFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if(SourceFileHandle == INVALID_HANDLE_VALUE)
+  {
+    return FALSE;
+  }
+  DestFileHandle = CreateFile(DestFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if(DestFileHandle == INVALID_HANDLE_VALUE)
+  {
+    CloseHandle(SourceFileHandle);
+    return FALSE;
+  }
+
+  while(ReadFile(SourceFileHandle, Buffer, sizeof(Buffer), &DataRead, NULL) && DataRead > 0)
+  {
+    if(!WriteFile(DestFileHandle, Buffer, DataRead, &DataWritten, NULL) ||
+       DataRead != DataWritten)
+    {
+      CloseHandle(SourceFileHandle);
+      CloseHandle(DestFileHandle);
+      DeleteFile(DestFileName);
+      return FALSE;
+    }
+  }
+
+  CloseHandle(SourceFileHandle);
+  CloseHandle(DestFileHandle);
+  return TRUE;
+}
+
 /* Find the drive with the inserted VMware cd-rom */
-static BOOL
+BOOL
 IsVMwareCDInDrive(WCHAR *Drv)
 {
   static WCHAR Drive[4] = L"X:\\";
@@ -166,13 +228,10 @@ IsVMwareCDInDrive(WCHAR *Drv)
     if(GetDriveType(Drive) == DRIVE_CDROM)
     {
 #endif
-      PathToVideoDrivers60[0] = Current;
       PathToVideoDrivers55[0] = Current;
       PathToVideoDrivers40[0] = Current;
       PathToVideoDrivers45[0] = Current;
-      if(SetCurrentDirectory(PathToVideoDrivers60))
-        SrcPath = PathToVideoDrivers60;
-      else if(SetCurrentDirectory(PathToVideoDrivers55))
+      if(SetCurrentDirectory(PathToVideoDrivers55))
         SrcPath = PathToVideoDrivers55;
       else if(SetCurrentDirectory(PathToVideoDrivers45))
         SrcPath = PathToVideoDrivers45;
@@ -185,7 +244,7 @@ IsVMwareCDInDrive(WCHAR *Drv)
       }
 
       if(FileExists(SrcPath, vmx_fb) &&
-         (FileExists(SrcPath, vmx_mode) || FileExists(SrcPath, vmx_mode_v6)) &&
+         FileExists(SrcPath, vmx_mode) &&
          FileExists(SrcPath, vmx_svga))
       {
         *Drv = Current;
@@ -199,14 +258,14 @@ IsVMwareCDInDrive(WCHAR *Drv)
   return FALSE;
 }
 
-static BOOL
+BOOL
 LoadResolutionSettings(DWORD *ResX, DWORD *ResY, DWORD *ColDepth)
 {
   HKEY hReg;
   DWORD Type, Size;
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                  L"SYSTEM\\CurrentControlSet\\Services\\vmx_svga\\Device0",
+                  L"SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\vmx_svga\\Device0",
                   0, KEY_QUERY_VALUE, &hReg) != ERROR_SUCCESS)
   {
     return FALSE;
@@ -214,26 +273,29 @@ LoadResolutionSettings(DWORD *ResX, DWORD *ResY, DWORD *ColDepth)
   if(RegQueryValueEx(hReg, L"DefaultSettings.BitsPerPel", 0, &Type, (BYTE*)ColDepth, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
-    *ColDepth = 8;
+    RegCloseKey(hReg);
+    return FALSE;
   }
 
   if(RegQueryValueEx(hReg, L"DefaultSettings.XResolution", 0, &Type, (BYTE*)ResX, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
-    *ResX = 640;
+    RegCloseKey(hReg);
+    return FALSE;
   }
 
   if(RegQueryValueEx(hReg, L"DefaultSettings.YResolution", 0, &Type, (BYTE*)ResY, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
-    *ResY = 480;
+    RegCloseKey(hReg);
+    return FALSE;
   }
 
   RegCloseKey(hReg);
   return TRUE;
 }
 
-static BOOL
+BOOL
 IsVmwSVGAEnabled(VOID)
 {
   HKEY hReg;
@@ -258,13 +320,13 @@ IsVmwSVGAEnabled(VOID)
 
 
 
-static BOOL
+BOOL
 SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
 {
   HKEY hReg;
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                  L"SYSTEM\\CurrentControlSet\\Services\\vmx_svga\\Device0",
+                  L"SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\vmx_svga\\Device0",
                   0, KEY_SET_VALUE, &hReg) != ERROR_SUCCESS)
   {
     return FALSE;
@@ -291,7 +353,7 @@ SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
   return TRUE;
 }
 
-static BOOL
+BOOL
 EnableDriver(WCHAR *Key, BOOL Enable)
 {
   DWORD Value;
@@ -314,7 +376,7 @@ EnableDriver(WCHAR *Key, BOOL Enable)
 }
 
 /* Activate the vmware driver and deactivate the others */
-static BOOL
+BOOL
 EnableVmwareDriver(BOOL VBE, BOOL VGA, BOOL VMX)
 {
   if(!EnableDriver(L"SYSTEM\\CurrentControlSet\\Services\\VBE", VBE))
@@ -333,11 +395,94 @@ EnableVmwareDriver(BOOL VBE, BOOL VGA, BOOL VMX)
   return TRUE;
 }
 
+/* Make sure the required registry entries are present */
+BOOL
+AddVmwareRegistryEntries()
+{
+  HRSRC VmwareInfResource;
+  HGLOBAL VmwareInfMem;
+  PVOID VmwareInfLocked;
+  DWORD Size;
+  WCHAR TempPath[MAX_PATH];
+  WCHAR BufferSize;
+  WCHAR TempFileName[MAX_PATH];
+  HANDLE TempFile;
+  DWORD Written;
+  WCHAR CmdLine[19 + MAX_PATH];
+
+  VmwareInfResource = FindResourceW(hAppInstance,
+                                    MAKEINTRESOURCE(IDR_VMWARE_INF),
+                                    L"RT_INF");
+  if (NULL == VmwareInfResource)
+  {
+    return FALSE;
+  }
+  Size = SizeofResource(hAppInstance, VmwareInfResource);
+  if (0 == Size)
+  {
+    return FALSE;
+  }
+  VmwareInfMem = LoadResource(hAppInstance, VmwareInfResource);
+  if (NULL == VmwareInfMem)
+  {
+    return FALSE;
+  }
+  VmwareInfLocked = LockResource(VmwareInfMem);
+  if (NULL == VmwareInfLocked)
+  {
+    return FALSE;
+  }
+
+  BufferSize = GetTempPathW(sizeof(TempPath) / sizeof(TempPath[0]), TempPath);
+  if (0 == BufferSize || sizeof(TempPath) / sizeof(TempPath[0]) < BufferSize)
+  {
+    return FALSE;
+  }
+  if (0 == GetTempFileNameW(TempPath, L"vmx", 0, TempFileName))
+  {
+    return FALSE;
+  }
+
+  TempFile = CreateFileW(TempFileName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+                         FILE_ATTRIBUTE_NORMAL, NULL);
+  if (INVALID_HANDLE_VALUE == TempFile)
+  {
+    DeleteFile(TempFileName);
+    return FALSE;
+  }
+  if (! WriteFile(TempFile, VmwareInfLocked, Size, &Written, NULL) ||
+      Written != Size)
+  {
+    CloseHandle(TempFile);
+    DeleteFile(TempFileName);
+    return FALSE;
+  }
+  CloseHandle(TempFile);
+
+  wcscpy(CmdLine, L"DefaultInstall 128 ");
+  wcscat(CmdLine, TempFileName);
+  InstallHinfSectionW(NULL, NULL, CmdLine, 0);
+
+  DeleteFile(TempFileName);
+
+  return TRUE;
+}
+
 /* GUI */
 
+void
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DWORD Flags, DLGPROC DlgProc)
+{
+  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
+  psp->dwSize = sizeof(PROPSHEETPAGE);
+  psp->dwFlags = PSP_DEFAULT | Flags;
+  psp->hInstance = hAppInstance;
+  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+  psp->pfnDlgProc = DlgProc;
+}
 
 /* Property page dialog callback */
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageWelcomeProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -367,6 +512,23 @@ PageWelcomeProc(
         {
           if(DriverFilesFound)
           {
+            if(!AddVmwareRegistryEntries())
+            {
+              WCHAR Msg[1024];
+              LoadString(hAppInstance, IDS_FAILEDTOADDREGENTRIES, Msg, sizeof(Msg) / sizeof(WCHAR));
+              MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
+              SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+              return TRUE;
+            }
+            if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
+            {
+
+              WCHAR Msg[1024];
+              LoadString(hAppInstance, IDS_FAILEDTOACTIVATEDRIVER, Msg, sizeof(Msg) / sizeof(WCHAR));
+              MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
+              SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+              return TRUE;
+            }
             SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CONFIG);
             return TRUE;
           }
@@ -380,7 +542,7 @@ PageWelcomeProc(
 }
 
 /* Property page dialog callback */
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageInsertDiscProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -408,7 +570,7 @@ PageInsertDiscProc(
   return FALSE;
 }
 
-static VOID
+VOID
 InstTerminateInstaller(BOOL Wait)
 {
   if(hInstallationThread != NULL)
@@ -425,11 +587,10 @@ InstTerminateInstaller(BOOL Wait)
   }
 }
 
-static DWORD STDCALL
+DWORD STDCALL
 InstInstallationThread(LPVOID lpParameter)
 {
   HANDLE hThread;
-  WCHAR InfFileName[1024];
   BOOL DriveAvailable;
   int DrivesTested = 0;
 
@@ -452,22 +613,47 @@ InstInstallationThread(LPVOID lpParameter)
   if(AbortInstall != 0) goto done;
   PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_COPYINGFILES, 0);
 
-  wcscpy(InfFileName, SrcPath);
-  wcscat(InfFileName, L"vmx_svga.inf");
-  DPRINT1("Calling UpdateDriverForPlugAndPlayDevices()\n");
-  if (!UpdateDriverForPlugAndPlayDevices(
-    hInstallationNotifyWnd,
-    L"PCI\\VEN_15AD&DEV_0405&SUBSYS_040515AD&REV_00",
-    InfFileName,
-    0,
-    NULL))
+  if(AbortInstall != 0) goto done;
+  if(!InstallFile(DestinationPath, vmx_fb))
   {
-    AbortInstall = 1;
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
+    goto cleanup;
   }
-  else
+
+  Sleep(250);
+
+  if(AbortInstall != 0) goto done;
+  if(!InstallFile(DestinationPath, vmx_mode))
   {
-    AbortInstall = 0;
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
+    goto cleanup;
   }
+
+  Sleep(250);
+
+  if(AbortInstall != 0) goto done;
+  if(!InstallFile(DestinationDriversPath, vmx_svga))
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
+    goto cleanup;
+  }
+
+  Sleep(250);
+
+  if(AbortInstall != 0) goto done;
+  PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_ENABLINGDRIVER, 0);
+  if(!AddVmwareRegistryEntries())
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOADDREGENTRIES, 0);
+    goto cleanup;
+  }
+  if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOACTIVATEDRIVER, 0);
+    goto cleanup;
+  }
+
+  Sleep(500);
 
 done:
   switch(AbortInstall)
@@ -489,7 +675,7 @@ cleanup:
   return 0;
 }
 
-static BOOL
+BOOL
 InstStartInstallationThread(HWND hwndNotify)
 {
   if(hInstallationThread == NULL)
@@ -516,7 +702,7 @@ InstStartInstallationThread(HWND hwndNotify)
 }
 
 /* Property page dialog callback */
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageInstallingProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -585,7 +771,7 @@ PageInstallingProc(
 }
 
 /* Property page dialog callback */
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageInstallFailedProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -610,7 +796,7 @@ PageInstallFailedProc(
   return FALSE;
 }
 
-static void
+void
 FillComboBox(HWND Dlg, int idComboBox, int From, int To)
 {
   int i;
@@ -633,7 +819,7 @@ typedef struct
 } MAPCTLRES;
 
 /* Property page dialog callback */
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageConfigProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -752,7 +938,7 @@ PageConfigProc(
 }
 
 /* Property page dialog callback */
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageChooseActionProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -804,7 +990,7 @@ PageChooseActionProc(
 }
 
 /* Property page dialog callback */
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageSelectDriverProc(
   HWND hwndDlg,
   UINT uMsg,
@@ -866,7 +1052,7 @@ PageSelectDriverProc(
   return FALSE;
 }
 
-static VOID
+VOID
 ShowUninstNotice(HWND Owner)
 {
   WCHAR Msg[1024];
@@ -874,7 +1060,7 @@ ShowUninstNotice(HWND Owner)
   MessageBox(Owner, Msg, NULL, MB_ICONINFORMATION);
 }
 
-static INT_PTR CALLBACK
+INT_PTR CALLBACK
 PageDoUninstallProc(
   HWND hwndDlg,
   UINT uMsg,
