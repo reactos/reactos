@@ -775,14 +775,6 @@ NtGdiSetWindowOrgEx (
 	LPPOINT	Point
 	);
 
-/* Use NtGdiModifyWorldTransform with MWT_MAX + 1; */
-BOOL
-STDCALL
-NtGdiSetWorldTransform (
-	HDC		hDC,
-	CONST LPXFORM	Xform
-	);
-
 /* Use NtGdiStretchDIBitsInternal. */
 INT
 STDCALL

@@ -469,7 +469,7 @@ LineDDA@24
 LineTo@12=NtGdiLineTo@12
 MaskBlt@48
 MirrorRgn@8
-ModifyWorldTransform@12=NtGdiModifyWorldTransform@12
+ModifyWorldTransform@12
 MoveToEx@16=NtGdiMoveToEx@16
 NamedEscape@32
 OffsetClipRgn@12=NtGdiOffsetClipRgn@12
@@ -580,7 +580,7 @@ SetVirtualResolution@20
 SetWinMetaFileBits@16
 SetWindowExtEx@16=NtGdiSetWindowExtEx@16
 SetWindowOrgEx@16=NtGdiSetWindowOrgEx@16
-SetWorldTransform@8=NtGdiSetWorldTransform@8
+SetWorldTransform@8
 StartDocA@8
 StartDocW@8
 StartFormPage@4

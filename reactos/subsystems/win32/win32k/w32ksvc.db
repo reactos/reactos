@@ -715,7 +715,6 @@ NtGdiSetViewportExtEx                   4
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
 NtGdiSetWindowOrgEx                     4
-NtGdiSetWorldTransform                  2
 NtGdiStretchDIBits                      13
 NtGdiTranslateCharsetInfo               3
 NtGdiUpdateICMRegKey                    4

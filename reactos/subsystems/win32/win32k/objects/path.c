@@ -448,7 +448,7 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
     /* Go to GM_ADVANCED temporarily to restore the world transform */
     graphicsMode = NtGdiGetGraphicsMode( dc->hSelf );
     NtGdiSetGraphicsMode( dc->hSelf, GM_ADVANCED );
-    NtGdiSetWorldTransform( dc->hSelf, &xform );
+    NtGdiModifyWorldTransform( dc->hSelf, &xform, MWT_MAX+1 );
     NtGdiSetGraphicsMode( dc->hSelf, graphicsMode );
     return TRUE;
   }
