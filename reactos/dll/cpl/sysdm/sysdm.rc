@@ -29,6 +29,7 @@ RC_LICENSE RTDATA "resources/gpl.txt"
 #include "lang/it-IT.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"
 
 /*
 #include "lang/cs-CZ.rc"
@@ -38,5 +39,4 @@ RC_LICENSE RTDATA "resources/gpl.txt"
 #include "lang/ja-JP.rc"
 #include "lang/nl-NL.rc"
 #include "lang/sv-SE.rc"
-#include "lang/uk-UA.rc"
 */

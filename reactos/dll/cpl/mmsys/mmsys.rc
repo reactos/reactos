@@ -9,5 +9,8 @@
 
 
 IDI_CPLICON ICON "resources/mmsys.ico"
+IDI_MUTED_ICON ICON "resources/muted.ico"
+IDI_MICROPHONE_ICON ICON "resources/microphone.ico"
+IDB_SPEAKIMG BITMAP "resources/speaker.bmp"
 
 #include "rsrc.rc"
