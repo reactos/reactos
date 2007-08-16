@@ -2936,6 +2936,8 @@ EngPlgBlt(SURFOBJ *psoTrg,SURFOBJ *psoSrc,SURFOBJ *psoMsk,CLIPOBJ *pco,XLATEOBJ 
 
 /*
  * @implemented
+ * Obsolete GDI Function
+ * http://www.osronline.com/DDKx/graphics/gdioview_20tj.htm
  */
 BOOL STDCALL
 EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo)
