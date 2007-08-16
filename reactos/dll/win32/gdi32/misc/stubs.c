@@ -2545,8 +2545,7 @@ VOID
 STDCALL
 EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)hsem);
 }
 
 
@@ -2678,9 +2677,10 @@ HSEMAPHORE
 STDCALL
 EngCreateSemaphore ( VOID )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  PRTL_CRITICAL_SECTION CritSect = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(RTL_CRITICAL_SECTION));
+  if (!CritSect) return NULL;
+  RtlInitializeCriticalSection( CritSect );
+  return (HSEMAPHORE)CritSect;
 }
 
 /*
@@ -2721,8 +2721,10 @@ VOID
 STDCALL
 EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+ if (!hsem) return;
+
+ RtlDeleteCriticalSection( (PRTL_CRITICAL_SECTION) hsem );
+ RtlFreeHeap( GetProcessHeap(), 0, hsem );
 }
 
 /*
@@ -2877,19 +2879,33 @@ EngMultiByteToUnicodeN(OUT LPWSTR UnicodeString,
 		       IN PCHAR MultiByteString,
 		       IN ULONG BytesInMultiByteString)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  RtlMultiByteToUnicodeN(
+                     UnicodeString,
+                     MaxBytesInUnicodeString,
+                     BytesInUnicodeString,
+                     MultiByteString,
+                     BytesInMultiByteString
+                        );
 }
 
 /*
  * @unimplemented
  */
 INT STDCALL 
-EngMultiByteToWideChar(UINT CodePage,LPWSTR WideCharString,INT BytesInWideCharString,LPSTR MultiByteString,INT BytesInMultiByteString)
+EngMultiByteToWideChar(UINT CodePage,
+                       LPWSTR WideCharString,
+                       INT BytesInWideCharString,
+                       LPSTR MultiByteString,
+                       INT BytesInMultiByteString)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return MultiByteToWideChar(
+                         CodePage,
+			 0,
+			 MultiByteString,
+			 BytesInMultiByteString,
+			 WideCharString,
+			(BytesInWideCharString/sizeof(WCHAR)) /* Bytes to (in WCHARs) */
+			    );
 }
 
 /*
@@ -2919,14 +2935,12 @@ EngPlgBlt(SURFOBJ *psoTrg,SURFOBJ *psoSrc,SURFOBJ *psoMsk,CLIPOBJ *pco,XLATEOBJ 
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return FALSE;
 }
 
 /*
@@ -2935,8 +2949,16 @@ EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo)
 VOID STDCALL 
 EngQueryLocalTime(PENG_TIME_FIELDS etf)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  SYSTEMTIME SystemTime;
+  GetLocalTime( &SystemTime );
+  etf->usYear    = SystemTime.wYear;
+  etf->usMonth   = SystemTime.wMonth;
+  etf->usWeekday = SystemTime.wDayOfWeek;
+  etf->usDay     = SystemTime.wDay;
+  etf->usHour    = SystemTime.wHour;
+  etf->usMinute  = SystemTime.wMinute;
+  etf->usSecond  = SystemTime.wSecond;
+  etf->usMilliseconds = SystemTime.wMilliseconds;
 }
 
 /*
@@ -2946,8 +2968,7 @@ VOID
 STDCALL
 EngReleaseSemaphore ( IN HSEMAPHORE hsem )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
 }
 
 
@@ -3024,8 +3045,13 @@ EngUnicodeToMultiByteN(OUT PCHAR MultiByteString,
 		       IN PWSTR  UnicodeString,
 		       IN ULONG  BytesInUnicodeString)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   RtlUnicodeToMultiByteN(
+                       MultiByteString,
+                       MaxBytesInMultiByteString,
+                       BytesInMultiByteString,
+                       UnicodeString,
+                       BytesInUnicodeString
+                         );
 }
 
 /*
@@ -3042,11 +3068,21 @@ EngUnlockSurface(SURFOBJ *pso)
  * @unimplemented
  */
 INT STDCALL 
-EngWideCharToMultiByte(UINT CodePage,LPWSTR WideCharString,INT BytesInWideCharString,LPSTR MultiByteString,INT BytesInMultiByteString)
+EngWideCharToMultiByte( UINT CodePage,
+                        LPWSTR WideCharString,
+                        INT BytesInWideCharString,
+                        LPSTR MultiByteString,
+                        INT BytesInMultiByteString)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return WideCharToMultiByte(
+                         CodePage,
+                         0,
+                         WideCharString,
+                        (BytesInWideCharString/sizeof(WCHAR)), /* Bytes to (in WCHARs) */
+                         MultiByteString,
+                         BytesInMultiByteString,
+                         NULL,
+                         NULL);
 }
 
 /*
