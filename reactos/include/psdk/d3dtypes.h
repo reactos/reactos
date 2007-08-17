@@ -25,9 +25,7 @@
 #ifndef __WINE_D3DTYPES_H
 #define __WINE_D3DTYPES_H
 
-#ifndef __WINESRC__
-# include <windows.h>
-#endif
+/* #include <windows.h> FIXME: Need to include for compatibility. Inclusion caused compile fail */
 
 #include <float.h>
 #include <ddraw.h>
