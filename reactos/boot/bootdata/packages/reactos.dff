@@ -119,7 +119,8 @@ dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
 dll\directx\ddraw\ddraw.dll                         1
 dll\directx\d3d8thk\d3d8thk.dll                     1
-dll\directx\d3d8\d3d8.dll                           1
+dll\directx\wine\d3d8\d3d8.dll                      1
+dll\directx\wine\wined3d\wined3d.dll                1
 dll\directx\d3d9\d3d9.dll                           1
 dll\directx\devenum\devenum.dll                     1
 
