@@ -789,14 +789,11 @@ GetObjectType(
       case GDI_OBJECT_TYPE_ENHMETAFILE:
         Ret = OBJ_ENHMETAFILE;
         break;
-      case GDI_OBJECT_TYPE_ENHMETADC:
-        Ret = OBJ_ENHMETADC;
-        break;
+      case GDI_OBJECT_TYPE_METADC:
+        Ret = OBJ_METADC;
+        break;      
       case GDI_OBJECT_TYPE_EXTPEN:
         Ret = OBJ_EXTPEN;
-        break;
-      case GDI_OBJECT_TYPE_MEMDC:
-        Ret = OBJ_MEMDC;
         break;
 
       default:

@@ -166,7 +166,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
   HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
   UNICODE_STRING DriverName;
-
+  INT DC_Type = DC_TYPE_DIRECT;
+  
   DisplayDC = NULL;
   if (hDC == NULL)
     {
@@ -177,6 +178,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
           return NULL;
         }
       hDC = DisplayDC;
+      DC_Type = DC_TYPE_MEMORY; // Null hDC == Memory DC.
     }
 
   /*  Allocate a new DC based on the original DC's device  */
@@ -205,7 +207,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
   /* Copy information from original DC to new DC  */
   NewDC->hSelf = hNewDC;
   NewDC->IsIC = FALSE;
-
+  NewDC->DC_Type = DC_Type;
+  
   NewDC->PDev = OrigDC->PDev;
   memcpy(NewDC->FillPatternSurfaces,
          OrigDC->FillPatternSurfaces,
@@ -891,6 +894,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     return NULL;
   }
 
+  NewDC->DC_Type = DC_TYPE_DIRECT;
   NewDC->IsIC = CreateAsIC;
   NewDC->DevInfo = &PrimarySurface.DevInfo;
   NewDC->GDIInfo = &PrimarySurface.GDIInfo;
@@ -2174,12 +2178,7 @@ NtGdiGetDCDword(
     case GdiGetFontLanguageInfo:
       break;
     case GdiGetIsMemDc:
-      {
-        if (dc->w.flags & DC_MEMORY)
-          SafeResult = DC_TYPE_MEMORY;  // = dc->DC_Type;
-        else
-          SafeResult = DC_TYPE_DIRECT;
-      }
+          SafeResult = dc->DC_Type;
       break;
     case GdiGetMapMode:
       SafeResult = dc->Dc_Attr.iMapMode;
