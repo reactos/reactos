@@ -1,0 +1,3 @@
+EXPORTS
+WineDirect3DCreate@12
+WineDirect3DCreateClipper@4
