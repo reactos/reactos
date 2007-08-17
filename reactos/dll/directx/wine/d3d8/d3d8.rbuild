@@ -37,6 +37,7 @@
       <file>vertexshader.c</file>
       <file>volume.c</file>
       <file>volumetexture.c</file>
+      <file>version.rc</file>
 	<file>d3d8.spec</file>
 
 </module>
