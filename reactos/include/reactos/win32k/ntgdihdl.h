@@ -214,8 +214,10 @@ typedef struct _DC_ATTR
     LONG lIcmMode;
     HANDLE hcmXform;
     HCOLORSPACE hColorSpace;
+    FLONG flIcmFlags;
     INT IcmBrushColor;
     INT IcmPenColor;
+    PVOID pvLIcm;
     FLONG flTextAlign;
     LONG lTextAlign;
     LONG lTextExtra;
@@ -240,6 +242,7 @@ typedef struct _DC_ATTR
     FLONG flXform;
     SIZEL szlVirtualDevicePixel;
     SIZEL szlVirtualDeviceMm;
+    SIZEL szlVirtualDeviceSize;
     POINTL ptlBrushOrigin;
     RGNATTR VisRectRegion;
 } DC_ATTR, *PDC_ATTR;
