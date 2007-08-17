@@ -9,6 +9,10 @@
 #define CMLIB_H
 
 //#define WIN32_NO_STATUS
+#ifdef CMLIB_HOST
+#include <typedefs64.h>
+#endif
+
 #include <ntddk.h>
 #include "hivedata.h"
 #include "cmdata.h"
