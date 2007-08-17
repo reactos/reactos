@@ -226,6 +226,10 @@ typedef struct _DC_ATTR
     MATRIX_S mxWorldToDevice;
     MATRIX_S mxDevicetoWorld;
     MATRIX_S mxWorldToPage;
+    EFLOAT_S efM11PtoD;
+    EFLOAT_S efM22PtoD;
+    EFLOAT_S efDxPtoD;
+    EFLOAT_S efDyPtoD;
     INT iMapMode;
     DWORD dwLayout;
     LONG lWindowOrgx;
