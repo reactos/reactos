@@ -240,15 +240,14 @@ CreateICA(
  */
 BOOL
 STDCALL
-NEWDeleteDC(HDC hDC)
+DeleteDC(HDC hDC)
 {
   BOOL Ret = TRUE;
+#if 0
   PDC_ATTR Dc_Attr;
   PLDC pLDC;
 
-  Ret = GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
-
-  if ( !Ret ) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
   
   if ( Dc_Attr )
     {
@@ -260,7 +259,7 @@ NEWDeleteDC(HDC hDC)
           LocalFree( pLDC );
         }
     }
-
+#endif
   Ret = NtGdiDeleteObjectApp(hDC);
   
   return Ret;
