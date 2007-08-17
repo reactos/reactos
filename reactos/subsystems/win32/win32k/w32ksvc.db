@@ -460,7 +460,7 @@ NtUserInvalidateRect                             3
 NtUserInvalidateRgn                              3
 NtUserIsClipboardFormatAvailable                 1
 NtUserKillTimer                                  2
-# NtUserLoadKeyboardLayoutEx                       7   Wrong number of param ?
+NtUserLoadKeyboardLayoutEx                       7
 NtUserLockWindowStation                          1
 NtUserLockWindowUpdate                           1
 NtUserLockWorkStation                            0
@@ -684,7 +684,6 @@ NtUserFindWindowEx                      4
 NtUserGetClassInfo                      4
 NtUserGetClipboardViewer                0
 NtUserInitTask                          11
-NtUserLoadKeyboardLayoutEx              6
 NtUserSetClassWord                      3
 NtUserSetCursorIconData                 6
 NtUserSetWinEventHook                   8
