@@ -102,8 +102,8 @@ typedef char CHAR;
 typedef short SHORT;
 #ifndef LONG_DEFINED
 #define LONG_DEFINED
-	typedef long LONG;
-	typedef unsigned long ULONG,*PULONG;
+    typedef long LONG;
+    typedef unsigned long ULONG,*PULONG;
 #endif//LONG_DEFINED
 typedef char CCHAR, *PCCHAR;
 typedef unsigned char UCHAR,*PUCHAR;

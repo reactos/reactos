@@ -107,21 +107,11 @@ inline void* ULongToPtr( const unsigned long ul )
 #else /*  !_WIN64 */
 typedef _W64 int INT_PTR, *PINT_PTR;
 typedef _W64 unsigned int UINT_PTR, *PUINT_PTR;
-
-#ifndef LONG_PTR_DEFINED
-#define LONG_PTR_DEFINED
-	typedef _W64 long LONG_PTR, *PLONG_PTR;
-	typedef _W64 unsigned long ULONG_PTR, *PULONG_PTR;
-#endif
-
+typedef _W64 long LONG_PTR, *PLONG_PTR;
+typedef _W64 unsigned long ULONG_PTR, *PULONG_PTR;
 typedef unsigned short UHALF_PTR, *PUHALF_PTR;
 typedef short HALF_PTR, *PHALF_PTR;
-
-#ifndef HANDLE_PTR_DEFINED
-#define HANDLE_PTR_DEFINED
-	typedef _W64 unsigned long HANDLE_PTR;
-#endif
-
+typedef _W64 unsigned long HANDLE_PTR;
 #endif /* !_WIN64 */
 
 typedef _W64 ULONG_PTR SIZE_T, *PSIZE_T;

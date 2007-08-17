@@ -17,59 +17,59 @@ extern "C" {
 
 extern int InfHostOpenBufferedFile(PHINF InfHandle,
                                    void *Buffer,
-                                   ULONG BufferSize,
-                                   ULONG *ErrorLine);
+                                   unsigned long BufferSize,
+                                   unsigned long *ErrorLine);
 extern int InfHostOpenFile(PHINF InfHandle,
-                           const CHAR *FileName,
-                           ULONG *ErrorLine);
+                           const char *FileName,
+                           unsigned long *ErrorLine);
 extern int InfHostWriteFile(HINF InfHandle,
-                            const CHAR *FileName,
-                            const CHAR *HeaderComment);
+                            const char *FileName,
+                            const char *HeaderComment);
 extern void InfHostCloseFile(HINF InfHandle);
 extern int InfHostFindFirstLine(HINF InfHandle,
-                                const CHAR *Section,
-                                const CHAR *Key,
+                                const char *Section,
+                                const char *Key,
                                 PINFCONTEXT *Context);
 extern int InfHostFindNextLine(PINFCONTEXT ContextIn,
                                PINFCONTEXT ContextOut);
 extern int InfHostFindFirstMatchLine(PINFCONTEXT ContextIn,
-                                     const CHAR *Key,
+                                     const char *Key,
                                      PINFCONTEXT ContextOut);
 extern int InfHostFindNextMatchLine(PINFCONTEXT ContextIn,
-                                    const CHAR *Key,
+                                    const char *Key,
                                     PINFCONTEXT ContextOut);
-extern LONG InfHostGetLineCount(HINF InfHandle,
-                                const CHAR *Section);
-extern LONG InfHostGetFieldCount(PINFCONTEXT Context);
+extern long InfHostGetLineCount(HINF InfHandle,
+                                const char *Section);
+extern long InfHostGetFieldCount(PINFCONTEXT Context);
 extern int InfHostGetBinaryField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 UCHAR *ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 ULONG *RequiredSize);
+                                 unsigned long FieldIndex,
+                                 unsigned char *ReturnBuffer,
+                                 unsigned long ReturnBufferSize,
+                                 unsigned long *RequiredSize);
 extern int InfHostGetIntField(PINFCONTEXT Context,
-                              ULONG FieldIndex,
-                              ULONG *IntegerValue);
+                              unsigned long FieldIndex,
+                              unsigned long *IntegerValue);
 extern int InfHostGetMultiSzField(PINFCONTEXT Context,
-                                  ULONG FieldIndex,
-                                  CHAR *ReturnBuffer,
-                                  ULONG ReturnBufferSize,
-                                  ULONG *RequiredSize);
+                                  unsigned long FieldIndex,
+                                  char *ReturnBuffer,
+                                  unsigned long ReturnBufferSize,
+                                  unsigned long *RequiredSize);
 extern int InfHostGetStringField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 CHAR *ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 ULONG *RequiredSize);
+                                 unsigned long FieldIndex,
+                                 char *ReturnBuffer,
+                                 unsigned long ReturnBufferSize,
+                                 unsigned long *RequiredSize);
 extern int InfHostGetData(PINFCONTEXT Context,
-                          CHAR **Key,
-                          CHAR **Data);
+                          char **Key,
+                          char **Data);
 extern int InfHostGetDataField(PINFCONTEXT Context,
-                               ULONG FieldIndex,
-                               CHAR **Data);
+                               unsigned long FieldIndex,
+                               char **Data);
 extern int InfHostFindOrAddSection(HINF InfHandle,
-                                   const CHAR *Section,
+                                   const char *Section,
                                    PINFCONTEXT *Context);
-extern int InfHostAddLine(PINFCONTEXT Context, const CHAR *Key);
-extern int InfHostAddField(PINFCONTEXT Context, const CHAR *Data);
+extern int InfHostAddLine(PINFCONTEXT Context, const char *Key);
+extern int InfHostAddField(PINFCONTEXT Context, const char *Data);
 extern void InfHostFreeContext(PINFCONTEXT Context);
 
 #ifdef __cplusplus

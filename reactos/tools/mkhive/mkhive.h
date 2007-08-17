@@ -37,11 +37,6 @@
 
 #define NTOS_MODE_USER
 #define WIN32_NO_STATUS
-
-#ifdef MKHIVE_HOST
-#include <typedefs64.h>
-#endif
-
 #include <ntddk.h>
 #include <cmlib.h>
 #include <infhost.h>

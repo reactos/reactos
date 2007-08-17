@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG
+unsigned long
 DbgPrint(char *Fmt, ...)
 {
   va_list Args;

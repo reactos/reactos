@@ -30,10 +30,10 @@
 
 typedef char CHAR, *PCHAR;
 typedef unsigned char UCHAR, *PUCHAR;
+typedef long LONG, *PLONG;
+typedef unsigned long ULONG, *PULONG;
 typedef void VOID, *PVOID;
 typedef UCHAR BOOLEAN, *PBOOLEAN;
-#include <typedefs64.h>
-typedef LONG *PLONG;
 
 typedef char TCHAR, *PTCHAR, *PTSTR;
 #define _T(x) x
@@ -48,7 +48,7 @@ typedef char TCHAR, *PTCHAR, *PTSTR;
 #define strcasecmp stricmp
 #endif
 
-extern ULONG DbgPrint(char *Fmt, ...);
+extern unsigned long DbgPrint(char *Fmt, ...);
 
 #else /* ! defined(INFLIB_HOST) */
 

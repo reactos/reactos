@@ -13,11 +13,11 @@
 #include <debug.h>
 
 int
-InfHostWriteFile(HINF InfHandle, const CHAR *FileName,
-                 const CHAR *HeaderComment)
+InfHostWriteFile(HINF InfHandle, const char *FileName,
+                 const char *HeaderComment)
 {
-  CHAR *Buffer;
-  ULONG BufferSize;
+  char *Buffer;
+  unsigned long BufferSize;
   INFSTATUS Status;
   FILE *File;
 
@@ -60,7 +60,7 @@ InfHostWriteFile(HINF InfHandle, const CHAR *FileName,
 
 int
 InfHostFindOrAddSection(HINF InfHandle,
-                        const CHAR *Section,
+                        const char *Section,
                         PINFCONTEXT *Context)
 {
   INFSTATUS Status;
@@ -78,7 +78,7 @@ InfHostFindOrAddSection(HINF InfHandle,
 }
 
 int
-InfHostAddLine(PINFCONTEXT Context, const CHAR *Key)
+InfHostAddLine(PINFCONTEXT Context, const char *Key)
 {
   INFSTATUS Status;
 
@@ -95,7 +95,7 @@ InfHostAddLine(PINFCONTEXT Context, const CHAR *Key)
 }
 
 int
-InfHostAddField(PINFCONTEXT Context, const CHAR *Data)
+InfHostAddField(PINFCONTEXT Context, const char *Data)
 {
   INFSTATUS Status;
 

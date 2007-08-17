@@ -16,8 +16,8 @@
 
 int
 InfHostFindFirstLine(HINF InfHandle,
-                     const CHAR *Section,
-                     const CHAR *Key,
+                     const char *Section,
+                     const char *Key,
                      PINFCONTEXT *Context)
 {
   INFSTATUS Status;
@@ -56,7 +56,7 @@ InfHostFindNextLine(PINFCONTEXT ContextIn,
 
 int
 InfHostFindFirstMatchLine(PINFCONTEXT ContextIn,
-                          const CHAR *Key,
+                          const char *Key,
                           PINFCONTEXT ContextOut)
 {
   INFSTATUS Status;
@@ -76,7 +76,7 @@ InfHostFindFirstMatchLine(PINFCONTEXT ContextIn,
 
 int
 InfHostFindNextMatchLine(PINFCONTEXT ContextIn,
-                         const CHAR *Key,
+                         const char *Key,
                          PINFCONTEXT ContextOut)
 {
   INFSTATUS Status;
@@ -94,7 +94,7 @@ InfHostFindNextMatchLine(PINFCONTEXT ContextIn,
 }
 
 
-LONG
+long
 InfHostGetLineCount(HINF InfHandle,
                     PCTSTR Section)
 {
@@ -105,7 +105,7 @@ InfHostGetLineCount(HINF InfHandle,
 /* InfGetLineText */
 
 
-LONG
+long
 InfHostGetFieldCount(PINFCONTEXT Context)
 {
   return InfpGetFieldCount(Context);
@@ -114,10 +114,10 @@ InfHostGetFieldCount(PINFCONTEXT Context)
 
 int
 InfHostGetBinaryField(PINFCONTEXT Context,
-                      ULONG FieldIndex,
-                      UCHAR *ReturnBuffer,
-                      ULONG ReturnBufferSize,
-                      ULONG *RequiredSize)
+                      unsigned long FieldIndex,
+                      unsigned char *ReturnBuffer,
+                      unsigned long ReturnBufferSize,
+                      unsigned long *RequiredSize)
 {
   INFSTATUS Status;
 
@@ -137,8 +137,8 @@ InfHostGetBinaryField(PINFCONTEXT Context,
 
 int
 InfHostGetIntField(PINFCONTEXT Context,
-                   ULONG FieldIndex,
-                   ULONG *IntegerValue)
+                   unsigned long FieldIndex,
+                   unsigned long *IntegerValue)
 {
   INFSTATUS Status;
 
@@ -157,10 +157,10 @@ InfHostGetIntField(PINFCONTEXT Context,
 
 int
 InfHostGetMultiSzField(PINFCONTEXT Context,
-                       ULONG FieldIndex,
-                       CHAR * ReturnBuffer,
-                       ULONG ReturnBufferSize,
-                       ULONG *RequiredSize)
+                       unsigned long FieldIndex,
+                       char * ReturnBuffer,
+                       unsigned long ReturnBufferSize,
+                       unsigned long *RequiredSize)
 {
   INFSTATUS Status;
 
@@ -180,10 +180,10 @@ InfHostGetMultiSzField(PINFCONTEXT Context,
 
 int
 InfHostGetStringField(PINFCONTEXT Context,
-                      ULONG FieldIndex,
-                      CHAR *ReturnBuffer,
-                      ULONG ReturnBufferSize,
-                      ULONG *RequiredSize)
+                      unsigned long FieldIndex,
+                      char *ReturnBuffer,
+                      unsigned long ReturnBufferSize,
+                      unsigned long *RequiredSize)
 {
   INFSTATUS Status;
 
@@ -203,8 +203,8 @@ InfHostGetStringField(PINFCONTEXT Context,
 
 int
 InfHostGetData(PINFCONTEXT Context,
-               CHAR **Key,
-               CHAR **Data)
+               char **Key,
+               char **Data)
 {
   INFSTATUS Status;
 
@@ -223,8 +223,8 @@ InfHostGetData(PINFCONTEXT Context,
 
 int
 InfHostGetDataField(PINFCONTEXT Context,
-                    ULONG FieldIndex,
-                    CHAR **Data)
+                    unsigned long FieldIndex,
+                    char **Data)
 {
   INFSTATUS Status;
 
