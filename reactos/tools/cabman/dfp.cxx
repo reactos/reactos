@@ -12,6 +12,7 @@
  *   CSH 15/08-2003 Made it portable
  *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
  *   CF  04/05-2007 Made it compatible with 64-bit operating systems
+ *   CF  18/08-2007 Use typedefs64.h and the Windows types for compatibility with 64-bit operating systems
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,31 +22,31 @@
 
 #if defined(WIN32)
 #define GetSizeOfFile(handle) _GetSizeOfFile(handle)
-static int32_t _GetSizeOfFile(FILEHANDLE handle)
+static LONG _GetSizeOfFile(FILEHANDLE handle)
 {
-	uint32_t size = GetFileSize(handle, NULL);
+	ULONG size = GetFileSize(handle, NULL);
 	if (size == INVALID_FILE_SIZE)
 		return -1;
 
 	return size;
 }
 #define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
-static bool _ReadFileData(FILEHANDLE handle, void* buffer, uint32_t size, uint32_t* bytesread)
+static bool _ReadFileData(FILEHANDLE handle, void* buffer, ULONG size, PULONG bytesread)
 {
 	return ReadFile(handle, buffer, size, (LPDWORD)bytesread, NULL);
 }
 #else
 #define GetSizeOfFile(handle) _GetSizeOfFile(handle)
-static int32_t _GetSizeOfFile(FILEHANDLE handle)
+static LONG _GetSizeOfFile(FILEHANDLE handle)
 {
-	int32_t size;
+	LONG size;
 	fseek(handle, 0, SEEK_END);
 	size = ftell(handle);
 	fseek(handle, 0, SEEK_SET);
 	return size;
 }
 #define ReadFileData(handle, buffer, size, bytesread) _ReadFileData(handle, buffer, size, bytesread)
-static bool _ReadFileData(FILEHANDLE handle, void* buffer, uint32_t size, uint32_t* bytesread)
+static bool _ReadFileData(FILEHANDLE handle, void* buffer, ULONG size, PULONG bytesread)
 {
 	*bytesread = fread(buffer, 1, size, handle);
 	return *bytesread == size;
@@ -128,7 +129,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 	char eolbuf[2];
 	char* destpath;
 #if defined(WIN32)
-	uint32_t BytesWritten;
+	ULONG BytesWritten;
 #endif
 
 	if (DontGenerateInf)
@@ -160,14 +161,14 @@ void CDFParser::WriteInfLine(char* InfLine)
 			NULL);                          // No attribute template
 		if (InfFileHandle == INVALID_HANDLE_VALUE)
 		{
-			DPRINT(MID_TRACE, ("Error creating '%d'.\n", (unsigned int)GetLastError()));
+			DPRINT(MID_TRACE, ("Error creating '%d'.\n", (ULONG)GetLastError()));
 			return;
 		}
 #else /* !WIN32 */
 		InfFileHandle = fopen(buf, "wb"); 
 		if (InfFileHandle == NULL)
 		{
-			DPRINT(MID_TRACE, ("Error creating '%d'.\n", (unsigned int)errno));
+			DPRINT(MID_TRACE, ("Error creating '%d'.\n", (ULONG)errno));
 			return;
 		}
 #endif
@@ -176,7 +177,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 #if defined(WIN32)
 	if (!WriteFile(InfFileHandle, InfLine, (DWORD)strlen(InfLine), (LPDWORD)&BytesWritten, NULL))
 	{
-		DPRINT(MID_TRACE, ("ERROR WRITING '%d'.\n", (unsigned int)GetLastError()));
+		DPRINT(MID_TRACE, ("ERROR WRITING '%d'.\n", (ULONG)GetLastError()));
 		return;
 	}
 #else
@@ -190,7 +191,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 #if defined(WIN32)
 	if (!WriteFile(InfFileHandle, eolbuf, sizeof(eolbuf), (LPDWORD)&BytesWritten, NULL))
 	{
-		DPRINT(MID_TRACE, ("ERROR WRITING '%d'.\n", (unsigned int)GetLastError()));
+		DPRINT(MID_TRACE, ("ERROR WRITING '%d'.\n", (ULONG)GetLastError()));
 		return;
 	}
 #else
@@ -200,7 +201,7 @@ void CDFParser::WriteInfLine(char* InfLine)
 }
 
 
-uint32_t CDFParser::Load(char* FileName)
+ULONG CDFParser::Load(char* FileName)
 /*
  * FUNCTION: Loads a directive file into memory
  * ARGUMENTS:
@@ -209,8 +210,8 @@ uint32_t CDFParser::Load(char* FileName)
  *     Status of operation
  */
 {
-	uint32_t BytesRead;
-	int32_t FileSize;
+	ULONG BytesRead;
+	LONG FileSize;
 
 	if (FileLoaded)
 		return CAB_STATUS_SUCCESS;
@@ -239,7 +240,7 @@ uint32_t CDFParser::Load(char* FileName)
 		return CAB_STATUS_CANNOT_OPEN;
 	}
 
-	FileBufferSize = (uint32_t)FileSize;
+	FileBufferSize = (ULONG)FileSize;
 
 	FileBuffer = (char*)AllocateMemory(FileBufferSize);
 	if (!FileBuffer)
@@ -266,7 +267,7 @@ uint32_t CDFParser::Load(char* FileName)
 }
 
 
-uint32_t CDFParser::Parse()
+ULONG CDFParser::Parse()
 /*
  * FUNCTION: Parses a loaded directive file
  * RETURNS:
@@ -274,7 +275,7 @@ uint32_t CDFParser::Parse()
  */
 {
 	bool Command;
-	uint32_t Status;
+	ULONG Status;
 
 	if (!FileLoaded)
 		return CAB_STATUS_NOFILE;
@@ -346,7 +347,7 @@ uint32_t CDFParser::Parse()
 
 							if (Status == CAB_STATUS_FAILURE)
 							{
-								printf("Directive file contains errors at line %d.\n", (unsigned int)CurrentLine);
+								printf("Directive file contains errors at line %d.\n", (ULONG)CurrentLine);
 								DPRINT(MID_TRACE, ("Error while executing command.\n"));
 							}
 
@@ -360,7 +361,7 @@ uint32_t CDFParser::Parse()
 
 							if (Status != CAB_STATUS_SUCCESS)
 							{
-								printf("Directive file contains errors at line %d.\n", (unsigned int)CurrentLine);
+								printf("Directive file contains errors at line %d.\n", (ULONG)CurrentLine);
 								DPRINT(MID_TRACE, ("Error while copying file.\n"));
 							}
 
@@ -381,8 +382,8 @@ uint32_t CDFParser::Parse()
 						break;
 
 					default:
-						printf("Directive file contains errors at line %d.\n", (unsigned int)CurrentLine);
-						DPRINT(MID_TRACE, ("Token is (%d).\n", (unsigned int)CurrentToken));
+						printf("Directive file contains errors at line %d.\n", (ULONG)CurrentLine);
+						DPRINT(MID_TRACE, ("Token is (%d).\n", (ULONG)CurrentToken));
 						return CAB_STATUS_SUCCESS;
 					}
 					NextToken();
@@ -401,7 +402,7 @@ uint32_t CDFParser::Parse()
 				Status = CloseDisk();
 			if (Status != CAB_STATUS_SUCCESS)
 			{
-				DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (unsigned int)Status));
+				DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (ULONG)Status));
 				return Status;
 			}
 		}
@@ -411,7 +412,7 @@ uint32_t CDFParser::Parse()
 			Status = CloseCabinet();
 			if (Status != CAB_STATUS_SUCCESS)
 			{
-				DPRINT(MIN_TRACE, ("Cannot close cabinet (%d).\n", (unsigned int)Status));
+				DPRINT(MIN_TRACE, ("Cannot close cabinet (%d).\n", (ULONG)Status));
 				return Status;
 			}
 		}
@@ -437,7 +438,7 @@ void CDFParser::SetFileRelativePath(char* Path)
 }
 
 
-bool CDFParser::OnDiskLabel(uint32_t Number, char* Label)
+bool CDFParser::OnDiskLabel(ULONG Number, char* Label)
 /*
  * FUNCTION: Called when a disk needs a label
  * ARGUMENTS:
@@ -448,13 +449,13 @@ bool CDFParser::OnDiskLabel(uint32_t Number, char* Label)
  */
 {
 	char Buffer[20];
-	unsigned int i;
+	ULONG i;
 	int j;
 	char ch;
 
 	Number += 1;
 
-	DPRINT(MID_TRACE, ("Giving disk (%d) a label...\n", (unsigned int)Number));
+	DPRINT(MID_TRACE, ("Giving disk (%d) a label...\n", (ULONG)Number));
 
 	if (GetDiskName(&DiskLabel, Number, Label))
 		return true;
@@ -470,7 +471,7 @@ bool CDFParser::OnDiskLabel(uint32_t Number, char* Label)
 			{
 				sprintf(Buffer, "%lu", Number);
 				strcat(Label, Buffer);
-				j += (int)strlen(Buffer);
+				j += (LONG)strlen(Buffer);
 			}
 			else
 			{
@@ -489,7 +490,7 @@ bool CDFParser::OnDiskLabel(uint32_t Number, char* Label)
 }
 
 
-bool CDFParser::OnCabinetName(uint32_t Number, char* Name)
+bool CDFParser::OnCabinetName(ULONG Number, char* Name)
 /*
  * FUNCTION: Called when a cabinet needs a name
  * ARGUMENTS:
@@ -500,13 +501,13 @@ bool CDFParser::OnCabinetName(uint32_t Number, char* Name)
  */
 {
 	char Buffer[MAX_PATH];
-	unsigned int i;
+	ULONG i;
 	int j;
 	char ch;
 
 	Number += 1;
 
-	DPRINT(MID_TRACE, ("Giving cabinet (%d) a name...\n", (unsigned int)Number));
+	DPRINT(MID_TRACE, ("Giving cabinet (%d) a name...\n", (ULONG)Number));
 
 	if (GetDiskName(&CabinetName, Number, Buffer))
 	{
@@ -518,7 +519,7 @@ bool CDFParser::OnCabinetName(uint32_t Number, char* Name)
 	if (CabinetNameTemplateSet)
 	{
 		strcpy(Name, GetDestinationPath());
-		j = (int)strlen(Name);
+		j = (LONG)strlen(Name);
 		for (i = 0; i < strlen(CabinetNameTemplate); i++)
 		{
 			ch = CabinetNameTemplate[i];
@@ -526,7 +527,7 @@ bool CDFParser::OnCabinetName(uint32_t Number, char* Name)
 			{
 				sprintf(Buffer, "%lu", Number);
 				strcat(Name, Buffer);
-				j += (int)strlen(Buffer);
+				j += (LONG)strlen(Buffer);
 			}
 			else
 			{
@@ -544,7 +545,7 @@ bool CDFParser::OnCabinetName(uint32_t Number, char* Name)
 }
 
 
-bool CDFParser::SetDiskName(PCABINET_NAME *List, uint32_t Number, char* String)
+bool CDFParser::SetDiskName(PCABINET_NAME *List, ULONG Number, char* String)
 /*
  * FUNCTION: Sets an entry in a list
  * ARGUMENTS:
@@ -582,7 +583,7 @@ bool CDFParser::SetDiskName(PCABINET_NAME *List, uint32_t Number, char* String)
 }
 
 
-bool CDFParser::GetDiskName(PCABINET_NAME *List, uint32_t Number, char* String)
+bool CDFParser::GetDiskName(PCABINET_NAME *List, ULONG Number, char* String)
 /*
  * FUNCTION: Returns an entry in a list
  * ARGUMENTS:
@@ -610,7 +611,7 @@ bool CDFParser::GetDiskName(PCABINET_NAME *List, uint32_t Number, char* String)
 }
 
 
-bool CDFParser::SetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t Value)
+bool CDFParser::SetDiskNumber(PDISK_NUMBER *List, ULONG Number, ULONG Value)
 /*
  * FUNCTION: Sets an entry in a list
  * ARGUMENTS:
@@ -648,7 +649,7 @@ bool CDFParser::SetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t Valu
 }
 
 
-bool CDFParser::GetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t* Value)
+bool CDFParser::GetDiskNumber(PDISK_NUMBER *List, ULONG Number, PULONG Value)
 /*
  * FUNCTION: Returns an entry in a list
  * ARGUMENTS:
@@ -676,7 +677,7 @@ bool CDFParser::GetDiskNumber(PDISK_NUMBER *List, uint32_t Number, uint32_t* Val
 }
 
 
-bool CDFParser::DoDiskLabel(uint32_t Number, char* Label)
+bool CDFParser::DoDiskLabel(ULONG Number, char* Label)
 /*
  * FUNCTION: Sets the label of a disk
  * ARGUMENTS:
@@ -686,7 +687,7 @@ bool CDFParser::DoDiskLabel(uint32_t Number, char* Label)
  *     false if there was not enough free memory available
  */
 {
-	DPRINT(MID_TRACE, ("Setting label of disk (%d) to '%s'\n", (unsigned int)Number, Label));
+	DPRINT(MID_TRACE, ("Setting label of disk (%d) to '%s'\n", (ULONG)Number, Label));
 
 	return SetDiskName(&DiskLabel, Number, Label);
 }
@@ -706,7 +707,7 @@ void CDFParser::DoDiskLabelTemplate(char* Template)
 }
 
 
-bool CDFParser::DoCabinetName(uint32_t Number, char* Name)
+bool CDFParser::DoCabinetName(ULONG Number, char* Name)
 /*
  * FUNCTION: Sets the name of a cabinet
  * ARGUMENTS:
@@ -716,7 +717,7 @@ bool CDFParser::DoCabinetName(uint32_t Number, char* Name)
  *     false if there was not enough free memory available
  */
 {
-	DPRINT(MID_TRACE, ("Setting name of cabinet (%d) to '%s'\n", (unsigned int)Number, Name));
+	DPRINT(MID_TRACE, ("Setting name of cabinet (%d) to '%s'\n", (ULONG)Number, Name));
 
 	return SetDiskName(&CabinetName, Number, Name);
 }
@@ -736,7 +737,7 @@ void CDFParser::DoCabinetNameTemplate(char* Template)
 }
 
 
-uint32_t CDFParser::DoMaxDiskSize(bool NumberValid, uint32_t Number)
+ULONG CDFParser::DoMaxDiskSize(bool NumberValid, ULONG Number)
 /*
  * FUNCTION: Sets the maximum disk size
  * ARGUMENTS:
@@ -748,7 +749,7 @@ uint32_t CDFParser::DoMaxDiskSize(bool NumberValid, uint32_t Number)
  *     Standard sizes are 2.88M, 1.44M, 1.25M, 1.2M, 720K, 360K, and CDROM
  */
 {
-	uint32_t A, B, Value;
+	ULONG A, B, Value;
 
 	if (IsNextToken(TokenInteger, true))
 	{
@@ -853,14 +854,14 @@ void CDFParser::DoInfFileName(char* FileName)
 	InfFileNameSet = true;
 }
 
-uint32_t CDFParser::SetupNewDisk()
+ULONG CDFParser::SetupNewDisk()
 /*
  * FUNCTION: Sets up parameters for a new disk
  * RETURNS:
  *     Status of operation
  */
 {
-	uint32_t Value;
+	ULONG Value;
 
 	if (!GetDiskNumber(&MaxDiskSize, GetCurrentDiskNumber(), &Value))
 	{
@@ -875,7 +876,7 @@ uint32_t CDFParser::SetupNewDisk()
 }
 
 
-uint32_t CDFParser::PerformSetCommand()
+ULONG CDFParser::PerformSetCommand()
 /*
  * FUNCTION: Performs a set variable command
  * RETURNS:
@@ -884,7 +885,7 @@ uint32_t CDFParser::PerformSetCommand()
 {
 	SETTYPE SetType;
 	bool NumberValid = false;
-	uint32_t Number = 0;
+	ULONG Number = 0;
 
 	if (!IsNextToken(TokenIdentifier, true))
 		return CAB_STATUS_FAILURE;
@@ -971,7 +972,7 @@ uint32_t CDFParser::PerformSetCommand()
 }
 
 
-uint32_t CDFParser::PerformNewCommand()
+ULONG CDFParser::PerformNewCommand()
 /*
  * FUNCTION: Performs a new disk|cabinet|folder command
  * RETURNS:
@@ -979,7 +980,7 @@ uint32_t CDFParser::PerformNewCommand()
  */
 {
 	NEWTYPE NewType;
-	uint32_t Status;
+	ULONG Status;
 
 	if (!IsNextToken(TokenIdentifier, true))
 		return CAB_STATUS_FAILURE;
@@ -1003,7 +1004,7 @@ uint32_t CDFParser::PerformNewCommand()
 					Status = CloseDisk();
 				if (Status != CAB_STATUS_SUCCESS)
 				{
-					DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (unsigned int)Status));
+					DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (ULONG)Status));
 					return CAB_STATUS_SUCCESS;
 				}
 				DiskCreated = false;
@@ -1012,7 +1013,7 @@ uint32_t CDFParser::PerformNewCommand()
 			Status = NewDisk();
 			if (Status != CAB_STATUS_SUCCESS)
 			{
-				DPRINT(MIN_TRACE, ("Cannot create disk (%d).\n", (unsigned int)Status));
+				DPRINT(MIN_TRACE, ("Cannot create disk (%d).\n", (ULONG)Status));
 				return CAB_STATUS_SUCCESS;
 			}
 			DiskCreated = true;
@@ -1027,7 +1028,7 @@ uint32_t CDFParser::PerformNewCommand()
 					Status = CloseDisk();
 				if (Status != CAB_STATUS_SUCCESS)
 				{
-					DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (unsigned int)Status));
+					DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (ULONG)Status));
 					return CAB_STATUS_SUCCESS;
 				}
 				DiskCreated = false;
@@ -1036,7 +1037,7 @@ uint32_t CDFParser::PerformNewCommand()
 			Status = NewCabinet();
 			if (Status != CAB_STATUS_SUCCESS)
 			{
-				DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (unsigned int)Status));
+				DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (ULONG)Status));
 				return CAB_STATUS_SUCCESS;
 			}
 			DiskCreated = true;
@@ -1054,7 +1055,7 @@ uint32_t CDFParser::PerformNewCommand()
 }
 
 
-uint32_t CDFParser::PerformInfBeginCommand()
+ULONG CDFParser::PerformInfBeginCommand()
 /*
  * FUNCTION: Begins inf mode
  * RETURNS:
@@ -1066,7 +1067,7 @@ uint32_t CDFParser::PerformInfBeginCommand()
 }
 
 
-uint32_t CDFParser::PerformInfEndCommand()
+ULONG CDFParser::PerformInfEndCommand()
 /*
  * FUNCTION: Begins inf mode
  * RETURNS:
@@ -1078,7 +1079,7 @@ uint32_t CDFParser::PerformInfEndCommand()
 }
 
 
-uint32_t CDFParser::PerformCommand()
+ULONG CDFParser::PerformCommand()
 /*
  * FUNCTION: Performs a command
  * RETURNS:
@@ -1098,15 +1099,15 @@ uint32_t CDFParser::PerformCommand()
 }
 
 
-uint32_t CDFParser::PerformFileCopy()
+ULONG CDFParser::PerformFileCopy()
 /*
  * FUNCTION: Performs a file copy
  * RETURNS:
  *     Status of operation
  */
 {
-	uint32_t Status;
-	uint32_t i, j;
+	ULONG Status;
+	ULONG i, j;
 	char ch;
 	char SrcName[MAX_PATH];
 	char DstName[MAX_PATH];
@@ -1139,7 +1140,7 @@ uint32_t CDFParser::PerformFileCopy()
 
 	if (CurrentToken != TokenEnd)
 	{
-		j = (uint32_t)strlen(CurrentString); i = 0;
+		j = (ULONG)strlen(CurrentString); i = 0;
 		while ((CurrentChar + i < LineLength) &&
 			((ch = Line[CurrentChar + i]) != ' ') &&
 			 (ch != 0x09) &&
@@ -1159,7 +1160,7 @@ uint32_t CDFParser::PerformFileCopy()
 
 	if (CurrentToken != TokenEnd)
 	{
-		j = (uint32_t)strlen(CurrentString); i = 0;
+		j = (ULONG)strlen(CurrentString); i = 0;
 		while ((CurrentChar + i < LineLength) &&
 			((ch = Line[CurrentChar + i]) != ' ') &&
 			 (ch != 0x09) &&
@@ -1181,7 +1182,7 @@ uint32_t CDFParser::PerformFileCopy()
 		Status = NewCabinet();
 		if (Status != CAB_STATUS_SUCCESS)
 		{
-			DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (unsigned int)Status));
+			DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (ULONG)Status));
 			printf("Cannot create cabinet.\n");
 			return CAB_STATUS_FAILURE;
 		}
@@ -1192,7 +1193,7 @@ uint32_t CDFParser::PerformFileCopy()
 		Status = NewDisk();
 		if (Status != CAB_STATUS_SUCCESS)
 		{
-			DPRINT(MIN_TRACE, ("Cannot create disk (%d).\n", (unsigned int)Status));
+			DPRINT(MIN_TRACE, ("Cannot create disk (%d).\n", (ULONG)Status));
 			printf("Cannot create disk.\n");
 			return CAB_STATUS_FAILURE;
 		}
@@ -1275,7 +1276,7 @@ bool CDFParser::ReadLine()
  *     true if there is a new line, false if not
  */
 {
-	uint32_t i, j;
+	ULONG i, j;
 	char ch;
 
 	if (CurrentOffset >= FileBufferSize)
@@ -1312,7 +1313,7 @@ void CDFParser::NextToken()
  * FUNCTION: Reads the next token from the current line
  */
 {
-	uint32_t i;
+	ULONG i;
 	char ch = ' ';
 
 	if (CurrentChar >= LineLength)

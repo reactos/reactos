@@ -19,15 +19,15 @@ public:
 	/* Default destructor */
 	virtual ~CRawCodec();
 	/* Compresses a data block */
-	virtual uint32_t Compress(void* OutputBuffer,
+	virtual ULONG Compress(void* OutputBuffer,
 		                      void* InputBuffer,
-		                      uint32_t InputLength,
-		                      uint32_t* OutputLength);
+		                      ULONG InputLength,
+		                      PULONG OutputLength);
 	/* Uncompresses a data block */
-	virtual uint32_t Uncompress(void* OutputBuffer,
+	virtual ULONG Uncompress(void* OutputBuffer,
 		                        void* InputBuffer,
-		                        uint32_t InputLength,
-		                        uint32_t* OutputLength);
+		                        ULONG InputLength,
+		                        PULONG OutputLength);
 };
 
 #endif /* __RAW_H */

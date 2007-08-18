@@ -10,6 +10,7 @@
  *   CSH 15/08-2003 Made it portable
  *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
  *   CF  04/05-2007 Made it compatible with 64-bit operating systems
+ *   CF  18/08-2007 Use typedefs64.h and the Windows types for compatibility with 64-bit operating systems
  */
 #include "raw.h"
 
@@ -32,10 +33,10 @@ CRawCodec::~CRawCodec()
 }
 
 
-uint32_t CRawCodec::Compress(void* OutputBuffer,
-                             void* InputBuffer,
-                             uint32_t InputLength,
-                             uint32_t* OutputLength)
+ULONG CRawCodec::Compress(void* OutputBuffer,
+                          void* InputBuffer,
+                          ULONG InputLength,
+                          PULONG OutputLength)
 /*
  * FUNCTION: Compresses data in a buffer
  * ARGUMENTS:
@@ -50,10 +51,10 @@ uint32_t CRawCodec::Compress(void* OutputBuffer,
 	return CS_SUCCESS;
 }
 
-uint32_t CRawCodec::Uncompress(void* OutputBuffer,
-                               void* InputBuffer,
-                               uint32_t InputLength,
-                               uint32_t* OutputLength)
+ULONG CRawCodec::Uncompress(void* OutputBuffer,
+                            void* InputBuffer,
+                            ULONG InputLength,
+                            PULONG OutputLength)
 /*
  * FUNCTION: Uncompresses data in a buffer
  * ARGUMENTS:
