@@ -480,6 +480,13 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (pAdapterInfo)
 			{
 				/*FIXME: select the correct adapter info!!*/
+				
+				if (pAdapterInfo->DhcpEnabled)
+					LoadString(hApplet, IDS_ASSIGNED_DHCP, Buffer, sizeof(Buffer) / sizeof(TCHAR));
+				else
+					LoadString(hApplet, IDS_ASSIGNED_MANUAL, Buffer, sizeof(Buffer) / sizeof(TCHAR));
+				
+				SendDlgItemMessage(hwndDlg, IDC_DETAILSTYPE, WM_SETTEXT, 0, (LPARAM)Buffer);
 				_stprintf(Buffer, _T("%S"), pAdapterInfo->IpAddressList.IpAddress.String);
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSIP, WM_SETTEXT, 0, (LPARAM)Buffer);
 				_stprintf(Buffer, _T("%S"), pAdapterInfo->IpAddressList.IpMask.String);
@@ -512,7 +519,6 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return FALSE;
 }
-
 
 static VOID
 DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)

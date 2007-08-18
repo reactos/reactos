@@ -104,6 +104,12 @@ BEGIN
 	IDS_CPLSYSTEMDESCRIPTION "Netzwerkeinstellungen bearbeiten"
 END
 
+STRINGTABLE
+BEGIN
+  IDS_ASSIGNED_DHCP "Von DHCP zugewiesen"
+  IDS_ASSIGNED_MANUAL "Manuell konfiguriert"
+END
+
 STRINGTABLE 
 BEGIN
 	IDS_ERROR "Fehler"
