@@ -99,7 +99,7 @@ filelen ( FILE* f )
 #ifdef WIN32
 	return _filelengthi64 ( _fileno(f) );
 #else
-# ifdef __FreeBSD__
+# if defined(__FreeBSD__) || defined(__APPLE__)
 	struct stat file_stat;
 	if ( fstat(fileno(f), &file_stat) != 0 )
 # else
