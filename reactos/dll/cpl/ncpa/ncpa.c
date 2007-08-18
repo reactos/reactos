@@ -277,6 +277,7 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E975-E325-11CE-BFC1-08002BE10318}"));
 
 			SendDlgItemMessage(hwndDlg, IDC_COMPONENTSLIST, LB_SETCURSEL, 0, 0);
+			SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_COMPONENTSLIST, LBN_SELCHANGE), 0);
 		}
 		break;
 	case WM_COMMAND:
@@ -479,6 +480,13 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (pAdapterInfo)
 			{
 				/*FIXME: select the correct adapter info!!*/
+				
+				if (pAdapterInfo->DhcpEnabled)
+					LoadString(hApplet, IDS_ASSIGNED_DHCP, Buffer, sizeof(Buffer) / sizeof(TCHAR));
+				else
+					LoadString(hApplet, IDS_ASSIGNED_MANUAL, Buffer, sizeof(Buffer) / sizeof(TCHAR));
+				
+				SendDlgItemMessage(hwndDlg, IDC_DETAILSTYPE, WM_SETTEXT, 0, (LPARAM)Buffer);
 				_stprintf(Buffer, _T("%S"), pAdapterInfo->IpAddressList.IpAddress.String);
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSIP, WM_SETTEXT, 0, (LPARAM)Buffer);
 				_stprintf(Buffer, _T("%S"), pAdapterInfo->IpAddressList.IpMask.String);
@@ -511,7 +519,6 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return FALSE;
 }
-
 
 static VOID
 DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
@@ -805,4 +812,5 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 
 	return TRUE;
 }
+
 

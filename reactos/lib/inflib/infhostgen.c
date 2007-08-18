@@ -19,15 +19,15 @@
 int
 InfHostOpenBufferedFile(PHINF InfHandle,
                         void *Buffer,
-                        unsigned long BufferSize,
-                        unsigned long *ErrorLine)
+                        ULONG BufferSize,
+                        ULONG *ErrorLine)
 {
   INFSTATUS Status;
   PINFCACHE Cache;
-  char *FileBuffer;
+  CHAR *FileBuffer;
 
   *InfHandle = NULL;
-  *ErrorLine = (unsigned long)-1;
+  *ErrorLine = (ULONG)-1;
 
   /* Allocate file buffer */
   FileBuffer = MALLOC(BufferSize + 1);
@@ -77,17 +77,17 @@ InfHostOpenBufferedFile(PHINF InfHandle,
 
 int
 InfHostOpenFile(PHINF InfHandle,
-                const char *FileName,
-                unsigned long *ErrorLine)
+                const CHAR *FileName,
+                ULONG *ErrorLine)
 {
   FILE *File;
-  char *FileBuffer;
-  unsigned long FileLength;
+  CHAR *FileBuffer;
+  ULONG FileLength;
   PINFCACHE Cache;
   INFSTATUS Status;
 
   *InfHandle = NULL;
-  *ErrorLine = (unsigned long)-1;
+  *ErrorLine = (ULONG)-1;
 
   /* Open the inf file */
   File = fopen(FileName, "rb");
@@ -108,7 +108,7 @@ InfHostOpenFile(PHINF InfHandle,
     }
 
   FileLength = ftell(File);
-  if ((unsigned long) -1 == FileLength)
+  if ((ULONG) -1 == FileLength)
     {
       DPRINT1("ftell() failed (errno %d)\n", errno);
       fclose(File);

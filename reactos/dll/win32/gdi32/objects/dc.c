@@ -240,15 +240,14 @@ CreateICA(
  */
 BOOL
 STDCALL
-NEWDeleteDC(HDC hDC)
+DeleteDC(HDC hDC)
 {
   BOOL Ret = TRUE;
+#if 0
   PDC_ATTR Dc_Attr;
   PLDC pLDC;
 
-  Ret = GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
-
-  if ( !Ret ) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
   
   if ( Dc_Attr )
     {
@@ -260,7 +259,7 @@ NEWDeleteDC(HDC hDC)
           LocalFree( pLDC );
         }
     }
-
+#endif
   Ret = NtGdiDeleteObjectApp(hDC);
   
   return Ret;
@@ -789,14 +788,11 @@ GetObjectType(
       case GDI_OBJECT_TYPE_ENHMETAFILE:
         Ret = OBJ_ENHMETAFILE;
         break;
-      case GDI_OBJECT_TYPE_ENHMETADC:
-        Ret = OBJ_ENHMETADC;
-        break;
+      case GDI_OBJECT_TYPE_METADC:
+        Ret = OBJ_METADC;
+        break;      
       case GDI_OBJECT_TYPE_EXTPEN:
         Ret = OBJ_EXTPEN;
-        break;
-      case GDI_OBJECT_TYPE_MEMDC:
-        Ret = OBJ_MEMDC;
         break;
 
       default:

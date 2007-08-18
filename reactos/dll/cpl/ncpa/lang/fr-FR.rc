@@ -105,6 +105,12 @@ BEGIN
   IDS_CPLSYSTEMDESCRIPTION "Modifie les paramètres réseau."
 END
 
+STRINGTABLE
+BEGIN
+  IDS_ASSIGNED_DHCP "Assigned by DHCP"
+  IDS_ASSIGNED_MANUAL "Manually configured"
+END
+
 STRINGTABLE 
 BEGIN
   IDS_ERROR "Erreur"

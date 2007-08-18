@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_D3D8_H
@@ -23,7 +23,14 @@
 #define DIRECT3D_VERSION  0x0800
 #endif
 
+#include <stdlib.h>
+
+#define COM_NO_WINDOWS_H
 #include <objbase.h>
+
+#ifndef __WINESRC__
+# include <windows.h>
+#endif
 
 #include <d3d8types.h>
 #include <d3d8caps.h>
@@ -39,8 +46,14 @@
 #define D3DCREATE_MIXED_VERTEXPROCESSING        0x00000080L
 
 /*****************************************************************************
+ * Flags for SetPrivateData
+ */
+#define D3DSPD_IUNKNOWN                         0x00000001L
+
+/*****************************************************************************
  * #defines and error codes
  */
+#define D3D_SDK_VERSION              220
 #define D3DADAPTER_DEFAULT           0
 #define D3DENUM_NO_WHQL_LEVEL        2
 
@@ -78,40 +91,40 @@
  * Predeclare the interfaces
  */
 DEFINE_GUID(IID_IDirect3D8,              0x1DD9E8DA,0x1C77,0x4D40,0xB0,0xCF,0x98,0xFE,0xFD,0xFF,0x95,0x12);
-typedef struct IDirect3D8                IDirect3D8, *LPDIRECT3D8;
+typedef struct IDirect3D8 *LPDIRECT3D8;
 
 DEFINE_GUID(IID_IDirect3DDevice8,        0x7385E5DF,0x8FE8,0x41D5,0x86,0xB6,0xD7,0xB4,0x85,0x47,0xB6,0xCF);
-typedef struct IDirect3DDevice8          IDirect3DDevice8, *LPDIRECT3DDEVICE8;
+typedef struct IDirect3DDevice8 *LPDIRECT3DDEVICE8;
 
 DEFINE_GUID(IID_IDirect3DResource8,      0x1B36BB7B,0x09B7,0x410A,0xB4,0x45,0x7D,0x14,0x30,0xD7,0xB3,0x3F);
-typedef struct IDirect3DResource8        IDirect3DResource8, *LPDIRECT3DRESOURCE8, *PDIRECT3DRESOURCE8;
+typedef struct IDirect3DResource8 *LPDIRECT3DRESOURCE8, *PDIRECT3DRESOURCE8;
 
 DEFINE_GUID(IID_IDirect3DVertexBuffer8,  0x8AEEEAC7,0x05F9,0x44D4,0xB5,0x91,0x00,0x0B,0x0D,0xF1,0xCB,0x95);
-typedef struct IDirect3DVertexBuffer8    IDirect3DVertexBuffer8, *LPDIRECT3DVERTEXBUFFER8, *PDIRECT3DVERTEXBUFFER8;
+typedef struct IDirect3DVertexBuffer8 *LPDIRECT3DVERTEXBUFFER8, *PDIRECT3DVERTEXBUFFER8;
 
 DEFINE_GUID(IID_IDirect3DVolume8,        0xBD7349F5,0x14F1,0x42E4,0x9C,0x79,0x97,0x23,0x80,0xDB,0x40,0xC0);
-typedef struct IDirect3DVolume8          IDirect3DVolume8, *LPDIRECT3DVOLUME8, *PDIRECT3DVOLUME8;
+typedef struct IDirect3DVolume8 *LPDIRECT3DVOLUME8, *PDIRECT3DVOLUME8;
 
 DEFINE_GUID(IID_IDirect3DSwapChain8,     0x928C088B,0x76B9,0x4C6B,0xA5,0x36,0xA5,0x90,0x85,0x38,0x76,0xCD);
-typedef struct IDirect3DSwapChain8       IDirect3DSwapChain8, *LPDIRECT3DSWAPCHAIN8, *PDIRECT3DSWAPCHAIN8;
+typedef struct IDirect3DSwapChain8 *LPDIRECT3DSWAPCHAIN8, *PDIRECT3DSWAPCHAIN8;
 
 DEFINE_GUID(IID_IDirect3DSurface8,       0xB96EEBCA,0xB326,0x4EA5,0x88,0x2F,0x2F,0xF5,0xBA,0xE0,0x21,0xDD);
-typedef struct IDirect3DSurface8         IDirect3DSurface8, *LPDIRECT3DSURFACE8, *PDIRECT3DSURFACE8;
+typedef struct IDirect3DSurface8 *LPDIRECT3DSURFACE8, *PDIRECT3DSURFACE8;
 
 DEFINE_GUID(IID_IDirect3DIndexBuffer8,   0x0E689C9A,0x053D,0x44A0,0x9D,0x92,0xDB,0x0E,0x3D,0x75,0x0F,0x86);
-typedef struct IDirect3DIndexBuffer8     IDirect3DIndexBuffer8, *LPDIRECT3DINDEXBUFFER8, *PDIRECT3DINDEXBUFFER8;
+typedef struct IDirect3DIndexBuffer8 *LPDIRECT3DINDEXBUFFER8, *PDIRECT3DINDEXBUFFER8;
 
 DEFINE_GUID(IID_IDirect3DBaseTexture8,   0xB4211CFA,0x51B9,0x4A9F,0xAB,0x78,0xDB,0x99,0xB2,0xBB,0x67,0x8E);
-typedef struct IDirect3DBaseTexture8     IDirect3DBaseTexture8, *LPDIRECT3DBASETEXTURE8, *PDIRECT3DBASETEXTURE8;
+typedef struct IDirect3DBaseTexture8 *LPDIRECT3DBASETEXTURE8, *PDIRECT3DBASETEXTURE8;
 
 DEFINE_GUID(IID_IDirect3DTexture8,       0xE4CDD575,0x2866,0x4F01,0xB1,0x2E,0x7E,0xEC,0xE1,0xEC,0x93,0x58);
-typedef struct IDirect3DTexture8         IDirect3DTexture8, *LPDIRECT3DTEXTURE8, *PDIRECT3DTEXTURE8;
+typedef struct IDirect3DTexture8 *LPDIRECT3DTEXTURE8, *PDIRECT3DTEXTURE8;
 
 DEFINE_GUID(IID_IDirect3DCubeTexture8,   0x3EE5B968,0x2ACA,0x4C34,0x8B,0xB5,0x7E,0x0C,0x3D,0x19,0xB7,0x50);
-typedef struct IDirect3DCubeTexture8     IDirect3DCubeTexture8, *LPDIRECT3DCUBETEXTURE8, *PDIRECT3DCUBETEXTURE8;
+typedef struct IDirect3DCubeTexture8 *LPDIRECT3DCUBETEXTURE8, *PDIRECT3DCUBETEXTURE8;
 
 DEFINE_GUID(IID_IDirect3DVolumeTexture8, 0x4B8AAAFA,0x140F,0x42BA,0x91,0x31,0x59,0x7E,0xAF,0xAA,0x2E,0xAD);
-typedef struct IDirect3DVolumeTexture8   IDirect3DVolumeTexture8, *LPDIRECT3DVOLUMETEXTURE8, *PDIRECT3DVOLUMETEXTURE8;
+typedef struct IDirect3DVolumeTexture8 *LPDIRECT3DVOLUMETEXTURE8, *PDIRECT3DVOLUMETEXTURE8;
 
 /*****************************************************************************
  * IDirect3D8 interface
@@ -136,7 +149,7 @@ DECLARE_INTERFACE_(IDirect3D8,IUnknown)
     STDMETHOD(CheckDepthStencilMatch)(THIS_ UINT  Adapter, D3DDEVTYPE  DeviceType, D3DFORMAT  AdapterFormat, D3DFORMAT  RenderTargetFormat, D3DFORMAT  DepthStencilFormat) PURE;
     STDMETHOD(GetDeviceCaps)(THIS_ UINT  Adapter, D3DDEVTYPE  DeviceType, D3DCAPS8 * pCaps) PURE;
     STDMETHOD_(HMONITOR,GetAdapterMonitor)(THIS_ UINT  Adapter) PURE;
-    STDMETHOD(CreateDevice)(THIS_ UINT  Adapter, D3DDEVTYPE  DeviceType,HWND  hFocusWindow, DWORD  BehaviorFlags, D3DPRESENT_PARAMETERS * pPresentationParameters, IDirect3DDevice8 ** ppReturnedDeviceInterface) PURE;
+    STDMETHOD(CreateDevice)(THIS_ UINT  Adapter, D3DDEVTYPE  DeviceType,HWND  hFocusWindow, DWORD  BehaviorFlags, D3DPRESENT_PARAMETERS * pPresentationParameters, struct IDirect3DDevice8 ** ppReturnedDeviceInterface) PURE;
 };
 #undef INTERFACE
 
@@ -178,6 +191,634 @@ DECLARE_INTERFACE_(IDirect3D8,IUnknown)
 #define IDirect3D8_GetDeviceCaps(p,a,b,c)                   (p)->GetDeviceCaps(a,b,c)
 #define IDirect3D8_GetAdapterMonitor(p,a)                   (p)->GetAdapterMonitor(a)
 #define IDirect3D8_CreateDevice(p,a,b,c,d,e,f)              (p)->CreateDevice(a,b,c,d,e,f)
+#endif
+
+/*****************************************************************************
+ * IDirect3DVolume8 interface
+ */
+#define INTERFACE IDirect3DVolume8
+DECLARE_INTERFACE_(IDirect3DVolume8,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DVolume8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid,CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID   refguid,void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD(GetContainer)(THIS_ REFIID  riid, void ** ppContainer) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DVOLUME_DESC * pDesc) PURE;
+    STDMETHOD(LockBox)(THIS_ D3DLOCKED_BOX * pLockedVolume,CONST D3DBOX * pBox, DWORD  Flags) PURE;
+    STDMETHOD(UnlockBox)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVolume8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVolume8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DVolume8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DVolume8 methods ***/
+#define IDirect3DVolume8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVolume8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DVolume8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DVolume8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DVolume8_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
+#define IDirect3DVolume8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#define IDirect3DVolume8_LockBox(p,a,b,c)             (p)->lpVtbl->LockBox(p,a,b,c)
+#define IDirect3DVolume8_UnlockBox(p)                 (p)->lpVtbl->UnlockBox(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVolume8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DVolume8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DVolume8_Release(p)                   (p)->Release()
+/*** IDirect3DVolume8 methods ***/
+#define IDirect3DVolume8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DVolume8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DVolume8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DVolume8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DVolume8_GetContainer(p,a,b)          (p)->GetContainer(a,b)
+#define IDirect3DVolume8_GetDesc(p,a)                 (p)->GetDesc(a)
+#define IDirect3DVolume8_LockBox(p,a,b,c)             (p)->LockBox(a,b,c)
+#define IDirect3DVolume8_UnlockBox(p)                 (p)->UnlockBox()
+#endif
+
+/*****************************************************************************
+ * IDirect3DSwapChain8 interface
+ */
+#define INTERFACE IDirect3DSwapChain8
+DECLARE_INTERFACE_(IDirect3DSwapChain8,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DSwapChain8 methods ***/
+    STDMETHOD(Present)(THIS_ CONST RECT * pSourceRect, CONST RECT * pDestRect, HWND  hDestWindowOverride,CONST RGNDATA * pDirtyRegion) PURE;
+    STDMETHOD(GetBackBuffer)(THIS_ UINT  BackBuffer, D3DBACKBUFFER_TYPE  Type, struct IDirect3DSurface8 ** ppBackBuffer) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DSwapChain8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DSwapChain8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DSwapChain8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DSwapChain8 methods ***/
+#define IDirect3DSwapChain8_Present(p,a,b,c)             (p)->lpVtbl->Present(p,a,b,c)
+#define IDirect3DSwapChain8_GetBackBuffer(p,a,b,c)       (p)->lpVtbl->GetBackBuffer(p,a,b,c)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DSwapChain8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DSwapChain8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DSwapChain8_Release(p)                   (p)->Release()
+/*** IDirect3DSwapChain8 methods ***/
+#define IDirect3DSwapChain8_Present(p,a,b,c)             (p)->Present(a,b,c)
+#define IDirect3DSwapChain8_GetBackBuffer(p,a,b,c)       (p)->GetBackBuffer(a,b,c)
+#endif
+
+/*****************************************************************************
+ * IDirect3DSurface8 interface
+ */
+#define INTERFACE IDirect3DSurface8
+DECLARE_INTERFACE_(IDirect3DSurface8,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DSurface8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid,CONST void * pData,DWORD  SizeOfData,DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid,void * pData,DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD(GetContainer)(THIS_ REFIID  riid, void ** ppContainer) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DSURFACE_DESC * pDesc) PURE;
+    STDMETHOD(LockRect)(THIS_ D3DLOCKED_RECT * pLockedRect, CONST RECT * pRect,DWORD  Flags) PURE;
+    STDMETHOD(UnlockRect)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DSurface8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DSurface8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DSurface8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DSurface8 methods ***/
+#define IDirect3DSurface8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DSurface8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DSurface8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DSurface8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DSurface8_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
+#define IDirect3DSurface8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#define IDirect3DSurface8_LockRect(p,a,b,c)            (p)->lpVtbl->LockRect(p,a,b,c)
+#define IDirect3DSurface8_UnlockRect(p)                (p)->lpVtbl->UnlockRect(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DSurface8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DSurface8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DSurface8_Release(p)                   (p)->Release()
+/*** IDirect3DSurface8 methods ***/
+#define IDirect3DSurface8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DSurface8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DSurface8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DSurface8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DSurface8_GetContainer(p,a,b)          (p)->GetContainer(a,b)
+#define IDirect3DSurface8_GetDesc(p,a)                 (p)->GetDesc(a)
+#define IDirect3DSurface8_LockRect(p,a,b,c)            (p)->LockRect(a,b,c)
+#define IDirect3DSurface8_UnlockRect(p)                (p)->UnlockRect()
+#endif
+
+/*****************************************************************************
+ * IDirect3DResource8 interface
+ */
+#define INTERFACE IDirect3DResource8
+DECLARE_INTERFACE_(IDirect3DResource8,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
+    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
+    STDMETHOD_(void,PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DResource8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DResource8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DResource8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DResource8 methods ***/
+#define IDirect3DResource8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DResource8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DResource8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DResource8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DResource8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DResource8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DResource8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DResource8_GetType(p)                   (p)->lpVtbl->GetType(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DResource8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DResource8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DResource8_Release(p)                   (p)->Release()
+/*** IDirect3DResource8 methods ***/
+#define IDirect3DResource8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DResource8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DResource8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DResource8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DResource8_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DResource8_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DResource8_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DResource8_GetType(p)                   (p)->GetType()
+#endif
+
+/*****************************************************************************
+ * IDirect3DVertexBuffer8 interface
+ */
+#define INTERFACE IDirect3DVertexBuffer8
+DECLARE_INTERFACE_(IDirect3DVertexBuffer8,IDirect3DResource8)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
+    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
+    STDMETHOD_(void,PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
+    /*** IDirect3DVertexBuffer8 methods ***/
+    STDMETHOD(Lock)(THIS_ UINT  OffsetToLock, UINT  SizeToLock, BYTE ** ppbData, DWORD  Flags) PURE;
+    STDMETHOD(Unlock)(THIS) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC  * pDesc) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVertexBuffer8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVertexBuffer8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DVertexBuffer8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DVertexBuffer8 methods: IDirect3DResource8 ***/
+#define IDirect3DVertexBuffer8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVertexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DVertexBuffer8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DVertexBuffer8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DVertexBuffer8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DVertexBuffer8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DVertexBuffer8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DVertexBuffer8_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DVertexBuffer8 methods ***/
+#define IDirect3DVertexBuffer8_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
+#define IDirect3DVertexBuffer8_Unlock(p)                    (p)->lpVtbl->Unlock(p)
+#define IDirect3DVertexBuffer8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVertexBuffer8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DVertexBuffer8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DVertexBuffer8_Release(p)                   (p)->Release()
+/*** IDirect3DVertexBuffer8 methods: IDirect3DResource8 ***/
+#define IDirect3DVertexBuffer8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DVertexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DVertexBuffer8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DVertexBuffer8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DVertexBuffer8_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DVertexBuffer8_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DVertexBuffer8_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DVertexBuffer8_GetType(p)                   (p)->GetType()
+/*** IDirect3DVertexBuffer8 methods ***/
+#define IDirect3DVertexBuffer8_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
+#define IDirect3DVertexBuffer8_Unlock(p)                    (p)->Unlock()
+#define IDirect3DVertexBuffer8_GetDesc(p,a)                 (p)->GetDesc(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DIndexBuffer8 interface
+ */
+#define INTERFACE IDirect3DIndexBuffer8
+DECLARE_INTERFACE_(IDirect3DIndexBuffer8,IDirect3DResource8)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
+    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
+    STDMETHOD_(void,PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
+    /*** IDirect3DIndexBuffer8 methods ***/
+    STDMETHOD(Lock)(THIS_ UINT  OffsetToLock, UINT  SizeToLock, BYTE ** ppbData, DWORD  Flags) PURE;
+    STDMETHOD(Unlock)(THIS) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DINDEXBUFFER_DESC * pDesc) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DIndexBuffer8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DIndexBuffer8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DIndexBuffer8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DIndexBuffer8 methods: IDirect3DResource8 ***/
+#define IDirect3DIndexBuffer8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DIndexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DIndexBuffer8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DIndexBuffer8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DIndexBuffer8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DIndexBuffer8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DIndexBuffer8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DIndexBuffer8_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DIndexBuffer8 methods ***/
+#define IDirect3DIndexBuffer8_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
+#define IDirect3DIndexBuffer8_Unlock(p)                    (p)->lpVtbl->Unlock(p)
+#define IDirect3DIndexBuffer8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DIndexBuffer8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DIndexBuffer8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DIndexBuffer8_Release(p)                   (p)->Release()
+/*** IDirect3DIndexBuffer8 methods: IDirect3DResource8 ***/
+#define IDirect3DIndexBuffer8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DIndexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DIndexBuffer8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DIndexBuffer8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DIndexBuffer8_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DIndexBuffer8_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DIndexBuffer8_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DIndexBuffer8_GetType(p)                   (p)->GetType()
+/*** IDirect3DIndexBuffer8 methods ***/
+#define IDirect3DIndexBuffer8_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
+#define IDirect3DIndexBuffer8_Unlock(p)                    (p)->Unlock()
+#define IDirect3DIndexBuffer8_GetDesc(p,a)                 (p)->GetDesc(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DBaseTexture8 interface
+ */
+#define INTERFACE IDirect3DBaseTexture8
+DECLARE_INTERFACE_(IDirect3DBaseTexture8,IDirect3DResource8)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
+    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
+    STDMETHOD_(void,PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture8 methods ***/
+    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
+    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DBaseTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DBaseTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DBaseTexture8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DBaseTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DBaseTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DBaseTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DBaseTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DBaseTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DBaseTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DBaseTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DBaseTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DBaseTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DBaseTexture8 methods ***/
+#define IDirect3DBaseTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DBaseTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
+#define IDirect3DBaseTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DBaseTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DBaseTexture8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DBaseTexture8_Release(p)                   (p)->Release()
+/*** IDirect3DBaseTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DBaseTexture8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DBaseTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DBaseTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DBaseTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DBaseTexture8_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DBaseTexture8_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DBaseTexture8_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DBaseTexture8_GetType(p)                   (p)->GetType()
+/*** IDirect3DBaseTexture8 methods ***/
+#define IDirect3DBaseTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
+#define IDirect3DBaseTexture8_GetLOD(p)                    (p)->GetLOD()
+#define IDirect3DBaseTexture8_GetLevelCount(p)             (p)->GetLevelCount()
+#endif
+
+/*****************************************************************************
+ * IDirect3DCubeTexture8 interface
+ */
+#define INTERFACE IDirect3DCubeTexture8
+DECLARE_INTERFACE_(IDirect3DCubeTexture8,IDirect3DBaseTexture8)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
+    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
+    STDMETHOD_(void,PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture8 methods ***/
+    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
+    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
+    /*** IDirect3DCubeTexture8 methods ***/
+    STDMETHOD(GetLevelDesc)(THIS_ UINT  Level,D3DSURFACE_DESC * pDesc) PURE;
+    STDMETHOD(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES  FaceType,UINT  Level,IDirect3DSurface8 ** ppCubeMapSurface) PURE;
+    STDMETHOD(LockRect)(THIS_ D3DCUBEMAP_FACES  FaceType,UINT  Level,D3DLOCKED_RECT * pLockedRect,CONST RECT * pRect,DWORD  Flags) PURE;
+    STDMETHOD(UnlockRect)(THIS_ D3DCUBEMAP_FACES  FaceType,UINT  Level) PURE;
+    STDMETHOD(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES  FaceType,CONST RECT * pDirtyRect) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DCubeTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DCubeTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DCubeTexture8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DCubeTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DCubeTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DCubeTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DCubeTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DCubeTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DCubeTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DCubeTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DCubeTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DCubeTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DCubeTexture8 methods: IDirect3DBaseTexture8 ***/
+#define IDirect3DCubeTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DCubeTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
+#define IDirect3DCubeTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
+/*** IDirect3DCubeTexture8 methods ***/
+#define IDirect3DCubeTexture8_GetLevelDesc(p,a,b)          (p)->lpVtbl->GetLevelDesc(p,a,b)
+#define IDirect3DCubeTexture8_GetCubeMapSurface(p,a,b,c)   (p)->lpVtbl->GetCubeMapSurface(p,a,b,c)
+#define IDirect3DCubeTexture8_LockRect(p,a,b,c,d,e)        (p)->lpVtbl->LockRect(p,a,b,c,d,e)
+#define IDirect3DCubeTexture8_UnlockRect(p,a,b)            (p)->lpVtbl->UnlockRect(p,a,b)
+#define IDirect3DCubeTexture8_AddDirtyRect(p,a,b)          (p)->lpVtbl->AddDirtyRect(p,a,b)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DCubeTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DCubeTexture8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DCubeTexture8_Release(p)                   (p)->Release()
+/*** IDirect3DCubeTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DCubeTexture8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DCubeTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DCubeTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DCubeTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DCubeTexture8_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DCubeTexture8_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DCubeTexture8_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DCubeTexture8_GetType(p)                   (p)->GetType()
+/*** IDirect3DCubeTexture8 methods: IDirect3DBaseTexture8 ***/
+#define IDirect3DCubeTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
+#define IDirect3DCubeTexture8_GetLOD(p)                    (p)->GetLOD()
+#define IDirect3DCubeTexture8_GetLevelCount(p)             (p)->GetLevelCount()
+/*** IDirect3DCubeTexture8 methods ***/
+#define IDirect3DCubeTexture8_GetLevelDesc(p,a,b)          (p)->GetLevelDesc(a,b)
+#define IDirect3DCubeTexture8_GetCubeMapSurface(p,a,b,c)   (p)->GetCubeMapSurface(a,b,c)
+#define IDirect3DCubeTexture8_LockRect(p,a,b,c,d,e)        (p)->LockRect(a,b,c,d,e)
+#define IDirect3DCubeTexture8_UnlockRect(p,a,b)            (p)->UnlockRect(a,b)
+#define IDirect3DCubeTexture8_AddDirtyRect(p,a,b)          (p)->AddDirtyRect(a,b)
+#endif
+
+/*****************************************************************************
+ * IDirect3DTexture8 interface
+ */
+#define INTERFACE IDirect3DTexture8
+DECLARE_INTERFACE_(IDirect3DTexture8,IDirect3DBaseTexture8)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
+    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
+    STDMETHOD_(void,PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture8 methods ***/
+    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
+    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
+    /*** IDirect3DTexture8 methods ***/
+    STDMETHOD(GetLevelDesc)(THIS_ UINT  Level,D3DSURFACE_DESC * pDesc) PURE;
+    STDMETHOD(GetSurfaceLevel)(THIS_ UINT  Level,IDirect3DSurface8 ** ppSurfaceLevel) PURE;
+    STDMETHOD(LockRect)(THIS_ UINT  Level,D3DLOCKED_RECT * pLockedRect,CONST RECT * pRect,DWORD  Flags) PURE;
+    STDMETHOD(UnlockRect)(THIS_ UINT  Level) PURE;
+    STDMETHOD(AddDirtyRect)(THIS_ CONST RECT * pDirtyRect) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DTexture8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DTexture8 methods: IDirect3DBaseTexture8 ***/
+#define IDirect3DTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
+#define IDirect3DTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
+/*** IDirect3DTexture8 methods ***/
+#define IDirect3DTexture8_GetLevelDesc(p,a,b)          (p)->lpVtbl->GetLevelDesc(p,a,b)
+#define IDirect3DTexture8_GetSurfaceLevel(p,a,b)       (p)->lpVtbl->GetSurfaceLevel(p,a,b)
+#define IDirect3DTexture8_LockRect(p,a,b,c,d)          (p)->lpVtbl->LockRect(p,a,b,c,d)
+#define IDirect3DTexture8_UnlockRect(p,a)              (p)->lpVtbl->UnlockRect(p,a)
+#define IDirect3DTexture8_AddDirtyRect(p,a)            (p)->lpVtbl->AddDirtyRect(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DTexture8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DTexture8_Release(p)                   (p)->Release()
+/*** IDirect3DTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DTexture8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DTexture8_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DTexture8_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DTexture8_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DTexture8_GetType(p)                   (p)->GetType()
+/*** IDirect3DTexture8 methods: IDirect3DBaseTexture8 ***/
+#define IDirect3DTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
+#define IDirect3DTexture8_GetLOD(p)                    (p)->GetLOD()
+#define IDirect3DTexture8_GetLevelCount(p)             (p)->GetLevelCount()
+/*** IDirect3DTexture8 methods ***/
+#define IDirect3DTexture8_GetLevelDesc(p,a,b)          (p)->GetLevelDesc(a,b)
+#define IDirect3DTexture8_GetSurfaceLevel(p,a,b)       (p)->GetSurfaceLevel(a,b)
+#define IDirect3DTexture8_LockRect(p,a,b,c,d)          (p)->LockRect(a,b,c,d)
+#define IDirect3DTexture8_UnlockRect(p,a)              (p)->UnlockRect(a)
+#define IDirect3DTexture8_AddDirtyRect(p,a)            (p)->AddDirtyRect(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DVolumeTexture8 interface
+ */
+#define INTERFACE IDirect3DVolumeTexture8
+DECLARE_INTERFACE_(IDirect3DVolumeTexture8,IDirect3DBaseTexture8)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource8 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice8 ** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
+    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
+    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
+    STDMETHOD_(void,PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture8 methods ***/
+    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
+    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
+    /*** IDirect3DVolumeTexture8 methods ***/
+    STDMETHOD(GetLevelDesc)(THIS_ UINT  Level,D3DVOLUME_DESC * pDesc) PURE;
+    STDMETHOD(GetVolumeLevel)(THIS_ UINT  Level,IDirect3DVolume8 ** ppVolumeLevel) PURE;
+    STDMETHOD(LockBox)(THIS_ UINT  Level,D3DLOCKED_BOX * pLockedVolume,CONST D3DBOX * pBox,DWORD  Flags) PURE;
+    STDMETHOD(UnlockBox)(THIS_ UINT  Level) PURE;
+    STDMETHOD(AddDirtyBox)(THIS_ CONST D3DBOX * pDirtyBox) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVolumeTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVolumeTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DVolumeTexture8_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DVolumeTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DVolumeTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVolumeTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DVolumeTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DVolumeTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DVolumeTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DVolumeTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DVolumeTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DVolumeTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DVolumeTexture8 methods: IDirect3DBaseTexture8 ***/
+#define IDirect3DVolumeTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DVolumeTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
+#define IDirect3DVolumeTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
+/*** IDirect3DVolumeTexture8 methods ***/
+#define IDirect3DVolumeTexture8_GetLevelDesc(p,a,b)          (p)->lpVtbl->GetLevelDesc(p,a,b)
+#define IDirect3DVolumeTexture8_GetVolumeLevel(p,a,b)        (p)->lpVtbl->GetVolumeLevel(p,a,b)
+#define IDirect3DVolumeTexture8_LockBox(p,a,b,c,d)           (p)->lpVtbl->LockBox(p,a,b,c,d)
+#define IDirect3DVolumeTexture8_UnlockBox(p,a)               (p)->lpVtbl->UnlockBox(p,a)
+#define IDirect3DVolumeTexture8_AddDirtyBox(p,a)             (p)->lpVtbl->AddDirtyBox(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVolumeTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DVolumeTexture8_AddRef(p)                    (p)->AddRef()
+#define IDirect3DVolumeTexture8_Release(p)                   (p)->Release()
+/*** IDirect3DVolumeTexture8 methods: IDirect3DResource8 ***/
+#define IDirect3DVolumeTexture8_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DVolumeTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DVolumeTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DVolumeTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DVolumeTexture8_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DVolumeTexture8_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DVolumeTexture8_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DVolumeTexture8_GetType(p)                   (p)->GetType()
+/*** IDirect3DVolumeTexture8 methods: IDirect3DBaseTexture8 ***/
+#define IDirect3DVolumeTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
+#define IDirect3DVolumeTexture8_GetLOD(p)                    (p)->GetLOD()
+#define IDirect3DVolumeTexture8_GetLevelCount(p)             (p)->GetLevelCount()
+/*** IDirect3DVolumeTexture8 methods ***/
+#define IDirect3DVolumeTexture8_GetLevelDesc(p,a,b)          (p)->GetLevelDesc(a,b)
+#define IDirect3DVolumeTexture8_GetVolumeLevel(p,a,b)        (p)->GetVolumeLevel(a,b)
+#define IDirect3DVolumeTexture8_LockBox(p,a,b,c,d)           (p)->LockBox(a,b,c,d)
+#define IDirect3DVolumeTexture8_UnlockBox(p,a)               (p)->UnlockBox(a)
+#define IDirect3DVolumeTexture8_AddDirtyBox(p,a)             (p)->AddDirtyBox(a)
 #endif
 
 /*****************************************************************************
@@ -488,634 +1129,6 @@ DECLARE_INTERFACE_(IDirect3DDevice8,IUnknown)
 #define IDirect3DDevice8_DrawRectPatch(p,a,b,c)                    (p)->DrawRectPatch(a,b,c)
 #define IDirect3DDevice8_DrawTriPatch(p,a,b,c)                     (p)->DrawTriPatch(a,b,c)
 #define IDirect3DDevice8_DeletePatch(p,a)                          (p)->DeletePatch(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DVolume8 interface
- */
-#define INTERFACE IDirect3DVolume8
-DECLARE_INTERFACE_(IDirect3DVolume8,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DVolume8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid,CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID   refguid,void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD(GetContainer)(THIS_ REFIID  riid, void ** ppContainer) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DVOLUME_DESC * pDesc) PURE;
-    STDMETHOD(LockBox)(THIS_ D3DLOCKED_BOX * pLockedVolume,CONST D3DBOX * pBox, DWORD  Flags) PURE;
-    STDMETHOD(UnlockBox)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVolume8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVolume8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DVolume8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DVolume8 methods ***/
-#define IDirect3DVolume8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVolume8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DVolume8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DVolume8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DVolume8_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
-#define IDirect3DVolume8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#define IDirect3DVolume8_LockBox(p,a,b,c)             (p)->lpVtbl->LockBox(p,a,b,c)
-#define IDirect3DVolume8_UnlockBox(p)                 (p)->lpVtbl->UnlockBox(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVolume8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DVolume8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DVolume8_Release(p)                   (p)->Release()
-/*** IDirect3DVolume8 methods ***/
-#define IDirect3DVolume8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DVolume8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DVolume8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DVolume8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DVolume8_GetContainer(p,a,b)          (p)->GetContainer(a,b)
-#define IDirect3DVolume8_GetDesc(p,a)                 (p)->GetDesc(a)
-#define IDirect3DVolume8_LockBox(p,a,b,c)             (p)->LockBox(a,b,c)
-#define IDirect3DVolume8_UnlockBox(p)                 (p)->UnlockBox()
-#endif
-
-/*****************************************************************************
- * IDirect3DSwapChain8 interface
- */
-#define INTERFACE IDirect3DSwapChain8
-DECLARE_INTERFACE_(IDirect3DSwapChain8,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DSwapChain8 methods ***/
-    STDMETHOD(Present)(THIS_ CONST RECT * pSourceRect, CONST RECT * pDestRect, HWND  hDestWindowOverride,CONST RGNDATA * pDirtyRegion) PURE;
-    STDMETHOD(GetBackBuffer)(THIS_ UINT  BackBuffer, D3DBACKBUFFER_TYPE  Type,IDirect3DSurface8 ** ppBackBuffer) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DSwapChain8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DSwapChain8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DSwapChain8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DSwapChain8 methods ***/
-#define IDirect3DSwapChain8_Present(p,a,b,c)             (p)->lpVtbl->Present(p,a,b,c)
-#define IDirect3DSwapChain8_GetBackBuffer(p,a,b,c,d)     (p)->lpVtbl->GetBackBuffer(p,a,b,c,d)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DSwapChain8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DSwapChain8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DSwapChain8_Release(p)                   (p)->Release()
-/*** IDirect3DSwapChain8 methods ***/
-#define IDirect3DSwapChain8_Present(p,a,b,c)             (p)->Present(a,b,c)
-#define IDirect3DSwapChain8_GetBackBuffer(p,a,b,c,d)     (p)->GetBackBuffer(a,b,c,d)
-#endif
-
-/*****************************************************************************
- * IDirect3DSurface8 interface
- */
-#define INTERFACE IDirect3DSurface8
-DECLARE_INTERFACE_(IDirect3DSurface8,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DSurface8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid,CONST void * pData,DWORD  SizeOfData,DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid,void * pData,DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD(GetContainer)(THIS_ REFIID  riid, void ** ppContainer) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DSURFACE_DESC * pDesc) PURE;
-    STDMETHOD(LockRect)(THIS_ D3DLOCKED_RECT * pLockedRect, CONST RECT * pRect,DWORD  Flags) PURE;
-    STDMETHOD(UnlockRect)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DSurface8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DSurface8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DSurface8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DSurface8 methods ***/
-#define IDirect3DSurface8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DSurface8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DSurface8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DSurface8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DSurface8_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
-#define IDirect3DSurface8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#define IDirect3DSurface8_LockRect(p,a,b,c)            (p)->lpVtbl->LockRect(p,a,b,c)
-#define IDirect3DSurface8_UnlockRect(p)                (p)->lpVtbl->UnlockRect(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DSurface8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DSurface8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DSurface8_Release(p)                   (p)->Release()
-/*** IDirect3DSurface8 methods ***/
-#define IDirect3DSurface8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DSurface8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DSurface8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DSurface8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DSurface8_GetContainer(p,a,b)          (p)->GetContainer(a,b)
-#define IDirect3DSurface8_GetDesc(p,a)                 (p)->GetDesc(a)
-#define IDirect3DSurface8_LockRect(p,a,b,c)            (p)->LockRect(a,b,c)
-#define IDirect3DSurface8_UnlockRect(p)                (p)->UnlockRect()
-#endif
-
-/*****************************************************************************
- * IDirect3DResource8 interface
- */
-#define INTERFACE IDirect3DResource8
-DECLARE_INTERFACE_(IDirect3DResource8,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
-    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
-    STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DResource8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DResource8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DResource8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DResource8 methods ***/
-#define IDirect3DResource8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DResource8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DResource8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DResource8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DResource8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DResource8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DResource8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DResource8_GetType(p)                   (p)->lpVtbl->GetType(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DResource8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DResource8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DResource8_Release(p)                   (p)->Release()
-/*** IDirect3DResource8 methods ***/
-#define IDirect3DResource8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DResource8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DResource8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DResource8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DResource8_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DResource8_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DResource8_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DResource8_GetType(p)                   (p)->GetType()
-#endif
-
-/*****************************************************************************
- * IDirect3DVertexBuffer8 interface
- */
-#define INTERFACE IDirect3DVertexBuffer8
-DECLARE_INTERFACE_(IDirect3DVertexBuffer8,IDirect3DResource8)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
-    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
-    STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
-    /*** IDirect3DVertexBuffer8 methods ***/
-    STDMETHOD(Lock)(THIS_ UINT  OffsetToLock, UINT  SizeToLock, BYTE ** ppbData, DWORD  Flags) PURE;
-    STDMETHOD(Unlock)(THIS) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC  * pDesc) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVertexBuffer8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVertexBuffer8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DVertexBuffer8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DVertexBuffer8 methods: IDirect3DResource8 ***/
-#define IDirect3DVertexBuffer8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVertexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DVertexBuffer8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DVertexBuffer8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DVertexBuffer8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DVertexBuffer8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DVertexBuffer8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DVertexBuffer8_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DVertexBuffer8 methods ***/
-#define IDirect3DVertexBuffer8_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
-#define IDirect3DVertexBuffer8_Unlock(p)                    (p)->lpVtbl->Unlock(p)
-#define IDirect3DVertexBuffer8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVertexBuffer8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DVertexBuffer8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DVertexBuffer8_Release(p)                   (p)->Release()
-/*** IDirect3DVertexBuffer8 methods: IDirect3DResource8 ***/
-#define IDirect3DVertexBuffer8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DVertexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DVertexBuffer8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DVertexBuffer8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DVertexBuffer8_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DVertexBuffer8_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DVertexBuffer8_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DVertexBuffer8_GetType(p)                   (p)->GetType()
-/*** IDirect3DVertexBuffer8 methods ***/
-#define IDirect3DVertexBuffer8_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
-#define IDirect3DVertexBuffer8_Unlock(p)                    (p)->Unlock()
-#define IDirect3DVertexBuffer8_GetDesc(p,a)                 (p)->GetDesc(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DIndexBuffer8 interface
- */
-#define INTERFACE IDirect3DIndexBuffer8
-DECLARE_INTERFACE_(IDirect3DIndexBuffer8,IDirect3DResource8)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
-    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
-    STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
-    /*** IDirect3DIndexBuffer8 methods ***/
-    STDMETHOD(Lock)(THIS_ UINT  OffsetToLock, UINT  SizeToLock, BYTE ** ppbData, DWORD  Flags) PURE;
-    STDMETHOD(Unlock)(THIS) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DINDEXBUFFER_DESC * pDesc) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DIndexBuffer8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DIndexBuffer8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DIndexBuffer8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DIndexBuffer8 methods: IDirect3DResource8 ***/
-#define IDirect3DIndexBuffer8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DIndexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DIndexBuffer8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DIndexBuffer8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DIndexBuffer8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DIndexBuffer8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DIndexBuffer8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DIndexBuffer8_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DIndexBuffer8 methods ***/
-#define IDirect3DIndexBuffer8_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
-#define IDirect3DIndexBuffer8_Unlock(p)                    (p)->lpVtbl->Unlock(p)
-#define IDirect3DIndexBuffer8_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DIndexBuffer8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DIndexBuffer8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DIndexBuffer8_Release(p)                   (p)->Release()
-/*** IDirect3DIndexBuffer8 methods: IDirect3DResource8 ***/
-#define IDirect3DIndexBuffer8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DIndexBuffer8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DIndexBuffer8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DIndexBuffer8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DIndexBuffer8_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DIndexBuffer8_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DIndexBuffer8_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DIndexBuffer8_GetType(p)                   (p)->GetType()
-/*** IDirect3DIndexBuffer8 methods ***/
-#define IDirect3DIndexBuffer8_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
-#define IDirect3DIndexBuffer8_Unlock(p)                    (p)->Unlock()
-#define IDirect3DIndexBuffer8_GetDesc(p,a)                 (p)->GetDesc(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DBaseTexture8 interface
- */
-#define INTERFACE IDirect3DBaseTexture8
-DECLARE_INTERFACE_(IDirect3DBaseTexture8,IDirect3DResource8)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
-    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
-    STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture8 methods ***/
-    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
-    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DBaseTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DBaseTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DBaseTexture8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DBaseTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DBaseTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DBaseTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DBaseTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DBaseTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DBaseTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DBaseTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DBaseTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DBaseTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DBaseTexture8 methods ***/
-#define IDirect3DBaseTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DBaseTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
-#define IDirect3DBaseTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DBaseTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DBaseTexture8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DBaseTexture8_Release(p)                   (p)->Release()
-/*** IDirect3DBaseTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DBaseTexture8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DBaseTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DBaseTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DBaseTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DBaseTexture8_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DBaseTexture8_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DBaseTexture8_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DBaseTexture8_GetType(p)                   (p)->GetType()
-/*** IDirect3DBaseTexture8 methods ***/
-#define IDirect3DBaseTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
-#define IDirect3DBaseTexture8_GetLOD(p)                    (p)->GetLOD()
-#define IDirect3DBaseTexture8_GetLevelCount(p)             (p)->GetLevelCount()
-#endif
-
-/*****************************************************************************
- * IDirect3DCubeTexture8 interface
- */
-#define INTERFACE IDirect3DCubeTexture8
-DECLARE_INTERFACE_(IDirect3DCubeTexture8,IDirect3DBaseTexture8)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
-    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
-    STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture8 methods ***/
-    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
-    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
-    /*** IDirect3DCubeTexture8 methods ***/
-    STDMETHOD(GetLevelDesc)(THIS_ UINT  Level,D3DSURFACE_DESC * pDesc) PURE;
-    STDMETHOD(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES  FaceType,UINT  Level,IDirect3DSurface8 ** ppCubeMapSurface) PURE;
-    STDMETHOD(LockRect)(THIS_ D3DCUBEMAP_FACES  FaceType,UINT  Level,D3DLOCKED_RECT * pLockedRect,CONST RECT * pRect,DWORD  Flags) PURE;
-    STDMETHOD(UnlockRect)(THIS_ D3DCUBEMAP_FACES  FaceType,UINT  Level) PURE;
-    STDMETHOD(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES  FaceType,CONST RECT * pDirtyRect) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DCubeTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DCubeTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DCubeTexture8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DCubeTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DCubeTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DCubeTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DCubeTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DCubeTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DCubeTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DCubeTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DCubeTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DCubeTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DCubeTexture8 methods: IDirect3DBaseTexture8 ***/
-#define IDirect3DCubeTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DCubeTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
-#define IDirect3DCubeTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
-/*** IDirect3DCubeTexture8 methods ***/
-#define IDirect3DCubeTexture8_GetLevelDesc(p,a,b)          (p)->lpVtbl->GetLevelDesc(p,a,b)
-#define IDirect3DCubeTexture8_GetCubeMapSurface(p,a,b,c)   (p)->lpVtbl->GetCubeMapSurface(p,a,b,c)
-#define IDirect3DCubeTexture8_LockRect(p,a,b,c,d,e)        (p)->lpVtbl->LockRect(p,a,b,c,d,e)
-#define IDirect3DCubeTexture8_UnlockRect(p,a,b)            (p)->lpVtbl->UnlockRect(p,a,b)
-#define IDirect3DCubeTexture8_AddDirtyRect(p,a,b)          (p)->lpVtbl->AddDirtyRect(p,a,b)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DCubeTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DCubeTexture8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DCubeTexture8_Release(p)                   (p)->Release()
-/*** IDirect3DCubeTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DCubeTexture8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DCubeTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DCubeTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DCubeTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DCubeTexture8_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DCubeTexture8_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DCubeTexture8_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DCubeTexture8_GetType(p)                   (p)->GetType()
-/*** IDirect3DCubeTexture8 methods: IDirect3DBaseTexture8 ***/
-#define IDirect3DCubeTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
-#define IDirect3DCubeTexture8_GetLOD(p)                    (p)->GetLOD()
-#define IDirect3DCubeTexture8_GetLevelCount(p)             (p)->GetLevelCount()
-/*** IDirect3DCubeTexture8 methods ***/
-#define IDirect3DCubeTexture8_GetLevelDesc(p,a,b)          (p)->GetLevelDesc(a,b)
-#define IDirect3DCubeTexture8_GetCubeMapSurface(p,a,b,c)   (p)->GetCubeMapSurface(a,b,c)
-#define IDirect3DCubeTexture8_LockRect(p,a,b,c,d,e)        (p)->LockRect(a,b,c,d,e)
-#define IDirect3DCubeTexture8_UnlockRect(p,a,b)            (p)->UnlockRect(a,b)
-#define IDirect3DCubeTexture8_AddDirtyRect(p,a,b)          (p)->AddDirtyRect(a,b)
-#endif
-
-/*****************************************************************************
- * IDirect3DTexture8 interface
- */
-#define INTERFACE IDirect3DTexture8
-DECLARE_INTERFACE_(IDirect3DTexture8,IDirect3DBaseTexture8)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
-    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
-    STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture8 methods ***/
-    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
-    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
-    /*** IDirect3DTexture8 methods ***/
-    STDMETHOD(GetLevelDesc)(THIS_ UINT  Level,D3DSURFACE_DESC * pDesc) PURE;
-    STDMETHOD(GetSurfaceLevel)(THIS_ UINT  Level,IDirect3DSurface8 ** ppSurfaceLevel) PURE;
-    STDMETHOD(LockRect)(THIS_ UINT  Level,D3DLOCKED_RECT * pLockedRect,CONST RECT * pRect,DWORD  Flags) PURE;
-    STDMETHOD(UnlockRect)(THIS_ UINT  Level) PURE;
-    STDMETHOD(AddDirtyRect)(THIS_ CONST RECT * pDirtyRect) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DTexture8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DTexture8 methods: IDirect3DBaseTexture8 ***/
-#define IDirect3DTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
-#define IDirect3DTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
-/*** IDirect3DTexture8 methods ***/
-#define IDirect3DTexture8_GetLevelDesc(p,a,b)          (p)->lpVtbl->GetLevelDesc(p,a,b)
-#define IDirect3DTexture8_GetSurfaceLevel(p,a,b)       (p)->lpVtbl->GetSurfaceLevel(p,a,b)
-#define IDirect3DTexture8_LockRect(p,a,b,c,d)          (p)->lpVtbl->LockRect(p,a,b,c,d)
-#define IDirect3DTexture8_UnlockRect(p,a)              (p)->lpVtbl->UnlockRect(p,a)
-#define IDirect3DTexture8_AddDirtyRect(p,a)            (p)->lpVtbl->AddDirtyRect(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DTexture8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DTexture8_Release(p)                   (p)->Release()
-/*** IDirect3DTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DTexture8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DTexture8_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DTexture8_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DTexture8_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DTexture8_GetType(p)                   (p)->GetType()
-/*** IDirect3DTexture8 methods: IDirect3DBaseTexture8 ***/
-#define IDirect3DTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
-#define IDirect3DTexture8_GetLOD(p)                    (p)->GetLOD()
-#define IDirect3DTexture8_GetLevelCount(p)             (p)->GetLevelCount()
-/*** IDirect3DTexture8 methods ***/
-#define IDirect3DTexture8_GetLevelDesc(p,a,b)          (p)->GetLevelDesc(a,b)
-#define IDirect3DTexture8_GetSurfaceLevel(p,a,b)       (p)->GetSurfaceLevel(a,b)
-#define IDirect3DTexture8_LockRect(p,a,b,c,d)          (p)->LockRect(a,b,c,d)
-#define IDirect3DTexture8_UnlockRect(p,a)              (p)->UnlockRect(a)
-#define IDirect3DTexture8_AddDirtyRect(p,a)            (p)->AddDirtyRect(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DVolumeTexture8 interface
- */
-#define INTERFACE IDirect3DVolumeTexture8
-DECLARE_INTERFACE_(IDirect3DVolumeTexture8,IDirect3DBaseTexture8)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource8 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice8 ** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID  refguid) PURE;
-    STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
-    STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
-    STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE,GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture8 methods ***/
-    STDMETHOD_(DWORD,SetLOD)(THIS_ DWORD  LODNew) PURE;
-    STDMETHOD_(DWORD,GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD,GetLevelCount)(THIS) PURE;
-    /*** IDirect3DVolumeTexture8 methods ***/
-    STDMETHOD(GetLevelDesc)(THIS_ UINT  Level,D3DVOLUME_DESC * pDesc) PURE;
-    STDMETHOD(GetVolumeLevel)(THIS_ UINT  Level,IDirect3DVolume8 ** ppVolumeLevel) PURE;
-    STDMETHOD(LockBox)(THIS_ UINT  Level,D3DLOCKED_BOX * pLockedVolume,CONST D3DBOX * pBox,DWORD  Flags) PURE;
-    STDMETHOD(UnlockBox)(THIS_ UINT  Level) PURE;
-    STDMETHOD(AddDirtyBox)(THIS_ CONST D3DBOX * pDirtyBox) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVolumeTexture8_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVolumeTexture8_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DVolumeTexture8_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DVolumeTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DVolumeTexture8_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVolumeTexture8_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DVolumeTexture8_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DVolumeTexture8_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DVolumeTexture8_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DVolumeTexture8_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DVolumeTexture8_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DVolumeTexture8_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DVolumeTexture8 methods: IDirect3DBaseTexture8 ***/
-#define IDirect3DVolumeTexture8_SetLOD(p,a)                  (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DVolumeTexture8_GetLOD(p)                    (p)->lpVtbl->GetLOD(p)
-#define IDirect3DVolumeTexture8_GetLevelCount(p)             (p)->lpVtbl->GetLevelCount(p)
-/*** IDirect3DVolumeTexture8 methods ***/
-#define IDirect3DVolumeTexture8_GetLevelDesc(p,a,b)          (p)->lpVtbl->GetLevelDesc(p,a,b)
-#define IDirect3DVolumeTexture8_GetVolumeLevel(p,a,b)        (p)->lpVtbl->GetVolumeLevel(p,a,b)
-#define IDirect3DVolumeTexture8_LockBox(p,a,b,c,d)           (p)->lpVtbl->LockBox(p,a,b,c,d)
-#define IDirect3DVolumeTexture8_UnlockBox(p,a)               (p)->lpVtbl->UnlockBox(p,a)
-#define IDirect3DVolumeTexture8_AddDirtyBox(p,a)             (p)->lpVtbl->AddDirtyBox(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVolumeTexture8_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DVolumeTexture8_AddRef(p)                    (p)->AddRef()
-#define IDirect3DVolumeTexture8_Release(p)                   (p)->Release()
-/*** IDirect3DVolumeTexture8 methods: IDirect3DResource8 ***/
-#define IDirect3DVolumeTexture8_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DVolumeTexture8_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DVolumeTexture8_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DVolumeTexture8_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DVolumeTexture8_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DVolumeTexture8_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DVolumeTexture8_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DVolumeTexture8_GetType(p)                   (p)->GetType()
-/*** IDirect3DVolumeTexture8 methods: IDirect3DBaseTexture8 ***/
-#define IDirect3DVolumeTexture8_SetLOD(p,a)                  (p)->SetLOD(a)
-#define IDirect3DVolumeTexture8_GetLOD(p)                    (p)->GetLOD()
-#define IDirect3DVolumeTexture8_GetLevelCount(p)             (p)->GetLevelCount()
-/*** IDirect3DVolumeTexture8 methods ***/
-#define IDirect3DVolumeTexture8_GetLevelDesc(p,a,b)          (p)->GetLevelDesc(a,b)
-#define IDirect3DVolumeTexture8_GetVolumeLevel(p,a,b)        (p)->GetVolumeLevel(a,b)
-#define IDirect3DVolumeTexture8_LockBox(p,a,b,c,d)           (p)->LockBox(a,b,c,d)
-#define IDirect3DVolumeTexture8_UnlockBox(p,a)               (p)->UnlockBox(a)
-#define IDirect3DVolumeTexture8_AddDirtyBox(p,a)             (p)->AddDirtyBox(a)
 #endif
 
 #ifdef __cplusplus

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_D3D9_H
@@ -24,7 +24,14 @@
 #define DIRECT3D_VERSION  0x0900
 #endif
 
+#include <stdlib.h>
+
+#define COM_NO_WINDOWS_H
 #include <objbase.h>
+
+#ifndef __WINESRC__
+# include <windows.h>
+#endif
 
 #include <d3d9types.h>
 #include <d3d9caps.h>
@@ -50,6 +57,7 @@
 /*****************************************************************************
  * #defines and error codes
  */
+#define D3D_SDK_VERSION                         32
 #define D3DADAPTER_DEFAULT                      0
 #define D3DENUM_NO_WHQL_LEVEL                   0x00000002L
 #define D3DPRESENT_BACK_BUFFERS_MAX             3L
@@ -93,55 +101,55 @@
  * Predeclare the interfaces
  */
 DEFINE_GUID(IID_IDirect3D9,                   0x81BDCBCA, 0x64D4, 0x426D, 0xAE, 0x8D, 0xAD, 0x1, 0x47, 0xF4, 0x27, 0x5C);
-typedef struct IDirect3D9                     IDirect3D9, *LPDIRECT3D9, *PDIRECT3D9;
+typedef struct IDirect3D9 *LPDIRECT3D9, *PDIRECT3D9;
 
 DEFINE_GUID(IID_IDirect3DDevice9,             0xd0223b96, 0xbf7a, 0x43fd, 0x92, 0xbd, 0xa4, 0x3b, 0xd, 0x82, 0xb9, 0xeb);
-typedef struct IDirect3DDevice9               IDirect3DDevice9, *LPDIRECT3DDEVICE9;
+typedef struct IDirect3DDevice9 *LPDIRECT3DDEVICE9;
 
 DEFINE_GUID(IID_IDirect3DResource9,           0x5eec05d, 0x8f7d, 0x4362, 0xb9, 0x99, 0xd1, 0xba, 0xf3, 0x57, 0xc7, 0x4);
-typedef struct IDirect3DResource9             IDirect3DResource9, *LPDIRECT3DRESOURCE9, *PDIRECT3DRESOURCE9;
+typedef struct IDirect3DResource9 *LPDIRECT3DRESOURCE9, *PDIRECT3DRESOURCE9;
 
 DEFINE_GUID(IID_IDirect3DVertexBuffer9,       0xb64bb1b5, 0xfd70, 0x4df6, 0xbf, 0x91, 0x19, 0xd0, 0xa1, 0x24, 0x55, 0xe3);
-typedef struct IDirect3DVertexBuffer9         IDirect3DVertexBuffer9, *LPDIRECT3DVERTEXBUFFER9, *PDIRECT3DVERTEXBUFFER9;
+typedef struct IDirect3DVertexBuffer9 *LPDIRECT3DVERTEXBUFFER9, *PDIRECT3DVERTEXBUFFER9;
 
 DEFINE_GUID(IID_IDirect3DVolume9,             0x24f416e6, 0x1f67, 0x4aa7, 0xb8, 0x8e, 0xd3, 0x3f, 0x6f, 0x31, 0x28, 0xa1);
-typedef struct IDirect3DVolume9               IDirect3DVolume9, *LPDIRECT3DVOLUME9, *PDIRECT3DVOLUME9;
+typedef struct IDirect3DVolume9 *LPDIRECT3DVOLUME9, *PDIRECT3DVOLUME9;
 
 DEFINE_GUID(IID_IDirect3DSwapChain9,          0x794950f2, 0xadfc, 0x458a, 0x90, 0x5e, 0x10, 0xa1, 0xb, 0xb, 0x50, 0x3b);
-typedef struct IDirect3DSwapChain9            IDirect3DSwapChain9, *LPDIRECT3DSWAPCHAIN9, *PDIRECT3DSWAPCHAIN9;
+typedef struct IDirect3DSwapChain9 *LPDIRECT3DSWAPCHAIN9, *PDIRECT3DSWAPCHAIN9;
 
 DEFINE_GUID(IID_IDirect3DSurface9,            0xcfbaf3a, 0x9ff6, 0x429a, 0x99, 0xb3, 0xa2, 0x79, 0x6a, 0xf8, 0xb8, 0x9b);
-typedef struct IDirect3DSurface9              IDirect3DSurface9, *LPDIRECT3DSURFACE9, *PDIRECT3DSURFACE9;
+typedef struct IDirect3DSurface9 *LPDIRECT3DSURFACE9, *PDIRECT3DSURFACE9;
 
 DEFINE_GUID(IID_IDirect3DIndexBuffer9,        0x7c9dd65e, 0xd3f7, 0x4529, 0xac, 0xee, 0x78, 0x58, 0x30, 0xac, 0xde, 0x35);
-typedef struct IDirect3DIndexBuffer9          IDirect3DIndexBuffer9, *LPDIRECT3DINDEXBUFFER9, *PDIRECT3DINDEXBUFFER9;
+typedef struct IDirect3DIndexBuffer9 *LPDIRECT3DINDEXBUFFER9, *PDIRECT3DINDEXBUFFER9;
 
 DEFINE_GUID(IID_IDirect3DBaseTexture9,        0x580ca87e, 0x1d3c, 0x4d54, 0x99, 0x1d, 0xb7, 0xd3, 0xe3, 0xc2, 0x98, 0xce);
-typedef struct IDirect3DBaseTexture9          IDirect3DBaseTexture9, *LPDIRECT3DBASETEXTURE9, *PDIRECT3DBASETEXTURE9;
+typedef struct IDirect3DBaseTexture9 *LPDIRECT3DBASETEXTURE9, *PDIRECT3DBASETEXTURE9;
 
 DEFINE_GUID(IID_IDirect3DTexture9,            0x85c31227, 0x3de5, 0x4f00, 0x9b, 0x3a, 0xf1, 0x1a, 0xc3, 0x8c, 0x18, 0xb5);
-typedef struct IDirect3DTexture9              IDirect3DTexture9, *LPDIRECT3DTEXTURE9, *PDIRECT3DTEXTURE9;
+typedef struct IDirect3DTexture9 *LPDIRECT3DTEXTURE9, *PDIRECT3DTEXTURE9;
 
 DEFINE_GUID(IID_IDirect3DCubeTexture9,        0xfff32f81, 0xd953, 0x473a, 0x92, 0x23, 0x93, 0xd6, 0x52, 0xab, 0xa9, 0x3f);
-typedef struct IDirect3DCubeTexture9          IDirect3DCubeTexture9, *LPDIRECT3DCUBETEXTURE9, *PDIRECT3DCUBETEXTURE9;
+typedef struct IDirect3DCubeTexture9 *LPDIRECT3DCUBETEXTURE9, *PDIRECT3DCUBETEXTURE9;
 
 DEFINE_GUID(IID_IDirect3DVolumeTexture9,      0x2518526c, 0xe789, 0x4111, 0xa7, 0xb9, 0x47, 0xef, 0x32, 0x8d, 0x13, 0xe6);
-typedef struct IDirect3DVolumeTexture9        IDirect3DVolumeTexture9, *LPDIRECT3DVOLUMETEXTURE9, *PDIRECT3DVOLUMETEXTURE9;
+typedef struct IDirect3DVolumeTexture9 *LPDIRECT3DVOLUMETEXTURE9, *PDIRECT3DVOLUMETEXTURE9;
 
 DEFINE_GUID(IID_IDirect3DVertexDeclaration9,  0xdd13c59c, 0x36fa, 0x4098, 0xa8, 0xfb, 0xc7, 0xed, 0x39, 0xdc, 0x85, 0x46);
-typedef struct IDirect3DVertexDeclaration9    IDirect3DVertexDeclaration9, *LPDIRECT3DVERTEXDECLARATION9;
+typedef struct IDirect3DVertexDeclaration9 *LPDIRECT3DVERTEXDECLARATION9;
 
 DEFINE_GUID(IID_IDirect3DVertexShader9,       0xefc5557e, 0x6265, 0x4613, 0x8a, 0x94, 0x43, 0x85, 0x78, 0x89, 0xeb, 0x36);
-typedef struct IDirect3DVertexShader9         IDirect3DVertexShader9, *LPDIRECT3DVERTEXSHADER9;
+typedef struct IDirect3DVertexShader9 *LPDIRECT3DVERTEXSHADER9;
 
 DEFINE_GUID(IID_IDirect3DPixelShader9,        0x6d3bdbdc, 0x5b02, 0x4415, 0xb8, 0x52, 0xce, 0x5e, 0x8b, 0xcc, 0xb2, 0x89);
-typedef struct IDirect3DPixelShader9          IDirect3DPixelShader9, *LPDIRECT3DPIXELSHADER9;
+typedef struct IDirect3DPixelShader9 *LPDIRECT3DPIXELSHADER9;
 
 DEFINE_GUID(IID_IDirect3DStateBlock9,         0xb07c4fe5, 0x310d, 0x4ba8, 0xa2, 0x3c, 0x4f, 0xf, 0x20, 0x6f, 0x21, 0x8b);
-typedef struct IDirect3DStateBlock9           IDirect3DStateBlock9, *LPDIRECT3DSTATEBLOCK9;
+typedef struct IDirect3DStateBlock9 *LPDIRECT3DSTATEBLOCK9;
 
 DEFINE_GUID(IID_IDirect3DQuery9,              0xd9771460, 0xa695, 0x4f26, 0xbb, 0xd3, 0x27, 0xb8, 0x40, 0xb5, 0x41, 0xcc);
-typedef struct IDirect3DQuery9                IDirect3DQuery9, *LPDIRECT3DQUERY9, *PDIRECT3DQUERY9;
+typedef struct IDirect3DQuery9 *LPDIRECT3DQUERY9, *PDIRECT3DQUERY9;
 
 /*****************************************************************************
  * IDirect3D9 interface
@@ -167,7 +175,7 @@ DECLARE_INTERFACE_(IDirect3D9,IUnknown)
     STDMETHOD(CheckDeviceFormatConversion)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT SourceFormat, D3DFORMAT TargetFormat) PURE;
     STDMETHOD(GetDeviceCaps)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps) PURE;
     STDMETHOD_(HMONITOR, GetAdapterMonitor)(THIS_ UINT Adapter) PURE;
-    STDMETHOD(CreateDevice)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, IDirect3DDevice9** ppReturnedDeviceInterface) PURE;
+    STDMETHOD(CreateDevice)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, struct IDirect3DDevice9** ppReturnedDeviceInterface) PURE;
 };
 #undef INTERFACE
 
@@ -211,6 +219,888 @@ DECLARE_INTERFACE_(IDirect3D9,IUnknown)
 #define IDirect3D9_GetDeviceCaps(p,a,b,c)                     (p)->GetDeviceCaps(a,b,c)
 #define IDirect3D9_GetAdapterMonitor(p,a)                     (p)->GetAdapterMonitor(a)
 #define IDirect3D9_CreateDevice(p,a,b,c,d,e,f)                (p)->CreateDevice(a,b,c,d,e,f)
+#endif
+
+/*****************************************************************************
+ * IDirect3DVolume9 interface
+ */
+#define INTERFACE IDirect3DVolume9
+DECLARE_INTERFACE_(IDirect3DVolume9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DVolume9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD(GetContainer)(THIS_ REFIID riid, void** ppContainer) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DVOLUME_DESC* pDesc) PURE;
+    STDMETHOD(LockBox)(THIS_ D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags) PURE;
+    STDMETHOD(UnlockBox)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVolume9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVolume9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DVolume9_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DVolume9 methods ***/
+#define IDirect3DVolume9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVolume9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DVolume9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DVolume9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DVolume9_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
+#define IDirect3DVolume9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#define IDirect3DVolume9_LockBox(p,a,b,c)             (p)->lpVtbl->LockBox(p,a,b,c)
+#define IDirect3DVolume9_UnlockBox(p)                 (p)->lpVtbl->UnlockBox(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVolume9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DVolume9_AddRef(p)                    (p)->AddRef()
+#define IDirect3DVolume9_Release(p)                   (p)->Release()
+/*** IDirect3DVolume9 methods ***/
+#define IDirect3DVolume9_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DVolume9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DVolume9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DVolume9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DVolume9_GetContainer(p,a,b)          (p)->GetContainer(a,b)
+#define IDirect3DVolume9_GetDesc(p,a)                 (p)->GetDesc(a)
+#define IDirect3DVolume9_LockBox(p,a,b,c)             (p)->LockBox(a,b,c)
+#define IDirect3DVolume9_UnlockBox(p)                 (p)->UnlockBox()
+#endif
+
+/*****************************************************************************
+ * IDirect3DSwapChain9 interface
+ */
+#define INTERFACE IDirect3DSwapChain9
+DECLARE_INTERFACE_(IDirect3DSwapChain9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DSwapChain9 methods ***/
+    STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags) PURE;
+    STDMETHOD(GetFrontBufferData)(THIS_ struct IDirect3DSurface9* pDestSurface) PURE;
+    STDMETHOD(GetBackBuffer)(THIS_ UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, struct IDirect3DSurface9** ppBackBuffer) PURE;
+    STDMETHOD(GetRasterStatus)(THIS_ D3DRASTER_STATUS* pRasterStatus) PURE;
+    STDMETHOD(GetDisplayMode)(THIS_ D3DDISPLAYMODE* pMode) PURE;
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(GetPresentParameters)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DSwapChain9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DSwapChain9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DSwapChain9_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DSwapChain9 methods ***/
+#define IDirect3DSwapChain9_Present(p,a,b,c,d,e)         (p)->lpVtbl->Present(p,a,b,c,d,e)
+#define IDirect3DSwapChain9_GetFrontBufferData(p,a)      (p)->lpVtbl->GetFrontBufferData(p,a)
+#define IDirect3DSwapChain9_GetBackBuffer(p,a,b,c)       (p)->lpVtbl->GetBackBuffer(p,a,b,c)
+#define IDirect3DSwapChain9_GetRasterStatus(p,a)         (p)->lpVtbl->GetRasterStatus(p,a)
+#define IDirect3DSwapChain9_GetDisplayMode(p,a)          (p)->lpVtbl->GetDisplayMode(p,a)
+#define IDirect3DSwapChain9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DSwapChain9_GetPresentParameters(p,a)    (p)->lpVtbl->GetPresentParameters(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DSwapChain9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DSwapChain9_AddRef(p)                    (p)->AddRef()
+#define IDirect3DSwapChain9_Release(p)                   (p)->Release()
+/*** IDirect3DSwapChain9 methods ***/
+#define IDirect3DSwapChain9_Present(p,a,b,c,d,e)         (p)->Present(a,b,c,d,e)
+#define IDirect3DSwapChain9_GetFrontBufferData(p,a)      (p)->GetFrontBufferData(a)
+#define IDirect3DSwapChain9_GetBackBuffer(p,a,b,c)       (p)->GetBackBuffer(a,b,c)
+#define IDirect3DSwapChain9_GetRasterStatus(p,a)         (p)->GetRasterStatus(a)
+#define IDirect3DSwapChain9_GetDisplayMode(p,a)          (p)->GetDisplayMode(a)
+#define IDirect3DSwapChain9_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DSwapChain9_GetPresentParameters(p,a)    (p)->GetPresentParameters(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DResource9 interface
+ */
+#define INTERFACE IDirect3DResource9
+DECLARE_INTERFACE_(IDirect3DResource9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DResource9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DResource9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DResource9_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DResource9 methods ***/
+#define IDirect3DResource9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DResource9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DResource9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DResource9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DResource9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DResource9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DResource9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DResource9_GetType(p)                   (p)->lpVtbl->GetType(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DResource9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DResource9_AddRef(p)                    (p)->AddRef()
+#define IDirect3DResource9_Release(p)                   (p)->Release()
+/*** IDirect3DResource9 methods ***/
+#define IDirect3DResource9_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DResource9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DResource9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DResource9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DResource9_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DResource9_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DResource9_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DResource9_GetType(p)                   (p)->GetType()
+#endif
+
+/*****************************************************************************
+ * IDirect3DSurface9 interface
+ */
+#define INTERFACE IDirect3DSurface9
+DECLARE_INTERFACE_(IDirect3DSurface9,IDirect3DResource9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IDirect3DSurface9 methods ***/
+    STDMETHOD(GetContainer)(THIS_ REFIID riid, void** ppContainer) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DSURFACE_DESC* pDesc) PURE;
+    STDMETHOD(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) PURE;
+    STDMETHOD(UnlockRect)(THIS) PURE;
+    STDMETHOD(GetDC)(THIS_ HDC* phdc) PURE;
+    STDMETHOD(ReleaseDC)(THIS_ HDC hdc) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DSurface9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DSurface9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DSurface9_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DSurface9 methods: IDirect3DResource9 ***/
+#define IDirect3DSurface9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DSurface9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DSurface9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DSurface9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DSurface9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DSurface9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DSurface9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DSurface9_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DSurface9 methods ***/
+#define IDirect3DSurface9_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
+#define IDirect3DSurface9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#define IDirect3DSurface9_LockRect(p,a,b,c)            (p)->lpVtbl->LockRect(p,a,b,c)
+#define IDirect3DSurface9_UnlockRect(p)                (p)->lpVtbl->UnlockRect(p)
+#define IDirect3DSurface9_GetDC(p,a)                   (p)->lpVtbl->GetDC(p,a)
+#define IDirect3DSurface9_ReleaseDC(p,a)               (p)->lpVtbl->ReleaseDC(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DSurface9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DSurface9_AddRef(p)                    (p)->AddRef()
+#define IDirect3DSurface9_Release(p)                   (p)->Release()
+/*** IDirect3DSurface9 methods: IDirect3DResource9 ***/
+#define IDirect3DSurface9_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DSurface9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DSurface9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DSurface9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DSurface9_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DSurface9_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DSurface9_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DSurface9_GetType(p)                   (p)->GetType()
+/*** IDirect3DSurface9 methods ***/
+#define IDirect3DSurface9_GetContainer(p,a,b)          (p)->GetContainer(a,b)
+#define IDirect3DSurface9_GetDesc(p,a)                 (p)->GetDesc(a)
+#define IDirect3DSurface9_LockRect(p,a,b,c)            (p)->LockRect(a,b,c)
+#define IDirect3DSurface9_UnlockRect(p)                (p)->UnlockRect()
+#define IDirect3DSurface9_GetDC(p,a)                   (p)->GetDC(a)
+#define IDirect3DSurface9_ReleaseDC(p,a)               (p)->ReleaseDC(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DVertexBuffer9 interface
+ */
+#define INTERFACE IDirect3DVertexBuffer9
+DECLARE_INTERFACE_(IDirect3DVertexBuffer9,IDirect3DResource9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IDirect3DVertexBuffer9 methods ***/
+    STDMETHOD(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags) PURE;
+    STDMETHOD(Unlock)(THIS) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC* pDesc) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVertexBuffer9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVertexBuffer9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DVertexBuffer9_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DVertexBuffer9 methods: IDirect3DResource9 ***/
+#define IDirect3DVertexBuffer9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVertexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DVertexBuffer9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DVertexBuffer9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DVertexBuffer9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DVertexBuffer9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DVertexBuffer9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DVertexBuffer9_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DVertexBuffer9 methods ***/
+#define IDirect3DVertexBuffer9_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
+#define IDirect3DVertexBuffer9_Unlock(p)                    (p)->lpVtbl->Unlock(p)
+#define IDirect3DVertexBuffer9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVertexBuffer9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DVertexBuffer9_AddRef(p)                    (p)->AddRef()
+#define IDirect3DVertexBuffer9_Release(p)                   (p)->Release()
+/*** IDirect3DVertexBuffer9 methods: IDirect3DResource9 ***/
+#define IDirect3DVertexBuffer9_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DVertexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DVertexBuffer9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DVertexBuffer9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DVertexBuffer9_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DVertexBuffer9_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DVertexBuffer9_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DVertexBuffer9_GetType(p)                   (p)->GetType()
+/*** IDirect3DVertexBuffer9 methods ***/
+#define IDirect3DVertexBuffer9_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
+#define IDirect3DVertexBuffer9_Unlock(p)                    (p)->Unlock()
+#define IDirect3DVertexBuffer9_GetDesc(p,a)                 (p)->GetDesc(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DIndexBuffer9 interface
+ */
+#define INTERFACE IDirect3DIndexBuffer9
+DECLARE_INTERFACE_(IDirect3DIndexBuffer9,IDirect3DResource9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IDirect3DIndexBuffer9 methods ***/
+    STDMETHOD(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags) PURE;
+    STDMETHOD(Unlock)(THIS) PURE;
+    STDMETHOD(GetDesc)(THIS_ D3DINDEXBUFFER_DESC* pDesc) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DIndexBuffer9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DIndexBuffer9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
+#define IDirect3DIndexBuffer9_Release(p)                   (p)->lpVtbl->Release(p)
+/*** IDirect3DIndexBuffer9 methods: IDirect3DResource9 ***/
+#define IDirect3DIndexBuffer9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DIndexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DIndexBuffer9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DIndexBuffer9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DIndexBuffer9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DIndexBuffer9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
+#define IDirect3DIndexBuffer9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
+#define IDirect3DIndexBuffer9_GetType(p)                   (p)->lpVtbl->GetType(p)
+/*** IDirect3DIndexBuffer9 methods ***/
+#define IDirect3DIndexBuffer9_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
+#define IDirect3DIndexBuffer9_Unlock(p)                    (p)->lpVtbl->Unlock(p)
+#define IDirect3DIndexBuffer9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DIndexBuffer9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
+#define IDirect3DIndexBuffer9_AddRef(p)                    (p)->AddRef()
+#define IDirect3DIndexBuffer9_Release(p)                   (p)->Release()
+/*** IDirect3DIndexBuffer9 methods: IDirect3DResource9 ***/
+#define IDirect3DIndexBuffer9_GetDevice(p,a)               (p)->GetDevice(a)
+#define IDirect3DIndexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DIndexBuffer9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
+#define IDirect3DIndexBuffer9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
+#define IDirect3DIndexBuffer9_SetPriority(p,a)             (p)->SetPriority(a)
+#define IDirect3DIndexBuffer9_GetPriority(p)               (p)->GetPriority()
+#define IDirect3DIndexBuffer9_PreLoad(p)                   (p)->PreLoad()
+#define IDirect3DIndexBuffer9_GetType(p)                   (p)->GetType()
+/*** IDirect3DIndexBuffer9 methods ***/
+#define IDirect3DIndexBuffer9_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
+#define IDirect3DIndexBuffer9_Unlock(p)                    (p)->Unlock()
+#define IDirect3DIndexBuffer9_GetDesc(p,a)                 (p)->GetDesc(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DBaseTexture9 interface
+ */
+#define INTERFACE IDirect3DBaseTexture9
+DECLARE_INTERFACE_(IDirect3DBaseTexture9,IDirect3DResource9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture9 methods ***/
+    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
+    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
+    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
+    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
+    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DBaseTexture9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DBaseTexture9_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IDirect3DBaseTexture9_Release(p)             (p)->lpVtbl->Release(p)
+/*** IDirect3DBaseTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DBaseTexture9_GetDevice(p,a)             (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DBaseTexture9_SetPrivateData(p,a,b,c,d)  (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DBaseTexture9_GetPrivateData(p,a,b,c)    (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DBaseTexture9_FreePrivateData(p,a)       (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DBaseTexture9_SetPriority(p,a)           (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DBaseTexture9_GetPriority(p)             (p)->lpVtbl->GetPriority(p)
+#define IDirect3DBaseTexture9_PreLoad(p)                 (p)->lpVtbl->PreLoad(p)
+#define IDirect3DBaseTexture9_GetType(p)                 (p)->lpVtbl->GetType(p)
+/*** IDirect3DBaseTexture9 methods ***/
+#define IDirect3DBaseTexture9_SetLOD(p,a)                (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DBaseTexture9_GetLOD(p)                  (p)->lpVtbl->GetLOD(p)
+#define IDirect3DBaseTexture9_GetLevelCount(p)           (p)->lpVtbl->GetLevelCount(p)
+#define IDirect3DBaseTexture9_SetAutoGenFilterType(p,a)  (p)->lpVtbl->SetAutoGenFilterType(p,a)
+#define IDirect3DBaseTexture9_GetAutoGenFilterType(p)    (p)->lpVtbl->GetAutoGenFilterType(p)
+#define IDirect3DBaseTexture9_GenerateMipSubLevels(p)    (p)->lpVtbl->GenerateMipSubLevels(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DBaseTexture9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
+#define IDirect3DBaseTexture9_AddRef(p)              (p)->AddRef()
+#define IDirect3DBaseTexture9_Release(p)             (p)->Release()
+/*** IDirect3DBaseTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DBaseTexture9_GetDevice(p,a)             (p)->GetDevice(a)
+#define IDirect3DBaseTexture9_SetPrivateData(p,a,b,c,d)  (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DBaseTexture9_GetPrivateData(p,a,b,c)    (p)->GetPrivateData(a,b,c)
+#define IDirect3DBaseTexture9_FreePrivateData(p,a)       (p)->FreePrivateData(a)
+#define IDirect3DBaseTexture9_SetPriority(p,a)           (p)->SetPriority(a)
+#define IDirect3DBaseTexture9_GetPriority(p)             (p)->GetPriority()
+#define IDirect3DBaseTexture9_PreLoad(p)                 (p)->PreLoad()
+#define IDirect3DBaseTexture9_GetType(p)                 (p)->GetType()
+/*** IDirect3DBaseTexture9 methods ***/
+#define IDirect3DBaseTexture9_SetLOD(p,a)                (p)->SetLOD(a)
+#define IDirect3DBaseTexture9_GetLOD(p)                  (p)->GetLOD()
+#define IDirect3DBaseTexture9_GetLevelCount(p)           (p)->GetLevelCount()
+#define IDirect3DBaseTexture9_SetAutoGenFilterType(p,a)  (p)->SetAutoGenFilterType(a)
+#define IDirect3DBaseTexture9_GetAutoGenFilterType(p)    (p)->GetAutoGenFilterType()
+#define IDirect3DBaseTexture9_GenerateMipSubLevels(p)    (p)->GenerateMipSubLevels()
+#endif
+
+/*****************************************************************************
+ * IDirect3DCubeTexture9 interface
+ */
+#define INTERFACE IDirect3DCubeTexture9
+DECLARE_INTERFACE_(IDirect3DCubeTexture9,IDirect3DBaseTexture9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture9 methods ***/
+    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
+    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
+    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
+    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
+    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
+    /*** IDirect3DCubeTexture9 methods ***/
+    STDMETHOD(GetLevelDesc)(THIS_ UINT Level,D3DSURFACE_DESC* pDesc) PURE;
+    STDMETHOD(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface) PURE;
+    STDMETHOD(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) PURE;
+    STDMETHOD(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level) PURE;
+    STDMETHOD(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DCubeTexture9_QueryInterface(p,a,b)       (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DCubeTexture9_AddRef(p)                   (p)->lpVtbl->AddRef(p)
+#define IDirect3DCubeTexture9_Release(p)                  (p)->lpVtbl->Release(p)
+/*** IDirect3DCubeTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DCubeTexture9_GetDevice(p,a)              (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DCubeTexture9_SetPrivateData(p,a,b,c,d)   (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DCubeTexture9_GetPrivateData(p,a,b,c)     (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DCubeTexture9_FreePrivateData(p,a)        (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DCubeTexture9_SetPriority(p,a)            (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DCubeTexture9_GetPriority(p)              (p)->lpVtbl->GetPriority(p)
+#define IDirect3DCubeTexture9_PreLoad(p)                  (p)->lpVtbl->PreLoad(p)
+#define IDirect3DCubeTexture9_GetType(p)                  (p)->lpVtbl->GetType(p)
+/*** IDirect3DCubeTexture9 methods: IDirect3DBaseTexture9 ***/
+#define IDirect3DCubeTexture9_SetLOD(p,a)                 (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DCubeTexture9_GetLOD(p)                   (p)->lpVtbl->GetLOD(p)
+#define IDirect3DCubeTexture9_GetLevelCount(p)            (p)->lpVtbl->GetLevelCount(p)
+#define IDirect3DCubeTexture9_SetAutoGenFilterType(p,a)   (p)->lpVtbl->SetAutoGenFilterType(p,a)
+#define IDirect3DCubeTexture9_GetAutoGenFilterType(p)     (p)->lpVtbl->GetAutoGenFilterType(p)
+#define IDirect3DCubeTexture9_GenerateMipSubLevels(p)     (p)->lpVtbl->GenerateMipSubLevels(p)
+/*** IDirect3DCubeTexture9 methods ***/
+#define IDirect3DCubeTexture9_GetLevelDesc(p,a,b)         (p)->lpVtbl->GetLevelDesc(p,a,b)
+#define IDirect3DCubeTexture9_GetCubeMapSurface(p,a,b,c)  (p)->lpVtbl->GetCubeMapSurface(p,a,b,c)
+#define IDirect3DCubeTexture9_LockRect(p,a,b,c,d,e)       (p)->lpVtbl->LockRect(p,a,b,c,d,e)
+#define IDirect3DCubeTexture9_UnlockRect(p,a,b)           (p)->lpVtbl->UnlockRect(p,a,b)
+#define IDirect3DCubeTexture9_AddDirtyRect(p,a,b)         (p)->lpVtbl->AddDirtyRect(p,a,b)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DCubeTexture9_QueryInterface(p,a,b)       (p)->QueryInterface(a,b)
+#define IDirect3DCubeTexture9_AddRef(p)                   (p)->AddRef()
+#define IDirect3DCubeTexture9_Release(p)                  (p)->Release()
+/*** IDirect3DCubeTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DCubeTexture9_GetDevice(p,a)              (p)->GetDevice(a)
+#define IDirect3DCubeTexture9_SetPrivateData(p,a,b,c,d)   (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DCubeTexture9_GetPrivateData(p,a,b,c)     (p)->GetPrivateData(a,b,c)
+#define IDirect3DCubeTexture9_FreePrivateData(p,a)        (p)->FreePrivateData(a)
+#define IDirect3DCubeTexture9_SetPriority(p,a)            (p)->SetPriority(a)
+#define IDirect3DCubeTexture9_GetPriority(p)              (p)->GetPriority()
+#define IDirect3DCubeTexture9_PreLoad(p)                  (p)->PreLoad()
+#define IDirect3DCubeTexture9_GetType(p)                  (p)->GetType()
+/*** IDirect3DCubeTexture9 methods: IDirect3DBaseTexture9 ***/
+#define IDirect3DCubeTexture9_SetLOD(p,a)                 (p)->SetLOD(a)
+#define IDirect3DCubeTexture9_GetLOD(p)                   (p)->GetLOD()
+#define IDirect3DCubeTexture9_GetLevelCount(p)            (p)->GetLevelCount()
+#define IDirect3DCubeTexture9_SetAutoGenFilterType(p,a)   (p)->SetAutoGenFilterType(a)
+#define IDirect3DCubeTexture9_GetAutoGenFilterType(p)     (p)->GetAutoGenFilterType()
+#define IDirect3DCubeTexture9_GenerateMipSubLevels(p)     (p)->GenerateMipSubLevels()
+/*** IDirect3DCubeTexture9 methods ***/
+#define IDirect3DCubeTexture9_GetLevelDesc(p,a,b)         (p)->GetLevelDesc(a,b)
+#define IDirect3DCubeTexture9_GetCubeMapSurface(p,a,b,c)  (p)->GetCubeMapSurface(a,b,c)
+#define IDirect3DCubeTexture9_LockRect(p,a,b,c,d,e)       (p)->LockRect(a,b,c,d,e)
+#define IDirect3DCubeTexture9_UnlockRect(p,a,b)           (p)->UnlockRect(a,b)
+#define IDirect3DCubeTexture9_AddDirtyRect(p,a,b)         (p)->AddDirtyRect(a,b)
+#endif
+
+/*****************************************************************************
+ * IDirect3DTexture9 interface
+ */
+#define INTERFACE IDirect3DTexture9
+DECLARE_INTERFACE_(IDirect3DTexture9,IDirect3DBaseTexture9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture9 methods ***/
+    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
+    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
+    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
+    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
+    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
+    /*** IDirect3DTexture9 methods ***/
+    STDMETHOD(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC* pDesc) PURE;
+    STDMETHOD(GetSurfaceLevel)(THIS_ UINT Level, IDirect3DSurface9** ppSurfaceLevel) PURE;
+    STDMETHOD(LockRect)(THIS_ UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) PURE;
+    STDMETHOD(UnlockRect)(THIS_ UINT Level) PURE;
+    STDMETHOD(AddDirtyRect)(THIS_ CONST RECT* pDirtyRect) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DTexture9_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DTexture9_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define IDirect3DTexture9_Release(p)                 (p)->lpVtbl->Release(p)
+/*** IDirect3DTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DTexture9_GetDevice(p,a)             (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DTexture9_SetPrivateData(p,a,b,c,d)  (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DTexture9_GetPrivateData(p,a,b,c)    (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DTexture9_FreePrivateData(p,a)       (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DTexture9_SetPriority(p,a)           (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DTexture9_GetPriority(p)             (p)->lpVtbl->GetPriority(p)
+#define IDirect3DTexture9_PreLoad(p)                 (p)->lpVtbl->PreLoad(p)
+#define IDirect3DTexture9_GetType(p)                 (p)->lpVtbl->GetType(p)
+/*** IDirect3DTexture9 methods: IDirect3DBaseTexture9 ***/
+#define IDirect3DTexture9_SetLOD(p,a)                (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DTexture9_GetLOD(p)                  (p)->lpVtbl->GetLOD(p)
+#define IDirect3DTexture9_GetLevelCount(p)           (p)->lpVtbl->GetLevelCount(p)
+#define IDirect3DTexture9_SetAutoGenFilterType(p,a)  (p)->lpVtbl->SetAutoGenFilterType(p,a)
+#define IDirect3DTexture9_GetAutoGenFilterType(p)    (p)->lpVtbl->GetAutoGenFilterType(p)
+#define IDirect3DTexture9_GenerateMipSubLevels(p)    (p)->lpVtbl->GenerateMipSubLevels(p)
+/*** IDirect3DTexture9 methods ***/
+#define IDirect3DTexture9_GetLevelDesc(p,a,b)        (p)->lpVtbl->GetLevelDesc(p,a,b)
+#define IDirect3DTexture9_GetSurfaceLevel(p,a,b)     (p)->lpVtbl->GetSurfaceLevel(p,a,b)
+#define IDirect3DTexture9_LockRect(p,a,b,c,d)        (p)->lpVtbl->LockRect(p,a,b,c,d)
+#define IDirect3DTexture9_UnlockRect(p,a)            (p)->lpVtbl->UnlockRect(p,a)
+#define IDirect3DTexture9_AddDirtyRect(p,a)          (p)->lpVtbl->AddDirtyRect(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DTexture9_QueryInterface(p,a,b)      (p)->QueryInterface(a,b)
+#define IDirect3DTexture9_AddRef(p)                  (p)->AddRef()
+#define IDirect3DTexture9_Release(p)                 (p)->Release()
+/*** IDirect3DTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DTexture9_GetDevice(p,a)             (p)->GetDevice(a)
+#define IDirect3DTexture9_SetPrivateData(p,a,b,c,d)  (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DTexture9_GetPrivateData(p,a,b,c)    (p)->GetPrivateData(a,b,c)
+#define IDirect3DTexture9_FreePrivateData(p,a)       (p)->FreePrivateData(a)
+#define IDirect3DTexture9_SetPriority(p,a)           (p)->SetPriority(a)
+#define IDirect3DTexture9_GetPriority(p)             (p)->GetPriority()
+#define IDirect3DTexture9_PreLoad(p)                 (p)->PreLoad()
+#define IDirect3DTexture9_GetType(p)                 (p)->GetType()
+/*** IDirect3DTexture9 methods: IDirect3DBaseTexture9 ***/
+#define IDirect3DTexture9_SetLOD(p,a)                (p)->SetLOD(a)
+#define IDirect3DTexture9_GetLOD(p)                  (p)->GetLOD()
+#define IDirect3DTexture9_GetLevelCount(p)           (p)->GetLevelCount()
+#define IDirect3DTexture9_SetAutoGenFilterType(p,a)  (p)->SetAutoGenFilterType(a)
+#define IDirect3DTexture9_GetAutoGenFilterType(p)    (p)->GetAutoGenFilterType()
+#define IDirect3DTexture9_GenerateMipSubLevels(p)    (p)->GenerateMipSubLevels()
+/*** IDirect3DTexture9 methods ***/
+#define IDirect3DTexture9_GetLevelDesc(p,a,b)        (p)->GetLevelDesc(a,b)
+#define IDirect3DTexture9_GetSurfaceLevel(p,a,b)     (p)->GetSurfaceLevel(a,b)
+#define IDirect3DTexture9_LockRect(p,a,b,c,d)        (p)->LockRect(a,b,c,d)
+#define IDirect3DTexture9_UnlockRect(p,a)            (p)->UnlockRect(a)
+#define IDirect3DTexture9_AddDirtyRect(p,a)          (p)->AddDirtyRect(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DVolumeTexture9 interface
+ */
+#define INTERFACE IDirect3DVolumeTexture9
+DECLARE_INTERFACE_(IDirect3DVolumeTexture9,IDirect3DBaseTexture9)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DResource9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
+    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
+    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
+    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
+    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
+    STDMETHOD_(void, PreLoad)(THIS) PURE;
+    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IDirect3DBaseTexture9 methods ***/
+    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
+    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
+    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
+    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
+    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
+    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
+    /*** IDirect3DVolumeTexture9 methods ***/
+    STDMETHOD(GetLevelDesc)(THIS_ UINT Level, D3DVOLUME_DESC *pDesc) PURE;
+    STDMETHOD(GetVolumeLevel)(THIS_ UINT Level, IDirect3DVolume9** ppVolumeLevel) PURE;
+    STDMETHOD(LockBox)(THIS_ UINT Level, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags) PURE;
+    STDMETHOD(UnlockBox)(THIS_ UINT Level) PURE;
+    STDMETHOD(AddDirtyBox)(THIS_ CONST D3DBOX* pDirtyBox) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVolumeTexture9_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVolumeTexture9_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IDirect3DVolumeTexture9_Release(p) (p)->lpVtbl->Release(p)
+/*** IDirect3DVolumeTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DVolumeTexture9_GetDevice(p,a) (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVolumeTexture9_SetPrivateData(p,a,b,c,d) (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
+#define IDirect3DVolumeTexture9_GetPrivateData(p,a,b,c) (p)->lpVtbl->GetPrivateData(p,a,b,c)
+#define IDirect3DVolumeTexture9_FreePrivateData(p,a) (p)->lpVtbl->FreePrivateData(p,a)
+#define IDirect3DVolumeTexture9_SetPriority(p,a) (p)->lpVtbl->SetPriority(p,a)
+#define IDirect3DVolumeTexture9_GetPriority(p) (p)->lpVtbl->GetPriority(p)
+#define IDirect3DVolumeTexture9_PreLoad(p) (p)->lpVtbl->PreLoad(p)
+#define IDirect3DVolumeTexture9_GetType(p) (p)->lpVtbl->GetType(p)
+/*** IDirect3DVolumeTexture9 methods: IDirect3DBaseTexture9 ***/
+#define IDirect3DVolumeTexture9_SetLOD(p,a) (p)->lpVtbl->SetLOD(p,a)
+#define IDirect3DVolumeTexture9_GetLOD(p) (p)->lpVtbl->GetLOD(p)
+#define IDirect3DVolumeTexture9_GetLevelCount(p) (p)->lpVtbl->GetLevelCount(p)
+#define IDirect3DVolumeTexture9_SetAutoGenFilterType(p,a) (p)->lpVtbl->SetAutoGenFilterType(p,a)
+#define IDirect3DVolumeTexture9_GetAutoGenFilterType(p) (p)->lpVtbl->GetAutoGenFilterType(p)
+#define IDirect3DVolumeTexture9_GenerateMipSubLevels(p) (p)->lpVtbl->GenerateMipSubLevels(p)
+/*** IDirect3DVolumeTexture9 methods ***/
+#define IDirect3DVolumeTexture9_GetLevelDesc(p,a,b) (p)->lpVtbl->GetLevelDesc(p,a,b)
+#define IDirect3DVolumeTexture9_GetVolumeLevel(p,a,b) (p)->lpVtbl->GetVolumeLevel(p,a,b)
+#define IDirect3DVolumeTexture9_LockBox(p,a,b,c,d) (p)->lpVtbl->LockBox(p,a,b,c,d)
+#define IDirect3DVolumeTexture9_UnlockBox(p,a) (p)->lpVtbl->UnlockBox(p,a)
+#define IDirect3DVolumeTexture9_AddDirtyBox(p,a) (p)->lpVtbl->AddDirtyBox(p,a)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVolumeTexture9_QueryInterface(p,a,b) (p)->QueryInterface(a,b)
+#define IDirect3DVolumeTexture9_AddRef(p) (p)->AddRef()
+#define IDirect3DVolumeTexture9_Release(p) (p)->Release()
+/*** IDirect3DVolumeTexture9 methods: IDirect3DResource9 ***/
+#define IDirect3DVolumeTexture9_GetDevice(p,a) (p)->GetDevice(a)
+#define IDirect3DVolumeTexture9_SetPrivateData(p,a,b,c,d) (p)->SetPrivateData(a,b,c,d)
+#define IDirect3DVolumeTexture9_GetPrivateData(p,a,b,c) (p)->GetPrivateData(a,b,c)
+#define IDirect3DVolumeTexture9_FreePrivateData(p,a) (p)->FreePrivateData(a)
+#define IDirect3DVolumeTexture9_SetPriority(p,a) (p)->SetPriority(a)
+#define IDirect3DVolumeTexture9_GetPriority(p) (p)->GetPriority()
+#define IDirect3DVolumeTexture9_PreLoad(p) (p)->PreLoad()
+#define IDirect3DVolumeTexture9_GetType(p) (p)->GetType()
+/*** IDirect3DVolumeTexture9 methods: IDirect3DBaseTexture9 ***/
+#define IDirect3DVolumeTexture9_SetLOD(p,a) (p)->SetLOD(a)
+#define IDirect3DVolumeTexture9_GetLOD(p) (p)->GetLOD()
+#define IDirect3DVolumeTexture9_GetLevelCount(p) (p)->GetLevelCount()
+#define IDirect3DVolumeTexture9_SetAutoGenFilterType(p,a) (p)->SetAutoGenFilterType(a)
+#define IDirect3DVolumeTexture9_GetAutoGenFilterType(p) (p)->GetAutoGenFilterType()
+#define IDirect3DVolumeTexture9_GenerateMipSubLevels(p) (p)->GenerateMipSubLevels()
+/*** IDirect3DVolumeTexture9 methods ***/
+#define IDirect3DVolumeTexture9_GetLevelDesc(p,a,b) (p)->GetLevelDesc(a,b)
+#define IDirect3DVolumeTexture9_GetVolumeLevel(p,a,b) (p)->GetVolumeLevel(a,b)
+#define IDirect3DVolumeTexture9_LockBox(p,a,b,c,d) (p)->LockBox(a,b,c,d)
+#define IDirect3DVolumeTexture9_UnlockBox(p,a) (p)->UnlockBox(a)
+#define IDirect3DVolumeTexture9_AddDirtyBox(p,a) (p)->AddDirtyBox(a)
+#endif
+
+/*****************************************************************************
+ * IDirect3DVertexDeclaration9 interface
+ */
+#define INTERFACE IDirect3DVertexDeclaration9
+DECLARE_INTERFACE_(IDirect3DVertexDeclaration9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DVertexDeclaration9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(GetDeclaration)(THIS_ D3DVERTEXELEMENT9*, UINT* pNumElements) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVertexDeclaration9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVertexDeclaration9_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IDirect3DVertexDeclaration9_Release(p)             (p)->lpVtbl->Release(p)
+/*** IDirect3DVertexShader9 methods ***/
+#define IDirect3DVertexDeclaration9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVertexDeclaration9_GetDeclaration(p,a,b)  (p)->lpVtbl->GetDeclaration(p,a,b)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVertexDeclaration9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
+#define IDirect3DVertexDeclaration9_AddRef(p)              (p)->AddRef()
+#define IDirect3DVertexDeclaration9_Release(p)             (p)->Release()
+/*** IDirect3DVertexShader9 methods ***/
+#define IDirect3DVertexDeclaration9_GetDevice(p,a)         (p)->GetDevice(a)
+#define IDirect3DVertexDeclaration9_GetDeclaration(p,a,b)  (p)->GetDeclaration(a,b)
+#endif
+
+/*****************************************************************************
+ * IDirect3DVertexShader9 interface
+ */
+#define INTERFACE IDirect3DVertexShader9
+DECLARE_INTERFACE_(IDirect3DVertexShader9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DVertexShader9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(GetFunction)(THIS_ void*, UINT* pSizeOfData) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DVertexShader9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DVertexShader9_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IDirect3DVertexShader9_Release(p)             (p)->lpVtbl->Release(p)
+/*** IDirect3DVertexShader9 methods ***/
+#define IDirect3DVertexShader9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DVertexShader9_GetFunction(p,a,b)     (p)->lpVtbl->GetFunction(p,a,b)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DVertexShader9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
+#define IDirect3DVertexShader9_AddRef(p)              (p)->AddRef()
+#define IDirect3DVertexShader9_Release(p)             (p)->Release()
+/*** IDirect3DVertexShader9 methods ***/
+#define IDirect3DVertexShader9_GetDevice(p,a)         (p)->GetDevice(a)
+#define IDirect3DVertexShader9_GetFunction(p,a,b)     (p)->GetFunction(a,b)
+#endif
+
+/*****************************************************************************
+ * IDirect3DPixelShader9 interface
+ */
+#define INTERFACE IDirect3DPixelShader9
+DECLARE_INTERFACE_(IDirect3DPixelShader9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DPixelShader9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(GetFunction)(THIS_ void*, UINT* pSizeOfData) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DPixelShader9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DPixelShader9_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IDirect3DPixelShader9_Release(p)             (p)->lpVtbl->Release(p)
+/*** IDirect3DPixelShader9 methods ***/
+#define IDirect3DPixelShader9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DPixelShader9_GetFunction(p,a,b)     (p)->lpVtbl->GetFunction(p,a,b)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DPixelShader9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
+#define IDirect3DPixelShader9_AddRef(p)              (p)->AddRef()
+#define IDirect3DPixelShader9_Release(p)             (p)->Release()
+/*** IDirect3DPixelShader9 methods ***/
+#define IDirect3DPixelShader9_GetDevice(p,a)         (p)->GetDevice(a)
+#define IDirect3DPixelShader9_GetFunction(p,a,b)     (p)->GetFunction(a,b)
+#endif
+
+/*****************************************************************************
+ * IDirect3DStateBlock9 interface
+ */
+#define INTERFACE IDirect3DStateBlock9
+DECLARE_INTERFACE_(IDirect3DStateBlock9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DStateBlock9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD(Capture)(THIS) PURE;
+    STDMETHOD(Apply)(THIS) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DStateBlock9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DStateBlock9_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IDirect3DStateBlock9_Release(p)             (p)->lpVtbl->Release(p)
+/*** IDirect3DStateBlock9 methods ***/
+#define IDirect3DStateBlock9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DStateBlock9_Capture(p)             (p)->lpVtbl->Capture(p)
+#define IDirect3DStateBlock9_Apply(p)               (p)->lpVtbl->Apply(p)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DStateBlock9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
+#define IDirect3DStateBlock9_AddRef(p)              (p)->AddRef()
+#define IDirect3DStateBlock9_Release(p)             (p)->Release()
+/*** IDirect3DStateBlock9 methods ***/
+#define IDirect3DStateBlock9_GetDevice(p,a)         (p)->GetDevice(a)
+#define IDirect3DStateBlock9_Capture(p)             (p)->Capture()
+#define IDirect3DStateBlock9_Apply(p)               (p)->Apply()
+#endif
+
+/*****************************************************************************
+ * IDirect3DQuery9 interface
+ */
+#define INTERFACE IDirect3DQuery9
+DECLARE_INTERFACE_(IDirect3DQuery9,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IDirect3DQuery9 methods ***/
+    STDMETHOD(GetDevice)(THIS_ struct IDirect3DDevice9** ppDevice) PURE;
+    STDMETHOD_(D3DQUERYTYPE, GetType)(THIS) PURE;
+    STDMETHOD_(DWORD, GetDataSize)(THIS) PURE;
+    STDMETHOD(Issue)(THIS_ DWORD dwIssueFlags) PURE;
+    STDMETHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDirect3DQuery9_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDirect3DQuery9_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IDirect3DQuery9_Release(p) (p)->lpVtbl->Release(p)
+/*** IDirect3DQuery9 ***/
+#define IDirect3DQuery9_GetDevice(p,a) (p)->lpVtbl->GetDevice(p,a)
+#define IDirect3DQuery9_GetType(p) (p)->lpVtbl->GetType(p)
+#define IDirect3DQuery9_GetDataSize(p) (p)->lpVtbl->GetDataSize(p)
+#define IDirect3DQuery9_Issue(p,a) (p)->lpVtbl->Issue(p,a)
+#define IDirect3DQuery9_GetData(p,a,b,c) (p)->lpVtbl->GetData(p,a,b,c)
+#else
+/*** IUnknown methods ***/
+#define IDirect3DQuery9_QueryInterface(p,a,b) (p)->QueryInterface(a,b)
+#define IDirect3DQuery9_AddRef(p) (p)->AddRef()
+#define IDirect3DQuery9_Release(p) (p)->Release()
+/*** IDirect3DQuery9 ***/
+#define IDirect3DQuery9_GetDevice(p,a) (p)->GetDevice(a)
+#define IDirect3DQuery9_GetType(p) (p)->GetType()
+#define IDirect3DQuery9_GetDataSize(p) (p)->GetDataSize()
+#define IDirect3DQuery9_Issue(p,a) (p)->Issue(a)
+#define IDirect3DQuery9_GetData(p,a,b,c) (p)->GetData(a,b,c)
 #endif
 
 /*****************************************************************************
@@ -589,891 +1479,18 @@ DECLARE_INTERFACE_(IDirect3DDevice9,IUnknown)
 #define IDirect3DDevice9_CreateQuery(p,a,b)                            (p)->CreateQuery(a,b)
 #endif
 
-/*****************************************************************************
- * IDirect3DVolume9 interface
- */
-#define INTERFACE IDirect3DVolume9
-DECLARE_INTERFACE_(IDirect3DVolume9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DVolume9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD(GetContainer)(THIS_ REFIID riid, void** ppContainer) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DVOLUME_DESC* pDesc) PURE;
-    STDMETHOD(LockBox)(THIS_ D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags) PURE;
-    STDMETHOD(UnlockBox)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVolume9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVolume9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DVolume9_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DVolume9 methods ***/
-#define IDirect3DVolume9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVolume9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DVolume9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DVolume9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DVolume9_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
-#define IDirect3DVolume9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#define IDirect3DVolume9_LockBox(p,a,b,c)             (p)->lpVtbl->LockBox(p,a,b,c)
-#define IDirect3DVolume9_UnlockBox(p)                 (p)->lpVtbl->UnlockBox(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVolume9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DVolume9_AddRef(p)                    (p)->AddRef()
-#define IDirect3DVolume9_Release(p)                   (p)->Release()
-/*** IDirect3DVolume9 methods ***/
-#define IDirect3DVolume9_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DVolume9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DVolume9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DVolume9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DVolume9_GetContainer(p,a,b)          (p)->GetContainer(a,b)
-#define IDirect3DVolume9_GetDesc(p,a)                 (p)->GetDesc(a)
-#define IDirect3DVolume9_LockBox(p,a,b,c)             (p)->LockBox(a,b,c)
-#define IDirect3DVolume9_UnlockBox(p)                 (p)->UnlockBox()
-#endif
-
-/*****************************************************************************
- * IDirect3DSwapChain9 interface
- */
-#define INTERFACE IDirect3DSwapChain9
-DECLARE_INTERFACE_(IDirect3DSwapChain9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DSwapChain9 methods ***/
-    STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion, DWORD dwFlags) PURE;
-    STDMETHOD(GetFrontBufferData)(THIS_ IDirect3DSurface9* pDestSurface) PURE;
-    STDMETHOD(GetBackBuffer)(THIS_ UINT iBackBuffer, D3DBACKBUFFER_TYPE Type, IDirect3DSurface9** ppBackBuffer) PURE;
-    STDMETHOD(GetRasterStatus)(THIS_ D3DRASTER_STATUS* pRasterStatus) PURE;
-    STDMETHOD(GetDisplayMode)(THIS_ D3DDISPLAYMODE* pMode) PURE;
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(GetPresentParameters)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DSwapChain9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DSwapChain9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DSwapChain9_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DSwapChain9 methods ***/
-#define IDirect3DSwapChain9_Present(p,a,b,c,d,e)         (p)->lpVtbl->Present(p,a,b,c,d,e)
-#define IDirect3DSwapChain9_GetFrontBufferData(p,a)      (p)->lpVtbl->GetFrontBufferData(p,a)
-#define IDirect3DSwapChain9_GetBackBuffer(p,a,b,c)       (p)->lpVtbl->GetBackBuffer(p,a,b,c)
-#define IDirect3DSwapChain9_GetRasterStatus(p,a)         (p)->lpVtbl->GetRasterStatus(p,a)
-#define IDirect3DSwapChain9_GetDisplayMode(p,a)          (p)->lpVtbl->GetDisplayMode(p,a)
-#define IDirect3DSwapChain9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DSwapChain9_GetPresentParameters(p,a)    (p)->lpVtbl->GetPresentParameters(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DSwapChain9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DSwapChain9_AddRef(p)                    (p)->AddRef()
-#define IDirect3DSwapChain9_Release(p)                   (p)->Release()
-/*** IDirect3DSwapChain9 methods ***/
-#define IDirect3DSwapChain9_Present(p,a,b,c,d,e)         (p)->Present(a,b,c,d,e)
-#define IDirect3DSwapChain9_GetFrontBufferData(p,a)      (p)->GetFrontBufferData(a)
-#define IDirect3DSwapChain9_GetBackBuffer(p,a,b,c)       (p)->GetBackBuffer(a,b,c)
-#define IDirect3DSwapChain9_GetRasterStatus(p,a)         (p)->GetRasterStatus(a)
-#define IDirect3DSwapChain9_GetDisplayMode(p,a)          (p)->GetDisplayMode(a)
-#define IDirect3DSwapChain9_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DSwapChain9_GetPresentParameters(p,a)    (p)->GetPresentParameters(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DResource9 interface
- */
-#define INTERFACE IDirect3DResource9
-DECLARE_INTERFACE_(IDirect3DResource9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DResource9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DResource9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DResource9_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DResource9 methods ***/
-#define IDirect3DResource9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DResource9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DResource9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DResource9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DResource9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DResource9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DResource9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DResource9_GetType(p)                   (p)->lpVtbl->GetType(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DResource9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DResource9_AddRef(p)                    (p)->AddRef()
-#define IDirect3DResource9_Release(p)                   (p)->Release()
-/*** IDirect3DResource9 methods ***/
-#define IDirect3DResource9_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DResource9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DResource9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DResource9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DResource9_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DResource9_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DResource9_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DResource9_GetType(p)                   (p)->GetType()
-#endif
-
-/*****************************************************************************
- * IDirect3DSurface9 interface
- */
-#define INTERFACE IDirect3DSurface9
-DECLARE_INTERFACE_(IDirect3DSurface9,IDirect3DResource9)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-    /*** IDirect3DSurface9 methods ***/
-    STDMETHOD(GetContainer)(THIS_ REFIID riid, void** ppContainer) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DSURFACE_DESC* pDesc) PURE;
-    STDMETHOD(LockRect)(THIS_ D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) PURE;
-    STDMETHOD(UnlockRect)(THIS) PURE;
-    STDMETHOD(GetDC)(THIS_ HDC* phdc) PURE;
-    STDMETHOD(ReleaseDC)(THIS_ HDC hdc) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DSurface9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DSurface9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DSurface9_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DSurface9 methods: IDirect3DResource9 ***/
-#define IDirect3DSurface9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DSurface9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DSurface9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DSurface9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DSurface9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DSurface9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DSurface9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DSurface9_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DSurface9 methods ***/
-#define IDirect3DSurface9_GetContainer(p,a,b)          (p)->lpVtbl->GetContainer(p,a,b)
-#define IDirect3DSurface9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#define IDirect3DSurface9_LockRect(p,a,b,c)            (p)->lpVtbl->LockRect(p,a,b,c)
-#define IDirect3DSurface9_UnlockRect(p)                (p)->lpVtbl->UnlockRect(p)
-#define IDirect3DSurface9_GetDC(p,a)                   (p)->lpVtbl->GetDC(p,a)
-#define IDirect3DSurface9_ReleaseDC(p,a)               (p)->lpVtbl->ReleaseDC(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DSurface9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DSurface9_AddRef(p)                    (p)->AddRef()
-#define IDirect3DSurface9_Release(p)                   (p)->Release()
-/*** IDirect3DSurface9 methods: IDirect3DResource9 ***/
-#define IDirect3DSurface9_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DSurface9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DSurface9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DSurface9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DSurface9_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DSurface9_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DSurface9_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DSurface9_GetType(p)                   (p)->GetType()
-/*** IDirect3DSurface9 methods ***/
-#define IDirect3DSurface9_GetContainer(p,a,b)          (p)->GetContainer(a,b)
-#define IDirect3DSurface9_GetDesc(p,a)                 (p)->GetDesc(a)
-#define IDirect3DSurface9_LockRect(p,a,b,c)            (p)->LockRect(a,b,c)
-#define IDirect3DSurface9_UnlockRect(p)                (p)->UnlockRect()
-#define IDirect3DSurface9_GetDC(p,a)                   (p)->GetDC(a)
-#define IDirect3DSurface9_ReleaseDC(p,a)               (p)->ReleaseDC(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DVertexBuffer9 interface
- */
-#define INTERFACE IDirect3DVertexBuffer9
-DECLARE_INTERFACE_(IDirect3DVertexBuffer9,IDirect3DResource9)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-    /*** IDirect3DVertexBuffer9 methods ***/
-    STDMETHOD(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags) PURE;
-    STDMETHOD(Unlock)(THIS) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DVERTEXBUFFER_DESC* pDesc) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVertexBuffer9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVertexBuffer9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DVertexBuffer9_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DVertexBuffer9 methods: IDirect3DResource9 ***/
-#define IDirect3DVertexBuffer9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVertexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DVertexBuffer9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DVertexBuffer9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DVertexBuffer9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DVertexBuffer9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DVertexBuffer9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DVertexBuffer9_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DVertexBuffer9 methods ***/
-#define IDirect3DVertexBuffer9_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
-#define IDirect3DVertexBuffer9_Unlock(p)                    (p)->lpVtbl->Unlock(p)
-#define IDirect3DVertexBuffer9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVertexBuffer9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DVertexBuffer9_AddRef(p)                    (p)->AddRef()
-#define IDirect3DVertexBuffer9_Release(p)                   (p)->Release()
-/*** IDirect3DVertexBuffer9 methods: IDirect3DResource9 ***/
-#define IDirect3DVertexBuffer9_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DVertexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DVertexBuffer9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DVertexBuffer9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DVertexBuffer9_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DVertexBuffer9_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DVertexBuffer9_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DVertexBuffer9_GetType(p)                   (p)->GetType()
-/*** IDirect3DVertexBuffer9 methods ***/
-#define IDirect3DVertexBuffer9_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
-#define IDirect3DVertexBuffer9_Unlock(p)                    (p)->Unlock()
-#define IDirect3DVertexBuffer9_GetDesc(p,a)                 (p)->GetDesc(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DIndexBuffer9 interface
- */
-#define INTERFACE IDirect3DIndexBuffer9
-DECLARE_INTERFACE_(IDirect3DIndexBuffer9,IDirect3DResource9)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-    /*** IDirect3DIndexBuffer9 methods ***/
-    STDMETHOD(Lock)(THIS_ UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags) PURE;
-    STDMETHOD(Unlock)(THIS) PURE;
-    STDMETHOD(GetDesc)(THIS_ D3DINDEXBUFFER_DESC* pDesc) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DIndexBuffer9_QueryInterface(p,a,b)        (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DIndexBuffer9_AddRef(p)                    (p)->lpVtbl->AddRef(p)
-#define IDirect3DIndexBuffer9_Release(p)                   (p)->lpVtbl->Release(p)
-/*** IDirect3DIndexBuffer9 methods: IDirect3DResource9 ***/
-#define IDirect3DIndexBuffer9_GetDevice(p,a)               (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DIndexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DIndexBuffer9_GetPrivateData(p,a,b,c)      (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DIndexBuffer9_FreePrivateData(p,a)         (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DIndexBuffer9_SetPriority(p,a)             (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DIndexBuffer9_GetPriority(p)               (p)->lpVtbl->GetPriority(p)
-#define IDirect3DIndexBuffer9_PreLoad(p)                   (p)->lpVtbl->PreLoad(p)
-#define IDirect3DIndexBuffer9_GetType(p)                   (p)->lpVtbl->GetType(p)
-/*** IDirect3DIndexBuffer9 methods ***/
-#define IDirect3DIndexBuffer9_Lock(p,a,b,c,d)              (p)->lpVtbl->Lock(p,a,b,c,d)
-#define IDirect3DIndexBuffer9_Unlock(p)                    (p)->lpVtbl->Unlock(p)
-#define IDirect3DIndexBuffer9_GetDesc(p,a)                 (p)->lpVtbl->GetDesc(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DIndexBuffer9_QueryInterface(p,a,b)        (p)->QueryInterface(a,b)
-#define IDirect3DIndexBuffer9_AddRef(p)                    (p)->AddRef()
-#define IDirect3DIndexBuffer9_Release(p)                   (p)->Release()
-/*** IDirect3DIndexBuffer9 methods: IDirect3DResource9 ***/
-#define IDirect3DIndexBuffer9_GetDevice(p,a)               (p)->GetDevice(a)
-#define IDirect3DIndexBuffer9_SetPrivateData(p,a,b,c,d)    (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DIndexBuffer9_GetPrivateData(p,a,b,c)      (p)->GetPrivateData(a,b,c)
-#define IDirect3DIndexBuffer9_FreePrivateData(p,a)         (p)->FreePrivateData(a)
-#define IDirect3DIndexBuffer9_SetPriority(p,a)             (p)->SetPriority(a)
-#define IDirect3DIndexBuffer9_GetPriority(p)               (p)->GetPriority()
-#define IDirect3DIndexBuffer9_PreLoad(p)                   (p)->PreLoad()
-#define IDirect3DIndexBuffer9_GetType(p)                   (p)->GetType()
-/*** IDirect3DIndexBuffer9 methods ***/
-#define IDirect3DIndexBuffer9_Lock(p,a,b,c,d)              (p)->Lock(a,b,c,d)
-#define IDirect3DIndexBuffer9_Unlock(p)                    (p)->Unlock()
-#define IDirect3DIndexBuffer9_GetDesc(p,a)                 (p)->GetDesc(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DBaseTexture9 interface
- */
-#define INTERFACE IDirect3DBaseTexture9
-DECLARE_INTERFACE_(IDirect3DBaseTexture9,IDirect3DResource9)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture9 methods ***/
-    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
-    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
-    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
-    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
-    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DBaseTexture9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DBaseTexture9_AddRef(p)              (p)->lpVtbl->AddRef(p)
-#define IDirect3DBaseTexture9_Release(p)             (p)->lpVtbl->Release(p)
-/*** IDirect3DBaseTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DBaseTexture9_GetDevice(p,a)             (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DBaseTexture9_SetPrivateData(p,a,b,c,d)  (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DBaseTexture9_GetPrivateData(p,a,b,c)    (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DBaseTexture9_FreePrivateData(p,a)       (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DBaseTexture9_SetPriority(p,a)           (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DBaseTexture9_GetPriority(p)             (p)->lpVtbl->GetPriority(p)
-#define IDirect3DBaseTexture9_PreLoad(p)                 (p)->lpVtbl->PreLoad(p)
-#define IDirect3DBaseTexture9_GetType(p)                 (p)->lpVtbl->GetType(p)
-/*** IDirect3DBaseTexture9 methods ***/
-#define IDirect3DBaseTexture9_SetLOD(p,a)                (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DBaseTexture9_GetLOD(p)                  (p)->lpVtbl->GetLOD(p)
-#define IDirect3DBaseTexture9_GetLevelCount(p)           (p)->lpVtbl->GetLevelCount(p)
-#define IDirect3DBaseTexture9_SetAutoGenFilterType(p,a)  (p)->lpVtbl->SetAutoGenFilterType(p,a)
-#define IDirect3DBaseTexture9_GetAutoGenFilterType(p)    (p)->lpVtbl->GetAutoGenFilterType(p)
-#define IDirect3DBaseTexture9_GenerateMipSubLevels(p)    (p)->lpVtbl->GenerateMipSubLevels(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DBaseTexture9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
-#define IDirect3DBaseTexture9_AddRef(p)              (p)->AddRef()
-#define IDirect3DBaseTexture9_Release(p)             (p)->Release()
-/*** IDirect3DBaseTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DBaseTexture9_GetDevice(p,a)             (p)->GetDevice(a)
-#define IDirect3DBaseTexture9_SetPrivateData(p,a,b,c,d)  (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DBaseTexture9_GetPrivateData(p,a,b,c)    (p)->GetPrivateData(a,b,c)
-#define IDirect3DBaseTexture9_FreePrivateData(p,a)       (p)->FreePrivateData(a)
-#define IDirect3DBaseTexture9_SetPriority(p,a)           (p)->SetPriority(a)
-#define IDirect3DBaseTexture9_GetPriority(p)             (p)->GetPriority()
-#define IDirect3DBaseTexture9_PreLoad(p)                 (p)->PreLoad()
-#define IDirect3DBaseTexture9_GetType(p)                 (p)->GetType()
-/*** IDirect3DBaseTexture9 methods ***/
-#define IDirect3DBaseTexture9_SetLOD(p,a)                (p)->SetLOD(a)
-#define IDirect3DBaseTexture9_GetLOD(p)                  (p)->GetLOD()
-#define IDirect3DBaseTexture9_GetLevelCount(p)           (p)->GetLevelCount()
-#define IDirect3DBaseTexture9_SetAutoGenFilterType(p,a)  (p)->SetAutoGenFilterType(a)
-#define IDirect3DBaseTexture9_GetAutoGenFilterType(p)    (p)->GetAutoGenFilterType()
-#define IDirect3DBaseTexture9_GenerateMipSubLevels(p)    (p)->GenerateMipSubLevels()
-#endif
-
-/*****************************************************************************
- * IDirect3DCubeTexture9 interface
- */
-#define INTERFACE IDirect3DCubeTexture9
-DECLARE_INTERFACE_(IDirect3DCubeTexture9,IDirect3DBaseTexture9)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture9 methods ***/
-    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
-    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
-    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
-    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
-    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
-    /*** IDirect3DCubeTexture9 methods ***/
-    STDMETHOD(GetLevelDesc)(THIS_ UINT Level,D3DSURFACE_DESC* pDesc) PURE;
-    STDMETHOD(GetCubeMapSurface)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface) PURE;
-    STDMETHOD(LockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) PURE;
-    STDMETHOD(UnlockRect)(THIS_ D3DCUBEMAP_FACES FaceType, UINT Level) PURE;
-    STDMETHOD(AddDirtyRect)(THIS_ D3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DCubeTexture9_QueryInterface(p,a,b)       (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DCubeTexture9_AddRef(p)                   (p)->lpVtbl->AddRef(p)
-#define IDirect3DCubeTexture9_Release(p)                  (p)->lpVtbl->Release(p)
-/*** IDirect3DCubeTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DCubeTexture9_GetDevice(p,a)              (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DCubeTexture9_SetPrivateData(p,a,b,c,d)   (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DCubeTexture9_GetPrivateData(p,a,b,c)     (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DCubeTexture9_FreePrivateData(p,a)        (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DCubeTexture9_SetPriority(p,a)            (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DCubeTexture9_GetPriority(p)              (p)->lpVtbl->GetPriority(p)
-#define IDirect3DCubeTexture9_PreLoad(p)                  (p)->lpVtbl->PreLoad(p)
-#define IDirect3DCubeTexture9_GetType(p)                  (p)->lpVtbl->GetType(p)
-/*** IDirect3DCubeTexture9 methods: IDirect3DBaseTexture9 ***/
-#define IDirect3DCubeTexture9_SetLOD(p,a)                 (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DCubeTexture9_GetLOD(p)                   (p)->lpVtbl->GetLOD(p)
-#define IDirect3DCubeTexture9_GetLevelCount(p)            (p)->lpVtbl->GetLevelCount(p)
-#define IDirect3DCubeTexture9_SetAutoGenFilterType(p,a)   (p)->lpVtbl->SetAutoGenFilterType(p,a)
-#define IDirect3DCubeTexture9_GetAutoGenFilterType(p)     (p)->lpVtbl->GetAutoGenFilterType(p)
-#define IDirect3DCubeTexture9_GenerateMipSubLevels(p)     (p)->lpVtbl->GenerateMipSubLevels(p)
-/*** IDirect3DCubeTexture9 methods ***/
-#define IDirect3DCubeTexture9_GetLevelDesc(p,a,b)         (p)->lpVtbl->GetLevelDesc(p,a,b)
-#define IDirect3DCubeTexture9_GetCubeMapSurface(p,a,b,c)  (p)->lpVtbl->GetCubeMapSurface(p,a,b,c)
-#define IDirect3DCubeTexture9_LockRect(p,a,b,c,d,e)       (p)->lpVtbl->LockRect(p,a,b,c,d,e)
-#define IDirect3DCubeTexture9_UnlockRect(p,a,b)           (p)->lpVtbl->UnlockRect(p,a,b)
-#define IDirect3DCubeTexture9_AddDirtyRect(p,a,b)         (p)->lpVtbl->AddDirtyRect(p,a,b)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DCubeTexture9_QueryInterface(p,a,b)       (p)->QueryInterface(a,b)
-#define IDirect3DCubeTexture9_AddRef(p)                   (p)->AddRef()
-#define IDirect3DCubeTexture9_Release(p)                  (p)->Release()
-/*** IDirect3DCubeTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DCubeTexture9_GetDevice(p,a)              (p)->GetDevice(a)
-#define IDirect3DCubeTexture9_SetPrivateData(p,a,b,c,d)   (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DCubeTexture9_GetPrivateData(p,a,b,c)     (p)->GetPrivateData(a,b,c)
-#define IDirect3DCubeTexture9_FreePrivateData(p,a)        (p)->FreePrivateData(a)
-#define IDirect3DCubeTexture9_SetPriority(p,a)            (p)->SetPriority(a)
-#define IDirect3DCubeTexture9_GetPriority(p)              (p)->GetPriority()
-#define IDirect3DCubeTexture9_PreLoad(p)                  (p)->PreLoad()
-#define IDirect3DCubeTexture9_GetType(p)                  (p)->GetType()
-/*** IDirect3DCubeTexture9 methods: IDirect3DBaseTexture9 ***/
-#define IDirect3DCubeTexture9_SetLOD(p,a)                 (p)->SetLOD(a)
-#define IDirect3DCubeTexture9_GetLOD(p)                   (p)->GetLOD()
-#define IDirect3DCubeTexture9_GetLevelCount(p)            (p)->GetLevelCount()
-#define IDirect3DCubeTexture9_SetAutoGenFilterType(p,a)   (p)->SetAutoGenFilterType(a)
-#define IDirect3DCubeTexture9_GetAutoGenFilterType(p)     (p)->GetAutoGenFilterType()
-#define IDirect3DCubeTexture9_GenerateMipSubLevels(p)     (p)->GenerateMipSubLevels()
-/*** IDirect3DCubeTexture9 methods ***/
-#define IDirect3DCubeTexture9_GetLevelDesc(p,a,b)         (p)->GetLevelDesc(a,b)
-#define IDirect3DCubeTexture9_GetCubeMapSurface(p,a,b,c)  (p)->GetCubeMapSurface(a,b,c)
-#define IDirect3DCubeTexture9_LockRect(p,a,b,c,d,e)       (p)->LockRect(a,b,c,d,e)
-#define IDirect3DCubeTexture9_UnlockRect(p,a,b)           (p)->UnlockRect(a,b)
-#define IDirect3DCubeTexture9_AddDirtyRect(p,a,b)         (p)->AddDirtyRect(a,b)
-#endif
-
-/*****************************************************************************
- * IDirect3DTexture9 interface
- */
-#define INTERFACE IDirect3DTexture9
-DECLARE_INTERFACE_(IDirect3DTexture9,IDirect3DBaseTexture9)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture9 methods ***/
-    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
-    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
-    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
-    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
-    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
-    /*** IDirect3DTexture9 methods ***/
-    STDMETHOD(GetLevelDesc)(THIS_ UINT Level, D3DSURFACE_DESC* pDesc) PURE;
-    STDMETHOD(GetSurfaceLevel)(THIS_ UINT Level, IDirect3DSurface9** ppSurfaceLevel) PURE;
-    STDMETHOD(LockRect)(THIS_ UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) PURE;
-    STDMETHOD(UnlockRect)(THIS_ UINT Level) PURE;
-    STDMETHOD(AddDirtyRect)(THIS_ CONST RECT* pDirtyRect) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DTexture9_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DTexture9_AddRef(p)                  (p)->lpVtbl->AddRef(p)
-#define IDirect3DTexture9_Release(p)                 (p)->lpVtbl->Release(p)
-/*** IDirect3DTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DTexture9_GetDevice(p,a)             (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DTexture9_SetPrivateData(p,a,b,c,d)  (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DTexture9_GetPrivateData(p,a,b,c)    (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DTexture9_FreePrivateData(p,a)       (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DTexture9_SetPriority(p,a)           (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DTexture9_GetPriority(p)             (p)->lpVtbl->GetPriority(p)
-#define IDirect3DTexture9_PreLoad(p)                 (p)->lpVtbl->PreLoad(p)
-#define IDirect3DTexture9_GetType(p)                 (p)->lpVtbl->GetType(p)
-/*** IDirect3DTexture9 methods: IDirect3DBaseTexture9 ***/
-#define IDirect3DTexture9_SetLOD(p,a)                (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DTexture9_GetLOD(p)                  (p)->lpVtbl->GetLOD(p)
-#define IDirect3DTexture9_GetLevelCount(p)           (p)->lpVtbl->GetLevelCount(p)
-#define IDirect3DTexture9_SetAutoGenFilterType(p,a)  (p)->lpVtbl->SetAutoGenFilterType(p,a)
-#define IDirect3DTexture9_GetAutoGenFilterType(p)    (p)->lpVtbl->GetAutoGenFilterType(p)
-#define IDirect3DTexture9_GenerateMipSubLevels(p)    (p)->lpVtbl->GenerateMipSubLevels(p)
-/*** IDirect3DTexture9 methods ***/
-#define IDirect3DTexture9_GetLevelDesc(p,a,b)        (p)->lpVtbl->GetLevelDesc(p,a,b)
-#define IDirect3DTexture9_GetSurfaceLevel(p,a,b)     (p)->lpVtbl->GetSurfaceLevel(p,a,b)
-#define IDirect3DTexture9_LockRect(p,a,b,c,d)        (p)->lpVtbl->LockRect(p,a,b,c,d)
-#define IDirect3DTexture9_UnlockRect(p,a)            (p)->lpVtbl->UnlockRect(p,a)
-#define IDirect3DTexture9_AddDirtyRect(p,a)          (p)->lpVtbl->AddDirtyRect(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DTexture9_QueryInterface(p,a,b)      (p)->QueryInterface(a,b)
-#define IDirect3DTexture9_AddRef(p)                  (p)->AddRef()
-#define IDirect3DTexture9_Release(p)                 (p)->Release()
-/*** IDirect3DTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DTexture9_GetDevice(p,a)             (p)->GetDevice(a)
-#define IDirect3DTexture9_SetPrivateData(p,a,b,c,d)  (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DTexture9_GetPrivateData(p,a,b,c)    (p)->GetPrivateData(a,b,c)
-#define IDirect3DTexture9_FreePrivateData(p,a)       (p)->FreePrivateData(a)
-#define IDirect3DTexture9_SetPriority(p,a)           (p)->SetPriority(a)
-#define IDirect3DTexture9_GetPriority(p)             (p)->GetPriority()
-#define IDirect3DTexture9_PreLoad(p)                 (p)->PreLoad()
-#define IDirect3DTexture9_GetType(p)                 (p)->GetType()
-/*** IDirect3DTexture9 methods: IDirect3DBaseTexture9 ***/
-#define IDirect3DTexture9_SetLOD(p,a)                (p)->SetLOD(a)
-#define IDirect3DTexture9_GetLOD(p)                  (p)->GetLOD()
-#define IDirect3DTexture9_GetLevelCount(p)           (p)->GetLevelCount()
-#define IDirect3DTexture9_SetAutoGenFilterType(p,a)  (p)->SetAutoGenFilterType(a)
-#define IDirect3DTexture9_GetAutoGenFilterType(p)    (p)->GetAutoGenFilterType()
-#define IDirect3DTexture9_GenerateMipSubLevels(p)    (p)->GenerateMipSubLevels()
-/*** IDirect3DTexture9 methods ***/
-#define IDirect3DTexture9_GetLevelDesc(p,a,b)        (p)->GetLevelDesc(a,b)
-#define IDirect3DTexture9_GetSurfaceLevel(p,a,b)     (p)->GetSurfaceLevel(a,b)
-#define IDirect3DTexture9_LockRect(p,a,b,c,d)        (p)->LockRect(a,b,c,d)
-#define IDirect3DTexture9_UnlockRect(p,a)            (p)->UnlockRect(a)
-#define IDirect3DTexture9_AddDirtyRect(p,a)          (p)->AddDirtyRect(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DVolumeTexture9 interface
- */
-#define INTERFACE IDirect3DVolumeTexture9
-DECLARE_INTERFACE_(IDirect3DVolumeTexture9,IDirect3DBaseTexture9)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DResource9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(SetPrivateData)(THIS_ REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) PURE;
-    STDMETHOD(GetPrivateData)(THIS_ REFGUID refguid, void* pData, DWORD* pSizeOfData) PURE;
-    STDMETHOD(FreePrivateData)(THIS_ REFGUID refguid) PURE;
-    STDMETHOD_(DWORD, SetPriority)(THIS_ DWORD PriorityNew) PURE;
-    STDMETHOD_(DWORD, GetPriority)(THIS) PURE;
-    STDMETHOD_(void, PreLoad)(THIS) PURE;
-    STDMETHOD_(D3DRESOURCETYPE, GetType)(THIS) PURE;
-    /*** IDirect3DBaseTexture9 methods ***/
-    STDMETHOD_(DWORD, SetLOD)(THIS_ DWORD LODNew) PURE;
-    STDMETHOD_(DWORD, GetLOD)(THIS) PURE;
-    STDMETHOD_(DWORD, GetLevelCount)(THIS) PURE;
-    STDMETHOD(SetAutoGenFilterType)(THIS_ D3DTEXTUREFILTERTYPE FilterType) PURE;
-    STDMETHOD_(D3DTEXTUREFILTERTYPE, GetAutoGenFilterType)(THIS) PURE;
-    STDMETHOD_(void, GenerateMipSubLevels)(THIS) PURE;
-    /*** IDirect3DVolumeTexture9 methods ***/
-    STDMETHOD(GetLevelDesc)(THIS_ UINT Level, D3DVOLUME_DESC *pDesc) PURE;
-    STDMETHOD(GetVolumeLevel)(THIS_ UINT Level, IDirect3DVolume9** ppVolumeLevel) PURE;
-    STDMETHOD(LockBox)(THIS_ UINT Level, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags) PURE;
-    STDMETHOD(UnlockBox)(THIS_ UINT Level) PURE;
-    STDMETHOD(AddDirtyBox)(THIS_ CONST D3DBOX* pDirtyBox) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVolumeTexture9_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVolumeTexture9_AddRef(p) (p)->lpVtbl->AddRef(p)
-#define IDirect3DVolumeTexture9_Release(p) (p)->lpVtbl->Release(p)
-/*** IDirect3DVolumeTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DVolumeTexture9_GetDevice(p,a) (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVolumeTexture9_SetPrivateData(p,a,b,c,d) (p)->lpVtbl->SetPrivateData(p,a,b,c,d)
-#define IDirect3DVolumeTexture9_GetPrivateData(p,a,b,c) (p)->lpVtbl->GetPrivateData(p,a,b,c)
-#define IDirect3DVolumeTexture9_FreePrivateData(p,a) (p)->lpVtbl->FreePrivateData(p,a)
-#define IDirect3DVolumeTexture9_SetPriority(p,a) (p)->lpVtbl->SetPriority(p,a)
-#define IDirect3DVolumeTexture9_GetPriority(p) (p)->lpVtbl->GetPriority(p)
-#define IDirect3DVolumeTexture9_PreLoad(p) (p)->lpVtbl->PreLoad(p)
-#define IDirect3DVolumeTexture9_GetType(p) (p)->lpVtbl->GetType(p)
-/*** IDirect3DVolumeTexture9 methods: IDirect3DBaseTexture9 ***/
-#define IDirect3DVolumeTexture9_SetLOD(p,a) (p)->lpVtbl->SetLOD(p,a)
-#define IDirect3DVolumeTexture9_GetLOD(p) (p)->lpVtbl->GetLOD(p)
-#define IDirect3DVolumeTexture9_GetLevelCount(p) (p)->lpVtbl->GetLevelCount(p)
-#define IDirect3DVolumeTexture9_SetAutoGenFilterType(p,a) (p)->lpVtbl->SetAutoGenFilterType(p,a)
-#define IDirect3DVolumeTexture9_GetAutoGenFilterType(p) (p)->lpVtbl->GetAutoGenFilterType(p)
-#define IDirect3DVolumeTexture9_GenerateMipSubLevels(p) (p)->lpVtbl->GenerateMipSubLevels(p)
-/*** IDirect3DVolumeTexture9 methods ***/
-#define IDirect3DVolumeTexture9_GetLevelDesc(p,a,b) (p)->lpVtbl->GetLevelDesc(p,a,b)
-#define IDirect3DVolumeTexture9_GetVolumeLevel(p,a,b) (p)->lpVtbl->GetVolumeLevel(p,a,b)
-#define IDirect3DVolumeTexture9_LockBox(p,a,b,c,d) (p)->lpVtbl->LockBox(p,a,b,c,d)
-#define IDirect3DVolumeTexture9_UnlockBox(p,a) (p)->lpVtbl->UnlockBox(p,a)
-#define IDirect3DVolumeTexture9_AddDirtyBox(p,a) (p)->lpVtbl->AddDirtyBox(p,a)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVolumeTexture9_QueryInterface(p,a,b) (p)->QueryInterface(a,b)
-#define IDirect3DVolumeTexture9_AddRef(p) (p)->AddRef()
-#define IDirect3DVolumeTexture9_Release(p) (p)->Release()
-/*** IDirect3DVolumeTexture9 methods: IDirect3DResource9 ***/
-#define IDirect3DVolumeTexture9_GetDevice(p,a) (p)->GetDevice(a)
-#define IDirect3DVolumeTexture9_SetPrivateData(p,a,b,c,d) (p)->SetPrivateData(a,b,c,d)
-#define IDirect3DVolumeTexture9_GetPrivateData(p,a,b,c) (p)->GetPrivateData(a,b,c)
-#define IDirect3DVolumeTexture9_FreePrivateData(p,a) (p)->FreePrivateData(a)
-#define IDirect3DVolumeTexture9_SetPriority(p,a) (p)->SetPriority(a)
-#define IDirect3DVolumeTexture9_GetPriority(p) (p)->GetPriority()
-#define IDirect3DVolumeTexture9_PreLoad(p) (p)->PreLoad()
-#define IDirect3DVolumeTexture9_GetType(p) (p)->GetType()
-/*** IDirect3DVolumeTexture9 methods: IDirect3DBaseTexture9 ***/
-#define IDirect3DVolumeTexture9_SetLOD(p,a) (p)->SetLOD(a)
-#define IDirect3DVolumeTexture9_GetLOD(p) (p)->GetLOD()
-#define IDirect3DVolumeTexture9_GetLevelCount(p) (p)->GetLevelCount()
-#define IDirect3DVolumeTexture9_SetAutoGenFilterType(p,a) (p)->SetAutoGenFilterType(a)
-#define IDirect3DVolumeTexture9_GetAutoGenFilterType(p) (p)->GetAutoGenFilterType()
-#define IDirect3DVolumeTexture9_GenerateMipSubLevels(p) (p)->GenerateMipSubLevels()
-/*** IDirect3DVolumeTexture9 methods ***/
-#define IDirect3DVolumeTexture9_GetLevelDesc(p,a,b) (p)->GetLevelDesc(a,b)
-#define IDirect3DVolumeTexture9_GetVolumeLevel(p,a,b) (p)->GetVolumeLevel(a,b)
-#define IDirect3DVolumeTexture9_LockBox(p,a,b,c,d) (p)->LockBox(a,b,c,d)
-#define IDirect3DVolumeTexture9_UnlockBox(p,a) (p)->UnlockBox(a)
-#define IDirect3DVolumeTexture9_AddDirtyBox(p,a) (p)->AddDirtyBox(a)
-#endif
-
-/*****************************************************************************
- * IDirect3DVertexDeclaration9 interface
- */
-#define INTERFACE IDirect3DVertexDeclaration9
-DECLARE_INTERFACE_(IDirect3DVertexDeclaration9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DVertexDeclaration9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(GetDeclaration)(THIS_ D3DVERTEXELEMENT9*, UINT* pNumElements) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVertexDeclaration9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVertexDeclaration9_AddRef(p)              (p)->lpVtbl->AddRef(p)
-#define IDirect3DVertexDeclaration9_Release(p)             (p)->lpVtbl->Release(p)
-/*** IDirect3DVertexShader9 methods ***/
-#define IDirect3DVertexDeclaration9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVertexDeclaration9_GetDeclaration(p,a,b)  (p)->lpVtbl->GetDeclaration(p,a,b)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVertexDeclaration9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
-#define IDirect3DVertexDeclaration9_AddRef(p)              (p)->AddRef()
-#define IDirect3DVertexDeclaration9_Release(p)             (p)->Release()
-/*** IDirect3DVertexShader9 methods ***/
-#define IDirect3DVertexDeclaration9_GetDevice(p,a)         (p)->GetDevice(a)
-#define IDirect3DVertexDeclaration9_GetDeclaration(p,a,b)  (p)->GetDeclaration(a,b)
-#endif
-
-/*****************************************************************************
- * IDirect3DVertexShader9 interface
- */
-#define INTERFACE IDirect3DVertexShader9
-DECLARE_INTERFACE_(IDirect3DVertexShader9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DVertexShader9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(GetFunction)(THIS_ void*, UINT* pSizeOfData) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DVertexShader9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DVertexShader9_AddRef(p)              (p)->lpVtbl->AddRef(p)
-#define IDirect3DVertexShader9_Release(p)             (p)->lpVtbl->Release(p)
-/*** IDirect3DVertexShader9 methods ***/
-#define IDirect3DVertexShader9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DVertexShader9_GetFunction(p,a,b)     (p)->lpVtbl->GetFunction(p,a,b)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DVertexShader9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
-#define IDirect3DVertexShader9_AddRef(p)              (p)->AddRef()
-#define IDirect3DVertexShader9_Release(p)             (p)->Release()
-/*** IDirect3DVertexShader9 methods ***/
-#define IDirect3DVertexShader9_GetDevice(p,a)         (p)->GetDevice(a)
-#define IDirect3DVertexShader9_GetFunction(p,a,b)     (p)->GetFunction(a,b)
-#endif
-
-/*****************************************************************************
- * IDirect3DPixelShader9 interface
- */
-#define INTERFACE IDirect3DPixelShader9
-DECLARE_INTERFACE_(IDirect3DPixelShader9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DPixelShader9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(GetFunction)(THIS_ void*, UINT* pSizeOfData) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DPixelShader9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DPixelShader9_AddRef(p)              (p)->lpVtbl->AddRef(p)
-#define IDirect3DPixelShader9_Release(p)             (p)->lpVtbl->Release(p)
-/*** IDirect3DPixelShader9 methods ***/
-#define IDirect3DPixelShader9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DPixelShader9_GetFunction(p,a,b)     (p)->lpVtbl->GetFunction(p,a,b)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DPixelShader9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
-#define IDirect3DPixelShader9_AddRef(p)              (p)->AddRef()
-#define IDirect3DPixelShader9_Release(p)             (p)->Release()
-/*** IDirect3DPixelShader9 methods ***/
-#define IDirect3DPixelShader9_GetDevice(p,a)         (p)->GetDevice(a)
-#define IDirect3DPixelShader9_GetFunction(p,a,b)     (p)->GetFunction(a,b)
-#endif
-
-/*****************************************************************************
- * IDirect3DStateBlock9 interface
- */
-#define INTERFACE IDirect3DStateBlock9
-DECLARE_INTERFACE_(IDirect3DStateBlock9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DStateBlock9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD(Capture)(THIS) PURE;
-    STDMETHOD(Apply)(THIS) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DStateBlock9_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DStateBlock9_AddRef(p)              (p)->lpVtbl->AddRef(p)
-#define IDirect3DStateBlock9_Release(p)             (p)->lpVtbl->Release(p)
-/*** IDirect3DStateBlock9 methods ***/
-#define IDirect3DStateBlock9_GetDevice(p,a)         (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DStateBlock9_Capture(p)             (p)->lpVtbl->Capture(p)
-#define IDirect3DStateBlock9_Apply(p)               (p)->lpVtbl->Apply(p)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DStateBlock9_QueryInterface(p,a,b)  (p)->QueryInterface(a,b)
-#define IDirect3DStateBlock9_AddRef(p)              (p)->AddRef()
-#define IDirect3DStateBlock9_Release(p)             (p)->Release()
-/*** IDirect3DStateBlock9 methods ***/
-#define IDirect3DStateBlock9_GetDevice(p,a)         (p)->GetDevice(a)
-#define IDirect3DStateBlock9_Capture(p)             (p)->Capture()
-#define IDirect3DStateBlock9_Apply(p)               (p)->Apply()
-#endif
-
-/*****************************************************************************
- * IDirect3DQuery9 interface
- */
-#define INTERFACE IDirect3DQuery9
-DECLARE_INTERFACE_(IDirect3DQuery9,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IDirect3DQuery9 methods ***/
-    STDMETHOD(GetDevice)(THIS_ IDirect3DDevice9** ppDevice) PURE;
-    STDMETHOD_(D3DQUERYTYPE, GetType)(THIS) PURE;
-    STDMETHOD_(DWORD, GetDataSize)(THIS) PURE;
-    STDMETHOD(Issue)(THIS_ DWORD dwIssueFlags) PURE;
-    STDMETHOD(GetData)(THIS_ void* pData, DWORD dwSize, DWORD dwGetDataFlags) PURE;
-};
-#undef INTERFACE
-
-#if !defined(__cplusplus) || defined(CINTERFACE)
-/*** IUnknown methods ***/
-#define IDirect3DQuery9_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
-#define IDirect3DQuery9_AddRef(p) (p)->lpVtbl->AddRef(p)
-#define IDirect3DQuery9_Release(p) (p)->lpVtbl->Release(p)
-/*** IDirect3DQuery9 ***/
-#define IDirect3DQuery9_GetDevice(p,a) (p)->lpVtbl->GetDevice(p,a)
-#define IDirect3DQuery9_GetType(p) (p)->lpVtbl->GetType(p)
-#define IDirect3DQuery9_GetDataSize(p) (p)->lpVtbl->GetDataSize(p)
-#define IDirect3DQuery9_Issue(p,a) (p)->lpVtbl->Issue(p,a)
-#define IDirect3DQuery9_GetData(p,a,b,c) (p)->lpVtbl->GetData(p,a,b,c)
-#else
-/*** IUnknown methods ***/
-#define IDirect3DQuery9_QueryInterface(p,a,b) (p)->QueryInterface(a,b)
-#define IDirect3DQuery9_AddRef(p) (p)->AddRef()
-#define IDirect3DQuery9_Release(p) (p)->Release()
-/*** IDirect3DQuery9 ***/
-#define IDirect3DQuery9_GetDevice(p,a) (p)->GetDevice(a)
-#define IDirect3DQuery9_GetType(p) (p)->GetType()
-#define IDirect3DQuery9_GetDataSize(p) (p)->GetDataSize()
-#define IDirect3DQuery9_Issue(p,a) (p)->Issue(a)
-#define IDirect3DQuery9_GetData(p,a,b,c) (p)->GetData(a,b,c)
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif  /* defined(__cplusplus) */
+
+int         WINAPI D3DPERF_BeginEvent(D3DCOLOR,LPCWSTR);
+int         WINAPI D3DPERF_EndEvent(void);
+DWORD       WINAPI D3DPERF_GetStatus(void);
+BOOL        WINAPI D3DPERF_QueryRepeatFrame(void);
+void        WINAPI D3DPERF_SetMarker(D3DCOLOR,LPCWSTR);
+void        WINAPI D3DPERF_SetOptions(DWORD);
+void        WINAPI D3DPERF_SetRegion(D3DCOLOR,LPCWSTR);
 
 /* Define the main entrypoint as well */
 IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion);

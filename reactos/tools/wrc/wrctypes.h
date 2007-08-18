@@ -22,6 +22,7 @@
 #define __WRC_WRCTYPES_H
 
 #include <stdarg.h>
+#include <typedefs64.h>
 #include "windef.h"
 #include "winbase.h"
 

@@ -54,8 +54,6 @@
 #define GDI_OBJECT_TYPE_METAFILE    0x00260000
 #define GDI_OBJECT_TYPE_ENHMETAFILE 0x00460000
 /* Following object types made up for ROS */
-#define GDI_OBJECT_TYPE_ENHMETADC   0x00740000
-#define GDI_OBJECT_TYPE_MEMDC       0x00750000
 #define GDI_OBJECT_TYPE_DONTCARE    0x007f0000
 /** Not really an object type. Forces GDI_FreeObj to be silent. */
 #define GDI_OBJECT_TYPE_SILENT      0x80000000
@@ -216,8 +214,10 @@ typedef struct _DC_ATTR
     LONG lIcmMode;
     HANDLE hcmXform;
     HCOLORSPACE hColorSpace;
+    FLONG flIcmFlags;
     INT IcmBrushColor;
     INT IcmPenColor;
+    PVOID pvLIcm;
     FLONG flTextAlign;
     LONG lTextAlign;
     LONG lTextExtra;
@@ -228,6 +228,10 @@ typedef struct _DC_ATTR
     MATRIX_S mxWorldToDevice;
     MATRIX_S mxDevicetoWorld;
     MATRIX_S mxWorldToPage;
+    EFLOAT_S efM11PtoD;
+    EFLOAT_S efM22PtoD;
+    EFLOAT_S efDxPtoD;
+    EFLOAT_S efDyPtoD;
     INT iMapMode;
     DWORD dwLayout;
     LONG lWindowOrgx;
@@ -238,6 +242,7 @@ typedef struct _DC_ATTR
     FLONG flXform;
     SIZEL szlVirtualDevicePixel;
     SIZEL szlVirtualDeviceMm;
+    SIZEL szlVirtualDeviceSize;
     POINTL ptlBrushOrigin;
     RGNATTR VisRectRegion;
 } DC_ATTR, *PDC_ATTR;

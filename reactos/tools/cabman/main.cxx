@@ -10,6 +10,7 @@
  *   CSH 15/08-2003 Made it portable
  *   CF  04/05-2007 Reformatted the code to be more consistent and use TABs instead of spaces
  *   CF  04/05-2007 Made it compatible with 64-bit operating systems
+ *   CF  18/08-2007 Use typedefs64.h and the Windows types for compatibility with 64-bit operating systems
  */
 #include <stdlib.h>
 #include <stdarg.h>
@@ -20,9 +21,9 @@
 
 #ifdef DBG
 
-uint32_t DebugTraceLevel = MIN_TRACE;
-//uint32_t DebugTraceLevel = MID_TRACE;
-//uint32_t DebugTraceLevel = MAX_TRACE;
+ULONG DebugTraceLevel = MIN_TRACE;
+//ULONG DebugTraceLevel = MID_TRACE;
+//ULONG DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
@@ -30,7 +31,7 @@ uint32_t DebugTraceLevel = MIN_TRACE;
 #define CM_VERSION  "0.9"
 
 
-char* Pad(char* Str, char PadChar, unsigned int Length)
+char* Pad(char* Str, char PadChar, ULONG Length)
 /*
  * FUNCTION: Pads a string with a character to make a given length
  * ARGUMENTS:
@@ -43,9 +44,9 @@ char* Pad(char* Str, char PadChar, unsigned int Length)
  *     Str must be at least Length + 1 bytes
  */
 {
-	unsigned int Len;
+	ULONG Len;
 
-	Len = (uint32_t)strlen(Str);
+	Len = (ULONG)strlen(Str);
 
 	if (Len < Length)
 	{
@@ -56,7 +57,7 @@ char* Pad(char* Str, char PadChar, unsigned int Length)
 }
 
 
-char* Date2Str(char* Str, uint16_t Date)
+char* Date2Str(char* Str, USHORT Date)
 /*
  * FUNCTION: Converts a DOS style date to a string
  * ARGUMENTS:
@@ -66,7 +67,7 @@ char* Date2Str(char* Str, uint16_t Date)
  *     Pointer to string
  */
 {
-	uint32_t dw;
+	ULONG dw;
 
 	/* Month */
 	Str[0] = (char)('0' + ((Date & 0x01E0) >> 5) / 10);
@@ -87,7 +88,7 @@ char* Date2Str(char* Str, uint16_t Date)
 }
 
 
-char* Time2Str(char* Str, uint16_t Time)
+char* Time2Str(char* Str, USHORT Time)
 /*
  * FUNCTION: Converts a DOS style time to a string
  * ARGUMENTS:
@@ -98,8 +99,8 @@ char* Time2Str(char* Str, uint16_t Time)
  */
 {
 	bool PM;
-	uint32_t Hour;
-	uint32_t dw;
+	ULONG Hour;
+	ULONG dw;
 
 	Hour = ((Time & 0xF800) >> 11);
 	PM = (Hour >= 12);
@@ -127,7 +128,7 @@ char* Time2Str(char* Str, uint16_t Time)
 }
 
 
-char* Attr2Str(char* Str, uint16_t Attr)
+char* Attr2Str(char* Str, USHORT Attr)
 /*
  * FUNCTION: Converts attributes to a string
  * ARGUMENTS:
@@ -365,7 +366,7 @@ bool CCABManager::CreateCabinet()
  * FUNCTION: Create cabinet
  */
 {
-	uint32_t Status;
+	ULONG Status;
 
 	Status = Load((char*)&FileName);
 	if (Status != CAB_STATUS_SUCCESS)
@@ -385,19 +386,19 @@ bool CCABManager::CreateSimpleCabinet()
  * FUNCTION: Create cabinet
  */
 {
-	uint32_t Status;
+	ULONG Status;
 
 	Status = NewCabinet();
 	if (Status != CAB_STATUS_SUCCESS)
 	{
-		DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (unsigned int)Status));
+		DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (ULONG)Status));
 		return false;
 	}
 
 	Status = AddFile(FileName);
 	if (Status != CAB_STATUS_SUCCESS)
 	{
-		DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%d).\n", (unsigned int)Status));
+		DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%d).\n", (ULONG)Status));
 		return false;
 	}
 
@@ -406,7 +407,7 @@ bool CCABManager::CreateSimpleCabinet()
 		Status = CloseDisk();
 	if (Status != CAB_STATUS_SUCCESS)
 	{
-		DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (unsigned int)Status));
+		DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (ULONG)Status));
 		return false;
 	}
 
@@ -423,8 +424,8 @@ bool CCABManager::DisplayCabinet()
 {
 	CAB_SEARCH Search;
 	char Str[20];
-	uint32_t FileCount = 0;
-	uint32_t ByteCount = 0;
+	ULONG FileCount = 0;
+	ULONG ByteCount = 0;
 
 	if (Open() == CAB_STATUS_SUCCESS)
 	{
@@ -486,7 +487,7 @@ bool CCABManager::ExtractFromCabinet()
  */
 {
 	CAB_SEARCH Search;
-	uint32_t Status;
+	ULONG Status;
 
 	if (Open() == CAB_STATUS_SUCCESS)
 	{
@@ -513,7 +514,7 @@ bool CCABManager::ExtractFromCabinet()
 						return false;
 
 					default:
-						printf("Unspecified error code (%d).\n", (unsigned int)Status);
+						printf("Unspecified error code (%d).\n", (ULONG)Status);
 						return false;
 				}
 			} while (FindNext(&Search) == CAB_STATUS_SUCCESS);

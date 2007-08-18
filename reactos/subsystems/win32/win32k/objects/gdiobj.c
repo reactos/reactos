@@ -84,8 +84,6 @@ GDI_OBJ_INFO ObjInfo[] =
   {GDI_OBJECT_TYPE_METADC,      sizeof(DC),             GDI_CleanupDummy},
   {GDI_OBJECT_TYPE_METAFILE,    sizeof(DC),            GDI_CleanupDummy},
   {GDI_OBJECT_TYPE_ENHMETAFILE, 0,                     GDI_CleanupDummy},
-  {GDI_OBJECT_TYPE_ENHMETADC,   0,                     GDI_CleanupDummy},
-  {GDI_OBJECT_TYPE_MEMDC,       0,                     GDI_CleanupDummy},
   {GDI_OBJECT_TYPE_EMF,         0,                     GDI_CleanupDummy}
 };
 

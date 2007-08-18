@@ -1232,6 +1232,7 @@ STDCALL
 NtUserLoadKeyboardLayoutEx( 
    IN HANDLE Handle,
    IN DWORD offTable,
+   IN PUNICODE_STRING puszKeyboardName,
    IN HKL hKL,
    IN PUNICODE_STRING puszKLID,
    IN DWORD dwKLID,

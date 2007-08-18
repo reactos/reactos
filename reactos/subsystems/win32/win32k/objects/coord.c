@@ -924,57 +924,5 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   return TRUE;
 }
 
-BOOL
-STDCALL
-NtGdiSetWorldTransform(HDC  hDC,
-                      CONST LPXFORM  XForm)
-{
-  PDC  dc;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  dc = DC_LockDc (hDC);
-  if ( !dc )
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return  FALSE;
-  }
-
-  if (!XForm)
-  {
-    DC_UnlockDc(dc);
-    /* Win doesn't set LastError */
-    return  FALSE;
-  }
-
-  /* Check that graphics mode is GM_ADVANCED */
-  if ( dc->Dc_Attr.iGraphicsMode != GM_ADVANCED )
-  {
-    DC_UnlockDc(dc);
-    return  FALSE;
-  }
-
-  _SEH_TRY
-  {
-    ProbeForRead(XForm,
-                 sizeof(XFORM),
-                 1);
-    dc->w.xformWorld2Wnd = *XForm;
-  }
-  _SEH_HANDLE
-  {
-    Status = _SEH_GetExceptionCode();
-  }
-  _SEH_END;
-
-  if(!NT_SUCCESS(Status))
-  {
-    DC_UnlockDc(dc);
-    return FALSE;
-  }
-
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
-  return  TRUE;
-}
 
 /* EOF */

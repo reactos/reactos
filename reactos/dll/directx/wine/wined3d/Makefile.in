@@ -1,0 +1,42 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = wined3d.dll
+IMPORTLIB = libwined3d.$(IMPLIBEXT)
+IMPORTS   = user32 gdi32 advapi32 kernel32
+EXTRALIBS = -luuid
+
+C_SRCS = \
+	arb_program_shader.c \
+	baseshader.c \
+	basetexture.c \
+	clipper.c \
+	context.c \
+	cubetexture.c \
+	device.c \
+	directx.c \
+	drawprim.c \
+	glsl_shader.c \
+	indexbuffer.c \
+	palette.c \
+	pixelshader.c \
+	query.c \
+	resource.c \
+	state.c \
+	stateblock.c \
+	surface.c \
+	surface_gdi.c \
+	swapchain.c \
+	texture.c \
+	utils.c \
+	vertexbuffer.c \
+	vertexdeclaration.c \
+	vertexshader.c \
+	volume.c \
+	volumetexture.c \
+	wined3d_main.c
+
+@MAKE_DLL_RULES@
+
+@DEPENDENCIES@  # everything below this line is overwritten by make depend

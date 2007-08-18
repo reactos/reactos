@@ -32,10 +32,6 @@ WMC_OBJECTS = \
 
 WMC_HOST_CFLAGS = -I$(WMC_BASE) $(TOOLS_CFLAGS) \
                   -D__USE_W32API -DWINE_UNICODE_API= -I$(UNICODE_BASE) \
-                  -DDWORD="unsigned int" -DDWORD_DEFINED \
-                  -DLONG="int" -DULONG="unsigned int" \
-                  -DPULONG="unsigned int *" -DLONG_DEFINED \
-                  -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
                   -Iinclude/reactos/wine -Iinclude/reactos -Iinclude -Iinclude/psdk
 
 WMC_HOST_LFLAGS = $(TOOLS_LFLAGS)

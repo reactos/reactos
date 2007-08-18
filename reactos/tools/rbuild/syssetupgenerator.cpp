@@ -36,7 +36,7 @@ void
 SysSetupGenerator::Generate ()
 {
 	HINF inf;
-	unsigned long errorLine;
+	ULONG errorLine;
 
 	string syssetupTemplate = "media" + sSep + "inf" + sSep + "syssetup.inf.tpl";
 	string syssetup = Environment::GetOutputPath() + sSep + "media" + sSep + "inf" + sSep + "syssetup.inf";

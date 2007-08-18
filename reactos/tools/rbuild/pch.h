@@ -34,6 +34,14 @@
 #endif//MAX_PATH
 #else
 #include <unistd.h>
+
+typedef char CHAR, *PCHAR;
+typedef unsigned char UCHAR, *PUCHAR;
+typedef void VOID, *PVOID;
+typedef UCHAR BOOLEAN, *PBOOLEAN;
+#include <typedefs64.h>
+typedef LONG *PLONG;
+
 #endif//WIN32
 
 #include <stdarg.h>

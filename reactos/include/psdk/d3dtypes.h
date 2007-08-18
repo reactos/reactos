@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* FIXME: Need to add C++ code for certain structs for headers - this is going to be a problem
@@ -151,19 +151,19 @@ typedef struct _D3DCOLORVALUE {
         union {
                 D3DVALUE r;
                 D3DVALUE dvR;
-        };
+        } DUMMYUNIONNAME1;
         union {
                 D3DVALUE g;
                 D3DVALUE dvG;
-        };
+        } DUMMYUNIONNAME2;
         union {
                 D3DVALUE b;
                 D3DVALUE dvB;
-        };
+        } DUMMYUNIONNAME3;
         union {
                 D3DVALUE a;
                 D3DVALUE dvA;
-        };
+        } DUMMYUNIONNAME4;
 } D3DCOLORVALUE,*LPD3DCOLORVALUE;
 
 typedef struct _D3DRECT {
