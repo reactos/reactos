@@ -277,6 +277,7 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E975-E325-11CE-BFC1-08002BE10318}"));
 
 			SendDlgItemMessage(hwndDlg, IDC_COMPONENTSLIST, LB_SETCURSEL, 0, 0);
+			SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_COMPONENTSLIST, LBN_SELCHANGE), 0);
 		}
 		break;
 	case WM_COMMAND:
@@ -805,4 +806,5 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 
 	return TRUE;
 }
+
 
