@@ -122,6 +122,8 @@ typedef void* __ptr64 PVOID64;
 #define _WCHAR_T_DEFINED
 #ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
 #define _WCHAR_T_DECLARED
+#ifndef _WCHAR_T               /* for Mac OS X */
+#define _WCHAR_T
 #ifndef _WCHAR_T_
 #define _WCHAR_T_
 #undef __need_wchar_t
