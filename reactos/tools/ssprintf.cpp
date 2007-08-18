@@ -28,10 +28,13 @@
 #include <ctype.h>
 #define _finite __finite
 #define _isnan __isnan
+
+#ifndef __APPLE__
 inline int iswdigit ( wchar_t c )
 {
 	return ( c >= L'0' && c <= L'9' );
 }
+#endif
 #endif//WIN32
 
 #if defined(__FreeBSD__) || defined(__APPLE__)
