@@ -16,11 +16,14 @@
 #include <time.h>
 #include <typedefs64.h>
 typedef unsigned short USHORT, *PUSHORT;
-#define _W64
 #include <unistd.h>
 #ifndef MAX_PATH
 #define MAX_PATH 260
 #endif
+#endif
+
+#ifndef _W64
+#define _W64
 #endif
 
 #include <stdlib.h>
