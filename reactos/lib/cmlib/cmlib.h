@@ -10,6 +10,7 @@
 
 //#define WIN32_NO_STATUS
 #include <ntddk.h>
+#include <wchar.h>
 #include "hivedata.h"
 #include "cmdata.h"
 
