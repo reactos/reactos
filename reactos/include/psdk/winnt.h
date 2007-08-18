@@ -133,6 +133,7 @@ typedef unsigned short wchar_t;
 #endif
 #endif
 #endif
+#endif
 
 #ifdef __cplusplus
 # define EXTERN_C    extern "C"
