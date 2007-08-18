@@ -50,6 +50,23 @@ extern "C" {
 #include <basetsd.h>
 #include <guiddef.h>
 
+#ifndef _WCHAR_T_DEFINED
+#define _WCHAR_T_DEFINED
+#ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
+#define _WCHAR_T_DECLARED
+#ifndef _WCHAR_T               /* for Mac OS X */
+#define _WCHAR_T
+#ifndef _WCHAR_T_
+#define _WCHAR_T_
+#undef __need_wchar_t
+#ifndef __cplusplus
+typedef unsigned short wchar_t;
+#endif
+#endif
+#endif
+#endif
+#endif
+
 #include <ctype.h>
 #include <winerror.h>
 #include <stddef.h>
@@ -117,23 +134,6 @@ typedef void *PVOID,*LPVOID;
 #define __ptr64
 #endif
 typedef void* __ptr64 PVOID64;
-
-#ifndef _WCHAR_T_DEFINED
-#define _WCHAR_T_DEFINED
-#ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
-#define _WCHAR_T_DECLARED
-#ifndef _WCHAR_T               /* for Mac OS X */
-#define _WCHAR_T
-#ifndef _WCHAR_T_
-#define _WCHAR_T_
-#undef __need_wchar_t
-#ifndef __cplusplus
-typedef unsigned short wchar_t;
-#endif
-#endif
-#endif
-#endif
-#endif
 
 #ifdef __cplusplus
 # define EXTERN_C    extern "C"
