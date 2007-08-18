@@ -352,6 +352,7 @@
 #include "config.h"
 #include "wine/port.h"
 
+#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -362,7 +363,6 @@
 #include <alloca.h>
 #endif
 
-#include "wrc.h"
 #include "utils.h"
 #include "newstruc.h"
 #include "dumpres.h"

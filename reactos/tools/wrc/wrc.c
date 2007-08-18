@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -34,7 +35,6 @@
 # include <getopt.h>
 #endif
 
-#include "wrc.h"
 #include "utils.h"
 #include "readres.h"
 #include "dumpres.h"

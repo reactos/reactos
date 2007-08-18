@@ -720,6 +720,7 @@ char *yytext;
 
 /*#define LEX_DEBUG*/
 
+#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -727,7 +728,6 @@ char *yytext;
 #include <assert.h>
 
 #include "wine/unicode.h"
-#include "wrc.h"
 #include "utils.h"
 #include "parser.h"
 #include "newstruc.h"
