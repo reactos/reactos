@@ -1266,8 +1266,8 @@ typedef struct _EX_RUNDOWN_REF
 {
     union
     {
-        __volatile ULONG_PTR Count;
-        __volatile PVOID Ptr;
+        volatile ULONG_PTR Count;
+        volatile PVOID Ptr;
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
@@ -1362,7 +1362,7 @@ typedef struct _IRP {
   ULONG  Flags;
   union {
     struct _IRP  *MasterIrp;
-    __volatile LONG  IrpCount;
+    volatile LONG  IrpCount;
     PVOID  SystemBuffer;
   } AssociatedIrp;
   LIST_ENTRY  ThreadListEntry;
@@ -1384,7 +1384,7 @@ typedef struct _IRP {
     } AsynchronousParameters;
     LARGE_INTEGER  AllocationSize;
   } Overlay;
-  __volatile PDRIVER_CANCEL  CancelRoutine;
+  volatile PDRIVER_CANCEL  CancelRoutine;
   PVOID  UserBuffer;
   union {
     struct {
@@ -2187,7 +2187,7 @@ typedef struct _DEVICE_OBJECT {
   PIO_TIMER  Timer;
   ULONG  Flags;
   ULONG  Characteristics;
-  __volatile PVPB  Vpb;
+  volatile PVPB  Vpb;
   PVOID  DeviceExtension;
   DEVICE_TYPE  DeviceType;
   CCHAR  StackSize;
@@ -3147,8 +3147,8 @@ typedef struct _ERESOURCE {
   POWNER_ENTRY  OwnerTable;
   SHORT  ActiveCount;
   USHORT  Flag;
-  __volatile PKSEMAPHORE  SharedWaiters;
-  __volatile PKEVENT  ExclusiveWaiters;
+  volatile PKSEMAPHORE  SharedWaiters;
+  volatile PKEVENT  ExclusiveWaiters;
   OWNER_ENTRY  OwnerThreads[2];
   ULONG  ContentionCount;
   USHORT  NumberOfSharedWaiters;
@@ -3479,15 +3479,15 @@ typedef struct _FILE_OBJECT
     ULONG Flags;
     UNICODE_STRING FileName;
     LARGE_INTEGER CurrentByteOffset;
-    __volatile ULONG Waiters;
-    __volatile ULONG Busy;
+    volatile ULONG Waiters;
+    volatile ULONG Busy;
     PVOID LastLock;
     KEVENT Lock;
     KEVENT Event;
-    __volatile PIO_COMPLETION_CONTEXT CompletionContext;
+    volatile PIO_COMPLETION_CONTEXT CompletionContext;
     KSPIN_LOCK IrpListLock;
     LIST_ENTRY IrpList;
-    __volatile PVOID FileObjectExtension;
+    volatile PVOID FileObjectExtension;
 } FILE_OBJECT;
 typedef struct _FILE_OBJECT *PFILE_OBJECT;
 
@@ -4467,7 +4467,7 @@ typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK * PIO_REMOVE_LOCK_TRACKING_BLOCK;
 typedef struct _IO_REMOVE_LOCK_COMMON_BLOCK {
   BOOLEAN  Removed;
   BOOLEAN  Reserved[3];
-  __volatile LONG  IoCount;
+  volatile LONG  IoCount;
   KEVENT  RemoveEvent;
 } IO_REMOVE_LOCK_COMMON_BLOCK;
 
@@ -4478,7 +4478,7 @@ typedef struct _IO_REMOVE_LOCK_DBG_BLOCK {
   LONG  AllocateTag;
   LIST_ENTRY  LockList;
   KSPIN_LOCK  Spin;
-  __volatile LONG  LowMemoryCount;
+  volatile LONG  LowMemoryCount;
   ULONG  Reserved1[4];
   PVOID  Reserved2;
   PIO_REMOVE_LOCK_TRACKING_BLOCK  Blocks;
@@ -4651,7 +4651,7 @@ typedef VOID
 typedef struct _WORK_QUEUE_ITEM {
   LIST_ENTRY  List;
   PWORKER_THREAD_ROUTINE  WorkerRoutine;
-  __volatile PVOID  Parameter;
+  volatile PVOID  Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
 
 typedef enum _KBUGCHECK_CALLBACK_REASON {

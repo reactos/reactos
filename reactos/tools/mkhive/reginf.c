@@ -262,7 +262,7 @@ do_reg_operation(HKEY KeyHandle,
 	      if (Str == NULL)
 		return FALSE;
 
-	      InfHostGetMultiSzField (Context, 5, Str, Size, NULL);
+	      InfHostGetMultiSzField (Context, 5, Str, (ULONG)Size, NULL);
 	    }
 
 	  if (Flags & FLG_ADDREG_APPEND)
@@ -291,7 +291,7 @@ do_reg_operation(HKEY KeyHandle,
 	      if (Str == NULL)
 		return FALSE;
 
-	      InfHostGetStringField (Context, 5, Str, Size, NULL);
+	      InfHostGetStringField (Context, 5, Str, (ULONG)Size, NULL);
 	    }
 	}
 
@@ -347,7 +347,7 @@ do_reg_operation(HKEY KeyHandle,
 	    return FALSE;
 
 	  DPRINT("setting binary data %s len %lu\n", ValueName, Size);
-	  InfHostGetBinaryField (Context, 5, Data, Size, NULL);
+	  InfHostGetBinaryField (Context, 5, Data, (ULONG)Size, NULL);
 	}
 
       RegSetValueExA (KeyHandle,
@@ -396,7 +396,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 
       /* get key */
       Length = strlen (Buffer);
-      if (InfHostGetStringField (Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL) != 0)
+      if (InfHostGetStringField (Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - (ULONG)Length, NULL) != 0)
 	*Buffer = 0;
 
       DPRINT("KeyName: <%s>\n", Buffer);

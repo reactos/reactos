@@ -133,7 +133,7 @@ RegpOpenOrCreateKey(
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
 		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!wcsncmp(LocalKeyName, L"CurrentControlSet", 17) &&
+		if (!memcmp(LocalKeyName, L"CurrentControlSet", 34) &&
                     ParentKey->NameSize == 12 &&
                     !memcmp(ParentKey->Name, L"SYSTEM", 12))
 			RtlInitUnicodeString(&KeyString, L"ControlSet001");
@@ -624,7 +624,7 @@ RegInitializeRegistry(VOID)
 {
 	UNICODE_STRING RootKeyName = RTL_CONSTANT_STRING(L"\\");
 	NTSTATUS Status;
-	HKEY ControlSetKey, LinkKey;
+	HKEY ControlSetKey;
 
 	InitializeListHead(&CmiHiveListHead);
 
