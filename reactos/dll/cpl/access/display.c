@@ -1,12 +1,13 @@
-/*
- * PROJECT:         ReactOS System Control Panel
+/* $Id$
+ *
+ * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/display.c
- * PURPOSE:         Memory, start-up and profiles settings
+ * PURPOSE:         Display-related accessibility settings
  * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
- * UPDATE HISTORY:
- *      03-04-2004  Created
+ *                  Copyright 2007 Eric Kohl
  */
+
 #include <windows.h>
 #include <stdlib.h>
 #include <commctrl.h>

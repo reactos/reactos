@@ -1,19 +1,17 @@
 /* $Id$
  *
- * PROJECT:         ReactOS System Control Panel
+ * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            lib/cpl/system/sysdm.c
- * PURPOSE:         ReactOS System Control Panel
+ * FILE:            dll/cpl/access/access.c
+ * PURPOSE:         Main control panel code
  * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
- * UPDATE HISTORY:
- *      03-04-2004  Created
+ *                  Copyright 2007 Eric Kohl
  */
+
 #include <windows.h>
 #include <commctrl.h>
 #include <cpl.h>
-
 #include <stdlib.h>
-
 #include "resource.h"
 #include "access.h"
 
