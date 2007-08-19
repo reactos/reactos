@@ -52,11 +52,13 @@ extern "C" {
 
 /* wchar_t checks
  * First check if wchar_t has already been defined by any host/OS */
-#ifndef _WCHAR_T_DEFINED
 #ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
+#define _WCHAR_T_DECLARED
 #ifndef _WCHAR_T               /* for Mac OS X */
+#define _WCHAR_T
 #ifndef _WCHAR_T_
-#undef __need_wchar_t
+#define _WCHAR_T_
+#ifndef _WCHAR_T_DEFINED       /* If you want to override the wchar_t setting, define this */
 #ifndef __cplusplus
   typedef unsigned short wchar_t;
 #endif
@@ -65,25 +67,14 @@ extern "C" {
 #endif
 #endif
 
-/* Now report that it has been defined to all known hosts/operating systems */
+/* Set _WCHAR_T_DEFINED for the case that this is checked later */
 #ifndef _WCHAR_T_DEFINED
 #define _WCHAR_T_DEFINED
 #endif
 
-#ifndef _WCHAR_T_DECLARED
-#define _WCHAR_T_DECLARED
-#endif
-
-#ifndef _WCHAR_T
-#define _WCHAR_T
-#endif
-
-#ifndef _WCHAR_T_
-#define _WCHAR_T_
-#endif
-
-
 #include <ctype.h>
+#undef __need_wchar_t
+
 #include <winerror.h>
 #include <stddef.h>
 #include <sdkddkver.h>
