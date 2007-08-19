@@ -62,7 +62,7 @@ KdbpPrintDisasm(void* Ignored, const char* fmt, ...)
 
   va_start(ap, fmt);
   ret = vsprintf(buffer, fmt, ap);
-  DbgPrint(buffer);
+  DbgPrint("%s", buffer);
   va_end(ap);
   return(ret);
 }
