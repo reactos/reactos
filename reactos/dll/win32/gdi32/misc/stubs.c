@@ -3371,9 +3371,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
 ULONG * STDCALL
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return XlateObj->pulXlate;
 }
 
 /*
