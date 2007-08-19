@@ -2766,11 +2766,26 @@ EngFillPath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,BRUSHOBJ *pbo,POINTL *pptlBru
  * @unimplemented
  */
 PVOID STDCALL
-EngFindResource(HANDLE h,int iName,int iType,PULONG pulSize)
+EngFindResource(HANDLE h,
+                int iName,
+                int iType,
+                PULONG pulSize)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+ HRSRC HRSrc;
+ DWORD Size;
+ HGLOBAL Hg;
+ LPVOID Lock;
+
+ if (!(HRSrc = FindResourceW( (HMODULE) h,
+                       MAKEINTRESOURCEW(iName),
+                       MAKEINTRESOURCEW(iType)
+                          ))) 
+                               return NULL;
+ if (!(Size = SizeofResource( (HMODULE) h, HRSrc ))) return NULL; 
+ if (!(Hg   = LoadResource(   (HMODULE) h, HRSrc ))) return NULL;
+ Lock = LockResource( Hg );
+ pulSize = (PULONG) Size;
+ return (PVOID) Lock;
 }
 
 /*
@@ -2779,8 +2794,7 @@ EngFindResource(HANDLE h,int iName,int iType,PULONG pulSize)
 VOID STDCALL 
 EngFreeModule(HANDLE h)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  LdrUnloadDll(h);
 }
 
 /*
@@ -2790,8 +2804,8 @@ VOID STDCALL
 EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
 		      OUT PUSHORT AnsiCodePage)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   OemCodePage  = (PUSHORT) GetOEMCP();
+   AnsiCodePage = (PUSHORT) GetACP();
 }
 
 /*
@@ -2852,9 +2866,7 @@ EngLineTo(SURFOBJ *Surface,
 HANDLE STDCALL 
 EngLoadModule(LPWSTR pwsz)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
 }
 
 
