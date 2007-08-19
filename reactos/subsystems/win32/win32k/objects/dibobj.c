@@ -324,20 +324,27 @@ NtGdiSetDIBits(
   return Ret;
 }
 
-INT STDCALL
-NtGdiSetDIBitsToDevice(
-	HDC  hDC,
-	INT  XDest,
-	INT  YDest,
-	DWORD  Width,
-	DWORD  Height,
-	INT  XSrc,
-	INT  YSrc,
-	UINT  StartScan,
-	UINT  ScanLines,
-	CONST VOID  *Bits,
-	CONST BITMAPINFO  *bmi,
-	UINT  ColorUse)
+W32KAPI
+INT
+APIENTRY
+NtGdiSetDIBitsToDeviceInternal(
+    IN HDC hDC,
+    IN INT XDest,
+    IN INT YDest,
+    IN DWORD Width,
+    IN DWORD Height,
+    IN INT XSrc,
+    IN INT YSrc,
+    IN DWORD StartScan,
+    IN DWORD ScanLines,
+    IN LPBYTE Bits,
+    IN LPBITMAPINFO bmi,
+    IN DWORD ColorUse,
+    IN UINT cjMaxBits,
+    IN UINT cjMaxInfo,
+    IN BOOL bTransformCoordinates,
+    IN OPTIONAL HANDLE hcmXform
+)
 {
   UNIMPLEMENTED;
   return 0;
@@ -591,7 +598,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
    if(Usage == DIB_PAL_COLORS)
    {
       hPal = NtGdiGetCurrentObject(hDC, OBJ_PAL);
-      hPal = NtGdiSelectPalette(hdcMem, hPal, FALSE);
+      hPal = NtUserSelectPalette(hdcMem, hPal, FALSE);
    }
 
    if (BitsInfo->bmiHeader.biCompression == BI_RLE4 ||
@@ -622,7 +629,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
                       SrcWidth, SrcHeight, ROP, 0);
 
    if(hPal)
-      NtGdiSelectPalette(hdcMem, hPal, FALSE);
+      NtUserSelectPalette(hdcMem, hPal, FALSE);
 
    NtGdiSelectObject(hdcMem, hOldBitmap);
    NtGdiDeleteObjectApp(hdcMem);

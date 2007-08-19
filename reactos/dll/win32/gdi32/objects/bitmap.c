@@ -110,3 +110,37 @@ CreateDiscardableBitmap(
 {
    return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
 }
+
+
+INT WINAPI
+SetDIBitsToDevice(
+    HDC hDC,
+    int XDest,
+    int YDest,
+    DWORD Width,
+    DWORD Height,
+    int XSrc,
+    int YSrc,
+    UINT StartScan,
+    UINT ScanLines,
+    CONST VOID *Bits,
+    CONST BITMAPINFO *lpbmi,
+    UINT ColorUse)
+{
+    return NtGdiSetDIBitsToDeviceInternal(hDC,
+                                          XDest,
+                                          YDest,
+                                          Width,
+                                          Height,
+                                          XSrc,
+                                          YSrc,
+                                          StartScan,
+                                          ScanLines,
+                                          (LPBYTE)Bits,
+                                          (LPBITMAPINFO)lpbmi,
+                                          ColorUse,
+                                          lpbmi->bmiHeader.biSizeImage,
+                                          lpbmi->bmiHeader.biSize,
+                                          FALSE,
+                                          NULL);
+}

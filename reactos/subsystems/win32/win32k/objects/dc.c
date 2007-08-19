@@ -1461,7 +1461,7 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
         NtGdiSetBkColor( hDC, dcs->Dc_Attr.crBackgroundClr);
         NtGdiSetTextColor( hDC, dcs->Dc_Attr.crForegroundClr);
 
-        NtGdiSelectPalette( hDC, dcs->w.hPalette, FALSE );
+        NtUserSelectPalette( hDC, dcs->w.hPalette, FALSE );
 
 #if 0
         GDISelectPalette16( hDC, dcs->w.hPalette, FALSE );

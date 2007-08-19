@@ -918,3 +918,17 @@ GetWindowOrgEx(
   return NtGdiGetDCPoint( hdc, GdiGetWindowOrg, lpPoint );
 }
 
+/* FIXME: include correct header */
+HPALETTE STDCALL NtUserSelectPalette(HDC  hDC,
+                            HPALETTE  hpal,
+                            BOOL  ForceBackground);
+
+HPALETTE
+STDCALL
+SelectPalette(
+    HDC hDC,
+    HPALETTE hPal,
+    BOOL bForceBackground)
+{
+    return NtUserSelectPalette(hDC, hPal, bForceBackground);
+}

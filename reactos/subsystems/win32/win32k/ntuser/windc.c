@@ -1006,5 +1006,62 @@ NtUserChangeDisplaySettings(
    return Ret;
 }
 
+/*!
+ * Select logical palette into device context.
+ * \param	hDC 				handle to the device context
+ * \param	hpal				handle to the palette
+ * \param	ForceBackground 	If this value is FALSE the logical palette will be copied to the device palette only when the applicatioon
+ * 								is in the foreground. If this value is TRUE then map the colors in the logical palette to the device
+ * 								palette colors in the best way.
+ * \return	old palette
+ *
+ * \todo	implement ForceBackground == TRUE
+*/
+HPALETTE STDCALL NtUserSelectPalette(HDC  hDC,
+                            HPALETTE  hpal,
+                            BOOL  ForceBackground)
+{
+  PDC dc;
+  HPALETTE oldPal = NULL;
+  PPALGDI PalGDI;
+
+  // FIXME: mark the palette as a [fore\back]ground pal
+  dc = DC_LockDc(hDC);
+  if (NULL != dc)
+    {
+      /* Check if this is a valid palette handle */
+      PalGDI = PALETTE_LockPalette(hpal);
+      if (NULL != PalGDI)
+	{
+          /* Is this a valid palette for this depth? */
+          if ((dc->w.bitsPerPixel <= 8 && PAL_INDEXED == PalGDI->Mode)
+              || (8 < dc->w.bitsPerPixel && PAL_INDEXED != PalGDI->Mode))
+            {
+              PALETTE_UnlockPalette(PalGDI);
+              oldPal = dc->w.hPalette;
+              dc->w.hPalette = hpal;
+            }
+          else if (8 < dc->w.bitsPerPixel && PAL_INDEXED == PalGDI->Mode)
+            {
+              PALETTE_UnlockPalette(PalGDI);
+              oldPal = dc->PalIndexed;
+              dc->PalIndexed = hpal;
+            }
+          else
+            {
+              PALETTE_UnlockPalette(PalGDI);
+              oldPal = NULL;
+            }
+	}
+      else
+	{
+	  oldPal = NULL;
+	}
+      DC_UnlockDc(dc);
+    }
+
+  return oldPal;
+}
+
 
 /* EOF */

@@ -277,7 +277,7 @@ NtGdiSetBrushOrg                                 4
 NtGdiSetColorAdjustment                          2
 NtGdiSetColorSpace                               2
 NtGdiSetDeviceGammaRamp                          2
-# NtGdiSetDIBitsToDeviceInternal                  16
+NtGdiSetDIBitsToDeviceInternal                  16
 # NtGdiSetFontEnumeration                          1
 # NtGdiSetFontXform                                3
 NtGdiSetIcmMode                                  3
@@ -507,7 +507,7 @@ NtUserResolveDesktopForWOW                       1
 NtUserSBGetParms                                 4
 NtUserScrollDC                                   7
 NtUserScrollWindowEx                             8
-# NtUserSelectPalette                              3
+NtUserSelectPalette                              3
 NtUserSendInput                                  3
 NtUserSetActiveWindow                            1
 # NtUserSetAppImeLevel                             2
@@ -692,12 +692,10 @@ NtUserValidateHandleSecure              1
 #
 #ReactOS specify syscall 
 NtGdiSelectObject                       2
-NtGdiSelectPalette                      3
 NtGdiSetBkColor                         2
 NtGdiSetBkMode                          2
 NtGdiSetDIBColorTable                   4
 NtGdiSetDIBits                          7
-NtGdiSetDIBitsToDevice                  12
 NtGdiSetEnhMetaFileBits                 2
 NtGdiSetGraphicsMode                    2
 NtGdiSetICMProfile                      2
