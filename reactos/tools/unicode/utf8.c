@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
-
 #include "wine/unicode.h"
+#include <string.h>
 
 /* number of following bytes in sequence based on first byte value (for bytes above 0x7f) */
 static const char utf8_length[128] =

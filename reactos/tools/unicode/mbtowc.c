@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
-
 #include "wine/unicode.h"
+#include <string.h>
 
 /* get the decomposition of a Unicode char */
 static int get_decomposition( WCHAR src, WCHAR *dst, unsigned int dstlen )
