@@ -251,9 +251,6 @@ VBEInitialize(PVOID HwDeviceExtension)
          VBEDeviceExtension->VbeInfo.Version & 0xFF,
          VBEDeviceExtension->VbeInfo.TotalMemory * 64);
 
-
-
-
 #ifdef VBE12_SUPPORT
       if (VBEDeviceExtension->VbeInfo.Version < 0x102)
 #else
@@ -298,16 +295,14 @@ VBEInitialize(PVOID HwDeviceExtension)
          break;
    }
 
- 
-
    /*
     * Allocate space for video modes information.
     */
 
    VBEDeviceExtension->ModeInfo =
-      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, (ModeCount + 1) * sizeof(VBE_MODEINFO), TAG_VBE);
+      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, ModeCount * sizeof(VBE_MODEINFO), TAG_VBE);
    VBEDeviceExtension->ModeNumbers =
-      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, (ModeCount+ 1) * sizeof(USHORT), TAG_VBE);
+      VideoPortAllocatePool(HwDeviceExtension, VpPagedPool, ModeCount * sizeof(USHORT), TAG_VBE);
 
    /*
     * Get the actual mode infos.
@@ -355,72 +350,27 @@ VBEInitialize(PVOID HwDeviceExtension)
       {
          if (VbeModeInfo->ModeAttributes & VBE_MODEATTR_LINEAR)
          {
-            VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp | 0x4000;
-            SuitableModeCount++;
+            /* Bit 15 14 13 12 | 11 10 9 8 | 7 6 5 4 | 3 2 1 0 */
+             // if (ModeTemp & 0x4000)
+             //{
+                VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp | 0x4000;
+                SuitableModeCount++;
+             //}
          }
 #ifdef VBE12_SUPPORT
          else
          {   
-            /* FIXME when PCI bus scanner are inplace we need add ModeTemp | 0x4000 
-             * for we will map the memory our self and do not use bankswitch          */
-
-            if (VBEDeviceExtension->VbeInfo.Version < 0x200)
-            {
-                VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp;
-                SuitableModeCount++;
-            }
+            VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp;
+            SuitableModeCount++;
          }
 #endif
       }
    }
 
 
-#ifdef VBE12_SUPPORT
-   if (VBEDeviceExtension->VbeInfo.Version < 0x200)
-   {
-          /* FIXME add PCI bus scanner to detect the video ram phy address */
-   }
-   else
-#endif
-   if (VBEDeviceExtension->VbeInfo.Version >= 0x200)
-   {
-
-        /* Call VBE BIOS to read the mode info.for the special mode */
-        VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
-        BiosRegisters.Eax = VBE_GET_MODE_INFORMATION;
-        BiosRegisters.Ecx = 0x81FF;
-        BiosRegisters.Edi = VBEDeviceExtension->TrampolineMemoryOffset + 0x200;
-        BiosRegisters.SegEs = VBEDeviceExtension->TrampolineMemorySegment;
-        VBEDeviceExtension->Int10Interface.Int10CallBios(
-        VBEDeviceExtension->Int10Interface.Context,
-        &BiosRegisters);
-
-        VBEDeviceExtension->ModeNumbers[SuitableModeCount] = 0;
-
-        if (BiosRegisters.Eax == VBE_SUCCESS)
-        {
-                /* transfer the special mode data to protected memory */
-                VBEDeviceExtension->Int10Interface.Int10ReadMemory(
-                    VBEDeviceExtension->Int10Interface.Context,
-                    VBEDeviceExtension->TrampolineMemorySegment,
-                    VBEDeviceExtension->TrampolineMemoryOffset + 0x200,
-                    VBEDeviceExtension->ModeInfo + SuitableModeCount,
-                    sizeof(VBE_MODEINFO));
-        
-                VBEDeviceExtension->ModeNumbers[SuitableModeCount] = 0x81FF;
-                /* Do not add special mode to the list */
-                //SuitableModeCount++;
-
-                /* to gain full phy memory 
-                *  VBEDeviceExtension->ModeNumbers[SuitableModeCount].PhysBasePtr
-                *  VBEDeviceExtension->VbeInfo.TotalMemory * 64 = x Memory on the card in Kbyte
-                */
-        }
-   }
-
-
    if (SuitableModeCount == 0)
    {
+
       VideoPortDebugPrint(Warn, "VBEMP: No video modes supported\n");
       return FALSE;
    }
@@ -446,9 +396,6 @@ VBEInitialize(PVOID HwDeviceExtension)
          VBEDeviceExtension->ModeInfo[CurrentMode].YResolution,
          VBEDeviceExtension->ModeInfo[CurrentMode].BitsPerPixel);
    }
-
-
-
 
    /*
     * Enumerate our children.
@@ -873,14 +820,11 @@ VBEMapVideoMemory(
 #ifdef VBE12_SUPPORT
    else
    {
-       // when pci bus scanner are in place we remove this one 
       FrameBuffer.QuadPart = 0xA0000;
       MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
       MapInformation->VideoRamLength = 0x10000;
    }
-#endif   
-
-
+#endif
 
    VideoPortMapMemory(DeviceExtension, FrameBuffer,
       &MapInformation->VideoRamLength, &inIoSpace,
