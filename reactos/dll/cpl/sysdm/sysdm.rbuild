@@ -8,6 +8,7 @@
 	<define name="WINVER">0x501</define>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<library>setupapi</library>
 	<library>msvcrt</library>
 	<library>user32</library>
 	<library>gdi32</library>
