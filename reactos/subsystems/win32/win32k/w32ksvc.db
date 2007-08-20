@@ -8,48 +8,48 @@
 #
 NtGdiAbortDoc                                    1
 NtGdiAbortPath                                   1
-# NtGdiAddFontResourceW                            6
-# NtGdiAddRemoteFontToDC                           4
-# NtGdiAddFontMemResourceEx                        5
-# NtGdiRemoveMergeFont                             2
-# NtGdiAddRemoteMMInstanceToDC                     3
+# NtGdiAddFontResourceW                          6
+# NtGdiAddRemoteFontToDC                         4
+# NtGdiAddFontMemResourceEx                      5
+# NtGdiRemoveMergeFont                           2
+# NtGdiAddRemoteMMInstanceToDC                   3
 NtGdiAlphaBlend                                 12
 NtGdiAngleArc                                    6
-# NtGdiAnyLinkedFonts                              0
-# NtGdiFontIsLinked                                1
+# NtGdiAnyLinkedFonts                            0
+# NtGdiFontIsLinked                              1
 NtGdiArcInternal                                10
 NtGdiBeginPath                                   1
 NtGdiBitBlt                                     11
 NtGdiCancelDC                                    1
-# NtGdiCheckBitmapBits                             8
+# NtGdiCheckBitmapBits                           8
 NtGdiCloseFigure                                 1
-# NtGdiClearBitmapAttributes                       2
-# NtGdiClearBrushAttributes                        2
-# NtGdiColorCorrectPalette                         6
+# NtGdiClearBitmapAttributes                     2
+# NtGdiClearBrushAttributes                      2
+# NtGdiColorCorrectPalette                       6
 NtGdiCombineRgn                                  4
 NtGdiCombineTransform                            3
-# NtGdiComputeXformCoefficients                    1
-# NtGdiConsoleTextOut                              4
-# NtGdiConvertMetafileRect                         2
+# NtGdiComputeXformCoefficients                  1
+# NtGdiConsoleTextOut                            4
+# NtGdiConvertMetafileRect                       2
 NtGdiCreateBitmap                                5
 NtGdiCreateClientObj                             1
 NtGdiCreateColorSpace                            1
-# NtGdiCreateColorTransform                        8
+# NtGdiCreateColorTransform                      8
 NtGdiCreateCompatibleBitmap                      3
 NtGdiCreateCompatibleDC                          1
 NtGdiCreateDIBBrush                              6
-#NtGdiCreateDIBitmapInternal                     11
+#NtGdiCreateDIBitmapInternal                    11
 NtGdiCreateDIBSection                            9
 NtGdiCreateEllipticRgn                           4
 NtGdiCreateHalftonePalette                       1
 NtGdiCreateHatchBrushInternal                    3
-# NtGdiCreateMetafileDC                            1
-# NtGdiCreatePaletteInternal                       2
+# NtGdiCreateMetafileDC                          1
+# NtGdiCreatePaletteInternal                     2
 NtGdiCreatePatternBrushInternal                  3
 NtGdiCreatePen                                   4
 NtGdiCreateRectRgn                               4
 NtGdiCreateRoundRectRgn                          6
-#NtGdiCreateServerMetaFile                        6
+#NtGdiCreateServerMetaFile                       6
 NtGdiCreateSolidBrush                            2
 NtGdiD3dContextCreate                            4
 NtGdiD3dContextDestroy                           1
@@ -107,44 +107,44 @@ NtGdiDdUnlock                                    2
 NtGdiDdUnlockD3D                                 2
 NtGdiDdUpdateOverlay                             3
 NtGdiDdWaitForVerticalBlank                      2
-# NtGdiDvpCanCreateVideoPort                       2
-# NtGdiDvpColorControl                             2
-# NtGdiDvpCreateVideoPort                          2
-# NtGdiDvpDestroyVideoPort                         2
-# NtGdiDvpFlipVideoPort                            4
-# NtGdiDvpGetVideoPortBandwidth                    2
-# NtGdiDvpGetVideoPortField                        2
-# NtGdiDvpGetVideoPortFlipStatus                   2
-# NtGdiDvpGetVideoPortInputFormats                 2
-# NtGdiDvpGetVideoPortLine                         2
-# NtGdiDvpGetVideoPortOutputFormats                2
-# NtGdiDvpGetVideoPortConnectInfo                  2
-# NtGdiDvpGetVideoSignalStatus                     2
-# NtGdiDvpUpdateVideoPort                          4
-# NtGdiDvpWaitForVideoPortSync                     2
-# NtGdiDvpAcquireNotification                      3
-# NtGdiDvpReleaseNotification                      2
-# NtGdiDxgGenericThunk                             6
+# NtGdiDvpCanCreateVideoPort                     2
+# NtGdiDvpColorControl                           2
+# NtGdiDvpCreateVideoPort                        2
+# NtGdiDvpDestroyVideoPort                       2
+# NtGdiDvpFlipVideoPort                          4
+# NtGdiDvpGetVideoPortBandwidth                  2
+# NtGdiDvpGetVideoPortField                      2
+# NtGdiDvpGetVideoPortFlipStatus                 2
+# NtGdiDvpGetVideoPortInputFormats               2
+# NtGdiDvpGetVideoPortLine                       2
+# NtGdiDvpGetVideoPortOutputFormats              2
+# NtGdiDvpGetVideoPortConnectInfo                2
+# NtGdiDvpGetVideoSignalStatus                   2
+# NtGdiDvpUpdateVideoPort                        4
+# NtGdiDvpWaitForVideoPortSync                   2
+# NtGdiDvpAcquireNotification                    3
+# NtGdiDvpReleaseNotification                    2
+# NtGdiDxgGenericThunk                           6
 NtGdiDeleteClientObj                             1
 NtGdiDeleteColorSpace                            1
-# NtGdiDeleteColorTransform                        2
+# NtGdiDeleteColorTransform                      2
 NtGdiDeleteObjectApp                             1
 NtGdiDescribePixelFormat                         4
-# NtGdiGetPerBandInfo                              2
-# NtGdiDoBanding                                   4
-# NtGdiDoPalette                                   6
+# NtGdiGetPerBandInfo                            2
+# NtGdiDoBanding                                 4
+# NtGdiDoPalette                                 6
 NtGdiDrawEscape                                  4
 NtGdiEllipse                                     5
-# NtGdiEnableEudc                                  1
+# NtGdiEnableEudc                                1
 NtGdiEndDoc                                      1
 NtGdiEndPage                                     1
 NtGdiEndPath                                     1
-# NtGdiEnumFontChunk                               5
-# NtGdiEnumFontClose                               1
-# NtGdiEnumFontOpen                                7
+# NtGdiEnumFontChunk                             5
+# NtGdiEnumFontClose                             1
+# NtGdiEnumFontOpen                              7
 NtGdiEnumObjects                                 4
 NtGdiEqualRgn                                    2
-# NtGdiEudcLoadUnloadLink                          7
+# NtGdiEudcLoadUnloadLink                        7
 NtGdiExcludeClipRect                             5
 NtGdiExtCreatePen                               11
 NtGdiExtCreateRegion                             3
@@ -152,13 +152,13 @@ NtGdiExtEscape                                   8
 NtGdiExtFloodFill                                5
 NtGdiExtGetObjectW                               3
 NtGdiExtSelectClipRgn                            3
-# NtGdiExtTextOutW                                 9
+# NtGdiExtTextOutW                               9
 NtGdiFillPath                                    1
 NtGdiFillRgn                                     3
 NtGdiFlattenPath                                 1
-# NtGdiFlushUserBatch                              0
+# NtGdiFlushUserBatch                            0
 NtGdiFlush                                       0
-# NtGdiForceUFIMapping                             2
+# NtGdiForceUFIMapping                           2
 NtGdiFrameRgn                                    5
 # NtGdiFullscreenControl                           5
 NtGdiGetAndSetDCDword                            4
@@ -246,10 +246,10 @@ NtGdiPathToRegion                                1
 NtGdiPlgBlt                                     11
 NtGdiPolyDraw                                    4
 NtGdiPolyPolyDraw                                5
-# NtGdiPolyTextOutW                                4
+# NtGdiPolyTextOutW                              4
 NtGdiPtInRegion                                  3
 NtGdiPtVisible                                   3
-# NtGdiQueryFonts                                  3
+# NtGdiQueryFonts                                3
 # NtGdiQueryFontAssocInfo                          1
 NtGdiRectangle                                   5
 NtGdiRectInRegion                                2
@@ -312,12 +312,12 @@ NtGdiUpdateColors                                1
 NtGdiWidenPath                                   1
 NtUserActivateKeyboardLayout                     2
 NtUserAlterWindowStyle                           3
-# NtUserAssociateInputContext                      3
+# NtUserAssociateInputContext                    3
 NtUserAttachThreadInput                          3
 NtUserBeginPaint                                 2
 NtUserBitBltSysBmp                               8
 NtUserBlockInput                                 1
-# NtUserBuildHimcList                              4
+# NtUserBuildHimcList                            4
 NtUserBuildHwndList                              7
 NtUserBuildNameList                              4
 NtUserBuildPropList                              4
@@ -333,14 +333,14 @@ NtUserCallOneParam                               2
 NtUserCallTwoParam                               3
 NtUserChangeClipboardChain                       2
 NtUserChangeDisplaySettings                      5
-# NtUserCheckImeHotKey                             2
+# NtUserCheckImeHotKey                           2
 NtUserCheckMenuItem                              3
 NtUserChildWindowFromPointEx                     4
 NtUserClipCursor                                 1
 NtUserCloseClipboard                             0
 NtUserCloseDesktop                               1
 NtUserCloseWindowStation                         1
-# NtUserConsoleControl                             3
+# NtUserConsoleControl                           3
 NtUserConvertMemHandle                           2
 NtUserCopyAcceleratorTable                       3
 NtUserCountClipboardFormats                      0
@@ -399,7 +399,7 @@ NtUserGetClipboardData                           2
 NtUserGetClipboardFormatName                     3
 NtUserGetClipboardOwner                          0
 NtUserGetClipboardSequenceNumber                 0
-# NtUserGetClipboardViewer                         1 Wrong number of param ?
+NtUserGetClipboardViewer                         0
 NtUserGetClipCursor                              1
 NtUserGetComboBoxInfo                            2
 NtUserGetControlBrush                            3
@@ -682,7 +682,6 @@ NtUserEnumDisplayMonitors               5
 NtUserFindExistingCursorIcon            4
 NtUserFindWindowEx                      4
 NtUserGetClassInfo                      4
-NtUserGetClipboardViewer                0
 NtUserInitTask                          11
 NtUserSetClassWord                      3
 NtUserSetCursorIconData                 6
