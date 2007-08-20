@@ -20,6 +20,11 @@
 
 #define IDS_VARIABLE                    66
 #define IDS_VALUE                       67
+#define IDS_NO_DUMP                     68
+#define IDS_MINI_DUMP                   69
+#define IDS_KERNEL_DUMP                 70
+#define IDS_FULL_DUMP                   71
+
 
 /* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100
