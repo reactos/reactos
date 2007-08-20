@@ -15,6 +15,7 @@ static int m_FreeLdrIni = 0;
 static TCHAR m_szDumpFile[MAX_PATH];
 static TCHAR m_szMinidumpDir[MAX_PATH];
 static DWORD m_dwCrashDumpEnabled = 0;
+
 void SetTimeout(HWND hwndDlg, int Timeout)
 {
     if (Timeout == 0)
@@ -475,6 +476,48 @@ void SetCrashDlgItems(HWND hwnd)
     SendDlgItemMessage(hwnd, IDC_STRRECDEBUGCOMBO, CB_SETCURSEL, (WPARAM)m_dwCrashDumpEnabled, (LPARAM)0);
 }
 
+void WriteStartupRecoveryOptions(HWND hwndDlg)
+{
+    HKEY hKey;
+    DWORD lResult;
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     _T("System\\CurrentControlSet\\Control\\CrashControl"),
+                     0,
+                     KEY_WRITE,
+                     &hKey) != ERROR_SUCCESS)
+    {
+        /* failed to open key */
+        return;
+    }
+
+    lResult = (DWORD) SendDlgItemMessage(hwndDlg, IDC_STRRECWRITEEVENT, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+    RegSetValueEx(hKey, _T("LogEvent"), 0, REG_DWORD, (LPBYTE)&lResult, sizeof(lResult));
+
+    lResult = (DWORD) SendDlgItemMessage(hwndDlg, IDC_STRRECSENDALERT, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+    RegSetValueEx(hKey, _T("SendAlert"), 0, REG_DWORD, (LPBYTE)&lResult, sizeof(lResult));
+
+    lResult = (DWORD) SendDlgItemMessage(hwndDlg, IDC_STRRECRESTART, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+    RegSetValueEx(hKey, _T("AutoReboot"), 0, REG_DWORD, (LPBYTE)&lResult, sizeof(lResult));
+
+    lResult = (DWORD) SendDlgItemMessage(hwndDlg, IDC_STRRECOVERWRITE, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+    RegSetValueEx(hKey, _T("Overwrite"), 0, REG_DWORD, (LPBYTE)&lResult, sizeof(lResult));
+
+
+    if (m_dwCrashDumpEnabled == 1 || m_dwCrashDumpEnabled == 2)
+    {
+        SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(m_szDumpFile) / sizeof(TCHAR), (LPARAM)m_szDumpFile);
+        RegSetValueEx(hKey, _T("DumpFile"), 0, REG_EXPAND_SZ, (LPBYTE)&m_szDumpFile, (_tcslen(m_szDumpFile) + 1) * sizeof(TCHAR));
+    }
+    else if (m_dwCrashDumpEnabled == 3)
+    {
+        SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(m_szDumpFile) / sizeof(TCHAR), (LPARAM)m_szDumpFile);
+        RegSetValueEx(hKey, _T("MinidumpDir"), 0, REG_EXPAND_SZ, (LPBYTE)&m_szDumpFile, (_tcslen(m_szDumpFile) + 1) * sizeof(TCHAR));
+    }
+
+    RegSetValueEx(hKey, _T("CrashDumpEnabled"), 0, REG_DWORD, (LPBYTE)&m_dwCrashDumpEnabled, sizeof(m_dwCrashDumpEnabled));
+    RegCloseKey(hKey);
+}
+
 void LoadRecoveryOptions(HWND hwndDlg)
 {
     HKEY hKey;
@@ -634,8 +677,6 @@ StartRecDlgProc(HWND hwndDlg,
 
                     pRecord = (PBOOTRECORD) SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_GETITEMDATA, (WPARAM)lResult, (LPARAM)0);
 
-
-
                     if ((INT)pRecord != CB_ERR)
                     {
                         if (m_FreeLdrIni == 1) // FreeLdrIni style
@@ -667,11 +708,11 @@ StartRecDlgProc(HWND hwndDlg,
 
                         }
                     }
+                    WriteStartupRecoveryOptions(hwndDlg);
                     DeleteBootRecords(hwndDlg);
                     EndDialog(hwndDlg,
                               LOWORD(wParam));
                     return TRUE;
-                    break;
                 }
                 case IDCANCEL:
                 {
