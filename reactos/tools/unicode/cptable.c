@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdlib.h>
-
 #include "wine/unicode.h"
+#include <stdlib.h>
 
 /* Everything below this line is generated automatically by cpmap.pl */
 /* ### cpmap begin ### */

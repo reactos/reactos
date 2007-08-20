@@ -331,6 +331,8 @@ ObpIncrementHandleDataBase(IN POBJECT_HEADER ObjectHeader,
             /* Insert a new entry */
             FreeEntry = ObpInsertHandleCount(ObjectHeader);
             if (!FreeEntry) return STATUS_INSUFFICIENT_RESOURCES;
+            ASSERT(!FreeEntry->Process);
+            ASSERT(!FreeEntry->HandleCount);
 
             /* Fill it out */
             FreeEntry->Process = Process;
@@ -375,6 +377,8 @@ ObpIncrementHandleDataBase(IN POBJECT_HEADER ObjectHeader,
             /* Allocate one */
             FreeEntry = ObpInsertHandleCount(ObjectHeader);
             if (!FreeEntry) return STATUS_INSUFFICIENT_RESOURCES;
+            ASSERT(!FreeEntry->Process);
+            ASSERT(!FreeEntry->HandleCount);
         }
 
         /* Fill out the entry */
@@ -533,6 +537,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
                     {
                         /* Found it, get the process handle count */
                         ProcessHandleCount = HandleEntry->HandleCount--;
+                        break;
                     }
 
                     /* Keep looping */

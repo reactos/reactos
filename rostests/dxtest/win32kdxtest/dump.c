@@ -251,8 +251,7 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         checkflag(flag,DDCAPS_PALETTE,"DDCAPS_PALETTE");
         checkflag(flag,DDCAPS_PALETTEVSYNC,"DDCAPS_PALETTEVSYNC");
         checkflag(flag,DDCAPS_READSCANLINE,"DDCAPS_READSCANLINE");
-/* FIXME */
-//        checkflag(flag,DDCAPS_STEREOVIEW,"DDCAPS_STEREOVIEW");
+        checkflag(flag,DDCAPS_STEREOVIEW,"DDCAPS_STEREOVIEW");
         checkflag(flag,DDCAPS_VBI,"DDCAPS_VBI");
         checkflag(flag,DDCAPS_ZBLTS,"DDCAPS_ZBLTS");
         checkflag(flag,DDCAPS_ZOVERLAYS,"DDCAPS_ZOVERLAYS");
@@ -271,8 +270,8 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
         checkflag(flag,DDCAPS2_CANFLIPODDEVEN,"DDCAPS2_CANFLIPODDEVEN");
         checkflag(flag,DDCAPS2_CANMANAGERESOURCE,"DDCAPS2_CANMANAGERESOURCE");
         checkflag(flag,DDCAPS2_CANMANAGETEXTURE,"DDCAPS2_CANMANAGETEXTURE");
-/* FIXME */
-//        checkflag(flagDDCAPS2_CANRENDERWINDOWED,"DDCAPS2_CANRENDERWINDOWED");
+
+        checkflag(flag,DDCAPS2_CANRENDERWINDOWED,"DDCAPS2_CANRENDERWINDOWED");
         checkflag(flag,DDCAPS2_CERTIFIED,"DDCAPS2_CERTIFIED");
         checkflag(flag,DDCAPS2_COLORCONTROLOVERLAY,"DDCAPS2_COLORCONTROLOVERLAY");
         checkflag(flag,DDCAPS2_COLORCONTROLPRIMARY,"DDCAPS2_COLORCONTROLPRIMARY");
@@ -438,9 +437,8 @@ dump_halinfo(DD_HALINFO *pHalInfo, char *text)
 
         flag = pHalInfo->dwFlags;
         count = 0;
-        // FIXME missing DDHALINFO_ISPRIMARYDISPLAY and DDHALINFO_MODEXILLEGAL in currrent headers
-        // checkflag(flag,DDHALINFO_ISPRIMARYDISPLAY,"DDHALINFO_ISPRIMARYDISPLAY");
-        // checkflag(flag,DDHALINFO_MODEXILLEGAL,"DDHALINFO_MODEXILLEGAL");
+        checkflag(flag,DDHALINFO_ISPRIMARYDISPLAY,"DDHALINFO_ISPRIMARYDISPLAY");
+        checkflag(flag,DDHALINFO_MODEXILLEGAL,"DDHALINFO_MODEXILLEGAL");
         checkflag(flag,DDHALINFO_GETDRIVERINFOSET,"DDHALINFO_GETDRIVERINFOSET");
         checkflag(flag,DDHALINFO_GETDRIVERINFO2,"DDHALINFO_GETDRIVERINFO2");
         endcheckflag(flag,"pHalInfo->dwFlags");

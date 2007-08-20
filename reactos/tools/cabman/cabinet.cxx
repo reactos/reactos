@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__APPLE__)
 # include <sys/stat.h>
 #endif // __FreeBSD__
 #include "cabinet.h"

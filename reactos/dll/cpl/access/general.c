@@ -1,13 +1,13 @@
 /* $Id$
  *
- * PROJECT:         ReactOS System Control Panel
+ * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/general.c
- * PURPOSE:         Memory, start-up and profiles settings
+ * PURPOSE:         General accessibility settings
  * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
- * UPDATE HISTORY:
- *      03-04-2004  Created
+ *                  Copyright 2007 Eric Kohl
  */
+
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>

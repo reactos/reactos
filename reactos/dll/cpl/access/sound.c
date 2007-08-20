@@ -1,12 +1,13 @@
 /* $Id$
  *
- * PROJECT:         ReactOS System Control Panel
+ * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/sound.c
  * PURPOSE:         Sound-related acessibility settings
  * COPYRIGHT:       Copyright 2004 Johannes Anderwald (j_anderw@sbox.tugraz.at)
  *                  Copyright 2007 Eric Kohl
  */
+
 #include <windows.h>
 #include <commctrl.h>
 #include <prsht.h>

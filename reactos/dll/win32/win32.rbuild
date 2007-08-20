@@ -289,6 +289,9 @@
 <directory name="winspool">
 	<xi:include href="winspool/winspool.rbuild" />
 </directory>
+<directory name="winsta">
+	<xi:include href="winsta/winsta.rbuild" />
+</directory>
 <directory name="wintrust">
 	<xi:include href="wintrust/wintrust.rbuild" />
 </directory>

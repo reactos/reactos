@@ -50,7 +50,31 @@ extern "C" {
 #include <basetsd.h>
 #include <guiddef.h>
 
+/* wchar_t checks
+ * First check if wchar_t has already been defined by any host/OS */
+#ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
+#define _WCHAR_T_DECLARED
+#ifndef _WCHAR_T               /* for Mac OS X */
+#define _WCHAR_T
+#ifndef _WCHAR_T_
+#define _WCHAR_T_
+#ifndef _WCHAR_T_DEFINED       /* If you want to override the wchar_t setting, define this */
+#ifndef __cplusplus
+  typedef unsigned short wchar_t;
+#endif
+#endif
+#endif
+#endif
+#endif
+
+/* Set _WCHAR_T_DEFINED for the case that this is checked later */
+#ifndef _WCHAR_T_DEFINED
+#define _WCHAR_T_DEFINED
+#endif
+
 #include <ctype.h>
+#undef __need_wchar_t
+
 #include <winerror.h>
 #include <stddef.h>
 #include <sdkddkver.h>
@@ -117,20 +141,6 @@ typedef void *PVOID,*LPVOID;
 #define __ptr64
 #endif
 typedef void* __ptr64 PVOID64;
-
-#ifndef _WCHAR_T_DEFINED
-#define _WCHAR_T_DEFINED
-#ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
-#define _WCHAR_T_DECLARED
-#ifndef _WCHAR_T_
-#define _WCHAR_T_
-#undef __need_wchar_t
-#ifndef __cplusplus
-typedef unsigned short wchar_t;
-#endif
-#endif
-#endif
-#endif
 
 #ifdef __cplusplus
 # define EXTERN_C    extern "C"
@@ -4007,6 +4017,7 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
 
+NTSYSAPI
 SIZE_T
 STDCALL
 RtlCompareMemory (

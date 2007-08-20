@@ -38,7 +38,7 @@
 # include <io.h>
 # include <dos.h>
 #else
-# ifdef __FreeBSD__
+# if defined(__FreeBSD__) || defined(__APPLE__)
 #  include <sys/uio.h>
 # else
 #  include <sys/io.h>

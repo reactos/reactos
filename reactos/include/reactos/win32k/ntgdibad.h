@@ -78,11 +78,6 @@ NtGdiCreateScalableFontResource(
     LPCWSTR CurrentPath
 );
 
-/* The gdi32 call Should Use NtGdiGetRandomRgn and nothing else */
-HRGN
-NTAPI
-NtGdiGetClipRgn(HDC hDC);
-
 /* The gdi32 call Should Use NtGdiGetTextExtent */
 BOOL
 NTAPI
@@ -604,15 +599,6 @@ NtGdiRemoveFontResource(LPCWSTR  FileName);
 /* Should be done in user-mode. */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 
-/* Use NtUserSelectPalette. */
-HPALETTE
-STDCALL
-NtGdiSelectPalette (
-	HDC		hDC,
-	HPALETTE	hpal,
-	BOOL		ForceBackground
-	);
-
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 COLORREF STDCALL NtGdiSetBkColor (HDC hDC, COLORREF Color);
 
@@ -635,24 +621,6 @@ STDCALL
 NtGdiSetDIBits (
 	HDC			hDC,
 	HBITMAP			hBitmap,
-	UINT			StartScan,
-	UINT			ScanLines,
-	CONST VOID		* Bits,
-	CONST BITMAPINFO	* bmi,
-	UINT			ColorUse
-	);
-
-/* Use NtGdiSetDIBitsToDeviceInternal. */
-INT
-STDCALL
-NtGdiSetDIBitsToDevice (
-	HDC			hDC,
-	INT			XDest,
-	INT			YDest,
-	DWORD			Width,
-	DWORD			Height,
-	INT			XSrc,
-	INT			YSrc,
 	UINT			StartScan,
 	UINT			ScanLines,
 	CONST VOID		* Bits,

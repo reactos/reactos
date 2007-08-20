@@ -101,6 +101,13 @@ static void DPRINT ( const char* fmt, ... )
 #define GCC_PACKED __attribute__((packed))
 #endif//_MSC_VER
 
+/* rtl.c */
+PWSTR
+xwcschr(
+   PWSTR String,
+   WCHAR Char
+);
+
 #endif /* __MKHIVE_H__ */
 
 /* EOF */

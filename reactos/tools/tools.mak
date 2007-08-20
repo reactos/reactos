@@ -34,11 +34,11 @@ XML_SSPRINTF_OBJECTS = \
 
 $(TOOLS_INT_)ssprintf.o: $(TOOLS_BASE_)ssprintf.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
 	$(ECHO_CC)
-	${host_gcc} $(TOOLS_CPPFLAGS) -c $< -o $@
+	${host_gpp} $(TOOLS_CPPFLAGS) -c $< -o $@
 
 $(TOOLS_INT_)xml.o: $(TOOLS_BASE_)xml.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
 	$(ECHO_CC)
-	${host_gcc} $(TOOLS_CPPFLAGS) -c $< -o $@
+	${host_gpp} $(TOOLS_CPPFLAGS) -c $< -o $@
 
 include tools/bin2c.mak
 include tools/bin2res/bin2res.mak

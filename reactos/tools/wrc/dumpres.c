@@ -18,11 +18,11 @@
 
 #include "config.h"
 
+#include "wrc.h"
 #include <assert.h>
 #include <stdio.h>
 #include <ctype.h>
 
-#include "wrc.h"
 #include "dumpres.h"
 
 /*

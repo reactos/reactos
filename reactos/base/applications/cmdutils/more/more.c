@@ -116,25 +116,28 @@ int main (int argc, char **argv)
 
 	buff=malloc(4096);
 
-	FlushConsoleInputBuffer (hKeyboard);	
+	FlushConsoleInputBuffer (hKeyboard);
 
 	if(argc > 1)
 	{
 		GetFullPathName(argv[1], MAX_PATH, szFullPath, NULL);
 		hFile = CreateFile (szFullPath, GENERIC_READ,
 	                        0,NULL,OPEN_ALWAYS,0,0);
+        
+		if (hFile == INVALID_HANDLE_VALUE)
+		{
+			ConOutPuts(_T("The file could not be opened"));
+			return 0;
+		}
+	}
+	else
+	{
+		hFile = hStdIn;
 	}
 
 	do
 	{
-		if(hFile != INVALID_HANDLE_VALUE)
-		{			
-			bRet = ReadFile(hFile,buff,4096,&dwRead,NULL);
-		}
-		else
-		{
-			bRet = ReadFile(hStdIn,buff,4096,&dwRead,NULL);
-		}
+		bRet = ReadFile(hFile,buff,4096,&dwRead,NULL);
 
 		for(last=i=0;i<dwRead && bRet;i++)
 		{
@@ -161,7 +164,8 @@ int main (int argc, char **argv)
 
 	free (buff);
 	CloseHandle (hKeyboard);
-	CloseHandle (hFile);
+	if (hFile != hStdIn)
+		CloseHandle (hFile);
 
 	return 0;
 }
