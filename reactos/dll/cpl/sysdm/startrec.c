@@ -246,6 +246,10 @@ int LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
        SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
     }
 
+    if(TimeOut)
+    {
+        SendDlgItemMessage(hwndDlg, IDC_STRECLIST, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+    }
     SetTimeout(hwndDlg, TimeOut);
     return TRUE;
 }
@@ -369,6 +373,10 @@ int LoadBootSettings(HINF hInf, HWND hwndDlg)
     {
        /* set cur sel */
        SendDlgItemMessage(hwndDlg, IDC_STRECOSCOMBO, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
+    }
+    if(TimeOut)
+    {
+        SendDlgItemMessage(hwndDlg, IDC_STRECLIST, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
     }
 
     SetTimeout(hwndDlg, TimeOut);
