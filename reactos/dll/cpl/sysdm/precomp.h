@@ -4,7 +4,6 @@
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <windows.h>
 #include <commctrl.h>
 #include <powrprof.h>
 #include <tchar.h>
@@ -16,6 +15,7 @@
 #include <shlobj.h>
 #include <cplext.h>
 #include <regstr.h>
+#include <setupapi.h>
 #include "resource.h"
 
 #define NUM_APPLETS (1)
@@ -66,5 +66,13 @@ typedef struct _VIRTMEM
     PAGEFILE  Pagefile[26];
 } VIRTMEM, *PVIRTMEM;
 
+typedef struct _BOOTRECORD
+{
+  DWORD BootType;
+  TCHAR szSectionName[128];
+  TCHAR szBootPath[MAX_PATH];
+  TCHAR szOptions[512];
+
+}BOOTRECORD, *PBOOTRECORD;
 
 #endif /* __CPL_SYSDM_H */
