@@ -121,7 +121,7 @@ BOOL
 STDCALL
 LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 {
-//#if 0
+#if 0
   INT i;
   PDC_ATTR Dc_Attr;
  
@@ -130,16 +130,16 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
   if (Dc_Attr->flXform & ( PAGE_XLATE_CHANGED   |  // Check for Changes and Updates
                            PAGE_EXTENTS_CHANGED |
                            WORLD_XFORM_CHANGED ))
-//#endif
+#endif
     return NtGdiTransformPoints( hDC, Points, Points, Count, GdiLpToDp); // LPtoDP mode
-//#if 0
+#if 0
   else
   {
     for ( i = 0; i < Count; i++ )
       CoordCnvP ( &Dc_Attr->mxWorldToDevice, &Points[i] );
   }
   return TRUE;
-//#endif
+#endif
 }
 
 
