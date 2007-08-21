@@ -453,7 +453,6 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
     dc->Dc_Attr.iGraphicsMode = GM_ADVANCED;
     IntGdiModifyWorldTransform( dc, &xform, MWT_MAX+1 );
     dc->Dc_Attr.iGraphicsMode = graphicsMode;
-//    DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
     return TRUE;
   }
   return FALSE;

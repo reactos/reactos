@@ -23,13 +23,6 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID
-APIENTRY
-NtGdiFlush(VOID)
-{
-  UNIMPLEMENTED;
-}
-
 DWORD
 APIENTRY
 NtGdiGetBoundsRect(

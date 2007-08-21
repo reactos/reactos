@@ -200,7 +200,6 @@ IntGdiModifyWorldTransform(PDC pDc,
        SetLastWin32Error(ERROR_INVALID_PARAMETER);
        return FALSE;
   }
-
   DC_UpdateXforms(pDc);
   return TRUE;
 }
@@ -445,8 +444,6 @@ NtGdiModifyWorldTransform(HDC hDC,
    {
       ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
       RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
-
-      Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
    }
    _SEH_HANDLE
    {
@@ -454,7 +451,8 @@ NtGdiModifyWorldTransform(HDC hDC,
    }
    _SEH_END;
 
-   DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
+   // Safe to handle kernel mode data.
+   Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
    DC_UnlockDc(dc);
    return Ret;
 }
@@ -503,7 +501,6 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
   dc->Dc_Attr.ptlViewportOrg.x += XOffset;
   dc->Dc_Attr.ptlViewportOrg.y += YOffset;
   DC_UpdateXforms(dc);
-  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
   return TRUE;
 }
@@ -554,7 +551,6 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
   dc->Dc_Attr.ptlWindowOrg.y += YOffset;
 
   DC_UpdateXforms(dc);
-  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -683,7 +679,6 @@ IntGdiSetMapMode(PDC  dc,
     }
 
     DC_UpdateXforms(dc);
-    DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   }
 
   return PrevMapMode;
@@ -756,7 +751,6 @@ NtGdiSetViewportExtEx(HDC  hDC,
 
   
   DC_UpdateXforms(dc);
-  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -808,7 +802,6 @@ NtGdiSetViewportOrgEx(HDC  hDC,
   dc->Dc_Attr.ptlViewportOrg.y = Y;
 
   DC_UpdateXforms(dc);
-  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -872,7 +865,6 @@ NtGdiSetWindowExtEx(HDC  hDC,
   dc->Dc_Attr.szlWindowExt.cy = YExtent;
 
   DC_UpdateXforms(dc);
-  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -924,7 +916,6 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   dc->Dc_Attr.ptlWindowOrg.y = Y;
 
   DC_UpdateXforms(dc);
-  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;

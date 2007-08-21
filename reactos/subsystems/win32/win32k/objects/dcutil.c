@@ -47,3 +47,11 @@ DCU_UpdateUserXForms(PDC pDC, ULONG uMask)
   return TRUE;
 }
 
+
+VOID
+APIENTRY
+NtGdiFlush(VOID)
+{
+  UNIMPLEMENTED;
+}
+
