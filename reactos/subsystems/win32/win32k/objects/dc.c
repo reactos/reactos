@@ -2328,7 +2328,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   PDC  NewDC;
   HDC  hDC;
   PWSTR Buf = NULL;
-  PDC_ATTR DC_Attr = NULL;
+//  PDC_ATTR DC_Attr = NULL;
   
   if (Driver != NULL)
   {
@@ -2349,7 +2349,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     }
     return  NULL;
   }
-//#if 0
+#if 0
   PVOID NewMem = NULL;
   ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE it will allocate that size
   NTSTATUS Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
@@ -2375,16 +2375,16 @@ DC_AllocDC(PUNICODE_STRING Driver)
     }
   }
   KeLeaveCriticalRegion();
-//#endif  
+#endif  
   NewDC = DC_LockDc(hDC);
   /* FIXME - Handle NewDC == NULL! */
-//#if 0
+#if 0
   if(NewMem)
   {
      NewDC->pDc_Attr = NewMem; // Store pointer
      DC_Attr = NewMem;
   }
-//#endif
+#endif
   if (Driver != NULL)
   {
     RtlCopyMemory(&NewDC->DriverName, Driver, sizeof(UNICODE_STRING));
@@ -2401,27 +2401,27 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
   NewDC->w.vport2WorldValid = TRUE;
 
-  XForm2MatrixS( &DC_Attr->mxWorldToDevice, &NewDC->w.xformWorld2Vport);
-  XForm2MatrixS( &DC_Attr->mxDevicetoWorld, &NewDC->w.xformVport2World);
-  XForm2MatrixS( &DC_Attr->mxWorldToPage, &NewDC->w.xformWorld2Wnd);
+//  XForm2MatrixS( &DC_Attr->mxWorldToDevice, &NewDC->w.xformWorld2Vport);
+//  XForm2MatrixS( &DC_Attr->mxDevicetoWorld, &NewDC->w.xformVport2World);
+//  XForm2MatrixS( &DC_Attr->mxWorldToPage, &NewDC->w.xformWorld2Wnd);
 
 // Setup syncing bits for the dcattr data packets.
-  NewDC->Dc_Attr.flXform = DEVICE_TO_PAGE_INVALID;
-  DC_Attr->flXform = NewDC->Dc_Attr.flXform;
-  NewDC->Dc_Attr.ulDirty_ = 0;  // Server side
-  DC_Attr->ulDirty_ = 0;        // Client side
+//  NewDC->Dc_Attr.flXform = DEVICE_TO_PAGE_INVALID;
+//  DC_Attr->flXform = NewDC->Dc_Attr.flXform;
+//  NewDC->Dc_Attr.ulDirty_ = 0;  // Server side
+//  DC_Attr->ulDirty_ = 0;        // Client side
 
   NewDC->Dc_Attr.iMapMode = MM_TEXT;
-  DC_Attr->iMapMode = MM_TEXT;
+//  DC_Attr->iMapMode = MM_TEXT;
 
   NewDC->Dc_Attr.szlWindowExt.cx = 1; // Float to Int,,, WRONG!
   NewDC->Dc_Attr.szlWindowExt.cy = 1;
   NewDC->Dc_Attr.szlViewportExt.cx = 1;
   NewDC->Dc_Attr.szlViewportExt.cy = 1;
-  DC_Attr->szlWindowExt.cx = 1;
-  DC_Attr->szlWindowExt.cy = 1;
-  DC_Attr->szlViewportExt.cx = 1;
-  DC_Attr->szlViewportExt.cy = 1;
+//  DC_Attr->szlWindowExt.cx = 1;
+//  DC_Attr->szlWindowExt.cy = 1;
+//  DC_Attr->szlViewportExt.cx = 1;
+//  DC_Attr->szlViewportExt.cy = 1;
 
 
   NewDC->Dc_Attr.crForegroundClr = 0;
@@ -2429,11 +2429,11 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
   NewDC->Dc_Attr.ulBackgroundClr = 0xffffff;
   NewDC->Dc_Attr.crBackgroundClr = 0xffffff;
-  DC_Attr->ulBackgroundClr = 0xffffff;
-  DC_Attr->crBackgroundClr = 0xffffff;
+//  DC_Attr->ulBackgroundClr = 0xffffff;
+//  DC_Attr->crBackgroundClr = 0xffffff;
 
   NewDC->Dc_Attr.hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
-  DC_Attr->hlfntNew = NewDC->Dc_Attr.hlfntNew;  // It's a service to the user.
+//  DC_Attr->hlfntNew = NewDC->Dc_Attr.hlfntNew;  // It's a service to the user.
   TextIntRealizeFont(NewDC->Dc_Attr.hlfntNew);
   
   NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
@@ -2473,7 +2473,7 @@ DC_InitDC(HDC  DCHandle)
 VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
-//#if 0
+#if 0
   KeEnterCriticalRegion();
   {
     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)DCToFree);
@@ -2493,7 +2493,7 @@ DC_FreeDC(HDC  DCToFree)
     }
   }
   KeLeaveCriticalRegion();
-//#endif
+#endif
   if (!GDIOBJ_FreeObj(GdiHandleTable, DCToFree, GDI_OBJECT_TYPE_DC))
   {
     DPRINT("DC_FreeDC failed\n");
