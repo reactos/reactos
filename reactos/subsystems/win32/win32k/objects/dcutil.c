@@ -9,6 +9,7 @@ BOOL
 FASTCALL
 DCU_UpdateUserXForms(PDC pDC, ULONG uMask)
 {
+#if 0
   PDC_ATTR DC_Attr = pDC->pDc_Attr;
 
   if (!uMask) return FALSE;
@@ -42,6 +43,7 @@ DCU_UpdateUserXForms(PDC pDC, ULONG uMask)
       return FALSE;
     }                                                                                                                                                                      
   }
+#endif
   return TRUE;
 }
 
