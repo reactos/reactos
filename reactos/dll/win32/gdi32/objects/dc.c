@@ -932,3 +932,18 @@ SelectPalette(
 {
     return NtUserSelectPalette(hDC, hPal, bForceBackground);
 }
+
+/*
+ * @implemented
+ */
+INT
+STDCALL
+SetMapMode(
+	HDC hdc,
+	INT Mode
+	)
+{
+  return GetAndSetDCDWord( hdc, GdiGetSetMapMode, Mode, 0, 0, 0 );
+}
+
+

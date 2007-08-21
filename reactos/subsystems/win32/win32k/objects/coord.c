@@ -454,6 +454,7 @@ NtGdiModifyWorldTransform(HDC hDC,
    }
    _SEH_END;
 
+   DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
    DC_UnlockDc(dc);
    return Ret;
 }
@@ -621,18 +622,10 @@ NtGdiSetGraphicsMode(HDC  hDC,
 
 int
 STDCALL
-NtGdiSetMapMode(HDC  hDC,
+IntGdiSetMapMode(PDC  dc,
                 int  MapMode)
 {
   int PrevMapMode;
-  PDC dc;
-
-  dc = DC_LockDc(hDC);
-  if (!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
-  }
 
   PrevMapMode = dc->Dc_Attr.iMapMode;
 
@@ -692,8 +685,6 @@ NtGdiSetMapMode(HDC  hDC,
     DC_UpdateXforms(dc);
     DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   }
-
-  DC_UnlockDc(dc);
 
   return PrevMapMode;
 }

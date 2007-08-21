@@ -2269,8 +2269,7 @@ NtGdiGetAndSetDCDword(
     case GdiGetSetMapperFlagsInternal:
       break;
     case GdiGetSetMapMode:
-      SafeResult = dc->Dc_Attr.iMapMode;
-      dc->Dc_Attr.iMapMode = dwIn;
+      SafeResult = IntGdiSetMapMode( dc, dwIn);
       break;
     case GdiGetSetArcDirection:
       if (dwIn != AD_COUNTERCLOCKWISE && dwIn != AD_CLOCKWISE)

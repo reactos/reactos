@@ -698,7 +698,6 @@ NtGdiSetDIBits                          7
 NtGdiSetEnhMetaFileBits                 2
 NtGdiSetGraphicsMode                    2
 NtGdiSetICMProfile                      2
-NtGdiSetMapMode                         2
 NtGdiSetMapperFlags                     2
 NtGdiSetPaletteEntries                  4
 NtGdiSetPixelV                          4

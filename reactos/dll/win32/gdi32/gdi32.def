@@ -555,7 +555,7 @@ SetICMProfileW@8
 SetLayout@8
 SetLayoutWidth@12
 SetMagicColors@12
-SetMapMode@8=NtGdiSetMapMode@8
+SetMapMode@8
 SetMapperFlags@8
 SetMetaFileBitsEx@8
 SetMetaRgn@4

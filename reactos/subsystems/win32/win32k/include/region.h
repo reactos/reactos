@@ -17,5 +17,7 @@ typedef struct _ROSRGNDATA {
 HRGN FASTCALL RGNDATA_AllocRgn(INT n);
 BOOL INTERNAL_CALL RGNDATA_Cleanup(PVOID ObjectBody);
 
+BOOL FASTCALL IntGdiPaintRgn(PDC, HRGN );
+
 #endif
 

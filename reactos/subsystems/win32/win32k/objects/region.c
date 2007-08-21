@@ -2524,13 +2524,11 @@ NtGdiOffsetRgn(HRGN  hRgn,
 }
 
 BOOL
-STDCALL
-NtGdiPaintRgn(HDC  hDC,
-                   HRGN  hRgn)
+FASTCALL
+IntGdiPaintRgn(PDC dc, HRGN  hRgn)
 {
   //RECT box;
-  HRGN tmpVisRgn; //, prevVisRgn;
-  DC *dc = DC_LockDc(hDC);
+  HRGN tmpVisRgn; //, prevVisRgn;   
   PROSRGNDATA visrgn;
   CLIPOBJ* ClipRegion;
   BOOL bRet = FALSE;
@@ -2595,9 +2593,22 @@ NtGdiPaintRgn(HDC  hDC,
   NtGdiDeleteObject( tmpVisRgn );
 
   // Fill the region
-  DC_UnlockDc( dc );
   return TRUE;
 }
+
+BOOL
+STDCALL
+NtGdiPaintRgn(HDC  hDC,
+                   HRGN  hRgn)
+{
+  DC *dc = DC_LockDc(hDC);
+
+  BOOL Ret = IntGdiPaintRgn(dc, hRgn);
+
+  DC_UnlockDc( dc );
+  return Ret;
+}
+
 
 BOOL
 STDCALL

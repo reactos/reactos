@@ -643,14 +643,6 @@ NtGdiSetICMProfile(HDC  hDC,
                         LPWSTR  Filename);
 
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
-int
-STDCALL
-NtGdiSetMapMode (
-	HDC	hDC,
-	int	MapMode
-	);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
 DWORD
 STDCALL
 NtGdiSetMapperFlags(HDC  hDC,
