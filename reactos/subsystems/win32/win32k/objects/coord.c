@@ -194,7 +194,6 @@ IntGdiModifyWorldTransform(PDC pDc,
 
      case MWT_MAX+1: // Must be MWT_SET????
        pDc->w.xformWorld2Wnd = *lpXForm; // Do it like Wine.
-       DC_UpdateXforms(pDc);             // Good wine port here too.
        break;
 
      default:
@@ -203,7 +202,6 @@ IntGdiModifyWorldTransform(PDC pDc,
   }
 
   DC_UpdateXforms(pDc);
-  DC_UnlockDc(pDc);
   return TRUE;
 }
 
@@ -229,8 +227,9 @@ NtGdiGetGraphicsMode ( HDC hDC )
 
 BOOL
 STDCALL
-NtGdiGetWorldTransform(HDC  hDC,
-                      LPXFORM  XForm)
+NtGdiGetTransform(HDC  hDC,
+               DWORD iXform,
+              LPXFORM  XForm)
 {
   PDC  dc;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -253,7 +252,14 @@ NtGdiGetWorldTransform(HDC  hDC,
     ProbeForWrite(XForm,
                   sizeof(XFORM),
                   1);
-    *XForm = dc->w.xformWorld2Wnd;
+   switch(iXform)
+   {
+     case GdiWorldSpaceToPageSpace:
+        *XForm = dc->w.xformWorld2Wnd;
+     break;
+     default:
+     break;
+   }
   }
   _SEH_HANDLE
   {
@@ -403,7 +409,10 @@ NtGdiTransformPoints( HDC hDC,
      SetLastNtError(Status);
      return FALSE;
    }
-
+//
+// If we are getting called that means User XForms is a mess!
+//
+   DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
    DC_UnlockDc(dc);
    ExFreePool(Points);
    return TRUE;
@@ -436,7 +445,7 @@ NtGdiModifyWorldTransform(HDC hDC,
    {
       ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
       RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
-      
+
       Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
    }
    _SEH_HANDLE
@@ -493,7 +502,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
   dc->Dc_Attr.ptlViewportOrg.x += XOffset;
   dc->Dc_Attr.ptlViewportOrg.y += YOffset;
   DC_UpdateXforms(dc);
-
+  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
   return TRUE;
 }
@@ -544,6 +553,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
   dc->Dc_Attr.ptlWindowOrg.y += YOffset;
 
   DC_UpdateXforms(dc);
+  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -680,6 +690,7 @@ NtGdiSetMapMode(HDC  hDC,
     }
 
     DC_UpdateXforms(dc);
+    DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   }
 
   DC_UnlockDc(dc);
@@ -732,7 +743,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
          Size->cx = dc->Dc_Attr.szlViewportExt.cx;
          Size->cy = dc->Dc_Attr.szlViewportExt.cy;
 
-		 dc->Dc_Attr.szlViewportExt.cx = XExtent;
+         dc->Dc_Attr.szlViewportExt.cx = XExtent;
          dc->Dc_Attr.szlViewportExt.cy = YExtent;
 
          if (dc->Dc_Attr.iMapMode == MM_ISOTROPIC)
@@ -754,6 +765,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
 
   
   DC_UpdateXforms(dc);
+  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -805,6 +817,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
   dc->Dc_Attr.ptlViewportOrg.y = Y;
 
   DC_UpdateXforms(dc);
+  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -868,6 +881,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
   dc->Dc_Attr.szlWindowExt.cy = YExtent;
 
   DC_UpdateXforms(dc);
+  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;
@@ -919,6 +933,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   dc->Dc_Attr.ptlWindowOrg.y = Y;
 
   DC_UpdateXforms(dc);
+  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
   DC_UnlockDc(dc);
 
   return TRUE;

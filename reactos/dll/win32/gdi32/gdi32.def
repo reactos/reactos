@@ -453,13 +453,13 @@ GetTextFaceW@12
 GetTextFaceAliasW@12
 GetTextMetricsA@8
 GetTextMetricsW@8
-GetTransform@12
+GetTransform@12=NtGdiGetTransform@12
 GetViewportExtEx@8
 GetViewportOrgEx@8
 GetWinMetaFileBits@20
 GetWindowExtEx@8
 GetWindowOrgEx@8
-GetWorldTransform@8=NtGdiGetWorldTransform@8
+GetWorldTransform@8
 HT_Get8BPPFormatPalette@16
 HT_Get8BPPMaskPalette@24
 IntersectClipRect@20=NtGdiIntersectClipRect@20

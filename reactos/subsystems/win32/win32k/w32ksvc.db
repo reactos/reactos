@@ -214,7 +214,7 @@ NtGdiGetTextExtent                               5
 NtGdiGetTextExtentExW                            8
 NtGdiGetTextFaceW                                4
 NtGdiGetTextMetricsW                             3
-# NtGdiGetTransform                                3
+NtGdiGetTransform                                3
 # NtGdiGetUFI                                      6
 # NtGdiGetEmbUFI                                   7
 # NtGdiGetUFIPathname                             10
@@ -806,7 +806,6 @@ NtGdiGetSystemPaletteEntries            4
 NtGdiGetTextAlign                       1
 NtGdiGetTextColor                       1
 NtGdiGetTextExtentPoint32               4
-NtGdiGetWorldTransform                  2
 NtGdiMoveToEx                           4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4

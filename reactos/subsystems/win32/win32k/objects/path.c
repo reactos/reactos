@@ -424,7 +424,7 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
      * tests show that resetting the graphics mode to GM_COMPATIBLE does
      * not reset the world transform.
      */
-    NtGdiGetWorldTransform( dc->hSelf, &xform );
+    NtGdiGetTransform( dc->hSelf, GdiWorldSpaceToPageSpace, &xform );
 
     /* Set MM_TEXT */
     NtGdiSetMapMode( dc->hSelf, MM_TEXT );

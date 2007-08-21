@@ -1872,18 +1872,6 @@ GetTextFaceAliasW(HDC hdc,int cChar,LPWSTR pszOut)
 /*
  * @unimplemented
  */
-BOOL 
-STDCALL
-GetTransform(HDC hdc, DWORD iXform, LPXFORM pxf)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 LONG 
 STDCALL
 HT_Get8BPPFormatPalette(LPPALETTEENTRY pPaletteEntry, USHORT RedGamma,USHORT GreenGamma, USHORT BlueGamma)

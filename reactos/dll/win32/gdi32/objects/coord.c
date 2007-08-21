@@ -103,7 +103,7 @@ DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
   if (Dc_Attr->flXform & ( DEVICE_TO_WORLD_INVALID | // Force a full recalibration!
                            PAGE_XLATE_CHANGED      | // Changes or Updates have been made,
                            PAGE_EXTENTS_CHANGED    | // do processing in kernel space.
-                           WORLD_XFORM_CHANGED )
+                           WORLD_XFORM_CHANGED ))
 #endif
     return NtGdiTransformPoints( hDC, Points, Points, Count, GdiDpToLp); // DPtoLP mode.
 #if 0
@@ -121,7 +121,7 @@ BOOL
 STDCALL
 LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 {
-#if 0
+//#if 0
   INT i;
   PDC_ATTR Dc_Attr;
  
@@ -129,17 +129,25 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 
   if (Dc_Attr->flXform & ( PAGE_XLATE_CHANGED   |  // Check for Changes and Updates
                            PAGE_EXTENTS_CHANGED |
-                           WORLD_XFORM_CHANGED )
-#endif
+                           WORLD_XFORM_CHANGED ))
+//#endif
     return NtGdiTransformPoints( hDC, Points, Points, Count, GdiLpToDp); // LPtoDP mode
-#if 0
+//#if 0
   else
   {
     for ( i = 0; i < Count; i++ )
       CoordCnvP ( &Dc_Attr->mxWorldToDevice, &Points[i] );
   }
   return TRUE;
-#endif
+//#endif
+}
+
+
+BOOL
+STDCALL
+GetWorldTransform( HDC hDC, LPXFORM lpXform )
+{
+  return NtGdiGetTransform( hDC, GdiWorldSpaceToPageSpace, lpXform);
 }
 
 

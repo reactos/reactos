@@ -140,6 +140,7 @@
 		<file>color.c</file>
 		<file>coord.c</file>
 		<file>dc.c</file>
+		<file>dcutil.c</file>
 		<file>dibobj.c</file>
 		<file>fillshap.c</file>
 		<file>gdiobj.c</file>

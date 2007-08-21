@@ -153,6 +153,8 @@ VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
+BOOL FASTCALL DCU_UpdateUserXForms(PDC, ULONG);
+
 VOID FASTCALL IntGetViewportExtEx(PDC dc, LPSIZE pt);
 VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);
 VOID FASTCALL IntGetWindowExtEx(PDC dc, LPSIZE pt);

@@ -465,14 +465,6 @@ BOOL STDCALL  NtGdiGetWindowExtEx(HDC  hDC, LPSIZE windowExt);
 /* Needs to be done in user-mode. */
 BOOL STDCALL  NtGdiGetWindowOrgEx(HDC  hDC, LPPOINT windowOrg);
 
-/* Use NtGdiGetTransform with GdiWorldSpaceToPageSpace */
-BOOL
-STDCALL
-NtGdiGetWorldTransform (
-	HDC	hDC,
-	LPXFORM	Xform
-	);
-
 /* Needs to be done in user-mode. */
 BOOL
 STDCALL
