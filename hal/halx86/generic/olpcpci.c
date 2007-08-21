@@ -172,6 +172,7 @@ static ULONG ff_loc    = ~0;
 static ULONG zero_loc  =  0;
 
 static int bar_probing = 0;       /* Set after a write of ~0 to a BAR */
+static ULONG bar_offset = 0;      /* what bar */
 
 static ULONG *hdr_addr(const ULONG *hdr, int reg)
 {
@@ -188,7 +189,17 @@ static ULONG *hdr_addr(const ULONG *hdr, int reg)
 	 * BAR0), and don't skip the size mask area.
 	 */
 
-	addr = (ULONG)hdr + reg + (bar_probing ? -0x10 : 0x20);
+	if (bar_probing && (bar_offset == reg))
+	{
+		addr = (ULONG)hdr + reg + (bar_probing ? -0x10 : 0x20);
+
+		/* Reset probing for this bar */
+		bar_probing = 0;
+	}
+	else
+	{
+		addr = (ULONG)hdr + reg + 0x20;
+	}
 
     if ( ((ULONG)addr - (ULONG)hdr) >= 0x90 )
     {
@@ -196,7 +207,6 @@ static ULONG *hdr_addr(const ULONG *hdr, int reg)
             (ULONG)addr - (ULONG)hdr, bar_probing, reg);
     }
 
-	bar_probing = 0;
 	return (ULONG *)addr;
 }
 
@@ -261,7 +271,7 @@ pci_olpc_read(ULONG bus, PCI_SLOT_NUMBER devfn, ULONG reg, ULONG len, PUCHAR val
 		}
 	}
 
-	ASSERT(len == 1 || len == 2 || len == 4)
+	ASSERT(len == 1 || len == 2 || len == 4);
 	RtlCopyMemory(value, addr, len);
 }
 
@@ -274,14 +284,18 @@ pci_olpc_write(ULONG bus, PCI_SLOT_NUMBER devfn, ULONG reg, ULONG len, PUCHAR va
 	 * Mostly we just discard writes, but if the write is a size probe
 	 * (i.e. writing ~0 to a BAR), we remember it and arrange to return
 	 * the appropriate size mask on the next read.  This is cheating
-	 * to some extent, because it depends on the fact that the next
-	 * access after such a write will always be a read to the same BAR.
+	 * to some extent, but it's possible to do intermediate read/writes
+	 * when probing BAR's size now.
 	 */
 
 	if ((reg >= 0x10) && (reg < 0x2c)) {
 		/* Write is to a BAR */
 		if (*(PULONG)value == ~0)
+		{
+			//DbgPrint("OLPC PCI: Probing bar size, devfn %x, reg %x\n", devfn.u.AsULONG, reg);
 			bar_probing = 1;
+			bar_offset = reg;
+		}
 	} else {
 		/*
 		 * No warning on writes to ROM BAR, CMD, LATENCY_TIMER,
@@ -289,6 +303,8 @@ pci_olpc_write(ULONG bus, PCI_SLOT_NUMBER devfn, ULONG reg, ULONG len, PUCHAR va
 		 */
 		if ((reg != 0x30) && (reg != 0x04) && (reg != 0x0d) &&
 		    (reg != 0x0c) && (reg != 0x44))
+		{
 			DbgPrint("OLPC PCI: Config write to devfn %x reg %x value %x\n", devfn, reg, *value);
+		}
 	}
 }
