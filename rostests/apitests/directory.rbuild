@@ -14,7 +14,7 @@
 </directory>
 
 <directory name="w32kdll">
-	<xi:include href="w32kdll/w32kdll.rbuild" />
+	<xi:include href="w32kdll/directory.rbuild" />
 </directory>
 
 <directory name="w32knapi">
