@@ -1,6 +1,33 @@
 #include "precomp.h"
 
 /*
+ * Return the full scan size for a bitmap.
+ * 
+ * Based on Wine and Windows Graphics Prog pg 595
+ */
+UINT
+FASTCALL
+DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
+{
+    UINT MaxBits = 0;
+    
+    if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+       PBITMAPCOREHEADER Core = (PBITMAPCOREHEADER)Info;
+       MaxBits = Core->bcBitCount * Core->bcPlanes * Core->bcWidth;
+    }
+    else  /* assume BITMAPINFOHEADER */
+    {
+       if ((Info->bmiHeader.biCompression) && (Info->bmiHeader.biCompression != BI_BITFIELDS))
+           return Info->bmiHeader.biSizeImage;
+       MaxBits = Info->bmiHeader.biBitCount * Info->bmiHeader.biPlanes * Info->bmiHeader.biWidth;
+    }
+    // Planes are over looked by Yuan. I guess assumed always 1.    
+    MaxBits = (MaxBits + 31) / 32; // ScanLineSize = (Width * bitcount + 31)/32
+    return (MaxBits * ScanLines);  // ret the full Size.
+}
+
+/*
  * @implemented
  */
 HBITMAP STDCALL
@@ -143,4 +170,28 @@ SetDIBitsToDevice(
                                           lpbmi->bmiHeader.biSize,
                                           FALSE,
                                           NULL);
+}
+
+
+INT 
+STDCALL
+GetDIBits(
+    HDC hDC,
+    HBITMAP hbmp,
+    UINT uStartScan,
+    UINT cScanLines,
+    LPVOID lpvBits,
+    LPBITMAPINFO lpbmi,
+    UINT uUsage
+         )
+{
+    return NtGdiGetDIBitsInternal(hDC,
+                                  hbmp,
+                                  uStartScan,
+                                  cScanLines,
+                                  lpvBits,
+                                  lpbmi,
+                                  uUsage,
+                                  DIB_BitmapMaxBitsSize( lpbmi, cScanLines ),
+                                  0);
 }

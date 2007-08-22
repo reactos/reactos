@@ -180,7 +180,7 @@ NtGdiGetDCPoint                                  3
 NtGdiGetDeviceCaps                               2
 NtGdiGetDeviceGammaRamp                          2
 # NtGdiGetDeviceCapsAll                            2
-# NtGdiGetDIBitsInternal                           9
+NtGdiGetDIBitsInternal                           9
 # NtGdiGetETM                                      2
 # NtGdiGetEudcTimeStampEx                          3
 NtGdiGetFontData                                 5
@@ -782,7 +782,6 @@ NtGdiGetColorSpace                      1
 NtGdiGetCurrentObject                   2
 NtGdiGetCurrentPositionEx               2
 NtGdiGetDIBColorTable                   4
-NtGdiGetDIBits                          7
 NtGdiGetEnhMetaFile                     1
 NtGdiGetEnhMetaFileBits                 3
 NtGdiGetEnhMetaFileDescription          3

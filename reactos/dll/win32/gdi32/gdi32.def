@@ -369,7 +369,7 @@ GetDCBrushColor@4
 GetDCOrgEx@8
 GetDCPenColor@4
 GetDIBColorTable@16=NtGdiGetDIBColorTable@16
-GetDIBits@28=NtGdiGetDIBits@28
+GetDIBits@28
 GetDeviceCaps@8=NtGdiGetDeviceCaps@8
 GetDeviceGammaRamp@8
 GetEnhMetaFileA@4

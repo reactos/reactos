@@ -317,20 +317,6 @@ NtGdiGetDIBColorTable (
 	RGBQUAD	* Colors
 	);
 
-/* Use NtGdiGetDIBitsInternal. */
-INT
-STDCALL
-NtGdiGetDIBits (
-	HDC		hDC,
-	HBITMAP		hBitmap,
-	UINT		StartScan,
-	UINT		ScanLines,
-	LPVOID		Bits,
-	LPBITMAPINFO	bi,
-	UINT		Usage
-	);
-
-
 /* Meta are user-mode. */
 HENHMETAFILE
 STDCALL

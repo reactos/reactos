@@ -1007,14 +1007,14 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     bi.bmiHeader.biYPelsPerMeter = 0;
                     bi.bmiHeader.biClrUsed = 0;
 
-                    ret = NtGdiGetDIBits(hdc, hMem, 0, bm.bmHeight,  NULL, &bi, DIB_RGB_COLORS);
+                    ret = NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight,  NULL, &bi, DIB_RGB_COLORS, 0, 0);
 
                     size = bi.bmiHeader.biSizeImage + sizeof(BITMAPINFOHEADER);
 
                     hCBData = ExAllocatePool(PagedPool, size);
                     memcpy(hCBData, &bi, sizeof(BITMAPINFOHEADER));
 
-                    ret = NtGdiGetDIBits(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS);
+                    ret = NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
 
                     UserReleaseDC(NULL, hdc, FALSE);
 

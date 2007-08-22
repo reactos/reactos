@@ -352,13 +352,15 @@ NtGdiSetDIBitsToDeviceInternal(
 
 /* Converts a device-dependent bitmap to a DIB */
 INT STDCALL
-NtGdiGetDIBits(HDC hDC,
-               HBITMAP hBitmap,
-               UINT StartScan,
-               UINT ScanLines,
-               LPVOID Bits,
-               LPBITMAPINFO Info,
-               UINT Usage)
+NtGdiGetDIBitsInternal(HDC hDC,
+                       HBITMAP hBitmap,
+                       UINT StartScan,
+                       UINT ScanLines,
+                       LPBYTE Bits,
+                       LPBITMAPINFO Info,
+                       UINT Usage,
+                       UINT MaxBits,
+                       UINT MaxInfo)
 {
    BITMAPOBJ *BitmapObj;
    SURFOBJ *DestSurfObj;
