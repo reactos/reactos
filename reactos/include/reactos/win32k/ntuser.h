@@ -281,9 +281,6 @@ NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
 LONG NTAPI
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
-INT NTAPI
-NtUserReleaseDC(HWND hWnd, HDC hDc);
-
 BOOL NTAPI
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
 
@@ -460,6 +457,7 @@ NtUserCallNoParam(
 #define ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT    0x29
 #define ONEPARAM_ROUTINE_SHOWCURSOR           0x30
 #define ONEPARAM_ROUTINE_REGISTERUSERMODULE   0x31
+#define ONEPARAM_ROUTINE_RELEASEDC            0x39
 DWORD
 NTAPI
 NtUserCallOneParam(

@@ -632,24 +632,6 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
 }
 
 
-// Win 3.1 throw back, hWnd should be ignored and not used.
-// Replace with NtUserCallOneParam ((DWORD) hDC, ONEPARAM_ROUTINE_RELEASEDC);
-INT STDCALL
-NtUserReleaseDC(HWND hWnd, HDC hDc)
-{
-   DECLARE_RETURN(INT);
-
-   DPRINT("Enter NtUserReleaseDC\n");
-   UserEnterExclusive();
-
-   RETURN(UserReleaseDC(NULL, hDc, FALSE));
-
-CLEANUP:
-   DPRINT("Leave NtUserReleaseDC, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 /***********************************************************************
  *           DceFreeDCE
  */

@@ -741,7 +741,6 @@ NtUserMenuItemInfo                      5
 NtUserMonitorFromPoint                  3
 NtUserMonitorFromRect                   2
 NtUserMonitorFromWindow                 2
-NtUserReleaseDC                         2
 NtUserRegisterClassEx                   6
 NtUserRegisterClipboardFormat           1 
 NtUserSendMessage                       5
