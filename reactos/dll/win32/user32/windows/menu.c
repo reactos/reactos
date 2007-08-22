@@ -5006,6 +5006,30 @@ TrackPopupMenuEx(
                         NULL != Tpm ? &Tpm->rcExclude : NULL);
 }
 
+//
+// Example for the Win32/User32 rewrite.
+// Def = TrackPopupMenuEx@24=NtUserTrackPopupMenuEx@24
+//
+//
+BOOL
+STDCALL
+NEWTrackPopupMenu(
+  HMENU Menu,
+  UINT Flags,
+  int x,
+  int y,
+  int Reserved,
+  HWND Wnd,
+  CONST RECT *Rect)
+{
+  return NtUserTrackPopupMenuEx( Menu,
+                                Flags,
+                                    x,
+                                    y,
+                                  Wnd,
+                                 NULL); // LPTPMPARAMS is null
+}
+
 
 /*
  * @implemented
