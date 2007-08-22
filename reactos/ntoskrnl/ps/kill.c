@@ -1108,12 +1108,21 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     PSTRACE(PS_KILL_DEBUG,
             "ProcessHandle: %p ExitStatus: %p\n", ProcessHandle, ExitStatus);
 
-    /* Remember how we will kill it */
-    KillByHandle = (ProcessHandle != NULL);
+    /* Were we passed a process handle? */
+    if (ProcessHandle)
+    {
+        /* Yes we were, use it */
+        KillByHandle = TRUE;
+    }
+    else
+    {
+        /* We weren't... we assume this is suicide */
+        KillByHandle = FALSE;
+        ProcessHandle = NtCurrentProcess();
+    }
 
     /* Get the Process Object */
-    Status = ObReferenceObjectByHandle((KillByHandle) ?
-                                       ProcessHandle : NtCurrentProcess(),
+    Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_TERMINATE,
                                        PsProcessType,
                                        KeGetPreviousMode(),
@@ -1138,9 +1147,8 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
         return STATUS_PROCESS_IS_TERMINATING;
     }
 
-    /* Set the delete flag */
-    if (!KillByHandle) InterlockedOr((PLONG)&Process->Flags,
-                                     PSF_PROCESS_DELETE_BIT);
+    /* Set the delete flag, unless the process is comitting suicide */
+    if (KillByHandle) PspSetProcessFlag(Process, PSF_PROCESS_DELETE_BIT);
 
     /* Get the first thread */
     Status = STATUS_NOTHING_TO_TERMINATE;
@@ -1169,23 +1177,22 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     ExReleaseRundownProtection(&Process->RundownProtect);
 
     /* Check if we are killing ourselves */
-    if (Process != CurrentProcess)
+    if (Process == CurrentProcess)
     {
-        /* Check for the DBG_TERMINATE_PROCESS exit code */
-        if (ExitStatus == DBG_TERMINATE_PROCESS)
+        /* Also make sure the caller gave us our handle */
+        if (KillByHandle)
         {
-            /* Disable debugging on this process */
-            DbgkClearProcessDebugObject(Process, NULL);
+            /* Dereference the project */
+            ObDereferenceObject(Process);
+
+            /* Terminate ourselves */
+            PspTerminateThreadByPointer(CurrentThread, ExitStatus, TRUE);
         }
     }
-    /* Make sure that we got a handle */
-    else if (KillByHandle)
+    else if (ExitStatus == DBG_TERMINATE_PROCESS)
     {
-        /* Dereference the project */
-        ObDereferenceObject(Process);
-
-        /* Terminate ourselves */
-        PspTerminateThreadByPointer(CurrentThread, ExitStatus, TRUE);
+        /* Disable debugging on this process */
+        DbgkClearProcessDebugObject(Process, NULL);
     }
 
     /* Check if there was nothing to terminate, or if we have a Debug Port */

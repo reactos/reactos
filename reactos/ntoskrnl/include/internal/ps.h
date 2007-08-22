@@ -58,6 +58,10 @@
 #define PSREFTRACE(x)
 #endif
 
+#define PspSetProcessFlag(Process, Flag) \
+ InterlockedOr((PLONG)&Process->Flags, Flag)
+
+
 //
 // Maximum Count of Notification Routines
 //
