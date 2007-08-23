@@ -661,7 +661,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
 NTSTATUS
 NTAPI
-NtInitializeRegistry (IN BOOLEAN SetUpBoot)
+NtInitializeRegistry (IN USHORT Flag)
 {
     NTSTATUS Status;
 
@@ -673,7 +673,7 @@ NtInitializeRegistry (IN BOOLEAN SetUpBoot)
     /* Save boot log file */
     IopSaveBootLogToFile();
 
-    Status = CmiInitHives (SetUpBoot);
+    Status = CmiInitHives (Flag);
 
     CmiRegistryInitialized = TRUE;
 

@@ -315,7 +315,7 @@ typedef struct _I386_LOADER_BLOCK
 {
     PVOID CommonDataArea;
     ULONG MachineType;
-    ULONG Reserved;
+    ULONG VirtualBias;
 } I386_LOADER_BLOCK, *PI386_LOADER_BLOCK;
 
 //

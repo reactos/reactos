@@ -1355,6 +1355,8 @@ typedef enum _TIMER_TYPE {
 #define IO_VIDEO_INCREMENT                1
 #define SEMAPHORE_INCREMENT               1
 
+#define MM_MAXIMUM_DISK_IO_SIZE          (0x10000)
+
 typedef struct _IRP {
   CSHORT  Type;
   USHORT  Size;
@@ -4740,6 +4742,11 @@ typedef enum _LOCK_OPERATION {
   IoModifyAccess
 } LOCK_OPERATION;
 
+typedef ULONG PFN_COUNT;
+
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+
 typedef enum _MM_SYSTEM_SIZE {
   MmSmallSystem,
   MmMediumSystem,
@@ -5274,6 +5281,12 @@ typedef struct _KPCR {
   ULONG  StallScaleFactor;      /* 4C */
   UCHAR  SpareUnused;           /* 50 */
   UCHAR  Number;                /* 51 */
+  UCHAR Spare0;
+  UCHAR SecondLevelCacheAssociativity;
+  ULONG VdmAlert;
+  ULONG KernelReserved[14];         // For use by the kernel
+  ULONG SecondLevelCacheSize;
+  ULONG HalReserved[16];            // For use by Hal
 } KPCR, *PKPCR;                 /* 54 */
 
 typedef struct _KFLOATING_SAVE {
@@ -5333,6 +5346,9 @@ extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
 #define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
 #define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
 #define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
+
+#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
+#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
 
 #define KI_USER_SHARED_DATA               0xffdf0000
 #define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
