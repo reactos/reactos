@@ -535,20 +535,6 @@ done:
   return Ret;
 }
 
-BOOL STDCALL
-NtGdiExtFloodFill(
-	HDC  hDC,
-	INT  XStart,
-	INT  YStart,
-	COLORREF  Color,
-	UINT  FillType)
-{
-	DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
-
-	/* lie and say we succeded */
-	return TRUE;
-}
-
 /***********************************************************************
  * MaskBlt
  * Ported from WINE by sedwards 11-4-03
