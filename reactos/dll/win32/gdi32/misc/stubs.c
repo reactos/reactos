@@ -2432,6 +2432,18 @@ GdiResetDCEMF(
 	return 0;
 }
 
+
+HBITMAP 
+STDCALL 
+CreateDIBitmap(HDC
+	hDc, const BITMAPINFOHEADER *Header,
+	DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
+	UINT ColorUse)
+{
+	/* FIMXE we need do more thing in user mode */
+	return NtGdiCreateDIBitmap(hDc, Header, Init, Bits, Data,  ColorUse);
+}
+
 /*
  * @unimplemented
  */

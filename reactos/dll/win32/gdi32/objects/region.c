@@ -56,11 +56,9 @@ CreateEllipticRgnIndirect(
    const RECT *prc
 )
 {
-   if (prc)
-   {
-      return NtGdiCreateEllipticRgn(prc->left, prc->top, prc->right, prc->bottom);
-   }
-   return NULL;
+    /* Notes if prc is NULL it will crash on All Windows NT I checked 2000/XP/VISTA */
+    return NtGdiCreateEllipticRgn(prc->left, prc->top, prc->right, prc->bottom);
+
 }
 
 HRGN

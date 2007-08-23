@@ -135,7 +135,7 @@ CreateDiscardableBitmap(
    INT  Width,
    INT  Height)
 {
-   return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
+   return  CreateCompatibleBitmap(hDC, Width, Height);
 }
 
 
