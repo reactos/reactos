@@ -90,8 +90,13 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
 
    MmInitMemoryAreas();
 
-   /* Start the paged and nonpaged pool at a 4MB boundary. */ 
-   MiNonPagedPoolStart = (PVOID)ROUND_UP((ULONG_PTR)LastKernelAddress + PAGE_SIZE, 0x400000);
+   /*
+    * FreeLDR Marks 6MB "in use" at the start of the kernel base,
+    * so start the non-paged pool at a boundary of 6MB from where
+    * the last driver was loaded. This should be the end of the
+    * FreeLDR-marked region.
+    */
+   MiNonPagedPoolStart = (PVOID)ROUND_UP((ULONG_PTR)LastKernelAddress + PAGE_SIZE, 0x600000);
    MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;
 
    MmPagedPoolBase = (PVOID)ROUND_UP((ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength + PAGE_SIZE, 0x400000);

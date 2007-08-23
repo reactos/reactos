@@ -992,7 +992,7 @@ Module::GetDefaultModuleBaseaddress () const
 	switch ( type )
 	{
 		case Kernel:
-			return "0x80000000";
+			return "0x80800000";
 		case Win32DLL:
 		case Win32OCX:
 			return "0x10000000";

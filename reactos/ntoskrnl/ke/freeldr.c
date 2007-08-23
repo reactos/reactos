@@ -102,7 +102,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         if (!_stricmp(DriverName, "ansi.nls"))
         {
             /* ANSI Code page */
-            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
+            ModStart = RVA(ModStart, KSEG0_BASE);
             LoaderBlock->NlsData->AnsiCodePageData = ModStart;
 
             /* Create an MD for it */
@@ -117,7 +117,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else if (!_stricmp(DriverName, "oem.nls"))
         {
             /* OEM Code page */
-            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
+            ModStart = RVA(ModStart, KSEG0_BASE);
             LoaderBlock->NlsData->OemCodePageData = ModStart;
 
             /* Create an MD for it */
@@ -132,7 +132,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else if (!_stricmp(DriverName, "casemap.nls"))
         {
             /* Unicode Code page */
-            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
+            ModStart = RVA(ModStart, KSEG0_BASE);
             LoaderBlock->NlsData->UnicodeCodePageData = ModStart;
 
             /* Create an MD for it */
@@ -150,7 +150,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             !(_stricmp(DriverName, "system.hiv")))
         {
             /* Save registry data */
-            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
+            ModStart = RVA(ModStart, KSEG0_BASE);
             LoaderBlock->RegistryBase = ModStart;
             LoaderBlock->RegistryLength = ModSize;
 
@@ -172,7 +172,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             !(_stricmp(DriverName, "hardware.hiv")))
         {
             /* Create an MD for it */
-            ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
+            ModStart = RVA(ModStart, KSEG0_BASE);
             MdEntry = &BldrMemoryDescriptors[i];
             MdEntry->MemoryType = LoaderRegistryData;
             MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
@@ -285,6 +285,11 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     LoaderBlock->Extension->MajorVersion = 5;
     LoaderBlock->Extension->MinorVersion = 2;
 
+    /* Save the number of pages the kernel images take */
+    LoaderBlock->Extension->LoaderPagesSpanned =
+        MmFreeLdrLastKrnlPhysAddr - MmFreeLdrFirstKrnlPhysAddr;
+    LoaderBlock->Extension->LoaderPagesSpanned /= PAGE_SIZE;
+
     /* Now setup the setup block if we have one */
     if (LoaderBlock->SetupLdrBlock)
     {
@@ -379,9 +384,8 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                                                         ModsCount - 1].
                                                 ModEnd);
     MmFreeLdrFirstKrnlPhysAddr = KeRosLoaderBlock->ModsAddr[0].ModStart -
-                                 KSEG0_BASE + 0x200000;
-    MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
-                                KSEG0_BASE + 0x200000;
+                                 KSEG0_BASE;
+    MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress - KSEG0_BASE;
 
 #if defined(_M_IX86)
     /* Set up the VDM Data */

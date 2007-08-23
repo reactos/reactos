@@ -33,8 +33,8 @@ PLOADER_MODULE CurrentModule = NULL;
 /* Unrelocated Kernel Base in Virtual Memory */
 ULONG_PTR KernelBase;
 
-/* Kernel Entrypoint in Physical Memory */
-ULONG_PTR KernelEntry;
+/* Kernel Entrypoint in Virtual Memory */
+ULONG_PTR KernelEntryPoint;
 
 /* Page Directory and Tables for non-PAE Systems */
 extern PAGE_DIRECTORY_X86 startup_pagedirectory;
@@ -297,9 +297,9 @@ LdrPEGetExportByName(PVOID BaseAddress,
     ULONG ExportDirSize;
 
     /* HAL and NTOS use a virtual address, switch it to physical mode */
-    if ((ULONG_PTR)BaseAddress & 0x80000000)
+    if ((ULONG_PTR)BaseAddress & KSEG0_BASE)
     {
-        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress - KSEG0_BASE + 0x200000);
+        BaseAddress = RVA(BaseAddress, -KSEG0_BASE);
     }
 
     ExportDir = (PIMAGE_EXPORT_DIRECTORY)
@@ -439,7 +439,7 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
             *ImportAddressList = LdrPEGetExportByName((PVOID)LoaderModule->ModStart, pe_name->Name, pe_name->Hint);
 
             /* Fixup the address to be virtual */
-            *ImportAddressList = (PVOID)((ULONG_PTR)*ImportAddressList + (KSEG0_BASE - 0x200000));
+            *ImportAddressList = RVA(*ImportAddressList, KSEG0_BASE);
 
             //DbgPrint("Looked for: %s and found: %p\n", pe_name->Name, *ImportAddressList);
             if ((*ImportAddressList) == NULL)
@@ -592,7 +592,7 @@ FrLdrMapImage(IN FILE *Image,
 
     /* Set the virtual (image) and physical (load) addresses */
     LoadBase = (PVOID)NextModuleBase;
-    ImageBase = RVA(LoadBase , -KERNEL_BASE_PHYS + KSEG0_BASE);
+    ImageBase = RVA(LoadBase, KSEG0_BASE);
 
     /* Save the Image Size */
     ImageSize = FsGetFileSize(Image);

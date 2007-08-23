@@ -36,7 +36,7 @@ CHAR szBootPath[255];
 CHAR SystemRoot[255];
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 BOOLEAN FrLdrBootType;
-extern ULONG_PTR KernelBase, KernelEntry;
+extern ULONG_PTR KernelBase, KernelEntryPoint;
 
 BOOLEAN
 FrLdrLoadDriver(PCHAR szFileName,
@@ -759,7 +759,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     /* Get the NT header, kernel base and kernel entry */
     NtHeader = RtlImageNtHeader(LoadBase);
     KernelBase = NtHeader->OptionalHeader.ImageBase;
-    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    KernelEntryPoint = KernelBase + NtHeader->OptionalHeader.AddressOfEntryPoint;
     LoaderBlock.KernelBase = KernelBase;
 
 	/*

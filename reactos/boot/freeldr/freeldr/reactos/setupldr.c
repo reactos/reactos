@@ -31,7 +31,7 @@ memory_map_t			reactos_memory_map[32];		// Memory map
 char szBootPath[256];
 char szHalName[256];
 CHAR SystemRoot[255];
-extern ULONG_PTR KernelBase, KernelEntry;
+extern ULONG_PTR KernelBase, KernelEntryPoint;
 
 extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
 
@@ -83,7 +83,7 @@ static FrLdrLoadKernel(IN PCHAR szFileName,
     /* Get the NT header, kernel base and kernel entry */
     NtHeader = RtlImageNtHeader(LoadBase);
     KernelBase = NtHeader->OptionalHeader.ImageBase;
-    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    KernelEntryPoint = KernelBase + NtHeader->OptionalHeader.AddressOfEntryPoint;
     LoaderBlock.KernelBase = KernelBase;
 
     /* Update Processbar and return success */
