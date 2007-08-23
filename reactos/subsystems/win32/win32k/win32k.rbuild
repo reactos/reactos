@@ -148,7 +148,6 @@
 		<file>icm.c</file>
 		<file>line.c</file>
 		<file>metafile.c</file>
-		<file>paintobj.c</file>
 		<file>palobj.c</file>
 		<file>path.c</file>
 		<file>pen.c</file>

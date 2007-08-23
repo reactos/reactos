@@ -3168,4 +3168,26 @@ IntChangeDisplaySettings(
   return Ret;
 }
 
+DWORD
+APIENTRY
+NtGdiGetBoundsRect(
+    IN HDC hdc,
+    OUT LPRECT prc,
+    IN DWORD f)
+{
+  DPRINT("stub");
+  return  DCB_RESET;   /* bounding rectangle always empty */
+}
+
+DWORD
+APIENTRY
+NtGdiSetBoundsRect(
+    IN HDC hdc,
+    IN LPRECT prc,
+    IN DWORD f)
+{
+  DPRINT("stub");
+  return  DCB_DISABLE;   /* bounding rectangle always empty */
+}
+
 /* EOF */
