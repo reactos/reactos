@@ -5,6 +5,7 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>ehci.c</file>
+	<file>ohci.c</file>
 	<file>uhci.c</file>
 	<file>roothub.c</file>
 	<file>hub.c</file>
