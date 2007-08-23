@@ -125,20 +125,24 @@ GetDlgInfo(PMAIN_WND_INFO Info)
                        (LPARAM)Info->PropSheet->lpDisplayName);
 
     /* set the description */
-    if (GetDescription(Info->CurrentService->lpServiceName, &Info->PropSheet->lpDescription))
+    if (Info->PropSheet->lpDescription = GetDescription(Info->CurrentService->lpServiceName))
+    {
         SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_DESCRIPTION,
                            WM_SETTEXT,
                            0,
                            (LPARAM)Info->PropSheet->lpDescription);
+    }
 
     /* set the executable path */
-    if (GetExecutablePath(Info, &Info->PropSheet->lpPathToExe))
+    if (Info->PropSheet->lpPathToExe = GetExecutablePath(Info))
+    {
         SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_EXEPATH,
                            WM_SETTEXT,
                            0,
                            (LPARAM)Info->PropSheet->lpPathToExe);
+    }
 
     /* set startup type */
     SetStartupType(Info);
@@ -182,8 +186,8 @@ GetDlgInfo(PMAIN_WND_INFO Info)
 static INT_PTR CALLBACK
 GeneralPageProc(HWND hwndDlg,
                 UINT uMsg,
-		        WPARAM wParam,
-		        LPARAM lParam)
+                WPARAM wParam,
+                LPARAM lParam)
 {
     PMAIN_WND_INFO Info;
 
@@ -247,6 +251,16 @@ GeneralPageProc(HWND hwndDlg,
             break;
 
         case WM_DESTROY:
+            if (Info->PropSheet->lpDescription)
+                HeapFree(ProcessHeap,
+                         0,
+                         Info->PropSheet->lpDescription);
+
+            if (Info->PropSheet->lpPathToExe)
+                HeapFree(ProcessHeap,
+                         0,
+                         Info->PropSheet->lpPathToExe);
+
         break;
 
         case WM_NOTIFY:

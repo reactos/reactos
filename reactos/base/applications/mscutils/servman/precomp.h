@@ -59,7 +59,7 @@ typedef struct _MAIN_WND_INFO
     struct _PROP_DLG_INFO *PropSheet;
 
     /* status flags */
-    BOOL InMenuLoop : 1;
+    BOOL InMenuLoop;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
@@ -97,8 +97,8 @@ BOOL Control(PMAIN_WND_INFO Info, DWORD Control);
 /* query.c */
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
 BOOL SetDescription(LPTSTR, LPTSTR);
-BOOL GetDescription(LPTSTR, LPTSTR *);
-BOOL GetExecutablePath(PMAIN_WND_INFO Info, LPTSTR *);
+LPTSTR GetDescription(LPTSTR);
+LPTSTR GetExecutablePath(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 DWORD GetServiceList(PMAIN_WND_INFO Info);
 

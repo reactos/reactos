@@ -304,6 +304,58 @@ pCreateToolbar(PMAIN_WND_INFO Info)
 }
 
 
+static VOID
+InitListViewImage(PMAIN_WND_INFO Info)
+{
+    HICON hSmIconItem, hLgIconItem;    /* icon for list-view items */
+    HIMAGELIST hSmall, hLarge;  /* image list for other views */
+
+
+    /* Create the icon image lists */
+    hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
+                              GetSystemMetrics(SM_CYSMICON),
+                              ILC_MASK | ILC_COLOR32,
+                              1,
+                              1);
+
+    hLarge = ImageList_Create(GetSystemMetrics(SM_CXICON),
+                              GetSystemMetrics(SM_CYICON),
+                              ILC_MASK | ILC_COLOR32,
+                              1,
+                              1);
+
+    /* Add an icon to each image list */
+    hSmIconItem = LoadImage(hInstance,
+                            MAKEINTRESOURCE(IDI_SM_ICON),
+                            IMAGE_ICON,
+                            16,
+                            16,
+                            0);
+
+    ImageList_AddIcon(hSmall,
+                      hSmIconItem);
+
+    hLgIconItem = LoadImage(hInstance,
+                            MAKEINTRESOURCE(IDI_SM_ICON),
+                            IMAGE_ICON,
+                            32,
+                            32,
+                            0);
+
+    ImageList_AddIcon(hLarge,
+                      hLgIconItem);
+
+    /* assign the image to the list view */
+    (void)ListView_SetImageList(Info->hListView,
+                                hSmall,
+                                LVSIL_SMALL);
+    (void)ListView_SetImageList(Info->hListView,
+                                hLarge,
+                                LVSIL_NORMAL);
+
+}
+
+
 static BOOL
 CreateListView(PMAIN_WND_INFO Info)
 {
@@ -396,6 +448,8 @@ CreateListView(PMAIN_WND_INFO Info)
     (void)ListView_InsertColumn(Info->hListView,
                                 4,
                                 &lvc);
+
+    InitListViewImage(Info);
 
     /* check the details view menu item */
     CheckMenuRadioItem(GetMenu(Info->hMainWnd),
