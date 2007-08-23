@@ -156,7 +156,7 @@ NtGdiExtSelectClipRgn                            3
 NtGdiFillPath                                    1
 NtGdiFillRgn                                     3
 NtGdiFlattenPath                                 1
-# NtGdiFlushUserBatch                            0
+NtGdiFlushUserBatch                              0
 NtGdiFlush                                       0
 # NtGdiForceUFIMapping                           2
 NtGdiFrameRgn                                    5

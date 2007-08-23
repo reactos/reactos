@@ -55,3 +55,12 @@ NtGdiFlush(VOID)
   UNIMPLEMENTED;
 }
 
+NTSTATUS
+APIENTRY
+NtGdiFlushUserBatch(VOID)
+{
+  NTSTATUS Status = STATUS_SUCCESS;
+//  UNIMPLEMENTED;
+  return Status;
+}
+

@@ -160,6 +160,8 @@ VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);
 VOID FASTCALL IntGetWindowExtEx(PDC dc, LPSIZE pt);
 VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
 
+NTSTATUS STDCALL NtGdiFlushUserBatch(VOID);
+
 /* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
 typedef struct
 {
