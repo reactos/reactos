@@ -13,6 +13,13 @@ AnimatePalette(HPALETTE hpal,
     return NtGdiDoPalette(hpal, iStartIndex, cEntries, (PALETTEENTRY*)ppe, GdiPalAnimate, TRUE);
 }
 
+HPALETTE
+WINAPI
+CreatePalette(CONST LOGPALETTE * plpal)
+{
+    return NtGdiCreatePaletteInternal((LPLOGPALETTE)plpal, plpal->palNumEntries);
+}
+
 UINT
 WINAPI
 GetPaletteEntries(HPALETTE hpal,
