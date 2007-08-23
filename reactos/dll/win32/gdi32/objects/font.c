@@ -1091,11 +1091,17 @@ int
 STDCALL
 AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
-  UNICODE_STRING Filename;
+    int retVal = 0;
 
-  /* FIXME handle fl parameter */
-  RtlInitUnicodeString(&Filename, lpszFilename);
-  return NtGdiAddFontResource ( &Filename, fl );
+    if (fl & (FR_PRIVATE | FR_NOT_ENUM))
+    {
+        retVal = GdiAddFontResourceW(lpszFilename, fl,0);
+    }
+    else
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+    }
+    return retVal;
 }
 
 

@@ -1314,17 +1314,7 @@ AddFontResourceTracking(
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL 
-AnyLinkedFonts(VOID)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -2442,28 +2432,9 @@ GdiResetDCEMF(
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-HANDLE STDCALL
-BRUSHOBJ_hGetColorTransform(BRUSHOBJ *pbo)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-PVOID STDCALL
-BRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ *BrushObj,
-		       IN ULONG ObjSize)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
+
 
 /*
  * @unimplemented

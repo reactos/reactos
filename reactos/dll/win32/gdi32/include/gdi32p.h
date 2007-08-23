@@ -184,5 +184,9 @@ UINT
 WINAPI
 UserRealizePalette(HDC hDC);
 
+int
+STDCALL
+GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv);
+
 /* EOF */
 

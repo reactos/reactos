@@ -258,11 +258,16 @@ EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
  */
 int
 STDCALL
-GdiAddFontResourceW(LPCWSTR filename,FLONG f,DESIGNVECTOR *pdv)
+GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	UNICODE_STRING Filename;
+	//UNIMPLEMENTED;
+	//SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	//return 0;
+
+	/* FIXME handle fl parameter */
+	RtlInitUnicodeString(&Filename, lpszFilename);
+	return NtGdiAddFontResource ( &Filename, fl );
 }
 
 /*
