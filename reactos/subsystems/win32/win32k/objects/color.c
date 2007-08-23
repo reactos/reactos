@@ -269,6 +269,42 @@ HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
   return NewPalette;
 }
 
+/*
+ * @implemented
+ */
+HPALETTE STDCALL 
+NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
+{
+    PPALGDI PalGDI;
+    HPALETTE NewPalette;
+
+    pLogPal->palNumEntries = cEntries;
+    NewPalette = PALETTE_AllocPalette( PAL_INDEXED,
+                                       cEntries,
+                                       (PULONG)pLogPal->palPalEntry,
+                                       0, 0, 0);
+
+    if (NewPalette == NULL)
+    {
+        return NULL;
+    }
+
+    PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
+    if (PalGDI != NULL)
+    {
+        PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
+        PalGDI->logicalToSystem = NULL;
+        PALETTE_UnlockPalette(PalGDI);
+    }
+    else
+    {
+        /* FIXME - Handle PalGDI == NULL!!!! */
+        DPRINT1("waring PalGDI is NULL \n");
+    }
+  return NewPalette;
+}
+
+
 BOOL STDCALL NtGdiGetColorAdjustment(HDC  hDC,
                              LPCOLORADJUSTMENT  ca)
 {

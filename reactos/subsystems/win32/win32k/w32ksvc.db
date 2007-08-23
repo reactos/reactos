@@ -44,7 +44,7 @@ NtGdiCreateEllipticRgn                           4
 NtGdiCreateHalftonePalette                       1
 NtGdiCreateHatchBrushInternal                    3
 # NtGdiCreateMetafileDC                          1
-# NtGdiCreatePaletteInternal                     2
+NtGdiCreatePaletteInternal                     2
 NtGdiCreatePatternBrushInternal                  3
 NtGdiCreatePen                                   4
 NtGdiCreateRectRgn                               4
