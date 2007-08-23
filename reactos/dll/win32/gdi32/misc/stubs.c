@@ -2434,69 +2434,6 @@ GdiResetDCEMF(
 
 
 
-
-
-/*
- * @unimplemented
- */
-PVOID STDCALL
-BRUSHOBJ_pvGetRbrush(IN BRUSHOBJ *BrushObj)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONG STDCALL
-BRUSHOBJ_ulGetBrushColor(BRUSHOBJ *pbo)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-CLIPOBJ_bEnum(IN CLIPOBJ *ClipObj,
-	      IN ULONG ObjSize,
-	      OUT ULONG *EnumRects)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONG STDCALL
-CLIPOBJ_cEnumStart(IN CLIPOBJ *ClipObj,
-		   IN BOOL ShouldDoAll,
-		   IN ULONG ClipType,
-		   IN ULONG BuildOrder,
-		   IN ULONG MaxRects)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-PATHOBJ* STDCALL
-CLIPOBJ_ppoGetPath(CLIPOBJ *ClipObj)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
  * @unimplemented
  */
