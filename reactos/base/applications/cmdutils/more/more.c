@@ -13,11 +13,12 @@
 #include <windows.h>
 #include <malloc.h>
 #include <tchar.h>
+#include <stdio.h>
+#include "resource.h"
 
-
-DWORD len;
-LPTSTR msg = _T("--- continue ---");
-
+static TCHAR szCont[128];
+static DWORD szContLength;
+static HINSTANCE hApp;
 
 /*handle for file and console*/
 HANDLE hStdIn;
@@ -42,7 +43,7 @@ static
 VOID ConOutPuts (LPTSTR szText)
 {
 	DWORD dwWritten;
-
+    
 	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
 	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
 }
@@ -70,7 +71,7 @@ WaitForKey (VOID)
 {
 	DWORD dwWritten;
 
-	WriteFile (hStdErr,msg , len, &dwWritten, NULL);
+    WriteFile (hStdErr, szCont , szContLength, &dwWritten, NULL);
 
 	ConInKey();
 
@@ -88,7 +89,7 @@ int main (int argc, char **argv)
 	DWORD i, last;
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 	TCHAR szFullPath[MAX_PATH];
-
+    TCHAR szMsg[1024];
 	/*reading/writing buffer*/
 	TCHAR *buff;
 
@@ -98,14 +99,28 @@ int main (int argc, char **argv)
 	/*ReadFile() return value*/
 	BOOL bRet;
 
-	len = _tcslen (msg);
+
 	hStdIn = GetStdHandle(STD_INPUT_HANDLE);
 	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+    hApp = GetModuleHandle(NULL);
+
+	buff=malloc(4096);
+    if (!buff)
+    {
+        ConOutPuts(_T("Error: no memory"));
+        return 0;
+    }
 
 	if (argc > 1 && _tcsncmp (argv[1], _T("/?"), 2) == 0)
 	{
-		ConOutPuts(_T("Help text still missing!!"));
+        if (LoadString(hApp, IDS_USAGE, buff, 4096 / sizeof(TCHAR)) < 4096 / sizeof(TCHAR))
+        {
+            CharToOem(buff, buff);
+            ConOutPuts(buff);
+        }
+
+        free(buff);
 		return 0;
 	}
 
@@ -114,26 +129,46 @@ int main (int argc, char **argv)
 
 	GetScreenSize(&maxx,&maxy);
 
-	buff=malloc(4096);
+
 
 	FlushConsoleInputBuffer (hKeyboard);
 
 	if(argc > 1)
 	{
-		GetFullPathName(argv[1], MAX_PATH, szFullPath, NULL);
-		hFile = CreateFile (szFullPath, GENERIC_READ,
-	                        0,NULL,OPEN_ALWAYS,0,0);
-        
-		if (hFile == INVALID_HANDLE_VALUE)
+		GetFullPathNameA(argv[1], MAX_PATH, szFullPath, NULL);
+		hFile = CreateFile (szFullPath, 
+                            GENERIC_READ,
+	                        0,
+                            NULL,
+                            OPEN_EXISTING,
+                            0,
+                            0);
+        if (hFile == INVALID_HANDLE_VALUE)
 		{
-			ConOutPuts(_T("The file could not be opened"));
-			return 0;
+            if (LoadString(hApp, IDS_FILE_ACCESS, szMsg, sizeof(szMsg) / sizeof(TCHAR)) < sizeof(szMsg) / sizeof(TCHAR))
+            {
+                _stprintf(buff, szMsg, szFullPath);
+                CharToOem(buff, buff);
+			    ConOutPuts(buff);
+            }
+
+            free(buff);
+            return 0;
 		}
 	}
 	else
 	{
 		hFile = hStdIn;
 	}
+
+    if (!LoadString(hApp, IDS_CONTINUE, szCont, sizeof(szCont) / sizeof(TCHAR)))
+    {
+        /* fail back to english */
+        _tcscpy(szCont, _T("--- continue ---"));
+    }
+    szContLength = _tcslen(szCont);
+
+
 
 	do
 	{

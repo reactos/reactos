@@ -1,0 +1,35 @@
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_USAGE, "Zeigt Daten seitenweise auf dem Bildschirm an.\n\n\
+  MORE [/E [/C] [/P] [/S] [/Tn] [+n]] < [Laufwerk:][Pfad]Dateiname\n\
+  Befehl | MORE [/E [/C] [/P] [/S] [/Tn] [+n]] \n\
+  MORE /E [/C] [/P] [/S] [/Tn] [+n] [Dateien]\n\n\
+  [Laufwerk:][Pfad]Dateiname Ein Datei, deren Inhalt angezeigt\n\
+\t\t\t     werden soll.\n\n\
+  Befehl\t\t     Ein Befehl, dessen Ausgabe angezeigt\n\
+\t\t\t     werden soll.\n\n\
+  /E\tAktiviert die erweiterten Möglichkeiten.\n\
+  /C\tLöscht den Bildschirm, bevor eine Seite angezeigt wird.\n\
+  /P\tFührt Seitenvorschubzeichen aus.\n\
+  /S\tFasst mehrere leere Zeilen zu einer Zeile zusammen.\n\
+  /Tn\tErsetzt Tabulatorenzeichen durch n Leerzeichen (Standard 8).\n\n\
+\tDie Optionen können in der Umgebungsvariablen MORE angegeben\n\
+\twerden.\n\n\
+  +n\tBeginnt mit der Anzeige der ersten Datei in Zeile n.\n\n\
+  Dateien  Gibt eine Liste mit anzuzeigenden Dateien an.\n\
+\t  Trennen sie die Dateinamen durch ein Leerzeichen.\n\n\
+  Wenn die erweiterten Möglichkeiten aktiviert sind, können die folgenden\n\
+  Befehle an der Eingabeforderung \"--Fortsetzung--\" eingegeben werden:\n\n\
+  P n\t Zeigt die nächsten n Zeilen an.\n\
+  S n\t Überspringt die nächsten n Zeilen.\n\
+  Q\tBeendet die Ausgabe.\n\
+  =\tZeigt die Zeilennummer an.\n\
+  ?\tZeigt die Hilfezeile an.\n\
+  <LEERTASTE>     Zeigt die nächste Zeile an.\n\
+  <EINGABETASTE>  Zeigt die nächste Zeile an.\n"
+
+  IDS_CONTINUE, " -- Fortsetzung (100%) -- "
+  IDS_FILE_ACCESS, "Auf die Datei %s kann nicht zugegriffen werden."
+}

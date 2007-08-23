@@ -4,3 +4,5 @@
 #define REACTOS_STR_INTERNAL_NAME	"more\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"more.exe\0"
 #include <reactos/version.rc>
+
+#include "rsrc.rc"
