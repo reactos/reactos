@@ -2432,7 +2432,34 @@ GdiResetDCEMF(
 	return 0;
 }
 
+/*
+ * @unimplemented
+ */
+INT
+STDCALL
+CombineRgn(HRGN  hDest,
+                    HRGN  hSrc1,
+                    HRGN  hSrc2,
+                    INT  CombineMode)
+{
+    /* FIXME some part should be done in user mode */
+    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode); 
+}
 
+/*
+ * @unimplemented
+ */
+HBITMAP STDCALL
+CreateBitmap(
+    INT  Width,
+    INT  Height,
+    UINT  Planes,
+    UINT  BitsPixel,
+    PCVOID pUnsafeBits)
+{
+    /* FIXME some part should be done in user mode */
+    return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
+}
 
 /*
  * @unimplemented
