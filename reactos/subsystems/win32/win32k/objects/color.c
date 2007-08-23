@@ -235,39 +235,10 @@ HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
         }
     }
 
-   return NtGdiCreatePalette((LOGPALETTE *)&Palette);
+   return NtGdiCreatePaletteInternal((LOGPALETTE *)&Palette, Palette->palNumEntries);
 }
 
-HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
-{
-    PPALGDI PalGDI;
 
-    HPALETTE NewPalette = PALETTE_AllocPalette(
-                                                PAL_INDEXED,
-                                                palette->palNumEntries,
-                                                (PULONG)palette->palPalEntry,
-                                                0, 0, 0);
-
-    if (NewPalette == NULL)
-    {
-        return NULL;
-    }
-
-    PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
-    if (PalGDI != NULL)
-    {
-        PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
-        PalGDI->logicalToSystem = NULL;
-        PALETTE_UnlockPalette(PalGDI);
-    }
-    else
-    {
-        /* FIXME - Handle PalGDI == NULL!!!! */
-        DPRINT1("waring PalGDI is NULL \n");
-    }
-
-  return NewPalette;
-}
 
 /*
  * @implemented

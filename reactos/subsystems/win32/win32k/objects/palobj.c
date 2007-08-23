@@ -172,7 +172,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     palPtr->palPalEntry[i].peFlags = 0;
   }
 
-  hpalette = NtGdiCreatePalette(palPtr);
+  hpalette = NtGdiCreatePaletteInternal(palPtr,NB_RESERVED_COLORS);
   ExFreePool(palPtr);
 
 #ifndef NO_MAPPING
