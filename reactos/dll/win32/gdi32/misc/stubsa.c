@@ -15,7 +15,7 @@
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -27,9 +27,8 @@ DeviceCapabilitiesExA(
 	CONST DEVMODEA	*pDevMode
 	)
 {
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+	/* Note Windows 2000/XP/VISTA always return -1 */
+	return -1;
 }
 
 

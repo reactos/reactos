@@ -836,22 +836,6 @@ SetColorSpace(
 	return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeleteColorSpace(
-	HCOLORSPACE	a0
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 /*
  * @unimplemented
  */

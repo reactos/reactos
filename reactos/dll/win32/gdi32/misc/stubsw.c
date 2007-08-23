@@ -14,7 +14,7 @@
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -26,18 +26,8 @@ DeviceCapabilitiesExW(
 	CONST DEVMODEW	*pDevMode
 	)
 {
-#if 0
-  /* FIXME no NtGdiDeviceCapabilities???? */
-  return NtGdiDeviceCapabilities ( pDevice,
-				  pPort,
-				  fwCapability,
-				  pOutput,
-				  pDevMode );
-#else
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-#endif
+    /* Note Windows 2000/XP/VISTA always return -1 */
+    return -1;
 }
 
 
