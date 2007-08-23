@@ -268,8 +268,8 @@ BEGIN
     IDS_PETABYTE "PB de RAM"
     IDS_VARIABLE "Variable"
     IDS_VALUE    "Valeur"
-    IDS_NO_DUMP "(None)"
-    IDS_MINI_DUMP "Minidump(64KB)"
-    IDS_KERNEL_DUMP "Kernel dump"
-    IDS_FULL_DUMP "Complete dump"
+    IDS_NO_DUMP "(Aucun)"
+    IDS_MINI_DUMP "Mini cliché(64KB)"
+    IDS_KERNEL_DUMP "Cliché du noyau"
+    IDS_FULL_DUMP "Cliché complet"
 END
