@@ -139,6 +139,18 @@ CreateDiscardableBitmap(
 }
 
 
+HBITMAP WINAPI
+CreateCompatibleBitmap(
+   HDC  hDC,
+   INT  Width,
+   INT  Height)
+{
+    /* FIXME some part shall be done in user mode */
+   return  NtGdiCreateCompatibleBitmap(hDC, Width, Height);
+}
+
+
+
 INT WINAPI
 SetDIBitsToDevice(
     HDC hDC,

@@ -84,6 +84,17 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
  */
 HDC
 STDCALL
+CreateCompatibleDC ( HDC hdc)
+{
+    /* FIXME need sharememory if it metadc */
+    return NtGdiCreateCompatibleDC(hdc);
+}
+
+/*
+ * @implemented
+ */
+HDC
+STDCALL
 CreateDCA (
 	LPCSTR		lpszDriver,
 	LPCSTR		lpszDevice,
