@@ -153,7 +153,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
             lvItem.iItem = ListView_InsertItem(Info->hListView, &lvItem);
 
             /* set the description */
-            if (lpDescription = GetDescription(Info->pServiceStatus[Index].lpServiceName))
+            if ((lpDescription = GetDescription(Info->pServiceStatus[Index].lpServiceName)))
             {
                 lvItem.pszText = lpDescription;
                 lvItem.iSubItem = 1;

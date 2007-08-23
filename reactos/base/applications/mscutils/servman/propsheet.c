@@ -125,7 +125,7 @@ GetDlgInfo(PMAIN_WND_INFO Info)
                        (LPARAM)Info->PropSheet->lpDisplayName);
 
     /* set the description */
-    if (Info->PropSheet->lpDescription = GetDescription(Info->CurrentService->lpServiceName))
+    if ((Info->PropSheet->lpDescription = GetDescription(Info->CurrentService->lpServiceName)))
     {
         SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_DESCRIPTION,
@@ -135,7 +135,7 @@ GetDlgInfo(PMAIN_WND_INFO Info)
     }
 
     /* set the executable path */
-    if (Info->PropSheet->lpPathToExe = GetExecutablePath(Info))
+    if ((Info->PropSheet->lpPathToExe = GetExecutablePath(Info)))
     {
         SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_EXEPATH,
