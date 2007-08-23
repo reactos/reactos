@@ -1260,7 +1260,7 @@ ULONG STDCALL
 NtGdiBRUSHOBJ_ulGetBrushColor(BRUSHOBJ *pbo)
 {
     UNIMPLEMENTED;
-    return NULL;
+    return 0;
 }
 
 /*
@@ -1287,7 +1287,7 @@ NtGdiCLIPOBJ_cEnumStart(IN CLIPOBJ *ClipObj,
                         IN ULONG MaxRects)
 {
     UNIMPLEMENTED;
-    return NULL;
+    return 0;
 }
 
 
