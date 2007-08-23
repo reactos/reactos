@@ -15,7 +15,7 @@ NtGdiAbortPath                                   1
 # NtGdiAddRemoteMMInstanceToDC                   3
 NtGdiAlphaBlend                                 12
 NtGdiAngleArc                                    6
-# NtGdiAnyLinkedFonts                            0
+NtGdiAnyLinkedFonts                              0
 # NtGdiFontIsLinked                              1
 NtGdiArcInternal                                10
 NtGdiBeginPath                                   1
@@ -641,9 +641,9 @@ NtGdiEngAlphaBlend                               7
 # NtGdiEngCreateClip                               0
 # NtGdiEngDeleteClip                               1
 # NtGdiBRUSHOBJ_ulGetBrushColor                    1
-# NtGdiBRUSHOBJ_pvAllocRbrush                      2
+NtGdiBRUSHOBJ_pvAllocRbrush                        2
 # NtGdiBRUSHOBJ_pvGetRbrush                        1
-# NtGdiBRUSHOBJ_hGetColorTransform                 1
+NtGdiBRUSHOBJ_hGetColorTransform                   1
 # NtGdiXFORMOBJ_bApplyXform                        5
 # NtGdiXFORMOBJ_iGetXform                          2
 # NtGdiFONTOBJ_vGetInfo                            3

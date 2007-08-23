@@ -7,6 +7,9 @@
 #define STUB(x) void x(void) { DbgPrint("WIN32K: Stub for %s\n", #x); }
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
+
+
+
 /*
  * @unimplemented
  */
@@ -1204,3 +1207,39 @@ XLATEOBJ_hGetColorTransform(
    UNIMPLEMENTED;
    return NULL;
 }
+
+
+/*
+ * @unimplemented
+ */
+
+BOOL
+STDCALL
+NtGdiAnyLinkedFonts()
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE STDCALL
+NtGdiBRUSHOBJ_hGetColorTransform(
+   IN BRUSHOBJ *Brush)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID STDCALL
+NtGdiBRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ *BrushObj,
+                            IN ULONG ObjSize)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
