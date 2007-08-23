@@ -235,7 +235,7 @@ HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
         }
     }
 
-   return NtGdiCreatePaletteInternal((LOGPALETTE *)&Palette, Palette->palNumEntries);
+   return NtGdiCreatePaletteInternal((LOGPALETTE *)&Palette, Palette.NumberOfEntries);
 }
 
 
