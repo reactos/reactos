@@ -132,7 +132,7 @@ NtGdiDeleteObjectApp                             1
 NtGdiDescribePixelFormat                         4
 # NtGdiGetPerBandInfo                            2
 # NtGdiDoBanding                                 4
-# NtGdiDoPalette                                 6
+NtGdiDoPalette                                   6
 NtGdiDrawEscape                                  4
 NtGdiEllipse                                     5
 # NtGdiEnableEudc                                1
@@ -513,7 +513,7 @@ NtUserSetActiveWindow                            1
 # NtUserSetAppImeLevel                             2
 NtUserSetCapture                                 1
 NtUserSetClassLong                               4
-# NtUserSetClassWord                               1  Wrong number of param ?
+NtUserSetClassWord                               3
 NtUserSetClipboardData                           3
 NtUserSetClipboardViewer                         1
 NtUserSetConsoleReserveKeys                      2
@@ -558,7 +558,7 @@ NtUserSetWindowsHookAW                           3
 NtUserSetWindowsHookEx                           6
 NtUserSetWindowStationUser                       4
 NtUserSetWindowWord                              3
-# NtUserSetWinEventHook                            4 Wrong number of param ?
+NtUserSetWinEventHook                            8
 NtUserShowCaret                                  1
 NtUserShowScrollBar                              3
 NtUserShowWindow                                 2
@@ -683,9 +683,7 @@ NtUserFindExistingCursorIcon            4
 NtUserFindWindowEx                      4
 NtUserGetClassInfo                      4
 NtUserInitTask                          11
-NtUserSetClassWord                      3
 NtUserSetCursorIconData                 6
-NtUserSetWinEventHook                   8
 NtUserUnregisterClass                   2
 NtUserValidateHandleSecure              1
 #
@@ -693,13 +691,11 @@ NtUserValidateHandleSecure              1
 NtGdiSelectObject                       2
 NtGdiSetBkColor                         2
 NtGdiSetBkMode                          2
-NtGdiSetDIBColorTable                   4
 NtGdiSetDIBits                          7
 NtGdiSetEnhMetaFileBits                 2
 NtGdiSetGraphicsMode                    2
 NtGdiSetICMProfile                      2
 NtGdiSetMapperFlags                     2
-NtGdiSetPaletteEntries                  4
 NtGdiSetPixelV                          4
 NtGdiSetPolyFillMode                    2
 NtGdiSetROP2                            2
@@ -751,7 +747,6 @@ NtUserSetCursorIconContents             2
 NtUserSetScrollBarInfo                  3
 NtUserGetDesktopWindow                  0
 NtGdiAddFontResource                    2
-NtGdiAnimatePalette                     4
 NtGdiCloseEnhMetaFile                   1
 NtGdiColorMatchToTarget                 3
 NtGdiCopyEnhMetaFile                    2
@@ -781,7 +776,6 @@ NtGdiGetClipBox                         2
 NtGdiGetColorSpace                      1
 NtGdiGetCurrentObject                   2
 NtGdiGetCurrentPositionEx               2
-NtGdiGetDIBColorTable                   4
 NtGdiGetEnhMetaFile                     1
 NtGdiGetEnhMetaFileBits                 3
 NtGdiGetEnhMetaFileDescription          3
@@ -794,12 +788,10 @@ NtGdiGetGraphicsMode                    1
 NtGdiGetICMProfile                      3
 NtGdiGetLogColorSpace                   3
 NtGdiGetMapMode                         1
-NtGdiGetPaletteEntries                  4
 NtGdiGetPixelFormat                     1
 NtGdiGetPolyFillMode                    1
 NtGdiGetROP2                            1
 NtGdiGetStretchBltMode                  1
-NtGdiGetSystemPaletteEntries            4
 NtGdiGetTextAlign                       1
 NtGdiGetTextColor                       1
 NtGdiGetTextExtentPoint32               4

@@ -25,7 +25,7 @@
 #include <debug.h>
 
 UINT STDCALL
-NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors)
+IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors)
 {
    PDC dc;
    PBITMAPOBJ BitmapObj;
@@ -62,22 +62,15 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
          Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
 
       PalGDI = PALETTE_LockPalette(BitmapObj->hDIBPalette);
-      _SEH_TRY
+
+      for (Index = StartIndex;
+           Index < StartIndex + Entries && Index < PalGDI->NumColors;
+           Index++)
       {
-         for (Index = StartIndex;
-              Index < StartIndex + Entries && Index < PalGDI->NumColors;
-              Index++)
-         {
-            PalGDI->IndexedColors[Index].peRed = Colors[Index - StartIndex].rgbRed;
-            PalGDI->IndexedColors[Index].peGreen = Colors[Index - StartIndex].rgbGreen;
-            PalGDI->IndexedColors[Index].peBlue = Colors[Index - StartIndex].rgbBlue;
-         }
+         PalGDI->IndexedColors[Index].peRed = Colors[Index - StartIndex].rgbRed;
+         PalGDI->IndexedColors[Index].peGreen = Colors[Index - StartIndex].rgbGreen;
+         PalGDI->IndexedColors[Index].peBlue = Colors[Index - StartIndex].rgbBlue;
       }
-      _SEH_HANDLE
-      {
-         Entries = 0;
-      }
-      _SEH_END
       PALETTE_UnlockPalette(PalGDI);
    }
    else
@@ -90,7 +83,7 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
 }
 
 UINT STDCALL
-NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
+IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
 {
    PDC dc;
    PBITMAPOBJ BitmapObj;
@@ -127,22 +120,15 @@ NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
          Entries = (1 << BitmapObj->dib->dsBmih.biBitCount) - StartIndex;
 
       PalGDI = PALETTE_LockPalette(BitmapObj->hDIBPalette);
-      _SEH_TRY
+
+      for (Index = StartIndex;
+           Index < StartIndex + Entries && Index < PalGDI->NumColors;
+           Index++)
       {
-         for (Index = StartIndex;
-              Index < StartIndex + Entries && Index < PalGDI->NumColors;
-              Index++)
-         {
-            Colors[Index - StartIndex].rgbRed = PalGDI->IndexedColors[Index].peRed;
-            Colors[Index - StartIndex].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
-            Colors[Index - StartIndex].rgbBlue = PalGDI->IndexedColors[Index].peBlue;
-         }
+         Colors[Index - StartIndex].rgbRed = PalGDI->IndexedColors[Index].peRed;
+         Colors[Index - StartIndex].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
+         Colors[Index - StartIndex].rgbBlue = PalGDI->IndexedColors[Index].peBlue;
       }
-      _SEH_HANDLE
-      {
-         Entries = 0;
-      }
-      _SEH_END
       PALETTE_UnlockPalette(PalGDI);
    }
    else

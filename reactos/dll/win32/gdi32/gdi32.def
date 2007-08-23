@@ -17,7 +17,7 @@ AddFontResourceExW@12
 AddFontResourceW@4
 AddFontResourceTracking@8
 AngleArc@24
-AnimatePalette@16=NtGdiAnimatePalette@16
+AnimatePalette@16
 AnyLinkedFonts@0
 Arc@36
 ArcTo@36
@@ -368,7 +368,7 @@ GetCurrentPositionEx@8=NtGdiGetCurrentPositionEx@8
 GetDCBrushColor@4
 GetDCOrgEx@8
 GetDCPenColor@4
-GetDIBColorTable@16=NtGdiGetDIBColorTable@16
+GetDIBColorTable@16
 GetDIBits@28
 GetDeviceCaps@8=NtGdiGetDeviceCaps@8
 GetDeviceGammaRamp@8
@@ -417,7 +417,7 @@ GetObjectType@4
 GetObjectW@12
 GetOutlineTextMetricsA@12
 GetOutlineTextMetricsW@12
-GetPaletteEntries@16=NtGdiGetPaletteEntries@16
+GetPaletteEntries@16
 GetPath@16
 GetPixel@12=NtGdiGetPixel@12
 GetPixelFormat@4
@@ -432,7 +432,7 @@ GetStockObject@4
 GetStretchBltMode@4=NtGdiGetStretchBltMode@4
 GetStringBitmapA@20
 GetStringBitmapW@20
-GetSystemPaletteEntries@16=NtGdiGetSystemPaletteEntries@16
+GetSystemPaletteEntries@16
 GetSystemPaletteUse@4
 GetTextAlign@4=NtGdiGetTextAlign@4
 GetTextCharacterExtra@4
@@ -542,7 +542,7 @@ SetColorAdjustment@8
 SetColorSpace@8
 SetDCBrushColor@8
 SetDCPenColor@8
-SetDIBColorTable@16=NtGdiSetDIBColorTable@16
+SetDIBColorTable@16
 SetDIBits@28=NtGdiSetDIBits@28
 SetDIBitsToDevice@48
 SetDeviceGammaRamp@8
@@ -560,7 +560,7 @@ SetMapperFlags@8
 SetMetaFileBitsEx@8
 SetMetaRgn@4
 SetMiterLimit@12
-SetPaletteEntries@16=NtGdiSetPaletteEntries@16
+SetPaletteEntries@16
 SetPixel@16=NtGdiSetPixel@16
 SetPixelFormat@12
 SetPixelV@16=NtGdiSetPixelV@16

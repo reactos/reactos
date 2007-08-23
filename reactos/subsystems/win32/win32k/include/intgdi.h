@@ -271,5 +271,36 @@ LONG STDCALL IntSetBitmapBits(PBITMAPOBJ bmp, DWORD  Bytes, IN PBYTE Bits);
 
 LONG STDCALL IntGetBitmapBits(PBITMAPOBJ bmp, DWORD Bytes, OUT PBYTE Bits);
 
+UINT STDCALL IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
+
+UINT STDCALL IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
+
+UINT STDCALL
+IntAnimatePalette(HPALETTE hPal, UINT StartIndex,
+   UINT NumEntries, CONST PPALETTEENTRY PaletteColors);
+
+UINT STDCALL
+IntGetPaletteEntries(HPALETTE  hpal,
+                     UINT  StartIndex,
+                     UINT  Entries,
+                     LPPALETTEENTRY  pe);
+
+UINT STDCALL 
+IntSetPaletteEntries(HPALETTE  hpal,
+                      UINT  Start,
+                      UINT  Entries,
+                      CONST LPPALETTEENTRY  pe);
+
+UINT STDCALL
+IntGetSystemPaletteEntries(HDC  hDC,
+                           UINT  StartIndex,
+                           UINT  Entries,
+                           LPPALETTEENTRY  pe);
+UINT STDCALL
+IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
+
+UINT STDCALL
+IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
+
 #endif /* _WIN32K_INTGDI_H */
 

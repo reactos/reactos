@@ -74,16 +74,21 @@ const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
    return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
 }
 
-BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
-   UINT NumEntries, CONST PPALETTEENTRY PaletteColors)
+UINT STDCALL
+IntAnimatePalette(HPALETTE hPal,
+                  UINT StartIndex,
+                  UINT NumEntries,
+                  CONST PPALETTEENTRY PaletteColors)
 {
+    UINT ret = 0;
+
     if( hPal != NtGdiGetStockObject(DEFAULT_PALETTE) )
     {
         PPALGDI palPtr;
         UINT pal_entries;
         HDC hDC;
         PDC dc;	
-      PWINDOW_OBJECT Wnd;
+        PWINDOW_OBJECT Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
  
         palPtr = (PPALGDI)PALETTE_LockPalette(hPal);
@@ -92,39 +97,42 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
         pal_entries = palPtr->NumColors;
         if (StartIndex >= pal_entries)
         {
-          PALETTE_UnlockPalette(palPtr);
-          return FALSE;
+            PALETTE_UnlockPalette(palPtr);
+            return FALSE;
         }
         if (StartIndex+NumEntries > pal_entries) NumEntries = pal_entries - StartIndex;
  
-        for (NumEntries += StartIndex; StartIndex < NumEntries; StartIndex++, pptr++) {
-          /* According to MSDN, only animate PC_RESERVED colours */
-          if (palPtr->IndexedColors[StartIndex].peFlags & PC_RESERVED) {
-            memcpy( &palPtr->IndexedColors[StartIndex], pptr,
-                    sizeof(PALETTEENTRY) );
-            PALETTE_ValidateFlags(&palPtr->IndexedColors[StartIndex], 1);
-          }
+        for (NumEntries += StartIndex; StartIndex < NumEntries; StartIndex++, pptr++)
+        {
+            /* According to MSDN, only animate PC_RESERVED colours */
+            if (palPtr->IndexedColors[StartIndex].peFlags & PC_RESERVED)
+            {
+                memcpy( &palPtr->IndexedColors[StartIndex], pptr,
+                        sizeof(PALETTEENTRY) );
+                ret++;
+                PALETTE_ValidateFlags(&palPtr->IndexedColors[StartIndex], 1);
+            }
         }
  
         PALETTE_UnlockPalette(palPtr);
  
         /* Immediately apply the new palette if current window uses it */		
-      Wnd = UserGetDesktopWindow();
+        Wnd = UserGetDesktopWindow();
         hDC =  (HDC)UserGetWindowDC(Wnd);
         dc = DC_LockDc(hDC);
         if (NULL != dc)
         {
-          if (dc->w.hPalette == hPal)
-          {
-            DC_UnlockDc(dc);
-            NtGdiRealizePalette(hDC);
-          }
-          else
-            DC_UnlockDc(dc);
+            if (dc->w.hPalette == hPal)
+            {
+                DC_UnlockDc(dc);
+                NtGdiRealizePalette(hDC);
+            }
+            else
+                DC_UnlockDc(dc);
         }		
-      UserReleaseDC(Wnd,hDC, FALSE);
+        UserReleaseDC(Wnd,hDC, FALSE);
     }
-    return TRUE;
+    return ret;
 }
 
 HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
@@ -138,7 +146,7 @@ HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
 
     Palette.Version = 0x300;
     Palette.NumberOfEntries = 256;
-    if (NtGdiGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries) == 0)
+    if (IntGetSystemPaletteEntries(hDC, 0, 256, Palette.aEntries) == 0)
     {
         /* from wine, more that 256 color math */
         Palette.NumberOfEntries = 20;
@@ -337,50 +345,56 @@ UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
   return index;
 }
 
-UINT STDCALL NtGdiGetPaletteEntries(HPALETTE  hpal,
-                            UINT  StartIndex,
-                            UINT  Entries,
-                            LPPALETTEENTRY  pe)
+UINT STDCALL
+IntGetPaletteEntries(HPALETTE  hpal,
+                     UINT  StartIndex,
+                     UINT  Entries,
+                     LPPALETTEENTRY  pe)
 {
-  PPALGDI palGDI;
-  UINT numEntries;
+    PPALGDI palGDI;
+    UINT numEntries;
 
-  palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
-  if (NULL == palGDI)
+    palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
+    if (NULL == palGDI)
     {
-      return 0;
+        return 0;
     }
 
-  numEntries = palGDI->NumColors;
-  if (numEntries < StartIndex + Entries)
+    numEntries = palGDI->NumColors;
+    if (NULL != pe)
     {
-      Entries = numEntries - StartIndex;
+        if (numEntries < StartIndex + Entries)
+        {
+            Entries = numEntries - StartIndex;
+        }
+        if (numEntries <= StartIndex)
+        {
+            PALETTE_UnlockPalette(palGDI);
+            return 0;
+        }
+        memcpy(pe, palGDI->IndexedColors + StartIndex, Entries * sizeof(PALETTEENTRY));
+        for (numEntries = 0; numEntries < Entries; numEntries++)
+        {
+            if (pe[numEntries].peFlags & 0xF0)
+            {
+                pe[numEntries].peFlags = 0;
+            }
+        }
     }
-  if (NULL != pe)
+    else
     {
-      if (numEntries <= StartIndex)
-	{
-	  PALETTE_UnlockPalette(palGDI);
-	  return 0;
-	}
-      memcpy(pe, palGDI->IndexedColors + StartIndex, Entries * sizeof(PALETTEENTRY));
-      for (numEntries = 0; numEntries < Entries; numEntries++)
-	{
-	  if (pe[numEntries].peFlags & 0xF0)
-	    {
-	      pe[numEntries].peFlags = 0;
-	    }
-	}
+        Entries = numEntries;
     }
 
-  PALETTE_UnlockPalette(palGDI);
-  return Entries;
+    PALETTE_UnlockPalette(palGDI);
+    return Entries;
 }
 
-UINT STDCALL NtGdiGetSystemPaletteEntries(HDC  hDC,
-                                  UINT  StartIndex,
-                                  UINT  Entries,
-                                  LPPALETTEENTRY  pe)
+UINT STDCALL
+IntGetSystemPaletteEntries(HDC  hDC,
+                           UINT  StartIndex,
+                           UINT  Entries,
+                           LPPALETTEENTRY  pe)
 {
     PPALGDI palGDI = NULL;
     PDC dc = NULL;
@@ -393,58 +407,46 @@ UINT STDCALL NtGdiGetSystemPaletteEntries(HDC  hDC,
         return 0;
     }
 
-    _SEH_TRY
+    if (pe != NULL)
+    {
+        EntriesSize = Entries * sizeof(pe[0]);
+        if (Entries != EntriesSize / sizeof(pe[0]))
+        {
+            /* Integer overflow! */
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+    }
+
+    if (!(dc = DC_LockDc(hDC)))
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    palGDI = PALETTE_LockPalette(dc->w.hPalette);
+    if (palGDI != NULL)
     {
         if (pe != NULL)
         {
-            EntriesSize = Entries * sizeof(pe[0]);
-            if (Entries != EntriesSize / sizeof(pe[0]))
-            {
-                /* Integer overflow! */
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                _SEH_LEAVE;
-            }
+            UINT CopyEntries;
 
-            ProbeForWrite(pe,
-                          EntriesSize,
-                          sizeof(UINT));
-        }
-
-        if (!(dc = DC_LockDc(hDC)))
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            _SEH_LEAVE;
-        }
-
-        palGDI = PALETTE_LockPalette(dc->w.hPalette);
-        if (palGDI != NULL)
-        {
-            if (pe != NULL)
-            {
-                UINT CopyEntries;
-
-                if (StartIndex + Entries < palGDI->NumColors)
-                    CopyEntries = StartIndex + Entries;
-                else
-                    CopyEntries = palGDI->NumColors - StartIndex;
-
-                memcpy(pe,
-                       palGDI->IndexedColors + StartIndex,
-                       CopyEntries * sizeof(pe[0]));
-
-                Ret = CopyEntries;
-            }
+            if (StartIndex + Entries < palGDI->NumColors)
+                CopyEntries = StartIndex + Entries;
             else
-            {
-                Ret = dc->GDIInfo->ulNumPalReg;
-            }
+                CopyEntries = palGDI->NumColors - StartIndex;
+
+            memcpy(pe,
+                   palGDI->IndexedColors + StartIndex,
+                   CopyEntries * sizeof(pe[0]));
+
+            Ret = CopyEntries;
+        }
+        else
+        {
+            Ret = dc->GDIInfo->ulNumPalReg;
         }
     }
-    _SEH_HANDLE
-    {
-        SetLastNtError(_SEH_GetExceptionCode());
-    }
-    _SEH_END;
 
     if (palGDI != NULL)
         PALETTE_UnlockPalette(palGDI);
@@ -624,34 +626,40 @@ BOOL STDCALL NtGdiSetColorAdjustment(HDC  hDC,
    return FALSE;
 }
 
-UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
-                            UINT  Start,
-                            UINT  Entries,
-                            CONST LPPALETTEENTRY  pe)
+UINT STDCALL 
+IntSetPaletteEntries(HPALETTE  hpal,
+                      UINT  Start,
+                      UINT  Entries,
+                      CONST LPPALETTEENTRY  pe)
 {
-  PPALGDI palGDI;
-  WORD numEntries;
+    PPALGDI palGDI;
+    WORD numEntries;
 
-  palGDI = PALETTE_LockPalette(hpal);
-  if (!palGDI) return 0;
-
-  numEntries = palGDI->NumColors;
-  if (Start >= numEntries)
+    if ((UINT)hpal & GDI_HANDLE_STOCK_MASK)
     {
-      PALETTE_UnlockPalette(palGDI);
-      return 0;
+    	return 0;
     }
-  if (numEntries < Start + Entries)
-    {
-      Entries = numEntries - Start;
-    }
-  memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
-  PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
-  ExFreePool(palGDI->logicalToSystem);
-  palGDI->logicalToSystem = NULL;
-  PALETTE_UnlockPalette(palGDI);
 
-  return Entries;
+    palGDI = PALETTE_LockPalette(hpal);
+    if (!palGDI) return 0;
+
+    numEntries = palGDI->NumColors;
+    if (Start >= numEntries)
+    {
+        PALETTE_UnlockPalette(palGDI);
+        return 0;
+    }
+    if (numEntries < Start + Entries)
+    {
+        Entries = numEntries - Start;
+    }
+    memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
+    PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
+    ExFreePool(palGDI->logicalToSystem);
+    palGDI->logicalToSystem = NULL;
+    PALETTE_UnlockPalette(palGDI);
+
+    return Entries;
 }
 
 UINT STDCALL
@@ -816,4 +824,83 @@ int STDCALL COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
   }
   return -1;
 }
+
+
+W32KAPI
+LONG
+APIENTRY 
+NtGdiDoPalette(
+    IN HGDIOBJ hObj,
+    IN WORD iStart,
+    IN WORD cEntries,
+    IN LPVOID pUnsafeEntries,
+    IN DWORD iFunc,
+    IN BOOL bInbound)
+{
+	LONG ret;
+
+	/* FIXME: Handle bInbound correctly */
+
+	if (bInbound &&
+	    (pUnsafeEntries == NULL || cEntries == 0))
+	{
+		return 0;
+	}
+
+	_SEH_TRY
+	{
+		switch(iFunc)
+		{
+			case GdiPalAnimate:
+				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
+				ret = IntAnimatePalette((HPALETTE)hObj, iStart, cEntries, pUnsafeEntries);
+				break;
+
+			case GdiPalSetEntries:
+				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
+				ret = IntSetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pUnsafeEntries);
+				break;
+
+			case GdiPalGetEntries:
+				if (pUnsafeEntries)
+				{
+					ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
+				}
+				ret = IntGetPaletteEntries((HPALETTE)hObj, iStart, cEntries, pUnsafeEntries);
+				break;
+
+			case GdiPalGetSystemEntries:
+				if (pUnsafeEntries)
+				{
+					ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
+				}
+				ret = IntGetSystemPaletteEntries((HDC)hObj, iStart, cEntries, pUnsafeEntries);
+				break;
+
+			case GdiPalSetColorTable:
+				ProbeForRead(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
+				ret = IntSetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pUnsafeEntries);
+				break;
+
+			case GdiPalGetColorTable:
+				if (pUnsafeEntries)
+				{
+					ProbeForWrite(pUnsafeEntries, cEntries * sizeof(PALETTEENTRY), 1);
+				}
+				ret = IntGetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pUnsafeEntries);
+				break;
+
+			default:
+				ret = 0;
+		}
+	}
+	_SEH_HANDLE
+	{
+		ret = 0;
+	}
+	_SEH_END
+
+	return ret;
+}
+
 /* EOF */

@@ -103,16 +103,6 @@ STDCALL
 NtGdiAddFontResource(PUNICODE_STRING Filename,
 					 DWORD fl);
 
-/* Use NtGdiDoPalette with GdiPalAnimate */
-BOOL
-STDCALL
-NtGdiAnimatePalette (
-	HPALETTE		hpal,
-	UINT			StartIndex,
-	UINT			Entries,
-	CONST PPALETTEENTRY	ppe
-	);
-
 /* Metafiles are user mode */
 HENHMETAFILE
 STDCALL
@@ -307,16 +297,6 @@ BOOL STDCALL  NtGdiGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 /* Use NtGdiGetDCPoint with GdiGetDCOrg. */
 BOOL STDCALL  NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point);
 
-/* Use NtGdiDoPalette with GdiPalGetColorTable. */
-UINT
-STDCALL
-NtGdiGetDIBColorTable (
-	HDC	hDC,
-	UINT	StartIndex,
-	UINT	Entries,
-	RGBQUAD	* Colors
-	);
-
 /* Meta are user-mode. */
 HENHMETAFILE
 STDCALL
@@ -394,16 +374,6 @@ NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
 /* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetMapMode(HDC  hDC);
 
-/* Use NtGdiDoPalette with GdiPalGetEntries. */
-UINT
-STDCALL
-NtGdiGetPaletteEntries (
-	HPALETTE	hpal,
-	UINT		StartIndex,
-	UINT		Entries,
-	LPPALETTEENTRY	pe
-	);
-
 /* Should be done in user-mode using shared GDI Objects. */
 INT
 STDCALL
@@ -417,16 +387,6 @@ INT STDCALL  NtGdiGetROP2(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetStretchBltMode(HDC  hDC);
-
-/* Use NtGdiDoPalette with GdiPalSetSystemEntries. */
-UINT
-STDCALL
-NtGdiGetSystemPaletteEntries (
-	HDC		hDC,
-	UINT		StartIndex,
-	UINT		Entries,
-	LPPALETTEENTRY	pe
-	);
 
 /* Should be done in user-mode using shared GDI Objects. */
 UINT STDCALL  NtGdiGetTextAlign(HDC  hDC);
@@ -583,16 +543,6 @@ COLORREF STDCALL NtGdiSetBkColor (HDC hDC, COLORREF Color);
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 INT STDCALL  NtGdiSetBkMode(HDC  hDC, INT  backgroundMode);
 
-/* Use NtGdiDoPalette with GdiPalSetColorTable, TRUE. */
-UINT
-STDCALL
-NtGdiSetDIBColorTable (
-	HDC		hDC,
-	UINT		StartIndex,
-	UINT		Entries,
-	CONST RGBQUAD	* Colors
-	);
-
 /* Use SetDIBitsToDevice in gdi32. */
 INT
 STDCALL
@@ -633,17 +583,6 @@ DWORD
 STDCALL
 NtGdiSetMapperFlags(HDC  hDC,
                           DWORD  Flag);
-
-
-/* Use NtGdiDoPalette with GdiPalSetEntries, TRUE. */
-UINT
-STDCALL
-NtGdiSetPaletteEntries (
-	HPALETTE		hpal,
-	UINT			Start,
-	UINT			Entries,
-	CONST LPPALETTEENTRY	pe
-	);
 
 /* Use NtGdiSetPixel(hdc, x, y, color) != CLR_INVALID; */
 BOOL
