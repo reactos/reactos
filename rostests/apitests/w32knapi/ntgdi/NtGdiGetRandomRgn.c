@@ -66,7 +66,7 @@ Test_NtGdiGetRandomRgn(PTESTINFO pti)
 	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	SelectClipRgn(hDC, hrgn2);
-	TEST(NtGdiGetRandomRgn(hDC, 0, 1) == -1);
+	RTEST(NtGdiGetRandomRgn(hDC, 0, 1) == -1);
 	RTEST(GetLastError() == ERROR_SUCCESS);
 	RTEST(NtGdiGetRandomRgn(hDC, hrgn, 1) == 1);
 	RTEST(CombineRgn(hrgn, hrgn, hrgn, RGN_OR) == SIMPLEREGION);
