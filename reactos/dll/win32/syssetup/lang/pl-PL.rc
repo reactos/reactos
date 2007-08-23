@@ -220,6 +220,12 @@ END
 
 STRINGTABLE
 BEGIN
+	IDS_SYS_TOOLS        "System Tools"
+	IDS_CMT_CHARMAP      "CharMap"
+END
+
+STRINGTABLE
+BEGIN
    IDS_REACTOS_SETUP               "Ustawienia ReactOS"
    IDS_UNKNOWN_ERROR           "Nieznany b³¹d"
    IDS_REGISTERING_COMPONENTS  "Rejestracja sk³adników..."
@@ -245,6 +251,7 @@ BEGIN
     IDS_SHORT_SNAP       "Zrzut ekranu.lnk"
     IDS_SHORT_SOLITAIRE  "RosPasjans.lnk"
     IDS_SHORT_WINEMINE   "ROSaper.lnk"
+	IDS_SHORT_CHARMAP    "CharMap.lnk"
 END
 
 STRINGTABLE
