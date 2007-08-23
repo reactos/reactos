@@ -1243,3 +1243,61 @@ NtGdiBRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ *BrushObj,
    return NULL;
 }
 
+/*
+ * @unimplemented
+ */
+PVOID STDCALL
+NtGdiBRUSHOBJ_pvGetRbrush(IN BRUSHOBJ *BrushObj)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+ULONG STDCALL
+NtGdiBRUSHOBJ_ulGetBrushColor(BRUSHOBJ *pbo)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiCLIPOBJ_bEnum( IN CLIPOBJ *ClipObj,
+                    IN ULONG ObjSize,
+                    OUT ULONG *EnumRects)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+ULONG STDCALL
+NtGdiCLIPOBJ_cEnumStart(IN CLIPOBJ *ClipObj,
+                        IN BOOL ShouldDoAll,
+                        IN ULONG ClipType,
+                        IN ULONG BuildOrder,
+                        IN ULONG MaxRects)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+PATHOBJ* STDCALL
+NtGdiCLIPOBJ_ppoGetPath(CLIPOBJ *ClipObj)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
