@@ -1449,6 +1449,7 @@ umss_complete_request(PUMSS_DEVICE_EXTENSION pdev_ext, NTSTATUS status)
     //this device has its irp queued
     if (status == STATUS_CANCELLED)
     {
+        usb_dbg_print(DBGLVL_MAXIMUM, ("umss_complete_request(): status of irp is cancelled\n"));
         IoAcquireCancelSpinLock(&old_irql);
         if (dev_obj->CurrentIrp == pirp)
         {
@@ -1462,8 +1463,15 @@ umss_complete_request(PUMSS_DEVICE_EXTENSION pdev_ext, NTSTATUS status)
         }
     }
     else
+    {
         // all requests come to this point from the irp queue
         IoStartNextPacket(dev_obj, FALSE);
+
+        // we are going to complete the request, so set it's cancel routine to NULL
+        IoAcquireCancelSpinLock(&old_irql);
+        (void)IoSetCancelRoutine(pirp, NULL);
+        IoReleaseCancelSpinLock(old_irql);
+    }
 
     pirp->IoStatus.Status = status;
 
