@@ -192,6 +192,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			KillTimer (hwnd, APP_TIMER);
 			free(stars);
+			ShowCursor(TRUE);
 			PostQuitMessage (0);
 			return 0;
 		}
@@ -266,13 +267,19 @@ void InitSaver(HWND hwndParent)
 	else
 	{
 		HWND hwnd;
-		hwnd = CreateWindow(APPNAME, APPNAME,
-		                    WS_VISIBLE | WS_POPUP | WS_EX_TOPMOST,
-		                    0, 0,
-		                    GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
-		                    HWND_DESKTOP, 0,
-		                    hInstance, NULL);
-		ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+		hwnd = CreateWindowEx(WS_EX_TOPMOST,
+                          APPNAME, 
+                          APPNAME,
+                          WS_VISIBLE | WS_POPUP,
+                          0, 0,
+                          GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+                          HWND_DESKTOP, 0,
+                          hInstance, NULL);
+     
+    SetWindowPos(hwnd, 
+                 0, 0, 0, 0, 0, 
+                 SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE|SWP_SHOWWINDOW);
+                 
 		ShowCursor(FALSE);
 		fullscreen = TRUE;
 	}
