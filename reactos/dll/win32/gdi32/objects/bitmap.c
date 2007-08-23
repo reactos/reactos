@@ -3,7 +3,7 @@
 /*
  * Return the full scan size for a bitmap.
  * 
- * Based on Wine and Windows Graphics Prog pg 595
+ * Based on Wine, Utils.c and Windows Graphics Prog pg 595
  */
 UINT
 FASTCALL
@@ -20,10 +20,10 @@ DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
     {
        if ((Info->bmiHeader.biCompression) && (Info->bmiHeader.biCompression != BI_BITFIELDS))
            return Info->bmiHeader.biSizeImage;
+    // Planes are over looked by Yuan. I guess assumed always 1.    
        MaxBits = Info->bmiHeader.biBitCount * Info->bmiHeader.biPlanes * Info->bmiHeader.biWidth;
     }
-    // Planes are over looked by Yuan. I guess assumed always 1.    
-    MaxBits = (MaxBits + 31) / 32; // ScanLineSize = (Width * bitcount + 31)/32
+    MaxBits = ((MaxBits + 31) & ~31 ) / 8; // From Yuan, ScanLineSize = (Width * bitcount + 31)/32
     return (MaxBits * ScanLines);  // ret the full Size.
 }
 
