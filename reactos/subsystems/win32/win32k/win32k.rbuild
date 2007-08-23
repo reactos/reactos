@@ -134,6 +134,7 @@
 	<directory name="objects">
 		<file>arc.c</file>
 		<file>bezier.c</file>
+		<file>bitblt.c</file>
 		<file>bitmaps.c</file>
 		<file>brush.c</file>
 		<file>cliprgn.c</file>
@@ -147,7 +148,6 @@
 		<file>icm.c</file>
 		<file>line.c</file>
 		<file>metafile.c</file>
-		<file>painting.c</file>
 		<file>paintobj.c</file>
 		<file>palobj.c</file>
 		<file>path.c</file>
