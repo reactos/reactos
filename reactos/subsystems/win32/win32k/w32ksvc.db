@@ -752,7 +752,6 @@ NtGdiColorMatchToTarget                 3
 NtGdiCopyEnhMetaFile                    2
 NtGdiCreateDIBitmap                     6
 NtGdiCreateEnhMetaFile                  4
-NtGdiCreatePolygonRgn                   3
 NtGdiCreatePolyPolygonRgn               4
 NtGdiCreateScalableFontResource         4
 NtGdiDeleteEnhMetaFile                  1
