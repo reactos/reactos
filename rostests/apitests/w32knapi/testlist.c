@@ -9,7 +9,7 @@
 #include "ntgdi/NtGdiArcInternal.c"
 #include "ntgdi/NtGdiCreateBitmap.c"
 #include "ntgdi/NtGdiCreateCompatibleBitmap.c"
-//#include "ntgdi/NtGdiDoPalette.c"
+#include "ntgdi/NtGdiDoPalette.c"
 #include "ntgdi/NtGdiGetBitmapBits.c"
 #include "ntgdi/NtGdiGetRandomRgn.c"
 #include "ntgdi/NtGdiSetBitmapBits.c"
@@ -29,7 +29,7 @@ TESTENTRY TestList[] =
 	{ L"NtGdiArcInternal", Test_NtGdiArcInternal },
 	{ L"NtGdiCreateBitmap", Test_NtGdiCreateBitmap },
 	{ L"NtGdiCreateCompatibleBitmap", Test_NtGdiCreateCompatibleBitmap },
-//	{ L"NtGdiDoPalette", Test_NtGdiDoPalette },
+	{ L"NtGdiDoPalette", Test_NtGdiDoPalette },
 	{ L"NtGdiGetBitmapBits", Test_NtGdiGetBitmapBits },
 	{ L"NtGdiGetRandomRgn", Test_NtGdiGetRandomRgn },
 	{ L"NtGdiSetBitmapBits", Test_NtGdiSetBitmapBits },
