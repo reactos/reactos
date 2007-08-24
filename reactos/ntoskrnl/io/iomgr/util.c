@@ -130,7 +130,7 @@ IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -138,8 +138,77 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
                         IN ULONG EaLength,
                         OUT PULONG ErrorOffset)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PFILE_FULL_EA_INFORMATION EaBufferEnd;
+    ULONG NextEaBufferOffset, IntEaLength;
+
+    /* Lenght of the rest. Inital equal to EaLength */
+    IntEaLength = EaLength;
+
+    /* Inital EaBuffer equal to EaBuffer */
+    EaBufferEnd = EaBuffer;
+
+    /* The rest length of the buffer */
+    while (IntEaLength >= FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[0]))
+    {
+        /* rest of buffer must greater then the
+           sizeof(FILE_FULL_EA_INFORMATION) + buffer */
+        NextEaBufferOffset =
+            EaBufferEnd->EaNameLength + EaBufferEnd->EaValueLength +
+            FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[0]) + 1;
+
+        if (IntEaLength >= NextEaBufferOffset)
+        {
+            /* is the EaBufferName terminated with zero? */
+            if (EaBufferEnd->EaName[EaBufferEnd->EaNameLength]==0)
+            {
+                /* more EaBuffers ahead */
+                if (EaBufferEnd->NextEntryOffset == 0)
+                {
+                    /* test the rest buffersize */
+                    IntEaLength = IntEaLength - NextEaBufferOffset;
+                    if (IntEaLength >= 0)
+                    {
+                        return STATUS_SUCCESS;
+                    }
+                }
+                else
+                { 
+                    /* From the MSDN
+                       http://msdn2.microsoft.com/en-us/library/ms795740.aspx
+                       For all entries except the last, the value of
+                       NextEntryOffset must be greater than zero and
+                       must fall on a ULONG boundary
+                     */
+                    NextEaBufferOffset = ((NextEaBufferOffset + 3) & ~3);
+                    if ((EaBufferEnd->NextEntryOffset == NextEaBufferOffset) &&
+                        (EaBufferEnd->NextEntryOffset>0))
+                    {
+                        /* Rest of buffer must be greater then the
+                           next offset */
+                        IntEaLength =
+                            IntEaLength - EaBufferEnd->NextEntryOffset;
+
+                        if (IntEaLength >= 0)
+                        {
+                            EaBufferEnd = (PFILE_FULL_EA_INFORMATION)
+                                ((ULONG_PTR)EaBufferEnd +
+                                 EaBufferEnd->NextEntryOffset);
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+        break;
+    }
+
+    if (ErrorOffset != NULL)
+    {
+        /* Calculate the error offset */
+        *ErrorOffset = (ULONG)((ULONG_PTR)EaBufferEnd - (ULONG_PTR)EaBuffer);
+    }
+
+    return STATUS_EA_LIST_INCONSISTENT;
 }
 
 /*

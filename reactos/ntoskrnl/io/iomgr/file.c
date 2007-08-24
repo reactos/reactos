@@ -1637,6 +1637,8 @@ IoCreateFile(OUT PHANDLE FileHandle,
     PVOID SystemEaBuffer = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     OPEN_PACKET OpenPacket;
+    ULONG EaErrorOffset;
+
     PAGED_CODE();
     IOTRACE(IO_FILE_DEBUG, "FileName: %wZ\n", ObjectAttributes->ObjectName);
 
@@ -1732,10 +1734,11 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Validate the buffer */
             Status = IoCheckEaBufferValidity(SystemEaBuffer,
                                              EaLength,
-                                             NULL);
+                                             &EaErrorOffset);
             if (!NT_SUCCESS(Status))
             {
-                /* FIXME: Fail once function is implemented */
+                DPRINT1("FIXME: IoCheckEaBufferValidity() failed with "
+                        "Status: %lx\n",Status);
             }
         }
     }
