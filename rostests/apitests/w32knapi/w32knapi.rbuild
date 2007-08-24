@@ -9,6 +9,4 @@
 	<library>shell32</library>
 	<file>w32knapi.c</file>
 	<file>testlist.c</file>
-	<file>winxp-sp2-2600.c</file>
-	<file>win2k-sp4-2195.c</file>
 </module>
