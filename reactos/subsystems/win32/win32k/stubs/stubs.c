@@ -1385,3 +1385,109 @@ NtGdiEngCreateDeviceBitmap(
 }
 
 
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngCopyBits(SURFOBJ *Dest,
+	    SURFOBJ *Source,
+	    CLIPOBJ *Clip,
+	    XLATEOBJ *ColorTranslation,
+	    RECTL *DestRect,
+	    POINTL *SourcePoint)
+{
+     UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HBITMAP STDCALL
+NtGdiEngCreateBitmap(IN SIZEL Size,
+		IN LONG Width,
+		IN ULONG Format,
+		IN ULONG Flags,
+		IN PVOID Bits,
+        IN DWORD UNKNOWN)
+{
+     UNIMPLEMENTED;
+    return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+HPALETTE STDCALL
+NtGdiEngCreatePalette(IN ULONG Mode,
+		 IN ULONG NumColors,
+		 IN ULONG *Colors,
+		 IN ULONG Red,
+		 IN ULONG Green,
+		 IN ULONG Blue)
+{
+     UNIMPLEMENTED;
+    return NULL;
+}
+
+BOOL STDCALL
+NtGdiEngTransparentBlt(IN SURFOBJ *Dest,
+		  IN SURFOBJ *Source,
+		  IN CLIPOBJ *Clip,
+		  IN XLATEOBJ *ColorTranslation,
+		  IN PRECTL DestRect,
+		  IN PRECTL SourceRect,
+		  IN ULONG TransparentColor,
+		  IN ULONG Reserved)
+{
+     UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL 
+NtGdiEngTextOut(SURFOBJ *pso,
+                STROBJ *pstro,
+                FONTOBJ *pfo,
+                CLIPOBJ *pco,
+                RECTL *prclExtra,
+                RECTL *prclOpaque,
+                BRUSHOBJ *pboFore,
+                BRUSHOBJ *pboOpaque,
+                POINTL *pptlOrg,
+                MIX mix)
+{
+     UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngStrokePath(SURFOBJ *pso,
+                   PATHOBJ *ppo,
+                   CLIPOBJ *pco,
+                   XFORMOBJ *pxo,
+                   BRUSHOBJ *pbo,
+                   POINTL *pptlBrushOrg,
+                   LINEATTRS *plineattrs,
+                   MIX mix)
+{
+     UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngDeletePalette(IN HPALETTE Palette)
+{
+     UNIMPLEMENTED;
+    return FALSE;
+}

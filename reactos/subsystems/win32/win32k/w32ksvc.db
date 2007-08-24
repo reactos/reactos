@@ -606,13 +606,13 @@ NtUserYieldTask                                  0
 # NtUserRemoteStopScreenUpdates                    0
 # NtUserCtxDisplayIOCtl                            3
 NtGdiEngAssociateSurface                         3
-# NtGdiEngCreateBitmap                             6
+NtGdiEngCreateBitmap                             6
 NtGdiEngCreateDeviceSurface                      4
 NtGdiEngCreateDeviceBitmap                       4
-# NtGdiEngCreatePalette                            6
+NtGdiEngCreatePalette                            6
 # NtGdiEngComputeGlyphSet                          3
-# NtGdiEngCopyBits                                 6
-# NtGdiEngDeletePalette                            1
+NtGdiEngCopyBits                                 6
+NtGdiEngDeletePalette                            1
 # NtGdiEngDeleteSurface                            1
 # NtGdiEngEraseSurface                             3
 # NtGdiEngUnlockSurface                            1
@@ -621,15 +621,15 @@ NtGdiEngBitBlt                                  11
 NtGdiEngStretchBlt                              11
 # NtGdiEngPlgBlt                                  11
 # NtGdiEngMarkBandingSurface                       1
-# NtGdiEngStrokePath                               8
+NtGdiEngStrokePath                               8
 # NtGdiEngFillPath                                 7
 # NtGdiEngStrokeAndFillPath                       10
 # NtGdiEngPaint                                    5
 # NtGdiEngLineTo                                   9
 NtGdiEngAlphaBlend                               7
 # NtGdiEngGradientFill                            10
-# NtGdiEngTransparentBlt                           8
-# NtGdiEngTextOut                                 10
+NtGdiEngTransparentBlt                           8
+NtGdiEngTextOut                                 10
 # NtGdiEngStretchBltROP                           13
 # NtGdiXLATEOBJ_cGetPalette                        4
 # NtGdiXLATEOBJ_iXlate                             2
