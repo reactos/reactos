@@ -1339,18 +1339,6 @@ ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEn
 /*
  * @unimplemented
  */
-BOOL 
-STDCALL
-EnableEUDC(BOOL enable)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 int
 STDCALL
 EndFormPage(HDC hdc)
@@ -2458,7 +2446,7 @@ CreateBitmap(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -2468,31 +2456,11 @@ EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 }
 
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngAssociateSurface(IN HSURF Surface,
-		    IN HDEV Dev,
-		    IN ULONG Hooks)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngCheckAbort(SURFOBJ *pso)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
+
 
 /*
  * @unimplemented
@@ -2536,42 +2504,6 @@ EngCreateBitmap(IN SIZEL Size,
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-CLIPOBJ* STDCALL
-EngCreateClip(VOID)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HBITMAP STDCALL
-EngCreateDeviceBitmap(IN DHSURF Surface,
-		      IN SIZEL Size,
-		      IN ULONG Format)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HSURF STDCALL
-EngCreateDeviceSurface(IN DHSURF Surface,
-		       IN SIZEL Size,
-		       IN ULONG FormatVersion)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
@@ -2602,15 +2534,7 @@ EngCreateSemaphore ( VOID )
   return (HSEMAPHORE)CritSect;
 }
 
-/*
- * @unimplemented
- */
-VOID STDCALL
-EngDeleteClip(CLIPOBJ *ClipRegion)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
+
 
 /*
  * @unimplemented

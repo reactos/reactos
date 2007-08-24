@@ -30,14 +30,9 @@ GetClipRgn(
 
 HRGN
 WINAPI 
-CreatePolygonRgn( const POINT* lppt, int cPoints, int fnPolyFillMode)
+CreatePolygonRgn( const POINT * lppt, int cPoints, int fnPolyFillMode)
 {
-    /* FIXME  NtGdiPolyPolyDraw */
-#if 0
-    return NtGdiPolyPolyDraw(fnPolyFillMode,lppt,cPoints,1,6);
-#else
-    return CreatePolyPolygonRgn(lppt, (const INT*)&cPoints, 1, fnPolyFillMode);
-#endif
+    return (HRGN) NtGdiPolyPolyDraw( (HDC) fnPolyFillMode, (PPOINT) lppt, (PULONG) &cPoints, 1, GdiPolyPolyRgn);
 }
 
 
@@ -48,17 +43,7 @@ CreatePolyPolygonRgn( const POINT* lppt,
                       int nCount,
                       int fnPolyFillMode)
 {
-    /* FIXME NtGdiPolyPolyDraw  */
-#if 0
-  return (HRGN) NtGdiPolyPolyDraw(  (HDC) fnPolyFillMode,
-                                 (PPOINT) lppt,
-                                 (PULONG) lpPolyCounts,
-                                  (ULONG) nCount,
-                                          GdiPolyPolyRgn );
-#else
-    return NtGdiCreatePolyPolygonRgn( (PPOINT)lppt, (PINT)lpPolyCounts, nCount, fnPolyFillMode);
-#endif
-
+    return (HRGN) NtGdiPolyPolyDraw(  (HDC) fnPolyFillMode, (PPOINT) lppt, (PULONG) lpPolyCounts, (ULONG) nCount, GdiPolyPolyRgn );
 }
 
 HRGN
