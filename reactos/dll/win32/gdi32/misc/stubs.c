@@ -2624,12 +2624,12 @@ EngFindResource(HANDLE h,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL 
 EngFreeModule(HANDLE h)
 {
-  LdrUnloadDll(h);
+  FreeLibrary(h);
 }
 
 /*
