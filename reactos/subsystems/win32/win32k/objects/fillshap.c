@@ -985,13 +985,186 @@ NtGdiPolyPolygon(HDC           hDC,
 
 ULONG_PTR
 STDCALL
-NtGdiPolyPolyDraw( IN HDC hdc,
-                   IN PPOINT ppt,
-                   IN PULONG pcpt,
-                   IN ULONG ccpt,
+NtGdiPolyPolyDraw( IN HDC hDC,
+                   IN PPOINT Points,
+                   IN PULONG PolyCounts,
+                   IN ULONG Count,
                    IN INT iFunc )
 {
-  return (ULONG_PTR) 0;
+  DC *dc;
+  LPPOINT Safept;
+  LPINT SafePolyPoints;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL Ret = TRUE;
+  INT nPoints, nEmpty, nInvalid, i;
+  
+  if (iFunc == GdiPolyPolyRgn)
+  { // Rename me to FASTCALL GdiCreatePolyPolygonRgn
+   return (ULONG_PTR) NtGdiCreatePolyPolygonRgn((CONST PPOINT)  Points,
+                                              (CONST PINT)  PolyCounts,
+                                                                 Count,
+                                                             (INT) hDC);
+  }
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  if(Count > 0)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(Points,
+                   Count * sizeof(POINT),
+                   1);
+      ProbeForRead(PolyCounts,
+                   Count * sizeof(INT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  
+    SafePolyPoints = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_SHAPE);
+    if(!SafePolyPoints)
+    {
+      DC_UnlockDc(dc);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+    _SEH_TRY
+    {
+      /* pointers already probed! */
+      RtlCopyMemory(SafePolyPoints,
+                    PolyCounts,
+                    Count * sizeof(INT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      ExFreePool(SafePolyPoints);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    /* validate poligons */
+    nPoints = 0;
+    nEmpty = 0;
+    nInvalid = 0;
+    for (i = 0; i < Count; i++)
+    {
+      if (SafePolyPoints[i] == 0)
+      {
+         nEmpty++;
+      }
+      if (SafePolyPoints[i] == 1)
+      {
+         nInvalid++;
+      }
+      nPoints += SafePolyPoints[i];
+    }
+
+    if (nEmpty == Count)
+    {
+      /* if all polygon counts are zero, return without setting a last error code. */
+      ExFreePool(SafePolyPoints);
+      return FALSE;
+    }
+    if (nInvalid != 0)
+    {
+     /* if at least one poly count is 1, fail */
+     ExFreePool(SafePolyPoints);
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+    }
+
+    Safept = ExAllocatePoolWithTag(PagedPool, nPoints * sizeof(POINT), TAG_SHAPE);
+    if(!Safept)
+    {
+      DC_UnlockDc(dc);
+      ExFreePool(SafePolyPoints);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+    _SEH_TRY
+    {
+      /* pointers already probed! */
+      RtlCopyMemory(Safept,
+                    Points,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      ExFreePool(SafePolyPoints);
+      ExFreePool(Safept);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(dc);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  switch(iFunc)
+  {
+    case GdiPolyPolygon:
+         Ret = IntGdiPolyPolygon(dc, Safept, SafePolyPoints, Count);
+         break;
+    case GdiPolyPolyLine:
+         Ret = IntGdiPolyPolyline(dc, Safept, (LPDWORD) SafePolyPoints, Count);
+         break;
+    case GdiPolyBezier:
+         Ret = IntGdiPolyBezier(dc, Safept, *PolyCounts);
+         break;
+    case GdiPolyLineTo:
+         Ret = IntGdiPolylineTo(dc, Safept, *PolyCounts);
+         break;
+    case GdiPolyBezierTo:
+         Ret = IntGdiPolyBezierTo(dc, Safept, *PolyCounts);
+         break;
+    default:
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         Ret = FALSE;
+  }
+  ExFreePool(SafePolyPoints);
+  ExFreePool(Safept);
+  DC_UnlockDc(dc);
+
+  return (ULONG_PTR) Ret;
 }
 
 

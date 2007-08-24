@@ -376,11 +376,13 @@ PaintRgn( HDC hDC, HRGN hRgn )
  return NtGdiFillRgn( hDC, hRgn, hBrush);
 }
 
+#endif
 
 BOOL
 STDCALL
 PolyBezier(HDC hDC ,const POINT* Point, DWORD cPoints)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -405,7 +407,8 @@ PolyBezier(HDC hDC ,const POINT* Point, DWORD cPoints)
       return FALSE;
     }
  }
- return NtGdiPolyPolyDraw( hDC , Point, &cPoints, 1, GdiPolyBezier );
+#endif
+ return NtGdiPolyPolyDraw( hDC ,(PPOINT) Point, &cPoints, 1, GdiPolyBezier );
 }
  
 
@@ -413,6 +416,7 @@ BOOL
 STDCALL
 PolyBezierTo(HDC hDC, const POINT* Point ,DWORD cPoints)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -433,7 +437,8 @@ PolyBezierTo(HDC hDC, const POINT* Point ,DWORD cPoints)
       return FALSE;
     }
  }
- return NtGdiPolyPolyDraw( hDC , Point, &cPoints, 1, GdiPolyBezierTo );
+#endif
+ return NtGdiPolyPolyDraw( hDC , (PPOINT) Point, &cPoints, 1, GdiPolyBezierTo );
 }
 
 
@@ -441,6 +446,7 @@ BOOL
 STDCALL
 PolyDraw(HDC hDC, const POINT* Point, const BYTE *lpbTypes, int cCount )
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -461,7 +467,8 @@ PolyDraw(HDC hDC, const POINT* Point, const BYTE *lpbTypes, int cCount )
       return FALSE;
     }
  }
- return NtGdiPolyDraw( hDC , Point, lpbTypes, cCount );
+#endif
+ return NtGdiPolyDraw( hDC , (PPOINT) Point, (PBYTE)lpbTypes, cCount );
 }
 
 
@@ -469,6 +476,7 @@ BOOL
 STDCALL
 Polygon(HDC hDC, const POINT *Point, int Count)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -489,7 +497,8 @@ Polygon(HDC hDC, const POINT *Point, int Count)
       return FALSE;
     }
  }
- return NtGdiPolyPolyDraw( hDC , Point, &Count, 1, GdiPolygon );
+#endif
+ return NtGdiPolyPolyDraw( hDC , (PPOINT) Point, (PULONG)&Count, 1, GdiPolyPolygon );
 }
 
 
@@ -497,6 +506,7 @@ BOOL
 STDCALL
 Polyline(HDC hDC, const POINT *Point, int Count)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -517,7 +527,8 @@ Polyline(HDC hDC, const POINT *Point, int Count)
       return FALSE;
     }
  }
- return NtGdiPolyPolyDraw( hDC , Point, &Count, 1, GdiPolyPolyLine );
+#endif
+ return NtGdiPolyPolyDraw( hDC , (PPOINT) Point, (PULONG)&Count, 1, GdiPolyPolyLine );
 }
 
 
@@ -525,6 +536,7 @@ BOOL
 STDCALL
 PolylineTo(HDC hDC, const POINT* Point, DWORD Count)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -545,8 +557,8 @@ PolylineTo(HDC hDC, const POINT* Point, DWORD Count)
       return FALSE;
     }
  }
- return NtGdiPolyPolyDraw( hDC , Point, &Count, 1, GdiPolyLineTo );
-
+#endif
+ return NtGdiPolyPolyDraw( hDC , (PPOINT) Point, &Count, 1, GdiPolyLineTo ); 
 }
 
 
@@ -554,6 +566,7 @@ BOOL
 STDCALL
 PolyPolygon(HDC hDC, const POINT* Point, const INT* Count, int Polys)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -574,8 +587,8 @@ PolyPolygon(HDC hDC, const POINT* Point, const INT* Count, int Polys)
       return FALSE;
     }
  }
- return NtGdiPolyPolyDraw( hDC , Point, Count, Polys, GdiPolygon );
-
+#endif
+ return NtGdiPolyPolyDraw( hDC , (PPOINT)Point, (PULONG)Count, Polys, GdiPolyPolygon );
 }
 
 
@@ -583,6 +596,7 @@ BOOL
 STDCALL
 PolyPolyline(HDC hDC, const POINT* Point, const DWORD* Counts, DWORD Polys)
 {
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -603,9 +617,9 @@ PolyPolyline(HDC hDC, const POINT* Point, const DWORD* Counts, DWORD Polys)
       return FALSE;
     }
  }
- return NtGdiPolyPolyDraw( hDC , Point, Count, Polys, GdiPolyPolyLine );
-}
 #endif
+ return NtGdiPolyPolyDraw( hDC , (PPOINT)Point, (PULONG)Counts, Polys, GdiPolyPolyLine );
+}
 
 
 BOOL
