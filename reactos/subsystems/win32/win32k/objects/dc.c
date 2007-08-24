@@ -600,6 +600,12 @@ IntPrepareDriver()
             DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
             continue;
          }
+
+         // Update the primary surface with what we really got
+         PrimarySurface.DMW.dmPelsWidth = PrimarySurface.GDIInfo.ulHorzRes;
+         PrimarySurface.DMW.dmPelsHeight = PrimarySurface.GDIInfo.ulVertRes;
+         PrimarySurface.DMW.dmBitsPerPel = PrimarySurface.GDIInfo.cBitsPixel;
+         PrimarySurface.DMW.dmDisplayFrequency = PrimarySurface.GDIInfo.ulVRefresh;
       }
 
       if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
@@ -2640,6 +2646,68 @@ IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
 #define SIZEOF_DEVMODEW_400 212
 #define SIZEOF_DEVMODEW_500 220
 
+static NTSTATUS FASTCALL
+GetDisplayNumberFromDeviceName(
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  OUT ULONG *DisplayNumber)
+{
+  UNICODE_STRING DisplayString = RTL_CONSTANT_STRING(L"\\\\.\\DISPLAY");
+  NTSTATUS Status = STATUS_SUCCESS;
+  ULONG Length;
+  ULONG Number;
+  ULONG i;
+
+  if (DisplayNumber == NULL)
+    return STATUS_INVALID_PARAMETER_2;
+
+  if (pDeviceName && pDeviceName->Length <= DisplayString.Length)
+    return STATUS_OBJECT_NAME_INVALID;
+
+  if (pDeviceName == NULL || pDeviceName->Length == 0)
+  {
+    PWINDOW_OBJECT DesktopObject;
+    HDC DesktopHDC;
+    PDC pDC;
+
+    DesktopObject = UserGetDesktopWindow();
+    DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
+    pDC = DC_LockDc(DesktopHDC);
+
+    *DisplayNumber = ((GDIDEVICE *)pDC->GDIDevice)->DisplayNumber;
+
+    DC_UnlockDc(DesktopHDC);
+    UserReleaseDC(DesktopObject, DesktopHDC, FALSE);
+
+    return STATUS_SUCCESS;
+  }
+
+  /* Hack to check if the first parts are equal, by faking the device name length */
+  Length = pDeviceName->Length;
+  pDeviceName->Length = DisplayString.Length;
+  if (RtlEqualUnicodeString(&DisplayString, pDeviceName, FALSE) == FALSE)
+    Status = STATUS_OBJECT_NAME_INVALID;
+  pDeviceName->Length = Length;
+
+  if (NT_SUCCESS(Status))
+  {
+    /* Convert the last part of pDeviceName to a number */
+    Number = 0;
+    Length = pDeviceName->Length / sizeof(WCHAR);
+    for (i = DisplayString.Length / sizeof(WCHAR); i < Length; i++)
+    {
+      WCHAR Char = pDeviceName->Buffer[i];
+      if (Char >= L'0' && Char <= L'9')
+        Number = Number * 10 + Char - L'0';
+      else if (Char != L'\0')
+        return STATUS_OBJECT_NAME_INVALID;
+    }
+
+    *DisplayNumber = Number - 1;
+  }
+
+  return Status;
+}
+
 /*! \brief Enumerate possible display settings for the given display...
  *
  * \todo Make thread safe!?
@@ -2655,10 +2723,17 @@ IntEnumDisplaySettings(
 {
   static DEVMODEW *CachedDevModes = NULL, *CachedDevModesEnd = NULL;
   static DWORD SizeOfCachedDevModes = 0;
+  static UNICODE_STRING CachedDeviceName;
   PDEVMODEW CachedMode = NULL;
   DEVMODEW DevMode;
   INT Size, OldSize;
-  ULONG DisplayNumber = 0; /* only default display supported */
+  ULONG DisplayNumber;
+
+  if (!NT_SUCCESS(GetDisplayNumberFromDeviceName(pDeviceName, &DisplayNumber)))
+  {
+    SetLastWin32Error(STATUS_NO_SUCH_DEVICE);
+    return FALSE;
+  }
 
   DPRINT("DevMode->dmSize = %d\n", pDevMode->dmSize);
   DPRINT("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
@@ -2693,11 +2768,27 @@ IntEnumDisplaySettings(
   }
   else
   {
-    if (iModeNum == 0 || CachedDevModes == NULL) /* query modes from drivers */
+    BOOL IsCachedDevice = (CachedDevModes != NULL);
+
+    if (CachedDevModes &&
+         ((pDeviceName == NULL && CachedDeviceName.Length > 0) ||
+         (pDeviceName != NULL && pDeviceName->Buffer != NULL && CachedDeviceName.Length == 0) ||
+         (pDeviceName != NULL && pDeviceName->Buffer != NULL && CachedDeviceName.Length > 0 && RtlEqualUnicodeString(pDeviceName, &CachedDeviceName, TRUE) == FALSE)))
+    {
+      IsCachedDevice = FALSE;
+    }
+
+    if (iModeNum == 0 || IsCachedDevice == FALSE) /* query modes from drivers */
     {
       UNICODE_STRING DriverFileNames;
       LPWSTR CurrentName;
       DRVENABLEDATA DrvEnableData;
+
+      /* Free resources from last driver cache */
+      if (IsCachedDevice == FALSE && CachedDeviceName.Buffer != NULL)
+      {
+        RtlFreeUnicodeString(&CachedDeviceName);
+      }
 
       /* Retrieve DDI driver names from registry */
       RtlInitUnicodeString(&DriverFileNames, NULL);
@@ -2719,9 +2810,12 @@ IntEnumDisplaySettings(
       {
         INT i;
         PGD_ENABLEDRIVER GDEnableDriver;
+        PGD_GETMODES GetModes = NULL;
+        INT SizeNeeded, SizeUsed;
 
         /* Get the DDI driver's entry point */
-        GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
+        //GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
+        GDEnableDriver = DRIVER_FindExistingDDIDriver(L"DISPLAY");
         if (NULL == GDEnableDriver)
         {
           DPRINT("FindDDIDriver failed for %S\n", CurrentName);
@@ -2743,61 +2837,80 @@ IntEnumDisplaySettings(
         for (i = 0; i < DrvEnableData.c; i++)
         {
           PDRVFN DrvFn = DrvEnableData.pdrvfn + i;
-          PGD_GETMODES GetModes;
-          INT SizeNeeded, SizeUsed;
 
-          if (DrvFn->iFunc != INDEX_DrvGetModes)
-            continue;
-
-          GetModes = (PGD_GETMODES)DrvFn->pfn;
-
-          /* make sure we have enough memory to hold the modes */
-          SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject), 0, NULL);
-          if (SizeNeeded <= 0)
+          if (DrvFn->iFunc == INDEX_DrvGetModes)
           {
-            DPRINT("DrvGetModes failed for %S\n", CurrentName);
+            GetModes = (PGD_GETMODES)DrvFn->pfn;
             break;
           }
+        }
 
-          SizeUsed = CachedDevModesEnd - CachedDevModes;
-          if (SizeOfCachedDevModes - SizeUsed < SizeNeeded)
-          {
-            PVOID NewBuffer;
+        if (GetModes == NULL)
+        {
+          DPRINT("DrvGetModes doesn't exist for %S\n", CurrentName);
+          continue;
+        }
 
-            SizeOfCachedDevModes += SizeNeeded;
-            NewBuffer = ExAllocatePool(PagedPool, SizeOfCachedDevModes);
-            if (NewBuffer == NULL)
-            {
-              /* clean up */
-              ExFreePool(CachedDevModes);
-              SizeOfCachedDevModes = 0;
-              CachedDevModes = NULL;
-              CachedDevModesEnd = NULL;
-              SetLastWin32Error(STATUS_NO_MEMORY);
-              return FALSE;
-            }
-            if (CachedDevModes != NULL)
-            {
-              RtlCopyMemory(NewBuffer, CachedDevModes, SizeUsed);
-              ExFreePool(CachedDevModes);
-            }
-            CachedDevModes = NewBuffer;
-            CachedDevModesEnd = (DEVMODEW *)((PCHAR)NewBuffer + SizeUsed);
-          }
-
-          /* query modes */
-          SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject),
-                                SizeOfCachedDevModes - SizeUsed,
-                                CachedDevModesEnd);
-          if (SizeNeeded <= 0)
-          {
-            DPRINT("DrvGetModes failed for %S\n", CurrentName);
-          }
-          else
-          {
-            CachedDevModesEnd = (DEVMODEW *)((PCHAR)CachedDevModesEnd + SizeNeeded);
-          }
+        /* make sure we have enough memory to hold the modes */
+        SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject), 0, NULL);
+        if (SizeNeeded <= 0)
+        {
+          DPRINT("DrvGetModes failed for %S\n", CurrentName);
           break;
+        }
+
+        SizeUsed = (PCHAR)CachedDevModesEnd - (PCHAR)CachedDevModes;
+        if (SizeOfCachedDevModes < SizeUsed + SizeNeeded)
+        {
+          PVOID NewBuffer;
+
+          SizeOfCachedDevModes += SizeNeeded;
+          NewBuffer = ExAllocatePool(PagedPool, SizeOfCachedDevModes);
+          if (NewBuffer == NULL)
+          {
+            /* clean up */
+            ExFreePool(CachedDevModes);
+            CachedDevModes = NULL;
+            CachedDevModesEnd = NULL;
+            SizeOfCachedDevModes = 0;
+
+            if (CachedDeviceName.Buffer != NULL)
+              RtlFreeUnicodeString(&CachedDeviceName);
+
+            SetLastWin32Error(STATUS_NO_MEMORY);
+            return FALSE;
+          }
+          if (CachedDevModes != NULL)
+          {
+            RtlCopyMemory(NewBuffer, CachedDevModes, SizeUsed);
+            ExFreePool(CachedDevModes);
+          }
+          CachedDevModes = NewBuffer;
+          CachedDevModesEnd = (DEVMODEW *)((PCHAR)NewBuffer + SizeUsed);
+        }
+
+        if (!IsCachedDevice)
+        {
+          if (CachedDeviceName.Buffer != NULL)
+            RtlFreeUnicodeString(&CachedDeviceName);
+
+          if (pDeviceName)
+            IntSafeCopyUnicodeString(&CachedDeviceName, pDeviceName);
+
+          IsCachedDevice = TRUE;
+        }
+
+        /* query modes */
+        SizeNeeded = GetModes((HANDLE)(PrimarySurface.VideoFileObject->DeviceObject),
+                              SizeNeeded,
+                              CachedDevModesEnd);
+        if (SizeNeeded <= 0)
+        {
+          DPRINT("DrvGetModes failed for %S\n", CurrentName);
+        }
+        else
+        {
+          CachedDevModesEnd = (DEVMODEW *)((PCHAR)CachedDevModesEnd + SizeNeeded);
         }
       }
 

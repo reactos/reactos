@@ -77,6 +77,21 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
   return  TRUE;
 }
 
+PGD_ENABLEDRIVER DRIVER_FindExistingDDIDriver(LPCWSTR Name)
+{
+  GRAPHICS_DRIVER *Driver = DriverList;
+  while (Driver && Name)
+  {
+    if (!_wcsicmp(Driver->Name, Name))
+    {
+      return Driver->EnableDriver;
+    }
+    Driver = Driver->Next;
+  }
+
+  return NULL;
+}
+
 PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
 {
   static WCHAR DefaultPath[] = L"\\SystemRoot\\System32\\";
