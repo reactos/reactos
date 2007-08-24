@@ -613,8 +613,8 @@ NtGdiEngCreatePalette                            6
 # NtGdiEngComputeGlyphSet                          3
 NtGdiEngCopyBits                                 6
 NtGdiEngDeletePalette                            1
-# NtGdiEngDeleteSurface                            1
-# NtGdiEngEraseSurface                             3
+NtGdiEngDeleteSurface                            1
+NtGdiEngEraseSurface                             3
 # NtGdiEngUnlockSurface                            1
 NtGdiEngLockSurface                              1
 NtGdiEngBitBlt                                  11
@@ -623,7 +623,7 @@ NtGdiEngStretchBlt                              11
 # NtGdiEngMarkBandingSurface                       1
 NtGdiEngStrokePath                               8
 # NtGdiEngFillPath                                 7
-# NtGdiEngStrokeAndFillPath                       10
+NtGdiEngStrokeAndFillPath                       10
 # NtGdiEngPaint                                    5
 # NtGdiEngLineTo                                   9
 NtGdiEngAlphaBlend                               7
@@ -637,7 +637,7 @@ NtGdiEngTextOut                                 10
 NtGdiCLIPOBJ_bEnum                               3
 NtGdiCLIPOBJ_cEnumStart                          5
 NtGdiCLIPOBJ_ppoGetPath                          1
-# NtGdiEngDeletePath                               1
+NtGdiEngDeletePath                               1
 NtGdiEngCreateClip                               0
 NtGdiEngDeleteClip                               1
 NtGdiBRUSHOBJ_ulGetBrushColor                     1

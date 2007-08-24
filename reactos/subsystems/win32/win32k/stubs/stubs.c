@@ -1491,3 +1491,54 @@ NtGdiEngDeletePalette(IN HPALETTE Palette)
      UNIMPLEMENTED;
     return FALSE;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL 
+NtGdiEngStrokeAndFillPath(SURFOBJ *pso,
+                          PATHOBJ *ppo,
+                          CLIPOBJ *pco,
+                          XFORMOBJ *pxo,
+                          BRUSHOBJ *pboStroke,
+                          LINEATTRS *plineattrs,
+                          BRUSHOBJ *pboFill,
+                          POINTL *pptlBrushOrg,
+                          MIX mixFill,
+                          FLONG flOptions)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+NtGdiEngDeletePath(PATHOBJ *ppo)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngDeleteSurface(IN HSURF Surface)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngEraseSurface(SURFOBJ *Surface,
+                     RECTL *Rect,
+                     ULONG iColor)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
