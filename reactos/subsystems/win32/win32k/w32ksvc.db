@@ -619,18 +619,18 @@ NtGdiEngEraseSurface                             3
 NtGdiEngLockSurface                              1
 NtGdiEngBitBlt                                  11
 NtGdiEngStretchBlt                              11
-# NtGdiEngPlgBlt                                  11
-# NtGdiEngMarkBandingSurface                       1
+NtGdiEngPlgBlt                                  11
+NtGdiEngMarkBandingSurface                       1
 NtGdiEngStrokePath                               8
-# NtGdiEngFillPath                                 7
+NtGdiEngFillPath                                 7
 NtGdiEngStrokeAndFillPath                       10
-# NtGdiEngPaint                                    5
-# NtGdiEngLineTo                                   9
+NtGdiEngPaint                                    5
+NtGdiEngLineTo                                   9
 NtGdiEngAlphaBlend                               7
-# NtGdiEngGradientFill                            10
+NtGdiEngGradientFill                            10
 NtGdiEngTransparentBlt                           8
 NtGdiEngTextOut                                 10
-# NtGdiEngStretchBltROP                           13
+NtGdiEngStretchBltROP                           13
 # NtGdiXLATEOBJ_cGetPalette                        4
 # NtGdiXLATEOBJ_iXlate                             2
 # NtGdiXLATEOBJ_hGetColorTransform                 1

@@ -1542,3 +1542,54 @@ NtGdiEngEraseSurface(SURFOBJ *Surface,
     return FALSE;
 }
 
+
+
+
+
+
+
+
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngFillPath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,BRUSHOBJ *pbo,POINTL *pptlBrushOrg,MIX mix,FLONG flOptions)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL STDCALL 
+EngGradientFill(SURFOBJ *psoDest,CLIPOBJ *pco,XLATEOBJ *pxlo,TRIVERTEX *pVertex,ULONG nVertex,PVOID pMesh,ULONG nMesh,RECTL *prclExtents,POINTL *pptlDitherOrg,ULONG ulMode)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL STDCALL
+NtGdiEngLineTo(SURFOBJ *Surface,
+	  CLIPOBJ *Clip,
+	  BRUSHOBJ *Brush,
+	  LONG x1,
+	  LONG y1,
+	  LONG x2,
+	  LONG y2,
+	  RECTL *RectBounds,
+	  MIX mix)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL 
+NtGdiEngMarkBandingSurface(HSURF hsurf)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
