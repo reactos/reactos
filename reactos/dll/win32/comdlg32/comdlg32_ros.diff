@@ -2,7 +2,7 @@ Index: printdlg.c
 ===================================================================
 --- printdlg.c	(revision 23123)
 +++ printdlg.c	(working copy)
-@@ -347,7 +347,7 @@
+@@ -352,7 +352,7 @@
  	        lpdm->dmCollate =
  		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
  	    if (lpdm->dmFields & DM_COPIES)
@@ -11,7 +11,7 @@ Index: printdlg.c
  	} else {
  	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
  	        lppd->Flags |= PD_COLLATE;
-@@ -425,7 +425,7 @@
+@@ -435,7 +435,7 @@
  	        lpdm->dmCollate =
  		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
  	    if (lpdm->dmFields & DM_COPIES)
@@ -20,7 +20,7 @@ Index: printdlg.c
  	} else {
  	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
  	        lppd->Flags |= PD_COLLATE;
-@@ -590,9 +590,9 @@
+@@ -600,9 +600,9 @@
                                        Sel, 0);
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -32,7 +32,7 @@ Index: printdlg.c
          }
      }
      else {
-@@ -602,9 +602,9 @@
+@@ -612,9 +612,9 @@
           */
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -44,7 +44,7 @@ Index: printdlg.c
          }
      }
  
-@@ -700,9 +700,9 @@
+@@ -710,9 +710,9 @@
                                        Sel, 0);
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -56,7 +56,7 @@ Index: printdlg.c
          }
      }
      else {
-@@ -712,9 +712,9 @@
+@@ -722,9 +722,9 @@
           */
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -68,7 +68,7 @@ Index: printdlg.c
          }
      }
  
-@@ -964,7 +964,7 @@
+@@ -974,7 +974,7 @@
  	  if (lppd->hDevMode == 0)
  	      copies = lppd->nCopies;
  	  else
@@ -77,7 +77,7 @@ Index: printdlg.c
  	  if(copies == 0) copies = 1;
  	  else if(copies < 0) copies = MAX_COPIES;
  	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
-@@ -986,7 +986,7 @@
+@@ -996,7 +996,7 @@
              ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
  
      } else { /* PD_PRINTSETUP */
@@ -86,7 +86,7 @@ Index: printdlg.c
  
        PRINTDLG_SetUpPaperComboBoxA(hDlg, cmb2,
  				  PrintStructures->lpPrinterInfo->pPrinterName,
-@@ -1113,7 +1113,7 @@
+@@ -1123,7 +1123,7 @@
  	  if (lppd->hDevMode == 0)
  	      copies = lppd->nCopies;
  	  else
@@ -95,7 +95,7 @@ Index: printdlg.c
  	  if(copies == 0) copies = 1;
  	  else if(copies < 0) copies = MAX_COPIES;
  	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
-@@ -1135,7 +1135,7 @@
+@@ -1145,7 +1145,7 @@
              ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
  
      } else { /* PD_PRINTSETUP */
@@ -104,7 +104,7 @@ Index: printdlg.c
  
        PRINTDLG_SetUpPaperComboBoxW(hDlg, cmb2,
  				  PrintStructures->lpPrinterInfo->pPrinterName,
-@@ -1509,7 +1509,7 @@
+@@ -1519,7 +1519,7 @@
      case rad1: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
@@ -113,7 +113,7 @@ Index: printdlg.c
                SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hPortraitIcon));
          }
-@@ -1518,7 +1518,7 @@
+@@ -1528,7 +1528,7 @@
      case rad2: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
@@ -122,7 +122,7 @@ Index: printdlg.c
                SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hLandscapeIcon));
          }
-@@ -1542,7 +1542,7 @@
+@@ -1552,7 +1552,7 @@
        {
  	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb2, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
@@ -131,7 +131,7 @@ Index: printdlg.c
  							    CB_GETITEMDATA,
  							    Sel, 0);
        }
-@@ -1552,7 +1552,7 @@
+@@ -1562,7 +1562,7 @@
        {
  	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
@@ -140,7 +140,7 @@ Index: printdlg.c
  							  CB_GETITEMDATA, Sel,
  							  0);
        }
-@@ -1563,8 +1563,8 @@
+@@ -1573,8 +1573,8 @@
  	case rad1:                         /* orientation */
  	case rad2:
  	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
@@ -151,7 +151,7 @@ Index: printdlg.c
  		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hPortraitIcon);
-@@ -1573,8 +1573,8 @@
+@@ -1583,8 +1583,8 @@
  					(LPARAM)PrintStructures->hPortraitIcon);
  		}
  	    } else {
@@ -162,7 +162,7 @@ Index: printdlg.c
  		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hLandscapeIcon);
-@@ -1673,7 +1673,7 @@
+@@ -1683,7 +1683,7 @@
      case rad1: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
@@ -171,7 +171,7 @@ Index: printdlg.c
                SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hPortraitIcon));
          }
-@@ -1682,7 +1682,7 @@
+@@ -1692,7 +1692,7 @@
      case rad2: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
@@ -180,7 +180,7 @@ Index: printdlg.c
                SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hLandscapeIcon));
          }
-@@ -1706,7 +1706,7 @@
+@@ -1716,7 +1716,7 @@
        {
  	  DWORD Sel = SendDlgItemMessageW(hDlg, cmb2, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
@@ -189,7 +189,7 @@ Index: printdlg.c
  							    CB_GETITEMDATA,
  							    Sel, 0);
        }
-@@ -1716,7 +1716,7 @@
+@@ -1726,7 +1726,7 @@
        {
  	  DWORD Sel = SendDlgItemMessageW(hDlg, cmb3, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
@@ -198,7 +198,7 @@ Index: printdlg.c
  							  CB_GETITEMDATA, Sel,
  							  0);
        }
-@@ -1727,8 +1727,8 @@
+@@ -1737,8 +1737,8 @@
  	case rad1:                         /* orientation */
  	case rad2:
  	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
@@ -209,7 +209,7 @@ Index: printdlg.c
  		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hPortraitIcon);
-@@ -1737,8 +1737,8 @@
+@@ -1747,8 +1747,8 @@
  					(LPARAM)PrintStructures->hPortraitIcon);
  		}
  	    } else {
@@ -220,7 +220,7 @@ Index: printdlg.c
  		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hLandscapeIcon);
-@@ -2499,15 +2499,15 @@
+@@ -2507,15 +2507,15 @@
  
      /* Save paper orientation into device context */
      if(pda->curdlg.ptPaperSize.x > pda->curdlg.ptPaperSize.y)
@@ -239,7 +239,7 @@ Index: printdlg.c
      else
          FIXME("could not get dialog text for papersize cmbbox?\n");
  
-@@ -2515,7 +2515,7 @@
+@@ -2523,7 +2523,7 @@
      paperword = SendDlgItemMessageA(hDlg,cmb1,CB_GETITEMDATA,
          SendDlgItemMessageA(hDlg, cmb1, CB_GETCURSEL, 0, 0), 0);
      if (paperword != CB_ERR)
@@ -248,7 +248,19 @@ Index: printdlg.c
      else
          FIXME("could not get dialog text for papersize cmbbox?\n");
  
-@@ -2809,7 +2809,7 @@
+@@ -2574,9 +2574,9 @@
+ 
+     /* Save orientation */
+     if (pda->dlga->ptPaperSize.x > pda->dlga->ptPaperSize.y)
+-        dm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++        dm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+     else
+-        dm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++        dm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+ 
+     GlobalUnlock(pda->pdlg.hDevNames);
+     GlobalUnlock(pda->pdlg.hDevMode);
+@@ -2824,7 +2824,7 @@
      case cmb3:
  	if(msg == CBN_SELCHANGE){
  	    DEVMODEA *dm = GlobalLock(pda->pdlg.hDevMode);
@@ -257,7 +269,7 @@ Index: printdlg.c
                  SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0), 0);
  	    GlobalUnlock(pda->pdlg.hDevMode);
  	}
-@@ -2832,10 +2832,10 @@
+@@ -2847,10 +2847,10 @@
  	                        DM_IN_BUFFER | DM_OUT_BUFFER | DM_IN_PROMPT);
  	    ClosePrinter(hPrinter);
  	    /* Changing paper */
@@ -270,7 +282,7 @@ Index: printdlg.c
                  DWORD tmp = pda->curdlg.ptPaperSize.x;
                  pda->curdlg.ptPaperSize.x = pda->curdlg.ptPaperSize.y;
                  pda->curdlg.ptPaperSize.y = tmp;
-@@ -2849,7 +2849,7 @@
+@@ -2864,7 +2864,7 @@
  	    count = SendDlgItemMessageA(hDlg, cmb2, CB_GETCOUNT, 0, 0);
  	    if(count != CB_ERR){ 
                  for(i=0; i<count; ++i){
@@ -279,7 +291,7 @@ Index: printdlg.c
  			SendDlgItemMessageA(hDlg, cmb2, CB_SETCURSEL, i, 0);
  			break;
  		    }
-@@ -3153,7 +3153,7 @@
+@@ -3168,7 +3168,7 @@
  	}
          /* Set orientation radiobutton properly */
          dm = GlobalLock(pda->dlga->hDevMode);
@@ -288,7 +300,7 @@ Index: printdlg.c
              CheckRadioButton(hDlg, rad1, rad2, rad2);
  	else /* this is default if papersize is not set */
              CheckRadioButton(hDlg, rad1, rad2, rad1);
-@@ -3198,8 +3198,8 @@
+@@ -3213,8 +3213,8 @@
          PRINTDLG_PS_ChangePrinterA(hDlg, pda);
  	dm = GlobalLock(pda->pdlg.hDevMode);
  	if(dm){
@@ -299,12 +311,21 @@ Index: printdlg.c
              GlobalUnlock(pda->pdlg.hDevMode);
  	    pda->curdlg.ptPaperSize.x = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.x);
  	    pda->curdlg.ptPaperSize.y = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.y);
-@@ -3401,7 +3401,7 @@
- 	DEVMODEA *dm;
- 	
- 	dm = GlobalLock(pdlg.hDevMode);
--    	PRINTDLG_PaperSizeA(&pdlg, dm->u1.s1.dmPaperSize, &setupdlg->ptPaperSize);
-+    	PRINTDLG_PaperSizeA(&pdlg, dm->u.s.dmPaperSize, &setupdlg->ptPaperSize);
- 	GlobalUnlock(pdlg.hDevMode);
- 	setupdlg->ptPaperSize.x=_c_10mm2size(setupdlg,setupdlg->ptPaperSize.x);
- 	setupdlg->ptPaperSize.y=_c_10mm2size(setupdlg,setupdlg->ptPaperSize.y);
+@@ -3282,7 +3282,7 @@
+ 
+         dm = GlobalLock(pda->dlga->hDevMode);
+ 	/* Landscape orientation */
+-	if (dm->u1.s1.dmOrientation == DMORIENT_LANDSCAPE)
++	if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE)
+             CheckRadioButton(hDlg, rad1, rad2, rad2);
+ 	else /* this is default if papersize is not set */
+             CheckRadioButton(hDlg, rad1, rad2, rad1);
+@@ -3422,7 +3422,7 @@
+ 	setupdlg->hDevMode = pdlg.hDevMode;
+ 	setupdlg->hDevNames = pdlg.hDevNames;
+         dm = GlobalLock(pdlg.hDevMode);
+-        PRINTDLG_PaperSizeA(&pdlg, dm->u1.s1.dmPaperSize, &setupdlg->ptPaperSize);
++        PRINTDLG_PaperSizeA(&pdlg, dm->u.s.dmPaperSize, &setupdlg->ptPaperSize);
+         GlobalUnlock(pdlg.hDevMode);
+         setupdlg->ptPaperSize.x=_c_10mm2size(setupdlg,setupdlg->ptPaperSize.x);
+         setupdlg->ptPaperSize.y=_c_10mm2size(setupdlg,setupdlg->ptPaperSize.y);

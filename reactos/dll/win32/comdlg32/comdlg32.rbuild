@@ -1,4 +1,4 @@
-<module name="comdlg32" type="win32dll" baseaddress="${BASEADDRESS_COMDLG32}" installbase="system32" installname="comdlg32.dll" allowwarnings="true">
+<module name="comdlg32" type="win32dll" baseaddress="${BASEADDRESS_COMDLG32}" installbase="system32" installname="comdlg32.dll" allowwarnings="true" entrypoint="0">
 	<importlibrary definition="comdlg32.spec.def" />
 	<include base="comdlg32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
@@ -8,12 +8,6 @@
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
-
-	<metadata
-		description = "Common dialog boxes used by ReactOS"
-		version = "Autosync"
-		owner = "Wine" />
-
 	<library>wine</library>
 	<library>shell32</library>
 	<library>shlwapi</library>

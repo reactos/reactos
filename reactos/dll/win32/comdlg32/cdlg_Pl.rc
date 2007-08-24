@@ -86,19 +86,19 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Do:", 1091, 120, 80, 30, 9
  LTEXT "Jakoœæ &wydruku:", 1092, 6, 100, 76, 9
  COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "Drukuj do Pli&ku", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Drukuj do pli&ku", chx1, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Sortuj kopie", chx2, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ustawienia Wydruku"
+CAPTION "Ustawienia wydruku"
 FONT 8, "MS Shell Dlg"
 {
  GROUPBOX "Drukarka", grp1, 6, 10, 180, 65, BS_GROUPBOX
  RADIOBUTTON "&Domyœlna drukarka", rad1, 16, 20, 80, 12
- LTEXT "[none]", 1088, 35, 35, 120, 9
+ LTEXT "[brak]", 1088, 35, 35, 120, 9
  RADIOBUTTON "&Inna drukarka", rad2, 16, 50, 80, 12
  COMBOBOX cmb1, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -178,7 +178,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Anuluj", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Pomoc", pshHelp,100,166, 44, 14
  PUSHBUTTON "&Dodaj do dowolnych",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Z&definiuj Kolor >>", 719/*1025*/,   4, 150, 140, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Z&definiuj kolor >>", 719/*1025*/,   4, 150, 140, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
@@ -209,7 +209,7 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "&ZnajdŸ:", -1, 4, 9, 48, 8
  EDITTEXT edt1, 54, 7, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "Zanieñ &na:", -1, 4, 26, 48, 8
+ LTEXT "Zamieñ &na:", -1, 4, 26, 48, 8
  EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Uwzglêdniaj &tylko ca³e wyrazy", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Uwzglêdniaj wielkoœæ liter", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -238,13 +238,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "&Nazwa:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stan:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowany Stan",    stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowany stan",    stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Typ:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowany Typ",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowany typ",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Gdzie:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowana Lokalizacja", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowana lokalizacja", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Komentarz:",       stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowany Komentarz",   stc13, 60, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowany komentarz",   stc13, 60, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Kopie",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Lczba &kopii:",stc5,168,108,68,8
@@ -277,13 +277,13 @@ BEGIN
     LTEXT           "&Nazwa:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stan:",        stc8,  16, 36,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowany Stan",    stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowany stan",    stc12, 60, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Typ:",          stc7,  16, 48,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowany Typ",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowany typ",     stc11, 60, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Gdzie:",         stc10, 16, 60,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowana Lokalizacja", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowana lokalizacja", stc14, 60, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Komentarz:",       stc9,  16, 72,  36,10, SS_NOPREFIX
-    LTEXT           "Symulowany Komentarz",   stc13, 60, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Symulowany komentarz",   stc13, 60, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Papier",          grp2,   8, 92, 164,56, WS_GROUP
     LTEXT           "&Rozmiar:",         stc2,  16,108,  36, 8
@@ -357,15 +357,15 @@ STRINGTABLE DISCARDABLE
     IDS_DOCUMENTFOLDERS     "Katalog Dokumentów"
     IDS_PERSONAL            "Moje Dokumenty"
     IDS_FAVORITES           "Moje Ulubione"
-    IDS_PATH                "Œcie¿ka Systemowa"
+    IDS_PATH                "Œcie¿ka systemowa"
     IDS_DESKTOP             "Pulpit"
     IDS_FONTS               "Czcionki"
-    IDS_MYCOMPUTER          "Mój Komputer"
+    IDS_MYCOMPUTER          "Mój komputer"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_SYSTEMFOLDERS       "Katalogi Systemowe"
+    IDS_SYSTEMFOLDERS       "Katalogi systemowe"
     IDS_LOCALHARDRIVES      "Lokalne dyski twarde"
     IDS_FILENOTFOUND        "Nie znaleziono pliku"
     IDS_VERIFYFILE          "SprawdŸ, czy podana nazwa pliku jest prawid³owa."
@@ -380,7 +380,7 @@ STRINGTABLE DISCARDABLE
 STRINGTABLE DISCARDABLE
 {
     IDS_UPFOLDER         "Poziom w górê"
-    IDS_NEWFOLDER        "Utwórz nowy folded"
+    IDS_NEWFOLDER        "Utwórz nowy folder"
     IDS_LISTVIEW         "Lista"
     IDS_REPORTVIEW       "Szczegó³y"
     IDS_TODESKTOP        "Przegl¹daj pulpit"
@@ -391,7 +391,7 @@ STRINGTABLE DISCARDABLE
     PD32_PRINT_TITLE       "Drukuj"
 
     PD32_VALUE_UREADABLE     "Sk³adnia zakresu stron jest nieprawid³owa."
-    PD32_INVALID_PAGE_RANGE  "Ta wartoœæ nie mieœci siê w zakresie strony.\nWprowadŸ liczbê pomiêdzy 'od' a 'do'"
+    PD32_INVALID_PAGE_RANGE  "Ta wartoœæ nie mieœci siê w zakresie stron.\nWprowadŸ liczbê pomiêdzy %d a %d."
     PD32_FROM_NOT_ABOVE_TO   "Wartoœæ „od” nie mo¿e byæ wiêksza ni¿ wartoœæ „do”."
     PD32_MARGINS_OVERLAP     "Marginesy znajduj¹ siê poza stron¹.\nWprowadŸ inn¹ wielkoœæ marginesu."
     PD32_NR_OF_COPIES_EMPTY  "Wartoœæ „liczba kopii” nie mo¿e byæ pusta."
@@ -402,11 +402,11 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY       "Za ma³o pamiêci dla tej operacji."
     PD32_GENERIC_ERROR       "Podczas tej operacji wyst¹pi³ b³¹d."
     PD32_DRIVER_UNKNOWN      "Nieznany sterownik drukarki."
-    PD32_NO_DEVICES                       "Zanim bêdzie mo¿na wykonywaæ czynnoœci zwi¹zane \
-z drukowaniem takie jak ustawienie strony lub wydruk dokumentu nale¿y zainstalowaæ drukarkê. \
+    PD32_NO_DEVICES          "Zanim bêdzie mo¿na wykonywaæ czynnoœci zwi¹zane \
+z drukowaniem, takie jak ustawienie strony lub wydruk dokumentu, nale¿y zainstalowaæ drukarkê. \
 Po zainstalowaniu spróbuj ponownie."
 
-    PD32_DEFAULT_PRINTER                  "Domyœlna Drukarka; "
+    PD32_DEFAULT_PRINTER                  "Domyœlna drukarka; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "W kolejce znajduj¹ siê %d dokumenty"
     PD32_MARGINS_IN_INCHES                "Marginesy [cale]"
     PD32_MARGINS_IN_MILIMETERS            "Marginesy [mm]"
@@ -417,19 +417,19 @@ Po zainstalowaniu spróbuj ponownie."
     PD32_PRINTER_STATUS_PENDING_DELETION  "Kasowanie"
     PD32_PRINTER_STATUS_PAPER_JAM         "Problemy z papierem; "
     PD32_PRINTER_STATUS_PAPER_OUT         "Koniec papieru; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "W³ó¿ papierl; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "W³ó¿ papier; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Problemy z papierem; "
     PD32_PRINTER_STATUS_OFFLINE           "Drukarka jest offline; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "Aktywnoœæ I/O; "
     PD32_PRINTER_STATUS_BUSY              "Zajêta; "
     PD32_PRINTER_STATUS_PRINTING          "Drukuje; "
     PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Pojemnik jest zape³niony; "
-    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Nie osi¹gala; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Nie osi¹galna; "
     PD32_PRINTER_STATUS_WAITING           "Oczekuje; "
     PD32_PRINTER_STATUS_PROCESSING        "Zajêta; "
     PD32_PRINTER_STATUS_INITIALIZING      "Inicjuje; "
     PD32_PRINTER_STATUS_WARMING_UP        "Uruchamianie; "
-    PD32_PRINTER_STATUS_TONER_LOW         "Mo³o toneru; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Ma³o toneru; "
     PD32_PRINTER_STATUS_NO_TONER          "Brak toneru; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
     PD32_PRINTER_STATUS_USER_INTERVENTION "Przerwane przez u¿ytkownika; "
@@ -446,7 +446,7 @@ STRINGTABLE DISCARDABLE
     IDS_SAVE_IN     "Zapisz &w:"
     IDS_SAVE        "Zapisz"
     IDS_SAVE_AS     "Zapisz jako"
-    IDS_OPEN_FILE   "Otwórz Plik"
+    IDS_OPEN_FILE   "Otwórz plik"
 }
 
 STRINGTABLE DISCARDABLE /* Color names */

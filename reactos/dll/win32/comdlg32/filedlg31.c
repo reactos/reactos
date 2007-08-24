@@ -783,7 +783,7 @@ void FD31_DestroyPrivate(PFD31_DATA lfs)
 /************************************************************************
  *                              FD31_AllocPrivate            [internal]
  *      allocate a private object to hold 32 bits Unicode
- *      structure that will be used throughtout the calls, while
+ *      structure that will be used throughout the calls, while
  *      keeping available the original structures and a few variables
  *      On entry : type = dialog procedure type (16,32A,32W)
  *                 dlgType = dialog type (open or save)
