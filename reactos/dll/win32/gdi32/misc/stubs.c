@@ -2633,14 +2633,15 @@ EngFreeModule(HANDLE h)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
+
 VOID STDCALL
 EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
 		      OUT PUSHORT AnsiCodePage)
 {
-   OemCodePage  = (PUSHORT) GetOEMCP();
-   AnsiCodePage = (PUSHORT) GetACP();
+   *OemCodePage  = GetOEMCP();
+   *AnsiCodePage = GetACP();
 }
 
 /*
