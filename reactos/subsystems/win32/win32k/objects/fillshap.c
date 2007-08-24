@@ -1115,7 +1115,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
       /* pointers already probed! */
       RtlCopyMemory(Safept,
                     Points,
-                    Count * sizeof(POINT));
+                    nPoints * sizeof(POINT));
     }
     _SEH_HANDLE
     {

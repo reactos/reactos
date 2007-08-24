@@ -500,7 +500,7 @@ PolyPolygon@16=NtGdiPolyPolygon@16
 PolyPolyline@16=NtGdiPolyPolyline@16
 PolyTextOutA@12
 PolyTextOutW@12
-Polygon@12=NtGdiPolygon@12
+Polygon@12                      ;=NtGdiPolygon@12
 Polyline@12=NtGdiPolyline@12
 PolylineTo@12=NtGdiPolylineTo@12
 PtInRegion@12=NtGdiPtInRegion@12
