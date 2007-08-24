@@ -2934,7 +2934,8 @@ NtGdiEngCreateBitmap(
     IN LONG lWidth,
     IN ULONG iFormat,
     IN FLONG fl,
-    IN OPTIONAL PVOID pvBits
+    IN OPTIONAL PVOID pvBits,
+    IN DWORD UNKNOWN
 );
 
 W32KAPI
