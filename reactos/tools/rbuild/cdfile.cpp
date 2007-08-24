@@ -22,6 +22,7 @@
 
 using std::string;
 
+/*
 string
 CDFile::ReplaceVariable ( const string& name,
                           const string& value,
@@ -33,6 +34,7 @@ CDFile::ReplaceVariable ( const string& name,
 	else
 		return path;
 }
+*/
 
 CDFile::CDFile ( const Project& project_,
 	             const XMLElement& cdfileNode,
@@ -42,7 +44,7 @@ CDFile::CDFile ( const Project& project_,
 {
 	const XMLAttribute* att = node.GetAttribute ( "base", false );
 	if ( att != NULL )
-		base = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
+		base = ResolveVariablesInPath ( att->value );
 	else
 		base = "";
 

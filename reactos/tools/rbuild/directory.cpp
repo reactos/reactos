@@ -116,28 +116,6 @@ Directory::CreateDirectory ( string path )
 	return directoryWasCreated;
 }
 
-string
-Directory::ReplaceVariable ( const string& name,
-                             const string& value,
-                             string path )
-{
-	size_t i = path.find ( name );
-	if ( i != string::npos )
-		return path.replace ( i, name.length (), value );
-	else
-		return path;
-}
-
-void
-Directory::ResolveVariablesInPath ( char* buf,
-                                    const string& path )
-{
-	string s = ReplaceVariable ( "$(INTERMEDIATE)", Environment::GetIntermediatePath (), path );
-	s = ReplaceVariable ( "$(OUTPUT)", Environment::GetOutputPath (), s );
-	s = ReplaceVariable ( "$(INSTALL)", Environment::GetInstallPath (), s );
-	strcpy ( buf, s.c_str () );
-}
-
 void
 Directory::GenerateTree ( const string& parent,
                           bool verbose )
@@ -152,8 +130,10 @@ Directory::GenerateTree ( const string& parent,
 			path = parent + sSep + name;
 		else
 			path = parent;
-		ResolveVariablesInPath ( buf, path );
-		if ( CreateDirectory ( buf ) && verbose )
+		
+		path = ResolveVariablesInPath ( path );
+
+		if ( CreateDirectory ( path ) && verbose )
 			printf ( "Created %s\n", buf );
 	}
 	else

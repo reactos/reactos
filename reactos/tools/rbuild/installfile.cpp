@@ -28,7 +28,22 @@ InstallFile::InstallFile ( const Project& project_,
 	: project ( project_ ),
 	  node ( installfileNode )
 {
-	const XMLAttribute* att = node.GetAttribute ( "base", false );
+}
+
+InstallFile::~InstallFile ()
+{
+}
+
+void
+InstallFile::ProcessXML()
+{
+	const XMLAttribute* att = node.GetAttribute ( "root", false );
+	if ( att != NULL )
+		this->path = ResolveVariablesInPath ( att->value );
+	else
+		this->path = path;
+
+	att = node.GetAttribute ( "base", false );
 	if ( att != NULL )
 		base = att->value;
 	else
@@ -40,28 +55,6 @@ InstallFile::InstallFile ( const Project& project_,
 	else
 		newname = node.value;
 	name = node.value;
-
-	att = node.GetAttribute ( "root", false );
-	if ( att != NULL)
-	{
-		if ( att->value == "intermediate" )
-			this->path = "$(INTERMEDIATE)" + sSep + path;
-		else if ( att->value == "output" )
-			this->path = "$(OUTPUT)" + sSep + path;
-		else
-		{
-			throw InvalidAttributeValueException (
-				node.location,
-				"root",
-				att->value );
-		}
-	}
-	else
-		this->path = path;
-}
-
-InstallFile::~InstallFile ()
-{
 }
 
 string
@@ -70,7 +63,3 @@ InstallFile::GetPath () const
 	return path + sSep + name;
 }
 
-void
-InstallFile::ProcessXML()
-{
-}
