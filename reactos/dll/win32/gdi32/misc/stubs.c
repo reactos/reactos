@@ -2454,14 +2454,6 @@ EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 {
    RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)hsem);
 }
-
-
-
-
-
-
-
-
 /*
  * @unimplemented
  */

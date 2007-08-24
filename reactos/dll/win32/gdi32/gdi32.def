@@ -176,9 +176,7 @@ DdEntry55@12=NtGdiDdUpdateOverlay@12
 DdEntry56@8=NtGdiDdWaitForVerticalBlank@8
 Ellipse@20=NtGdiEllipse@20
 EngCopyBits@24
-EngCreateDeviceBitmap@16
 EngCreatePalette@24
-EngDeleteClip@4
 EngDeletePalette@4
 EngDeletePath@4
 EngDeleteSemaphore@4
