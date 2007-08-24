@@ -1555,14 +1555,29 @@ NtGdiEngEraseSurface(SURFOBJ *Surface,
  * @unimplemented
  */
 BOOL STDCALL
-NtGdiEngFillPath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,BRUSHOBJ *pbo,POINTL *pptlBrushOrg,MIX mix,FLONG flOptions)
+NtGdiEngFillPath(SURFOBJ *pso,
+                 PATHOBJ *ppo,
+                 CLIPOBJ *pco,
+                 BRUSHOBJ *pbo,
+                 POINTL *pptlBrushOrg,
+                 MIX mix,
+                 FLONG flOptions)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
 BOOL STDCALL 
-EngGradientFill(SURFOBJ *psoDest,CLIPOBJ *pco,XLATEOBJ *pxlo,TRIVERTEX *pVertex,ULONG nVertex,PVOID pMesh,ULONG nMesh,RECTL *prclExtents,POINTL *pptlDitherOrg,ULONG ulMode)
+NtGdiEngGradientFill(SURFOBJ *psoDest,
+                     CLIPOBJ *pco,
+                     XLATEOBJ *pxlo,
+                     TRIVERTEX *pVertex,
+                     ULONG nVertex,
+                     PVOID pMesh,
+                     ULONG nMesh,
+                     RECTL *prclExtents,
+                     POINTL *pptlDitherOrg,
+                     ULONG ulMode)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -1593,3 +1608,62 @@ NtGdiEngMarkBandingSurface(HSURF hsurf)
     UNIMPLEMENTED;
     return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngPaint(IN SURFOBJ *Surface,
+	 IN CLIPOBJ *ClipRegion,
+	 IN BRUSHOBJ *Brush,
+	 IN POINTL *BrushOrigin,
+	 IN MIX  Mix)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL 
+NtGdiEngPlgBlt(SURFOBJ *psoTrg,
+               SURFOBJ *psoSrc,
+               SURFOBJ *psoMsk,
+               CLIPOBJ *pco,
+               XLATEOBJ *pxlo,
+               COLORADJUSTMENT *pca,
+               POINTL *pptlBrushOrg,
+               POINTFIX *pptfx,
+               RECTL *prcl,
+               POINTL *pptl,
+               ULONG iMode)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL 
+NtGdiEngStretchBltROP(SURFOBJ *psoDest,
+                      SURFOBJ *psoSrc,
+                      SURFOBJ *psoMask,
+                      CLIPOBJ *pco,
+                      XLATEOBJ *pxlo,
+                      COLORADJUSTMENT *pca,
+                      POINTL *pptlHTOrg,
+                      RECTL *prclDest,
+                      RECTL *prclSrc,
+                      POINTL *pptlMask,
+                      ULONG iMode,
+                      BRUSHOBJ *pbo,
+                      DWORD rop4)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
