@@ -1,39 +1,24 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/start.c
+ * FILE:        base/applications/mscutils/servman/start.c
  * PURPOSE:     Start a service
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2005-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "precomp.h"
 
 static BOOL
-DoStartService(PMAIN_WND_INFO Info)
+DoStartService(PMAIN_WND_INFO Info,
+               HWND hProgDlg)
 {
-    HWND hProgBar;
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
     SERVICE_STATUS_PROCESS ServiceStatus;
     DWORD BytesNeeded = 0;
     INT ArgCount = 0;
     DWORD dwStartTickCount, dwOldCheckPoint;
-
-
-    /* set the progress bar range and step */
-    hProgBar = GetDlgItem(Info->hProgDlg,
-                          IDC_SERVCON_PROGRESS);
-
-    SendMessage(hProgBar,
-                PBM_SETRANGE,
-                0,
-                MAKELPARAM(0, PROGRESSRANGE));
-
-    SendMessage(hProgBar,
-                PBM_SETSTEP,
-                (WPARAM)1,
-                0);
 
     /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL,
@@ -92,8 +77,7 @@ DoStartService(PMAIN_WND_INFO Info)
         else if ( dwWaitTime > 5000 )
             dwWaitTime = 5000;
 
-        /* increment the progress bar */
-        SendMessage(hProgBar, PBM_STEPIT, 0, 0);
+        IncrementProgressBar(hProgDlg);
 
         /* wait before checking status */
         Sleep(ServiceStatus.dwWaitHint / 8);
@@ -112,7 +96,7 @@ DoStartService(PMAIN_WND_INFO Info)
         if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
         {
             /* The service is making progress. increment the progress bar */
-            SendMessage(hProgBar, PBM_STEPIT, 0, 0);
+            IncrementProgressBar(hProgDlg);
             dwStartTickCount = GetTickCount();
             dwOldCheckPoint = ServiceStatus.dwCheckPoint;
         }
@@ -130,96 +114,34 @@ DoStartService(PMAIN_WND_INFO Info)
 
     if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
     {
-        SendMessage(hProgBar,
-                    PBM_DELTAPOS,
-                    PROGRESSRANGE,
-                    0);
+        CompleteProgressBar(hProgDlg);
         Sleep(1000);
         return TRUE;
     }
     else
         return FALSE;
-
 }
-
-
 
 
 BOOL
 DoStart(PMAIN_WND_INFO Info)
 {
     HWND hProgDlg;
-    TCHAR ProgDlgBuf[100];
+    BOOL bRet = FALSE;
 
-    /* open the progress dialog */
-    hProgDlg = CreateDialog(hInstance,
-                            MAKEINTRESOURCE(IDD_DLG_PROGRESS),
-                            Info->hMainWnd,
-                            (DLGPROC)ProgressDialogProc);
-    if (hProgDlg != NULL)
+    hProgDlg = CreateProgressDialog(Info->hMainWnd,
+                                    Info->CurrentService->lpServiceName);
+
+    if (hProgDlg)
     {
-        ShowWindow(hProgDlg,
-                   SW_SHOW);
+        bRet = DoStartService(Info,
+                              hProgDlg);
 
-        /* write the info to the progress dialog */
-        LoadString(hInstance,
-                   IDS_PROGRESS_INFO_START,
-                   ProgDlgBuf,
-                   sizeof(ProgDlgBuf) / sizeof(TCHAR));
-
-        SendDlgItemMessage(hProgDlg,
-                           IDC_SERVCON_INFO,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)ProgDlgBuf);
-
-        /* write the service name to the progress dialog */
-        SendDlgItemMessage(hProgDlg,
-                           IDC_SERVCON_NAME,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)Info->CurrentService->lpServiceName);
+        SendMessage(hProgDlg,
+                    WM_DESTROY,
+                    0,
+                    0);
     }
 
-    /* start the service */
-    if ( DoStartService(Info) )
-    {
-        LVITEM item;
-        TCHAR szStatus[64];
-        TCHAR buf[25];
-
-        LoadString(hInstance,
-                   IDS_SERVICES_STARTED,
-                   szStatus,
-                   sizeof(szStatus) / sizeof(TCHAR));
-        item.pszText = szStatus;
-        item.iItem = Info->SelectedItem;
-        item.iSubItem = 2;
-        SendMessage(Info->hListView,
-                    LVM_SETITEMTEXT,
-                    item.iItem,
-                    (LPARAM) &item);
-
-        /* change dialog status */
-        if (Info->PropSheet != NULL)
-        {
-            LoadString(hInstance,
-                      IDS_SERVICES_STARTED,
-                      buf,
-                      sizeof(buf) / sizeof(TCHAR));
-
-            SendDlgItemMessageW(Info->PropSheet->hwndGenDlg,
-                                IDC_SERV_STATUS,
-                                WM_SETTEXT,
-                                0,
-                                (LPARAM)buf);
-        }
-    }
-
-    SendMessage(hProgDlg,
-                WM_DESTROY,
-                0,
-                0);
-
-    return TRUE;
+    return bRet;
 }

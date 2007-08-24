@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/mainwnd.c
+ * FILE:        base/applications/mscutils/servman/mainwnd.c
  * PURPOSE:     Main window message handler
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -33,12 +33,6 @@ TBBUTTON Buttons [NUM_BUTTONS] =
     {TBICON_STOP,    ID_STOP,    TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* stop */
     {TBICON_PAUSE,   ID_PAUSE,   TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* pause */
     {TBICON_RESTART, ID_RESTART, TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* restart */
-
-    {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
-
-    {TBICON_HELP,    ID_HELP,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },         /* help */
-    {TBICON_EXIT,    ID_EXIT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },          /* exit */
-
 };
 
 
@@ -281,7 +275,7 @@ pCreateToolbar(PMAIN_WND_INFO Info)
                     0);
 
         hImageList = InitImageList(IDB_PROP,
-                                   IDB_EXIT,
+                                   IDB_RESTART,
                                    16,
                                    16);
         if (hImageList == NULL)
@@ -585,22 +579,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
         {
             if (Info->SelectedItem != NO_ITEM_SELECTED)
             {
-                PPROP_DLG_INFO PropSheet;
-
-                PropSheet = (PROP_DLG_INFO*) HeapAlloc(ProcessHeap,
-                                      HEAP_ZERO_MEMORY,
-                                      sizeof(PROP_DLG_INFO));
-                if (PropSheet != NULL)
-                {
-                    Info->PropSheet = PropSheet;
-                    OpenPropSheet(Info);
-                }
-
-                HeapFree(ProcessHeap,
-                         0,
-                         PropSheet);
-
-                Info->PropSheet = NULL;
+                Info->bDlgOpen = TRUE;
+                OpenPropSheet(Info);
+                Info->bDlgOpen = FALSE;
             }
         }
         break;
@@ -667,27 +648,29 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_START:
         {
-            DoStart(Info);
+            if (DoStart(Info))
+                SetMenuAndButtonStates(Info);
         }
         break;
 
         case ID_STOP:
         {
-            DoStop(Info);
+            if (DoStop(Info))
+                SetMenuAndButtonStates(Info);
         }
         break;
 
         case ID_PAUSE:
         {
-            Control(Info,
-                    SERVICE_CONTROL_PAUSE);
+            //Control(Info,
+            //        SERVICE_CONTROL_PAUSE);
         }
         break;
 
         case ID_RESUME:
         {
-            Control(Info,
-                    SERVICE_CONTROL_CONTINUE );
+            //Control(Info,
+            //        SERVICE_CONTROL_CONTINUE );
         }
         break;
 
@@ -847,60 +830,60 @@ MainWndProc(HWND hwnd,
         }
         break;
 
-	    case WM_SIZE:
-	    {
+        case WM_SIZE:
+        {
             MainWndResize(Info,
                           LOWORD(lParam),
                           HIWORD(lParam));
-	    }
-	    break;
+        }
+        break;
 
-	    case WM_NOTIFY:
+        case WM_NOTIFY:
         {
             LPNMHDR pnmhdr = (LPNMHDR)lParam;
 
             switch (pnmhdr->code)
             {
-	            case NM_DBLCLK:
-	            {
-	                POINT pt;
-	                RECT rect;
+                case NM_DBLCLK:
+                {
+                    POINT pt;
+                    RECT rect;
 
-	                GetCursorPos(&pt);
-	                GetWindowRect(Info->hListView, &rect);
+                    GetCursorPos(&pt);
+                    GetWindowRect(Info->hListView, &rect);
 
-	                if (PtInRect(&rect, pt))
-	                {
+                    if (PtInRect(&rect, pt))
+                    {
                         SendMessage(hwnd,
                                     WM_COMMAND,
                                     //ID_PROP,
                                     MAKEWPARAM((WORD)ID_PROP, (WORD)0),
                                     0);
-	                }
+                    }
 
                     //OpenPropSheet(Info);
-	            }
-			    break;
+                }
+                break;
 
-			    case LVN_COLUMNCLICK:
-			    {
+                case LVN_COLUMNCLICK:
+                {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
 
                     (void)ListView_SortItems(Info->hListView,
                                              CompareFunc,
                                              pnmv->iSubItem);
                     bSortAscending = !bSortAscending;
-			    }
+                }
                 break;
 
-			    case LVN_ITEMCHANGED:
-			    {
-			        LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
+                case LVN_ITEMCHANGED:
+                {
+                    LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
 
-			        ListViewSelectionChanged(Info, pnmv);
+                    ListViewSelectionChanged(Info, pnmv);
 
-			    }
-			    break;
+                }
+                break;
 
                 case TTN_GETDISPINFO:
                 {
@@ -949,15 +932,6 @@ MainWndProc(HWND hwnd,
                         case ID_RESTART:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_RESTART);
                         break;
-
-                        case ID_HELP:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_HELP);
-                        break;
-
-                        case ID_EXIT:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_EXIT);
-                        break;
-
                     }
                 }
                 break;
@@ -1031,19 +1005,19 @@ MainWndProc(HWND hwnd,
             break;
         }
 
-	    case WM_CLOSE:
-	    {
+        case WM_CLOSE:
+        {
             /* Free service array */
             HeapFree(ProcessHeap,
                      0,
                      Info->pServiceStatus);
 
             DestroyMenu(Info->hShortcutMenu);
-		    DestroyWindow(hwnd);
-	    }
-	    break;
+            DestroyWindow(hwnd);
+        }
+        break;
 
-	    case WM_DESTROY:
+        case WM_DESTROY:
         {
             //DestroyMainWnd(Info);
 
@@ -1057,18 +1031,18 @@ MainWndProc(HWND hwnd,
             /* Break the message queue loop */
             PostQuitMessage(0);
         }
-	    break;
+        break;
 
-	    default:
-	    {
+        default:
+        {
 HandleDefaultMessage:
 
             Ret = DefWindowProc(hwnd,
                                 msg,
                                 wParam,
                                 lParam);
-	    }
-	    break;
+        }
+        break;
     }
     return Ret;
 }

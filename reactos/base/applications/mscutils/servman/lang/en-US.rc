@@ -204,8 +204,6 @@ BEGIN
   IDS_TOOLTIP_STOP "Stop service"
   IDS_TOOLTIP_PAUSE "Pause service"
   IDS_TOOLTIP_RESTART "Restart service"
-  IDS_TOOLTIP_HELP "Help"
-  IDS_TOOLTIP_EXIT "Exit"
 END
 
 STRINGTABLE DISCARDABLE
@@ -221,30 +219,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
 END
-#define IDS_HINT_BLANK          20000
-#define IDS_HINT_EXPORT         20001
-#define IDS_HINT_EXIT           20002
 
-#define IDS_HINT_CONNECT        20011
-#define IDS_HINT_START          20012
-#define IDS_HINT_STOP           21013
-#define IDS_HINT_PAUSE          21014
-#define IDS_HINT_RESUME         20015
-#define IDS_HINT_RESTART        20016
-#define IDS_HINT_REFRESH        20017
-#define IDS_HINT_EDIT           20018
-#define IDS_HINT_CREATE         20019
-#define IDS_HINT_DELETE         20020
-#define IDS_HINT_PROP           20021
-
-#define IDS_HINT_LARGE          20030
-#define IDS_HINT_SMALL          20031
-#define IDS_HINT_LIST           20032
-#define IDS_HINT_DETAILS        20033
-#define IDS_HINT_CUST           20034
-
-#define IDS_HINT_HELP           20040
-#define IDS_HINT_ABOUT          20041
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN

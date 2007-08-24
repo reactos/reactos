@@ -36,10 +36,10 @@ static BOOL
 SaveServicesToFile(PMAIN_WND_INFO Info,
                    LPCTSTR pszFileName)
 {
-	HANDLE hFile;
-	BOOL bSuccess = FALSE;
+    HANDLE hFile;
+    BOOL bSuccess = FALSE;
 
-	hFile = CreateFile(pszFileName,
+    hFile = CreateFile(pszFileName,
                        GENERIC_WRITE,
                        0,
                        NULL,
@@ -47,21 +47,21 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                        FILE_ATTRIBUTE_NORMAL,
                        NULL);
 
-	if(hFile != INVALID_HANDLE_VALUE)
-	{
+    if(hFile != INVALID_HANDLE_VALUE)
+    {
         TCHAR LVText[500];
         TCHAR newl = _T('\n');
         TCHAR tab = _T('\t');
-		DWORD dwTextLength, dwWritten;
-		INT NumListedServ = 0;
-		INT i, k;
+        DWORD dwTextLength, dwWritten;
+        INT NumListedServ = 0;
+        INT i, k;
 
-		NumListedServ = ListView_GetItemCount(Info->hListView);
+        NumListedServ = ListView_GetItemCount(Info->hListView);
 
-		for (i=0; i < NumListedServ; i++)
-		{
-		    for (k=0; k<5; k++)
-		    {
+        for (i=0; i < NumListedServ; i++)
+        {
+            for (k=0; k<5; k++)
+            {
                 dwTextLength = GetTextFromListView(Info,
                                                    LVText,
                                                    i,
@@ -80,46 +80,43 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
                               &dwWritten,
                               NULL);
                 }
-		    }
-		    WriteFile(hFile,
+            }
+            WriteFile(hFile,
                       &newl,
                       sizeof(TCHAR),
                       &dwWritten,
                       NULL);
-		}
+        }
 
-		CloseHandle(hFile);
-		bSuccess = TRUE;
-	}
+        CloseHandle(hFile);
+        bSuccess = TRUE;
+    }
 
-	return bSuccess;
+    return bSuccess;
 }
 
 
 VOID ExportFile(PMAIN_WND_INFO Info)
 {
-	OPENFILENAME ofn;
-	TCHAR szFileName[MAX_PATH] = _T("");
+    OPENFILENAME ofn;
+    TCHAR szFileName[MAX_PATH] = _T("");
 
-	ZeroMemory(&ofn, sizeof(ofn));
+    ZeroMemory(&ofn, sizeof(ofn));
 
-	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = Info->hMainWnd;
-	ofn.lpstrFilter = _T("Text (Tab Delimited)(*.txt)\0*.txt\0Text (Comma Delimited)(*.csv)\0*.csv\0");
-	ofn.lpstrFile = szFileName;
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrDefExt = _T("txt");
-	ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = Info->hMainWnd;
+    ofn.lpstrFilter = _T("Text (Tab Delimited)(*.txt)\0*.txt\0Text (Comma Delimited)(*.csv)\0*.csv\0");
+    ofn.lpstrFile = szFileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrDefExt = _T("txt");
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 
-	if(GetSaveFileName(&ofn))
-	{
-		if (SaveServicesToFile(Info, szFileName))
+    if(GetSaveFileName(&ofn))
+    {
+        if (SaveServicesToFile(Info, szFileName))
             return;
-	}
+    }
 
-	if (CommDlgExtendedError() != CDERR_GENERALCODES)
+    if (CommDlgExtendedError() != CDERR_GENERALCODES)
         MessageBox(NULL, _T("Export to file failed"), NULL, 0);
 }
-
-
-

@@ -51,8 +51,6 @@
 #define IDS_TOOLTIP_STOP    6006
 #define IDS_TOOLTIP_PAUSE   6007
 #define IDS_TOOLTIP_RESTART 6008
-#define IDS_TOOLTIP_HELP    6009
-#define IDS_TOOLTIP_EXIT    6010
 
 #define IDS_SERVICES_STARTED 5000
 #define IDS_SERVICES_STOPPED 5001
@@ -73,8 +71,6 @@
 #define IDB_STOP            10006
 #define IDB_PAUSE           10007
 #define IDB_RESTART         10008
-#define IDB_HELP            10009
-#define IDB_EXIT            10010
 
 /* toolbar buttons */
 #define TBICON_PROP         0
@@ -86,8 +82,6 @@
 #define TBICON_STOP         6
 #define TBICON_PAUSE        7
 #define TBICON_RESTART      8
-#define TBICON_HELP         9
-#define TBICON_EXIT         10
 
 
 /* menu hints */

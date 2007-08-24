@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/control
+ * FILE:        base/applications/mscutils/servman/control
  * PURPOSE:     Stops, pauses and resumes a service
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -11,9 +11,9 @@
 
 BOOL
 Control(PMAIN_WND_INFO Info,
+        HWND hProgDlg,
         DWORD Control)
 {
-    HWND hProgBar;
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
     SERVICE_STATUS_PROCESS ServiceStatus;
@@ -28,19 +28,6 @@ Control(PMAIN_WND_INFO Info,
                 LVM_GETITEM,
                 0,
                 (LPARAM)&item);
-
-    /* set the progress bar range and step */
-    hProgBar = GetDlgItem(Info->hProgDlg,
-                          IDC_SERVCON_PROGRESS);
-    SendMessage(hProgBar,
-                PBM_SETRANGE,
-                0,
-                MAKELPARAM(0, PROGRESSRANGE));
-
-    SendMessage(hProgBar,
-                PBM_SETSTEP,
-                (WPARAM)1,
-                0);
 
     /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL,
@@ -100,11 +87,7 @@ Control(PMAIN_WND_INFO Info,
         else if (dwWaitTime > 5000)
             dwWaitTime = 5000;
 
-        /* increment the progress bar */
-        SendMessage(hProgBar,
-                    PBM_STEPIT,
-                    0,
-                    0);
+        IncrementProgressBar(hProgDlg);
 
         /* wait before checking status */
         Sleep(dwWaitTime);
@@ -122,11 +105,7 @@ Control(PMAIN_WND_INFO Info,
 
         if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
         {
-            /* The service is making progress. increment the progress bar */
-            SendMessage(hProgBar,
-                        PBM_STEPIT,
-                        0,
-                        0);
+            IncrementProgressBar(hProgDlg);
             dwStartTickCount = GetTickCount();
             dwOldCheckPoint = ServiceStatus.dwCheckPoint;
         }
@@ -144,10 +123,7 @@ Control(PMAIN_WND_INFO Info,
 
     if (ServiceStatus.dwCurrentState == Control)
     {
-        SendMessage(hProgBar,
-                    PBM_DELTAPOS,
-                    PROGRESSRANGE,
-                    0);
+        CompleteProgressBar(hProgDlg);
         Sleep(1000);
         return TRUE;
     }

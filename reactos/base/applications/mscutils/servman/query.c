@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/query.c
+ * FILE:        base/applications/mscutils/servman/query.c
  * PURPOSE:     Query service information
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -320,32 +320,36 @@ DWORD
 GetServiceList(PMAIN_WND_INFO Info)
 {
     SC_HANDLE ScHandle;
+    BOOL bGotServices = FALSE;
 
     DWORD BytesNeeded = 0;
     DWORD ResumeHandle = 0;
     DWORD NumServices = 0;
 
-    ScHandle = OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    ScHandle = OpenSCManager(NULL,
+                             NULL,
+                             SC_MANAGER_ENUMERATE_SERVICE);
     if (ScHandle != INVALID_HANDLE_VALUE)
     {
-        if (EnumServicesStatusEx(ScHandle,
-                                 SC_ENUM_PROCESS_INFO,
-                                 SERVICE_WIN32,
-                                 SERVICE_STATE_ALL,
-                                 (LPBYTE)Info->pServiceStatus,
-                                 0, &BytesNeeded,
-                                 &NumServices,
-                                 &ResumeHandle,
-                                 0) == FALSE)
+        if (!EnumServicesStatusEx(ScHandle,
+                                  SC_ENUM_PROCESS_INFO,
+                                  SERVICE_WIN32,
+                                  SERVICE_STATE_ALL,
+                                  (LPBYTE)Info->pServiceStatus,
+                                  0,
+                                  &BytesNeeded,
+                                  &NumServices,
+                                  &ResumeHandle,
+                                  0))
         {
             /* Call function again if required size was returned */
             if (GetLastError() == ERROR_MORE_DATA)
             {
                 /* reserve memory for service info array */
                 Info->pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *)
-                        HeapAlloc(ProcessHeap,
-                                  0,
-                                  BytesNeeded);
+                                          HeapAlloc(ProcessHeap,
+                                                    0,
+                                                    BytesNeeded);
                 if (Info->pServiceStatus == NULL)
                     return FALSE;
 
@@ -359,22 +363,23 @@ GetServiceList(PMAIN_WND_INFO Info)
                                          &BytesNeeded,
                                          &NumServices,
                                          &ResumeHandle,
-                                         0) == FALSE)
+                                         0))
                 {
-                    HeapFree(ProcessHeap,
-                             0,
-                             Info->pServiceStatus);
-                    return FALSE;
+                    bGotServices = TRUE;
                 }
-            }
-            else /* exit on failure */
-            {
-                return FALSE;
             }
         }
     }
 
-    CloseServiceHandle(ScHandle);
+    if (ScHandle)
+        CloseServiceHandle(ScHandle);
+
+    if (!bGotServices)
+    {
+        HeapFree(ProcessHeap,
+                 0,
+                 Info->pServiceStatus);
+    }
 
     return NumServices;
 }

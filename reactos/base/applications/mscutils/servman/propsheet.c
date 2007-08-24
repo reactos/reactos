@@ -1,16 +1,17 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/propsheet.c
+ * FILE:        base/applications/mscutils/servman/propsheet.c
  * PURPOSE:     Property dialog box message handler
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "precomp.h"
 
 static VOID
-SetButtonStates(PMAIN_WND_INFO Info)
+SetButtonStates(PMAIN_WND_INFO Info,
+                HWND hwndDlg)
 {
     HWND hButton;
     DWORD Flags, State;
@@ -20,25 +21,25 @@ SetButtonStates(PMAIN_WND_INFO Info)
 
     if (State == SERVICE_STOPPED)
     {
-        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_START);
+        hButton = GetDlgItem(hwndDlg, IDC_START);
         EnableWindow (hButton, TRUE);
     }
 
     if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
     {
-        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_STOP);
+        hButton = GetDlgItem(hwndDlg, IDC_STOP);
         EnableWindow (hButton, TRUE);
     }
 
     if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
     {
-        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_PAUSE);
+        hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
     }
 
     if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
     {
-        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_PAUSE);
+        hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
     }
 }
@@ -48,7 +49,8 @@ SetButtonStates(PMAIN_WND_INFO Info)
  * values and sets it to value of the selected item
  */
 static VOID
-SetStartupType(PMAIN_WND_INFO Info)
+SetStartupType(PMAIN_WND_INFO Info,
+               HWND hwndDlg)
 {
     HWND hList;
     HKEY hKey;
@@ -70,7 +72,7 @@ SetStartupType(PMAIN_WND_INFO Info)
                  KEY_READ,
                  &hKey);
 
-    hList = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_START_TYPE);
+    hList = GetDlgItem(hwndDlg, IDC_START_TYPE);
 
     LoadString(hInstance, IDS_SERVICES_AUTO, buf, sizeof(buf) / sizeof(TCHAR));
     SendMessage(hList, CB_ADDSTRING, 0, (LPARAM)buf);
@@ -97,7 +99,6 @@ SetStartupType(PMAIN_WND_INFO Info)
         SendMessage(hList, CB_SETCURSEL, 1, 0);
     else if (StartUp == 0x04)
         SendMessage(hList, CB_SETCURSEL, 2, 0);
-
 }
 
 
@@ -106,75 +107,90 @@ SetStartupType(PMAIN_WND_INFO Info)
  * the relevant service information
  */
 static VOID
-GetDlgInfo(PMAIN_WND_INFO Info)
+GetDlgInfo(PMAIN_WND_INFO Info,
+           HWND hwndDlg)
 {
+    LPTSTR lpDescription;
+    LPTSTR lpPathToExe;
+
     /* set the service name */
-    Info->PropSheet->lpServiceName = Info->CurrentService->lpServiceName;
-    SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
+    SendDlgItemMessage(hwndDlg,
                        IDC_SERV_NAME,
                        WM_SETTEXT,
                        0,
-                       (LPARAM)Info->PropSheet->lpServiceName);
+                       (LPARAM)Info->CurrentService->lpServiceName);
 
     /* set the display name */
-    Info->PropSheet->lpDisplayName = Info->CurrentService->lpDisplayName;
-    SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
+    SendDlgItemMessage(hwndDlg,
                        IDC_DISP_NAME,
                        WM_SETTEXT,
                        0,
-                       (LPARAM)Info->PropSheet->lpDisplayName);
+                       (LPARAM)Info->CurrentService->lpDisplayName);
 
     /* set the description */
-    if ((Info->PropSheet->lpDescription = GetDescription(Info->CurrentService->lpServiceName)))
+    if ((lpDescription = GetDescription(Info->CurrentService->lpServiceName)))
     {
-        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
+        SendDlgItemMessage(hwndDlg,
                            IDC_DESCRIPTION,
                            WM_SETTEXT,
                            0,
-                           (LPARAM)Info->PropSheet->lpDescription);
+                           (LPARAM)lpDescription);
+
+        HeapFree(ProcessHeap,
+                 0,
+                 lpDescription);
+
+
     }
 
     /* set the executable path */
-    if ((Info->PropSheet->lpPathToExe = GetExecutablePath(Info)))
+    if ((lpPathToExe = GetExecutablePath(Info)))
     {
-        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
+        SendDlgItemMessage(hwndDlg,
                            IDC_EXEPATH,
                            WM_SETTEXT,
                            0,
-                           (LPARAM)Info->PropSheet->lpPathToExe);
+                           (LPARAM)lpPathToExe);
+
+        HeapFree(ProcessHeap,
+                 0,
+                 lpPathToExe);
     }
 
     /* set startup type */
-    SetStartupType(Info);
+    SetStartupType(Info, hwndDlg);
 
     /* set service status */
     if (Info->CurrentService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
     {
+        TCHAR szServiceStatus[32];
+
         LoadString(hInstance,
                    IDS_SERVICES_STARTED,
-                   Info->PropSheet->szServiceStatus,
-                   sizeof(Info->PropSheet->szServiceStatus) / sizeof(TCHAR));
+                   szServiceStatus,
+                   _tcslen(szServiceStatus) + 1);
 
-        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
+        SendDlgItemMessage(hwndDlg,
                            IDC_SERV_STATUS,
                            WM_SETTEXT,
                            0,
-                           (LPARAM)Info->PropSheet->szServiceStatus);
+                           (LPARAM)szServiceStatus);
     }
     else
     {
+        TCHAR szServiceStatus[32];
+
         LoadString(hInstance,
                    IDS_SERVICES_STOPPED,
-                   Info->PropSheet->szServiceStatus,
-                   sizeof(Info->PropSheet->szServiceStatus) / sizeof(TCHAR));
+                   szServiceStatus,
+                   _tcslen(szServiceStatus) + 1);
 
-        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
+        SendDlgItemMessage(hwndDlg,
                            IDC_SERV_STATUS,
                            WM_SETTEXT,
                            0,
-                           (LPARAM)Info->PropSheet->szServiceStatus);
+                           (LPARAM)szServiceStatus);
     }
-
 }
 
 
@@ -207,13 +223,11 @@ GeneralPageProc(HWND hwndDlg,
             Info = (PMAIN_WND_INFO)(((LPPROPSHEETPAGE)lParam)->lParam);
             if (Info != NULL)
             {
-                Info->PropSheet->hwndGenDlg = hwndDlg;
-
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
                                  (LONG_PTR)Info);
-                GetDlgInfo(Info);
-                SetButtonStates(Info);
+                GetDlgInfo(Info, hwndDlg);
+                SetButtonStates(Info, hwndDlg);
             }
         }
         break;
@@ -251,16 +265,6 @@ GeneralPageProc(HWND hwndDlg,
             break;
 
         case WM_DESTROY:
-            if (Info->PropSheet->lpDescription)
-                HeapFree(ProcessHeap,
-                         0,
-                         Info->PropSheet->lpDescription);
-
-            if (Info->PropSheet->lpPathToExe)
-                HeapFree(ProcessHeap,
-                         0,
-                         Info->PropSheet->lpPathToExe);
-
         break;
 
         case WM_NOTIFY:
@@ -290,8 +294,8 @@ GeneralPageProc(HWND hwndDlg,
 static INT_PTR CALLBACK
 DependanciesPageProc(HWND hwndDlg,
                      UINT uMsg,
-		             WPARAM wParam,
-		             LPARAM lParam)
+                     WPARAM wParam,
+                     LPARAM lParam)
 {
     PMAIN_WND_INFO Info;
 
@@ -311,8 +315,6 @@ DependanciesPageProc(HWND hwndDlg,
             Info = (PMAIN_WND_INFO)(((LPPROPSHEETPAGE)lParam)->lParam);
             if (Info != NULL)
             {
-                Info->PropSheet->hwndDepDlg = hwndDlg;
-
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
                                  (LONG_PTR)Info);
@@ -375,8 +377,6 @@ AddEditButton(HWND hwnd, UINT message, LPARAM lParam)
     }
     return TRUE;
 }
-
-
 
 
 static VOID

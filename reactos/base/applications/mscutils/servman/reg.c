@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/reg.c
+ * FILE:        base/applications/mscutils/servman/reg.c
  * PURPOSE:     Query service information
- * COPYRIGHT:   Copyright 2005 - 2007 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 

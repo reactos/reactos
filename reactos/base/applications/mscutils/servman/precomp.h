@@ -13,29 +13,11 @@
 #pragma warning(disable : 4100)
 #endif
 
-#ifndef SB_SIMPLEID
-#define SB_SIMPLEID 0xFF
-#endif
-
 #define NO_ITEM_SELECTED -1
 #define MAX_KEY_LENGTH 256
-#define NUM_BUTTONS 14
+#define NUM_BUTTONS 11
 #define PROGRESSRANGE 8
 
-
-typedef struct _PROP_DLG_INFO
-{
-    HWND   hwndGenDlg;
-    HWND   hwndDepDlg;
-    LPTSTR lpServiceName;
-    LPTSTR lpDisplayName;
-    LPTSTR lpDescription;
-    LPTSTR lpPathToExe;
-    TCHAR  szStartupType;
-    TCHAR  szServiceStatus[25];
-    LPTSTR lpStartParams;
-
-} PROP_DLG_INFO, *PPROP_DLG_INFO;
 
 typedef struct _MAIN_WND_INFO
 {
@@ -43,22 +25,14 @@ typedef struct _MAIN_WND_INFO
     HWND  hListView;
     HWND  hStatus;
     HWND  hTool;
-    HWND  hProgDlg;
     HMENU hShortcutMenu;
     int   nCmdShow;
 
-    /* Stores the complete services array */
-    ENUM_SERVICE_STATUS_PROCESS *pServiceStatus;
+    ENUM_SERVICE_STATUS_PROCESS *pServiceStatus; /* Stores the complete services array */
+    ENUM_SERVICE_STATUS_PROCESS *CurrentService; /* Stores the current selected service */
 
-    /* Stores the current selected service */
-    ENUM_SERVICE_STATUS_PROCESS *CurrentService;
-
-    /* selection number in the list view */
-    INT SelectedItem;
-
-    struct _PROP_DLG_INFO *PropSheet;
-
-    /* status flags */
+    INT SelectedItem;/* selection number in the list view */
+    BOOL bDlgOpen;
     BOOL InMenuLoop;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
@@ -92,7 +66,12 @@ BOOL DoStart(PMAIN_WND_INFO Info);
 BOOL DoStop(PMAIN_WND_INFO Info);
 
 /* control */
-BOOL Control(PMAIN_WND_INFO Info, DWORD Control);
+BOOL Control(PMAIN_WND_INFO Info, HWND hProgDlg, DWORD Control);
+
+/* progress.c */
+HWND CreateProgressDialog(HWND hParent, LPTSTR lpServiceName);
+VOID IncrementProgressBar(HWND hProgDlg);
+VOID CompleteProgressBar(HWND hProgDlg);
 
 /* query.c */
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
