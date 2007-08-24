@@ -2980,7 +2980,8 @@ APIENTRY
 NtGdiEngCreateDeviceBitmap(
     IN DHSURF dhsurf,
     IN SIZEL sizl,
-    IN ULONG iFormatCompat
+    IN ULONG iFormatCompat,
+    IN DWORD UNKNOWN
 );
 
 W32KAPI
