@@ -2812,7 +2812,7 @@ EngQueryLocalTime(PENG_TIME_FIELDS etf)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
