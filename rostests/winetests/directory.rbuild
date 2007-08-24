@@ -8,17 +8,20 @@
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.rbuild" />
 </directory>
+<directory name="comdlg32">
+	<xi:include href="comdlg32/comdlg32.rbuild" />
+</directory>
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.rbuild" />
 </directory>
 <directory name="icmp">
-        <xi:include href="icmp/icmp.rbuild" />
+	<xi:include href="icmp/icmp.rbuild" />
 </directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
 </directory>
 <directory name="lz32">
-        <xi:include href="lz32/lz32.rbuild" />
+	<xi:include href="lz32/lz32.rbuild" />
 </directory>
 <directory name="msi">
 	<xi:include href="msi/msi.rbuild" />
