@@ -53,7 +53,7 @@ reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
 reactos/dll/win32/msimg32         # Autosync
-reactos/dll/win32/msi             # Out of sync
+reactos/dll/win32/msi             # Needs a widl update
 reactos/dll/win32/msvcrt20        # Out of sync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/netapi32        # Autosync
@@ -74,7 +74,7 @@ reactos/dll/win32/setupapi        # Forked at Wine-20050524
 reactos/dll/win32/shell32         # Synced to Wine-0_9_5
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
-reactos/dll/win32/shlwapi         # Synced to Wine-0_9_5
+reactos/dll/win32/shlwapi         # Autosync
 reactos/dll/win32/twain_32        # Out of sync
 reactos/dll/win32/urlmon          # Autosync
 reactos/dll/win32/uxtheme         # Autosync
