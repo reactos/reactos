@@ -135,7 +135,7 @@ NtGdiDescribePixelFormat                         4
 NtGdiDoPalette                                   6
 NtGdiDrawEscape                                  4
 NtGdiEllipse                                     5
-# NtGdiEnableEudc                                1
+NtGdiEnableEudc                                  1
 NtGdiEndDoc                                      1
 NtGdiEndPage                                     1
 NtGdiEndPath                                     1
@@ -605,10 +605,10 @@ NtUserYieldTask                                  0
 # NtUserRemoteRedrawScreen                         0
 # NtUserRemoteStopScreenUpdates                    0
 # NtUserCtxDisplayIOCtl                            3
-# NtGdiEngAssociateSurface                         3
+NtGdiEngAssociateSurface                         3
 # NtGdiEngCreateBitmap                             6
-# NtGdiEngCreateDeviceSurface                      4
-# NtGdiEngCreateDeviceBitmap                       4
+NtGdiEngCreateDeviceSurface                      4
+NtGdiEngCreateDeviceBitmap                       4
 # NtGdiEngCreatePalette                            6
 # NtGdiEngComputeGlyphSet                          3
 # NtGdiEngCopyBits                                 6
@@ -638,8 +638,8 @@ NtGdiCLIPOBJ_bEnum                               3
 NtGdiCLIPOBJ_cEnumStart                          5
 NtGdiCLIPOBJ_ppoGetPath                          1
 # NtGdiEngDeletePath                               1
-# NtGdiEngCreateClip                               0
-# NtGdiEngDeleteClip                               1
+NtGdiEngCreateClip                               0
+NtGdiEngDeleteClip                               1
 NtGdiBRUSHOBJ_ulGetBrushColor                     1
 NtGdiBRUSHOBJ_pvAllocRbrush                       2
 NtGdiBRUSHOBJ_pvGetRbrush                         1
@@ -665,7 +665,7 @@ NtGdiBRUSHOBJ_hGetColorTransform                   1
 # NtGdiPATHOBJ_vEnumStartClipLines                 4
 # NtGdiPATHOBJ_bEnumClipLines                      3
 # NtGdiGetDhpdev                                   1
-# NtGdiEngCheckAbort                               1
+NtGdiEngCheckAbort                               1
 # NtGdiHT_Get8BPPFormatPalette                     4
 # NtGdiHT_Get8BPPMaskPalette                       6
 # NtGdiUpdateTransform                             1

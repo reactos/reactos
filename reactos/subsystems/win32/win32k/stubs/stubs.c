@@ -1301,3 +1301,87 @@ NtGdiCLIPOBJ_ppoGetPath(CLIPOBJ *ClipObj)
     return NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL 
+STDCALL
+NtGdiEnableEudc(BOOL enable)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngAssociateSurface(IN HSURF Surface,
+                         IN HDEV Dev,
+                         IN ULONG Hooks)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+CLIPOBJ* STDCALL
+NtGdiEngCreateClip(VOID)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+NtGdiEngDeleteClip(CLIPOBJ *ClipRegion)
+{
+    UNIMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+NtGdiEngCheckAbort(SURFOBJ *pso)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HSURF STDCALL
+NtGdiEngCreateDeviceSurface( IN DHSURF Surface,
+                             IN SIZEL Size,
+                             IN ULONG FormatVersion,
+                             IN DWORD UNKNOWN)
+{
+     UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HBITMAP STDCALL
+NtGdiEngCreateDeviceBitmap(
+    IN DHSURF dhsurf,
+    IN SIZEL sizl,
+    IN ULONG iFormatCompat,
+    IN DWORD UNKNOWN)
+{
+     UNIMPLEMENTED;
+    return NULL;
+}
+
+
