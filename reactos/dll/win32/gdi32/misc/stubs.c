@@ -2468,54 +2468,6 @@ EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
 /*
  * @unimplemented
  */
-BOOL STDCALL
-EngCopyBits(SURFOBJ *Dest,
-	    SURFOBJ *Source,
-	    CLIPOBJ *Clip,
-	    XLATEOBJ *ColorTranslation,
-	    RECTL *DestRect,
-	    POINTL *SourcePoint)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HBITMAP STDCALL
-EngCreateBitmap(IN SIZEL Size,
-		IN LONG Width,
-		IN ULONG Format,
-		IN ULONG Flags,
-		IN PVOID Bits)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HPALETTE STDCALL
-EngCreatePalette(IN ULONG Mode,
-		 IN ULONG NumColors,
-		 IN ULONG *Colors,
-		 IN ULONG Red,
-		 IN ULONG Green,
-		 IN ULONG Blue)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 HSEMAPHORE
 STDCALL
 EngCreateSemaphore ( VOID )
@@ -2528,26 +2480,7 @@ EngCreateSemaphore ( VOID )
 
 
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngDeletePalette(IN HPALETTE Palette)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-VOID STDCALL
-EngDeletePath(PATHOBJ *ppo)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
 
 /*
  * @unimplemented
@@ -2562,40 +2495,11 @@ EngDeleteSemaphore ( IN HSEMAPHORE hsem )
  RtlFreeHeap( GetProcessHeap(), 0, hsem );
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngDeleteSurface(IN HSURF Surface)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngEraseSurface(SURFOBJ *Surface,
-		RECTL *Rect,
-		ULONG iColor)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngFillPath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,BRUSHOBJ *pbo,POINTL *pptlBrushOrg,MIX mix,FLONG flOptions)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
+
+
 
 /*
  * @unimplemented
@@ -2656,48 +2560,16 @@ EngGetDriverName(HDEV hdev)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 LPWSTR STDCALL
 EngGetPrinterDataFileName(HDEV hdev)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return EngGetDriverName(hdev);
 }
 
 /*
- * @unimplemented
- */
-BOOL STDCALL 
-EngGradientFill(SURFOBJ *psoDest,CLIPOBJ *pco,XLATEOBJ *pxlo,TRIVERTEX *pVertex,ULONG nVertex,PVOID pMesh,ULONG nMesh,RECTL *prclExtents,POINTL *pptlDitherOrg,ULONG ulMode)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngLineTo(SURFOBJ *Surface,
-	  CLIPOBJ *Clip,
-	  BRUSHOBJ *Brush,
-	  LONG x1,
-	  LONG y1,
-	  LONG x2,
-	  LONG y2,
-	  RECTL *RectBounds,
-	  MIX mix)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
+ * @implemented
  */
 HANDLE STDCALL 
 EngLoadModule(LPWSTR pwsz)
@@ -2707,37 +2579,7 @@ EngLoadModule(LPWSTR pwsz)
 
 
 /*
- * @unimplemented
- */
-BOOL STDCALL 
-EngMarkBandingSurface(HSURF hsurf)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL
-EngMultiByteToUnicodeN(OUT LPWSTR UnicodeString,
-		       IN ULONG MaxBytesInUnicodeString,
-		       OUT PULONG BytesInUnicodeString,
-		       IN PCHAR MultiByteString,
-		       IN ULONG BytesInMultiByteString)
-{
-  RtlMultiByteToUnicodeN(
-                     UnicodeString,
-                     MaxBytesInUnicodeString,
-                     BytesInUnicodeString,
-                     MultiByteString,
-                     BytesInMultiByteString
-                        );
-}
-
-/*
- * @unimplemented
+ * @implemented
  */
 INT STDCALL 
 EngMultiByteToWideChar(UINT CodePage,
@@ -2746,41 +2588,11 @@ EngMultiByteToWideChar(UINT CodePage,
                        LPSTR MultiByteString,
                        INT BytesInMultiByteString)
 {
-  return MultiByteToWideChar(
-                         CodePage,
-			 0,
-			 MultiByteString,
-			 BytesInMultiByteString,
-			 WideCharString,
-			(BytesInWideCharString/sizeof(WCHAR)) /* Bytes to (in WCHARs) */
-			    );
+  return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngPaint(IN SURFOBJ *Surface,
-	 IN CLIPOBJ *ClipRegion,
-	 IN BRUSHOBJ *Brush,
-	 IN POINTL *BrushOrigin,
-	 IN MIX  Mix)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-BOOL STDCALL 
-EngPlgBlt(SURFOBJ *psoTrg,SURFOBJ *psoSrc,SURFOBJ *psoMsk,CLIPOBJ *pco,XLATEOBJ *pxlo,COLORADJUSTMENT *pca,POINTL *pptlBrushOrg,POINTFIX *pptfx,RECTL *prcl,POINTL *pptl,ULONG iMode)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @implemented
@@ -2821,87 +2633,20 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
   RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
 }
 
-
-
 /*
- * @unimplemented
+ * @implemented
  */
-BOOL STDCALL 
-EngStretchBltROP(SURFOBJ *psoDest,SURFOBJ *psoSrc,SURFOBJ *psoMask,CLIPOBJ *pco,XLATEOBJ *pxlo,COLORADJUSTMENT *pca,POINTL *pptlHTOrg,RECTL *prclDest,RECTL *prclSrc,POINTL *pptlMask,ULONG iMode,BRUSHOBJ *pbo,DWORD rop4)
+BOOL 
+STDCALL
+Ellipse(
+  HDC hdc,
+  int nLeftRect,
+  int nTopRect,
+  int nRightRect,
+  int nBottomRect)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL 
-EngStrokeAndFillPath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,XFORMOBJ *pxo,BRUSHOBJ *pboStroke,LINEATTRS *plineattrs,BRUSHOBJ *pboFill,POINTL *pptlBrushOrg,MIX mixFill,FLONG flOptions)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngStrokePath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,XFORMOBJ *pxo,BRUSHOBJ *pbo,POINTL *pptlBrushOrg,LINEATTRS *plineattrs,MIX mix)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL 
-EngTextOut(SURFOBJ *pso,STROBJ *pstro,FONTOBJ *pfo,CLIPOBJ *pco,RECTL *prclExtra,RECTL *prclOpaque,BRUSHOBJ *pboFore,BRUSHOBJ *pboOpaque,POINTL *pptlOrg,MIX mix)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngTransparentBlt(IN SURFOBJ *Dest,
-		  IN SURFOBJ *Source,
-		  IN CLIPOBJ *Clip,
-		  IN XLATEOBJ *ColorTranslation,
-		  IN PRECTL DestRect,
-		  IN PRECTL SourceRect,
-		  IN ULONG TransparentColor,
-		  IN ULONG Reserved)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL
-EngUnicodeToMultiByteN(OUT PCHAR MultiByteString,
-		       IN ULONG  MaxBytesInMultiByteString,
-		       OUT PULONG  BytesInMultiByteString,
-		       IN PWSTR  UnicodeString,
-		       IN ULONG  BytesInUnicodeString)
-{
-   RtlUnicodeToMultiByteN(
-                       MultiByteString,
-                       MaxBytesInMultiByteString,
-                       BytesInMultiByteString,
-                       UnicodeString,
-                       BytesInUnicodeString
-                         );
+    /* FIXME some parts need be done in user mode */
+    return NtGdiEllipse(hdc,nLeftRect,nTopRect,nRightRect,nBottomRect);
 }
 
 /*
