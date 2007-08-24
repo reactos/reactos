@@ -2794,7 +2794,7 @@ EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID STDCALL 
 EngQueryLocalTime(PENG_TIME_FIELDS etf)
