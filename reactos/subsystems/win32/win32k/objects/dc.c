@@ -3303,4 +3303,13 @@ NtGdiSetBoundsRect(
   return  DCB_DISABLE;   /* bounding rectangle always empty */
 }
 
+BOOL
+STDCALL
+NtGdiGetAspectRatioFilterEx(HDC  hDC,
+                                 LPSIZE  AspectRatio)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
 /* EOF */

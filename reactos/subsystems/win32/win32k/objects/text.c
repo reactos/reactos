@@ -136,12 +136,6 @@ static CHARSETINFO FontTci[MAXTCIINDEX] = {
   { SYMBOL_CHARSET, 42 /* CP_SYMBOL */, FS(31)},
 };
 
-VOID FASTCALL
-IntLoadSystemFonts(VOID);
-
-INT FASTCALL
-IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
-
 BOOL FASTCALL
 InitFontSupport(VOID)
 {
@@ -2156,15 +2150,6 @@ fail:
    DC_UnlockDc(dc);
 
    return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiGetAspectRatioFilterEx(HDC  hDC,
-                                 LPSIZE  AspectRatio)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 BOOL

@@ -26,6 +26,8 @@ BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 VOID FASTCALL IntEnableFontRendering(BOOL Enable);
 INT FASTCALL FontGetObject(PTEXTOBJ TextObj, INT Count, PVOID Buffer);
+VOID FASTCALL IntLoadSystemFonts(VOID);
+INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)
