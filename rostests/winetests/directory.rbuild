@@ -23,6 +23,9 @@
 <directory name="lz32">
 	<xi:include href="lz32/lz32.rbuild" />
 </directory>
+<directory name="mlang">
+	<xi:include href="mlang/mlang.rbuild" />
+</directory>
 <directory name="msi">
 	<xi:include href="msi/msi.rbuild" />
 </directory>

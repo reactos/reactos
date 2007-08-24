@@ -14,19 +14,25 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdio.h>
 
-#define INITGUID
 #include "wine/test.h"
 #include "winbase.h"
 #include "winerror.h"
 #include "winnls.h"
 #include "winuser.h"
 #include "shlguid.h"
-#include "wine/shobjidl.h"
+#include "shobjidl.h"
+#include "olectl.h"
+
+#define INITGUID
+#include "initguid.h"
+
+/* This GUID has been removed from the PSDK */
+DEFINE_OLEGUID(WINE_IID_IDelayedRelease,     0x000214EDL, 0, 0);
 
 /* Function ptrs for ordinal calls */
 static HMODULE hShlwapi = 0;
@@ -56,7 +62,7 @@ const GUID * TEST_guids[] = {
   &IID_IPersistFolder,
   &IID_IExtractIconA,
   &IID_IShellDetails,
-  &IID_IDelayedRelease,
+  &WINE_IID_IDelayedRelease,
   &IID_IShellLinkA,
   &IID_IShellCopyHookA,
   &IID_IFileViewerA,
@@ -153,19 +159,33 @@ static void test_ClassIDs(void)
   ok(szBuff[0] == '{', "Didn't write to buffer with ok length\n");
 }
 
+static void test_CLSIDFromProgIDWrap(void)
+{
+    HRESULT (WINAPI *pCLSIDFromProgIDWrap)(LPCOLESTR,LPCLSID);
+    CLSID clsid = IID_NULL;
+    HRESULT hres;
+
+    static const WCHAR wszStdPicture[] = {'S','t','d','P','i','c','t','u','r','e',0};
+
+    pCLSIDFromProgIDWrap = (void*)GetProcAddress(hShlwapi,(char*)435);
+
+    hres = pCLSIDFromProgIDWrap(wszStdPicture, &clsid);
+    ok(hres == S_OK, "CLSIDFromProgIDWrap failed: %08x\n", hres);
+    ok(IsEqualGUID(&CLSID_StdPicture, &clsid), "wrong clsid\n");
+
+    hres = pCLSIDFromProgIDWrap(NULL, &clsid);
+    ok(hres == E_INVALIDARG, "CLSIDFromProgIDWrap failed: %08x, expected E_INVALIDARG\n", hres);
+
+    hres = pCLSIDFromProgIDWrap(wszStdPicture, NULL);
+    ok(hres == E_INVALIDARG, "CLSIDFromProgIDWrap failed: %08x, expected E_INVALIDARG\n", hres);
+}
 
 START_TEST(clsid)
 {
-  hShlwapi = LoadLibraryA("shlwapi.dll");
-  ok(hShlwapi != 0, "LoadLibraryA failed\n");
-  if (hShlwapi)
-  {
-    pSHLWAPI_269 = (void*)GetProcAddress(hShlwapi, (LPSTR)269);
-    pSHLWAPI_23 = (void*)GetProcAddress(hShlwapi, (LPSTR)23);
-  }
+  hShlwapi = GetModuleHandleA("shlwapi.dll");
+  pSHLWAPI_269 = (void*)GetProcAddress(hShlwapi, (LPSTR)269);
+  pSHLWAPI_23 = (void*)GetProcAddress(hShlwapi, (LPSTR)23);
 
   test_ClassIDs();
-
-  if (hShlwapi)
-    FreeLibrary(hShlwapi);
+  test_CLSIDFromProgIDWrap();
 }

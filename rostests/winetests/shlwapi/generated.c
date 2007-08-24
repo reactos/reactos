@@ -157,11 +157,6 @@ static void test_pack_HUSKEY(void)
     TEST_TYPE(HUSKEY, 4, 4);
 }
 
-static void test_pack_IQueryAssociations(void)
-{
-    /* IQueryAssociations */
-}
-
 static void test_pack_PHUSKEY(void)
 {
     /* PHUSKEY */
@@ -176,7 +171,6 @@ static void test_pack(void)
     test_pack_DLLVERSIONINFO();
     test_pack_DLLVERSIONINFO2();
     test_pack_HUSKEY();
-    test_pack_IQueryAssociations();
     test_pack_PHUSKEY();
 }
 

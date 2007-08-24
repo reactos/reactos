@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -214,33 +214,30 @@ static HRESULT (WINAPI *pSHLWAPI_214)(_IDummyStream*,ULARGE_INTEGER*);
 
 static void InitFunctionPtrs(void)
 {
-  SHLWAPI_hshlwapi = LoadLibraryA("shlwapi.dll");
-  ok(SHLWAPI_hshlwapi != 0, "LoadLibrary failed\n");
-  if (SHLWAPI_hshlwapi)
-  {
-    pSHLWAPI_17 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)17);
-    ok(pSHLWAPI_17 != 0, "No Ordinal 17\n");
-    pSHLWAPI_18 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)18);
-    ok(pSHLWAPI_18 != 0, "No Ordinal 18\n");
-    pSHLWAPI_19 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)19);
-    ok(pSHLWAPI_19 != 0, "No Ordinal 19\n");
-    pSHLWAPI_20 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)20);
-    ok(pSHLWAPI_20 != 0, "No Ordinal 20\n");
-    pSHLWAPI_21 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)21);
-    ok(pSHLWAPI_21 != 0, "No Ordinal 21\n");
-    pSHLWAPI_22 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)22);
-    ok(pSHLWAPI_22 != 0, "No Ordinal 22\n");
-    pSHLWAPI_166 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)166);
-    ok(pSHLWAPI_166 != 0, "No Ordinal 166\n");
-    pSHLWAPI_184 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)184);
-    ok(pSHLWAPI_184 != 0, "No Ordinal 184\n");
-    pSHLWAPI_212 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)212);
-    ok(pSHLWAPI_212 != 0, "No Ordinal 212\n");
-    pSHLWAPI_213 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)213);
-    ok(pSHLWAPI_213 != 0, "No Ordinal 213\n");
-    pSHLWAPI_214 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)214);
-    ok(pSHLWAPI_214 != 0, "No Ordinal 214\n");
-  }
+  SHLWAPI_hshlwapi = GetModuleHandleA("shlwapi.dll");
+
+  pSHLWAPI_17 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)17);
+  ok(pSHLWAPI_17 != 0, "No Ordinal 17\n");
+  pSHLWAPI_18 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)18);
+  ok(pSHLWAPI_18 != 0, "No Ordinal 18\n");
+  pSHLWAPI_19 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)19);
+  ok(pSHLWAPI_19 != 0, "No Ordinal 19\n");
+  pSHLWAPI_20 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)20);
+  ok(pSHLWAPI_20 != 0, "No Ordinal 20\n");
+  pSHLWAPI_21 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)21);
+  ok(pSHLWAPI_21 != 0, "No Ordinal 21\n");
+  pSHLWAPI_22 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)22);
+  ok(pSHLWAPI_22 != 0, "No Ordinal 22\n");
+  pSHLWAPI_166 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)166);
+  ok(pSHLWAPI_166 != 0, "No Ordinal 166\n");
+  pSHLWAPI_184 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)184);
+  ok(pSHLWAPI_184 != 0, "No Ordinal 184\n");
+  pSHLWAPI_212 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)212);
+  ok(pSHLWAPI_212 != 0, "No Ordinal 212\n");
+  pSHLWAPI_213 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)213);
+  ok(pSHLWAPI_213 != 0, "No Ordinal 213\n");
+  pSHLWAPI_214 = (void *)GetProcAddress( SHLWAPI_hshlwapi, (LPSTR)214);
+  ok(pSHLWAPI_214 != 0, "No Ordinal 214\n");
 }
 
 static void InitDummyStream(_IDummyStream* iface)
@@ -299,21 +296,20 @@ static void test_CList(void)
       inserted = pSHLWAPI_22(list, item->ulId);
       ok(inserted != NULL, "lost after adding\n");
 
-      ok(!inserted || inserted->ulId != ~0UL, "find returned a container\n");
+      ok(!inserted || inserted->ulId != ~0U, "find returned a container\n");
 
       /* Check size */
       if (inserted && inserted->ulSize & 0x3)
       {
         /* Contained */
-        ok(inserted[-1].ulId == ~0UL, "invalid size is not countained\n");
+        ok(inserted[-1].ulId == ~0U, "invalid size is not countained\n");
         ok(inserted[-1].ulSize > inserted->ulSize+sizeof(SHLWAPI_CLIST),
            "container too small\n");
       }
       else if (inserted)
       {
         ok(inserted->ulSize==item->ulSize+sizeof(SHLWAPI_CLIST),
-           "id %ld size wrong (%ld!=%ld)\n", inserted->ulId, inserted->ulSize,
-           item->ulSize+sizeof(SHLWAPI_CLIST));
+           "id %d wrong size %d\n", inserted->ulId, inserted->ulSize);
       }
       if (inserted)
       {
@@ -370,20 +366,22 @@ static void test_CList(void)
   /* The call succeeds but the item is not inserted, except on some early
    * versions which return failure. Wine behaves like later versions.
    */
-#if 0
+  if (0)
+  {
   ok(hRet == S_OK, "failed bad element size\n");
-#endif
+  }
   inserted = pSHLWAPI_22(list, 33);
   ok(inserted == NULL, "inserted bad element size\n");
 
   inserted = (LPSHLWAPI_CLIST)buff;
   inserted->ulSize = 44;
-  inserted->ulId = ~0UL;
+  inserted->ulId = ~0U;
   hRet = pSHLWAPI_20(&list, inserted);
   /* See comment above, some early versions fail this call */
-#if 0
+  if (0)
+  {
   ok(hRet == S_OK, "failed adding a container\n");
-#endif
+  }
   item = SHLWAPI_CLIST_items;
 
   /* Look for nonexistent item in populated list */
@@ -424,21 +422,20 @@ static void test_CList(void)
       inserted = pSHLWAPI_22(list, item->ulId);
       ok(inserted != NULL, "lost after adding\n");
 
-      ok(!inserted || inserted->ulId != ~0UL, "find returned a container\n");
+      ok(!inserted || inserted->ulId != ~0U, "find returned a container\n");
 
       /* Check size */
       if (inserted && inserted->ulSize & 0x3)
       {
         /* Contained */
-        ok(inserted[-1].ulId == ~0UL, "invalid size is not countained\n");
+        ok(inserted[-1].ulId == ~0U, "invalid size is not countained\n");
         ok(inserted[-1].ulSize > inserted->ulSize+sizeof(SHLWAPI_CLIST),
            "container too small\n");
       }
       else if (inserted)
       {
         ok(inserted->ulSize==item->ulSize+sizeof(SHLWAPI_CLIST),
-           "id %ld size wrong (%ld!=%ld)\n", inserted->ulId, inserted->ulSize,
-           item->ulSize+sizeof(SHLWAPI_CLIST));
+           "id %d wrong size %d\n", inserted->ulId, inserted->ulSize);
       }
       ok(!inserted || inserted->ulId==item->ulId, "find got wrong item\n");
       if (inserted)
@@ -637,7 +634,4 @@ START_TEST(clist)
     test_SHLWAPI_213();
     test_SHLWAPI_214();
   }
-
-  if (SHLWAPI_hshlwapi)
-    FreeLibrary(SHLWAPI_hshlwapi);
 }
