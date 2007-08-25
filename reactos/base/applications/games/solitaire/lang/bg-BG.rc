@@ -1,8 +1,8 @@
 /*
  * PROJECT:     Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/en.rc
- * PURPOSE:     English Language File for Solitaire
+ * FILE:        base/applications/games/solitaire/lang/bg-BG.rc
+ * PURPOSE:     Bulgarian Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  */
 #include "resource.h"
