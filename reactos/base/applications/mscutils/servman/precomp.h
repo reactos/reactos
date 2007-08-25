@@ -15,9 +15,6 @@
 
 #define NO_ITEM_SELECTED -1
 #define MAX_KEY_LENGTH 256
-#define NUM_BUTTONS 11
-#define PROGRESSRANGE 8
-
 
 typedef struct _MAIN_WND_INFO
 {
@@ -28,7 +25,7 @@ typedef struct _MAIN_WND_INFO
     HMENU hShortcutMenu;
     int   nCmdShow;
 
-    ENUM_SERVICE_STATUS_PROCESS *pServiceStatus; /* Stores the complete services array */
+    ENUM_SERVICE_STATUS_PROCESS *pAllServices;
     ENUM_SERVICE_STATUS_PROCESS *CurrentService; /* Stores the current selected service */
 
     INT SelectedItem;/* selection number in the list view */
@@ -79,7 +76,7 @@ BOOL SetDescription(LPTSTR, LPTSTR);
 LPTSTR GetDescription(LPTSTR);
 LPTSTR GetExecutablePath(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
-DWORD GetServiceList(PMAIN_WND_INFO Info);
+//DWORD GetServiceList(PMAIN_WND_INFO Info);
 
 /* propsheet.c */
 LONG APIENTRY OpenPropSheet(PMAIN_WND_INFO Info);
@@ -91,35 +88,27 @@ VOID ExportFile(PMAIN_WND_INFO Info);
 INT AllocAndLoadString(OUT LPTSTR *lpTarget,
                        IN HINSTANCE hInst,
                        IN UINT uID);
-
 DWORD LoadAndFormatString(IN HINSTANCE hInstance,
                           IN UINT uID,
                           OUT LPTSTR *lpTarget,
                           ...);
-
 BOOL StatusBarLoadAndFormatString(IN HWND hStatusBar,
                                   IN INT PartId,
                                   IN HINSTANCE hInstance,
                                   IN UINT uID,
                                   ...);
-
 BOOL StatusBarLoadString(IN HWND hStatusBar,
                          IN INT PartId,
                          IN HINSTANCE hInstance,
                          IN UINT uID);
-
 INT GetTextFromEdit(OUT LPTSTR lpString,
                     IN HWND hDlg,
                     IN UINT Res);
-
 VOID GetError(VOID);
-
 VOID DisplayString(PTCHAR);
-
 HIMAGELIST InitImageList(UINT NumButtons,
                          UINT StartResource,
                          UINT Width,
                          UINT Height);
-
 
 #endif /* __SERVMAN_PRECOMP_H */

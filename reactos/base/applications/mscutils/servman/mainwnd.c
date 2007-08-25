@@ -15,7 +15,7 @@ BOOL bSortAscending = TRUE;
 
 
 /* Toolbar buttons */
-TBBUTTON Buttons [NUM_BUTTONS] =
+static const TBBUTTON Buttons [] =
 {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
     {TBICON_PROP,    ID_PROP,    TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0},    /* properties */
     {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* refresh */
@@ -141,31 +141,19 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 {
     HMENU hMainMenu;
     DWORD Flags, State;
+    UINT i;
 
     /* get handle to menu */
     hMainMenu = GetMenu(Info->hMainWnd);
 
     /* set all to greyed */
-    EnableMenuItem(hMainMenu, ID_START, MF_GRAYED);
-    EnableMenuItem(hMainMenu, ID_STOP, MF_GRAYED);
-    EnableMenuItem(hMainMenu, ID_PAUSE, MF_GRAYED);
-    EnableMenuItem(hMainMenu, ID_RESUME, MF_GRAYED);
-    EnableMenuItem(hMainMenu, ID_RESTART, MF_GRAYED);
-
-    EnableMenuItem(Info->hShortcutMenu, ID_START, MF_GRAYED);
-    EnableMenuItem(Info->hShortcutMenu, ID_STOP, MF_GRAYED);
-    EnableMenuItem(Info->hShortcutMenu, ID_PAUSE, MF_GRAYED);
-    EnableMenuItem(Info->hShortcutMenu, ID_RESUME, MF_GRAYED);
-    EnableMenuItem(Info->hShortcutMenu, ID_RESTART, MF_GRAYED);
-
-    SendMessage(Info->hTool, TB_SETSTATE, ID_START,
-                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
-    SendMessage(Info->hTool, TB_SETSTATE, ID_STOP,
-                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
-    SendMessage(Info->hTool, TB_SETSTATE, ID_PAUSE,
-                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
-    SendMessage(Info->hTool, TB_SETSTATE, ID_RESTART,
-                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+    for (i = ID_START; i <= ID_RESTART; i++)
+    {
+        EnableMenuItem(hMainMenu, i, MF_GRAYED);
+        EnableMenuItem(Info->hShortcutMenu, ID_START, MF_GRAYED);
+        SendMessage(Info->hTool, TB_SETSTATE, i,
+                    (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+    }
 
     if (Info->SelectedItem != NO_ITEM_SELECTED)
     {
@@ -249,7 +237,7 @@ CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 static BOOL
 pCreateToolbar(PMAIN_WND_INFO Info)
 {
-    INT NumButtons = sizeof(Buttons) / sizeof(Buttons[0]);
+    INT numButtons = sizeof(Buttons) / sizeof(Buttons[0]);
 
     Info->hTool = CreateWindowEx(0,
                                  TOOLBARCLASSNAME,
@@ -288,7 +276,7 @@ pCreateToolbar(PMAIN_WND_INFO Info)
 
         SendMessage(Info->hTool,
                     TB_ADDBUTTONS,
-                    NumButtons,
+                    numButtons,
                     (LPARAM)Buttons);
 
         return TRUE;
@@ -346,7 +334,6 @@ InitListViewImage(PMAIN_WND_INFO Info)
     (void)ListView_SetImageList(Info->hListView,
                                 hLarge,
                                 LVSIL_NORMAL);
-
 }
 
 
@@ -472,7 +459,6 @@ CreateStatusBar(PMAIN_WND_INFO Info)
     if(Info->hStatus == NULL)
         return FALSE;
 
-
     SendMessage(Info->hStatus,
                 SB_SETPARTS,
                 sizeof(StatWidths) / sizeof(INT),
@@ -485,7 +471,6 @@ static VOID
 ListViewSelectionChanged(PMAIN_WND_INFO Info,
                          LPNMLISTVIEW pnmv)
 {
-
     HMENU hMainMenu;
 
     /* get handle to menu */
@@ -543,16 +528,19 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
 }
 
 
-static VOID
+static BOOL
 InitMainWnd(PMAIN_WND_INFO Info)
 {
     if (!pCreateToolbar(Info))
+    {
         DisplayString(_T("error creating toolbar"));
+        return FALSE;
+    }
 
     if (!CreateListView(Info))
     {
         DisplayString(_T("error creating list view"));
-        return;
+        return FALSE;
     }
 
     if (!CreateStatusBar(Info))
@@ -563,6 +551,8 @@ InitMainWnd(PMAIN_WND_INFO Info)
                                    MAKEINTRESOURCE(IDR_POPUP));
     Info->hShortcutMenu = GetSubMenu(Info->hShortcutMenu,
                                      0);
+
+    return TRUE;
 }
 
 
@@ -820,7 +810,8 @@ MainWndProc(HWND hwnd,
                              GWLP_USERDATA,
                              (LONG_PTR)Info);
 
-            InitMainWnd(Info);
+            if (!InitMainWnd(Info))
+                return -1;
 
             /* Show the window */
             ShowWindow(hwnd,
@@ -1007,10 +998,9 @@ MainWndProc(HWND hwnd,
 
         case WM_CLOSE:
         {
-            /* Free service array */
             HeapFree(ProcessHeap,
                      0,
-                     Info->pServiceStatus);
+                     Info->pAllServices);
 
             DestroyMenu(Info->hShortcutMenu);
             DestroyWindow(hwnd);
@@ -1019,8 +1009,6 @@ MainWndProc(HWND hwnd,
 
         case WM_DESTROY:
         {
-            //DestroyMainWnd(Info);
-
             HeapFree(ProcessHeap,
                      0,
                      Info);
@@ -1028,7 +1016,6 @@ MainWndProc(HWND hwnd,
                              GWLP_USERDATA,
                              0);
 
-            /* Break the message queue loop */
             PostQuitMessage(0);
         }
         break;
@@ -1044,6 +1031,7 @@ HandleDefaultMessage:
         }
         break;
     }
+
     return Ret;
 }
 
@@ -1122,4 +1110,3 @@ UninitMainWindowImpl(VOID)
     UnregisterClass(szMainWndClass,
                     hInstance);
 }
-

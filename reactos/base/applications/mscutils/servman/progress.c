@@ -9,6 +9,8 @@
 
 #include "precomp.h"
 
+#define PROGRESSRANGE 8
+
 VOID
 CompleteProgressBar(HWND hProgDlg)
 {

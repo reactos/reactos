@@ -27,7 +27,6 @@ GetSelectedService(PMAIN_WND_INFO Info)
 }
 
 
-
 /* get vendor of service binary */
 LPTSTR
 GetExecutablePath(PMAIN_WND_INFO Info)
@@ -99,21 +98,90 @@ cleanup:
 }
 
 
+static BOOL
+GetServiceList(PMAIN_WND_INFO Info,
+               DWORD *NumServices)
+{
+    SC_HANDLE ScHandle;
+    BOOL bRet = FALSE;
+
+    DWORD BytesNeeded = 0;
+    DWORD ResumeHandle = 0;
+
+    *NumServices = 0;
+
+    ScHandle = OpenSCManager(NULL,
+                             NULL,
+                             SC_MANAGER_ENUMERATE_SERVICE);
+    if (ScHandle != INVALID_HANDLE_VALUE)
+    {
+        if (!EnumServicesStatusEx(ScHandle,
+                                  SC_ENUM_PROCESS_INFO,
+                                  SERVICE_WIN32,
+                                  SERVICE_STATE_ALL,
+                                  NULL,
+                                  0,
+                                  &BytesNeeded,
+                                  NumServices,
+                                  &ResumeHandle,
+                                  0))
+        {
+            /* Call function again if required size was returned */
+            if (GetLastError() == ERROR_MORE_DATA)
+            {
+                /* reserve memory for service info array */
+                Info->pAllServices = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(ProcessHeap,
+                                                                         0,
+                                                                         BytesNeeded);
+                if (Info->pAllServices)
+                {
+                    /* fill array with service info */
+                    if (EnumServicesStatusEx(ScHandle,
+                                             SC_ENUM_PROCESS_INFO,
+                                             SERVICE_WIN32,
+                                             SERVICE_STATE_ALL,
+                                             (LPBYTE)Info->pAllServices,
+                                             BytesNeeded,
+                                             &BytesNeeded,
+                                             NumServices,
+                                             &ResumeHandle,
+                                             0))
+                    {
+                        bRet = TRUE;
+                    }
+                }
+            }
+        }
+    }
+
+    if (ScHandle)
+        CloseServiceHandle(ScHandle);
+
+    if (!bRet)
+    {
+        HeapFree(ProcessHeap,
+                 0,
+                 Info->pAllServices);
+    }
+
+    return bRet;
+}
+
+
 BOOL
 RefreshServiceList(PMAIN_WND_INFO Info)
 {
+    ENUM_SERVICE_STATUS_PROCESS *pService;
     LVITEM lvItem;
     TCHAR szNumServices[32];
     TCHAR szStatus[64];
-    DWORD NumServices = 0;
+    DWORD NumServices;
     DWORD Index;
     LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
 
     (void)ListView_DeleteAllItems(Info->hListView);
 
-    NumServices = GetServiceList(Info);
-
-    if (NumServices)
+    if (GetServiceList(Info, &NumServices))
     {
         TCHAR buf[300];     /* buffer to hold key path */
         INT NumListedServ = 0; /* how many services were listed */
@@ -122,38 +190,43 @@ RefreshServiceList(PMAIN_WND_INFO Info)
         {
             HKEY hKey = NULL;
             LPTSTR lpDescription = NULL;
-            LPTSTR LogOnAs = NULL;
+            LPTSTR lpLogOnAs = NULL;
             DWORD StartUp = 0;
             DWORD dwValueSize;
+
+            /* copy the service info over */
+            pService = &Info->pAllServices[Index];
 
              /* open the registry key for the service */
             _sntprintf(buf,
                        300,
                        Path,
-                       Info->pServiceStatus[Index].lpServiceName);
-
-            RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                         buf,
+                       pService->lpServiceName);
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                             buf,
+                             0,
+                             KEY_READ,
+                             &hKey) != ERROR_SUCCESS)
+            {
+                HeapFree(ProcessHeap,
                          0,
-                         KEY_READ,
-                         &hKey);
-
+                         pService);
+                continue;
+            }
 
             /* set the display name */
             ZeroMemory(&lvItem, sizeof(LVITEM));
             lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-            lvItem.pszText = Info->pServiceStatus[Index].lpDisplayName;
+            lvItem.pszText = pService->lpDisplayName;
 
-            /* Set a pointer for each service so we can query it later.
-             * Not all services are added to the list, so we can't query
-             * the item number as they become out of sync with the array */
-            lvItem.lParam = (LPARAM)&Info->pServiceStatus[Index];
+            /* Add the service pointer */
+            lvItem.lParam = (LPARAM)pService;
 
-            lvItem.iItem = ListView_GetItemCount(Info->hListView);
+            /* add it to the listview */
             lvItem.iItem = ListView_InsertItem(Info->hListView, &lvItem);
 
             /* set the description */
-            if ((lpDescription = GetDescription(Info->pServiceStatus[Index].lpServiceName)))
+            if ((lpDescription = GetDescription(pService->lpServiceName)))
             {
                 lvItem.pszText = lpDescription;
                 lvItem.iSubItem = 1;
@@ -168,7 +241,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
             }
 
             /* set the status */
-            if (Info->pServiceStatus[Index].ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+            if (pService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
             {
                 LoadString(hInstance,
                            IDS_SERVICES_STARTED,
@@ -189,44 +262,34 @@ RefreshServiceList(PMAIN_WND_INFO Info)
                                 NULL,
                                 NULL,
                                 (LPBYTE)&StartUp,
-                                &dwValueSize))
+                                &dwValueSize) == ERROR_SUCCESS)
             {
-                RegCloseKey(hKey);
-                continue;
-            }
+                switch (StartUp)
+                {
+                    case 2:
+                        LoadStringW(hInstance,
+                                    IDS_SERVICES_AUTO,
+                                    szStatus,
+                                    sizeof(szStatus) / sizeof(TCHAR));
+                         break;
+                    case 3:
+                        LoadStringW(hInstance,
+                                    IDS_SERVICES_MAN,
+                                    szStatus,
+                                    sizeof(szStatus) / sizeof(TCHAR));
+                        break;
 
-            if (StartUp == 0x02)
-            {
-                LoadString(hInstance,
-                           IDS_SERVICES_AUTO,
-                           szStatus,
-                           sizeof(szStatus) / sizeof(TCHAR));
-                lvItem.pszText = szStatus;
-                lvItem.iSubItem = 3;
-                SendMessage(Info->hListView,
-                            LVM_SETITEMTEXT,
-                            lvItem.iItem,
-                            (LPARAM)&lvItem);
-            }
-            else if (StartUp == 0x03)
-            {
-                LoadString(hInstance,
-                           IDS_SERVICES_MAN,
-                           szStatus,
-                           sizeof(szStatus) / sizeof(TCHAR));
-                lvItem.pszText = szStatus;
-                lvItem.iSubItem = 3;
-                SendMessage(Info->hListView,
-                            LVM_SETITEMTEXT,
-                            lvItem.iItem,
-                            (LPARAM)&lvItem);
-            }
-            else if (StartUp == 0x04)
-            {
-                LoadString(hInstance,
-                           IDS_SERVICES_DIS,
-                           szStatus,
-                           sizeof(szStatus) / sizeof(TCHAR));
+                    case 4:
+                        LoadStringW(hInstance,
+                                    IDS_SERVICES_DIS,
+                                    szStatus,
+                                    sizeof(szStatus) / sizeof(TCHAR));
+                        break;
+                    default:
+                        szStatus[0] = 0;
+                        break;
+                }
+
                 lvItem.pszText = szStatus;
                 lvItem.iSubItem = 3;
                 SendMessage(Info->hListView,
@@ -242,52 +305,39 @@ RefreshServiceList(PMAIN_WND_INFO Info)
                                 NULL,
                                 NULL,
                                 NULL,
-                                &dwValueSize))
+                                &dwValueSize) == ERROR_SUCCESS)
             {
+                lpLogOnAs = HeapAlloc(ProcessHeap,
+                                     0,
+                                     dwValueSize);
+                if (lpLogOnAs != NULL)
+                {
+                    if(RegQueryValueEx(hKey,
+                                       _T("ObjectName"),
+                                       NULL,
+                                       NULL,
+                                       (LPBYTE)lpLogOnAs,
+                                       &dwValueSize) == ERROR_SUCCESS)
+                    {
+                        lvItem.pszText = lpLogOnAs;
+                        lvItem.iSubItem = 4;
+                        SendMessage(Info->hListView,
+                                    LVM_SETITEMTEXT,
+                                    lvItem.iItem,
+                                    (LPARAM)&lvItem);
+                    }
+
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpLogOnAs);
+                }
+
                 RegCloseKey(hKey);
-                continue;
             }
-
-            LogOnAs = HeapAlloc(ProcessHeap,
-                                HEAP_ZERO_MEMORY,
-                                dwValueSize);
-            if (LogOnAs == NULL)
-            {
-                RegCloseKey(hKey);
-                return FALSE;
-            }
-            if(RegQueryValueEx(hKey,
-                               _T("ObjectName"),
-                               NULL,
-                               NULL,
-                               (LPBYTE)LogOnAs,
-                               &dwValueSize))
-            {
-                HeapFree(ProcessHeap,
-                         0,
-                         LogOnAs);
-                RegCloseKey(hKey);
-                continue;
-            }
-
-            lvItem.pszText = LogOnAs;
-            lvItem.iSubItem = 4;
-            SendMessage(Info->hListView,
-                        LVM_SETITEMTEXT,
-                        lvItem.iItem,
-                        (LPARAM)&lvItem);
-
-            HeapFree(ProcessHeap,
-                     0,
-                     LogOnAs);
-
-            RegCloseKey(hKey);
-
         }
 
-        NumListedServ = ListView_GetItemCount(Info->hListView);
-
         /* set the number of listed services in the status bar */
+        NumListedServ = ListView_GetItemCount(Info->hListView);
         LoadString(hInstance,
                    IDS_NUM_SERVICES,
                    szNumServices,
@@ -308,78 +358,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
     SendMessage (Info->hListView,
                  WM_SETREDRAW,
                  TRUE,
-                 0) ;
+                 0);
 
     return TRUE;
-}
-
-
-
-
-DWORD
-GetServiceList(PMAIN_WND_INFO Info)
-{
-    SC_HANDLE ScHandle;
-    BOOL bGotServices = FALSE;
-
-    DWORD BytesNeeded = 0;
-    DWORD ResumeHandle = 0;
-    DWORD NumServices = 0;
-
-    ScHandle = OpenSCManager(NULL,
-                             NULL,
-                             SC_MANAGER_ENUMERATE_SERVICE);
-    if (ScHandle != INVALID_HANDLE_VALUE)
-    {
-        if (!EnumServicesStatusEx(ScHandle,
-                                  SC_ENUM_PROCESS_INFO,
-                                  SERVICE_WIN32,
-                                  SERVICE_STATE_ALL,
-                                  (LPBYTE)Info->pServiceStatus,
-                                  0,
-                                  &BytesNeeded,
-                                  &NumServices,
-                                  &ResumeHandle,
-                                  0))
-        {
-            /* Call function again if required size was returned */
-            if (GetLastError() == ERROR_MORE_DATA)
-            {
-                /* reserve memory for service info array */
-                Info->pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *)
-                                          HeapAlloc(ProcessHeap,
-                                                    0,
-                                                    BytesNeeded);
-                if (Info->pServiceStatus == NULL)
-                    return FALSE;
-
-                /* fill array with service info */
-                if (EnumServicesStatusEx(ScHandle,
-                                         SC_ENUM_PROCESS_INFO,
-                                         SERVICE_WIN32,
-                                         SERVICE_STATE_ALL,
-                                         (LPBYTE)Info->pServiceStatus,
-                                         BytesNeeded,
-                                         &BytesNeeded,
-                                         &NumServices,
-                                         &ResumeHandle,
-                                         0))
-                {
-                    bGotServices = TRUE;
-                }
-            }
-        }
-    }
-
-    if (ScHandle)
-        CloseServiceHandle(ScHandle);
-
-    if (!bGotServices)
-    {
-        HeapFree(ProcessHeap,
-                 0,
-                 Info->pServiceStatus);
-    }
-
-    return NumServices;
 }
