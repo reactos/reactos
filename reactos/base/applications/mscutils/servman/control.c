@@ -187,7 +187,7 @@ BOOL DoResume(PMAIN_WND_INFO Info)
     {
         ret = Control(Info,
                       hProgDlg,
-                      SERVICE_CONTROL_RESUME);
+                      SERVICE_CONTROL_CONTINUE);
 
         SendMessage(hProgDlg, WM_DESTROY, 0, 0);
     }
