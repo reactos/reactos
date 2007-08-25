@@ -166,7 +166,7 @@ BOOL DoPause(PMAIN_WND_INFO Info)
     {
         ret = Control(Info,
                       hProgDlg,
-                      SERVICE_CONTROL_STOP);
+                      SERVICE_CONTROL_PAUSE);
 
         SendMessage(hProgDlg, WM_DESTROY, 0, 0);
     }
@@ -187,7 +187,7 @@ BOOL DoResume(PMAIN_WND_INFO Info)
     {
         ret = Control(Info,
                       hProgDlg,
-                      SERVICE_CONTROL_STOP);
+                      SERVICE_CONTROL_RESUME);
 
         SendMessage(hProgDlg, WM_DESTROY, 0, 0);
     }
