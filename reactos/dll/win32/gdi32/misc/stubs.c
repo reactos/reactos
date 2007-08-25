@@ -2457,28 +2457,6 @@ EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
 	return 0;
 }
 
-
-/*
- * @implemented
- */
-VOID STDCALL 
-EngFreeModule(HANDLE h)
-{
-  FreeLibrary(h);
-}
-
-/*
- * @implemented
- */
-
-VOID STDCALL
-EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
-		      OUT PUSHORT AnsiCodePage)
-{
-   *OemCodePage  = GetOEMCP();
-   *AnsiCodePage = GetACP();
-}
-
 /*
  * @unimplemented
  */
@@ -2488,24 +2466,6 @@ EngGetDriverName(HDEV hdev)
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-/*
- * @implemented
- */
-LPWSTR STDCALL
-EngGetPrinterDataFileName(HDEV hdev)
-{
-    return EngGetDriverName(hdev);
-}
-
-/*
- * @implemented
- */
-HANDLE STDCALL 
-EngLoadModule(LPWSTR pwsz)
-{
-   return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
 }
 
 
@@ -2521,9 +2481,6 @@ EngMultiByteToWideChar(UINT CodePage,
 {
   return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
 }
-
-
-
 
 /*
  * @implemented
@@ -2942,3 +2899,4 @@ VOID STDCALL GdiInitializeLanguagePack(DWORD InitParam)
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
+

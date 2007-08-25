@@ -78,3 +78,44 @@ EngFindResource(HANDLE h,
     return (PVOID) Lock;
 }
 
+/*
+ * @implemented
+ */
+VOID STDCALL 
+EngFreeModule(HANDLE h)
+{
+    FreeLibrary(h);
+}
+
+/*
+ * @implemented
+ */
+
+VOID STDCALL
+EngGetCurrentCodePage( OUT PUSHORT OemCodePage,
+                       OUT PUSHORT AnsiCodePage)
+{
+    *OemCodePage  = GetOEMCP();
+    *AnsiCodePage = GetACP();
+}
+
+
+/*
+ * @implemented
+ */
+LPWSTR STDCALL
+EngGetPrinterDataFileName(HDEV hdev)
+{
+    return EngGetDriverName(hdev);
+}
+
+/*
+ * @implemented
+ */
+HANDLE STDCALL 
+EngLoadModule(LPWSTR pwsz)
+{
+   return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
+}
+
+
