@@ -2934,8 +2934,7 @@ NtGdiEngCreateBitmap(
     IN LONG lWidth,
     IN ULONG iFormat,
     IN FLONG fl,
-    IN OPTIONAL PVOID pvBits,
-    IN DWORD UNKNOWN
+    IN OPTIONAL PVOID pvBits
 );
 
 W32KAPI
@@ -2972,8 +2971,7 @@ APIENTRY
 NtGdiEngCreateDeviceSurface(
     IN DHSURF dhsurf,
     IN SIZEL sizl,
-    IN ULONG iFormatCompat,
-    IN DWORD UNKNOWN
+    IN ULONG iFormatCompat
 );
 
 W32KAPI
@@ -2982,8 +2980,7 @@ APIENTRY
 NtGdiEngCreateDeviceBitmap(
     IN DHSURF dhsurf,
     IN SIZEL sizl,
-    IN ULONG iFormatCompat,
-    IN DWORD UNKNOWN
+    IN ULONG iFormatCompat
 );
 
 W32KAPI
