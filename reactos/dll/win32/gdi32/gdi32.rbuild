@@ -32,6 +32,7 @@
 		<file>brush.c</file>
 		<file>coord.c</file>
 		<file>dc.c</file>
+		<file>eng.c</file>
 		<file>enhmfile.c</file>
 		<file>font.c</file>
 		<file>linedda.c</file>

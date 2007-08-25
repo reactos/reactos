@@ -2445,15 +2445,7 @@ CreateBitmap(
     return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
 }
 
-/*
- * @implemented
- */
-VOID
-STDCALL
-EngAcquireSemaphore ( IN HSEMAPHORE hsem )
-{
-   RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)hsem);
-}
+
 /*
  * @unimplemented
  */
@@ -2465,67 +2457,6 @@ EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-HSEMAPHORE
-STDCALL
-EngCreateSemaphore ( VOID )
-{
-  PRTL_CRITICAL_SECTION CritSect = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(RTL_CRITICAL_SECTION));
-  if (!CritSect) return NULL;
-  RtlInitializeCriticalSection( CritSect );
-  return (HSEMAPHORE)CritSect;
-}
-
-
-
-
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-EngDeleteSemaphore ( IN HSEMAPHORE hsem )
-{
- if (!hsem) return;
-
- RtlDeleteCriticalSection( (PRTL_CRITICAL_SECTION) hsem );
- RtlFreeHeap( GetProcessHeap(), 0, hsem );
-}
-
-
-
-
-
-
-
-/*
- * @unimplemented
- */
-PVOID STDCALL
-EngFindResource(HANDLE h,
-                int iName,
-                int iType,
-                PULONG pulSize)
-{
- HRSRC HRSrc;
- DWORD Size;
- HGLOBAL Hg;
- LPVOID Lock;
-
- if (!(HRSrc = FindResourceW( (HMODULE) h,
-                       MAKEINTRESOURCEW(iName),
-                       MAKEINTRESOURCEW(iType)
-                          ))) 
-                               return NULL;
- if (!(Size = SizeofResource( (HMODULE) h, HRSrc ))) return NULL; 
- if (!(Hg   = LoadResource(   (HMODULE) h, HRSrc ))) return NULL;
- Lock = LockResource( Hg );
- pulSize = (PULONG) Size;
- return (PVOID) Lock;
-}
 
 /*
  * @implemented
