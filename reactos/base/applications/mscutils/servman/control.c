@@ -140,7 +140,6 @@ BOOL DoStop(PMAIN_WND_INFO Info)
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
                                     Info->CurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_STOP);
-
     if (hProgDlg)
     {
         ret = Control(Info,
@@ -161,7 +160,6 @@ BOOL DoPause(PMAIN_WND_INFO Info)
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
                                     Info->CurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_PAUSE);
-
     if (hProgDlg)
     {
         ret = Control(Info,
@@ -182,7 +180,6 @@ BOOL DoResume(PMAIN_WND_INFO Info)
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
                                     Info->CurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_RESUME);
-
     if (hProgDlg)
     {
         ret = Control(Info,

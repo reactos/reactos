@@ -639,13 +639,48 @@ MainWndCommand(PMAIN_WND_INFO Info,
         case ID_START:
         {
             if (DoStart(Info))
+            {
+                LVITEM item;
+                TCHAR szStatus[64];
+                TCHAR buf[25];
+
+                LoadString(hInstance,
+                           IDS_SERVICES_STARTED,
+                           szStatus,
+                           sizeof(szStatus) / sizeof(TCHAR));
+                item.pszText = szStatus;
+                item.iItem = Info->SelectedItem;
+                item.iSubItem = 2;
+                SendMessage(Info->hListView,
+                            LVM_SETITEMTEXT,
+                            item.iItem,
+                            (LPARAM) &item);
+
+                Info->CurrentService->ServiceStatusProcess.dwCurrentState = SERVICE_RUNNING;
                 SetMenuAndButtonStates(Info);
+                SetFocus(Info->hListView);
+            }
         }
         break;
 
         case ID_STOP:
             if (DoStop(Info))
+            {
+                LVITEM item;
+                TCHAR buf[25];
+
+                item.pszText = 0;
+                item.iItem = Info->SelectedItem;
+                item.iSubItem = 2;
+                SendMessage(Info->hListView,
+                            LVM_SETITEMTEXT,
+                            item.iItem,
+                            (LPARAM) &item);
+
+                Info->CurrentService->ServiceStatusProcess.dwCurrentState = SERVICE_STOPPED;
                 SetMenuAndButtonStates(Info);
+                SetFocus(Info->hListView);
+            }
         break;
 
         case ID_PAUSE:
@@ -657,17 +692,26 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_RESTART:
-        {
-            /* FIXME: remove this hack */
-            SendMessage(Info->hMainWnd,
-                        WM_COMMAND,
-                        0,
-                        ID_STOP);
-            SendMessage(Info->hMainWnd,
-                        WM_COMMAND,
-                        0,
-                        ID_START);
-        }
+            if (DoStop(Info))
+            {
+                if(!DoStart(Info))
+                {
+                    LVITEM item;
+                    TCHAR buf[25];
+
+                    item.pszText = 0;
+                    item.iItem = Info->SelectedItem;
+                    item.iSubItem = 2;
+                    SendMessage(Info->hListView,
+                                LVM_SETITEMTEXT,
+                                item.iItem,
+                                (LPARAM) &item);
+
+                    Info->CurrentService->ServiceStatusProcess.dwCurrentState = SERVICE_STOPPED;
+                    SetMenuAndButtonStates(Info);
+                    SetFocus(Info->hListView);
+                }
+            }
         break;
 
         case ID_HELP:
