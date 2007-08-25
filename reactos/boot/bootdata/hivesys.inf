@@ -570,11 +570,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000010
 
 ; Floppy driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Group",0x00000000,"Primary Disk"
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ImagePath",0x00020000,"system32\drivers\floppy.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Group",0x00000000,"Primary Disk"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ImagePath",0x00020000,"system32\drivers\floppy.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Start",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Type",0x00010001,0x00000001
 
 ; Filesystem recognizer driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ErrorControl",0x00010001,0x00000000

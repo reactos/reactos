@@ -482,8 +482,8 @@ for(;;);
     return;
 
   /* Load floppy.sys */
-  if (!LoadDriver(SourcePath, "floppy.sys"))
-    return;
+  /*if (!LoadDriver(SourcePath, "floppy.sys"))
+    return;*/
 
   /* Load vfatfs.sys (could be loaded by the setup prog!) */
   if (!LoadDriver(SourcePath, "vfatfs.sys"))
