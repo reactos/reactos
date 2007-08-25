@@ -1116,16 +1116,22 @@ AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
     PWSTR FilenameW;
     int rc = 0;
 
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
+    if (!(fl & (FR_PRIVATE | FR_NOT_ENUM)))
     {
-        SetLastError (RtlNtStatusToDosError(Status));
+        SetLastError( ERROR_INVALID_PARAMETER );
     }
     else
     {
-      rc = AddFontResourceExW ( FilenameW, fl, pvReserved );
-
-      HEAP_free ( FilenameW );
+        Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
+        if ( !NT_SUCCESS (Status) )
+        {
+            SetLastError (RtlNtStatusToDosError(Status));
+        }
+        else
+        {
+            rc = GdiAddFontResourceW ( FilenameW, fl, 0 );
+            HEAP_free ( FilenameW );
+        }
     }
   return rc;
 }
