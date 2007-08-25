@@ -2,5 +2,6 @@
 #include "resource.h"
 
 #include "lang/en-US.rc"
+#include "lang/de-DE.rc"
 #include "lang/fr-FR.rc"
 #include "lang/uk-UA.rc"
