@@ -563,7 +563,7 @@ EngLockSurface(IN HSURF Surface)
  * @implemented
  */
 VOID STDCALL
-NtGdiEngUnLockSurface(IN SURFOBJ *Surface)
+NtGdiEngUnlockSurface(IN SURFOBJ *Surface)
 {
     EngUnlockSurface(Surface);
 }
