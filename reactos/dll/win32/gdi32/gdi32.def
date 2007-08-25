@@ -205,7 +205,7 @@ DdEntry53@8=NtGdiDdUnlock@8
 DdEntry54@8=NtGdiDdUnlockD3D@8
 DdEntry55@12=NtGdiDdUpdateOverlay@12
 DdEntry56@8=NtGdiDdWaitForVerticalBlank@8
-EngUnlockSurface@4=NtGdiEngLockSurface@4
+EngUnlockSurface@4=NtGdiEngUnlockSurface@4
 EngWideCharToMultiByte@20
 EnumEnhMetaFile@20
 EnumFontFamiliesA@16
