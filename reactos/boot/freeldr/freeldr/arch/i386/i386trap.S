@@ -83,7 +83,7 @@ i386ExceptionHandlerText:
 	.ascii "An error occured in FreeLoader\n"
 	.ascii VERSION
 	.ascii "\n"
-	.asciz "Report this error to the ReactOS Development mailing list <ros-dev@reactos.com>\n\n"
+	.asciz "Report this error to the ReactOS Development mailing list <ros-dev@reactos.org>\n\n"
 
 i386DivideByZeroText:
 	.asciz "Exception 00: DIVIDE BY ZERO\n\n"
