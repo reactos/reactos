@@ -2503,15 +2503,6 @@ Ellipse(
     return NtGdiEllipse(hdc,nLeftRect,nTopRect,nRightRect,nBottomRect);
 }
 
-/*
- * @unimplemented
- */
-VOID STDCALL 
-EngUnlockSurface(SURFOBJ *pso)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
 
 /*
  * @unimplemented
