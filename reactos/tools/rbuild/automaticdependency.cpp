@@ -354,7 +354,6 @@ AutomaticDependency::ReplaceVariable ( const string& name,
 		return path;
 }
 
-/*
 string
 AutomaticDependency::ResolveVariablesInPath ( const string& path )
 {
@@ -363,7 +362,6 @@ AutomaticDependency::ResolveVariablesInPath ( const string& path )
 	s = ReplaceVariable ( "$(INSTALL)", Environment::GetInstallPath (), s );
 	return s;
 }
-*/
 
 bool
 AutomaticDependency::LocateIncludedFile ( const string& directory,

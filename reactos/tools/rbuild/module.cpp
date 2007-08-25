@@ -24,31 +24,6 @@ using std::string;
 using std::vector;
 
 string
-ResolveVariablesInPath ( const string& path )
-{
-	string s;
-
-	s = ReplaceVariable ( "$(INTERMEDIATE)", Environment::GetIntermediatePath (), path );
-	s = ReplaceVariable ( "$(OUTPUT)", Environment::GetOutputPath (), s );
-	s = ReplaceVariable ( "$(INSTALL)", Environment::GetInstallPath (), s );
-	s = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), s );
-	
-	return s;
-}
-
-string
-ReplaceVariable ( const string& name,
-                             const string& value,
-                             string path )
-{
-	size_t i = path.find ( name );
-	if ( i != string::npos )
-		return path.replace ( i, name.length (), value );
-	else
-		return path;
-}
-
-string
 Right ( const string& s, size_t n )
 {
 	if ( n > s.size() )

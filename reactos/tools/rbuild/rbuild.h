@@ -119,9 +119,12 @@ public:
 	                  const std::string& parent );
 private:
 	bool mkdir_p ( const char* path );
+	std::string ReplaceVariable ( const std::string& name,
+	                              const std::string& value,
+	                              std::string path );
 	std::string GetEnvironmentVariable ( const std::string& name );
-	//void ResolveVariablesInPath ( char* buf,
-	//                              const std::string& path );
+	void ResolveVariablesInPath ( char* buf,
+	                              const std::string& path );
 	bool CreateDirectory ( std::string path );
 };
 
@@ -780,7 +783,7 @@ private:
 	std::string ReplaceVariable ( const std::string& name,
 	                              const std::string& value,
 	                              std::string path );
-//	std::string ResolveVariablesInPath ( const std::string& path );
+	std::string ResolveVariablesInPath ( const std::string& path );
 	std::map<std::string, SourceFile*> sourcefile_map;
 };
 
@@ -802,6 +805,9 @@ public:
 private:
 	bool IsSupportedModuleType ( ModuleType type );
 	void Initialize();
+	static std::string ReplaceVariable ( const std::string& name,
+	                                     const std::string& value,
+	                                     std::string path );
 };
 
 
@@ -822,6 +828,9 @@ public:
 	void ProcessXML();
 	std::string GetPath () const;
 private:
+	static std::string ReplaceVariable ( const std::string& name,
+	                                     const std::string& value,
+	                                     std::string path );
 };
 
 
@@ -841,7 +850,6 @@ public:
 	~InstallFile ();
 	void ProcessXML ();
 	std::string GetPath () const;
-private:
 };
 
 
@@ -987,14 +995,6 @@ private:
 
 extern void
 InitializeEnvironment ();
-
-extern std::string
-ResolveVariablesInPath ( const std::string& path );
-
-extern std::string
-ReplaceVariable ( const std::string& name,
-				  const std::string& value,
-                  std::string path );
 
 extern std::string
 Right ( const std::string& s, size_t n );
