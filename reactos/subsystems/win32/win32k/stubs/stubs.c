@@ -1363,8 +1363,7 @@ NtGdiEngCheckAbort(SURFOBJ *pso)
 HSURF STDCALL
 NtGdiEngCreateDeviceSurface( IN DHSURF Surface,
                              IN SIZEL Size,
-                             IN ULONG FormatVersion,
-                             IN DWORD UNKNOWN)
+                             IN ULONG FormatVersion)
 {
      UNIMPLEMENTED;
     return 0;
@@ -1377,8 +1376,7 @@ HBITMAP STDCALL
 NtGdiEngCreateDeviceBitmap(
     IN DHSURF dhsurf,
     IN SIZEL sizl,
-    IN ULONG iFormatCompat,
-    IN DWORD UNKNOWN)
+    IN ULONG iFormatCompat)
 {
      UNIMPLEMENTED;
     return NULL;
@@ -1408,8 +1406,7 @@ NtGdiEngCreateBitmap(IN SIZEL Size,
 		IN LONG Width,
 		IN ULONG Format,
 		IN ULONG Flags,
-		IN PVOID Bits,
-        IN DWORD UNKNOWN)
+		IN PVOID Bits)
 {
      UNIMPLEMENTED;
     return NULL;
