@@ -8,14 +8,11 @@
  */
 
 #include <windows.h>
-//#include <stdio.h>
 #include <shellapi.h>
-
-#include "shellapi.h"
-#include "windows.h"
-
 #include "magnifier.h"
 #include "resource.h"
+
+const TCHAR szWindowClass[] = TEXT("MAGNIFIER");
 
 #define MAX_LOADSTRING 100
 
@@ -24,7 +21,6 @@ HINSTANCE hInst;								// current instance
 HWND hMainWnd;
 
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 
 #define REPAINT_SPEED	100
 
@@ -57,7 +53,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_MAGNIFIER, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization:

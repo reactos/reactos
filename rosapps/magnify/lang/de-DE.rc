@@ -61,5 +61,4 @@ END
 STRINGTABLE 
 BEGIN
     IDS_APP_TITLE           "Bildschirm-Lupe"
-    IDC_MAGNIFIER           "BILDSCHIRM-LUPE"
 END

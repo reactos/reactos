@@ -61,5 +61,4 @@ END
 STRINGTABLE 
 BEGIN
     IDS_APP_TITLE           "Loupe"
-    IDC_MAGNIFIER           "LOUPE"
 END
