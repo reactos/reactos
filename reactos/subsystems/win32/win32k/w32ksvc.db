@@ -610,7 +610,7 @@ NtGdiEngCreateBitmap                             6
 NtGdiEngCreateDeviceSurface                      4
 NtGdiEngCreateDeviceBitmap                       4
 NtGdiEngCreatePalette                            6
-# NtGdiEngComputeGlyphSet                          3
+NtGdiEngComputeGlyphSet                          3
 NtGdiEngCopyBits                                 6
 NtGdiEngDeletePalette                            1
 NtGdiEngDeleteSurface                            1

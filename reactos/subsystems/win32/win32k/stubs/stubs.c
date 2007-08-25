@@ -1666,4 +1666,13 @@ NtGdiEngStretchBltROP(SURFOBJ *psoDest,
     return FALSE;
 }
 
+FD_GLYPHSET* STDCALL
+NtGdiEngComputeGlyphSet( INT nCodePage,
+                         INT nFirstChar,
+                         INT cChars)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
 
