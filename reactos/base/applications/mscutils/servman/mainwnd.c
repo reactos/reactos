@@ -642,7 +642,6 @@ MainWndCommand(PMAIN_WND_INFO Info,
             {
                 LVITEM item;
                 TCHAR szStatus[64];
-                TCHAR buf[25];
 
                 LoadString(hInstance,
                            IDS_SERVICES_STARTED,
@@ -667,7 +666,6 @@ MainWndCommand(PMAIN_WND_INFO Info,
             if (DoStop(Info))
             {
                 LVITEM item;
-                TCHAR buf[25];
 
                 item.pszText = 0;
                 item.iItem = Info->SelectedItem;
@@ -697,7 +695,6 @@ MainWndCommand(PMAIN_WND_INFO Info,
                 if(!DoStart(Info))
                 {
                     LVITEM item;
-                    TCHAR buf[25];
 
                     item.pszText = 0;
                     item.iItem = Info->SelectedItem;
