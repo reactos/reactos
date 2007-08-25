@@ -217,6 +217,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS usi³uje uruchomiæ nastêpuj¹c¹ us³ugê"
   IDS_PROGRESS_INFO_STOP  "ReactOS usi³uje zatrzymaæ nastêpuj¹c¹ us³ugê"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
+  IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
   IDS_CREATE_SUCCESS "Us³uga utworzona pomyœlnie"
   IDS_CREATE_REQ "Pole zaznaczone wraz z \ nasterix jest obowi¹zkowy"
   IDS_DELETE_STOP "Musisz rêcznie zatrzymaæ us³ugê przed usuwaniem!"

@@ -644,24 +644,16 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_STOP:
-        {
             if (DoStop(Info))
                 SetMenuAndButtonStates(Info);
-        }
         break;
 
         case ID_PAUSE:
-        {
-            //Control(Info,
-            //        SERVICE_CONTROL_PAUSE);
-        }
+            DoPause(Info);
         break;
 
         case ID_RESUME:
-        {
-            //Control(Info,
-            //        SERVICE_CONTROL_CONTINUE );
-        }
+            DoResume(Info);
         break;
 
         case ID_RESTART:

@@ -214,6 +214,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_PROGRESS_INFO_START "РеактОС се опитва да пусне следната услуга"
   IDS_PROGRESS_INFO_STOP  "РеактОС се опитва да спре следната услуга"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
+  IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
   IDS_CREATE_SUCCESS "Услугата е успешно създадена"
   IDS_CREATE_REQ "Полетата, отбелязани със \nзвездичка са неазадължителни"
   IDS_DELETE_STOP "Трябва ръчно да спрете услугата, преди да я изтриете!"

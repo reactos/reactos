@@ -96,7 +96,8 @@ ProgressDialogProc(HWND hDlg,
 
 HWND
 CreateProgressDialog(HWND hParent,
-                     LPTSTR lpServiceName)
+                     LPTSTR lpServiceName,
+                     UINT Event)
 {
     HWND hProgDlg;
     TCHAR ProgDlgBuf[100];
@@ -113,7 +114,7 @@ CreateProgressDialog(HWND hParent,
 
         /* write the  info to the progress dialog */
         LoadString(hInstance,
-                   IDS_PROGRESS_INFO_STOP,
+                   Event,
                    ProgDlgBuf,
                    sizeof(ProgDlgBuf) / sizeof(TCHAR));
 

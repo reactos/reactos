@@ -9,7 +9,7 @@
 
 #include "precomp.h"
 
-BOOL
+static BOOL
 Control(PMAIN_WND_INFO Info,
         HWND hProgDlg,
         DWORD Control)
@@ -131,3 +131,67 @@ Control(PMAIN_WND_INFO Info,
         return FALSE;
 
 }
+
+BOOL DoStop(PMAIN_WND_INFO Info)
+{
+    BOOL ret = FALSE;
+    HWND hProgDlg;
+
+    hProgDlg = CreateProgressDialog(Info->hMainWnd,
+                                    Info->CurrentService->lpServiceName,
+                                    IDS_PROGRESS_INFO_STOP);
+
+    if (hProgDlg)
+    {
+        ret = Control(Info,
+                      hProgDlg,
+                      SERVICE_CONTROL_STOP);
+
+        SendMessage(hProgDlg, WM_DESTROY, 0, 0);
+    }
+
+    return ret;
+}
+
+BOOL DoPause(PMAIN_WND_INFO Info)
+{
+    BOOL ret = FALSE;
+    HWND hProgDlg;
+
+    hProgDlg = CreateProgressDialog(Info->hMainWnd,
+                                    Info->CurrentService->lpServiceName,
+                                    IDS_PROGRESS_INFO_PAUSE);
+
+    if (hProgDlg)
+    {
+        ret = Control(Info,
+                      hProgDlg,
+                      SERVICE_CONTROL_STOP);
+
+        SendMessage(hProgDlg, WM_DESTROY, 0, 0);
+    }
+
+    return ret;
+}
+
+BOOL DoResume(PMAIN_WND_INFO Info)
+{
+    BOOL ret = FALSE;
+    HWND hProgDlg;
+
+    hProgDlg = CreateProgressDialog(Info->hMainWnd,
+                                    Info->CurrentService->lpServiceName,
+                                    IDS_PROGRESS_INFO_RESUME);
+
+    if (hProgDlg)
+    {
+        ret = Control(Info,
+                      hProgDlg,
+                      SERVICE_CONTROL_STOP);
+
+        SendMessage(hProgDlg, WM_DESTROY, 0, 0);
+    }
+
+    return ret;
+}
+

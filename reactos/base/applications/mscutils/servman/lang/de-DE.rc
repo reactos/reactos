@@ -210,6 +210,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS versucht den folgenden Dienst zu starten"
   IDS_PROGRESS_INFO_STOP  "ReactOS versucht den folgenden Dienst zu beenden"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
+  IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
   IDS_CREATE_SUCCESS "Dienst wurde erfolgreich erstellt"
   IDS_CREATE_REQ "Mit einem Sternchen gekennzeichnete Felder sind erforderlich"
   IDS_DELETE_STOP "Sie müssen den Dienst manuell beenden, bevor er gelöscht werden kann!"

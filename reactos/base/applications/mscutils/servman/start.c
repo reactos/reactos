@@ -130,7 +130,8 @@ DoStart(PMAIN_WND_INFO Info)
     BOOL bRet = FALSE;
 
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->CurrentService->lpServiceName);
+                                    Info->CurrentService->lpServiceName,
+                                    IDS_PROGRESS_INFO_START);
 
     if (hProgDlg)
     {

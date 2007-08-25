@@ -27,8 +27,7 @@
       <file>query.c</file>
       <file>reg.c</file>
       <file>servman.c</file>
-      <file>start.c</file>	
-      <file>stop.c</file>	
+      <file>start.c</file>		
     </compilationunit>
     <file>servman.rc</file>
     <pch>precomp.h</pch>

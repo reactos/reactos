@@ -60,23 +60,26 @@ HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);
 BOOL DoStart(PMAIN_WND_INFO Info);
 
 /* stop */
-BOOL DoStop(PMAIN_WND_INFO Info);
+
 
 /* control */
-BOOL Control(PMAIN_WND_INFO Info, HWND hProgDlg, DWORD Control);
+BOOL DoStop(PMAIN_WND_INFO Info);
+BOOL DoPause(PMAIN_WND_INFO Info);
+BOOL DoResume(PMAIN_WND_INFO Info);
 
 /* progress.c */
-HWND CreateProgressDialog(HWND hParent, LPTSTR lpServiceName);
+HWND CreateProgressDialog(HWND hParent, LPTSTR lpServiceName, UINT Event);
 VOID IncrementProgressBar(HWND hProgDlg);
 VOID CompleteProgressBar(HWND hProgDlg);
 
 /* query.c */
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
-BOOL SetDescription(LPTSTR, LPTSTR);
-LPTSTR GetDescription(LPTSTR);
 LPTSTR GetExecutablePath(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
-//DWORD GetServiceList(PMAIN_WND_INFO Info);
+
+/* reg */
+BOOL SetDescription(LPTSTR, LPTSTR);
+LPTSTR GetDescription(LPTSTR);
 
 /* propsheet.c */
 LONG APIENTRY OpenPropSheet(PMAIN_WND_INFO Info);

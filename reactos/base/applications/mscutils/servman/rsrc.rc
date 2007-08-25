@@ -17,8 +17,6 @@ IDB_START   BITMAP DISCARDABLE "res/start.bmp"
 IDB_STOP    BITMAP DISCARDABLE "res/stop.bmp"
 IDB_PAUSE   BITMAP DISCARDABLE "res/pause.bmp"
 IDB_RESTART BITMAP DISCARDABLE "res/restart.bmp"
-IDB_HELP    BITMAP DISCARDABLE "res/help.bmp"
-IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 
 #include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
@@ -29,5 +27,3 @@ IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
 #include "lang/th-TH.rc"
-
-

@@ -209,6 +209,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS пытается запустить службу"
   IDS_PROGRESS_INFO_STOP  "ReactOS пытается остановить службу"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
+  IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
   IDS_CREATE_SUCCESS "Создание службы успешно завершено"
   IDS_CREATE_REQ "* = обязательные поля"
   IDS_DELETE_STOP "Вы должны вручную остановить службу перед удалением!"
