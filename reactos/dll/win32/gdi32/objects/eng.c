@@ -118,4 +118,88 @@ EngLoadModule(LPWSTR pwsz)
    return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
 }
 
+/*
+ * @implemented
+ */
+INT STDCALL 
+EngMultiByteToWideChar(UINT CodePage,
+                       LPWSTR WideCharString,
+                       INT BytesInWideCharString,
+                       LPSTR MultiByteString,
+                       INT BytesInMultiByteString)
+{
+  return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
+}
 
+/*
+ * @implemented
+ */
+VOID STDCALL 
+EngQueryLocalTime(PENG_TIME_FIELDS etf)
+{
+  SYSTEMTIME SystemTime;
+  GetLocalTime( &SystemTime );
+  etf->usYear    = SystemTime.wYear;
+  etf->usMonth   = SystemTime.wMonth;
+  etf->usWeekday = SystemTime.wDayOfWeek;
+  etf->usDay     = SystemTime.wDay;
+  etf->usHour    = SystemTime.wHour;
+  etf->usMinute  = SystemTime.wMinute;
+  etf->usSecond  = SystemTime.wSecond;
+  etf->usMilliseconds = SystemTime.wMilliseconds;
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+EngReleaseSemaphore ( IN HSEMAPHORE hsem )
+{
+  RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
+}
+
+BOOL 
+copy_my_glyphset( FD_GLYPHSET *dst_glyphset , FD_GLYPHSET * src_glyphset, ULONG Size)
+{
+    BOOL retValue = FALSE;
+
+    memcpy(src_glyphset, dst_glyphset, Size);
+    if (src_glyphset->cRuns == 0)
+    {
+        retValue = TRUE;
+    }
+
+    /* FIXME copy wrun */
+    return retValue;
+}
+
+/*
+ * @unimplemented
+ */
+FD_GLYPHSET* STDCALL
+EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
+{
+    FD_GLYPHSET * ntfd_glyphset;
+    FD_GLYPHSET * myfd_glyphset = NULL;
+
+    ntfd_glyphset = NtGdiEngComputeGlyphSet(nCodePage,nFirstChar,cChars);
+
+    if (!ntfd_glyphset)
+    {
+        if (ntfd_glyphset->cjThis)
+        {
+            myfd_glyphset = GlobalAlloc(0,ntfd_glyphset->cjThis);
+
+            if (!myfd_glyphset)
+            {
+                if (copy_my_glyphset(myfd_glyphset,ntfd_glyphset,ntfd_glyphset->cjThis) == FALSE)
+                {
+                    GlobalFree(myfd_glyphset);
+                    myfd_glyphset = NULL;
+                }
+            }
+        }
+    }
+    return myfd_glyphset;
+}

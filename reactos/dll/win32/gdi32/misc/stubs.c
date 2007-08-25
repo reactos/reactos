@@ -2446,16 +2446,7 @@ CreateBitmap(
 }
 
 
-/*
- * @unimplemented
- */
-FD_GLYPHSET* STDCALL
-EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -2468,58 +2459,33 @@ EngGetDriverName(HDEV hdev)
 	return 0;
 }
 
-
 /*
- * @implemented
- */
-INT STDCALL 
-EngMultiByteToWideChar(UINT CodePage,
-                       LPWSTR WideCharString,
-                       INT BytesInWideCharString,
-                       LPSTR MultiByteString,
-                       INT BytesInMultiByteString)
-{
-  return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
-}
-
-/*
- * @implemented
- * Obsolete GDI Function
- * http://www.osronline.com/DDKx/graphics/gdioview_20tj.htm
+ * @unimplemented
+ * wrong info it is not Obsolete GDI Function as http://www.osronline.com/DDKx/graphics/gdioview_20tj.htm say
  */
 BOOL STDCALL
 EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo)
 {
-  return FALSE;
+#if 0
+    BOOL retValue = FALSE;
+    DHPDEV Dhpdev;
+
+    if ((!hdev) && (!pEMFInfo))
+    {
+        if ((Dhpdev = NtGdiGetDhpdev(hdev)))
+        {
+            /* FIXME check if it support or if it is pEMFInfo we got */
+            /* FIXME copy the data from Dhpdev to pEMFInfo           */
+        }
+    }
+    return retValue;
+#else
+    return FALSE;
+#endif
 }
 
-/*
- * @implemented
- */
-VOID STDCALL 
-EngQueryLocalTime(PENG_TIME_FIELDS etf)
-{
-  SYSTEMTIME SystemTime;
-  GetLocalTime( &SystemTime );
-  etf->usYear    = SystemTime.wYear;
-  etf->usMonth   = SystemTime.wMonth;
-  etf->usWeekday = SystemTime.wDayOfWeek;
-  etf->usDay     = SystemTime.wDay;
-  etf->usHour    = SystemTime.wHour;
-  etf->usMinute  = SystemTime.wMinute;
-  etf->usSecond  = SystemTime.wSecond;
-  etf->usMilliseconds = SystemTime.wMilliseconds;
-}
 
-/*
- * @implemented
- */
-VOID
-STDCALL
-EngReleaseSemaphore ( IN HSEMAPHORE hsem )
-{
-  RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
-}
+
 
 /*
  * @implemented
