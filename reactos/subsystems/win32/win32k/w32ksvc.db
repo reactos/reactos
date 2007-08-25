@@ -615,7 +615,7 @@ NtGdiEngCopyBits                                 6
 NtGdiEngDeletePalette                            1
 NtGdiEngDeleteSurface                            1
 NtGdiEngEraseSurface                             3
-# NtGdiEngUnlockSurface                            1
+NtGdiEngUnlockSurface                            1
 NtGdiEngLockSurface                              1
 NtGdiEngBitBlt                                  11
 NtGdiEngStretchBlt                              11
