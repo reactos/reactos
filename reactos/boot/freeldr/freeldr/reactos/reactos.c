@@ -599,7 +599,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     if (LoaderBlock.MmapLength)
     {
         ULONG i;
-
+        LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
         LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
         reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
         for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
