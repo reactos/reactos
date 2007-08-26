@@ -501,6 +501,7 @@ QSI_DEF(SystemBasicInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
+	RtlZeroMemory(Sbi, Size);
 	Sbi->Reserved = 0;
 	Sbi->TimerResolution = KeMaximumIncrement;
 	Sbi->PageSize = PAGE_SIZE;
@@ -722,6 +723,7 @@ QSI_DEF(SystemProcessInformation)
 		{
 			_SEH_YIELD(return STATUS_INFO_LENGTH_MISMATCH); // in case buffer size is too small
 		}
+		RtlZeroMemory(Spi, Size);
 
 		syspr = PsGetNextProcess(NULL);
 		pr = syspr;
@@ -1819,9 +1821,6 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
             ProbeForWriteUlong(UnsafeResultLength);
         }
 
-      /* Clear user buffer. */
-      RtlZeroMemory(SystemInformation, Length);
-
       /*
        * Check the request is valid.
        */
@@ -1842,15 +1841,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	    {
               if (PreviousMode != KernelMode)
                 {
-                  _SEH_TRY
-                    {
                       *UnsafeResultLength = ResultLength;
-                    }
-                  _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
-                    {
-                      FStatus = _SEH_GetExceptionCode();
-                    }
-                  _SEH_END;
                 }
               else
                 {
