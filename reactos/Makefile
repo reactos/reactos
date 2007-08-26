@@ -624,6 +624,6 @@ makefile_auto_clean:
 clean: makefile_auto_clean
 
 .PHONY: depends
-depends:
-	@-$(rm) $(ROS_AUTOMAKE)
-	@$(MAKE) $(filter-out depends, $(MAKECMDGOALS))
+depends: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw
