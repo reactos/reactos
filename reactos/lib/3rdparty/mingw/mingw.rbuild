@@ -5,7 +5,6 @@
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="ReactOS">include/crt</include>
 	<include base="mingw_common">include</include>
-	<dependency>psdk</dependency>
 	<file>cpu_features.c</file>
 	<file>CRTfmode.c</file>
 	<file>CRTglob.c</file>
@@ -25,7 +24,6 @@
 <module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true">
 	<include base="ReactOS">include/crt</include>
 	<include base="mingw_common">include</include>
-	<dependency>psdk</dependency>
 	<file>binmode.c</file>
 	<file>crt1.c</file>
 	<file>main.c</file>
@@ -33,7 +31,6 @@
 <module name="mingw_wmain" type="staticlibrary" isstartuplib="true" allowwarnings="true">
 	<include base="ReactOS">include/crt</include>
 	<include base="mingw_common">include</include>
-	<dependency>psdk</dependency>
 	<file>wbinmode.c</file>
 	<file>wcrt1.c</file>
 	<file>wmain.c</file>
