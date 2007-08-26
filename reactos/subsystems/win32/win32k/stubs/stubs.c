@@ -2141,3 +2141,486 @@ NtGdiConvertMetafileRect(
     return 0;
 }
 
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpGetVideoPortFlipStatus(
+    IN HANDLE hDirectDraw,
+    IN OUT PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpGetVideoPortInputFormats(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpGetVideoPortLine(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_GETVPORTLINEDATA puGetVPortLineData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpGetVideoPortOutputFormats(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpGetVideoPortConnectInfo(
+    IN HANDLE hDirectDraw,
+    IN OUT PDD_GETVPORTCONNECTDATA puGetVPortConnectData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpGetVideoSignalStatus(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_GETVPORTSIGNALDATA puGetVPortSignalData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpUpdateVideoPort(
+    IN HANDLE hVideoPort,
+    IN HANDLE* phSurfaceVideo,
+    IN HANDLE* phSurfaceVbi,
+    IN OUT PDD_UPDATEVPORTDATA puUpdateVPortData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpWaitForVideoPortSync(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpAcquireNotification(
+    IN HANDLE hVideoPort,
+    IN OUT HANDLE* hEvent,
+    IN LPDDVIDEOPORTNOTIFY pNotify)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpReleaseNotification(
+    IN HANDLE hVideoPort,
+    IN HANDLE hEvent)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDxgGenericThunk(
+    IN ULONG_PTR ulIndex,
+    IN ULONG_PTR ulHandle,
+    IN OUT SIZE_T *pdwSizeOfPtr1,
+    IN OUT  PVOID pvPtr1,
+    IN OUT SIZE_T *pdwSizeOfPtr2,
+    IN OUT  PVOID pvPtr2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiDeleteColorTransform(
+    IN HDC hdc,
+    IN HANDLE hColorTransform)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiGetPerBandInfo(
+    IN HDC hdc,
+    IN OUT PERBANDINFO *ppbi)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiDoBanding(
+    IN HDC hdc,
+    IN BOOL bStart,
+    OUT POINTL *pptl,
+    OUT PSIZE pSize)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiEnumFontChunk(
+    IN HDC hdc,
+    IN ULONG_PTR idEnum,
+    IN ULONG cjEfdw,
+    OUT ULONG *pcjEfdw,
+    OUT PENUMFONTDATAW pefdw)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiEnumFontClose(
+    IN ULONG_PTR idEnum)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG_PTR
+STDCALL
+NtGdiEnumFontOpen(
+    IN HDC hdc,
+    IN ULONG iEnumType,
+    IN FLONG flWin31Compat,
+    IN ULONG cwchMax,
+    IN OPTIONAL LPWSTR pwszFaceName,
+    IN ULONG lfCharSet,
+    OUT ULONG *pulCount)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL 
+NtGdiEudcLoadUnloadLink(
+    IN OPTIONAL LPCWSTR pBaseFaceName,
+    IN UINT cwcBaseFaceName,
+    IN LPCWSTR pEudcFontPath,
+    IN UINT cwcEudcFontPath,
+    IN INT iPriority,
+    IN INT iFontLinkType,
+    IN BOOL bLoadLin)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiExtTextOutW(
+    IN HDC hdc,
+    IN INT x,
+    IN INT y,
+    IN UINT flOpts,
+    IN OPTIONAL LPRECT prcl,
+    IN LPWSTR pwsz,
+    IN INT cwc,
+    IN OPTIONAL LPINT pdx,
+    IN DWORD dwCodePage)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiForceUFIMapping(
+    IN HDC hdc,
+    IN PUNIVERSAL_FONT_ID pufi)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtGdiFullscreenControl(
+    IN FULLSCREENCONTROL FullscreenCommand,
+    IN PVOID FullscreenInput,
+    IN DWORD FullscreenInputLength,
+    OUT PVOID FullscreenOutput,
+    IN OUT PULONG FullscreenOutputLength)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+INT
+STDCALL
+NtGdiGetAppClipBox(
+    IN HDC hdc,
+    OUT LPRECT prc)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetCharABCWidthsW(
+    IN HDC hdc,
+    IN UINT wchFirst,
+    IN ULONG cwch,
+    IN OPTIONAL PWCHAR pwch,
+    IN FLONG fl,
+    OUT PVOID pvBuf)
+ {
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiGetCharacterPlacementW(
+    IN HDC hdc,
+    IN LPWSTR pwsz,
+    IN INT nCount,
+    IN INT nMaxExtent,
+    IN OUT LPGCP_RESULTSW pgcpw,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetCharWidthW(
+    IN HDC hdc,
+    IN UINT wcFirst,
+    IN UINT cwc,
+    IN OPTIONAL PWCHAR pwc,
+    IN FLONG fl,
+    OUT PVOID pvBuf)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetCharWidthInfo(
+    IN HDC hdc,
+    OUT PCHWIDTHINFO pChWidthInfo)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG_PTR
+STDCALL
+NtGdiGetColorSpaceforBitmap(
+    IN HBITMAP hsurf)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+HDC
+STDCALL
+NtGdiGetDCforBitmap(
+    IN HBITMAP hsurf)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+ /*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+NtGdiGetDCObject(
+    IN  HDC hdc,
+    IN  INT itype)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetDeviceCapsAll (
+    IN HDC hdc,
+    OUT PDEVCAPS pDevCaps)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetETM(
+    IN HDC hdc,
+    OUT EXTTEXTMETRIC *petm)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiGetEudcTimeStampEx(
+    IN OPTIONAL LPWSTR lpBaseFaceName,
+    IN ULONG cwcBaseFaceName,
+    IN BOOL bSystemTimeStamp)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+
+
+
+
+
+
+
