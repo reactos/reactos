@@ -2616,7 +2616,18 @@ NtGdiGetEudcTimeStampEx(
     return 0;
 }
 
-
+ /*
+ * @unimplemented
+ */
+ DWORD
+STDCALL
+NtGdiDvpGetVideoPortField(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_GETVPORTFIELDDATA puGetVPortFieldData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
 
 
 
