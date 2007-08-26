@@ -330,6 +330,7 @@ BEGIN
     IDS_START               "开始"
     IDS_LOGOFF              "注销..."
     IDS_SHUTDOWN            "关闭..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "运行..."
     IDS_START_HELP          "帮助"
     IDS_SEARCH_FILES        "搜索..."

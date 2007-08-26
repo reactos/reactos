@@ -330,6 +330,7 @@ BEGIN
     IDS_START               "Start"
     IDS_LOGOFF              "Odhlásit se..."
     IDS_SHUTDOWN            "Vypnout..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "Spustit..."
     IDS_START_HELP          "Pomoc"
     IDS_SEARCH_FILES        "Hledat"
@@ -396,5 +397,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 

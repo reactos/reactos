@@ -315,6 +315,7 @@ BEGIN
     IDS_START               "Iniciar"
     IDS_LOGOFF              "Salir..."
     IDS_SHUTDOWN            "Apagar..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "Ejecutar..."
     IDS_START_HELP          "Ayuda"
     IDS_SEARCH_FILES        "Buscar..."
@@ -381,4 +382,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

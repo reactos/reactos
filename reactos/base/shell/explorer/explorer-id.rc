@@ -330,6 +330,7 @@ BEGIN
     IDS_START               "Mulai"
     IDS_LOGOFF              "Keluar..."
     IDS_SHUTDOWN            "Matikan..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "Jalankan..."
     IDS_START_HELP          "Bantuan"
     IDS_SEARCH_FILES        "Cari..."
@@ -396,4 +397,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

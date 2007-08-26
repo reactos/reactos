@@ -330,6 +330,7 @@ BEGIN
     IDS_START               "Start"
     IDS_LOGOFF              "Kijelentkezés..."
     IDS_SHUTDOWN            "Kikapcsolás..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "Futtatás..."
     IDS_START_HELP          "Súgó"
     IDS_SEARCH_FILES        "Keresés..."
@@ -396,4 +397,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

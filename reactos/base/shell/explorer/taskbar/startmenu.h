@@ -348,6 +348,7 @@ protected:
 
 	static void	ShowLaunchDialog(HWND hwndOwner);
 	static void	ShowLogoffDialog(HWND hwndOwner);
+    static void	ShowRestartDialog(HWND hwndOwner, UINT flags);
 	static void	ShowSearchDialog();
 	static void	ShowSearchComputer();
 };

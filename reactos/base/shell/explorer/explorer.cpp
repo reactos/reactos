@@ -402,6 +402,7 @@ void IconCache::init()
 	_icons[ICID_COMPUTER]	= Icon(ICID_COMPUTER,	IDI_COMPUTER,	icon_size);
 	_icons[ICID_LOGOFF] 	= Icon(ICID_LOGOFF, 	IDI_LOGOFF,		icon_size);
 	_icons[ICID_SHUTDOWN]	= Icon(ICID_SHUTDOWN,	IDI_SHUTDOWN,	icon_size);
+	_icons[ICID_RESTART]	= Icon(ICID_RESTART,	IDI_RESTART,	icon_size);
 	_icons[ICID_BOOKMARK]	= Icon(ICID_BOOKMARK,	IDI_DOT_TRANS,	icon_size);
 	_icons[ICID_MINIMIZE]	= Icon(ICID_MINIMIZE,	IDI_MINIMIZE,	icon_size);
 	_icons[ICID_CONTROLPAN] = Icon(ICID_CONTROLPAN, IDI_CONTROLPAN,	icon_size);

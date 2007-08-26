@@ -48,6 +48,7 @@
 #define IDS_SHOW_HIDDEN_ICONS           43
 #define IDS_HIDE_ICONS                  44
 #define IDS_TERMINATE                   45
+#define IDS_RESTART                     46
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -123,6 +124,7 @@
 #define IDI_NETCONNS                    175
 #define IDI_ADMIN                       176
 #define IDI_RECENT                      178
+#define IDI_RESTART                     179
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
