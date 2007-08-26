@@ -83,7 +83,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
 	string dsp_path = module.GetBasePath();
-	vector<string> c_srcs, source_files, resource_files, includes, libraries;
+	vector<string> c_srcs, source_files, header_files, resource_files, includes, libraries;
 	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.project.non_if_data );
@@ -108,6 +108,8 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			source_files.push_back ( file );
 			if ( !stricmp ( Right(file,2).c_str(), ".c" ) )
 				c_srcs.push_back ( file );
+			if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
+				header_files.push_back ( file );
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
 		}
@@ -144,7 +146,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	}
 	// TODO FIXME - we don't include header files in our build system
 	//my @header_files = @{module->{header_files}};
-	vector<string> header_files;
+	//vector<string> header_files;
 
 	// TODO FIXME - wine hack?
 	/*if (module.name !~ /^wine(?:_unicode|build|runtests|test)?$/ &&
