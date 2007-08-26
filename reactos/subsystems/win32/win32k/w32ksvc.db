@@ -24,17 +24,17 @@ NtGdiCancelDC                                    1
 NtGdiCheckBitmapBits                             8
 NtGdiCloseFigure                                 1
 NtGdiClearBitmapAttributes                       2
-# NtGdiClearBrushAttributes                      2
-# NtGdiColorCorrectPalette                       6
+NtGdiClearBrushAttributes                        2
+NtGdiColorCorrectPalette                         6
 NtGdiCombineRgn                                  4
 NtGdiCombineTransform                            3
-# NtGdiComputeXformCoefficients                  1
-# NtGdiConsoleTextOut                            4
-# NtGdiConvertMetafileRect                       2
+NtGdiComputeXformCoefficients                    1
+NtGdiConsoleTextOut                              4
+NtGdiConvertMetafileRect                         2
 NtGdiCreateBitmap                                5
 NtGdiCreateClientObj                             1
 NtGdiCreateColorSpace                            1
-# NtGdiCreateColorTransform                      8
+NtGdiCreateColorTransform                        8
 NtGdiCreateCompatibleBitmap                      3
 NtGdiCreateCompatibleDC                          1
 NtGdiCreateDIBBrush                              6
@@ -107,12 +107,12 @@ NtGdiDdUnlock                                    2
 NtGdiDdUnlockD3D                                 2
 NtGdiDdUpdateOverlay                             3
 NtGdiDdWaitForVerticalBlank                      2
-# NtGdiDvpCanCreateVideoPort                     2
-# NtGdiDvpColorControl                           2
-# NtGdiDvpCreateVideoPort                        2
-# NtGdiDvpDestroyVideoPort                       2
-# NtGdiDvpFlipVideoPort                          4
-# NtGdiDvpGetVideoPortBandwidth                  2
+NtGdiDvpCanCreateVideoPort                       2
+NtGdiDvpColorControl                             2
+NtGdiDvpCreateVideoPort                          2
+NtGdiDvpDestroyVideoPort                         2
+NtGdiDvpFlipVideoPort                            4
+NtGdiDvpGetVideoPortBandwidth                    2
 # NtGdiDvpGetVideoPortField                      2
 # NtGdiDvpGetVideoPortFlipStatus                 2
 # NtGdiDvpGetVideoPortInputFormats               2

@@ -1970,3 +1970,174 @@ NtGdiFONTOBJ_pxoGetXform(IN FONTOBJ *pfo)
     return NULL;
 }
 
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpCanCreateVideoPort(
+    IN HANDLE hDirectDraw,
+    IN OUT PDD_CANCREATEVPORTDATA puCanCreateVPortData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpColorControl(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_VPORTCOLORDATA puVPortColorData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+NtGdiDvpCreateVideoPort(
+    IN HANDLE hDirectDraw,
+    IN OUT PDD_CREATEVPORTDATA puCreateVPortData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpDestroyVideoPort(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_DESTROYVPORTDATA puDestroyVPortData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpFlipVideoPort(
+    IN HANDLE hVideoPort,
+    IN HANDLE hDDSurfaceCurrent,
+    IN HANDLE hDDSurfaceTarget,
+    IN OUT PDD_FLIPVPORTDATA puFlipVPortData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiDvpGetVideoPortBandwidth(
+    IN HANDLE hVideoPort,
+    IN OUT PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+HBRUSH
+STDCALL
+NtGdiClearBrushAttributes(
+    IN HBRUSH hbm,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiColorCorrectPalette(
+    IN HDC hdc,
+    IN HPALETTE hpal,
+    IN ULONG FirstEntry,
+    IN ULONG NumberOfEntries,
+    IN OUT PALETTEENTRY *ppalEntry,
+    IN ULONG Command)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+NtGdiCreateColorTransform(
+    IN HDC hdc,
+    IN LPLOGCOLORSPACEW pLogColorSpaceW,
+    IN OPTIONAL PVOID pvSrcProfile,
+    IN ULONG cjSrcProfile,
+    IN OPTIONAL PVOID pvDestProfile,
+    IN ULONG cjDestProfile,
+    IN OPTIONAL PVOID pvTargetProfile,
+    IN ULONG cjTargetProfile)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiComputeXformCoefficients(IN HDC hdc)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiConsoleTextOut(
+    IN HDC hdc,
+    IN POLYTEXTW *lpto,
+    IN UINT nStrings,
+    IN RECTL *prclBounds)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+LONG
+STDCALL
+NtGdiConvertMetafileRect(
+    IN HDC hdc,
+    IN OUT PRECTL prect)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
