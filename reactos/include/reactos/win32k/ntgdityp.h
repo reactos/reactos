@@ -120,7 +120,17 @@ typedef struct _TMW_INTERNAL
     TMDIFF Diff;
 } TMW_INTERNAL, *PTMW_INTERNAL;
 
-typedef struct _ENUMFONTDATAW ENUMFONTDATAW, *PENUMFONTDATAW;
+typedef struct _ENUMFONTDATAW 
+{
+    DWORD            cbSize;  // Size of ENUMFONTDATAW + (size of ENUMTEXTMETRIC + ENUMLOGFONTEXDV)
+    PENUMTEXTMETRIC  lpentm;  // Ptr with in this structure.              ^^^ if Win2k + ^^^
+    DWORD            FontType;
+    PENUMLOGFONTEXDV lpelfedv; // Prt with in this structure.
+    // The rest of the structure is variable in size.
+    // Based on iEnumType and Win32Compat flags,,
+    // if w2k+ {ENUMTEXTMETRIC else NEWTEXTMETRICS} or TEXTMETRIC
+    // if w2k+ {ENUMLOGFONTEXDV else ENUMLOGFONT} or LOGFONT
+} ENUMFONTDATAW, *PENUMFONTDATAW;
 
 /* Number Representation */
 typedef struct _EFLOAT_S
