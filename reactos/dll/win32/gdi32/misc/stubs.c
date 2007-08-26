@@ -2525,106 +2525,6 @@ EngWideCharToMultiByte( UINT CodePage,
                          NULL);
 }
 
-/*
- * @unimplemented
- */
-ULONG
-STDCALL
-FONTOBJ_cGetAllGlyphHandles(IN FONTOBJ *FontObj,
-                            IN HGLYPH  *Glyphs)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-STDCALL
-FONTOBJ_cGetGlyphs(IN FONTOBJ *FontObj,
-                   IN ULONG    Mode,
-                   IN ULONG    NumGlyphs,
-                   IN HGLYPH  *GlyphHandles,
-                   IN PVOID   *OutGlyphs)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-PFD_GLYPHATTR STDCALL
-FONTOBJ_pQueryGlyphAttrs(FONTOBJ *pfo,ULONG iMode)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-FD_GLYPHSET *STDCALL
-FONTOBJ_pfdg(FONTOBJ *pfo)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-IFIMETRICS*
-STDCALL
-FONTOBJ_pifi(IN FONTOBJ  *FontObj)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-PVOID
-STDCALL
-FONTOBJ_pvTrueTypeFontFile(IN FONTOBJ  *FontObj,
-                           IN ULONG    *FileSize)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-XFORMOBJ*
-STDCALL
-FONTOBJ_pxoGetXform(IN FONTOBJ  *FontObj)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-FONTOBJ_vGetInfo(IN  FONTOBJ   *FontObj,
-                 IN  ULONG      InfoSize,
-                 OUT PFONTINFO  FontInfo)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
 
 /*
  * @unimplemented
@@ -2856,4 +2756,40 @@ VOID STDCALL GdiInitializeLanguagePack(DWORD InitParam)
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
+
+
+/*
+ * @implemented
+ */
+INT
+STDCALL
+ExcludeClipRect(IN HDC hdc, IN INT xLeft, IN INT yTop, IN INT xRight, IN INT yBottom)
+{
+	/* FIXME some part need be done on user mode size */
+	return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
+}
+
+/*
+ * @implemented
+ */
+INT
+STDCALL
+ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
+{
+	/* FIXME some part need be done on user mode size */
+	return NtGdiExtSelectClipRgn(hdc,hrgn, iMode);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+FillRgn( IN HDC hdc, IN HRGN hrgn, IN HBRUSH hbrush)
+{
+	/* FIXME some part need be done on user mode size */
+	return NtGdiFillRgn( hdc, hrgn, hbrush);
+}
+
+
 
