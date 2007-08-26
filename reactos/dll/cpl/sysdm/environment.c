@@ -266,6 +266,8 @@ OnInitDialog(HWND hwndDlg)
     /* Set user environment variables */
     hwndListView = GetDlgItem(hwndDlg, IDC_USER_VARIABLE_LIST);
 
+    (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_FULLROWSELECT);
+
     SetListViewColumns(hwndListView);
 
     SetEnvironmentVariables(hwndListView,
@@ -273,11 +275,16 @@ OnInitDialog(HWND hwndDlg)
                             _T("Environment"));
 
     (void)ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
+
+    ListView_SetItemState(hwndListView,0,LVIS_FOCUSED,LVIS_FOCUSED);
+
     (void)ListView_Update(hwndListView,0);
 
 
     /* Set system environment variables */
     hwndListView = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
+
+    (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_FULLROWSELECT);
 
     SetListViewColumns(hwndListView);
 
@@ -286,6 +293,9 @@ OnInitDialog(HWND hwndDlg)
                             _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"));
 
     (void)ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
+
+    ListView_SetItemState(hwndListView,0,LVIS_FOCUSED,LVIS_FOCUSED);
+
     (void)ListView_Update(hwndListView,0);
 }
 
@@ -319,17 +329,22 @@ OnNewVariable(HWND hwndDlg,
             GlobalFree(VarData->lpCookedValue);
     
         GlobalFree(VarData);
-    }
+    } 
+    else
+    {
+        if(VarData->lpName != NULL && (VarData->lpCookedValue || VarData->lpRawValue))
+        {
+            memset(&lvi, 0x00, sizeof(lvi));
+            lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
+            lvi.lParam = (LPARAM)VarData;
+            lvi.pszText = VarData->lpName;
+            lvi.state = 0;
+            iItem = ListView_InsertItem(hwndListView, &lvi);
 
-    memset(&lvi, 0x00, sizeof(lvi));
-    lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
-    lvi.lParam = (LPARAM)VarData;
-    lvi.pszText = VarData->lpName;
-    lvi.state = 0;
-    iItem = ListView_InsertItem(hwndListView, &lvi);
-
-    ListView_SetItemText(hwndListView, iItem, 1,
+            ListView_SetItemText(hwndListView, iItem, 1,
                          (VarData->lpCookedValue) ? VarData->lpCookedValue : VarData->lpRawValue);
+        }
+    }
 }
 
 
