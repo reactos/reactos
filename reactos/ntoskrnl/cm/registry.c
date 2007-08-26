@@ -142,7 +142,7 @@ CmpRosGetHardwareHive(OUT PULONG Length)
         {
             /* Check if it's not the SYSTEM hive that we already initialized */
             if ((MdBlock->BasePage) !=
-                ((ULONG_PTR)KeLoaderBlock->RegistryBase >> PAGE_SHIFT))
+                (((ULONG_PTR)KeLoaderBlock->RegistryBase &~ KSEG0_BASE) >> PAGE_SHIFT))
             {
                 /* Hardware hive break out */
                 break;
@@ -156,7 +156,7 @@ CmpRosGetHardwareHive(OUT PULONG Length)
     /* We need a hardware hive */
     ASSERT(MdBlock);
     *Length = MdBlock->PageCount << PAGE_SHIFT;
-    return (PVOID)(MdBlock->BasePage << PAGE_SHIFT);
+    return (PVOID)((MdBlock->BasePage << PAGE_SHIFT) | KSEG0_BASE);
 }
 
 VOID
