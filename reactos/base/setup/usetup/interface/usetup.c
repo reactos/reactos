@@ -1387,10 +1387,10 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
   if (IsUnattendedSetup)
     {
-      SelectPartition(PartitionList,
-        UnattendDestinationDiskNumber,
-        UnattendDestinationPartitionNumber);
-      return(SELECT_FILE_SYSTEM_PAGE);
+      if (SelectPartition(PartitionList, UnattendDestinationDiskNumber, UnattendDestinationPartitionNumber))
+        {
+          return(SELECT_FILE_SYSTEM_PAGE);
+        }
     }
 
   while(TRUE)
