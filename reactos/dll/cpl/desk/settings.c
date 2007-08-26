@@ -137,11 +137,11 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 			Current->dmPelsHeight = devmode.dmPelsHeight;
 			Current->dmBitsPerPel = devmode.dmBitsPerPel;
 			while (Next != NULL && (
-			       Next->dmPelsHeight < Current->dmPelsHeight ||
-			       (Next->dmPelsHeight == Current->dmPelsHeight && Next->dmBitsPerPel < Current->dmBitsPerPel) ||
+			       Next->dmPelsWidth < Current->dmPelsWidth ||
+			       (Next->dmPelsWidth == Current->dmPelsWidth && Next->dmPelsHeight < Current->dmPelsHeight) ||
 			       (Next->dmPelsHeight == Current->dmPelsHeight &&
-			        Next->dmBitsPerPel == Current->dmBitsPerPel &&
-			        Next->dmPelsWidth < Current->dmPelsWidth)))
+			        Next->dmPelsWidth == Current->dmPelsWidth &&
+			        Next->dmBitsPerPel < Current->dmBitsPerPel )))
 			{
 				Previous = Next;
 				Next = Next->Flink;
@@ -194,7 +194,7 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR D
 	for (Current = newEntry->Settings; Current != NULL; Current = Current->Flink)
 	{
 		if (Current->Flink != NULL &&
-			((Current->dmPelsWidth != Current->Flink->dmPelsWidth) ||
+			((Current->dmPelsWidth != Current->Flink->dmPelsWidth) &&
 			(Current->dmPelsHeight != Current->Flink->dmPelsHeight)))
 		{
 			ResolutionsCount++;
@@ -211,7 +211,7 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR D
 	{
 		if (Current->Flink == NULL ||
 			(Current->Flink != NULL &&
-			((Current->dmPelsWidth != Current->Flink->dmPelsWidth) ||
+			((Current->dmPelsWidth != Current->Flink->dmPelsWidth) &&
 			(Current->dmPelsHeight != Current->Flink->dmPelsHeight))))
 		{
 			newEntry->Resolutions[i].dmPelsWidth = Current->dmPelsWidth;
