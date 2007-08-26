@@ -2193,6 +2193,11 @@ MingwModuleHandler::GetDefaultDependencies (
 		&& module.name != "hostzlib" )
 
 		dependencies.push_back ( "$(INIT)" );
+
+	if ( module.type != BuildTool
+		&& module.name != "psdk" )
+
+		dependencies.push_back ( "$(PSDK_TARGET)" );
 }
 
 void
