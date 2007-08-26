@@ -1672,4 +1672,301 @@ NtGdiEngComputeGlyphSet( INT nCodePage,
     return NULL;
 }
 
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiFONTOBJ_cGetAllGlyphHandles(IN FONTOBJ *FontObj,
+                            IN HGLYPH  *Glyphs)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiFONTOBJ_cGetGlyphs(IN FONTOBJ *FontObj,
+                        IN ULONG    Mode,
+                        IN ULONG    NumGlyphs,
+                        IN HGLYPH  *GlyphHandles,
+                        IN PVOID   *OutGlyphs)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+
+/*
+ * @unimplemented
+ */
+INT
+STDCALL
+NtGdiAddFontResourceW(
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
+    IN ULONG cFiles,
+    IN FLONG f,
+    IN DWORD dwPidTid,
+    IN OPTIONAL DESIGNVECTOR *pdv)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiAddRemoteFontToDC(
+    IN HDC hdc,
+    IN PVOID pvBuffer,
+    IN ULONG cjBuffer,
+    IN OPTIONAL PUNIVERSAL_FONT_ID pufi)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+NtGdiAddFontMemResourceEx(
+    IN PVOID pvBuffer,
+    IN DWORD cjBuffer,
+    IN DESIGNVECTOR *pdv,
+    IN ULONG cjDV,
+    OUT DWORD *pNumFonts
+)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiRemoveMergeFont(
+    IN HDC hdc,
+    IN UNIVERSAL_FONT_ID *pufi)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+NtGdiAddRemoteMMInstanceToDC(
+    IN HDC hdc,
+    IN DOWNLOADDESIGNVECTOR *pddv,
+    IN ULONG cjDDV)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiFontIsLinked(IN HDC hdc)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiCheckBitmapBits(
+    IN HDC hdc,
+    IN HANDLE hColorTransform,
+    IN PVOID pvBits,
+    IN ULONG bmFormat,
+    IN DWORD dwWidth,
+    IN DWORD dwHeight,
+    IN DWORD dwStride,
+    OUT PBYTE paResults)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+NtGdiCreateServerMetaFile(
+    IN DWORD iType,
+    IN ULONG cjData,
+    IN LPBYTE pjData,
+    IN DWORD mm,
+    IN DWORD xExt,
+    IN DWORD yExt)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+ /*
+ * @unimplemented
+ */
+
+HDC
+STDCALL
+NtGdiCreateMetafileDC(IN HDC hdc)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+ /*
+ * @unimplemented
+ */
+
+HBITMAP
+STDCALL
+NtGdiCreateDIBitmapInternal(
+    IN HDC hdc,
+    IN INT cx,
+    IN INT cy,
+    IN DWORD fInit,
+    IN OPTIONAL LPBYTE pjInit,
+    IN OPTIONAL LPBITMAPINFO pbmi,
+    IN DWORD iUsage,
+    IN UINT cjMaxInitInfo,
+    IN UINT cjMaxBits,
+    IN FLONG f,
+    IN HANDLE hcmXform)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+ /*
+ * @unimplemented
+ */
+HBITMAP
+STDCALL
+NtGdiClearBitmapAttributes(
+    IN HBITMAP hbm,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetUFI(
+    IN  HDC hdc,
+    OUT PUNIVERSAL_FONT_ID pufi,
+    OUT OPTIONAL DESIGNVECTOR *pdv,
+    OUT ULONG *pcjDV,
+    OUT ULONG *pulBaseCheckSum,
+    OUT FLONG *pfl)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+PFD_GLYPHATTR
+STDCALL
+NtGdiFONTOBJ_pQueryGlyphAttrs(
+    IN FONTOBJ *pfo,
+    IN ULONG iMode)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+IFIMETRICS*
+STDCALL
+NtGdiFONTOBJ_pifi(
+    IN FONTOBJ *pfo)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+FD_GLYPHSET*
+STDCALL
+NtGdiFONTOBJ_pfdg(IN FONTOBJ *pfo)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+PVOID
+STDCALL 
+NtGdiFONTOBJ_pvTrueTypeFontFile(
+    IN FONTOBJ *pfo,
+    OUT ULONG *pcjFile
+)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+VOID
+STDCALL
+NtGdiFONTOBJ_vGetInfo(
+    IN FONTOBJ *pfo,
+    IN ULONG cjSize,
+    OUT FONTINFO *pfi)
+{
+    UNIMPLEMENTED;
+}
+
+ /*
+ * @unimplemented
+ */
+XFORMOBJ*
+STDCALL
+NtGdiFONTOBJ_pxoGetXform(IN FONTOBJ *pfo)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
 
