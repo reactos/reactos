@@ -80,6 +80,7 @@ LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
 LONG UnattendMBRInstallType = -1;
 LONG UnattendFormatPartition = 0;
+LONG AutoPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
 BOOLEAN RepairUpdateFlag = FALSE;
 
@@ -578,7 +579,13 @@ CheckUnattendedSetup(VOID)
           UnattendFormatPartition = IntValue;
         }
     }
-
+  if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"AutoPartition", &Context))
+    {
+      if (SetupGetIntField(&Context, 1, &IntValue))
+        {
+          AutoPartition = IntValue;
+        }
+    }
   SetupCloseInfFile(UnattendInf);
 
   DPRINT("Running unattended setup\n");
@@ -1391,6 +1398,10 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
           return(SELECT_FILE_SYSTEM_PAGE);
         }
+      else
+        {
+          return (CREATE_PARTITION_PAGE);
+        }
     }
 
   while(TRUE)
@@ -1695,21 +1706,29 @@ CreatePartitionPage (PINPUT_RECORD Ir)
   while (TRUE)
     {
       MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-      ShowPartitionSizeInputBox (12, 14, xScreen - 12, 17, /* left, top, right, bottom */
+      if (!IsUnattendedSetup || !AutoPartition)
+        {
+          ShowPartitionSizeInputBox (12, 14, xScreen - 12, 17, /* left, top, right, bottom */
 				 MaxSize, InputBuffer, &Quit, &Cancel);
-      if (Quit == TRUE)
-	{
-	  if (ConfirmQuit (Ir) == TRUE)
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
-      else if (Cancel == TRUE)
-	{
-	  return SELECT_PARTITION_PAGE;
-	}
+        }
       else
-	{
+        {
+          Quit = FALSE;
+          Cancel = FALSE;
+        }
+      if (Quit == TRUE)
+	    {
+	      if (ConfirmQuit (Ir) == TRUE)
+	        {
+	          return QUIT_PAGE;
+	        }
+	    }
+      else if (Cancel == TRUE)
+	    {
+	      return SELECT_PARTITION_PAGE;
+	    }
+      else
+	    {
 	  PartSize = atoi (InputBuffer);
 	  if (PartSize < 1)
 	    {
