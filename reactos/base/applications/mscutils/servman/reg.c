@@ -2,104 +2,100 @@
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/reg.c
- * PURPOSE:     Query service information
- * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
+ * PURPOSE:     functions for querying a services registry key
+ * COPYRIGHT:   Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "precomp.h"
 
-/* Sets the service description in the registry */
-BOOL SetDescription(LPTSTR ServiceName, LPTSTR Description)
+static HKEY
+OpenServiceKey(LPTSTR lpServiceName)
 {
-    HKEY hKey;
+    HKEY hKey = NULL;
     LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
     TCHAR buf[300];
-    TCHAR szBuf[MAX_PATH];
-    LONG val;
 
-
-   /* open the registry key for the service */
-    _sntprintf(buf, sizeof(buf) / sizeof(TCHAR), Path, ServiceName);
-    RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                 buf,
-                 0,
-                 KEY_WRITE,
-                 &hKey);
-
-
-   if ((val = RegSetValueEx(hKey,
-                     _T("Description"),
+    _sntprintf(buf, sizeof(buf) / sizeof(TCHAR), Path, lpServiceName);
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     buf,
                      0,
-                     REG_SZ,
-                     (LPBYTE)Description,
-                     (DWORD)lstrlen(szBuf)+1)) != ERROR_SUCCESS)
-   {
-       //GetError(val);
-       return FALSE;
-   }
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS)
+    {
+        return hKey;
+    }
+    else
+    {
+        return NULL;
+    }
+}
 
+BOOL 
+SetDescription(LPTSTR lpServiceName,
+               LPTSTR lpDescription)
+{
+    HKEY hKey;
+    TCHAR szBuf[MAX_PATH];
+    BOOL bRet = FALSE;
 
-    RegCloseKey(hKey);
-    return TRUE;
+    hKey = OpenServiceKey(lpServiceName);
+    if (hKey)
+    {
+       if (RegSetValueEx(hKey,
+                         _T("Description"),
+                         0,
+                         REG_SZ,
+                         (LPBYTE)lpDescription,
+                         (DWORD)(_tcslen(szBuf) + 1 ) * sizeof(TCHAR)) == ERROR_SUCCESS)
+       {
+           bRet = TRUE;
+       }
+
+        RegCloseKey(hKey);
+    }
+
+    return bRet;
 }
 
 
-
-/* Retrives the service description from the registry */
 LPTSTR
 GetDescription(LPTSTR lpServiceName)
 {
     HKEY hKey;
     LPTSTR lpDescription = NULL;
     DWORD dwValueSize = 0;
-    LONG ret;
-    LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
-    TCHAR buf[300];
 
-    /* open the registry key for the service */
-    _sntprintf(buf, sizeof(buf) / sizeof(TCHAR), Path, lpServiceName);
-    RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                 buf,
-                 0,
-                 KEY_READ,
-                 &hKey);
-
-    ret = RegQueryValueEx(hKey,
-                          _T("Description"),
-                          NULL,
-                          NULL,
-                          NULL,
-                          &dwValueSize);
-    if (ret != ERROR_SUCCESS && ret != ERROR_FILE_NOT_FOUND && ret != ERROR_INVALID_HANDLE)
+    hKey = OpenServiceKey(lpServiceName);
+    if (hKey)
     {
+        if (RegQueryValueEx(hKey,
+                            _T("Description"),
+                            NULL,
+                            NULL,
+                            NULL,
+                            &dwValueSize) == ERROR_SUCCESS)
+        {
+            lpDescription = HeapAlloc(ProcessHeap,
+                                      0,
+                                      dwValueSize);
+            if (lpDescription)
+            {
+                if(RegQueryValueEx(hKey,
+                                   _T("Description"),
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)lpDescription,
+                                   &dwValueSize) != ERROR_SUCCESS)
+                {
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpDescription);
+                }
+            }
+        }
+
         RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    if (ret != ERROR_FILE_NOT_FOUND)
-    {
-        lpDescription = HeapAlloc(ProcessHeap,
-                                  HEAP_ZERO_MEMORY,
-                                  dwValueSize);
-        if (lpDescription == NULL)
-        {
-            RegCloseKey(hKey);
-            return FALSE;
-        }
-
-        if(RegQueryValueEx(hKey,
-                           _T("Description"),
-                           NULL,
-                           NULL,
-                           (LPBYTE)lpDescription,
-                           &dwValueSize))
-        {
-            HeapFree(ProcessHeap,
-                     0,
-                     lpDescription);
-            RegCloseKey(hKey);
-        }
     }
 
     return lpDescription;

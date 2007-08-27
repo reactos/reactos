@@ -49,7 +49,7 @@ GetExecutablePath(PMAIN_WND_INFO Info)
 
     /* get a handle to the service requested for starting */
     hSc = OpenService(hSCManager,
-                      Info->CurrentService->lpServiceName,
+                      Info->pCurrentService->lpServiceName,
                       SERVICE_QUERY_CONFIG);
     if (hSc == NULL)
     {
@@ -162,6 +162,40 @@ GetServiceList(PMAIN_WND_INFO Info,
         HeapFree(ProcessHeap,
                  0,
                  Info->pAllServices);
+    }
+
+    return bRet;
+}
+
+
+BOOL
+UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService)
+{
+    SC_HANDLE hScm;
+    BOOL bRet = FALSE;
+
+    hScm = OpenSCManager(NULL,
+                             NULL,
+                             SC_MANAGER_ENUMERATE_SERVICE);
+    if (hScm != INVALID_HANDLE_VALUE)
+    {
+        SC_HANDLE hService;
+
+        hService = OpenService(hScm,
+                               pService->lpServiceName,
+                               SERVICE_QUERY_STATUS);
+        if (hService)
+        {
+            DWORD size;
+
+            QueryServiceStatusEx(hService,
+                                 SC_STATUS_PROCESS_INFO,
+                                 (LPBYTE)&pService->ServiceStatusProcess,
+                                 sizeof(*pService),
+                                 &size);
+
+            bRet = TRUE;
+        }
     }
 
     return bRet;

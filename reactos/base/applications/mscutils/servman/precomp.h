@@ -26,7 +26,7 @@ typedef struct _MAIN_WND_INFO
     int   nCmdShow;
 
     ENUM_SERVICE_STATUS_PROCESS *pAllServices;
-    ENUM_SERVICE_STATUS_PROCESS *CurrentService; /* Stores the current selected service */
+    ENUM_SERVICE_STATUS_PROCESS *pCurrentService;
 
     INT SelectedItem;/* selection number in the list view */
     BOOL bDlgOpen;
@@ -59,9 +59,6 @@ HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);
 /* start */
 BOOL DoStart(PMAIN_WND_INFO Info);
 
-/* stop */
-
-
 /* control */
 BOOL DoStop(PMAIN_WND_INFO Info);
 BOOL DoPause(PMAIN_WND_INFO Info);
@@ -76,6 +73,7 @@ VOID CompleteProgressBar(HWND hProgDlg);
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
 LPTSTR GetExecutablePath(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
+BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
 
 /* reg */
 BOOL SetDescription(LPTSTR, LPTSTR);

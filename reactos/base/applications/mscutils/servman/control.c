@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/servman/control
+ * FILE:        base/applications/mscutils/servman/control.c
  * PURPOSE:     Stops, pauses and resumes a service
- * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -41,7 +41,7 @@ Control(PMAIN_WND_INFO Info,
 
     /* open handle to the service */
     hSc = OpenService(hSCManager,
-                      Info->CurrentService->lpServiceName,
+                      Info->pCurrentService->lpServiceName,
                       SC_MANAGER_ALL_ACCESS);
     if (hSc == NULL)
     {
@@ -138,7 +138,7 @@ BOOL DoStop(PMAIN_WND_INFO Info)
     HWND hProgDlg;
 
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->CurrentService->lpServiceName,
+                                    Info->pCurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_STOP);
     if (hProgDlg)
     {
@@ -158,7 +158,7 @@ BOOL DoPause(PMAIN_WND_INFO Info)
     HWND hProgDlg;
 
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->CurrentService->lpServiceName,
+                                    Info->pCurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_PAUSE);
     if (hProgDlg)
     {
@@ -178,7 +178,7 @@ BOOL DoResume(PMAIN_WND_INFO Info)
     HWND hProgDlg;
 
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->CurrentService->lpServiceName,
+                                    Info->pCurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_RESUME);
     if (hProgDlg)
     {

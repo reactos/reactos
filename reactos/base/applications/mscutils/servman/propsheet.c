@@ -16,8 +16,8 @@ SetButtonStates(PMAIN_WND_INFO Info,
     HWND hButton;
     DWORD Flags, State;
 
-    Flags = Info->CurrentService->ServiceStatusProcess.dwControlsAccepted;
-    State = Info->CurrentService->ServiceStatusProcess.dwCurrentState;
+    Flags = Info->pCurrentService->ServiceStatusProcess.dwControlsAccepted;
+    State = Info->pCurrentService->ServiceStatusProcess.dwCurrentState;
 
     if (State == SERVICE_STOPPED)
     {
@@ -64,7 +64,7 @@ SetStartupType(PMAIN_WND_INFO Info,
     _sntprintf(KeyBuf,
                sizeof(KeyBuf) / sizeof(TCHAR),
                Path,
-               Info->CurrentService->lpServiceName);
+               Info->pCurrentService->lpServiceName);
 
     RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                  KeyBuf,
@@ -118,17 +118,17 @@ GetDlgInfo(PMAIN_WND_INFO Info,
                        IDC_SERV_NAME,
                        WM_SETTEXT,
                        0,
-                       (LPARAM)Info->CurrentService->lpServiceName);
+                       (LPARAM)Info->pCurrentService->lpServiceName);
 
     /* set the display name */
     SendDlgItemMessage(hwndDlg,
                        IDC_DISP_NAME,
                        WM_SETTEXT,
                        0,
-                       (LPARAM)Info->CurrentService->lpDisplayName);
+                       (LPARAM)Info->pCurrentService->lpDisplayName);
 
     /* set the description */
-    if ((lpDescription = GetDescription(Info->CurrentService->lpServiceName)))
+    if ((lpDescription = GetDescription(Info->pCurrentService->lpServiceName)))
     {
         SendDlgItemMessage(hwndDlg,
                            IDC_DESCRIPTION,
@@ -161,7 +161,7 @@ GetDlgInfo(PMAIN_WND_INFO Info,
     SetStartupType(Info, hwndDlg);
 
     /* set service status */
-    if (Info->CurrentService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+    if (Info->pCurrentService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
     {
         TCHAR szServiceStatus[32];
 
@@ -407,7 +407,7 @@ OpenPropSheet(PMAIN_WND_INFO Info)
     psh.hwndParent = Info->hMainWnd;
     psh.hInstance = hInstance;
     psh.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
-    psh.pszCaption = Info->CurrentService->lpDisplayName;
+    psh.pszCaption = Info->pCurrentService->lpDisplayName;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.pfnCallback = AddEditButton;

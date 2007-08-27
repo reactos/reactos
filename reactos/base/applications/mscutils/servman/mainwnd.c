@@ -9,6 +9,12 @@
 
 #include "precomp.h"
 
+#define LVNAME 0
+#define LVDESC 1
+#define LVSTATUS 2
+#define LVSTARTUP 3
+#define LVLOGONAS 4
+
 static const TCHAR szMainWndClass[] = TEXT("ServManWndClass");
 
 BOOL bSortAscending = TRUE;
@@ -136,6 +142,73 @@ SetListViewStyle(HWND hListView,
     }
 }
 
+static VOID
+ChangeListViewText(PMAIN_WND_INFO Info,
+                   UINT Column)
+{
+    LVITEM item;
+
+    item.iItem = Info->SelectedItem;
+    item.iSubItem = Column;
+
+    switch (Column)
+    {
+        case LVNAME:
+
+        break;
+
+        case LVDESC:
+        {
+            LPTSTR lpDescription;
+
+            lpDescription = GetDescription(Info->pCurrentService->lpServiceName);
+
+            item.pszText = lpDescription;
+            SendMessage(Info->hListView,
+                        LVM_SETITEMTEXT,
+                        item.iItem,
+                        (LPARAM) &item);
+
+            HeapFree(ProcessHeap,
+                     0,
+                     lpDescription);
+        }
+        break;
+
+        case LVSTATUS:
+        {
+            TCHAR szStatus[64];
+
+            if (Info->pCurrentService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+            {
+                LoadString(hInstance,
+                           IDS_SERVICES_STARTED,
+                           szStatus,
+                           sizeof(szStatus) / sizeof(TCHAR));
+            }
+            else
+            {
+                szStatus[0] = 0;
+            }
+
+            item.pszText = szStatus;
+            SendMessage(Info->hListView,
+                        LVM_SETITEMTEXT,
+                        item.iItem,
+                        (LPARAM) &item);
+        }
+        break;
+
+        case LVSTARTUP:
+
+        break;
+
+        case LVLOGONAS:
+
+        break;
+    }
+}
+
 
 VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 {
@@ -163,8 +236,8 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
         EnableMenuItem(hMainMenu, ID_DELETE, MF_ENABLED);
         EnableMenuItem(Info->hShortcutMenu, ID_DELETE, MF_ENABLED);
 
-        Flags = Info->CurrentService->ServiceStatusProcess.dwControlsAccepted;
-        State = Info->CurrentService->ServiceStatusProcess.dwCurrentState;
+        Flags = Info->pCurrentService->ServiceStatusProcess.dwControlsAccepted;
+        State = Info->pCurrentService->ServiceStatusProcess.dwCurrentState;
 
         if (State == SERVICE_STOPPED)
         {
@@ -369,9 +442,8 @@ CreateListView(PMAIN_WND_INFO Info)
     lvc.fmt  = LVCFMT_LEFT;
 
     /* Add columns to the list-view */
-
     /* name */
-    lvc.iSubItem = 0;
+    lvc.iSubItem = LVNAME;
     lvc.cx       = 150;
     LoadString(hInstance,
                IDS_FIRSTCOLUMN,
@@ -383,7 +455,7 @@ CreateListView(PMAIN_WND_INFO Info)
                                 &lvc);
 
     /* description */
-    lvc.iSubItem = 1;
+    lvc.iSubItem = LVDESC;
     lvc.cx       = 240;
     LoadString(hInstance,
                IDS_SECONDCOLUMN,
@@ -395,7 +467,7 @@ CreateListView(PMAIN_WND_INFO Info)
                                 &lvc);
 
     /* status */
-    lvc.iSubItem = 2;
+    lvc.iSubItem = LVSTATUS;
     lvc.cx       = 55;
     LoadString(hInstance,
                IDS_THIRDCOLUMN,
@@ -407,7 +479,7 @@ CreateListView(PMAIN_WND_INFO Info)
                                 &lvc);
 
     /* startup type */
-    lvc.iSubItem = 3;
+    lvc.iSubItem = LVSTARTUP;
     lvc.cx       = 80;
     LoadString(hInstance,
                IDS_FOURTHCOLUMN,
@@ -419,7 +491,7 @@ CreateListView(PMAIN_WND_INFO Info)
                                 &lvc);
 
     /* logon as */
-    lvc.iSubItem = 4;
+    lvc.iSubItem = LVLOGONAS;
     lvc.cx       = 100;
     LoadString(hInstance,
                IDS_FITHCOLUMN,
@@ -509,7 +581,7 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
     Info->SelectedItem = pnmv->iItem;
 
     /* get pointer to selected service */
-    Info->CurrentService = GetSelectedService(Info);
+    Info->pCurrentService = GetSelectedService(Info);
 
     /* alter options for the service */
     SetMenuAndButtonStates(Info);
@@ -518,7 +590,7 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
     SendMessage(Info->hStatus,
                 SB_SETTEXT,
                 1,
-                (LPARAM)Info->CurrentService->lpDisplayName);
+                (LPARAM)Info->pCurrentService->lpDisplayName);
 
     /* show the properties button */
     SendMessage(Info->hTool,
@@ -613,7 +685,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_DELETE:
         {
-            if (Info->CurrentService->ServiceStatusProcess.dwCurrentState != SERVICE_RUNNING)
+            if (Info->pCurrentService->ServiceStatusProcess.dwCurrentState != SERVICE_RUNNING)
             {
                 DialogBoxParam(hInstance,
                                MAKEINTRESOURCE(IDD_DLG_DELETE),
@@ -640,22 +712,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
         {
             if (DoStart(Info))
             {
-                LVITEM item;
-                TCHAR szStatus[64];
-
-                LoadString(hInstance,
-                           IDS_SERVICES_STARTED,
-                           szStatus,
-                           sizeof(szStatus) / sizeof(TCHAR));
-                item.pszText = szStatus;
-                item.iItem = Info->SelectedItem;
-                item.iSubItem = 2;
-                SendMessage(Info->hListView,
-                            LVM_SETITEMTEXT,
-                            item.iItem,
-                            (LPARAM) &item);
-
-                Info->CurrentService->ServiceStatusProcess.dwCurrentState = SERVICE_RUNNING;
+                UpdateServiceStatus(Info->pCurrentService);
+                ChangeListViewText(Info, LVSTATUS);
                 SetMenuAndButtonStates(Info);
                 SetFocus(Info->hListView);
             }
@@ -665,17 +723,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
         case ID_STOP:
             if (DoStop(Info))
             {
-                LVITEM item;
-
-                item.pszText = 0;
-                item.iItem = Info->SelectedItem;
-                item.iSubItem = 2;
-                SendMessage(Info->hListView,
-                            LVM_SETITEMTEXT,
-                            item.iItem,
-                            (LPARAM) &item);
-
-                Info->CurrentService->ServiceStatusProcess.dwCurrentState = SERVICE_STOPPED;
+                UpdateServiceStatus(Info->pCurrentService);
+                ChangeListViewText(Info, LVSTATUS);
                 SetMenuAndButtonStates(Info);
                 SetFocus(Info->hListView);
             }
@@ -692,22 +741,11 @@ MainWndCommand(PMAIN_WND_INFO Info,
         case ID_RESTART:
             if (DoStop(Info))
             {
-                if(!DoStart(Info))
-                {
-                    LVITEM item;
-
-                    item.pszText = 0;
-                    item.iItem = Info->SelectedItem;
-                    item.iSubItem = 2;
-                    SendMessage(Info->hListView,
-                                LVM_SETITEMTEXT,
-                                item.iItem,
-                                (LPARAM) &item);
-
-                    Info->CurrentService->ServiceStatusProcess.dwCurrentState = SERVICE_STOPPED;
-                    SetMenuAndButtonStates(Info);
-                    SetFocus(Info->hListView);
-                }
+                DoStart(Info);
+                UpdateServiceStatus(Info->pCurrentService);
+                ChangeListViewText(Info, LVSTATUS);
+                SetMenuAndButtonStates(Info);
+                SetFocus(Info->hListView);
             }
         break;
 

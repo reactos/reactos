@@ -32,7 +32,7 @@ DoStartService(PMAIN_WND_INFO Info,
 
     /* get a handle to the service requested for starting */
     hSc = OpenService(hSCManager,
-                      Info->CurrentService->lpServiceName,
+                      Info->pCurrentService->lpServiceName,
                       SERVICE_ALL_ACCESS);
     if (hSc == NULL)
     {
@@ -130,7 +130,7 @@ DoStart(PMAIN_WND_INFO Info)
     BOOL bRet = FALSE;
 
     hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->CurrentService->lpServiceName,
+                                    Info->pCurrentService->lpServiceName,
                                     IDS_PROGRESS_INFO_START);
 
     if (hProgDlg)

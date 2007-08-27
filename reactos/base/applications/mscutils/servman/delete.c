@@ -28,7 +28,7 @@ DoDeleteService(PMAIN_WND_INFO Info,
 
     /* get a handle to the service requested for deleting */
     hSc = OpenService(hSCManager,
-                      Info->CurrentService->lpServiceName,
+                      Info->pCurrentService->lpServiceName,
                       DELETE);
     if (hSc == NULL)
     {
@@ -87,7 +87,7 @@ DeleteDialogProc(HWND hDlg,
                                IDC_DEL_NAME,
                                WM_SETTEXT,
                                0,
-                               (LPARAM)Info->CurrentService->lpDisplayName);
+                               (LPARAM)Info->pCurrentService->lpDisplayName);
 
 
             item.mask = LVIF_TEXT;
