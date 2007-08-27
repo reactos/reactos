@@ -35,20 +35,20 @@ TimeZoneIndex=85
 ; 0 - format disabled
 FormatPartition=1
 
-; enable this section to automatically launch programs
-; after 3rd boot
-;
-; [GuiRunOnce]
-; %SystemRoot%\system32\cmd.exe
+; enable this setting to automatically create a partition
+; during installation
+; 1 - enabled
+; 0 - disabled
+AutoPartition = 1
 
 ; enable this setting to disable vmware driver install
 ; yes - disabled
 ; no  - enabled
 DisableVmwInst = yes
 
-; enable this setting to automatically create a partition
-; during installation
-; 1 - enabled
-; 0 - disabled
-AutoPartition = 1
+; enable this section to automatically launch programs
+; after 3rd boot
+;
+; [GuiRunOnce]
+; %SystemRoot%\system32\cmd.exe
 
