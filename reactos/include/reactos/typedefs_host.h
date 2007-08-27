@@ -17,8 +17,8 @@
 #define DPRINT if (0) printf
 #define DPRINT1 printf
 
-#define NTAPI __stdcall
-#define WINAPI __stdcall
+#define NTAPI
+#define WINAPI
 
 #define IN
 #define OUT
