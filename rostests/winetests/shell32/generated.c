@@ -201,14 +201,16 @@ static void test_pack_COAUTHINFO(void)
     TEST_FIELD(COAUTHINFO, DWORD, dwCapabilities, 24, 4, 4);
 }
 
-static void test_pack_COSERVERINFO(void)
+static void test_pack_DATE(void)
 {
-    /* COSERVERINFO (pack 4) */
-    TEST_TYPE(COSERVERINFO, 16, 4);
-    TEST_FIELD(COSERVERINFO, DWORD, dwReserved1, 0, 4, 4);
-    TEST_FIELD(COSERVERINFO, LPWSTR, pwszName, 4, 4, 4);
-    TEST_FIELD(COSERVERINFO, COAUTHINFO *, pAuthInfo, 8, 4, 4);
-    TEST_FIELD(COSERVERINFO, DWORD, dwReserved2, 12, 4, 4);
+    /* DATE */
+    TEST_TYPE(DATE, 8, 8);
+}
+
+static void test_pack_DOUBLE(void)
+{
+    /* DOUBLE */
+    TEST_TYPE(DOUBLE, 8, 8);
 }
 
 static void test_pack_DWORD_SIZEDARR(void)
@@ -255,7 +257,6 @@ static void test_pack_LPBLOB(void)
 {
     /* LPBLOB */
     TEST_TYPE(LPBLOB, 4, 4);
-    TEST_TYPE_POINTER(LPBLOB, 8, 4);
 }
 
 static void test_pack_LPBSTR(void)
@@ -269,7 +270,6 @@ static void test_pack_LPBSTRBLOB(void)
 {
     /* LPBSTRBLOB */
     TEST_TYPE(LPBSTRBLOB, 4, 4);
-    TEST_TYPE_POINTER(LPBSTRBLOB, 8, 4);
 }
 
 static void test_pack_LPCOLESTR(void)
@@ -835,7 +835,6 @@ static void test_pack_LPITEMIDLIST(void)
 {
     /* LPITEMIDLIST */
     TEST_TYPE(LPITEMIDLIST, 4, 4);
-    TEST_TYPE_POINTER(LPITEMIDLIST, 3, 1);
 }
 
 static void test_pack_LPSHELLDETAILS(void)
@@ -848,7 +847,6 @@ static void test_pack_LPSHITEMID(void)
 {
     /* LPSHITEMID */
     TEST_TYPE(LPSHITEMID, 4, 4);
-    TEST_TYPE_POINTER(LPSHITEMID, 3, 1);
 }
 
 static void test_pack_LPSTRRET(void)
@@ -1009,26 +1007,6 @@ static void test_pack_FILEGROUPDESCRIPTORW(void)
     TEST_TYPE(FILEGROUPDESCRIPTORW, 596, 1);
     TEST_FIELD(FILEGROUPDESCRIPTORW, UINT, cItems, 0, 4, 1);
     TEST_FIELD(FILEGROUPDESCRIPTORW, FILEDESCRIPTORW[1], fgd, 4, 592, 1);
-}
-
-static void test_pack_IFileSystemBindData(void)
-{
-    /* IFileSystemBindData */
-}
-
-static void test_pack_IFileSystemBindDataVtbl(void)
-{
-    /* IFileSystemBindDataVtbl */
-}
-
-static void test_pack_IShellChangeNotify(void)
-{
-    /* IShellChangeNotify */
-}
-
-static void test_pack_IShellIcon(void)
-{
-    /* IShellIcon */
 }
 
 static void test_pack_LPBROWSEINFOA(void)
@@ -1282,8 +1260,9 @@ static void test_pack(void)
     test_pack_CLSID();
     test_pack_COAUTHIDENTITY();
     test_pack_COAUTHINFO();
-    test_pack_COSERVERINFO();
     test_pack_CSFV();
+    test_pack_DATE();
+    test_pack_DOUBLE();
     test_pack_DRAGINFOA();
     test_pack_DRAGINFOW();
     test_pack_DROPFILES();
@@ -1299,11 +1278,7 @@ static void test_pack(void)
     test_pack_GUID();
     test_pack_HMETAFILEPICT();
     test_pack_HYPER_SIZEDARR();
-    test_pack_IFileSystemBindData();
-    test_pack_IFileSystemBindDataVtbl();
     test_pack_IID();
-    test_pack_IShellChangeNotify();
-    test_pack_IShellIcon();
     test_pack_ITEMIDLIST();
     test_pack_LPBLOB();
     test_pack_LPBROWSEINFOA();

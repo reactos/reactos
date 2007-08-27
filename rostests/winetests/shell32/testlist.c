@@ -13,15 +13,17 @@ extern void func_shlexec(void);
 extern void func_shlfileop(void);
 extern void func_shlfolder(void);
 extern void func_string(void);
+extern void func_systray(void);
 
 const struct test winetest_testlist[] =
 {
-//    { "generated", func_generated },
+    { "generated", func_generated },
     { "shelllink", func_shelllink },
     { "shellpath", func_shellpath },
     { "shlexec", func_shlexec },
     { "shlfileop", func_shlfileop },
     { "shlfolder", func_shlfolder },
     { "string", func_string },
+    { "systray", func_systray },
     { 0, 0 }
 };
