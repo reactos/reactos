@@ -53,6 +53,7 @@
 #define GDI_OBJECT_TYPE_METADC      0x00660000
 #define GDI_OBJECT_TYPE_METAFILE    0x00260000
 #define GDI_OBJECT_TYPE_ENHMETAFILE 0x00460000
+#define GDI_OBJECT_TYPE_ENUMFONT    0x00160000
 /* Following object types made up for ROS */
 #define GDI_OBJECT_TYPE_DONTCARE    0x007f0000
 /** Not really an object type. Forces GDI_FreeObj to be silent. */
