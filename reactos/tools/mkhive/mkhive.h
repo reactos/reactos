@@ -30,19 +30,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* We have to do this because psdk/windef.h will _always_ define _WIN32... */
-#if defined(_WIN32) || defined(_WIN64)
-#define WINDOWS_HOST
-#endif
+#include <typedefs_host.h>
+#include <ntstatus.h>
 
-#define NTOS_MODE_USER
-#define WIN32_NO_STATUS
+VOID NTAPI
+KeQuerySystemTime(
+    OUT PLARGE_INTEGER CurrentTime);
+NTSTATUS NTAPI
+RtlAnsiStringToUnicodeString(
+    IN OUT PUNICODE_STRING UniDest,
+    IN PANSI_STRING AnsiSource,
+    IN BOOLEAN AllocateDestinationString);
+VOID NTAPI
+RtlInitAnsiString(
+    IN OUT PANSI_STRING DestinationString,
+    IN PCSTR SourceString);
+VOID NTAPI
+RtlInitUnicodeString(
+    IN OUT PUNICODE_STRING DestinationString,
+    IN PCWSTR SourceString);
+WCHAR NTAPI
+RtlUpcaseUnicodeChar(
+    IN WCHAR Source);
 
-#ifdef MKHIVE_HOST
-#include <typedefs64.h>
-#endif
-
-#include <ntddk.h>
+#define CMLIB_HOST
 #include <cmlib.h>
 #include <infhost.h>
 #include "reginf.h"

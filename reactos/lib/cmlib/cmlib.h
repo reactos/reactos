@@ -8,12 +8,17 @@
 #ifndef CMLIB_H
 #define CMLIB_H
 
-//#define WIN32_NO_STATUS
-#ifdef CMLIB_HOST
-#include <typedefs64.h>
+#ifdef _TYPEDEFS_HOST_H
+#define REG_OPTION_VOLATILE 1
+#define OBJ_CASE_INSENSITIVE 0x00000040L
+#define USHORT_MAX USHRT_MAX
+#else
+ #ifdef CMLIB_HOST
+ #include <typedefs64.h>
+ #endif
+ #include <ntddk.h>
 #endif
 
-#include <ntddk.h>
 #include <wchar.h>
 #include "hivedata.h"
 #include "cmdata.h"

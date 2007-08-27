@@ -6,11 +6,7 @@
 
 #include <stdlib.h>
 
-#define RTL_H
-
-#define NTOS_MODE_USER
-#define WIN32_NO_STATUS
-#include <ntddk.h>
+#include "mkhive.h"
 #include <bitmap.c>
 
 SIZE_T xwcslen( PCWSTR String ) {
