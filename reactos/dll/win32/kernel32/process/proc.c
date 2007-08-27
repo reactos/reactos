@@ -567,6 +567,9 @@ ExitProcess(UINT uExitCode)
   ULONG Request;
   NTSTATUS Status;
 
+  /* kill sibling threads ... we want to be alone at this point */
+  NtTerminateProcess (NULL, 0);
+
   /* unload all dll's */
   LdrShutdownProcess ();
 
