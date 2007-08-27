@@ -45,3 +45,10 @@ FormatPartition=1
 ; yes - disabled
 ; no  - enabled
 DisableVmwInst = yes
+
+; enable this setting to automatically create a partition
+; during installation
+; 1 - enabled
+; 0 - disabled
+AutoPartition = 1
+
