@@ -1394,13 +1394,21 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
   if (IsUnattendedSetup)
     {
-      if (SelectPartition(PartitionList, UnattendDestinationDiskNumber, UnattendDestinationPartitionNumber))
+      if (!SelectPartition(PartitionList, UnattendDestinationDiskNumber, UnattendDestinationPartitionNumber))
         {
-          return(SELECT_FILE_SYSTEM_PAGE);
+          if (AutoPartition)
+            {
+              PPARTENTRY PartEntry = PartEntry = PartitionList->CurrentPartition;
+              ULONG MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+              CreateNewPartition (PartitionList,
+                			 	  MaxSize,
+                				  TRUE);
+              return (SELECT_FILE_SYSTEM_PAGE);
+            }
         }
       else
         {
-          return (CREATE_PARTITION_PAGE);
+          return(SELECT_FILE_SYSTEM_PAGE);
         }
     }
 
@@ -1706,17 +1714,9 @@ CreatePartitionPage (PINPUT_RECORD Ir)
   while (TRUE)
     {
       MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-      if (!IsUnattendedSetup || !AutoPartition)
-        {
-          ShowPartitionSizeInputBox (12, 14, xScreen - 12, 17, /* left, top, right, bottom */
+      ShowPartitionSizeInputBox (12, 14, xScreen - 12, 17, /* left, top, right, bottom */
 				 MaxSize, InputBuffer, &Quit, &Cancel);
-        }
-      else
-        {
-          Quit = FALSE;
-          Cancel = FALSE;
-        }
-      if (Quit == TRUE)
+       if (Quit == TRUE)
 	    {
 	      if (ConfirmQuit (Ir) == TRUE)
 	        {
@@ -1729,7 +1729,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 	    }
       else
 	    {
-	  PartSize = atoi (InputBuffer);
+  	          PartSize = atoi (InputBuffer);
 	  if (PartSize < 1)
 	    {
 	      /* Too small */
