@@ -45,6 +45,13 @@
 			<description>The Off By One Browser is a very small and fast web browser with full HTML 3.2 support.</description>
 			<location>http://offbyone.com/offbyone/images/OffByOneSetup.exe</location>
 		</application>
+		<application name="mIRC">
+			<regname>mIRC</regname>
+			<licence>Shareware</licence>
+			<version>6.21</version>
+			<description>The most popular client for the Internet Relay Chat (IRC).</description>
+			<location>http://www.efnet.org/clients/win32/mirc/mirc621.exe</location>
+		</application>
 		<application name="Samba TNG">
 			<description>This tool allows you to access your Windows shared folders/printers with ReactOS.</description>
 			<location>http://svn.reactos.org/packages/samba-tng.exe</location>
