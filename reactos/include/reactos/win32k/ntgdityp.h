@@ -120,18 +120,36 @@ typedef struct _TMW_INTERNAL
     TMDIFF Diff;
 } TMW_INTERNAL, *PTMW_INTERNAL;
 
-typedef struct _ENUMFONTDATAW 
-{
-    DWORD            cbSize;  // Size of ENUMFONTDATAW + (size of ENUMTEXTMETRIC + ENUMLOGFONTEXDV)
-    PENUMTEXTMETRIC  lpentm;  // Ptr with in this structure.              ^^^ if Win2k + ^^^
-    DWORD            FontType;
-    PENUMLOGFONTEXDV lpelfedv; // Prt with in this structure.
-    // The rest of the structure is variable in size.
-    // Based on iEnumType and Win32Compat flags,,
-    // if w2k+ {ENUMTEXTMETRIC else NEWTEXTMETRICS} or TEXTMETRIC
-    // if w2k+ {ENUMLOGFONTEXDV else ENUMLOGFONT} or LOGFONT
-} ENUMFONTDATAW, *PENUMFONTDATAW;
+typedef struct _DESIGNVECTORINT {
+  DWORD dvReserved;
+  DWORD dvNumAxes;
+  LONG  dvValues[0];
+} DESIGNVECTORINT, *PDESIGNVECTORINT;
 
+typedef struct _ENUMFONTDATAINT
+{
+   DWORD            dwReserved;
+   DWORD            dwReserved1;
+   ENUMTEXTMETRICW  etmTm;
+} ENUMFONTDATAINT, *PENUMFONTDATAINT;
+
+typedef struct _ENUMFONTDATAW
+{
+   DWORD            dwSize;      // Full size of this structure.
+   ULONG            ulOffsetTM;  // Offset to enfdi in this structure.
+   DWORD            dwFontType;  // If sign set scale enum.
+   ENUMLOGFONTEXW   elfex;
+/* 
+ * Yuam 14.5:
+ * DESIGNVECTOR is a variable-size data structure that specifies the number of 
+ * axes and a value for each axis. 
+ * So it maybe smaller than MM_MAX_NUMAXES.
+ */
+   DESIGNVECTORINT  DesignVectori;
+   ENUMFONTDATAINT  enfdi;
+} ENUMFONTDATAW, *PENUMFONTDATAW;
+                                                                   
+                                                                   
 /* Number Representation */
 typedef struct _EFLOAT_S
 {
