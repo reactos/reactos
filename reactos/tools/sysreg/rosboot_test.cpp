@@ -209,7 +209,7 @@ namespace Sysreg_
 				}
 				else
 				{
-					m_Src = _T("\\\\.\\pipe\\" + pipe;
+					m_Src = _T("\\\\.\\pipe\\") + pipe;
 				}
 #endif				
 			}
@@ -221,7 +221,7 @@ namespace Sysreg_
 #ifdef __LINUX__
 					m_Src = m_BootCmd;
 #else					
-					cerr << "Error: sysreg  doesnot support reading stdio" << endl;
+					cerr << "Error: sysreg does not support reading stdio" << endl;
 					return false;	
 #endif				
 				
