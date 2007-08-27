@@ -139,7 +139,6 @@ VOID NTAPI
 KeQuerySystemTime(
 	OUT PLARGE_INTEGER CurrentTime)
 {
-	DPRINT1("KeQuerySystemTime() unimplemented\n");
 	CurrentTime->QuadPart = 0;
 }
 

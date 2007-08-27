@@ -9,10 +9,13 @@
 #ifndef _TYPEDEFS_HOST_H
 #define _TYPEDEFS_HOST_H
 
+#include <stdlib.h>
 #include <limits.h>
 
 #define UNIMPLEMENTED { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
-#define ASSERT(x) { if (!(x)) { printf("ASSERT at %s:%d failed\n", __FILE__, __LINE__); exit(1); } }
+#define ASSERT(x) { if (!(x)) { printf("Assertion " #x " at %s:%d failed\n", __FILE__, __LINE__); exit(1); } }
+#define DPRINT if (0) printf
+#define DPRINT1 printf
 
 #define NTAPI __stdcall
 #define WINAPI __stdcall
@@ -24,9 +27,13 @@
 #define FALSE 0
 #define TRUE (!(FALSE))
 
+/* FIXME: this value is target specific, host tools MUST not use it 
+ * and this line has to be removed */
+#define PAGE_SIZE 4096
+
 typedef void VOID, *PVOID, *HANDLE;
 typedef HANDLE HKEY, *PHKEY;
-typedef size_t SIZE_T, *PSIZE_T;
+typedef long unsigned int SIZE_T, *PSIZE_T;
 typedef unsigned char UCHAR, *PUCHAR, BYTE, *LPBYTE;
 typedef char CHAR, *PCHAR, *PSTR;
 typedef const char CCHAR;
@@ -48,6 +55,7 @@ typedef int POOL_TYPE;
 
 #define MAXUSHORT USHRT_MAX
 
+#include <pshpack4.h>
 typedef struct _RTL_BITMAP
 {
     ULONG  SizeOfBitMap;
@@ -89,9 +97,12 @@ typedef struct _UNICODE_STRING
     USHORT MaximumLength;
     PWSTR  Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
+#include <poppack.h>
+
 typedef const UNICODE_STRING *PCUNICODE_STRING;
 
 #define NT_SUCCESS(x) ((x)>=0)
+#define FIELD_OFFSET(t,f) ((LONG_PTR)&(((t*)0)->f))
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #define RtlZeroMemory(Destination, Length) memset(Destination, 0, Length)
 #define RtlCopyMemory(Destination, Source, Length) memcpy(Destination, Source, Length)

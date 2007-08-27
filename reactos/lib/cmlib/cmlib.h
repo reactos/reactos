@@ -8,15 +8,48 @@
 #ifndef CMLIB_H
 #define CMLIB_H
 
-#ifdef _TYPEDEFS_HOST_H
-#define REG_OPTION_VOLATILE 1
-#define OBJ_CASE_INSENSITIVE 0x00000040L
-#define USHORT_MAX USHRT_MAX
-#else
- #ifdef CMLIB_HOST
- #include <typedefs64.h>
- #endif
+#ifdef CMLIB_HOST
+#include <typedefs_host.h>
+#include <stdio.h>
+#include <string.h>
+#include <ntstatus.h>
+#endif
+
+#ifndef _TYPEDEFS_HOST_H
  #include <ntddk.h>
+#else
+ #define REG_OPTION_VOLATILE 1
+ #define OBJ_CASE_INSENSITIVE 0x00000040L
+ #define USHORT_MAX USHRT_MAX
+
+VOID NTAPI
+KeQuerySystemTime(
+    OUT PLARGE_INTEGER CurrentTime);
+
+VOID NTAPI
+RtlInitializeBitMap(
+    IN PRTL_BITMAP BitMapHeader,
+    IN PULONG BitMapBuffer,
+    IN ULONG SizeOfBitMap);
+
+ULONG NTAPI
+RtlFindSetBits(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex);
+
+VOID NTAPI
+RtlSetBits(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG StartingIndex,
+    IN ULONG NumberToSet);
+
+VOID NTAPI
+RtlClearAllBits(
+    IN PRTL_BITMAP BitMapHeader);
+
+#define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
+
 #endif
 
 #include <wchar.h>

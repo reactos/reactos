@@ -33,9 +33,6 @@
 #include <typedefs_host.h>
 #include <ntstatus.h>
 
-VOID NTAPI
-KeQuerySystemTime(
-    OUT PLARGE_INTEGER CurrentTime);
 NTSTATUS NTAPI
 RtlAnsiStringToUnicodeString(
     IN OUT PUNICODE_STRING UniDest,
@@ -74,31 +71,7 @@ extern LIST_ENTRY CmiHiveListHead;
 #define min(a, b)  (((a) < (b)) ? (a) : (b))
 #endif
 
-
-/* Debugging macros */
-
-#ifdef _MSC_VER
-#include <stdio.h>
-#include <stdarg.h>
-static void DPRINT1(const char* fmt, ... )
-{
-	va_list args;
-	va_start ( args, fmt );
-	vprintf ( fmt, args );
-	va_end ( args );
-}
-static void DPRINT ( const char* fmt, ... )
-{
-}
-#else
-#define DPRINT1(args...) do { printf("(%s:%d) ",__FILE__,__LINE__); printf(args); } while(0);
-#define DPRINT(args...)
-#endif//_MSC_VER
-#define CHECKPOINT1 do { printf("%s:%d\n",__FILE__,__LINE__); } while(0);
-
-#define CHECKPOINT
-
-#ifdef WINDOWS_HOST
+#ifdef _WIN32
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #else
