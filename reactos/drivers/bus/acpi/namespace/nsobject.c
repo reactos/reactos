@@ -179,7 +179,7 @@ acpi_ns_attach_object (
 
 			/* Check for a recognized Opcode */
 
-			switch ((u8) opcode) {
+			switch (opcode) {
 
 			case AML_OP_PREFIX:
 
