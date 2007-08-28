@@ -84,7 +84,7 @@ namespace Sysreg_
 		ConfigMap::iterator it = m_Map.find (ConfVariable);
 		if (it == m_Map.end ())
 		{
-			cerr << "ConfigParser::getValue failed to find " << ConfVariable << endl;
+			//cerr << "ConfigParser::getValue failed to find " << ConfVariable << endl;
 			return false;
 		}
 		

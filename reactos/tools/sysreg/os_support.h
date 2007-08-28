@@ -62,7 +62,7 @@ namespace System_
 ///
 ///
 
-		static ProcessID createProcess(TCHAR * procname, int procargsnum, TCHAR ** procargs);
+		static ProcessID createProcess(TCHAR * procname, int procargsnum, TCHAR ** procargs, bool wait);
 
 //---------------------------------------------------------------------------------------
 ///

@@ -15,6 +15,7 @@
 //#include "sym_file.h"
 #include "file_reader.h"
 #include "os_support.h"
+#include "env_var.h"
 
 #include <iostream> 
 #include <vector>
@@ -36,6 +37,7 @@ namespace Sysreg_
 /*	using System_::SymbolFile; */
 	using System_::FileReader;
 	using System_::OsSupport;
+    using System_::EnvironmentVariable;
 
 #ifdef UNICODE
 	using std::wofstream;
@@ -74,7 +76,7 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
     bool RosBootTest::executeBootCmd()
     {
-        m_Pid = OsSupport::createProcess ((TCHAR*)m_BootCmd.c_str(), 0, NULL); 
+        m_Pid = OsSupport::createProcess ((TCHAR*)m_BootCmd.c_str(), 0, NULL, false); 
         if (!m_Pid)
         {
             cerr << "Error: failed to launch boot cmd" << m_BootCmd << endl;
@@ -140,15 +142,34 @@ namespace Sysreg_
             string qemuimgdir = qemupath;
             m_HDDImage = _T("ros.img");
 #ifdef __LINUX___            
-                qemuimgdir += _T("qemu-img");
+                qemuimgdir += _T("\\qemu-img");
 #else
-                qemuimgdir += _T("qemu-img.exe");
+                qemuimgdir += _T("\\qemu-img.exe");
 #endif  
             ///
             /// FIXME
             /// call qemu-img to create the tool
             ///
-            cerr << "Creating HDD Image ..." << qemuimgdir << endl;
+            TCHAR * options[] = {
+                                _T("create"),
+                                NULL,
+                                _T("100M"),
+                                NULL
+                                };
+            string output = "output-i386";
+            EnvironmentVariable::getValue(_T("ROS_OUTPUT"), output);
+            output += _T("\\ros.hd");
+            options[1] = (TCHAR*)output.c_str();
+            
+            cerr << "Creating HDD Image ..." << output << endl;
+            if (OsSupport::createProcess ((TCHAR*)qemuimgdir.c_str(), 3, options, true))
+            {
+                m_HDDImage = output;
+            }
+            else
+            {
+                return false;
+            }
         }
         
         if (!bootcmdprovided)
@@ -170,11 +191,11 @@ namespace Sysreg_
 
         	if (bootfromcd)
         	{
-            		m_BootCmd = m_EmuPath + _T(" -serial ") + pipe + _T(" -m ") + m_MaxMem + _T(" -hda ") + m_HDDImage +  _T(" -boot d -cdrom ") + m_CDImage;
+            		m_BootCmd = m_EmuPath + _T(" -serial ") + pipe + _T(" -m ") + m_MaxMem + _T(" -hda ") + m_HDDImage +  _T(" -boot d -cdrom ") + m_CDImage + _T(" -L ") + qemupath;
         	}
         	else
         	{
-            		m_BootCmd = m_EmuPath + _T(" -L ") + qemupath + _T(" -m ") + m_MaxMem + _T(" -boot c -serial ") + pipe;
+            		m_BootCmd = m_EmuPath + _T(" -L ") + qemupath + _T(" -m ") + m_MaxMem + _T(" -boot c -serial ") + pipe + _T(" -hda ") + m_HDDImage;
         	}
 
         	if (m_KillEmulator == _T("yes"))

@@ -25,36 +25,66 @@ namespace System_
 		return ret;
 	}
 
-	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs)
+	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs, bool wait)
 	{
 		STARTUPINFO siStartInfo;
 		PROCESS_INFORMATION piProcInfo; 
 		OsSupport::ProcessID pid;
-
-		UNREFERENCED_PARAMETER(procargsnum);
-		UNREFERENCED_PARAMETER(procargs);
-
+        DWORD length = 0;
+        TCHAR * szBuffer;
+        TCHAR * cmd;
 		ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
 		ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 
 		siStartInfo.cb = sizeof(STARTUPINFO);
 		siStartInfo.wShowWindow = SW_SHOWNORMAL;
 		siStartInfo.dwFlags = STARTF_USESHOWWINDOW;
+        
+        if (procargsnum)
+        {
+            for (int i = 0; i < procargsnum; i++)
+            {
+                length += _tcslen(procargs[i]);
+            }
 
-		LPTSTR command = _tcsdup(procname);
+            length += procargsnum;
+            szBuffer = (TCHAR*)malloc(length * sizeof(TCHAR));
+            length = 0;
+            for (int i = 0; i < procargsnum; i++)
+            {
+                _tcscpy(&szBuffer[length], procargs[i]);
+                length += _tcslen(procargs[i]);
+                szBuffer[length] = _T(' ');
+                length++;
+            }
+            length = _tcslen(procname) + _tcslen(szBuffer) + 2;
+            cmd = (TCHAR*)malloc(length * sizeof(TCHAR));
+            _tcscpy(cmd, procname);
+            _tcscat(cmd, _T(" "));
+            _tcscat(cmd, szBuffer);
+            free(szBuffer);
+        }
+        else
+        {
+            cmd = _tcsdup(procname);
 
-		if (!CreateProcess(NULL, procname, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &siStartInfo, &piProcInfo))
+        }
+		if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &siStartInfo, &piProcInfo))
 		{
-			cerr << "Error: CreateProcess failed " << command <<endl;
+            cerr << "Error: CreateProcess failed " << cmd << endl;
 			pid = 0;
 		}
 		else
 		{
 			pid = piProcInfo.dwProcessId;
+            if (wait)
+            {
+                WaitForSingleObject(piProcInfo.hThread, INFINITE);
+            }
 			CloseHandle(piProcInfo.hProcess);
 			CloseHandle(piProcInfo.hThread);
 		}
-		free(command);
+		free(cmd);
 		return pid;
 	}
    	void OsSupport::sleep(long value)
