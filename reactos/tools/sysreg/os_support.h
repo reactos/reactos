@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <sys/wait.h>
 #endif
 
 #include "user_types.h"
