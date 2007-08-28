@@ -161,14 +161,6 @@ NtGdiCreatePolygonRgn(CONST PPOINT  pt,
                            INT  Count,
                            INT  PolyFillMode);
 
-/* Use NtGdiPolyPolyDraw with PolyPolyRgn. */
-HRGN
-STDCALL
-NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
-                               CONST PINT  PolyCounts,
-                               INT  Count,
-                               INT  PolyFillMode);
-
 /* Meta are user-mode. */
 BOOL
 STDCALL
@@ -505,21 +497,6 @@ BOOL
 STDCALL
 NtGdiPolyTextOut(HDC  hDC,
                       CONST LPPOLYTEXTW txt,
-                      int  Count);
-
-/* Use NtGdiPolyPolyDraw with GdiPolyPolygon. */
-BOOL
-STDCALL
-NtGdiPolygon(HDC  hDC,
-                  CONST PPOINT  Points,
-                  int  Count);
-
-/* Use NtGdiPolyPolyDraw with GdiPolyPolygon. */
-BOOL
-STDCALL
-NtGdiPolyPolygon(HDC  hDC,
-                      CONST LPPOINT  Points,
-                      CONST LPINT  PolyCounts,
                       int  Count);
 
 /* Call UserRealizePalette. */

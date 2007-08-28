@@ -3423,8 +3423,8 @@ IntCreatePolyPolgonRgn(POINT *Pts,
 
 
 HRGN
-STDCALL
-NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
+FASTCALL
+GdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                           CONST PINT  PolyCounts,
                           INT  Count,
                           INT  PolyFillMode)

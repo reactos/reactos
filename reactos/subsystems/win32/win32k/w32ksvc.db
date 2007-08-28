@@ -804,8 +804,6 @@ NtGdiPolyline                           3
 NtGdiPolylineTo                         3
 NtGdiPolyPolyline                       4
 NtGdiPolyTextOut                        3
-NtGdiPolygon                            3
-NtGdiPolyPolygon                        4
 NtGdiRealizePalette                     1
 NtGdiRemoveFontResource                 1
 #
