@@ -1225,10 +1225,10 @@ BOOL WINAPI FileIconInit(BOOL bFullInit)
 	return 0;
 }
 /*************************************************************************
- * IsUserAdmin					[SHELL32.680] NT 4.0
+ * IsUserAnAdmin					[SHELL32.680] NT 4.0
  *
  */
-HRESULT WINAPI IsUserAdmin(void)
+BOOL WINAPI IsUserAnAdmin(VOID)
 {	FIXME("stub\n");
 	return TRUE;
 }

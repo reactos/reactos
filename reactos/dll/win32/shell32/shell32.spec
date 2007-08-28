@@ -244,7 +244,7 @@
  654 stdcall @(long long) shell32_654 # ReadCabinetState@8
 
  660 stdcall -noname FileIconInit(long)
- 680 stdcall -noname IsUserAdmin()
+ 680 stdcall -noname IsUserAnAdmin()
 
  714 stdcall @(ptr) SHELL32_714 # PathIsTemporaryW
  730 stdcall -noname RestartDialogEx(long wstr long long)
