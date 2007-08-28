@@ -12,6 +12,16 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#ifndef __fastcall
+#define __fastcall __attribute__((fastcall))
+#endif
+#ifndef __cdecl
+#define __cdecl __attribute__((cdecl))
+#endif
+#ifndef __stdcall
+#define __stdcall __attribute__((stdcall))
+#endif
+
 #define UNIMPLEMENTED { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
 #define ASSERT(x) { if (!(x)) { printf("Assertion " #x " at %s:%d failed\n", __FILE__, __LINE__); exit(1); } }
 #define DPRINT if (0) printf

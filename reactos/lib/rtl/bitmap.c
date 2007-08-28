@@ -36,6 +36,7 @@ static const signed char NTDLL_mostSignificant[16] = {
 
 static
 int
+__cdecl
 NTDLL_RunSortFn(const void *lhs,
                 const void *rhs)
 {
