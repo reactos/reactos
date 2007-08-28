@@ -25,7 +25,7 @@ DBGPRINT_SOURCES = $(addprefix $(DBGPRINT_BASE_), \
 DBGPRINT_OBJECTS = \
   $(addprefix $(INTERMEDIATE_), $(DBGPRINT_SOURCES:.c=.o))
 
-DBGPRINT_HOST_CFLAGS = $(TOOLS_CFLAGS) -D__USE_W32API -Iinclude -Iinclude/reactos -Iinclude/psdk
+DBGPRINT_HOST_CFLAGS = $(TOOLS_CFLAGS) -D__USE_W32API -Iinclude -Iinclude/reactos -Iinclude/psdk -Iinclude$(SEP)crt -Iinclude/reactos/libs -I$(INTERMEDIATE_)$(SEP)include$(SEP)psdk
 
 DBGPRINT_HOST_LFLAGS = $(TOOLS_LFLAGS) -lntdll
 
