@@ -60,6 +60,8 @@ static SETUPDATA SetupData;
 
 
 /* FUNCTIONS ****************************************************************/
+BOOL
+GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength);
 
 #ifdef VMWINST
 static BOOL
@@ -779,7 +781,7 @@ SetKeyboardLayoutName(HWND hwnd)
 
 
 static BOOL
-RunControlPanelApplet(HWND hwnd, TCHAR *lpCommandLine)
+RunControlPanelApplet(HWND hwnd, WCHAR *lpCommandLine)
 {
   STARTUPINFO StartupInfo;
   PROCESS_INFORMATION ProcessInformation;
@@ -787,7 +789,7 @@ RunControlPanelApplet(HWND hwnd, TCHAR *lpCommandLine)
   ZeroMemory(&StartupInfo, sizeof(STARTUPINFO));
   StartupInfo.cb = sizeof(STARTUPINFO);
 
-  if (!CreateProcess(NULL,
+  if (!CreateProcessW(NULL,
                        lpCommandLine,
                        NULL,
                        NULL,
@@ -815,7 +817,7 @@ LocalePageDlgProc(HWND hwndDlg,
                   LPARAM lParam)
 {
   PSETUPDATA SetupData;
-  TCHAR szBuffer[MAX_PATH];
+  WCHAR szBuffer[1024];
 
   /* Retrieve pointer to the global setup data */
   SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -841,7 +843,7 @@ LocalePageDlgProc(HWND hwndDlg,
           {
         case IDC_CUSTOMLOCALE:
           {
-            _tcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5"));
+            wcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5"));
             RunControlPanelApplet(hwndDlg, szBuffer);
             /* FIXME: Update input locale name */
           }
@@ -849,7 +851,7 @@ LocalePageDlgProc(HWND hwndDlg,
 
         case IDC_CUSTOMLAYOUT:
           {
-            _tcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL main.cpl,@1"));
+            wcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL main.cpl,@1"));
             RunControlPanelApplet(hwndDlg, szBuffer);
           }
           break;
@@ -868,7 +870,16 @@ LocalePageDlgProc(HWND hwndDlg,
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 if (SetupData->UnattendSetup)
                   {
-                    _tcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\""));
+                    WCHAR szPath[MAX_PATH];
+                    if (GetRosInstallCD(szPath, MAX_PATH))
+                      {
+                        wsprintf(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"%s\\reactos\\unattend.inf\"", szPath);
+                      }
+                    else
+                      {
+                        wcscpy(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\"");
+                      }
+
                     RunControlPanelApplet(hwndDlg, szBuffer);
                     SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
                     return TRUE;
@@ -2144,6 +2155,89 @@ ProcessUnattendInf(HINF hUnattendedInf)
   return TRUE;
 }
 
+/*
+ * GetRosInstallCD should find the path to ros installation medium
+ * BUG 1
+ * If there are more than one CDDrive in it containing a ReactOS 
+ * installation cd, then it will pick the first one regardless if
+ * it is really the installation cd
+ * 
+ * The best way to implement this is to set the key
+ * HKLM\Software\Microsoft\Windows NT\CurrentVersion\SourcePath (REG_SZ)
+ */
+
+BOOL
+GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
+{
+  WCHAR szDrives[512];
+  WCHAR szDrive[] = L"D:\\";
+  DWORD dwLength, dwIndex;
+  WCHAR * pDrive;
+  dwLength = GetLogicalDriveStringsW(sizeof(szDrives) / sizeof(WCHAR), szDrives);
+
+  if (dwLength > (sizeof(szDrives) / sizeof(WCHAR)) || dwLength == 0)
+  {
+    /* buffer too small or failure */
+     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"GetLogicalDriveStringsW failed");
+    return FALSE;
+  }
+
+  pDrive = szDrives;
+  for (dwIndex = 0; dwIndex < dwLength; dwIndex++)
+  {
+    szDrive[0] = pDrive[dwIndex];
+    if (GetDriveType(szDrive) == DRIVE_CDROM)
+    {
+        WCHAR szBuffer[MAX_PATH];
+        wcscpy(szBuffer, szDrive);
+        wcscat(szBuffer, L"reactos\\ntoskrnl.exe");
+        LogItem(SYSSETUP_SEVERITY_INFORMATION, szBuffer);
+        if (FileExists(szBuffer, NULL))
+        {
+            wcsncpy(szPath, szDrive, dwPathLength);
+            return TRUE;
+        }
+    }
+  }
+  return FALSE;
+}
+
+VOID
+ProcessUnattendSetup()
+{
+  WCHAR szPath[MAX_PATH];
+  HINF hUnattendedInf;
+  DWORD dwLength;
+
+  if (!GetRosInstallCD(szPath, MAX_PATH))
+  {
+    /* no cd drive found */
+      return;
+  }
+
+  dwLength = wcslen(szPath);
+  if (dwLength + 21 > MAX_PATH)
+  {
+    /* FIXME 
+     * allocate bigger buffer 
+     */
+    return;
+  }
+
+  wcscat(szPath, L"reactos\\unattend.inf");
+
+  hUnattendedInf = SetupOpenInfFileW(szPath,
+                           NULL,
+                           INF_STYLE_OLDNT,
+                           NULL);
+
+  if (hUnattendedInf != INVALID_HANDLE_VALUE)
+  {
+    SetupData.UnattendSetup = ProcessUnattendInf(hUnattendedInf);
+    SetupCloseInfFile(hUnattendedInf);
+  }
+}
+
 
 VOID
 InstallWizard(VOID)
@@ -2152,21 +2246,12 @@ InstallWizard(VOID)
   HPROPSHEETPAGE ahpsp[8];
   PROPSHEETPAGE psp = {0};
   UINT nPages = 0;
-  HINF hUnattendedInf;
 
   /* Clear setup data */
   ZeroMemory(&SetupData, sizeof(SETUPDATA));
    
-  hUnattendedInf = SetupOpenInfFileW(L"unattend.inf",
-                           NULL,
-                           INF_STYLE_OLDNT,
-                           NULL);
+  ProcessUnattendSetup();
   
-  if (hUnattendedInf != INVALID_HANDLE_VALUE)
-  {
-    SetupData.UnattendSetup = ProcessUnattendInf(hUnattendedInf);
-    SetupCloseInfFile(hUnattendedInf);
-  }
 
   /* Create the Welcome page */
   psp.dwSize = sizeof(PROPSHEETPAGE);
