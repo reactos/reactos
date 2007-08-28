@@ -161,7 +161,7 @@ ChangeListViewText(PMAIN_WND_INFO Info,
         {
             LPTSTR lpDescription;
 
-            lpDescription = GetDescription(Info->pCurrentService->lpServiceName);
+            lpDescription = GetServiceDescription(Info->pCurrentService->lpServiceName);
 
             item.pszText = lpDescription;
             SendMessage(Info->hListView,

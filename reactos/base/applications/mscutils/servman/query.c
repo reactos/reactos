@@ -27,29 +27,25 @@ GetSelectedService(PMAIN_WND_INFO Info)
 }
 
 
-/* get vendor of service binary */
-LPTSTR
-GetExecutablePath(PMAIN_WND_INFO Info)
+LPQUERY_SERVICE_CONFIG
+GetServiceConfig(LPTSTR lpServiceName)
 {
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hSc = NULL;
     LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
     DWORD BytesNeeded = 0;
-    LPTSTR lpExePath = NULL;
 
-    /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL,
                                NULL,
                                SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCManager == NULL)
     {
         GetError();
-        return FALSE;
+        return NULL;
     }
 
-    /* get a handle to the service requested for starting */
     hSc = OpenService(hSCManager,
-                      Info->pCurrentService->lpServiceName,
+                      lpServiceName,
                       SERVICE_QUERY_CONFIG);
     if (hSc == NULL)
     {
@@ -70,32 +66,101 @@ GetExecutablePath(PMAIN_WND_INFO Info)
             if (pServiceConfig == NULL)
                 goto cleanup;
 
-            if (QueryServiceConfig(hSc,
-                                   pServiceConfig,
-                                   BytesNeeded,
-                                   &BytesNeeded))
+            if (!QueryServiceConfig(hSc,
+                                    pServiceConfig,
+                                    BytesNeeded,
+                                    &BytesNeeded))
             {
-                lpExePath = HeapAlloc(ProcessHeap,
-                                      0,
-                                      (_tcslen(pServiceConfig->lpBinaryPathName) +1 ) * sizeof(TCHAR));
+                HeapFree(ProcessHeap,
+                         0,
+                         pServiceConfig);
 
-                _tcscpy(lpExePath, pServiceConfig->lpBinaryPathName);
+                pServiceConfig = NULL;
             }
         }
     }
 
 cleanup:
-    if (pServiceConfig)
-        HeapFree(ProcessHeap,
-                 0,
-                 pServiceConfig);
     if (hSCManager != NULL)
         CloseServiceHandle(hSCManager);
     if (hSc != NULL)
         CloseServiceHandle(hSc);
 
-    return lpExePath;
+    return pServiceConfig;
 }
+
+
+LPTSTR
+GetServiceDescription(LPTSTR lpServiceName)
+{
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hSc = NULL;
+    SERVICE_DESCRIPTION *pServiceDescription = NULL;
+    LPTSTR lpDescription = NULL;
+    DWORD BytesNeeded = 0;
+
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_ENUMERATE_SERVICE);
+    if (hSCManager == NULL)
+    {
+        GetError();
+        return NULL;
+    }
+
+    hSc = OpenService(hSCManager,
+                      lpServiceName,
+                      SERVICE_QUERY_CONFIG);
+    if (hSc)
+    {
+        if (!QueryServiceConfig2(hSc,
+                                 SERVICE_CONFIG_DESCRIPTION,
+                                 NULL,
+                                 0,
+                                 &BytesNeeded))
+        {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                pServiceDescription = (SERVICE_DESCRIPTION *) HeapAlloc(ProcessHeap,
+                                                                        0,
+                                                                        BytesNeeded);
+                if (pServiceDescription == NULL)
+                    goto cleanup;
+
+                if (QueryServiceConfig2(hSc,
+                                        SERVICE_CONFIG_DESCRIPTION,
+                                        (LPBYTE)pServiceDescription,
+                                        BytesNeeded,
+                                        &BytesNeeded))
+                {
+                    if (pServiceDescription->lpDescription)
+                    {
+                        lpDescription = HeapAlloc(ProcessHeap,
+                                                  0,
+                                                  (_tcslen(pServiceDescription->lpDescription) + 1) * sizeof(TCHAR));
+                        if (lpDescription)
+                            _tcscpy(lpDescription,
+                                    pServiceDescription->lpDescription);
+                    }
+                }
+            }
+        }
+    }
+
+cleanup:
+    if (pServiceDescription)
+        HeapFree(ProcessHeap,
+                 0,
+                 pServiceDescription);
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
+    if (hSc != NULL)
+        CloseServiceHandle(hSc);
+
+    return lpDescription;
+}
+
+
 
 
 static BOOL
@@ -206,6 +271,7 @@ BOOL
 RefreshServiceList(PMAIN_WND_INFO Info)
 {
     ENUM_SERVICE_STATUS_PROCESS *pService;
+    LPTSTR lpDescription;
     LVITEM lvItem;
     TCHAR szNumServices[32];
     TCHAR szStatus[64];
@@ -223,7 +289,6 @@ RefreshServiceList(PMAIN_WND_INFO Info)
         for (Index = 0; Index < NumServices; Index++)
         {
             HKEY hKey = NULL;
-            LPTSTR lpDescription = NULL;
             LPTSTR lpLogOnAs = NULL;
             DWORD StartUp = 0;
             DWORD dwValueSize;
@@ -260,7 +325,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
             lvItem.iItem = ListView_InsertItem(Info->hListView, &lvItem);
 
             /* set the description */
-            if ((lpDescription = GetDescription(pService->lpServiceName)))
+            if ((lpDescription = GetServiceDescription(pService->lpServiceName)))
             {
                 lvItem.pszText = lpDescription;
                 lvItem.iSubItem = 1;
