@@ -526,17 +526,14 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 	void RosBootTest::cleanup()
 	{
-        	m_DataSource->closeSource();
-		if (m_KillEmulator == "yes")
-		{
-        		OsSupport::sleep(3 * CLOCKS_PER_SEC);
-        		if (m_Pid)
-        		{
-		    		OsSupport::terminateProcess (m_Pid);
-        		}
-        	}	
+        m_DataSource->closeSource();
+        OsSupport::sleep(3 * CLOCKS_PER_SEC);
+        if (m_Pid)
+        {
+			OsSupport::terminateProcess (m_Pid);
+        }
 		delete m_DataSource;
-
+        m_DataSource = NULL;
 	}
     
 //---------------------------------------------------------------------------------------
@@ -819,7 +816,7 @@ namespace Sysreg_
 
 			if (!m_DataSource->readSource (vect))
 			{
-				cerr << "No data read" << endl;
+				cerr << "No data read" << GetLastError() << endl;
 				continue;				
 			}
 			if (write_log)
