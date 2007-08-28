@@ -3306,6 +3306,10 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	string bootcdDirectory = "cd";
+	string srcunattend = NormalizeFilename("boot/bootdata/bootcdregtest/unattend.inf");
+	string tarunattend = NormalizeFilename("$(OUTPUT)/cd/reactos/unattend.inf");
+
+	vector<string> vCdFiles;
 	string bootcd = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdDirectory + sSep ),
 		backend->outputDirectory );
@@ -3313,8 +3317,9 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	string bootloader;
 	string IsoName;
 
-	if (module.name == "bootcdregtest")
+	if (module.type == IsoRegTest)
 	{
+		vCdFiles.push_back (srcunattend.c_str ());
 		bootloader = "isobtrt.o";
 		IsoName = "ReactOS-RegTest.iso";
 	}
@@ -3338,7 +3343,6 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 		backend->outputDirectory );
 	string reactosDff = NormalizeFilename ( "boot" + sSep + "bootdata" + sSep + "packages" + sSep + "reactos.dff" );
 	string cdDirectories = GetCdDirectories ( bootcdDirectory );
-	vector<string> vCdFiles;
 	GetCdFiles ( vCdFiles );
 	string cdFiles = v2s ( vCdFiles, 5 );
 
@@ -3366,6 +3370,16 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          reactosInf.c_str () );
 	OutputBootstrapfileCopyCommands ( bootcdDirectory );
 	OutputCdfileCopyCommands ( bootcdDirectory );
+	if (module.type == IsoRegTest)
+	{
+		fprintf ( fMakefile,
+				  "\t$(ECHO_CP)\n" );
+		fprintf ( fMakefile,
+				  "\t${cp} %s %s 1>$(NUL)\n",
+				  srcunattend.c_str (),
+				  tarunattend.c_str () );
+	}
+
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CDMAKE_TARGET) -v -j -m -b %s %s REACTOS %s\n",
