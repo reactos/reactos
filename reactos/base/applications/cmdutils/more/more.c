@@ -30,11 +30,11 @@ HANDLE hKeyboard;
 static VOID
 GetScreenSize (PSHORT maxx, PSHORT maxy)
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
+   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-	GetConsoleScreenBufferInfo (hStdOut, &csbi);
-		*maxx = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
-		*maxy = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
+   GetConsoleScreenBufferInfo (hStdOut, &csbi);
+      *maxx = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
+      *maxy = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
 
 }
 
@@ -42,40 +42,40 @@ GetScreenSize (PSHORT maxx, PSHORT maxy)
 static
 VOID ConOutPuts (LPTSTR szText)
 {
-	DWORD dwWritten;
-    
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
+   DWORD dwWritten;
+   
+   WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
+   WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
 }
 
 
 static VOID
 ConInKey (VOID)
 {
-	INPUT_RECORD ir;
-	DWORD dwRead;
+   INPUT_RECORD ir;
+   DWORD dwRead;
 
-	do
-	{
-		ReadConsoleInput (hKeyboard, &ir, 1, &dwRead);
-		if ((ir.EventType == KEY_EVENT) &&
-			(ir.Event.KeyEvent.bKeyDown == TRUE))
-			return;
-	}
-	while (TRUE);
+   do
+   {
+      ReadConsoleInput (hKeyboard, &ir, 1, &dwRead);
+      if ((ir.EventType == KEY_EVENT) &&
+         (ir.Event.KeyEvent.bKeyDown == TRUE))
+         return;
+   }
+   while (TRUE);
 }
 
 
 static VOID
 WaitForKey (VOID)
 {
-	DWORD dwWritten;
+   DWORD dwWritten;
 
     WriteFile (hStdErr, szCont , szContLength, &dwWritten, NULL);
 
-	ConInKey();
+   ConInKey();
 
-	WriteFile (hStdErr, _T("\n"), 1, &dwWritten, NULL);
+   WriteFile (hStdErr, _T("\n"), 1, &dwWritten, NULL);
 
 //	FlushConsoleInputBuffer (hConsoleIn);
 }
@@ -84,125 +84,125 @@ WaitForKey (VOID)
 //INT CommandMore (LPTSTR cmd, LPTSTR param)
 int main (int argc, char **argv)
 {
-	SHORT maxx,maxy;
-	SHORT line_count=0,ch_count=0;
-	DWORD i, last;
-	HANDLE hFile = INVALID_HANDLE_VALUE;
-	TCHAR szFullPath[MAX_PATH];
+   SHORT maxx,maxy;
+   SHORT line_count=0,ch_count=0;
+   DWORD i, last;
+   HANDLE hFile = INVALID_HANDLE_VALUE;
+   TCHAR szFullPath[MAX_PATH];
     TCHAR szMsg[1024];
-	/*reading/writing buffer*/
-	TCHAR *buff;
+   /*reading/writing buffer*/
+   TCHAR *buff;
 
-	/*bytes written by WriteFile and ReadFile*/
-	DWORD dwRead,dwWritten;
+   /*bytes written by WriteFile and ReadFile*/
+   DWORD dwRead,dwWritten;
 
-	/*ReadFile() return value*/
-	BOOL bRet;
+   /*ReadFile() return value*/
+   BOOL bRet;
 
 
-	hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	hStdErr = GetStdHandle(STD_ERROR_HANDLE);
+   hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+   hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+   hStdErr = GetStdHandle(STD_ERROR_HANDLE);
     hApp = GetModuleHandle(NULL);
 
-	buff=malloc(4096);
-    if (!buff)
-    {
-        ConOutPuts(_T("Error: no memory"));
-        return 0;
-    }
+   buff=malloc(4096);
+   if (!buff)
+   {
+      ConOutPuts(_T("Error: no memory"));
+      return 1;
+   }
 
-	if (argc > 1 && _tcsncmp (argv[1], _T("/?"), 2) == 0)
-	{
-        if (LoadString(hApp, IDS_USAGE, buff, 4096 / sizeof(TCHAR)) < 4096 / sizeof(TCHAR))
-        {
-            CharToOem(buff, buff);
-            ConOutPuts(buff);
-        }
+   if (argc > 1 && _tcsncmp (argv[1], _T("/?"), 2) == 0)
+   {
+      if (LoadString(hApp, IDS_USAGE, buff, 4096 / sizeof(TCHAR)) < 4096 / sizeof(TCHAR))
+      {
+         CharToOem(buff, buff);
+         ConOutPuts(buff);
+      }
 
-        free(buff);
-		return 0;
-	}
+      free(buff);
+      return 0;
+   }
 
-	hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ,
-	                        0,NULL,OPEN_ALWAYS,0,0);
+   hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ,
+                           0,NULL,OPEN_ALWAYS,0,0);
 
-	GetScreenSize(&maxx,&maxy);
+   GetScreenSize(&maxx,&maxy);
 
 
 
-	FlushConsoleInputBuffer (hKeyboard);
+   FlushConsoleInputBuffer (hKeyboard);
 
-	if(argc > 1)
-	{
-		GetFullPathNameA(argv[1], MAX_PATH, szFullPath, NULL);
-		hFile = CreateFile (szFullPath, 
+   if(argc > 1)
+   {
+      GetFullPathNameA(argv[1], MAX_PATH, szFullPath, NULL);
+      hFile = CreateFile (szFullPath, 
                             GENERIC_READ,
-	                        0,
+                           0,
                             NULL,
                             OPEN_EXISTING,
                             0,
                             0);
-        if (hFile == INVALID_HANDLE_VALUE)
-		{
-            if (LoadString(hApp, IDS_FILE_ACCESS, szMsg, sizeof(szMsg) / sizeof(TCHAR)) < sizeof(szMsg) / sizeof(TCHAR))
-            {
-                _stprintf(buff, szMsg, szFullPath);
-                CharToOem(buff, buff);
-			    ConOutPuts(buff);
-            }
+      if (hFile == INVALID_HANDLE_VALUE)
+      {
+         if (LoadString(hApp, IDS_FILE_ACCESS, szMsg, sizeof(szMsg) / sizeof(TCHAR)) < sizeof(szMsg) / sizeof(TCHAR))
+         {
+            _stprintf(buff, szMsg, szFullPath);
+            CharToOem(buff, buff);
+            ConOutPuts(buff);
+         }
 
-            free(buff);
-            return 0;
-		}
-	}
-	else
-	{
-		hFile = hStdIn;
-	}
+         free(buff);
+         return 0;
+      }
+   }
+   else
+   {
+      hFile = hStdIn;
+   }
 
     if (!LoadString(hApp, IDS_CONTINUE, szCont, sizeof(szCont) / sizeof(TCHAR)))
     {
-        /* fail back to english */
-        _tcscpy(szCont, _T("--- continue ---"));
+        /* Shouldn't happen, so exit */
+        return 1;
     }
     szContLength = _tcslen(szCont);
 
 
 
-	do
-	{
-		bRet = ReadFile(hFile,buff,4096,&dwRead,NULL);
+   do
+   {
+      bRet = ReadFile(hFile,buff,4096,&dwRead,NULL);
 
-		for(last=i=0;i<dwRead && bRet;i++)
-		{
-			ch_count++;
-			if(buff[i] == _T('\n') || ch_count == maxx)
-			{
-				ch_count=0;
-				line_count++;
-				if (line_count == maxy)
-				{
-					line_count = 0;
-					WriteFile(hStdOut,&buff[last], i-last+1, &dwWritten, NULL);
-					last=i+1;
-					FlushFileBuffers (hStdOut);
-					WaitForKey ();
-				}
-			}
-		}
-		if (last<dwRead && bRet)
-			WriteFile(hStdOut,&buff[last], dwRead-last, &dwWritten, NULL);
+      for(last=i=0;i<dwRead && bRet;i++)
+      {
+         ch_count++;
+         if(buff[i] == _T('\n') || ch_count == maxx)
+         {
+            ch_count=0;
+            line_count++;
+            if (line_count == maxy)
+            {
+               line_count = 0;
+               WriteFile(hStdOut,&buff[last], i-last+1, &dwWritten, NULL);
+               last=i+1;
+               FlushFileBuffers (hStdOut);
+               WaitForKey ();
+            }
+         }
+      }
+      if (last<dwRead && bRet)
+         WriteFile(hStdOut,&buff[last], dwRead-last, &dwWritten, NULL);
 
-	}
-	while(dwRead>0 && bRet);
+   }
+   while(dwRead>0 && bRet);
 
-	free (buff);
-	CloseHandle (hKeyboard);
-	if (hFile != hStdIn)
-		CloseHandle (hFile);
+   free (buff);
+   CloseHandle (hKeyboard);
+   if (hFile != hStdIn)
+      CloseHandle (hFile);
 
-	return 0;
+   return 0;
 }
 
 /* EOF */
