@@ -1,16 +1,19 @@
 ; Display.INF
 ;
-; Installation file for the Display class
+; Installation file for the display adapters and display class
 ;
 [Version]
 Signature  = "$Windows NT$"
 ;Signature  = "$ReactOS$"
 LayoutFile = layout.inf
-
 Class      = Display
-ClassGUID  = {4d36e968-e325-11ce-bfc1-08002be10318}
+ClassGUID  = {4D36E968-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/18/2005,1.00
+DriverVer  = 08/25/2007,1.10
+
+[DestinationDirs]
+DefaultDestDir = 12
+VGA.Display_CopyFiles.NT = 11
 
 [ClassInstall32.NT]
 AddReg = DisplayClass.NT.AddReg
@@ -20,6 +23,50 @@ HKR, , ,                0, %DisplayClassName%
 HKR, , Icon,            0, "-1"
 HKR, , Installer32,     0, "desk.cpl,DisplayClassInstaller"
 
+[Manufacturer]
+%StdMfg% = StdMfg
+
+[StdMfg]
+%VGA.DeviceDesc% = VGA_Inst,PCI\CC_0001
+%VGA.DeviceDesc% = VGA_Inst,PCI\CC_0300
+%VGA.DeviceDesc% = VGA_Inst,PCI\CC_0301
+
+;---------------------------- VGA/VBE DRIVER ----------------------------
+
+[VGA_Inst.NT]
+CopyFiles = VGA.Miniport_CopyFiles.NT, VGA.Display_CopyFiles.NT
+
+[VGA.Miniport_CopyFiles.NT]
+vgamp.sys
+vbemp.sys
+
+[VGA.Display_CopyFiles.NT]
+vgaddi.dll
+framebuf.dll
+
+[VGA_Inst.NT.Services]
+AddService = VGA, , VGA_Service_Inst
+AddService = VBE, 0x00000002, VBE_Service_Inst
+
+[VGA_Service_Inst]
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 0
+ServiceBinary = %12%\vgamp.sys
+LoadOrderGroup = Video Save
+
+[VBE_Service_Inst]
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 0
+ServiceBinary = %12%\vbemp.sys
+LoadOrderGroup = Video SVGA Save
+
+;-------------------------------- STRINGS -------------------------------
+
 [Strings]
 ReactOS = "ReactOS Team"
 DisplayClassName = "Display Adapters"
+
+StdMfg = "(Standard display adapters)"
+VGA.DeviceDesc = "VGA-compatible graphic card"
