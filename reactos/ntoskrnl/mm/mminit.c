@@ -296,6 +296,34 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
+PCHAR
+MemType[]  = {
+    "ExceptionBlock    ", // ?
+   "SystemBlock       ", // ?
+   "Free              ",
+   "Bad               ", // used
+   "LoadedProgram     ", // == Free
+   "FirmwareTemporary ", // == Free
+   "FirmwarePermanent ", // == Bad
+   "OsloaderHeap      ", // used
+   "OsloaderStack     ", // == Free
+   "SystemCode        ",
+   "HalCode           ",
+   "BootDriver        ", // not used
+   "ConsoleInDriver   ", // ?
+   "ConsoleOutDriver  ", // ?
+   "StartupDpcStack   ", // ?
+   "StartupKernelStack", // ?
+   "StartupPanicStack ", // ?
+   "StartupPcrPage    ", // ?
+   "StartupPdrPage    ", // ?
+   "RegistryData      ", // used
+   "MemoryData        ", // not used
+   "NlsData           ", // used
+   "SpecialMemory     ", // == Bad
+   "BBTMemory         " // == Bad
+};
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -318,6 +346,25 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
           FirstKrnlPhysAddr,
           LastKrnlPhysAddr,
           LastKernelAddress);
+
+    /* Dump memory descriptors */
+    {
+        PLIST_ENTRY NextEntry;
+        PMEMORY_ALLOCATION_DESCRIPTOR Md;
+        ULONG TotalPages = 0;
+
+        DPRINT1("Base\t\tLength\t\tType\n");
+        for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+             NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
+             NextEntry = NextEntry->Flink)
+        {
+            Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
+            DPRINT1("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
+            TotalPages += Md->PageCount;
+        }
+
+        DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
+    }
 
    /* Set the page directory */
    PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();

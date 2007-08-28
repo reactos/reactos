@@ -23,6 +23,12 @@ ULONG MmFreeLdrPageDirectoryEnd;
 /* FreeLDR Loader Data */
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
 BOOLEAN AcpiTableDetected;
+ADDRESS_RANGE KeMemoryMap[64];
+ULONG KeMemoryMapRangeCount;
+
+/* NT Loader Module/Descriptor Count */
+ULONG BldrCurrentMd;
+ULONG BldrCurrentMod;
 
 /* NT Loader Data. Eats up about 80KB! */
 LOADER_PARAMETER_BLOCK BldrLoaderBlock;                 // 0x0000
@@ -44,6 +50,15 @@ ARC_DISK_SIGNATURE BldrDiskInfo[32];                    // 0x1413C
                                                         // 0x1443C
 
 /* FUNCTIONS *****************************************************************/
+
+PMEMORY_ALLOCATION_DESCRIPTOR
+NTAPI
+KiRosGetMdFromArray(VOID)
+{
+    /* Return the next MD from the list, but make sure we don't overflow */
+    if (BldrCurrentMd > 64) KEBUGCHECK(0);
+    return &BldrMemoryDescriptors[BldrCurrentMd++];
+}
 
 VOID
 NTAPI
@@ -69,6 +84,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
     MmFreeLdrMemHigher = RosLoaderBlock->MemHigher;
     MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
+    if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
 
     /* Set the NT Loader block and initialize it */
     *NtLoaderBlock = LoaderBlock = &BldrLoaderBlock;
@@ -89,6 +105,64 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     InitializeListHead(&LoaderBlock->BootDriverListHead);
     InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
+    /* Create one large blob of free memory */
+    MdEntry = KiRosGetMdFromArray();
+    MdEntry->MemoryType = LoaderFree;
+    MdEntry->BasePage = 0;
+    MdEntry->PageCount = MmFreeLdrMemHigher / 4;
+    InsertTailList(&LoaderBlock->MemoryDescriptorListHead, &MdEntry->ListEntry);
+
+    /*
+     * FIXME: Instead of just "inserting" MDs into the list,
+     * we need to make then be "consumed" from the Free Descriptor.
+     * This will happen soon (and also ensure a sorted list).
+     */
+
+    /* Loop the BIOS Memory Map */
+    for (j = 0; j < KeMemoryMapRangeCount; j++)
+    {
+        /* Check if this is a reserved entry */
+        if (KeMemoryMap[j].Type == 2)
+        {
+            /* It is, build an entry for it */
+            MdEntry = KiRosGetMdFromArray();
+            MdEntry->MemoryType = LoaderSpecialMemory;
+            MdEntry->BasePage = KeMemoryMap[j].BaseAddrLow >> PAGE_SHIFT;
+            MdEntry->PageCount = (KeMemoryMap[j].LengthLow + PAGE_SIZE - 1) >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+        }
+    }
+
+    /* Page 0 is reserved: build an entry for it */
+    MdEntry = KiRosGetMdFromArray();
+    MdEntry->MemoryType = LoaderFirmwarePermanent;
+    MdEntry->BasePage = 0;
+    MdEntry->PageCount = 1;
+    InsertTailList(&LoaderBlock->MemoryDescriptorListHead, &MdEntry->ListEntry);
+
+    /* Build an entry for the KPCR (which we put in page 1) */
+    MdEntry = KiRosGetMdFromArray();
+    MdEntry->MemoryType = LoaderMemoryData;
+    MdEntry->BasePage = 1;
+    MdEntry->PageCount = 1;
+    InsertTailList(&LoaderBlock->MemoryDescriptorListHead, &MdEntry->ListEntry);
+
+    /* Build an entry for the PDE */
+    MdEntry = KiRosGetMdFromArray();
+    MdEntry->MemoryType = LoaderMemoryData;
+    MdEntry->BasePage = (ULONG_PTR)MmGetPageDirectory() >> PAGE_SHIFT;
+    MdEntry->PageCount = (MmFreeLdrPageDirectoryEnd -
+                          (ULONG_PTR)MmGetPageDirectory()) / PAGE_SIZE;
+    InsertTailList(&LoaderBlock->MemoryDescriptorListHead, &MdEntry->ListEntry);
+
+    /* Mark Video ROM as reserved */
+    MdEntry = KiRosGetMdFromArray();
+    MdEntry->MemoryType = LoaderFirmwarePermanent;
+    MdEntry->BasePage = 0xA0000 >> PAGE_SHIFT;
+    MdEntry->PageCount = (0xE8000 - 0xA0000) / PAGE_SIZE;
+    InsertTailList(&LoaderBlock->MemoryDescriptorListHead, &MdEntry->ListEntry);
+
     /* Loop boot driver list */
     for (i = 0; i < RosLoaderBlock->ModsCount; i++)
     {
@@ -106,9 +180,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             LoaderBlock->NlsData->AnsiCodePageData = ModStart;
 
             /* Create an MD for it */
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderNlsData;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1)>> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -121,9 +195,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             LoaderBlock->NlsData->OemCodePageData = ModStart;
 
             /* Create an MD for it */
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderNlsData;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -136,9 +210,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             LoaderBlock->NlsData->UnicodeCodePageData = ModStart;
 
             /* Create an MD for it */
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderNlsData;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -158,9 +232,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
             LoaderBlock->SetupLdrBlock = NULL;
 
             /* Create an MD for it */
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderRegistryData;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -173,9 +247,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         {
             /* Create an MD for it */
             ModStart = (PVOID)((ULONG_PTR)ModStart + (KSEG0_BASE - 0x200000));
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderRegistryData;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -186,9 +260,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         if (!(_stricmp(DriverName, "ntoskrnl.exe")))
         {
             /* Create an MD for it */
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderSystemCode;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -196,9 +270,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else if (!(_stricmp(DriverName, "hal.dll")))
         {
             /* Create an MD for the HAL */
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderHalCode;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -206,9 +280,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else
         {
             /* Create an MD for any driver */
-            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry = KiRosGetMdFromArray();
             MdEntry->MemoryType = LoaderBootDriver;
-            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->BasePage = ((ULONG_PTR)ModStart &~ KSEG0_BASE) >> PAGE_SHIFT;
             MdEntry->PageCount = (ModSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
             InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
                            &MdEntry->ListEntry);
@@ -351,6 +425,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                              IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
+    ULONG size, i;
 #if defined(_M_IX86)
     PKTSS Tss;
     PKGDTENTRY TssEntry;
@@ -382,6 +457,39 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                                  KSEG0_BASE + 0x200000;
     MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress -
                                 KSEG0_BASE + 0x200000;
+
+    KeMemoryMapRangeCount = 0;
+    if (LoaderBlock->Flags & MB_FLAGS_MMAP_INFO)
+    {
+        /* We have a memory map from the nice BIOS */
+        size = *((PULONG)(LoaderBlock->MmapAddr - sizeof(ULONG)));
+        i = 0;
+
+        /* Map it until we run out of size */
+        while (i < LoaderBlock->MmapLength)
+        {
+            /* Copy into the Kernel Memory Map */
+            memcpy (&KeMemoryMap[KeMemoryMapRangeCount],
+                    (PVOID)(LoaderBlock->MmapAddr + i),
+                    sizeof(ADDRESS_RANGE));
+
+            /* Increase Memory Map Count */
+            KeMemoryMapRangeCount++;
+
+            /* Increase Size */
+            i += size;
+        }
+
+        /* Save data */
+        LoaderBlock->MmapLength = KeMemoryMapRangeCount * sizeof(ADDRESS_RANGE);
+        LoaderBlock->MmapAddr = (ULONG)KeMemoryMap;
+    }
+    else
+    {
+        /* Nothing from BIOS */
+        LoaderBlock->MmapLength = 0;
+        LoaderBlock->MmapAddr = (ULONG)KeMemoryMap;
+    }
 
 #if defined(_M_IX86)
     /* Set up the VDM Data */

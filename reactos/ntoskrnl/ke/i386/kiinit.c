@@ -18,6 +18,10 @@
 KSPIN_LOCK KiFreezeExecutionLock;
 KSPIN_LOCK Ki486CompatibilityLock;
 
+/* BIOS Memory Map. Not NTLDR-compliant yet */
+extern ULONG KeMemoryMapRangeCount;
+extern ADDRESS_RANGE KeMemoryMap[64];
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -536,8 +540,8 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     MmInit1(MmFreeLdrFirstKrnlPhysAddr,
             MmFreeLdrLastKrnlPhysAddr,
             MmFreeLdrLastKernelAddress,
-            NULL,
-            0,
+            KeMemoryMap,
+            KeMemoryMapRangeCount,
             4096);
 
     /* Set basic CPU Features that user mode can read */
