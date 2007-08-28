@@ -28,7 +28,7 @@
  #define _tremove remove
  #define _ttoi atoi
  #define _T(x) x
- #define _tfopen _open
+ #define _tfopen fopen
  #define _tcsstr strstr
  #define _fgetts fgets
  #define _tgetenv getenv

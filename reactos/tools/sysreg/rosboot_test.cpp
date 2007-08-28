@@ -278,6 +278,7 @@ namespace Sysreg_
 #ifdef __LINUX__
             cerr << "Error: reading from pipes is not supported with linux hosts - use stdio" << endl;
             return false;
+		}
 #else
 		    pipe = pipe.substr(pos + 5, pipe.size() - pos - 5);
             pos = pipe.find(_T(" "));
@@ -816,7 +817,11 @@ namespace Sysreg_
 
 			if (!m_DataSource->readSource (vect))
 			{
+#ifndef __LINUX__
 				cerr << "No data read" << GetLastError() << endl;
+#else
+				cerr << "No data read" << endl;
+#endif
 				continue;				
 			}
 			if (write_log)
