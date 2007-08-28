@@ -83,6 +83,16 @@ namespace Sysreg_
 
 	protected:
 
+    void getDefaultHDDImage(string & img);
+    bool isFileExisting(string filename);
+    bool isDefaultHDDImageExisting();
+    bool createDefaultHDDImage();
+    bool isQemuPathValid();
+    bool getQemuDir(string &);
+    bool createBootCmd();
+    bool extractPipeFromBootCmd();
+    bool configureCDImage();
+    bool configureHDDImage();
     void getPidFromFile();
     bool executeBootCmd();
     void delayRead();
