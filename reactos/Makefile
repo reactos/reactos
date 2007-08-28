@@ -420,7 +420,6 @@ $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	${mkdir} $(OUTPUT_)media$(SEP)inf 2>$(NUL)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw
-	@$(MAKE) psdk
 
 world: all bootcd livecd
 
@@ -625,6 +624,6 @@ makefile_auto_clean:
 clean: makefile_auto_clean
 
 .PHONY: depends
-depends:
-	@-$(rm) makefile.auto
-	@$(MAKE) $(filter-out depends, $(MAKECMDGOALS))
+depends: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw

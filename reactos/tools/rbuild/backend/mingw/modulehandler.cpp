@@ -615,7 +615,7 @@ MingwModuleHandler::GenerateDependsTarget () const
 	fprintf ( fMakefile,
 	          "\t$(ECHO_RBUILD)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(RBUILD_TARGET) -dm%s mingw\n",
+	          "\t$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) -dm%s mingw\n",
 	          module.name.c_str () );
 }
 
@@ -2193,6 +2193,11 @@ MingwModuleHandler::GetDefaultDependencies (
 		&& module.name != "hostzlib" )
 
 		dependencies.push_back ( "$(INIT)" );
+
+	if ( module.type != BuildTool
+		&& module.name != "psdk" )
+
+		dependencies.push_back ( "$(PSDK_TARGET)" );
 }
 
 void
