@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <commctrl.h>
+#include <shlobj.h>
 #include "resource.h"
 
 #ifdef _MSC_VER
@@ -30,7 +31,8 @@ typedef struct _MAIN_WND_INFO
 
     INT SelectedItem;/* selection number in the list view */
     BOOL bDlgOpen;
-    BOOL InMenuLoop;
+    BOOL bInMenuLoop;
+    BOOL bIsUserAnAdmin;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
@@ -72,6 +74,7 @@ VOID CompleteProgressBar(HWND hProgDlg);
 /* query.c */
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
 LPQUERY_SERVICE_CONFIG GetServiceConfig(LPTSTR lpServiceName);
+VOID SetServiceConfig(LPQUERY_SERVICE_CONFIG);
 LPTSTR GetServiceDescription(LPTSTR lpServiceName);
 LPTSTR GetExecutablePath(LPTSTR lpServiceName);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);

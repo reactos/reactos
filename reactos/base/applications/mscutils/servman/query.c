@@ -90,6 +90,13 @@ cleanup:
 }
 
 
+VOID
+SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig)
+{
+
+}
+
+
 LPTSTR
 GetServiceDescription(LPTSTR lpServiceName)
 {
@@ -159,7 +166,6 @@ cleanup:
 
     return lpDescription;
 }
-
 
 
 

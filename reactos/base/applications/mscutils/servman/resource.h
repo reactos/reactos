@@ -132,6 +132,7 @@
 #define IDC_PAUSE           10151
 #define IDC_RESUME          10161
 #define IDC_START_PARAM     10191
+#define IDC_EDIT            10192
 
 /* dependancies dialog */
 #define IDD_DLG_DEPEND      20001

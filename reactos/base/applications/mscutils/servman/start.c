@@ -19,107 +19,90 @@ DoStartService(PMAIN_WND_INFO Info,
     DWORD BytesNeeded = 0;
     INT ArgCount = 0;
     DWORD dwStartTickCount, dwOldCheckPoint;
+    BOOL bRet = FALSE;
 
-    /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL,
                                NULL,
                                SC_MANAGER_ALL_ACCESS);
     if (hSCManager == NULL)
     {
-        GetError();
-        return FALSE;
-    }
-
-    /* get a handle to the service requested for starting */
-    hSc = OpenService(hSCManager,
-                      Info->pCurrentService->lpServiceName,
-                      SERVICE_ALL_ACCESS);
-    if (hSc == NULL)
-    {
-        GetError();
-        return FALSE;
-    }
-
-    /* start the service opened */
-    if (! StartService(hSc,
-                       ArgCount,
-                       NULL))
-    {
-        GetError();
-        return FALSE;
-    }
-
-    /* query the state of the service */
-    if (! QueryServiceStatusEx(hSc,
-                               SC_STATUS_PROCESS_INFO,
-                               (LPBYTE)&ServiceStatus,
-                               sizeof(SERVICE_STATUS_PROCESS),
-                               &BytesNeeded))
-    {
-        GetError();
-        return FALSE;
-    }
-
-    /* Save the tick count and initial checkpoint. */
-    dwStartTickCount = GetTickCount();
-    dwOldCheckPoint = ServiceStatus.dwCheckPoint;
-
-    /* loop whilst service is not running */
-    /* FIXME: needs more control adding. 'Loop' is temparary */
-    while (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
-    {
-        DWORD dwWaitTime;
-
-        dwWaitTime = ServiceStatus.dwWaitHint / 10;
-
-        if( dwWaitTime < 500 )
-            dwWaitTime = 500;
-        else if ( dwWaitTime > 5000 )
-            dwWaitTime = 5000;
-
-        IncrementProgressBar(hProgDlg);
-
-        /* wait before checking status */
-        Sleep(ServiceStatus.dwWaitHint / 8);
-
-        /* check status again */
-        if (! QueryServiceStatusEx(hSc,
-                                   SC_STATUS_PROCESS_INFO,
-                                   (LPBYTE)&ServiceStatus,
-                                   sizeof(SERVICE_STATUS_PROCESS),
-                                   &BytesNeeded))
+        hSc = OpenService(hSCManager,
+                          Info->pCurrentService->lpServiceName,
+                          SERVICE_ALL_ACCESS);
+        if (hSc != NULL)
         {
-            GetError();
-            return FALSE;
-        }
-
-        if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
-        {
-            /* The service is making progress. increment the progress bar */
-            IncrementProgressBar(hProgDlg);
-            dwStartTickCount = GetTickCount();
-            dwOldCheckPoint = ServiceStatus.dwCheckPoint;
-        }
-        else
-        {
-            if(GetTickCount() - dwStartTickCount > ServiceStatus.dwWaitHint)
+            if (StartService(hSc,
+                              ArgCount,
+                              NULL))
             {
-                /* No progress made within the wait hint */
-                break;
-            }
-        }
-    }
+                if (QueryServiceStatusEx(hSc,
+                                         SC_STATUS_PROCESS_INFO,
+                                         (LPBYTE)&ServiceStatus,
+                                         sizeof(SERVICE_STATUS_PROCESS),
+                                         &BytesNeeded))
+                {
+                    dwStartTickCount = GetTickCount();
+                    dwOldCheckPoint = ServiceStatus.dwCheckPoint;
 
-    CloseServiceHandle(hSc);
+                    while (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
+                    {
+                        DWORD dwWaitTime;
+
+                        dwWaitTime = ServiceStatus.dwWaitHint / 10;
+
+                        if(dwWaitTime < 1000)
+                            dwWaitTime = 500;
+                        else if (dwWaitTime > 10000)
+                            dwWaitTime = 10000;
+
+                        IncrementProgressBar(hProgDlg);
+                        Sleep(dwWaitTime );
+                        IncrementProgressBar(hProgDlg);
+
+                        if (!QueryServiceStatusEx(hSc,
+                                                  SC_STATUS_PROCESS_INFO,
+                                                  (LPBYTE)&ServiceStatus,
+                                                  sizeof(SERVICE_STATUS_PROCESS),
+                                                  &BytesNeeded))
+                        {
+                            break;
+                        }
+
+                        if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
+                        {
+                            /* The service is making progress, increment the progress bar */
+                            IncrementProgressBar(hProgDlg);
+                            dwStartTickCount = GetTickCount();
+                            dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+                        }
+                        else
+                        {
+                            if(GetTickCount() - dwStartTickCount > ServiceStatus.dwWaitHint)
+                            {
+                                /* No progress made within the wait hint */
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            CloseServiceHandle(hSc);
+        }
+
+        CloseServiceHandle(hSCManager);
+    }
 
     if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
     {
         CompleteProgressBar(hProgDlg);
         Sleep(1000);
-        return TRUE;
+        bRet = TRUE;
     }
     else
-        return FALSE;
+        GetError();
+
+    return bRet;
 }
 
 

@@ -190,7 +190,39 @@ GetDlgInfo(PSERVICEPROPSHEET dlgInfo,
                            0,
                            (LPARAM)szServiceStatus);
     }
+
+    if (dlgInfo->Info->bIsUserAnAdmin)
+    {
+        HWND hEdit = GetDlgItem(hwndDlg,
+                                IDC_EDIT);
+        EnableWindow(hEdit,
+                     TRUE);
+    }
 }
+
+
+SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
+            HWND hwndDlg)
+{
+    LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
+    HWND hList;
+    DWORD StartUp;
+
+    hList = GetDlgItem(hwndDlg, IDC_START_TYPE);
+
+    StartUp = SendMessage(hList,
+                          CB_GETCURSEL,
+                          0,
+                          0);
+
+    switch (StartUp)
+    {
+        case 0: pServiceConfig->dwStartType = SERVICE_AUTO_START; break;
+        case 1: pServiceConfig->dwStartType = SERVICE_DEMAND_START; break;
+        case 2: pServiceConfig->dwStartType = SERVICE_DISABLED; break;
+    }
+}
+
 
 
 /*
@@ -258,14 +290,25 @@ GeneralPageProc(HWND hwndDlg,
                     //SendMessage(Info->hMainWnd, WM_COMMAND, ID_RESUME, 0);
                 break;
 
+                case IDC_EDIT:
+                {
+                    HWND hName, hDesc, hExePath;
+
+                    hName = GetDlgItem(hwndDlg, IDC_DISP_NAME);
+                    hDesc = GetDlgItem(hwndDlg, IDC_DESCRIPTION);
+                    hExePath = GetDlgItem(hwndDlg, IDC_EXEPATH);
+
+                    SendMessage(hName, EM_SETREADONLY, FALSE, 0);
+                    SendMessage(hDesc, EM_SETREADONLY, FALSE, 0);
+                    SendMessage(hExePath, EM_SETREADONLY, FALSE, 0);
+                }
+                break;
+
                 case IDC_START_PARAM:
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 break;
             }
             break;
-
-        case WM_DESTROY:
-        break;
 
         case WM_NOTIFY:
             {
@@ -296,13 +339,13 @@ DependanciesPageProc(HWND hwndDlg,
                      WPARAM wParam,
                      LPARAM lParam)
 {
-    PMAIN_WND_INFO Info;
+    PSERVICEPROPSHEET dlgInfo;
 
     /* Get the window context */
-    Info = (PMAIN_WND_INFO)GetWindowLongPtr(hwndDlg,
-                                            GWLP_USERDATA);
+    dlgInfo = (PSERVICEPROPSHEET)GetWindowLongPtr(hwndDlg,
+                                                  GWLP_USERDATA);
 
-    if (Info == NULL && uMsg != WM_INITDIALOG)
+    if (dlgInfo == NULL && uMsg != WM_INITDIALOG)
     {
         return FALSE;
     }
@@ -311,12 +354,12 @@ DependanciesPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            Info = (PMAIN_WND_INFO)(((LPPROPSHEETPAGE)lParam)->lParam);
-            if (Info != NULL)
+            dlgInfo = (PSERVICEPROPSHEET)(((LPPROPSHEETPAGE)lParam)->lParam);
+            if (dlgInfo != NULL)
             {
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
-                                 (LONG_PTR)Info);
+                                 (LONG_PTR)dlgInfo);
             }
         }
         break;
@@ -324,21 +367,6 @@ DependanciesPageProc(HWND hwndDlg,
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
-
-            }
-            break;
-
-        case WM_DESTROY:
-            break;
-
-        case WM_NOTIFY:
-            {
-                LPNMHDR lpnm = (LPNMHDR)lParam;
-
-                switch (lpnm->code)
-                {
-
-                }
 
             }
             break;
@@ -404,7 +432,7 @@ OpenPropSheet(PMAIN_WND_INFO Info)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USECALLBACK;
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USECALLBACK;// | PSH_MODELESS;
     psh.hwndParent = Info->hMainWnd;
     psh.hInstance = hInstance;
     psh.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));

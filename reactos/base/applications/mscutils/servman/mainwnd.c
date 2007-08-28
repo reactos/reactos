@@ -122,7 +122,7 @@ UpdateMainStatusBar(PMAIN_WND_INFO Info)
     {
         SendMessage(Info->hStatus,
                     SB_SIMPLE,
-                    (WPARAM)Info->InMenuLoop,
+                    (WPARAM)Info->bInMenuLoop,
                     0);
     }
 }
@@ -624,6 +624,8 @@ InitMainWnd(PMAIN_WND_INFO Info)
     Info->hShortcutMenu = GetSubMenu(Info->hShortcutMenu,
                                      0);
 
+    Info->bIsUserAnAdmin = IsUserAnAdmin();
+
     return TRUE;
 }
 
@@ -1055,14 +1057,14 @@ MainWndProc(HWND hwnd,
 
         case WM_ENTERMENULOOP:
         {
-            Info->InMenuLoop = TRUE;
+            Info->bInMenuLoop = TRUE;
             UpdateMainStatusBar(Info);
             break;
         }
 
         case WM_EXITMENULOOP:
         {
-            Info->InMenuLoop = FALSE;
+            Info->bInMenuLoop = FALSE;
             UpdateMainStatusBar(Info);
             break;
         }
