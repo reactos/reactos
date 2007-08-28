@@ -200,7 +200,7 @@ GetDlgInfo(PSERVICEPROPSHEET dlgInfo,
     }
 }
 
-
+VOID
 SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
             HWND hwndDlg)
 {
