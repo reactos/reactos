@@ -1,8 +1,6 @@
 #ifndef _APITEST_H
 #define _APITEST_H
 
-#define WINVER 0x501
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -84,8 +82,8 @@ typedef struct tagTEST
 		} \
 	}
 
-
-#define ASSERT1(x) \
+#undef ASSERT
+#define ASSERT(x) \
 	if (!(x)) \
 	{ \
 			printf("Assertion failed in %s:%d (%s)\n", __FILE__, __LINE__, #x);\

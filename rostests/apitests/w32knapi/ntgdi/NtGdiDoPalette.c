@@ -1,20 +1,3 @@
-#include "../w32knapi.h"
-
-W32KAPI
-LONG
-APIENTRY 
-NtGdiDoPalette(
-    IN HPALETTE hpal,
-    IN WORD iStart,
-    IN WORD cEntries,
-    IN PALETTEENTRY *pPalEntries,
-    IN DWORD iFunc,
-    IN BOOL bInbound
-)
-{
-	return (LONG)Syscall(L"NtGdiDoPalette", 6, &hpal);
-}
-
 HPALETTE
 CreateTestPalette()
 {

@@ -1,15 +1,5 @@
 #include "../w32knapi.h"
 
-LONG STDCALL
-NtGdiSetBitmapBits(
-	HBITMAP  hBitmap,
-	DWORD  Bytes,
-	IN PBYTE Bits)
-{
-	return (LONG)Syscall(L"NtGdiSetBitmapBits", 3, &hBitmap);
-}
-
-
 INT
 Test_NtGdiSetBitmapBits(PTESTINFO pti)
 {

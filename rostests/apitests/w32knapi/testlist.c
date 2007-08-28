@@ -1,4 +1,4 @@
-#include "../apitest.h"
+#include "w32knapi.h"
 
 /* include the tests */
 
@@ -10,6 +10,9 @@
 #include "ntgdi/NtGdiCreateBitmap.c"
 #include "ntgdi/NtGdiCreateCompatibleBitmap.c"
 #include "ntgdi/NtGdiDoPalette.c"
+#include "ntgdi/NtGdiEngCreatePalette.c"
+//#include "ntgdi/NtGdiEnumFontChunk.c"
+#include "ntgdi/NtGdiEnumFontOpen.c"
 #include "ntgdi/NtGdiGetBitmapBits.c"
 #include "ntgdi/NtGdiGetRandomRgn.c"
 #include "ntgdi/NtGdiSetBitmapBits.c"
@@ -30,6 +33,9 @@ TESTENTRY TestList[] =
 	{ L"NtGdiCreateBitmap", Test_NtGdiCreateBitmap },
 	{ L"NtGdiCreateCompatibleBitmap", Test_NtGdiCreateCompatibleBitmap },
 	{ L"NtGdiDoPalette", Test_NtGdiDoPalette },
+	{ L"NtGdiEngCreatePalette", Test_NtGdiEngCreatePalette },
+//	{ L"NtGdiEnumFontChunk", Test_NtGdiEnumFontChunk },
+	{ L"NtGdiEnumFontOpen", Test_NtGdiEnumFontOpen },
 	{ L"NtGdiGetBitmapBits", Test_NtGdiGetBitmapBits },
 	{ L"NtGdiGetRandomRgn", Test_NtGdiGetRandomRgn },
 	{ L"NtGdiSetBitmapBits", Test_NtGdiSetBitmapBits },

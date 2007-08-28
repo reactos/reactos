@@ -178,21 +178,21 @@ Test_Brush(PTESTINFO pti)
 	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_BRUSH, 0, NULL) == sizeof(LOGBRUSH));
 	TEST(GetObject(hBrush, sizeof(WORD), NULL) == sizeof(LOGBRUSH));
 	TEST(GetObject(hBrush, 0, NULL) == sizeof(LOGBRUSH));
-	TEST(GetObject(hBrush, 5, NULL) == sizeof(LOGBRUSH));
-	TEST(GetObject(hBrush, -5, NULL) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, 5, NULL) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, -5, NULL) == sizeof(LOGBRUSH));
 
-	TEST(GetObject(hBrush, 0, &logbrush) == 0);
-	TEST(logbrush.lbStyle == 0x77777777);
-	TEST(GetObject(hBrush, 5, &logbrush) == sizeof(LOGBRUSH));
-	TEST(logbrush.lbStyle == 0);
-	TEST(logbrush.lbColor == 0x77777701);
+	RTEST(GetObject(hBrush, 0, &logbrush) == 0);
+	RTEST(logbrush.lbStyle == 0x77777777);
+	RTEST(GetObject(hBrush, 5, &logbrush) == sizeof(LOGBRUSH));
+	RTEST(logbrush.lbStyle == 0);
+	RTEST(logbrush.lbColor == 0x77777701);
 
-	TEST(GetObject(hBrush, sizeof(LOGBRUSH), &logbrush) == sizeof(LOGBRUSH));
-	TEST(GetObject(hBrush, sizeof(LOGBRUSH)+2, &logbrush) == sizeof(LOGBRUSH));
-	TEST(GetObject(hBrush, -1, &logbrush) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, sizeof(LOGBRUSH), &logbrush) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, sizeof(LOGBRUSH)+2, &logbrush) == sizeof(LOGBRUSH));
+	RTEST(GetObject(hBrush, -1, &logbrush) == sizeof(LOGBRUSH));
 	// TODO: test all members
 
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetLastError() == ERROR_SUCCESS);
 	DeleteObject(hBrush);
 	return TRUE;
 }
@@ -207,21 +207,21 @@ Test_Pen(PTESTINFO pti)
 	hPen = CreatePen(PS_SOLID, 3, RGB(4,5,6));
 	if (!hPen) return FALSE;
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_PEN, 0, NULL) == sizeof(LOGPEN));
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_PEN, 0, NULL) == sizeof(LOGPEN));
-	TEST(GetObject(hPen, sizeof(BITMAP), NULL) == sizeof(LOGPEN));
-	TEST(GetObject(hPen, 0, NULL) == sizeof(LOGPEN));
-	TEST(GetObject(hPen, 5, NULL) == sizeof(LOGPEN));
-	TEST(GetObject(hPen, -5, NULL) == sizeof(LOGPEN));
-	TEST(GetObject(hPen, sizeof(LOGPEN), &logpen) == sizeof(LOGPEN));
-	TEST(GetObject(hPen, sizeof(LOGPEN)-1, &logpen) == 0);
-	TEST(GetObject(hPen, sizeof(LOGPEN)+2, &logpen) == sizeof(LOGPEN));
-	TEST(GetObject(hPen, 0, &logpen) == 0);
-	TEST(GetObject(hPen, -5, &logpen) == sizeof(LOGPEN));
-	TEST(GetLastError() == ERROR_SUCCESS);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_PEN, 0, NULL) == sizeof(LOGPEN));
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_PEN, 0, NULL) == sizeof(LOGPEN));
+	RTEST(GetObject(hPen, sizeof(BITMAP), NULL) == sizeof(LOGPEN));
+	RTEST(GetObject(hPen, 0, NULL) == sizeof(LOGPEN));
+	RTEST(GetObject(hPen, 5, NULL) == sizeof(LOGPEN));
+	RTEST(GetObject(hPen, -5, NULL) == sizeof(LOGPEN));
+	RTEST(GetObject(hPen, sizeof(LOGPEN), &logpen) == sizeof(LOGPEN));
+	RTEST(GetObject(hPen, sizeof(LOGPEN)-1, &logpen) == 0);
+	RTEST(GetObject(hPen, sizeof(LOGPEN)+2, &logpen) == sizeof(LOGPEN));
+	RTEST(GetObject(hPen, 0, &logpen) == 0);
+	RTEST(GetObject(hPen, -5, &logpen) == sizeof(LOGPEN));
+	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	/* test if the fields are filled correctly */
-	TEST(logpen.lopnStyle == PS_SOLID);
+	RTEST(logpen.lopnStyle == PS_SOLID);
 	
 
 	DeleteObject(hPen);
@@ -242,8 +242,8 @@ Test_ExtPen(PTESTINFO pti)
 	} elpUserStyle;
 
 	SetLastError(ERROR_SUCCESS);
-	TEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
-	TEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
+	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
+	RTEST(GetObjectW((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 	FillMemory(&extlogpen, sizeof(EXTLOGPEN), 0x77);
@@ -252,12 +252,12 @@ Test_ExtPen(PTESTINFO pti)
 	logbrush.lbHatch = 22;
 	hPen = ExtCreatePen(PS_GEOMETRIC | PS_DASH, 5, &logbrush, 0, NULL);
 
-	TEST(GDI_HANDLE_GET_TYPE(hPen) == GDI_OBJECT_TYPE_EXTPEN);
-	TEST(GetObject((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
-	TEST(GetObject(hPen, sizeof(EXTLOGPEN), NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject(hPen, 0, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject((HANDLE)GDI_HANDLE_GET_INDEX(hPen), 0, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
-	TEST(GetObject(hPen, 5, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GDI_HANDLE_GET_TYPE(hPen) == GDI_OBJECT_TYPE_EXTPEN);
+	RTEST(GetObject((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0);
+	RTEST(GetObject(hPen, sizeof(EXTLOGPEN), NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject(hPen, 0, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject((HANDLE)GDI_HANDLE_GET_INDEX(hPen), 0, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
+	RTEST(GetObject(hPen, 5, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
 	RTEST(GetObject(hPen, -5, NULL) == sizeof(EXTLOGPEN)-sizeof(DWORD));
 	RTEST(GetObject(hPen, 0, &extlogpen) == 0);
 	RTEST(GetObject(hPen, 4, &extlogpen) == 0);

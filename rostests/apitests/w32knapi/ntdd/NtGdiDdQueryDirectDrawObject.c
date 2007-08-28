@@ -64,10 +64,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devmode);
 
 	hdc = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
-	ASSERT1(hdc != NULL);
+	ASSERT(hdc != NULL);
 
 	hDirectDraw = (HANDLE) Syscall(L"NtGdiDdCreateDirectDrawObject", 1, &hdc);
-	ASSERT1(hDirectDraw != NULL);
+	ASSERT(hDirectDraw != NULL);
 
 	/* Test ReactX */
 	hDirectDraw = (HANDLE) Syscall(L"NtGdiDdCreateDirectDrawObject", 1, &hdc);
@@ -123,7 +123,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puD3dTextureFormats == NULL);
 	RTEST(puNumFourCC == NULL);
 	RTEST(puFourCC == NULL);
-	ASSERT1(pHalInfo != NULL);
+	ASSERT(pHalInfo != NULL);
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
 
@@ -131,7 +131,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 		(pHalInfo->dwSize != sizeof(DD_HALINFO_V4)))
 	{
 		RTEST(pHalInfo->dwSize != sizeof(DD_HALINFO));
-		ASSERT1(pHalInfo->dwSize != sizeof(DD_HALINFO));
+		ASSERT(pHalInfo->dwSize != sizeof(DD_HALINFO));
 	}
 
 	if (pHalInfo->dwSize == sizeof(DD_HALINFO))
@@ -149,7 +149,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 			RTEST(pHalInfo->vmiData.lDisplayPitch == 0x1700;
 		*/
 		RTEST(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT) ); 
-		ASSERT1(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT));
+		ASSERT(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT));
 
 		/* Fail on 8bit screen deep */
 		RTEST(pHalInfo->vmiData.ddpfDisplay.dwFlags  == DDPF_RGB);
@@ -225,7 +225,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puD3dTextureFormats == NULL);
 	RTEST(puNumFourCC == NULL);
 	RTEST(puFourCC == NULL);
-	ASSERT1(pHalInfo != NULL);
+	ASSERT(pHalInfo != NULL);
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
 
@@ -266,7 +266,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puFourCC == NULL);
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
-	ASSERT1(pHalInfo != NULL);
+	ASSERT(pHalInfo != NULL);
 
 	/* We do not retesting DD_HALINFO, instead we compare it */
 	RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
@@ -307,7 +307,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puFourCC == NULL);
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
-	ASSERT1(pHalInfo != NULL);
+	ASSERT(pHalInfo != NULL);
 
 	/* We do not retesting DD_HALINFO, instead we compare it */
 	RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
@@ -351,7 +351,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puFourCC == NULL);
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
-	ASSERT1(pHalInfo != NULL);
+	ASSERT(pHalInfo != NULL);
 
 	/* We do not retesting DD_HALINFO, instead we compare it */
 	RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
@@ -395,7 +395,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puFourCC == NULL);
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
-	ASSERT1(pHalInfo != NULL);
+	ASSERT(pHalInfo != NULL);
 
 	/* We do not retesting DD_HALINFO, instead we compare it */
 	RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);
@@ -453,7 +453,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puFourCC == NULL);
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
-	ASSERT1(pHalInfo != NULL);
+	ASSERT(pHalInfo != NULL);
 
 	/* We do not retesting DD_HALINFO, instead we compare it */
 	RTEST(memcmp(&oldHalInfo, pHalInfo, sizeof(DD_HALINFO)) == 0);

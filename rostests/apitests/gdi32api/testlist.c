@@ -26,12 +26,12 @@ TESTENTRY TestList[] =
 	{ L"CreateRectRgn", Test_CreateRectRgn },
 	{ L"ExtCreatePen", Test_ExtCreatePen },
 	{ L"GetClipRgn", Test_GetClipRgn },
+	{ L"GetObject", Test_GetObject },
 	{ L"GetStockObject", Test_GetStockObject },
 	{ L"SetSysColors", Test_SetSysColors },
 	{ L"SelectObject", Test_SelectObject },
 	{ L"SetDCPenColor", Test_SetDCPenColor },
 //	{ L"SetWorldTransform", Test_SetWorldTransform },
-	{ L"GetObject", Test_GetObject }
 };
 
 /* The function that gives us the number of tests */

@@ -1,17 +1,3 @@
-#include "../w32knapi.h"
-
-W32KAPI
-INT
-APIENTRY
-NtGdiGetRandomRgn(
-    IN HDC hdc,
-    IN HRGN hrgn,
-    IN INT iRgn)
-{
-	return (INT)Syscall(L"NtGdiGetRandomRgn", 3, &hdc);
-}
-
-
 INT
 Test_NtGdiGetRandomRgn(PTESTINFO pti)
 {
@@ -26,7 +12,7 @@ Test_NtGdiGetRandomRgn(PTESTINFO pti)
 //	UpdateWindow(hWnd);
 	hDC = GetDC(hWnd);
 
-	ASSERT1(hDC != NULL);
+	ASSERT(hDC != NULL);
 
 	hrgn = CreateRectRgn(0,0,0,0);
 	hrgn2 = CreateRectRgn(3,3,10,10);

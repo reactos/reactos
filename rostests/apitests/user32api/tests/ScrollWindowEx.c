@@ -15,7 +15,7 @@ Test_ScrollWindowEx(PTESTINFO pti)
 
 	/* Assert that no update region is there */
 	hrgn = CreateRectRgn(0,0,0,0);
-	ASSERT1(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION);
+	ASSERT(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION);
 
 	Result = ScrollWindowEx(hWnd, 20, 0, NULL, NULL, NULL, NULL, 0);
 	TEST(Result == SIMPLEREGION);

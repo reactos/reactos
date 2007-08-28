@@ -17,7 +17,7 @@ Test_ScrollDC(PTESTINFO pti)
 
 	/* Assert that no update region is there */
 	hrgn = CreateRectRgn(0,0,0,0);
-	ASSERT1(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION);
+	ASSERT(GetUpdateRgn(hWnd, hrgn, FALSE) == NULLREGION);
 
     /* Test normal scrolling */
 	TEST(ScrollDC(hDC, 0, 0, NULL, NULL, hrgn, NULL) == TRUE);

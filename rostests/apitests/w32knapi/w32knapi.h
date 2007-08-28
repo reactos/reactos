@@ -1,10 +1,16 @@
 #ifndef _W32KNAPI_H
 #define _W32KNAPI_H
 
-#include "../apitest.h"
+#define WIN32_NO_STATUS
+#define NTOS_MODE_USER
+#define WINVER 0x501
 
-#include <ddk/winddi.h>
-#include <ddk/ntddk.h>
+#include <windows.h>
+#include <wingdi.h>
+#include <winddi.h>
+#include <ntddk.h>
+#include <d3dnthal.h>
+#include <prntfont.h>
 
 /* Public Win32K Headers */
 #include <win32k/callback.h>
@@ -12,11 +18,13 @@
 #include <win32k/ntgdityp.h>
 #include <win32k/ntgdihdl.h>
 
+#include <ntgdi.h>
+
+#include "../apitest.h"
+
 #define OS_UNSUPPORTED 0
 #define OS_REACTOS	1
 #define OS_WINDOWS	2
-
-#define W32KAPI
 
 typedef struct
 {
@@ -25,11 +33,11 @@ typedef struct
 	INT nParams;
 } SYCALL_ENTRY, *PSYSCALL_ENTRY;
 
+typedef PGDI_TABLE_ENTRY (CALLBACK * GDIQUERYPROC) (void);
+
 extern HINSTANCE g_hInstance;
-extern SYCALL_ENTRY SyscallTable_XP_2600[];
-extern SYCALL_ENTRY SyscallTable_2K_2195[];
 extern HMODULE g_hModule;
-extern INT g_nOsVer;
+extern PGDI_TABLE_ENTRY GdiHandleTable;
 
 DWORD Syscall(LPWSTR lpszFunction, int cParams, void* pParams);
 BOOL InitOsVersion();

@@ -2,6 +2,7 @@
 
 HINSTANCE g_hInstance;
 HMODULE g_hModule = NULL;
+PGDI_TABLE_ENTRY GdiHandleTable;
 
 static DWORD STDCALL
 IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
@@ -58,7 +59,8 @@ WinMain(HINSTANCE hInstance,
         int       nCmdShow)
 {
 	g_hInstance = hInstance;
-	
+	GDIQUERYPROC GdiQueryHandleTable;
+
 	printf("Win32k native API test\n");
 
 	/* Convert to gui thread */
@@ -68,7 +70,18 @@ WinMain(HINSTANCE hInstance,
 	if (!g_hModule)
 	{
 		printf("w32kdll.dll not found!\n");
-		return FALSE;
+		return -1;
+	}
+
+	GdiQueryHandleTable = (GDIQUERYPROC)GetProcAddress(GetModuleHandleW(L"GDI32.DLL"), "GdiQueryTable");
+	if(!GdiQueryHandleTable)
+	{
+		return -1;
+	}
+	GdiHandleTable = GdiQueryHandleTable();
+	if(!GdiHandleTable)
+	{
+		return -1;
 	}
 
 	printf("\n");

@@ -7,6 +7,7 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>shell32</library>
+	<library>w32kdll</library>
 	<file>w32knapi.c</file>
 	<file>testlist.c</file>
 </module>
