@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  * This is a test program for the SHGet{Special}Folder{Path|Location} functions
  * of shell32, that get either a filesytem path or a LPITEMIDLIST (shell
  * namespace) path for a given folder (CSIDL value).
@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include "windef.h"
 #include "winbase.h"
-#include "initguid.h"
 #include "shlguid.h"
 #include "shlobj.h"
 #include "shlwapi.h"
@@ -74,7 +73,7 @@ struct shellExpectedValues {
     BYTE pidlType;
 };
 
-static HMODULE hShell32;
+static HRESULT (WINAPI *pDllGetVersion)(DLLVERSIONINFO *);
 static HRESULT (WINAPI *pSHGetFolderPathA)(HWND, int, HANDLE, DWORD, LPSTR);
 static HRESULT (WINAPI *pSHGetFolderLocation)(HWND, int, HANDLE, DWORD,
  LPITEMIDLIST *);
@@ -153,55 +152,57 @@ static const struct shellExpectedValues optionalShellValues[] = {
 
 static void loadShell32(void)
 {
-    hShell32 = LoadLibraryA("shell32");
-    if (hShell32)
+    HMODULE hShell32 = GetModuleHandleA("shell32");
+
+#define GET_PROC(func) \
+    p ## func = (void*)GetProcAddress(hShell32, #func); \
+    if(!p ## func) \
+      trace("GetProcAddress(%s) failed\n", #func);
+
+    GET_PROC(DllGetVersion)
+    GET_PROC(SHGetFolderPathA)
+    GET_PROC(SHGetFolderLocation)
+    GET_PROC(SHGetSpecialFolderPathA)
+    GET_PROC(SHGetSpecialFolderLocation)
+    GET_PROC(ILFindLastID)
+    if (!pILFindLastID)
+        pILFindLastID = (void *)GetProcAddress(hShell32, (LPCSTR)16);
+    GET_PROC(SHFileOperationA)
+    GET_PROC(SHGetMalloc)
+
+    ok(pSHGetMalloc != NULL, "shell32 is missing SHGetMalloc\n");
+    if (pSHGetMalloc)
     {
-        HRESULT (WINAPI *pDllGetVersion)(DLLVERSIONINFO *);
+        HRESULT hr = pSHGetMalloc(&pMalloc);
 
-        pSHGetFolderPathA = (void *)GetProcAddress(hShell32,
-         "SHGetFolderPathA");
-        pSHGetFolderLocation = (void *)GetProcAddress(hShell32,
-         "SHGetFolderLocation");
-        pSHGetSpecialFolderPathA = (void *)GetProcAddress(hShell32,
-         "SHGetSpecialFolderPathA");
-        pSHGetSpecialFolderLocation = (void *)GetProcAddress(hShell32,
-         "SHGetSpecialFolderLocation");
-        pDllGetVersion = (void *)GetProcAddress(hShell32, "DllGetVersion");
-        pILFindLastID = (void *)GetProcAddress(hShell32, "ILFindLastID");
-        if (!pILFindLastID)
-            pILFindLastID = (void *)GetProcAddress(hShell32, (LPCSTR)16);
-        pSHFileOperationA = (void *)GetProcAddress(hShell32,
-         "SHFileOperationA");
-        pSHGetMalloc = (void *)GetProcAddress(hShell32, "SHGetMalloc");
-
-        ok(pSHGetMalloc != NULL, "shell32 is missing SHGetMalloc\n");
-        if (pSHGetMalloc)
-        {
-            HRESULT hr = pSHGetMalloc(&pMalloc);
-
-            ok(SUCCEEDED(hr), "SHGetMalloc failed: 0x%08lx\n", hr);
-            ok(pMalloc != NULL, "SHGetMalloc returned a NULL IMalloc\n");
-        }
-
-        if (pDllGetVersion)
-        {
-            shellVersion.cbSize = sizeof(shellVersion);
-            pDllGetVersion(&shellVersion);
-            if (winetest_interactive)
-                printf("shell32 version is %ld.%ld\n",
-                 shellVersion.dwMajorVersion, shellVersion.dwMinorVersion);
-        }
+        ok(SUCCEEDED(hr), "SHGetMalloc failed: 0x%08x\n", hr);
+        ok(pMalloc != NULL, "SHGetMalloc returned a NULL IMalloc\n");
     }
+
+    if (pDllGetVersion)
+    {
+        shellVersion.cbSize = sizeof(shellVersion);
+        pDllGetVersion(&shellVersion);
+        if (winetest_interactive)
+            printf("shell32 version is %d.%d\n",
+             shellVersion.dwMajorVersion, shellVersion.dwMinorVersion);
+    }
+#undef GET_PROC
 }
 
 #ifndef CSIDL_PROFILES
 #define CSIDL_PROFILES		0x003e
 #endif
 
+/* CSIDL_MYDOCUMENTS is now the same as CSIDL_PERSONAL, but what we want
+ * here is its original value.
+ */
+#define OLD_CSIDL_MYDOCUMENTS  0x000c
+
 /* A couple utility printing functions */
 static const char *getFolderName(int folder)
 {
-    static char unknown[17];
+    static char unknown[32];
 
 #define CSIDL_TO_STR(x) case x: return#x;
     switch (folder)
@@ -218,7 +219,7 @@ static const char *getFolderName(int folder)
     CSIDL_TO_STR(CSIDL_SENDTO);
     CSIDL_TO_STR(CSIDL_BITBUCKET);
     CSIDL_TO_STR(CSIDL_STARTMENU);
-    CSIDL_TO_STR(CSIDL_MYDOCUMENTS);
+    CSIDL_TO_STR(OLD_CSIDL_MYDOCUMENTS);
     CSIDL_TO_STR(CSIDL_MYMUSIC);
     CSIDL_TO_STR(CSIDL_MYVIDEO);
     CSIDL_TO_STR(CSIDL_DESKTOPDIRECTORY);
@@ -266,7 +267,7 @@ static const char *getFolderName(int folder)
     CSIDL_TO_STR(CSIDL_COMPUTERSNEARME);
 #undef CSIDL_TO_STR
     default:
-        wnsprintfA(unknown, sizeof(unknown), "unknown (0x%04x)", folder);
+        sprintf(unknown, "unknown (0x%04x)", folder);
         return unknown;
     }
 }
@@ -277,8 +278,7 @@ static const char *printGUID(const GUID *guid)
 
     if (!guid) return NULL;
 
-    wnsprintfA(guidSTR, sizeof(guidSTR),
-     "{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+    sprintf(guidSTR, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
      guid->Data1, guid->Data2, guid->Data3,
      guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
      guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
@@ -297,7 +297,7 @@ static void testSHGetFolderLocationInvalidArgs(void)
     hr = pSHGetFolderLocation(NULL, 0xeeee, NULL, 0, &pidl);
     ok(hr == E_INVALIDARG,
      "SHGetFolderLocation(NULL, 0xeeee, NULL, 0, &pidl)\n"
-     "returned 0x%08lx, expected E_INVALIDARG\n", hr);
+     "returned 0x%08x, expected E_INVALIDARG\n", hr);
     if (SUCCEEDED(hr))
         IMalloc_Free(pMalloc, pidl);
     /* check a bogus user token: */
@@ -305,7 +305,7 @@ static void testSHGetFolderLocationInvalidArgs(void)
     hr = pSHGetFolderLocation(NULL, CSIDL_FAVORITES, (HANDLE)2, 0, &pidl);
     ok(hr == E_FAIL,
      "SHGetFolderLocation(NULL, CSIDL_FAVORITES, 2, 0, &pidl)\n"
-     "returned 0x%08lx, expected E_FAIL\n", hr);
+     "returned 0x%08x, expected E_FAIL\n", hr);
     if (SUCCEEDED(hr))
         IMalloc_Free(pMalloc, pidl);
     /* check reserved is not zero: */
@@ -313,7 +313,7 @@ static void testSHGetFolderLocationInvalidArgs(void)
     hr = pSHGetFolderLocation(NULL, CSIDL_DESKTOP, NULL, 1, &pidl);
     ok(hr == E_INVALIDARG,
      "SHGetFolderLocation(NULL, CSIDL_DESKTOP, NULL, 1, &pidl)\n"
-     "returned 0x%08lx, expected E_INVALIDARG\n", hr);
+     "returned 0x%08x, expected E_INVALIDARG\n", hr);
     if (SUCCEEDED(hr))
         IMalloc_Free(pMalloc, pidl);
     /* a NULL pidl pointer crashes, so don't test it */
@@ -329,7 +329,7 @@ static void testSHGetSpecialFolderLocationInvalidArgs(void)
     /* SHGetSpecialFolderLocation(NULL, 0, NULL) crashes */
     hr = pSHGetSpecialFolderLocation(NULL, 0xeeee, &pidl);
     ok(hr == E_INVALIDARG,
-     "SHGetSpecialFolderLocation(NULL, 0xeeee, &pidl) returned 0x%08lx, "
+     "SHGetSpecialFolderLocation(NULL, 0xeeee, &pidl) returned 0x%08x, "
      "expected E_INVALIDARG\n", hr);
 }
 
@@ -345,11 +345,11 @@ static void testSHGetFolderPathInvalidArgs(void)
      SHGFP_TYPE_DEFAULT, path);
     ok(hr == E_FAIL,
      "SHGetFolderPathA(NULL, CSIDL_DESKTOP, 2, SHGFP_TYPE_DEFAULT, path)\n"
-     "returned 0x%08lx, expected E_FAIL\n", hr);
+     "returned 0x%08x, expected E_FAIL\n", hr);
     hr = pSHGetFolderPathA(NULL, 0xeeee, NULL, SHGFP_TYPE_DEFAULT, path);
     ok(hr == E_INVALIDARG,
      "SHGetFolderPathA(NULL, 0xeeee, NULL, SHGFP_TYPE_DEFAULT, path)\n"
-     "returned 0x%08lx, expected E_INVALIDARG\n", hr);
+     "returned 0x%08x, expected E_INVALIDARG\n", hr);
 }
 
 static void testSHGetSpecialFolderPathInvalidArgs(void)
@@ -359,16 +359,18 @@ static void testSHGetSpecialFolderPathInvalidArgs(void)
 
     if (!pSHGetSpecialFolderPathA) return;
 
+#if 0
     ret = pSHGetSpecialFolderPathA(NULL, NULL, CSIDL_BITBUCKET, FALSE);
     ok(!ret,
      "SHGetSpecialFolderPathA(NULL, NULL, CSIDL_BITBUCKET, FALSE)\n"
      "returned TRUE, expected FALSE\n");
+#endif
     /* odd but true: calling with a NULL path still succeeds if it's a real
-     * dir
+     * dir (on some windows platform).  on winME it generates exception.
      */
-    ret = pSHGetSpecialFolderPathA(NULL, NULL, CSIDL_PROGRAMS, FALSE);
+    ret = pSHGetSpecialFolderPathA(NULL, path, CSIDL_PROGRAMS, FALSE);
     ok(ret,
-     "SHGetSpecialFolderPathA(NULL, NULL, CSIDL_PROGRAMS, FALSE)\n"
+     "SHGetSpecialFolderPathA(NULL, path, CSIDL_PROGRAMS, FALSE)\n"
      "returned FALSE, expected TRUE\n");
     ret = pSHGetSpecialFolderPathA(NULL, path, 0xeeee, FALSE);
     ok(!ret,
@@ -398,7 +400,7 @@ static BYTE testSHGetFolderLocation(BOOL optional, int folder)
     hr = pSHGetFolderLocation(NULL, folder, NULL, 0, &pidl);
     ok(SUCCEEDED(hr) || optional,
      "SHGetFolderLocation(NULL, %s, NULL, 0, &pidl)\n"
-     "failed: 0x%08lx\n", getFolderName(folder), hr);
+     "failed: 0x%08x\n", getFolderName(folder), hr);
     if (SUCCEEDED(hr))
     {
         ok(pidl != NULL,
@@ -432,7 +434,7 @@ static BYTE testSHGetSpecialFolderLocation(BOOL optional, int folder)
     hr = pSHGetSpecialFolderLocation(NULL, folder, &pidl);
     ok(SUCCEEDED(hr) || optional,
      "SHGetSpecialFolderLocation(NULL, %s, &pidl)\n"
-     "failed: 0x%08lx\n", getFolderName(folder), hr);
+     "failed: 0x%08x\n", getFolderName(folder), hr);
     if (SUCCEEDED(hr))
     {
         ok(pidl != NULL,
@@ -462,7 +464,7 @@ static void testSHGetFolderPath(BOOL optional, int folder)
     hr = pSHGetFolderPathA(NULL, folder, NULL, SHGFP_TYPE_CURRENT, path);
     ok(SUCCEEDED(hr) || optional,
      "SHGetFolderPathA(NULL, %s, NULL, SHGFP_TYPE_CURRENT, path)\n"
-     "failed: 0x%08lx\n", getFolderName(folder), hr);
+     "failed: 0x%08x\n", getFolderName(folder), hr);
 }
 
 static void testSHGetSpecialFolderPath(BOOL optional, int folder)
@@ -720,21 +722,21 @@ static void testNonExistentPath1(void)
 
     /* test some failure cases first: */
     hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES, NULL,
-     SHGFP_TYPE_CURRENT, NULL);
+     SHGFP_TYPE_CURRENT, path);
     ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-     "SHGetFolderPath returned 0x%08lx, expected 0x80070002\n", hr);
+     "SHGetFolderPath returned 0x%08x, expected 0x80070002\n", hr);
     pidl = NULL;
     hr = pSHGetFolderLocation(NULL, CSIDL_FAVORITES, NULL, 0,
      &pidl);
     ok(hr == E_FAIL,
-     "SHGetFolderLocation returned 0x%08lx, expected E_FAIL\n", hr);
+     "SHGetFolderLocation returned 0x%08x, expected E_FAIL\n", hr);
     if (SUCCEEDED(hr) && pidl)
         IMalloc_Free(pMalloc, pidl);
     ok(!pSHGetSpecialFolderPathA(NULL, path, CSIDL_FAVORITES, FALSE),
      "SHGetSpecialFolderPath succeeded, expected failure\n");
     pidl = NULL;
     hr = pSHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidl);
-    ok(hr == E_FAIL, "SHGetFolderLocation returned 0x%08lx, expected E_FAIL\n",
+    ok(hr == E_FAIL, "SHGetFolderLocation returned 0x%08x, expected E_FAIL\n",
      hr);
     if (SUCCEEDED(hr) && pidl)
         IMalloc_Free(pMalloc, pidl);
@@ -753,13 +755,13 @@ static void testNonExistentPath1(void)
          "with ERROR_ALREADY_EXISTS\n");
         if (!ret)
             ok(GetLastError() == ERROR_ALREADY_EXISTS,
-             "CreateDirectoryA failed with %ld, "
+             "CreateDirectoryA failed with %d, "
              "expected ERROR_ALREADY_EXISTS\n",
              GetLastError());
     }
     ok(SUCCEEDED(hr),
      "SHGetFolderPath(NULL, CSIDL_FAVORITES | CSIDL_FLAG_CREATE, "
-     "NULL, SHGFP_TYPE_CURRENT, path)\nfailed: 0x%08lx\n", hr);
+     "NULL, SHGFP_TYPE_CURRENT, path)\nfailed: 0x%08x\n", hr);
 }
 
 /* Subprocess helper 2: make sure SHGetFolderPath still succeeds when the
@@ -768,10 +770,11 @@ static void testNonExistentPath1(void)
 static void testNonExistentPath2(void)
 {
     HRESULT hr;
+    char path[MAX_PATH];
 
     hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES | CSIDL_FLAG_CREATE, NULL,
-     SHGFP_TYPE_CURRENT, NULL);
-    ok(SUCCEEDED(hr), "SHGetFolderPath failed: 0x%08lx\n", hr);
+     SHGFP_TYPE_CURRENT, path);
+    ok(SUCCEEDED(hr), "SHGetFolderPath failed: 0x%08x\n", hr);
 }
 
 static void doChild(const char *arg)
@@ -825,16 +828,15 @@ static void testNonExistentPath(void)
             modifiedPath[len++] = '\0';
             if (winetest_interactive)
                 printf("Changing CSIDL_FAVORITES to %s\n", modifiedPath);
-            if (!RegSetValueExA(key, "Favorites", 0, type, (LPBYTE) modifiedPath, len))
+            if (!RegSetValueExA(key, "Favorites", 0, type,
+             (LPBYTE)modifiedPath, len))
             {
-                char buffer[MAX_PATH];
+                char buffer[MAX_PATH+20];
                 STARTUPINFOA startup;
                 PROCESS_INFORMATION info;
                 HRESULT hr;
-                BOOL ret;
 
-                wnsprintfA(buffer, sizeof(buffer), "%s tests/shellpath.c 1",
-                 selfname);
+                sprintf(buffer, "%s tests/shellpath.c 1", selfname);
                 memset(&startup, 0, sizeof(startup));
                 startup.cb = sizeof(startup);
                 startup.dwFlags = STARTF_USESHOWWINDOW;
@@ -847,7 +849,7 @@ static void testNonExistentPath(void)
                 /* Query the path to be able to delete it below */
                 hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES, NULL,
                  SHGFP_TYPE_CURRENT, modifiedPath);
-                ok(SUCCEEDED(hr), "SHGetFolderPathA failed: 0x%08lx\n", hr);
+                ok(SUCCEEDED(hr), "SHGetFolderPathA failed: 0x%08x\n", hr);
 
                 /* restore original values: */
                 if (winetest_interactive)
@@ -856,8 +858,7 @@ static void testNonExistentPath(void)
                  strlen(originalPath) + 1);
                 RegFlushKey(key);
 
-                wnsprintfA(buffer, sizeof(buffer), "%s tests/shellpath.c 2",
-                 selfname);
+                sprintf(buffer, "%s tests/shellpath.c 2", selfname);
                 memset(&startup, 0, sizeof(startup));
                 startup.cb = sizeof(startup);
                 startup.dwFlags = STARTF_USESHOWWINDOW;
@@ -867,8 +868,10 @@ static void testNonExistentPath(void)
                 ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0,
                  "child process termination\n");
 
-                ret = RemoveDirectoryA(modifiedPath);
-                ok( ret, "RemoveDirectoryA failed: %ld\n", GetLastError());
+                strcpy(buffer, modifiedPath);
+                strcat(buffer, "\\desktop.ini");
+                DeleteFileA(buffer);
+                RemoveDirectoryA(modifiedPath);
             }
         }
         else if (winetest_interactive)
@@ -886,7 +889,6 @@ START_TEST(shellpath)
     if (!init()) return;
 
     loadShell32();
-    if (!hShell32) return;
 
     if (myARGC >= 3)
         doChild(myARGV[2]);
