@@ -110,7 +110,7 @@ SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig,
         {
             hSc = OpenService(hSCManager,
                               lpServiceName,
-                              SERVICE_QUERY_CONFIG);
+                              SERVICE_CHANGE_CONFIG);
             if (hSc)
             {
                 if (ChangeServiceConfig(hSc,
@@ -119,7 +119,7 @@ SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig,
                                         pServiceConfig->dwErrorControl,
                                         pServiceConfig->lpBinaryPathName,
                                         pServiceConfig->lpLoadOrderGroup,
-                                        &pServiceConfig->dwTagId,
+                                        pServiceConfig->dwTagId ? &pServiceConfig->dwTagId : NULL,
                                         pServiceConfig->lpDependencies,
                                         pServiceConfig->lpServiceStartName,
                                         lpPassword,

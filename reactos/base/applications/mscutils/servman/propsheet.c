@@ -200,6 +200,7 @@ GetDlgInfo(PSERVICEPROPSHEET dlgInfo,
     }
 }
 
+
 VOID
 SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
             HWND hwndDlg)
@@ -208,21 +209,40 @@ SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
     HWND hList;
     DWORD StartUp;
 
-    hList = GetDlgItem(hwndDlg, IDC_START_TYPE);
-
-    StartUp = SendMessage(hList,
-                          CB_GETCURSEL,
-                          0,
-                          0);
-
-    switch (StartUp)
+    pServiceConfig = HeapAlloc(ProcessHeap,
+                               HEAP_ZERO_MEMORY,
+                               sizeof(*pServiceConfig));
+    if (pServiceConfig)
     {
-        case 0: pServiceConfig->dwStartType = SERVICE_AUTO_START; break;
-        case 1: pServiceConfig->dwStartType = SERVICE_DEMAND_START; break;
-        case 2: pServiceConfig->dwStartType = SERVICE_DISABLED; break;
+        pServiceConfig->dwServiceType = SERVICE_NO_CHANGE;
+        pServiceConfig->dwErrorControl = SERVICE_NO_CHANGE;
+
+        hList = GetDlgItem(hwndDlg, IDC_START_TYPE);
+        StartUp = SendMessage(hList,
+                              CB_GETCURSEL,
+                              0,
+                              0);
+        switch (StartUp)
+        {
+            case 0: pServiceConfig->dwStartType = SERVICE_AUTO_START; break;
+            case 1: pServiceConfig->dwStartType = SERVICE_DEMAND_START; break;
+            case 2: pServiceConfig->dwStartType = SERVICE_DISABLED; break;
+        }
+
+        if (SetServiceConfig(pServiceConfig,
+                             dlgInfo->pService->lpServiceName,
+                             NULL))
+        {
+            ChangeListViewText(dlgInfo->Info,
+                               dlgInfo->pService,
+                               LVSTARTUP);
+        }
+
+        HeapFree(ProcessHeap,
+                 0,
+                 pServiceConfig);
     }
 }
-
 
 
 /*
@@ -317,7 +337,7 @@ GeneralPageProc(HWND hwndDlg,
                 switch (lpnm->code)
                 {
                     case PSN_APPLY:
-                        MessageBox(NULL, _T("apply"), NULL, 0);
+                        SaveDlgInfo(dlgInfo, hwndDlg);
                     break;
                 }
             }

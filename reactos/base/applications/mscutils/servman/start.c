@@ -24,7 +24,7 @@ DoStartService(PMAIN_WND_INFO Info,
     hSCManager = OpenSCManager(NULL,
                                NULL,
                                SC_MANAGER_ALL_ACCESS);
-    if (hSCManager == NULL)
+    if (hSCManager != NULL)
     {
         hSc = OpenService(hSCManager,
                           Info->pCurrentService->lpServiceName,

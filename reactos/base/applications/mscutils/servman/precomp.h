@@ -17,6 +17,12 @@
 #define NO_ITEM_SELECTED -1
 #define MAX_KEY_LENGTH 256
 
+#define LVNAME 0
+#define LVDESC 1
+#define LVSTATUS 2
+#define LVSTARTUP 3
+#define LVLOGONAS 4
+
 typedef struct _MAIN_WND_INFO
 {
     HWND  hMainWnd;
@@ -54,6 +60,7 @@ typedef struct _MENU_HINT
     UINT HintId;
 } MENU_HINT, *PMENU_HINT;
 
+VOID ChangeListViewText(PMAIN_WND_INFO Info, ENUM_SERVICE_STATUS_PROCESS* pService, UINT Column);
 BOOL InitMainWindowImpl(VOID);
 VOID UninitMainWindowImpl(VOID);
 HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);

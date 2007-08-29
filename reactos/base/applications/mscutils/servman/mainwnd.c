@@ -9,12 +9,6 @@
 
 #include "precomp.h"
 
-#define LVNAME 0
-#define LVDESC 1
-#define LVSTATUS 2
-#define LVSTARTUP 3
-#define LVLOGONAS 4
-
 static const TCHAR szMainWndClass[] = TEXT("ServManWndClass");
 
 BOOL bSortAscending = TRUE;
@@ -142,70 +136,112 @@ SetListViewStyle(HWND hListView,
     }
 }
 
-static VOID
+VOID
 ChangeListViewText(PMAIN_WND_INFO Info,
+                   ENUM_SERVICE_STATUS_PROCESS* pService,
                    UINT Column)
 {
-    LVITEM item;
+    LVFINDINFO lvfi;
+    LVITEM lvItem;
+    INT index;
 
-    item.iItem = Info->SelectedItem;
-    item.iSubItem = Column;
-
-    switch (Column)
+    lvfi.flags = LVFI_PARAM;
+    lvfi.lParam = (LPARAM)pService;
+    index = ListView_FindItem(Info->hListView,
+                              -1,
+                              &lvfi);
+    if (index != -1)
     {
-        case LVNAME:
+        lvItem.iItem = index;
+        lvItem.iSubItem = Column;
 
-        break;
-
-        case LVDESC:
+        switch (Column)
         {
-            LPTSTR lpDescription;
+            case LVNAME:
 
-            lpDescription = GetServiceDescription(Info->pCurrentService->lpServiceName);
+            break;
 
-            item.pszText = lpDescription;
-            SendMessage(Info->hListView,
-                        LVM_SETITEMTEXT,
-                        item.iItem,
-                        (LPARAM) &item);
-
-            HeapFree(ProcessHeap,
-                     0,
-                     lpDescription);
-        }
-        break;
-
-        case LVSTATUS:
-        {
-            TCHAR szStatus[64];
-
-            if (Info->pCurrentService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+            case LVDESC:
             {
-                LoadString(hInstance,
-                           IDS_SERVICES_STARTED,
-                           szStatus,
-                           sizeof(szStatus) / sizeof(TCHAR));
+                LPTSTR lpDescription;
+
+                lpDescription = GetServiceDescription(pService->lpServiceName);
+
+                lvItem.pszText = lpDescription;
+                SendMessage(Info->hListView,
+                            LVM_SETITEMTEXT,
+                            lvItem.iItem,
+                            (LPARAM) &lvItem);
+
+                HeapFree(ProcessHeap,
+                         0,
+                         lpDescription);
             }
-            else
+            break;
+
+            case LVSTATUS:
             {
-                szStatus[0] = 0;
+                TCHAR szStatus[64];
+
+                if (pService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+                {
+                    LoadString(hInstance,
+                               IDS_SERVICES_STARTED,
+                               szStatus,
+                               sizeof(szStatus) / sizeof(TCHAR));
+                }
+                else
+                {
+                    szStatus[0] = 0;
+                }
+
+                lvItem.pszText = szStatus;
+                SendMessage(Info->hListView,
+                            LVM_SETITEMTEXT,
+                            lvItem.iItem,
+                            (LPARAM) &lvItem);
             }
+            break;
 
-            item.pszText = szStatus;
-            SendMessage(Info->hListView,
-                        LVM_SETITEMTEXT,
-                        item.iItem,
-                        (LPARAM) &item);
+            case LVSTARTUP:
+            {
+                LPQUERY_SERVICE_CONFIG lpServiceConfig;
+                LPTSTR lpStartup = NULL;
+                DWORD StringId = 0;
+
+                lpServiceConfig = GetServiceConfig(pService->lpServiceName);
+
+                switch (lpServiceConfig->dwStartType)
+                {
+                    case 2: StringId = IDS_SERVICES_AUTO; break;
+                    case 3: StringId = IDS_SERVICES_MAN; break;
+                    case 4: StringId = IDS_SERVICES_DIS; break;
+                }
+
+                if (StringId)
+                    AllocAndLoadString(&lpStartup,
+                                       hInstance,
+                                       StringId);
+
+                lvItem.pszText = lpStartup;
+                SendMessage(Info->hListView,
+                            LVM_SETITEMTEXT,
+                            lvItem.iItem,
+                            (LPARAM)&lvItem);
+
+                HeapFree(ProcessHeap,
+                         0,
+                         lpStartup);
+                HeapFree(ProcessHeap,
+                         0,
+                         lpServiceConfig);
+            }
+            break;
+
+            case LVLOGONAS:
+
+            break;
         }
-        break;
-
-        case LVSTARTUP:
-
-        break;
-
-        case LVLOGONAS:
-
-        break;
     }
 }
 
@@ -715,7 +751,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             if (DoStart(Info))
             {
                 UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, LVSTATUS);
+                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
                 SetMenuAndButtonStates(Info);
                 SetFocus(Info->hListView);
             }
@@ -726,7 +762,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             if (DoStop(Info))
             {
                 UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, LVSTATUS);
+                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
                 SetMenuAndButtonStates(Info);
                 SetFocus(Info->hListView);
             }
@@ -745,7 +781,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             {
                 DoStart(Info);
                 UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, LVSTATUS);
+                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
                 SetMenuAndButtonStates(Info);
                 SetFocus(Info->hListView);
             }
