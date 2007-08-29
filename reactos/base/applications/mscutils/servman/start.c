@@ -17,8 +17,6 @@ DoStartService(PMAIN_WND_INFO Info,
     SC_HANDLE hSc;
     SERVICE_STATUS_PROCESS ServiceStatus;
     DWORD BytesNeeded = 0;
-    INT ArgCount = 0;
-    DWORD dwStartTickCount, dwOldCheckPoint;
     BOOL bRet = FALSE;
 
     hSCManager = OpenSCManager(NULL,
@@ -32,7 +30,7 @@ DoStartService(PMAIN_WND_INFO Info,
         if (hSc != NULL)
         {
             if (StartService(hSc,
-                              ArgCount,
+                              0,
                               NULL))
             {
                 if (QueryServiceStatusEx(hSc,
@@ -41,14 +39,12 @@ DoStartService(PMAIN_WND_INFO Info,
                                          sizeof(SERVICE_STATUS_PROCESS),
                                          &BytesNeeded))
                 {
-                    dwStartTickCount = GetTickCount();
-                    dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+                    DWORD dwStartTickCount = GetTickCount();
+                    DWORD dwOldCheckPoint = ServiceStatus.dwCheckPoint;
 
                     while (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
                     {
-                        DWORD dwWaitTime;
-
-                        dwWaitTime = ServiceStatus.dwWaitHint / 10;
+                        DWORD dwWaitTime = ServiceStatus.dwWaitHint / 10;
 
                         if(dwWaitTime < 1000)
                             dwWaitTime = 500;

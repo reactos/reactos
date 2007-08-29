@@ -199,45 +199,23 @@ RefreshServiceList(PMAIN_WND_INFO Info)
     ENUM_SERVICE_STATUS_PROCESS *pService;
     LPTSTR lpDescription;
     LVITEM lvItem;
+    LPTSTR lpNumServices;
     TCHAR szNumServices[32];
     TCHAR szStatus[64];
     DWORD NumServices;
     DWORD Index;
-    LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
 
     (void)ListView_DeleteAllItems(Info->hListView);
 
     if (GetServiceList(Info, &NumServices))
     {
-        TCHAR buf[300];     /* buffer to hold key path */
-        INT NumListedServ = 0; /* how many services were listed */
+        INT NumListedServ = 0;
 
         for (Index = 0; Index < NumServices; Index++)
         {
-            HKEY hKey = NULL;
-            LPTSTR lpLogOnAs = NULL;
-            DWORD StartUp = 0;
-            DWORD dwValueSize;
+            LPQUERY_SERVICE_CONFIG pServiceConfig;
 
-            /* copy the service info over */
             pService = &Info->pAllServices[Index];
-
-             /* open the registry key for the service */
-            _sntprintf(buf,
-                       300,
-                       Path,
-                       pService->lpServiceName);
-            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                             buf,
-                             0,
-                             KEY_READ,
-                             &hKey) != ERROR_SUCCESS)
-            {
-                HeapFree(ProcessHeap,
-                         0,
-                         pService);
-                continue;
-            }
 
             /* set the display name */
             ZeroMemory(&lvItem, sizeof(LVITEM));
@@ -254,7 +232,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
             if ((lpDescription = GetServiceDescription(pService->lpServiceName)))
             {
                 lvItem.pszText = lpDescription;
-                lvItem.iSubItem = 1;
+                lvItem.iSubItem = LVDESC;
                 SendMessage(Info->hListView,
                             LVM_SETITEMTEXT,
                             lvItem.iItem,
@@ -273,110 +251,78 @@ RefreshServiceList(PMAIN_WND_INFO Info)
                            szStatus,
                            sizeof(szStatus) / sizeof(TCHAR));
                 lvItem.pszText = szStatus;
-                lvItem.iSubItem = 2;
+                lvItem.iSubItem = LVSTATUS;
                 SendMessage(Info->hListView,
                             LVM_SETITEMTEXT,
                             lvItem.iItem,
                             (LPARAM)&lvItem);
             }
 
-            /* set the startup type */
-            dwValueSize = sizeof(DWORD);
-            if (RegQueryValueEx(hKey,
-                                _T("Start"),
-                                NULL,
-                                NULL,
-                                (LPBYTE)&StartUp,
-                                &dwValueSize) == ERROR_SUCCESS)
+            pServiceConfig = GetServiceConfig(pService->lpServiceName);
+            if (pServiceConfig)
             {
-                switch (StartUp)
-                {
-                    case 2:
-                        LoadStringW(hInstance,
-                                    IDS_SERVICES_AUTO,
-                                    szStatus,
-                                    sizeof(szStatus) / sizeof(TCHAR));
-                         break;
-                    case 3:
-                        LoadStringW(hInstance,
-                                    IDS_SERVICES_MAN,
-                                    szStatus,
-                                    sizeof(szStatus) / sizeof(TCHAR));
-                        break;
+                DWORD StringId = 0;
+                LPTSTR lpStartup;
 
-                    case 4:
-                        LoadStringW(hInstance,
-                                    IDS_SERVICES_DIS,
-                                    szStatus,
-                                    sizeof(szStatus) / sizeof(TCHAR));
-                        break;
-                    default:
-                        szStatus[0] = 0;
-                        break;
+                /* set the startup type */
+                switch (pServiceConfig->dwStartType)
+                {
+                    case 2: StringId = IDS_SERVICES_AUTO; break;
+                    case 3: StringId = IDS_SERVICES_MAN; break;
+                    case 4: StringId = IDS_SERVICES_DIS; break;
                 }
 
-                lvItem.pszText = szStatus;
-                lvItem.iSubItem = 3;
+                if (StringId)
+                    AllocAndLoadString(&lpStartup,
+                                       hInstance,
+                                       StringId);
+
+                lvItem.pszText = lpStartup;
+                lvItem.iSubItem = LVSTARTUP;
                 SendMessage(Info->hListView,
                             LVM_SETITEMTEXT,
                             lvItem.iItem,
                             (LPARAM)&lvItem);
-            }
 
-            /* set Log On As */
-            dwValueSize = 0;
-            if (RegQueryValueEx(hKey,
-                                _T("ObjectName"),
-                                NULL,
-                                NULL,
-                                NULL,
-                                &dwValueSize) == ERROR_SUCCESS)
-            {
-                lpLogOnAs = HeapAlloc(ProcessHeap,
-                                     0,
-                                     dwValueSize);
-                if (lpLogOnAs != NULL)
-                {
-                    if(RegQueryValueEx(hKey,
-                                       _T("ObjectName"),
-                                       NULL,
-                                       NULL,
-                                       (LPBYTE)lpLogOnAs,
-                                       &dwValueSize) == ERROR_SUCCESS)
-                    {
-                        lvItem.pszText = lpLogOnAs;
-                        lvItem.iSubItem = 4;
-                        SendMessage(Info->hListView,
-                                    LVM_SETITEMTEXT,
-                                    lvItem.iItem,
-                                    (LPARAM)&lvItem);
-                    }
+                HeapFree(ProcessHeap,
+                         0,
+                         lpStartup);
 
-                    HeapFree(ProcessHeap,
-                             0,
-                             lpLogOnAs);
-                }
+                /* set Log On As */
+                lvItem.pszText = pServiceConfig->lpServiceStartName;
+                lvItem.iSubItem = LVLOGONAS;
+                SendMessage(Info->hListView,
+                            LVM_SETITEMTEXT,
+                            lvItem.iItem,
+                            (LPARAM)&lvItem);
 
-                RegCloseKey(hKey);
+                HeapFree(ProcessHeap,
+                         0,
+                         pServiceConfig);
             }
         }
 
-        /* set the number of listed services in the status bar */
-        NumListedServ = ListView_GetItemCount(Info->hListView);
-        LoadString(hInstance,
-                   IDS_NUM_SERVICES,
-                   szNumServices,
-                   sizeof(szNumServices) / sizeof(TCHAR));
+        if (AllocAndLoadString(&lpNumServices,
+                               hInstance,
+                               IDS_NUM_SERVICES))
+        {
+            NumListedServ = ListView_GetItemCount(Info->hListView);
 
-        _sntprintf(buf,
-                   300,
-                   szNumServices,
-                   NumListedServ);
+            _sntprintf(szNumServices,
+                       300,
+                       lpNumServices,
+                       NumListedServ);
 
-        SendMessage(Info->hStatus,
-                    SB_SETTEXT,
-                    0,
-                    (LPARAM)buf);
+            SendMessage(Info->hStatus,
+                        SB_SETTEXT,
+                        0,
+                        (LPARAM)szNumServices);
+
+            HeapFree(ProcessHeap,
+                     0,
+                     lpNumServices);
+        }
+
     }
 
     /* turn redraw flag on. It's turned off initially via the LBS_NOREDRAW flag */
