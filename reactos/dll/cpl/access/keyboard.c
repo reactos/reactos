@@ -128,13 +128,64 @@ FilterKeysDlgProc(HWND hwndDlg,
             pGlobalData = (PGLOBAL_DATA)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
+            memcpy(&pGlobalData->oldFilterKeys,
+                   &pGlobalData->filterKeys,
+                   sizeof(FILTERKEYS));
+
+            CheckDlgButton(hwndDlg,
+                           IDC_FILTER_ACTIVATE_CHECK,
+                           pGlobalData->filterKeys.dwFlags & FKF_HOTKEYACTIVE ? BST_CHECKED : BST_UNCHECKED);
+
+            if (pGlobalData->filterKeys.iBounceMSec != 0)
+            {
+                CheckRadioButton(hwndDlg, IDC_FILTER_BOUNCE_RADIO, IDC_FILTER_REPEAT_RADIO, IDC_FILTER_BOUNCE_RADIO);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_BOUNCE_BUTTON), TRUE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_REPEAT_BUTTON), FALSE);
+            }
+            else
+            {
+                CheckRadioButton(hwndDlg, IDC_FILTER_BOUNCE_RADIO, IDC_FILTER_REPEAT_RADIO, IDC_FILTER_REPEAT_RADIO);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_BOUNCE_BUTTON), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_REPEAT_BUTTON), TRUE);
+            }
+
+            CheckDlgButton(hwndDlg,
+                           IDC_FILTER_SOUND_CHECK,
+                           pGlobalData->filterKeys.dwFlags & FKF_CLICKON ? BST_CHECKED : BST_UNCHECKED);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_FILTER_STATUS_CHECK,
+                           pGlobalData->filterKeys.dwFlags & FKF_INDICATOR ? BST_CHECKED : BST_UNCHECKED);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_FILTER_ACTIVATE_CHECK:
+                    pGlobalData->filterKeys.dwFlags ^= FKF_HOTKEYACTIVE;
+                    break;
+
+                case IDC_FILTER_BOUNCE_RADIO:
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_BOUNCE_BUTTON), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_REPEAT_BUTTON), FALSE);
+                    break;
+
+                case IDC_FILTER_REPEAT_RADIO:
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_BOUNCE_BUTTON), FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_REPEAT_BUTTON), TRUE);
+                    break;
+
+                case IDC_FILTER_SOUND_CHECK:
+                    pGlobalData->filterKeys.dwFlags ^= FKF_CLICKON;
+                    break;
+
+                case IDC_FILTER_STATUS_CHECK:
+                    pGlobalData->filterKeys.dwFlags ^= FKF_INDICATOR;
+                    break;
+
                 case IDOK:
-                    EndDialog(hwndDlg, TRUE);
+                    EndDialog(hwndDlg,
+                              (pGlobalData->filterKeys.dwFlags != pGlobalData->oldFilterKeys.dwFlags));
                     break;
 
                 case IDCANCEL:
@@ -175,7 +226,6 @@ ToggleKeysDlgProc(HWND hwndDlg,
             CheckDlgButton(hwndDlg,
                            IDC_TOGGLE_ACTIVATE_CHECK,
                            pGlobalData->toggleKeys.dwFlags & TKF_HOTKEYACTIVE ? BST_CHECKED : BST_UNCHECKED);
-
             break;
 
         case WM_COMMAND:
