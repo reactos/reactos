@@ -20,6 +20,7 @@
       <file>create.c</file>
       <file>delete.c</file>
       <file>export.c</file>
+      <file>listview.c</file>
       <file>mainwnd.c</file>
       <file>misc.c</file>
       <file>progress.c</file>

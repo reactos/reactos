@@ -65,6 +65,11 @@ BOOL InitMainWindowImpl(VOID);
 VOID UninitMainWindowImpl(VOID);
 HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);
 
+/* listview.c */
+VOID SetListViewStyle(HWND hListView, DWORD View);
+VOID ListViewSelectionChanged(PMAIN_WND_INFO Info, LPNMLISTVIEW pnmv);
+BOOL CreateListView(PMAIN_WND_INFO Info);
+
 /* start */
 BOOL DoStart(PMAIN_WND_INFO Info);
 
@@ -86,6 +91,7 @@ LPTSTR GetServiceDescription(LPTSTR lpServiceName);
 LPTSTR GetExecutablePath(LPTSTR lpServiceName);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
+BOOL GetServiceList(PMAIN_WND_INFO Info, DWORD *NumServices);
 
 /* reg */
 BOOL SetDescription(LPTSTR, LPTSTR);
