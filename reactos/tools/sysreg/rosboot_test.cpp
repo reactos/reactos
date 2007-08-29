@@ -167,7 +167,7 @@ namespace Sysreg_
         options[2] = (TCHAR*)output.c_str();
             
         cerr << "Creating HDD Image ..." << output << endl;
-        if (OsSupport::createProcess ((TCHAR*)qemuimgdir.c_str(), 3, options, true))
+        if (OsSupport::createProcess ((TCHAR*)qemuimgdir.c_str(), 4, options, true))
         {
             m_HDDImage = output;
             return true;
