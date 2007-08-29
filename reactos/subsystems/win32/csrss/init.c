@@ -340,6 +340,73 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 /* === INIT ROUTINES === */
 
 /**********************************************************************
+ * CsrpCreateBNODirectory/3
+ *
+ * These used to be part of kernel32 startup, but that clearly wasn't a good
+ * idea, as races were definately possible.  These are moved (as in the 
+ * previous fixmes).
+ */
+static NTSTATUS
+CsrpCreateBNODirectory (int argc, char ** argv, char ** envp)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\BaseNamedObjects");
+    UNICODE_STRING SymName = RTL_CONSTANT_STRING(L"Local");
+    UNICODE_STRING SymName2 = RTL_CONSTANT_STRING(L"Global");
+    HANDLE DirHandle, SymHandle;
+
+    /* Seems like a good place to create these objects which are needed by
+     * win32 processes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateDirectoryObject(&DirHandle,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
+    }
+
+    /* Create the "local" Symbolic Link. 
+     * FIXME: CSR should do this -- Fixed */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SymName,
+                               OBJ_CASE_INSENSITIVE,
+                               DirHandle,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &Name);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
+    }
+    
+    /* Create the "global" Symbolic Link. */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SymName2,
+                               OBJ_CASE_INSENSITIVE,
+                               DirHandle,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &Name);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
+    }
+
+    return Status;
+}
+
+/**********************************************************************
  * CsrpCreateHeap/3
  */
 static NTSTATUS
@@ -623,6 +690,7 @@ struct {
 	CSR_INIT_ROUTINE EntryPoint;
 	PCHAR ErrorMessage;
 } InitRoutine [] = {
+        {TRUE, CsrpCreateBNODirectory,   "create base named objects directory"},
 	{TRUE, CsrpCreateCallbackPort,   "create the callback port \\Windows\\SbApiPort"},
 	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
 	{TRUE, CsrpCreateHeap,           "create the CSR heap"},
