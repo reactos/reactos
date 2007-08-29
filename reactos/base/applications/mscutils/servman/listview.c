@@ -122,7 +122,6 @@ ChangeListViewText(PMAIN_WND_INFO Info,
                              lpServiceConfig);
                 }
             }
-
             break;
 
             case LVDESC:
@@ -370,51 +369,57 @@ RefreshServiceList(PMAIN_WND_INFO Info)
 static VOID
 InitListViewImage(PMAIN_WND_INFO Info)
 {
-    HICON hSmIconItem, hLgIconItem;    /* icon for list-view items */
-    HIMAGELIST hSmall, hLarge;  /* image list for other views */
+    HICON hSmIconItem, hLgIconItem;
+    HIMAGELIST hSmall, hLarge;
 
-
-    /* Create the icon image lists */
     hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
                               GetSystemMetrics(SM_CYSMICON),
                               ILC_MASK | ILC_COLOR32,
                               1,
                               1);
+    if (hSmall)
+    {
+        hSmIconItem = LoadImage(hInstance,
+                                MAKEINTRESOURCE(IDI_SM_ICON),
+                                IMAGE_ICON,
+                                16,
+                                16,
+                                0);
+        if (hSmIconItem)
+        {
+            ImageList_AddIcon(hSmall,
+                              hSmIconItem);
+            (void)ListView_SetImageList(Info->hListView,
+                                        hSmall,
+                                        LVSIL_SMALL);
+
+            DestroyIcon(hSmIconItem);
+        }
+    }
 
     hLarge = ImageList_Create(GetSystemMetrics(SM_CXICON),
                               GetSystemMetrics(SM_CYICON),
                               ILC_MASK | ILC_COLOR32,
                               1,
                               1);
-
-    /* Add an icon to each image list */
-    hSmIconItem = LoadImage(hInstance,
-                            MAKEINTRESOURCE(IDI_SM_ICON),
-                            IMAGE_ICON,
-                            16,
-                            16,
-                            0);
-
-    ImageList_AddIcon(hSmall,
-                      hSmIconItem);
-
-    hLgIconItem = LoadImage(hInstance,
-                            MAKEINTRESOURCE(IDI_SM_ICON),
-                            IMAGE_ICON,
-                            32,
-                            32,
-                            0);
-
-    ImageList_AddIcon(hLarge,
-                      hLgIconItem);
-
-    /* assign the image to the list view */
-    (void)ListView_SetImageList(Info->hListView,
-                                hSmall,
-                                LVSIL_SMALL);
-    (void)ListView_SetImageList(Info->hListView,
-                                hLarge,
-                                LVSIL_NORMAL);
+    if (hLarge)
+    {
+        hLgIconItem = LoadImage(hInstance,
+                                MAKEINTRESOURCE(IDI_SM_ICON),
+                                IMAGE_ICON,
+                                32,
+                                32,
+                                0);
+        if (hLgIconItem)
+        {
+            ImageList_AddIcon(hLarge,
+                              hLgIconItem);
+            (void)ListView_SetImageList(Info->hListView,
+                                        hLarge,
+                                        LVSIL_NORMAL);
+            DestroyIcon(hLgIconItem);
+        }
+    }
 }
 
 
