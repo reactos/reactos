@@ -1999,6 +1999,8 @@ ProcessUnattendInf(HINF hUnattendedInf)
   TCHAR szName[256];
   TCHAR szValue[MAX_PATH];
   DWORD LineLength;
+  HKEY hKey;
+  DWORD BootCDRegtestActive = 0;
 
   if (!SetupFindFirstLine(hUnattendedInf,
               _T("Unattend"),
@@ -2089,17 +2091,46 @@ ProcessUnattendInf(HINF hUnattendedInf)
       {
         SetupData.TimeZoneIndex = _ttoi(szValue);
       }
-    else if (_tcscmp(szName, _T("DisableAutoDaylightTimeSet")))
+    else if (!_tcscmp(szName, _T("DisableAutoDaylightTimeSet")))
       {
         SetupData.DisableAutoDaylightTimeSet = _ttoi(szValue);
       }
-    else if (_tcscmp(szName, _T("DisableVmwInst")))
+    else if (!_tcscmp(szName, _T("DisableVmwInst")))
       {
-        if(_tcscmp(szValue, _T("yes"))) SetupData.DisableVmwInst = 1;
-        else SetupData.DisableVmwInst = 0;
+        if(!_tcscmp(szValue, _T("yes"))) 
+            SetupData.DisableVmwInst = 1;
+        else 
+            SetupData.DisableVmwInst = 0;
       }
+    else if (!_tcscmp(szName, _T("BootCDRegTestActive")))
+      {
+        BootCDRegtestActive = _ttoi(szValue);
+      }
+
   }
   while (SetupFindNextLine(&InfContext, &InfContext));
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                        _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce"),
+                        0,
+                        KEY_SET_VALUE,
+                        &hKey) != ERROR_SUCCESS)
+    {
+      DPRINT1("Error: failed to open HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce\n");
+      return TRUE;
+    }
+
+  if (BootCDRegtestActive)
+    {
+      _tcscpy(szValue, _T("C:\\ReactOS\\bin\\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE"));
+      RegSetValueEx(hKey,
+                    _T("BootCDRegtestActive"),
+                    0,
+                    REG_SZ,
+                    (const BYTE*)szValue,
+                     _tcslen(szValue) * sizeof(TCHAR));
+    }
+
 
 
   if (SetupFindFirstLine(hUnattendedInf,
@@ -2107,21 +2138,8 @@ ProcessUnattendInf(HINF hUnattendedInf)
                          NULL,
                          &InfContext))
     {
-      HKEY hKey;
-      int i;
 
-      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                        _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce"),
-                        0,
-                        KEY_SET_VALUE,
-                        &hKey) != ERROR_SUCCESS)
-        {
-          DPRINT1("Error: failed to open HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce\n");
-          return TRUE;
-        }
-
-      i = 0;
-
+      int i = 0;
       do
       {
         if(SetupGetStringField(&InfContext, 
