@@ -105,6 +105,23 @@ ChangeListViewText(PMAIN_WND_INFO Info,
         switch (Column)
         {
             case LVNAME:
+            {
+                LPQUERY_SERVICE_CONFIG lpServiceConfig;
+
+                lpServiceConfig = GetServiceConfig(pService->lpServiceName);
+                if (lpServiceConfig)
+                {
+                    lvItem.pszText = lpServiceConfig->lpDisplayName;
+                    SendMessage(Info->hListView,
+                                LVM_SETITEMTEXT,
+                                lvItem.iItem,
+                                (LPARAM)&lvItem);
+
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpServiceConfig);
+                }
+            }
 
             break;
 
@@ -186,7 +203,23 @@ ChangeListViewText(PMAIN_WND_INFO Info,
             break;
 
             case LVLOGONAS:
+            {
+                LPQUERY_SERVICE_CONFIG lpServiceConfig;
 
+                lpServiceConfig = GetServiceConfig(pService->lpServiceName);
+                if (lpServiceConfig)
+                {
+                    lvItem.pszText = lpServiceConfig->lpServiceStartName;
+                    SendMessage(Info->hListView,
+                                LVM_SETITEMTEXT,
+                                lvItem.iItem,
+                                (LPARAM)&lvItem);
+
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpServiceConfig);
+                }
+            }
             break;
         }
     }
@@ -309,7 +342,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
             NumListedServ = ListView_GetItemCount(Info->hListView);
 
             _sntprintf(szNumServices,
-                       300,
+                       31,
                        lpNumServices,
                        NumListedServ);
 
@@ -322,7 +355,6 @@ RefreshServiceList(PMAIN_WND_INFO Info)
                      0,
                      lpNumServices);
         }
-
     }
 
     /* turn redraw flag on. It's turned off initially via the LBS_NOREDRAW flag */
