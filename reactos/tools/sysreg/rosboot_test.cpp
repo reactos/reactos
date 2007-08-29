@@ -155,6 +155,13 @@ namespace Sysreg_
                                 NULL
                             };
 
+        if (!isFileExisting(qemuimgdir))
+        {
+            cerr << "Error: ROS_EMU_PATH must contain the path to qemu and qemu-img" << endl;
+            return false;
+        }
+
+
         getDefaultHDDImage(output);
         options[1] = (TCHAR*)output.c_str();
             
