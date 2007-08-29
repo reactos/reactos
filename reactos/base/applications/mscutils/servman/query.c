@@ -90,10 +90,53 @@ cleanup:
 }
 
 
-VOID
-SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig)
+BOOL
+SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig,
+                 LPTSTR lpServiceName,
+                 LPTSTR lpPassword)
 {
+    SC_HANDLE hSCManager;
+    SC_HANDLE hSc;
+    SC_LOCK scLock;
+    BOOL bRet = FALSE;
 
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_LOCK);
+    if (hSCManager)
+    {
+        scLock = LockServiceDatabase(hSCManager);
+        if (scLock)
+        {
+            hSc = OpenService(hSCManager,
+                              lpServiceName,
+                              SERVICE_QUERY_CONFIG);
+            if (hSc)
+            {
+                if (ChangeServiceConfig(hSc,
+                                        pServiceConfig->dwServiceType,
+                                        pServiceConfig->dwStartType,
+                                        pServiceConfig->dwErrorControl,
+                                        pServiceConfig->lpBinaryPathName,
+                                        pServiceConfig->lpLoadOrderGroup,
+                                        &pServiceConfig->dwTagId,
+                                        pServiceConfig->lpDependencies,
+                                        pServiceConfig->lpServiceStartName,
+                                        lpPassword,
+                                        pServiceConfig->lpDisplayName))
+                {
+                    bRet = TRUE;
+                }
+            }
+
+            UnlockServiceDatabase(scLock);
+        }
+    }
+
+    if (!bRet)
+        GetError();
+
+    return bRet;
 }
 
 

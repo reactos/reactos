@@ -74,7 +74,7 @@ VOID CompleteProgressBar(HWND hProgDlg);
 /* query.c */
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
 LPQUERY_SERVICE_CONFIG GetServiceConfig(LPTSTR lpServiceName);
-VOID SetServiceConfig(LPQUERY_SERVICE_CONFIG);
+BOOL SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig, LPTSTR lpServiceName, LPTSTR lpPassword);
 LPTSTR GetServiceDescription(LPTSTR lpServiceName);
 LPTSTR GetExecutablePath(LPTSTR lpServiceName);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
