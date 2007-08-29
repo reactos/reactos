@@ -99,7 +99,7 @@ BEGIN
   LTEXT "Vous pouvez définir les paramètres passés au service lorsque vous le démarrez.",IDC_STATIC, 6,177,240,15
   LTEXT "Paramètres:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+  PUSHBUTTON "Éditer", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
@@ -215,8 +215,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS essaye de démarrer le service suivant"
   IDS_PROGRESS_INFO_STOP  "ReactOS essaye d'arrêter le service suivant"
-  IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
-  IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS essaye de suspendre le service suivan"
+  IDS_PROGRESS_INFO_RESUME "ReactOS essaye de relancer le service suivan"
   IDS_CREATE_SUCCESS "Service créé"
   IDS_CREATE_REQ "Les champs marqués d'une astérisque\nasont obligatoires"
   IDS_DELETE_STOP "Vous devez arrêter le service avant de le supprimer!"
@@ -253,7 +253,7 @@ BEGIN
   IDS_HINT_CUST         " Personnaliser l'affichage."
 
   IDS_HINT_HELP         " Affiche la fenêtre d'aide."
-  IDS_HINT_ABOUT        " A Propos du gestionnaire de Services ReactOS."
+  IDS_HINT_ABOUT        " À propos du gestionnaire de Services ReactOS."
 
   IDS_HINT_SYS_RESTORE  " Restaurer la taille de la fenêtre."
   IDS_HINT_SYS_MOVE     " Déplacer la fenêtre."

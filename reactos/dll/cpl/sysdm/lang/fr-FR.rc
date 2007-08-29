@@ -51,7 +51,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avancé"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Administrator privileges are required for most of these settings.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT       "Les privilèges administrateur sont requis pour la plupart de ces paramètres.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "Performance", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Les  options de performance contrôlent comment les applications utilisent la mémoire, ce qui affecte la vitesse de l'ordinateur.", IDC_STATIC, 16, 29, 210, 25
     PUSHBUTTON  "Réglages", IDC_PERFOR, 194, 48, 50, 15
@@ -155,19 +155,19 @@ BEGIN
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondes", IDC_STATIC, 210, 70, 30, 8
-    LTEXT       "Pour éditer le fichier d'options de démarrage manuellement, cliquer sur Editer.", IDC_STATIC, 14, 85, 187, 18
-    PUSHBUTTON  "&Editer", IDC_STRRECEDIT, 188, 87, 50, 14
+    LTEXT       "Pour éditer le fichier d'options de démarrage manuellement, cliquer sur Éditer.", IDC_STATIC, 14, 85, 187, 18
+    PUSHBUTTON  "&Éditer", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Erreur Système", IDC_STATIC, 7, 111, 238, 140
-    CONTROL     "&Ecrire un événement dans le  journal système", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 160, 10
+    CONTROL     "&Écrire un événement dans le journal système", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 160, 10
     CONTROL     "Envoyer une alerte administrative", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 148, 10
     CONTROL     "Redémarrer automatiquement", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 145, 10
 
-    GROUPBOX    "Ecrire les informations de débogage", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX    "Écrire les informations de débogage", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
-    LTEXT       "Ficher &Dump :", IDC_STATIC, 17, 202, 150, 8
+    LTEXT       "Ficher Cliché :", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    CONTROL     "&Ecraser tout fichier existant", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 125, 10
+    CONTROL     "&Écraser tout fichier existant", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Annuler", IDCANCEL, 195, 259, 50, 14
@@ -180,14 +180,15 @@ CAPTION "Mémoire Virtuelle"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LTEXT       "Lecteur  [Nom de Volume]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "Taille de fichier swap (MB)", IDC_STATIC, 115, 5, 96, 9
-    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS    GROUPBOX    "Taille de fichier swap pour le disque sélectionné", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT       "Taille du fichier d'échange (Mo)", IDC_STATIC, 115, 5, 96, 9
+    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
+    GROUPBOX    "Taille du fichier d'échange pour le disque sélectionné", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT       "Lecteur :", IDC_STATIC, 20, 80, 30, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT       "Espace disponible :", IDC_STATIC, 20, 92, 66, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "Taille &Initiale (MB):", -1, 22, 118, 72, 9
-    LTEXT       "Taille Ma&ximum (MB):", -1, 22, 131, 72, 9
+    LTEXT       "Taille &Initiale (Mo):", -1, 22, 118, 72, 9
+    LTEXT       "Taille Ma&ximum (Mo):", -1, 22, 131, 72, 9
     CONTROL     "&Taille personnalisée", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 75, 9
     CONTROL     "&Taille &gérée par le système", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 100, 9
     CONTROL     "&Pas de mémoire virtuelle", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 100,9
@@ -219,7 +220,7 @@ BEGIN
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "&Nouvelle...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
-    PUSHBUTTON  "&Editer...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
+    PUSHBUTTON  "&Éditer...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON  "&Supprimer", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
     GROUPBOX    "Variables système", IDC_STATIC, 7, 116, 238, 100
 
@@ -227,7 +228,7 @@ BEGIN
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Nou&velle...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
-    PUSHBUTTON  "Edi&ter...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
+    PUSHBUTTON  "Édi&ter...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
     PUSHBUTTON  "Su&pprimer", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
     DEFPUSHBUTTON  "OK", IDOK, 141, 224, 50, 14, WS_GROUP
     PUSHBUTTON  "Annuler", IDCANCEL, 195, 224, 50, 14
@@ -262,14 +263,14 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Système"
     IDS_CPLSYSTEMDESCRIPTION "Affiche des informations à propos de l'ordinateur et change des réglages systèmes et matériels."
-    IDS_MEGABYTE "MB de RAM"
-    IDS_GIGABYTE "GB de RAM"
-    IDS_TERABYTE "TB de RAM"
-    IDS_PETABYTE "PB de RAM"
+    IDS_MEGABYTE "Mo de RAM"
+    IDS_GIGABYTE "Go de RAM"
+    IDS_TERABYTE "To de RAM"
+    IDS_PETABYTE "Po de RAM"
     IDS_VARIABLE "Variable"
     IDS_VALUE    "Valeur"
     IDS_NO_DUMP "(Aucun)"
-    IDS_MINI_DUMP "Mini cliché(64KB)"
+    IDS_MINI_DUMP "Mini cliché(64Ko)"
     IDS_KERNEL_DUMP "Cliché du noyau"
     IDS_FULL_DUMP "Cliché complet"
 END
