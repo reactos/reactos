@@ -334,19 +334,15 @@ namespace Sysreg_
             return true;
         }
 
-        if (m_CDImage.length())
+        if (!createDefaultHDDImage())
         {
-            /* ROS_CD_IMAGE is set but no ROS_HDD_IMAGE is set 
-             * so create hdd image */
-            if (!createDefaultHDDImage())
-            {
-                /* failed to create hdd image */
-                cerr << "Error: failed to create hdd image " << endl;
-                return false;
-            }
-            getDefaultHDDImage(m_HDDImage);
-            return true;
+            /* failed to create hdd image */
+            cerr << "Error: failed to create hdd image " << endl;
+            return false;
         }
+        getDefaultHDDImage(m_HDDImage);
+        return true;
+
         /// 
         /// FIXME
         /// scan m_BootCmd if theres -hda param provided
