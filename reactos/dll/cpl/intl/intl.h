@@ -11,7 +11,8 @@ typedef struct _APPLET
 } APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;
-
+extern DWORD IsUnattendedSetupEnabled;
+extern DWORD UnattendLCID;
 
 /* currency.c */
 INT_PTR CALLBACK

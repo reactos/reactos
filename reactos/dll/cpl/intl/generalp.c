@@ -173,6 +173,34 @@ void SetNewLocale(LCID lcid)
 	RegCloseKey(langKey);
 
 }
+DWORD
+VerifyUnattendLCID(HWND hwndDlg)
+{
+	LRESULT lCount, lIndex, lResult;
+	lCount = SendMessage(hList, CB_GETCOUNT, (WPARAM)0, (LPARAM)0);
+	if (lCount == CB_ERR)
+	{
+		return 0;
+	}
+
+	for (lIndex = 0; lIndex < lCount; lIndex++)
+	{
+		lResult = SendMessage(hList, CB_GETITEMDATA, (WPARAM)lIndex, (LPARAM)0);
+		if (lResult == CB_ERR)
+		{
+			continue;
+		}
+
+		if (lResult == (LCID)UnattendLCID)
+		{
+			SendMessage(hList, CB_SETCURSEL, (WPARAM)lIndex, (LPARAM)0);
+			PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -185,6 +213,15 @@ GeneralPageProc(HWND hwndDlg,
 	{
 	case WM_INITDIALOG:
 		CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
+		if (IsUnattendedSetupEnabled)
+		{
+			if (VerifyUnattendLCID(hwndDlg))
+			{
+				SetNewLocale(UnattendLCID);
+				PostQuitMessage(0);
+			}
+			return TRUE;
+		}
 		break;
 	case WM_COMMAND:
 		switch (LOWORD(wParam))

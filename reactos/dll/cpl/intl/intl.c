@@ -41,6 +41,9 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
 HINSTANCE hApplet = 0;
 HINF hSetupInf = INVALID_HANDLE_VALUE;
+DWORD IsUnattendedSetupEnabled = 0;
+DWORD UnattendLCID = 0;
+
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] = 
@@ -97,10 +100,10 @@ OpenSetupInf()
   return (hSetupInf != INVALID_HANDLE_VALUE);
 }
 
-LONG ParseSetupInf()
+VOID
+ParseSetupInf()
 {
   INFCONTEXT InfContext;
-  INT LocaleID;
   TCHAR szBuffer[30];
 
   if (!SetupFindFirstLine(hSetupInf,
@@ -108,7 +111,8 @@ LONG ParseSetupInf()
               _T("LocaleID"),
               &InfContext))
   {
-    return -1;
+    SetupCloseInfFile(hSetupInf);
+    return;
   }
 
   if (!SetupGetStringField(&InfContext,
@@ -117,13 +121,13 @@ LONG ParseSetupInf()
                         sizeof(szBuffer) / sizeof(TCHAR),
                         NULL))
   {
-    return -1;
+    SetupCloseInfFile(hSetupInf);
+    return;
   }
-  LocaleID = _ttoi(szBuffer);
-  SetNewLocale((LCID)LocaleID);
+  
+  UnattendLCID = _tcstoul(szBuffer, NULL, 16);
+  IsUnattendedSetupEnabled = 1;
   SetupCloseInfFile(hSetupInf);
-
-  return 0;
 }
 
 static LONG APIENTRY
@@ -135,7 +139,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
   if (OpenSetupInf())
   {
-    return ParseSetupInf();
+    ParseSetupInf();
   }
 
   LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
