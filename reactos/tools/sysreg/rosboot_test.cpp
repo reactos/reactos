@@ -824,11 +824,6 @@ namespace Sysreg_
 
 			if (!m_DataSource->readSource (vect))
 			{
-#ifndef __LINUX__
-				cerr << "No data read" << GetLastError() << endl;
-#else
-				cerr << "No data read" << endl;
-#endif
 				continue;				
 			}
 			if (write_log)

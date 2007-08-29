@@ -91,7 +91,7 @@ namespace System_
 		TCHAR * res = _fgetts(buf, 100, m_File);
 		if (!res)
 		{
-			cerr << "Error: PipeReader::readPipe failed" << endl;
+			//cerr << "Error: PipeReader::readPipe failed" << endl;
 			free(buf);
 			return false;
 		}
