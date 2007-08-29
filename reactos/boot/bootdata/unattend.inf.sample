@@ -46,6 +46,12 @@ AutoPartition = 1
 ; no  - enabled
 DisableVmwInst = yes
 
+; set this option to automatically
+; specify language in 2nd mode setup
+; see hivesys.inf for available languages
+; LocaleID = 407 
+
+
 ; enable this section to automatically launch programs
 ; after 3rd boot
 ;
