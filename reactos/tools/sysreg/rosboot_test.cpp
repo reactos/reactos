@@ -148,22 +148,23 @@ namespace Sysreg_
         qemuimgdir += _T("\\qemu-img.exe");
 #endif  
 
-        TCHAR * options[] = {
+       if (!isFileExisting(qemuimgdir))
+        {
+            cerr << "Error: ROS_EMU_PATH must contain the path to qemu and qemu-img" << endl;
+            return false;
+        }
+
+        TCHAR * options[] = {   NULL,
                                 _T("create"),
                                 NULL,
                                 _T("100M"),
                                 NULL
                             };
 
-        if (!isFileExisting(qemuimgdir))
-        {
-            cerr << "Error: ROS_EMU_PATH must contain the path to qemu and qemu-img" << endl;
-            return false;
-        }
-
 
         getDefaultHDDImage(output);
-        options[1] = (TCHAR*)output.c_str();
+        options[0] = (TCHAR*)qemuimgdir.c_str();
+        options[2] = (TCHAR*)output.c_str();
             
         cerr << "Creating HDD Image ..." << output << endl;
         if (OsSupport::createProcess ((TCHAR*)qemuimgdir.c_str(), 3, options, true))

@@ -42,7 +42,7 @@ namespace System_
         
         if (procargsnum)
         {
-            for (int i = 0; i < procargsnum; i++)
+            for (int i = 1; i < procargsnum; i++)
             {
                 length += _tcslen(procargs[i]);
             }
@@ -50,7 +50,7 @@ namespace System_
             length += procargsnum;
             szBuffer = (TCHAR*)malloc(length * sizeof(TCHAR));
             length = 0;
-            for (int i = 0; i < procargsnum; i++)
+            for (int i = 1; i < procargsnum; i++)
             {
                 _tcscpy(&szBuffer[length], procargs[i]);
                 length += _tcslen(procargs[i]);
