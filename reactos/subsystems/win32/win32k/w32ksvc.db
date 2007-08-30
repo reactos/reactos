@@ -185,22 +185,22 @@ NtGdiGetETM                                      2
 NtGdiGetEudcTimeStampEx                          3
 NtGdiGetFontData                                 5
 NtGdiGetFontResourceInfoInternalW                7
-# NtGdiGetGlyphIndicesW                          5
-# NtGdiGetGlyphIndicesWInternal                  6
+NtGdiGetGlyphIndicesW                            5
+NtGdiGetGlyphIndicesWInternal                    6
 NtGdiGetGlyphOutline                             8
 NtGdiGetKerningPairs                             3
-# NtGdiGetLinkedUFIs                             3
+NtGdiGetLinkedUFIs                               3
 NtGdiGetMiterLimit                               2
-# NtGdiGetMonitorID                              3
+NtGdiGetMonitorID                                3
 NtGdiGetNearestColor                             2
 NtGdiGetNearestPaletteIndex                      2
-# NtGdiGetObjectBitmapHandle                     2
+NtGdiGetObjectBitmapHandle                       2
 NtGdiGetOutlineTextMetricsInternalW              4
 NtGdiGetPath                                     4
 NtGdiGetPixel                                    3
 NtGdiGetRandomRgn                                3
 NtGdiGetRasterizerCaps                           2
-# NtGdiGetRealizationInfo                        3
+NtGdiGetRealizationInfo                          3
 NtGdiGetRegionData                               3
 NtGdiGetRgnBox                                   2
 # NtGdiGetServerMetaFileBits                     7

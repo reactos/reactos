@@ -2672,5 +2672,91 @@ NtGdiGetSpoolMessage( DWORD u1,
 }
 
 
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiGetGlyphIndicesW(
+    IN HDC hdc,
+    IN OPTIONAL LPWSTR pwc,
+    IN INT cwc,
+    OUT OPTIONAL LPWORD pgi,
+    IN DWORD iMode)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
 
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiGetGlyphIndicesWInternal(
+    IN HDC hdc,
+    IN OPTIONAL LPWSTR pwc,
+    IN INT cwc,
+    OUT OPTIONAL LPWORD pgi,
+    IN DWORD iMode,
+    IN BOOL bSubset)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+INT
+STDCALL
+NtGdiGetLinkedUFIs(
+    IN HDC hdc,
+    OUT OPTIONAL PUNIVERSAL_FONT_ID pufiLinkedUFIs,
+    IN INT BufferSize)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+
+ /*
+ * @unimplemented
+ */
+HBITMAP
+STDCALL
+NtGdiGetObjectBitmapHandle(
+    IN HBRUSH hbr,
+    OUT UINT *piUsage)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetMonitorID(
+    IN  HDC hdc,
+    IN  DWORD dwSize,
+    OUT LPWSTR pszMonitorID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL 
+NtGdiGetRealizationInfo(
+    IN HDC hdc,
+    OUT PREALIZATION_INFO pri,
+    IN HFONT hf)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
