@@ -88,6 +88,7 @@ ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
 LPQUERY_SERVICE_CONFIG GetServiceConfig(LPTSTR lpServiceName);
 BOOL SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig, LPTSTR lpServiceName, LPTSTR lpPassword);
 LPTSTR GetServiceDescription(LPTSTR lpServiceName);
+BOOL SetServiceDescription(LPTSTR lpServiceName, LPTSTR lpDescription);
 LPTSTR GetExecutablePath(LPTSTR lpServiceName);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);

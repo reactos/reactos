@@ -60,10 +60,10 @@ DoCreate(PCREATE_DATA Data)
         return FALSE;
     }
 
-    /* Set the service description in the registry
-     * CreateService does not do this for us */
-    //SetDescription(Data->ServiceName,
-    //               Data->Description);
+    /* Set the service description as CreateService
+       does not do this for us */
+    SetServiceDescription(Data->ServiceName,
+                          Data->Description);
 
     /* report success to user */
     LoadString(hInstance,

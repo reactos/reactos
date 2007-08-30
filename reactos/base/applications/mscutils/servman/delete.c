@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/delete.c
+ * FILE:        base/applications/mscutils/servman/delete.c
  * PURPOSE:     Delete an existing service
- * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -15,42 +15,30 @@ DoDeleteService(PMAIN_WND_INFO Info,
 {
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
+    BOOL bRet = FALSE;
 
-    /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL,
                                NULL,
                                SC_MANAGER_ALL_ACCESS);
-    if (hSCManager == NULL)
+    if (hSCManager)
     {
-        GetError();
-        return FALSE;
-    }
+        hSc = OpenService(hSCManager,
+                          Info->pCurrentService->lpServiceName,
+                          DELETE);
+        if (hSc)
+        {
+            if (DeleteService(hSc))
+            {
+                bRet = TRUE;
+            }
 
-    /* get a handle to the service requested for deleting */
-    hSc = OpenService(hSCManager,
-                      Info->pCurrentService->lpServiceName,
-                      DELETE);
-    if (hSc == NULL)
-    {
-        GetError();
+            CloseServiceHandle(hSc);
+        }
+
         CloseServiceHandle(hSCManager);
-        return FALSE;
     }
 
-    /* delete the service opened */
-    if (! DeleteService(hSc))
-    {
-        GetError();
-        CloseServiceHandle(hSCManager);
-        CloseServiceHandle(hSc);
-        return FALSE;
-    }
-
-
-    CloseServiceHandle(hSCManager);
-    CloseServiceHandle(hSc);
-
-    return TRUE;
+    return bRet;
 }
 
 
@@ -62,53 +50,66 @@ DeleteDialogProc(HWND hDlg,
 {
     PMAIN_WND_INFO Info = NULL;
     HICON hIcon = NULL;
-    TCHAR Buf[1000];
-    LVITEM item;
+
+    /* Get the window context */
+    Info = (PMAIN_WND_INFO)GetWindowLongPtr(hDlg,
+                                            GWLP_USERDATA);
+    if (Info == NULL && message != WM_INITDIALOG)
+    {
+        return FALSE;
+    }
 
     switch (message)
     {
         case WM_INITDIALOG:
         {
+            LPTSTR lpDescription;
+
             Info = (PMAIN_WND_INFO)lParam;
+            if (Info != NULL)
+            {
+                SetWindowLongPtr(hDlg,
+                                 GWLP_USERDATA,
+                                 (LONG_PTR)Info);
 
-            hIcon = (HICON) LoadImage(hInstance,
-                              MAKEINTRESOURCE(IDI_SM_ICON),
-                              IMAGE_ICON,
-                              16,
-                              16,
-                              0);
+                hIcon = (HICON)LoadImage(hInstance,
+                                         MAKEINTRESOURCE(IDI_SM_ICON),
+                                         IMAGE_ICON,
+                                         16,
+                                         16,
+                                         0);
+                if (hIcon)
+                {
+                    SendMessage(hDlg,
+                                WM_SETICON,
+                                ICON_SMALL,
+                                (LPARAM)hIcon);
+                    DestroyIcon(hIcon);
+                }
 
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_SMALL,
-                        (LPARAM)hIcon);
+                SendDlgItemMessage(hDlg,
+                                   IDC_DEL_NAME,
+                                   WM_SETTEXT,
+                                   0,
+                                   (LPARAM)Info->pCurrentService->lpDisplayName);
 
-            SendDlgItemMessage(hDlg,
-                               IDC_DEL_NAME,
-                               WM_SETTEXT,
-                               0,
-                               (LPARAM)Info->pCurrentService->lpDisplayName);
+                lpDescription = GetServiceDescription(Info->pCurrentService->lpServiceName);
+                if (lpDescription)
+                {
+                    SendDlgItemMessage(hDlg,
+                                       IDC_DEL_DESC,
+                                       WM_SETTEXT,
+                                       0,
+                                       (LPARAM)lpDescription);
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpDescription);
+                }
 
+                return TRUE;
+            }
 
-            item.mask = LVIF_TEXT;
-            item.iItem = Info->SelectedItem;
-            item.iSubItem = 1;
-            item.pszText = Buf;
-            item.cchTextMax = sizeof(Buf);
-            SendMessage(Info->hListView,
-                        LVM_GETITEM,
-                        0,
-                        (LPARAM)&item);
-
-            SendDlgItemMessage(hDlg,
-                               IDC_DEL_DESC,
-                               WM_SETTEXT,
-                               0,
-                               (LPARAM)Buf);
-
-            SetFocus(GetDlgItem(hDlg, IDCANCEL));
-
-            return TRUE;
+            return FALSE;
         }
 
         case WM_COMMAND:
@@ -120,8 +121,6 @@ DeleteDialogProc(HWND hDlg,
                     if (DoDeleteService(Info, hDlg))
                         (void)ListView_DeleteItem(Info->hListView,
                                                   Info->SelectedItem);
-
-                    DestroyIcon(hIcon);
                     EndDialog(hDlg,
                               LOWORD(wParam));
                     return TRUE;
@@ -129,7 +128,6 @@ DeleteDialogProc(HWND hDlg,
 
                 case IDCANCEL:
                 {
-                    DestroyIcon(hIcon);
                     EndDialog(hDlg,
                               LOWORD(wParam));
                     return TRUE;

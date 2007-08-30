@@ -211,6 +211,53 @@ cleanup:
 }
 
 
+BOOL
+SetServiceDescription(LPTSTR lpServiceName,
+                      LPTSTR lpDescription)
+{
+    SC_HANDLE hSCManager;
+    SC_HANDLE hSc;
+    SC_LOCK scLock;
+    SERVICE_DESCRIPTION ServiceDescription;
+    BOOL bRet = FALSE;
+
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_LOCK);
+    if (hSCManager)
+    {
+        scLock = LockServiceDatabase(hSCManager);
+        if (scLock)
+        {
+            hSc = OpenService(hSCManager,
+                              lpServiceName,
+                              SERVICE_CHANGE_CONFIG);
+            if (hSc)
+            {
+                ServiceDescription.lpDescription = lpDescription;
+
+                if (ChangeServiceConfig2(hSc,
+                                         SERVICE_CONFIG_DESCRIPTION,
+                                         &ServiceDescription))
+                {
+                    bRet = TRUE;
+                }
+
+                CloseServiceHandle(hSc);
+            }
+
+            UnlockServiceDatabase(scLock);
+        }
+
+        CloseServiceHandle(hSCManager);
+    }
+
+    if (!bRet)
+        GetError();
+
+    return bRet;
+}
+
 
 BOOL
 GetServiceList(PMAIN_WND_INFO Info,
