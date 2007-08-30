@@ -3635,4 +3635,12 @@ BOOL
 APIENTRY
 NtGdiInitSpool();
 
+/* FIXME wrong prototypes fix the build */
+W32KAPI
+INT
+APIENTRY
+NtGdiGetSpoolMessage( DWORD u1, 
+                      DWORD u2, 
+                      DWORD u3, 
+                      DWORD u4);
 #endif
