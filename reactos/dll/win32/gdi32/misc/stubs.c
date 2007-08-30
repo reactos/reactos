@@ -831,19 +831,29 @@ SetColorSpace(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetDeviceGammaRamp(
-	HDC	a0,
-	LPVOID	a1
-	)
+GetDeviceGammaRamp( HDC hdc,
+                    LPVOID lpGammaRamp)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    BOOL retValue = FALSE;
+    if (lpGammaRamp == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    else
+    {
+        retValue = NtGdiGetDeviceGammaRamp(hdc,lpGammaRamp);
+    }
+
+    return retValue;
 }
+
+
+    
+
 
 
 /*
