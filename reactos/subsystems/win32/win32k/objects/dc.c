@@ -3288,7 +3288,7 @@ NtGdiGetBoundsRect(
     OUT LPRECT prc,
     IN DWORD f)
 {
-  DPRINT("stub");
+  DPRINT1("stub");
   return  DCB_RESET;   /* bounding rectangle always empty */
 }
 
@@ -3299,7 +3299,7 @@ NtGdiSetBoundsRect(
     IN LPRECT prc,
     IN DWORD f)
 {
-  DPRINT("stub");
+  DPRINT1("stub");
   return  DCB_DISABLE;   /* bounding rectangle always empty */
 }
 
