@@ -3630,4 +3630,9 @@ NtGdiMakeObjectUnXferable(
     IN HANDLE h
 );
 
+W32KAPI
+BOOL
+APIENTRY
+NtGdiInitSpool();
+
 #endif
