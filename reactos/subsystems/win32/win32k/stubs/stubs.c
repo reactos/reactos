@@ -2647,7 +2647,7 @@ NtGdiInitSpool()
  * @unimplemented
  */
 INT
-APIENTRY
+STDCALL
 NtGdiQueryFonts( OUT PUNIVERSAL_FONT_ID pufiFontList,
                  IN ULONG nBufferSize,
                  OUT PLARGE_INTEGER pTimeStamp)
@@ -2660,7 +2660,7 @@ NtGdiQueryFonts( OUT PUNIVERSAL_FONT_ID pufiFontList,
  * @unimplemented
  */
 INT
-APIENTRY
+STDCALL
 NtGdiGetSpoolMessage( DWORD u1, 
                       DWORD u2, 
                       DWORD u3, 
