@@ -74,11 +74,13 @@ $(SYSREGBUILD_INT_)env_var.o: $(SYSREGBUILD_BASE_)env_var.cpp | $(SYSREGBUILD_IN
 $(SYSREGBUILD_INT_)pipe_reader.o: $(SYSREGBUILD_BASE_)pipe_reader.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
+	
 ifneq ($(HOST),mingw32-linux)
 $(SYSREGBUILD_INT_)namedpipe_reader.o: $(SYSREGBUILD_BASE_)namedpipe_reader.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@
 endif
+
 $(SYSREGBUILD_INT_)rosboot_test.o: $(SYSREGBUILD_BASE_)rosboot_test.cpp | $(SYSREGBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(SYSREGBUILD_HOST_CFLAGS) -c $< -o $@

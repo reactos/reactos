@@ -103,7 +103,11 @@ namespace Sysreg_
         img = "output-i386";
 
         EnvironmentVariable::getValue(_T("ROS_OUTPUT"), img);
+#ifdef __LINUX__
+        img += _T("/ros.hd");
+#else
         img += _T("\\ros.hd");
+#endif
     }
 //---------------------------------------------------------------------------------------
     bool RosBootTest::isFileExisting(string output)
@@ -142,15 +146,17 @@ namespace Sysreg_
             return false;
         }
 
-#ifdef __LINUX___            
-        qemuimgdir += _T("\\qemu-img");
+
+#ifdef __LINUX__
+        qemuimgdir += _T("/qemu-img");
+
 #else
         qemuimgdir += _T("\\qemu-img.exe");
 #endif  
 
        if (!isFileExisting(qemuimgdir))
         {
-            cerr << "Error: ROS_EMU_PATH must contain the path to qemu and qemu-img" << endl;
+            cerr << "Error: ROS_EMU_PATH must contain the path to qemu and qemu-img 	" << qemuimgdir << endl;
             return false;
         }
 
