@@ -185,29 +185,29 @@ NtGdiGetETM                                      2
 NtGdiGetEudcTimeStampEx                          3
 NtGdiGetFontData                                 5
 NtGdiGetFontResourceInfoInternalW                7
-# NtGdiGetGlyphIndicesW                            5
-# NtGdiGetGlyphIndicesWInternal                    6
+# NtGdiGetGlyphIndicesW                          5
+# NtGdiGetGlyphIndicesWInternal                  6
 NtGdiGetGlyphOutline                             8
 NtGdiGetKerningPairs                             3
-# NtGdiGetLinkedUFIs                               3
+# NtGdiGetLinkedUFIs                             3
 NtGdiGetMiterLimit                               2
-# NtGdiGetMonitorID                                3
+# NtGdiGetMonitorID                              3
 NtGdiGetNearestColor                             2
 NtGdiGetNearestPaletteIndex                      2
-# NtGdiGetObjectBitmapHandle                       2
+# NtGdiGetObjectBitmapHandle                     2
 NtGdiGetOutlineTextMetricsInternalW              4
 NtGdiGetPath                                     4
 NtGdiGetPixel                                    3
 NtGdiGetRandomRgn                                3
 NtGdiGetRasterizerCaps                           2
-# NtGdiGetRealizationInfo                          3
+# NtGdiGetRealizationInfo                        3
 NtGdiGetRegionData                               3
 NtGdiGetRgnBox                                   2
-# NtGdiGetServerMetaFileBits                       7
-# NtGdiGetSpoolMessage                             4
-# NtGdiGetStats                                    5
+# NtGdiGetServerMetaFileBits                     7
+NtGdiGetSpoolMessage                             4
+# NtGdiGetStats                                  5
 NtGdiGetStockObject                              1
-# NtGdiGetStringBitmapW                            5
+# NtGdiGetStringBitmapW                          5
 NtGdiGetSystemPaletteUse                         1
 NtGdiGetTextCharsetInfo                          3
 NtGdiGetTextExtent                               5
@@ -216,27 +216,27 @@ NtGdiGetTextFaceW                                4
 NtGdiGetTextMetricsW                             3
 NtGdiGetTransform                                3
 NtGdiGetUFI                                      6
-# NtGdiGetEmbUFI                                   7
-# NtGdiGetUFIPathname                             10
-# NtGdiGetEmbedFonts                               0
-# NtGdiChangeGhostFont                             2
-# NtGdiAddEmbFontToDC                              2
-# NtGdiGetFontUnicodeRanges                        2
-# NtGdiGetWidthTable                               7
+# NtGdiGetEmbUFI                                 7
+# NtGdiGetUFIPathname                           10
+# NtGdiGetEmbedFonts                             0
+# NtGdiChangeGhostFont                           2
+# NtGdiAddEmbFontToDC                            2
+# NtGdiGetFontUnicodeRanges                      2
+# NtGdiGetWidthTable                             7
 NtGdiGradientFill                                6
 NtGdiHfontCreate                                 5
-# NtGdiIcmBrushInfo                                8
-# NtGdiInit                                        0
-# NtGdiInitSpool                                   0
+# NtGdiIcmBrushInfo                              8
+# NtGdiInit                                      0
+NtGdiInitSpool                                   0
 NtGdiIntersectClipRect                           5
 NtGdiInvertRgn                                   2
 NtGdiLineTo                                      3
-# NtGdiMakeFontDir                                 5
-# NtGdiMakeInfoDC                                  2
+# NtGdiMakeFontDir                               5
+# NtGdiMakeInfoDC                                2
 NtGdiMaskBlt                                    13
 NtGdiModifyWorldTransform                        3
-# NtGdiMonoBitmap                                  1
-# NtGdiMoveTo                                      4
+# NtGdiMonoBitmap                                1
+# NtGdiMoveTo                                    4
 NtGdiOffsetClipRgn                               3
 NtGdiOffsetRgn                                   3
 NtGdiOpenDCW                                     7
@@ -249,13 +249,13 @@ NtGdiPolyPolyDraw                                5
 # NtGdiPolyTextOutW                              4
 NtGdiPtInRegion                                  3
 NtGdiPtVisible                                   3
-# NtGdiQueryFonts                                3
-# NtGdiQueryFontAssocInfo                          1
+NtGdiQueryFonts                                  3
+# NtGdiQueryFontAssocInfo                        1
 NtGdiRectangle                                   5
 NtGdiRectInRegion                                2
 NtGdiRectVisible                                 2
-# NtGdiRemoveFontResourceW                         6
-# NtGdiRemoveFontMemResourceEx                     1
+# NtGdiRemoveFontResourceW                       6
+# NtGdiRemoveFontMemResourceEx                   1
 NtGdiResetDC                                     5
 NtGdiResizePalette                               2
 NtGdiRestoreDC                                   2
@@ -263,50 +263,50 @@ NtGdiRoundRect                                   7
 NtGdiSaveDC                                      1
 NtGdiScaleViewportExtEx                          6
 NtGdiScaleWindowExtEx                            6
-# NtGdiSelectBitmap                                2
-# NtGdiSelectBrush                                 2
+# NtGdiSelectBitmap                              2
+# NtGdiSelectBrush                               2
 NtGdiSelectClipPath                              2
-# NtGdiSelectFont                                  2
-# NtGdiSelectPen                                   2
-# NtGdiSetBitmapAttributes                         2
+# NtGdiSelectFont                                2
+# NtGdiSelectPen                                 2
+# NtGdiSetBitmapAttributes                       2
 NtGdiSetBitmapBits                               3
 NtGdiSetBitmapDimension                          4
 NtGdiSetBoundsRect                               3
-# NtGdiSetBrushAttributes                          2
+# NtGdiSetBrushAttributes                        2
 NtGdiSetBrushOrg                                 4
 NtGdiSetColorAdjustment                          2
 NtGdiSetColorSpace                               2
 NtGdiSetDeviceGammaRamp                          2
 NtGdiSetDIBitsToDeviceInternal                  16
-# NtGdiSetFontEnumeration                          1
-# NtGdiSetFontXform                                3
+# NtGdiSetFontEnumeration                        1
+# NtGdiSetFontXform                              3
 NtGdiSetIcmMode                                  3
-# NtGdiSetLinkedUFIs                               3
-# NtGdiSetMagicColors                              3
+# NtGdiSetLinkedUFIs                             3
+# NtGdiSetMagicColors                            3
 NtGdiSetMetaRgn                                  1
 NtGdiSetMiterLimit                               3
-# NtGdiGetDeviceWidth                              1
-# NtGdiMirrorWindowOrg                             1
-# NtGdiSetLayout                                   3
+# NtGdiGetDeviceWidth                            1
+# NtGdiMirrorWindowOrg                           1
+# NtGdiSetLayout                                 3
 NtGdiSetPixel                                    4
 NtGdiSetPixelFormat                              2
 NtGdiSetRectRgn                                  5
 NtGdiSetSystemPaletteUse                         2
 NtGdiSetTextJustification                        3
-# NtGdiSetupPublicCFONT                            3
-# NtGdiSetVirtualResolution                        5
-# NtGdiSetSizeDevice                               3
+# NtGdiSetupPublicCFONT                          3
+# NtGdiSetVirtualResolution                      5
+# NtGdiSetSizeDevice                             3
 NtGdiStartDoc                                    4
 NtGdiStartPage                                   1
 NtGdiStretchBlt                                 12
-# NtGdiStretchDIBitsInternal                      16
+# NtGdiStretchDIBitsInternal                    16
 NtGdiStrokeAndFillPath                           1
 NtGdiStrokePath                                  1
 NtGdiSwapBuffers                                 1
 NtGdiTransformPoints                             5
 NtGdiTransparentBlt                             11
-# NtGdiUnloadPrinterDriver                         2
-# NtGdiUnmapMemFont                                1
+# NtGdiUnloadPrinterDriver                       2
+# NtGdiUnmapMemFont                              1
 NtGdiUnrealizeObject                             1
 NtGdiUpdateColors                                1
 NtGdiWidenPath                                   1
@@ -347,10 +347,10 @@ NtUserCountClipboardFormats                      0
 NtUserCreateAcceleratorTable                     2
 NtUserCreateCaret                                4
 NtUserCreateDesktop                              5
-# NtUserCreateInputContext                         1
+# NtUserCreateInputContext                       1
 NtUserCreateLocalMemHandle                       4
-# NtUserCreateWindowEx                            15 Wrong number of param ?
-# NtUserCreateWindowStation                        7   Wrong number of param ?
+# NtUserCreateWindowEx                          15 Wrong number of param ?
+# NtUserCreateWindowStation                      7   Wrong number of param ?
 NtUserDdeGetQualityOfService                     3
 NtUserDdeInitialize                              5
 NtUserDdeSetQualityOfService                     3
@@ -358,11 +358,11 @@ NtUserDeferWindowPos                             8
 NtUserDefSetText                                 2
 NtUserDeleteMenu                                 3
 NtUserDestroyAcceleratorTable                    1
-# NtUserDestroyCursor                              2
-# NtUserDestroyInputContext                        1
+# NtUserDestroyCursor                            2
+# NtUserDestroyInputContext                      1
 NtUserDestroyMenu                                1
 NtUserDestroyWindow                              1
-# NtUserDisableThreadIme                           1
+# NtUserDisableThreadIme                         1
 NtUserDispatchMessage                            1
 NtUserDragDetect                                 3
 NtUserDragObject                                 5
@@ -378,22 +378,22 @@ NtUserEndDeferWindowPosEx                        2
 NtUserEndMenu                                    0
 NtUserEndPaint                                   2
 NtUserEnumDisplayDevices                         4
-# NtUserEnumDisplayMonitors                        4 Wrong number of param ?
+# NtUserEnumDisplayMonitors                      4 Wrong number of param ?
 NtUserEnumDisplaySettings                        4
 NtUserEvent                                      1
 NtUserExcludeUpdateRgn                           2
 NtUserFillWindow                                 4
-# NtUserFindExistingCursorIcon                     3  Wrong number of param ?
-# NtUserFindWindowEx                               5  Wrong number of param ?
+# NtUserFindExistingCursorIcon                   3  Wrong number of param ?
+# NtUserFindWindowEx                             5  Wrong number of param ?
 NtUserFlashWindowEx                              1
 NtUserGetAltTabInfo                              6
 NtUserGetAncestor                                2
-# NtUserGetAppImeLevel                             1
+# NtUserGetAppImeLevel                           1
 NtUserGetAsyncKeyState                           1
-# NtUserGetAtomName                                2
+# NtUserGetAtomName                              2
 NtUserGetCaretBlinkTime                          0
 NtUserGetCaretPos                                1
-# NtUserGetClassInfo                               5   Wrong number of param ?
+# NtUserGetClassInfo                             5   Wrong number of param ?
 NtUserGetClassName                               3
 NtUserGetClipboardData                           2
 NtUserGetClipboardFormatName                     3
@@ -413,10 +413,10 @@ NtUserGetDoubleClickTime                         0
 NtUserGetForegroundWindow                        0
 NtUserGetGuiResources                            2
 NtUserGetGUIThreadInfo                           2
-# NtUserGetIconInfo                                6
-# NtUserGetIconSize                                4
+# NtUserGetIconInfo                              6
+# NtUserGetIconSize                              4
 NtUserGetImeHotKey                               4
-# NtUserGetImeInfoEx                               2
+# NtUserGetImeInfoEx                             2
 NtUserGetInternalWindowPos                       3
 NtUserGetKeyboardLayoutList                      2
 NtUserGetKeyboardLayoutName                      1
@@ -433,11 +433,11 @@ NtUserGetObjectInformation                       5
 NtUserGetOpenClipboardWindow                     0
 NtUserGetPriorityClipboardFormat                 2
 NtUserGetProcessWindowStation                    0
-# NtUserGetRawInputBuffer                          3
-# NtUserGetRawInputData                            5
-# NtUserGetRawInputDeviceInfo                      4
-# NtUserGetRawInputDeviceList                      3
-# NtUserGetRegisteredRawInputDevices               3
+# NtUserGetRawInputBuffer                        3
+# NtUserGetRawInputData                          5
+# NtUserGetRawInputDeviceInfo                    4
+# NtUserGetRawInputDeviceList                    3
+# NtUserGetRegisteredRawInputDevices             3
 NtUserGetScrollBarInfo                           3
 NtUserGetSystemMenu                              2
 NtUserGetThreadDesktop                           2
@@ -448,13 +448,13 @@ NtUserGetUpdateRgn                               3
 NtUserGetWindowDC                                1
 NtUserGetWindowPlacement                         2
 NtUserGetWOWClass                                2
-# NtUserHardErrorControl                           3
+# NtUserHardErrorControl                         3
 NtUserHideCaret                                  1
 NtUserHiliteMenuItem                             4
 NtUserImpersonateDdeClientWindow                 2
-# NtUserInitialize                                 3
+# NtUserInitialize                               3
 NtUserInitializeClientPfnArrays                  4
-# NtUserInitTask                                  12 Wrong number of param ?
+# NtUserInitTask                                12 Wrong number of param ?
 NtUserInternalGetWindowText                      3
 NtUserInvalidateRect                             3
 NtUserInvalidateRgn                              3
@@ -467,13 +467,13 @@ NtUserLockWorkStation                            0
 NtUserMapVirtualKeyEx                            4
 NtUserMenuItemFromPoint                          4
 NtUserMessageCall                                7
-# NtUserMinMaximize                                3
+# NtUserMinMaximize                              3
 NtUserMNDragLeave                                0
 NtUserMNDragOver                                 2
 NtUserModifyUserStartupInfoFlags                 2
 NtUserMoveWindow                                 6
 NtUserNotifyIMEStatus                            3
-# NtUserNotifyProcessCreate                        4
+# NtUserNotifyProcessCreate                      4
 NtUserNotifyWinEvent                             4
 NtUserOpenClipboard                              2
 NtUserOpenDesktop                                3
@@ -483,26 +483,26 @@ NtUserPaintDesktop                               1
 NtUserPeekMessage                                5
 NtUserPostMessage                                4
 NtUserPostThreadMessage                          4
-# NtUserPrintWindow                                3
-# NtUserProcessConnect                             3
-# NtUserQueryInformationThread                     5
-# NtUserQueryInputContext                          2
+# NtUserPrintWindow                              3
+# NtUserProcessConnect                           3
+# NtUserQueryInformationThread                   5
+# NtUserQueryInputContext                        2
 NtUserQuerySendMessage                           1
 NtUserQueryUserCounters                          5
 NtUserQueryWindow                                2
 NtUserRealChildWindowFromPoint                   3
-# NtUserRealInternalGetMessage                     6
-# NtUserRealWaitMessageEx                          2
+# NtUserRealInternalGetMessage                   6
+# NtUserRealWaitMessageEx                        2
 NtUserRedrawWindow                               4
-# NtUserRegisterClassExWOW                         7
-# NtUserRegisterUserApiHook                        2
+# NtUserRegisterClassExWOW                       7
+# NtUserRegisterUserApiHook                      2
 NtUserRegisterHotKey                             4
-# NtUserRegisterRawInputDevices                    3
+# NtUserRegisterRawInputDevices                  3
 NtUserRegisterTasklist                           1
 NtUserRegisterWindowMessage                      1
 NtUserRemoveMenu                                 3
 NtUserRemoveProp                                 2
-# NtUserResolveDesktop                             4
+# NtUserResolveDesktop                           4
 NtUserResolveDesktopForWOW                       1
 NtUserSBGetParms                                 4
 NtUserScrollDC                                   7
@@ -510,7 +510,7 @@ NtUserScrollWindowEx                             8
 NtUserSelectPalette                              3
 NtUserSendInput                                  3
 NtUserSetActiveWindow                            1
-# NtUserSetAppImeLevel                             2
+# NtUserSetAppImeLevel                           2
 NtUserSetCapture                                 1
 NtUserSetClassLong                               4
 NtUserSetClassWord                               3
@@ -518,15 +518,15 @@ NtUserSetClipboardData                           3
 NtUserSetClipboardViewer                         1
 NtUserSetConsoleReserveKeys                      2
 NtUserSetCursor                                  1
-# NtUserSetCursorContents                          2
-# NtUserSetCursorIconData                          4 Wrong number of param ?
+# NtUserSetCursorContents                        2
+# NtUserSetCursorIconData                        4 Wrong number of param ?
 NtUserSetDbgTag                                  2
 NtUserSetFocus                                   1
 NtUserSetImeHotKey                               5
-# NtUserSetImeInfoEx                               1
+# NtUserSetImeInfoEx                             1
 NtUserSetImeOwnerWindow                          2
-# NtUserSetInformationProcess                      4
-# NtUserSetInformationThread                       4
+# NtUserSetInformationProcess                    4
+# NtUserSetInformationThread                     4
 NtUserSetInternalWindowPos                       4
 NtUserSetKeyboardState                           1
 NtUserSetLogonNotifyWindow                       1
@@ -546,7 +546,7 @@ NtUserSetSystemCursor                            2
 NtUserSetSystemMenu                              2
 NtUserSetSystemTimer                             4
 NtUserSetThreadDesktop                           1
-# NtUserSetThreadLayoutHandles                     2
+# NtUserSetThreadLayoutHandles                   2
 NtUserSetThreadState                             2
 NtUserSetTimer                                   4
 NtUserSetWindowFNID                              2
@@ -563,36 +563,36 @@ NtUserShowCaret                                  1
 NtUserShowScrollBar                              3
 NtUserShowWindow                                 2
 NtUserShowWindowAsync                            2
-# NtUserSoundSentry                                0
+# NtUserSoundSentry                              0
 NtUserSwitchDesktop                              1
 NtUserSystemParametersInfo                       4
-# NtUserTestForInteractiveUser                     1
+# NtUserTestForInteractiveUser                   1
 NtUserThunkedMenuInfo                            2
 NtUserThunkedMenuItemInfo                        6
 NtUserToUnicodeEx                                7
 NtUserTrackMouseEvent                            1
 NtUserTrackPopupMenuEx                           6
-# NtUserCalcMenuBar                                5
-# NtUserPaintMenuBar                               6
+# NtUserCalcMenuBar                              5
+# NtUserPaintMenuBar                             6
 NtUserTranslateAccelerator                       3
 NtUserTranslateMessage                           2
 NtUserUnhookWindowsHookEx                        1
 NtUserUnhookWinEvent                             1
 NtUserUnloadKeyboardLayout                       1
 NtUserUnlockWindowStation                        1
-# NtUserUnregisterClass                            3 Wrong number of param ?
-# NtUserUnregisterUserApiHook                      0
+# NtUserUnregisterClass                          3 Wrong number of param ?
+# NtUserUnregisterUserApiHook                    0
 NtUserUnregisterHotKey                           2
 NtUserUpdateInputContext                         3
 NtUserUpdateInstance                             3
 NtUserUpdateLayeredWindow                        9
-# NtUserGetLayeredWindowAttributes                 4
+# NtUserGetLayeredWindowAttributes               4
 NtUserSetLayeredWindowAttributes                 4
 NtUserUpdatePerUserSystemParameters              2
 NtUserUserHandleGrantAccess                      3
-# NtUserValidateHandleSecure                       2 Wrong number of param ?
-# NtUserValidateRect                               2
-# NtUserValidateTimerCallback                      3
+# NtUserValidateHandleSecure                     2 Wrong number of param ?
+# NtUserValidateRect                             2
+# NtUserValidateTimerCallback                    3
 NtUserVkKeyScanEx                                3
 NtUserWaitForInputIdle                           3
 NtUserWaitForMsgAndEvent                         1
@@ -600,11 +600,11 @@ NtUserWaitMessage                                0
 NtUserWin32PoolAllocationStats                   6
 NtUserWindowFromPoint                            2
 NtUserYieldTask                                  0
-# NtUserRemoteConnect                              3
-# NtUserRemoteRedrawRectangle                      4
-# NtUserRemoteRedrawScreen                         0
-# NtUserRemoteStopScreenUpdates                    0
-# NtUserCtxDisplayIOCtl                            3
+# NtUserRemoteConnect                            3
+# NtUserRemoteRedrawRectangle                    4
+# NtUserRemoteRedrawScreen                       0
+# NtUserRemoteStopScreenUpdates                  0
+# NtUserCtxDisplayIOCtl                          3
 NtGdiEngAssociateSurface                         3
 NtGdiEngCreateBitmap                             6
 NtGdiEngCreateDeviceSurface                      4
@@ -631,21 +631,21 @@ NtGdiEngGradientFill                            10
 NtGdiEngTransparentBlt                           8
 NtGdiEngTextOut                                 10
 NtGdiEngStretchBltROP                           13
-# NtGdiXLATEOBJ_cGetPalette                        4
-# NtGdiXLATEOBJ_iXlate                             2
-# NtGdiXLATEOBJ_hGetColorTransform                 1
+# NtGdiXLATEOBJ_cGetPalette                      4
+# NtGdiXLATEOBJ_iXlate                           2
+# NtGdiXLATEOBJ_hGetColorTransform               1
 NtGdiCLIPOBJ_bEnum                               3
 NtGdiCLIPOBJ_cEnumStart                          5
 NtGdiCLIPOBJ_ppoGetPath                          1
 NtGdiEngDeletePath                               1
 NtGdiEngCreateClip                               0
 NtGdiEngDeleteClip                               1
-NtGdiBRUSHOBJ_ulGetBrushColor                     1
-NtGdiBRUSHOBJ_pvAllocRbrush                       2
-NtGdiBRUSHOBJ_pvGetRbrush                         1
-NtGdiBRUSHOBJ_hGetColorTransform                   1
-# NtGdiXFORMOBJ_bApplyXform                        5
-# NtGdiXFORMOBJ_iGetXform                          2
+NtGdiBRUSHOBJ_ulGetBrushColor                    1
+NtGdiBRUSHOBJ_pvAllocRbrush                      2
+NtGdiBRUSHOBJ_pvGetRbrush                        1
+NtGdiBRUSHOBJ_hGetColorTransform                 1
+# NtGdiXFORMOBJ_bApplyXform                      5
+# NtGdiXFORMOBJ_iGetXform                        2
 NtGdiFONTOBJ_vGetInfo                            3
 NtGdiFONTOBJ_pxoGetXform                         1
 NtGdiFONTOBJ_cGetGlyphs                          5
@@ -654,25 +654,25 @@ NtGdiFONTOBJ_pfdg                                1
 NtGdiFONTOBJ_pQueryGlyphAttrs                    2
 NtGdiFONTOBJ_pvTrueTypeFontFile                  2
 NtGdiFONTOBJ_cGetAllGlyphHandles                 2
-# NtGdiSTROBJ_bEnum                                3
-# NtGdiSTROBJ_bEnumPositionsOnly                   3
-# NtGdiSTROBJ_bGetAdvanceWidths                    4
-# NtGdiSTROBJ_vEnumStart                           1
-# NtGdiSTROBJ_dwGetCodePage                        1
-# NtGdiPATHOBJ_vGetBounds                          2
-# NtGdiPATHOBJ_bEnum                               2
-# NtGdiPATHOBJ_vEnumStart                          1
-# NtGdiPATHOBJ_vEnumStartClipLines                 4
-# NtGdiPATHOBJ_bEnumClipLines                      3
-# NtGdiGetDhpdev                                   1
+# NtGdiSTROBJ_bEnum                              3
+# NtGdiSTROBJ_bEnumPositionsOnly                 3
+# NtGdiSTROBJ_bGetAdvanceWidths                  4
+# NtGdiSTROBJ_vEnumStart                         1
+# NtGdiSTROBJ_dwGetCodePage                      1
+# NtGdiPATHOBJ_vGetBounds                        2
+# NtGdiPATHOBJ_bEnum                             2
+# NtGdiPATHOBJ_vEnumStart                        1
+# NtGdiPATHOBJ_vEnumStartClipLines               4
+# NtGdiPATHOBJ_bEnumClipLines                    3
+# NtGdiGetDhpdev                                 1
 NtGdiEngCheckAbort                               1
-# NtGdiHT_Get8BPPFormatPalette                     4
-# NtGdiHT_Get8BPPMaskPalette                       6
-# NtGdiUpdateTransform                             1
-# NtGdiSetPUMPDOBJ                                 4
-# NtGdiBRUSHOBJ_DeleteRbrush                       2
-# NtGdiUMPDEngFreeUserMem                          1
-# NtGdiDrawStream                                  3
+# NtGdiHT_Get8BPPFormatPalette                   4
+# NtGdiHT_Get8BPPMaskPalette                     6
+# NtGdiUpdateTransform                           1
+# NtGdiSetPUMPDOBJ                               4
+# NtGdiBRUSHOBJ_DeleteRbrush                     2
+# NtGdiUMPDEngFreeUserMem                        1
+# NtGdiDrawStream                                3
 #
 #
 # Wrong number of param ?

@@ -2143,6 +2143,7 @@ NtGdiConvertMetafileRect(
 
 
 
+
  /*
  * @unimplemented
  */
@@ -2630,7 +2631,45 @@ NtGdiDvpGetVideoPortField(
 }
 
 
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiInitSpool()
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
+
+ /*
+ * @unimplemented
+ */
+INT
+APIENTRY
+NtGdiQueryFonts( OUT PUNIVERSAL_FONT_ID pufiFontList,
+                 IN ULONG nBufferSize,
+                 OUT PLARGE_INTEGER pTimeStamp)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+INT
+APIENTRY
+NtGdiGetSpoolMessage( DWORD u1, 
+                      DWORD u2, 
+                      DWORD u3, 
+                      DWORD u4)
+{
+    /* FIXME the prototypes */
+    UNIMPLEMENTED;
+    return 0;
+}
 
 
 
