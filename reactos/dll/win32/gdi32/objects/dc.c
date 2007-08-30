@@ -396,6 +396,9 @@ GetDCDWord( HDC hDC, INT u, DWORD Result )
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetAspectRatioFilterEx(

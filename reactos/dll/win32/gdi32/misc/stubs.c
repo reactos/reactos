@@ -757,18 +757,14 @@ UnrealizeObject(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GdiFlush()
 {
-        /*
-         * Although GdiFlush is unimplemented, it's safe to return
-         * TRUE, because we don't have GDI engine surface caching
-         * implemented yet.
-         */
-	return TRUE;
+    NtGdiFlush();
+    return TRUE;
 }
 
 
@@ -1118,9 +1114,9 @@ wglSwapLayerBuffers(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD
+BOOL
 STDCALL
 GdiPlayDCScript(
 	DWORD	a0,
@@ -1131,16 +1127,15 @@ GdiPlayDCScript(
 	DWORD	a5
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    /* FIXME fix the prototype right */
+    return FALSE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD
+BOOL
 STDCALL
 GdiPlayJournal(
 	DWORD	a0,
@@ -1150,16 +1145,15 @@ GdiPlayJournal(
 	DWORD	a4
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    /* FIXME fix the prototype right */
+    return FALSE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD
+BOOL
 STDCALL
 GdiPlayScript(
 	DWORD	a0,
@@ -1168,12 +1162,10 @@ GdiPlayScript(
 	DWORD	a3,
 	DWORD	a4,
 	DWORD	a5,
-	DWORD	a6
-	)
+	DWORD	a6)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    /* FIXME prototype */
+    return FALSE;
 }
 
 
@@ -1348,17 +1340,7 @@ EndFormPage(HDC hdc)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
-FontIsLinked(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -1409,51 +1391,43 @@ GdiConvertAndCheckDC(HDC hdc)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP 
 STDCALL
 GdiConvertBitmap(HBITMAP hbm)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return hbm;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBRUSH
 STDCALL
 GdiConvertBrush(HBRUSH hbr)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return hbr;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC 
 STDCALL
 GdiConvertDC(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return hdc;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HFONT 
 STDCALL
 GdiConvertFont(HFONT hfont)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return hfont;
 }
 
 /*
@@ -1498,18 +1472,6 @@ GdiConvertEnhMetaFile(HENHMETAFILE hmf)
 BOOL
 STDCALL
 GdiDeleteLocalDC(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-int 
-STDCALL
-GdiDescribePixelFormat(HDC hdc,int ipfd,UINT cjpfd,PPIXELFORMATDESCRIPTOR ppfd)
 {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1613,15 +1575,13 @@ GdiIsPlayMetafileDC(HDC hdc)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GdiSetAttrs(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return TRUE;
 }
 
 /*
@@ -1635,17 +1595,7 @@ GdiSetLastError(DWORD dwErrCode)
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GdiSetPixelFormat(HDC hdc,int ipfd)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -1659,27 +1609,16 @@ GdiValidateHandle(HGDIOBJ hobj)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GdiSwapBuffers(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID 
 STDCALL
 GdiSetServerAttr(HDC hdc,DWORD attr)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    /* it does do nothing */
 }
 
 /*
@@ -2052,31 +1991,9 @@ GetTextExtentPointI(
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-GdiFullscreenControl(FULLSCREENCONTROL FullscreenCommand,PVOID FullscreenInput,
-					DWORD FullscreenInputLength,PVOID FullscreenOutput,
-					PULONG FullscreenOutputLength)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-INT 
-STDCALL
-GdiQueryFonts(PUNIVERSAL_FONT_ID pufiFontList,ULONG nBufferSize,PLARGE_INTEGER pTimeStamp )
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
+
 
 /*
  * @unimplemented
@@ -2719,17 +2636,7 @@ GdiPlayEMF
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GdiInitSpool(VOID)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -2791,5 +2698,101 @@ FillRgn( IN HDC hdc, IN HRGN hrgn, IN HBRUSH hbrush)
 	return NtGdiFillRgn( hdc, hrgn, hbrush);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GdiGradientFill(
+    IN HDC hdc,
+    IN PTRIVERTEX pVertex,
+    IN ULONG nVertex,
+    IN PVOID pMesh,
+    IN ULONG nMesh,
+    IN ULONG ulMode)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiGradientFill(hdc, pVertex, nVertex, pMesh, nMesh, ulMode);
+}
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+FrameRgn(
+    IN HDC hdc,
+    IN HRGN hrgn,
+    IN HBRUSH hbrush,
+    IN INT xWidth,
+    IN INT yHeight)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiFrameRgn(hdc, hrgn, hbrush, xWidth, yHeight);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GdiTransparentBlt(
+    IN HDC hdcDst,
+    IN INT xDst,
+    IN INT yDst,
+    IN INT cxDst,
+    IN INT cyDst,
+    IN HDC hdcSrc,
+    IN INT xSrc,
+    IN INT ySrc,
+    IN INT cxSrc,
+    IN INT cySrc,
+    IN COLORREF TransColor
+)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, TransColor);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+GdiPrinterThunk(
+    IN HUMPD humpd,
+    DWORD *status,
+    DWORD unuse)
+{
+    /* FIXME figout the protypes, the HUMPD are a STRUCT or COM object */
+    /* status contain some form of return value that being save, what it is I do not known */
+    /* unsue seam have zero effect, what it is for I do not known */
+
+    // ? return NtGdiSetPUMPDOBJ(humpd->0x10,TRUE, humpd, ?) <- blackbox, OpenRCE info, and api hooks for anylaysing;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ *
+ */
+HBITMAP
+STDCALL
+GdiConvertBitmapV5(
+    HBITMAP in_format_BitMap, 
+    HBITMAP src_BitMap,
+    INT bpp,
+    INT unuse)
+{
+    /* FIXME guessing the prototypes */
+
+    /* 
+     * it have create a new bitmap with desired in format, 
+     * then convert it src_bitmap to new format
+     * and return it as HBITMAP 
+     */
+
+    return FALSE;
+}
 

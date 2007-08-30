@@ -260,17 +260,6 @@ GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv)
 	return NtGdiAddFontResource ( &Filename, fl );
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GdiConsoleTextOut(HDC hdc, POLYTEXTW *lpto,UINT nStrings, RECTL *prclBounds)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
