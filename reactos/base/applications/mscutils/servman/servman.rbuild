@@ -26,7 +26,6 @@
       <file>progress.c</file>
       <file>propsheet.c</file>
       <file>query.c</file>
-      <file>reg.c</file>
       <file>servman.c</file>
       <file>start.c</file>
     </compilationunit>
