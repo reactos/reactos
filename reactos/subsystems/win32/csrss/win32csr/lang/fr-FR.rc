@@ -1,0 +1,50 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_END_NOW DIALOG DISCARDABLE  0, 0, 200, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Fin du programme - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Termine le programme... Veuillez patienter",IDC_STATIC,7,7,186,11
+    CONTROL         "Avancement",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    7,20,186,13
+    LTEXT           "Si vous choisissez de terminer le programme immédiatement, vous perdrez toutes les données non sauvegardées. Pour terminer le programme maintenant, cliquez sur Terminer maintenant.",
+                    IDC_STATIC,7,40,186,26
+    DEFPUSHBUTTON   "T&erminer maintenant",IDC_END_NOW,150,71,43,17
+END
+
+IDD_NOT_RESPONDING DIALOG DISCARDABLE 0, 0, 192, 122
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Fin du programme - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Annuler",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "T&erminer maintenant",IDC_END_NOW,78,98,43,17
+    LTEXT           "Ce programme ne répond pas",IDC_STATIC,7,7,178,8
+    LTEXT           "Pour retourner à ReactOS et vérifier l'état du programme, cliquez sur Annuler",
+                    IDC_STATIC,7,26,178,16
+    LTEXT           "Si vous choisissez de terminer le programme immédiatement, vous perdrez toutes les données non sauvegardées. Pour terminer le programme maintenant, cliquez sur Terminer maintenant",
+                    IDC_STATIC,7,53,178,26
+END
+
+/* Fixme : Translation could be really improved, with context
+           La traduction pourrait réellement être améliorée grâce au contexte */
+STRINGTABLE
+BEGIN
+  IDS_EDIT "Éditer"
+  IDS_MARK "Marquer"
+  IDS_COPY "Copier\tEntrée"
+  IDS_PASTE "Coller"
+  IDS_SELECTALL "Tout sélectionner"
+  IDS_SCROLL "Défiler"
+  IDS_FIND "Trouver..."
+  IDS_DEFAULTS "Défauts"
+  IDS_PROPERTIES "Proprietés"
+  IDS_SCROLLHERE "Défiler ici"
+  IDS_SCROLLTOP "Défiler tout en haut"
+  IDS_SCROLLBOTTOM "Défiler tout en bas"
+  IDS_SCROLLPAGE_UP "Page précédente"
+  IDS_SCROLLPAGE_DOWN "Page suivante"
+  IDS_SCROLLUP "Défiler en haut"
+  IDS_SCROLLDOWN "Défiler en bas"
+END

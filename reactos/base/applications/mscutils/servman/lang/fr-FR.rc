@@ -215,8 +215,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_PROGRESS_INFO_START "ReactOS essaye de démarrer le service suivant"
   IDS_PROGRESS_INFO_STOP  "ReactOS essaye d'arrêter le service suivant"
-  IDS_PROGRESS_INFO_PAUSE  "ReactOS essaye de suspendre le service suivan"
-  IDS_PROGRESS_INFO_RESUME "ReactOS essaye de relancer le service suivan"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS essaye de suspendre le service suivant"
+  IDS_PROGRESS_INFO_RESUME "ReactOS essaye de relancer le service suivant"
   IDS_CREATE_SUCCESS "Service créé"
   IDS_CREATE_REQ "Les champs marqués d'une astérisque\nasont obligatoires"
   IDS_DELETE_STOP "Vous devez arrêter le service avant de le supprimer!"
