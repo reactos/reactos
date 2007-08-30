@@ -18,6 +18,7 @@
 #include <string.h>
 #include <setupapi.h>
 #include <pseh/pseh.h>
+#include <shlobj.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
@@ -2120,18 +2121,6 @@ ProcessUnattendInf(HINF hUnattendedInf)
       return TRUE;
     }
 
-  if (BootCDRegtestActive)
-    {
-      _tcscpy(szValue, _T("C:\\ReactOS\\bin\\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE"));
-      RegSetValueEx(hKey,
-                    _T("BootCDRegtestActive"),
-                    0,
-                    REG_SZ,
-                    (const BYTE*)szValue,
-                     _tcslen(szValue) * sizeof(TCHAR));
-    }
-
-
 
   if (SetupFindFirstLine(hUnattendedInf,
                          _T("GuiRunOnce"),
@@ -2167,10 +2156,47 @@ ProcessUnattendInf(HINF hUnattendedInf)
              }
           }
       }while(SetupFindNextLine(&InfContext, &InfContext));
+   }
 
+  DPRINT1("BootCDRegtestActive %d\n", BootCDRegtestActive);
+  if (BootCDRegtestActive)
+    {
+      char szPath[MAX_PATH];
+      FILE * file;
+#if 0
+      if (!SHGetSpecialFolderPathA(0, szPath, CSIDL_DESKTOP, FALSE))
+        {
+          /* failed to get desktop path */
+            strcpy(szPath, "C:");
+        }
+      strcat(szPath, "\\sysregtest.bat");
+#else
+      strcpy(szPath, "C:\\sysregtest.bat");
+#endif
+      file = fopen(szPath, "w+");
+      if (!file)
+        {
+          DPRINT1("Error: failed create sysregtest.bat");
+          RegCloseKey(hKey);
+          return TRUE;
+        }
+
+      RegSetValueExA(hKey,
+                    "BootCDRegtestActive",
+                    0,
+                    REG_SZ,
+                    (const BYTE*)szPath,
+                     strlen(szPath) * sizeof(char));
+
+      strcpy(szPath, "C:\\ReactOS\\bin\\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
+      fwrite(szPath, 1, strlen(szPath) + 1, file);
+      strcpy(szPath, "C:\\ReactOS\\system32\\shutdown.exe -s");
+      fwrite(szPath, 1, strlen(szPath) + 1, file);
+      fclose(file);
+
+    }
     RegCloseKey(hKey);
-  }
-  return TRUE;
+    return TRUE;
 }
 
 /*
