@@ -1584,16 +1584,7 @@ GdiSetAttrs(HDC hdc)
     return TRUE;
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-GdiSetLastError(DWORD dwErrCode)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
+
 
 
 
