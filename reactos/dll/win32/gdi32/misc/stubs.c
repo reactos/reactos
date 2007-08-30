@@ -1431,15 +1431,13 @@ GdiConvertFont(HFONT hfont)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HPALETTE 
 STDCALL
 GdiConvertPalette(HPALETTE hpal)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return hpal;
 }
 
 /*
@@ -1449,9 +1447,7 @@ HRGN
 STDCALL
 GdiConvertRegion(HRGN hregion)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return hregion;
 }
 
 /*
