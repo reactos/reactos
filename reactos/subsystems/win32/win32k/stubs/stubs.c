@@ -2760,3 +2760,97 @@ NtGdiGetRealizationInfo(
     return FALSE;
 }
 
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiDrawStream(
+    IN HDC hdcDst,
+    IN ULONG cjIn,
+    IN VOID *pvIn)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+NtGdiUMPDEngFreeUserMem(
+    IN KERNEL_PVOID *ppv)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+NtGdiBRUSHOBJ_DeleteRbrush(
+    IN BRUSHOBJ *pbo,
+    IN BRUSHOBJ *pboB)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+NtGdiSetPUMPDOBJ(
+    IN HUMPD humpd,
+    IN BOOL bStoreID,
+    OUT HUMPD *phumpd,
+    OUT BOOL *pbWOW64)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+NtGdiUpdateTransform(IN HDC hdc)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+LONG
+STDCALL
+NtGdiHT_Get8BPPMaskPalette(
+    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
+    IN BOOL Use8BPPMaskPal,
+    IN BYTE CMYMask,
+    IN USHORT RedGamma,
+    IN USHORT GreenGamma,
+    IN USHORT BlueGamma)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+LONG
+STDCALL
+NtGdiHT_Get8BPPFormatPalette(
+    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
+    IN USHORT RedGamma,
+    IN USHORT GreenGamma,
+    IN USHORT BlueGamma)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+

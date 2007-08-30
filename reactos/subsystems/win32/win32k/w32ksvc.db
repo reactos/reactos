@@ -666,13 +666,13 @@ NtGdiFONTOBJ_cGetAllGlyphHandles                 2
 # NtGdiPATHOBJ_bEnumClipLines                    3
 # NtGdiGetDhpdev                                 1
 NtGdiEngCheckAbort                               1
-# NtGdiHT_Get8BPPFormatPalette                   4
-# NtGdiHT_Get8BPPMaskPalette                     6
-# NtGdiUpdateTransform                           1
-# NtGdiSetPUMPDOBJ                               4
-# NtGdiBRUSHOBJ_DeleteRbrush                     2
-# NtGdiUMPDEngFreeUserMem                        1
-# NtGdiDrawStream                                3
+NtGdiHT_Get8BPPFormatPalette                     4
+NtGdiHT_Get8BPPMaskPalette                       6
+NtGdiUpdateTransform                             1
+NtGdiSetPUMPDOBJ                                 4
+NtGdiBRUSHOBJ_DeleteRbrush                       2
+NtGdiUMPDEngFreeUserMem                          1
+NtGdiDrawStream                                  3
 #
 #
 # Wrong number of param ?
