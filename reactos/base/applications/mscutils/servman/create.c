@@ -318,17 +318,21 @@ CreateDialogProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            hIcon = (HICON) LoadImage(hInstance,
-                              MAKEINTRESOURCE(IDI_SM_ICON),
-                              IMAGE_ICON,
-                              16,
-                              16,
-                              0);
+            hIcon = (HICON)LoadImage(hInstance,
+                                     MAKEINTRESOURCE(IDI_SM_ICON),
+                                     IMAGE_ICON,
+                                     16,
+                                     16,
+                                     0);
+            if (hIcon)
+            {
+                SendMessage(hDlg,
+                            WM_SETICON,
+                            ICON_SMALL,
+                            (LPARAM)hIcon);
+                DestroyIcon(hIcon);
+            }
 
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_SMALL,
-                        (LPARAM)hIcon);
             return TRUE;
         }
 
@@ -340,10 +344,10 @@ CreateDialogProc(HWND hDlg,
                 {
                     PCREATE_DATA Data;
 
-                    Data = (PCREATE_DATA) HeapAlloc(ProcessHeap,
-                                     HEAP_ZERO_MEMORY,
-                                     sizeof(CREATE_DATA));
-                    if (Data != NULL)
+                    Data = (PCREATE_DATA)HeapAlloc(ProcessHeap,
+                                                   HEAP_ZERO_MEMORY,
+                                                   sizeof(CREATE_DATA));
+                    if (Data)
                     {
                         Data->hSelf = hDlg;
 
@@ -362,7 +366,6 @@ CreateDialogProc(HWND hDlg,
                         FreeMemory(Data);
                     }
 
-                    DestroyIcon(hIcon);
                     EndDialog(hDlg,
                               LOWORD(wParam));
                     return TRUE;
@@ -370,7 +373,6 @@ CreateDialogProc(HWND hDlg,
 
                 case IDCANCEL:
                 {
-                    DestroyIcon(hIcon);
                     EndDialog(hDlg,
                               LOWORD(wParam));
                     return TRUE;

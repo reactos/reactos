@@ -121,6 +121,35 @@ UpdateMainStatusBar(PMAIN_WND_INFO Info)
     }
 }
 
+VOID
+UpdateServiceCount(PMAIN_WND_INFO Info)
+{
+    LPTSTR lpNumServices;
+
+    if (AllocAndLoadString(&lpNumServices,
+                           hInstance,
+                           IDS_NUM_SERVICES))
+    {
+        TCHAR szNumServices[32];
+
+        INT NumListedServ = ListView_GetItemCount(Info->hListView);
+
+        _sntprintf(szNumServices,
+                   31,
+                   lpNumServices,
+                   NumListedServ);
+
+        SendMessage(Info->hStatus,
+                    SB_SETTEXT,
+                    0,
+                    (LPARAM)szNumServices);
+
+        HeapFree(ProcessHeap,
+                 0,
+                 lpNumServices);
+    }
+}
+
 
 VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 {

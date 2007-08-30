@@ -231,8 +231,6 @@ RefreshServiceList(PMAIN_WND_INFO Info)
     ENUM_SERVICE_STATUS_PROCESS *pService;
     LPTSTR lpDescription;
     LVITEM lvItem;
-    LPTSTR lpNumServices;
-    TCHAR szNumServices[32];
     TCHAR szStatus[64];
     DWORD NumServices;
     DWORD Index;
@@ -241,8 +239,6 @@ RefreshServiceList(PMAIN_WND_INFO Info)
 
     if (GetServiceList(Info, &NumServices))
     {
-        INT NumListedServ = 0;
-
         for (Index = 0; Index < NumServices; Index++)
         {
             LPQUERY_SERVICE_CONFIG pServiceConfig;
@@ -334,26 +330,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
             }
         }
 
-        if (AllocAndLoadString(&lpNumServices,
-                               hInstance,
-                               IDS_NUM_SERVICES))
-        {
-            NumListedServ = ListView_GetItemCount(Info->hListView);
-
-            _sntprintf(szNumServices,
-                       31,
-                       lpNumServices,
-                       NumListedServ);
-
-            SendMessage(Info->hStatus,
-                        SB_SETTEXT,
-                        0,
-                        (LPARAM)szNumServices);
-
-            HeapFree(ProcessHeap,
-                     0,
-                     lpNumServices);
-        }
+        UpdateServiceCount(Info);
     }
 
     /* turn redraw flag on. It's turned off initially via the LBS_NOREDRAW flag */

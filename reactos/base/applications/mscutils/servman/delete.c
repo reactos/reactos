@@ -119,8 +119,11 @@ DeleteDialogProc(HWND hDlg,
                 case IDOK:
                 {
                     if (DoDeleteService(Info, hDlg))
+                    {
                         (void)ListView_DeleteItem(Info->hListView,
                                                   Info->SelectedItem);
+                        UpdateServiceCount(Info);
+                    }
                     EndDialog(hDlg,
                               LOWORD(wParam));
                     return TRUE;
