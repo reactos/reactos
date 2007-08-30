@@ -27,196 +27,111 @@ DoCreate(PCREATE_DATA Data)
 {
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
-    TCHAR Buf[32];
+    BOOL bRet = FALSE;
 
     /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL,
                                NULL,
                                SC_MANAGER_ALL_ACCESS);
-    if (hSCManager == NULL)
+    if (hSCManager)
     {
-        GetError();
-        return FALSE;
-    }
+        hSc = CreateService(hSCManager,
+                            Data->ServiceName,
+                            Data->DisplayName,
+                            SERVICE_ALL_ACCESS,
+                            SERVICE_WIN32_OWN_PROCESS,
+                            SERVICE_DEMAND_START,
+                            SERVICE_ERROR_NORMAL,
+                            Data->BinPath,
+                            NULL,
+                            NULL,
+                            NULL,
+                            NULL,
+                            NULL);
 
-    hSc = CreateService(hSCManager,
-                        Data->ServiceName,
-                        Data->DisplayName,
-                        SERVICE_ALL_ACCESS,
-                        SERVICE_WIN32_OWN_PROCESS,
-                        SERVICE_DEMAND_START,
-                        SERVICE_ERROR_NORMAL,
-                        Data->BinPath,
-                        NULL,
-                        NULL,
-                        NULL,
-                        NULL,
-                        NULL);
+        if (hSc)
+        {
+            LPTSTR lpSuccess;
 
-    if (hSc == NULL)
-    {
-        GetError();
+            /* Set the service description as CreateService
+               does not do this for us */
+            SetServiceDescription(Data->ServiceName,
+                                  Data->Description);
+
+            /* report success to user */
+            if (AllocAndLoadString(&lpSuccess,
+                                   hInstance,
+                                   IDS_CREATE_SUCCESS))
+            {
+                DisplayString(lpSuccess);
+
+                HeapFree(ProcessHeap,
+                         0,
+                         lpSuccess);
+            }
+
+            CloseServiceHandle(hSc);
+            bRet = TRUE;
+        }
+
         CloseServiceHandle(hSCManager);
-        return FALSE;
     }
 
-    /* Set the service description as CreateService
-       does not do this for us */
-    SetServiceDescription(Data->ServiceName,
-                          Data->Description);
+    return bRet;
+}
 
-    /* report success to user */
-    LoadString(hInstance,
-               IDS_CREATE_SUCCESS,
-               Buf,
-               sizeof(Buf) / sizeof(TCHAR));
-    DisplayString(Buf);
 
-    CloseServiceHandle(hSCManager);
-    CloseServiceHandle(hSc);
+static LPTSTR
+GetStringFromDialog(PCREATE_DATA Data,
+                    UINT id)
+{
+    HWND hwnd;
+    LPTSTR lpString = NULL;
+    INT iLen = 0;
 
-    return TRUE;
+    hwnd = GetDlgItem(Data->hSelf,
+                      id);
+    if (hwnd)
+    {
+        iLen = GetWindowTextLength(hwnd);
+        if (iLen)
+        {
+            lpString = (LPTSTR)HeapAlloc(ProcessHeap,
+                                         0,
+                                         (iLen + 1) * sizeof(TCHAR));
+            if (lpString)
+            {
+                GetWindowText(hwnd,
+                              lpString,
+                              iLen + 1);
+            }
+        }
+    }
+
+    return lpString;
 }
 
 
 static BOOL
 GetDataFromDialog(PCREATE_DATA Data)
 {
-    HWND hwnd;
-    TCHAR Buf[64];
-    INT iLen = 0;
+    BOOL bRet = FALSE;
 
-    /* get service name */
-    hwnd = GetDlgItem(Data->hSelf,
-                      IDC_CREATE_SERVNAME);
-    iLen = GetWindowTextLength(hwnd);
-    if (iLen != 0)
+    if ((Data->ServiceName = GetStringFromDialog(Data, IDC_CREATE_SERVNAME)))
     {
-        Data->ServiceName = (TCHAR*) HeapAlloc(ProcessHeap,
-                                      0,
-                                      (iLen+1) * sizeof(TCHAR));
-        if (Data->ServiceName != NULL)
+        if ((Data->DisplayName = GetStringFromDialog(Data, IDC_CREATE_DISPNAME)))
         {
-            GetWindowText(hwnd,
-                          Data->ServiceName,
-                          iLen+1);
+            if ((Data->BinPath = GetStringFromDialog(Data, IDC_CREATE_PATH)))
+            {
+                Data->Description = GetStringFromDialog(Data, IDC_CREATE_DESC);
+                Data->Options = GetStringFromDialog(Data, IDC_CREATE_OPTIONS);
+
+                bRet = TRUE;
+            }
         }
-        else
-            return FALSE;
-    }
-    else
-    {
-        LoadString(hInstance,
-                   IDS_CREATE_REQ,
-                   Buf,
-                   sizeof(Buf));
-        DisplayString(Buf);
-        SetFocus(hwnd);
-        return FALSE;
     }
 
-    /* get display name */
-    iLen = 0;
-    hwnd = GetDlgItem(Data->hSelf,
-                      IDC_CREATE_DISPNAME);
-    iLen = GetWindowTextLength(hwnd);
-    if (iLen != 0)
-    {
-        Data->DisplayName = (TCHAR*) HeapAlloc(ProcessHeap,
-                                      0,
-                                      (iLen+1) * sizeof(TCHAR));
-        if (Data->DisplayName != NULL)
-        {
-            GetWindowText(hwnd,
-                          Data->DisplayName,
-                          iLen+1);
-        }
-        else
-            return FALSE;
-    }
-    else
-    {
-        LoadString(hInstance,
-                   IDS_CREATE_REQ,
-                   Buf,
-                   sizeof(Buf));
-        DisplayString(Buf);
-        SetFocus(hwnd);
-        return FALSE;
-    }
-
-    /* get binary path */
-    iLen = 0;
-    hwnd = GetDlgItem(Data->hSelf,
-                      IDC_CREATE_PATH);
-    iLen = GetWindowTextLength(hwnd);
-    if (iLen != 0)
-    {
-        Data->BinPath = (TCHAR*) HeapAlloc(ProcessHeap,
-                                  0,
-                                  (iLen+1) * sizeof(TCHAR));
-        if (Data->BinPath != NULL)
-        {
-            GetWindowText(hwnd,
-                          Data->BinPath,
-                          iLen+1);
-        }
-        else
-            return FALSE;
-    }
-    else
-    {
-        LoadString(hInstance,
-                   IDS_CREATE_REQ,
-                   Buf,
-                   sizeof(Buf));
-        DisplayString(Buf);
-        SetFocus(hwnd);
-        return FALSE;
-    }
-
-    /* get description */
-    iLen = 0;
-    hwnd = GetDlgItem(Data->hSelf,
-                      IDC_CREATE_DESC);
-    iLen = GetWindowTextLength(hwnd);
-    if (iLen != 0)
-    {
-        Data->Description = (TCHAR*) HeapAlloc(ProcessHeap,
-                                      0,
-                                      (iLen+1) * sizeof(TCHAR));
-        if (Data->Description != NULL)
-        {
-            GetWindowText(hwnd,
-                          Data->Description,
-                          iLen+1);
-        }
-        else
-            return FALSE;
-    }
-
-
-    /* get options */
-    iLen = 0;
-    hwnd = GetDlgItem(Data->hSelf,
-                      IDC_CREATE_PATH);
-    iLen = GetWindowTextLength(hwnd);
-    if (iLen != 0)
-    {
-        Data->Options = (TCHAR*) HeapAlloc(ProcessHeap,
-                                  0,
-                                  (iLen+1) * sizeof(TCHAR));
-        if (Data->Options != NULL)
-        {
-            GetWindowText(hwnd,
-                          Data->Options,
-                          iLen+1);
-        }
-        else
-            return FALSE;
-    }
-
-    return TRUE;
+    return bRet;
 }
 
 static VOID
