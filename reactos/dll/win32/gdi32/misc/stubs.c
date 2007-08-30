@@ -100,19 +100,17 @@ ExtCreateRegion(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
 GetBoundsRect(
-	HDC	a0,
-	LPRECT	a1,
-	UINT	a2
+	HDC	hdc,
+	LPRECT	lprcBounds,
+	UINT	flags
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiGetBoundsRect(hdc,lprcBounds,flags & DCB_RESET);
 }
 
 
@@ -1441,7 +1439,7 @@ GdiConvertPalette(HPALETTE hpal)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HRGN
 STDCALL
@@ -2781,5 +2779,54 @@ GdiConvertBitmapV5(
      */
 
     return FALSE;
+}
+
+
+/*
+ * @implemented
+ *
+ */
+COLORREF 
+STDCALL 
+GetBkColor(HDC hdc)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiGetBkColor(hdc);
+}
+
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL 
+GetBkMode(HDC hdc)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiGetBkMode(hdc);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL 
+STDCALL 
+GetBrushOrgEx(HDC hdc,LPPOINT pt)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiGetBrushOrgEx(hdc,pt);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL 
+STDCALL 
+GetCharABCWidthsFloatW(HDC hdc,UINT FirstChar,UINT LastChar,LPABCFLOAT abcF)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiGetCharABCWidthsFloat(hdc, FirstChar, LastChar, abcF);
 }
 

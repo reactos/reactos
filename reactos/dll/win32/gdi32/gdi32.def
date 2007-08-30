@@ -276,6 +276,18 @@ GdiTransparentBlt@44
 GdiValidateHandle@4
 GetArcDirection@4
 GetAspectRatioFilterEx@8
+GetBitmapBits@12=NtGdiGetBitmapBits@12
+GetBitmapDimensionEx@8=NtGdiGetBitmapDimension@8
+GetBkColor@4
+GetBkMode@4
+GetBoundsRect@12
+GetBrushOrgEx@8
+GetCharABCWidthsA@16
+GetCharABCWidthsFloatA@16
+GetCharABCWidthsFloatW@16
+GetCharABCWidthsI@20
+
+
 
 ClearBitmapAttributes@8
 ClearBrushAttributes@8
@@ -337,17 +349,7 @@ DdEntry55@12=NtGdiDdUpdateOverlay@12
 DdEntry56@8=NtGdiDdWaitForVerticalBlank@8
 GdiDrawStream@12
 GetBitmapAttributes@4
-GetBitmapBits@12=NtGdiGetBitmapBits@12
-GetBitmapDimensionEx@8=NtGdiGetBitmapDimension@8
-GetBkColor@4=NtGdiGetBkColor@4
-GetBkMode@4=NtGdiGetBkMode@4
-GetBoundsRect@12
 GetBrushAttributes@4
-GetBrushOrgEx@8=NtGdiGetBrushOrgEx@8
-GetCharABCWidthsA@16
-GetCharABCWidthsFloatA@16
-GetCharABCWidthsFloatW@16=NtGdiGetCharABCWidthsFloat@16
-GetCharABCWidthsI@20
 GetCharABCWidthsW@16=NtGdiGetCharABCWidths@16
 GetCharWidth32A@16
 GetCharWidth32W@16=NtGdiGetCharWidth32@16
