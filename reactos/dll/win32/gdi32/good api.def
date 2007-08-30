@@ -7,7 +7,7 @@
 ; if bugs exists their or verify
 ;
 
-AAddFontResourceA@4
+AddFontResourceA@4
 AddFontResourceExA@12
 AddFontResourceExW@12
 AddFontResourceW@4
@@ -94,6 +94,9 @@ GdiConsoleTextOut@16
 GdiConvertBitmap@4
 GdiConvertBrush@4
 GdiConvertDC@4
+GdiConvertFont@4
+GdiConvertPalette@4
+GdiConvertRegion@4
 GdiDescribePixelFormat@16
 GdiEntry16@12=DdSwapTextureHandles@12
 GdiFlush@0
@@ -111,5 +114,9 @@ GdiSetPixelFormat@8
 GdiSetServerAttr@8
 GdiSwapBuffers@4
 GetAspectRatioFilterEx@8
+GetBitmapBits@12
+GetBitmapDimensionEx@8
+GetBoundsRect@12
+
 
 
