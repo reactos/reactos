@@ -262,15 +262,24 @@ GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
-GetEUDCTimeStampExW(LPCWSTR str)
+GetEUDCTimeStampExW(LPWSTR lpBaseFaceName)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    DWORD retValue = 0;
+
+    if (!lpBaseFaceName)
+    {
+        retValue = NtGdiGetEudcTimeStampEx(NULL,0,FALSE);
+    }
+    else
+    {
+        retValue = NtGdiGetEudcTimeStampEx(lpBaseFaceName, wcslen(lpBaseFaceName), FALSE);
+    }
+
+    return retValue;
 }
 
 /*
