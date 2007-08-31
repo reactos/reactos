@@ -1745,23 +1745,19 @@ UnloadNetworkFonts(DWORD unknown)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL 
 STDCALL
-GetTextExtentExPointI(
-	HDC hdc,
-	LPWORD pgiIn,
-	int cgi,
-	int nMaxExtent,
-	LPINT lpnFit,
-	LPINT alpDx,
-	LPSIZE lpSize
-)
+GetTextExtentExPointI(HDC hdc,
+                      LPWORD pgiIn,
+                      int cgi,
+                      int nMaxExtent,
+                      LPINT lpnFit,
+                      LPINT alpDx,
+                      LPSIZE lpSize)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiGetTextExtentExW(hdc,pgiIn,cgi,nMaxExtent,(ULONG *)lpnFit, (PULONG) alpDx,lpSize,1);
 }
 
 /*
