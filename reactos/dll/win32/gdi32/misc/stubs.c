@@ -609,20 +609,7 @@ SetColorAdjustment(
 }
 
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetColorAdjustment(
-	HDC			hdc,
-	LPCOLORADJUSTMENT	a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
 
 
 /*
@@ -1435,7 +1422,7 @@ HFONT
 STDCALL
 GdiConvertFont(HFONT hfont)
 {
-	return hfont;
+    return hfont;
 }
 
 /*
@@ -1445,7 +1432,7 @@ HPALETTE
 STDCALL
 GdiConvertPalette(HPALETTE hpal)
 {
-	return hpal;
+    return hpal;
 }
 
 /*
@@ -1455,7 +1442,7 @@ HRGN
 STDCALL
 GdiConvertRegion(HRGN hregion)
 {
-	return hregion;
+    return hregion;
 }
 
 /*
@@ -1692,15 +1679,13 @@ GetFontUnicodeRanges(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG 
 STDCALL
 GetEUDCTimeStamp(VOID)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiGetEudcTimeStampEx(NULL,0,TRUE);
 }
 
 /*
@@ -2002,17 +1987,7 @@ GdiRealizationInfo(HDC hdc, PREALIZATION_INFO pri)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
-GetCharWidthInfo(HDC hdc,PCHWIDTHINFO pChWidthInfo)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -2840,3 +2815,100 @@ GetCharABCWidthsFloatW(HDC hdc,UINT FirstChar,UINT LastChar,LPABCFLOAT abcF)
     return NtGdiGetCharABCWidthsFloat(hdc, FirstChar, LastChar, abcF);
 }
 
+/*
+ * @implemented
+ *
+ */
+int 
+STDCALL 
+GetDeviceCaps(HDC hdc,
+              int i)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiGetDeviceCaps(hdc,i);
+}
+
+
+/*
+ * @implemented
+ *
+ */
+BOOL 
+STDCALL 
+GetCurrentPositionEx(HDC hdc,
+                     LPPOINT lpPoint)
+{
+    /* FIXME some part need be done in user mode */
+    return  NtGdiGetCurrentPositionEx(hdc, lpPoint);
+}
+
+/*
+ * @implemented
+ *
+ */
+HGDIOBJ 
+STDCALL
+GetCurrentObject(HDC hdc,
+                 UINT uObjectType)
+{
+    /* FIXME some part need be done in user mode */
+    return  NtGdiGetCurrentObject(hdc, uObjectType);
+}
+
+/*
+ * @implemented
+ *
+ */
+int 
+STDCALL
+GetClipBox(HDC hdc,
+           LPRECT lprc)
+{
+    /* FIXME some part need be done in user mode */
+    return  NtGdiGetClipBox(hdc, lprc);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL 
+STDCALL
+GetCharWidthFloatW(HDC hdc,
+                   UINT iFirstChar, 
+                   UINT iLastChar, 
+                   PFLOAT pxBuffer)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiGetCharWidthFloat(hdc, iFirstChar, iLastChar, pxBuffer);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL
+STDCALL
+GetCharWidth32W(HDC hdc,
+               UINT iFirstChar,
+               UINT iLastChar,
+               LPINT lpBuffer)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiGetCharWidth32(hdc, iFirstChar, iLastChar, lpBuffer);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL
+STDCALL
+GetCharABCWidths(HDC hdc,
+                 UINT uFirstChar,
+                 UINT uLastChar,
+                 LPABC lpabc)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiGetCharABCWidths(hdc, uFirstChar, uLastChar, lpabc);
+}
