@@ -1227,10 +1227,78 @@ BOOL WINAPI FileIconInit(BOOL bFullInit)
 /*************************************************************************
  * IsUserAnAdmin					[SHELL32.680] NT 4.0
  *
+ * Checks whether the current user is a member of the Administrators group.
+ *
+ * PARAMS
+ *     None
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
  */
 BOOL WINAPI IsUserAnAdmin(VOID)
-{	FIXME("stub\n");
-	return TRUE;
+{
+    SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
+    HANDLE hToken;
+    DWORD dwSize;
+    PTOKEN_GROUPS lpGroups;
+    PSID lpSid;
+    DWORD i;
+    BOOL bResult = FALSE;
+
+    TRACE("\n");
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    {
+        return FALSE;
+    }
+
+    if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            CloseHandle(hToken);
+            return FALSE;
+        }
+    }
+
+    lpGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (lpGroups == NULL)
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    if (!GetTokenInformation(hToken, TokenGroups, lpGroups, dwSize, &dwSize))
+    {
+        HeapFree(GetProcessHeap(), 0, lpGroups);
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    CloseHandle(hToken);
+
+    if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                                  &lpSid))
+    {
+        HeapFree(GetProcessHeap(), 0, lpGroups);
+        return FALSE;
+    }
+
+    for (i = 0; i < lpGroups->GroupCount; i++)
+    {
+        if (EqualSid(lpSid, lpGroups->Groups[i].Sid))
+        {
+            bResult = TRUE;
+            break;
+        }
+    }
+
+    FreeSid(lpSid);
+    HeapFree(GetProcessHeap(), 0, lpGroups);
+
+    return bResult;
 }
 
 /*************************************************************************

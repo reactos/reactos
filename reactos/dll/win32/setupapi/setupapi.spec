@@ -216,7 +216,7 @@
 @ stdcall InstallHinfSectionW(long long wstr long)
 @ stub InstallStop
 @ stub InstallStopEx
-@ stdcall IsUserAdmin()
+@ stdcall IsUserAdmin=shell32.IsUserAnAdmin()
 @ stub LookUpStringInTable
 @ stub MemoryInitialize
 @ stdcall MultiByteToUnicode(str long)
