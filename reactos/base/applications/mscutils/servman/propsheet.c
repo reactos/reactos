@@ -27,7 +27,7 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
     Flags = dlgInfo->pService->ServiceStatusProcess.dwControlsAccepted;
     State = dlgInfo->pService->ServiceStatusProcess.dwCurrentState;
 
-    for (i = IDC_START; i <= 10104; i++)
+    for (i = IDC_START; i <= IDC_RESUME; i++)
     {
         hButton = GetDlgItem(hwndDlg, i);
         EnableWindow (hButton, FALSE);
