@@ -127,6 +127,21 @@ GetEUDCTimeStampExW@4
 GetFontAssocStatus@4
 GetFontData@20
 GetFontUnicodeRanges@8
+GetGlyphIndicesW@20
+GetGlyphOutline@28
+GetKerningPairs@12
+GetKerningPairsW@12
+GetMetaRgn@8
+GetMiterLimit@8
+GetNearestColor@8
+GetNearestPaletteIndex@8
+GetPaletteEntries@16
+GetPath@16
+GetPixelFormat@4
+GetRandomRgn@12
+GetRasterizerCaps@8
+GetRegionData@12
+
 
 
 
