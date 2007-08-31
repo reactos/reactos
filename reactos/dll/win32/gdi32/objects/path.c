@@ -91,16 +91,25 @@ FlattenPath(
 /*
  * @implemented
  */
-int
+INT
 STDCALL
-GetPath(
-	HDC		hdc,
-	LPPOINT		a1,
-	LPBYTE		a2,
-	int		a3
-	)
+GetPath(HDC hdc,
+        LPPOINT pptlBuf,
+        LPBYTE pjTypes,
+        INT cptBuf)
 {
-	return NtGdiGetPath ( hdc, a1, a2, a3 );
+    INT retValue = -1;
+
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_METADC)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    else
+    {
+        retValue = NtGdiGetPath(hdc,pptlBuf,pjTypes,cptBuf);
+    }
+
+    return retValue;
 }
 
 
