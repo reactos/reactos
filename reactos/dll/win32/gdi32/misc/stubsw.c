@@ -330,15 +330,25 @@ GetGlyphIndicesW(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
-GetStringBitmapW(HDC hdc,LPWSTR pwsz,BOOL unknown,UINT cj,BYTE *lpSB)
+GetStringBitmapW(HDC hdc,
+                 LPWSTR pwsz,
+                 BOOL doCall,
+                 UINT cj,
+                 BYTE *lpSB)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UINT retValue = 0;
+
+    if (doCall)
+    {
+        retValue = NtGdiGetStringBitmapW(hdc, pwsz, 1, lpSB, cj);
+    }
+
+    return retValue;
+
 }
 
 
