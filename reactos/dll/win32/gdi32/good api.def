@@ -13,7 +13,6 @@ AddFontResourceExW@12
 AddFontResourceW@4
 AnyLinkedFonts@0
 BRUSHOBJ_hGetColorTransform@4
-BRUSHOBJ_hGetColorTransform@4
 BRUSHOBJ_pvAllocRbrush@8
 BRUSHOBJ_pvGetRbrush@4
 BRUSHOBJ_ulGetBrushColor@4
@@ -50,6 +49,7 @@ EngCreateDeviceSurface@16
 EngCreatePalette@24
 EngCreateSemaphore@0
 EngDeleteClip@4
+EngDeletePalette@4
 EngDeletePath@4
 EngDeleteSemaphore@4
 EngDeleteSurface@4
@@ -97,6 +97,7 @@ GdiConvertDC@4
 GdiConvertFont@4
 GdiConvertPalette@4
 GdiConvertRegion@4
+GdiDeleteLocalDC@4
 GdiDescribePixelFormat@16
 GdiEntry16@12=DdSwapTextureHandles@12
 GdiFlush@0
@@ -123,6 +124,10 @@ GetDCOrgEx@8
 GetDeviceGammaRamp@8
 GetEUDCTimeStamp@0
 GetEUDCTimeStampExW@4
+GetFontAssocStatus@4
+GetFontData@20
+GetFontUnicodeRanges@8
+
 
 
 
