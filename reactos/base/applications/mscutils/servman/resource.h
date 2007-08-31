@@ -162,6 +162,7 @@
 #define IDC_DEL_NAME        9002
 #define IDC_DEL_DESC        9003
 #define IDS_DELETE_STOP     9010
+#define IDS_DELETE_SUCCESS  9011
 
 
 /* progress bar */

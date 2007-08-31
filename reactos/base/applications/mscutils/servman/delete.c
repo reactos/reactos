@@ -29,6 +29,20 @@ DoDeleteService(PMAIN_WND_INFO Info,
         {
             if (DeleteService(hSc))
             {
+                LPTSTR lpSuccess;
+
+                /* report success to user */
+                if (AllocAndLoadString(&lpSuccess,
+                                       hInstance,
+                                       IDS_DELETE_SUCCESS))
+                {
+                    DisplayString(lpSuccess);
+
+                    HeapFree(ProcessHeap,
+                             0,
+                             lpSuccess);
+                }
+
                 bRet = TRUE;
             }
 

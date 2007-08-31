@@ -221,6 +221,7 @@ BEGIN
   IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
   IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
   IDS_CREATE_SUCCESS "Us³uga utworzona pomyœlnie"
+  IDS_DELETE_SUCCESS "Service Deleted Succesfully"
   IDS_CREATE_REQ "Pole zaznaczone wraz z \ nasterix jest obowi¹zkowy"
   IDS_DELETE_STOP "Musisz rêcznie zatrzymaæ us³ugê przed usuwaniem!"
 END

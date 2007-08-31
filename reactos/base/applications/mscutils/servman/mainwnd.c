@@ -400,11 +400,15 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_CREATE:
         {
-            DialogBoxParam(hInstance,
-                           MAKEINTRESOURCE(IDD_DLG_CREATE),
-                           Info->hMainWnd,
-                           (DLGPROC)CreateDialogProc,
-                           (LPARAM)Info);
+            INT ret;
+
+            ret = DialogBoxParam(hInstance,
+                                 MAKEINTRESOURCE(IDD_DLG_CREATE),
+                                 Info->hMainWnd,
+                                 (DLGPROC)CreateDialogProc,
+                                 (LPARAM)Info);
+            if (ret == IDOK)
+                RefreshServiceList(Info);
 
             SetFocus(Info->hListView);
         }

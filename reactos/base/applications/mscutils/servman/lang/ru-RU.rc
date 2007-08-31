@@ -213,6 +213,7 @@ BEGIN
   IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
   IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
   IDS_CREATE_SUCCESS "Создание службы успешно завершено"
+  IDS_DELETE_SUCCESS "Service Deleted Succesfully"
   IDS_CREATE_REQ "* = обязательные поля"
   IDS_DELETE_STOP "Вы должны вручную остановить службу перед удалением!"
 END
