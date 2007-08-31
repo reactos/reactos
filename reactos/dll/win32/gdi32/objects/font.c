@@ -1093,7 +1093,7 @@ AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
     int retVal = 0;
 
-    if (!(fl & (FR_PRIVATE | FR_NOT_ENUM)))
+    if (fl & (FR_PRIVATE | FR_NOT_ENUM))
     {
         retVal = GdiAddFontResourceW(lpszFilename, fl,0);
     }
