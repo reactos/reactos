@@ -115,18 +115,14 @@ GetBoundsRect(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
-GetMetaRgn(
-	HDC	a0,
-	HRGN	a1
-	)
+GetMetaRgn(HDC hdc,
+           HRGN hrgn)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiGetRandomRgn(hdc,hrgn,2);
 }
 
 
