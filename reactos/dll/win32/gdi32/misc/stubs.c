@@ -1663,20 +1663,7 @@ GetCharWidthI(
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-DWORD 
-STDCALL
-GetFontUnicodeRanges(
-	HDC hdc,
-	LPGLYPHSET lpgs
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @implemented
