@@ -72,28 +72,13 @@ GetTextCharacterExtra(
  */
 int
 STDCALL
-GetTextCharset(
-	HDC	hdc
-	)
+GetTextCharset(HDC hdc)
 {
     /* MSDN docs say this is equivalent */
-        return GetTextCharsetInfo(hdc, NULL, 0);        
+    return NtGdiGetTextCharsetInfo(hdc,NULL,0);
 }
 
 
-/*
- * @implemented
- */
-int
-STDCALL
-GetTextCharsetInfo(
-	HDC		hdc,
-	LPFONTSIGNATURE	lpSig,
-	DWORD		dwFlags
-	)
-{
-        return NtGdiGetTextCharsetInfo(hdc, lpSig, dwFlags);
-}
 
 
 /*

@@ -1761,20 +1761,16 @@ GetTextExtentExPointI(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL 
 STDCALL
-GetTextExtentPointI(
-	HDC hdc,
-	LPWORD pgiIn,
-	int cgi,
-	LPSIZE lpSize
-)
+GetTextExtentPointI(HDC hdc,
+                    LPWORD pgiIn,
+                    int cgi,
+                    LPSIZE lpSize)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiGetTextExtent(hdc,pgiIn,cgi,lpSize,2);
 }
 
 
