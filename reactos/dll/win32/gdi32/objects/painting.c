@@ -3,43 +3,6 @@
 
 #if 0 /* FIXME: enable this as soon as we have working usermode gdi */
 
-// Will move to dc.c
-HGDIOBJ
-STDCALL
-GetDCObject( HDC hDC, INT iType)
-{
-
- if((iType == GDI_OBJECT_TYPE_BRUSH) ||
-    (iType == GDI_OBJECT_TYPE_EXTPEN)||
-    (iType == GDI_OBJECT_TYPE_PEN)   ||
-    (iType == GDI_OBJECT_TYPE_COLORSPACE))
- {
-   HGDIOBJ hGO;
-   PDC_ATTR Dc_Attr;
-   
-   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return NULL;
-
-   switch (iType)
-   {
-     case GDI_OBJECT_TYPE_BRUSH:
-          hGO = Dc_Attr->hbrush;  
-          break;
-     
-     case GDI_OBJECT_TYPE_EXTPEN:
-     case GDI_OBJECT_TYPE_PEN:
-          hGO = Dc_Attr->hpen;
-          break;
-     
-     case GDI_OBJECT_TYPE_COLORSPACE:
-          hGO = Dc_Attr->hColorSpace;
-          break;
-   }   
-   return hGO;
- }  
- return NtGdiGetDCObject( hDC, iType );
-}
-
-
 BOOL
 STDCALL
 LineTo( HDC hDC, INT x, INT y )
