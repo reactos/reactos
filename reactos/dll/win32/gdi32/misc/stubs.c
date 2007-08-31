@@ -1108,60 +1108,13 @@ wglSwapLayerBuffers(
  */
 
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GdiPlayDCScript(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5
-	)
-{
-    /* FIXME fix the prototype right */
-    return FALSE;
-}
 
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GdiPlayJournal(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4
-	)
-{
-    /* FIXME fix the prototype right */
-    return FALSE;
-}
 
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GdiPlayScript(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2,
-	DWORD	a3,
-	DWORD	a4,
-	DWORD	a5,
-	DWORD	a6)
-{
-    /* FIXME prototype */
-    return FALSE;
-}
+
+
+
 
 
 /*
@@ -1386,66 +1339,6 @@ GdiConvertAndCheckDC(HDC hdc)
 }
 
 /*
- * @implemented
- */
-HBITMAP 
-STDCALL
-GdiConvertBitmap(HBITMAP hbm)
-{
-    return hbm;
-}
-
-/*
- * @implemented
- */
-HBRUSH
-STDCALL
-GdiConvertBrush(HBRUSH hbr)
-{
-    return hbr;
-}
-
-/*
- * @implemented
- */
-HDC 
-STDCALL
-GdiConvertDC(HDC hdc)
-{
-    return hdc;
-}
-
-/*
- * @implemented
- */
-HFONT 
-STDCALL
-GdiConvertFont(HFONT hfont)
-{
-    return hfont;
-}
-
-/*
- * @implemented
- */
-HPALETTE 
-STDCALL
-GdiConvertPalette(HPALETTE hpal)
-{
-    return hpal;
-}
-
-/*
- * @implemented
- */
-HRGN
-STDCALL
-GdiConvertRegion(HRGN hregion)
-{
-    return hregion;
-}
-
-/*
  * @unimplemented
  */
 HENHMETAFILE 
@@ -1566,20 +1459,6 @@ GdiIsPlayMetafileDC(HDC hdc)
 }
 
 /*
- * @implemented
- */
-BOOL
-STDCALL
-GdiSetAttrs(HDC hdc)
-{
-    return TRUE;
-}
-
-
-
-
-
-/*
  * @unimplemented
  */
 BOOL
@@ -1589,18 +1468,6 @@ GdiValidateHandle(HGDIOBJ hobj)
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-GdiSetServerAttr(HDC hdc,DWORD attr)
-{
-    /* it does do nothing */
 }
 
 /*
