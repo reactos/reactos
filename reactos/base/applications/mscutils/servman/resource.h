@@ -121,18 +121,18 @@
 
 /* properties dialog */
 #define IDD_DLG_GENERAL     10001
-#define IDC_SERV_NAME       10041
-#define IDC_DISP_NAME       10051
-#define IDC_DESCRIPTION     10061
-#define IDC_EXEPATH         10062
-#define IDC_START_TYPE      10101
-#define IDC_SERV_STATUS     10121
-#define IDC_START           10131
-#define IDC_STOP            10141
-#define IDC_PAUSE           10151
-#define IDC_RESUME          10161
-#define IDC_START_PARAM     10191
-#define IDC_EDIT            10192
+#define IDC_SERV_NAME       10002
+#define IDC_DISP_NAME       10003
+#define IDC_DESCRIPTION     10004
+#define IDC_EXEPATH         10005
+#define IDC_START_TYPE      10006
+#define IDC_SERV_STATUS     10007
+#define IDC_START_PARAM     10008
+#define IDC_EDIT            10009
+#define IDC_START           10101
+#define IDC_STOP            10102
+#define IDC_PAUSE           10103
+#define IDC_RESUME          10104
 
 /* dependancies dialog */
 #define IDD_DLG_DEPEND      20001

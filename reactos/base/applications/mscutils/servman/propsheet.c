@@ -22,9 +22,16 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
 {
     HWND hButton;
     DWORD Flags, State;
+    UINT i;
 
     Flags = dlgInfo->pService->ServiceStatusProcess.dwControlsAccepted;
     State = dlgInfo->pService->ServiceStatusProcess.dwCurrentState;
+
+    for (i = IDC_START; i <= 10104; i++)
+    {
+        hButton = GetDlgItem(hwndDlg, i);
+        EnableWindow (hButton, FALSE);
+    }
 
     if (State == SERVICE_STOPPED)
     {
@@ -43,11 +50,37 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
     }
+}
 
-    if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
+
+static VOID
+SetServiceStatusText(PSERVICEPROPSHEET dlgInfo,
+                     HWND hwndDlg)
+{
+    LPTSTR lpStatus;
+    UINT id;
+
+    if (dlgInfo->pService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
     {
-        hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
-        EnableWindow (hButton, TRUE);
+        id = IDS_SERVICES_STARTED;
+    }
+    else
+    {
+        id = IDS_SERVICES_STOPPED;
+    }
+
+    if (AllocAndLoadString(&lpStatus,
+                           hInstance,
+                           id))
+    {
+        SendDlgItemMessage(hwndDlg,
+                           IDC_SERV_STATUS,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)lpStatus);
+        HeapFree(ProcessHeap,
+                 0,
+                 lpStatus);
     }
 }
 
@@ -159,37 +192,8 @@ GetDlgInfo(PSERVICEPROPSHEET dlgInfo,
     /* set startup type */
     SetStartupType(dlgInfo->pService->lpServiceName, hwndDlg);
 
-    /* set service status */
-    if (dlgInfo->pService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
-    {
-        TCHAR szServiceStatus[32];
-
-        LoadString(hInstance,
-                   IDS_SERVICES_STARTED,
-                   szServiceStatus,
-                   _tcslen(szServiceStatus) + 1);
-
-        SendDlgItemMessage(hwndDlg,
-                           IDC_SERV_STATUS,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)szServiceStatus);
-    }
-    else
-    {
-        TCHAR szServiceStatus[32];
-
-        LoadString(hInstance,
-                   IDS_SERVICES_STOPPED,
-                   szServiceStatus,
-                   _tcslen(szServiceStatus) + 1);
-
-        SendDlgItemMessage(hwndDlg,
-                           IDC_SERV_STATUS,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)szServiceStatus);
-    }
+    SetServiceStatusText(dlgInfo,
+                         hwndDlg);
 
     if (dlgInfo->Info->bIsUserAnAdmin)
     {
@@ -292,22 +296,41 @@ GeneralPageProc(HWND hwndDlg,
                 case IDC_START:
                     if (DoStart(dlgInfo->Info))
                     {
-                        //UpdateServiceStatus(dlgInfo->pService);
-                        //ChangeListViewText(dlgInfo, LVSTATUS);
-                        //SetMenuAndButtonStates(Info);
+                        UpdateServiceStatus(dlgInfo->pService);
+                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                        SetButtonStates(dlgInfo, hwndDlg);
+                        SetServiceStatusText(dlgInfo, hwndDlg);
                     }
                 break;
 
                 case IDC_STOP:
-                    //SendMessage(Info->hMainWnd, WM_COMMAND, ID_STOP, 0);
+                    if (DoStop(dlgInfo->Info))
+                    {
+                        UpdateServiceStatus(dlgInfo->pService);
+                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                        SetButtonStates(dlgInfo, hwndDlg);
+                        SetServiceStatusText(dlgInfo, hwndDlg);
+                    }
                 break;
 
                 case IDC_PAUSE:
-                    //SendMessage(Info->hMainWnd, WM_COMMAND, ID_PAUSE, 0);
+                    if (DoPause(dlgInfo->Info))
+                    {
+                        UpdateServiceStatus(dlgInfo->pService);
+                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                        SetButtonStates(dlgInfo, hwndDlg);
+                        SetServiceStatusText(dlgInfo, hwndDlg);
+                    }
                 break;
 
                 case IDC_RESUME:
-                    //SendMessage(Info->hMainWnd, WM_COMMAND, ID_RESUME, 0);
+                    if (DoResume(dlgInfo->Info))
+                    {
+                        UpdateServiceStatus(dlgInfo->pService);
+                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                        SetButtonStates(dlgInfo, hwndDlg);
+                        SetServiceStatusText(dlgInfo, hwndDlg);
+                    }
                 break;
 
                 case IDC_EDIT:
@@ -396,36 +419,6 @@ DependanciesPageProc(HWND hwndDlg,
 }
 
 
-static INT CALLBACK
-AddEditButton(HWND hwnd, UINT message, LPARAM lParam)
-{
-    HWND hEditButton;
-
-    switch (message)
-    {
-        case PSCB_PRECREATE:
-            /*hEditButton = CreateWindowEx(0,
-                                         WC_BUTTON,
-                                         NULL,
-                                         WS_CHILD | WS_VISIBLE,
-                                         20, 300, 30, 15,
-                                         hwnd,
-                                         NULL,
-                                         hInstance,
-                                         NULL);
-            if (hEditButton == NULL)
-                GetError(0);*/
-
-            hEditButton = GetDlgItem(hwnd, PSBTN_OK);
-            DestroyWindow(hEditButton);
-            //SetWindowText(hEditButton, _T("test"));
-
-            return TRUE;
-    }
-    return TRUE;
-}
-
-
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp,
                   PSERVICEPROPSHEET dlgInfo,
@@ -459,7 +452,6 @@ OpenPropSheet(PMAIN_WND_INFO Info)
     psh.pszCaption = Info->pCurrentService->lpDisplayName;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
-    psh.pfnCallback = AddEditButton;
     psh.ppsp = psp;
 
 
