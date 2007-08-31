@@ -38,14 +38,12 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         hButton = GetDlgItem(hwndDlg, IDC_START);
         EnableWindow (hButton, TRUE);
     }
-
-    if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
+    else if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
     {
         hButton = GetDlgItem(hwndDlg, IDC_STOP);
         EnableWindow (hButton, TRUE);
     }
-
-    if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
+    else if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
     {
         hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
@@ -144,8 +142,8 @@ SetStartupType(LPTSTR lpServiceName,
  * the relevant service information
  */
 static VOID
-GetDlgInfo(PSERVICEPROPSHEET dlgInfo,
-           HWND hwndDlg)
+InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
+                HWND hwndDlg)
 {
     LPQUERY_SERVICE_CONFIG pServiceConfig;
     LPTSTR lpDescription;
@@ -279,7 +277,7 @@ GeneralPageProc(HWND hwndDlg,
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
                                  (LONG_PTR)dlgInfo);
-                GetDlgInfo(dlgInfo, hwndDlg);
+                InitGeneralPage(dlgInfo, hwndDlg);
                 SetButtonStates(dlgInfo, hwndDlg);
             }
         }
@@ -369,13 +367,21 @@ GeneralPageProc(HWND hwndDlg,
 
     return FALSE;
 }
-
-
-
 /*
+static VOID
+InitDependPage(PSERVICEPROPSHEET dlgInfo,
+               HWND hwndDlg)
+{
+
+
+}
+
+
+
+*
  * Dependancies Property dialog callback.
  * Controls messages to the Dependancies dialog
- */
+ *
 static INT_PTR CALLBACK
 DependanciesPageProc(HWND hwndDlg,
                      UINT uMsg,
@@ -384,7 +390,6 @@ DependanciesPageProc(HWND hwndDlg,
 {
     PSERVICEPROPSHEET dlgInfo;
 
-    /* Get the window context */
     dlgInfo = (PSERVICEPROPSHEET)GetWindowLongPtr(hwndDlg,
                                                   GWLP_USERDATA);
 
@@ -403,6 +408,8 @@ DependanciesPageProc(HWND hwndDlg,
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
                                  (LONG_PTR)dlgInfo);
+
+                InitDependPage(dlgInfo, hwndDlg);
             }
         }
         break;
@@ -417,7 +424,7 @@ DependanciesPageProc(HWND hwndDlg,
 
     return FALSE;
 }
-
+*/
 
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp,
@@ -439,7 +446,7 @@ LONG APIENTRY
 OpenPropSheet(PMAIN_WND_INFO Info)
 {
     PROPSHEETHEADER psh;
-    PROPSHEETPAGE psp[2];
+    PROPSHEETPAGE psp[1];
     PSERVICEPROPSHEET pServicePropSheet;
     LONG Ret = 0;
 
@@ -467,7 +474,7 @@ OpenPropSheet(PMAIN_WND_INFO Info)
         InitPropSheetPage(&psp[0], pServicePropSheet, IDD_DLG_GENERAL, GeneralPageProc);
         //InitPropSheetPage(&psp[1], Info, IDD_DLG_GENERAL, LogonPageProc);
         //InitPropSheetPage(&psp[2], Info, IDD_DLG_GENERAL, RecoveryPageProc);
-        InitPropSheetPage(&psp[1], pServicePropSheet, IDD_DLG_DEPEND, DependanciesPageProc);
+        //InitPropSheetPage(&psp[1], pServicePropSheet, IDD_DLG_DEPEND, DependanciesPageProc);
 
         Ret = (LONG)(PropertySheet(&psh) != -1);
 
