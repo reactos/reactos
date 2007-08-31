@@ -34,19 +34,23 @@ PolyTextOutW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
-GetKerningPairsW(
-	HDC		a0,
-	DWORD		a1,
-	LPKERNINGPAIR	a2
-	)
+GetKerningPairsW(HDC hdc,
+                 ULONG cPairs,
+                 LPKERNINGPAIR pkpDst)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    if ((cPairs != 0) || (pkpDst == 0))
+    {
+        return NtGdiGetKerningPairs(hdc,cPairs,pkpDst);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 }
 
 
