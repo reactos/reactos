@@ -427,7 +427,7 @@ GetPolyFillMode@4=NtGdiGetPolyFillMode@4
 GetROP2@4=NtGdiGetROP2@4
 GetRandomRgn@12=NtGdiGetRandomRgn@12
 GetRasterizerCaps@8
-GetRegionData@12=NtGdiGetRegionData@12
+GetRegionData@12
 GetRelAbs@8
 GetRgnBox@8=NtGdiGetRgnBox@8
 GetStockObject@4
