@@ -1533,15 +1533,19 @@ GetLayout(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-GetTextExtentExPointWPri(HDC hdc,LPWSTR lpwsz,ULONG cwc,ULONG dxMax,ULONG *pcCh,PULONG pdxOut,LPSIZE psize)
+GetTextExtentExPointWPri(HDC hdc,
+                         LPWSTR lpwsz,
+                         ULONG cwc,
+                         ULONG dxMax,
+                         ULONG *pcCh,
+                         PULONG pdxOut,
+                         LPSIZE psize)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiGetTextExtentExW(hdc,lpwsz,cwc,dxMax,pcCh,pdxOut,psize,0);
 }
 
 /*
