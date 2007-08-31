@@ -14,22 +14,6 @@
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 
-/*
- * @implemented
- */
-int
-STDCALL
-DeviceCapabilitiesExA(
-	LPCSTR		pDevice,
-	LPCSTR		pPort,
-	WORD		fwCapability,
-	LPSTR		pOutput,
-	CONST DEVMODEA	*pDevMode
-	)
-{
-	/* Note Windows 2000/XP/VISTA always return -1 */
-	return -1;
-}
 
 
 /*

@@ -158,18 +158,6 @@ GdiGetBatchLimit()
     return GDI_BatchLimit;
 }
 
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GdiReleaseLocalDC(HDC hdc)
-{
-	return TRUE;
-}
-
-
 /*
  * @unimplemented
  */
@@ -177,8 +165,7 @@ BOOL
 STDCALL
 GdiReleaseDC(HDC hdc)
 {
-	GdiReleaseLocalDC(hdc);
-	return 0;
+    return 0;
 }
 
 INT STDCALL

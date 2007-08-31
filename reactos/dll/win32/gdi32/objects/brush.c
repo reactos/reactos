@@ -3,19 +3,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-FixBrushOrgEx(
-   HDC hDC,
-   INT nXOrg,
-   INT nYOrg,
-   LPPOINT lpPoint)
-{
-   return FALSE;
-}
+
 
 /*
  * @implemented

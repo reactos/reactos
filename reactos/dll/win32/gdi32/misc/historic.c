@@ -9,6 +9,11 @@
  */
 
 #include "precomp.h"
+#include <ddraw.h>
+#include <ddrawi.h>
+#include <ddrawint.h>
+#include <ddrawgdi.h>
+#include <ntgdi.h>
 
 /*
  * @implemented
@@ -65,6 +70,7 @@ HBITMAP
 STDCALL
 GdiConvertBitmap(HBITMAP hbm)
 {
+    /* Note Windows 2000/XP/VISTA always returns hbm */
     return hbm;
 }
 
@@ -75,6 +81,7 @@ HBRUSH
 STDCALL
 GdiConvertBrush(HBRUSH hbr)
 {
+    /* Note Windows 2000/XP/VISTA always returns hbr */
     return hbr;
 }
 
@@ -85,6 +92,7 @@ HDC
 STDCALL
 GdiConvertDC(HDC hdc)
 {
+    /* Note Windows 2000/XP/VISTA always returns hdc */
     return hdc;
 }
 
@@ -95,6 +103,7 @@ HFONT
 STDCALL
 GdiConvertFont(HFONT hfont)
 {
+    /* Note Windows 2000/XP/VISTA always returns hfont */
     return hfont;
 }
 
@@ -105,6 +114,7 @@ HPALETTE
 STDCALL
 GdiConvertPalette(HPALETTE hpal)
 {
+    /* Note Windows 2000/XP/VISTA always returns hpal */
     return hpal;
 }
 
@@ -115,6 +125,7 @@ HRGN
 STDCALL
 GdiConvertRegion(HRGN hregion)
 {
+    /* Note Windows 2000/XP/VISTA always returns hregion */
     return hregion;
 }
 
@@ -125,8 +136,21 @@ BOOL
 STDCALL
 GdiSetAttrs(HDC hdc)
 {
+    /* Note Windows 2000/XP/VISTA always returns TRUE */
     return TRUE;
 }
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GdiDeleteLocalDC(HDC hdc)
+{
+    /* Note Windows 2000/XP/VISTA always returns TRUE */
+    return TRUE;
+}
+
 
 /*
  * @implemented
@@ -139,5 +163,74 @@ GdiSetServerAttr(HDC hdc,DWORD attr)
 }
 
 
+/*
+ * @implemented
+ */
+int
+STDCALL
+DeviceCapabilitiesExA(LPCSTR pDevice,
+                      LPCSTR pPort,
+                      WORD fwCapability,
+                      LPSTR pOutput,
+                      CONST DEVMODEA *pDevMode)
+{
+    /* Note Windows 2000/XP/VISTA always returns -1 */
+    return -1;
+}
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+DeviceCapabilitiesExW(LPCWSTR pDevice,
+                      LPCWSTR pPort,
+                      WORD fwCapability,
+                      LPWSTR pOutput,
+                      CONST DEVMODEW *pDevMode)
+{
+    /* Note Windows 2000/XP/VISTA always returns -1 */
+    return -1;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+FixBrushOrgEx(HDC hDC,
+              INT nXOrg,
+              INT nYOrg,
+              LPPOINT lpPoint)
+{
+    /* Note Windows 2000/XP/VISTA always returns FALSE */
+    return FALSE;
+}
+
+/*
+ * @implemented
+ *
+ * GDIEntry 16
+ */
+DWORD
+WINAPI
+DdSwapTextureHandles(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
+                     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
+                     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2)
+{
+    /* Note Windows 2000/XP/VISTA always returns success */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GdiReleaseLocalDC(HDC hdc)
+{
+    /* Note Windows 2000/XP/VISTA always returns TRUE */
+    return TRUE;
+}
 
 

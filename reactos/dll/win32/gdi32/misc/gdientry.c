@@ -1033,20 +1033,7 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
                                hdc,
                                lpGammaRamp);
 }
-/*
- * @implemented
- *
- * GDIEntry 16
- */
-DWORD
-WINAPI
-DdSwapTextureHandles(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-                     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
-                     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2)
-{
-    /* Always returns success */
-    return TRUE;
-}
+
 
 
 

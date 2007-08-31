@@ -1355,18 +1355,6 @@ GdiConvertEnhMetaFile(HENHMETAFILE hmf)
  */
 BOOL
 STDCALL
-GdiDeleteLocalDC(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 GdiDrawStream(HDC dc, ULONG l, VOID *v)
 {
 	UNIMPLEMENTED;
