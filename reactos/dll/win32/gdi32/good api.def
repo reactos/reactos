@@ -117,6 +117,13 @@ GetAspectRatioFilterEx@8
 GetBitmapBits@12
 GetBitmapDimensionEx@8
 GetBoundsRect@12
+GetCharWidthInfo@8
+GetColorAdjustment@8
+GetDCOrgEx@8
+GetDeviceGammaRamp@8
+GetEUDCTimeStamp@0
+GetEUDCTimeStampExW@4
+
 
 
 
