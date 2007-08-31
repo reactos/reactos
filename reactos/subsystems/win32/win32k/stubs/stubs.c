@@ -2860,8 +2860,16 @@ NtGdiHT_Get8BPPFormatPalette(
 ULONG
 STDCALL
 NtGdiQueryFontAssocInfo(
-    IN HDC hdc
-)
+    IN HDC hdc)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD 
+NtGdiGetFontUnicodeRanges(
+    IN HDC hdc,
+    OUT OPTIONAL LPGLYPHSET pgs)
 {
     UNIMPLEMENTED;
     return 0;

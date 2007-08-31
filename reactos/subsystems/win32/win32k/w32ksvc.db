@@ -221,7 +221,7 @@ NtGdiGetUFI                                      6
 # NtGdiGetEmbedFonts                             0
 # NtGdiChangeGhostFont                           2
 # NtGdiAddEmbFontToDC                            2
-# NtGdiGetFontUnicodeRanges                      2
+NtGdiGetFontUnicodeRanges                        2
 # NtGdiGetWidthTable                             7
 NtGdiGradientFill                                6
 NtGdiHfontCreate                                 5
