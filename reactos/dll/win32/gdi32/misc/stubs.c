@@ -1689,15 +1689,20 @@ GetEUDCTimeStamp(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG 
 STDCALL
 GetFontAssocStatus(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    ULONG retValue = 0;
+
+    if (hdc)
+    {
+        retValue = NtGdiQueryFontAssocInfo(hdc);
+    }
+
+    return retValue;
 }
 
 /*
@@ -2911,4 +2916,24 @@ GetCharABCWidths(HDC hdc,
 {
     /* FIXME some part need be done in user mode */
     return NtGdiGetCharABCWidths(hdc, uFirstChar, uLastChar, lpabc);
+}
+
+
+/*
+ * @implemented
+ *
+ */
+DWORD 
+STDCALL
+GetFontData(HDC hdc,
+            DWORD dwTable,
+            DWORD dwOffset,
+            LPVOID lpvBuffer,
+            DWORD cbData)
+{
+    if (!lpvBuffer)
+    {
+       cbData = 0;
+    }
+    return NtGdiGetFontData(hdc, dwTable, dwOffset, lpvBuffer, cbData);
 }
