@@ -250,7 +250,7 @@ NtGdiPolyPolyDraw                                5
 NtGdiPtInRegion                                  3
 NtGdiPtVisible                                   3
 NtGdiQueryFonts                                  3
-# NtGdiQueryFontAssocInfo                        1
+NtGdiQueryFontAssocInfo                          1
 NtGdiRectangle                                   5
 NtGdiRectInRegion                                2
 NtGdiRectVisible                                 2

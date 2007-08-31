@@ -2854,3 +2854,16 @@ NtGdiHT_Get8BPPFormatPalette(
     return FALSE;
 }
 
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiQueryFontAssocInfo(
+    IN HDC hdc
+)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
