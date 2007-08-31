@@ -178,20 +178,6 @@ WidenPath(
 	return NtGdiWidenPath ( hdc );
 }
 
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetMiterLimit(
-	HDC	hdc,
-	PFLOAT	a1
-	)
-{
-	return NtGdiGetMiterLimit ( hdc, (PDWORD)a1 );
-}
-
 /*
  * @implemented
  */

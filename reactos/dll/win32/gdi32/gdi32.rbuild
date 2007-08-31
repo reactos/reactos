@@ -20,6 +20,7 @@
 	<directory name="misc">
 		<file>heap.c</file>
 		<file>gdientry.c</file>
+		<file>hacks.c</file>
 		<file>historic.c</file>
 		<file>misc.c</file>
 		<file>stubs.c</file>

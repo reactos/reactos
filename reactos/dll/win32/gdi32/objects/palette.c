@@ -20,6 +20,9 @@ CreatePalette(CONST LOGPALETTE * plpal)
     return NtGdiCreatePaletteInternal((LPLOGPALETTE)plpal, plpal->palNumEntries);
 }
 
+/*
+ * @implemented
+ */
 UINT
 WINAPI
 GetPaletteEntries(HPALETTE hpal,

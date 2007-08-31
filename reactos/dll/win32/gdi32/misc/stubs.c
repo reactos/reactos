@@ -142,22 +142,6 @@ GetMetaFileBitsEx(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetRasterizerCaps(
-	LPRASTERIZER_STATUS	a0,
-	UINT			a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 /*
  * @unimplemented
  */
@@ -167,7 +151,6 @@ GetSystemPaletteUse(HDC hDc)
 {
     return NtGdiGetSystemPaletteUse(hDc);
 }
-
 
 /*
  * @unimplemented
@@ -182,7 +165,6 @@ GetFontLanguageInfo(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 /*
  * @unimplemented
@@ -199,7 +181,6 @@ PlayMetaFile(
 	return FALSE;
 }
 
-
 /*
  * @unimplemented
  */
@@ -215,7 +196,6 @@ ResizePalette(
 	return FALSE;
 }
 
-
 /*
  * @unimplemented
  */
@@ -229,7 +209,6 @@ SetMetaRgn(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 /*
  * @unimplemented
@@ -263,7 +242,6 @@ SetMapperFlags(
 	return 0;
 }
 
-
 /*
  * @unimplemented
  */
@@ -278,7 +256,6 @@ SetMetaFileBitsEx(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 /*
  * @unimplemented
@@ -295,7 +272,6 @@ SetSystemPaletteUse(
 	return 0;
 }
 
-
 /*
  * @unimplemented
  */
@@ -311,7 +287,6 @@ SetTextJustification(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
 
 /*
  * @unimplemented
@@ -363,10 +338,6 @@ EnumMetaFile(
 	return FALSE;
 }
 
-
-
-
-
 /*
  * @unimplemented
  */
@@ -380,7 +351,6 @@ DeleteEnhMetaFile(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
 
 /*
  * @unimplemented
@@ -399,7 +369,6 @@ EnumEnhMetaFile(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
 
 /*
  * @unimplemented
@@ -434,7 +403,6 @@ GetEnhMetaFileHeader(
 	return 0;
 }
 
-
 /*
  * @unimplemented
  */
@@ -450,7 +418,6 @@ GetEnhMetaFilePaletteEntries(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 /*
  * @unimplemented
@@ -603,10 +570,6 @@ SetColorAdjustment(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
-
 
 /*
  * @unimplemented
@@ -2794,4 +2757,35 @@ GetRegionData(HRGN hrgn,
 
     return NtGdiGetRegionData(hrgn,nCount,lpRgnData);
 }
+
+
+/*
+ * @implemented
+ *
+ */
+INT
+STDCALL
+GetRgnBox(HRGN hrgn,
+          LPRECT prcOut)
+{
+    /* FIXME some stuff need be done in user mode */
+    return NtGdiGetRgnBox(hrgn, prcOut);
+}
+
+
+/*
+ * @implemented
+ *
+ */
+DWORD
+STDCALL
+GetPixel(HDC hdc,
+         INT x,
+         INT y)
+{
+    /* FIXME some part need todo in user mode */
+    return  NtGdiGetPixel(hdc, x, y);
+}
+
+
 
