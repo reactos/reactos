@@ -9,8 +9,17 @@
 #ifndef _TYPEDEFS_HOST_H
 #define _TYPEDEFS_HOST_H
 
+#include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
+
+#if defined(_MSC_VER)
+#define W64 __w64
+#elif defined(__GNUC__)
+#define W64
+#else
+#error Unknown compiler
+#endif
 
 #ifndef __fastcall
 #define __fastcall __attribute__((fastcall))
@@ -23,7 +32,7 @@
 #endif
 
 #define UNIMPLEMENTED { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
-#define ASSERT(x) { if (!(x)) { printf("Assertion " #x " at %s:%d failed\n", __FILE__, __LINE__); exit(1); } }
+#define ASSERT(x) assert(x)
 #define DPRINT if (0) printf
 #define DPRINT1 printf
 
@@ -50,14 +59,14 @@ typedef const char CCHAR;
 typedef const char *PCSTR, *LPCSTR;
 typedef short SHORT;
 typedef unsigned short USHORT;
-typedef unsigned int LONG, *PLONG;
-typedef unsigned int ULONG, *PULONG, DWORD;
+typedef int LONG, *PLONG;
+typedef unsigned int ULONG, *PULONG, DWORD, *LPDWORD;
 typedef long long LONGLONG;
 typedef unsigned long long ULONGLONG;
 typedef UCHAR BOOLEAN, *PBOOLEAN;
 typedef int BOOL;
-typedef int LONG_PTR, *PLONG_PTR;
-typedef unsigned int ULONG_PTR, *PULONG_PTR;
+typedef int W64 LONG_PTR, *PLONG_PTR;
+typedef unsigned int W64 ULONG_PTR, *PULONG_PTR;
 typedef wchar_t WCHAR, *PWCHAR, *PWSTR, *LPWSTR;
 typedef const wchar_t *PCWSTR, *LPCWSTR;
 typedef int NTSTATUS;
