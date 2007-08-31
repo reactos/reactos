@@ -2875,3 +2875,16 @@ NtGdiGetFontUnicodeRanges(
     return 0;
 }
 
+UINT
+STDCALL  
+NtGdiGetStringBitmapW(
+    IN HDC hdc,
+    IN LPWSTR pwsz,
+    IN UINT cwc,
+    OUT BYTE *lpSB,
+    IN UINT cj)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+

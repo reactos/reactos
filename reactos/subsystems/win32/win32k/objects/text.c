@@ -3091,8 +3091,8 @@ NtGdiGetGlyphOutline(
 DWORD
 STDCALL
 NtGdiGetKerningPairs(HDC  hDC,
-                           DWORD  NumPairs,
-                           LPKERNINGPAIR  krnpair)
+                     ULONG  NumPairs,
+                     LPKERNINGPAIR  krnpair)
 {
   UNIMPLEMENTED;
   return 0;

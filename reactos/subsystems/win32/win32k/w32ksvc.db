@@ -207,7 +207,7 @@ NtGdiGetRgnBox                                   2
 NtGdiGetSpoolMessage                             4
 # NtGdiGetStats                                  5
 NtGdiGetStockObject                              1
-# NtGdiGetStringBitmapW                          5
+NtGdiGetStringBitmapW                            5
 NtGdiGetSystemPaletteUse                         1
 NtGdiGetTextCharsetInfo                          3
 NtGdiGetTextExtent                               5
