@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <commctrl.h>
 #include <prsht.h>
+#include <tchar.h>
 #include "resource.h"
 #include "access.h"
 
@@ -25,6 +26,10 @@ typedef struct _GLOBAL_DATA
     TOGGLEKEYS oldToggleKeys;
     BOOL bKeyboardPref;
 } GLOBAL_DATA, *PGLOBAL_DATA;
+
+
+#define BOUNCETICKS 5
+static INT nBounceArray[BOUNCETICKS] = {500, 700, 1000, 1500, 2000};
 
 
 /* Property page dialog callback */
@@ -111,6 +116,92 @@ StickyKeysDlgProc(HWND hwndDlg,
 }
 
 
+static VOID
+SetDlgItemTime(HWND hwnd, INT nId, INT nTimeMs)
+{
+    TCHAR szBuffer[16];
+
+    wsprintf(szBuffer, _T("%d.%d"), nTimeMs / 1000, (nTimeMs % 1000) / 100);
+
+    SetDlgItemText(hwnd, nId, szBuffer);
+}
+
+
+INT_PTR CALLBACK
+BounceKeysDlgProc(HWND hwndDlg,
+                  UINT uMsg,
+                  WPARAM wParam,
+                  LPARAM lParam)
+{
+    PGLOBAL_DATA pGlobalData;
+    INT i;
+
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pGlobalData = (PGLOBAL_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            /* Set the range */
+            SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_TRACK, TBM_SETRANGE,
+                               TRUE, MAKELONG(0, BOUNCETICKS - 1));
+
+            /* Determine the current thumb position */
+            if (pGlobalData->filterKeys.iBounceMSec == 0)
+                pGlobalData->filterKeys.iBounceMSec = nBounceArray[0];
+
+            for (i = 0; i < BOUNCETICKS; i++)
+            {
+                 if (pGlobalData->filterKeys.iBounceMSec < nBounceArray[i])
+                     break;
+            }
+            i--;
+
+            /* Set the thumb position */
+            SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_TRACK, TBM_SETPOS, TRUE, i);
+
+            /* Set the bounce delay */
+            SetDlgItemTime(hwndDlg, IDC_BOUNCE_TIME_EDIT, nBounceArray[i]);
+            break;
+
+        case WM_HSCROLL:
+            switch (GetWindowLong((HWND) lParam, GWL_ID))
+            {
+                case IDC_BOUNCE_TIME_TRACK:
+                    i = SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_TRACK, TBM_GETPOS, 0, 0);
+                    if (i >= 0 && i < BOUNCETICKS)
+                    {
+                        /* Update the bounce delay */
+                        pGlobalData->filterKeys.iBounceMSec = nBounceArray[i];
+                        SetDlgItemTime(hwndDlg, IDC_BOUNCE_TIME_EDIT, nBounceArray[i]);
+                    }
+                    break;
+            }
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, TRUE);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, FALSE);
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 FilterKeysDlgProc(HWND hwndDlg,
@@ -175,8 +266,19 @@ FilterKeysDlgProc(HWND hwndDlg,
                     EnableWindow(GetDlgItem(hwndDlg, IDC_FILTER_REPEAT_BUTTON), TRUE);
                     break;
 
+                case IDC_FILTER_BOUNCE_BUTTON:
+                    DialogBoxParam(hApplet,
+                                   MAKEINTRESOURCE(IDD_BOUNCEKEYSOPTIONS),
+                                   hwndDlg,
+                                   (DLGPROC)BounceKeysDlgProc,
+                                   (LPARAM)pGlobalData);
+                    break;
+
                 case IDC_FILTER_SOUND_CHECK:
                     pGlobalData->filterKeys.dwFlags ^= FKF_CLICKON;
+                    break;
+
+                case IDC_FILTER_REPEAT_BUTTON:
                     break;
 
                 case IDC_FILTER_STATUS_CHECK:
