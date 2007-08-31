@@ -24,7 +24,7 @@ static const TBBUTTON Buttons [] =
     /* Note: First item for a seperator is its width in pixels */
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
-    {TBICON_CREATE,  ID_CREATE,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },         /* create */
+    {TBICON_CREATE,  ID_CREATE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },         /* create */
     {TBICON_DELETE,  ID_DELETE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* delete */
 
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
@@ -172,10 +172,13 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
     if (Info->SelectedItem != NO_ITEM_SELECTED)
     {
         /* allow user to delete service */
-        SendMessage(Info->hTool, TB_SETSTATE, ID_DELETE,
-                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
-        EnableMenuItem(hMainMenu, ID_DELETE, MF_ENABLED);
-        EnableMenuItem(Info->hShortcutMenu, ID_DELETE, MF_ENABLED);
+        if (Info->bIsUserAnAdmin)
+        {
+            SendMessage(Info->hTool, TB_SETSTATE, ID_DELETE,
+                       (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+            EnableMenuItem(hMainMenu, ID_DELETE, MF_ENABLED);
+            EnableMenuItem(Info->hShortcutMenu, ID_DELETE, MF_ENABLED);
+        }
 
         Flags = Info->pCurrentService->ServiceStatusProcess.dwControlsAccepted;
         State = Info->pCurrentService->ServiceStatusProcess.dwCurrentState;
@@ -350,6 +353,24 @@ InitMainWnd(PMAIN_WND_INFO Info)
                                      0);
 
     Info->bIsUserAnAdmin = IsUserAnAdmin();
+    if (Info->bIsUserAnAdmin)
+    {
+        HMENU hMainMenu = GetMenu(Info->hMainWnd);
+
+        SendMessage(Info->hTool,
+                    TB_SETSTATE,
+                    ID_CREATE,
+                    (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+        if (hMainMenu)
+        {
+            EnableMenuItem(hMainMenu,
+                           ID_CREATE,
+                           MF_ENABLED);
+        }
+        EnableMenuItem(Info->hShortcutMenu,
+                       ID_CREATE,
+                       MF_ENABLED);
+    }
 
     return TRUE;
 }
