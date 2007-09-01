@@ -1091,13 +1091,17 @@ int
 STDCALL
 AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
-    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
+    int retVal = 0;
+
+    if (fl & (FR_PRIVATE | FR_NOT_ENUM))
+    {
+        retVal = GdiAddFontResourceW(lpszFilename, fl,0);
+    }
+    else
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return 0;
     }
-
-    return GdiAddFontResourceW(lpszFilename, fl,0);
+    return retVal;
 }
 
 
@@ -1110,24 +1114,26 @@ AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
     NTSTATUS Status;
     PWSTR FilenameW;
-    int rc;
+    int rc = 0;
 
-    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
+    if (!(fl & (FR_PRIVATE | FR_NOT_ENUM)))
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return 0;
     }
-
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
+    else
     {
-        SetLastError (RtlNtStatusToDosError(Status));
-        return 0;
+        Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
+        if ( !NT_SUCCESS (Status) )
+        {
+            SetLastError (RtlNtStatusToDosError(Status));
+        }
+        else
+        {
+            rc = GdiAddFontResourceW ( FilenameW, fl, 0 );
+            HEAP_free ( FilenameW );
+        }
     }
-
-    rc = GdiAddFontResourceW ( FilenameW, fl, 0 );
-    HEAP_free ( FilenameW );
-    return rc;
+  return rc;
 }
 
 
