@@ -1880,13 +1880,13 @@ GuiInit(VOID)
   wc.lpfnWndProc = GuiConsoleWndProc;
   wc.style = 0;
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-  wc.hIcon = LoadIconW(Win32CsrDllHandle, MAKEINTRESOURCEW(1));
+  wc.hIcon = LoadIconW(GetModuleHandleW(L"win32csr"), MAKEINTRESOURCEW(1));
   wc.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_ARROW);
   wc.hbrBackground = NULL;
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
-  wc.hIconSm = LoadImageW(Win32CsrDllHandle, MAKEINTRESOURCEW(1), IMAGE_ICON,
+  wc.hIconSm = LoadImageW(GetModuleHandleW(L"win32csr"), MAKEINTRESOURCEW(1), IMAGE_ICON,
                           GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
                           LR_SHARED);
   if (RegisterClassExW(&wc) == 0)
