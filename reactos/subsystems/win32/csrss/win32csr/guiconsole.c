@@ -121,15 +121,16 @@ static VOID FASTCALL
 GuiConsoleAppendMenuItems(HMENU hMenu,
                           const GUICONSOLE_MENUITEM *Items)
 {
-    UINT i;
+    UINT i = 0;
     WCHAR szMenuString[255];
     HMENU hSubMenu;
+    HINSTANCE hInst = GetModuleHandleW(L"win32csr");
 
-    for (i = 0; Items[i].uID != 0; i++)
+    do
     {
         if (Items[i].uID != (UINT)-1)
         {
-            if (LoadStringW(Win32CsrDllHandle,
+            if (LoadStringW(hInst,
                             Items[i].uID,
                             szMenuString,
                             sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
@@ -167,20 +168,21 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
                         0,
                         NULL);
         }
-    }
+    i++;
+    }while(!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
 static VOID FASTCALL
 GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
 {
     HMENU hMenu;
-
     hMenu = GetSystemMenu(Console->hWindow,
                           FALSE);
     if (hMenu != NULL)
     {
         GuiConsoleAppendMenuItems(hMenu,
                                   GuiConsoleMainMenuItems);
+        DrawMenuBar(Console->hWindow);
     }
 }
 
