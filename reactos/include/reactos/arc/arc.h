@@ -86,6 +86,27 @@ typedef enum _TYPE_OF_MEMORY
     LoaderMaximum
 } TYPE_OF_MEMORY;
 
+typedef enum _MEMORY_TYPE
+{
+    MemoryExceptionBlock,
+    MemorySystemBlock,
+    MemoryFree,
+    MemoryBad,
+    MemoryLoadedProgram,
+    MemoryFirmwareTemporary,
+    MemoryFirmwarePermanent,
+    MemoryFreeContiguous,
+    MemorySpecialMemory,
+    MemoryMaximum
+} MEMORY_TYPE;
+
+typedef struct _MEMORY_DESCRIPTOR
+{
+    MEMORY_TYPE MemoryType;
+    ULONG BasePage;
+    ULONG PageCount;
+} MEMORY_DESCRIPTOR, *PMEMORY_DESCRIPTOR;
+
 typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
 {
     LIST_ENTRY ListEntry;

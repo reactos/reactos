@@ -326,7 +326,8 @@ MemType[]  = {
    "MemoryData        ", // not used
    "NlsData           ", // used
    "SpecialMemory     ", // == Bad
-   "BBTMemory         " // == Bad
+   "BBTMemory         ",
+   "LoaderReserve     "// == Bad
 };
 
 VOID
