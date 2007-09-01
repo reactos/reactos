@@ -1112,8 +1112,9 @@ DC_GET_VAL( COLORREF, NtGdiGetBkColor, Dc_Attr.crBackgroundClr )
 DC_GET_VAL( INT, NtGdiGetBkMode, Dc_Attr.jBkMode )
 DC_GET_VAL_EX( GetBrushOrgEx, Dc_Attr.ptlBrushOrigin.x, Dc_Attr.ptlBrushOrigin.y, POINT, x, y )
 
-HGDIOBJ STDCALL
-NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
+HANDLE
+STDCALL
+NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
 {
   HGDIOBJ SelObject;
   DC *dc;
@@ -1129,23 +1130,23 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
 
   switch(ObjectType)
   {
-    case OBJ_PEN:
-    case OBJ_EXTPEN:
+    case GDI_OBJECT_TYPE_EXTPEN:
+    case GDI_OBJECT_TYPE_PEN:         
       SelObject = dc->Dc_Attr.hpen;
       break;
-    case OBJ_BRUSH:
+    case GDI_OBJECT_TYPE_BRUSH:
       SelObject = dc->Dc_Attr.hbrush;
       break;
-    case OBJ_PAL:
+    case GDI_OBJECT_TYPE_PALETTE:
       SelObject = dc->w.hPalette;
       break;
-    case OBJ_FONT:
+    case GDI_OBJECT_TYPE_FONT:
       SelObject = dc->Dc_Attr.hlfntNew;
       break;
-    case OBJ_BITMAP:
+    case GDI_OBJECT_TYPE_BITMAP:
       SelObject = dc->w.hBitmap;
       break;
-    case OBJ_COLORSPACE:
+    case GDI_OBJECT_TYPE_COLORSPACE:
       DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_COLORSPACE not supported yet!\n");
       SelObject = NULL;
       break;
@@ -2103,6 +2104,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   DC_UnlockDc( dc );
   return objOrg;
 }
+
 
 WORD STDCALL
 IntGdiSetHookFlags(HDC hDC, WORD Flags)

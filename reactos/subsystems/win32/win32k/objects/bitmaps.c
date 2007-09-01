@@ -509,33 +509,8 @@ NtGdiSetBitmapDimension(
 	return TRUE;
 }
 
-COLORREF STDCALL
-NtGdiSetPixel(
-	HDC  hDC,
-	INT  X,
-	INT  Y,
-	COLORREF  Color)
-{
-   
-	DPRINT("0 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);	
-	
-	
-	DPRINT("0 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
-
-	if (NtGdiSetPixelV(hDC,X,Y,Color))
-	{
-		Color = NtGdiGetPixel(hDC,X,Y);
-		DPRINT("1 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
-		return Color;
-	}
-
-	Color = ((COLORREF) -1);
-	DPRINT("2 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
-	return Color;
-}
-
 BOOL STDCALL
-NtGdiSetPixelV(
+GdiSetPixelV(
 	HDC  hDC,
 	INT  X,
 	INT  Y,
@@ -557,6 +532,28 @@ NtGdiSetPixelV(
 	NtGdiDeleteObject(NewBrush);
 	return TRUE;
 }
+
+COLORREF STDCALL
+NtGdiSetPixel(
+	HDC  hDC,
+	INT  X,
+	INT  Y,
+	COLORREF  Color)
+{
+   	DPRINT("0 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
+
+	if (GdiSetPixelV(hDC,X,Y,Color))
+	{
+		Color = NtGdiGetPixel(hDC,X,Y);
+		DPRINT("1 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
+		return Color;
+	}
+
+	Color = ((COLORREF) CLR_INVALID);
+	DPRINT("2 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
+	return Color;
+}
+
 
 /*  Internal Functions  */
 

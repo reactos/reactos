@@ -2174,25 +2174,6 @@ EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo)
 }
 
 
-
-
-/*
- * @implemented
- */
-BOOL 
-STDCALL
-Ellipse(
-  HDC hdc,
-  int nLeftRect,
-  int nTopRect,
-  int nRightRect,
-  int nBottomRect)
-{
-    /* FIXME some parts need be done in user mode */
-    return NtGdiEllipse(hdc,nLeftRect,nTopRect,nRightRect,nBottomRect);
-}
-
-
 /*
  * @unimplemented
  */
@@ -2464,17 +2445,6 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
  */
 BOOL
 STDCALL
-FillRgn( IN HDC hdc, IN HRGN hrgn, IN HBRUSH hbrush)
-{
-	/* FIXME some part need be done on user mode size */
-	return NtGdiFillRgn( hdc, hrgn, hbrush);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
 GdiGradientFill(
     IN HDC hdc,
     IN PTRIVERTEX pVertex,
@@ -2487,22 +2457,6 @@ GdiGradientFill(
     return NtGdiGradientFill(hdc, pVertex, nVertex, pMesh, nMesh, ulMode);
 }
 
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-FrameRgn(
-    IN HDC hdc,
-    IN HRGN hrgn,
-    IN HBRUSH hbrush,
-    IN INT xWidth,
-    IN INT yHeight)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiFrameRgn(hdc, hrgn, hbrush, xWidth, yHeight);
-}
 
 /*
  * @implemented
@@ -2648,19 +2602,6 @@ GetCurrentPositionEx(HDC hdc,
  * @implemented
  *
  */
-HGDIOBJ 
-STDCALL
-GetCurrentObject(HDC hdc,
-                 UINT uObjectType)
-{
-    /* FIXME some part need be done in user mode */
-    return  NtGdiGetCurrentObject(hdc, uObjectType);
-}
-
-/*
- * @implemented
- *
- */
 int 
 STDCALL
 GetClipBox(HDC hdc,
@@ -2766,21 +2707,6 @@ GetRgnBox(HRGN hrgn,
 {
     /* FIXME some stuff need be done in user mode */
     return NtGdiGetRgnBox(hrgn, prcOut);
-}
-
-
-/*
- * @implemented
- *
- */
-DWORD
-STDCALL
-GetPixel(HDC hdc,
-         INT x,
-         INT y)
-{
-    /* FIXME some part need todo in user mode */
-    return  NtGdiGetPixel(hdc, x, y);
 }
 
 

@@ -696,7 +696,6 @@ NtGdiSetEnhMetaFileBits                 2
 NtGdiSetGraphicsMode                    2
 NtGdiSetICMProfile                      2
 NtGdiSetMapperFlags                     2
-NtGdiSetPixelV                          4
 NtGdiSetPolyFillMode                    2
 NtGdiSetROP2                            2
 NtGdiSetStretchBltMode                  2
@@ -771,7 +770,6 @@ NtGdiGetCharWidth32                     4
 NtGdiGetCharWidthFloat                  4
 NtGdiGetClipBox                         2
 NtGdiGetColorSpace                      1
-NtGdiGetCurrentObject                   2
 NtGdiGetCurrentPositionEx               2
 NtGdiGetEnhMetaFile                     1
 NtGdiGetEnhMetaFileBits                 3
@@ -795,7 +793,6 @@ NtGdiGetTextExtentPoint32               4
 NtGdiMoveToEx                           4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
-NtGdiPaintRgn                           2
 NtGdiPlayEnhMetaFile                    3
 NtGdiPlayEnhMetaFileRecord              4
 NtGdiPolyBezier                         3

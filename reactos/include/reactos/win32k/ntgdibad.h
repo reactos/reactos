@@ -280,9 +280,6 @@ HCOLORSPACE
 STDCALL
 NtGdiGetColorSpace(HDC  hDC);
 
-/* Should be done in user-mode and/or NtGdiGetDCObject. */
-HGDIOBJ STDCALL  NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType);
-
 /* Should be done in user mode. */
 BOOL STDCALL  NtGdiGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 
@@ -431,12 +428,6 @@ NtGdiOffsetWindowOrgEx (
 	LPPOINT	Point
 	);
 
-/* Use NtGdiFillRgn. Add 0 at the end. */
-BOOL
-STDCALL
-NtGdiPaintRgn(HDC  hDC,
-                   HRGN  hRgn);
-
 /* Metafiles are user-mode. */
 BOOL
 STDCALL
@@ -560,16 +551,6 @@ DWORD
 STDCALL
 NtGdiSetMapperFlags(HDC  hDC,
                           DWORD  Flag);
-
-/* Use NtGdiSetPixel(hdc, x, y, color) != CLR_INVALID; */
-BOOL
-STDCALL
-NtGdiSetPixelV (
-	HDC		hDC,
-	INT		X,
-	INT		Y,
-	COLORREF	Color
-	);
 
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 INT STDCALL  NtGdiSetPolyFillMode(HDC  hDC, INT polyFillMode);

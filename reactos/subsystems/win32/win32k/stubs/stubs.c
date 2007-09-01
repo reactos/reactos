@@ -2567,19 +2567,6 @@ NtGdiGetDCforBitmap(
  /*
  * @unimplemented
  */
-HANDLE
-STDCALL
-NtGdiGetDCObject(
-    IN  HDC hdc,
-    IN  INT itype)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
 BOOL
 STDCALL
 NtGdiGetDeviceCapsAll (

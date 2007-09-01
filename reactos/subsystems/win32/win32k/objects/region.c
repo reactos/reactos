@@ -2598,20 +2598,6 @@ IntGdiPaintRgn(PDC dc, HRGN  hRgn)
 
 BOOL
 STDCALL
-NtGdiPaintRgn(HDC  hDC,
-                   HRGN  hRgn)
-{
-  DC *dc = DC_LockDc(hDC);
-
-  BOOL Ret = IntGdiPaintRgn(dc, hRgn);
-
-  DC_UnlockDc( dc );
-  return Ret;
-}
-
-
-BOOL
-STDCALL
 NtGdiPtInRegion(HRGN  hRgn,
                      INT  X,
                      INT  Y)

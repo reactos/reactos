@@ -585,7 +585,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
 
    if(Usage == DIB_PAL_COLORS)
    {
-      hPal = NtGdiGetCurrentObject(hDC, OBJ_PAL);
+      hPal = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);
       hPal = NtUserSelectPalette(hdcMem, hPal, FALSE);
    }
 

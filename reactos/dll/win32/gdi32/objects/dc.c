@@ -355,6 +355,49 @@ GetDCObject( HDC hDC, INT iType)
 
 /*
  * @implemented
+ *
+ */
+HGDIOBJ 
+STDCALL
+GetCurrentObject(HDC hdc,
+                 UINT uObjectType)
+{
+    /* FIXME some part need be done in user mode */
+    switch(uObjectType)
+    {
+      case OBJ_EXTPEN:
+      case OBJ_PEN:
+        uObjectType = GDI_OBJECT_TYPE_PEN;
+        break;
+      case OBJ_BRUSH:
+        uObjectType = GDI_OBJECT_TYPE_BRUSH;
+        break;
+      case OBJ_PAL:
+        uObjectType = GDI_OBJECT_TYPE_PALETTE;
+        break;
+      case OBJ_FONT:
+        uObjectType = GDI_OBJECT_TYPE_FONT;
+        break;
+      case OBJ_BITMAP:
+        uObjectType = GDI_OBJECT_TYPE_BITMAP;
+        break;
+      case OBJ_COLORSPACE:
+        uObjectType = GDI_OBJECT_TYPE_COLORSPACE;
+        break;
+      /* tests show that OBJ_REGION is explicitly ignored */
+      case OBJ_REGION:
+        return NULL;
+      /* the SDK only mentions those above */
+      default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+    return  GetDCObject(hdc, uObjectType);
+}
+
+
+/*
+ * @implemented
  */
 DWORD
 STDCALL
