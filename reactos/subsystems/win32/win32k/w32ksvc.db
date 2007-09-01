@@ -659,10 +659,10 @@ NtGdiFONTOBJ_cGetAllGlyphHandles                 2
 # NtGdiSTROBJ_bGetAdvanceWidths                  4
 # NtGdiSTROBJ_vEnumStart                         1
 # NtGdiSTROBJ_dwGetCodePage                      1
-# NtGdiPATHOBJ_vGetBounds                        2
+NtGdiPATHOBJ_vGetBounds                          2
 NtGdiPATHOBJ_bEnum                               2
-# NtGdiPATHOBJ_vEnumStart                        1
-# NtGdiPATHOBJ_vEnumStartClipLines               4
+NtGdiPATHOBJ_vEnumStart                          1
+NtGdiPATHOBJ_vEnumStartClipLines                 4
 NtGdiPATHOBJ_bEnumClipLines                      3
 # NtGdiGetDhpdev                                 1
 NtGdiEngCheckAbort                               1

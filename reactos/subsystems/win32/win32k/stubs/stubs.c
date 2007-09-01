@@ -2908,3 +2908,42 @@ NtGdiPATHOBJ_bEnumClipLines(
     return FALSE;
 }
 
+ /*
+ * @unimplemented
+ */
+VOID
+STDCALL
+NtGdiPATHOBJ_vGetBounds(
+    IN PATHOBJ *ppo,
+    OUT PRECTFX prectfx)
+{
+    UNIMPLEMENTED;
+}
+
+
+
+ /*
+ * @unimplemented
+ */
+VOID
+STDCALL
+NtGdiPATHOBJ_vEnumStart(
+    IN PATHOBJ *ppo)
+{
+    UNIMPLEMENTED;
+}
+
+ /*
+ * @unimplemented
+ */
+VOID
+STDCALL
+NtGdiPATHOBJ_vEnumStartClipLines(
+    IN PATHOBJ *ppo,
+    IN CLIPOBJ *pco,
+    IN SURFOBJ *pso,
+    IN LINEATTRS *pla)
+{
+    UNIMPLEMENTED;
+}
+
