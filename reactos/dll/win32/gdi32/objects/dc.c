@@ -362,7 +362,6 @@ STDCALL
 GetCurrentObject(HDC hdc,
                  UINT uObjectType)
 {
-    /* FIXME some part need be done in user mode */
     switch(uObjectType)
     {
       case OBJ_EXTPEN:
