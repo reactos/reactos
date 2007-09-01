@@ -1549,15 +1549,24 @@ GetTextExtentExPointWPri(HDC hdc,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-int 
+INT 
 STDCALL
-GetTextFaceAliasW(HDC hdc,int cChar,LPWSTR pszOut)
+GetTextFaceAliasW(HDC hdc,
+                  int cChar,
+                  LPWSTR pszOut)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    INT retValue = 0;
+    if ((!pszOut) || (cChar))
+    {
+        retValue = NtGdiGetTextFaceW(hdc,cChar,pszOut,TRUE);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    return retValue;
 }
 
 /*
