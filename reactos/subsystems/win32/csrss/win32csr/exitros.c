@@ -244,7 +244,7 @@ EndNowThreadProc(LPVOID Parameter)
   SetThreadDesktop(NotifyContext->Desktop);
   SwitchDesktop(NotifyContext->Desktop);
   CallInitCommonControls();
-  NotifyContext->Dlg = CreateDialogParam(Win32CsrDllHandle,
+  NotifyContext->Dlg = CreateDialogParam(GetModuleHandleW(L"win32csr"),
                                          MAKEINTRESOURCE(IDD_END_NOW), NULL,
                                          EndNowDlgProc, (LPARAM) NotifyContext);
   if (NULL == NotifyContext->Dlg)
