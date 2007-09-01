@@ -165,16 +165,16 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         hFind = FindFirstFile(szSearchPath, &fd);
         while (hFind != INVALID_HANDLE_VALUE)
         {
-            /* Don't add any hidden bitmaps */
-            if ((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0)
+            TCHAR filename[MAX_PATH];
+
+            GetWindowsDirectory(filename, MAX_PATH);
+
+            _tcscat(filename, TEXT("\\"));
+            _tcscat(filename, fd.cFileName);
+            
+            /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
+            if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcscmp(wallpaperFilename, filename) != 0))
             {
-                TCHAR filename[MAX_PATH];
-
-                GetWindowsDirectory(filename, MAX_PATH);
-
-                _tcscat(filename, TEXT("\\"));
-                _tcscat(filename, fd.cFileName);
-
                 himl = (HIMAGELIST)SHGetFileInfo(filename,
                                                 0,
                                                 &sfi,
@@ -779,4 +779,5 @@ BackgroundPageProc(HWND hwndDlg,
 
     return FALSE;
 }
+
 
