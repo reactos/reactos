@@ -416,8 +416,26 @@ OffsetClipRgn@12
 OffsetRgn@12
 OffsetViewportOrgEx@16
 OffsetWindowOrgEx@16
-
-
+PATHOBJ_bEnum@8=NtGdiPATHOBJ_bEnum@8
+PATHOBJ_bEnumClipLines@12=NtGdiPATHOBJ_bEnumClipLines@12
+PATHOBJ_vEnumStart@4=NtGdiPATHOBJ_vEnumStart@4
+PATHOBJ_vEnumStartClipLines@16=NtGdiPATHOBJ_vEnumStartClipLines@16
+PATHOBJ_vGetBounds@8=NtGdiPATHOBJ_vGetBounds@8
+PaintRgn@8
+PatBlt@24
+PathToRegion@4
+Pie@36
+PlayEnhMetaFile@12
+PlayEnhMetaFileRecord@16
+PlayMetaFile@8
+PlayMetaFileRecord@16
+PlgBlt@40
+PolyBezier@12
+PolyBezierTo@12
+PolyDraw@16
+PolyPatBlt@20
+PolyPolygon@16
+PolyPolyline@16
 
 
 
@@ -494,26 +512,6 @@ GetBrushAttributes@4
 GetGlyphIndicesA@20
 GetTextExtentExPointWPri@28
 GetTextExtentPoint32A@16
-PaintRgn@8
-PatBlt@24=NtGdiPatBlt@24
-PATHOBJ_bEnum@8
-PATHOBJ_bEnumClipLines@12
-PATHOBJ_vEnumStart@4
-PATHOBJ_vEnumStartClipLines@16
-PATHOBJ_vGetBounds@8
-PolyPatBlt@20=NtGdiPolyPatBlt@20
-PathToRegion@4
-Pie@36
-PlayEnhMetaFile@12
-PlayEnhMetaFileRecord@16
-PlayMetaFile@8
-PlayMetaFileRecord@16
-PlgBlt@40
-PolyBezier@12
-PolyBezierTo@12
-PolyDraw@16
-PolyPolygon@16
-PolyPolyline@16
 PolyTextOutA@12
 PolyTextOutW@12
 Polygon@12

@@ -155,6 +155,11 @@ GetTransform@12
 GetWorldTransform@8
 HT_Get8BPPFormatPalette@16
 HT_Get8BPPMaskPalette@24
+PATHOBJ_bEnum@8
+PATHOBJ_bEnumClipLines@12
+PATHOBJ_vEnumStart@4
+PATHOBJ_vEnumStartClipLines@16
+PATHOBJ_vGetBounds@8
 
 
 

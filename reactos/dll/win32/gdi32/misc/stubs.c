@@ -2196,57 +2196,6 @@ EngWideCharToMultiByte( UINT CodePage,
 }
 
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-PATHOBJ_bEnum(PATHOBJ *ppo,PATHDATA *ppd)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL 
-PATHOBJ_bEnumClipLines(PATHOBJ *ppo,ULONG cb,CLIPLINE *pcl)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL 
-PATHOBJ_vEnumStart(PATHOBJ *ppo)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL
-PATHOBJ_vEnumStartClipLines(PATHOBJ *ppo,CLIPOBJ *pco,SURFOBJ *pso,LINEATTRS *pla)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL
-PATHOBJ_vGetBounds(PATHOBJ *ppo,PRECTFX prectfx)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
 
 /*
  * @unimplemented
@@ -2775,9 +2724,33 @@ NamedEscape(HDC hdc,
      * when it calls to NtGdiExtEscape from NamedEscape
      */
     return NtGdiExtEscape(NULL,pDriver,wcslen(pDriver),iEsc,cjIn,pjIn,cjOut,pjOut);
-
 }
 
+
+BOOL
+STDCALL
+PatBlt(HDC hdc, 
+       int nXLeft, 
+       int nYLeft, 
+       int nWidth, 
+       int nHeight, 
+       DWORD dwRop)
+{
+    /* FIXME some part need be done in user mode */
+    return PatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
+}
+
+BOOL
+STDCALL
+PolyPatBlt(IN HDC hdc,
+           IN DWORD rop4,
+           IN PPOLYPATBLT pPoly,
+           IN DWORD Count,
+           IN DWORD Mode)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiPolyPatBlt(hdc, rop4, pPoly,Count,Mode);
+}
 
 
 
