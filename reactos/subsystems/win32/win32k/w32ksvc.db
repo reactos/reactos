@@ -795,11 +795,6 @@ NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
 NtGdiPlayEnhMetaFile                    3
 NtGdiPlayEnhMetaFileRecord              4
-NtGdiPolyBezier                         3
-NtGdiPolyBezierTo                       3
-NtGdiPolyline                           3
-NtGdiPolylineTo                         3
-NtGdiPolyPolyline                       4
 NtGdiPolyTextOut                        3
 NtGdiRealizePalette                     1
 NtGdiRemoveFontResource                 1

@@ -447,42 +447,6 @@ NtGdiPlayEnhMetaFileRecord (
 	UINT			Handles
 	);
 
-/* Use NtGdiPolyPolyDraw with GdiPolyBezier. */
-BOOL
-STDCALL
-NtGdiPolyBezier(HDC  hDC,
-                     CONST LPPOINT  pt,
-                     DWORD  Count);
-
-/* Use NtGdiPolyPolyDraw with GdiPolyBezierTo. */
-BOOL
-STDCALL
-NtGdiPolyBezierTo(HDC  hDC,
-                       CONST LPPOINT  pt,
-                       DWORD  Count);
-
-/* Use NtGdiPolyPolyDraw with GdiPolyPolyLine. */
-BOOL
-STDCALL
-NtGdiPolyline(HDC  hDC,
-                   CONST LPPOINT  pt,
-                   int  Count);
-
-/* Use NtGdiPolyPolyDraw with GdiPolyLineTo. */
-BOOL
-STDCALL
-NtGdiPolylineTo(HDC  hDC,
-                     CONST LPPOINT  pt,
-                     DWORD  Count);
-
-/* Use NtGdiPolyPolyDraw with GdiPolyPolyLine. */
-BOOL
-STDCALL
-NtGdiPolyPolyline(HDC  hDC,
-                       CONST LPPOINT  pt,
-                       CONST LPDWORD  PolyPoints,
-                       DWORD  Count);
-
 /* Use NtGdiPolyTextOutW with 0 at the end. */
 BOOL
 STDCALL
