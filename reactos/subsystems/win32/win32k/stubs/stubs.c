@@ -2853,6 +2853,9 @@ NtGdiQueryFontAssocInfo(
     return 0;
 }
 
+ /*
+ * @unimplemented
+ */
 DWORD 
 NtGdiGetFontUnicodeRanges(
     IN HDC hdc,
@@ -2862,6 +2865,9 @@ NtGdiGetFontUnicodeRanges(
     return 0;
 }
 
+ /*
+ * @unimplemented
+ */
 UINT
 STDCALL  
 NtGdiGetStringBitmapW(
@@ -2873,5 +2879,32 @@ NtGdiGetStringBitmapW(
 {
     UNIMPLEMENTED;
     return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiPATHOBJ_bEnum(
+    IN PATHOBJ *ppo,
+    OUT PATHDATA *ppd)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiPATHOBJ_bEnumClipLines(
+    IN PATHOBJ *ppo,
+    IN ULONG cb,
+    OUT CLIPLINE *pcl)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
