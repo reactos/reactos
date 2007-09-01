@@ -1,5 +1,3 @@
-#include "../gdi32api.h"
-
 INT
 Test_ExtCreatePen(PTESTINFO pti)
 {

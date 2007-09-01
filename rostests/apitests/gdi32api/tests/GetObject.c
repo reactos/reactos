@@ -1,5 +1,3 @@
-#include "../gdi32api.h"
-
 static INT
 Test_General(PTESTINFO pti)
 {
