@@ -732,6 +732,10 @@ RtlSelfRelativeToAbsoluteSD(IN PSECURITY_DESCRIPTOR SelfRelativeSD,
        DaclLength > *DaclSize ||
        SaclLength > *SaclSize)
    {
+      *OwnerSize = OwnerLength;
+      *PrimaryGroupSize = GroupLength;
+      *DaclSize = DaclLength;
+      *SaclSize = SaclLength;
       return STATUS_BUFFER_TOO_SMALL;
    }
 
