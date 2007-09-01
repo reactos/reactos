@@ -565,8 +565,11 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
         {
             /* Get the granted access and validate it */
             GrantedAccess = HandleEntry->GrantedAccess;
+            /* Inherit flags are not a kind of access right, they indicate 
+             * the disposition of access rights.  Therefore, they should not
+             * be considered. */
             if ((AccessMode == KernelMode) ||
-                !(~GrantedAccess & DesiredAccess))
+                !((~GrantedAccess & DesiredAccess & ~VALID_INHERIT_FLAGS)))
             {
                 /* Reference the object directly since we have its header */
                 InterlockedIncrement(&ObjectHeader->PointerCount);
@@ -596,6 +599,7 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
             else
             {
                 /* Requested access failed */
+                DPRINT("Rights not granted: %x\n", ~GrantedAccess & DesiredAccess);
                 Status = STATUS_ACCESS_DENIED;
             }
         }
