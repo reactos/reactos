@@ -185,7 +185,7 @@ MoveToEx(HDC hdc,
          int Y,
          LPPOINT lpPoint)
 {
-    return MoveToEx(hdc, X, Y, lpPoint);
+    return  NtGdiMoveToEx(hdc, X, Y, lpPoint);
 }
 
 /*
@@ -199,7 +199,7 @@ OffsetViewportOrgEx(HDC hdc,
                     int nYOffset,
                     LPPOINT lpPoint)
 {
-    return OffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+    return  NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
 }
 
 /*
