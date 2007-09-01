@@ -141,6 +141,21 @@ GetPixelFormat@4
 GetRandomRgn@12
 GetRasterizerCaps@8
 GetRegionData@12
+GetStringBitmapA@20
+GetStringBitmapW@20
+GetSystemPaletteUse@4
+GetTextCharset@4
+GetTextCharsetInfo@12
+GetTextExtentExPointI@28
+GetTextExtentExPointWPri@28
+GetTextExtentPointI@16
+GetTextFaceAliasW@12
+GetTextFaceW@12
+GetTransform@12
+GetWorldTransform@8
+HT_Get8BPPFormatPalette@16
+HT_Get8BPPMaskPalette@24
+
 
 
 
