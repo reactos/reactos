@@ -142,15 +142,7 @@ GetMetaFileBitsEx(
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetSystemPaletteUse(HDC hDc)
-{
-    return NtGdiGetSystemPaletteUse(hDc);
-}
+
 
 /*
  * @unimplemented
@@ -1073,8 +1065,39 @@ wglSwapLayerBuffers(
 
 
 
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+IsValidEnhMetaRecord(
+	DWORD	a0,
+	DWORD	a1
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 
+}
 
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+IsValidEnhMetaRecordOffExt(
+	DWORD	a0,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+
+}
 
 /*
  * @unimplemented
@@ -1569,29 +1592,7 @@ GetTextFaceAliasW(HDC hdc,
     return retValue;
 }
 
-/*
- * @unimplemented
- */
-LONG 
-STDCALL
-HT_Get8BPPFormatPalette(LPPALETTEENTRY pPaletteEntry, USHORT RedGamma,USHORT GreenGamma, USHORT BlueGamma)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-LONG 
-STDCALL
-HT_Get8BPPMaskPalette(LPPALETTEENTRY pPaletteEntry, BOOL Use8BPPMaskPal,BYTE CMYMask, USHORT RedGamma, USHORT GreenGamma, USHORT BlueGamma)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
@@ -1605,17 +1606,7 @@ MirrorRgn(HWND hwnd,HRGN hrgn)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-int 
-STDCALL
-NamedEscape(HDC hdc,PWCHAR pDriver,int nDriver,int iEsc,int cjIn,LPSTR pjIn,int cjOut,LPSTR pjOut)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
@@ -2717,6 +2708,82 @@ GetRgnBox(HRGN hrgn,
     /* FIXME some stuff need be done in user mode */
     return NtGdiGetRgnBox(hrgn, prcOut);
 }
+
+
+/*
+ * @implemented
+ *
+ */
+INT
+STDCALL
+OffsetRgn( HRGN hrgn,
+          int nXOffset,
+          int nYOffset)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
+}
+
+
+INT
+STDCALL
+GetTextCharsetInfo(HDC hdc,
+                   LPFONTSIGNATURE lpSig,
+                   DWORD dwFlags)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiGetTextCharsetInfo(hdc, lpSig, dwFlags); 
+}
+
+
+
+INT 
+STDCALL
+IntersectClipRect(HDC hdc,
+                  int nLeftRect,
+                  int nTopRect,
+                  int nRightRect,
+                  int nBottomRect)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+}
+
+INT 
+STDCALL
+OffsetClipRgn(HDC hdc,
+              int nXOffset,
+              int nYOffset)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+}
+
+
+INT
+STDCALL
+NamedEscape(HDC hdc,
+            PWCHAR pDriver,
+            INT iEsc, 
+            INT cjIn,
+            LPSTR pjIn,
+            INT cjOut,
+            LPSTR pjOut)
+{
+    /* FIXME metadc, metadc are done most in user mode, and we do not support it 
+     * Windows 2000/XP/Vista ignore the current hdc, that are being pass and always set hdc to NULL 
+     * when it calls to NtGdiExtEscape from NamedEscape
+     */
+    return NtGdiExtEscape(NULL,pDriver,wcslen(pDriver),iEsc,cjIn,pjIn,cjOut,pjOut);
+
+}
+
+
+
+
+
+
+
 
 
 

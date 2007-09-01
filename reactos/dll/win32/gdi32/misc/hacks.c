@@ -140,5 +140,81 @@ GetMapMode(HDC hdc)
     return NtGdiGetMapMode(hdc);
 }
 
+/*
+ * @implemented
+ *
+ */
+int 
+STDCALL
+GetStretchBltMode(HDC hdc)
+{
+    return NtGdiGetStretchBltMode(hdc);
+}
+
+/*
+ * @implemented
+ *
+ */
+UINT 
+STDCALL
+GetTextAlign(HDC hdc)
+{
+    return NtGdiGetTextAlign(hdc);
+}
+
+
+/*
+ * @implemented
+ *
+ */
+COLORREF
+STDCALL
+GetTextColor(HDC hdc)
+{
+    return NtGdiGetTextColor(hdc);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL
+STDCALL
+MoveToEx(HDC hdc,
+         int X,
+         int Y,
+         LPPOINT lpPoint)
+{
+    return MoveToEx(hdc, X, Y, lpPoint);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL
+STDCALL
+OffsetViewportOrgEx(HDC hdc,
+                    int nXOffset,
+                    int nYOffset,
+                    LPPOINT lpPoint)
+{
+    return OffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+}
+
+/*
+ * @implemented
+ *
+ */
+BOOL 
+STDCALL
+OffsetWindowOrgEx(HDC hdc,
+                  int nXOffset,
+                  int nYOffset,
+                  LPPOINT lpPoint)
+{
+    return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
+}
+
 
 

@@ -143,6 +143,9 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetWorldTransform( HDC hDC, LPXFORM lpXform )
