@@ -318,15 +318,22 @@ ExtTextOutW(
 /*
  * @implemented
  */
-int
+INT
 STDCALL
-GetTextFaceW(
-	HDC	hDC,
-	int	nCount,
-	LPWSTR	lpFaceName
-	)
+GetTextFaceW(HDC hDC,
+             int nCount,
+             LPWSTR	lpFaceName)
 {
-	return NtGdiGetTextFaceW(hDC, nCount, lpFaceName, FALSE);
+    INT retValue = 0;
+    if ((!lpFaceName) || (nCount))
+    {
+        retValue = NtGdiGetTextFaceW(hDC,nCount,lpFaceName,0);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    return retValue;
 }
 
 
