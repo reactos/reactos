@@ -790,20 +790,26 @@ GetDeviceGammaRamp( HDC hdc,
     
 
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
-SetDeviceGammaRamp(
-	HDC	a0,
-	LPVOID	a1
-	)
+SetDeviceGammaRamp(HDC hdc,
+                   LPVOID lpGammaRamp)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    BOOL retValue = FALSE;
+
+    if (lpGammaRamp)
+    {
+        retValue = NtGdiSetDeviceGammaRamp(hdc, lpGammaRamp);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+
+    return  retValue;
 }
 
 
