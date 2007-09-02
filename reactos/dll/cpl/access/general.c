@@ -30,12 +30,16 @@ typedef struct _GLOBAL_DATA
 static VOID
 FillResetComboBox(HWND hwnd)
 {
-    TCHAR szBuffer[16];
+    TCHAR szBuffer[32];
+    TCHAR szMinutes[20];
     INT i;
+
+    if (LoadString(hApplet, IDS_MINUTES, szMinutes, 20) == 0)
+        lstrcpy(szMinutes, L"Minutes");
 
     for (i = 0; i < 6; i++)
     {
-        _stprintf(szBuffer, _T("%u"), (i + 1) * 5);
+        _stprintf(szBuffer, _T("%u %s"), (i + 1) * 5, szMinutes);
         SendMessage(hwnd,
                     CB_ADDSTRING,
                     0,

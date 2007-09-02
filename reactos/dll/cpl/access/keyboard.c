@@ -10,6 +10,7 @@
 
 #include <windows.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <commctrl.h>
 #include <prsht.h>
 #include <tchar.h>
@@ -119,9 +120,15 @@ StickyKeysDlgProc(HWND hwndDlg,
 static VOID
 SetDlgItemTime(HWND hwnd, INT nId, INT nTimeMs)
 {
-    TCHAR szBuffer[16];
+    TCHAR szBuffer[32];
+    TCHAR szSeconds[20];
 
-    wsprintf(szBuffer, _T("%d.%d"), nTimeMs / 1000, (nTimeMs % 1000) / 100);
+    if (LoadString(hApplet, IDS_SECONDS, szSeconds, 20) == 0)
+        lstrcpy(szSeconds, L"Seconds");
+
+    _stprintf(szBuffer, _T("%d.%d %s"),
+              nTimeMs / 1000, (nTimeMs % 1000) / 100,
+              szSeconds);
 
     SetDlgItemText(hwnd, nId, szBuffer);
 }
@@ -179,6 +186,44 @@ BounceKeysDlgProc(HWND hwndDlg,
                     }
                     break;
             }
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    EndDialog(hwndDlg, TRUE);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, FALSE);
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+INT_PTR CALLBACK
+RepeatKeysDlgProc(HWND hwndDlg,
+                  UINT uMsg,
+                  WPARAM wParam,
+                  LPARAM lParam)
+{
+    PGLOBAL_DATA pGlobalData;
+
+    pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pGlobalData = (PGLOBAL_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
             break;
 
         case WM_COMMAND:
@@ -279,6 +324,11 @@ FilterKeysDlgProc(HWND hwndDlg,
                     break;
 
                 case IDC_FILTER_REPEAT_BUTTON:
+                    DialogBoxParam(hApplet,
+                                   MAKEINTRESOURCE(IDD_REPEATKEYSOPTIONS),
+                                   hwndDlg,
+                                   (DLGPROC)RepeatKeysDlgProc,
+                                   (LPARAM)pGlobalData);
                     break;
 
                 case IDC_FILTER_STATUS_CHECK:
