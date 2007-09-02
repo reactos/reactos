@@ -225,18 +225,18 @@ NtGdiGetFontUnicodeRanges                        2
 NtGdiGetWidthTable                               7
 NtGdiGradientFill                                6
 NtGdiHfontCreate                                 5
-# NtGdiIcmBrushInfo                              8
-# NtGdiInit                                      0
+NtGdiIcmBrushInfo                                8
+NtGdiInit                                        0
 NtGdiInitSpool                                   0
 NtGdiIntersectClipRect                           5
 NtGdiInvertRgn                                   2
 NtGdiLineTo                                      3
-# NtGdiMakeFontDir                               5
-# NtGdiMakeInfoDC                                2
+NtGdiMakeFontDir                                 5
+NtGdiMakeInfoDC                                  2
 NtGdiMaskBlt                                    13
 NtGdiModifyWorldTransform                        3
-# NtGdiMonoBitmap                                1
-# NtGdiMoveTo                                    4
+NtGdiMonoBitmap                                  1
+NtGdiMoveTo                                      4
 NtGdiOffsetClipRgn                               3
 NtGdiOffsetRgn                                   3
 NtGdiOpenDCW                                     7

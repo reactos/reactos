@@ -3326,3 +3326,90 @@ NtGdiGetWidthTable(
     return FALSE;
 }
 
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiIcmBrushInfo(
+    IN HDC hdc,
+    IN HBRUSH hbrush,
+    IN OUT PBITMAPINFO pbmiDIB,
+    IN OUT PVOID pvBits,
+    IN OUT ULONG *pulBits,
+    OUT OPTIONAL DWORD *piUsage,
+    OUT OPTIONAL BOOL *pbAlreadyTran,
+    IN ULONG Command)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiInit()
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiMakeFontDir(
+    IN FLONG flEmbed,
+    OUT PBYTE pjFontDir,
+    IN unsigned cjFontDir,
+    IN LPWSTR pwszPathname,
+    IN unsigned cjPathname)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiMakeInfoDC(
+    IN HDC hdc,
+    IN BOOL bSet)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiMonoBitmap(
+    IN HBITMAP hbm)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiMoveTo(
+    IN HDC hdc,
+    IN INT x,
+    IN INT y,
+    OUT OPTIONAL LPPOINT pptOut)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
