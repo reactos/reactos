@@ -23,7 +23,7 @@ BEGIN
   EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
   GROUPBOX "Geografische Lage", -1, 5, 172, 234, 55
   LTEXT "Wählen Sie Ihren Standort, sodass Dienste sie mit lokalen Informationen, wie Nachrichten und Wettervorhersagen, versorgen können.", -1, 14, 184, 210, 24
-  COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+  COMBOBOX IDC_LOCATION_COMBO, 14, 210, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
              WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -37,7 +37,7 @@ BEGIN
     PUSHBUTTON "&Details...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Zusätzliche Sprachunterstützung", IDC_GROUPBOX, 5, 62, 234, 82
     LTEXT "Die meisten Sprachen sind standardmäßig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren Kontollkästchen.", -1, 12, 72, 220, 18
-	CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links Schreibstil installieren", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22
+	CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links Schreibstil installieren", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
 	CHECKBOX "Dateien für &ostasiatische Sprachen installieren", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22
 END
 
@@ -49,11 +49,11 @@ BEGIN
     GROUPBOX "Sprache für Unicode-Inkompatible Programme", IDC_GROUPBOX, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 60, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Diese Einstellung ermöglicht es Unicode-Inkompatiblen Programmen, Menüs und Dialoge in der örtlichen Sprache darzustellen. Dies beeinflusst Unicode-Kompatible Programme nicht, wird aber für alle Nutzer des Computers angewendet.", -1, 14, 18, 223, 33
-    LTEXT "Wählen Sie eine Sprache aus, die der Sprachversion des Unicode-Inkompatiblen Programmes entspricht, dass Sie nutzen wollen:", -1, 14, 55, 223, 18
+    LTEXT "Wählen Sie eine Sprache aus, die der Sprachversion des Programmes entspricht, dass Sie nutzen wollen:", -1, 14, 55, 223, 18
     GROUPBOX "Codepage Konvertierungstabellen", -1, 5, 101, 234, 88
 	LISTBOX IDC_CONV_TABLES, 14, 114, 217, 77, LBS_STANDARD
     GROUPBOX "Standardeinstellungen für Benutzerkonten", -1, 5, 193, 234, 30
-	CHECKBOX "&Alle Einstellungen auf das derzeitige Benutzerkonto und auf das Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22
+	CHECKBOX "Einstellungen &auf das aktive und Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -152,7 +152,7 @@ BEGIN
     LTEXT "Kalendertypus:", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
              WS_VSCROLL | WS_TABSTOP | CBS_SORT | WS_DISABLED
-    LTEXT "Muslimischer Kalender:", -1, 13, 65, 60, 12
+    LTEXT "Muslim. Kalender:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
              WS_VSCROLL | WS_TABSTOP | CBS_SORT | WS_DISABLED
     GROUPBOX "Kurzes Datumsformat", IDC_GROUPBOX, 7, 83, 230, 81
