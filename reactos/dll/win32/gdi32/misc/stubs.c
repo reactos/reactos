@@ -1120,24 +1120,6 @@ GetGlyphOutlineWow(
 }
 
 
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SelectBrushLocal(
-	DWORD	a0,
-	DWORD	a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 /*
  * @unimplemented
  */

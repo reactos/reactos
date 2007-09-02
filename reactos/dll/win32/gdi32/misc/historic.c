@@ -233,4 +233,13 @@ GdiReleaseLocalDC(HDC hdc)
     return TRUE;
 }
 
-
+/*
+ * @implemented
+ */
+HBRUSH
+STDCALL
+SelectBrushLocal(HBRUSH Currenthbm,
+                 HBRUSH Newhbm)
+{
+    return Newhbm;
+}
