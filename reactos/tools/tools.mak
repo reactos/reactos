@@ -47,6 +47,7 @@ include tools/cabman/cabman.mak
 include tools/cdmake/cdmake.mak
 include tools/dbgprint/dbgprint.mak
 include tools/gendib/gendib.mak
+include tools/ofw_interface/ofw_interface.mak
 include tools/mkhive/mkhive.mak
 include tools/nci/nci.mak
 include tools/pefixup.mak
