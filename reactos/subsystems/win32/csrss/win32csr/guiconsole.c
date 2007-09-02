@@ -1627,13 +1627,51 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 
   if (windx != Console->ActiveBuffer->MaxX || windy != Console->ActiveBuffer->MaxY)
   {
-    //
-    // TODO
-    // resize screen buffer
+     BYTE * Buffer = HeapAlloc(Win32CsrApiHeap, 0, windx * windy * 2);
+     if (Buffer)
+     {
+        DWORD Offset = 0;
+        DWORD BufferOffset = 0;
+        USHORT CurrentY;
+        BYTE * OldBuffer;
+        DWORD diff;
+        DWORD value = ((((DWORD)Console->ActiveBuffer->DefaultAttrib) << 16) | 0x20);
 
+        OldBuffer = Console->ActiveBuffer->Buffer;
 
-    // Console->ActiveBuffer->MaxX = windx;
-    // Console->ActiveBuffer->MaxY = windy;
+        for (CurrentY = 0; CurrentY < min(Console->ActiveBuffer->MaxY, windy); CurrentY++)
+        {
+            if (windx < Console->ActiveBuffer->MaxX)
+            {
+                /* reduce size */
+                RtlCopyMemory(&Buffer[Offset], &OldBuffer[BufferOffset], windx * 2);
+                Offset += (windx * 2);
+                BufferOffset += (Console->ActiveBuffer->MaxX * 2);
+            }
+            else
+            {
+                /* enlarge size */
+                diff = windx - Console->ActiveBuffer->MaxX;
+
+                RtlCopyMemory(&Buffer[Offset], &OldBuffer[BufferOffset], Console->ActiveBuffer->MaxX * 2);
+                Offset += (Console->ActiveBuffer->MaxX * 2);
+                /* zero new part of it */
+                memset(&Buffer[Offset], value, (diff * 2));
+                Offset += (diff * 2);
+                BufferOffset += (Console->ActiveBuffer->MaxX * 2);
+            }
+        }
+        
+        if (windy > Console->ActiveBuffer->MaxY)
+        {
+            diff = windy - Console->ActiveBuffer->MaxX;
+            memset(&Buffer[Offset], value, diff * 2 * windx);
+        }
+        (void)InterlockedExchangePointer((PVOID volatile  *)Console->ActiveBuffer->Buffer, Buffer);
+        HeapFree(Win32CsrApiHeap, 0, OldBuffer);
+        Console->ActiveBuffer->MaxX = windx;
+        Console->ActiveBuffer->MaxY = windy;
+     }
   }
 
   windx = LOWORD(pConInfo->WindowSize);
