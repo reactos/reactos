@@ -1621,17 +1621,23 @@ QueryFontAssocStatus(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL 
 STDCALL
-RemoveFontMemResourceEx(
-	HANDLE fh
-)
+RemoveFontMemResourceEx(HANDLE fh)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    BOOL retValue=0;
+
+    if (fh)
+    {
+        retValue = NtGdiRemoveFontMemResourceEx(fh);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    return retValue;
 }
 
 /*
