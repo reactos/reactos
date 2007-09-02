@@ -10,7 +10,7 @@ SelectClipRgn(
         HRGN    hrgn
 )
 {
-    return NtGdiExtSelectClipRgn(hdc, hrgn, RGN_COPY);
+    return ExtSelectClipRgn(hdc, hrgn, RGN_COPY);
 }
 
 
