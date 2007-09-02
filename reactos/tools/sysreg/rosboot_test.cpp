@@ -135,7 +135,7 @@ namespace Sysreg_
     }
 
 //---------------------------------------------------------------------------------------
-    bool RosBootTest::createDefaultHDDImage()
+    bool RosBootTest::createHDDImage(string image)
     {
 
         string qemuimgdir;
@@ -168,9 +168,8 @@ namespace Sysreg_
                             };
 
 
-        getDefaultHDDImage(output);
         options[0] = (TCHAR*)qemuimgdir.c_str();
-        options[2] = (TCHAR*)output.c_str();
+        options[2] = (TCHAR*)image.c_str();
             
         cerr << "Creating HDD Image ..." << output << endl;
         if (OsSupport::createProcess ((TCHAR*)qemuimgdir.c_str(), 4, options, true))
@@ -271,7 +270,7 @@ namespace Sysreg_
                  * on windows we can get pid as return of CreateProcess
                  */
         m_PidFile = _T("output-i386");
-        EnvironmentVariable::getValue(_T("ROS_OUTPUT"), pid);
+        EnvironmentVariable::getValue(_T("ROS_OUTPUT"), m_PidFile);
         m_PidFile += _T("/pid.txt");
         m_BootCmd += _T(" -pidfile ");
         m_BootCmd += m_PidFile;
@@ -334,33 +333,61 @@ namespace Sysreg_
         if (m_HDDImage.length())
         {
             /* check if ROS_HDD_IMAGE points to hdd image */
-            return isFileExisting(m_HDDImage);
+            if (!isFileExisting(m_HDDImage))
+            {
+                /* create it */
+                return createHDDImage(m_HDDImage);
+            }
+            return true;
+        }
+        else if (!m_BootCmd.length ())
+        {
+            /* no hdd image provided
+             * but also no override by 
+             * ROS_BOOT_CMD
+             */
+            getDefaultHDDImage(m_HDDImage);
+            return createHDDImage(m_HDDImage);
+        }
+        bool hdaboot = false;
+        string::size_type pos = m_BootCmd.find (_T("-boot c"));
+        if (pos != string::npos)
+        {
+            hdaboot = true;
         }
 
-        if (isDefaultHDDImageExisting())
+        pos = m_BootCmd.find(_T("-hda "));
+        if (pos != string::npos)
         {
-            /*  ROS_HDD_IMAGE is not set but theres
-             *  a default existing image 
-             *   to use */
-            getDefaultHDDImage(m_HDDImage);
+            string hdd = m_BootCmd.substr(pos + 5, m_BootCmd.length() - pos - 5);
+            if (!hdd.length ())
+            {
+                cerr << "Error: ROS_BOOT_CMD misses value of -hda option" << endl;
+                return false;
+            }
+            pos = m_BootCmd.find(" ");
+            if (pos != string::npos)
+            {
+                /// FIXME
+                /// sysreg assumes that the hdd image filename has no spaces
+                ///
+                hdd = hdd.substr(0, pos);
+            }
+            if (!isFileExisting(hdd))
+            {
+                if (hdaboot)
+                {
+                    cerr << "Error: ROS_BOOT_CMD specifies booting from hda but no valid hdd image " << hdd << " provided" << endl;
+                    return false;
+                }
+
+                /* the file does not exist create it */
+                return createHDDImage(hdd);
+            }
             return true;
         }
 
-        if (!createDefaultHDDImage())
-        {
-            /* failed to create hdd image */
-            cerr << "Error: failed to create hdd image " << endl;
-            return false;
-        }
-        getDefaultHDDImage(m_HDDImage);
-        return true;
-
-        /// 
-        /// FIXME
-        /// scan m_BootCmd if theres -hda param provided
-        /// and check if it exists
-
-        return true;
+        return false;
     }
 //----------------------------------------------------------------------------------------
     bool RosBootTest::configureCDImage()

@@ -86,7 +86,7 @@ namespace Sysreg_
     void getDefaultHDDImage(string & img);
     bool isFileExisting(string filename);
     bool isDefaultHDDImageExisting();
-    bool createDefaultHDDImage();
+    bool createHDDImage(string filename);
     bool isQemuPathValid();
     bool getQemuDir(string &);
     bool createBootCmd();
