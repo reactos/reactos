@@ -1204,6 +1204,18 @@ MingwModuleHandler::GetWidlFlags ( const CompilationUnit& compilationUnit )
 }
 
 string
+MingwModuleHandler::GetPropertyValue ( const Module& module, const std::string& name )
+{
+	for ( size_t i = 0; i < module.project.non_if_data.properties.size (); i++ )
+	{
+		const Property& property = *module.project.non_if_data.properties[i];
+		if ( property.name == name )
+			return property.value;
+	}
+	return string ( "" );
+}
+
+string
 MingwModuleHandler::GetRpcServerHeaderFilename ( string basename ) const
 {
 	return PassThruCacheDirectory ( basename + "_s.h",

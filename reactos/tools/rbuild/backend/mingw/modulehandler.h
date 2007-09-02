@@ -211,6 +211,7 @@ private:
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupCompilationUnitVector ( std::vector<CompilationUnit*>& compilationUnits );
 	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
+	static std::string GetPropertyValue ( const Module& module, const std::string& name );
 	std::string GetRpcServerHeaderFilename ( std::string basename ) const;
 	std::string GetRpcClientHeaderFilename ( std::string basename ) const;
 	std::string GetIdlHeaderFilename ( std::string basename ) const;
