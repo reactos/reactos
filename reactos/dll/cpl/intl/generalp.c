@@ -27,6 +27,8 @@
  */
 
 #define WINVER 0x0501
+#define SAMPLE_NUMBER   L"123456789"
+#define NO_FLAG         0
 
 #include <windows.h>
 #include <commctrl.h>
@@ -38,6 +40,7 @@
 #include "resource.h"
 
 HWND hList;
+HWND hLocaleList, hGeoList;
 
 BOOL CALLBACK LocalesEnumProc(
   LPTSTR lpLocale // locale id
@@ -65,6 +68,44 @@ BOOL CALLBACK LocalesEnumProc(
 	return TRUE;
 }
 
+/* Update all locale samples */
+static
+VOID
+UpdateLocaleSample(HWND hwndDlg, LCID lcidLocale)
+{
+    WCHAR OutBuffer[MAX_FMT_SIZE];
+
+    /* Get number format sample */
+    GetNumberFormatW(lcidLocale, NO_FLAG, SAMPLE_NUMBER, NULL, OutBuffer,
+        MAX_FMT_SIZE);
+    SendMessageW(GetDlgItem(hwndDlg, IDC_NUMSAMPLE_EDIT),
+                 WM_SETTEXT, 0, (LPARAM)OutBuffer);
+
+    /* Get monetary format sample */
+    GetCurrencyFormatW(lcidLocale, LOCALE_USE_CP_ACP, SAMPLE_NUMBER, NULL,
+        OutBuffer, MAX_FMT_SIZE);
+    SendMessageW(GetDlgItem(hwndDlg, IDC_MONEYSAMPLE_EDIT),
+                 WM_SETTEXT, 0, (LPARAM)OutBuffer);
+
+    /* Get time format sample */
+    GetTimeFormatW(lcidLocale, NO_FLAG, NULL, NULL, OutBuffer, MAX_FMT_SIZE);
+    SendMessageW(GetDlgItem(hwndDlg, IDC_TIMESAMPLE_EDIT),
+        WM_SETTEXT,
+        0,
+        (LPARAM)OutBuffer);
+
+    /* Get short date format sample */
+    GetDateFormatW(lcidLocale, DATE_SHORTDATE, NULL, NULL, OutBuffer,
+        MAX_FMT_SIZE);
+    SendMessageW(GetDlgItem(hwndDlg, IDC_SHORTTIMESAMPLE_EDIT), WM_SETTEXT,
+        0, (LPARAM)OutBuffer);
+
+    /* Get long date sample */
+    GetDateFormatW(lcidLocale, DATE_LONGDATE, NULL, NULL, OutBuffer,
+        MAX_FMT_SIZE);
+    SendMessageW(GetDlgItem(hwndDlg, IDC_FULLTIMESAMPLE_EDIT),
+        WM_SETTEXT, 0, (LPARAM)OutBuffer);
+}
 
 static VOID
 CreateLanguagesList(HWND hwnd)
@@ -173,6 +214,55 @@ void SetNewLocale(LCID lcid)
 	RegCloseKey(langKey);
 
 }
+
+/* Location enumerate procedure */
+BOOL
+CALLBACK
+LocationsEnumProc(GEOID gId)
+{
+    TCHAR loc[MAX_STR_SIZE];
+    int index;
+
+    GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_FMT_SIZE, LANG_SYSTEM_DEFAULT);
+    index = (int) SendMessageW(hGeoList,
+                         CB_ADDSTRING,
+                         0,
+                         (LPARAM)loc);
+
+    SendMessageW(hGeoList,
+                 CB_SETITEMDATA,
+                 index,
+                 (LPARAM)gId);
+
+    return TRUE;
+}
+
+/* Enumerate all system locations identifiers */
+static
+VOID
+CreateLocationsList(HWND hWnd)
+{
+    GEOID userGeoID;
+    TCHAR loc[MAX_STR_SIZE];
+
+    hGeoList = hWnd;
+
+    EnumSystemGeoID(GEOCLASS_NATION, 0, LocationsEnumProc);
+
+    /* Select current location */
+    userGeoID = GetUserGeoID(GEOCLASS_NATION);
+    GetGeoInfo(userGeoID,
+               GEO_FRIENDLYNAME,
+               loc,
+               MAX_FMT_SIZE,
+               LANG_SYSTEM_DEFAULT);
+
+    SendMessageW(hGeoList,
+                 CB_SELECTSTRING,
+                 (WPARAM) -1,
+                 (LPARAM)loc);
+}
+
 DWORD
 VerifyUnattendLCID(HWND hwndDlg)
 {
@@ -213,6 +303,8 @@ GeneralPageProc(HWND hwndDlg,
 	{
 	case WM_INITDIALOG:
 		CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
+		UpdateLocaleSample(hwndDlg, LOCALE_USER_DEFAULT);
+		CreateLocationsList(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO));
 		if (IsUnattendedSetupEnabled)
 		{
 			if (VerifyUnattendLCID(hwndDlg))
@@ -231,6 +323,9 @@ GeneralPageProc(HWND hwndDlg,
 			{
 				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 			}
+			break;
+		case IDC_SETUP_BUTTON:
+				SetupApplet(hwndDlg, uMsg, wParam, lParam);
 			break;
 		}
 		break;

@@ -67,7 +67,7 @@ TimePageProc(HWND hwndDlg,
         UpdateTimeSample(GetDlgItem(hwndDlg, IDC_TIMESAMPLE));
 
         /* Get the time format (max. 80 characters) */
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
                     CB_LIMITTEXT, 80, 0);
 
         /* FIXME: add available time formats to the list */
@@ -77,26 +77,26 @@ TimePageProc(HWND hwndDlg,
                      CB_ADDSTRING,
                      0,
                      (LPARAM)Buffer);
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
                     CB_SETCURSEL,
                     0, /* index */
                     0);
 
         /* Get the time separator (max. 4 characters) */
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
                     CB_LIMITTEXT, 4, 0);
         GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STIME, Buffer, 80);
         SendMessageW(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
                      CB_ADDSTRING,
                      0,
                      (LPARAM)Buffer);
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
                     CB_SETCURSEL,
                     0, /* index */
                     0);
 
         /* Get the AM symbol (max. 9 characters) */
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
                     CB_LIMITTEXT, 9, 0);
         nLen = GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_S1159, Buffer, 80);
         SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
@@ -110,13 +110,13 @@ TimePageProc(HWND hwndDlg,
                        0,
                        (LPARAM)L"");
         }
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
                     CB_SETCURSEL,
                     0, /* index */
                     0);
 
         /* Get the PM symbol (max. 9 characters) */
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
                     CB_LIMITTEXT, 9, 0);
         nLen = GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_S2359, Buffer, 80);
         SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
@@ -130,7 +130,7 @@ TimePageProc(HWND hwndDlg,
                        0,
                        (LPARAM)L"");
         }
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
+        SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
                     CB_SETCURSEL,
                     0, /* index */
                     0);
@@ -163,25 +163,25 @@ TimePageProc(HWND hwndDlg,
           int nIndex;
 
           /* Set time format */
-          nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
+          nIndex = SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
                                CB_GETCURSEL, 0, 0);
-          SendMessage(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
+          SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEFORMAT),
                       CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)Buffer);
           SetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, Buffer);
 
           /* Set time separator */
-          nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
+          nIndex = SendMessageW(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
                                CB_GETCURSEL, 0, 0);
-          SendMessage(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
+          SendMessageW(GetDlgItem(hwndDlg, IDC_TIMESEPARATOR),
                       CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)Buffer);
           SetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STIME, Buffer);
 
           /* Set the AM symbol */
-          nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
+          nIndex = SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
                                CB_GETCURSEL, 0, 0);
           if (nIndex != CB_ERR)
           {
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
+            SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEAMSYMBOL),
                         CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)Buffer);
             SetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_S1159, Buffer);
           }
@@ -191,11 +191,11 @@ TimePageProc(HWND hwndDlg,
           }
 
           /* Set the PM symbol */
-          nIndex = SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
+          nIndex = SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
                                CB_GETCURSEL, 0, 0);
           if (nIndex != CB_ERR)
           {
-            SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
+            SendMessageW(GetDlgItem(hwndDlg, IDC_TIMEPMSYMBOL),
                         CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)Buffer);
             SetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_S2359, Buffer);
           }

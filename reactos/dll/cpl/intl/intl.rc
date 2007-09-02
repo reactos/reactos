@@ -11,7 +11,6 @@
 
 
 IDC_CPLICON ICON "resources/applet.ico"
-IDC_FLAGS ICON "resources/flags.ico"
 
 
 
@@ -21,17 +20,17 @@ IDC_FLAGS ICON "resources/flags.ico"
  * a neutral version. This is to get localized bitmaps for example.
  */
 
-#include "lang/cs-CZ.rc"
-#include "lang/de-DE.rc"
-#include "lang/el-GR.rc"
+//#include "lang/cs-CZ.rc"
+//#include "lang/de-DE.rc"
+//#include "lang/el-GR.rc"
 #include "lang/en-US.rc"
-#include "lang/es-ES.rc"
-#include "lang/fr-FR.rc"
-#include "lang/hu-HU.rc"
-#include "lang/id-ID.rc"
-#include "lang/it-IT.rc"
-#include "lang/ja-JP.rc"
-#include "lang/nl-NL.rc"
-#include "lang/ru-RU.rc"
-#include "lang/sv-SE.rc"
-#include "lang/uk-UA.rc"
+//#include "lang/es-ES.rc"
+//#include "lang/fr-FR.rc"
+//#include "lang/hu-HU.rc"
+//#include "lang/id-ID.rc"
+//#include "lang/it-IT.rc"
+//#include "lang/ja-JP.rc"
+//#include "lang/nl-NL.rc"
+//#include "lang/ru-RU.rc"
+//#include "lang/sv-SE.rc"
+//#include "lang/uk-UA.rc"

@@ -1,6 +1,10 @@
 #ifndef __CPL_INTL_H
 #define __CPL_INTL_H
 
+#define MAX_FMT_SIZE          30
+#define MAX_STR_SIZE          128
+#define MAX_SAMPLES_STR_SIZE  70
+#define DECIMAL_RADIX         10
 
 typedef struct _APPLET
 {
@@ -13,6 +17,24 @@ typedef struct _APPLET
 extern HINSTANCE hApplet;
 extern DWORD IsUnattendedSetupEnabled;
 extern DWORD UnattendLCID;
+
+/* intl.c */
+VOID
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
+
+/* languages.c */
+INT_PTR CALLBACK
+LanguagesPageProc(HWND hwndDlg,
+	     UINT uMsg,
+	     WPARAM wParam,
+	     LPARAM lParam);
+		 
+/* advanced.c */
+INT_PTR CALLBACK
+AdvancedPageProc(HWND hwndDlg,
+	     UINT uMsg,
+	     WPARAM wParam,
+	     LPARAM lParam);
 
 /* currency.c */
 INT_PTR CALLBACK
@@ -58,6 +80,17 @@ TimePageProc(HWND hwndDlg,
 
 
 void SetNewLocale(LCID lcid);
+
+/* misc.c */
+WCHAR*
+InsSpacesFmt(const WCHAR *wszSourceStr, const WCHAR *wszFmtStr);
+
+WCHAR*
+ReplaceSubStr(const WCHAR *wszSourceStr, const WCHAR *wszStrToReplace, const WCHAR *wszTempl);
+
+LONG
+APIENTRY
+SetupApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
 
 #endif /* __CPL_INTL_H */
 

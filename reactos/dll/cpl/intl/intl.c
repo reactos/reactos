@@ -133,7 +133,7 @@ ParseSetupInf()
 static LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
-  PROPSHEETPAGE psp[6];
+  PROPSHEETPAGE psp[3];
   PROPSHEETHEADER psh;
   TCHAR Caption[256];
 
@@ -156,11 +156,8 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   psh.ppsp = psp;
 
   InitPropSheetPage(&psp[0], IDD_GENERALPAGE, GeneralPageProc);
-  InitPropSheetPage(&psp[1], IDD_NUMBERSPAGE, NumbersPageProc);
-  InitPropSheetPage(&psp[2], IDD_CURRENCYPAGE, CurrencyPageProc);
-  InitPropSheetPage(&psp[3], IDD_TIMEPAGE, TimePageProc);
-  InitPropSheetPage(&psp[4], IDD_DATEPAGE, DatePageProc);
-  InitPropSheetPage(&psp[5], IDD_LOCALEPAGE, InpLocalePageProc);
+  InitPropSheetPage(&psp[1], IDD_LANGUAGESPAGE, LanguagesPageProc);
+  InitPropSheetPage(&psp[2], IDD_ADVANCEDPAGE, AdvancedPageProc);
 
   return (LONG)(PropertySheet(&psh) != -1);
 }
