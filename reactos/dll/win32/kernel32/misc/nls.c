@@ -16,7 +16,7 @@
 
 #include <k32.h>
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 /* GLOBAL VARIABLES ***********************************************************/
 

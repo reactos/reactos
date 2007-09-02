@@ -12,7 +12,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
 

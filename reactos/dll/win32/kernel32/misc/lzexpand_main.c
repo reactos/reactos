@@ -26,7 +26,7 @@
 
 #include <k32.h>
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 #include "lzexpand.h"
 
 #define HFILE_ERROR ((HFILE)-1)

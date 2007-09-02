@@ -21,7 +21,7 @@
 #include <tlhelp32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 /* INTERNAL DEFINITIONS *******************************************************/
 

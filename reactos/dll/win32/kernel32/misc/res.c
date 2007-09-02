@@ -14,7 +14,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 #define STUB \
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \

@@ -17,7 +17,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 
 #define SYMLINK_FLAG_RELATIVE   1

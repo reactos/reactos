@@ -1,7 +1,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 #define ACTCTX_FLAGS_ALL (\
  ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\

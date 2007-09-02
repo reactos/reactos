@@ -13,7 +13,7 @@
 
 #include <k32.h>
 
-#include "../include/debug.h"
+#include <debug.h>
 
 /*
  * @unimplemented

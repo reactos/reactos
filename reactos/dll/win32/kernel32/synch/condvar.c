@@ -7,7 +7,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 /* FIXME: Move these RTL declarations to the NDK */
 NTSTATUS

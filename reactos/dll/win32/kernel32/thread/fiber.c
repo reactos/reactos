@@ -10,7 +10,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 typedef struct _FIBER                                      /* Field offsets:  */
 {                                                          /* 32 bit   64 bit */

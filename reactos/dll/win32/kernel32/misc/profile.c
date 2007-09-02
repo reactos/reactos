@@ -22,7 +22,7 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include <debug.h>
 
 static const char bom_utf8[] = {0xEF,0xBB,0xBF};
 

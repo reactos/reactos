@@ -10,7 +10,7 @@
 
 #include <k32.h>
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 typedef struct _DBGSS_THREAD_DATA
 {
