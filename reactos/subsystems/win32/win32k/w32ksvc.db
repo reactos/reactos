@@ -216,13 +216,13 @@ NtGdiGetTextFaceW                                4
 NtGdiGetTextMetricsW                             3
 NtGdiGetTransform                                3
 NtGdiGetUFI                                      6
-# NtGdiGetEmbUFI                                 7
-# NtGdiGetUFIPathname                           10
-# NtGdiGetEmbedFonts                             0
-# NtGdiChangeGhostFont                           2
-# NtGdiAddEmbFontToDC                            2
+NtGdiGetEmbUFI                                   7
+NtGdiGetUFIPathname                             10
+NtGdiGetEmbedFonts                               0
+NtGdiChangeGhostFont                             2
+NtGdiAddEmbFontToDC                              2
 NtGdiGetFontUnicodeRanges                        2
-# NtGdiGetWidthTable                             7
+NtGdiGetWidthTable                               7
 NtGdiGradientFill                                6
 NtGdiHfontCreate                                 5
 # NtGdiIcmBrushInfo                              8
@@ -654,17 +654,17 @@ NtGdiFONTOBJ_pfdg                                1
 NtGdiFONTOBJ_pQueryGlyphAttrs                    2
 NtGdiFONTOBJ_pvTrueTypeFontFile                  2
 NtGdiFONTOBJ_cGetAllGlyphHandles                 2
-# NtGdiSTROBJ_bEnum                              3
-# NtGdiSTROBJ_bEnumPositionsOnly                 3
-# NtGdiSTROBJ_bGetAdvanceWidths                  4
-# NtGdiSTROBJ_vEnumStart                         1
-# NtGdiSTROBJ_dwGetCodePage                      1
+NtGdiSTROBJ_bEnum                                3
+NtGdiSTROBJ_bEnumPositionsOnly                   3
+NtGdiSTROBJ_bGetAdvanceWidths                    4
+NtGdiSTROBJ_vEnumStart                           1
+NtGdiSTROBJ_dwGetCodePage                        1
 NtGdiPATHOBJ_vGetBounds                          2
 NtGdiPATHOBJ_bEnum                               2
 NtGdiPATHOBJ_vEnumStart                          1
 NtGdiPATHOBJ_vEnumStartClipLines                 4
 NtGdiPATHOBJ_bEnumClipLines                      3
-# NtGdiGetDhpdev                                 1
+NtGdiGetDhpdev                                   1
 NtGdiEngCheckAbort                               1
 NtGdiHT_Get8BPPFormatPalette                     4
 NtGdiHT_Get8BPPMaskPalette                       6

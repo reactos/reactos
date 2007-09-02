@@ -3154,3 +3154,175 @@ NtGdiSetBrushAttributes(
     return NULL;
 }
 
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSTROBJ_bEnum(
+    IN STROBJ *pstro,
+    OUT ULONG *pc,
+    OUT PGLYPHPOS *ppgpos)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSTROBJ_bEnumPositionsOnly(
+    IN STROBJ *pstro,
+    OUT ULONG *pc,
+    OUT PGLYPHPOS *ppgpos)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSTROBJ_bGetAdvanceWidths(
+    IN STROBJ*pstro,
+    IN ULONG iFirst,
+    IN ULONG c,
+    OUT POINTQF*pptqD)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+VOID
+STDCALL
+NtGdiSTROBJ_vEnumStart(
+    IN STROBJ *pstro)
+{
+    UNIMPLEMENTED;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiSTROBJ_dwGetCodePage(
+    IN STROBJ *pstro)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+DHPDEV
+NtGdiGetDhpdev(
+    IN HDEV hdev)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetEmbUFI(
+    IN HDC hdc,
+    OUT PUNIVERSAL_FONT_ID pufi,
+    OUT OPTIONAL DESIGNVECTOR *pdv,
+    OUT ULONG *pcjDV,
+    OUT ULONG *pulBaseCheckSum,
+    OUT FLONG  *pfl,
+    OUT KERNEL_PVOID *embFontID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetUFIPathname(
+    IN PUNIVERSAL_FONT_ID pufi,
+    OUT OPTIONAL ULONG* pcwc,
+    OUT OPTIONAL LPWSTR pwszPathname,
+    OUT OPTIONAL ULONG* pcNumFiles,
+    IN FLONG fl,
+    OUT OPTIONAL BOOL *pbMemFont,
+    OUT OPTIONAL ULONG *pcjView,
+    OUT OPTIONAL PVOID pvView,
+    OUT OPTIONAL BOOL *pbTTC,
+    OUT OPTIONAL ULONG *piTTC)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL 
+NtGdiGetEmbedFonts(
+    VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL 
+NtGdiChangeGhostFont(
+    IN KERNEL_PVOID *pfontID,
+    IN BOOL bLoad)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL 
+NtGdiAddEmbFontToDC(
+    IN HDC hdc,
+    IN VOID **pFontID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetWidthTable(
+    IN HDC hdc,
+    IN ULONG cSpecial,
+    IN WCHAR *pwc,
+    IN ULONG cwc,
+    OUT USHORT *psWidth,
+    OUT OPTIONAL WIDTHDATA *pwd,
+    OUT FLONG *pflInfo)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
