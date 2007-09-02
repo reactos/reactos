@@ -13,7 +13,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <infcommon.h>
+#include "infcommon.h"
 
 extern int InfHostOpenBufferedFile(PHINF InfHandle,
                                    void *Buffer,

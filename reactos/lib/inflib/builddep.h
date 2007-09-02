@@ -8,13 +8,12 @@
 
 /* Definitions native to the host on which we're building */
 
+#include <typedefs_host.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-
-#define FALSE 0
-#define TRUE  1
 
 #define FREE(Area) free(Area)
 #define MALLOC(Size) malloc(Size)
@@ -28,13 +27,6 @@
 #define INF_STATUS_BUFFER_OVERFLOW   E2BIG
 #define INF_SUCCESS(x) (0 == (x))
 
-typedef char CHAR, *PCHAR;
-typedef unsigned char UCHAR, *PUCHAR;
-typedef void VOID, *PVOID;
-typedef UCHAR BOOLEAN, *PBOOLEAN;
-#include <typedefs64.h>
-typedef LONG *PLONG;
-
 typedef char TCHAR, *PTCHAR, *PTSTR;
 #define _T(x) x
 #define _tcsicmp strcasecmp
@@ -45,10 +37,8 @@ typedef char TCHAR, *PTCHAR, *PTSTR;
 #define STRFMT "%s"
 
 #ifdef _MSC_VER
-#define strcasecmp stricmp
+#define strcasecmp _stricmp
 #endif
-
-extern ULONG DbgPrint(char *Fmt, ...);
 
 #else /* ! defined(INFLIB_HOST) */
 
