@@ -156,6 +156,7 @@ protected:
     string m_MaxMem;
     string m_BootCmd;
     string m_Src;
+    string m_PidFile;
 
     DataSource * m_DataSource;
     OsSupport::ProcessID m_Pid;

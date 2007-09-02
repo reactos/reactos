@@ -230,6 +230,7 @@ namespace Sysreg_
     bool RosBootTest::createBootCmd()
     {
         string pipe;
+        string qemudir;
 
         if (m_MaxMem.length() == 0)
         {
@@ -240,15 +241,16 @@ namespace Sysreg_
 #ifdef __LINUX__
 		pipe = _T("stdio");
 		m_Src = _T("");
+        qemudir = _T("/usr/share/qemu");
 #else		
 		pipe = _T("pipe:qemu");
 		m_Src = _T("\\\\.\\pipe\\qemu");
-#endif	 
-        string qemudir;
         if (!getQemuDir(qemudir))
         {
             return false;
         }
+#endif	 
+
         
         m_BootCmd = m_EmuPath + _T(" -L ") + qemudir + _T(" -m ") + m_MaxMem + _T(" -hda ") + m_HDDImage + _T(" -serial ") + pipe;
 
@@ -268,7 +270,11 @@ namespace Sysreg_
                  * to terminate the emulator in case of errors
                  * on windows we can get pid as return of CreateProcess
                  */
-        m_BootCmd += _T(" -pidfile pid.txt");
+        m_PidFile = _T("output-i386");
+        EnvironmentVariable::getValue(_T("ROS_OUTPUT"), pid);
+        m_PidFile += _T("/pid.txt");
+        m_BootCmd += _T(" -pidfile ");
+        m_BootCmd += m_PidFile;
 #endif
 
         m_BootCmd += _T(" -no-reboot ");
@@ -478,11 +484,11 @@ namespace Sysreg_
                 return false;
             }
         }
- 
         cerr << "Opening Data Source:" << m_BootCmd << endl;
 
 
 #ifdef __LINUX__
+        _tremove(m_PidFile.c_str ());
         m_DataSource = new PipeReader();
         m_Src = m_BootCmd;
 #else
@@ -539,6 +545,7 @@ namespace Sysreg_
 	{
         m_DataSource->closeSource();
         OsSupport::sleep(3 * CLOCKS_PER_SEC);
+
         if (m_Pid)
         {
 			OsSupport::terminateProcess (m_Pid);
@@ -597,9 +604,25 @@ namespace Sysreg_
             cleanup();
             return false;
         }
+        OsSupport::sleep(1000); 
+#ifdef __LINUX__
 
-#ifndef __LINUX__
-        OsSupport::sleep(3000); //FIXME
+        FILE * file = fopen(m_PidFile.c_str(), "r");
+        if (!file)
+        {
+            cerr << "Error: failed to launch emulator" << endl;
+            cleanup();
+            return false;
+        }
+        char buffer[128];
+        if (!fread(buffer, sizeof(buffer), 1, file))
+        {
+            cerr << "Error: pid file w/o pid!!! " << endl;
+            cleanup();
+            return false;
+        }
+        m_Pid = atoi(buffer);
+        fclose(file);
 #endif
         bool ret = analyzeDebugData();
 	cleanup();
