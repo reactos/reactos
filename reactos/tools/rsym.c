@@ -795,6 +795,7 @@ int main(int argc, char* argv[])
   void *FileData;
   ULONG RosSymLength;
   void *RosSymSection;
+  char elfhdr[4] = { '\177', 'E', 'L', 'F' };
 
   if (3 != argc)
     {
@@ -816,6 +817,9 @@ int main(int argc, char* argv[])
   PEDosHeader = (PIMAGE_DOS_HEADER) FileData;
   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
     {
+      /* Ignore elf */
+      if (!memcmp(PEDosHeader, elfhdr, sizeof(elfhdr)))
+	exit(0);
       perror("Input file is not a PE image.\n");
       free(FileData);
       exit(1);
