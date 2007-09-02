@@ -43,6 +43,9 @@ DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
     }
   else
     {
+      ULONG Fill[3];
+      ULONG MultiCount;
+
       /* Align to 4-byte address */
       while (0 != ((ULONG_PTR) addr & 0x3))
         {

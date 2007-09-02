@@ -130,7 +130,7 @@ DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
       "r"(SurfObj->lDelta), "r"(y2 - y1), "a"(c)
     : "cc", "memory", "%ecx");
 #else
-    PBYTE byteaddr = (ULONG_PTR)SurfObj->pvScan0 + y1 * SurfObj->lDelta;
+    PBYTE byteaddr = (PBYTE)(ULONG_PTR)SurfObj->pvScan0 + y1 * SurfObj->lDelta;
     PWORD addr = (PWORD)byteaddr + x;
     LONG lDelta = SurfObj->lDelta;
 
