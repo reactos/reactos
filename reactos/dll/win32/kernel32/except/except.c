@@ -124,6 +124,7 @@ _module_name_from_addr(const void* addr, void **module_start_addr,
    return psz;
 }
 
+#ifdef _M_IX86
 static VOID
 _dump_context(PCONTEXT pc)
 {
@@ -138,6 +139,13 @@ _dump_context(PCONTEXT pc)
 	    pc->Ebp, pc->Esi, pc->Esp);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
 }
+#else
+#warning Unknown architecture
+static VOID
+_dump_context(PCONTEXT pc)
+{
+}
+#endif
 
 static LONG
 BasepCheckForReadOnlyResource(IN PVOID Ptr)
@@ -237,9 +245,9 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    {
 #ifdef _X86_
       PULONG Frame;
+#endif
       PVOID StartAddr;
       CHAR szMod[128] = "";
-#endif
 
       /* Print a stack trace. */
       DbgPrint("Unhandled exception\n");

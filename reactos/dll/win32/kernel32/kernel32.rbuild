@@ -108,10 +108,12 @@
 		<file>utils.c</file>
 	</directory>
 	<directory name="thread">
-		<directory name="i386">
-			<file>fiber.S</file>
-			<file>thread.S</file>
-		</directory>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>fiber.S</file>
+				<file>thread.S</file>
+			</directory>
+		</if>
 	</directory>
 </module>
 <module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">

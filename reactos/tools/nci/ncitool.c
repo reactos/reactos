@@ -54,14 +54,20 @@
                             "    ret $0x%x\n\n"
 
 #define UserModeStub_ppc    "    mflr 0\n" \
-			    "    addi 1,1,-16\n" \
-			    "	 li   0,%x\n" \
-			    "    stw  0,1(0)\n" \
-			    "    sc\n" \
-			    "    lwz  0,1(0)\n" \
-			    "    mtlr 0\n" \
-			    "    addi 1,1,16\n" \
-			    "    blr\n"
+                            "    addi 1,1,-16\n" \
+                            "    li   0,%x\n" \
+                            "    stw  0,1(0)\n" \
+                            "    sc\n" \
+                            "    lwz  0,1(0)\n" \
+                            "    mtlr 0\n" \
+                            "    addi 1,1,16\n" \
+                            "    blr\n"
+
+#define UserModeStub_mips   "    li $8, KUSER_SHARED_SYSCALL\n" \
+                            "    lw $8,0($8)\n" \
+                            "    j $8\n" \
+                            "    nop\n"
+
 #elif defined(_MSC_VER)
 #define UserModeStub_x86    "    asm { \n" \
                             "        mov eax, %xh\n" \
@@ -86,7 +92,11 @@
                             "    ret $0x%x\n\n"
 
 #define KernelModeStub_ppc  "    bl KiSystemService\n" \
-			    "    rfi\n"
+                            "    rfi\n"
+
+#define KernelModeStub_mips "    j KiSystemService\n" \
+                            "    nop\n"
+
 #elif defined(_MSC_VER)
 #define KernelModeStub_x86  "    asm { \n" \
                             "        mov eax, %xh\n" \
@@ -114,6 +124,8 @@ struct ncitool_data_t ncitool_data[] = {
 	{ "i386", 4, KernelModeStub_x86, UserModeStub_x86,
 	  ".global _%s@%d\n", "_%s@%d:\n" },
 	{ "powerpc", 4, KernelModeStub_ppc, UserModeStub_ppc,
+	  "\t.globl %s\n", "%s:\n" },
+	{ "mips", 4, KernelModeStub_mips, UserModeStub_mips,
 	  "\t.globl %s\n", "%s:\n" },
 	{ 0, }
 };

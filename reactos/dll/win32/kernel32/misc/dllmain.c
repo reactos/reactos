@@ -257,6 +257,7 @@ DllMain(HANDLE hDll,
     {
         case DLL_PROCESS_ATTACH:
 
+#ifdef _M_IX86
         /* OK, yes, this is really retarded but it works for now */
         InWindows = NtCurrentPeb()->BeingDebugged;
 
@@ -290,6 +291,7 @@ DllMain(HANDLE hDll,
                 *Eip = (ULONG)BaseProcessStartThunk;
             }
         }
+#endif
 
         /* Don't bother us for each thread */
         LdrDisableThreadCalloutsForDll((PVOID)hDll);

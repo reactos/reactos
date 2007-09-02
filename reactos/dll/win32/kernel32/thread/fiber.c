@@ -251,12 +251,18 @@ VOID
 WINAPI
 BaseFiberStartup(VOID)
 {
+#ifdef _M_IX86
     PFIBER Fiber = GetFiberData();
-    
+
     /* Call the Thread Startup Routine */
     DPRINT1("Starting Fiber\n");
     BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Eax,
                       (LPVOID)Fiber->Context.Ebx);
+#else
+#warning Unknown architecture
+    UNIMPLEMENTED;
+    DbgBreakPoint();
+#endif
 }
 
 /* EOF */
