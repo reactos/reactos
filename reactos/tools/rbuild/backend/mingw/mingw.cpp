@@ -426,7 +426,9 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "PROJECT_LFLAGS := %s\n",
 	          GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
+	fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
 	fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );
+	fprintf ( fMakefile, "endif\n" );
 	fprintf ( fMakefile, "PROJECT_CFLAGS += $(PROJECT_GCCOPTIONS)\n" );
 	fprintf ( fMakefile, "\n" );
 }
