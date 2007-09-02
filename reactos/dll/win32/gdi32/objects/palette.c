@@ -63,6 +63,9 @@ GetDIBColorTable(HDC hDC,
     return NtGdiDoPalette(hDC, iStartIndex, cEntries, pColors, GdiPalGetColorTable, FALSE);
 }
 
+/*
+ * @implemented
+ */
 UINT
 WINAPI
 SetDIBColorTable(HDC hDC,
@@ -70,7 +73,14 @@ SetDIBColorTable(HDC hDC,
                  UINT cEntries,
                  const RGBQUAD *pColors)
 {
-    return NtGdiDoPalette(hDC, iStartIndex, cEntries, (RGBQUAD*)pColors, GdiPalSetColorTable, TRUE);
+    UINT retValue=0;
+
+    if (cEntries)
+    {
+        retValue = NtGdiDoPalette(hDC, iStartIndex, cEntries, (RGBQUAD*)pColors, GdiPalSetColorTable, TRUE);
+    }
+
+    return retValue;
 }
 
 /* EOF */
