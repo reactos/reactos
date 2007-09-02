@@ -102,6 +102,7 @@ namespace Sysreg_
     bool readConfigurationValues(ConfigParser & conf_parser);
     bool configureQemu();
     bool configureVmWare();
+    bool hasQemuNoRebootOption();
     void cleanup();
 //---------------------------------------------------------------------------------------
 ///

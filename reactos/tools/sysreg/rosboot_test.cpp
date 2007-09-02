@@ -208,6 +208,16 @@ namespace Sysreg_
         return isFileExisting(qemupath);
     }
 //----------------------------------------------------------------------------------------
+    bool RosBootTest::hasQemuNoRebootOption()
+    {
+        ///
+        /// FIXME 
+        /// extract version
+        ///
+
+        return true;
+    }
+//----------------------------------------------------------------------------------------
     bool RosBootTest::getQemuDir(string & qemupath)
     {
         string::size_type pos;
@@ -275,9 +285,10 @@ namespace Sysreg_
         m_BootCmd += _T(" -pidfile ");
         m_BootCmd += m_PidFile;
 #endif
-
-        m_BootCmd += _T(" -no-reboot ");
-
+        if (hasQemuNoRebootOption())
+        {
+            m_BootCmd += _T(" -no-reboot ");
+        }
         return true;
     }
 //----------------------------------------------------------------------------------------
@@ -335,6 +346,11 @@ namespace Sysreg_
             /* check if ROS_HDD_IMAGE points to hdd image */
             if (!isFileExisting(m_HDDImage))
             {
+                if (!m_CDImage.length ())
+                {
+                    cerr << "Error: HDD image is not existing and CDROM image not provided" << endl;
+                    return false;
+                }
                 /* create it */
                 return createHDDImage(m_HDDImage);
             }
@@ -346,9 +362,20 @@ namespace Sysreg_
              * but also no override by 
              * ROS_BOOT_CMD
              */
+            if (!m_CDImage.length ())
+            {
+                cerr << "Error: no HDD and CDROM image provided" << endl;
+                return false;
+            }
+
             getDefaultHDDImage(m_HDDImage);
             return createHDDImage(m_HDDImage);
         }
+        /*
+         * verify the provided ROS_BOOT_CMD for hdd image
+         *
+         */
+
         bool hdaboot = false;
         string::size_type pos = m_BootCmd.find (_T("-boot c"));
         if (pos != string::npos)
@@ -392,34 +419,28 @@ namespace Sysreg_
 //----------------------------------------------------------------------------------------
     bool RosBootTest::configureCDImage()
     {
-        if (m_CDImage.length())
+        if (!m_BootCmd.length ())
         {
-            /* we have a cd image lets check if its valid */
-            if (!isFileExisting(m_CDImage))
+            if (m_CDImage.length())
             {
-                cerr << "Error: ROS_CD_IMAGE is not valid" << endl;
-                return false;
+                /* we have a cd image lets check if its valid */
+                if (isFileExisting(m_CDImage))
+                {
+                    cerr << "Using CDROM image " << m_CDImage << endl;
+                    return true;
+                }
             }
-            return true;
-        }
-        
-        /* ROS_CD_IMAGE is not set
-         * lets check if m_BootCmd provides it 
-         */
-
-        if (!m_BootCmd.length())
-        {
-            /* ROS_BOOT_CMD not set
-             * check if theres a default image 
-             */
-
             if (isFileExisting(_T("ReactOS-RegTest.iso")))
             {
                 m_CDImage = _T("ReactOS-RegTest.iso");
+                cerr << "Falling back to default CDROM image " << m_CDImage << endl;
+                return true;
             }
+            cerr << "No CDROM image found, boot device is HDD" << endl;
+            m_CDImage = _T("");
             return true;
         }
-
+        
         string::size_type pos = m_BootCmd.find(_T("-boot "));
         if (pos == string::npos)
         {
