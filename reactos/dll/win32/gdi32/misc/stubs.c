@@ -203,19 +203,16 @@ SetMetaRgn(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
-SetBoundsRect(
-	HDC		a0,
-	CONST RECT	*a1,
-	UINT		a2
-	)
+SetBoundsRect(HDC hdc,
+              CONST RECT *prc,
+              UINT flags)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    /* FIXME add check for vaildate the flags */
+    return NtGdiSetBoundsRect(hdc, *prc, flags
 }
 
 
