@@ -3413,3 +3413,212 @@ NtGdiMoveTo(
     return FALSE;
 }
 
+ /*
+ * @unimplemented
+ */
+HBITMAP
+STDCALL
+NtGdiSelectBitmap(
+    IN HDC hdc,
+    IN HBITMAP hbm)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+HBRUSH
+STDCALL
+NtGdiSelectBrush(
+    IN HDC hdc,
+    IN HBRUSH hbrush)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+HFONT
+STDCALL
+NtGdiSelectFont(
+    IN HDC hdc,
+    IN HFONT hf)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+HPEN
+STDCALL 
+NtGdiSelectPen(
+    IN HDC hdc,
+    IN HPEN hpen)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+HBITMAP
+STDCALL
+NtGdiSetBitmapAttributes(
+    IN HBITMAP hbm,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiSetFontEnumeration(
+    IN ULONG ulType)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSetFontXform(
+    IN HDC hdc,
+    IN DWORD dwxScale,
+    IN DWORD dwyScale)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSetLinkedUFIs(
+    IN HDC hdc,
+    IN PUNIVERSAL_FONT_ID pufiLinks,
+    IN ULONG uNumUFIs)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSetMagicColors(
+    IN HDC hdc,
+    IN PALETTEENTRY peMagic,
+    IN ULONG Index)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+LONG
+STDCALL 
+NtGdiGetDeviceWidth(
+    IN HDC hdc)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiMirrorWindowOrg(
+    IN HDC hdc)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+NtGdiSetLayout(
+    IN HDC hdc,
+    IN LONG wox,
+    IN DWORD dwLayout)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+INT
+STDCALL
+NtGdiStretchDIBitsInternal(
+    IN HDC hdc,
+    IN INT xDst,
+    IN INT yDst,
+    IN INT cxDst,
+    IN INT cyDst,
+    IN INT xSrc,
+    IN INT ySrc,
+    IN INT cxSrc,
+    IN INT cySrc,
+    IN OPTIONAL LPBYTE pjInit,
+    IN LPBITMAPINFO pbmi,
+    IN DWORD dwUsage,
+    IN DWORD dwRop4,
+    IN UINT cjMaxInfo,
+    IN UINT cjMaxBits,
+    IN HANDLE hcmXform)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiUnloadPrinterDriver(
+    IN LPWSTR pDriverName,
+    IN ULONG cbDriverName)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiUnmapMemFont(
+    IN PVOID pvView)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+

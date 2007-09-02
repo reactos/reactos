@@ -263,12 +263,12 @@ NtGdiRoundRect                                   7
 NtGdiSaveDC                                      1
 NtGdiScaleViewportExtEx                          6
 NtGdiScaleWindowExtEx                            6
-# NtGdiSelectBitmap                              2
-# NtGdiSelectBrush                               2
+NtGdiSelectBitmap                                2
+NtGdiSelectBrush                                 2
 NtGdiSelectClipPath                              2
-# NtGdiSelectFont                                2
-# NtGdiSelectPen                                 2
-# NtGdiSetBitmapAttributes                       2
+NtGdiSelectFont                                  2
+NtGdiSelectPen                                   2
+NtGdiSetBitmapAttributes                         2
 NtGdiSetBitmapBits                               3
 NtGdiSetBitmapDimension                          4
 NtGdiSetBoundsRect                               3
@@ -278,16 +278,16 @@ NtGdiSetColorAdjustment                          2
 NtGdiSetColorSpace                               2
 NtGdiSetDeviceGammaRamp                          2
 NtGdiSetDIBitsToDeviceInternal                  16
-# NtGdiSetFontEnumeration                        1
-# NtGdiSetFontXform                              3
+NtGdiSetFontEnumeration                          1
+NtGdiSetFontXform                                3
 NtGdiSetIcmMode                                  3
-# NtGdiSetLinkedUFIs                             3
-# NtGdiSetMagicColors                            3
+NtGdiSetLinkedUFIs                               3
+NtGdiSetMagicColors                              3
 NtGdiSetMetaRgn                                  1
 NtGdiSetMiterLimit                               3
-# NtGdiGetDeviceWidth                            1
-# NtGdiMirrorWindowOrg                           1
-# NtGdiSetLayout                                 3
+NtGdiGetDeviceWidth                              1
+NtGdiMirrorWindowOrg                             1
+NtGdiSetLayout                                   3
 NtGdiSetPixel                                    4
 NtGdiSetPixelFormat                              2
 NtGdiSetRectRgn                                  5
@@ -299,14 +299,14 @@ NtGdiSetSizeDevice                               3
 NtGdiStartDoc                                    4
 NtGdiStartPage                                   1
 NtGdiStretchBlt                                 12
-# NtGdiStretchDIBitsInternal                    16
+NtGdiStretchDIBitsInternal                      16
 NtGdiStrokeAndFillPath                           1
 NtGdiStrokePath                                  1
 NtGdiSwapBuffers                                 1
 NtGdiTransformPoints                             5
 NtGdiTransparentBlt                             11
-# NtGdiUnloadPrinterDriver                       2
-# NtGdiUnmapMemFont                              1
+NtGdiUnloadPrinterDriver                         2
+NtGdiUnmapMemFont                                1
 NtGdiUnrealizeObject                             1
 NtGdiUpdateColors                                1
 NtGdiWidenPath                                   1
