@@ -1120,20 +1120,7 @@ GetGlyphOutlineWow(
 }
 
 
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SelectFontLocal(
-	DWORD	a0,
-	DWORD	a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 
 /*

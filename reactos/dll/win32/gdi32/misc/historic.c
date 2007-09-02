@@ -243,3 +243,14 @@ SelectBrushLocal(HBRUSH Currenthbm,
 {
     return Newhbm;
 }
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
+SelectFontLocal(HFONT Currenthfnt,
+                HFONT newhfnt)
+{
+    return newhfnt;
+}
