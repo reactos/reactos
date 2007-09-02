@@ -212,7 +212,7 @@ SetBoundsRect(HDC hdc,
               UINT flags)
 {
     /* FIXME add check for vaildate the flags */
-    return NtGdiSetBoundsRect(hdc, *prc, flags
+    return NtGdiSetBoundsRect(hdc, (LPRECT)prc, flags);
 }
 
 
