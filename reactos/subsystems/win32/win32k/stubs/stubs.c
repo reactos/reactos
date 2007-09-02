@@ -2947,3 +2947,210 @@ NtGdiPATHOBJ_vEnumStartClipLines(
     UNIMPLEMENTED;
 }
 
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiRemoveFontMemResourceEx(
+    IN HANDLE hMMFont)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiRemoveFontResourceW(
+    IN WCHAR *pwszFiles,
+    IN ULONG cwc,
+    IN ULONG cFiles,
+    IN ULONG fl,
+    IN DWORD dwPidTid,
+    IN OPTIONAL DESIGNVECTOR *pdv)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiPolyTextOutW(
+    IN HDC hdc,
+    IN POLYTEXTW *pptw,
+    IN UINT cStr,
+    IN DWORD dwCodePage)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiGetServerMetaFileBits(
+    IN HANDLE hmo,
+    IN ULONG cjData,
+    OUT OPTIONAL LPBYTE pjData,
+    OUT PDWORD piType,
+    OUT PDWORD pmm,
+    OUT PDWORD pxExt,
+    OUT PDWORD pyExt)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+NtGdiGetStats(
+    IN HANDLE hProcess,
+    IN INT iIndex,
+    IN INT iPidType,
+    OUT PVOID pResults,
+    IN UINT cjResultSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiXLATEOBJ_cGetPalette(
+    IN XLATEOBJ *pxlo,
+    IN ULONG iPal,
+    IN ULONG cPal,
+    OUT ULONG *pPal)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiXLATEOBJ_iXlate(
+    IN XLATEOBJ *pxlo,
+    IN ULONG iColor)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+NtGdiXLATEOBJ_hGetColorTransform(
+    IN XLATEOBJ *pxlo)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiXFORMOBJ_bApplyXform(
+    IN XFORMOBJ *pxo,
+    IN ULONG iMode,
+    IN ULONG cPoints,
+    IN  PVOID pvIn,
+    OUT PVOID pvOut)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+ULONG
+STDCALL
+NtGdiXFORMOBJ_iGetXform(
+    IN XFORMOBJ *pxo,
+    OUT OPTIONAL XFORML *pxform)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSetSizeDevice(
+    IN HDC hdc,
+    IN INT cxVirtualDevice,
+    IN INT cyVirtualDevice)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiSetVirtualResolution(
+    IN HDC hdc,
+    IN INT cxVirtualDevicePixel,
+    IN INT cyVirtualDevicePixel,
+    IN INT cxVirtualDeviceMm,
+    IN INT cyVirtualDeviceMm)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+ /*
+ * @unimplemented
+ */
+INT
+STDCALL
+NtGdiSetupPublicCFONT(
+    IN HDC hdc,
+    IN OPTIONAL HFONT hf,
+    IN ULONG ulAve)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ /*
+ * @unimplemented
+ */
+HBRUSH
+STDCALL
+NtGdiSetBrushAttributes(
+    IN HBRUSH hbm,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+

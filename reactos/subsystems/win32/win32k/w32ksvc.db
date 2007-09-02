@@ -203,9 +203,9 @@ NtGdiGetRasterizerCaps                           2
 NtGdiGetRealizationInfo                          3
 NtGdiGetRegionData                               3
 NtGdiGetRgnBox                                   2
-# NtGdiGetServerMetaFileBits                     7
+NtGdiGetServerMetaFileBits                       7
 NtGdiGetSpoolMessage                             4
-# NtGdiGetStats                                  5
+NtGdiGetStats                                    5
 NtGdiGetStockObject                              1
 NtGdiGetStringBitmapW                            5
 NtGdiGetSystemPaletteUse                         1
@@ -246,7 +246,7 @@ NtGdiPathToRegion                                1
 NtGdiPlgBlt                                     11
 NtGdiPolyDraw                                    4
 NtGdiPolyPolyDraw                                5
-# NtGdiPolyTextOutW                              4
+NtGdiPolyTextOutW                                4
 NtGdiPtInRegion                                  3
 NtGdiPtVisible                                   3
 NtGdiQueryFonts                                  3
@@ -254,8 +254,8 @@ NtGdiQueryFontAssocInfo                          1
 NtGdiRectangle                                   5
 NtGdiRectInRegion                                2
 NtGdiRectVisible                                 2
-# NtGdiRemoveFontResourceW                       6
-# NtGdiRemoveFontMemResourceEx                   1
+NtGdiRemoveFontResourceW                         6
+NtGdiRemoveFontMemResourceEx                     1
 NtGdiResetDC                                     5
 NtGdiResizePalette                               2
 NtGdiRestoreDC                                   2
@@ -272,7 +272,7 @@ NtGdiSelectClipPath                              2
 NtGdiSetBitmapBits                               3
 NtGdiSetBitmapDimension                          4
 NtGdiSetBoundsRect                               3
-# NtGdiSetBrushAttributes                        2
+NtGdiSetBrushAttributes                          2
 NtGdiSetBrushOrg                                 4
 NtGdiSetColorAdjustment                          2
 NtGdiSetColorSpace                               2
@@ -293,9 +293,9 @@ NtGdiSetPixelFormat                              2
 NtGdiSetRectRgn                                  5
 NtGdiSetSystemPaletteUse                         2
 NtGdiSetTextJustification                        3
-# NtGdiSetupPublicCFONT                          3
-# NtGdiSetVirtualResolution                      5
-# NtGdiSetSizeDevice                             3
+NtGdiSetupPublicCFONT                            3
+NtGdiSetVirtualResolution                        5
+NtGdiSetSizeDevice                               3
 NtGdiStartDoc                                    4
 NtGdiStartPage                                   1
 NtGdiStretchBlt                                 12
@@ -631,9 +631,9 @@ NtGdiEngGradientFill                            10
 NtGdiEngTransparentBlt                           8
 NtGdiEngTextOut                                 10
 NtGdiEngStretchBltROP                           13
-# NtGdiXLATEOBJ_cGetPalette                      4
-# NtGdiXLATEOBJ_iXlate                           2
-# NtGdiXLATEOBJ_hGetColorTransform               1
+NtGdiXLATEOBJ_cGetPalette                        4
+NtGdiXLATEOBJ_iXlate                             2
+NtGdiXLATEOBJ_hGetColorTransform                 1
 NtGdiCLIPOBJ_bEnum                               3
 NtGdiCLIPOBJ_cEnumStart                          5
 NtGdiCLIPOBJ_ppoGetPath                          1
@@ -644,8 +644,8 @@ NtGdiBRUSHOBJ_ulGetBrushColor                    1
 NtGdiBRUSHOBJ_pvAllocRbrush                      2
 NtGdiBRUSHOBJ_pvGetRbrush                        1
 NtGdiBRUSHOBJ_hGetColorTransform                 1
-# NtGdiXFORMOBJ_bApplyXform                      5
-# NtGdiXFORMOBJ_iGetXform                        2
+NtGdiXFORMOBJ_bApplyXform                        5
+NtGdiXFORMOBJ_iGetXform                          2
 NtGdiFONTOBJ_vGetInfo                            3
 NtGdiFONTOBJ_pxoGetXform                         1
 NtGdiFONTOBJ_cGetGlyphs                          5
