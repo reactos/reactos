@@ -2737,7 +2737,7 @@ PatBlt(HDC hdc,
        DWORD dwRop)
 {
     /* FIXME some part need be done in user mode */
-    return PatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
+    return NtGdiPatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
 }
 
 BOOL
