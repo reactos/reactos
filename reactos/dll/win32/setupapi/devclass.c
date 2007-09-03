@@ -1449,7 +1449,7 @@ SetupDiGetClassImageListExW(
 
         /* Prepare a HIMAGELIST */
         InitCommonControls();
-        ClassImageListData->ImageList = ImageList_Create(16, 16, ILC_COLOR32, 100, 10);
+        ClassImageListData->ImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 100, 10);
         if (!ClassImageListData->ImageList)
             goto cleanup;
 
