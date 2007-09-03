@@ -19,9 +19,6 @@
 
 #include <freeldr.h>
 #include <debug.h>
-#ifdef _M_PPC
-#include "of.h"
-#endif
 
 ULONG			AllocationCount = 0;
 
@@ -84,17 +81,6 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	// Find out how many blocks it will take to
 	// satisfy this allocation
 	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
-
-#ifdef _M_PPC
-	{
-		// We don't have enough reserve, claim some memory from openfirmware
-		ULONG ptr;
-		ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
-		MemPointer = (PVOID)(ptr);
-		if (MemPointer)
-			return MemPointer;
-	}
-#endif
 
 	// If we don't have enough available mem
 	// then return NULL
