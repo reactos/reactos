@@ -222,6 +222,9 @@ __mingw_CRTStartup (void)
 #elif defined(__mips__)
   /* Align the stack to 16 bytes */
   asm  __volatile__  ("andi %sp,%sp,-16" : : : "%sp");
+#elif defined(__PowerPC__)
+  /* Align the stack to 16 bytes */
+  asm  __volatile__  ("li 0,15\n\tandc 1,1,0" : : : "r1");
 #else
 #error Unsupported architecture
 #endif
