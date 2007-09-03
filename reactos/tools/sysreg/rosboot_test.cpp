@@ -261,17 +261,25 @@ namespace Sysreg_
 #endif	 
 
         
-        m_BootCmd = m_EmuPath + _T(" -L ") + qemudir + _T(" -m ") + m_MaxMem + _T(" -hda ") + m_HDDImage + _T(" -serial ") + pipe;
+        m_BootCmd = m_EmuPath + _T(" -L ") + qemudir + _T(" -m ") + m_MaxMem + _T(" -serial ") + pipe;
 
         if (m_CDImage.length())
         {
             /* boot from cdrom */
             m_BootCmd +=  _T(" -boot d -cdrom ") + m_CDImage;
         }
-        else
+        else if (m_HDDImage.length ())
         {
             /* boot from hdd */
-            m_BootCmd += _T(" -boot c ");
+            m_BootCmd += _T(" -boot c -hda ") + m_HDDImage;
+        }
+        else
+        {
+            /*
+             * no boot device provided 
+             */
+            cerr << "Error: no bootdevice provided" << endl;
+            return false;
         }
 
 #ifdef __LINUX__
