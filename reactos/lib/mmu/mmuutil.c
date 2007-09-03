@@ -1,5 +1,5 @@
-#include "mmu.h"
-#include "mmuutil.h"
+#include "ppcmmu/mmu.h"
+#include "ppcmmu/mmuutil.h"
 
 inline int GetMSR() {
     register int res asm ("r3");
@@ -134,7 +134,7 @@ __asm__("\t.globl SetPhysByte\n"
     );
 
 inline int GetSR(int n) {
-    register int res;
+    register int res = 0;
     switch( n ) {
     case 0:
 	__asm__("mfsr %0,0" : "=r" (res));

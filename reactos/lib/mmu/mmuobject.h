@@ -9,7 +9,9 @@ void mmudelpage(ppc_map_info_t *info, int count);
 void mmugetpage(ppc_map_info_t *info, int count);
 void mmusetvsid(int start, int end, int vsid);
 void *allocvsid(int);
+void mmuallocvsid(int vsid, int mask);
 void freevsid(int);
+void mmufreevsid(int vsid, int mask);
 int mmunitest();
 
 #endif/*_LIBMMU_MMUOBJECT_H*/

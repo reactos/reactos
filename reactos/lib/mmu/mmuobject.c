@@ -64,7 +64,9 @@ paddr_t RamSize, FirstUsablePage, NextPage;
 MmuVsidTree *NextTreePage = 0;
 MmuFreeTree *FreeTree;
 MmuVsidInfo *Segs[16], *VsidHead = 0;
+
 extern void fmtout(const char *fmt, ...);
+int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr);
 
 __asm__(".text\n\t"
 	".globl mmumain\n\t"
@@ -190,6 +192,8 @@ __asm__(".text\n\t"
 	"stw 0,148(1)\n\t"
 	"mfdar 0\n\t"
 	"stw 0,152(1)\n\t"
+	"mfxer 0\n\t"
+	"stw 0,156(1)\n\t"
 	"li 3,100\n\t"
 	"mr 4,1\n\t"
 	"lis 5,data_miss_finish_start@ha\n\t"
@@ -208,8 +212,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
 {
     void (*fun)(void *) = arg1;
     ppc_trap_frame_t *trap_frame = arg1;
-    int ret = 0, i;
-    int *start, *end, *target;
+    int ret = 0;
 
     switch(action)
     {
@@ -254,10 +257,10 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
     case 9:
 	return FirstUsablePage;
     case 10:
-	allocvsid((int)arg1);
+	mmuallocvsid((int)arg1, (int)arg2);
 	break;
     case 11:
-	freevsid((int)arg1);
+	mmufreevsid((int)arg1, (int)arg2);
 	break;
     case 100:
 	if(!ptegreload(trap_frame, trap_frame->dar))
@@ -415,6 +418,10 @@ MmuVsidTree *allocvsidtree()
 
 void freevsidtree(MmuVsidTree *tree)
 {
+    int i;
+    for(i = 0; i < 256; i++)
+	if(tree->leaves[i])
+	    freepage(tree->leaves[i]);
     MmuFreeTree *NextFreeTree = (MmuFreeTree *)tree;
     NextFreeTree->next = FreeTree;
     FreeTree = NextFreeTree;
@@ -431,6 +438,16 @@ void *allocvsid(int vsid)
     info->next = VsidHead;
     VsidHead = info;
     return info;
+}
+
+void mmuallocvsid(int vsid, int mask)
+{
+    int i;
+    for(i = 0; i < 16; i++)
+    {
+	if(mask & (1 << i))
+	    allocvsid((vsid << 4) + i);
+    }
 }
 
 MmuVsidInfo *findvsid(int vsid)
@@ -457,13 +474,22 @@ void freevsid(int vsid)
     freepage(map);
 }
 
+void mmufreevsid(int vsid, int mask)
+{
+    int i;
+    for(i = 0; i < 16; i++)
+    {
+	if(mask & (1 << i))
+	    allocvsid((vsid << 4) + i);
+    }    
+}
+
 int mmuaddpage(ppc_map_info_t *info, int count)
 {
-    int i, iva, vsid, phys, virt;
+    int i, iva = 0, vsid, phys, virt;
     int ptehi;
     int ptelo, vsid_table_hi, vsid_table_lo;
     ppc_map_t *PagePtr;
-    MmuFreePage *FreePage;
     MmuVsidInfo *VsidInfo;
     MmuVsidTree *VsidTree;
 
@@ -524,42 +550,55 @@ int PageMatch(vaddr_t addr, ppc_pte_t pte)
 	(((addr >> 22) & 63) == api_pte);
 }
 
-void mmudelpage(ppc_map_info_t *info, int count)
-{
-    int i, j, k, ipa;
-    ppc_map_t *PagePtr;
-    ppc_pteg_t *PageEntry;
-    ppc_pte_t ZeroPte = { 0 };
-    MmuFreePage *FreePage;
-
-    for(i = 0; i < count; i++)
-    {
-	ipa = info[i].phys;
-
-	PagePtr = &PpcPageTable[i];
-	for(j = 0; j < 2; j++)
-	{
-	    PageEntry = PtegFromPage(PagePtr, 0);
-	    for(k = 0; k < 8; k++)
-	    {
-		if(PageMatch(ipa, PageEntry->block[k]))
-		    PageEntry->block[k] = ZeroPte;
-	    }
-	}
-	freepage(PagePtr);
-	__asm__("tlbie %0\n\tsync\n\tisync" : : "r" (info[i].addr));
-    }
-}
-
 ppc_map_t *mmuvirtmap(vaddr_t addr, int vsid)
 {
-    int seg = (addr >> 28) & 15, ptegnum;
+    int seg = (addr >> 28) & 15;
     MmuVsidInfo *seginfo = Segs[seg];
     MmuVsidTree *segtree = 0;
     if(!seginfo) return 0;
     segtree = seginfo->tree[(addr >> 20) & 255];
     if(!segtree) return 0;
     return segtree->leaves[(addr >> 12) & 255];
+}
+
+void mmudelpage(ppc_map_info_t *info, int count)
+{
+    int i, j, k, ipa;
+    ppc_map_t *PagePtr;
+    ppc_pteg_t *PageEntry;
+    ppc_pte_t ZeroPte = { 0 };
+
+    for(i = 0; i < count; i++)
+    {
+	if (info[i].phys)
+	{
+	    ipa = info[i].phys;
+	    PagePtr = &PpcPageTable[ipa];
+	    info[i].proc = PagePtr->proc;
+	    info[i].addr = PagePtr->addr;
+	}
+	else
+	{
+	    PagePtr = mmuvirtmap(info[i].proc, info[i].addr);
+	    ipa = PPC_PAGE_ADDR(PagePtr - PpcPageTable);
+	}
+
+	for(j = 0; j < 2; j++)
+	{
+	    PageEntry = PtegFromPage(PagePtr, j);
+	    for(k = 0; k < 8; k++)
+	    {
+		if(PageMatch(ipa, PageEntry->block[k]))
+		{
+		    if(PageEntry->block[k].ptel & 0x100)
+			info[i].flags |= MMU_PAGE_DIRTY;
+		    PageEntry->block[k] = ZeroPte;
+		}
+	    }
+	}
+	freepage(PagePtr);
+	__asm__("tlbie %0\n\tsync\n\tisync" : : "r" (info[i].addr));
+    }
 }
 
 void mmugetpage(ppc_map_info_t *info, int count)
@@ -572,13 +611,20 @@ void mmugetpage(ppc_map_info_t *info, int count)
 	if(!info[i].addr && !info[i].proc)
 	{
 	    PagePtr = &((ppc_map_t*)PAGETAB)[info[i].phys];
-	    info->proc = PagePtr->proc;
-	    info->addr = PagePtr->addr;
-	    info->flags = MMU_ALL_RW;
+	    info[i].proc = PagePtr->proc;
+	    info[i].addr = PagePtr->addr;
+	    info[i].flags = MMU_ALL_RW;
 	} else {
 	    vaddr_t addr = info[i].addr;
 	    int vsid = ((addr >> 28) & 15) | (info[i].proc << 4);
-	    mmuvirtmap(info[i].addr, vsid);
+	    PagePtr = mmuvirtmap(info[i].addr, vsid);
+	    if(!PagePtr)
+		info[i].phys = 0;
+	    else
+	    {
+		info[i].phys = PPC_PAGE_ADDR(PagePtr - PpcPageTable);
+		info[i].flags = MMU_ALL_RW; // HACK
+	    }
 	}
     }
 }
