@@ -85,21 +85,24 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	// satisfy this allocation
 	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
 
+#ifdef _M_PPC
+	{
+		// We don't have enough reserve, claim some memory from openfirmware
+		ULONG ptr;
+		ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
+		MemPointer = (PVOID)(ptr);
+		if (MemPointer)
+			return MemPointer;
+	}
+#endif
+
 	// If we don't have enough available mem
 	// then return NULL
 	if (FreePagesInLookupTable < PagesNeeded)
 	{
-#ifdef _M_PPC
-               ULONG ptr;
-               printf("Allocating %d bytes directly ...\n", MemorySize);
-               ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
-               MemPointer = (PVOID)(ptr);
-               return MemPointer;
-#else
 		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateMemory(). Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
-#endif
 	}
 
 	FirstFreePageFromEnd = MmFindAvailablePages(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded, AllocateFromEnd);

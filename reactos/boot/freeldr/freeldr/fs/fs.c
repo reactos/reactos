@@ -26,8 +26,8 @@
 // DATA
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-ULONG			FsType = 0;	// Type of filesystem on boot device, set by FsOpenVolume()
-PVOID                   FsStaticBufferDisk = 0, FsStaticBufferData = 0;
+ULONG FsType = 0;	// Type of filesystem on boot device, set by FsOpenVolume()
+PVOID FsStaticBufferDisk = 0, FsStaticBufferData = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -52,20 +52,17 @@ static BOOLEAN FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG 
 {
 	CHAR ErrorText[80];
 
-	printf("FsOpenVolume: (disk=%d,start=%d,count=%d,type=%d)\n",
-	       DriveNumber, StartSector, SectorCount, Type);
-
 	FsType = Type;
 
 	if( !FsStaticBufferDisk )
-	    FsStaticBufferDisk = MmAllocateMemory( 0x20000 );
+		FsStaticBufferDisk = MmAllocateMemory( 0x20000 );
 	if( !FsStaticBufferDisk )
 	{
-	        FileSystemError("could not allocate filesystem static buffer");
+		FileSystemError("could not allocate filesystem static buffer");
 		return FALSE;
 	}
 	FsStaticBufferData = ((PCHAR)FsStaticBufferDisk) + 0x10000;
-	    
+
 	switch (FsType)
 	{
 	case FS_FAT:
@@ -165,7 +162,6 @@ PFILE FsOpenFile(PCSTR FileName)
 		break;
 	}
 
-#ifdef DEBUG
 	//
 	// Check return value
 	//
@@ -177,7 +173,6 @@ PFILE FsOpenFile(PCSTR FileName)
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "FsOpenFile() failed.\n"));
 	}
-#endif // defined DEBUG
 
 	return FileHandle;
 }
