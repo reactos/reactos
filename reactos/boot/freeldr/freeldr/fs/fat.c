@@ -39,80 +39,80 @@ ULONG			FatDriveNumber = 0;
 
 VOID FatSwapFatBootSector(PFAT_BOOTSECTOR Obj)
 {
-    SW(Obj, BytesPerSector);
-    SW(Obj, ReservedSectors);
-    SW(Obj, RootDirEntries);
-    SW(Obj, TotalSectors);
-    SW(Obj, SectorsPerFat);
-    SW(Obj, SectorsPerTrack);
-    SW(Obj, NumberOfHeads);
-    SD(Obj, HiddenSectors);
-    SD(Obj, TotalSectorsBig);
-    SD(Obj, VolumeSerialNumber);
-    SW(Obj, BootSectorMagic);
+	SW(Obj, BytesPerSector);
+	SW(Obj, ReservedSectors);
+	SW(Obj, RootDirEntries);
+	SW(Obj, TotalSectors);
+	SW(Obj, SectorsPerFat);
+	SW(Obj, SectorsPerTrack);
+	SW(Obj, NumberOfHeads);
+	SD(Obj, HiddenSectors);
+	SD(Obj, TotalSectorsBig);
+	SD(Obj, VolumeSerialNumber);
+	SW(Obj, BootSectorMagic);
 }
 
 VOID FatSwapFat32BootSector(PFAT32_BOOTSECTOR Obj)
 {
-    SW(Obj, BytesPerSector);
-    SW(Obj, ReservedSectors);
-    SW(Obj, RootDirEntries);
-    SW(Obj, TotalSectors);
-    SW(Obj, SectorsPerFat);
-    SW(Obj, NumberOfHeads);
-    SD(Obj, HiddenSectors);
-    SD(Obj, TotalSectorsBig);
-    SD(Obj, SectorsPerFatBig);
-    SW(Obj, ExtendedFlags);
-    SW(Obj, FileSystemVersion);
-    SD(Obj, RootDirStartCluster);
-    SW(Obj, FsInfo);
-    SW(Obj, BackupBootSector);
-    SD(Obj, VolumeSerialNumber);
-    SW(Obj, BootSectorMagic);
+	SW(Obj, BytesPerSector);
+	SW(Obj, ReservedSectors);
+	SW(Obj, RootDirEntries);
+	SW(Obj, TotalSectors);
+	SW(Obj, SectorsPerFat);
+	SW(Obj, NumberOfHeads);
+	SD(Obj, HiddenSectors);
+	SD(Obj, TotalSectorsBig);
+	SD(Obj, SectorsPerFatBig);
+	SW(Obj, ExtendedFlags);
+	SW(Obj, FileSystemVersion);
+	SD(Obj, RootDirStartCluster);
+	SW(Obj, FsInfo);
+	SW(Obj, BackupBootSector);
+	SD(Obj, VolumeSerialNumber);
+	SW(Obj, BootSectorMagic);
 }
 
 VOID FatSwapFatXBootSector(PFATX_BOOTSECTOR Obj)
 {
-    SD(Obj, VolumeSerialNumber);
-    SD(Obj, SectorsPerCluster);
-    SW(Obj, NumberOfFats);
+	SD(Obj, VolumeSerialNumber);
+	SD(Obj, SectorsPerCluster);
+	SW(Obj, NumberOfFats);
 }
 
 VOID FatSwapDirEntry(PDIRENTRY Obj)
 {
-    SW(Obj, CreateTime);
-    SW(Obj, CreateDate);
-    SW(Obj, LastAccessDate);
-    SW(Obj, ClusterHigh);
-    SW(Obj, Time);
-    SW(Obj, Date);
-    SW(Obj, ClusterLow);
-    SD(Obj, Size);
+	SW(Obj, CreateTime);
+	SW(Obj, CreateDate);
+	SW(Obj, LastAccessDate);
+	SW(Obj, ClusterHigh);
+	SW(Obj, Time);
+	SW(Obj, Date);
+	SW(Obj, ClusterLow);
+	SD(Obj, Size);
 }
 
 VOID FatSwapLFNDirEntry(PLFN_DIRENTRY Obj)
 {
-    int i;
-    SW(Obj, StartCluster);
-    for(i = 0; i < 5; i++)
-	Obj->Name0_4[i] = SWAPW(Obj->Name0_4[i]);
-    for(i = 0; i < 6; i++)
-	Obj->Name5_10[i] = SWAPW(Obj->Name5_10[i]);
-    for(i = 0; i < 2; i++)
-	Obj->Name11_12[i] = SWAPW(Obj->Name11_12[i]);
+	int i;
+	SW(Obj, StartCluster);
+	for(i = 0; i < 5; i++)
+		Obj->Name0_4[i] = SWAPW(Obj->Name0_4[i]);
+	for(i = 0; i < 6; i++)
+		Obj->Name5_10[i] = SWAPW(Obj->Name5_10[i]);
+	for(i = 0; i < 2; i++)
+		Obj->Name11_12[i] = SWAPW(Obj->Name11_12[i]);
 }
 
 VOID FatSwapFatXDirEntry(PFATX_DIRENTRY Obj)
 {
-    SD(Obj, StartCluster);
-    SD(Obj, Size);
-    SW(Obj, Time);
-    SW(Obj, Date);
-    SW(Obj, CreateTime);
-    SW(Obj, CreateDate);
-    SW(Obj, LastAccessTime);
-    SW(Obj, LastAccessDate);
+	SD(Obj, StartCluster);
+	SD(Obj, Size);
+	SW(Obj, Time);
+	SW(Obj, Date);
+	SW(Obj, CreateTime);
+	SW(Obj, CreateDate);
+	SW(Obj, LastAccessTime);
+	SW(Obj, LastAccessDate);
 }
 
 BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount)
@@ -153,17 +153,14 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	}
 	RtlCopyMemory(FatVolumeBootSector, (PVOID)DISKREADBUFFER, 512);
 
-
 	// Get the FAT type
 	FatType = FatDetermineFatType(FatVolumeBootSector, PartitionSectorCount);
 
-#ifdef DEBUG
-
+	// Dump boot sector (and swap it for big endian systems)
 	DbgPrint((DPRINT_FILESYSTEM, "Dumping boot sector:\n"));
-
 	if (ISFATX(FatType))
 	{
-	        FatSwapFatXBootSector(FatXVolumeBootSector);
+		FatSwapFatXBootSector(FatXVolumeBootSector);
 		DbgPrint((DPRINT_FILESYSTEM, "sizeof(FATX_BOOTSECTOR) = 0x%x.\n", sizeof(FATX_BOOTSECTOR)));
 
 		DbgPrint((DPRINT_FILESYSTEM, "FileSystemType: %c%c%c%c.\n", FatXVolumeBootSector->FileSystemType[0], FatXVolumeBootSector->FileSystemType[1], FatXVolumeBootSector->FileSystemType[2], FatXVolumeBootSector->FileSystemType[3]));
@@ -177,7 +174,7 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	}
 	else if (FatType == FAT32)
 	{
-	        FatSwapFat32BootSector(Fat32VolumeBootSector);
+		FatSwapFat32BootSector(Fat32VolumeBootSector);
 		DbgPrint((DPRINT_FILESYSTEM, "sizeof(FAT32_BOOTSECTOR) = 0x%x.\n", sizeof(FAT32_BOOTSECTOR)));
 
 		DbgPrint((DPRINT_FILESYSTEM, "JumpBoot: 0x%x 0x%x 0x%x\n", Fat32VolumeBootSector->JumpBoot[0], Fat32VolumeBootSector->JumpBoot[1], Fat32VolumeBootSector->JumpBoot[2]));
@@ -211,7 +208,7 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	}
 	else
 	{
-	        FatSwapFatBootSector(FatVolumeBootSector);
+		FatSwapFatBootSector(FatVolumeBootSector);
 		DbgPrint((DPRINT_FILESYSTEM, "sizeof(FAT_BOOTSECTOR) = 0x%x.\n", sizeof(FAT_BOOTSECTOR)));
 
 		DbgPrint((DPRINT_FILESYSTEM, "JumpBoot: 0x%x 0x%x 0x%x\n", FatVolumeBootSector->JumpBoot[0], FatVolumeBootSector->JumpBoot[1], FatVolumeBootSector->JumpBoot[2]));
@@ -237,9 +234,9 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 		DbgPrint((DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", FatVolumeBootSector->BootSectorMagic));
 	}
 
-#endif // defined DEBUG
+#endif // !defined NDEBUG
 
-        //
+	//
 	// Set the correct partition offset
 	//
 	FatVolumeStartSector = VolumeStartSector;
@@ -250,7 +247,7 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	if (! ISFATX(FatType) && SWAPW(FatVolumeBootSector->BootSectorMagic) != 0xaa55)
 	{
 		sprintf(ErrMsg, "Invalid boot sector magic on drive 0x%x (expected 0xaa55 found 0x%x)",
-                        DriveNumber, FatVolumeBootSector->BootSectorMagic);
+		        DriveNumber, FatVolumeBootSector->BootSectorMagic);
 		FileSystemError(ErrMsg);
 		MmFreeMemory(FatVolumeBootSector);
 		return FALSE;
@@ -261,7 +258,7 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	// We do not support clusters bigger than 64k
 	//
 	if ((ISFATX(FatType) && 64 * 1024 < FatXVolumeBootSector->SectorsPerCluster * 512) ||
-            (! ISFATX(FatType) && 64 * 1024 < FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector))
+	   (! ISFATX(FatType) && 64 * 1024 < FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector))
 	{
 		FileSystemError("This file system has cluster sizes bigger than 64k.\nFreeLoader does not support this.");
 		MmFreeMemory(FatVolumeBootSector);
@@ -342,7 +339,6 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	//
 	// Initialize the disk cache for this drive
 	//
-	printf("About to do cache init\n");
 	if (!CacheInitializeDrive(DriveNumber))
 	{
 		return FALSE;
@@ -502,7 +498,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 
 	for (CurrentEntry=0; CurrentEntry<EntryCount; CurrentEntry++, DirectoryBuffer = ((PDIRENTRY)DirectoryBuffer)+1)
 	{
-	        OurLfnDirEntry = *((PLFN_DIRENTRY) DirectoryBuffer);
+		OurLfnDirEntry = *((PLFN_DIRENTRY) DirectoryBuffer);
 		FatSwapLFNDirEntry(LfnDirEntry);
 		OurDirEntry = *((PDIRENTRY) DirectoryBuffer);
 		FatSwapDirEntry(DirEntry);
@@ -518,7 +514,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 		//
 		if (DirEntry->FileName[0] == '\0')
 		{
-		        return FALSE;
+			return FALSE;
 		}
 
 		//
@@ -701,7 +697,7 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dir
 	ULONG		EntryCount;
 	ULONG		CurrentEntry;
 	ULONG		FileNameLen;
-	FATX_DIRENTRY   OurDirEntry;
+	FATX_DIRENTRY	OurDirEntry;
 	PFATX_DIRENTRY	DirEntry = &OurDirEntry;
 
 	EntryCount = DirectorySize / sizeof(FATX_DIRENTRY);
@@ -712,8 +708,8 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dir
 
 	for (CurrentEntry = 0; CurrentEntry < EntryCount; CurrentEntry++, DirectoryBuffer = ((PFATX_DIRENTRY)DirectoryBuffer)+1)
 	{
-	        OurDirEntry = *(PFATX_DIRENTRY) DirectoryBuffer;
-	        FatSwapFatXDirEntry(&OurDirEntry);
+		OurDirEntry = *(PFATX_DIRENTRY) DirectoryBuffer;
+		FatSwapFatXDirEntry(&OurDirEntry);
 		if (0xff == DirEntry->FileNameSize)
 		{
 			break;
@@ -811,7 +807,6 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 		// Buffer the directory contents
 		//
 		DirectoryBuffer = FatBufferDirectory(DirectoryStartCluster, &DirectorySize, (i == 0) );
-
 		if (DirectoryBuffer == NULL)
 		{
 			return FALSE;
