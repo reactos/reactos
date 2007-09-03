@@ -125,6 +125,7 @@ protected:
 	void GenerateRules ();
 	void GenerateImportLibraryTargetIfNeeded ();
 	void GetDefinitionDependencies ( string_list& dependencies ) const;
+
 	std::string GetLinkingDependencies () const;
 	static MingwBackend* backend;
 	static FILE* fMakefile;
@@ -510,6 +511,14 @@ class MingwEmbeddedTypeLibModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwEmbeddedTypeLibModuleHandler ( const Module& module );
+	virtual HostType DefaultHost() { return HostFalse; }
+	virtual void Process ();
+};
+
+class MingwElfExecutableModuleHandler : public MingwModuleHandler
+{
+public:
+        MingwElfExecutableModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 };

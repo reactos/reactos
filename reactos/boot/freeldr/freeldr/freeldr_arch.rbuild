@@ -47,6 +47,8 @@
 				<include base="freeldr_base">include</include>
 				<include base="freeldr_base">cache</include>
 				<include base="ntoskrnl">include</include>
+				<include base="ReactOS">include/reactos/libs</include>
+				<include base="ReactOS">include/reactos/elf</include>
 				<define name="__USE_W32API" />
 				<define name="_NTHAL_" />
 				<compilerflag>-ffreestanding</compilerflag>

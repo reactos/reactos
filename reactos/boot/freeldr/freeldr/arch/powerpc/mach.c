@@ -18,123 +18,32 @@
  */
 #include "freeldr.h"
 #include "machine.h"
+#include "ppcmmu/mmu.h"
 #include "of.h"
+#include "ppcboot.h"
+#include "prep.h"
+#include "compat.h"
 
-extern void BootMain( char * );
-extern char *GetFreeLoaderVersionString();
+extern void BootMain( LPSTR CmdLine );
+extern PCHAR GetFreeLoaderVersionString();
+extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
-static int chosen_package, stdin_handle, part_handle = -1;
+static int chosen_package, stdin_handle, stdout_handle, 
+  part_handle = -1, kernel_mem = 0;
+int mmu_handle = 0, FixedMemory = 0;
 BOOLEAN AcpiPresent = FALSE;
-char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
+char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { "bootprep" };
 jmp_buf jmp;
+volatile char *video_mem = 0;
+boot_infos_t BootInfo;
 
-void le_swap( const void *start_addr_v, 
-              const void *end_addr_v, 
-              const void *target_addr_v ) {
-    long *start_addr = (long *)ROUND_DOWN((long)start_addr_v,8), 
-        *end_addr = (long *)ROUND_UP((long)end_addr_v,8), 
-        *target_addr = (long *)ROUND_DOWN((long)target_addr_v,8);
-    long tmp;
-    while( start_addr <= end_addr ) {
-        tmp = start_addr[0];
-        target_addr[0] = REV(start_addr[1]);
-        target_addr[1] = REV(tmp);
-        start_addr += 2;
-        target_addr += 2;
-    }
-}
-
-int ofw_finddevice( const char *name ) {
-    int ret, len;
-
-    len = strlen(name);
-    le_swap( name, name + len, name );
-    ret = ofproxy( 0, (char *)name, NULL, NULL, NULL );
-    le_swap( name, name + len, name );
-    return ret;
-}
-
-int ofw_getprop( int package, const char *name, void *buffer, int buflen ) {
-    int ret, len = strlen(name);
-    le_swap( name, name + len, name );
-    le_swap( buffer, (char *)buffer + buflen, buffer );
-    ret = ofproxy
-        ( 4, (void *)package, (char *)name, buffer, (void *)buflen );
-    le_swap( buffer, (char *)buffer + buflen, buffer );
-    le_swap( name, name + len, name );
-    return ret;
-}
-
-/* Since this is from external storage, it doesn't need swapping */
-int ofw_write( int handle, const char *data, int len ) {
-    int ret;
-    le_swap( data, data + len, data );
-    ret = ofproxy
-        ( 8, (void *)handle, (char *)data, (void *)len, NULL );
-    le_swap( data, data + len, data );
-    return ret;
-}
-
-/* Since this is from external storage, it doesn't need swapping */
-int ofw_read( int handle, const char *data, int len ) {
-    int ret;
-
-    le_swap( data, data + len, data );
-    ret = ofproxy
-        ( 12, (void *)handle, (char *)data, (void *)len, NULL );
-    le_swap( data, data + len, data );
-
-    return ret;
-}
-
-void ofw_exit() {
-    ofproxy( 16, NULL, NULL, NULL, NULL );
-}
-
-void ofw_dumpregs() {
-    ofproxy( 20, NULL, NULL, NULL, NULL );
-}
-
-void ofw_print_string( const char *str ) {
-    int len = strlen(str);
-    le_swap( (char *)str, str + len, (char *)str );
-    ofproxy( 24, (void *)str, NULL, NULL, NULL );
-    le_swap( (char *)str, str + len, (char *)str );
-}
-
-void ofw_print_number( int num ) {
-    ofproxy( 28, (void *)num, NULL, NULL, NULL );
-}
-
-int ofw_open( const char *name ) {
-    int ret, len;
-
-    len = strlen(name);
-    le_swap( name, name + len, name );
-    ret = ofproxy( 32, (char *)name, NULL, NULL, NULL );
-    le_swap( name, name + len, name );
-    return ret;
-}
-
-int ofw_child( int package ) {
-    return ofproxy( 36, (void *)package, NULL, NULL, NULL );
-}
-
-int ofw_peer( int package ) {
-    return ofproxy( 40, (void *)package, NULL, NULL, NULL );
-}
-
-int ofw_seek( int handle, long long location ) {
-    return ofproxy( 44, (void *)handle, (void *)(int)(location >> 32), (void *)(int)location, NULL );
-}
-
-void PpcPutChar( int ch ) {
+void PpcOfwPutChar( int ch ) {
     char buf[3];
     if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; } 
     else { buf[0] = ch; buf[1] = 0; }
     buf[2] = 0;
-    ofw_print_string( buf );
+    ofw_write(stdout_handle, buf, strlen(buf));
 }
 
 int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
@@ -156,7 +65,7 @@ int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
 
     if( !nth && match ) return parent;
 
-    for( i = 0; i < depth; i++ ) PpcPutChar( ' ' );
+    for( i = 0; i < depth; i++ ) PpcOfwPutChar( ' ' );
     
     if( depth == 1 ) {
 	if( gotname > 0 ) {
@@ -176,7 +85,7 @@ int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
 }
 
 BOOLEAN PpcConsKbHit() {
-    return TRUE;
+    return FALSE;
 }
 
 int PpcConsGetCh() {
@@ -186,27 +95,26 @@ int PpcConsGetCh() {
 }
 
 void PpcVideoClearScreen( UCHAR Attr ) {
-    ofw_print_string("ClearScreen\n");
 }
 
-VIDEODISPLAYMODE PpcVideoSetDisplayMode( char *DisplayMode, BOOLEAN Init ) {
-    printf( "DisplayMode: %s %s\n", DisplayMode, Init ? "true" : "false" );
-    return VideoGraphicsMode;
-}
-
-/* FIXME: Query */
 VOID PpcVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth ) {
-    ofw_print_string("GetDisplaySize\n");
-    *Width = 640;
-    *Height = 480;
-    *Depth = 8;
+    *Width = 80;
+    *Height = 25;
+    *Depth = 16;
 }
 
 ULONG PpcVideoGetBufferSize() {
     ULONG Width, Height, Depth;
-    ofw_print_string("PpcVideoGetBufferSize\n");
-    PpcVideoGetDisplaySize( &Width, &Height, &Depth );
+    MachVideoGetDisplaySize( &Width, &Height, &Depth );
     return Width * Height * Depth / 8;
+}
+
+VIDEODISPLAYMODE PpcVideoSetDisplayMode( char *DisplayMode, BOOLEAN Init ) {
+    //printf( "DisplayMode: %s %s\n", DisplayMode, Init ? "true" : "false" );
+    if( Init && !video_mem ) {
+	video_mem = MmAllocateMemory( PpcVideoGetBufferSize() );
+    }
+    return VideoTextMode;
 }
 
 VOID PpcVideoSetTextCursorPosition( ULONG X, ULONG Y ) {
@@ -222,7 +130,22 @@ VOID PpcVideoPutChar( int Ch, UCHAR Attr, unsigned X, unsigned Y ) {
 }
 
 VOID PpcVideoCopyOffScreenBufferToVRAM( PVOID Buffer ) {
-    printf( "CopyOffScreenBufferToVRAM(%x)\n", Buffer );
+    int i,j;
+    ULONG w,h,d;
+    PCHAR ChBuf = Buffer;
+    int offset = 0;
+
+    MachVideoGetDisplaySize( &w, &h, &d );
+
+    for( i = 0; i < h; i++ ) {
+	for( j = 0; j < w; j++ ) {
+	    offset = (j * 2) + (i * w * 2);
+	    if( ChBuf[offset] != video_mem[offset] ) {
+		video_mem[offset] = ChBuf[offset];
+		MachVideoPutChar(ChBuf[offset],0,j+1,i+1);
+	    }
+	}
+    }
 }
 
 BOOLEAN PpcVideoIsPaletteFixed() {
@@ -243,27 +166,187 @@ VOID PpcVideoSync() {
     printf( "Sync\n" );
 }
 
-VOID PpcVideoPrepareForReactOS() {
-    printf( "PrepareForReactOS\n");
+static int prom_next_node(int *nodep)
+{
+	int node;
+
+	if ((node = *nodep) != 0
+	    && (*nodep = ofw_child(node)) != 0)
+		return 1;
+	if ((*nodep = ofw_peer(node)) != 0)
+		return 1;
+	for (;;) {
+		if ((node = ofw_parent(node)) == 0)
+			return 0;
+		if ((*nodep = ofw_peer(node)) != 0)
+			return 1;
+	}
 }
-/* XXX FIXME:
- * According to the linux people (this is backed up by my own experience),
- * the memory object in older ofw does not do getprop right.
- *
- * The "right" way is to probe the pci bridge. *sigh*
+
+/* Appropriated from linux' btext.c
+ * author:
+ * Benjamin Herrenschmidt <benh@kernel.crashing.org>
+ */
+VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
+    int i, j, k, /* display_handle, */ display_package, display_size = 0;
+    int node, ret, elts;
+    int device_address;
+    //pci_reg_property display_regs[8];
+    char type[256], path[256], name[256];
+    char logo[] = {
+	"          "
+	"  XXXXXX  "
+	" X      X "
+	" X X  X X "
+	" X      X "
+	" X XXXX X "
+	" X  XX  X "
+	" X      X "
+	"  XXXXXX  "
+	"          "
+    };
+    int logo_x = 10, logo_y = 10;
+    int logo_scale_x = 8, logo_scale_y = 8;
+
+
+    for( node = ofw_finddevice("/"); prom_next_node(&node); ) {
+	memset(type, 0, sizeof(type));
+	memset(path, 0, sizeof(path));
+	
+	ret = ofw_getprop(node, "name", name, sizeof(name));
+
+	if(ofw_getprop(node, "device_type", type, sizeof(type)) <= 0) {
+	    printf("Could not get type for node %x\n", node);
+	    continue;
+	}
+
+	printf("Node %x ret %d name %s type %s\n", node, ret, name, type);
+
+	if(strcmp(type, "display") == 0) break;
+    }
+
+    if(!node) return;
+
+    if(ofw_package_to_path(node, path, sizeof(path)) < 0) {
+	printf("could not get path for display package %x\n", node);
+	return;
+    }
+
+    printf("Opening display package: %s\n", path);
+    display_package = ofw_finddevice(path);
+    printf("display package %x\n", display_package);
+
+    BootInfo.dispDeviceRect[0] = BootInfo.dispDeviceRect[1] = 0;
+
+    ofw_getprop(display_package, "width", 
+		(void *)&BootInfo.dispDeviceRect[2], sizeof(int));
+    ofw_getprop(display_package, "height",
+		(void *)&BootInfo.dispDeviceRect[3], sizeof(int));
+    ofw_getprop(display_package, "depth",
+		(void *)&BootInfo.dispDeviceDepth, sizeof(int));
+    ofw_getprop(display_package, "linebytes",
+		(void *)&BootInfo.dispDeviceRowBytes, sizeof(int));
+
+    BootInfo.dispDeviceRect[2] = BootInfo.dispDeviceRect[2];
+    BootInfo.dispDeviceRect[3] = BootInfo.dispDeviceRect[3];
+    BootInfo.dispDeviceDepth = BootInfo.dispDeviceDepth;
+    BootInfo.dispDeviceRowBytes = BootInfo.dispDeviceRowBytes;
+
+    if(ofw_getprop
+       (display_package,
+	"address",
+	(void *)&device_address,
+	sizeof(device_address)) < 1) {
+	printf("Could not get device base\n");
+	return;
+    }
+
+    BootInfo.dispDeviceBase = (PVOID)(device_address);
+
+    display_size = BootInfo.dispDeviceRowBytes * BootInfo.dispDeviceRect[3];
+
+    printf("Display size is %x bytes (%x per row times %x rows)\n",
+	   display_size, 
+	   BootInfo.dispDeviceRowBytes,
+	   BootInfo.dispDeviceRect[3]);
+
+    printf("display is at %x\n", BootInfo.dispDeviceBase);
+
+    for( i = 0; i < logo_y * logo_scale_y; i++ ) {
+	for( j = 0; j < logo_x * logo_scale_x; j++ ) {
+	    elts = (j/logo_scale_x) + ((i/logo_scale_y) * logo_x);
+
+	    for( k = 0; k < BootInfo.dispDeviceDepth/8; k++ ) {
+		SetPhysByte(((ULONG_PTR)BootInfo.dispDeviceBase)+
+			    k +
+			    ((j * (BootInfo.dispDeviceDepth/8)) + 
+			     (i * (BootInfo.dispDeviceRowBytes))),
+			    logo[elts] == ' ' ? 0 : 255);
+	    }
+	}
+    }
+}
+
+/* 
+ * Get memory the proper openfirmware way
  */
 ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
                        ULONG MaxMemoryMapSize ) {
-    printf("GetMemoryMap(chosen=%x)\n", chosen_package);
+    int i, memhandle, returned, total = 0, slots = 0;
+    int memdata[0x40];
 
-    BiosMemoryMap[0].Type = BiosMemoryUsable;
-    BiosMemoryMap[0].BaseAddress = 0;
-    BiosMemoryMap[0].Length = 32 * 1024 * 1024; /* Assume 32 meg for now */
+    printf("PpcGetMemoryMap(%d)\n", MaxMemoryMapSize);
 
-    printf( "Returning memory map (%dk total)\n", 
-            (int)BiosMemoryMap[0].Length / 1024 );
+    memhandle = ofw_finddevice("/memory");
 
-    return 1;
+    returned = ofw_getprop(memhandle, "available", 
+			   (char *)memdata, sizeof(memdata));
+
+    printf("Returned data: %d\n", returned);
+    if( returned == -1 ) {
+	printf("getprop /memory[@reg] failed\n");
+	return 0;
+    }
+
+    for( i = 0; i < returned; i++ ) {
+	printf("%x ", memdata[i]);
+    }
+    printf("\n");
+
+    for( i = 0; i < returned / 2; i++ ) {
+	BiosMemoryMap[slots].Type = 1/*MEMTYPE_USABLE*/;
+	BiosMemoryMap[slots].BaseAddress = memdata[i*2];
+	BiosMemoryMap[slots].Length = memdata[i*2+1];
+	printf("MemoryMap[%d] = (%x:%x)\n", 
+	       i, 
+	       (int)BiosMemoryMap[slots].BaseAddress,
+	       (int)BiosMemoryMap[slots].Length);
+
+	/* Hack for pearpc */
+	if( kernel_mem ) {
+	    BiosMemoryMap[slots].Length = kernel_mem * 1024;
+	    if( !FixedMemory ) {
+		ofw_claim((int)BiosMemoryMap[slots].BaseAddress,
+			  (int)BiosMemoryMap[slots].Length,
+			  0x1000);
+		FixedMemory = BiosMemoryMap[slots].BaseAddress;
+	    }
+	    total += BiosMemoryMap[slots].Length;
+	    slots++;
+	    break;
+	/* Normal way */
+	} else if( BiosMemoryMap[slots].Length &&
+		   ofw_claim((int)BiosMemoryMap[slots].BaseAddress,
+			     (int)BiosMemoryMap[slots].Length,
+			     0x1000) ) {
+	    total += BiosMemoryMap[slots].Length;
+	    slots++;
+	}
+    }
+
+    printf( "Returning memory map (%dk total)\n", total / 1024 );
+
+    return slots;
 }
 
 /* Strategy:
@@ -288,7 +371,14 @@ BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
                              PULONGLONG StartSector, 
                              PULONGLONG SectorCount, 
                              int *FsType ) {
-    return FALSE;
+    char *remain = strchr(SystemPath, '\\');
+    if( remain ) {
+	strcpy( RemainingPath, remain+1 );
+    } else {
+	RemainingPath[0] = 0;
+    }
+    *Device = 0;
+    return MachDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
 }
 
 BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
@@ -305,7 +395,7 @@ BOOLEAN PpcDiskBootingFromFloppy(VOID) {
 }
 
 BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
-                                ULONG SectorCount, PVOID Buffer ) {
+				   ULONG SectorCount, PVOID Buffer ) {
     int rlen = 0;
 
     if( part_handle == -1 ) {
@@ -322,11 +412,14 @@ BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 	return FALSE;
     }
 
-    if( ofw_seek( part_handle, SectorNumber * 512 ) ) {
-	printf("Seek to %x failed\n", SectorNumber * 512);
+    if( ofw_seek( part_handle, 
+		   (ULONG)(SectorNumber >> 25), 
+		   (ULONG)((SectorNumber * 512) & 0xffffffff) ) ) {
+	printf("Seek to %x failed\n", (ULONG)(SectorNumber * 512));
 	return FALSE;
     }
-    rlen = ofw_read( part_handle, Buffer, SectorCount * 512 );
+
+    rlen = ofw_read( part_handle, Buffer, (ULONG)(SectorCount * 512) );
     return rlen > 0;
 }
 
@@ -351,31 +444,75 @@ ULONG PpcDiskGetCacheableBlockCount( ULONG DriveNumber ) {
 
 VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day, 
                                PULONG Hour, PULONG Minute, PULONG Second ) {
-    printf("RTCGeturrentDateTime\n");
+    //printf("RTCGeturrentDateTime\n");
 }
 
 VOID PpcHwDetect() {
     printf("PpcHwDetect\n");
 }
 
+BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
+	CHAR BootPath[256];
+	ULONG PartitionNumber;
+	ULONG DriveNumber;
+	PARTITION_TABLE_ENTRY PartEntry;
+	char *p;
+
+	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
+	{
+		return FALSE;
+	}
+
+	if (0 != PartitionNumber)
+	{
+		return TRUE;
+	}
+
+	if (! DiskGetActivePartitionEntry(DriveNumber,
+	                                  &PartEntry,
+	                                  &PartitionNumber) ||
+	    PartitionNumber < 1 || 9 < PartitionNumber)
+	{
+		return FALSE;
+	}
+
+	p = SystemPath;
+	while ('\0' != *p && 0 != _strnicmp(p, "partition(", 10)) {
+		p++;
+	}
+	p = strchr(p, ')');
+	if (NULL == p || '0' != *(p - 1)) {
+		return FALSE;
+	}
+	*(p - 1) = '0' + PartitionNumber;
+
+	return TRUE;
+}
+
+extern int _bss;
 typedef unsigned int uint32_t;
 
-void PpcInit( of_proxy the_ofproxy ) {
-    int len;
-    ofproxy = the_ofproxy;
-
+void PpcOfwInit()
+{
     chosen_package = ofw_finddevice( "/chosen" );
 
+    ofw_getprop(chosen_package, "bootargs",
+		CmdLine, sizeof(CmdLine));
     ofw_getprop( chosen_package, "stdin",
-                 &stdin_handle, sizeof(stdin_handle) );
+		 (char *)&stdin_handle, sizeof(stdin_handle) );
+    ofw_getprop( chosen_package, "stdout",
+		 (char *)&stdout_handle, sizeof(stdout_handle) );
+    ofw_getprop( chosen_package, "mmu",
+		 (char *)&mmu_handle, sizeof(mmu_handle) );
 
-    stdin_handle = REV(stdin_handle);
-
-    MachVtbl.ConsPutChar = PpcPutChar;
+    MachVtbl.ConsPutChar = PpcOfwPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;
     MachVtbl.ConsGetCh   = PpcConsGetCh;
-    
-    printf( "stdin_handle is %x\n", stdin_handle );
+
+    printf( "chosen_package %x, stdin_handle is %x\n", 
+	    chosen_package, stdin_handle );
+    printf("virt2phys (0xe00000,D) -> %x\n", PpcVirt2phys(0xe00000,0));
+    printf("virt2phys (0xe01000,D) -> %x\n", PpcVirt2phys(0xe01000,0));
 
     MachVtbl.VideoClearScreen = PpcVideoClearScreen;
     MachVtbl.VideoSetDisplayMode = PpcVideoSetDisplayMode;
@@ -394,6 +531,7 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
+    MachVtbl.DiskNormalizeSystemPath = PpcDiskNormalizeSystemPath;
     MachVtbl.DiskGetBootVolume = PpcDiskGetBootVolume;
     MachVtbl.DiskGetSystemVolume = PpcDiskGetSystemVolume;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
@@ -408,19 +546,27 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     MachVtbl.HwDetect = PpcHwDetect;
 
+    // Allow forcing prep for broken OFW
+    if(!strncmp(CmdLine, "bootprep", 8))
+    {
+	printf("Going to PREP init...\n");
+	PpcPrepInit();
+	return;
+    }
+
     printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
-
-    len = ofw_getprop(chosen_package, "bootargs",
-		      CmdLine, sizeof(CmdLine));
-
-    if( len < 0 ) len = 0;
-    CmdLine[len] = 0;
 
     BootMain( CmdLine );
 }
 
+void PpcInit( of_proxy the_ofproxy ) {
+    ofproxy = the_ofproxy;
+    if(ofproxy) PpcOfwInit();
+    else PpcPrepInit();
+}
+
 void MachInit(const char *CmdLine) {
-    int len, i;
+    int i, len;
     char *sep;
 
     BootPart[0] = 0;
@@ -428,15 +574,19 @@ void MachInit(const char *CmdLine) {
 
     printf( "Determining boot device: [%s]\n", CmdLine );
 
-    printf( "Boot Args: %s\n", CmdLine );
     sep = NULL;
     for( i = 0; i < strlen(CmdLine); i++ ) {
 	if( strncmp(CmdLine + i, "boot=", 5) == 0) {
 	    strcpy(BootPart, CmdLine + i + 5);
-	    sep = strchr(BootPart, ' ');
+	    sep = strchr(BootPart, ',');
 	    if( sep )
 		*sep = 0;
-	    break;
+	    while(CmdLine[i] && CmdLine[i]!=',') i++;
+	}
+	if( strncmp(CmdLine + i, "mem=", 4) == 0) {
+	    kernel_mem = atoi(CmdLine+i+4);
+	    printf("Allocate %dk kernel memory\n", kernel_mem);
+	    while(CmdLine[i] && CmdLine[i]!=',') i++;
 	}
     }
 
@@ -464,10 +614,11 @@ void beep() {
 }
 
 UCHAR NTAPI READ_PORT_UCHAR(PUCHAR Address) {
-    return 0xff;
+    return GetPhysByte(((ULONG)Address)+0x80000000);
 }
 
 void WRITE_PORT_UCHAR(PUCHAR Address, UCHAR Value) {
+    SetPhysByte(((ULONG)Address)+0x80000000, Value);
 }
 
 void DiskStopFloppyMotor() {
@@ -482,5 +633,9 @@ void BootNewLinuxKernel() {
 }
 
 void ChainLoadBiosBootSectorCode() {
+    ofw_exit();
+}
+
+void DbgBreakPoint() {
     ofw_exit();
 }

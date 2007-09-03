@@ -1,65 +1,74 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         Freeloader
- * FILE:            boot/freeldr/freeldr/multiboot.c
- * PURPOSE:         ReactOS Loader
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *  FreeLoader
+ *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2005       Alex Ionescu  <alex@relsoft.net>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #include <freeldr.h>
-#include <internal/powerpc/ke.h>
+#include <elf/elf.h>
+#include <elf/reactos.h>
+#include <of_call.h>
+#include "ppcboot.h"
+#include "ppcmmu/mmu.h"
+#include "compat.h"
+#include "ppcfont.h"
 
 #define NDEBUG
 #include <debug.h>
 
-/* Base Addres of Kernel in Physical Memory */
-#define KERNEL_BASE_PHYS 0x200000
+PVOID KernelMemory = 0;
+extern boot_infos_t BootInfo;
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
 #define PFN_SHIFT 12
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Directory */
-#define PDE_SHIFT 20
+#define PDE_SHIFT 22
 #define PDE_SHIFT_PAE 18
 
-  
-/* Converts a Relative Address read from the Kernel into a Physical Address */
-#define RaToPa(p) \
-    (ULONG_PTR)((ULONG_PTR)p + KERNEL_BASE_PHYS)
-   
-/* Converts a Phsyical Address Pointer into a Page Frame Number */
-#define PaPtrToPfn(p) \
-    (((ULONG_PTR)&p) >> PFN_SHIFT)
-    
-/* Converts a Phsyical Address into a Page Frame Number */
-#define PaToPfn(p) \
-    ((p) >> PFN_SHIFT)
-
-#define STARTUP_BASE                0xF0000000
-#define HYPERSPACE_BASE             0xF0800000
+#define STARTUP_BASE                0xC0000000
+#define HYPERSPACE_BASE             0xC0400000
+#define HYPERSPACE_PAE_BASE         0xC0800000
 #define APIC_BASE                   0xFEC00000
 #define KPCR_BASE                   0xFF000000
-    
+
 #define LowMemPageTableIndex        0
-#define StartupPageTableIndex       (STARTUP_BASE >> 20)    / sizeof(HARDWARE_PTE_X86)
-#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 20) / sizeof(HARDWARE_PTE_X86)
-#define KpcrPageTableIndex          (KPCR_BASE >> 20)       / sizeof(HARDWARE_PTE_X86)
-#define ApicPageTableIndex          (APIC_BASE >> 20)       / sizeof(HARDWARE_PTE_X86)
+#define StartupPageTableIndex       (STARTUP_BASE >> 22)
+#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 22)
+#define KpcrPageTableIndex          (KPCR_BASE >> 22)
+#define ApicPageTableIndex          (APIC_BASE >> 22)
 
 #define LowMemPageTableIndexPae     0
 #define StartupPageTableIndexPae    (STARTUP_BASE >> 21)
-#define HyperspacePageTableIndexPae (HYPERSPACE_BASE >> 21)
+#define HyperspacePageTableIndexPae (HYPERSPACE_PAE_BASE >> 21)
 #define KpcrPageTableIndexPae       (KPCR_BASE >> 21)
 #define ApicPageTableIndexPae       (APIC_BASE >> 21)
 
 
+#define BAT_GRANULARITY             (64 * 1024)
+#define KernelMemorySize            (8 * 1024 * 1024)
 #define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
+#define XROUNDUP(x,n)               ((((ULONG)x) + ((n) - 1)) & (~((n) - 1)))
 
 /* Load Address of Next Module */
 ULONG_PTR NextModuleBase = 0;
 
 /* Currently Opened Module */
-VOID *CurrentModule = NULL;
+PLOADER_MODULE CurrentModule = NULL;
 
 /* Unrelocated Kernel Base in Virtual Memory */
 ULONG_PTR KernelBase;
@@ -70,10 +79,22 @@ BOOLEAN PaeModeEnabled;
 /* Kernel Entrypoint in Physical Memory */
 ULONG_PTR KernelEntry;
 
+/* Dummy to bring in memmove */
+PVOID memmove_dummy = memmove;
+
+PLOADER_MODULE
+NTAPI
+LdrGetModuleObject(PCHAR ModuleName);
+
+NTSTATUS
+NTAPI
+LdrPEFixupImports(IN PVOID DllBase,
+                  IN PCHAR DllName);
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
- * FrLdrStartup 
+ * FrLdrStartup
  * INTERNAL
  *
  *     Prepares the system for loading the Kernel.
@@ -88,24 +109,128 @@ ULONG_PTR KernelEntry;
  *     None.
  *
  *--*/
+
+typedef void (*KernelEntryFn)( void * );
+
+int MmuPageMiss(int inst, ppc_trap_frame_t *trap)
+{
+    int i;
+    printf("inst %x\n", inst);
+    for( i = 0; i < 40; i++ )
+	printf("r[%d] %x\n", i, trap->gpr[i]);
+    printf("HALT!\n");
+    while(1);
+}
+
 VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
-{   
-#if 0   
-    /* Disable Interrupts */
-    KeArchDisableInterrupts();
-    
-    /* Re-initalize EFLAGS */
-    KeArchEraseFlags();
-    
-    /* Initialize the page directory */
-    FrLdrSetupPageDirectory();
-#endif
+{
+    KernelEntryFn KernelEntryAddress = 
+	(KernelEntryFn)(KernelEntry + KernelBase);
+    ULONG_PTR i, j, page, count;
+    PCHAR ModHeader;
+    boot_infos_t *LocalBootInfo = &BootInfo;
+    LocalBootInfo->dispFont = (font_char *)&LocalBootInfo[1];
+    LoaderBlock.ArchExtra = (ULONG)LocalBootInfo;
+    ppc_map_info_t *info = MmAllocateMemory(0x80 * sizeof(*info));
+
+    for(i = 0; i < LoaderBlock.ModsCount; i++)
+    {
+	ModHeader = ((PCHAR)reactos_modules[i].ModStart);
+	if(ModHeader[0] == 'M' && ModHeader[1] == 'Z')
+	    LdrPEFixupImports
+		((PVOID)reactos_modules[i].ModStart,
+		 (PCHAR)reactos_modules[i].String);
+    }
+
+    /* We'll use vsid 1 for freeldr (expendable) */
+    MmuAllocVsid(1, 0xff);
+    MmuSetVsid(0, 8, 1);
+
+    MmuAllocVsid(0, 0xff00);
+    MmuSetVsid(8, 16, 0);
+
+    MmuSetPageCallback(MmuPageMiss);
+
+    info = MmAllocateMemory((KernelMemorySize >> PAGE_SHIFT) * sizeof(*info));
+
+    /* Map kernel space 0x80000000 ... */
+    for( i = (ULONG)KernelMemory, page = 0; 
+	 i < (ULONG)KernelMemory + KernelMemorySize; 
+	 i += (1<<PFN_SHIFT), page++ ) {
+	info[page].proc = 0;
+	info[page].addr = KernelBase + (page << PAGE_SHIFT);
+	info[page].phys = i; //PpcVirt2phys(i, 1);
+	info[page].flags = MMU_ALL_RW;
+    }
+
+    MmuMapPage(info, page);
+
+    /* Map module name strings */
+    for( count = 0, i = 0; i < LoaderBlock.ModsCount; i++ )
+    {
+	page = ROUND_DOWN(((ULONG)reactos_modules[i].String), (1<<PFN_SHIFT));
+	for( j = 0; j < count; j++ )
+	{
+	    if(info[j].addr == page) break;
+	}
+	if( j != count )
+	{
+	    info[count].flags = MMU_ALL_RW;
+	    info[count].proc = 1;
+	    info[count].addr = page;
+	    info[count].phys = page; // PpcVirt2phys(page, 0);
+	    count++;
+	}
+    }
+
+    page = ROUND_DOWN((vaddr_t)&LoaderBlock, (1 << PAGE_SHIFT));
+    for( j = 0; j < count; j++ )
+    {
+	if(info[j].addr == page) break;
+    }
+    if( j != count )
+    {
+	info[count].flags = MMU_ALL_RW;
+	info[count].proc = 1;
+	info[count].addr = page;
+	info[count].phys = page; // PpcVirt2phys(page, 0);
+	count++;
+    }
+    MmuMapPage(info, count);
+
+    MmuTurnOn(KernelEntryAddress, (void*)&LoaderBlock);
+
+    /* Nothing more */
+    while(1);
 }
 
 /*++
- * FrLdrGetKernelBase 
+ * FrLdrSetupPae
+ * INTERNAL
+ *
+ *     Configures PAE on a MP System, and sets the PDBR if it's supported, or if
+ *     the system is UP.
+ *
+ * Params:
+ *     Magic - Multiboot Magic
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+VOID
+FASTCALL
+FrLdrSetupPae(ULONG Magic)
+{
+}
+
+/*++
+ * FrLdrGetKernelBase
  * INTERNAL
  *
  *     Gets the Kernel Base to use.
@@ -125,31 +250,57 @@ FASTCALL
 FrLdrGetKernelBase(VOID)
 {
     PCHAR p;
-     
+
+    /* Default kernel base at 2GB */
+    KernelBase = 0x80000000;
+
+    /* Set KernelBase */
+    LoaderBlock.KernelBase = KernelBase;
+
     /* Read Command Line */
     p = (PCHAR)LoaderBlock.CommandLine;
     while ((p = strchr(p, '/')) != NULL) {
-        
+
         /* Find "/3GB" */
-        if (!strnicmp(p + 1, "3GB", 3)) {
-            
+        if (!_strnicmp(p + 1, "3GB", 3)) {
+
             /* Make sure there's nothing following it */
             if (p[4] == ' ' || p[4] == 0) {
-                
+
                 /* Use 3GB */
-                KernelBase = 0xC0000000;
+                KernelBase = 0xE0000000;
+                LoaderBlock.KernelBase = 0xC0000000;
             }
         }
 
         p++;
     }
-          
-    /* Set KernelBase */
-    LoaderBlock.KernelBase = KernelBase;
 }
 
 /*++
- * FrLdrSetupPageDirectory 
+ * FrLdrGetPaeMode
+ * INTERNAL
+ *
+ *     Determines whether PAE mode shoudl be enabled or not.
+ *
+ * Params:
+ *     None.
+ *
+ * Returns:
+ *     None.
+ *
+ * Remarks:
+ *     None.
+ *
+ *--*/
+VOID
+FASTCALL
+FrLdrGetPaeMode(VOID)
+{
+}
+
+/*++
+ * FrLdrSetupPageDirectory
  * INTERNAL
  *
  *     Sets up the ReactOS Startup Page Directory.
@@ -169,199 +320,277 @@ VOID
 FASTCALL
 FrLdrSetupPageDirectory(VOID)
 {
-#if 0
-    PPAGE_DIRECTORY_X86 PageDir;
-    PPAGE_DIRECTORY_TABLE_X64 PageDirTablePae;
-    PPAGE_DIRECTORY_X64 PageDirPae;
-    ULONG KernelPageTableIndex;
-    ULONG i;
-
-    if (PaeModeEnabled) {
-    
-        /* Get the Kernel Table Index */
-        KernelPageTableIndex = (KernelBase >> 21);
-
-        /* Get the Startup Page Directory Table */
-        PageDirTablePae = (PPAGE_DIRECTORY_TABLE_X64)&startup_pagedirectorytable_pae;
-
-        /* Get the Startup Page Directory */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&startup_pagedirectory_pae;
-
-        /* Set the Startup page directory table */
-        for (i = 0; i < 4; i++)
-        {
-            PageDirTablePae->Pde[i].Valid = 1;
-            PageDirTablePae->Pde[i].PageFrameNumber = PaPtrToPfn(startup_pagedirectory_pae) + i;
-        }
-
-        /* Set up the Low Memory PDE */
-        for (i = 0; i < 2; i++)
-        {
-            PageDirPae->Pde[LowMemPageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[LowMemPageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[LowMemPageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(lowmem_pagetable_pae) + i;
-        }
-
-        /* Set up the Kernel PDEs */
-        for (i = 0; i < 3; i++)
-        {
-            PageDirPae->Pde[KernelPageTableIndex + i].Valid = 1;
-            PageDirPae->Pde[KernelPageTableIndex + i].Write = 1;
-            PageDirPae->Pde[KernelPageTableIndex + i].PageFrameNumber = PaPtrToPfn(kernel_pagetable_pae) + i;
-        }
-    
-        /* Set up the Startup PDE */
-        for (i = 0; i < 4; i++)
-        {
-            PageDirPae->Pde[StartupPageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[StartupPageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[StartupPageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(startup_pagedirectory_pae) + i;
-        }
-    
-        /* Set up the Hyperspace PDE */
-        for (i = 0; i < 2; i++)
-        {
-            PageDirPae->Pde[HyperspacePageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[HyperspacePageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[HyperspacePageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable_pae) + i;
-        }
-    
-        /* Set up the Apic PDE */   
-        for (i = 0; i < 2; i++)
-        {
-            PageDirPae->Pde[ApicPageTableIndexPae + i].Valid = 1;
-            PageDirPae->Pde[ApicPageTableIndexPae + i].Write = 1;
-            PageDirPae->Pde[ApicPageTableIndexPae + i].PageFrameNumber = PaPtrToPfn(apic_pagetable_pae) + i;
-        }
-        
-        /* Set up the KPCR PDE */
-        PageDirPae->Pde[KpcrPageTableIndexPae].Valid = 1;
-        PageDirPae->Pde[KpcrPageTableIndexPae].Write = 1;
-        PageDirPae->Pde[KpcrPageTableIndexPae].PageFrameNumber = PaPtrToPfn(kpcr_pagetable_pae);
-    
-        /* Set up Low Memory PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&lowmem_pagetable_pae;
-        for (i=0; i<1024; i++) {
-        
-            PageDirPae->Pde[i].Valid = 1;
-            PageDirPae->Pde[i].Write = 1;
-            PageDirPae->Pde[i].Owner = 1;
-            PageDirPae->Pde[i].PageFrameNumber = i;
-        }
-            
-        /* Set up Kernel PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&kernel_pagetable_pae;
-        for (i=0; i<1536; i++) {
-        
-            PageDirPae->Pde[i].Valid = 1;
-            PageDirPae->Pde[i].Write = 1;
-            PageDirPae->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS) + i;
-        }
-        
-        /* Set up APIC PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&apic_pagetable_pae;
-        PageDirPae->Pde[0].Valid = 1;
-        PageDirPae->Pde[0].Write = 1;
-        PageDirPae->Pde[0].CacheDisable = 1;
-        PageDirPae->Pde[0].WriteThrough = 1;
-        PageDirPae->Pde[0].PageFrameNumber = PaToPfn(APIC_BASE);
-        PageDirPae->Pde[0x200].Valid = 1;
-        PageDirPae->Pde[0x200].Write = 1;
-        PageDirPae->Pde[0x200].CacheDisable = 1;
-        PageDirPae->Pde[0x200].WriteThrough = 1;
-        PageDirPae->Pde[0x200].PageFrameNumber = PaToPfn(APIC_BASE + KERNEL_BASE_PHYS);
-    
-        /* Set up KPCR PTEs */
-        PageDirPae = (PPAGE_DIRECTORY_X64)&kpcr_pagetable_pae;
-        PageDirPae->Pde[0].Valid = 1;
-        PageDirPae->Pde[0].Write = 1;
-        PageDirPae->Pde[0].PageFrameNumber = 1;      
-    
-    } else {
-            
-        /* Get the Kernel Table Index */
-        KernelPageTableIndex = (KernelBase >> PDE_SHIFT) / sizeof(HARDWARE_PTE_X86);
-        
-        /* Get the Startup Page Directory */
-        PageDir = (PPAGE_DIRECTORY_X86)&startup_pagedirectory;
-        
-        /* Set up the Low Memory PDE */
-        PageDir->Pde[LowMemPageTableIndex].Valid = 1;
-        PageDir->Pde[LowMemPageTableIndex].Write = 1;
-        PageDir->Pde[LowMemPageTableIndex].PageFrameNumber = PaPtrToPfn(lowmem_pagetable);
-    
-        /* Set up the Kernel PDEs */
-        PageDir->Pde[KernelPageTableIndex].Valid = 1;
-        PageDir->Pde[KernelPageTableIndex].Write = 1;
-        PageDir->Pde[KernelPageTableIndex].PageFrameNumber = PaPtrToPfn(kernel_pagetable);
-        PageDir->Pde[KernelPageTableIndex + 1].Valid = 1;
-        PageDir->Pde[KernelPageTableIndex + 1].Write = 1;
-        PageDir->Pde[KernelPageTableIndex + 1].PageFrameNumber = PaPtrToPfn(kernel_pagetable + 4096);
-        
-        /* Set up the Startup PDE */
-        PageDir->Pde[StartupPageTableIndex].Valid = 1;
-        PageDir->Pde[StartupPageTableIndex].Write = 1;
-        PageDir->Pde[StartupPageTableIndex].PageFrameNumber = PaPtrToPfn(startup_pagedirectory);
-        
-        /* Set up the Hyperspace PDE */
-        PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
-        PageDir->Pde[HyperspacePageTableIndex].Write = 1;
-        PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
-    
-        /* Set up the Apic PDE */   
-        PageDir->Pde[ApicPageTableIndex].Valid = 1;
-        PageDir->Pde[ApicPageTableIndex].Write = 1;
-        PageDir->Pde[ApicPageTableIndex].PageFrameNumber = PaPtrToPfn(apic_pagetable);
-        
-        /* Set up the KPCR PDE */
-        PageDir->Pde[KpcrPageTableIndex].Valid = 1;
-        PageDir->Pde[KpcrPageTableIndex].Write = 1;
-        PageDir->Pde[KpcrPageTableIndex].PageFrameNumber = PaPtrToPfn(kpcr_pagetable);
-    
-        /* Set up Low Memory PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
-        for (i=0; i<1024; i++) {
-        
-            PageDir->Pde[i].Valid = 1;
-            PageDir->Pde[i].Write = 1;
-            PageDir->Pde[i].Owner = 1;
-            PageDir->Pde[i].PageFrameNumber = PaToPfn(i * PAGE_SIZE);
-        }
-        
-        /* Set up Kernel PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&kernel_pagetable;
-        for (i=0; i<1536; i++) {
-        
-            PageDir->Pde[i].Valid = 1;
-            PageDir->Pde[i].Write = 1;
-            PageDir->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS + i * PAGE_SIZE);
-        }
-        
-        /* Set up APIC PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&apic_pagetable;
-        PageDir->Pde[0].Valid = 1;
-        PageDir->Pde[0].Write = 1;
-        PageDir->Pde[0].CacheDisable = 1;
-        PageDir->Pde[0].WriteThrough = 1;
-        PageDir->Pde[0].PageFrameNumber = PaToPfn(APIC_BASE);
-        PageDir->Pde[0x200].Valid = 1;
-        PageDir->Pde[0x200].Write = 1;
-        PageDir->Pde[0x200].CacheDisable = 1;
-        PageDir->Pde[0x200].WriteThrough = 1;
-        PageDir->Pde[0x200].PageFrameNumber = PaToPfn(APIC_BASE + KERNEL_BASE_PHYS);
-    
-        /* Set up KPCR PTEs */
-        PageDir = (PPAGE_DIRECTORY_X86)&kpcr_pagetable;
-        PageDir->Pde[0].Valid = 1;
-        PageDir->Pde[0].Write = 1;
-        PageDir->Pde[0].PageFrameNumber = 1;      
-    }
-    return;
-#endif
 }
 
 /*++
- * FrLdrMapKernel 
+ * FrLdrMapModule
+ * INTERNAL
+ *
+ *     Loads the indicated elf image as PE.  The target will appear to be
+ *     a PE image whose ImageBase has ever been KernelAddr.
+ *
+ * Params:
+ *     Image -- File to load
+ *     ImageName -- Name of image for the modules list
+ *     MemLoadAddr -- Freeldr address of module
+ *     KernelAddr -- Kernel address of module
+ *--*/
+#define ELF_SECTION(n) ((Elf32_Shdr*)(sptr + (n * shsize)))
+#define COFF_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((DWORD)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+(SWAPW(((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))))
+
+BOOLEAN
+NTAPI
+FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG KernelAddr)
+{
+    PIMAGE_DOS_HEADER ImageHeader = 0;
+    PIMAGE_NT_HEADERS NtHeader = 0;
+    PIMAGE_SECTION_HEADER Section;
+    ULONG SectionCount;
+    ULONG ImageSize;
+    INT i, j;
+    PLOADER_MODULE ModuleData;
+    int phsize, phnum, shsize, shnum, relsize, SectionAddr = 0;
+    PCHAR sptr;
+    Elf32_Ehdr ehdr;
+    Elf32_Shdr *shdr;
+    LPSTR TempName;
+
+    TempName = strrchr(ImageName, '\\');
+    if(TempName) TempName++; else TempName = (LPSTR)ImageName;
+    ModuleData = LdrGetModuleObject(TempName);
+    
+    if(ModuleData) 
+    {
+	return TRUE;
+    }
+
+    if(!KernelAddr)
+	KernelAddr = (ULONG)NextModuleBase - (ULONG)KernelMemory + KernelBase;
+    if(!MemLoadAddr)
+	MemLoadAddr = (PCHAR)NextModuleBase;
+
+    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
+    printf("Loading file (elf at %x)\n", KernelAddr);
+
+    /* Load the first 1024 bytes of the kernel image so we can read the PE header */
+    if (!FsReadFile(KernelImage, sizeof(ehdr), NULL, &ehdr)) {
+
+        /* Fail if we couldn't read */
+	printf("Couldn't read the elf header\n");
+        return FALSE;
+    }
+
+    /* Start by getting elf headers */
+    phsize = ehdr.e_phentsize;
+    phnum = ehdr.e_phnum;
+    shsize = ehdr.e_shentsize;
+    shnum = ehdr.e_shnum;
+    sptr = (PCHAR)MmAllocateMemory(shnum * shsize);
+
+    /* Read section headers */
+    FsSetFilePointer(KernelImage,  ehdr.e_shoff);
+    FsReadFile(KernelImage, shsize * shnum, NULL, sptr);
+
+    printf("Loaded section headers\n");
+
+    /* Now we'll get the PE Header */
+    for( i = 0; i < shnum; i++ ) 
+    {
+	shdr = ELF_SECTION(i);
+	shdr->sh_addr = 0;
+
+	/* Find the PE Header */
+	if (shdr->sh_type == TYPE_PEHEADER)
+	{
+	    FsSetFilePointer(KernelImage, shdr->sh_offset);
+	    FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr);
+	    ImageHeader = (PIMAGE_DOS_HEADER)MemLoadAddr;
+	    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)MemLoadAddr + SWAPD(ImageHeader->e_lfanew));
+	    printf("NtHeader at %x\n", SWAPD(ImageHeader->e_lfanew));
+	    printf("SectionAlignment %x\n", 
+		   SWAPD(NtHeader->OptionalHeader.SectionAlignment));
+	    SectionAddr = ROUND_UP
+		(shdr->sh_size, SWAPD(NtHeader->OptionalHeader.SectionAlignment));
+	    printf("Header ends at %x\n", SectionAddr);
+	    break;
+	}
+    }
+
+    if(i == shnum) 
+    {
+	printf("No peheader section encountered :-(\n");
+	return 0;
+    }
+
+    /* Save the Image Base */
+    NtHeader->OptionalHeader.ImageBase = SWAPD(KernelAddr);
+
+    /* Load the file image */
+    Section = COFF_FIRST_SECTION(NtHeader);
+    SectionCount = SWAPW(NtHeader->FileHeader.NumberOfSections);
+
+    printf("Section headers at %x\n", Section);
+
+    /* Walk each section */
+    for (i=0; i < SectionCount; i++, Section++)
+    {
+	shdr = ELF_SECTION((SWAPD(Section->PointerToRawData)+1));
+
+	shdr->sh_addr = SectionAddr = SWAPD(Section->VirtualAddress);
+	shdr->sh_addr += KernelAddr;
+
+	Section->PointerToRawData = SWAPD((Section->VirtualAddress - KernelAddr));
+
+	if (shdr->sh_type != SHT_NOBITS)
+	{
+	    /* Content area */
+	    printf("Loading section %d at %x (real: %x:%d)\n", i, KernelAddr + SectionAddr, MemLoadAddr+SectionAddr, shdr->sh_size);
+	    FsSetFilePointer(KernelImage, shdr->sh_offset);
+	    FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr + SectionAddr);
+	} 
+	else
+	{
+	    /* Zero it out */
+	    printf("BSS section %d at %x\n", i, KernelAddr + SectionAddr);
+	    memset(MemLoadAddr + SectionAddr, 0, 
+		   ROUND_UP(shdr->sh_size, 
+			    SWAPD(NtHeader->OptionalHeader.SectionAlignment)));
+        }
+    }
+
+    ImageSize = SWAPD(NtHeader->OptionalHeader.SizeOfImage);
+    KernelEntry = SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    printf("Total image size is %x\n", ImageSize);
+    
+    /* Handle relocation sections */
+    for (i = 0; i < shnum; i++) {
+	Elf32_Rela reloc = { };
+	ULONG *Target32, x;
+	USHORT *Target16;
+	int numreloc, relstart, targetSection;
+	Elf32_Sym symbol;
+	PCHAR RelocSection, SymbolSection;
+	
+	shdr = ELF_SECTION(i);
+	/* Only relocs here */
+	if((shdr->sh_type != SHT_REL) &&
+	   (shdr->sh_type != SHT_RELA)) continue;
+	
+	relstart = shdr->sh_offset;
+	relsize = shdr->sh_type == SHT_RELA ? 12 : 8;
+	numreloc = shdr->sh_size / relsize;
+	targetSection = shdr->sh_info;
+
+	if (!ELF_SECTION(targetSection)->sh_addr) continue;
+
+	RelocSection = MmAllocateMemory(shdr->sh_size);
+	FsSetFilePointer(KernelImage, relstart);
+	FsReadFile(KernelImage, shdr->sh_size, NULL, RelocSection);
+
+	/* Get the symbol section */
+	shdr = ELF_SECTION(shdr->sh_link);
+
+	SymbolSection = MmAllocateMemory(shdr->sh_size);
+	FsSetFilePointer(KernelImage, shdr->sh_offset);
+	FsReadFile(KernelImage, shdr->sh_size, NULL, SymbolSection);
+
+	for(j = 0; j < numreloc; j++)
+	{
+	    ULONG S,A,P;
+	    
+	    /* Get the reloc */
+	    memcpy(&reloc, RelocSection + (j * relsize), sizeof(reloc));
+
+	    /* Get the symbol */
+	    memcpy(&symbol, SymbolSection + (ELF32_R_SYM(reloc.r_info) * sizeof(symbol)), sizeof(symbol));
+
+	    /* Compute addends */
+	    S = symbol.st_value + ELF_SECTION(symbol.st_shndx)->sh_addr;
+	    A = reloc.r_addend;
+	    P = reloc.r_offset + ELF_SECTION(targetSection)->sh_addr;
+
+#if 0
+	    printf("Symbol[%d] %d -> %d(%x:%x) -> %x(+%x)@%x\n",
+		   ELF32_R_TYPE(reloc.r_info),
+		   ELF32_R_SYM(reloc.r_info), 
+		   symbol.st_shndx, 
+		   ELF_SECTION(symbol.st_shndx)->sh_addr,
+		   symbol.st_value,
+		   S,
+		   A,
+		   P);
+#endif
+
+	    Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + (P - KernelAddr));
+	    Target16 = (USHORT *)Target32;
+	    x = *Target32;
+	    
+	    switch (ELF32_R_TYPE(reloc.r_info))
+	    {
+	    case R_PPC_NONE:
+		break;
+	    case R_PPC_ADDR32:
+		*Target32 = S + A;
+		break;
+	    case R_PPC_REL32:
+		*Target32 = S + A - P;
+		break;
+	    case R_PPC_UADDR32: /* Special: Treat as RVA */
+		*Target32 = S + A - KernelAddr;
+		break;
+	    case R_PPC_ADDR24:
+		*Target32 = (ADDR24_MASK & (S+A)) | (*Target32 & ~ADDR24_MASK);
+		break;
+	    case R_PPC_REL24:
+		*Target32 = (ADDR24_MASK & (S+A-P)) | (*Target32 & ~ADDR24_MASK);
+		break;
+	    case R_PPC_ADDR16_LO:
+		*Target16 = S + A;
+		break;
+	    case R_PPC_ADDR16_HA:
+		*Target16 = (S + A + 0x8000) >> 16;
+		break;
+	    default:
+		break;
+	    }
+	    
+#if 0
+	    printf("reloc[%d:%x]: (type %x sym %d val %d) off %x add %x (old %x new %x)\n", 
+		   j,
+		   ((ULONG)Target32) - ((ULONG)MemLoadAddr),
+		   ELF32_R_TYPE(reloc.r_info),
+		   ELF32_R_SYM(reloc.r_info), 
+		   symbol.st_value,
+		   reloc.r_offset, reloc.r_addend,
+		   x, *Target32);	    
+#endif
+	}
+
+	MmFreeMemory(SymbolSection);
+	MmFreeMemory(RelocSection);
+    }
+
+    MmFreeMemory(sptr);
+
+    ModuleData->ModStart = (ULONG)MemLoadAddr;
+    /* Increase the next Load Base */
+    NextModuleBase = ROUND_UP((ULONG)MemLoadAddr + ImageSize, PAGE_SIZE);
+    ModuleData->ModEnd = NextModuleBase;
+    ModuleData->String = (ULONG)MmAllocateMemory(strlen(ImageName)+1);
+    strcpy((PCHAR)ModuleData->String, ImageName);
+    printf("Module %s (%x-%x) next at %x\n",
+	   ModuleData->String, 
+	   ModuleData->ModStart,
+	   ModuleData->ModEnd,
+	   NextModuleBase);
+    LoaderBlock.ModsCount++;
+
+    /* Return Success */
+    return TRUE;
+}
+
+/*++
+ * FrLdrMapKernel
  * INTERNAL
  *
  *     Maps the Kernel into memory, does PE Section Mapping, initalizes the
@@ -381,207 +610,63 @@ BOOLEAN
 NTAPI
 FrLdrMapKernel(FILE *KernelImage)
 {
-#if 0
-    PIMAGE_DOS_HEADER ImageHeader;
-    PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_SECTION_HEADER Section;
-    ULONG SectionCount;
-    ULONG ImageSize;
-    ULONG_PTR SourceSection;
-    ULONG_PTR TargetSection;
-    ULONG SectionSize;
-    LONG i;
-    PIMAGE_DATA_DIRECTORY RelocationDDir;
-    PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-    ULONG Count;
-    ULONG_PTR Address, MaxAddress;
-    PUSHORT TypeOffset;
-    ULONG_PTR Delta;
-    PUSHORT ShortPtr;
-    PULONG LongPtr;
-
-    /* Allocate 1024 bytes for PE Header */
-    ImageHeader = (PIMAGE_DOS_HEADER)MmAllocateMemory(1024);
-    
-    /* Make sure it was succesful */
-    if (ImageHeader == NULL) {
-        
-        return FALSE;
-    }
-
-    /* Load the first 1024 bytes of the kernel image so we can read the PE header */
-    if (!FsReadFile(KernelImage, 1024, NULL, ImageHeader)) {
-
-        /* Fail if we couldn't read */
-        MmFreeMemory(ImageHeader);
-        return FALSE;
-    }
-
-    /* Now read the MZ header to get the offset to the PE Header */
-    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)ImageHeader + ImageHeader->e_lfanew);
-     
     /* Get Kernel Base */
-    KernelBase = NtHeader->OptionalHeader.ImageBase;  
     FrLdrGetKernelBase();
-    
-    /* Save Entrypoint */
-    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
-    
-    /* Save the Image Size */
-    ImageSize = NtHeader->OptionalHeader.SizeOfImage;
-     
-    /* Free the Header */
-    MmFreeMemory(ImageHeader);
 
-    /* Set the file pointer to zero */
-    FsSetFilePointer(KernelImage, 0);
+    /* Allocate kernel memory */
+    KernelMemory = MmAllocateMemory(KernelMemorySize);
+    printf("Kernel Memory @%x\n", (int)KernelMemory);
 
-    /* Load the file image */
-    FsReadFile(KernelImage, ImageSize, NULL, (PVOID)KERNEL_BASE_PHYS);
-    
-    /* Reload the NT Header */
-    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)KERNEL_BASE_PHYS + ImageHeader->e_lfanew);
-    
-    /* Load the first section */
-    Section = IMAGE_FIRST_SECTION(NtHeader);
-    SectionCount = NtHeader->FileHeader.NumberOfSections - 1;
-    
-    /* Now go to the last section */
-    Section += SectionCount;
-    
-    /* Walk each section backwards */    
-    for (i=SectionCount; i >= 0; i--, Section--) {
-    
-        /* Get the disk location and the memory location, and the size */          
-        SourceSection = RaToPa(Section->PointerToRawData);
-        TargetSection = RaToPa(Section->VirtualAddress);
-        SectionSize = Section->SizeOfRawData;
-   
-        /* If the section is already mapped correctly, go to the next */
-        if (SourceSection == TargetSection) continue;
-        
-        /* Load it into memory */
-        memmove((PVOID)TargetSection, (PVOID)SourceSection, SectionSize);
-        
-        /* Check for unitilizated data */
-        if (Section->SizeOfRawData < Section->Misc.VirtualSize) {
-            
-            /* Zero it out */
-            memset((PVOID)RaToPa(Section->VirtualAddress + Section->SizeOfRawData), 
-                   0,
-                   Section->Misc.VirtualSize - Section->SizeOfRawData);
-        }
-    }
-       
-    /* Get the Relocation Data Directory */
-    RelocationDDir = &NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-    
-    /* Get the Relocation Section Start and End*/
-    RelocationDir = (PIMAGE_BASE_RELOCATION)(KERNEL_BASE_PHYS + RelocationDDir->VirtualAddress);
-    RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
-   
-    /* Calculate Difference between Real Base and Compiled Base*/
-    Delta = KernelBase - NtHeader->OptionalHeader.ImageBase;;
-    
-    /* Determine how far we shoudl relocate */
-    MaxAddress = KERNEL_BASE_PHYS + ImageSize;
-    
-    /* Relocate until we've processed all the blocks */
-    while (RelocationDir < RelocationEnd && RelocationDir->SizeOfBlock > 0) {
-        
-        /* See how many Relocation Blocks we have */
-        Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
-        
-        /* Calculate the Address of this Directory */
-        Address = KERNEL_BASE_PHYS + RelocationDir->VirtualAddress;
-        
-        /* Calculate the Offset of the Type */
-        TypeOffset = (PUSHORT)(RelocationDir + 1);
-
-        for (i = 0; i < Count; i++) {
-            
-            ShortPtr = (PUSHORT)(Address + (*TypeOffset & 0xFFF));
-
-            /* Don't relocate after the end of the loaded driver */
-            if ((ULONG_PTR)ShortPtr >= MaxAddress) break;
-
-            switch (*TypeOffset >> 12) {
-                
-                case IMAGE_REL_BASED_ABSOLUTE:
-                    break;
-
-                case IMAGE_REL_BASED_HIGH:
-                    *ShortPtr += HIWORD(Delta);
-                    break;
-
-                case IMAGE_REL_BASED_LOW:
-                    *ShortPtr += LOWORD(Delta);
-                    break;
-
-                case IMAGE_REL_BASED_HIGHLOW:
-                    LongPtr = (PULONG)ShortPtr;
-                    *LongPtr += Delta;
-                    break;
-            }
-            
-            TypeOffset++;
-        }
-        
-        /* Move to the next Relocation Table */
-        RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
-    }
-    
-    /* Increase the next Load Base */
-    NextModuleBase = ROUND_UP(KERNEL_BASE_PHYS + ImageSize, PAGE_SIZE);
-
-    /* Return Success */
-#endif
-    return TRUE;
+    return FrLdrMapModule(KernelImage, "ntoskrnl.exe", KernelMemory, KernelBase);
 }
 
 ULONG_PTR
 NTAPI
-FrLdrLoadModule(FILE *ModuleImage, 
-                LPCSTR ModuleName, 
+FrLdrLoadModule(FILE *ModuleImage,
+                LPCSTR ModuleName,
                 PULONG ModuleSize)
 {
-#if 0
     ULONG LocalModuleSize;
-    PFRLDR_MODULE ModuleData;
+    PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;
     LPSTR TempName;
 
     /* Get current module data structure and module name string array */
-    ModuleData = &multiboot_modules[LoaderBlock.ModsCount];
-    
+    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
+
     /* Get only the Module Name */
     do {
-        
+
         TempName = strchr(ModuleName, '\\');
-        
+
         if(TempName) {
             ModuleName = TempName + 1;
         }
 
     } while(TempName);
-    NameBuffer = multiboot_module_strings[LoaderBlock.ModsCount];
+    NameBuffer = reactos_module_strings[LoaderBlock.ModsCount];
 
     /* Get Module Size */
     LocalModuleSize = FsGetFileSize(ModuleImage);
-    
+
     /* Fill out Module Data Structure */
-    ModuleData->ModuleStart = NextModuleBase;
-    ModuleData->ModuleEnd = NextModuleBase + LocalModuleSize;
-    
+    ModuleData->ModStart = NextModuleBase;
+    ModuleData->ModEnd = NextModuleBase + LocalModuleSize;
+
+    printf("Module size %x len %x name %s\n", 
+	   ModuleData->ModStart,
+	   ModuleData->ModEnd - ModuleData->ModStart,
+	   ModuleName);
+
     /* Save name */
     strcpy(NameBuffer, ModuleName);
-    ModuleData->ModuleName = NameBuffer;
+    ModuleData->String = (ULONG_PTR)NameBuffer;
 
     /* Load the file image */
     FsReadFile(ModuleImage, LocalModuleSize, NULL, (PVOID)NextModuleBase);
 
     /* Move to next memory block and increase Module Count */
-    NextModuleBase = ROUND_UP(ModuleData->ModuleEnd, PAGE_SIZE);
+    NextModuleBase = ROUND_UP(ModuleData->ModEnd, PAGE_SIZE);
     LoaderBlock.ModsCount++;
 
     /* Return Module Size if required */
@@ -589,63 +674,55 @@ FrLdrLoadModule(FILE *ModuleImage,
         *ModuleSize = LocalModuleSize;
     }
 
-    return(ModuleData->ModuleStart);
-#else
-    return 0;
-#endif
+    return(ModuleData->ModStart);
 }
 
 ULONG_PTR
 NTAPI
 FrLdrCreateModule(LPCSTR ModuleName)
 {
-#if 0
-    PFRLDR_MODULE ModuleData;
+    PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;
 
     /* Get current module data structure and module name string array */
-    ModuleData = &multiboot_modules[LoaderBlock.ModsCount];
-    NameBuffer = multiboot_module_strings[LoaderBlock.ModsCount];
+    ModuleData = &reactos_modules[LoaderBlock.ModsCount];
+    NameBuffer = reactos_module_strings[LoaderBlock.ModsCount];
 
     /* Set up the structure */
-    ModuleData->ModuleStart = NextModuleBase;
-    ModuleData->ModuleEnd = -1;
-    
+    ModuleData->ModStart = NextModuleBase;
+    ModuleData->ModEnd = -1;
+
     /* Copy the name */
     strcpy(NameBuffer, ModuleName);
-    ModuleData->ModuleName = NameBuffer;
+    ModuleData->String = (ULONG_PTR)NameBuffer;
 
     /* Set the current Module */
     CurrentModule = ModuleData;
 
     /* Return Module Base Address */
-    return(ModuleData->ModuleStart);
-#else
-    return 0;
-#endif
+    return(ModuleData->ModStart);
 }
 
 BOOLEAN
 NTAPI
-FrLdrCloseModule(ULONG_PTR ModuleBase, 
+FrLdrCloseModule(ULONG_PTR ModuleBase,
                  ULONG ModuleSize)
 {
-#if 0
-    PFRLDR_MODULE ModuleData = CurrentModule;
+    PLOADER_MODULE ModuleData = CurrentModule;
 
     /* Make sure a module is opened */
     if (ModuleData) {
-    
+
         /* Make sure this is the right module and that it hasn't been closed */
-        if ((ModuleBase == ModuleData->ModuleStart) && (ModuleData->ModuleEnd == -1)) {
-        
+        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == (ULONG_PTR)-1)) {
+
             /* Close the Module */
-            ModuleData->ModuleEnd = ModuleData->ModuleStart + ModuleSize;
+            ModuleData->ModEnd = ModuleData->ModStart + ModuleSize;
 
             /* Set the next Module Base and increase the number of modules */
-            NextModuleBase = ROUND_UP(ModuleData->ModuleEnd, PAGE_SIZE);
+            NextModuleBase = ROUND_UP(ModuleData->ModEnd, PAGE_SIZE);
             LoaderBlock.ModsCount++;
-            
+
             /* Close the currently opened module */
             CurrentModule = NULL;
 
@@ -655,6 +732,5 @@ FrLdrCloseModule(ULONG_PTR ModuleBase,
     }
 
     /* Failure path */
-#endif
     return(FALSE);
 }

@@ -22,9 +22,3 @@
 	<bootstrap base="loader" nameoncd="isobtrt.bin" />
 	<file>isobtrt.asm</file>
 </module>
-<if property="ARCH" value="powerpc">
-	<module name="ofwldr" type="bootprogram" payload="freeldr">
-		<bootstrap base="loader" nameoncd="boot/ofwldr" />
-		<file>ofwboot.s</file>
-	</module>
-</if>

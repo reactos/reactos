@@ -274,7 +274,8 @@ enum ModuleType
 	IdlHeader = 23,
 	IsoRegTest = 24,
 	LiveIsoRegTest = 25,
-	EmbeddedTypeLib = 26
+	EmbeddedTypeLib = 26,
+        ElfExecutable = 27
 };
 
 enum HostType
@@ -295,6 +296,7 @@ public:
 	std::string extension;
 	std::string baseaddress;
 	std::string payload;
+	std::string buildtype;
 	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;

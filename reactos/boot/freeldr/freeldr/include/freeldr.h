@@ -87,6 +87,8 @@
 #include <reactos/helper.h>
 /* Needed if debuging is enabled */
 #include <comm.h>
+/* Swap */
+#include <bytesex.h>
 
 #define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
 

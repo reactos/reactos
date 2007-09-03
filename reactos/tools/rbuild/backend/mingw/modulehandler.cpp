@@ -146,7 +146,7 @@ MingwModuleHandler::PassThruCacheDirectory (const FileLocation* fileLocation )
 MingwModuleHandler::GetTargetDirectoryTree (
 	const Module& module )
 {
-	if ( module.type == StaticLibrary )
+	if ( module.type == StaticLibrary || module.type == BootProgram )
 		return backend->intermediateDirectory;
 	return backend->outputDirectory;
 }
@@ -267,6 +267,9 @@ MingwModuleHandler::InstanciateHandler (
 		case EmbeddedTypeLib:
 			handler = new MingwEmbeddedTypeLibModuleHandler ( module );
 			break;
+                case ElfExecutable:
+                        handler = new MingwElfExecutableModuleHandler ( module );
+                        break;
 		default:
 			throw UnknownModuleTypeException (
 				module.node.location,
@@ -3145,20 +3148,24 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
-	fprintf ( fMakefile, "\t$(BOOTPROG_PREPARE) $(OUTPUT)$(SEP)%s %s\n",
+	fprintf ( fMakefile, "\t$(%s_PREPARE) $(OUTPUT)$(SEP)%s %s\n",
+		  module.buildtype.c_str (), 
 		  NormalizeFilename( payload->GetPath() ).c_str (),
 		junk_cpy.c_str () );
 
-	fprintf ( fMakefile, "\t${objcopy} $(BOOTPROG_FLATFORMAT) %s %s\n",
+	fprintf ( fMakefile, "\t${objcopy} $(%s_FLATFORMAT) %s %s\n",
+		module.buildtype.c_str (),
 		junk_cpy.c_str (),
 		junk_tmp.c_str () );
 
-	fprintf ( fMakefile, "\t${ld} $(BOOTPROG_LINKFORMAT) %s %s -g -o %s\n",
+	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -g -o %s\n",
+		module.buildtype.c_str (),
 		linkDepsMacro.c_str (),
 		junk_tmp.c_str (),
 		junk_elf.c_str () );
 
-	fprintf ( fMakefile, "\t${objcopy} $(BOOTPROG_COPYFORMAT) %s %s\n",
+	fprintf ( fMakefile, "\t${objcopy} $(%s_COPYFORMAT) %s $(INTERMEDIATE)$(SEP)%s\n",
+		module.buildtype.c_str (),
 		junk_elf.c_str (),
 		module.GetPath().c_str () );
 
@@ -3689,4 +3696,38 @@ void
 MingwIdlHeaderModuleHandler::Process ()
 {
 	GenerateRules ();
+}
+
+MingwElfExecutableModuleHandler::MingwElfExecutableModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwElfExecutableModuleHandler::Process ()
+{
+	string targetName ( module.GetTargetName () );
+	string targetMacro ( GetTargetMacro (module) );
+	string workingDirectory = GetWorkingDirectory ();
+	string objectsMacro = GetObjectsMacro ( module );
+	string linkDepsMacro = GetLinkingDependenciesMacro ();
+	string libsMacro = GetLibsMacro ();
+
+	GenerateRules ();
+
+	fprintf ( fMakefile, "%s: %s %s | %s\n",
+	          targetMacro.c_str (),
+	          objectsMacro.c_str (),
+	          linkDepsMacro.c_str (),
+	          GetDirectory(GetTargetFilename(module,NULL)).c_str () );
+
+	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
+
+	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -g -o %s\n",
+		  module.buildtype.c_str(),
+		  objectsMacro.c_str(),
+                  libsMacro.c_str(),
+                  targetMacro.c_str () );
 }

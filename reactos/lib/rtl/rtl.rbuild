@@ -18,6 +18,14 @@
             <file>thread.c</file>
         </directory>
     </if>
+    <if property="ARCH" value="powerpc">
+	<directory name="powerpc">
+	    <file>debug.c</file>
+	    <file>except.c</file>
+	    <file>interlocked.c</file>
+	    <file>thread.c</file>
+	</directory>
+    </if>
     <directory name="austin">
         <file>avl.c</file>
         <file>tree.c</file>

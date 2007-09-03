@@ -339,6 +339,11 @@ typedef struct _I386_LOADER_BLOCK
     ULONG VirtualBias;
 } I386_LOADER_BLOCK, *PI386_LOADER_BLOCK;
 
+typedef struct _PPC_LOADER_BLOCK
+{
+    PVOID BootInfo;
+} PPC_LOADER_BLOCK, *PPPC_LOADER_BLOCK;
+
 //
 // Loader Parameter Block
 //
@@ -369,6 +374,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
         I386_LOADER_BLOCK I386;
         ALPHA_LOADER_BLOCK Alpha;
         IA64_LOADER_BLOCK Ia64;
+	PPC_LOADER_BLOCK PowerPC;
     } u;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 

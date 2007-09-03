@@ -19,6 +19,9 @@
 
 #include <freeldr.h>
 #include <debug.h>
+#ifdef _M_PPC
+#include "of.h"
+#endif
 
 ULONG			AllocationCount = 0;
 
@@ -65,6 +68,12 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 
 	if (MemorySize == 0)
 	{
+#ifdef _M_PPC
+               ULONG ptr;
+               printf("Allocating %d bytes directly ...\n", MemorySize);
+               ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
+               MemPointer = (PVOID)(ptr);
+#endif
 		DbgPrint((DPRINT_MEMORY, "MmAllocateMemory() called for 0 bytes. Returning NULL.\n"));
 		UiMessageBoxCritical("Memory allocation failed: MmAllocateMemory() called for 0 bytes.");
 		return NULL;

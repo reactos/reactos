@@ -474,6 +474,19 @@ Module::Module ( const Project& project,
 		att = moduleNode.GetAttribute ( "payload", true );
 		payload = att->value;
 	}
+
+	if ( type == BootProgram || type == ElfExecutable )
+	{
+		att = moduleNode.GetAttribute ( "buildtype", false );
+		if ( att != NULL )
+		{
+			buildtype = att->value;
+		}
+		else
+		{
+			buildtype = "BOOTPROG";
+		}
+	}
 }
 
 Module::~Module ()
@@ -879,6 +892,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return IdlHeader;
 	if ( attribute.value == "embeddedtypelib" )
 		return EmbeddedTypeLib;
+        if ( attribute.value == "elfexecutable" )
+                return ElfExecutable;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -891,6 +906,7 @@ Module::GetDefaultModuleExtension () const
 	{
 		case BuildTool:
 			return ExePostfix;
+		case BootProgram:
 		case StaticLibrary:
 			return ".a";
 		case ObjectLibrary:
@@ -926,7 +942,7 @@ Module::GetDefaultModuleExtension () const
 		case RpcClient:
 			return ".o";
 		case Alias:
-		case BootProgram:
+                case ElfExecutable:
 		case IdlHeader:
 			return "";
 		case EmbeddedTypeLib:
@@ -979,6 +995,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case Alias:
 		case BootProgram:
 		case IdlHeader:
+                case ElfExecutable:
 		case EmbeddedTypeLib:
 			return "";
 	}
@@ -1007,6 +1024,8 @@ Module::GetDefaultModuleBaseaddress () const
 		case KernelModeDLL:
 		case KernelModeDriver:
 			return "0x00010000";
+                case ElfExecutable:
+                        return "0xe00000";                        
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:
@@ -1066,6 +1085,7 @@ Module::IsDLL () const
 		case Alias:
 		case IdlHeader:
 		case EmbeddedTypeLib:
+                case ElfExecutable:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -1091,18 +1111,19 @@ Module::GenerateInOutputTree () const
 		case BuildTool:
 		case BootLoader:
 		case BootSector:
-		case BootProgram:
 		case Iso:
 		case LiveIso:
 		case IsoRegTest:
 		case LiveIsoRegTest:
 		case EmbeddedTypeLib:
+                case ElfExecutable:
 			return true;
 		case StaticLibrary:
 		case ObjectLibrary:
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case BootProgram:
 		case IdlHeader:
 			return false;
 	}
@@ -1686,6 +1707,7 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 		case Alias:
 		case IdlHeader:
 		case EmbeddedTypeLib:
+                case ElfExecutable:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

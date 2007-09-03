@@ -126,6 +126,8 @@ RtlAssert(
 #define ASM_BREAKPOINT "\nbreak\n"
 #elif defined(__x86_64__)
 #define ASM_BREAKPOINT "\nint $3\n"
+#elif defined(_M_PPC)
+#define ASM_BREAKPOINT "\ntwi 1\n"
 #else
 #error Unsupported architecture.
 #endif

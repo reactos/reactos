@@ -4039,6 +4039,7 @@ typedef struct _OBJECT_TYPE_LIST {
 
 #if defined(__GNUC__)
 
+#ifdef _M_IX86
 static __inline__ PVOID GetCurrentFiber(void)
 {
     void* ret;
@@ -4048,9 +4049,27 @@ static __inline__ PVOID GetCurrentFiber(void)
 	);
     return ret;
 }
+#else
+static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_winnt(const unsigned long Offset)
+{
+    unsigned long result;
+    __asm__("\tadd 7,13,%1\n"
+	    "\tlwz %0,0(7)\n"
+	    : "=r" (result)
+	    : "r" (Offset)
+	    : "r7");
+    return result;
+}
+
+static __inline__ PVOID GetCurrentFiber(void)
+{
+    return __readfsdword_winnt(0x10);
+}
+#endif
 
 /* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
 #ifndef __NTDDK_H
+#ifdef _M_IX86
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
     struct _TEB *ret;
@@ -4063,6 +4082,12 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
 
     return ret;
 }
+#else
+static __inline__ struct _TEB * NtCurrentTeb(void)
+{
+    return __readfsdword_winnt(0x18);
+}
+#endif
 #endif
 
 #elif defined(__WATCOMC__)
@@ -4124,12 +4149,36 @@ InterlockedBitTestAndSet(IN LONG volatile *Base,
 {
 	LONG OldBit;
 
+#ifdef _M_IX86
 	__asm__ __volatile__("lock "
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Base)
 		             :"Ir" (Bit)
 			     : "memory");
+#elif defined(_M_PPC)
+	LONG scratch = 0;
+
+	Bit = 1 << Bit;
+	/* %0 - OldBit
+	 * %1 - Bit
+	 * %2 - scratch
+	 * %3 - Base
+	 */
+	__asm__ __volatile__(
+	    "sync\n"
+	    "0:\n\t"
+	    "lwarx %2,0,%3\n\t"
+            "mr %0,%2\n\t"
+	    "or %2,%1,%2\n\t"
+	    "stwcx. %2,0,%3\n\t"
+	    "bne- 0b\n\t" : 
+	    "=r" (OldBit) :
+	    "r" (Bit),
+	    "r" (scratch),
+	    "r" (Base)
+	    );
+#endif
 	return OldBit;
 }
 
@@ -4139,12 +4188,36 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 {
 	LONG OldBit;
 
+#ifdef _M_IX86
 	__asm__ __volatile__("lock "
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Base)
 		             :"Ir" (Bit)
 			     : "memory");
+#elif defined(_M_PPC)
+	LONG scratch = 0;
+
+	Bit = ~(1 << Bit);
+	/* %0 - OldBit
+	 * %1 - Bit
+	 * %2 - scratch
+	 * %3 - Base
+	 */
+	__asm__ __volatile__(
+	    "sync\n"
+	    "0:\n\t"
+	    "lwarx %2,0,%3\n\t"
+            "mr %0,%2\n\t"
+	    "and %2,%1,%2\n\t"
+	    "stwcx. %2,0,%3\n\t"
+	    "bne- 0b\n\t" : 
+	    "=r" (OldBit) :
+	    "r" (Bit),
+	    "r" (scratch),
+	    "r" (Base)
+	    );
+#endif
 	return OldBit;
 }
 
@@ -4153,17 +4226,32 @@ BitScanReverse(OUT ULONG *Index,
                IN ULONG Mask)
 {
 	BOOLEAN BitPosition = 0;
+#ifdef _M_IX86
 	__asm__ __volatile__("bsrl %2,%0\n\t"
 	                     "setnz %1\n\t"
                          :"=&r" (*Index), "=r" (BitPosition)
 		                 :"rm" (Mask)
 			             :"memory");
 	return BitPosition;
+#elif defined(_M_PPC)
+	/* Slow implementation for now */
+	for( *Index = 31; *Index; *Index-- ) {
+		if( (1<<*Index) & Mask ) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+#endif
 }
 
 #endif
 
+#ifdef _M_IX86
 #define YieldProcessor() __asm__ __volatile__("pause");
+#elif defined(_M_PPC)
+#define YieldProcessor() __asm__ __volatile__("nop");
+#endif
 
 #if defined(_AMD64_)
 #if defined(_M_AMD64)
