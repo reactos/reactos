@@ -1614,7 +1614,15 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 {
   DWORD windx, windy;
   RECT rect;
-    
+  PCSRSS_SCREEN_BUFFER ActiveBuffer;
+  PCSRSS_PROCESS_DATA ProcessData = NULL;
+  
+  if (Console->ProcessList.Flink != &Console->ProcessList)
+    {
+      ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
+      ConioLockScreenBuffer(ProcessData, Console->hActiveBuffer, (Object_t **)&ActiveBuffer);
+    }
+
   /* apply text / background color */
   GuiData->ScreenText = pConInfo->ScreenText;
   GuiData->ScreenBackground = pConInfo->ScreenBackground;
@@ -1625,38 +1633,51 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
   windx = LOWORD(pConInfo->ScreenBuffer);
   windy = HIWORD(pConInfo->ScreenBuffer);
 
-  if (windx != Console->ActiveBuffer->MaxX || windy != Console->ActiveBuffer->MaxY)
+  if (windx != ActiveBuffer->MaxX || windy != ActiveBuffer->MaxY)
   {
      BYTE * Buffer = HeapAlloc(Win32CsrApiHeap, 0, windx * windy * 2);
+
      if (Buffer)
      {
         DWORD Offset = 0;
         DWORD BufferOffset = 0;
         USHORT CurrentY;
         BYTE * OldBuffer;
+        USHORT value;
         DWORD diff;
-        DWORD value = ((((DWORD)Console->ActiveBuffer->DefaultAttrib) << 16) | 0x20);
+        DWORD i;
+        
+        value = MAKEWORD(' ', ActiveBuffer->DefaultAttrib);
 
-        OldBuffer = Console->ActiveBuffer->Buffer;
+        DPRINT("MaxX %d MaxY %d windx %d windy %d value %04x DefaultAttrib %d\n",ActiveBuffer->MaxX, ActiveBuffer->MaxY, windx, windy, value, ActiveBuffer->DefaultAttrib);
+        OldBuffer = ActiveBuffer->Buffer;
 
-        for (CurrentY = 0; CurrentY < min(Console->ActiveBuffer->MaxY, windy); CurrentY++)
+        for (CurrentY = 0; CurrentY < min(ActiveBuffer->MaxY, windy); CurrentY++)
         {
-            if (windx < Console->ActiveBuffer->MaxX)
+            if (windx <= ActiveBuffer->MaxX)
             {
                 /* reduce size */
                 RtlCopyMemory(&Buffer[Offset], &OldBuffer[BufferOffset], windx * 2);
                 Offset += (windx * 2);
-                BufferOffset += (Console->ActiveBuffer->MaxX * 2);
+                BufferOffset += (ActiveBuffer->MaxX * 2);
             }
             else
             {
                 /* enlarge size */
-                diff = windx - Console->ActiveBuffer->MaxX;
-
-                RtlCopyMemory(&Buffer[Offset], &OldBuffer[BufferOffset], Console->ActiveBuffer->MaxX * 2);
-                Offset += (Console->ActiveBuffer->MaxX * 2);
+                RtlCopyMemory(&Buffer[Offset], &OldBuffer[BufferOffset], ActiveBuffer->MaxX * 2);
+                Offset += (ActiveBuffer->MaxX * 2);
+                
+                diff = windx - ActiveBuffer->MaxX;
                 /* zero new part of it */
-                memset(&Buffer[Offset], value, (diff * 2));
+#if HAVE_WMEMSET
+                wmemset((WCHAR*)&Buffer[Offset], value, diff);
+#else
+                for (i = 0; i < diff * 2; i++)
+                {
+                    Buffer[Offset * 2] = ' ';
+                    Buffer[Offset * 2 + 1] = ActiveBuffer->DefaultAttrib;
+                }
+#endif
                 Offset += (diff * 2);
                 BufferOffset += (Console->ActiveBuffer->MaxX * 2);
             }
@@ -1665,17 +1686,54 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
         if (windy > Console->ActiveBuffer->MaxY)
         {
             diff = windy - Console->ActiveBuffer->MaxX;
-            memset(&Buffer[Offset], value, diff * 2 * windx);
+#if HAVE_WMEMSET
+                wmemset((WCHAR*)&Buffer[Offset], value, diff * windx);
+#else
+                for (i = 0; i < diff * 2; i++)
+                {
+                    Buffer[Offset * 2] = ' ';
+                    Buffer[Offset * 2 + 1] = ActiveBuffer->DefaultAttrib;
+                }
+#endif
         }
-        (void)InterlockedExchangePointer((PVOID volatile  *)Console->ActiveBuffer->Buffer, Buffer);
+
+        (void)InterlockedExchangePointer((PVOID volatile  *)&Console->ActiveBuffer->Buffer, Buffer);
         HeapFree(Win32CsrApiHeap, 0, OldBuffer);
         Console->ActiveBuffer->MaxX = windx;
         Console->ActiveBuffer->MaxY = windy;
+        InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
+     }
+     else
+     {
+        if (ProcessData)
+        {
+            ConioUnlockScreenBuffer(ActiveBuffer);
+        }
+        return;
      }
   }
 
   windx = LOWORD(pConInfo->WindowSize);
   windy = HIWORD(pConInfo->WindowSize);
+
+  if (windx > Console->Size.X)
+  {
+      PWCHAR LineBuffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, windx * sizeof(WCHAR));
+      if (LineBuffer)
+      {
+          HeapFree(Win32CsrApiHeap, 0, GuiData->LineBuffer);
+          GuiData->LineBuffer = LineBuffer;
+      }
+      else
+      {
+          if (ProcessData)
+          {
+              ConioUnlockScreenBuffer(ActiveBuffer);
+          }
+          return;
+      }
+  }
+
 
   if (windx != Console->Size.X || windy != Console->Size.Y)
   {
@@ -1701,7 +1759,10 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
           //ShowScrollBar(GuiData->hHScrollBar, SB_CTL, FALSE);
       }
   }
-  /* repaint window */
+  if (ProcessData)
+  {
+      ConioUnlockScreenBuffer(ActiveBuffer);
+  }
   InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
 }
 

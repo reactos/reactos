@@ -153,6 +153,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
   Console->EarlyReturn = FALSE;
   Console->ActiveBuffer = NULL;
+  Console->hActiveBuffer = INVALID_HANDLE_VALUE;
   InitializeListHead(&Console->InputEvents);
   Console->CodePage = GetOEMCP();
   Console->OutputCodePage = GetOEMCP();
@@ -174,13 +175,6 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
 
   /* allocate console screen buffer */
   NewBuffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_SCREEN_BUFFER));
-  /* init screen buffer with defaults */
-  NewBuffer->CursorInfo.bVisible = TRUE;
-  NewBuffer->CursorInfo.dwSize = 5;
-  /* make console active, and insert into console list */
-  Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
-  /* add a reference count because the buffer is tied to the console */
-  InterlockedIncrement(&Console->ActiveBuffer->Header.ReferenceCount);
   if (NULL == NewBuffer)
     {
       RtlFreeUnicodeString(&Console->Title);
@@ -188,6 +182,15 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       CloseHandle(Console->ActiveEvent);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
+  /* init screen buffer with defaults */
+  NewBuffer->CursorInfo.bVisible = TRUE;
+  NewBuffer->CursorInfo.dwSize = 5;
+  /* make console active, and insert into console list */
+  Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
+  Console->hActiveBuffer = INVALID_HANDLE_VALUE;
+  /* add a reference count because the buffer is tied to the console */
+  InterlockedIncrement(&Console->ActiveBuffer->Header.ReferenceCount);
+
 
   if (! GuiMode)
     {
@@ -332,6 +335,7 @@ CSR_API(CsrAllocConsole)
             ProcessData->Console = 0;
             return Request->Status = Status;
         }
+        Console->hActiveBuffer = Request->Data.AllocConsoleRequest.OutputHandle;
     }
 
     /* Duplicate the Event */
@@ -1065,6 +1069,7 @@ ConioDeleteConsole(Object_t *Object)
 #endif
 
   Console->ActiveBuffer = NULL;
+  Console->hActiveBuffer = INVALID_HANDLE_VALUE;
   ConioCleanupConsole(Console);
 
   CloseHandle(Console->ActiveEvent);
@@ -2272,6 +2277,7 @@ CSR_API(CsrSetScreenBuffer)
     }
   /* tie console to new buffer */
   Console->ActiveBuffer = Buff;
+  Console->hActiveBuffer = Request->Data.SetScreenBufferRequest.OutputHandle;
   /* inc ref count on new buffer */
   InterlockedIncrement(&Buff->Header.ReferenceCount);
   /* Redraw the console */

@@ -70,6 +70,7 @@ typedef struct tagCSRSS_CONSOLE
   WORD WaitingChars;
   WORD WaitingLines;                    /* number of chars and lines in input queue */
   PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
+  HANDLE hActiveBuffer;
   WORD Mode;                            /* Console mode flags */
   WORD EchoCount;                       /* count of chars to echo, in line buffered mode */
   UNICODE_STRING Title;                 /* Title of console */
