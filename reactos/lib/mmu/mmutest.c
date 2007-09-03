@@ -1,5 +1,5 @@
-#include "mmu.h"
-#include "mmuutil.h"
+#include "ppcmmu/mmu.h"
+#include "ppcmmu/mmuutil.h"
 #include "mmuobject.h"
 
 int mmunitest()
