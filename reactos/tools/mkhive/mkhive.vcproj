@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="kernel32.lib ../../obj-i386/lib/cmlib/cmlib.a ../../obj-i386/lib/inflib_host/infcore.o ../../obj-i386/lib/inflib_host/infget.o ../../obj-i386/lib/inflib_host/infhostgen.o ../../obj-i386/lib/inflib_host/infhostget.o ../../obj-i386/lib/inflib_host/infhostglue.o ../../obj-i386/lib/inflib_host/infhostput.o ../../obj-i386/lib/inflib_host/infput.o ../../obj-i386/lib/rtl/rtl.a $(NOINHERIT)"
+				AdditionalDependencies="kernel32.lib ../../obj-i386/lib/cmlib_host/cminit.o ../../obj-i386/lib/cmlib_host/hivebin.o ../../obj-i386/lib/cmlib_host/hivecell.o ../../obj-i386/lib/cmlib_host/hiveinit.o ../../obj-i386/lib/cmlib_host/hivesum.o ../../obj-i386/lib/cmlib_host/hivewrt.o ../../obj-i386/lib/inflib_host/infcore.o ../../obj-i386/lib/inflib_host/infget.o ../../obj-i386/lib/inflib_host/infhostgen.o ../../obj-i386/lib/inflib_host/infhostget.o ../../obj-i386/lib/inflib_host/infhostput.o ../../obj-i386/lib/inflib_host/infput.o $(NOINHERIT)"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="../../include/ddk;../../include/psdk;../../include/reactos;../../lib/cmlib;../../lib/inflib;../../lib/rtl"
 				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="kernel32.lib $(NOINHERIT)"
+				AdditionalDependencies="kernel32.lib ../../obj-i386/lib/cmlib_host/cminit.o ../../obj-i386/lib/cmlib_host/hivebin.o ../../obj-i386/lib/cmlib_host/hivecell.o ../../obj-i386/lib/cmlib_host/hiveinit.o ../../obj-i386/lib/cmlib_host/hivesum.o ../../obj-i386/lib/cmlib_host/hivewrt.o ../../obj-i386/lib/inflib_host/infcore.o ../../obj-i386/lib/inflib_host/infget.o ../../obj-i386/lib/inflib_host/infhostgen.o ../../obj-i386/lib/inflib_host/infhostget.o ../../obj-i386/lib/inflib_host/infhostput.o ../../obj-i386/lib/inflib_host/infput.o $(NOINHERIT)"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"

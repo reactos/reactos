@@ -21,13 +21,13 @@
 #error Unknown compiler
 #endif
 
-#ifndef __fastcall
+#if !defined(_MSC_VER) && !defined(__fastcall)
 #define __fastcall __attribute__((fastcall))
 #endif
-#ifndef __cdecl
+#if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl __attribute__((cdecl))
 #endif
-#ifndef __stdcall
+#if !defined(_MSC_VER) && !defined(__stdcall)
 #define __stdcall __attribute__((stdcall))
 #endif
 
