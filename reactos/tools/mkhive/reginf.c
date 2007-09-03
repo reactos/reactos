@@ -477,12 +477,12 @@ ImportRegistryFile(PCHAR FileName)
 
 	if (!registry_callback (hInf, "DelReg", TRUE))
 	{
-		DPRINT1 ("registry_callback() failed\n");
+		DPRINT1 ("registry_callback() for DelReg failed\n");
 	}
 
 	if (!registry_callback (hInf, "AddReg", FALSE))
 	{
-		DPRINT1 ("registry_callback() failed\n");
+		DPRINT1 ("registry_callback() for AddReg failed\n");
 	}
 
 	InfHostCloseFile (hInf);
