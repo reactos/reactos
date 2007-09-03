@@ -643,4 +643,9 @@ STRING_FOR_ERROR,                  "ungültige Variablenangabe."
 STRING_SCREEN_COL,                 "ungültige Spalten-Angabe"
 STRING_SCREEN_ROW,                 "ungültige Zeilen-Angabe"
 STRING_TIMER_TIME                  "Timer %d ist %s: "
+
+STRING_INVALID_OPERAND,            "Ungültiger Operand."
+STRING_EXPECTED_CLOSE_PAREN,       "Erwartet ')'."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Erwartet Nummer oder Variablennamen."
+STRING_SYNTAX_COMMAND_INCORRECT,   "Syntaxfehler."
 }

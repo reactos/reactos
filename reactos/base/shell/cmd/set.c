@@ -112,6 +112,13 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		return Success;
 	}
 
+	if ( !_tcsnicmp (param, _T("/"), 1) )
+	{
+		LoadString(CMD_ModuleHandle, STRING_SYNTAX_COMMAND_INCORRECT, szMsg, RC_STRING_MAX_SIZE);
+		ConErrPrintf (szMsg, param);
+		return 0;
+	}
+
 	p = _tcschr (param, _T('='));
 	if (p)
 	{
