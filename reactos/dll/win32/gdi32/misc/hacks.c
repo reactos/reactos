@@ -108,18 +108,6 @@ SetBkMode(HDC hdc,
  * @implemented
  *
  */
-COLORREF 
-STDCALL
-SetBkColor(HDC hdc, 
-           COLORREF crColor)
-{
-    return NtGdiSetBkColor(hdc,crColor);
-}
-
-/*
- * @implemented
- *
- */
 HGDIOBJ
 STDCALL
 SelectObject(HDC hdc, 

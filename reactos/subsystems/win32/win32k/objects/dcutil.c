@@ -8,7 +8,6 @@ static
 VOID
 CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr, FLONG Dirty)
 {
-
       Dc_Attr->hpen              = dc->Dc_Attr.hpen;
       Dc_Attr->hbrush            = dc->Dc_Attr.hbrush;
       Dc_Attr->hColorSpace       = dc->Dc_Attr.hColorSpace;
@@ -67,9 +66,17 @@ CopyFromUserDcAttr(PDC dc, PDC_ATTR Dc_Attr, FLONG Dirty)
       }
       if ( Dirty & DIRTY_LINE || (Dc_Attr->ulDirty_ & DIRTY_LINE))
       {
-        dc->Dc_Attr.ulPenClr       = Dc_Attr->ulPenClr;
-        dc->Dc_Attr.crPenClr       = Dc_Attr->crPenClr;
+        dc->Dc_Attr.crBackgroundClr = Dc_Attr->crBackgroundClr;
+        dc->Dc_Attr.ulBackgroundClr = Dc_Attr->ulBackgroundClr;
+        dc->Dc_Attr.ulPenClr        = Dc_Attr->ulPenClr;
+        dc->Dc_Attr.crPenClr        = Dc_Attr->crPenClr;
         Dc_Attr->ulDirty_ &= ~DIRTY_LINE;
+      }
+      if ( Dirty & DIRTY_TEXT || (Dc_Attr->ulDirty_ & DIRTY_TEXT))
+      {
+        dc->Dc_Attr.crForegroundClr = Dc_Attr->crForegroundClr;
+        dc->Dc_Attr.ulForegroundClr = Dc_Attr->ulForegroundClr;
+        Dc_Attr->ulDirty_ &= ~DIRTY_TEXT;
       }
 }
 
@@ -133,6 +140,7 @@ DCU_UpdateUserXForms(PDC pDC, ULONG uMask)
   else
   {
     NTSTATUS Status = STATUS_SUCCESS;
+    KeEnterCriticalRegion();
     _SEH_TRY
     {
       ProbeForWrite(DC_Attr,
@@ -152,6 +160,7 @@ DCU_UpdateUserXForms(PDC pDC, ULONG uMask)
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
+    KeLeaveCriticalRegion();
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
@@ -173,6 +182,7 @@ DCU_SyncDcAttrtoUser(PDC dc, FLONG Dirty)
   else
   {
     NTSTATUS Status = STATUS_SUCCESS;
+    KeEnterCriticalRegion();
     _SEH_TRY
     {
       ProbeForWrite(Dc_Attr,
@@ -185,14 +195,9 @@ DCU_SyncDcAttrtoUser(PDC dc, FLONG Dirty)
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    if(!NT_SUCCESS(Status))
-    {
-      TryHarder = TRUE;
-    }
-    if (TryHarder)
-    {
-      return ReadWriteVMDcAttr( dc, Dirty, TRUE);
-    }
+    KeLeaveCriticalRegion();
+    if(!NT_SUCCESS(Status)) TryHarder = TRUE;
+    if (TryHarder) return ReadWriteVMDcAttr( dc, Dirty, TRUE);
   }
   return TRUE;
 }
@@ -218,6 +223,7 @@ DCU_SyncDcAttrtoW32k(PDC dc, FLONG Dirty)
   else
   {
     NTSTATUS Status = STATUS_SUCCESS;
+    KeEnterCriticalRegion();
     _SEH_TRY
     {
       ProbeForRead(Dc_Attr,
@@ -230,14 +236,9 @@ DCU_SyncDcAttrtoW32k(PDC dc, FLONG Dirty)
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    if(!NT_SUCCESS(Status))
-    {
-      TryHarder = TRUE;
-    }
-    if (TryHarder)
-    {
-      return ReadWriteVMDcAttr( dc, Dirty, FALSE);
-    }
+    KeLeaveCriticalRegion();
+    if(!NT_SUCCESS(Status)) TryHarder = TRUE;
+    if (TryHarder) return ReadWriteVMDcAttr( dc, Dirty, FALSE);
   }
   return TRUE;
 }

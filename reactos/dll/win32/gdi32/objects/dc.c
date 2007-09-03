@@ -320,13 +320,13 @@ HGDIOBJ
 STDCALL
 GetDCObject( HDC hDC, INT iType)
 {
-#if 0
+//#if 0
  if((iType == GDI_OBJECT_TYPE_BRUSH) ||
     (iType == GDI_OBJECT_TYPE_EXTPEN)||
     (iType == GDI_OBJECT_TYPE_PEN)   ||
     (iType == GDI_OBJECT_TYPE_COLORSPACE))
  {
-   HGDIOBJ hGO;
+   HGDIOBJ hGO = NULL;
    PDC_ATTR Dc_Attr;
    
    if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return NULL;
@@ -348,7 +348,7 @@ GetDCObject( HDC hDC, INT iType)
    }   
    return hGO;
  }
-#endif
+//#endif
  return NtGdiGetDCObject( hDC, iType );
 }
 
@@ -691,12 +691,12 @@ GetDCBrushColor(
 	HDC hdc
 )
 {
-#if 0
+//#if 0
   PDC_ATTR Dc_Attr;
  
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
-#endif
+//#endif
   return NtUserGetDCBrushColor(hdc);
 }
 
@@ -709,12 +709,12 @@ GetDCPenColor(
 	HDC hdc
 )
 {
-#if 0
+//#if 0
   PDC_ATTR Dc_Attr;
  
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
-#endif
+//#endif
   return NtUserGetDCPenColor(hdc);
 }
 
@@ -728,7 +728,7 @@ SetDCBrushColor(
 	COLORREF crColor
 )
 {
-#if 0
+//#if 0
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
@@ -745,7 +745,7 @@ SetDCBrushColor(
     }
   }
   return OldColor;
-#endif
+//#endif
   return NtUserSetDCBrushColor(hdc, crColor);
 }
 
@@ -759,7 +759,7 @@ SetDCPenColor(
 	COLORREF crColor
 )
 {
-#if 0
+//#if 0
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
@@ -776,10 +776,105 @@ SetDCPenColor(
     }
   }
   return OldColor;
-#endif
+//#endif
   return NtUserSetDCPenColor(hdc, crColor);
 }
 
+/*
+ * @implemented
+ */
+COLORREF 
+STDCALL
+SetTextColor(
+	HDC hdc,
+	COLORREF crColor
+)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+  COLORREF OldColor = CLR_INVALID;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetTextColor( hDC, crColor );
+    else
+    {
+      PLDC pLDC = Dc_Attr->pvLDC;
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if return EMFDRV_SetTextColor( hDC, crColor );
+      }
+    }
+  }
+#endif
+  OldColor = (COLORREF) Dc_Attr->ulForegroundClr;
+  Dc_Attr->ulForegroundClr = (ULONG) crColor;
+
+  if ( Dc_Attr->crForegroundClr != crColor )
+  {
+     Dc_Attr->ulDirty_ |= DIRTY_TEXT;
+     Dc_Attr->crForegroundClr = crColor;
+  }
+  return OldColor;
+#endif
+  return NtGdiSetTextColor(hdc, crColor);
+}
+
+/*
+ * @implemented
+ */
+COLORREF 
+STDCALL
+SetBkColor(
+	HDC hdc,
+	COLORREF crColor
+)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+  COLORREF OldColor = CLR_INVALID;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetBkColor( hDC, crColor );
+    else
+    {
+      PLDC pLDC = Dc_Attr->pvLDC;
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if return EMFDRV_SetBkColor( hDC, crColor );
+      }
+    }
+  }
+#endif
+  OldColor = (COLORREF) Dc_Attr->ulBackgroundClr;
+  Dc_Attr->ulBackgroundClr = (ULONG) crColor;
+
+  if ( Dc_Attr->crBackgroundClr != crColor )
+  {
+     Dc_Attr->ulDirty_ |= DIRTY_LINE;
+     Dc_Attr->crBackgroundClr = crColor;
+  }
+  return OldColor;
+#endif
+  return NtGdiSetBkColor(hdc, crColor);
+}
 
 /*
  * @implemented

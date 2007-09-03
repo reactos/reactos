@@ -520,7 +520,7 @@ PolylineTo@12
 PtInRegion@12=NtGdiPtInRegion@12
 PtVisible@12=NtGdiPtVisible@12
 QueryFontAssocStatus@0
-RealizePalette@4=NtGdiRealizePalette@4
+RealizePalette@4
 RectInRegion@8=NtGdiRectInRegion@8
 RectVisible@8=NtGdiRectVisible@8
 Rectangle@20
@@ -588,7 +588,7 @@ SetStretchBltMode@8=NtGdiSetStretchBltMode@8
 SetSystemPaletteUse@8
 SetTextAlign@8=NtGdiSetTextAlign@8
 SetTextCharacterExtra@8
-SetTextColor@8=NtGdiSetTextColor@8
+SetTextColor@8
 SetTextJustification@12
 SetViewportExtEx@16=NtGdiSetViewportExtEx@16
 SetViewportOrgEx@16=NtGdiSetViewportOrgEx@16
