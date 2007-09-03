@@ -518,7 +518,7 @@ public:
 class MingwElfExecutableModuleHandler : public MingwModuleHandler
 {
 public:
-        MingwElfExecutableModuleHandler ( const Module& module );
+	MingwElfExecutableModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 };

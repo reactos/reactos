@@ -267,9 +267,9 @@ MingwModuleHandler::InstanciateHandler (
 		case EmbeddedTypeLib:
 			handler = new MingwEmbeddedTypeLibModuleHandler ( module );
 			break;
-                case ElfExecutable:
-                        handler = new MingwElfExecutableModuleHandler ( module );
-                        break;
+		case ElfExecutable:
+			handler = new MingwElfExecutableModuleHandler ( module );
+			break;
 		default:
 			throw UnknownModuleTypeException (
 				module.node.location,
@@ -2002,6 +2002,8 @@ MingwModuleHandler::GenerateOtherMacros ()
 		globalCflags += " -pipe";
 	if ( !module.allowWarnings )
 		globalCflags += " -Werror";
+	if ( module.host == HostTrue )
+		globalCflags += " $(HOST_CFLAGS)";
 
 	// Always force disabling of sibling calls optimisation for GCC
 	// (TODO: Move to version-specific once this bug is fixed in GCC)
@@ -3149,8 +3151,8 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
 	fprintf ( fMakefile, "\t$(%s_PREPARE) $(OUTPUT)$(SEP)%s %s\n",
-		  module.buildtype.c_str (), 
-		  NormalizeFilename( payload->GetPath() ).c_str (),
+		module.buildtype.c_str (), 
+		NormalizeFilename( payload->GetPath() ).c_str (),
 		junk_cpy.c_str () );
 
 	fprintf ( fMakefile, "\t${objcopy} $(%s_FLATFORMAT) %s %s\n",
@@ -3726,8 +3728,8 @@ MingwElfExecutableModuleHandler::Process ()
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
 	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -g -o %s\n",
-		  module.buildtype.c_str(),
-		  objectsMacro.c_str(),
-                  libsMacro.c_str(),
-                  targetMacro.c_str () );
+	          module.buildtype.c_str(),
+	          objectsMacro.c_str(),
+	          libsMacro.c_str(),
+	          targetMacro.c_str () );
 }

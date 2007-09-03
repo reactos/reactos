@@ -275,7 +275,7 @@ enum ModuleType
 	IsoRegTest = 24,
 	LiveIsoRegTest = 25,
 	EmbeddedTypeLib = 26,
-        ElfExecutable = 27
+	ElfExecutable = 27
 };
 
 enum HostType
