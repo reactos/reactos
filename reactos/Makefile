@@ -38,7 +38,7 @@
 #        This can require several minutes to complete. If you only need to check
 #        dependencies for a single or few modules then you can use the
 #        module_depends targets instead. This target can also repair a damaged or
-#        missing makefile.auto if needed.
+#        missing makefile-{ROS_ARCH}.auto if needed.
 #
 #    module_depends
 #        These targets do a dependency check of individual modules. Replace module
@@ -65,13 +65,13 @@
 #        files are generated files that are needed to generate the final
 #        output files. Examples of intermediate files include *.o, *.a, and
 #        *.coff. N.B. Don't put a path separator at the end. The variable
-#        defaults to .\obj-i386.
+#        defaults to .\obj-{ROS_ARCH}.
 #
 #    ROS_OUTPUT
 #        This variable controls where to put output files. Output files are
 #        generated files that makes up the result of the build process.
 #        Examples of output files include *.exe, *.dll, and *.sys. N.B. Don't
-#        put a path separator at the end. The variable defaults to .\output-i386.
+#        put a path separator at the end. The variable defaults to .\output-{ROS_ARCH}.
 #
 #    ROS_CDOUTPUT
 #        This variable controls the name of the ReactOS directory on cdrom.
@@ -89,7 +89,7 @@
 #    ROS_INSTALL
 #        This variable controls where to install output files to when using
 #        'make install'. N.B. Don't put a path separator at the end. The variable
-#        defaults to .\reactos.
+#        defaults to .\{ROS_CDOUTPUT}.
 #
 #    ROS_BUILDMAP
 #        This variable controls if map files are to be generated for executable
@@ -146,6 +146,12 @@ endif
 .PHONY: clean
 .PHONY: world
 .PHONY: universe
+
+ifneq ($(ROS_ARCH),)
+  ARCH := $(ROS_ARCH)
+else
+  ARCH := i386
+endif
 
 ifeq ($(ROS_AUTOMAKE),)
 ROS_AUTOMAKE=makefile.auto
@@ -327,31 +333,17 @@ else # mingw32-windows
 	endif
 endif
 
-ifneq ($(ROS_ARCH),)
-  ARCH := $(ROS_ARCH)
-else
-  ARCH := i386
-endif
-
 ifneq ($(ROS_INTERMEDIATE),)
   INTERMEDIATE := $(ROS_INTERMEDIATE)
 else
-  ifneq ($(ROS_CDOUTPUT),)
-    INTERMEDIATE := obj-$(ROS_CDOUTPUT)
-  else
-    INTERMEDIATE := obj-$(ARCH)
-  endif
+  INTERMEDIATE := obj-$(ARCH)
 endif
 INTERMEDIATE_ := $(INTERMEDIATE)$(SEP)
 
 ifneq ($(ROS_OUTPUT),)
   OUTPUT := $(ROS_OUTPUT)
 else
-  ifneq ($(ROS_CDOUTPUT),)
-    OUTPUT := output-$(ROS_CDOUTPUT)
-  else
-    OUTPUT := output-$(ARCH)
-  endif
+  OUTPUT := output-$(ARCH)
 endif
 OUTPUT_ := $(OUTPUT)$(SEP)
 
@@ -372,11 +364,7 @@ TEMPORARY_ := $(TEMPORARY)$(SEP)
 ifneq ($(ROS_INSTALL),)
   INSTALL := $(ROS_INSTALL)
 else
-  ifneq ($(ROS_CDOUTPUT),)
-    INSTALL := reactos.$(ROS_CDOUTPUT)
-  else
-    INSTALL := reactos
-  endif
+  INSTALL := $(CDOUTPUT)
 endif
 INSTALL_ := $(INSTALL)$(SEP)
 
@@ -414,10 +402,9 @@ PREAUTO := \
 	$(ERRCODES_H) \
 	$(ERRCODES_RC) \
 	$(GENDIB_DIB_FILES) \
-	$(NCI_SERVICE_FILES) \
-	$(OFW_INTERFACE_SERVICE_FILES)
+	$(NCI_SERVICE_FILES)
 ifeq ($(ARCH),powerpc)
-PREAUTO += $(PPCMMU_TARGETS)
+PREAUTO += $(OFW_INTERFACE_SERVICE_FILES) $(PPCMMU_TARGETS)
 endif
 
 $(ROS_AUTOMAKE): $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
