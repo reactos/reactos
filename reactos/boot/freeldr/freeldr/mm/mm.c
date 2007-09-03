@@ -68,12 +68,6 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 
 	if (MemorySize == 0)
 	{
-#ifdef _M_PPC
-               ULONG ptr;
-               printf("Allocating %d bytes directly ...\n", MemorySize);
-               ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
-               MemPointer = (PVOID)(ptr);
-#endif
 		DbgPrint((DPRINT_MEMORY, "MmAllocateMemory() called for 0 bytes. Returning NULL.\n"));
 		UiMessageBoxCritical("Memory allocation failed: MmAllocateMemory() called for 0 bytes.");
 		return NULL;
@@ -95,9 +89,17 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	// then return NULL
 	if (FreePagesInLookupTable < PagesNeeded)
 	{
+#ifdef _M_PPC
+               ULONG ptr;
+               printf("Allocating %d bytes directly ...\n", MemorySize);
+               ptr = ofw_claim(0,MemorySize,MM_PAGE_SIZE);
+               MemPointer = (PVOID)(ptr);
+               return MemPointer;
+#else
 		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateMemory(). Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
+#endif
 	}
 
 	FirstFreePageFromEnd = MmFindAvailablePages(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded, AllocateFromEnd);
