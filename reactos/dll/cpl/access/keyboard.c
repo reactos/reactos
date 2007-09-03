@@ -32,6 +32,15 @@ typedef struct _GLOBAL_DATA
 #define BOUNCETICKS 5
 static INT nBounceArray[BOUNCETICKS] = {500, 700, 1000, 1500, 2000};
 
+#define DELAYTICKS 5
+static INT nDelayArray[DELAYTICKS] = {300, 700, 1000, 1500, 2000};
+
+#define REPEATTICKS 6
+static INT nRepeatArray[REPEATTICKS] = {300, 500, 700, 1000, 1500, 2000};
+
+#define WAITTICKS 10
+static INT nWaitArray[WAITTICKS] = {0, 300, 500, 700, 1000, 1500, 2000, 5000, 10000, 20000};
+
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -118,7 +127,7 @@ StickyKeysDlgProc(HWND hwndDlg,
 
 
 static VOID
-SetDlgItemTime(HWND hwnd, INT nId, INT nTimeMs)
+AddComboBoxTime(HWND hwnd, INT nId, INT nTimeMs)
 {
     TCHAR szBuffer[32];
     TCHAR szSeconds[20];
@@ -130,7 +139,7 @@ SetDlgItemTime(HWND hwnd, INT nId, INT nTimeMs)
               nTimeMs / 1000, (nTimeMs % 1000) / 100,
               szSeconds);
 
-    SetDlgItemText(hwnd, nId, szBuffer);
+    SendDlgItemMessage(hwnd, nId, CB_ADDSTRING, 0, (LPARAM)szBuffer);
 }
 
 
@@ -141,7 +150,7 @@ BounceKeysDlgProc(HWND hwndDlg,
                   LPARAM lParam)
 {
     PGLOBAL_DATA pGlobalData;
-    INT i;
+    INT i, n;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -151,47 +160,35 @@ BounceKeysDlgProc(HWND hwndDlg,
             pGlobalData = (PGLOBAL_DATA)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            /* Set the range */
-            SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_TRACK, TBM_SETRANGE,
-                               TRUE, MAKELONG(0, BOUNCETICKS - 1));
-
-            /* Determine the current thumb position */
+            /* Determine the current bounce time */
             if (pGlobalData->filterKeys.iBounceMSec == 0)
                 pGlobalData->filterKeys.iBounceMSec = nBounceArray[0];
 
-            for (i = 0; i < BOUNCETICKS; i++)
+            for (n = 0; n < BOUNCETICKS; n++)
             {
-                 if (pGlobalData->filterKeys.iBounceMSec < nBounceArray[i])
+                 if (pGlobalData->filterKeys.iBounceMSec < nBounceArray[n])
                      break;
             }
-            i--;
+            n--;
 
-            /* Set the thumb position */
-            SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_TRACK, TBM_SETPOS, TRUE, i);
-
-            /* Set the bounce delay */
-            SetDlgItemTime(hwndDlg, IDC_BOUNCE_TIME_EDIT, nBounceArray[i]);
-            break;
-
-        case WM_HSCROLL:
-            switch (GetWindowLong((HWND) lParam, GWL_ID))
+            for (i = 0; i < BOUNCETICKS; i++)
             {
-                case IDC_BOUNCE_TIME_TRACK:
-                    i = SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_TRACK, TBM_GETPOS, 0, 0);
-                    if (i >= 0 && i < BOUNCETICKS)
-                    {
-                        /* Update the bounce delay */
-                        pGlobalData->filterKeys.iBounceMSec = nBounceArray[i];
-                        SetDlgItemTime(hwndDlg, IDC_BOUNCE_TIME_EDIT, nBounceArray[i]);
-                    }
-                    break;
+                 AddComboBoxTime(hwndDlg, IDC_BOUNCE_TIME_COMBO, nBounceArray[i]);
             }
+
+            SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_COMBO, CB_SETCURSEL, n, 0);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDOK:
+                    i = SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_COMBO, CB_GETCURSEL, 0, 0);
+                    if (i != CB_ERR)
+                    {
+                        pGlobalData->filterKeys.iBounceMSec = nBounceArray[i];
+                    }
+
                     EndDialog(hwndDlg, TRUE);
                     break;
 
@@ -216,6 +213,7 @@ RepeatKeysDlgProc(HWND hwndDlg,
                   LPARAM lParam)
 {
     PGLOBAL_DATA pGlobalData;
+    INT i, n;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -224,12 +222,99 @@ RepeatKeysDlgProc(HWND hwndDlg,
         case WM_INITDIALOG:
             pGlobalData = (PGLOBAL_DATA)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+            CheckRadioButton(hwndDlg,
+                             IDC_REPEAT_NOREPEAT_RADIO,
+                             IDC_REPEAT_REPEAT_RADIO,
+                             (pGlobalData->filterKeys.iDelayMSec == 0) ? IDC_REPEAT_NOREPEAT_RADIO : IDC_REPEAT_REPEAT_RADIO);
+
+            /* Initialize the delay combobox */
+            for (n = 0; n < DELAYTICKS; n++)
+            {
+                 if (pGlobalData->filterKeys.iDelayMSec < nDelayArray[n])
+                     break;
+            }
+            n--;
+
+            for (i = 0; i < DELAYTICKS; i++)
+            {
+                 AddComboBoxTime(hwndDlg, IDC_REPEAT_DELAY_COMBO, nDelayArray[i]);
+            }
+
+            SendDlgItemMessage(hwndDlg, IDC_REPEAT_DELAY_COMBO, CB_SETCURSEL, n, 0);
+
+            /* Initialize the repeat combobox */
+            for (n = 0; n < REPEATTICKS; n++)
+            {
+                 if (pGlobalData->filterKeys.iRepeatMSec < nRepeatArray[n])
+                     break;
+            }
+            n--;
+
+            for (i = 0; i < REPEATTICKS; i++)
+            {
+                 AddComboBoxTime(hwndDlg, IDC_REPEAT_REPEAT_COMBO, nRepeatArray[i]);
+            }
+
+            SendDlgItemMessage(hwndDlg, IDC_REPEAT_REPEAT_COMBO, CB_SETCURSEL, n, 0);
+
+            /* Disable the delay and repeat comboboxes if needed */
+            if (pGlobalData->filterKeys.iDelayMSec == 0)
+            {
+                EnableWindow(GetDlgItem(hwndDlg, IDC_REPEAT_DELAY_COMBO), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_REPEAT_REPEAT_COMBO), FALSE);
+            }
+
+            /* Initialize the wait combobox */
+            for (n = 0; n < WAITTICKS; n++)
+            {
+                 if (pGlobalData->filterKeys.iWaitMSec < nWaitArray[n])
+                     break;
+            }
+            n--;
+
+            for (i = 0; i < WAITTICKS; i++)
+            {
+                 AddComboBoxTime(hwndDlg, IDC_REPEAT_WAIT_COMBO, nWaitArray[i]);
+            }
+
+            SendDlgItemMessage(hwndDlg, IDC_REPEAT_WAIT_COMBO, CB_SETCURSEL, n, 0);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_REPEAT_NOREPEAT_RADIO:
+                    pGlobalData->filterKeys.iDelayMSec = 0;
+                    pGlobalData->filterKeys.iRepeatMSec = 0;
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_REPEAT_DELAY_COMBO), FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_REPEAT_REPEAT_COMBO), FALSE);
+                    break;
+
+                case IDC_REPEAT_REPEAT_RADIO:
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_REPEAT_DELAY_COMBO), TRUE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_REPEAT_REPEAT_COMBO), TRUE);
+                    break;
+
                 case IDOK:
+                    i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_DELAY_COMBO, CB_GETCURSEL, 0, 0);
+                    if (i != CB_ERR)
+                    {
+                        pGlobalData->filterKeys.iDelayMSec = nDelayArray[i];
+                    }
+
+                    i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_REPEAT_COMBO, CB_GETCURSEL, 0, 0);
+                    if (i != CB_ERR)
+                    {
+                        pGlobalData->filterKeys.iRepeatMSec = nRepeatArray[i];
+                    }
+
+                    i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_WAIT_COMBO, CB_GETCURSEL, 0, 0);
+                    if (i != CB_ERR)
+                    {
+                        pGlobalData->filterKeys.iWaitMSec = nWaitArray[i];
+                    }
+
                     EndDialog(hwndDlg, TRUE);
                     break;
 
