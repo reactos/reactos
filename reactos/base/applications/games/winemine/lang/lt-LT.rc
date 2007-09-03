@@ -1,0 +1,85 @@
+/* Translation by Vytis "CMan" Girdþijauskas (cman@cman.us) */
+
+#include "resource.h"
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE {
+     IDS_APPNAME, "WineMine"
+
+}
+
+MENU_WINEMINE MENU DISCARDABLE
+{
+    POPUP "&Þaidimas" {
+        MENUITEM "&Naujas þaidimas",           IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "Þymëti &spëjamus (?)", IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "&Pradedantis",      IDM_BEGINNER
+        MENUITEM "Pa&þengæs",      IDM_ADVANCED
+        MENUITEM "&Ekspertas",        IDM_EXPERT
+        MENUITEM "Pasi&rinktas",        IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "&Baigti",          IDM_EXIT
+    }
+    POPUP "&Informacija" {
+        MENUITEM "&Greièiausi laikai",    IDM_TIMES
+        MENUITEM "&Apie",         IDM_ABOUT
+    }
+}
+
+DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Greièiausi laikai"
+FONT 8, "MS Shell Dlg"
+{
+    GROUPBOX        "Greièiausi laikai", IDNONE,  10,  10, 140,  45
+    LTEXT           "Pradedantis",      IDNONE,  20,  20,  40,   8
+    LTEXT           "Paþengæs",      IDNONE,  20,  30,  40,   8
+    LTEXT           "Ekspertas",        IDNONE,  20,  40,  40,   8
+    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
+    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
+    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
+    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
+    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
+    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
+    DEFPUSHBUTTON   "OK",                IDOK,  55,  60,  50,  15
+}
+
+DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Sveikiname!"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "Praðome áraðyti savo vardà", IDIGNORE,  10,  10, 150,  10
+    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
+    DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
+}
+
+DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Pasirinktas þaidimas"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "Eilutës",   IDNONE,   5,   5,  30,  10
+    LTEXT           "Stulpeliai",   IDNONE,   5,  35,  30,  10
+    LTEXT           "Minos",  IDNONE,   5,  65,  30,  10
+    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
+    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
+    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
+    DEFPUSHBUTTON   "OK",     IDOK,      40,  30,  50,  15
+    PUSHBUTTON      "Atðaukti", IDCANCEL,  40,  50,  50,  15
+}
+
+DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Apie"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
+    LTEXT                 "under the Wine license", IDNONE,  35,  35, 100,  10
+    ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
+    DEFPUSHBUTTON                             "OK", IDOK,      50,  60,  55,  15
+}

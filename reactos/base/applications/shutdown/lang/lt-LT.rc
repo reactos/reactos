@@ -1,0 +1,16 @@
+/* Translation by Vytis "CMan" Girdþijauskas (cman@cman.us) */
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "Naudojimas: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  Be parametrø arba -?\tParodyti ðá praneðimà\n\
+  -l\t\t\tAtsijungti\n\
+  -s\t\t\tIðjungti kompiuterá\n\
+  -r\t\t\tPerkrauti kompiuterá\n\
+  -f\t\t\tPriverstinai uþverti visas paleistas programas\n\
+    \t\t\tJeigu nenurodyti jokie kiti parametrai, taip pat\n\
+    \t\t\tbus ávykdytas atsijungimas"
+}
