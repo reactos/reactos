@@ -9,6 +9,10 @@ TOOLS_CFLAGS = $(HOST_CFLAGS) -Wall -Wpointer-arith -Wno-strict-aliasing
 TOOLS_CPPFLAGS = $(HOST_CPPFLAGS) -Wall -Wpointer-arith
 TOOLS_LFLAGS = $(HOST_LFLAGS)
 
+# HACK: Remove those lines once host tools don't use target headers anymore
+TOOLS_CFLAGS += -D__i386__
+TOOLS_CPPFLAGS += -D__i386__
+
 $(TOOLS_INT): | $(INTERMEDIATE)
 	$(ECHO_MKDIR)
 	${mkdir} $@
