@@ -1057,7 +1057,7 @@ NTSTATUS NTAPI HwPowerOff(PCONTROLLER_INFO ControllerInfo)
  *     - Wake up with a hardware reset
  */
 {
-  DPRINT("floppy: HwPowerOff called on controller 0x%x\n", ControllerInfo);
+  DPRINT("floppy: HwPowerOff called on controller 0x%p\n", ControllerInfo);
 
   WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DATA_RATE_SELECT_REGISTER, DRSR_POWER_DOWN);
 

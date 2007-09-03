@@ -291,7 +291,7 @@ static NTSTATUS NTAPI RWSeekToCylinder(PDRIVE_INFO DriveInfo,
 
   PAGED_CODE();
 
-  DPRINT("floppy: RWSeekToCylinder called drive 0x%x cylinder %d\n", DriveInfo, Cylinder);
+  DPRINT("floppy: RWSeekToCylinder called drive 0x%p cylinder %d\n", DriveInfo, Cylinder);
 
   /* Clear any spurious interrupts */
   KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
