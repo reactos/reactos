@@ -1745,7 +1745,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 
 static 
 LRESULT
-GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
+GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam, PGUI_CONSOLE_DATA GuiData)
 {
   SCROLLINFO sInfo;
   int old_pos;
@@ -1793,10 +1793,6 @@ GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
       sInfo.nPos = sInfo.nMax;
       break;
 
-      break;
-              
-
-
   default: 
      break;
   }
@@ -1825,8 +1821,16 @@ GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
      /// fixme scroll window
      ///
      
-      // ScrollWindow
-      //UpdateWindow(hwnd);
+      ScrollWindowEx(hwnd,
+                     0,
+                     GuiData->CharHeight * (old_pos - sInfo.nPos), 
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     SW_INVALIDATE);
+
+      UpdateWindow(hwnd);
   }
   return 0;
 }
@@ -1881,7 +1885,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           break;
       case WM_HSCROLL:
       case WM_VSCROLL:
-          Result = GuiConsoleHandleScroll(hWnd, msg, wParam);
+          Result = GuiConsoleHandleScroll(hWnd, msg, wParam, GuiData);
           break;
       case WM_SIZE:
           GuiConsoleResize(hWnd, wParam, lParam);
