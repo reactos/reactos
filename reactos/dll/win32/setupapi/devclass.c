@@ -1449,7 +1449,7 @@ SetupDiGetClassImageListExW(
 
         /* Prepare a HIMAGELIST */
         InitCommonControls();
-        ClassImageListData->ImageList = ImageList_Create(16, 16, ILC_COLOR, 100, 10);
+        ClassImageListData->ImageList = ImageList_Create(16, 16, ILC_COLOR32, 100, 10);
         if (!ClassImageListData->ImageList)
             goto cleanup;
 
@@ -1464,7 +1464,10 @@ SetupDiGetClassImageListExW(
                 &hIcon,
                 NULL);
             if (ret)
+            {
                 list->IconIndexes[i] = ImageList_AddIcon(ClassImageListData->ImageList, hIcon);
+                DestroyIcon(hIcon);
+            }
             else
                 list->IconIndexes[i] = -1; /* Special value to tell that icon is unavailable */
         }
@@ -1612,7 +1615,8 @@ SetupDiLoadClassIcon(
         TRACE("Icon index %d, dll name %s\n", iconIndex, debugstr_w(DllName));
         if (LargeIcon)
         {
-            if (1 != ExtractIconEx(DllName, iconIndex, LargeIcon, NULL, 1))
+            *LargeIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+            if (!*LargeIcon)
             {
                 SetLastError(ERROR_INVALID_INDEX);
                 goto cleanup;
