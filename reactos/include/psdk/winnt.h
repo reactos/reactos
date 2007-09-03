@@ -4,10 +4,6 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __GNUC__
-#include "intrin.h"
-#endif
-
 /* translate GCC target defines to MS equivalents. Keep this synchronized
    with windows.h. */
 #if defined(__i686__) && !defined(_M_IX86)
@@ -250,6 +246,10 @@ typedef BYTE BOOLEAN,*PBOOLEAN;
 typedef BYTE FCHAR;
 typedef WORD FSHORT;
 typedef DWORD FLONG;
+
+#ifdef __GNUC__
+#include "intrin.h"
+#endif
 
 #define NTAPI __stdcall
 #include <basetsd.h>

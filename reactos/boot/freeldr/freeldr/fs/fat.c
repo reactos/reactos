@@ -234,8 +234,6 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 		DbgPrint((DPRINT_FILESYSTEM, "BootSectorMagic: 0x%x\n", FatVolumeBootSector->BootSectorMagic));
 	}
 
-#endif // !defined NDEBUG
-
 	//
 	// Set the correct partition offset
 	//
