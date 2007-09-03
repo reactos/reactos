@@ -215,9 +215,16 @@ __mingw_CRTStartup (void)
    /* Adust references to dllimported data that have non-zero offsets.  */
   _pei386_runtime_relocator ();
 
+#if defined(__i386__)
   /* Align the stack to 16 bytes for the sake of SSE ops in main
      or in functions inlined into main.  */
   asm  __volatile__  ("andl $-16, %%esp" : : : "%esp");
+#elif defined(__mips__)
+  /* Align the stack to 16 bytes */
+  asm  __volatile__  ("andi %sp,%sp,-16" : : : "%sp");
+#else
+#error Unsupported architecture
+#endif
 
   /*
    * Call the main function. If the user does not supply one
