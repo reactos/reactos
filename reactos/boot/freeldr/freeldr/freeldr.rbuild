@@ -22,5 +22,6 @@
             <library>rossym</library>
             <library>cmlib</library>
             <library>rtl</library>
+            <library>libcntpr</library>
         </module>
 </if>

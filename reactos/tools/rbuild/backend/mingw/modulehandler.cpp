@@ -146,7 +146,7 @@ MingwModuleHandler::PassThruCacheDirectory (const FileLocation* fileLocation )
 MingwModuleHandler::GetTargetDirectoryTree (
 	const Module& module )
 {
-	if ( module.type == StaticLibrary || module.type == BootProgram )
+	if ( module.type == StaticLibrary )
 		return backend->intermediateDirectory;
 	return backend->outputDirectory;
 }

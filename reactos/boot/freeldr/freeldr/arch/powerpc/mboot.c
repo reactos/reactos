@@ -61,7 +61,6 @@ extern boot_infos_t BootInfo;
 
 #define BAT_GRANULARITY             (64 * 1024)
 #define KernelMemorySize            (8 * 1024 * 1024)
-#define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
 #define XROUNDUP(x,n)               ((((ULONG)x) + ((n) - 1)) & (~((n) - 1)))
 
 /* Load Address of Next Module */
@@ -77,7 +76,7 @@ ULONG_PTR KernelBase;
 BOOLEAN PaeModeEnabled;
 
 /* Kernel Entrypoint in Physical Memory */
-ULONG_PTR KernelEntry;
+ULONG_PTR KernelEntryPoint;
 
 /* Dummy to bring in memmove */
 PVOID memmove_dummy = memmove;
@@ -127,7 +126,7 @@ NTAPI
 FrLdrStartup(ULONG Magic)
 {
     KernelEntryFn KernelEntryAddress = 
-	(KernelEntryFn)(KernelEntry + KernelBase);
+	(KernelEntryFn)(KernelEntryPoint + KernelBase);
     ULONG_PTR i, j, page, count;
     PCHAR ModHeader;
     boot_infos_t *LocalBootInfo = &BootInfo;
@@ -459,7 +458,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     }
 
     ImageSize = SWAPD(NtHeader->OptionalHeader.SizeOfImage);
-    KernelEntry = SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    KernelEntryPoint = SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint);
     printf("Total image size is %x\n", ImageSize);
     
     /* Handle relocation sections */
@@ -675,6 +674,24 @@ FrLdrLoadModule(FILE *ModuleImage,
     }
 
     return(ModuleData->ModStart);
+}
+
+PVOID
+NTAPI
+FrLdrMapImage(IN FILE *Image, IN PCHAR ShortName, IN ULONG ImageType)
+{
+    PVOID Result;
+
+    if (ImageType == 1)
+    {
+        if(FrLdrMapKernel(Image))
+            return (PVOID)KernelBase;
+        else
+            return NULL;
+    }
+    else
+        Result = (PVOID)FrLdrLoadModule(Image, ShortName, NULL);
+    return Result;
 }
 
 ULONG_PTR

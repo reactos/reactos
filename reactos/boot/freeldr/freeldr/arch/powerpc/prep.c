@@ -61,7 +61,7 @@ void PpcPrepVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
     *Depth = 16;
 }
 
-void PpcPrepVideoPrepareForReactOS()
+void PpcPrepVideoPrepareForReactOS(BOOLEAN setup)
 {
     pci_setup(&pci1_desc);
 }

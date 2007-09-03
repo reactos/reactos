@@ -5,7 +5,9 @@
     <define name="_NTSYSTEM_" />
     <define name="_NTDLLBUILD_" />
     <define name="_SEH_NO_NATIVE_NLG" />
-    <define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
+    <if property="ARCH" value="i386">
+        <define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
+    </if>
     <include base="libcntpr">.</include>
 
     <directory name="except">

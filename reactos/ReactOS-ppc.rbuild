@@ -9,7 +9,7 @@
 
   <xi:include href="ReactOS-generic.rbuild" />
 
-  <property name="OFWLDR_LINKFORMAT" value="-L$(INTERMEDIATE)/lib/ppcmmu -lppcmmu_code"/>
+  <property name="OFWLDR_LINKFORMAT" value="-L$(INTERMEDIATE)/lib/ppcmmu -lppcmmu_code -lppcmmu -nostdlib -nostartfiles"/>
 
   <define name="_M_PPC" />
   <define name="_PPC_" />
