@@ -4,6 +4,9 @@
 #pragma GCC system_header
 #endif
 
+#ifdef __GNUC__
+#include "intrin.h"
+#endif
 
 /* translate GCC target defines to MS equivalents. Keep this synchronized
    with windows.h. */
@@ -2341,7 +2344,7 @@ typedef struct _CONTEXT {
 #endif
 } CONTEXT;
 
-#elif defined(MIPS)
+#elif defined(_MIPS_)
 
 /* The following flags control the contents of the CONTEXT structure. */
 
@@ -4039,28 +4042,32 @@ typedef struct _OBJECT_TYPE_LIST {
 
 #if defined(__GNUC__)
 
-#ifdef _M_IX86
+#if defined(_M_IX86)
 static __inline__ PVOID GetCurrentFiber(void)
 {
     void* ret;
     __asm__ __volatile__ (
-	"movl	%%fs:0x10,%0"
-	: "=r" (ret) /* allow use of reg eax,ebx,ecx,edx,esi,edi */
-	);
+        "movl	%%fs:0x10,%0"
+        : "=r" (ret) /* allow use of reg eax,ebx,ecx,edx,esi,edi */
+    );
     return ret;
 }
 #else
+#if defined(_M_PPC)
 static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_winnt(const unsigned long Offset)
 {
     unsigned long result;
     __asm__("\tadd 7,13,%1\n"
-	    "\tlwz %0,0(7)\n"
-	    : "=r" (result)
-	    : "r" (Offset)
-	    : "r7");
+            "\tlwz %0,0(7)\n"
+            : "=r" (result)
+            : "r" (Offset)
+            : "r7");
     return result;
 }
 
+#else
+#error Unknown architecture
+#endif
 static __inline__ PVOID GetCurrentFiber(void)
 {
     return __readfsdword_winnt(0x10);
@@ -4147,78 +4154,36 @@ static __inline__ BOOLEAN
 InterlockedBitTestAndSet(IN LONG volatile *Base,
                          IN LONG Bit)
 {
+#if defined(_M_IX86)
 	LONG OldBit;
-
-#ifdef _M_IX86
 	__asm__ __volatile__("lock "
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
-		             :"=r" (OldBit),"=m" (*Base)
-		             :"Ir" (Bit)
-			     : "memory");
-#elif defined(_M_PPC)
-	LONG scratch = 0;
-
-	Bit = 1 << Bit;
-	/* %0 - OldBit
-	 * %1 - Bit
-	 * %2 - scratch
-	 * %3 - Base
-	 */
-	__asm__ __volatile__(
-	    "sync\n"
-	    "0:\n\t"
-	    "lwarx %2,0,%3\n\t"
-            "mr %0,%2\n\t"
-	    "or %2,%1,%2\n\t"
-	    "stwcx. %2,0,%3\n\t"
-	    "bne- 0b\n\t" : 
-	    "=r" (OldBit) :
-	    "r" (Bit),
-	    "r" (scratch),
-	    "r" (Base)
-	    );
-#endif
+	                     :"=r" (OldBit),"=m" (*Base)
+	                     :"Ir" (Bit)
+	                     : "memory");
 	return OldBit;
+#else
+	return (_InterlockedOr(Base, 1 << Bit) >> Bit) & 1;
+#endif
 }
 
 static __inline__ BOOLEAN
 InterlockedBitTestAndReset(IN LONG volatile *Base,
-                          IN LONG Bit)
+                           IN LONG Bit)
 {
+#if defined(_M_IX86)
 	LONG OldBit;
-
-#ifdef _M_IX86
 	__asm__ __volatile__("lock "
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
-		             :"=r" (OldBit),"=m" (*Base)
-		             :"Ir" (Bit)
-			     : "memory");
-#elif defined(_M_PPC)
-	LONG scratch = 0;
-
-	Bit = ~(1 << Bit);
-	/* %0 - OldBit
-	 * %1 - Bit
-	 * %2 - scratch
-	 * %3 - Base
-	 */
-	__asm__ __volatile__(
-	    "sync\n"
-	    "0:\n\t"
-	    "lwarx %2,0,%3\n\t"
-            "mr %0,%2\n\t"
-	    "and %2,%1,%2\n\t"
-	    "stwcx. %2,0,%3\n\t"
-	    "bne- 0b\n\t" : 
-	    "=r" (OldBit) :
-	    "r" (Bit),
-	    "r" (scratch),
-	    "r" (Base)
-	    );
-#endif
+	                     :"=r" (OldBit),"=m" (*Base)
+	                     :"Ir" (Bit)
+	                     : "memory");
 	return OldBit;
+#else
+	return (_InterlockedAnd(Base, ~(1 << Bit)) >> Bit) & 1;
+#endif
 }
 
 static __inline__ BOOLEAN
@@ -4226,14 +4191,14 @@ BitScanReverse(OUT ULONG *Index,
                IN ULONG Mask)
 {
 	BOOLEAN BitPosition = 0;
-#ifdef _M_IX86
+#if defined(_M_IX86)
 	__asm__ __volatile__("bsrl %2,%0\n\t"
 	                     "setnz %1\n\t"
-                         :"=&r" (*Index), "=r" (BitPosition)
-		                 :"rm" (Mask)
-			             :"memory");
+	                     :"=&r" (*Index), "=r" (BitPosition)
+	                     :"rm" (Mask)
+	                     :"memory");
 	return BitPosition;
-#elif defined(_M_PPC)
+#else
 	/* Slow implementation for now */
 	for( *Index = 31; *Index; *Index-- ) {
 		if( (1<<*Index) & Mask ) {
@@ -4247,10 +4212,14 @@ BitScanReverse(OUT ULONG *Index,
 
 #endif
 
-#ifdef _M_IX86
+#if defined(_M_IX86)
 #define YieldProcessor() __asm__ __volatile__("pause");
 #elif defined(_M_PPC)
 #define YieldProcessor() __asm__ __volatile__("nop");
+#elif defined(_M_MIPS)
+#define YieldProcessor() __asm__ __volatile__("nop");
+#else
+#error Unknown architecture
 #endif
 
 #if defined(_AMD64_)
