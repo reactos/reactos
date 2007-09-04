@@ -170,7 +170,7 @@ namespace Sysreg_
         options[0] = (TCHAR*)qemuimgdir.c_str();
         options[2] = (TCHAR*)image.c_str();
             
-        cerr << "Creating HDD Image ..." << output << endl;
+        cerr << "Creating HDD Image ..." << image << endl;
         if (OsSupport::createProcess ((TCHAR*)qemuimgdir.c_str(), 4, options, true))
         {
             m_HDDImage = image;
