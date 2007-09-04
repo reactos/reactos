@@ -181,7 +181,7 @@ do_reg_operation(
 {
 	CHAR EmptyStr = (CHAR)0;
 	ULONG Type;
-	SIZE_T Size;
+	ULONG Size;
 	LONG Error;
 
 	if (Flags & FLG_ADDREG_DELVAL)  /* deletion */

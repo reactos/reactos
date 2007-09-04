@@ -52,7 +52,6 @@
 
 typedef void VOID, *PVOID, *HANDLE;
 typedef HANDLE HKEY, *PHKEY;
-typedef long unsigned int SIZE_T, *PSIZE_T;
 typedef unsigned char UCHAR, *PUCHAR, BYTE, *LPBYTE;
 typedef char CHAR, *PCHAR, *PSTR;
 typedef const char CCHAR;
@@ -65,8 +64,9 @@ typedef long long LONGLONG;
 typedef unsigned long long ULONGLONG;
 typedef UCHAR BOOLEAN, *PBOOLEAN;
 typedef int BOOL;
-typedef int W64 LONG_PTR, *PLONG_PTR;
-typedef unsigned int W64 ULONG_PTR, *PULONG_PTR;
+typedef long int W64 LONG_PTR, *PLONG_PTR;
+typedef long unsigned int W64 ULONG_PTR, *PULONG_PTR;
+typedef ULONG_PTR SIZE_T, *PSIZE_T;
 typedef wchar_t WCHAR, *PWCHAR, *PWSTR, *LPWSTR;
 typedef const wchar_t *PCWSTR, *LPCWSTR;
 typedef int NTSTATUS;
