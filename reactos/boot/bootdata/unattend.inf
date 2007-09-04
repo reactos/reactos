@@ -7,7 +7,7 @@ Signature = "$ReactOS$"
 
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
-UnattendSetupEnabled = yes
+UnattendSetupEnabled = no
 
 ; Install to \Device\Harddisk0\Partition1\ReactOS
 DestinationDiskNumber = 0

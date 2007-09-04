@@ -7,7 +7,7 @@
 <cdfile base="$(CDOUTPUT)">hivesft.inf</cdfile>
 <cdfile base="$(CDOUTPUT)">hivesys.inf</cdfile>
 <cdfile base="$(CDOUTPUT)">txtsetup.sif</cdfile>
-<!--<cdfile base="$(CDOUTPUT)">unattend.inf</cdfile>-->
+<cdfile base="$(CDOUTPUT)">unattend.inf</cdfile>
 <directory name="bootcd">
 	<xi:include href="bootcd/bootcd.rbuild" />
 </directory>
