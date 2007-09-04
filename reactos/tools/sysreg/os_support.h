@@ -77,7 +77,16 @@ namespace System_
 
 	static bool terminateProcess(ProcessID pid);
 
-    static void sleep(long value);
+
+//----------------------------------------------------------------------------------------
+///
+/// delayExecution
+///
+/// Description: this function sleeps the current process for the amount given in seconds
+///
+/// @param sec amount of seconds to sleep
+
+    static void delayExecution(long sec);
 
 	protected:
 //---------------------------------------------------------------------------------------

@@ -94,7 +94,7 @@ namespace Sysreg_
 			/// delay reading until emulator is ready
 			///
 
-            OsSupport::sleep(m_DelayRead);
+            OsSupport::delayExecution(m_DelayRead);
 		}
     }
 //---------------------------------------------------------------------------------------
@@ -600,7 +600,7 @@ namespace Sysreg_
 	void RosBootTest::cleanup()
 	{
         m_DataSource->closeSource();
-        OsSupport::sleep(3 * CLOCKS_PER_SEC);
+        OsSupport::delayExecution(3);
 
         if (m_Pid)
         {
@@ -650,7 +650,7 @@ namespace Sysreg_
         }
 #endif
 #ifndef __LINUX__
-        OsSupport::sleep(500);
+        OsSupport::delayExecution(1);
 #endif
 
 	assert(m_DataSource != 0);
@@ -660,8 +660,15 @@ namespace Sysreg_
             cleanup();
             return false;
         }
-        OsSupport::sleep(1000); 
 #ifdef __LINUX__
+        
+        OsSupport::delayExecution(3); 
+        /*
+         * For linux systems we can only
+         * check if the emulator runs by
+         * opening pid.txt and lookthrough if
+         * it exists
+         */
 
         FILE * file = fopen(m_PidFile.c_str(), "r");
         if (!file)

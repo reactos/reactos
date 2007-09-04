@@ -87,9 +87,9 @@ namespace System_
 		free(cmd);
 		return pid;
 	}
-   	void OsSupport::sleep(long value)
+   	void OsSupport::delayExecution(long value)
     	{
-        	Sleep(value);
+        	Sleep(value * 1000);
     	}
 #else
 /********************************************************************************************************************/
@@ -124,9 +124,9 @@ namespace System_
 		return true;
 	}
 
-    	void OsSupport::sleep(long value)
+    	void OsSupport::delayExecution(long value)
     	{
-        	sleep(value);
+			sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
     	}
 
 
