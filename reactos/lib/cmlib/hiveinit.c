@@ -156,8 +156,8 @@ HvpInitializeMemoryHive(
    if (ChunkSize < sizeof(HBASE_BLOCK) ||
        !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
    {
-      DPRINT1("Registry is corrupt: ChunkSize %d < sizeof(HBASE_BLOCK) %d, "
-          "or HvpVerifyHiveHeader() failed\n", ChunkSize, sizeof(HBASE_BLOCK));
+      DPRINT1("Registry is corrupt: ChunkSize %lu < sizeof(HBASE_BLOCK) %lu, "
+          "or HvpVerifyHiveHeader() failed\n", ChunkSize, (SIZE_T)sizeof(HBASE_BLOCK));
       return STATUS_REGISTRY_CORRUPT;
    }
 
