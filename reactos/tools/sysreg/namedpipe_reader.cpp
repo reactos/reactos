@@ -20,15 +20,22 @@ namespace System_
 
 	using std::vector;
 //---------------------------------------------------------------------------------------
-    NamedPipeReader::NamedPipeReader() : DataSource(), h_Pipe(NULLVAL)
+    NamedPipeReader::NamedPipeReader() : DataSource(), h_Pipe(NULLVAL), m_Buffer(0)
 	{
-
+#ifdef UNICODE
+        m_WBuffer = 0;
+#endif
 	}
 
 //---------------------------------------------------------------------------------------
 	NamedPipeReader::~NamedPipeReader()
 	{
-
+        if (m_Buffer)
+            free(m_Buffer);
+#ifdef UNICODE
+        if (m_WBuffer)
+            free(m_WBuffer);
+#endif
 	}
 
 	bool NamedPipeReader::isSourceOpen()
@@ -45,15 +52,15 @@ namespace System_
 			cerr << "NamedPipeReader::openPipe> pipe already open" << endl;
 			return false;
 		}
-
+#ifndef __LINUX__
 		h_Pipe = CreateFile("\\\\.\\pipe\\qemu", //PipeCmd.c_str(),
-			GENERIC_WRITE | GENERIC_READ,
-			0,
-			NULL,
-			OPEN_EXISTING,
-			FILE_ATTRIBUTE_NORMAL,
-			(HANDLE)
-			NULL);
+			                GENERIC_WRITE | GENERIC_READ,
+			                0,
+			                NULL,
+			                OPEN_EXISTING,
+			                FILE_ATTRIBUTE_NORMAL,
+			                (HANDLE)
+			                NULL);
 
 		if(INVALID_HANDLE_VALUE == h_Pipe) {
             cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << " Error:" << GetLastError() << endl;
@@ -63,26 +70,46 @@ namespace System_
 		else
 		{
 			cout << "NamedPipeReader::openPipe> successfully opened pipe" << endl;
+            m_BufferLength = 100;
+            m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
+#ifdef UNICODE
+            m_WBuffer = (WCHAR*)malloc(sizeof(WCHAR) * m_BufferLength);
+#endif
+		    ConnectNamedPipe(h_Pipe,
+                 			 0);
+            return true;
+		}
+#else
+		h_Pipe = open("PipeCmd.c_str()", O_RDONLY);
+
+		if(INVALID_HANDLE_VALUE == h_Pipe) {
+			cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << endl;
+			h_Pipe = NULLVAL;
+			return false;
+		}
+		else
+		{
+			cout << "NamedPipeReader::openPipe> successfully opened pipe" << endl;
 			return true;
 		}
-
-		ConnectNamedPipe(
-			h_Pipe,
-			0);
+#endif
 	}
 
 //---------------------------------------------------------------------------------------
 
 	bool NamedPipeReader::closeSource() 
 	{
-		if (h_Pipe == INVALID_HANDLE_VALUE)
+		if (h_Pipe == NULLVAL)
 		{
 			cerr << "NamedPipeReader::closePipe> pipe is not open" << endl;
 			return false;
 		}
+#ifdef __LINUX__
+        close(h_Pipe);
+#else
 		DisconnectNamedPipe(h_Pipe);
 		CloseHandle(h_Pipe);
-
+#endif
 		h_Pipe = NULLVAL;
 		return true;
 	}
@@ -173,70 +200,75 @@ namespace System_
 			append_line = false;
 		}
 	}
+//---------------------------------------------------------------------------------------
+    bool NamedPipeReader::readPipe(char * buffer, int bufferlength, long & read)
+    {
+        
+#ifdef __LINUX__
+        long cbRead = read(h_Pipe,
+                           buffer,
+                           (bufferlength-1) * sizeof(char));
+#else
+        DWORD cbRead = 0;
+        BOOL fSuccess = ReadFile(h_Pipe,
+						         buffer,
+						         (bufferlength-1) * sizeof(char),
+						         &cbRead,
+						         NULL);
+				 
+		if (!fSuccess && GetLastError() != ERROR_MORE_DATA)
+            return false;
+#endif
 
+        read = cbRead;
+        return true;
+    }
 //---------------------------------------------------------------------------------------
 
 	bool NamedPipeReader::readSource(vector<string> & vect)
 	{
-		char * localbuf;
-		DWORD localsize = 100;
 		size_t lines = vect.size ();
 
-		BOOL fSuccess;
-		localbuf = (char*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(char));
+        if (h_Pipe == NULLVAL)
+        {
+            cerr << "Error: pipe is not open" << endl;
+            return false;
+        }
+
+        if (!m_Buffer)
+        {
+            cerr << "Error: no memory" << endl;
+        }
+
 #ifdef UNICODE
-		wchar_t * wbuf = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, localsize * sizeof(wchar_t));
-#endif /* UNICODE */
-		if (localbuf != NULL)
+        if (!m_WBuffer)
+        {
+            cerr << "Error: no memory" << endl;
+        }
+#endif
+
+		bool append_line = false;
+		do
 		{
-			bool append_line = false;
-			do
-			{
-				DWORD cbRead;
-				do 
-				{ 
-					ZeroMemory(localbuf, localsize * sizeof(char));
-#ifdef UNICODE
-					ZeroMemory(wbuf, localsize * sizeof(wchar_t));
-#endif /* UNICODE */
-
-					fSuccess = ReadFile( 
-						h_Pipe,
-						localbuf,
-						(localsize-1) * sizeof(char),
-						&cbRead,
-						NULL);
-				 
-					if (! fSuccess && GetLastError() != ERROR_MORE_DATA) 
-						break; 
+            memset(m_Buffer, 0x0, m_BufferLength * sizeof(char));
+            long cbRead = 0;
+                    
+            if (!readPipe(m_Buffer, 100, cbRead))
+                break;
 
 #ifdef UNICODE
-					if (UnicodeConverter::ansi2Unicode(localbuf, wbuf, cbRead))
-					{
-						extractLines(wbuf, vect, append_line, cbRead);
-					}
-#else /* UNICODE */
-					extractLines(localbuf, vect, append_line, cbRead);
-#endif /* UNICODE */
+            memset(m_WBuffer, 0x0, m_BufferLength * sizeof(WCHAR));
+            if (!UnicodeConverter::ansi2Unicode(m_Buffer, m_WBuffer, cbRead))
+                break;
+            extractLines(m_WBuffer, vect, append_line, cbRead);
+#endif
+            extractLines(m_Buffer, vect, append_line, cbRead);
 
-				} while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
-			} while (append_line);
 
-			if (!fSuccess)
-				return 0;
+        }while (append_line);
 
-			HeapFree(GetProcessHeap(), 0, localbuf);
-#ifdef UNICODE
-			HeapFree(GetProcessHeap(), 0, wbuf);
-#endif /* UNICODE */
-		}
-		else
-		{
-			return 0;
-		}
-
-	return (vect.size () - lines);
-	}
+    return (vect.size () - lines);
+}
 
 
 } // end of namespace System_

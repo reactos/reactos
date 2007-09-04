@@ -247,12 +247,14 @@ namespace Sysreg_
         }
 
 #ifdef __LINUX__
-		pipe = _T("stdio");
-		m_Src = _T("");
+        pipe = _T("pipe:/tmp/qemu");
+		m_Src = _T("/tmp/qemu");
         qemudir = _T("/usr/share/qemu");
+        m_DebugPort = _T("pipe");
 #else		
 		pipe = _T("pipe:qemu");
 		m_Src = _T("\\\\.\\pipe\\qemu");
+        m_DebugPort = _T("pipe");
         if (!getQemuDir(qemudir))
         {
             return false;
@@ -322,29 +324,26 @@ namespace Sysreg_
 	    pos = pipe.find(_T("pipe:"));
 		if (pos == 0)
 		{
-#ifdef __LINUX__
-            cerr << "Error: reading from pipes is not supported with linux hosts - use stdio" << endl;
-            return false;
-		}
-#else
 		    pipe = pipe.substr(pos + 5, pipe.size() - pos - 5);
             pos = pipe.find(_T(" "));
             if (pos != string::npos)
             {
-				m_Src = _T("\\\\.\\pipe\\") + pipe.substr(0, pos);	
-			}
-			else
-			{
-				m_Src = _T("\\\\.\\pipe\\") + pipe;
-			}
+                pipe = pipe.substr(0, pos);
+            }
+#ifdef __LINUX__
+            m_Src = pipe;
+#else
+			m_Src = _T("\\\\.\\pipe\\") + pipe.substr(0, pos);
+#endif
+            m_DebugPort = _T("pipe");
             return true;
         }
-#endif
         pos = pipe.find(_T("stdio"));
         if (pos == 0)
 		{
 #ifdef __LINUX__
 			m_Src = m_BootCmd;
+            m_DebugPort = _T("stdio");
             return true;
 #else					
 			cerr << "Error: reading from stdio is not supported for windows hosts - use pipes" << endl;
@@ -387,6 +386,11 @@ namespace Sysreg_
             }
 
             getDefaultHDDImage(m_HDDImage);
+            if (isFileExisting(m_HDDImage))
+            {
+                cerr << "Falling back to default hdd image " << m_HDDImage << endl;
+                return true;
+            }
             return createHDDImage(m_HDDImage);
         }
         /*
@@ -552,19 +556,20 @@ namespace Sysreg_
         }
         cerr << "Opening Data Source:" << m_BootCmd << endl;
 
-
+/*
 #ifdef __LINUX__
         _tremove(m_PidFile.c_str ());
         m_DataSource = new PipeReader();
         m_Src = m_BootCmd;
 #else
+*/
         m_DataSource = new NamedPipeReader();
         if (!executeBootCmd())
         {
             cerr << "Error: failed to launch emulator with: " << m_BootCmd << endl;
             return false;
         }
-#endif
+//#endif
         
         return true;
     }
@@ -659,23 +664,19 @@ namespace Sysreg_
             return false;
         }
 #endif
-#ifndef __LINUX__
-        OsSupport::delayExecution(1);
-#endif
 
-	assert(m_DataSource != 0);
+        if (m_DelayRead)
+        {
+            cerr << "Delaying read for " << m_DelayRead << " seconds" << endl;
+            OsSupport::delayExecution(m_DelayRead); 
+        }
+
         if (!m_DataSource->openSource(m_Src))
         {
             cerr << "Error: failed to open data source with " << m_Src << endl;
             cleanup();
             return false;
         }
-
-        if (m_DelayRead)
-        {
-            OsSupport::delayExecution(m_DelayRead); 
-        }
-
 #ifdef __LINUX__
         /*
          * For linux systems we can only

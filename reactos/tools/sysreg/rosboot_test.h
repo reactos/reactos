@@ -157,6 +157,7 @@ protected:
     string m_MaxMem;
     string m_BootCmd;
     string m_Src;
+    string m_DebugPort;
     string m_PidFile;
 
     DataSource * m_DataSource;

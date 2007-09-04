@@ -120,8 +120,15 @@ protected:
 
 	void extractLines(TCHAR * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead);
 
+    bool readPipe(char * buffer, int bufferlength, long & read);
+
 
 	HANDLE h_Pipe;
+    char * m_Buffer;
+    int m_BufferLength;
+#ifdef UNICODE
+    WCHAR * m_WBuffer;
+#endif
 
 	}; // end of class NamedPipeReader
 
