@@ -34,9 +34,9 @@ SYSREGBUILD_OBJECTS = \
 
 
 ifeq ($(HOST),mingw32-linux)
-SYSREGBUILD_HOST_CFLAGS = $(TOOLS_CPPFLAGS) -D__LINUX__
+SYSREGBUILD_HOST_CFLAGS = $(TOOLS_CPPFLAGS) -D__LINUX__ -Wall
 else
-SYSREGBUILD_HOST_CFLAGS = $(TOOLS_CPPFLAGS) -D__USE_W32API -Iinclude -Iinclude/reactos -Iinclude/psdk -Iinclude$(SEP)crt -Iinclude/reactos/libs -I$(INTERMEDIATE_)$(SEP)include$(SEP)psdk
+SYSREGBUILD_HOST_CFLAGS = $(TOOLS_CPPFLAGS) -D__USE_W32API -Iinclude -Iinclude/reactos -Iinclude/psdk -Iinclude$(SEP)crt -Iinclude/reactos/libs -I$(INTERMEDIATE_)$(SEP)include$(SEP)psdk -Wall
 endif
 
 SYSREGBUILD_HOST_LFLAGS = $(TOOLS_LFLAGS)

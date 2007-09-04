@@ -80,7 +80,7 @@ namespace System_
             return true;
 		}
 #else
-		h_Pipe = open("PipeCmd.c_str()", O_RDONLY);
+		h_Pipe = open(PipeCmd.c_str(), O_RDONLY);
 
 		if(INVALID_HANDLE_VALUE == h_Pipe) {
 			cerr << "NamedPipeReader::openPipe> failed to open pipe " << PipeCmd << endl;
