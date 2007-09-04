@@ -2197,9 +2197,9 @@ ProcessUnattendInf(HINF hUnattendedInf)
               szPath[length]  = '\\';
               length++;
             }
-          strcpy(&szPath[length], "system32\\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
+          strcpy(&szPath[length], "dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
           fwrite(szPath, 1, strlen(szPath) + 1, file);
-          strcpy(&szPath[length], "system32\\shutdown.exe -s"); 
+          strcpy(&szPath[length], "shutdown.exe -s"); 
           fwrite(szPath, 1, strlen(szPath) + 1, file);
         }
       fclose(file);
