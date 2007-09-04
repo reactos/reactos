@@ -1459,17 +1459,25 @@ SetupDiGetClassImageListExW(
          * and put their index in the image list in the IconIndexes array */
         for (i = 0; i < list->NumberOfGuids; i++)
         {
+            INT miniIconIndex;
+
             ret = SetupDiLoadClassIcon(
                 &list->Guids[i],
-                &hIcon,
-                NULL);
+                NULL,
+                &miniIconIndex);
             if (ret)
             {
-                list->IconIndexes[i] = ImageList_AddIcon(ClassImageListData->ImageList, hIcon);
-                DestroyIcon(hIcon);
+                hIcon = LoadImage(hInstance, MAKEINTRESOURCE(miniIconIndex), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+                if (hIcon)
+                {
+                    list->IconIndexes[i] = ImageList_AddIcon(ClassImageListData->ImageList, hIcon);
+                    DestroyIcon(hIcon);
+                }
+                else
+                    list->IconIndexes[i] = -1;
             }
             else
-                list->IconIndexes[i] = -1; /* Special value to tell that icon is unavailable */
+                list->IconIndexes[i] = -1; /* Special value to indicate that the icon is unavailable */
         }
 
         ret = TRUE;
@@ -1615,7 +1623,7 @@ SetupDiLoadClassIcon(
         TRACE("Icon index %d, dll name %s\n", iconIndex, debugstr_w(DllName));
         if (LargeIcon)
         {
-            *LargeIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+            *LargeIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             if (!*LargeIcon)
             {
                 SetLastError(ERROR_INVALID_INDEX);
