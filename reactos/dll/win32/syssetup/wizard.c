@@ -2158,7 +2158,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
       }while(SetupFindNextLine(&InfContext, &InfContext));
    }
 
-  DPRINT1("BootCDRegtestActive %d\n", BootCDRegtestActive);
+  DPRINT("BootCDRegtestActive %d\n", BootCDRegtestActive);
   if (BootCDRegtestActive)
     {
       char szPath[MAX_PATH];
@@ -2188,12 +2188,21 @@ ProcessUnattendInf(HINF hUnattendedInf)
                     (const BYTE*)szPath,
                      strlen(szPath) * sizeof(char));
 
-      strcpy(szPath, "C:\\ReactOS\\bin\\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
-      fwrite(szPath, 1, strlen(szPath) + 1, file);
-      strcpy(szPath, "C:\\ReactOS\\system32\\shutdown.exe -s");
-      fwrite(szPath, 1, strlen(szPath) + 1, file);
-      fclose(file);
+      if (GetSystemDirectoryA(szPath, MAX_PATH))
+        {
+          UINT length = strlen(szPath);
 
+          if (szPath[length-1] != '\\')
+            {
+              szPath[length]  = '\\';
+              length++;
+            }
+          strcpy(&szPath[length], "bin\\dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
+          fwrite(szPath, 1, strlen(szPath) + 1, file);
+          strcpy(&szPath[length], "system32\\shutdown.exe -s"); 
+          fwrite(szPath, 1, strlen(szPath) + 1, file);
+        }
+      fclose(file);
     }
     RegCloseKey(hKey);
     return TRUE;
