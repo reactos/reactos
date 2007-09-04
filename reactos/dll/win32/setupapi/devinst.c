@@ -2787,7 +2787,9 @@ SetupDiOpenDeviceInfoW(
                 goto cleanup;
             }
 
+            ClassGUID = GUID_NULL;
             dwSize = MAX_GUID_STRING_LEN * sizeof(WCHAR);
+
             if (RegQueryValueExW(hKey,
                                  REGSTR_VAL_CLASSGUID,
                                  NULL,
@@ -2798,8 +2800,7 @@ SetupDiOpenDeviceInfoW(
                 szClassGuid[MAX_GUID_STRING_LEN - 2] = UNICODE_NULL;
 
                 /* Convert a string to a ClassGuid */
-                if (UuidFromStringW(&szClassGuid[1], &ClassGUID) != RPC_S_OK)
-                    ClassGUID = GUID_NULL;
+                UuidFromStringW(&szClassGuid[1], &ClassGUID);
             }
 
             if (!CreateDeviceInfoElement(list, DeviceInstanceId, &ClassGUID, &deviceInfo))
