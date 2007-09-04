@@ -266,6 +266,13 @@ namespace Sysreg_
         {
             /* boot from cdrom */
             m_BootCmd +=  _T(" -boot d -cdrom ") + m_CDImage;
+
+            if (m_HDDImage.length ())
+            {
+                /* add disk when specified */
+                m_BootCmd += _T(" -hda ") + m_HDDImage;
+            }
+
         }
         else if (m_HDDImage.length ())
         {
@@ -291,11 +298,14 @@ namespace Sysreg_
         m_PidFile += _T("/pid.txt");
         m_BootCmd += _T(" -pidfile ");
         m_BootCmd += m_PidFile;
-#endif
+        m_BootCmd += _T(" -vnc 0");
+#else
+
         if (hasQemuNoRebootOption())
         {
             m_BootCmd += _T(" -no-reboot ");
         }
+#endif
         return true;
     }
 //----------------------------------------------------------------------------------------
