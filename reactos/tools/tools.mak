@@ -49,7 +49,6 @@ include tools/bin2res/bin2res.mak
 include tools/buildno/buildno.mak
 include tools/cabman/cabman.mak
 include tools/cdmake/cdmake.mak
-include tools/dbgprint/dbgprint.mak
 include tools/gendib/gendib.mak
 include tools/ofw_interface/ofw_interface.mak
 include tools/mkhive/mkhive.mak
