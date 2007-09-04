@@ -76,10 +76,34 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
     bool RosBootTest::executeBootCmd()
     {
-        m_Pid = OsSupport::createProcess ((TCHAR*)m_BootCmd.c_str(), 0, NULL, false); 
+        int numargs = 0;
+        char * args[128];
+        char * pBuf;
+        char szBuffer[128];
+
+        pBuf = (char*)m_BootCmd.c_str ();
+        if (pBuf)
+        {
+            pBuf = strtok(pBuf, _T(" "));
+            while(pBuf != NULL)
+            {
+                if (!numargs)
+                    strcpy(szBuffer, pBuf);
+
+                args[numargs] = pBuf;
+                numargs++;
+                pBuf = _tcstok(NULL, _T(" "));
+            }
+            args[numargs++] = 0;
+        }
+        else
+        {
+            strcpy(szBuffer, pBuf);
+        }
+        m_Pid = OsSupport::createProcess (szBuffer, numargs-1, args, false); 
         if (!m_Pid)
         {
-            cerr << "Error: failed to launch boot cmd" << m_BootCmd << endl;
+            cerr << "Error: failed to launch boot cmd " << m_BootCmd << endl;
             return false;
         }
 
