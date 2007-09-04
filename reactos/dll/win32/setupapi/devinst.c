@@ -2710,7 +2710,7 @@ SetupDiOpenDeviceInfoW(
 {
     struct DeviceInfoSet *list;
     HKEY hEnumKey, hKey = NULL;
-    DWORD rc;
+    DWORD rc, dwSize;
     BOOL ret = FALSE;
 
     TRACE("%p %s %p %lx %p\n",
@@ -2738,7 +2738,7 @@ SetupDiOpenDeviceInfoW(
         struct DeviceInfoElement *deviceInfo = NULL;
         /* Search if device already exists in DeviceInfoSet.
          *    If yes, return the existing element
-         *    If no, create a new element using informations in registry
+         *    If no, create a new element using information in registry
          */
         PLIST_ENTRY ItemList = list->ListHead.Flink;
         while (ItemList != &list->ListHead)
@@ -2757,6 +2757,9 @@ SetupDiOpenDeviceInfoW(
         }
         else
         {
+            GUID ClassGUID;
+            WCHAR szClassGuid[MAX_GUID_STRING_LEN];
+
             /* Open supposed registry key */
             rc = RegOpenKeyExW(
                 list->HKLM,
@@ -2784,11 +2787,24 @@ SetupDiOpenDeviceInfoW(
                 goto cleanup;
             }
 
-            /* FIXME: try to get ClassGUID from registry, instead of
-             * sending GUID_NULL to CreateDeviceInfoElement
-             */
-            if (!CreateDeviceInfoElement(list, DeviceInstanceId, &GUID_NULL, &deviceInfo))
+            dwSize = MAX_GUID_STRING_LEN * sizeof(WCHAR);
+            if (RegQueryValueExW(hKey,
+                                 REGSTR_VAL_CLASSGUID,
+                                 NULL,
+                                 NULL,
+                                 (LPBYTE)szClassGuid,
+                                 &dwSize) == ERROR_SUCCESS)
+            {
+                szClassGuid[MAX_GUID_STRING_LEN - 2] = UNICODE_NULL;
+
+                /* Convert a string to a ClassGuid */
+                if (UuidFromStringW(&szClassGuid[1], &ClassGUID) != RPC_S_OK)
+                    ClassGUID = GUID_NULL;
+            }
+
+            if (!CreateDeviceInfoElement(list, DeviceInstanceId, &ClassGUID, &deviceInfo))
                 goto cleanup;
+
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
             ret = TRUE;
