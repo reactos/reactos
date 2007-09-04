@@ -201,7 +201,7 @@ namespace System_
 		}
 	}
 //---------------------------------------------------------------------------------------
-    bool NamedPipeReader::readPipe(char * buffer, int bufferlength, long & read)
+    bool NamedPipeReader::readPipe(char * buffer, int bufferlength, long & bytesread)
     {
         
 #ifdef __LINUX__
@@ -220,7 +220,7 @@ namespace System_
             return false;
 #endif
 
-        read = cbRead;
+        bytesread = cbRead;
         return true;
     }
 //---------------------------------------------------------------------------------------
