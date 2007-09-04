@@ -89,7 +89,7 @@ ReadWriteVMDcAttr(PDC dc, FLONG Dirty, BOOL Write)
     {
       INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)dc->hSelf);
       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-      HANDLE ProcessId = (HANDLE)(((ULONG_PTR)(Entry->ProcessId)) & 0x0000ffff);
+      HANDLE ProcessId = (HANDLE)(((ULONG_PTR)(Entry->ProcessId)) & ~1);
       DC_ATTR lDc_AttrData;
 
       if(Entry->UserData)
