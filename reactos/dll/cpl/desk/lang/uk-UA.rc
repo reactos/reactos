@@ -1,7 +1,7 @@
 /*
  * PROJECT:     Display Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/desk/Uk.rc
+ * FILE:        dll/cpl/desk/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Display Control Panel Applet
  * TRANSLATOR:  Artem Reznikov
  */
@@ -29,27 +29,27 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Screensaver"
+CAPTION "Заставка"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Screensaver",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Заставка",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Se&ttings",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "Pre&view",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Wait",IDC_WAITTEXT, 14, 125, 16, 9
+    PUSHBUTTON      "П&араметри",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "&Перегляд",IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "&Інтервал",IDC_WAITTEXT, 14, 125, 16, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "minutes", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Ask for &password on resume.",IDC_SCREENS_USEPASSCHK,"button",
+    LTEXT           "хв", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "За&хист паролем.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
-    GROUPBOX        "&Energy Saving features of monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
+    GROUPBOX        "&Енергозбереження", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "Щоб змінити параметри живлення монітора, натисніть кнопку ""Живлення"".",
                     IDC_STATIC, 14, 166, 146 ,20
-    PUSHBUTTON      "P&ower...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+    PUSHBUTTON      "&Живлення...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -61,44 +61,44 @@ BEGIN
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Colorscheme", IDC_STATIC, 7, 140, 64, 7
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Advanced", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
+    PUSHBUTTON      "Додатково", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Advanced Appearance"
+CAPTION "Додаткове оформлення"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "Element:", 8, 5, 160, 50, 9
+    LTEXT "Елемент:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Size", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    LTEXT "&Розмір", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
-    LTEXT   "&1st Color:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT   "Колір &1:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT   "&2nd Color:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT   "Колір &2:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "Font:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "Шрифт:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Fontsize:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "Розмір:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
-    LTEXT   "Color:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    LTEXT   "Колір:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
-    AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "Ж", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "К ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
 
-    PUSHBUTTON "Cancel", IDCANCEL, 191, 220, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 191, 220, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
@@ -125,9 +125,9 @@ END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normal",           ID_MENU_NORMAL
-    MENUITEM "Disabled",         ID_MENU_DISABLED
-    MENUITEM "Selected",         ID_MENU_SELECTED
+    MENUITEM "Звичайна",         ID_MENU_NORMAL
+    MENUITEM "Вимкнена",         ID_MENU_DISABLED
+    MENUITEM "Вибрана",          ID_MENU_SELECTED
 END
 
 STRINGTABLE 
@@ -158,36 +158,36 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_INACTWIN "Inactive Window"
-    IDS_ACTWIN   "Active Window"
-    IDS_WINTEXT  "Window Text"
-    IDS_MESSBOX  "Message Box"
-    IDS_MESSTEXT "Message Text"
+    IDS_INACTWIN "Неактивне вікно"
+    IDS_ACTWIN   "Активне вікно"
+    IDS_WINTEXT  "Текст у вікні"
+    IDS_MESSBOX  "Вікно повідомлення"
+    IDS_MESSTEXT "Повідомлення"
     IDS_BUTTEXT  "OK"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ELEMENT_1 "Desktop"
-    IDS_ELEMENT_2 "Caption of inactive windows"
-    IDS_ELEMENT_3 "Border of inactive windows"
-    IDS_ELEMENT_4 "Caption of active windows"
-    IDS_ELEMENT_5 "Border of active windows"
-    IDS_ELEMENT_6 "Menu"
-    IDS_ELEMENT_7 "Hilited elements"
-    IDS_ELEMENT_8 "Windows"
-    IDS_ELEMENT_9 "Scrollbars"
-    IDS_ELEMENT_10 "3D objects"
-    IDS_ELEMENT_11 "Palette title"
-    IDS_ELEMENT_12 "Symbol title"
-    IDS_ELEMENT_13 "Captionbar"
-    IDS_ELEMENT_14 "Deactivated menu elements"
-    IDS_ELEMENT_15 "Dialog"
-    IDS_ELEMENT_16 "Scrollbar controls"
-    IDS_ELEMENT_17 "Application background"
-    IDS_ELEMENT_18 "Small captionbar"
-    IDS_ELEMENT_19 "Symbol distance (horizontal)"
-    IDS_ELEMENT_20 "Symbol distance (vertical)"
-    IDS_ELEMENT_21 "Quickinfo"
-    IDS_ELEMENT_22 "Symbol"
+    IDS_ELEMENT_1 "Робочий стіл"
+    IDS_ELEMENT_2 "Заголовок неактивних вікон"
+    IDS_ELEMENT_3 "Межа неактивних вікон"
+    IDS_ELEMENT_4 "Заголовок активних вікон"
+    IDS_ELEMENT_5 "Межа активних вікон"
+    IDS_ELEMENT_6 "Меню"
+    IDS_ELEMENT_7 "Виділені пункти"
+    IDS_ELEMENT_8 "Вікна"
+    IDS_ELEMENT_9 "Смуга прокрутки"
+    IDS_ELEMENT_10 "Рельєфні об'єкти"
+    IDS_ELEMENT_11 "Назва панелі"
+    IDS_ELEMENT_12 "Підпис значка"
+    IDS_ELEMENT_13 "Кнопки керування вікном"
+    IDS_ELEMENT_14 "Недоступні пункти меню"
+    IDS_ELEMENT_15 "Вікно повідомлення"
+    IDS_ELEMENT_16 "Елементи управління прокрутки"
+    IDS_ELEMENT_17 "Робоча область додатка"
+    IDS_ELEMENT_18 "Значок у заголовку"
+    IDS_ELEMENT_19 "Інтервал між значками (гор.)"
+    IDS_ELEMENT_20 "Інтервал між значками (верт.)"
+    IDS_ELEMENT_21 "Виринаюча підказка"
+    IDS_ELEMENT_22 "Значок"
 END

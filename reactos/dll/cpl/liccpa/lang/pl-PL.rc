@@ -20,7 +20,7 @@ BEGIN
 	CONTROL "Pomoc",                                          109, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 48, 46, 14
 	CONTROL "Replikacja...",                                110, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 68, 46, 14
 	CONTROL "Dodaj licencjê",                                  111, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 30, 56, 65, 15
-	CONTROL "Usuñ licencje",                               112, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 112, 56, 61, 16
+	CONTROL "Usuñ licencjê",                               112, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 112, 56, 61, 16
 	CONTROL "",                                              114, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 187, 39, 32, 12
 END
 
@@ -28,5 +28,5 @@ STRINGTABLE
 BEGIN
   IDS_CPLNAME_1 "Mened¿er licencji"
   IDS_CPLDESCRIPTION_1 "Mened¿er licencji"
-  IDS_REACTOS "ReactOS - Darmowe oprogramowanie"
+  IDS_REACTOS "ReactOS - darmowe oprogramowanie"
 END

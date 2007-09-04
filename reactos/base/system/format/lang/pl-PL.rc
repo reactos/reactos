@@ -21,14 +21,14 @@ STRING_HELP,  "Sposób u¿ycia: %S wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A
                   16 KB, 32 KB, 64 KB, 128 KB, 256 KB.\n\
                   Kompresja NTFS nie jest obs³ugiwana dla jednostek alokacji\n\
                   wiêkszych ni¿ 4096 bajtów.\n\
-  -C              Pliki stworzone na nowym woluminie bêd¹ domyœlnie poddane\n\
+  -C              Pliki utworzone na nowym woluminie bêd¹ domyœlnie poddane\n\
                   kompresji.\n\n"
 
 STRING_COMPLETE   "%lu procent ukoñczone.\r"
 
-STRING_FORMAT_FAIL "FormatEx nie móg³ zakonczyæ dzia³ania pomyœlnie.\n\n"
+STRING_FORMAT_FAIL "FormatEx nie móg³ zakoñczyæ dzia³ania pomyœlnie.\n\n"
 
-STRING_NO_SUPPORT  "Opercja niewspierana"
+STRING_NO_SUPPORT  "Operacja niewspierana"
 
 STRING_FMIFS_FAIL  "Nie mo¿na zlokalizowaæ punktów wejœciowych FMIFS.\n\n"
 
@@ -36,7 +36,7 @@ STRING_UNKNOW_ARG  "Nieprawid³owy parametr: %S\n"
 
 STRING_DRIVE_PARM  "Brakuj¹cy wymagany parametr dysku.\n\n"
 
-STRING_ERROR_DRIVE_TYPE  "Nie mo¿na okreœliæ rodzaj dysku"
+STRING_ERROR_DRIVE_TYPE  "Nie mo¿na okreœliæ rodzaju dysku"
 
 STRING_INSERT_DISK       "W³ó¿ nowy dysk do napêdu %C:\ni naciœnij Enter, gdy bêdzie gotowe..."
 
@@ -50,8 +50,8 @@ STRING_LABEL_NAME_EDIT  "Podaj aktualn¹ etykietê woluminu dla dysku %C: "
 
 STRING_ERROR_LABEL     "Nieprawid³owa etykieta woluminu zosta³a wpisana dla tego dysku.\n"
 
-STRING_YN_FORMAT       "\OSTRZE¯ENIE, WSZYSTKIE DANE NA DYSKU NIEWYJMOWALNYM\n\
-STACJA %C: BED¥ UTRACONE!\nCzy kontynuowaæ formatowanie (T/N)? "
+STRING_YN_FORMAT       "\OSTRZE¯ENIE: WSZYSTKIE DANE NA NIEWYJMOWALNYM DYSKU\n\
+W STACJI %C: ZOSTAN¥ UTRACONE!\nCzy kontynuowaæ formatowanie (T/N)? "
 
 STRING_YES_NO_FAQ      "TN"
 
@@ -63,9 +63,9 @@ STRING_CREATE_FSYS     "Tworzenie struktury systemu plików.\n"
 
 STRING_FMT_COMPLETE    "Formatowanie ukoñczone.\n"
 
-STRING_VOL_COMPRESS    "Wolumin nie obsluguje kompresji.\n"
+STRING_VOL_COMPRESS    "Wolumin nie obs³uguje kompresji.\n"
 
-STRING_ENTER_LABEL     "Etykieta woluminu (11 znaków, wcisnij ENTER dla pustej)? "
+STRING_ENTER_LABEL     "Podaj etykietê woluminu (11 znaków, ENTER = bez etykiety) "
 
 STRING_NO_LABEL        "Nie mo¿na zmieniæ etykiety woluminu"
 

@@ -14,6 +14,7 @@ IDI_HORIZONTAL ICON "resources/HORIZ.ICO"
 IDI_VERTICAL ICON "resources/VERTIC.ICO"
 IDI_NETSTAT ICON "resources/NETCONN.ICO"
 
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/da-DK.rc"
 #include "lang/de-DE.rc"

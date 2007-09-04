@@ -8,5 +8,5 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
 	IDS_CPLNAME "Dodaj sprzêt"
-	IDS_CPLDESCRIPTION "Dodaje sprzêt na twoim komputerze."
+	IDS_CPLDESCRIPTION "Dodaje sprzêt do Twojego komputera."
 END

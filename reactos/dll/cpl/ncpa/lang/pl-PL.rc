@@ -29,7 +29,7 @@ BEGIN
  PUSHBUTTON "&W³aœciwoœci", IDC_PROPERTIES, 174, 130, 65, 14
  GROUPBOX "Opis", -1, 9, 153, 230, 46, BS_GROUPBOX
  LTEXT "Opis komponentu:", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
- CHECKBOX "Pokazuj ikonê w zasobniku systemowym kiedy po³¹czony", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP
+ CHECKBOX "Pokazuj ikonê w zasobniku systemowym, kiedy po³¹czony", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP
 END
 
 
@@ -80,7 +80,7 @@ STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Mo¿esz automatycznie pobraæ ustawienia siecioweprotoko³u IP, je¿eli twoja sieæ obs³uguje te funkcje. W innym przypadku musisz skontaktowaæ siê z administratorem w celu zdobycia odpowiednich ustawieñ.", -1, 9, 9, 228, 27
+ LTEXT "Mo¿esz automatycznie pobraæ ustawienia sieciowe protoko³u IP, je¿eli Twoja sieæ obs³uguje te funkcje. W innym przypadku musisz skontaktowaæ siê z administratorem w celu zdobycia odpowiednich ustawieñ.", -1, 9, 9, 228, 27
  CONTROL "Pobierz adres IP automatycznie", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
  CONTROL "&U¿yj nastêpuj¹cego adresu IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
@@ -107,18 +107,12 @@ BEGIN
   IDS_CPLSYSTEMDESCRIPTION "Zmiany ustawieñ sieci."
 END
 
-STRINGTABLE
-BEGIN
-  IDS_ASSIGNED_DHCP "Assigned by DHCP"
-  IDS_ASSIGNED_MANUAL "Manually configured"
-END
-
 STRINGTABLE 
 BEGIN
   IDS_ERROR "B³¹d"
   IDS_ENTER_VALID_IPADDRESS "Musisz wpisaæ poprawny adres IP"
   IDS_ENTER_VALID_SUBNET "Musisz wpisaæ poprawn¹ maskê podsieci"
-  IDS_CANNOT_LOAD_CONFIG "Nie mo¿na odczytaæ bierz¹cej konfiguracji"
+  IDS_CANNOT_LOAD_CONFIG "Nie mo¿na odczytaæ bie¿¹cej konfiguracji"
   IDS_CANNOT_CREATE_PROPSHEET "Nie mo¿na utworzyæ przegl¹du ustawieñ"
   IDS_OUT_OF_MEMORY "Brak wolnej pamiêci"
   IDS_CANNOT_SAVE_CHANGES "Nie mo¿na zapisaæ dokonanych zmian!"

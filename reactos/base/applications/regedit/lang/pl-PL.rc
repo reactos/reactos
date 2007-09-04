@@ -41,7 +41,7 @@ BEGIN
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "&Informacje ...",                ID_HELP_ABOUT
+        MENUITEM "&Informacje...",                ID_HELP_ABOUT
     END
 END
 
@@ -125,7 +125,7 @@ BEGIN
   BEGIN
         POPUP "&Nowy"
         BEGIN
-            MENUITEM "&Kklucz",                    ID_EDIT_NEW_KEY
+            MENUITEM "&Klucz",                    ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Wartoœæ ci¹gu",             ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Wartoœæ &binarna",           ID_EDIT_NEW_BINARYVALUE
@@ -237,7 +237,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_MENU        "Zawiera polecenia do pracy z ca³ym rejestrem"
-    ID_EDIT_MENU            "Zawiera polecenia do edycji wartoœci lub klucz"
+    ID_EDIT_MENU            "Zawiera polecenia do edycji wartoœci lub kluczy"
     ID_VIEW_MENU            "Zawiera polecenia do dostosowywania okien rejestru"
     ID_FAVOURITES_MENU      "Zawiera polecenia dla dostêpu do czêsto u¿ywanych klawiszy"
     ID_HELP_MENU            "Zawiera polecenia do wyœwietlania Pomocy oraz informacji o Edytorze rejestru"
@@ -265,7 +265,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Konczy dzia³anie Edytora rejestru"
+    ID_REGISTRY_EXIT        "Koñczy dzia³anie Edytora rejestru"
     ID_FAVOURITES_ADDTOFAVOURITES "Dodaje klawisze do listy elementów ulubionych"
     ID_FAVOURITES_REMOVEFAVOURITE "Usuwa klawisze z listy elementów ulubionych"
     ID_VIEW_STATUSBAR       "Pokazuje lub ukrywa pasek stanu"
@@ -273,7 +273,7 @@ BEGIN
     ID_VIEW_REFRESH         "Odœwie¿a okno"
     ID_EDIT_DELETE          "Usuwa zaznaczenie"
     ID_EDIT_RENAME          "Zmienia nazwê zaznaczenia"
-    ID_EDIT_COPYKEYNAME     "Kopiuje nazwê wybranego klucza do Schowka"
+    ID_EDIT_COPYKEYNAME     "Kopiuje nazwê wybranego klucza do schowka"
     ID_EDIT_FIND            "Znajduje ci¹g tekstowy w kluczu, wartoœci lub danych"
     ID_EDIT_FINDNEXT        "Znajduje nastêpne wyst¹pienie tekstu okreœlonego przy poprzednim szukaniu"
 END
@@ -288,7 +288,7 @@ BEGIN
     IDS_MULTI_SZ_EMPTY_STRING "Dane typu REG_MULTI_SZ nie mog¹ zawieraæ pustych ci¹gów.\nPusty ci¹g zosta³ usuniêty z listy."
     IDS_QUERY_DELETE_KEY_ONE    "Czy na pewno chcesz usun¹æ ten klucz?"
     IDS_QUERY_DELETE_KEY_MORE   "Czy na pewno chcesz usun¹æ te klucze?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Potwierdzenie usuniêcia klucza"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Potwierdzanie usuniêcia klucza"
     IDS_QUERY_DELETE_ONE    "Czy na pewno chcesz usun¹æ tê wartoœæ?"
     IDS_QUERY_DELETE_MORE   "Czy na pewno chcesz usun¹æ te wartoœci?"
     IDS_QUERY_DELETE_CONFIRM "Potwierdzanie usuniêcia wartoœci"
@@ -303,7 +303,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_BINARY_EMPTY	    "(wartoœæ binarna o d³ugoœci zero)"
-    IDS_DEFAULT_VALUE_NAME  "(Domyœlna)"
+    IDS_DEFAULT_VALUE_NAME  "(domyœlna)"
     IDS_VALUE_NOT_SET       "(wartoœæ nie ustalona)"
     IDS_UNKNOWN_TYPE        "Nieznany typ: (0x%lx)"
     IDS_MY_COMPUTER         "Mój komputer"

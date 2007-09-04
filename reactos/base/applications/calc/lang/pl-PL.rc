@@ -30,7 +30,7 @@ STRINGTABLE DISCARDABLE
    IDS_BTN_MEM_PLUS,       "M+"
    IDS_BTN_MEM_STATUS_M,   "M"
    IDS_BTN_SQRT,           "sqrt"
-   IDS_ERR_INVALID_INPUT,  "Niewa¿ne wejœcie dla funkcji."
+   IDS_ERR_INVALID_INPUT,  "Niew³aœciwy argument funkcji."
    IDS_ERR_DIVIDE_BY_ZERO, "Nie mo¿na dzieliæ przez zero."
    IDS_ERR_UNDEFINED,      "Nieokreœlony wynik funkcji."
 }
@@ -102,7 +102,7 @@ SCIWS_MENU MENU DISCARDABLE
 	  MENUITEM "Wo&rd\tF3",         ID_CALC_WS_WORD
 	  MENUITEM "&Byte\tF4",         ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
-      MENUITEM "Digit Grouping",   IDM_DIGIT_GROUPING
+      MENUITEM "&Grupowanie cyfr",   IDM_DIGIT_GROUPING
    }
    POPUP "Pomo&c" {
       MENUITEM "&Tematy pomocy",      IDM_HELP_TOPICS

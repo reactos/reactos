@@ -31,7 +31,7 @@ BEGIN
         , CHECKED
         MENUITEM "&Minimalizuj podczas uøytkowania",            ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "&Ukryj gdy zminimalizowane",        ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "&Ukryj, gdy zminimalizowane",        ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
         MENUITEM "Pokazuj 16-&bitowe zadania",          ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
@@ -75,7 +75,7 @@ BEGIN
     BEGIN
         MENUITEM "Menedøer zadaÒ - tematy &pomocy",   ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Menedøerze zadaÒ - &informacje",         ID_HELP_ABOUT
+        MENUITEM "Menedøer zadaÒ - &informacje",         ID_HELP_ABOUT
     END
 END
 
@@ -114,8 +114,8 @@ BEGIN
         MENUITEM "&Maksymalizuj",                   ID_WINDOWS_MAXIMIZE
         MENUITEM "&Kaskadowo",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "&ZakoÒcz Zadanie",                   ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "Prz&ejdª do procesu",              ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&ZakoÒcz zadanie",                   ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "Prz&ejdü do procesu",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -220,7 +220,7 @@ STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Uøycie procesora",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
-    GROUPBOX        "Uzycie pliku stronnicowania",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "Uøycie pliku stronicowania",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Sumy",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "PamiÍÊ zadeklarowana (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "PamiÍÊ fizyczna (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
@@ -386,7 +386,7 @@ BEGIN
                     WS_TABSTOP,7,105,53,10
     CONTROL         "Obie&kty USER",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
-    CONTROL         "Odczyty We/WY",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Odczyty We/Wy",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
     CONTROL         "Odczyty We/Wy w bajtach",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
@@ -574,7 +574,7 @@ BEGIN
     ID_WINDOWS_BRINGTOFRONT "Prze≥πcza okna na wierzch, lecz nie prze≥πcza na nie"
     ID_HELP_TOPICS          "Wyúwietla tematy pomocy Menedøera zadaÒ"
     ID_HELP_ABOUT           "Wyúwietla informacje o programie, numerze wersji oraz prawach autorskich"
-    ID_FILE_EXIT            "Zamyka Menedøera zadaÒ"
+    ID_FILE_EXIT            "Zamyka Menedøer zadaÒ"
     ID_OPTIONS_SHOW16BITTASKS
                             "Pokazuje 16-bitowe aplikacje skojarzone z plikiem ntvdm.exe"
     ID_VIEW_SELECTCOLUMNS   "Zaznacza, ktÛre kolumny bÍdπ widoczne na stronie Procesy"
@@ -591,7 +591,7 @@ BEGIN
     ID_ENDTASK              "Zamyka zadanie"
     ID_GOTOPROCESS          "Ustawia aktywnym proces zaznaczonego zadania"
     ID_RESTORE              "Przywraca Menedøer zadaÒ ze stanu ukrycia"
-    ID_PROCESS_PAGE_ENDPROCESS "Usuwa procesz systemu"
+    ID_PROCESS_PAGE_ENDPROCESS "Usuwa proces z systemu"
     ID_PROCESS_PAGE_ENDPROCESSTREE
                             "Usuwa dany proces oraz wszystkie procesy potomne z systemu"
     ID_PROCESS_PAGE_DEBUG   "Podpina pod ten proces debugger"
@@ -607,7 +607,7 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Ustawia procesowi priorytet poniøej normalnego"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Ustawia procesowi priorytet niski"
-    IDS_LICENSE             "Niniejszy program jest wolnym oprogramowaniem; moøesz go rozprowadzaÊ dalej i/lub modyfikowaÊ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez FundacjÍ Wolnego Oprogramowania - wed≥ug wersji 2 tej Licencji lub (wed≥ug twojego wyboru) ktÛrejæ z pÛùniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejë, iø bÍdzie on uøyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyælnej gwarancji PRZYDATNOπCI HANDLOWEJ albo PRZYDATNOπCI DO OKREπLONYCH ZASTOSOWA—. W celu uzyskania bliøszych informacji siÍgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoæcië wraz z niniejszym programem otrzyma≥eæ teø egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeæli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301 USA."
+    IDS_LICENSE             "Niniejszy program jest wolnym oprogramowaniem; moøesz go rozprowadzaÊ dalej i/lub modyfikowaÊ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez FundacjÍ Wolnego Oprogramowania - wed≥ug wersji 2 tej Licencji lub (wed≥ug Twojego wyboru) ktÛrejú z pÛüniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejπ, iø bÍdzie on uøyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyúlnej gwarancji PRZYDATNOåCI HANDLOWEJ albo PRZYDATNOåCI DO OKREåLONYCH ZASTOSOWA—. W celu uzyskania bliøszych informacji siÍgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoúciπ wraz z niniejszym programem otrzyma≥eú teø egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeúli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301 USA."
 END
 
 
@@ -620,7 +620,7 @@ BEGIN
     IDS_TAB_STATUS                "Stan"
     IDS_TAB_IMAGENAME             "Nazwa obrazu"
     IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "Nazwa uzytkownika"
+    IDS_TAB_USERNAME              "Nazwa uøytkownika"
     IDS_TAB_SESSIONID             "ID sesji"
     IDS_TAB_CPU                   "CPU"
     IDS_TAB_CPUTIME               "Czas procesora CPU"
@@ -655,16 +655,16 @@ BEGIN
     IDS_MENU_SHOWKERNELTIMES      "&Pokazuj czas jπdra"
     IDS_CREATENEWTASK             "StwÛrz nowy proces"
     IDS_CREATENEWTASK_DESC        "Wpisz nazwÍ programu, folderu, dokumentu lub zasobu internetowego, a zostanie on otwarty przez Menedøer zadaÒ." 
-    IDS_MSG_ACCESSPROCESSAFF      "Nie mozna uzyskaÊ dostÍpu lub ustawiÊ koligacji procesu"
-	IDS_MSG_PROCESSONEPRO         "Proces musi posiadaÊ koligacjÍ z przynajmniej jednym procesorem."
-	IDS_MSG_INVALIDOPTION         "Nieprawid≥owa opcja"
+    IDS_MSG_ACCESSPROCESSAFF      "Nie moøna uzyskaÊ dostÍpu lub ustawiÊ koligacji procesu"
+    IDS_MSG_PROCESSONEPRO         "Proces musi posiadaÊ koligacjÍ z przynajmniej jednym procesorem."
+    IDS_MSG_INVALIDOPTION         "Nieprawid≥owa opcja"
     IDS_MSG_UNABLEDEBUGPROCESS    "Nie moøna debugowaÊ procesu"
-    IDS_MSG_WARNINGDEBUG          "UWAGA: Debugowanie procesu moøe spowodowaÊ utratÍ danych.\nJesteú pewien, øe chcesz podpiπÊ debugger pod ten proces?"
-	IDS_MSG_TASKMGRWARNING        "Ostrzeøenie Menedøera zadaÒ"
-    IDS_MSG_WARNINGTERMINATING    "UWAGA: ZakoÒczenie procesu moøe przynbieúÊ nieporzπdane skutki, w tym rÛwnieø utrate danych i niestabilnoúÊ systemu.\nProces nie bÍdzie mia≥ szansy na zapisane danych.\nCzy na pewno chcesz zakonczyÊ?"
-	IDS_MSG_UNABLETERMINATEPRO    "Nie mozna zakonczyÊ procesu"
+    IDS_MSG_WARNINGDEBUG          "UWAGA: Debugowanie procesu moøe spowodowaÊ utratÍ danych.\nCzy jesteú pewien, øe chcesz podpiπÊ debugger pod ten proces?"
+    IDS_MSG_TASKMGRWARNING        "Ostrzeøenie Menedøera zadaÒ"
+    IDS_MSG_WARNINGTERMINATING    "UWAGA: ZakoÒczenie procesu moøe przynieúÊ niepoøπdane skutki, w tym rÛwnieø utratÍ danych i niestabilnoúÊ systemu.\nProces nie bÍdzie mia≥ szansy na zapisane danych.\nCzy na pewno chcesz zakoÒczyÊ?"
+    IDS_MSG_UNABLETERMINATEPRO    "Nie moøna zakoÒczyÊ procesu"
     IDS_MSG_UNABLECHANGEPRIORITY  "Nie moøna zmieniÊ priorytetu"
-    IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu moøe przynieúÊ\nnieporzπdane skutki, w tym rÛwnieø niestabilnoúÊ systemu.\nCzy na pewno chcesz zmieniÊ priorytet?" 
+    IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu moøe przynieúÊ\nniepoøπdane skutki, w tym rÛwnieø niestabilnoúÊ systemu.\nCzy na pewno chcesz zmieniÊ priorytet?" 
     IDS_MSG_TRAYICONCPUUSAGE      "Uøycie procesora: %d%%"
     IDS_STATUS_MEMUSAGE           "Pam. zadeklar.: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Uøycie procesora: %3d%%"

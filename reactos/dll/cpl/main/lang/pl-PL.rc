@@ -18,7 +18,7 @@ BEGIN
   LTEXT "Ma³e", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
   ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-  LTEXT "&Czêstotliwoœc powtarzania", -1, 40, 70, 50, 10
+  LTEXT "&Czêstotliwoœæ powtarzania", -1, 40, 70, 50, 10
   LTEXT "Ma³a", -1, 40, 85, 20, 10
   LTEXT "Du¿a", -1, 200, 85, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
@@ -40,7 +40,7 @@ END
 
 IDD_CLICK_LOCK DIALOGEX 0, 0, 246, 100
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
-CAPTION "Blokada klikniêcia"
+CAPTION "Blokada Klikniêcia"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Krótko", -1, 35,  50, 30, 10
@@ -67,8 +67,8 @@ BEGIN
   LTEXT "Szybko", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
-  GROUPBOX "BlokadaKlikniêcia", -1, 5, 150, 230, 70
-  CHECKBOX "&W³¹cz funkcjê BlokadaKlikniêcia", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
+  GROUPBOX "Blokada Klikniêcia", -1, 5, 150, 230, 70
+  CHECKBOX "&W³¹cz funkcjê Blokada Klikniêcia", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
   PUSHBUTTON "&Ustawienia...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
   LTEXT "Umo¿liwia podœwietlanie lub przeci¹ganie bez przytrzymywania naciœniêtego przycisku myszy. Aby ustawiæ, naciœnij na krótko przycisk myszy. Aby zwolniæ, kliknij przycisk myszy ponownie.", -1, 10, 180, 190, 30
 END
@@ -166,12 +166,12 @@ BEGIN
   IDS_SIZEALL "Przenieœ"
   IDS_UPARROW "Alternatywny wybór"
   IDS_HAND "Wybór ³¹cza"
-  IDS_NONE "(Brak)"
+  IDS_NONE "(brak)"
   IDS_SYSTEM_SCHEME "(schemat systemu)"
   IDS_BROWSE_FILTER "Kursory (*.ani, *.cur)\0*.ani;*.cur\Animowane kusory (*.ani)\0*.ani\0Kursory statyczne (*.cur)\0*.cur\0Wszystkie pliki\0*.*\0\0"
   IDS_BROWSE_TITLE "Przegl¹daj"
   IDS_REMOVE_TITLE "PotwierdŸ usuniêcie schematu"
   IDS_REMOVE_TEXT "Czy na pewno chcesz usun¹æ schemat kursorów '%s'?"
   IDS_OVERWRITE_TITLE "PotwierdŸ nadpisanie schematu kursorów"
-  IDS_OVERWRITE_TEXT "Wybrana nazwa schematu kursorów jest ju¿ w u¿ytku. Czy chcesz nadpisaæ istniej¹cy schemat?"
+  IDS_OVERWRITE_TEXT "Wybrana nazwa schematu kursorów jest ju¿ w u¿yciu. Czy chcesz nadpisaæ istniej¹cy schemat?"
 END

@@ -69,5 +69,5 @@ STID_HISTORY, 		"&Historia"
 STID_TOPICS,		"&Tematy"
 STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
 STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
+STID_FILE_NOT_FOUND_s	"Nie mo¿na odnaleŸæ pliku '%s'. Czy chcesz spróbowaæ zlokalizowaæ ten plik samodzielnie?"
 }

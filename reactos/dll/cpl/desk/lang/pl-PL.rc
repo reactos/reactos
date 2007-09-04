@@ -32,7 +32,7 @@ FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Wygaszasz ekranu",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Wygaszacz ekranu",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Ustawienia",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "&Podgl¹d",IDC_SCREENS_TESTSC, 175, 103, 50, 13
@@ -123,8 +123,8 @@ END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normalny",           ID_MENU_NORMAL
-    MENUITEM "Wy³¹czony",         ID_MENU_DISABLED
+    MENUITEM "Normalny",        ID_MENU_NORMAL
+    MENUITEM "Wy³¹czony",       ID_MENU_DISABLED
     MENUITEM "Wybrany",         ID_MENU_SELECTED
 END
 
@@ -132,7 +132,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Ekran"
     IDS_CPLDESCRIPTION "Dostosowuje wygl¹d pulpitu oraz wygaszacze."
-    IDS_NONE "(Brak)"
+    IDS_NONE "(brak)"
     IDS_CENTER "Do œrodka"
     IDS_STRETCH "Rozci¹gniêcie"
     IDS_TILE "S¹siaduj¹co"

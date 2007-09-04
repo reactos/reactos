@@ -10,10 +10,10 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Zakoñcz program - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Trwa zamykanie programu... Prosze czekaæ",IDC_STATIC,7,7,186,11
+    LTEXT           "Trwa zamykanie programu... Proszê czekaæ",IDC_STATIC,7,7,186,11
     CONTROL         "Postêp",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
-    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakonczyæ program, wciœnij Zakoñcz teraz.",
+    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakoñczyæ program, wciœnij Zakoñcz teraz.",
                     IDC_STATIC,7,40,186,26
     DEFPUSHBUTTON   "&Zakoñcz teraz",IDC_END_NOW,150,71,43,17
 END
@@ -25,10 +25,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Anuluj",IDCANCEL,142,98,43,17
     PUSHBUTTON      "&Zakoñcz teraz",IDC_END_NOW,78,98,43,17
-    LTEXT           "Podany program nie odpowiada",IDC_STATIC,7,7,178,8
-    LTEXT           "Aby powróciæ do ReactOS i sprawdziæ status program, kliknij Anuluj",
+    LTEXT           "Wybrany program nie odpowiada",IDC_STATIC,7,7,178,8
+    LTEXT           "Aby powróciæ do ReactOS i sprawdziæ status programu, kliknij Anuluj",
                     IDC_STATIC,7,26,178,16
-    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ natychmiastowo program, utracisz wszelkie niezapisane dane. Aby zakonczyæ program, wciœnij Zakoñcz teraz.",
+    LTEXT           "Jeœli zdecydujesz siê zamkn¹æ program natychmiastowo, utracisz wszelkie niezapisane dane. Aby zakoñczyæ program, wciœnij Zakoñcz teraz.",
                     IDC_STATIC,7,53,178,26
 END
 

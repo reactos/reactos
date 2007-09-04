@@ -38,7 +38,7 @@ BEGIN
 
     GROUPBOX    "Kreator sprzêtu", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT       "Kreator sprzêtu pomoga w instalacji, deinstalacji, od³¹czaniu, wysuwaniu i konfiguracji sprzetu.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT       "Kreator sprzêtu pomaga w instalacji, deinstalacji, od³¹czaniu, usuwaniu i konfiguracji sprzêtu.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON  "&Kreator sprzêtu", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
 
     GROUPBOX    "Profile sprzêtu", IDC_STATIC, 6, 149, 244, 61
@@ -52,7 +52,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Aby móc przeprowadziæ wiêkszoœæ tych zmian, musisz zalogowaæ siê jako Administrator.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT       "Aby móc przeprowadziæ wiêkszoœæ tych zmian, musisz zalogowaæ siê jako administrator.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "Wydajnoœæ", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Efekty wizualne, planowanie u¿ycia procesora, wykorzystanie pamiêci i pamiêæ wirtualna.", IDC_STATIC, 16, 29, 210, 17
     PUSHBUTTON  "&Ustawienia", IDC_PERFOR, 194, 48, 50, 15
@@ -118,7 +118,7 @@ END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
 STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Profile u¿ytkowika"
+CAPTION "Profile u¿ytkownika"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
@@ -131,9 +131,7 @@ BEGIN
     PUSHBUTTON  "&Usuñ", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
     PUSHBUTTON  "&Kopiuj do", IDC_USERPROFILE_COPY, 200, 156, 50, 13
 
-    LTEXT       "Aby utworzyæ nowe konta u¿ytkowników, otwórz aplet", IDC_STATIC, 7, 175, 116, 8
-    LTEXT       "Konta u¿ytkowników", IDC_USERACCOUNT_LINK, 123, 175, 48, 8
-    LTEXT       "w Panelu sterowania.", IDC_STATIC, 173, 175, 64, 8
+    CONTROL     "Aby utworzyæ nowe konta u¿ytkowników, otwórz aplet <A>Konta u¿ytkowników</A> w Panelu sterowania.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 228, 8
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
     PUSHBUTTON  "Anuluj", IDCANCEL, 196, 200, 54, 13
@@ -183,7 +181,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LTEXT       "&Dysk [Etykieta woluminu]", IDC_STATIC, 12, 5, 96, 9
     LTEXT       "Rozmiar pliku stronicowania (MB)", IDC_STATIC, 115, 5, 96, 9
-    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS    GROUPBOX    "Rozmiar pliku stronicowania dla wybranego dysku", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS    
+    GROUPBOX    "Rozmiar pliku stronicowania dla wybranego dysku", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT       "Dysk:", IDC_STATIC, 20, 80, 20, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT       "Dostêpne miejsce:", IDC_STATIC, 20, 92, 56, 9
@@ -215,7 +214,7 @@ STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_
 CAPTION "Zmienne œrodowiskowe"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX    "Zmienne uzytkownika", IDC_STATIC, 7, 12, 238, 100
+    GROUPBOX    "Zmienne u¿ytkownika", IDC_STATIC, 7, 12, 238, 100
 
     CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
@@ -270,9 +269,4 @@ BEGIN
     IDS_PETABYTE "PB RAM"
     IDS_VARIABLE "Zmienna"
     IDS_VALUE    "Wartoœæ"
-    IDS_NO_DUMP "(None)"
-    IDS_MINI_DUMP "Minidump(64KB)"
-    IDS_KERNEL_DUMP "Kernel dump"
-    IDS_FULL_DUMP "Complete dump"
-
 END

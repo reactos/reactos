@@ -10,7 +10,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
 
-STRING_ATTRIB_HELP,    "Wyœwietla b¹dŸ zmienia atrybuty plików.\n\n\
+STRING_ATTRIB_HELP,    "Wyœwietla lub zmienia atrybuty plików.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
        [/S [/D]]\n\n\
   +   Ustawia atrybut\n\
@@ -18,7 +18,7 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
   R   Atrybut pliku tylko do odczytu\n\
   A   Atrybut pliku archiwalnego\n\
   S   Atrybut pliku systemowego\n\
-  H   Atrybut pliku ukrytegi\n\
+  H   Atrybut pliku ukrytego\n\
   /S  Przetwarza wszystkie, pasuj¹ce pliki w bie¿¹cym katalogu\n\
       i we wszystkich podkatalogach\n\
   /D  Przetwarza równie¿ katalogi\n\n\
@@ -27,7 +27,7 @@ Wpisz ATTRIB bez ¿adnego parametru, by wyœwietliæ atrybuty wszystkich plików.\n"
 STRING_ALIAS_HELP,  "Ustawia, usuwa, a tak¿e wyœwietla aliasy.\n\n\
 ALIAS [nazwa=[tekst]]\n\n\
   nazwa   Nazwa aliasu.\n\
-  tekst   Ci¹g tekstu jaki ma zostaæ zast¹piony aliasem.\n\n\
+  tekst   Ci¹g tekstu, jaki ma zostaæ zast¹piony aliasem.\n\n\
 Aby wyœwietliæ wszystkie aliasy:\n\
   ALIAS\n\n\
 Aby ustawiæ nowy albo zmieniæ ju¿ istniej¹cy alias:\n\
@@ -50,18 +50,18 @@ CD[..|.]\n\n\
   ..   katalog poziom wy¿ej\n\
   .    bie¿¹cy katalog\n\
   /D   Umo¿liwia zmianê napêdu.\n\n\
-Wpisz CD [napêd:] by wyœwietliæ bie¿¹cy katalog na danym napêdzie.\n\
+Wpisz CD [napêd:], by wyœwietliæ bie¿¹cy katalog na danym napêdzie.\n\
 Wpisz CD bez ¿adnych parametrów, by wyœwietliæ bie¿¹cy napêd i katalog.\n"
 
-STRING_CHCP_HELP,   "Wyœwietla lub zmienia aktywny numer strony kodowej.\n\n\
+STRING_CHCP_HELP,   "Wyœwietla lub ustawia numer aktywnej strony kodowej.\n\n\
 CHCP [nnn]\n\n\
   nnn   Numer strony kodowej.\n\n\
 Wpisz CHCP bez parametru, by wyœwietliæ numer aktywnej strony kodowej.\n"
 
-STRING_CHOICE_HELP, "Wyœwietla opcje jakie ma u¿ytkownik i oczekuje na wybór jednej z nich.\n\n\
+STRING_CHOICE_HELP, "Wyœwietla opcje jakimi dysponuje u¿ytkownik i oczekuje na wybór jednej z nich.\n\n\
 CHOICE  [/C[:]opcje][/N][/S][/T[:]c,nn][tekst]\n\n\
   /C[:]opcje  Wyznacza klawisze wyœwietlane jako wybór. Domyœlne: TN.\n\
-  /N            Nie wyœwietla klawiszy opcji ani znaku ? na koniec tekstu.\n\
+  /N            Nie wyœwietla klawiszy opcji ani znaku ? na koñcu tekstu.\n\
   /S            Komenda wyró¿ni wielkoœæ liter przy wpisywaniu (n != N).\n\
   /T[:]c,nn     Komenda zwróci domyœlny klawisz (c) po up³ywie (nn) sekund .\n\
   tekst         Tekst wyœwietlany przy oczekiwaniu na wybór.\n\n\
@@ -115,7 +115,7 @@ STRING_COPY_HELP1,  "Nadpisaæ %s (Tak/Nie/Zawsze)? "
 STRING_COPY_HELP2, "Kopiuje jeden lub wiêcej plików do wskazanej lokacji.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] Ÿród³o [/A|/B]\n\
      [+ Ÿród³o [/A|/B] [+ ...]] [cel [/A|/B]]\n\n\
-  Ÿród³o       Miejsce gdzie znajduj¹ siê plik(i) do skopiowania.\n\
+  Ÿród³o       Miejsce, gdzie znajduj¹ siê plik(i) do skopiowania.\n\
   /A           Wymusza traktowanie plików jako tekstowych (ASCII).\n\
   /B           Wymusza traktowanie plików jako binarnych.\n\
   cel          Docelowy katalog/plik.\n\
@@ -133,10 +133,10 @@ STRING_DATE_HELP2, "\nPodaj now¹ datê (dd%cmm%crrrr): "
 
 STRING_DATE_HELP3, "\nPodaj now¹ datê (rrrr%cmm%cdd): "
 
-STRING_DATE_HELP4, "Wyœwietla b¹dŸ zmienia datê systemow¹.\n\n\
+STRING_DATE_HELP4, "Wyœwietla lub zmienia datê systemow¹.\n\n\
 DATE [/T][data]\n\n\
   /T    tylko wyœwietlenie\n\n\
-Wpisz DATE bez ¿adnych parametrów by wyœwietliæ obecn¹ datê i\n\
+Wpisz DATE bez ¿adnych parametrów, by wyœwietliæ obecn¹ datê i\n\
 zapytaæ o now¹. Naciœniêcie ENTER od razu, pozostawia obecn¹.\n"
 
 STRING_DEL_HELP1,  "Kasuje jeden lub wiêcej plików.\n\n\
@@ -161,11 +161,11 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributy]] plik ...\n\n\
 
 STRING_DEL_HELP2, "Wszystkie pliki w tym katalogu zostan¹ skasowane!\nCzy jesteœ pewien (T/N)?"
 STRING_DEL_HELP3, "    %lu plik skasowany\n"
-STRING_DEL_HELP4, "    %lu pliki(-ów) skasowanych\n"
+STRING_DEL_HELP4, "    %lu pliki(-ów) skasowane(-ych)\n"
 
-STRING_DELAY_HELP, "Pauzuje na n sekund b¹dŸ milisekund\n\
+STRING_DELAY_HELP, "Pauzuje na n sekund lub milisekund\n\
 DELAY [/m]n\n\n\
-  /m          wymusza traktowanie n jako milisekund\n\
+  /m          wymusza traktowanie n jako milisekund,\n\
               w innym wypadku bêdzie traktowane jako sekundy\n"
 
 STRING_DIR_HELP1, "DIR [napêd:][œcie¿ka][pliki] [/A[[:]atrybuty]] [/B] [/C] [/D] [/L] [/N]\n\
@@ -178,7 +178,7 @@ STRING_DIR_HELP1, "DIR [napêd:][œcie¿ka][pliki] [/A[[:]atrybuty]] [/B] [/C] [/D]
                S  Pliki systemowe         -  Przedrostek NIE\n\
   /B          Format minimalny (bez nag³ówka i podsumowania).\n\
   /C          Wyœwietla separator co trzy zera w rozmiarach plików.\n\
-              Opcja domyœlnie w³¹czona. By wy³¹czyæ u¿yj: /-C .\n\
+              Opcja domyœlnie w³¹czona. Aby wy³¹czyæ, u¿yj: /-C .\n\
   /D          To samo co format szeroki, ale pliki s¹ posortowane kolumnami.\n\
   /L          U¿ywa ma³ych liter.\n\
   /N          Nowy, d³ugi format plików, gdzie nazwy znajduj¹ siê od prawej.\n\
@@ -190,9 +190,9 @@ STRING_DIR_HELP1, "DIR [napêd:][œcie¿ka][pliki] [/A[[:]atrybuty]] [/B] [/C] [/D]
   /Q          Wyœwietla w³aœciciela plików\n\
   /S          Wyœwietla pliki w danym katalogu i wszystkich podkatalogach.\n\
   /T          Pole czasu, odpowiedzialne za wyœwietlanie/sortowanie \n\
-  czas        C  Stworzenia\n\
+  czas        C  Utworzenia\n\
               A  Ostatniego otwarcia\n\
-              W  Ostatniej zmiany\n\
+              W  Ostatniej modyfikacji\n\
   /W          U¿ywa szerokiego formatu wyœwietlania.\n\
   /X          Wyœwietla krótkie nazwy, dla plików nie w standardzie 8.3.\n\
               Format jest zbli¿ony do tego przy /N z krótkimi nazwami,\n\
@@ -204,11 +204,11 @@ odwróciæ dzia³anie parametrów przedrostkiem - (myœlnik)-- na przyk³ad, /-W.\n"
 
 STRING_DIR_HELP2, " Wolumin w napêdzie %c ma etykietê: %s\n"
 STRING_DIR_HELP3, " Wolumin w napêdzie %c nie posiada etykiety.\n"
-STRING_DIR_HELP4, " Numer Seryjny Woluminu to: %04X-%04X\n"
+STRING_DIR_HELP4, " Numer seryjny woluminu to: %04X-%04X\n"
 STRING_DIR_HELP5, "\n     Ogó³em wyœwietonych:\n%16i plik(ów)% 14s bajtów\n"
-STRING_DIR_HELP6, "%16i Katalog(ów)% 15s bajtów\n"
-STRING_DIR_HELP7, "\n Katalog %s\n\n"
-STRING_DIR_HELP8, "%16i Plik(ów)% 14s bajtów\n"
+STRING_DIR_HELP6, "%16i katalog(ów)% 15s bajtów\n"
+STRING_DIR_HELP7, "\n katalog %s\n\n"
+STRING_DIR_HELP8, "%16i plik(ów)% 14s bajtów\n"
 
 STRING_DIRSTACK_HELP1, "Przechowuje obecny katalog dla potrzeb komendy POPD, nastêpnie\n\
 zmienia na podany.\n\n\
@@ -235,7 +235,7 @@ STRING_ECHO_HELP4, "Wyœwietla wiadomoœæ albo w³¹cza/wy³¹cza wyœwietlanie.\n\n\
   ECHO [ON | OFF]\n\
   ECHO [wiadomoœæ]\n\
   ECHO.             wyœwietla pust¹ liniê\n\n\
-Wpisz ECHO bez ¿adnych parametrów by wyœwietliæ obecne ustawienie."
+Wpisz ECHO bez ¿adnych parametrów, by wyœwietliæ obecne ustawienie."
 
 STRING_ECHO_HELP5, "ECHO jest %s\n"
 
@@ -247,14 +247,14 @@ STRING_EXIT_HELP, "Zamyka okno konsoli.\n\nEXIT [/b] [kod]\n\n\
 STRING_FOR_HELP1, "Uruchamia wyznaczon¹ komendê dla ka¿dego pliku w zestawie\n\n\
 FOR %zmienna IN (zestaw) DO komenda [parametery]\n\n\
   %zmienna    Wyznacza zamienny parametr.\n\
-  (zestaw)    Definiuje zestaw plików. Mo¿na stosowaæ wieloznaczniki(np. *.*)\n\
+  (zestaw)    Definiuje zestaw plików. Mo¿na stosowaæ wieloznaczniki (np. *.*)\n\
   komenda     Wyznacza komendê do wykonania na zestawie plików.\n\
-  parametry  Wyznacza parametry dla podanej komendy.\n\n\
+  parametry   Wyznacza parametry dla podanej komendy.\n\n\
 By u¿yæ FOR w pliku wsadowym, oznacz zmienn¹ jako %%zmienna zamiast\n\
 %zmienna.\n"
 
 STRING_FREE_HELP1, "\nWolumin w napêdzie %s ma etykietê: %-11s\n\
- Numer Seryjny Woluminu to: %s\n\
+ Numer seryjny woluminu to: %s\n\
   %16s bajtów na dysku ogó³em\n\
   %16s bajtów zajête\n\
   %16s bajtów wolne\n"
@@ -269,8 +269,8 @@ STRING_IF_HELP1, "Wykonuje przetwarzanie warunkowe w programach wsadowych.\n\n\
 NOT               Oznacza, ¿e CMD powinien wykonaæ dane dzia³anie tylko,\n\
                   je¿eli warunek nie jest spe³niony\n\
 ERRORLEVEL numer  Zwraca PRAWDA, jeœli ostatni dzia³aj¹cy program zwróci³\n\
-                  kod b³êdu równy b¹dŸ wiêkszy od podanego.\n\
-komenda           Okreœla komendê, wykonan¹, gdy warunek bêdzie spe³niony.\n\
+                  kod b³êdu równy lub wiêkszy od podanego.\n\
+komenda           Komenda do wykonania, gdy warunek bêdzie spe³niony.\n\
 ci¹g1==ci¹g2      Zwraca PRAWDA, gdy oba ci¹gi znaków s¹ identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeœli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeœli podana zmienna zosta³a zdefiniowana\n"
@@ -280,12 +280,12 @@ GOTO etykieta\n\n\
   etykieta  Ci¹g znaków, u¿yty w programie wsadowym do oznaczenia linii.\n\n\
 Mo¿esz oznaczyæ linie dowoln¹ etykiet¹, zaczynaj¹c od dwukropka."
 
-STRING_LABEL_HELP1, "Wyœwietla b¹dŸ zmienia etykietê napêdu.\n\nLABEL [napêd:][etykieta]\n"
+STRING_LABEL_HELP1, "Wyœwietla lub zmienia etykietê napêdu.\n\nLABEL [napêd:][etykieta]\n"
 
 STRING_LABEL_HELP2, "Wolumin w napêdzie %c: ma etykietê: %s\n"
 STRING_LABEL_HELP3, "Wolumin w napêdzie %c: nie posiada etykiety\n"
-STRING_LABEL_HELP4, "Numer Seryjny Woluminu to: %04X-%04X\n"
-STRING_LABEL_HELP5, "Podaj etykietê (0-11 Znaków, ENTER potwierdza)? "
+STRING_LABEL_HELP4, "Numer seryjny woluminu to: %04X-%04X\n"
+STRING_LABEL_HELP5, "Podaj etykietê (0-11 znaków, ENTER = brak etykiety) "
 
 STRING_LOCALE_HELP1, "Czas bie¿¹cy"
 
@@ -306,14 +306,14 @@ STRING_MISC_HELP1, "Naciœnij dowolny klawisz, aby kontynuowaæ...\n"
 
 STRING_MOVE_HELP1, "Nadpisaæ %s (Tak/Nie/Zawsze)? "
 
-STRING_MOVE_HELP2, "Przenosi a tak¿e zmienia nazwy plików i katalogów.\n\n\
+STRING_MOVE_HELP2, "Przenosi, a tak¿e zmienia nazwy plików i katalogów.\n\n\
 Aby przenieœæ jeden lub wiêcej plików:\n\
 MOVE [/N][napêd:][œcie¿ka]nazwa_pliku1[,...] cel\n\n\
 Aby zmieniæ nazwê katalogu:\n\
 MOVE [/N][napêd:][œcie¿ka]nazwa1 nazwa2\n\n\
-  [napêd:][œcie¿ka]nazwa  Wyznacza scie¿kê dostêpu do pliku b¹dŸ \n\
+  [napêd:][œcie¿ka]nazwa  Wyznacza scie¿kê dostêpu do pliku lub \n\
                           plików, które chcesz przenieœæ.\n\
-  /N                      Nic. Zrób wszystko prócz przenoszenia plików/katalogów.\n\n\
+  /N                      Nic. Zrób wszystko, oprócz przenoszenia plików/katalogów.\n\n\
 Obecne ograniczenia:\n\
   - Nie mo¿esz przenieœæ pliku ani katalogu z jednego napêdu na inny.\n"
 
@@ -328,22 +328,22 @@ Wartoœæ ERRORLEVEL wynosi zale¿nie od naciœniêtego przycisku:\n\n\
 TAK  :  10    |  NIE      :  11\n\
 OK   :  10    |  ANULUJ   :  12\n"
 
-STRING_PATH_HELP1, "Wyœwietla b¹dŸ ustawia œcie¿kê dostêpu dla programów.\n\n\
+STRING_PATH_HELP1, "Wyœwietla lub ustawia œcie¿kê dostêpu dla programów.\n\n\
 PATH [[napêd:]œcie¿ka[;...]]\nPATH ;\n\n\
-Wpisz PATH ; by wyczyœciæ wszystkie zapisane œcie¿ki dostêpu i zmusiæ konsolê\n\
-do przeszukiwania wy³¹cznie katalogu bierz¹cego.\n\
+Wpisz PATH ; jeœli chcesz wyczyœciæ wszystkie zapisane œcie¿ki dostêpu i zmusiæ konsolê\n\
+do przeszukiwania wy³¹cznie katalogu bie¿¹cego.\n\
 Wpisz PATH bez ¿adnych parametrów, by wyœwietliæ zapisane œcie¿ki dostêpu.\n"
 
 STRING_PROMPT_HELP1, "Zmienia znak zachêty.\n\n\
 PROMPT [tekst]\n\n\
   tekst   Definiuje nowy znak zachêty.\n\n\
-Znak zachêty mo¿e sk³adaæ siê z normalnych znaków a tak¿e poni¿szych symboli:\n\n\
+Znak zachêty mo¿e sk³adaæ siê z normalnych znaków, a tak¿e poni¿szych symboli:\n\n\
   $A   & (Et)\n\
   $B   | \n\
-  $C   ( (Lewy nawias)\n\
+  $C   ( (lewy nawias)\n\
   $D   Bie¿¹ca data\n\
   $E   Znak ucieczki (kod ASCII 27)\n\
-  $F   ) (Prawy nawias)\n\
+  $F   ) (prawy nawias)\n\
   $G   > (znak wiêkszoœci)\n\
   $H   (usuwa ostatni znak)\n\
   $L   < (znak mniejszoœci)\n\
@@ -361,7 +361,7 @@ PAUSE [wiadomoœæ]"
 
 STRING_PROMPT_HELP2, "  $+   Wyœwietla obecny poziom stosu katalogów"
 
-STRING_PROMPT_HELP3, "\nWpisz PROMPT bez ¿adnych parametrów by powróciæ do ustawieñ domyœlnych."
+STRING_PROMPT_HELP3, "\nWpisz PROMPT bez ¿adnych parametrów, by powróciæ do ustawieñ domyœlnych."
 
 STRING_REM_HELP, "Definiuje liniê komentarza w pliku wsadowym.\n\nREM [komentarz]"
 
@@ -377,7 +377,7 @@ REN [/E /N /P /Q /S /T] stara_nazwa ... nowa_nazwa\n\n\
   /E    Bez komunikatów o b³êdach.\n\
   /N    Nic.\n\
   /P    Wyœwietla proœbê o potwierdzenie przed ka¿dym plikiem/katalogiem.\n\
-        (Nie jest jeszcze zaimplementowane!)\n\
+        (nie jest jeszcze zaimplementowane)\n\
   /Q    Tryb cichy.\n\
   /S    Zmienia tak¿e nazwy podkatalogów.\n\
   /T    Wyœwietla podsumowanie iloœci zmienionych nazw.\n\n\
@@ -393,14 +393,14 @@ SHIFT [DOWN]"
 
 STRING_SCREEN_HELP, "Przesuwa kursor i opcjonalnie wyœwietla tekst\n\n\
 SCREEN rz¹d kolumna [tekst]\n\n\
-  rz¹d         numer rzêdu do którego zostanie przesuniêty kursor\n\
-  kolumna      numer kolumny do której zostanie przesuniêty kursor"
+  rz¹d         numer rzêdu, do którego zostanie przesuniêty kursor\n\
+  kolumna      numer kolumny, do której zostanie przesuniêty kursor"
 
-STRING_SET_HELP, "Wyœwietla, ustawia b¹dŸ usuwa zmienne œrodowiskowe.\n\n\
+STRING_SET_HELP, "Wyœwietla, ustawia lub usuwa zmienne œrodowiskowe.\n\n\
 SET [zmienna[=][parametry]]\n\n\
   zmienna      Okreœla nazwê zmiennej œrodowiskowej.\n\
   parametry    Okreœla parametry przypisane do tej zmiennej.\n\n\
-Wpisz SET bez ¿adnych parametrów by wyœwietliæ obecne ustawienia zmiennych.\n"
+Wpisz SET bez ¿adnych parametrów, by wyœwietliæ obecne ustawienia zmiennych.\n"
 
 STRING_START_HELP1, "Wywo³uje komendê.\n\n\
 START komenda\n\n\
@@ -411,7 +411,7 @@ STRING_TITLE_HELP, "Ustawia tytu³ dla okna ze znakiem zachêty.\n\n\
 TITLE [tytu³]\n\n\
 tytu³       Okreœla tytu³ dla okna.\n"
 
-STRING_TIME_HELP1, "Wyœwietla b¹dŸ ustawia czas systemowy.\n\n\
+STRING_TIME_HELP1, "Wyœwietla lub ustawia czas systemowy.\n\n\
 TIME [/T][czas]\n\n\
   /T    tylko wyœwietla\n\n\
 Wpisz TIME bez ¿adnych parametrów, by wyœwietliæ obecny czas i\n\
@@ -432,7 +432,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   /n          Definiuje numer stopera.\n\
               Dostêpne s¹ numery od 0 do 9\n\
               Domyœlnie stoper dostaje numer 1\n\
-  /Fn         Format wyœwietlania czasu\n\
+  /Fn         Format wyœwietlania czasu,\n\
               n mo¿liwoœci:\n\
                     0    millisekundy\n\
                     1    hh%cmm%css%cdd\n\n\
@@ -464,13 +464,13 @@ rozpowszechniaæ pod pewnymi warunkami: wpisz `ver /r'. Lista podziêkowañ pod\n\
 parametrem: `ver /c'."
 
 STRING_VERSION_HELP3, "\n Program ten jest rozpowszechniany w dobrej wierze, ze wzglêdu\n\
- na jego u¿ytecznoœæ ale BEZ ¯ADNEJ GWARANCJI; nie jest on przeznaczony\n\
- NA SPRZEDA¯ ani do u¿ytku profesjonalnego. Szczegó³y dostêpne w\n\
+ na jego u¿ytecznoœæ, ale BEZ ¯ADNEJ GWARANCJI; nie jest on przeznaczony\n\
+ NA SPRZEDA¯, ani do u¿ytku profesjonalnego. Szczegó³y dostêpne w\n\
  GNU General Public License."
 
-STRING_VERSION_HELP4, "\n To jest darmowe oprogramowanie; mo¿esz je rozpowszechniaæ i modyfikowaæ\n\
+STRING_VERSION_HELP4, "\n To jest darmowe oprogramowanie; mo¿esz je rozpowszechniaæ i modyfikowaæ,\n\
 o ile nie naruszasz warunków GNU General Public License, w formie opublikowanej\n\
-przez Free Software Foundation; wersja numer dwa albo dowolna pó¿niejsza.\n"
+przez Free Software Foundation; wersja 2 albo dowolna póŸniejsza.\n"
 
 STRING_VERSION_HELP5, "\nRaporty o b³êdach prosimy przesy³aæ pod adres: <ros-dev@reactos.org>.\n\
 Uaktualnienia dostêpne na stronie: http://www.reactos.org"
@@ -481,8 +481,8 @@ STRING_VERSION_HELP7, "\nwersja ReactOS, napisana przez:\n"
 
 STRING_VOL_HELP1, " Wolumin w napêdzie %c ma etykietê: %s"
 STRING_VOL_HELP2, " Wolumin w napêdzie %c nie posiada etykiety.\n"
-STRING_VOL_HELP3, " Numer Seryjny Woluminu to: %04X-%04X\n"
-STRING_VOL_HELP4, "Wyœwietla etykietê woluminu w danym napêdzie(o ile istnieje) i jego numer seryjny.\n\nVOL [napêd:]"
+STRING_VOL_HELP3, " Numer seryjny woluminu to: %04X-%04X\n"
+STRING_VOL_HELP4, "Wyœwietla etykietê woluminu w danym napêdzie (o ile istnieje) i jego numer seryjny.\n\nVOL [napêd:]"
 
 STRING_WINDOW_HELP1, "Zmienia wymiar i pozycjê danego okna konsoli\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
@@ -503,26 +503,26 @@ RESTORE       odtwarza standardowe ustawienia okna\n\
 title         nowy tytu³ okna\n"
 
 
-STRING_HELP1, "Lista wszystkich dostêpnych komend (+ opisy)\n\n\
+STRING_HELP1, "Lista wszystkich dostêpnych komend (+opisy)\n\n\
   komenda /?     Wyœwietla dok³adny opis danej komendy\n\n\
 ?        Lista wszystkich dostêpnych komend (bez opisów).\n\
 ALIAS    Ustawia, pokazuje lub usuwa aliasy.\n\
-ATTRIB   Wyœwietla b¹dŸ zmienia atrybuty plików.\n\
+ATTRIB   Wyœwietla lub zmienia atrybuty plików.\n\
 BEEP     Sygna³ przez g³oœnik PC.\n\
 CALL     Wywo³uje program wsadowy z poziomu innego.\n\
-CD       Wyœwietla œcie¿kê, b¹dŸ przechodzi do innego katalogu.\n\
-CHCP     Wyœwietla b¹dŸ ustawia bie¿¹c¹ stronê kodow¹.\n\
+CD       Wyœwietla œcie¿kê lub przechodzi do innego katalogu.\n\
+CHCP     Wyœwietla lub ustawia bie¿¹c¹ stronê kodow¹.\n\
 CHOICE   Przedstawia u¿ytkownikowi kilka mo¿liwoœci i czeka na wybór.\n\
 CLS      Czyœci ekran.\n\
 CMD      Uruchamia kolejne okno konsoli ReactOS.\n\
 COLOR    Ustawia kolory t³a i tekstu w oknie konsoli.\n\
 COPY     Kopiuje jeden lub wiêcej plików w inne miejsce.\n\
-DATE     Wyœwietla b¹dŸ ustawia datê.\n\
+DATE     Wyœwietla lub ustawia datê.\n\
 DELETE   Kasuje jeden lub wiêcej plików.\n\
 DIR      Wyœwietla listê plików i podkatalogów w danym katalogu.\n\
-ECHO     Wyœwietla wiadomosci albo w³¹cza/wy³¹cza komendê ECHO.\n\
+ECHO     Wyœwietla wiadomoœci albo w³¹cza/wy³¹cza komendê ECHO.\n\
 ERASE    Kasuje jeden lub wiêcej plików.\n\
-EXIT     Zamyka bierz¹ce okno konsoli.\n\
+EXIT     Zamyka bie¿¹ce okno konsoli.\n\
 FOR      Wykonuje okreœlon¹ komendê dla ka¿dego pliku z okreœlonej listy.\n\
 FREE     Wolne miejsce na dysku.\n\
 GOTO     Kieruje interpreter poleceñ do okreœlonej linii,\n\
@@ -533,7 +533,7 @@ IF       Przetwarzanie warunkowe w programach wsadowych.\n\
 LABEL    Tworzy, zmienia lub kasuje etykietê woluminu w danym napêdzie.\n\
 MD       Tworzy katalog.\n\
 MKDIR    Tworzy katalog.\n\
-MOVE     Przenosi jeden lub wiêcej plików z jednego katalogu do drugiego\n\
+MOVE     Przenosi jeden lub wiêcej plików z jednego katalogu do drugiego.\n\
 PATH     Wyœwietla lub ustawia œcie¿ki dostêpu dla programów.\n\
 PAUSE    Zawiesza przetwarzanie programu wsadowego i wyœwietla komunikat.\n\
 POPD     Odtwarza poprzedni¹ nazwê danego katalogu, zapisan¹ przez\n\
@@ -546,18 +546,18 @@ REN      Zmienia nazwê pliku lub plików.\n\
 RENAME   Zmienia nazwê pliku lub plików.\n\
 RMDIR    Usuwa katalog.\n\
 SCREEN   Przenosi kursor i opcjonalnie wyœwietla tekst.\n\
-SET      Wyœwietla, ustawia b¹dŸ usuwa zmienne œrodowiskowe.\n\
+SET      Wyœwietla, ustawia lub usuwa zmienne œrodowiskowe.\n\
 SHIFT    Przenosi zamienne parametry w programach wsadowych.\n"
 STRING_HELP2, "START    Uruchamia oddzielne okno do wykonania okreœlonego polecenia lub komendy.\n\
          Wykonuje polecenie.\n\
-TIME     Wyœwietla b¹dŸ zmienia czas systemowy.\n\
+TIME     Wyœwietla lub zmienia czas systemowy.\n\
 TIMER    Pozwala na u¿ycie do 10 stoperów.\n\
 TITLE    Ustanawia tytu³ dla danej sesji CMD.EXE.\n\
 TYPE     Wyœwietla zawartoœæ pliku tekstowego.\n\
-VER      Wyœwietla wersjê ReactOS.\n\
-VERIFY   Decyduje czy ReactOS ma sprawdzaæ poprawnoœæ zapisuj plików\n\
+VER      Wyœwietla wersjê systemu ReactOS.\n\
+VERIFY   Decyduje czy ReactOS ma sprawdzaæ poprawnoœæ zapisu plików\n\
          na dysku.\n\
-VOL      Wyœwietla etykietê woluminu na danym napêdzi i numer seryjny.\n"
+VOL      Wyœwietla etykietê woluminu na danym napêdzie i numer seryjny.\n"
 
 
 STRING_CHOICE_OPTION,         "TN"
@@ -565,8 +565,8 @@ STRING_COPY_OPTION,           "TNZ"
 
 
 STRING_ALIAS_ERROR,          "Linia poleceñ zbyt d³uga po rozszerzeniu aliasa!\n"
-STRING_BATCH_ERROR,          "B³¹d przy otwarciu pliku wsadowego\n"
-STRING_CHCP_ERROR1,          "Aktywna strona kodowa nr.: %u\n"
+STRING_BATCH_ERROR,          "B³¹d podczas otwierania pliku wsadowego\n"
+STRING_CHCP_ERROR1,          "Aktywna strona kodowa nr: %u\n"
 STRING_CHCP_ERROR4,          "Niew³aœciwy numer strony kodowej\n"
 STRING_CHOICE_ERROR,         "Parametr niepoprawny. Poprawna forma: /C[:]opcja"
 STRING_CHOICE_ERROR_TXT,     "Parametr niepoprawny. Poprawna forma: /T[:]c,nn"
@@ -595,7 +595,7 @@ STRING_ERROR_ERROR1,         "Nieznany b³¹d! Kod b³êdu: 0x%lx\n"
 STRING_ERROR_ERROR2,         "B³¹d sk³adni"
 STRING_FOR_ERROR1,           "Brak 'in' dla twierdzenia."
 STRING_FOR_ERROR2,           "Nawias nie zosta³ znaleziony."
-STRING_FOR_ERROR3,           "Brakuje 'do'."
+STRING_FOR_ERROR3,           "Brakuje 'do'." 
 STRING_FOR_ERROR4,           "Brak komendy po 'do'."
 STRING_FREE_ERROR1,          "Nieprawid³owa litera napêdu"
 STRING_FREE_ERROR2,          "brak"
@@ -626,13 +626,13 @@ STRING_ERROR_INVALID_DRIVE,        "Nieprawid³owe okreœlenie napêdu\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Niew³aœciwy format parametru - %s\n"
 STRING_ERROR_BADCOMMAND,           "Nieprawid³owa komenda lub nazwa pliku\n"
 STRING_ERROR_OUT_OF_MEMORY,        "B³¹d - brak pamiêci.\n"
-STRING_ERROR_CANNOTPIPE,           "B³¹d potoków! Nie mo¿na otworzyæ pliku tymczasowego.!\n"
+STRING_ERROR_CANNOTPIPE,           "B³¹d potoków! Nie mo¿na otworzyæ pliku tymczasowego.\n"
 STRING_ERROR_D_PAUSEMSG,           "Naciœnij dowolny klawisz, aby kontynuowaæ . . ."
 STRING_ERROR_DRIVER_NOT_READY,     "Napêd nie jest gotowy"
 
 STRING_PATH_ERROR,                 "CMD: Poza œrodowiskiem '%s'\n"
 
-STRING_CMD_SHELLINFO,              "\nInterpreter Linii Poleceñ ReactOS "
+STRING_CMD_SHELLINFO,              "\nInterpreter linii poleceñ ReactOS "
 STRING_VERSION_RUNVER,             " dzia³aj¹cy na %s"
 STRING_COPY_FILE ,                 "        %d plik(ów) skopiowano\n"
 STRING_DELETE_WIPE,                "skasowano"

@@ -11,7 +11,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_CPLACCESS ICON "resources/applet.ico"
 
-
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
@@ -24,4 +24,5 @@ IDI_CPLACCESS ICON "resources/applet.ico"
 #include "lang/nl-NL.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
+
 

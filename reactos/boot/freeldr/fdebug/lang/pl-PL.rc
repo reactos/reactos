@@ -19,7 +19,7 @@ BEGIN
         MENUITEM "P&o³¹cz", IDM_FILE_CONNECT
         MENUITEM "&Roz³¹cz", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&Wyczyœæ wyœwietlacz", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
         MENUITEM "Ro&zpocznij zrzut", IDM_FILE_STARTCAPTURE
         MENUITEM "Za&trzymaj zrzut", IDM_FILE_STOPCAPTURE, GRAYED
@@ -30,7 +30,7 @@ BEGIN
     END
     POPUP "Po&moc"
     BEGIN
-        MENUITEM "&O ...", IDM_ABOUT
+        MENUITEM "&O programie", IDM_ABOUT
     END
 END
 
@@ -137,11 +137,11 @@ FONT 8, "Tahoma"
 BEGIN
     LTEXT           "WprowadŸ port COM (np. COM1):",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "WprowadŸ szybkoœæ portu w baudach (np. 115200):",IDC_STATIC,7,38,114,
+    LTEXT           "WprowadŸ szybkoœæ portu w bodach (np. 115200):",IDC_STATIC,7,38,114,
                     8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,45,79,50,14
-    PUSHBUTTON      "Cofnij",IDCANCEL,100,79,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,100,79,50,14
 END
 
 IDD_CAPTURE DIALOG DISCARDABLE  0, 0, 251, 95
@@ -153,7 +153,7 @@ BEGIN
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
     PUSHBUTTON      "Przeg&l¹daj",IDC_BROWSE,194,26,50,14
     DEFPUSHBUTTON   "OK",IDOK,139,74,50,14
-    PUSHBUTTON      "Cofnij",IDCANCEL,194,74,50,14
+    PUSHBUTTON      "Anuluj",IDCANCEL,194,74,50,14
 END
 
 
@@ -172,7 +172,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     
-	IDS_LICENSE				"Ten program nale¿y do wolnego oprogramowania; mo¿esz go rozpowszechniaæ i/lub modyfikowaæ w zgodzie z zasadami licencji GNU GPL w formie w jakiej zosta³y opublikowane przez fundacjê Free Software Foundation; albo w wersji drugiej Licencji albo (tu masz wybór) w jakiejkolwiek póŸniejszej wersji.\r\n\r\nRozpowszechniaj¹c ten program mamy nadziejê, ¿e bêdzie u¿yteczny, ale BEZ ¯ADNEJ GWARANCJI; nawet bez zak³adanej gwarancji HANDLOWOŒCI a w szczególnym przypadku zdatnoœci. Aby poznaæ wiêcej szczegó³ów zajrzyj do licencji GNU.\r\n\r\nKopia licencji GNU GPL powinna byæ dostarczona razem z tym programem; jeœli tak nie jest, napisz list do funfacji na adres: Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+	IDS_LICENSE				"Ten program nale¿y do wolnego oprogramowania; mo¿esz go rozpowszechniaæ i/lub modyfikowaæ w zgodzie z zasadami licencji GNU GPL w formie w jakiej zosta³y opublikowane przez fundacjê Free Software Foundation; albo w wersji 2 Licencji albo (tu masz wybór) w jakiejkolwiek póŸniejszej wersji.\r\n\r\nRozpowszechniaj¹c ten program mamy nadziejê, ¿e bêdzie u¿yteczny, ale BEZ ¯ADNEJ GWARANCJI; nawet bez zak³adanej gwarancji HANDLOWOŒCI, a w szczególnym przypadku zdatnoœci. Aby poznaæ wiêcej szczegó³ów, zajrzyj do licencji GNU.\r\n\r\nKopia licencji GNU GPL powinna byæ dostarczona razem z tym programem; jeœli tak nie jest, napisz list do fundacji na adres: Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 
 	END
 

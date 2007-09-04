@@ -41,7 +41,7 @@ FONT 8, "MS Shell Dlg"
 {
     GROUPBOX        "Najlepsze czasy", IDNONE,  10,  10, 140,  45
     LTEXT           "Pocz¹tkuj¹cy",      IDNONE,  20,  20,  40,   8
-    LTEXT           "zaawansowany",      IDNONE,  20,  30,  40,   8
+    LTEXT           "Zaawansowany",      IDNONE,  20,  30,  40,   8
     LTEXT           "Ekspert",        IDNONE,  20,  40,  40,   8
     LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
     LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
@@ -59,7 +59,7 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT           "Wpisz swoje imiê", IDNONE,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "Ok",                         IDOK,  60,  40,  40,  15
+    DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
 }
 
 DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
@@ -73,8 +73,8 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
     EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
     EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
-    DEFPUSHBUTTON   "Ok",     IDOK,      40,  30,  50,  15
-    PUSHBUTTON      "Wycofaj", IDCANCEL,  40,  50,  50,  15
+    DEFPUSHBUTTON   "OK",     IDOK,      40,  30,  50,  15
+    PUSHBUTTON      "Anuluj", IDCANCEL,  40,  50,  50,  15
 }
 
 DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
@@ -86,5 +86,5 @@ FONT 8, "MS Shell Dlg"
     LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
     LTEXT                 "Na licencji Wine", IDNONE,  35,  35, 100,  10
     ICON                                IDI_WINEMINE, IDNONE,  10,  25,  20,  20
-    DEFPUSHBUTTON                             "Ok", IDOK,      50,  60,  55,  15
+    DEFPUSHBUTTON                             "OK", IDOK,      50,  60,  55,  15
 }

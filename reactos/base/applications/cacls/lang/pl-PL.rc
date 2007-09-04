@@ -10,7 +10,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
 
-IDS_HELP, "Poka¿ albo modyfikuj listê kontroli dostêpu (Access Control List) plików\n\n\
+IDS_HELP, "Poka¿ lub modyfikuj listê kontroli dostêpu (Access Control List) plików\n\n\
 CACLS nazwa pliku [/T] [/E] [/C] [/G u¿ytkownik:dostêp [...]] [/R u¿ytkownik [...]]\n\
                [/P u¿ytkownik:dostêp [...]] [/D u¿ytkownik [...]]\n\
    filename      Poka¿ ACL.\n\
@@ -24,7 +24,7 @@ CACLS nazwa pliku [/T] [/E] [/C] [/G u¿ytkownik:dostêp [...]] [/R u¿ytkownik [..
                               W  Zapisu\n\
                               C  Zmiany (zapis)\n\
                               F  Pe³en dostêp\n\
-   /R u¿ytkownik         Odwo³aj okreœlonemu u¿ytkownikowi prawa dostêpu (tylko wa¿ny z /E).\n\
+   /R u¿ytkownik         Odwo³aj okreœlonemu u¿ytkownikowi prawa dostêpu (wa¿ny tylko z /E).\n\
    /P u¿ytkownik:dostêp  Zast¹p okreœlonemu u¿ytkownikowi prawa dostêpu.\n\
                          Dostêp ma byæ tylko do:\n\
                               N  ¯adnego\n\

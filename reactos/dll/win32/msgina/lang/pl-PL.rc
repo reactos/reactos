@@ -17,10 +17,10 @@ END
 
 IDD_NOTICE_DLG DIALOGEX 0,0,186,59
 STYLE NOT WS_VISIBLE | DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Witam w ReactOS"
+CAPTION "Witamy w ReactOS"
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
-    LTEXT           "PProszê wcisn¹æ kombinacjê klawiszy Control-Alt-Delete",IDC_STATIC,16,18,144,14
+    LTEXT           "Proszê wcisn¹æ kombinacjê klawiszy Control-Alt-Delete",IDC_STATIC,16,18,144,14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
@@ -48,7 +48,7 @@ BEGIN
     PUSHBUTTON      "Wy³¹cz",IDC_SHUTDOWN,170,76,70,14
     LTEXT           "Co chcesz teraz zrobiæ?",IDC_STATIC,86,53,87,8
     PUSHBUTTON      "Blokada komputera",IDC_LOCK,10,76,70,14
-    PUSHBUTTON      "Menad¿er zadañ",IDC_TASKMGR,90,95,70,14
+    PUSHBUTTON      "Mened¿er zadañ",IDC_TASKMGR,90,95,70,14
     CONTROL         "",IDC_ROSLOGO,"Static",SS_BLACKFRAME,7,7,230,38
 END
 
@@ -59,5 +59,5 @@ BEGIN
     IDS_PRESSCTRLALTDELETE "Wciœnij Control-Alt-Delete aby siê zalogowaæ."
     IDS_ASKFORUSER "Nazwa u¿ytkownika: "
     IDS_ASKFORPASSWORD "Has³o: "
-    IDS_FORCELOGOFF "To wyloguje aktualnego u¿ytkownika i straci wszystkie nie zapisane dane kontynuowaæ?"
+    IDS_FORCELOGOFF "To wyloguje aktualnego u¿ytkownika i straci on wszystkie niezapisane dane. Kontynuowaæ?"
 END

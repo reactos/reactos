@@ -11,7 +11,7 @@ CAPTION "Opcje regionalne"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standardy i formaty", IDC_GROUPBOX, 5, 3, 242, 165
-    LTEXT "Ta opcja wp³ywa na spsób, w jaki niektóre programy formatuj¹ liczby, waluty, daty i godziny.", -1, 14, 15, 230, 16
+    LTEXT "Ta opcja wp³ywa na sposób, w jaki niektóre programy formatuj¹ liczby, waluty, daty i godziny.", -1, 14, 15, 230, 16
     LTEXT "&Wybierz element, aby dopasowaæ jego preferencje lub kliknij przycisk Dostosuj, aby wybraæ w³asne formaty:", -1, 14, 36, 230, 16
     COMBOBOX IDC_SETREG_COMBO, 14, 54, 168, 120, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
              WS_VSCROLL | WS_TABSTOP | CBS_SORT
@@ -52,7 +52,7 @@ CAPTION "Jêzyki"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Us³ugi tekstowe i jêzykowe", IDC_GROUPBOX, 5, 3, 242, 52
-    LTEXT "Aby wyœwietliæ lub zmieniæ jêzyk i metody wprowadzania tekstu kliknij przycisk ""Szczegó³y""", -1, 12, 13, 230, 18
+    LTEXT "Aby wyœwietliæ lub zmieniæ jêzyk i metody wprowadzania tekstu, kliknij przycisk ""Szczegó³y""", -1, 12, 13, 230, 18
     PUSHBUTTON "&Szczegó³y", IDC_DETAIL_BUTTON, 186, 34, 54, 14
     GROUPBOX "Obs³uga dodatkowych jêzyków", IDC_GROUPBOX, 5, 60, 242, 82
     /* TODO: add other components*/

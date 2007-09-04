@@ -1,0 +1,23 @@
+/*
+ * PROJECT:     ReactOS logoff utility
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/logoff/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for logoff
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "Завершення сеансу.\n\n\
+  /v\t\tВідображення інформації про виконані дії.\n\
+  /?\t\tВідображення цієї інформації.\n\n"
+
+IDS_LOGOFF_REMOTE, "Завершення сеансу на віддаленій машині."
+IDS_LOGOFF_LOCAL, "Завершення поточного сеансу на цій машині."
+
+IDS_ILLEGAL_PARAM, "Невірні параметри\n"
+}
+/* EOF */

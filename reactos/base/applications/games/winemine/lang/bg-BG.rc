@@ -12,7 +12,7 @@ MENU_WINEMINE MENU DISCARDABLE
     POPUP "&Игра" {
         MENUITEM "&Нова",           IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Mark Question", IDM_MARKQ
+        MENUITEM "Използване на &въпросителна (?)", IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "На&чинаещ",      IDM_BEGINNER
         MENUITEM "На&преднал",      IDM_ADVANCED
@@ -28,9 +28,10 @@ MENU_WINEMINE MENU DISCARDABLE
 }
 
 DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Най- къси времена"
 FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
 {
     GROUPBOX        "Най- къси времена", IDNONE,  10,  10, 140,  45
     LTEXT           "Начинаещ",      IDNONE,  20,  20,  40,   8
@@ -46,9 +47,10 @@ FONT 8, "MS Shell Dlg"
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Поздрави!"
 FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
 {
     LTEXT           "Въведете името си", IDIGNORE,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
@@ -56,9 +58,10 @@ FONT 8, "MS Shell Dlg"
 }
 
 DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Нагодена игра"
 FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
 {
     LTEXT           "Реда",   IDNONE,   5,   5,  30,  10
     LTEXT           "Стълба",   IDNONE,   5,  35,  30,  10
@@ -71,13 +74,14 @@ FONT 8, "MS Shell Dlg"
 }
 
 DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "За"
 FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
 {
     LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
+    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
     LTEXT                 "under the Wine license", IDNONE,  35,  35, 100,  10
-    ICON                                IDI_WINEMINE, IDNONE,  10,  25,  20,  20
+    ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
     DEFPUSHBUTTON                             "Добре", IDOK,      50,  60,  55,  15
 }

@@ -133,7 +133,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301  USA."
+  STRING_LICENSE, "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug Twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301  USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -152,19 +152,19 @@ STRING_INFO,                                    "Informacja"
 
 STRING_UNTITLED,                                "(bez tytu³u)"
 
-STRING_ALL_FILES,                               "Wszystkie piki (*.*)"
+STRING_ALL_FILES,                               "Wszystkie pliki (*.*)"
 STRING_TEXT_FILES_TXT,                  "Pliki tekstowe (*.txt)"
 
-STRING_TOOLARGE,                                "Plik '%s' jest za du¿y dla notatnika.\n \
+STRING_TOOLARGE,                                "Plik '%s' jest za du¿y dla Notatnika.\n \
 Proszê u¿yæ innego edytora."
 STRING_NOTEXT,                                  "Nie wprowadzi³eœ ¿adnego tekstu. \
 \nProszê coœ wpisaæ i spróbowaæ ponownie."
 STRING_DOESNOTEXIST,                            "Plik '%s' nie istnieje\n\n \
-Czy chcesz utworzyæ nowy plik ?"
+Czy chcesz utworzyæ nowy plik?"
 STRING_NOTSAVED,                                "Plik '%s'\nzosta³ zmodyfikowany\n\n \
-Czy chcesz zachowaæ zmiany ?"
+Czy chcesz zachowaæ zmiany?"
 STRING_NOTFOUND,                                        "Nie mo¿na odnaleŸæ '%s'."
 STRING_OUT_OF_MEMORY,                   "Za ma³o pamiêci do wykonania tego zadania.\n \
-Zamknij jedn¹ lub wiêcej aplikacji aby zwiêkszyæ iloœæ wolnej pamiêci."
+Zamknij jedn¹ lub wiêcej aplikacji, by zwiêkszyæ iloœæ wolnej pamiêci."
 
 }

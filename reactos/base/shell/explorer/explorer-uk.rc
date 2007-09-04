@@ -328,9 +328,9 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "Провідник ReactOS"
     IDS_START               "Пуск"
-    IDS_LOGOFF              "Вихід із системи..."
+    IDS_LOGOFF              "Завершення сеансу..."
     IDS_SHUTDOWN            "Вимкнення..."
-    IDS_RESTART             "Restart..."
+    IDS_RESTART             "Перезавантаження..."
     IDS_LAUNCH              "Виконати..."
     IDS_START_HELP          "Довідка"
     IDS_SEARCH_FILES        "Пошук..."

@@ -32,7 +32,7 @@ BEGIN
    LTEXT "Ten program pomo¿e w instalacji systemu ReactOS. W tym celu "\
          "konieczne bêdzie zebranie informacji o twoim komputerze, by "\
          "prawid³owo skonfigurowaæ system operacyjny.", IDC_STATIC, 115, 40, 195, 100
-   LTEXT "Naciœnij Dalej by kontynuowaæ.", IDC_STATIC, 115, 169, 195, 17
+   LTEXT "Naciœnij Dalej, by kontynuowaæ.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -46,11 +46,11 @@ BEGIN
                    IDC_STATIC,15,7,286,19
    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-   LTEXT           "ReactOS oparty jest na licencji GPL, wieæ by w ca³oœci lub czêœciowo wykorzystaæ Ÿród³a "\
+   LTEXT           "ReactOS oparty jest na licencji GPL, wiêc by w ca³oœci lub czêœciowo wykorzystaæ Ÿród³a "\
                    "ReactOS, musisz przestrzegaæ postanowieñ licencji.",
                    IDC_STATIC,15,110,227,19
    PUSHBUTTON      "Poka¿ &GPL..",IDC_VIEWGPL,251,110,50,19
-   LTEXT           "Naciœnij Dalej by kontynuowaæ.",IDC_STATIC,15,136,
+   LTEXT           "Naciœnij Dalej, by kontynuowaæ.",IDC_STATIC,15,136,
                    195,17
 END
 
@@ -60,7 +60,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT "Podaj swoje imiê i nazwisko, a tak¿e nazwê twojej firmy b¹dŸ organizacji.",
+   LTEXT "Podaj swoje imiê i nazwisko, a tak¿e nazwê Twojej firmy lub organizacji.",
          IDC_STATIC, 54, 7, 242, 21
    LTEXT "Na&zwa:", IDC_STATIC, 54, 37, 44, 8
    EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
@@ -82,11 +82,11 @@ BEGIN
    LTEXT "Program konfiguracyjny stworzy konto Administrator. "\
          "Dziêki niemu uzyskasz, w razie potrzeby, pe³en dostêp do systemu.",
          IDC_STATIC, 54, 57, 250, 25
-   LTEXT "Podaj Has³o Administratora, nie d³u¿sze ni¿ 14 znaków.",
+   LTEXT "Podaj has³o administratora, nie d³u¿sze ni¿ 14 znaków.",
          IDC_STATIC, 54, 87, 250, 8
-   LTEXT "&Has³o Administratora:", IDC_STATIC, 54, 104, 75, 8
+   LTEXT "&Has³o administratora:", IDC_STATIC, 54, 104, 75, 8
    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-   LTEXT "&Potwierdzenie Has³a:", IDC_STATIC, 54, 123, 75, 8
+   LTEXT "&Potwierdzenie has³a:", IDC_STATIC, 54, 123, 75, 8
    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -103,7 +103,7 @@ BEGIN
    LTEXT "By zmieniæ lokalizacjê systemu, naciœnij Ustaw.",
          IDC_STATIC, 53, 60, 184, 8
    PUSHBUTTON "&Ustaw...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-   LTEXT "Uk;ad klawiatury decyduje o przyporzadkowaniu znaków pod klawisze.",
+   LTEXT "Uk³ad klawiatury decyduje o przyporz¹dkowaniu znaków pod klawisze.",
          IDC_STATIC, 53, 86, 253, 8
    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
    LTEXT "Aby zmieniæ uk³ad klawiatury, naciœnij Ustaw.",
@@ -117,7 +117,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT "Data i Czas", IDC_STATIC, 53, 7, 253, 8
+   LTEXT "Data i czas", IDC_STATIC, 53, 7, 253, 8
    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
@@ -125,7 +125,7 @@ BEGIN
    LTEXT "Strefa czasowa", IDC_STATIC, 53, 42, 253, 8
    COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
             CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-   AUTOCHECKBOX "Automatycznie ustaw zegar przy &Zmianie Czasu(DST)",
+   AUTOCHECKBOX "Automatycznie ustaw zegar przy &zmianie czasu (DST)",
                 IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
@@ -152,7 +152,7 @@ BEGIN
          "Teraz naciœnij Koniec, by ponownie uruchomiæ komputer.", IDC_STATIC, 115, 40, 195, 100
    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
    LTEXT "Upewnij siê, czy w napêdach CD/DVD nie pozosta³ ¿aden noœnik. "\
-         "Jeœli tak, to wyjmij go przed naciœniêciem Koniec.", IDC_STATIC, 115, 169, 195, 17
+         "Jeœli tak, to wyjmij go przed naciœniêciem przycisku Koniec.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -169,7 +169,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Please wait..."
+CAPTION "Proszê czekaæ..."
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -182,11 +182,11 @@ BEGIN
    IDS_ACKSUBTITLE      "Wszyscy, bez których nie by³oby ReactOS, a tak¿e informacje o Licencji "
    IDS_OWNERTITLE       "Personalizacja systemu"
    IDS_OWNERSUBTITLE    "Program konfiguracyjny wykorzysta te informacje, aby spersonalizowaæ system."
-   IDS_COMPUTERTITLE    "Nazwa komputera i Has³o Administratora"
-   IDS_COMPUTERSUBTITLE "Musisz podaæ nazwê swojego komputera a tak¿e Has³o Administratora."
-   IDS_LOCALETITLE      "Ustawienia Regionalne"
+   IDS_COMPUTERTITLE    "Nazwa komputera i has³o administratora"
+   IDS_COMPUTERSUBTITLE "Musisz podaæ nazwê swojego komputera a tak¿e has³o administratora."
+   IDS_LOCALETITLE      "Ustawienia regionalne"
    IDS_LOCALESUBTITLE   "Mo¿esz ustawiæ ReactOS pod k¹tem jêzyka i sposobu wyœwietlania danych."
-   IDS_DATETIMETITLE    "Data i Czas"
+   IDS_DATETIMETITLE    "Data i czas"
    IDS_DATETIMESUBTITLE "Ustaw prawid³ow¹ datê i czas."
    IDS_PROCESSTITLE     "Tytu³ strony"
    IDS_PROCESSSUBTITLE  "Podtytu³ strony"
@@ -203,12 +203,12 @@ BEGIN
    IDS_CMT_CALC        "Uruchom Kalkulator"
    IDS_CMT_CMD         "Uruchom konsolê"
    IDS_CMT_EXPLORER    "Uruchom Eksplorator"
-   IDS_CMT_NOTEPAD     "Uruchom Edytor Tekstu"
-   IDS_CMT_REGEDIT     "Uruchom Edytor Rejestru"
-   IDS_CMT_WORDPAD     "Uruchom Wordpada"
+   IDS_CMT_NOTEPAD     "Uruchom Edytor tekstu"
+   IDS_CMT_REGEDIT     "Uruchom Edytor rejestru"
+   IDS_CMT_WORDPAD     "Uruchom WordPada"
    IDS_CMT_SCREENSHOT  "Zrzut ekranu"
-   IDS_CMT_DEVMGMT     "Uruchom Mened¿er Urz¹dzeñ"
-   IDS_CMT_SERVMAN     "Uruchom Mened¿er Us³ug"
+   IDS_CMT_DEVMGMT     "Uruchom Mened¿er urz¹dzeñ"
+   IDS_CMT_SERVMAN     "Uruchom Mened¿er us³ug"
 END
 
 STRINGTABLE
@@ -216,12 +216,6 @@ BEGIN
    IDS_GAMES           "Gry"
    IDS_CMT_SOLITAIRE   "Pasjans"
    IDS_CMT_WINEMINE    "Saper"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
 END
 
 STRINGTABLE
@@ -241,17 +235,16 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Wiersz poleceñ.lnk"
     IDS_SHORT_EXPLORER   "Eksplorator ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Œci¹gaj! .lnk"
-    IDS_SHORT_SERVICE    "Mened¿er Us³ug.lnk"
-    IDS_SHORT_DEVICE     "Mened¿er Urz¹dzeñ.lnk"
-    IDS_SHORT_CALC       "Kalculator.lnk"
+    IDS_SHORT_DOWNLOADER "Download!.lnk"
+    IDS_SHORT_SERVICE    "Mened¿er us³ug.lnk"
+    IDS_SHORT_DEVICE     "Mened¿er urz¹dzeñ.lnk"
+    IDS_SHORT_CALC       "Kalkulator.lnk"
     IDS_SHORT_REGEDIT    "Edytor rejestru.lnk"
     IDS_SHORT_NOTEPAD    "Notatnik.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "Zrzut ekranu.lnk"
-    IDS_SHORT_SOLITAIRE  "RosPasjans.lnk"
-    IDS_SHORT_WINEMINE   "ROSaper.lnk"
-	IDS_SHORT_CHARMAP    "CharMap.lnk"
+    IDS_SHORT_SOLITAIRE  "Pasjans.lnk"
+    IDS_SHORT_WINEMINE   "Saper.lnk"
 END
 
 STRINGTABLE
@@ -259,7 +252,7 @@ BEGIN
     IDS_WZD_NAME         "Program instalacyjny nie mo¿e kontynuowaæ dopóki nie wpiszesz swojego imienia i nazwiska."
     IDS_WZD_SETCOMPUTERNAME  "Program instalacyjny nie zdo³a³ ustawiæ nowej nazwy komputera."
     IDS_WZD_COMPUTERNAME  "Program instalacyjny nie mo¿e kontynuowaæ dopóki nie wpiszesz nazwy komputera."
-    IDS_WZD_PASSWORDEMPTY  "Musisz wprowadziæ has³o !"
+    IDS_WZD_PASSWORDEMPTY  "Musisz wprowadziæ has³o!"
     IDS_WZD_PASSWORDMATCH  "Oba wprowadzone has³a nie s¹ identyczne. Musisz wpisaæ to samo has³o dwa razy."
     IDS_WZD_PASSWORDCHAR  "Wprowadzone has³o zawiera nieodpowiednie znaki. Proszê wprowadziæ has³o bez ich udzia³u."
     IDS_WZD_LOCALTIME    "Program instalacyjny nie zdo³a³ ustawiæ czasu lokalnego."

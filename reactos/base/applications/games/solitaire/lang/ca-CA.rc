@@ -1,8 +1,8 @@
-/*
+ï»¿/*
  * PROJECT:     Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/en.rc
- * PURPOSE:     English Language File for Solitaire
+ * FILE:        base/applications/games/solitaire/ca-CA.rc
+ * PURPOSE:     Catalan Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  */
 #include "resource.h"
@@ -18,19 +18,19 @@ CAPTION "Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Cartes", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "Dibuixan &Una", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Dibuixan &Tres", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    AUTORADIOBUTTON "Treu-ne &Una", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Treu-ne &Tres", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
     AUTOCHECKBOX    "&Mostra el temps", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
     AUTOCHECKBOX    "&Barra d'estat", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "Acceptar", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Cancel·lar", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "CancelÂ·lar", IDCANCEL, 101, 97, 50, 14
 END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 221, 96
-CAPTION "Select Card Back"
+CAPTION "Seleccioneu l'anvers"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -39,7 +39,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 112, 7, 50, 61
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 166, 7, 50, 61
     DEFPUSHBUTTON "Acceptar", IDOK, 104, 77, 54, 13
-    PUSHBUTTON    "Cancel·lar", IDCANCEL, 162, 77, 54, 13
+    PUSHBUTTON    "CancelÂ·lar", IDCANCEL, 162, 77, 54, 13
 END
 
 
@@ -58,7 +58,7 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Game"
+    POPUP "&Joc"
     BEGIN
         MENUITEM "R&eparteix\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
