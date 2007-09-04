@@ -60,7 +60,6 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define NR_SECTION_PAGE_ENTRIES             1024
 
 #define TEB_BASE                            0x7FFDE000
-#define KPCR_BASE                           0xFF000000
 
 /* Although Microsoft says this isn't hardcoded anymore,
    they won't be able to change it. Stuff depends on it */

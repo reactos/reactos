@@ -904,7 +904,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	}
 
 	CurrentTime.QuadPart = KeQueryInterruptTime();
-	Prcb = ((PKPCR)KPCR_BASE)->Prcb;
+	Prcb = KeGetPcr()->Prcb;
 	for (i = 0; i < KeNumberProcessors; i++)
 	{
 	   Spi->IdleTime.QuadPart = (Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime) * 100000LL; // IdleTime
@@ -1196,7 +1196,7 @@ QSI_DEF(SystemInterruptInformation)
 
   ti = KeQueryTimeIncrement();
 
-  Prcb = ((PKPCR)KPCR_BASE)->Prcb;
+  Prcb = KeGetPcr()->Prcb;
   for (i = 0; i < KeNumberProcessors; i++)
   {
     //sii->ContextSwitches = Prcb->KeContextSwitches;

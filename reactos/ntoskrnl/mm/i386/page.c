@@ -1925,8 +1925,16 @@ MmCreateVirtualMapping(PEPROCESS Process,
    {
       if (!MmIsUsablePage(Pages[i]))
       {
-         DPRINT1("Page at address %x not usable\n", PFN_TO_PTE(Pages[i]));
-         KEBUGCHECK(0);
+          /* Is this an attempt to map KUSER_SHARED_DATA? */
+         if ((Address == (PVOID)0x7FFE0000) && (PageCount == 1) && (Pages[0] == 2))
+         {
+            // allow
+         }
+         else
+         {
+            DPRINT1("Page at address %x not usable\n", PFN_TO_PTE(Pages[i]));
+            KEBUGCHECK(0);
+         }
       }
    }
 

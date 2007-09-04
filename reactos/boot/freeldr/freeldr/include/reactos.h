@@ -40,16 +40,12 @@
 
 #define STARTUP_BASE                0xC0000000
 #define HYPERSPACE_BASE             0xC0400000
-#define HYPERSPACE_PAE_BASE         0xC0800000
-#define APIC_BASE                   0xFEC00000
-#define KPCR_BASE                   0xFF000000
+#define HAL_BASE                    0xFFC00000
 
 #define LowMemPageTableIndex        0
 #define StartupPageTableIndex       (STARTUP_BASE >> 22)
 #define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 22)
-#define KpcrPageTableIndex          (KPCR_BASE >> 22)
-#define ApicPageTableIndex          (APIC_BASE >> 22)
-#define KuserPageTableIndex         (KI_USER_SHARED_DATA >> 22)
+#define HalPageTableIndex           (HAL_BASE >> 22)
 
 typedef struct _PAGE_DIRECTORY_X86
 {

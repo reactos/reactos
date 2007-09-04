@@ -5,9 +5,6 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
-/* Temporary hack */
-#define KPCR_BASE   0xFF000000
-
 #define HAL_APC_REQUEST         0
 #define HAL_DPC_REQUEST         1
 

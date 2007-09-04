@@ -29,7 +29,7 @@ Author:
 #ifdef CONFIG_SMP
 #define PCR                                     fs:
 #else
-#define PCR                                     ds:[0xFF000000]
+#define PCR                                     ds:[0xFFDFF000]
 #endif
 #endif
 
@@ -610,6 +610,7 @@ Author:
 #define PRIMARY_VECTOR_BASE                     0x30 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
+
 
 
 

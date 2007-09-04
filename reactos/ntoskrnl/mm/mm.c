@@ -193,17 +193,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
       CPRINT("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
       return(STATUS_UNSUCCESSFUL);
    }
-   if (PsGetCurrentProcess() == NULL)
-   {
-      /* Allow this! It lets us page alloc much earlier! It won't be needed 
-       * after my init patch anyways
-       */
-      DPRINT("No current process\n");
-      if (Address < (ULONG_PTR)MmSystemRangeStart)
-      {
-         return(STATUS_ACCESS_VIOLATION);
-      }
-   }
 
    /*
     * Find the memory area for the faulting address

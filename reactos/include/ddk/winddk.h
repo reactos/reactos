@@ -227,11 +227,7 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define ZwCurrentProcess() NtCurrentProcess()
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 #define ZwCurrentThread() NtCurrentThread()
-#ifdef _REACTOS_
-#define KIP0PCRADDRESS                      0xff000000
-#else
 #define KIP0PCRADDRESS                      0xffdff000
-#endif
 
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440

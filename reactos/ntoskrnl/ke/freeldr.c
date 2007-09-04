@@ -471,8 +471,8 @@ KiRosBuildOsMemoryMap(VOID)
     Status = KiRosAllocateArcDescriptor(0, 1, MemoryFirmwarePermanent);
     if (Status != STATUS_SUCCESS) return Status;
 
-    /* Build an entry for the KPCR (which we put in page 1) */
-    Status = KiRosAllocateArcDescriptor(1, 2, LoaderMemoryData);
+    /* Build an entry for the KPCR and KUSER_SHARED_DATA */
+    Status = KiRosAllocateArcDescriptor(1, 3, LoaderMemoryData);
     if (Status != STATUS_SUCCESS) return Status;
 
     /* Build an entry for the PDE and return the status */
@@ -882,8 +882,8 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
-	MmFreeLdrMemHigher = RosLoaderBlock->MemHigher;
-	MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
+    MmFreeLdrMemHigher = RosLoaderBlock->MemHigher;
+    MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
     if (!MmFreeLdrPageDirectoryEnd) MmFreeLdrPageDirectoryEnd = 0x40000;
 
     /* Set the NT Loader block and initialize it */

@@ -175,20 +175,10 @@ FrLdrSetupPageDirectory(VOID)
     PageDir->Pde[HyperspacePageTableIndex].Write = 1;
     PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
 
-    /* Set up the Apic PDE */
-    PageDir->Pde[ApicPageTableIndex].Valid = 1;
-    PageDir->Pde[ApicPageTableIndex].Write = 1;
-    PageDir->Pde[ApicPageTableIndex].PageFrameNumber = PaPtrToPfn(apic_pagetable);
-
-    /* Set up the KPCR PDE */
-    PageDir->Pde[KpcrPageTableIndex].Valid = 1;
-    PageDir->Pde[KpcrPageTableIndex].Write = 1;
-    PageDir->Pde[KpcrPageTableIndex].PageFrameNumber = PaPtrToPfn(kpcr_pagetable);
-
-    /* Set up the KUSER PDE */
-    PageDir->Pde[KuserPageTableIndex].Valid = 1;
-    PageDir->Pde[KuserPageTableIndex].Write = 1;
-    PageDir->Pde[KuserPageTableIndex].PageFrameNumber = PaPtrToPfn(kuser_pagetable);
+    /* Set up the HAL PDE */
+    PageDir->Pde[HalPageTableIndex].Valid = 1;
+    PageDir->Pde[HalPageTableIndex].Write = 1;
+    PageDir->Pde[HalPageTableIndex].PageFrameNumber = PaPtrToPfn(apic_pagetable);
 
     /* Set up Low Memory PTEs */
     PageDir = (PPAGE_DIRECTORY_X86)&lowmem_pagetable;
@@ -209,35 +199,28 @@ FrLdrSetupPageDirectory(VOID)
         PageDir->Pde[i].PageFrameNumber = PaToPfn(KERNEL_BASE_PHYS + i * PAGE_SIZE);
     }
 
-    /* Set up APIC PTEs */
+    /* Setup APIC Base */
     PageDir = (PPAGE_DIRECTORY_X86)&apic_pagetable;
     PageDir->Pde[0].Valid = 1;
     PageDir->Pde[0].Write = 1;
     PageDir->Pde[0].CacheDisable = 1;
     PageDir->Pde[0].WriteThrough = 1;
-    PageDir->Pde[0].PageFrameNumber = PaToPfn(APIC_BASE);
+    PageDir->Pde[0].PageFrameNumber = PaToPfn(HAL_BASE);
     PageDir->Pde[0x200].Valid = 1;
     PageDir->Pde[0x200].Write = 1;
     PageDir->Pde[0x200].CacheDisable = 1;
     PageDir->Pde[0x200].WriteThrough = 1;
-    PageDir->Pde[0x200].PageFrameNumber = PaToPfn(APIC_BASE + KERNEL_BASE_PHYS);
+    PageDir->Pde[0x200].PageFrameNumber = PaToPfn(HAL_BASE + KERNEL_BASE_PHYS);
 
-    /* Set up KPCR PTEs */
-    PageDir = (PPAGE_DIRECTORY_X86)&kpcr_pagetable;
-    PageDir->Pde[0].Valid = 1;
-    PageDir->Pde[0].Write = 1;
-    PageDir->Pde[0].PageFrameNumber = 1;
+    /* Setup KUSER_SHARED_DATA Base */
+    PageDir->Pde[0x1F0].Valid = 1;
+    PageDir->Pde[0x1F0].Write = 1;
+    PageDir->Pde[0x1F0].PageFrameNumber = 2;
 
-    /* Setup KUSER PTEs */
-    PageDir = (PPAGE_DIRECTORY_X86)&kuser_pagetable;
-    for (i = 0; i < 1024; i++)
-    {
-        /* SEetup each entry */
-        PageDir->Pde[i].Valid = 1;
-        PageDir->Pde[i].Write = 1;
-        PageDir->Pde[i].Owner = 1;
-        PageDir->Pde[i].PageFrameNumber = PaToPfn(KI_USER_SHARED_DATA + i * PAGE_SIZE);
-    }
+    /* Setup KPCR Base*/
+    PageDir->Pde[0x1FF].Valid = 1;
+    PageDir->Pde[0x1FF].Write = 1;
+    PageDir->Pde[0x1FF].PageFrameNumber = 1;
 }
 
 PLOADER_MODULE
