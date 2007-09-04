@@ -126,7 +126,7 @@ namespace System_
 
     	void OsSupport::delayExecution(long value)
     	{
-			sleep( (clock_t)m_Delayread * CLOCKS_PER_SEC );
+			sleep( (clock_t)value * CLOCKS_PER_SEC );
     	}
 
 
