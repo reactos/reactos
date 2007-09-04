@@ -139,10 +139,9 @@ namespace Sysreg_
     {
 
         string qemuimgdir;
-        string output;
-
         if (!getQemuDir(qemuimgdir))
         {
+            cerr << "Error: failed to retrieve qemu directory path" << endl;
             return false;
         }
 
@@ -174,7 +173,7 @@ namespace Sysreg_
         cerr << "Creating HDD Image ..." << output << endl;
         if (OsSupport::createProcess ((TCHAR*)qemuimgdir.c_str(), 4, options, true))
         {
-            m_HDDImage = output;
+            m_HDDImage = image;
             return true;
         }
 
@@ -349,6 +348,7 @@ namespace Sysreg_
 //----------------------------------------------------------------------------------------
     bool RosBootTest::configureHDDImage()
     {
+        //cout << "configureHDDImage m_HDDImage " << m_HDDImage.length() << " m_CDImage " << m_CDImage.length() << " m_BootCmd: " << m_BootCmd.length() << endl;
         if (m_HDDImage.length())
         {
             /* check if ROS_HDD_IMAGE points to hdd image */
@@ -660,9 +660,13 @@ namespace Sysreg_
             cleanup();
             return false;
         }
+
+        if (m_DelayRead)
+        {
+            OsSupport::delayExecution(m_DelayRead); 
+        }
+
 #ifdef __LINUX__
-        
-        OsSupport::delayExecution(3); 
         /*
          * For linux systems we can only
          * check if the emulator runs by
