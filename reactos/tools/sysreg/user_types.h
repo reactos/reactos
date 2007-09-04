@@ -18,6 +18,7 @@
 #else
  #define TCHAR char
  #define tstrcpy strcpy
+ #define _tcschr strchr
  #define _tcscat strcat
  #define _tcscpy(str1, str2) strcpy(str1, str2)
  #define _tcslen(str1) strlen(str1)
