@@ -20,7 +20,7 @@ BEGIN
                     IDC_STATIC,120,21,195,16
     LTEXT           "Selezionare Successivo per continuare.",IDC_STATIC,120,169,195,17
     LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,134,36,164,11
-    LTEXT           "ATTENZIONE! INSTALLARE UN DISPOSITIVO PERSONALIZZATO PUÒ BLOCCARE IL COMPUTER O IMPEDIRNE L'AVVIO!",IDC_STATIC,120,59,195,16
+    LTEXT           "ATTENZIONE! INSTALLARE UN DISPOSITIVO PERSONALIZZATO PUÒ BLOCCARE IL COMPUTER O IMPEDIRNE L'AVVIO!",IDC_STATIC,120,59,195,24
     CONTROL         "Installa il driver automaticamente",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
     CONTROL         "Installa il driver da una posizione specifica",IDC_RADIO_MANUAL,
@@ -36,7 +36,7 @@ BEGIN
     LTEXT           "L'installazione è fallita",IDC_FINISHTITLE,120,8,195,24
     LTEXT           "Impossibile installare il dispositivo perché il driver non è stato trovato.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Selezionare Indietro se si ha un disco di driver o si conosce il percorso per trovare il driver.",
+    LTEXT           "Selezionare Indietro se si ha un disco con il driver o si conosce il percorso dove trovarlo.",
                     IDC_STATIC,120,98,181,24
     CONTROL         "Non mostrare più questo dialogo",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
@@ -63,7 +63,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,27,11,239,13
     CONTROL         "Scegli il driver manualmente",IDC_RADIO_CHOOSE,"Button",
                     BS_AUTORADIOBUTTON,27,98,171,12
-    CONTROL         "Cerca in supporti rimuovibili",IDC_CHECK_MEDIA,"Button",
+    CONTROL         "Cerca nei supporti rimuovibili",IDC_CHECK_MEDIA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
     CONTROL         "Includi questo percorso",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,47,54,162,10
@@ -115,4 +115,6 @@ BEGIN
                     179,11
     LTEXT           "DISPOSITIVO SCONOSCIUTO",IDC_DEVICE,148,53,147,12
 END
+
+
 

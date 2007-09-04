@@ -33,12 +33,12 @@ BEGIN
     PUSHBUTTON "Sav&e As...", -1, 134,70,50,15
     PUSHBUTTON "&Delete", -1, 188,70,50,15
     LTEXT "To change sounds, click a program event in the following list and then select a sound to apply. You can save the changes as a new sound scheme.",-1,8,90,230,40
-    LTEXT "&Pogram events:",-1,8,118,150,17
+    LTEXT "&Program events:",-1,8,118,150,17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
     LTEXT "&Sounds:",-1,8,194,80,17
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "", -1, 168,205,15,15
-    PUSHBUTTON "&Brouse...", -1, 188,205,50,15
+    PUSHBUTTON "&Browse...", -1, 188,205,50,15
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -101,5 +101,6 @@ BEGIN
     IDS_CPLNAME "Sound and Audio Devices"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
 END
+
 
 
