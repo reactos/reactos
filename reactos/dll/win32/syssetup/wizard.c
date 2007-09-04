@@ -1926,6 +1926,12 @@ FinishDlgProc(HWND hwndDlg,
                              WM_SETFONT,
                              (WPARAM)SetupData->hTitleFont,
                              (LPARAM)TRUE);
+          if (SetupData->UnattendSetup)
+          {
+            KillTimer(hwndDlg, 1);
+            SetupIsActive(0);
+            PostQuitMessage(0);
+          }
         }
         break;
 
