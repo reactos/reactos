@@ -249,11 +249,11 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
 
 #define KdbpGetCharKeyboard(ScanCode) KdbpTryGetCharKeyboard(ScanCode, 0)
 CHAR
-KdbpTryGetCharKeyboard(PULONG ScanCode, UINT Retry);
+KdbpTryGetCharKeyboard(PULONG ScanCode, ULONG Retry);
 
 #define KdbpGetCharSerial()  KdbpTryGetCharSerial(0)
 CHAR
-KdbpTryGetCharSerial(UINT Retry);
+KdbpTryGetCharSerial(ULONG Retry);
 
 VOID
 KdbEnter(VOID);
