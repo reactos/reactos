@@ -2219,8 +2219,93 @@ ScmrChangeServiceConfig2W(handle_t BindingHandle,
                           unsigned char *lpInfo,
                           unsigned long dwInfoSize)
 {
-    DPRINT1("ScmrChangeServiceConfig2W() is unimplemented\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD dwError = ERROR_SUCCESS;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService = NULL;
+    HKEY hServiceKey = NULL;
+
+    DPRINT("ScmrChangeServiceConfig2W() called\n");
+    DPRINT("dwInfoLevel = %lu\n", dwInfoLevel);
+    DPRINT("dwInfoSize = %lu\n", dwInfoSize);
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hSvc = (PSERVICE_HANDLE)hService;
+    if (hSvc->Handle.Tag != SERVICE_TAG)
+    {
+        DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SERVICE_CHANGE_CONFIG))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* FIXME: Lock database exclusively */
+
+    if (lpService->bDeleted)
+    {
+        /* FIXME: Unlock database */
+        DPRINT1("The service has already been marked for delete!\n");
+        return ERROR_SERVICE_MARKED_FOR_DELETE;
+    }
+
+    /* Open the service key */
+    dwError = ScmOpenServiceKey(lpService->szServiceName,
+                                KEY_SET_VALUE,
+                                &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    if (dwInfoLevel & SERVICE_CONFIG_DESCRIPTION)
+    {
+        LPSERVICE_DESCRIPTIONW lpServiceDescription = (LPSERVICE_DESCRIPTIONW)lpInfo;
+
+        if (dwInfoSize != sizeof(*lpServiceDescription))
+        {
+            dwError = ERROR_INVALID_PARAMETER;
+            goto done;
+        }
+
+        if (lpServiceDescription != NULL && lpServiceDescription->lpDescription != NULL)
+        {
+            RegSetValueExW(hServiceKey,
+                           L"Description",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)lpServiceDescription->lpDescription,
+                           (wcslen(lpServiceDescription->lpDescription) + 1) * sizeof(WCHAR));
+
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+    }
+    else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        DPRINT1("SERVICE_CONFIG_FAILURE_ACTIONS not implemented\n");
+        dwError = ERROR_CALL_NOT_IMPLEMENTED;
+        goto done;
+    }
+
+done:
+    /* FIXME: Unlock database */
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    DPRINT("ScmrChangeServiceConfigW() done (Error %lu)\n", dwError);
+
+    return dwError;
 }
 
 
@@ -2247,8 +2332,92 @@ ScmrQueryServiceConfig2W(handle_t BindingHandle,
                          unsigned long cbBufSize,
                          unsigned long *pcbBytesNeeded)
 {
-    DPRINT1("ScmrQueryServiceConfig2W() is unimplemented\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD dwError = ERROR_SUCCESS;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService = NULL;
+    HKEY hServiceKey = NULL;
+    DWORD dwRequiredSize;
+    LPWSTR lpDescription = NULL;
+
+    DPRINT("ScmrQueryServiceConfig2W() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hSvc = (PSERVICE_HANDLE)hService;
+    if (hSvc->Handle.Tag != SERVICE_TAG)
+    {
+        DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SERVICE_QUERY_CONFIG))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* FIXME: Lock the service database shared */
+
+    dwError = ScmOpenServiceKey(lpService->lpServiceName,
+                                KEY_READ,
+                                &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    if (dwInfoLevel & SERVICE_CONFIG_DESCRIPTION)
+    {
+        LPSERVICE_DESCRIPTIONW lpServiceDescription = (LPSERVICE_DESCRIPTIONW)lpBuffer;
+        LPWSTR lpStr;
+
+        dwError = ScmReadString(hServiceKey,
+                                L"Description",
+                                &lpDescription);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+
+        dwRequiredSize = sizeof(SERVICE_DESCRIPTIONW) + ((wcslen(lpDescription) + 1) * sizeof(WCHAR));
+
+        if (cbBufSize < dwRequiredSize)
+        {
+            *pcbBytesNeeded = dwRequiredSize;
+            dwError = ERROR_INSUFFICIENT_BUFFER;
+            goto done;
+        }
+        else
+        {
+            lpStr = (LPWSTR)(lpServiceDescription + 1);
+            wcscpy(lpStr, lpDescription);
+            lpServiceDescription->lpDescription = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceDescription);
+        }
+    }
+    else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        DPRINT1("SERVICE_CONFIG_FAILURE_ACTIONS not implemented\n");
+        dwError = ERROR_CALL_NOT_IMPLEMENTED;
+        goto done;
+    }
+
+done:
+    if (lpDescription != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDescription);
+
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    /* FIXME: Unlock database */
+
+    DPRINT("ScmrQueryServiceConfig2W() done (Error %lu)\n", dwError);
+
+    return dwError;
 }
 
 
