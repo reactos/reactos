@@ -18,6 +18,8 @@ endif
 WPP_TARGET = \
 	$(WPP_OUT_)libwpp.a
 
+WPP_DEPENDS = $(BUILDNO_H)
+
 WPP_SOURCES = $(addprefix $(WPP_BASE_), \
 	lex.yy.c \
 	preproc.c \
@@ -28,7 +30,7 @@ WPP_SOURCES = $(addprefix $(WPP_BASE_), \
 WPP_OBJECTS = \
     $(addprefix $(INTERMEDIATE_), $(WPP_SOURCES:.c=.o))
 
-WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude/reactos/wine -Iinclude/reactos -Iinclude -Iinclude/psdk $(TOOLS_CFLAGS)
+WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude/reactos/wine -Iinclude/reactos -Iinclude -Iinclude/psdk -I$(INTERMEDIATE_)include $(TOOLS_CFLAGS)
 
 .PHONY: wpp
 wpp: $(WPP_TARGET)
@@ -37,19 +39,19 @@ $(WPP_TARGET): $(WPP_OBJECTS) | $(WPP_OUT)
 	$(ECHO_AR)
 	${host_ar} -rc $(WPP_TARGET) $(WPP_OBJECTS)
 
-$(WPP_INT_)lex.yy.o: $(WPP_BASE_)lex.yy.c | $(WPP_INT)
+$(WPP_INT_)lex.yy.o: $(WPP_BASE_)lex.yy.c $(WPP_DEPENDS) | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_INT_)preproc.o: $(WPP_BASE_)preproc.c | $(WPP_INT)
+$(WPP_INT_)preproc.o: $(WPP_BASE_)preproc.c $(WPP_DEPENDS) | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_INT_)wpp.o: $(WPP_BASE_)wpp.c | $(WPP_INT)
+$(WPP_INT_)wpp.o: $(WPP_BASE_)wpp.c $(WPP_DEPENDS) | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_INT_)ppy.tab.o: $(WPP_BASE_)ppy.tab.c | $(WPP_INT)
+$(WPP_INT_)ppy.tab.o: $(WPP_BASE_)ppy.tab.c $(WPP_DEPENDS) | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 

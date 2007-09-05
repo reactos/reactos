@@ -36,6 +36,9 @@ $(GENDIB_INT_)gendib.o: $(GENDIB_BASE_)gendib.c | $(GENDIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(GENDIB_HOST_CFLAGS) -c $< -o $@
 
+.PHONY: gendib
+gendib: $(GENDIB_TARGET)
+
 .PHONY: gendib_clean
 gendib_clean:
 	-@$(rm) $(GENDIB_TARGET) $(GENDIB_OBJECTS) 2>$(NUL)

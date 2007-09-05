@@ -36,6 +36,9 @@ $(NCI_INT_)ncitool.o: $(NCI_BASE_)ncitool.c | $(NCI_INT)
 	$(ECHO_CC)
 	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
 
+.PHONY: nci
+nci: $(NCI_TARGET)
+
 .PHONY: nci_clean
 nci_clean:
 	-@$(rm) $(NCI_TARGET) $(NCI_OBJECTS) 2>$(NUL)
