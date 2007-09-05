@@ -69,4 +69,4 @@ ReactOS = "ReactOS Team"
 DisplayClassName = "Display Adapters"
 
 StdMfg = "(Standard display adapters)"
-VGA.DeviceDesc = "VGA-compatible graphic card"
+VGA.DeviceDesc = "VGA-compatible graphics card"
