@@ -90,6 +90,8 @@ namespace System_
 		else
 		{
 			cout << "NamedPipeReader::openPipe> successfully opened pipe" << endl;
+            m_BufferLength = 100;
+            m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
 			return true;
 		}
 #endif
