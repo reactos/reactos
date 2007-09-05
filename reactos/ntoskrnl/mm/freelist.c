@@ -457,12 +457,12 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
                /*
                 * Page two is reserved for the KUSER_SHARED_DATA
                 */
-               MmPageArray[1].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-               MmPageArray[1].Flags.Consumer = MC_NPPOOL;
-               MmPageArray[1].Flags.Zero = 0;
-               MmPageArray[1].ReferenceCount = 0;
+               MmPageArray[2].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+               MmPageArray[2].Flags.Consumer = MC_NPPOOL;
+               MmPageArray[2].Flags.Zero = 0;
+               MmPageArray[2].ReferenceCount = 0;
                InsertTailList(&BiosPageListHead,
-                              &MmPageArray[1].ListEntry);
+                              &MmPageArray[2].ListEntry);
 	       MmStats.NrReservedPages++;
 	    }
         /* Protect the Page Directory. This will be changed in r3 */
