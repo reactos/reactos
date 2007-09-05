@@ -288,7 +288,8 @@ done:;
     if (dwError != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, ptr);
-        HeapFree(GetProcessHeap(), 0, expanded);
+        if (expanded)
+            HeapFree(GetProcessHeap(), 0, expanded);
     }
 
     return dwError;
