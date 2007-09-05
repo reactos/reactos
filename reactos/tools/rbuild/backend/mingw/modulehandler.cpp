@@ -27,7 +27,7 @@ using std::vector;
 
 #define CLEAN_FILE(f) clean_files.push_back ( f );
 
-static string ros_temp = "$(TEMPORARY)";
+static string ros_temp = "$(TEMPORARY_)";
 MingwBackend*
 MingwModuleHandler::backend = NULL;
 FILE*
