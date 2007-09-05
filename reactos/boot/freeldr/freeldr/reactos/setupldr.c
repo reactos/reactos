@@ -22,6 +22,9 @@
 #include <freeldr.h>
 #include <debug.h>
 
+extern ULONG PageDirectoryStart;
+extern ULONG PageDirectoryEnd;
+
 ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel
 LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
@@ -175,6 +178,8 @@ VOID RunLoader(VOID)
 
   /* Setup multiboot information structure */
   LoaderBlock.CommandLine = reactos_kernel_cmdline;
+  LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
+  LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
   LoaderBlock.ModsCount = 0;
   LoaderBlock.ModsAddr = reactos_modules;
   LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
