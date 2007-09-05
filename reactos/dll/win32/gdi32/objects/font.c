@@ -1310,6 +1310,70 @@ EnumFontsA (
 #endif
 }
 
+#define EfdFontFamilies 3
 
+INT
+STDCALL
+NewEnumFontFamiliesExW(
+    HDC hDC,
+    LPLOGFONTW lpLogfont,
+    FONTENUMPROCW lpEnumFontFamExProcW,
+    LPARAM lParam,
+    DWORD dwFlags)
+{
+	ULONG_PTR idEnum, ulCount, ulSize;
+	PENUMFONTDATAW pEfdw;
+	PBYTE pBuffer;
+	PBYTE pMax;
+	INT ret = 1;
+
+	idEnum = NtGdiEnumFontOpen(hDC,
+	                           EfdFontFamilies,
+	                           0,
+	                           LF_FACESIZE,
+	                           lpLogfont->lfFaceName,
+	                           lpLogfont->lfCharSet,
+	                           &ulCount);
+	if (idEnum == 0)
+	{
+		return 0;
+	}
+	if (ulCount == 0)
+	{
+		NtGdiEnumFontClose(idEnum);
+		return 0;
+	}
+
+	pBuffer = HeapAlloc(GetProcessHeap(), 0, ulCount);
+	if (pBuffer == NULL)
+	{
+		NtGdiEnumFontClose(idEnum);
+		return 0;
+	}
+	pMax = pBuffer + ulCount;
+
+	if (!NtGdiEnumFontChunk(hDC, idEnum, ulCount, &ulSize, (PVOID)pBuffer))
+	{
+		HeapFree(GetProcessHeap(), 0, pBuffer);
+		NtGdiEnumFontClose(idEnum);
+		return 0;
+	}
+
+	/* Iterate through the structures */
+	for (pEfdw = (PENUMFONTDATAW)pBuffer;
+	     (PBYTE)pEfdw < pMax && pEfdw->cbSize != 0 && ret != 0;
+	     pEfdw = (PENUMFONTDATAW)((PBYTE)pEfdw + pEfdw->cbSize))
+	{
+		ENUMLOGFONTEXW *pElfew = &pEfdw->efdi.elfex;
+		NEWTEXTMETRICEXW *pNtmew = (NEWTEXTMETRICEXW*)((PBYTE)&pEfdw->efdi + pEfdw->efdi.cbSize + sizeof(DWORD)); // FIXME
+		DWORD dwFontType = pEfdw->efdi.dwFontType;
+		ret = lpEnumFontFamExProcW(pElfew, pNtmew, dwFontType, lParam);
+	}
+
+	HeapFree(GetProcessHeap(), 0, pBuffer);
+	NtGdiEnumFontClose(idEnum);
+
+	return ret;
+}
 
 
