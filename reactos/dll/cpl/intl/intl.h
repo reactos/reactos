@@ -82,11 +82,11 @@ TimePageProc(HWND hwndDlg,
 void SetNewLocale(LCID lcid);
 
 /* misc.c */
-WCHAR*
-InsSpacesFmt(const WCHAR *wszSourceStr, const WCHAR *wszFmtStr);
+LPTSTR
+InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr);
 
-WCHAR*
-ReplaceSubStr(const WCHAR *wszSourceStr, const WCHAR *wszStrToReplace, const WCHAR *wszTempl);
+LPTSTR
+ReplaceSubStr(LPCTSTR szSourceStr, LPCTSTR szStrToReplace, LPCTSTR szTempl);
 
 LONG
 APIENTRY

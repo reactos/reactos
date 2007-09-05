@@ -64,14 +64,14 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 }
 
 BOOL
-OpenSetupInf()
+OpenSetupInf(VOID)
 {
   LPTSTR lpCmdLine;
   LPTSTR lpSwitch;
   size_t len;
 
   lpCmdLine = GetCommandLine();
-  
+
   lpSwitch = _tcsstr(lpCmdLine, _T("/f:\""));
 
   if(!lpSwitch)
@@ -101,7 +101,7 @@ OpenSetupInf()
 }
 
 VOID
-ParseSetupInf()
+ParseSetupInf(VOID)
 {
   INFCONTEXT InfContext;
   TCHAR szBuffer[30];

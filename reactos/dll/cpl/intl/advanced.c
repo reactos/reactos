@@ -8,16 +8,17 @@
 /* Property page dialog callback */
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg,
-	     UINT uMsg,
-	     WPARAM wParam,
-	     LPARAM lParam)
+                 UINT uMsg,
+                 WPARAM wParam,
+                 LPARAM lParam)
 {
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
-  return FALSE;
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+    }
+
+    return FALSE;
 }
 
 /* EOF */

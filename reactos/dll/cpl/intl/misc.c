@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <cpl.h>
+#include <tchar.h>
 
 #include "intl.h"
 #include "resource.h"
@@ -8,139 +9,141 @@
 #define NUM_SHEETS           4
 
 /* Insert the space  */
-WCHAR*
-InsSpacePos(const WCHAR *wszInsStr, const int nPos)
+LPTSTR
+InsSpacePos(LPCTSTR szInsStr, const int nPos)
 {
-	WCHAR* pwszDestStr;
-	pwszDestStr=(WCHAR*) malloc(MAX_SAMPLES_STR_SIZE);
-    
-    int nDestStrCnt=0;
-    int nStrCnt;
-    int nStrSize;
+    LPTSTR pszDestStr;
+    INT nDestStrCnt = 0;
+    INT nStrCnt;
+    INT nStrSize;
 
-	wcscpy(pwszDestStr,wszInsStr);  
-    
-    nStrSize = wcslen(wszInsStr);
+    pszDestStr = (LPTSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(TCHAR));
 
-    for(nStrCnt=0; nStrCnt<nStrSize; nStrCnt++)
+    _tcscpy(pszDestStr, szInsStr);
+
+    nStrSize = _tcslen(szInsStr);
+
+    for (nStrCnt = 0; nStrCnt < nStrSize; nStrCnt++)
     {
-        if(nStrCnt==nStrSize-nPos)
+        if (nStrCnt == nStrSize - nPos)
         {
-            pwszDestStr[nDestStrCnt]=' ';
+            pszDestStr[nDestStrCnt] = _T(' ');
             nDestStrCnt++;
         }
-        pwszDestStr[nDestStrCnt]=wszInsStr[nStrCnt];
+
+        pszDestStr[nDestStrCnt] = szInsStr[nStrCnt];
         nDestStrCnt++;
     }
-    pwszDestStr[nDestStrCnt]='\0';
-    
-    return pwszDestStr;
+
+    pszDestStr[nDestStrCnt] = _T('\0');
+
+    return pszDestStr;
 }
 
 /* Insert the spaces by format string separated by ';' */
-WCHAR*
-InsSpacesFmt(const WCHAR *wszSourceStr, const WCHAR *wszFmtStr)
+LPTSTR
+InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr)
 {
-	WCHAR* pwszDestStr;
-	pwszDestStr=(WCHAR*) malloc(255);
-
- 	WCHAR* pwszTempStr;
-
-    WCHAR wszFmtVal[255];
-
-	int nFmtCount=0;
-	int nValCount=0;
-    int nLastVal=0;
-    int nSpaceOffset=0;
-    
+    LPTSTR pszDestStr;
+    LPTSTR pszTempStr;
+    TCHAR szFmtVal[255];
+    INT nFmtCount = 0;
+    INT nValCount = 0;
+    INT nLastVal = 0;
+    INT nSpaceOffset = 0;
     BOOL wasNul=FALSE;
 
-	wcscpy(pwszDestStr,wszSourceStr);
+    pszDestStr = (LPTSTR)malloc(255 * sizeof(TCHAR));
+
+    _tcscpy(pszDestStr, szSourceStr);
 
     /* if format is clean return source string */
-    if(!*wszFmtStr) return pwszDestStr;
+    if (!*szFmtStr)
+        return pszDestStr;
 
     /* Search for all format values */
-    for(nFmtCount=0;nFmtCount<=(int)wcslen(wszFmtStr);nFmtCount++)
+    for (nFmtCount = 0; nFmtCount <= _tcslen(szFmtStr); nFmtCount++)
     {
-        if(wszFmtStr[nFmtCount]==';' || wszFmtStr[nFmtCount]=='\0')
+        if (szFmtStr[nFmtCount] == _T(';') || szFmtStr[nFmtCount] == _T('\0'))
         {
-            if(_wtoi(wszFmtVal)==0 && !wasNul)
+            if (_ttoi(szFmtVal) == 0 && !wasNul)
             {
                 wasNul=TRUE;
                 break;
             }
+
             /* If was 0, repeat spaces */
-            if(wasNul)
+            if (wasNul)
             {
-                nSpaceOffset+=nLastVal;
+                nSpaceOffset += nLastVal;
             }
             else
             {
-                nSpaceOffset+=_wtoi(wszFmtVal);
+                nSpaceOffset += _ttoi(szFmtVal);
             }
-            wszFmtVal[nValCount]='\0';
-            nValCount=0;
-            /* insert space to finded position plus all pos before */
-            pwszTempStr=InsSpacePos(pwszDestStr,nSpaceOffset);
-            wcscpy(pwszDestStr,pwszTempStr);
-            free(pwszTempStr);
-            /* num of spaces total increment */
 
-            if(!wasNul)
+            szFmtVal[nValCount] = _T('\0');
+            nValCount=0;
+
+            /* insert space to finded position plus all pos before */
+            pszTempStr = InsSpacePos(pszDestStr, nSpaceOffset);
+            _tcscpy(pszDestStr,pszTempStr);
+            free(pszTempStr);
+
+            /* num of spaces total increment */
+            if (!wasNul)
             {
                 nSpaceOffset++;
-                nLastVal=_wtoi(wszFmtVal);
+                nLastVal = _ttoi(szFmtVal);
             }
-              
         }
         else
         {
-            wszFmtVal[nValCount++]=wszFmtStr[nFmtCount];
+            szFmtVal[nValCount++] = szFmtStr[nFmtCount];
         }
     }
 
     /* Create spaces for rest part of string */
-    if(wasNul && nLastVal!=0)
+    if (wasNul && nLastVal != 0)
     {
-        for(nFmtCount=nSpaceOffset+nLastVal;nFmtCount<wcslen(pwszDestStr);nFmtCount+=nLastVal+1)
+        for (nFmtCount = nSpaceOffset + nLastVal; nFmtCount < _tcslen(pszDestStr); nFmtCount += nLastVal + 1)
         {
-            pwszTempStr=InsSpacePos(pwszDestStr,nFmtCount);
-            wcscpy(pwszDestStr,pwszTempStr);
-            free(pwszTempStr);
+            pszTempStr = InsSpacePos(pszDestStr, nFmtCount);
+            _tcscpy(pszDestStr, pszTempStr);
+            free(pszTempStr);
         }
     }
 
-    return pwszDestStr;
+    return pszDestStr;
 }
 
 /* Replace given template in source string with string to replace and return recieved string */
-WCHAR*
-ReplaceSubStr(const WCHAR *wszSourceStr,
-              const WCHAR *wszStrToReplace,
-              const WCHAR *wszTempl)
+LPTSTR
+ReplaceSubStr(LPCTSTR szSourceStr,
+              LPCTSTR szStrToReplace,
+              LPCTSTR szTempl)
 {
-	int nCharCnt;
-	int nSubStrCnt;
-	int nDestStrCnt;
-    int nFirstCharCnt;
+    LPTSTR szDestStr;
+    INT nCharCnt;
+    INT nSubStrCnt;
+    INT nDestStrCnt;
+    INT nFirstCharCnt;
 
-	WCHAR* wszDestStr;
-	wszDestStr=(WCHAR*) malloc(MAX_SAMPLES_STR_SIZE*sizeof(WCHAR));
+    szDestStr = (LPTSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(TCHAR));
 
-	nDestStrCnt=0;
-    nFirstCharCnt=0;
+    nDestStrCnt = 0;
+    nFirstCharCnt = 0;
 
-    wcscpy(wszDestStr,L"");
+    _tcscpy(szDestStr, _T(""));
 
-    while(nFirstCharCnt<(int)wcslen(wszSourceStr))
-	{
-        if(wszSourceStr[nFirstCharCnt]==wszTempl[0])
+    while (nFirstCharCnt < _tcslen(szSourceStr))
+    {
+        if (szSourceStr[nFirstCharCnt] == szTempl[0])
         {
-            nSubStrCnt=0;
-            for(nCharCnt=nFirstCharCnt;nCharCnt<nFirstCharCnt+(int)wcslen(wszTempl);nCharCnt++)
+            nSubStrCnt = 0;
+            for (nCharCnt = nFirstCharCnt; nCharCnt < nFirstCharCnt + _tcslen(szTempl); nCharCnt++)
             {
-                if(wszSourceStr[nCharCnt]==wszTempl[nSubStrCnt])
+                if (szSourceStr[nCharCnt] == szTempl[nSubStrCnt])
                 {
                     nSubStrCnt++;
                 }
@@ -148,24 +151,26 @@ ReplaceSubStr(const WCHAR *wszSourceStr,
                 {
                     break;
                 }
-                if((int)wcslen(wszTempl)==nSubStrCnt)
+
+                if (_tcslen(szTempl) == nSubStrCnt)
                 {
-                    wcscat(wszDestStr,wszStrToReplace);
-                    nDestStrCnt=(int)wcslen(wszDestStr);
-                    nFirstCharCnt+=(int)wcslen(wszTempl)-1;
+                    _tcscat(szDestStr, szStrToReplace);
+                    nDestStrCnt = _tcslen(szDestStr);
+                    nFirstCharCnt += _tcslen(szTempl) - 1;
                     break;
                 }
             }
         }
-        else 
+        else
         {
-            wszDestStr[nDestStrCnt++]=wszSourceStr[nFirstCharCnt];
-            wszDestStr[nDestStrCnt]='\0';
+            szDestStr[nDestStrCnt++] = szSourceStr[nFirstCharCnt];
+            szDestStr[nDestStrCnt] = _T('\0');
         }
-        nFirstCharCnt++;
-	}
 
-	return wszDestStr;
+        nFirstCharCnt++;
+    }
+
+    return szDestStr;
 }
 
 /* Create applets */

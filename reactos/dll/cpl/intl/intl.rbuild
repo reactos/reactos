@@ -1,12 +1,11 @@
-<module name="intl" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl.cpl">
+<module name="intl" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl.cpl" unicode="yes">
 	<importlibrary definition="intl.def" />
 	<include base="intl">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
+	<define name="_WIN32_WINNT">0x600</define>
+	<define name="WINVER">0x609</define>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
