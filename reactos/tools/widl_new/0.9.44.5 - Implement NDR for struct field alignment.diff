@@ -1,0 +1,75 @@
+--- typegen.c	Wed Sep 05 10:00:03 2007
++++ typegen.c	Wed Sep 05 10:01:43 2007
+@@ -98,6 +98,8 @@
+     case RPC_FC_CARRAY: return "FC_CARRAY";
+     case RPC_FC_CVARRAY: return "FC_CVARRAY";
+     case RPC_FC_BOGUS_ARRAY: return "FC_BOGUS_ARRAY";
++    case RPC_FC_ALIGNM4: return "RPC_FC_ALIGNM4";
++    case RPC_FC_ALIGNM8: return "RPC_FC_ALIGNM8";
+     default:
+         error("string_of_type: unknown type 0x%02x\n", type);
+         return NULL;
+@@ -682,13 +684,25 @@
+ 
+ static size_t fields_memsize(const var_list_t *fields, unsigned int *align)
+ {
++    int have_align = FALSE;
+     size_t size = 0;
+     const var_t *v;
+ 
+     if (!fields) return 0;
+     LIST_FOR_EACH_ENTRY( v, fields, const var_t, entry )
+-        size += type_memsize(v->type, align);
++    {
++        unsigned int falign = 0;
++        size_t fsize = type_memsize(v->type, &falign);
++        if (!have_align)
++        {
++            *align = falign;
++            have_align = TRUE;
++        }
++        size = (size + (falign - 1)) & ~(falign - 1);
++        size += fsize;
++    }
+ 
++    size = (size + (*align - 1)) & ~(*align - 1);
+     return size;
+ }
+ 
+@@ -1508,12 +1522,36 @@
+                                  unsigned int *corroff, unsigned int *typestring_offset)
+ {
+     const var_t *field;
++    unsigned short offset = 0;
+ 
+     if (type->fields) LIST_FOR_EACH_ENTRY( field, type->fields, const var_t, entry )
+     {
+         type_t *ft = field->type;
+         if (!ft->declarray || !is_conformant_array(ft))
++        {
++            unsigned int align = 0;
++            size_t size = type_memsize(ft, &align);
++            if ((align - 1) & offset)
++            {
++                unsigned char fc = 0;
++                switch (align)
++                {
++                case 4:
++                    fc = RPC_FC_ALIGNM4;
++                    break;
++                case 8:
++                    fc = RPC_FC_ALIGNM8;
++                    break;
++                default:
++                    error("write_struct_members: cannot align type %d", ft->type);
++                }
++                print_file(file, 2, "0x%x,\t/* %s */\n", fc, string_of_type(fc));
++                offset = (offset + (align - 1)) & ~(align - 1);
++                *typestring_offset += 1;
++            }
+             write_member_type(file, ft, field, corroff, typestring_offset);
++            offset += size;
++        }
+     }
+ 
+     write_end(file, typestring_offset);

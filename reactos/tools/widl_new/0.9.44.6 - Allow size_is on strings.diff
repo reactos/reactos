@@ -1,0 +1,87 @@
+--- typegen.c	Wed Sep 05 10:05:10 2007
++++ typegen.c	Wed Sep 05 10:04:52 2007
+@@ -1312,30 +1312,37 @@
+             &offset_in_memory, &offset_in_buffer, typestring_offset);
+ }
+ 
++static int is_declptr(const type_t *t)
++{
++  return is_ptr(t) || (is_conformant_array(t) && !t->declarray);
++}
++
+ static size_t write_string_tfs(FILE *file, const attr_list_t *attrs,
+                                const type_t *type,
+                                const char *name, unsigned int *typestring_offset)
+ {
+     size_t start_offset = *typestring_offset;
+-    unsigned char flags = 0;
+-    int pointer_type;
+     unsigned char rtype;
+ 
+-    if (is_ptr(type))
++    if (is_declptr(type))
+     {
+-        pointer_type = type->type;
+-        type = type->ref;
++        unsigned char flag = is_conformant_array(type) ? 0 : RPC_FC_P_SIMPLEPOINTER;
++        int pointer_type = is_ptr(type) ? type->type : get_attrv(attrs, ATTR_POINTERTYPE);
++        if (!pointer_type)
++            pointer_type = RPC_FC_RP;
++        print_file(file, 2,"0x%x, 0x%x,\t/* %s%s */\n",
++                   pointer_type, flag, string_of_type(pointer_type),
++                   flag ? " [simple_pointer]" : "");
++        *typestring_offset += 2;
++        if (!flag)
++        {
++            print_file(file, 2, "NdrFcShort(0x2),\n");
++            *typestring_offset += 2;
++        }
++        rtype = type->ref->type;
+     }
+     else
+-        pointer_type = get_attrv(attrs, ATTR_POINTERTYPE);
+-
+-    if (!pointer_type)
+-        pointer_type = RPC_FC_RP;
+-
+-    if (!get_attrp(attrs, ATTR_SIZEIS))
+-        flags |= RPC_FC_P_SIMPLEPOINTER;
+-
+-    rtype = type->type;
++        rtype = type->type;
+ 
+     if ((rtype != RPC_FC_BYTE) && (rtype != RPC_FC_CHAR) && (rtype != RPC_FC_WCHAR))
+     {
+@@ -1343,18 +1350,6 @@
+         return start_offset;
+     }
+ 
+-    print_file(file, 2,"0x%x, 0x%x,    /* %s%s */\n",
+-               pointer_type, flags,
+-               pointer_type == RPC_FC_FP ? "FC_FP" : (pointer_type == RPC_FC_UP ? "FC_UP" : "FC_RP"),
+-               (flags & RPC_FC_P_SIMPLEPOINTER) ? " [simple_pointer]" : "");
+-    *typestring_offset += 2;
+-
+-    if (!(flags & RPC_FC_P_SIMPLEPOINTER))
+-    {
+-        print_file(file, 2, "NdrFcShort(0x2),\n");
+-        *typestring_offset += 2;
+-    }
+-
+     if (type->declarray && !is_conformant_array(type))
+     {
+         /* FIXME: multi-dimensional array */
+@@ -1396,10 +1391,10 @@
+     }
+     else
+     {
+-        if (rtype == RPC_FC_CHAR)
+-            WRITE_FCTYPE(file, FC_C_CSTRING, *typestring_offset);
+-        else
++        if (rtype == RPC_FC_WCHAR)
+             WRITE_FCTYPE(file, FC_C_WSTRING, *typestring_offset);
++        else
++            WRITE_FCTYPE(file, FC_C_CSTRING, *typestring_offset);
+         print_file(file, 2, "0x%x, /* FC_PAD */\n", RPC_FC_PAD);
+         *typestring_offset += 2;
+ 

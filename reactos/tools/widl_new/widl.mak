@@ -41,7 +41,6 @@ WIDL_SOURCES = $(addprefix $(WIDL_BASE_), \
 	client.c \
 	hash.c \
 	header.c \
-	lex.yy.c \
 	proxy.c \
 	server.c \
 	typegen.c \
@@ -49,6 +48,7 @@ WIDL_SOURCES = $(addprefix $(WIDL_BASE_), \
 	utils.c \
 	widl.c \
 	write_msft.c \
+	parser.yy.c \
 	parser.tab.c \
 	port$(SEP)mkstemps.c \
 	)
@@ -85,10 +85,6 @@ $(WIDL_INT_)header.o: $(WIDL_BASE_)header.c $(WIDL_DEPENDS) | $(WIDL_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
 
-$(WIDL_INT_)lex.yy.o: $(WIDL_BASE_)lex.yy.c $(WIDL_DEPENDS) | $(WIDL_INT)
-	$(ECHO_CC)
-	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
-
 $(WIDL_INT_)proxy.o: $(WIDL_BASE_)proxy.c $(WIDL_DEPENDS) | $(WIDL_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
@@ -114,6 +110,10 @@ $(WIDL_INT_)widl.o: $(WIDL_BASE_)widl.c $(WIDL_DEPENDS) | $(WIDL_INT)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
 
 $(WIDL_INT_)write_msft.o: $(WIDL_BASE_)write_msft.c $(WIDL_DEPENDS) | $(WIDL_INT)
+	$(ECHO_CC)
+	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
+
+$(WIDL_INT_)parser.yy.o: $(WIDL_BASE_)parser.yy.c $(WIDL_DEPENDS) | $(WIDL_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
 

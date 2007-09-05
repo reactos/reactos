@@ -1,0 +1,44 @@
+--- typelib.c	Wed Sep 05 09:46:05 2007
++++ typelib.c	Wed Sep 05 09:47:36 2007
+@@ -103,7 +103,7 @@
+ /* List of oleauto types that should be recognized by name.
+  * (most of) these seem to be intrinsic types in mktyplib. */
+ 
+-static struct oatype {
++static const struct oatype {
+   const char *kw;
+   unsigned short vt;
+ } oatypes[] = {
+@@ -129,7 +129,8 @@
+ static unsigned short builtin_vt(const type_t *t)
+ {
+   const char *kw = t->name;
+-  struct oatype key, *kwp;
++  struct oatype key;
++  const struct oatype *kwp;
+   key.kw = kw;
+ #ifdef KW_BSEARCH
+   kwp = bsearch(&key, oatypes, NTYPES, sizeof(oatypes[0]), kw_cmp_func);
+--- widl.c	Fri Aug 24 16:34:34 2007
++++ widl.c	Wed Sep 05 09:47:20 2007
+@@ -49,7 +49,7 @@
+ /* O = generate interpreted stubs */
+ /* w = select win16/win32 output (?) */
+ 
+-static char usage[] =
++static const char usage[] =
+ "Usage: widl [options...] infile.idl\n"
+ "   -c          Generate client stub\n"
+ "   -C file     Name of client stub file (default is infile_c.c)\n"
+@@ -133,9 +133,9 @@
+     PREFIX_SERVER_OPTION
+ };
+ 
+-static const char *short_options =
++static const char short_options[] =
+     "cC:d:D:EhH:I:NpP:sS:tT:uU:VW";
+-static struct option long_options[] = {
++static const struct option long_options[] = {
+     { "oldnames", no_argument, 0, OLDNAMES_OPTION },
+     { "prefix-all", required_argument, 0, PREFIX_ALL_OPTION },
+     { "prefix-client", required_argument, 0, PREFIX_CLIENT_OPTION },

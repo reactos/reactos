@@ -21,14 +21,14 @@
 #ifndef __WIDL_PARSER_H
 #define __WIDL_PARSER_H
 
-int yyparse(void);
+int parser_parse(void);
 
-extern FILE *yyin;
-extern char *yytext;
-extern int yydebug;
+extern FILE *parser_in;
+extern char *parser_text;
+extern int parser_debug;
 extern int yy_flex_debug;
 
-int yylex(void);
+int parser_lex(void);
 
 extern int import_stack_ptr;
 int do_import(char *fname);

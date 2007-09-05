@@ -1,0 +1,11 @@
+--- typelib.c	Wed Sep 05 09:44:46 2007
++++ typelib.c	Wed Sep 05 09:45:29 2007
+@@ -206,6 +206,8 @@
+   case RPC_FC_UP:
+   case RPC_FC_OP:
+   case RPC_FC_FP:
++  case RPC_FC_CARRAY:
++  case RPC_FC_CVARRAY:
+     if(t->ref)
+     {
+       if (match(t->ref->name, "SAFEARRAY"))

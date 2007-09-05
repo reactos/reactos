@@ -1,0 +1,53 @@
+--- typelib.c	Fri Aug 24 16:34:34 2007
++++ typelib.c	Wed Sep 05 09:39:09 2007
+@@ -126,8 +126,9 @@
+         return strcmp(KWP(s1)->kw, KWP(s2)->kw);
+ }
+ 
+-static unsigned short builtin_vt(const char *kw)
++static unsigned short builtin_vt(const type_t *t)
+ {
++  const char *kw = t->name;
+   struct oatype key, *kwp;
+   key.kw = kw;
+ #ifdef KW_BSEARCH
+@@ -145,6 +146,13 @@
+   if (kwp) {
+     return kwp->vt;
+   }
++  if (is_string_type (t->attrs, t))
++    switch (t->ref->type)
++      {
++      case RPC_FC_CHAR: return VT_LPSTR;
++      case RPC_FC_WCHAR: return VT_LPWSTR;
++      default: break;
++      }
+   return 0;
+ }
+ 
+@@ -160,7 +168,7 @@
+ 
+   chat("get_type_vt: %p type->name %s\n", t, t->name);
+   if (t->name) {
+-    vt = builtin_vt(t->name);
++    vt = builtin_vt(t);
+     if (vt) return vt;
+   }
+ 
+--- write_msft.c	Fri Aug 24 16:34:34 2007
++++ write_msft.c	Wed Sep 05 09:40:02 2007
+@@ -852,6 +852,13 @@
+         *encoded_type = default_type;
+         break;
+ 
++    case VT_LPSTR:
++    case VT_LPWSTR:
++        *encoded_type = 0xfffe0000 | vt;
++        *width = 4;
++        *alignment = 4;
++        break;
++
+     case VT_PTR:
+       {
+         int next_vt;
+

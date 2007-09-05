@@ -1,5 +1,14 @@
 ChangeLog
 
+2007-09-05 hpoussin
+
+- Synchronized with WINE widl 0.9.44
+- parser.tab.c/h were generated with:
+    bison -p parser_ -d parser.y
+- parser.yy.c was generated with:
+    flex -t parser.l >parser.yy.c
+
+
 2007-05-17 ekohl
 
    tools/widl/lex.yy.c
