@@ -161,13 +161,14 @@ RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid);
 RPC_STATUS RPCRT4_MakeBinding(RpcBinding** Binding, RpcConnection* Connection);
 RPC_STATUS RPCRT4_ExportBinding(RpcBinding** Binding, RpcBinding* OldBinding);
 RPC_STATUS RPCRT4_DestroyBinding(RpcBinding* Binding);
-RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection, PRPC_SYNTAX_IDENTIFIER TransferSyntax, PRPC_SYNTAX_IDENTIFIER InterfaceId);
+RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
+                              const RPC_SYNTAX_IDENTIFIER *TransferSyntax, const RPC_SYNTAX_IDENTIFIER *InterfaceId);
 RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection);
 BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPCSS_NP_REPLY reply);
 HANDLE RPCRT4_GetMasterMutex(void);
 HANDLE RPCRT4_RpcssNPConnect(void);
 
-static inline const char *rpcrt4_conn_get_name(RpcConnection *Connection)
+static inline const char *rpcrt4_conn_get_name(const RpcConnection *Connection)
 {
   return Connection->ops->name;
 }

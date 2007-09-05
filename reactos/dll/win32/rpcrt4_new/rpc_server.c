@@ -119,7 +119,7 @@ static inline UUID *LookupObjType(UUID *ObjUuid)
 }
 
 static RpcServerInterface* RPCRT4_find_interface(UUID* object,
-                                                 RPC_SYNTAX_IDENTIFIER* if_id,
+                                                 const RPC_SYNTAX_IDENTIFIER* if_id,
                                                  BOOL check_object)
 {
   UUID* MgrType = NULL;
@@ -198,7 +198,7 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
                                              RPC_MAX_PACKET_SIZE,
                                              RPC_MAX_PACKET_SIZE,
                                              conn->Endpoint,
-                                             RESULT_ACCEPT, NO_REASON,
+                                             RESULT_ACCEPT, REASON_NONE,
                                              &sif->If->TransferSyntax);
 
         /* save the interface for later use */

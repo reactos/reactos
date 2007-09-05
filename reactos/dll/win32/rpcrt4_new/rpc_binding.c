@@ -274,8 +274,8 @@ RPC_STATUS RPCRT4_DestroyBinding(RpcBinding* Binding)
 }
 
 RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
-                              PRPC_SYNTAX_IDENTIFIER TransferSyntax,
-                              PRPC_SYNTAX_IDENTIFIER InterfaceId)
+                              const RPC_SYNTAX_IDENTIFIER *TransferSyntax,
+                              const RPC_SYNTAX_IDENTIFIER *InterfaceId)
 {
   TRACE("(Binding == ^%p)\n", Binding);
 

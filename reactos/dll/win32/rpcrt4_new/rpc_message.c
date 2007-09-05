@@ -230,6 +230,7 @@ RpcPktHdr *RPCRT4_BuildBindNackHeader(unsigned long DataRepresentation,
 
   RPCRT4_BuildCommonHeader(header, PKT_BIND_NACK, DataRepresentation);
   header->common.frag_len = sizeof(header->bind_nack);
+  header->bind_nack.reject_reason = REJECT_REASON_NOT_SPECIFIED;
   header->bind_nack.protocols_count = 1;
   header->bind_nack.protocols[0].rpc_ver = RpcVersion;
   header->bind_nack.protocols[0].rpc_ver_minor = RpcVersionMinor;
@@ -301,6 +302,12 @@ NCA_STATUS RPC2NCA_STATUS(RPC_STATUS status)
     case RPC_S_INVALID_BOUND:               return NCA_S_FAULT_INVALID_BOUND;
     case RPC_S_PROCNUM_OUT_OF_RANGE:        return NCA_S_OP_RNG_ERROR;
     case RPC_X_SS_HANDLES_MISMATCH:         return NCA_S_FAULT_CONTEXT_MISMATCH;
+    case RPC_S_CALL_CANCELLED:              return NCA_S_FAULT_CANCEL;
+    case RPC_S_COMM_FAILURE:                return NCA_S_COMM_FAILURE;
+    case RPC_X_WRONG_PIPE_ORDER:            return NCA_S_FAULT_PIPE_ORDER;
+    case RPC_X_PIPE_CLOSED:                 return NCA_S_FAULT_PIPE_CLOSED;
+    case RPC_X_PIPE_DISCIPLINE_ERROR:       return NCA_S_FAULT_PIPE_DISCIPLINE;
+    case RPC_X_PIPE_EMPTY:                  return NCA_S_FAULT_PIPE_EMPTY;
     case STATUS_FLOAT_DIVIDE_BY_ZERO:       return NCA_S_FAULT_FP_DIV_ZERO;
     case STATUS_FLOAT_INVALID_OPERATION:    return NCA_S_FAULT_FP_ERROR;
     case STATUS_FLOAT_OVERFLOW:             return NCA_S_FAULT_FP_OVERFLOW;
@@ -433,7 +440,7 @@ static RPC_STATUS RPCRT4_SecurePacket(RpcConnection *Connection,
  */
 static RPC_STATUS RPCRT4_SendAuth(RpcConnection *Connection, RpcPktHdr *Header,
                                   void *Buffer, unsigned int BufferLength,
-                                  void *Auth, unsigned int AuthLength)
+                                  const void *Auth, unsigned int AuthLength)
 {
   PUCHAR buffer_pos;
   DWORD hdr_size;
@@ -1013,6 +1020,7 @@ static inline BOOL is_hard_error(RPC_STATUS status)
     case RPC_S_PROTOCOL_ERROR:
     case RPC_S_CALL_FAILED:
     case RPC_S_CALL_FAILED_DNE:
+    case RPC_S_SEC_PKG_ERROR:
         return TRUE;
     default:
         return FALSE;

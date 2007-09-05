@@ -1211,7 +1211,7 @@ static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq
     
     if (!poll_info)
         return -1;
-
+    
     ret = poll(poll_info, count, -1);
     if (ret < 0)
     {
@@ -1484,7 +1484,9 @@ ULONG RpcAssoc_Release(RpcAssoc *assoc)
   return refs;
 }
 
-static RPC_STATUS RpcAssoc_BindConnection(RpcAssoc *assoc, RpcConnection *conn,
+#define ROUND_UP(value, alignment) (((value) + ((alignment) - 1)) & ~((alignment)-1))
+
+static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *conn,
                                           const RPC_SYNTAX_IDENTIFIER *InterfaceId,
                                           const RPC_SYNTAX_IDENTIFIER *TransferSyntax)
 {
@@ -1512,23 +1514,98 @@ static RPC_STATUS RpcAssoc_BindConnection(RpcAssoc *assoc, RpcConnection *conn,
     return status;
   }
 
-  if (response_hdr->common.ptype != PKT_BIND_ACK)
+  switch (response_hdr->common.ptype)
   {
-    ERR("failed to bind for interface %s, %d.%d\n",
-      debugstr_guid(&InterfaceId->SyntaxGUID),
-      InterfaceId->SyntaxVersion.MajorVersion,
-      InterfaceId->SyntaxVersion.MinorVersion);
-    RPCRT4_FreeHeader(response_hdr);
-    return RPC_S_PROTOCOL_ERROR;
+  case PKT_BIND_ACK:
+  {
+    RpcAddressString *server_address = msg.Buffer;
+    if ((msg.BufferLength >= FIELD_OFFSET(RpcAddressString, string[0])) ||
+        (msg.BufferLength >= ROUND_UP(FIELD_OFFSET(RpcAddressString, string[server_address->length]), 4)))
+    {
+        unsigned short remaining = msg.BufferLength -
+            ROUND_UP(FIELD_OFFSET(RpcAddressString, string[server_address->length]), 4);
+        RpcResults *results = (RpcResults*)((ULONG_PTR)server_address +
+            ROUND_UP(FIELD_OFFSET(RpcAddressString, string[server_address->length]), 4));
+        if ((results->num_results == 1) && (remaining >= sizeof(*results)))
+        {
+            switch (results->results[0].result)
+            {
+            case RESULT_ACCEPT:
+                conn->assoc_group_id = response_hdr->bind_ack.assoc_gid;
+                conn->MaxTransmissionSize = response_hdr->bind_ack.max_tsize;
+                conn->ActiveInterface = *InterfaceId;
+                break;
+            case RESULT_PROVIDER_REJECTION:
+                switch (results->results[0].reason)
+                {
+                case REASON_ABSTRACT_SYNTAX_NOT_SUPPORTED:
+                    ERR("syntax %s, %d.%d not supported\n",
+                        debugstr_guid(&InterfaceId->SyntaxGUID),
+                        InterfaceId->SyntaxVersion.MajorVersion,
+                        InterfaceId->SyntaxVersion.MinorVersion);
+                    status = RPC_S_UNKNOWN_IF;
+                    break;
+                case REASON_TRANSFER_SYNTAXES_NOT_SUPPORTED:
+                    ERR("transfer syntax not supported\n");
+                    status = RPC_S_SERVER_UNAVAILABLE;
+                    break;
+                case REASON_NONE:
+                default:
+                    status = RPC_S_CALL_FAILED_DNE;
+                }
+                break;
+            case RESULT_USER_REJECTION:
+            default:
+                ERR("rejection result %d\n", results->results[0].result);
+                status = RPC_S_CALL_FAILED_DNE;
+            }
+        }
+        else
+        {
+            ERR("incorrect results size\n");
+            status = RPC_S_CALL_FAILED_DNE;
+        }
+    }
+    else
+    {
+        ERR("bind ack packet too small (%d)\n", msg.BufferLength);
+        status = RPC_S_PROTOCOL_ERROR;
+    }
+    break;
+  }
+  case PKT_BIND_NACK:
+    switch (response_hdr->bind_nack.reject_reason)
+    {
+    case REJECT_LOCAL_LIMIT_EXCEEDED:
+    case REJECT_TEMPORARY_CONGESTION:
+        ERR("server too busy\n");
+        status = RPC_S_SERVER_TOO_BUSY;
+        break;
+    case REJECT_PROTOCOL_VERSION_NOT_SUPPORTED:
+        ERR("protocol version not supported\n");
+        status = RPC_S_PROTOCOL_ERROR;
+        break;
+    case REJECT_UNKNOWN_AUTHN_SERVICE:
+        ERR("unknown authentication service\n");
+        status = RPC_S_UNKNOWN_AUTHN_SERVICE;
+        break;
+    case REJECT_INVALID_CHECKSUM:
+        ERR("invalid checksum\n");
+        status = ERROR_ACCESS_DENIED;
+        break;
+    default:
+        ERR("rejected bind for reason %d\n", response_hdr->bind_nack.reject_reason);
+        status = RPC_S_CALL_FAILED_DNE;
+    }
+    break;
+  default:
+    ERR("wrong packet type received %d\n", response_hdr->common.ptype);
+    status = RPC_S_PROTOCOL_ERROR;
+    break;
   }
 
-  /* FIXME: do more checks? */
-
-  conn->assoc_group_id = response_hdr->bind_ack.assoc_gid;
-  conn->MaxTransmissionSize = response_hdr->bind_ack.max_tsize;
-  conn->ActiveInterface = *InterfaceId;
   RPCRT4_FreeHeader(response_hdr);
-  return RPC_S_OK;
+  return status;
 }
 
 static RpcConnection *RpcAssoc_GetIdleConnection(RpcAssoc *assoc,

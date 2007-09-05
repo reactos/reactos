@@ -177,9 +177,25 @@ typedef struct
 #define PKT_CO_CANCEL          18
 #define PKT_ORPHANED           19
 
-#define RESULT_ACCEPT           0
+#define RESULT_ACCEPT               0
+#define RESULT_USER_REJECTION       1
+#define RESULT_PROVIDER_REJECTION   2
 
-#define NO_REASON               0
+#define REASON_NONE                             0
+#define REASON_ABSTRACT_SYNTAX_NOT_SUPPORTED    1
+#define REASON_TRANSFER_SYNTAXES_NOT_SUPPORTED  2
+#define REASON_LOCAL_LIMIT_EXCEEDED             3
+
+#define REJECT_REASON_NOT_SPECIFIED            0
+#define REJECT_TEMPORARY_CONGESTION            1
+#define REJECT_LOCAL_LIMIT_EXCEEDED            2
+#define REJECT_CALLED_PADDR_UNKNOWN            3 /* not used */
+#define REJECT_PROTOCOL_VERSION_NOT_SUPPORTED  4
+#define REJECT_DEFAULT_CONTEXT_NOT_SUPPORTED   5 /* not used */
+#define REJECT_USER_DATA_NOT_READABLE          6 /* not used */
+#define REJECT_NO_PSAP_AVAILABLE               7 /* not used */
+#define REJECT_UNKNOWN_AUTHN_SERVICE           8
+#define REJECT_INVALID_CHECKSUM                9
 
 #define NCADG_IP_UDP   0x08
 #define NCACN_IP_TCP   0x07
