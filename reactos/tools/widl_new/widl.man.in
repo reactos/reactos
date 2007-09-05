@@ -1,0 +1,88 @@
+.\" -*- nroff -*-
+.TH WIDL 1 "October 2005" "@PACKAGE_STRING@" "Wine Developers Manual"
+.SH NAME
+widl \- Wine Interface Definition Language Compiler
+.SH SYNOPSIS
+.BR "widl "\fI[options]\fR " \fIinfile.idl\fR"
+.SH DESCRIPTION
+.B widl 
+is a Wine tool which purpose is to compile Interface Definition Language (IDL) files.
+.PP
+.SH OPTIONS
+.B Help mode:
+.nf
+No options are used.
+The program prints the help info and then exits.
+.PP
+.B General options:
+.IP "\fB-V\fR"
+Print version number and exits from the program.
+.PP
+.B Header options:
+.IP "\fB-h\fR"
+Generate header files.
+.IP "\fB-H \fIfile\fR"
+Name of header file to generate. The default header
+filename is infile.h.
+.IP "\fB--oldnames\fR"
+Use old naming conventions.
+.PP
+.B Type library options:
+.IP \fB-t\fR
+Generate a type library.
+.IP "\fB-T \fIfile\fR"
+Define the name of the type library to be generated. 
+The default filename is infile.tlb.
+.PP
+.B Proxy/stub generation options:
+.IP "\fB-c\fR"
+Generate client stub.
+.IP "\fB-C \fIfile\fR"
+Name of client stub file (default is infile_c.c)
+.IP "\fB-p\fR"
+Generate proxy.
+.IP "\fB-P \fIfile\fR"
+Name of proxy file (default is infile_p.c)
+.IP "\fB-s\fR"
+Generate server stub.
+.IP "\fB-S \fIfile\fR"
+Name of server stub file (default is infile_s.c)
+.PP
+.B Preprocessor options:
+.IP "\fB-I \fIpath\fR"
+Add a header search dir to path. Multiple search 
+dirs are allowed.
+.IP "\fB-D \fIid[=val]\fR"
+Define preprocessor identifier id value.
+.IP "\fB-E\fR"
+Preprocess only.
+.IP "\fB-N\fR"
+Do not preprocess input.
+.PP
+.B Debug options:
+.IP "\fB-W\fR"
+Enable pedantic warnings.
+.IP "\fB-d \fIn\fR"
+.nf
+Set debug level to n. 
+n may be '0x01', '0x02', '0x04', '0x08', '0x10' or '0x20'.
+(See section \fBDebug\fR)
+.PP
+.SH Debug
+Debug level 'n' is a bitmask with the following meaning:
+    * 0x01 Tell which resource is parsed (verbose mode)
+    * 0x02 Dump internal structures
+    * 0x04 Create a parser trace (yydebug=1)
+    * 0x08 Preprocessor messages
+    * 0x10 Preprocessor lex messages
+    * 0x20 Preprocessor yacc trace
+.SH BUGS
+Typelib generation doesn't work at the moment. It is still under development.
+.SH AUTHORS
+.B widl
+was written by Ove Kaaven. This man page was written by Hannu
+Valtonen.
+.SH "SEE ALSO"
+The Winelib User Guide
+.nf
+The Wine Developers Guide
