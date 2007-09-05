@@ -717,7 +717,7 @@ namespace Sysreg_
             return false;
         }
         char buffer[128];
-        if (!fread(buffer, sizeof(buffer), 1, file))
+        if (!fread(buffer, 1, sizeof(buffer), file))
         {
             cerr << "Error: pid file w/o pid!!! " << endl;
             cleanup();
