@@ -120,36 +120,33 @@ typedef struct _TMW_INTERNAL
     TMDIFF Diff;
 } TMW_INTERNAL, *PTMW_INTERNAL;
 
-typedef struct _DESIGNVECTORINT {
-  DWORD dvReserved;
-  DWORD dvNumAxes;
-  LONG  dvValues[0];
-} DESIGNVECTORINT, *PDESIGNVECTORINT;
-
-typedef struct _ENUMFONTDATAINT
+typedef struct
 {
-   DWORD            dwReserved;
-   DWORD            dwReserved1;
-   ENUMTEXTMETRICW  etmTm;
-} ENUMFONTDATAINT, *PENUMFONTDATAINT;
-
-typedef struct _ENUMFONTDATAW
-{
-   DWORD            dwSize;      // Full size of this structure.
-   ULONG            ulOffsetTM;  // Offset to enfdi in this structure.
-   DWORD            dwFontType;  // If sign set scale enum.
-   ENUMLOGFONTEXW   elfex;
+    ULONG cbSize;
+    DWORD dwFontType;
+    ENUMLOGFONTEXW elfex;
 /* 
- * Yuam 14.5:
+ * Yuan 14.5:
  * DESIGNVECTOR is a variable-size data structure that specifies the number of 
  * axes and a value for each axis. 
  * So it maybe smaller than MM_MAX_NUMAXES.
  */
-   DESIGNVECTORINT  DesignVectori;
-   ENUMFONTDATAINT  enfdi;
+    DESIGNVECTOR dv;
+} ENUMFONTDATAINTW, *PENUMFONTDATAINTW;
+
+/* Warning: this structure is of variable size!
+ * It is only to access the cbSize and efdi member.
+ * The rest of the structure has to be parsed. */
+typedef struct _ENUMFONTDATAW
+{
+    ULONG cbSize;
+    ENUMFONTDATAINTW efdi;
+/* The following 2 members do not have a constant offset! */
+/*    DWORD dwFlags;
+      ENUMTEXTMETRICW etm; */
 } ENUMFONTDATAW, *PENUMFONTDATAW;
-                                                                   
-                                                                   
+
+
 /* Number Representation */
 typedef struct _EFLOAT_S
 {
