@@ -578,22 +578,19 @@ namespace Sysreg_
                 return false;
             }
         }
-        cerr << "Opening Data Source:" << m_BootCmd << endl;
+        if (m_PidFile.length () && isFileExisting(m_PidFile))
+        {
+            cerr << "Deleting pid file " << m_PidFile << endl;
+            _tremove(m_PidFile.c_str ());
+        }
 
-/*
-#ifdef __LINUX__
-        _tremove(m_PidFile.c_str ());
-        m_DataSource = new PipeReader();
-        m_Src = m_BootCmd;
-#else
-*/
+        cerr << "Opening Data Source:" << m_BootCmd << endl;
         m_DataSource = new NamedPipeReader();
         if (!executeBootCmd())
         {
             cerr << "Error: failed to launch emulator with: " << m_BootCmd << endl;
             return false;
         }
-//#endif
         
         return true;
     }
@@ -647,6 +644,11 @@ namespace Sysreg_
         }
 		delete m_DataSource;
         m_DataSource = NULL;
+
+        if (m_PidFile.length ())
+        {
+            _tremove(m_PidFile.c_str ());
+        }
 	}
     
 //---------------------------------------------------------------------------------------
@@ -720,6 +722,7 @@ namespace Sysreg_
         if (!fread(buffer, 1, sizeof(buffer), file))
         {
             cerr << "Error: pid file w/o pid!!! " << endl;
+            fclose(file);
             cleanup();
             return false;
         }
