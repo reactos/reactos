@@ -687,6 +687,22 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
       return STATUS_IO_DEVICE_ERROR;
     }
 
+/* Check if floppy drive exists */
+  if(HwSenseInterruptStatus(ControllerInfo) != STATUS_SUCCESS)
+	{
+	  DPRINT("floppy: Floppy drive not detected! Returning STATUS_IO_DEVICE_ERROR\n");
+	  return STATUS_IO_DEVICE_ERROR;
+	}
+
+DPRINT("floppy: InitController: resetting the controller after floppy detection\n");
+
+  /* Reset the controller */
+  if(HwReset(ControllerInfo) != STATUS_SUCCESS)
+    {
+      DPRINT("floppy: InitController: unable to reset controller\n");
+      return STATUS_IO_DEVICE_ERROR;
+    }
+
   DPRINT("floppy: InitController: setting data rate\n");
 
   /* Set data rate */
