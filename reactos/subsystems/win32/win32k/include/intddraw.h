@@ -4,13 +4,6 @@
 #include <ddrawint.h>
 #include <ddkernel.h>
 
-#define GDI_OBJECT_TYPE_DIRECTDRAW    0x00600000
-#define GDI_OBJECT_TYPE_DD_SURFACE    0x00610000
-#define GDI_OBJECT_TYPE_DD_VIDEOPORT  0x00620000
-#define GDI_OBJECT_TYPE_DD_PALETTE    0x00630000
-#define GDI_OBJECT_TYPE_DD_CLIPPER    0x00640000
-#define GDI_OBJECT_TYPE_DD_MOTIONCOMP 0x00650000
-
 typedef struct
 {
     /* for the driver */
