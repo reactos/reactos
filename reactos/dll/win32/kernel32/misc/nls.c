@@ -813,12 +813,15 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
    HANDLE KeyHandle;
    PKEY_VALUE_PARTIAL_INFORMATION Kvpi;
    DWORD KvpiSize;
+   BOOL bRetValue;
+
+   bRetValue = FALSE;
 
    /* Convert the codepage number to string. */
    ValueName.Buffer = ValueNameBuffer;
    ValueName.MaximumLength = sizeof(ValueNameBuffer);
    if (!NT_SUCCESS(RtlIntegerToUnicodeString(CodePage, 10, &ValueName)))
-      return FALSE;
+      return bRetValue;
 
    /* Open the registry key containing file name mappings. */
    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System\\"
@@ -828,17 +831,17 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
    Status = NtOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
    if (!NT_SUCCESS(Status))
    {
-      return FALSE;
+      return bRetValue;
    }
 
    /* Allocate buffer that will be used to query the value data. */
    KvpiSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
               (MAX_PATH * sizeof(WCHAR));
-   Kvpi = HeapAlloc(GetProcessHeap(), 0, KvpiSize);
+   Kvpi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, KvpiSize);
    if (Kvpi == NULL)
    {
       NtClose(KeyHandle);
-      return FALSE;
+      return bRetValue;
    }
 
    /* Query the file name for our code page. */
@@ -856,10 +859,11 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
          lstrcpynW(FileName, (WCHAR*)Kvpi->Data,
                    min(Kvpi->DataLength / sizeof(WCHAR), FileNameSize));
       }
-      return TRUE;
    }
-
-   return FALSE;
+   
+   /* free temporary buffer */
+   HeapFree(GetProcessHeap(),0,Kvpi);
+   return bRetValue;
 }
 
 /**
