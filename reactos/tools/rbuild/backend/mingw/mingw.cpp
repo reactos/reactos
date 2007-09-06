@@ -890,14 +890,20 @@ bool
 MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
 {
 	if ( manualBinutilsSetting ) return true;
-	
+
 	/* linux */
 	if ( binutilsVersion.find('.') != std::string::npos )
 	{
-		/* TODO: blacklist versions on version number instead of date */		
+		/* TODO: blacklist versions on version number instead of date */
 		return true;
 	}
 
+	/*
+	 * - Binutils older than 2003/10/01 have broken windres which can't handle
+	 *   icons with alpha channel.
+	 * - Binutils between 2004/09/02 and 2004/10/08 have broken handling of
+	 *   forward exports in dlltool.
+	 */
 	if ( ( ( strcmp ( binutilsVersion.c_str (), "20040902") >= 0 ) &&
 	       ( strcmp ( binutilsVersion.c_str (), "20041008") <= 0 ) ) ||
 	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
