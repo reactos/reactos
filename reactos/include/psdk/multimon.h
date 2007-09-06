@@ -13,4 +13,4 @@ HMONITOR WINAPI MonitorFromPoint(POINT,DWORD);
 }
 #endif
 
-#endif /* __MULTIMON_H &/
+#endif /* __MULTIMON_H */
