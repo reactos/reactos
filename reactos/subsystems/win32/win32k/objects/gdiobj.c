@@ -364,7 +364,7 @@ GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
 
   ASSERT(ObjectType != GDI_OBJECT_TYPE_DONTCARE);
 
-  TypeIndex = 0; //GDI_OBJECT_GET_TYPE_INDEX(ObjectType);
+  TypeIndex = GDI_OBJECT_GET_TYPE_INDEX(ObjectType);
   if (ObjTypeInfo[TypeIndex].bUseLookaside)
   {
     LookasideList = FindLookasideList(HandleTable, TypeIndex);
@@ -583,7 +583,7 @@ LockHandle:
         }
 
         /* call the cleanup routine. */
-        TypeIndex = 0; //GDI_OBJECT_GET_TYPE_INDEX(HandleType);
+        TypeIndex = GDI_OBJECT_GET_TYPE_INDEX(HandleType);
         Ret = RunCleanupCallback(GDIHdrToBdy(GdiHdr), TypeIndex);
 
         /* Now it's time to free the memory */
