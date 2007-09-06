@@ -1618,6 +1618,7 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpImagePath = NULL;
+    LPWSTR lpServiceStartName = NULL;
     DWORD dwRequiredSize;
     LPQUERY_SERVICE_CONFIGW lpConfig;
     LPWSTR lpStr;
@@ -1662,6 +1663,10 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
+    ScmReadString(hServiceKey,
+                  L"ObjectName",
+                  &lpServiceStartName);
+
     dwRequiredSize = sizeof(QUERY_SERVICE_CONFIGW);
 
     if (lpImagePath != NULL)
@@ -1672,7 +1677,8 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
 
     /* FIXME: Add Dependencies length*/
 
-    /* FIXME: Add ServiceStartName length*/
+    if (lpServiceStartName != NULL)
+        dwRequiredSize += ((wcslen(lpServiceStartName) + 1) * sizeof(WCHAR));
 
     if (lpService->lpDisplayName != NULL)
         dwRequiredSize += ((wcslen(lpService->lpDisplayName) + 1) * sizeof(WCHAR));
@@ -1716,8 +1722,16 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
         /* FIXME: Append Dependencies */
         lpConfig->lpDependencies = NULL;
 
-        /* FIXME: Append ServiceStartName */
-        lpConfig->lpServiceStartName = NULL;
+        if (lpServiceStartName != NULL)
+        {
+            wcscpy(lpStr, lpServiceStartName);
+            lpConfig->lpServiceStartName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+            lpStr += (wcslen(lpServiceStartName) + 1);
+        }
+        else
+        {
+            lpConfig->lpServiceStartName = NULL;
+        }
 
         if (lpService->lpDisplayName != NULL)
         {
@@ -1736,6 +1750,9 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
 Done:;
     if (lpImagePath != NULL)
         HeapFree(GetProcessHeap(), 0, lpImagePath);
+
+    if (lpServiceStartName != NULL)
+        HeapFree(GetProcessHeap(), 0, lpServiceStartName);
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
