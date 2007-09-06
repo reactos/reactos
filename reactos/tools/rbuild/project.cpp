@@ -35,6 +35,12 @@ Environment::GetVariable ( const string& name )
 		return "";
 }
 
+string
+Environment::GetArch ()
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_ARCH", "i386" );
+}
+
 /* static */ string
 Environment::GetEnvironmentVariablePathOrDefault ( const string& name,
                                                    const string& defaultValue )
@@ -50,7 +56,7 @@ Environment::GetEnvironmentVariablePathOrDefault ( const string& name,
 Environment::GetIntermediatePath ()
 {
 	string defaultIntermediate =
-		string( "obj-" ) + GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT", "i386" );
+		string( "obj-" ) + GetArch ();
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INTERMEDIATE",
 	                                             defaultIntermediate );
 }
@@ -59,7 +65,7 @@ Environment::GetIntermediatePath ()
 Environment::GetOutputPath ()
 {
 	string defaultOutput =
-		string( "output-" ) + GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT", "i386" );
+		string( "output-" ) + GetArch ();
 	return GetEnvironmentVariablePathOrDefault ( "ROS_OUTPUT",
 	                                             defaultOutput );
 }
@@ -67,8 +73,7 @@ Environment::GetOutputPath ()
 /* static */ string
 Environment::GetInstallPath ()
 {
-	string defaultInstall =
-		string( "reactos." ) + GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT", "" );
+	string defaultInstall = GetCdOutputPath ();
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INSTALL",
 	                                             defaultInstall );
 }

@@ -153,6 +153,7 @@ class Environment
 {
 public:
 	static std::string GetVariable ( const std::string& name );
+	static std::string GetArch ();
 	static std::string GetIntermediatePath ();
 	static std::string GetOutputPath ();
 	static std::string GetCdOutputPath ();
