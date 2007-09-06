@@ -1111,11 +1111,13 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     LoaderBlock->Extension->MajorVersion = 5;
     LoaderBlock->Extension->MinorVersion = 2;
 
-    /* Save the number of pages the kernel images take */
-    LoaderBlock->Extension->LoaderPagesSpanned =
-        PAGE_ROUND_UP(KeRosLoaderBlock->
-                      ModsAddr[KeRosLoaderBlock->ModsCount - 1].ModEnd) -
-        KeRosLoaderBlock->ModsAddr[0].ModStart;
+    /* FreeLDR hackllocates 1536 static pages for the initial boot images */
+    LoaderBlock->Extension->LoaderPagesSpanned = 1536 * PAGE_SIZE;
+
+    /* ReactOS always boots the kernel at 0x80800000 (just like NT 5.2) */
+    LoaderBlock->Extension->LoaderPagesSpanned += 0x80800000 - KSEG0_BASE;
+
+    /* Now convert to pages */
     LoaderBlock->Extension->LoaderPagesSpanned /= PAGE_SIZE;
 
     /* Now setup the setup block if we have one */
