@@ -579,7 +579,7 @@ NtUserEmptyClipboard(VOID)
 
     if (ret && ClipboardOwnerWindow)
     {
-        DPRINT1("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->hSelf);
+        DPRINT("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->hSelf);
         co_IntSendMessage( ClipboardOwnerWindow->hSelf, WM_DESTROYCLIPBOARD, 0, 0);
     }
 
