@@ -854,6 +854,7 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
    if (NT_SUCCESS(Status) && Kvpi->Type == REG_SZ &&
        Kvpi->DataLength > sizeof(WCHAR))
    {
+      bRetValue = TRUE;
       if (FileName != NULL)
       {
          lstrcpynW(FileName, (WCHAR*)Kvpi->Data,
