@@ -49,7 +49,6 @@ namespace Sysreg_
 	string RosBootTest::ROS_EMU_TYPE= _T("ROS_EMU_TYPE");
 	string RosBootTest::EMU_TYPE_QEMU = _T("qemu");
 	string RosBootTest::EMU_TYPE_VMWARE = _T("vmware");
-	string RosBootTest::ROS_EMU_PATH = _T("ROS_EMU_PATH");
 	string RosBootTest::ROS_HDD_IMAGE= _T("ROS_HDD_IMAGE");
 	string RosBootTest::ROS_CD_IMAGE = _T("ROS_CD_IMAGE");
 	string RosBootTest::ROS_MAX_TIME = _T("ROS_MAX_TIME");
@@ -61,6 +60,12 @@ namespace Sysreg_
 	string RosBootTest::ROS_EMU_KILL = _T("ROS_EMU_KILL");
 	string RosBootTest::ROS_EMU_MEM = _T("ROS_EMU_MEM");
 	string RosBootTest::ROS_BOOT_CMD = _T("ROS_BOOT_CMD");
+
+#ifdef __LINUX__
+    string RosBootTest::ROS_EMU_PATH = _T("ROS_EMU_PATH_LIN");
+#else
+    string RosBootTest::ROS_EMU_PATH = _T("ROS_EMU_PATH_WIN");
+#endif
 
 //---------------------------------------------------------------------------------------
 	RosBootTest::RosBootTest() : m_MaxTime(0.0), m_DelayRead(0)
