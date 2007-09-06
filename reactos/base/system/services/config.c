@@ -1,5 +1,10 @@
 /*
- * config.c
+ * PROJECT:     ReactOS Service Control Manager
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/services/config.c
+ * PURPOSE:     Service configuration interface
+ * COPYRIGHT:   Copyright 2005 Eric Kohl
+ *
  */
 
 /* INCLUDES *****************************************************************/

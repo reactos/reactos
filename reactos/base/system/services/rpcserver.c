@@ -1,5 +1,12 @@
 /*
-
+ * PROJECT:     ReactOS Service Control Manager
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/services/rpcserver.c
+ * PURPOSE:     RPC server interface for the advapi32 calls
+ * COPYRIGHT:   Copyright 2005-2006 Eric Kohl
+ *              Copyright 2006-2007 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
+ *
  */
 
 /* INCLUDES ****************************************************************/

@@ -1,5 +1,10 @@
 /*
- * driver.c
+ * PROJECT:     ReactOS Service Control Manager
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/services/driver.c
+ * PURPOSE:     Driver control interface
+ * COPYRIGHT:   Copyright 2005-2006 Eric Kohl
+ *
  */
 
 /* INCLUDES *****************************************************************/

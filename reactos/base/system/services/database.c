@@ -1,25 +1,11 @@
 /*
- *
- * service control manager
- *
- * ReactOS Operating System
- *
- * --------------------------------------------------------------------
- *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software; see the file COPYING.LIB. If not, write
- * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.
+ * PROJECT:     ReactOS Service Control Manager
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/services/database.c
+ * PURPOSE:     Database control interface
+ * COPYRIGHT:   Copyright 2002-2006 Eric Kohl
+ *              Copyright 2006 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -436,6 +422,18 @@ ScmCreateServiceDatabase(VOID)
     DPRINT("ScmCreateServiceDatabase() done\n");
 
     return ERROR_SUCCESS;
+}
+
+
+VOID
+ScmShutdownServiceDatabase(VOID)
+{
+    DPRINT("ScmShutdownServiceDatabase() called\n");
+
+    ScmDeleteMarkedServices();
+    RtlDeleteResource(&DatabaseLock);
+
+    DPRINT("ScmShutdownServiceDatabase() done\n");
 }
 
 
@@ -998,6 +996,34 @@ ScmAutoStartServices(VOID)
         CurrentService->ServiceVisited = FALSE;
         ServiceEntry = ServiceEntry->Flink;
     }
+}
+
+
+VOID
+ScmAutoShutdownServices(VOID)
+{
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+    SERVICE_STATUS ServiceStatus;
+
+    DPRINT("ScmAutoShutdownServices() called\n");
+
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+
+        if (CurrentService->Status.dwCurrentState == SERVICE_RUNNING ||
+            CurrentService->Status.dwCurrentState == SERVICE_START_PENDING)
+        {
+            /* shutdown service */
+            ScmControlService(CurrentService, SERVICE_CONTROL_STOP, &ServiceStatus);
+        }
+
+        ServiceEntry = ServiceEntry->Flink;
+    }
+
+    DPRINT("ScmGetBootAndSystemDriverState() done\n");
 }
 
 /* EOF */

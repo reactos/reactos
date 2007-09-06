@@ -94,8 +94,10 @@ DWORD ScmReadString(HKEY hServiceKey,
 /* database.c */
 
 DWORD ScmCreateServiceDatabase(VOID);
+VOID ScmShutdownServiceDatabase(VOID);
 VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
+VOID ScmAutoShutdownServices(VOID);
 DWORD ScmStartService(PSERVICE Service,
                       LPWSTR lpArgs);
 
