@@ -13,7 +13,7 @@ Test_NtGdiDdCreateDirectDrawObject(PTESTINFO pti)
 
 	/* Cleanup ReactX setup */
 	DeleteDC(hdc);
-	Syscall(L"NtGdiDdDeleteDirectDrawObject", 1, &hDirectDraw);
+	NtGdiDdDeleteDirectDrawObject(hDirectDraw);
 
 	return APISTATUS_NORMAL;
 }

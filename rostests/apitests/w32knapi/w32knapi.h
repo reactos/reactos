@@ -22,10 +22,6 @@
 
 #include "../apitest.h"
 
-#define OS_UNSUPPORTED 0
-#define OS_REACTOS	1
-#define OS_WINDOWS	2
-
 typedef struct
 {
 	LPWSTR lpszFunction;

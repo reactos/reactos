@@ -25,7 +25,7 @@ Test_NtGdiEngCreatePalette(PTESTINFO pti)
 	TEST(GDI_HANDLE_GET_TYPE(hPal) == GDI_OBJECT_TYPE_PALETTE);
 	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(hPal)];
 	TEST(pEntry->KernelData != NULL);
-	TEST(pEntry->ProcessId == (HANDLE)GetCurrentProcessId());
+	TEST(pEntry->ProcessId == GetCurrentProcessId());
 	TEST(pEntry->UserData == 0);
 	TEST(pEntry->Type == (((UINT)hPal >> 16) | GDI_OBJECT_TYPE_PALETTE));
 

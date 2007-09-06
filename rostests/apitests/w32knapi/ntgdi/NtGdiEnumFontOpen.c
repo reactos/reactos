@@ -1,3 +1,4 @@
+
 INT
 Test_NtGdiEnumFontOpen(PTESTINFO pti)
 {
@@ -17,7 +18,7 @@ Test_NtGdiEnumFontOpen(PTESTINFO pti)
 	TEST(GDI_HANDLE_GET_TYPE(idEnum) == GDI_OBJECT_TYPE_ENUMFONT);
 	pEntry = &GdiHandleTable[GDI_HANDLE_GET_INDEX(idEnum)];
 	TEST(pEntry->KernelData != NULL);
-	TEST(pEntry->ProcessId == (HANDLE)GetCurrentProcessId());
+	TEST(pEntry->ProcessId == GetCurrentProcessId());
 	TEST(pEntry->UserData == 0);
 	TEST(pEntry->Type == ((idEnum >> 16) | GDI_OBJECT_TYPE_ENUMFONT));
 
