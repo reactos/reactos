@@ -46,6 +46,12 @@ BRUSH_Cleanup(PVOID ObjectBody)
     NtGdiDeleteObject(pBrush->hbmPattern);
   }
 
+  /* Free the kmode styles array of EXTPENS */
+  if (pBrush->pStyle)
+  {
+    ExFreePool(pBrush->pStyle);
+  }
+
   return TRUE;
 }
 

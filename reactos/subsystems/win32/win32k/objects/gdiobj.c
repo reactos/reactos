@@ -75,11 +75,11 @@ GDI_OBJ_INFO ObjInfo[] =
   {GDI_OBJECT_TYPE_DC,          sizeof(DC),            DC_Cleanup},
   {GDI_OBJECT_TYPE_PALETTE,     sizeof(PALGDI),        PALETTE_Cleanup},
   {GDI_OBJECT_TYPE_BRUSH,       sizeof(GDIBRUSHOBJ),   BRUSH_Cleanup},
-  {GDI_OBJECT_TYPE_PEN,         sizeof(GDIBRUSHOBJ),   GDI_CleanupDummy},
+  {GDI_OBJECT_TYPE_PEN,         sizeof(GDIBRUSHOBJ),   BRUSH_Cleanup},
   {GDI_OBJECT_TYPE_FONT,        sizeof(TEXTOBJ),       GDI_CleanupDummy},
   {GDI_OBJECT_TYPE_DIRECTDRAW,  sizeof(DD_DIRECTDRAW), DD_Cleanup},
   {GDI_OBJECT_TYPE_DD_SURFACE,  sizeof(DD_SURFACE),    DDSURF_Cleanup},
-  {GDI_OBJECT_TYPE_EXTPEN,      sizeof(GDIBRUSHOBJ),   EXTPEN_Cleanup},
+  {GDI_OBJECT_TYPE_EXTPEN,      sizeof(GDIBRUSHOBJ),   BRUSH_Cleanup},
   /* FIXME do not use normal DC struct for this */
   {GDI_OBJECT_TYPE_METADC,      sizeof(DC),             GDI_CleanupDummy},
   {GDI_OBJECT_TYPE_METAFILE,    sizeof(DC),            GDI_CleanupDummy},
@@ -88,6 +88,51 @@ GDI_OBJ_INFO ObjInfo[] =
 };
 
 #define OBJTYPE_COUNT (sizeof(ObjInfo) / sizeof(ObjInfo[0]))
+
+typedef struct
+{
+    BOOL bUseLookaside;
+    ULONG_PTR ulBodySize;
+    ULONG Tag;
+    GDICLEANUPPROC CleanupProc;
+} OBJ_TYPE_INFO, *POBJ_TYPE_INFO;
+
+static const
+OBJ_TYPE_INFO ObjTypeInfo[] =
+{
+  {0, 0,                     0,                       NULL},             /* 00 reserved entry */
+  {1, sizeof(DC),            GDI_OBJECT_TAG_DC,       DC_Cleanup},       /* 01 DC */
+  {1, sizeof(DD_DIRECTDRAW), GDI_OBJECT_TAG_DDRAW,    DD_Cleanup},       /* 02 DD_DDRAW, should be moved away from gdi objects */
+  {1, sizeof(DD_SURFACE),    GDI_OBJECT_TAG_DDSURF,   DDSURF_Cleanup},   /* 03 DD_SURFACE, should be moved away from gdi objects */
+  {1, sizeof(ROSRGNDATA),    GDI_OBJECT_TAG_REGION,   RGNDATA_Cleanup},  /* 04 REGION */
+  {1, sizeof(BITMAPOBJ),     GDI_OBJECT_TAG_BITMAP,   BITMAP_Cleanup},   /* 05 BITMAP */
+  {0, sizeof(DC),            GDI_OBJECT_TAG_CLIOBJ,   GDI_CleanupDummy}, /* 06 CLIOBJ: METADC,... FIXME: don't use DC struct */
+  {0, 0,                     GDI_OBJECT_TAG_PATH,     NULL},             /* 07 PATH, unused */
+  {1, sizeof(PALGDI),        GDI_OBJECT_TAG_PALETTE,  PALETTE_Cleanup},  /* 08 PALETTE */
+  {0, 0,                     GDI_OBJECT_TAG_COLSPC,   NULL},             /* 09 COLORSPACE, unused */
+  {1, sizeof(TEXTOBJ),       GDI_OBJECT_TAG_FONT,     GDI_CleanupDummy}, /* 0a FONT */
+  {0, 0,                     0,                       NULL},             /* 0b RFONT, unused */
+  {0, 0,                     0,                       NULL},             /* 0c PFE, unused */
+  {0, 0,                     0,                       NULL},             /* 0d PFT, unused */
+  {0, 0,                     0,                       NULL},             /* 0e ICMCXF, unused */
+  {0, 0,                     0,                       NULL},             /* 0f ICMDLL, unused */
+  {1, sizeof(GDIBRUSHOBJ),   GDI_OBJECT_TAG_BRUSH,    BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
+  {0, 0,                     0,                       NULL},             /* 11 D3D_HANDLE, unused */
+  {0, 0,                     0,                       NULL},             /* 12 DD_VPORT, unused */
+  {0, 0,                     0,                       NULL},             /* 13 SPACE, unused */
+  {0, 0,                     0,                       NULL},             /* 14 DD_MOTION, unused */
+  {0, 0,                     0,                       NULL},             /* 15 META, unused */
+  {0, 0,                     0,                       NULL},             /* 16 ENUMFONT, unused */
+  {0, 0,                     0,                       NULL},             /* 18 VTFD, unused */
+  {0, 0,                     0,                       NULL},             /* 19 TTFD, unused */
+  {0, 0,                     0,                       NULL},             /* 1a RC, unused */
+  {0, 0,                     0,                       NULL},             /* 1b TEMP, unused */
+  {0, 0,                     0,                       NULL},             /* 1c DRVOBJ, unused */
+  {0, 0,                     0,                       NULL},             /* 1d DCIOBJ, unused */
+  {0, 0,                     0,                       NULL},             /* 1e SPOOL, unused */
+};
+
+#define BASE_OBJTYPE_COUNT (sizeof(ObjTypeInfo) / sizeof(ObjTypeInfo[0]))
 
 static LARGE_INTEGER ShortDelay;
 

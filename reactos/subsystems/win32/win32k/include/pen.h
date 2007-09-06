@@ -15,6 +15,5 @@
 #define PENOBJ_UnlockPen(pPenObj) GDIOBJ_UnlockObjByPtr(GdiHandleTable, pPenObj)
 
 INT STDCALL PEN_GetObject(PGDIBRUSHOBJ hPen, INT Count, PLOGPEN Buffer);
-BOOL INTERNAL_CALL EXTPEN_Cleanup(PVOID ObjectBody);
 
 #endif

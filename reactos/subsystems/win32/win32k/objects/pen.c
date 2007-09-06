@@ -201,19 +201,6 @@ PEN_GetObject(PGDIBRUSHOBJ pPenObject, INT cbCount, PLOGPEN pBuffer)
    return cbRetCount;
 }
 
-BOOL INTERNAL_CALL
-EXTPEN_Cleanup(PVOID ObjectBody)
-{
-   PGDIBRUSHOBJ pPenObject = (PGDIBRUSHOBJ)ObjectBody;
-
-   /* Free the kmode Styles array */
-   if (pPenObject->pStyle)
-   {
-      ExFreePool(pPenObject->pStyle);
-   }
-   return TRUE;
-}
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 HPEN STDCALL
