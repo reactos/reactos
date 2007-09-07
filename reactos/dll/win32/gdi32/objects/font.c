@@ -1321,59 +1321,67 @@ NewEnumFontFamiliesExW(
     LPARAM lParam,
     DWORD dwFlags)
 {
-	ULONG_PTR idEnum, ulCount, ulSize;
+	ULONG_PTR idEnum, cbDataSize, cbRetSize;
 	PENUMFONTDATAW pEfdw;
 	PBYTE pBuffer;
 	PBYTE pMax;
 	INT ret = 1;
 
+	/* Open enumeration handle and find out how much memory we need */
 	idEnum = NtGdiEnumFontOpen(hDC,
 	                           EfdFontFamilies,
 	                           0,
 	                           LF_FACESIZE,
-	                           lpLogfont->lfFaceName,
-	                           lpLogfont->lfCharSet,
-	                           &ulCount);
+	                           (lpLogfont && lpLogfont->lfFaceName[0])? lpLogfont->lfFaceName : NULL,
+	                           lpLogfont? lpLogfont->lfCharSet : DEFAULT_CHARSET,
+	                           &cbDataSize);
 	if (idEnum == 0)
 	{
 		return 0;
 	}
-	if (ulCount == 0)
+	if (cbDataSize == 0)
 	{
 		NtGdiEnumFontClose(idEnum);
 		return 0;
 	}
 
-	pBuffer = HeapAlloc(GetProcessHeap(), 0, ulCount);
+	/* Allocate memory */
+	pBuffer = HeapAlloc(GetProcessHeap(), 0, cbDataSize);
 	if (pBuffer == NULL)
 	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		NtGdiEnumFontClose(idEnum);
 		return 0;
 	}
-	pMax = pBuffer + ulCount;
 
-	if (!NtGdiEnumFontChunk(hDC, idEnum, ulCount, &ulSize, (PVOID)pBuffer))
+	/* Do the enumeration */
+	if (!NtGdiEnumFontChunk(hDC, idEnum, cbDataSize, &cbRetSize, (PVOID)pBuffer))
 	{
 		HeapFree(GetProcessHeap(), 0, pBuffer);
 		NtGdiEnumFontClose(idEnum);
 		return 0;
 	}
 
-	/* Iterate through the structures */
-	for (pEfdw = (PENUMFONTDATAW)pBuffer;
-	     (PBYTE)pEfdw < pMax && pEfdw->cbSize != 0 && ret != 0;
-	     pEfdw = (PENUMFONTDATAW)((PBYTE)pEfdw + pEfdw->cbSize))
-	{
-		ENUMLOGFONTEXW *pElfew = &pEfdw->efdi.elfex;
-		NEWTEXTMETRICEXW *pNtmew = (NEWTEXTMETRICEXW*)((PBYTE)&pEfdw->efdi + pEfdw->efdi.cbSize + sizeof(DWORD)); // FIXME
-		DWORD dwFontType = pEfdw->efdi.dwFontType;
-		ret = lpEnumFontFamExProcW(pElfew, pNtmew, dwFontType, lParam);
+    /* Get start and end address */
+    pEfdw = (PENUMFONTDATAW)pBuffer;
+	pMax = pBuffer + cbDataSize;
+
+    /* Iterate through the structures */
+    while ((PBYTE)pEfdw < pMax && ret)
+    {
+        PNTMW_INTERNAL pNtmwi = (PNTMW_INTERNAL)((ULONG_PTR)pEfdw + pEfdw->ulNtmwiOffset);
+
+        ret = lpEnumFontFamExProcW(&pEfdw->elfexdv.elfEnumLogfontEx,
+                                   &pNtmwi->ntmw,
+                                   pEfdw->dwFontType,
+                                   lParam);
+
+        pEfdw = (PENUMFONTDATAW)((ULONG_PTR)pEfdw + pEfdw->cbSize);
 	}
 
+	/* Release the memory and close handle */
 	HeapFree(GetProcessHeap(), 0, pBuffer);
 	NtGdiEnumFontClose(idEnum);
 
 	return ret;
 }
-
-

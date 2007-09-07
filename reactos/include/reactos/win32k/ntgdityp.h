@@ -120,32 +120,20 @@ typedef struct _TMW_INTERNAL
     TMDIFF Diff;
 } TMW_INTERNAL, *PTMW_INTERNAL;
 
-typedef struct
+typedef struct _NTMW_INTERNAL
 {
-    ULONG cbSize;
-    DWORD dwFontType;
-    ENUMLOGFONTEXW elfex;
-/* 
- * Yuan 14.5:
- * DESIGNVECTOR is a variable-size data structure that specifies the number of 
- * axes and a value for each axis. 
- * So it maybe smaller than MM_MAX_NUMAXES.
- */
-    DESIGNVECTOR dv;
-} ENUMFONTDATAINTW, *PENUMFONTDATAINTW;
+    TMDIFF tmd;
+    NEWTEXTMETRICEXW ntmw;
+} NTMW_INTERNAL, *PNTMW_INTERNAL;
 
-/* Warning: this structure is of variable size!
- * It is only to access the cbSize and efdi member.
- * The rest of the structure has to be parsed. */
 typedef struct _ENUMFONTDATAW
 {
     ULONG cbSize;
-    ENUMFONTDATAINTW efdi;
-/* The following 2 members do not have a constant offset! */
-/*    DWORD dwFlags;
-      ENUMTEXTMETRICW etm; */
+    ULONG ulNtmwiOffset;
+    DWORD dwFontType;
+    ENUMLOGFONTEXDVW elfexdv; /* variable size! */
+    /* NTMW_INTERNAL ntmwi; use ulNtwmOffset */
 } ENUMFONTDATAW, *PENUMFONTDATAW;
-
 
 /* Number Representation */
 typedef struct _EFLOAT_S
