@@ -2294,15 +2294,13 @@ ScmrChangeServiceConfig2W(handle_t BindingHandle,
 
     if (dwInfoLevel & SERVICE_CONFIG_DESCRIPTION)
     {
-        LPSERVICE_DESCRIPTIONW lpServiceDescription = (LPSERVICE_DESCRIPTIONW)lpInfo;
+        LPSERVICE_DESCRIPTIONW lpServiceDescription;
 
-        if (dwInfoSize != sizeof(*lpServiceDescription))
-        {
-            dwError = ERROR_INVALID_PARAMETER;
-            goto done;
-        }
+        lpServiceDescription = (LPSERVICE_DESCRIPTIONW)lpInfo;
+        lpServiceDescription->lpDescription = (LPWSTR)(lpInfo + sizeof(LPSERVICE_DESCRIPTIONW));
 
-        if (lpServiceDescription != NULL && lpServiceDescription->lpDescription != NULL)
+        if (lpServiceDescription != NULL &&
+            lpServiceDescription->lpDescription != NULL)
         {
             RegSetValueExW(hServiceKey,
                            L"Description",
@@ -2327,7 +2325,7 @@ done:
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
-    DPRINT("ScmrChangeServiceConfigW() done (Error %lu)\n", dwError);
+    DPRINT("ScmrChangeServiceConfig2W() done (Error %lu)\n", dwError);
 
     return dwError;
 }
