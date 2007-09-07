@@ -810,9 +810,12 @@ InstallReactOS(HINSTANCE hInstance)
         return 0;
     }
 
-    /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
-    /// DO NOT REMOVE!!!
-    DbgPrint("SYSREG_CHECKPOINT:SYSSETUP_COMPLETE\n");
+    if (SetupData.BootCDRegtestActive)
+    {
+        /// THE FOLLOWING DPRINT IS FOR THE SYSTEM REGRESSION TOOL
+        /// DO NOT REMOVE!!!
+        DbgPrint("SYSREG_CHECKPOINT:SYSSETUP_COMPLETE\n");
+    }
 
     ExitWindowsEx(EWX_REBOOT, 0);
     return 0;

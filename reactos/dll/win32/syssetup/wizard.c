@@ -57,7 +57,7 @@ typedef struct _REGISTRATIONDATA
 
 /* GLOBALS ******************************************************************/
 
-static SETUPDATA SetupData;
+SETUPDATA SetupData;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -2007,7 +2007,6 @@ ProcessUnattendInf(HINF hUnattendedInf)
   TCHAR szValue[MAX_PATH];
   DWORD LineLength;
   HKEY hKey;
-  DWORD BootCDRegtestActive = 0;
 
   if (!SetupFindFirstLine(hUnattendedInf,
               _T("Unattend"),
@@ -2111,7 +2110,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
       }
     else if (!_tcscmp(szName, _T("BootCDRegTestActive")))
       {
-        BootCDRegtestActive = _ttoi(szValue);
+        SetupData.BootCDRegtestActive = _ttoi(szValue);
       }
 
   }
@@ -2164,8 +2163,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
       }while(SetupFindNextLine(&InfContext, &InfContext));
    }
 
-  DPRINT("BootCDRegtestActive %d\n", BootCDRegtestActive);
-  if (BootCDRegtestActive)
+  if (SetupData.BootCDRegtestActive)
     {
       char szPath[MAX_PATH];
       FILE * file;
