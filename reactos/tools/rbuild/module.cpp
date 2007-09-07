@@ -795,8 +795,19 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				e.location,
 				"Only one <pch> is valid per module" );
 		}
-		pch = new PchFile (
-			e, *this, File ( FixSeparator ( path + cSep + e.value ), false, "", true ) );
+		size_t pos = e.value.find_last_of ( "/\\" );
+		if ( pos == string::npos )
+		{
+			pch = new PchFile (
+				e, *this, FileLocation ( SourceDirectory, path, e.value ) );
+		}
+		else
+		{
+			string dir = e.value.substr ( 0, pos );
+			string name = e.value.substr ( pos + 1);
+			pch = new PchFile (
+				e, *this, FileLocation ( SourceDirectory, path + sSep + dir, name ) );
+		}
 		subs_invalid = true;
 	}
 	else if ( e.name == "compilationunit" )
@@ -1144,6 +1155,15 @@ Module::GetDependencyPath () const
 		return ReplaceExtension ( GetPathWithPrefix ( "lib" ), ".a" );
 	else
 		return GetPath();
+}
+
+string
+Module::GetDependencyTargetName () const
+{
+	if ( HasImportLibrary () )
+		return "lib" + name + ".a";
+	else
+		return GetTargetName();
 }
 
 string
@@ -1650,102 +1670,12 @@ Property::ProcessXML()
 PchFile::PchFile (
 	const XMLElement& node_,
 	const Module& module_,
-	const File file_ )
+	const FileLocation& file_ )
 	: node(node_), module(module_), file(file_)
 {
 }
 
 void
 PchFile::ProcessXML()
-{
-}
-
-
-AutoRegister::AutoRegister ( const Project& project_,
-                             const Module* module_,
-                             const XMLElement& node_ )
-	: project(project_),
-	  module(module_),
-	  node(node_)
-{
-	Initialize();
-}
-
-AutoRegister::~AutoRegister ()
-{
-}
-
-bool
-AutoRegister::IsSupportedModuleType ( ModuleType type )
-{
-	switch ( type )
-	{
-		case Win32DLL:
-		case Win32OCX:
-			return true;
-		case Kernel:
-		case KernelModeDLL:
-		case NativeDLL:
-		case NativeCUI:
-		case Win32CUI:
-		case Win32GUI:
-		case Win32SCR:
-		case KernelModeDriver:
-		case BootSector:
-		case BootLoader:
-		case BootProgram:
-		case BuildTool:
-		case StaticLibrary:
-		case ObjectLibrary:
-		case Iso:
-		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
-		case Test:
-		case RpcServer:
-		case RpcClient:
-		case Alias:
-		case IdlHeader:
-		case EmbeddedTypeLib:
-                case ElfExecutable:
-			return false;
-	}
-	throw InvalidOperationException ( __FILE__,
-	                                  __LINE__ );
-}
-
-AutoRegisterType
-AutoRegister::GetAutoRegisterType( string type )
-{
-	if ( type == "DllRegisterServer" )
-		return DllRegisterServer;
-	if ( type == "DllInstall" )
-		return DllInstall;
-	if ( type == "Both" )
-		return Both;
-	throw XMLInvalidBuildFileException (
-		node.location,
-		"<autoregister> type attribute must be DllRegisterServer, DllInstall or Both." );
-}
-
-void
-AutoRegister::Initialize ()
-{
-	if ( !IsSupportedModuleType ( module->type ) )
-	{
-		throw XMLInvalidBuildFileException (
-			node.location,
-			"<autoregister> is not applicable for this module type." );
-	}
-
-	const XMLAttribute* att = node.GetAttribute ( "infsection", true );
-	infSection = att->value;
-
-	att = node.GetAttribute ( "type", true );
-	type = GetAutoRegisterType ( att->value );
-}
-
-void
-AutoRegister::ProcessXML()
 {
 }

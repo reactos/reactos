@@ -99,10 +99,40 @@ ParseContext::ParseContext ()
 }
 
 
-FileLocation::FileLocation ( Directory* directory,
-                             std::string filename )
-                             : directory (directory),
-                               filename (filename)
+FileLocation::FileLocation ( const DirectoryLocation directory,
+                             const std::string& relative_path,
+                             const std::string& name )
+	: directory ( directory ),
+	  relative_path ( NormalizeFilename ( relative_path ) ),
+	  name ( name )
+{
+	if ( relative_path[0] == '/' ||
+	     relative_path[0] == '\\' ||
+	     relative_path.find ( '$' ) != string::npos ||
+	     ( relative_path.length () > 1 && ( relative_path[1] == ':' ||
+	                                        relative_path.find_last_of ( "/\\" ) == relative_path.length () - 1 ) )
+	     )
+	{
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__,
+		                                  "Invalid relative path '%s'",
+		                                  relative_path.c_str () );
+	}
+
+	if ( strpbrk ( name.c_str (), "/\\:" ) )
+	{
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__,
+		                                  "Invalid file name '%s'",
+		                                  name.c_str () );
+	}
+}
+
+
+FileLocation::FileLocation ( const FileLocation& other )
+	: directory ( other.directory ),
+	  relative_path ( other.relative_path ),
+	  name ( other.name )
 {
 }
 

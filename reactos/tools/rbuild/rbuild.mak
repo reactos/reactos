@@ -244,6 +244,7 @@ RBUILD_COMMON_SOURCES = \
 	$(addprefix $(RBUILD_BASE_), \
 		global.cpp \
 		automaticdependency.cpp \
+		autoregister.cpp \
 		bootstrap.cpp \
 		cdfile.cpp \
 		compilationunit.cpp \
@@ -264,6 +265,7 @@ RBUILD_COMMON_SOURCES = \
 		syssetupgenerator.cpp \
 		testsupportcode.cpp \
 		wineresource.cpp \
+		xmlnode.cpp \
 		)
 
 RBUILD_SPECIAL_SOURCES = \
@@ -374,6 +376,10 @@ $(RBUILD_INT_)automaticdependency.o: $(RBUILD_BASE_)automaticdependency.cpp $(RB
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
+$(RBUILD_INT_)autoregister.o: $(RBUILD_BASE_)autoregister.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
 $(RBUILD_INT_)bootstrap.o: $(RBUILD_BASE_)bootstrap.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
@@ -451,6 +457,10 @@ $(RBUILD_INT_)syssetupgenerator.o: $(RBUILD_BASE_)syssetupgenerator.cpp $(RBUILD
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)wineresource.o: $(RBUILD_BASE_)wineresource.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)xmlnode.o: $(RBUILD_BASE_)xmlnode.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

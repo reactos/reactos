@@ -100,7 +100,6 @@ ProxyMakefile::GenerateProxyMakefileForModule ( Module& module,
 	if ( outputTree.length () > 0 )
 	{
 		base = outputTree + sSep + module.GetBasePath ();
-		Path path;
 		pathToTopDirectory = working_directory;
 	}
 	else
@@ -122,7 +121,7 @@ ProxyMakefile::GenerateProxyMakefileForModule ( Module& module,
 	s = s + sprintf ( s, "DEFAULT = %s\n", defaultTarget.c_str () );
 	s = s + sprintf ( s, "include $(TOP)/proxy.mak\n" );
 
-	FileSupportCode::WriteIfChanged ( buf, proxyMakefile );
+	FileSupportCode::WriteIfChanged ( buf, proxyMakefile, true );
 
 	free ( buf );
 }

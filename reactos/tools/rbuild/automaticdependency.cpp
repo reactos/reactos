@@ -320,7 +320,10 @@ AutomaticDependency::GetModuleFiles ( const Module& module,
 	/* FIXME: Collect files in IFs here */
 
 	if ( module.pch != NULL )
-		files.push_back ( &module.pch->file );
+	{
+		File *file = new File ( module.pch->file.relative_path + sSep + module.pch->file.name , false, "", true );
+		files.push_back ( file );
+	}
 }
 
 void

@@ -28,6 +28,7 @@ CompilationUnit::CompilationUnit ( File* file )
 	  module(NULL),
 	  node(NULL)
 {
+	local_name = file->name;
 	name = file->name;
 	files.push_back ( file );
 }
@@ -41,6 +42,7 @@ CompilationUnit::CompilationUnit ( const Project* project,
 {
 	const XMLAttribute* att = node->GetAttribute ( "name", true );
 	assert(att);
+	local_name = att->value;
 	name = module->GetBasePath () + cSep + att->value;
 }
 
@@ -92,16 +94,40 @@ CompilationUnit::IsFirstFile () const
 	return file->first;
 }
 
-FileLocation*
-CompilationUnit::GetFilename ( Directory* intermediateDirectory ) const
+
+const FileLocation*
+CompilationUnit::GetFilename () const
 {
 	if ( files.size () == 0 || files.size () > 1 )
-		return new FileLocation ( intermediateDirectory, name );
+	{
+		return new FileLocation ( IntermediateDirectory,
+		                          module ? module->GetBasePath () : "",
+		                          local_name );
+	}
+
 	File* file = files[0];
-	if (file->path_prefix.length() > 0)
-		return new FileLocation ( intermediateDirectory, file->name );
+
+	DirectoryLocation directory;
+	if ( file->path_prefix.length () == 0 )
+		directory = SourceDirectory;
+	else if ( file->path_prefix == "$(INTERMEDIATE)" )
+		directory = IntermediateDirectory;
 	else
-		return new FileLocation ( NULL, file->name );
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__,
+		                                  "Invalid path prefix '%s'",
+		                                  file->path_prefix.c_str () );
+
+	size_t pos = file->name.find_last_of ( "/\\" );
+	assert ( pos != string::npos );
+	string relative_path = file->name.substr ( 0, pos );
+	string name = file->name.substr ( pos + 1 );
+	if ( relative_path.compare ( 0, 15, "$(INTERMEDIATE)") == 0 )
+	{
+		directory = IntermediateDirectory;
+		relative_path.erase ( 0, 16 );
+	}
+	return new FileLocation ( directory, relative_path, name );
 }
 
 std::string

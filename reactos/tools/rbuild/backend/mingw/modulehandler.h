@@ -41,21 +41,16 @@ public:
 	static void SetMakefile ( FILE* f );
 	void EnablePreCompiledHeaderSupport ();
 
-	static std::string PassThruCacheDirectory (
-		const std::string &f,
-		Directory* directoryTree );
+	static const FileLocation* PassThruCacheDirectory (const FileLocation* fileLocation );
 
-	static std::string PassThruCacheDirectory (const FileLocation* fileLocation );
-
-	static Directory* GetTargetDirectoryTree (
+	static DirectoryLocation GetTargetDirectoryTree (
 		const Module& module );
 
-	static std::string GetTargetFilename (
+	static const FileLocation* GetTargetFilename (
 		const Module& module,
 		string_list* pclean_files );
 
-	static std::string
-	GetImportLibraryFilename (
+	static const FileLocation* GetImportLibraryFilename (
 		const Module& module,
 		string_list* pclean_files );
 
@@ -64,7 +59,7 @@ public:
 
 	std::string GetModuleTargets ( const Module& module );
 	void GetObjectsVector ( const IfableData& data,
-	                        std::vector<std::string>& objectFiles ) const;
+	                        std::vector<FileLocation>& objectFiles ) const;
 	void GenerateObjectMacro();
 	void GenerateTargetMacro();
 	void GenerateOtherMacros();
@@ -83,25 +78,28 @@ public:
 	void GenerateDependsTarget () const;
 	static bool ReferenceObjects ( const Module& module );
 	virtual void AddImplicitLibraries ( Module& module ) { return; }
+
+	void OutputCopyCommand ( const FileLocation& source,
+	                         const FileLocation& destination );
 protected:
 	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
-	FileLocation* GetActualSourceFilename ( const FileLocation* fileLocation ) const;
-	std::string GetExtraDependencies ( const std::string& filename ) const;
+	const FileLocation* GetActualSourceFilename ( const FileLocation* file ) const;
+	std::string GetExtraDependencies ( const FileLocation *file ) const;
 	std::string GetCompilationUnitDependencies ( const CompilationUnit& compilationUnit ) const;
-	std::string GetModuleArchiveFilename () const;
+	const FileLocation* GetModuleArchiveFilename () const;
 	bool IsGeneratedFile ( const File& file ) const;
 	std::string GetImportLibraryDependency ( const Module& importedModule );
 	void GetTargets ( const Module& dependencyModule,
 	                  string_list& targets );
 	void GetModuleDependencies ( string_list& dependencies );
 	std::string GetAllDependencies () const;
-	void GetSourceFilenames ( string_list& list,
+	void GetSourceFilenames ( std::vector<FileLocation>& list,
 	                          bool includeGeneratedFiles ) const;
-	void GetSourceFilenamesWithoutGeneratedFiles ( string_list& list ) const;
-	std::string GetObjectFilename ( const FileLocation* sourceFileLocation,
-	                                string_list* pclean_files ) const;
+	void GetSourceFilenamesWithoutGeneratedFiles ( std::vector<FileLocation>& list ) const;
+	const FileLocation* GetObjectFilename ( const FileLocation* sourceFile,
+	                                        string_list* pclean_files ) const;
 
 	std::string GetObjectFilenames ();
 
@@ -121,10 +119,10 @@ protected:
 	                             const std::string& libsMacro,
 	                             const std::string& pefixupParameters );
 	void GeneratePhonyTarget() const;
-	void GenerateBuildMapCode ( const char *mapTarget = NULL );
+	void GenerateBuildMapCode ( const FileLocation *mapTarget = NULL );
 	void GenerateRules ();
 	void GenerateImportLibraryTargetIfNeeded ();
-	void GetDefinitionDependencies ( string_list& dependencies ) const;
+	void GetDefinitionDependencies ( std::vector<FileLocation>& dependencies ) const;
 
 	std::string GetLinkingDependencies () const;
 	static MingwBackend* backend;
@@ -150,19 +148,19 @@ private:
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;
-	std::string GetPrecompiledHeaderFilename () const;
-	void GenerateGccCommand ( const FileLocation* sourceFileLocation,
+	const FileLocation* GetPrecompiledHeaderFilename () const;
+	void GenerateGccCommand ( const FileLocation* sourceFile,
 	                          const std::string& extraDependencies,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );
-	void GenerateGccAssemblerCommand ( const FileLocation* sourceFileLocation,
+	void GenerateGccAssemblerCommand ( const FileLocation* sourceFile,
 	                                   const std::string& cc,
 	                                   const std::string& cflagsMacro );
-	void GenerateNasmCommand ( const FileLocation* sourceFileLocation,
+	void GenerateNasmCommand ( const FileLocation* sourceFile,
 	                           const std::string& nasmflagsMacro );
-	void GenerateWindresCommand ( const FileLocation* sourceFileLocation,
+	void GenerateWindresCommand ( const FileLocation* sourceFile,
 	                              const std::string& windresflagsMacro );
-	void GenerateWinebuildCommands ( const FileLocation* sourceFileLocation );
+	void GenerateWinebuildCommands ( const FileLocation* sourceFile );
 	std::string GetWidlFlags ( const CompilationUnit& compilationUnit );
 	void GenerateWidlCommandsServer (
 		const CompilationUnit& compilationUnit,
@@ -198,24 +196,23 @@ private:
 	                                 const std::string& nasmflagsMacro,
 	                                 const std::string& windresflagsMacro,
 	                                 const std::string& widlflagsMacro );
-	std::string GenerateArchiveTarget ( const std::string& ar,
-	                                    const std::string& objs_macro ) const;
-	void GetSpecObjectDependencies ( string_list& dependencies,
-	                                 const std::string& filename ) const;
-	void GetWidlObjectDependencies ( string_list& dependencies,
-	                                 const std::string& filename ) const;
+	const FileLocation* GenerateArchiveTarget ( const std::string& ar,
+	                                            const std::string& objs_macro ) const;
+	void GetSpecObjectDependencies ( std::vector<FileLocation>& dependencies,
+	                                 const FileLocation *file ) const;
+	void GetWidlObjectDependencies ( std::vector<FileLocation>& dependencies,
+	                                 const FileLocation *file ) const;
 	void GetDefaultDependencies ( string_list& dependencies ) const;
 	void GetInvocationDependencies ( const Module& module, string_list& dependencies );
 	bool IsWineModule () const;
-	std::string GetDefinitionFilename () const;
-	static std::string RemoveVariables ( std::string path);
+	const FileLocation* GetDefinitionFilename () const;
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupCompilationUnitVector ( std::vector<CompilationUnit*>& compilationUnits );
-	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
+	void GetRpcHeaderDependencies ( std::vector<FileLocation>& dependencies ) const;
 	static std::string GetPropertyValue ( const Module& module, const std::string& name );
-	std::string GetRpcServerHeaderFilename ( std::string basename ) const;
-	std::string GetRpcClientHeaderFilename ( std::string basename ) const;
-	std::string GetIdlHeaderFilename ( std::string basename ) const;
+	const FileLocation* GetRpcServerHeaderFilename ( const FileLocation *base ) const;
+	const FileLocation* GetRpcClientHeaderFilename ( const FileLocation *base ) const;
+	const FileLocation* GetIdlHeaderFilename ( const FileLocation *base ) const;
 	std::string GetModuleCleanTarget ( const Module& module ) const;
 	void GetReferencedObjectLibraryModuleCleanTargets ( std::vector<std::string>& moduleNames ) const;
 public:
@@ -427,12 +424,12 @@ public:
 	virtual void Process ();
 private:
 	void GenerateIsoModuleTarget ();
-	std::string GetBootstrapCdDirectories ( const std::string& bootcdDirectory );
-	std::string GetNonModuleCdDirectories ( const std::string& bootcdDirectory );
-	std::string GetCdDirectories ( const std::string& bootcdDirectory );
-	void GetBootstrapCdFiles ( std::vector<std::string>& out ) const;
-	void GetNonModuleCdFiles ( std::vector<std::string>& out ) const;
-	void GetCdFiles ( std::vector<std::string>& out ) const;
+	void GetBootstrapCdDirectories ( std::vector<FileLocation>& out, const std::string& bootcdDirectory );
+	void GetNonModuleCdDirectories ( std::vector<FileLocation>& out, const std::string& bootcdDirectory );
+	void GetCdDirectories ( std::vector<FileLocation>& out, const std::string& bootcdDirectory );
+	void GetBootstrapCdFiles ( std::vector<FileLocation>& out ) const;
+	void GetNonModuleCdFiles ( std::vector<FileLocation>& out ) const;
+	void GetCdFiles ( std::vector<FileLocation>& out ) const;
 	void OutputBootstrapfileCopyCommands ( const std::string& bootcdDirectory );
 	void OutputCdfileCopyCommands ( const std::string& bootcdDirectory );
 };
@@ -447,9 +444,6 @@ public:
 private:
 	void GenerateLiveIsoModuleTarget ();
 	void CreateDirectory ( const std::string& directory );
-	void OutputCopyCommand ( const std::string& sourceFilename,
-	                         const std::string& targetFilename,
-	                         const std::string& targetDirectory );
 	void OutputModuleCopyCommands ( std::string& livecdDirectory,
 	                                std::string& livecdReactos );
 	void OutputNonModuleCopyCommands ( std::string& livecdDirectory,

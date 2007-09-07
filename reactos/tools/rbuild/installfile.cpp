@@ -22,32 +22,22 @@
 
 using std::string;
 
-InstallFile::InstallFile ( const Project& project_,
+InstallFile::InstallFile ( const Project& project,
                            const XMLElement& installfileNode,
                            const string& path )
-	: project ( project_ ),
-	  node ( installfileNode )
+	: XmlNode(project, installfileNode )
 {
-	const XMLAttribute* att = node.GetAttribute ( "base", false );
-	if ( att != NULL )
-		base = att->value;
-	else
-		base = "";
+	const XMLAttribute* base = node.GetAttribute ( "base", false );
+	const XMLAttribute* newname = node.GetAttribute ( "newname", false );
 
-	att = node.GetAttribute ( "newname", false );
-	if ( att != NULL )
-		newname = att->value;
-	else
-		newname = node.value;
-	name = node.value;
-
-	att = node.GetAttribute ( "root", false );
+	DirectoryLocation source_directory = SourceDirectory;
+	const XMLAttribute* att = node.GetAttribute ( "root", false );
 	if ( att != NULL)
 	{
 		if ( att->value == "intermediate" )
-			this->path = "$(INTERMEDIATE)" + sSep + path;
+			source_directory = IntermediateDirectory;
 		else if ( att->value == "output" )
-			this->path = "$(OUTPUT)" + sSep + path;
+			source_directory = OutputDirectory;
 		else
 		{
 			throw InvalidAttributeValueException (
@@ -56,21 +46,15 @@ InstallFile::InstallFile ( const Project& project_,
 				att->value );
 		}
 	}
-	else
-		this->path = path;
-}
 
-InstallFile::~InstallFile ()
-{
-}
-
-string
-InstallFile::GetPath () const
-{
-	return path + sSep + name;
-}
-
-void
-InstallFile::ProcessXML()
-{
+	source = new FileLocation ( source_directory,
+	                            path,
+	                            node.value );
+	target = new FileLocation ( InstallDirectory,
+	                            base && base->value != "."
+	                                ? base->value
+	                                : "",
+	                            newname
+	                                ? newname->value
+	                                : node.value );
 }
