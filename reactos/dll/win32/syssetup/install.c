@@ -765,6 +765,19 @@ InstallReactOS(HINSTANCE hInstance)
         CreateDirectory(szBuffer, NULL);
     }
 
+    // Temporary hack for ROS 0.3.3 to get Firefox 2.0 to install
+    // Because of a permission problem, the Firefox installer cannot create the "chrome" subdirectory. Therefore it has to exist, before Firefox is installed
+    ZeroMemory(&szBuffer, sizeof(szBuffer));
+
+    if (SHGetSpecialFolderPath(0, szBuffer, CSIDL_PROGRAM_FILES, FALSE))
+    {
+        PathAddBackslash(szBuffer);
+        _tcscat(szBuffer, _T("Mozilla Firefox"));
+        CreateDirectory(szBuffer, NULL);
+        _tcscat(szBuffer, _T("\\chrome"));
+        CreateDirectory(szBuffer, NULL);
+    }
+
     if (!CommonInstall())
         return 0;
 
