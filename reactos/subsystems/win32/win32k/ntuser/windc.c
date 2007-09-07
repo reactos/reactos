@@ -39,7 +39,7 @@
 /* NOTE - I think we should store this per window station (including gdi objects) */
 
 static PDCE FirstDce = NULL;
-static HDC defaultDCstate = NULL;
+static PDC defaultDCstate = NULL;
 //static INT DCECount = 0;
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
@@ -126,12 +126,16 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
       ExFreePoolWithTag(pDce, TAG_PDCE);
       return NULL;     
     }
-  
+//
+// If NULL, first time through! Build the default window dc!  
+//
     if (NULL == defaultDCstate) // Ultra HAX! Dedicated to GvG!
       { // This is a cheesy way to do this. 
-        // But, due to the right way of creating gdi handles there is no choice.
-      defaultDCstate = IntGdiGetDCState(pDce->hDC);
-      DC_SetOwnership( defaultDCstate, NULL);
+        PDC dc = DC_LockDc ( pDce->hDC );
+        defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+        RtlZeroMemory(defaultDCstate, sizeof(DC));
+        IntGdiCopyToSaveState(dc, defaultDCstate);
+        DC_UnlockDc( dc );
     }
     
     pDce->hwndCurrent = (Window ? Window->hSelf : NULL);
@@ -144,8 +148,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
     KeLeaveCriticalRegion();
       
     if (Type == DCE_WINDOW_DC) //Window DCE have ownership.
-     {
-       DC_SetOwnership(pDce->hDC, PsGetCurrentProcess());
+     { // Process should already own it.
        pDce->pProcess = PsGetCurrentProcess();
      }
     else
@@ -248,13 +251,8 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
       /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
       IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
-      if( dce->pProcess ) // Attempt to fix Dc_Attr problem.
-        DC_SetOwnership( defaultDCstate, dce->pProcess);
-      else
-        DC_SetOwnership( defaultDCstate, PsGetCurrentProcess());
-
-      IntGdiSetDCState(dce->hDC, defaultDCstate);
-      DC_SetOwnership( defaultDCstate, NULL); // Return default dc state to inaccessible mode.
+      PDC dc = DC_LockDc ( dce->hDC );
+      IntGdiCopyFromSaveState(dc, defaultDCstate); // Was SetDCState.
 
       dce->DCXFlags &= ~DCX_DCEBUSY;
       if (dce->DCXFlags & DCX_DCEDIRTY)

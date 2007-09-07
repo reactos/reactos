@@ -59,37 +59,42 @@ typedef struct _WIN_DC_INFO
 
 typedef struct _DC
 {
-  HDC  hSelf;
-  HDC  hNext;
-  PDC_ATTR pDc_Attr;
-  INT  DC_Type;
-  INT  DC_Flags;
-  DHPDEV  PDev;
-  HSURF  FillPatternSurfaces[HS_DDI_MAX];
-  PGDIINFO  GDIInfo;
-  PDEVINFO  DevInfo;
-  HDEV   GDIDevice;
+  HGDIOBJ     hHmgr;
+  PVOID       pvEntry;
+  ULONG       lucExcLock;
+  ULONG       Tid;
+
+  DHPDEV      PDev;
+  INT         DC_Type;
+  INT         DC_Flags;
+  PDC_ATTR    pDc_Attr;
+  DC_ATTR     Dc_Attr;
+
+  HDC         hSelf;
+  HDC         hNext;
+  HSURF       FillPatternSurfaces[HS_DDI_MAX];
+  PGDIINFO    GDIInfo;
+  PDEVINFO    DevInfo;
+  HDEV        GDIDevice;
 
   DRIVER_FUNCTIONS  DriverFunctions;
   UNICODE_STRING    DriverName;
-  HANDLE  DeviceDriver;
+  HANDLE      DeviceDriver;
 
-  CLIPOBJ *CombinedClip;
+  CLIPOBJ     *CombinedClip;
 
-  XLATEOBJ *XlateBrush;
-  XLATEOBJ *XlatePen;
+  XLATEOBJ    *XlateBrush;
+  XLATEOBJ    *XlatePen;
 
-  INT  saveLevel;
-  BOOL IsIC;
+  INT         saveLevel;
+  BOOL        IsIC;
 
-  HPALETTE PalIndexed;
+  HPALETTE    PalIndexed;
 
-  WIN_DC_INFO  w;
-  DC_ATTR Dc_Attr;
+  WIN_DC_INFO w;
   
-  HANDLE hFile;  
+  HANDLE      hFile;  
   LPENHMETAHEADER emh;
-
 } DC, *PDC;
 
 typedef struct _GDIPOINTER /* should stay private to ENG */
@@ -151,6 +156,8 @@ BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);
 HDC  FASTCALL DC_GetNextDC (PDC pDC);
 VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
 VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
+VOID FASTCALL IntGdiCopyFromSaveState(PDC, PDC);
+VOID FASTCALL IntGdiCopyToSaveState(PDC, PDC);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
