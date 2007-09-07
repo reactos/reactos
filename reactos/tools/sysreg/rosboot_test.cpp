@@ -192,7 +192,11 @@ namespace Sysreg_
         TCHAR * options[] = {NULL,
                              _T("create"),
                              _T("-f"),
+#ifdef __LINUX__
                             _T("raw"),
+#else
+                            _T("vmdk"),
+#endif
                             NULL,
                             _T("100M"),
                             NULL
