@@ -389,7 +389,7 @@ MingwModuleHandler::OutputCopyCommand ( const FileLocation& source,
 	fprintf ( fMakefile,
 	          "\t${cp} %s %s 1>$(NUL)\n",
 	          strFile ( &source ).c_str (),
-	          strFile ( &destination ).c_str () );
+	          strFile ( PassThruCacheDirectory ( &destination ) ).c_str () );
 }
 
 string
@@ -3353,8 +3353,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	FileLocation reactosDff ( SourceDirectory,
 	                          "boot" + sSep + "bootdata" + sSep + "packages",
 	                          "reactos.dff" );
-	FileLocation reactosInf ( TemporaryDirectory,
-	                          "",
+	FileLocation reactosInf ( bootcdReactos.directory,
+	                          bootcdReactos.relative_path,
 	                          "reactos.inf" );
 	vSourceFiles.push_back ( reactosDff );
 
@@ -3371,13 +3371,13 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	// fill cdrom
 	GetCdDirectories ( vCdDirectories, bootcdDirectory );
 	GetCdFiles ( vCdFiles );
-	string cdDirectories = v2s ( vCdDirectories, 5 );
+	string cdDirectories = "";//v2s ( vCdDirectories, 5 );
 	string cdFiles = v2s ( vCdFiles, 5 );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s: all %s %s %s $(CABMAN_TARGET) $(CDMAKE_TARGET) | %s\n",
+	          "%s: all %s %s %s $(CABMAN_TARGET) $(CDMAKE_TARGET) %s\n",
 	          module.name.c_str (),
 	          strFile ( &isoboot ).c_str (),
 	          sourceFiles.c_str (),
