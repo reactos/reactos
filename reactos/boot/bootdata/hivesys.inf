@@ -653,6 +653,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NetLogon
+HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Description",0x00000000,"Supports pass-through authentication of account logon events for computers in a domain."
 HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
@@ -695,7 +696,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 
 ; RPC service
-HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Description",0x00000000,"Enables a computer to recognize and adapt to hardware changes with little or no user input"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Description",0x00000000,"Provides the endpoint mapper and other miscellaneous RPC services."
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Group",0x00000000," RPC Service"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
