@@ -1,7 +1,7 @@
 /*
  * PROJECT:     Multimedia Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/mmsys/Uk.rc
+ * FILE:        dll/cpl/mmsys/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Multimedia Control Panel Applet
  * PROGRAMMERS: Artem Reznikov
  */
@@ -10,90 +10,90 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Volume"
+CAPTION "Гучність"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
     LTEXT "",-1,40,10,194,36
-    GROUPBOX "Device volume", -1, 7,30,230,100
+    GROUPBOX "Гучність мікшера", -1, 7,30,230,100
     ICON IDI_CPLICON, IDI_CPLICON, 17,45,32,32
     CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 45, 140, 14
-    LTEXT "Low",-1,62,66,30,17
-    LTEXT "High",-1,195,66,30,17
-    CHECKBOX "&Mute", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    CHECKBOX "Place volume &icon in the taskbar", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "Ad&vanced...", -1, 150,105,75,15
-    GROUPBOX "Speaker settings", -1, 7,140,230,80
+    LTEXT "нижче",-1,62,66,30,17
+    LTEXT "вище",-1,195,66,30,17
+    CHECKBOX "&Вимкнути звук", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
+    CHECKBOX "Пока&зувати значок гучності на панелі завдань", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
+    PUSHBUTTON "&Додатково...", -1, 150,105,75,15
+    GROUPBOX "Настройка динаміків", -1, 7,140,230,80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Use the settings below to change individual speaker volume and other settings.",-1,70,155,150,36
-    PUSHBUTTON "&Speaker Volume...", -1, 70,195,75,15
-    PUSHBUTTON "A&dvanced...", -1, 150,195,75,15
+    LTEXT "За допомогою розташованих нижче кнопок можна виконати індивідуальну настройку гучності динаміків та інших параметрів.",-1,70,155,150,36
+    PUSHBUTTON "&Гучність динаміків...", -1, 70,195,75,15
+    PUSHBUTTON "Дод&атково...", -1, 150,195,75,15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sounds"
+CAPTION "Звуковий супровід подій"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A sound scheme is a set of sounds applied to events to in ReactOS and programs. You can select an existing scheme or save one you have modified.",-1,8,7,230,40
-    LTEXT "Sound s&cheme:",-1,8,42,150,17
+    LTEXT "Звукова схема визначає звуки, які супроводжують події в системі ReactOS і у програмах. Можна вибрати одну з наявних схем або створити нову.",-1,8,7,230,40
+    LTEXT "Звукова с&хема:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Sav&e As...", -1, 134,70,50,15
-    PUSHBUTTON "&Delete", -1, 188,70,50,15
-    LTEXT "To change sounds, click a program event in the following list and then select a sound to apply. You can save the changes as a new sound scheme.",-1,8,90,230,40
-    LTEXT "&Pogram events:",-1,8,118,150,17
+    PUSHBUTTON "Зберегти &як...", -1, 134,70,50,15
+    PUSHBUTTON "В&идалити", -1, 188,70,50,15
+    LTEXT "Щоб змінити звуковий супровід, клацніть подію у списку та виберіть потрібний звук. Зміни можна зберегти як нову звукову схему.",-1,8,90,230,40
+    LTEXT "&Програмні події:",-1,8,118,150,17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Sounds:",-1,8,194,80,17
+    LTEXT "&Звуки:",-1,8,194,80,17
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "", -1, 168,205,15,15
-    PUSHBUTTON "&Brouse...", -1, 188,205,50,15
+    PUSHBUTTON "О&гляд...", -1, 188,205,50,15
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Audio"
+CAPTION "Аудіо"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sound playback", -1, 7,7,230,60
+    GROUPBOX "Відтворення звуку", -1, 7,7,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "&Default device:",-1,50,20,80,17
+    LTEXT "&Пристрій за замовчуванням:",-1,50,20,80,17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Volume...", -1, 85,47,70,15
-    PUSHBUTTON "Adva&nced...", -1, 160,47,70,15
-    GROUPBOX "Sound recording", -1, 7,75,230,60
+    PUSHBUTTON "&Гучність...", -1, 85,47,70,15
+    PUSHBUTTON "&Настройка...", -1, 160,47,70,15
+    GROUPBOX "Запис звуку", -1, 7,75,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "D&efault device:",-1,50,88,80,17
+    LTEXT "Пр&истрій за замовчуванням:",-1,50,88,80,17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "V&olume...", -1, 85,115,70,15
-    PUSHBUTTON "Advan&ced...", -1, 160,115,70,15
-    GROUPBOX "MIDI music playback", -1, 7,145,230,60
+    PUSHBUTTON "Гу&чність...", -1, 85,115,70,15
+    PUSHBUTTON "Н&астройка...", -1, 160,115,70,15
+    GROUPBOX "Відтворення MIDI", -1, 7,145,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,158,32,32
-    LTEXT "De&fault device:",-1,50,158,80,17
+    LTEXT "При&стрій за замовчуванням:",-1,50,158,80,17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Volu&me...", -1, 85,185,70,15
-    PUSHBUTTON "A&bout...", -1, 160,185,70,15
-    CHECKBOX "&Use only default devices", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+    PUSHBUTTON "Гучніст&ь...", -1, 85,185,70,15
+    PUSHBUTTON "&Відомості...", -1, 160,185,70,15
+    CHECKBOX "&Лише пристрої за замовчуванням", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Voice"
+CAPTION "Мовлення"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These settings control volume and advanced options for the voice playback or recording device you selected.",-1,8,7,230,40
-    GROUPBOX "Voice playback", -1, 7,37,230,60
+    LTEXT "Ці параметри керують гучністю та додатковою настройкою вибраних пристроїв відтворення або запису мовлення.",-1,8,7,230,40
+    GROUPBOX "Відтворення мовлення", -1, 7,37,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "&Default device:",-1,50,50,80,17
+    LTEXT "Пристрій &за замовчуванням:",-1,50,50,80,17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Volume...", -1, 85,77,70,15
-    PUSHBUTTON "Adva&nced...", -1, 160,77,70,15
-    GROUPBOX "Voice recording", -1, 7,105,230,60
+    PUSHBUTTON "&Гучність...", -1, 85,77,70,15
+    PUSHBUTTON "&Додатково...", -1, 160,77,70,15
+    GROUPBOX "Запис мовлення", -1, 7,105,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "D&efault device:",-1,50,118,80,17
+    LTEXT "Пр&истрій за замовчуванням:",-1,50,118,80,17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "V&olume...", -1, 85,145,70,15
-    PUSHBUTTON "Advan&ced...", -1, 160,145,70,15
-    PUSHBUTTON "&Test hardware...", -1, 160,175,70,15
+    PUSHBUTTON "Гу&чність...", -1, 85,145,70,15
+    PUSHBUTTON "Дод&атково...", -1, 160,145,70,15
+    PUSHBUTTON "&Перевірка...", -1, 160,175,70,15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228

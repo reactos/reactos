@@ -267,15 +267,15 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Система"
     IDS_CPLSYSTEMDESCRIPTION "Перегляд відомостей про систему комп'ютера та зміна параметрів устаткування, швидкодії, автоматичних оновлень."
-    IDS_MEGABYTE "MB of RAM"
-    IDS_GIGABYTE "GB of RAM"
-    IDS_TERABYTE "TB of RAM"
-    IDS_PETABYTE "PB of RAM"
+    IDS_MEGABYTE "Мб ОЗП"
+    IDS_GIGABYTE "Гб ОЗП"
+    IDS_TERABYTE "Тб ОЗП"
+    IDS_PETABYTE "Пб ОЗП"
     IDS_VARIABLE "Змінна"
     IDS_VALUE    "Значення"
-    IDS_NO_DUMP "(None)"
-    IDS_MINI_DUMP "Minidump(64KB)"
-    IDS_KERNEL_DUMP "Kernel dump"
-    IDS_FULL_DUMP "Complete dump"
+    IDS_NO_DUMP "(немає)"
+    IDS_MINI_DUMP "Мінідамп(64Кб)"
+    IDS_KERNEL_DUMP "Дамп ядра"
+    IDS_FULL_DUMP "Повний дамп"
 
 END
