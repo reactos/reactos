@@ -1,0 +1,28 @@
+#include "resource.h"
+#include <windows.h>
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Software Control Panel\0"
+#define REACTOS_STR_INTERNAL_NAME	"input\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"input.dll\0"
+#ifdef _MSC_VER
+#include <../../../reactos/version.rc>
+#else
+#include <reactos/version.rc>
+#endif
+
+IDI_KEYBOARD_ICO   ICON "resources/keyboard.ico"
+IDI_MARKER_ICO     ICON "resources/marker.ico"
+IDI_MIC_ICO        ICON "resources/microphone.ico"
+IDI_KEY_SHORT_ICO  ICON "resources/keyboard-shortcuts.ico"
+IDI_INFO_ICO       ICON "resources/information.ico"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
+
+#include "lang/en-US.rc"

@@ -10,6 +10,9 @@
 <directory name="hdwwiz">
 	<xi:include href="hdwwiz/hdwwiz.rbuild" />
 </directory>
+<directory name="input">
+	<xi:include href="input/input.rbuild" />
+</directory>
 <directory name="intl">
 	<xi:include href="intl/intl.rbuild" />
 </directory>
