@@ -21,18 +21,16 @@
 
 #include "config.h"
 
-#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
 
+#include "wrc.h"
 #include "newstruc.h"
 #include "utils.h"
 #include "parser.h"
-
-#include "wingdi.h"	/* for BITMAPINFOHEADER */
 
 #include <pshpack2.h>
 typedef struct

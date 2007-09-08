@@ -56,7 +56,6 @@ WRC_OBJECTS = \
 
 WRC_HOST_CFLAGS = -I$(WRC_BASE) $(TOOLS_CFLAGS) \
                   -D__USE_W32API -DWINE_UNICODE_API= \
-                  -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
                   -I$(UNICODE_BASE) -I$(WPP_BASE) \
                   -Iinclude/reactos/wine -Iinclude/reactos -Iinclude -Iinclude/psdk \
                   -I$(INTERMEDIATE_)include

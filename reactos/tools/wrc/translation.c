@@ -16,11 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "dumpres.h"
+#include "wrc.h"
 
 #define MASTER_LANGUAGE LANG_ENGLISH
 #define NB_LANG 0x94

@@ -98,7 +98,6 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 
 /*#define LEX_DEBUG*/
 
-#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,6 +105,7 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 #include <assert.h>
 
 #include "wine/unicode.h"
+#include "wrc.h"
 #include "utils.h"
 #include "parser.h"
 #include "newstruc.h"

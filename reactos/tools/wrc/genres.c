@@ -27,7 +27,6 @@
 
 #include "config.h"
 
-#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,12 +34,9 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include "wrc.h"
 #include "genres.h"
 #include "utils.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
 #include "wine/unicode.h"
 
 /* Fix 64-bit host, re: put_dword */

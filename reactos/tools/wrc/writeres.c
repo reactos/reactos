@@ -20,13 +20,13 @@
 
 #include "config.h"
 
-#include "wrc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
 #include "wine/unicode.h"
+#include "wrc.h"
 #include "genres.h"
 #include "newstruc.h"
 #include "utils.h"

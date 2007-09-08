@@ -22,17 +22,7 @@
 #define __WRC_WRCTYPES_H
 
 #include <stdarg.h>
-#include <typedefs64.h>
-#include "windef.h"
-#include "winbase.h"
-
-#ifndef MAKELANGID
-#include "winnls.h"
-#endif
-
-#ifndef VS_FFI_SIGNATURE
-#include "winver.h"
-#endif
+#include "wrcrostypes.h"
 
 /* Memory/load flags */
 #define WRC_MO_MOVEABLE		0x0010
