@@ -104,9 +104,9 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       MessageQueue = Window->MessageQueue;
    }
 
-#if 1
+#if 0
 
-   /* Win NT/2k/XP */
+   /* Windows NT/2k/XP behaviour */
    if (Elapse > 0x7fffffff)
    {
       DPRINT("Adjusting uElapse\n");
@@ -115,7 +115,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 
 #else
 
-   /* Win Server 2003 */
+   /* Windows XP SP2 and Windows Server 2003 behaviour */
    if (Elapse > 0x7fffffff)
    {
       DPRINT("Adjusting uElapse\n");
@@ -124,7 +124,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 
 #endif
 
-   /* Win 2k/XP */
+   /* Windows 2k/XP and Windows Server 2003 SP1 behaviour */
    if (Elapse < 10)
    {
       DPRINT("Adjusting uElapse\n");
