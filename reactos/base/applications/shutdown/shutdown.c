@@ -55,11 +55,25 @@ static struct CommandLineOptions ParseArguments(int argc, TCHAR *argv[])
 		if (argv[i][0] == '-' || argv[i][0] == '/') 
 		{
 			switch(argv[i][1]) {
-				case '?': PrintUsage(); exit(0);
-				case 'f': opts.force = TRUE; break;
-				case 'l': opts.logoff = TRUE; break;
-				case 'r': opts.restart = TRUE; break;
-				case 's': opts.shutdown = TRUE; break;
+				case '?':
+					PrintUsage();
+					exit(0);
+				case 'f':
+				case 'F':
+					opts.force = TRUE;
+					break;
+				case 'l':
+				case 'L':
+					opts.logoff = TRUE;
+					break;
+				case 'r':
+				case 'R':
+					opts.restart = TRUE;
+					break;
+				case 's':
+				case 'S':
+					opts.shutdown = TRUE;
+					break;
 				default:
 					// Unknown arguments will exit program.
 					PrintUsage();
