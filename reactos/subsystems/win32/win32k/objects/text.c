@@ -3483,10 +3483,10 @@ NtGdiGetTextExtentExW(
   {
     Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
                                      NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
+    TEXTOBJ_UnlockText(TextObj);
   }
   else
     Result = FALSE;
-  TEXTOBJ_UnlockText(TextObj);
   DC_UnlockDc(dc);
 
   ExFreePool(String);
