@@ -173,19 +173,28 @@ ReplaceSubStr(LPCTSTR szSourceStr,
     return szDestStr;
 }
 
+
+static VOID
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LCID lcid)
+{
+  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
+  psp->dwSize = sizeof(PROPSHEETPAGE);
+  psp->dwFlags = PSP_DEFAULT;
+  psp->hInstance = hApplet;
+  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+  psp->pfnDlgProc = DlgProc;
+  psp->lParam = (LPARAM)lcid;
+}
+
+
 /* Create applets */
 LONG
 APIENTRY
-SetupApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
+SetupApplet(LCID lcid)
 {
-    PROPSHEETPAGE PsPage[NUM_SHEETS];
+    PROPSHEETPAGE PsPage[NUM_SHEETS + 1];
     PROPSHEETHEADER psh;
     TCHAR Caption[MAX_STR_SIZE];
-
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(uMsg);
-    UNREFERENCED_PARAMETER(hwnd);
 
     LoadString(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
 
@@ -196,14 +205,20 @@ SetupApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
     psh.pszCaption = Caption;
-    psh.nPages = sizeof(PsPage) / sizeof(PROPSHEETPAGE);
+    psh.nPages = (sizeof(PsPage) / sizeof(PROPSHEETPAGE)) - 1;
     psh.nStartPage = 0;
     psh.ppsp = PsPage;
 
-    InitPropSheetPage(&PsPage[0], IDD_NUMBERSPAGE, NumbersPageProc);
-    InitPropSheetPage(&PsPage[1], IDD_CURRENCYPAGE, CurrencyPageProc);
-    InitPropSheetPage(&PsPage[2], IDD_TIMEPAGE, TimePageProc);
-    InitPropSheetPage(&PsPage[3], IDD_DATEPAGE, DatePageProc);
+    InitPropSheetPage(&PsPage[0], IDD_NUMBERSPAGE, NumbersPageProc, lcid);
+    InitPropSheetPage(&PsPage[1], IDD_CURRENCYPAGE, CurrencyPageProc, lcid);
+    InitPropSheetPage(&PsPage[2], IDD_TIMEPAGE, TimePageProc, lcid);
+    InitPropSheetPage(&PsPage[3], IDD_DATEPAGE, DatePageProc, lcid);
+
+    if (IsSortPageNeeded(lcid))
+    {
+        psh.nPages++;
+        InitPropSheetPage(&PsPage[4], IDD_SORTPAGE, SortPageProc, lcid);
+    }
 
     return (LONG)(PropertySheet(&psh) != -1);
 }

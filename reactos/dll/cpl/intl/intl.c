@@ -52,7 +52,7 @@ APPLET Applets[NUM_APPLETS] =
 };
 
 
-VOID
+static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 {
   ZeroMemory(psp, sizeof(PROPSHEETPAGE));

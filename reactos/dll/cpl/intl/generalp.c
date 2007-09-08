@@ -367,7 +367,26 @@ GeneralPageProc(HWND hwndDlg,
                     break;
 
                 case IDC_SETUP_BUTTON:
-                    SetupApplet(hwndDlg, uMsg, wParam, lParam);
+                    {
+                        LCID NewLcid;
+                        INT iCurSel;
+
+                        iCurSel = SendMessage(hList,
+                                              CB_GETCURSEL,
+                                              0,
+                                              0);
+                        if (iCurSel == CB_ERR)
+                            break;
+
+                        NewLcid = SendMessage(hList,
+                                              CB_GETITEMDATA,
+                                              iCurSel,
+                                              0);
+                        if (NewLcid == (LCID)CB_ERR)
+                            break;
+
+                         SetupApplet(NewLcid);
+                    }
                     break;
             }
             break;

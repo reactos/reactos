@@ -173,6 +173,19 @@ BEGIN
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE 
 END
 
+
+IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Sortierung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Sortierung", -1, 7, 7, 230, 74
+    LTEXT "Sorting methods define the sorting order of characters, words, files and folders.", -1, 14, 17, 220, 25
+    LTEXT "Select a sorting method for your language:", -1, 14, 37, 220, 22
+    COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+END
+
+
 STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Regionale Einstellungen bearbeiten"

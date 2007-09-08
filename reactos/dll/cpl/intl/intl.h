@@ -19,8 +19,6 @@ extern DWORD IsUnattendedSetupEnabled;
 extern DWORD UnattendLCID;
 
 /* intl.c */
-VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 
 /* languages.c */
 INT_PTR CALLBACK
@@ -78,8 +76,15 @@ TimePageProc(HWND hwndDlg,
 	     WPARAM wParam,
 	     LPARAM lParam);
 
+/* sort.c */
+BOOL
+IsSortPageNeeded(LCID lcid);
 
-void SetNewLocale(LCID lcid);
+INT_PTR CALLBACK
+SortPageProc(HWND hwndDlg,
+             UINT uMsg,
+             WPARAM wParam,
+             LPARAM lParam);
 
 /* misc.c */
 LPTSTR
@@ -90,7 +95,7 @@ ReplaceSubStr(LPCTSTR szSourceStr, LPCTSTR szStrToReplace, LPCTSTR szTempl);
 
 LONG
 APIENTRY
-SetupApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
+SetupApplet(LCID lcid);
 
 #endif /* __CPL_INTL_H */
 

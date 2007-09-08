@@ -23,5 +23,6 @@
 	<file>misc.c</file>
 	<file>languages.c</file>
 	<file>advanced.c</file>
+	<file>sort.c</file>
 	<file>intl.rc</file>
 </module>
