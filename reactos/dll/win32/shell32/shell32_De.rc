@@ -169,10 +169,10 @@ STRINGTABLE DISCARDABLE
 	IDS_OVERWRITEFILE_CAPTION "Bestätigung: Datei überschreiben"
 
         /* message box strings */
-        IDS_RESTART_TITLE       "Neustarten"
-        IDS_RESTART_PROMPT      "Möchten Sie, dass ein simulierter Windows Neustart durchgeführt wird ?"
-        IDS_SHUTDOWN_TITLE      "Anhalten"
-        IDS_SHUTDOWN_PROMPT     "Möchten Sie die aktuelle ReactOS Sitzung beenden ?"
+        IDS_RESTART_TITLE       "Neu starten"
+        IDS_RESTART_PROMPT      "Möchten Sie das System neu starten?"
+        IDS_SHUTDOWN_TITLE      "Herunterfahren"
+        IDS_SHUTDOWN_PROMPT     "Möchten Sie das System herunterfahren?"
 
         /* shell folder path default values */
 	IDS_PROGRAMS		"Startmenü\\Programme"

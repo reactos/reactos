@@ -336,7 +336,7 @@ BEGIN
     IDS_START               "Start"
     IDS_LOGOFF              "Abmelden..."
     IDS_SHUTDOWN            "Herunterfahren..."
-    IDS_RESTART             "Neustarten..."
+    IDS_RESTART             "Neu starten..."
     IDS_LAUNCH              "Ausführen..."
     IDS_START_HELP          "Hilfe"
     IDS_SEARCH_FILES        "Suche Dateien..."
