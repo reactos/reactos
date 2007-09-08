@@ -2608,7 +2608,6 @@ DC_UpdateXforms(PDC  dc)
 
   /* Create inverse of world-to-viewport transformation */
   dc->w.vport2WorldValid = DC_InvertXform(&dc->w.xformWorld2Vport, &dc->w.xformVport2World);
-  DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
 }
 
 BOOL FASTCALL

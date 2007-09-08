@@ -411,7 +411,6 @@ NtGdiTransformPoints( HDC hDC,
 //
 // If we are getting called that means User XForms is a mess!
 //
-   DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
    DC_UnlockDc(dc);
    ExFreePool(Points);
    return TRUE;

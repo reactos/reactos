@@ -1626,7 +1626,6 @@ end:
         IntDPtoLP(dc, &pt, 1);
         IntGdiMoveToEx(dc, pt.x, pt.y, NULL);
     }
-    DCU_UpdateUserXForms(dc, WORLD_TO_PAGE_IDENTITY|DEVICE_TO_WORLD_INVALID|WORLD_XFORM_CHANGED );
     DPRINT("Leave %s, ret=%d\n", __FUNCTION__, ret);
     return ret;
 }
