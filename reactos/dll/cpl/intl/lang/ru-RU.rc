@@ -178,11 +178,12 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_CUSTOMIZE_TITLE "Ќастройка региональных параметров"
+    IDS_CUSTOMIZE_TITLE "Ќастройка региональных параметров"
+    IDS_SPAIN "Spanish (Spain)"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME "язык и региональные стандарты"
-  IDS_CPLDESCRIPTION "¬ыбор €зыка, формата чисел, денежных единиц, времени и даты."
+    IDS_CPLNAME "язык и региональные стандарты"
+    IDS_CPLDESCRIPTION "¬ыбор €зыка, формата чисел, денежных единиц, времени и даты."
 END

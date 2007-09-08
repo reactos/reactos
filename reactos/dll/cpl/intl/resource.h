@@ -74,7 +74,7 @@
 #define IDS_CPLNAME		    1000
 #define IDS_CPLDESCRIPTION	1001
 #define IDS_CUSTOMIZE_TITLE 1002
-
+#define IDS_SPAIN 1003
 
 #endif /* __CPL_RESOURCE_H */
 

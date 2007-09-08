@@ -40,6 +40,7 @@
 
 HWND hList;
 HWND hLocaleList, hGeoList;
+BOOL bSpain = FALSE;
 
 static BOOL CALLBACK
 LocalesEnumProc(LPTSTR lpLocale)
@@ -47,12 +48,30 @@ LocalesEnumProc(LPTSTR lpLocale)
     LCID lcid;
     TCHAR lang[255];
     INT index;
+    BOOL bNoShow = FALSE;
 
-    //swscanf(lpLocale, L"%lx", &lcid); // maybe use wcstoul?
     lcid = _tcstoul(lpLocale, NULL, 16);
 
-    GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang));
+    if (lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) ||
+        lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
+    {
+        if (bSpain == FALSE)
+        {
+            LoadString(hApplet, IDS_SPAIN, lang, 255);
+            bSpain = TRUE;
+        }
+        else
+        {
+            bNoShow = TRUE;
+        }
+    }
+    else
+    {
+        GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang));
+    }
 
+    if (bNoShow == FALSE)
+    {
     index = SendMessage(hList,
                         CB_ADDSTRING,
                         0,
@@ -62,6 +81,7 @@ LocalesEnumProc(LPTSTR lpLocale)
                 CB_SETITEMDATA,
                 index,
                 (LPARAM)lcid);
+    }
 
     return TRUE;
 }
@@ -110,6 +130,7 @@ CreateLanguagesList(HWND hwnd)
     TCHAR langSel[255];
 
     hList = hwnd;
+    bSpain = FALSE;
     EnumSystemLocales(LocalesEnumProc, LCID_SUPPORTED);
 
     /* Select current locale */
@@ -322,6 +343,25 @@ GeneralPageProc(HWND hwndDlg,
                 case IDC_LANGUAGELIST:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
+                        LCID NewLcid;
+                        INT iCurSel;
+
+                        iCurSel = SendMessage(hList,
+                                              CB_GETCURSEL,
+                                              0,
+                                              0);
+                        if (iCurSel == CB_ERR)
+                            break;
+
+                        NewLcid = SendMessage(hList,
+                                              CB_GETITEMDATA,
+                                              iCurSel,
+                                              0);
+                        if (NewLcid == (LCID)CB_ERR)
+                            break;
+
+                        UpdateLocaleSample(hwndDlg, NewLcid);
+
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;

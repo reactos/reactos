@@ -178,11 +178,12 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_CUSTOMIZE_TITLE "Customize Regional Options"
+    IDS_CUSTOMIZE_TITLE "Customize Regional Options"
+    IDS_SPAIN "Spanish (Spain)"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME "Regional Options"
-  IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
+    IDS_CPLNAME "Regional Options"
+    IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
 END

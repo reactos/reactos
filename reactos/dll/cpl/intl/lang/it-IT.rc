@@ -179,11 +179,12 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_CUSTOMIZE_TITLE "Opzioni internazionali e della lingua"
+    IDS_CUSTOMIZE_TITLE "Opzioni internazionali e della lingua"
+    IDS_SPAIN "Spanish (Spain)"
 END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME "Opzioni internazionali e della lingua"
-  IDS_CPLDESCRIPTION "Personalizza le impostazioni per la visualizzazione delle lingue, numeri, ora e data."
+    IDS_CPLNAME "Opzioni internazionali e della lingua"
+    IDS_CPLDESCRIPTION "Personalizza le impostazioni per la visualizzazione delle lingue, numeri, ora e data."
 END
