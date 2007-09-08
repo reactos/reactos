@@ -436,8 +436,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "\t\t\t\tDataExecutionPrevention=\"0\"\r\n" );
 			}
 
+#if 0
 			if (module.importLibrary != NULL)
 				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", module.importLibrary->definition.c_str());
+#endif
 			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
 			bool use_msvcrt_lib = false;
 			for ( i = 0; i < libraries.size(); i++ )

@@ -719,7 +719,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				e.location,
 				"Only one <importlibrary> is valid per module" );
 		}
-		importLibrary = new ImportLibrary ( e, *this );
+		importLibrary = new ImportLibrary ( project, e, *this );
 		subs_invalid = true;
 	}
 	else if ( e.name == "if" )
@@ -1577,35 +1577,43 @@ Metadata::Metadata ( const XMLElement& _node,
 }
 
 
-ImportLibrary::ImportLibrary ( const XMLElement& _node,
-                               const Module& _module )
-	: node (_node),
-	  module (_module)
+ImportLibrary::ImportLibrary ( const Project& project,
+                               const XMLElement& node,
+                               const Module& module )
+	: XmlNode ( project, node ),
+	  module (module)
 {
-	const XMLAttribute* att = _node.GetAttribute ( "basename", false );
-	if (att != NULL)
-		basename = att->value;
-	else
-		basename = module.name;
+	const XMLAttribute* dllname = node.GetAttribute ( "dllname", false );
+	const XMLAttribute* definition = node.GetAttribute ( "definition", true );
+	assert ( definition );
 
-	att = _node.GetAttribute ( "dllname", false );
-	if (att != NULL)
-		dllname = att->value;
+	if ( dllname )
+		this->dllname = dllname->value;
+	else if ( module.type == StaticLibrary )
+		throw XMLInvalidBuildFileException (
+		    node.location,
+		    "<importlibrary> dllname attribute required." );
+
+	DirectoryLocation directory = SourceDirectory;
+	size_t index = definition->value.rfind ( ".spec.def" );
+	if ( index != string::npos )
+		directory = IntermediateDirectory;
+
+	index = definition->value.find_last_of ( "/\\" );
+	if ( index == string::npos )
+	{
+		source = new FileLocation ( directory,
+		                            module.GetBasePath (),
+		                            definition->value );
+	}
 	else
 	{
-		if ( _module.type == StaticLibrary )
-		{
-			throw XMLInvalidBuildFileException (
-			    node.location,
-			    "<importlibrary> dllname attribute required." );
-		}
-
-		dllname = "";
+		string dir = definition->value.substr ( 0, index );
+		string name = definition->value.substr ( index + 1);
+		source = new FileLocation ( directory,
+		                            NormalizeFilename ( module.GetBasePath () + sSep + dir ),
+		                            name );
 	}
-
-	att = _node.GetAttribute ( "definition", true );
-	assert (att);
-	definition = FixSeparator(att->value);
 }
 
 

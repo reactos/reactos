@@ -653,10 +653,12 @@ CBBackend::_generate_cbproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t\t<ExtraCommands>\r\n" );
 
+#if 0
 		if ( module.type == StaticLibrary && module.importLibrary )
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib $exe_output; %s -U\" />\r\n", module.importLibrary->dllname.c_str (), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
 		else if ( module.importLibrary != NULL )
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"dlltool --dllname %s --def %s --output-lib &quot;$(TARGET_OBJECT_DIR)lib$(TARGET_OUTPUT_BASENAME).a&quot; %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.mangledSymbols ? "" : "--kill-at" );
+#endif
 
 
 		for ( i = 0; i < resource_files.size(); i++ )
@@ -671,6 +673,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 #endif
 		}
 
+#if 0
 		if ( dll )
 		{
 			if (IsWineModule( module ))
@@ -684,6 +687,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 #endif
 			fprintf ( OUT, "\t\t\t\t\t<Mode after=\"always\" />\r\n" );
 		}
+#endif
 
 		fprintf ( OUT, "\t\t\t\t</ExtraCommands>\r\n" );
 
@@ -894,6 +898,6 @@ CBBackend::IsWineModule ( const Module& module ) const
 	if ( module.importLibrary == NULL)
 		return false;
 
-	size_t index = module.importLibrary->definition.rfind ( ".spec.def" );
+	size_t index = module.importLibrary->source->name.rfind ( ".spec.def" );
 	return ( index != string::npos );
 }

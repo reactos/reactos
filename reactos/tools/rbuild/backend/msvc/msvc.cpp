@@ -374,6 +374,7 @@ MSVCBackend::_get_def_files ( const Module& module, vector<string>& out) const
 {
 	if (module.HasImportLibrary ())
 	{
+#if 0
 		string modulename = module.GetBasePath ();
 		string file = module.importLibrary->definition;
 		size_t pos = file.find (".def");
@@ -383,6 +384,7 @@ MSVCBackend::_get_def_files ( const Module& module, vector<string>& out) const
 		}
 		modulename += DEF_SSEP + file;
 		out.push_back (modulename);
+#endif
 	}
 }
 

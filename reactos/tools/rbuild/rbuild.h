@@ -542,19 +542,16 @@ public:
 	void ProcessXML();
 };
 
-class ImportLibrary
+class ImportLibrary : public XmlNode
 {
 public:
-	const XMLElement& node;
 	const Module& module;
-	std::string basename;
-	std::string definition;
 	std::string dllname;
+	FileLocation *source;
 
-	ImportLibrary ( const XMLElement& _node,
+	ImportLibrary ( const Project& project,
+	                const XMLElement& node,
 	                const Module& module );
-
-	void ProcessXML ();
 };
 
 

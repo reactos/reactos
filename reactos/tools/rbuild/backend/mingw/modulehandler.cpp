@@ -2244,7 +2244,7 @@ MingwModuleHandler::IsWineModule () const
 	if ( module.importLibrary == NULL)
 		return false;
 
-	size_t index = module.importLibrary->definition.rfind ( ".spec.def" );
+	size_t index = module.importLibrary->source->name.rfind ( ".spec.def" );
 	return ( index != string::npos );
 }
 
@@ -2259,19 +2259,9 @@ MingwModuleHandler::GetDefinitionFilename () const
 		else
 			directory = SourceDirectory;
 
-		size_t pos = module.importLibrary->definition.find_last_of ( "/\\" );
-		if ( pos == string::npos )
-		{
-			return new FileLocation ( directory,
-			                          module.GetBasePath (),
-			                          module.importLibrary->definition );
-		}
-
-		string dir = module.importLibrary->definition.substr ( 0, pos );
-		string name = module.importLibrary->definition.substr ( pos + 1);
-		return new FileLocation ( directory,
-		                          NormalizeFilename ( module.GetBasePath () + sSep + dir ),
-		                          name );
+		return new FileLocation ( directory, 
+		                          module.importLibrary->source->relative_path,
+		                          module.importLibrary->source->name );
 	}
 	else
 		return new FileLocation ( SourceDirectory, "tools" + sSep + "rbuild", "empty.def" );
