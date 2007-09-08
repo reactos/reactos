@@ -14,6 +14,7 @@
   <property name="BASEADDRESS_USRMGR" value="0x5c900000" />
   <property name="BASEADDRESS_COMMCTRL" value="0x5d090000" />
   <property name="BASEADDRESS_DPLAYX" value="0x5e080000" />
+  <property name="BASEADDRESS_INPUT" value ="0x5e400000" />
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
   <property name="BASEADDRESS_NETID" value="0x5f660000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
