@@ -3,9 +3,6 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
-	<if property="NTLPC" value="1">
-		<define name="NTLPC" />
-	</if>
 	<library>nt</library>
 	<library>smlib</library>
 	<library>ntdll</library>

@@ -80,11 +80,6 @@
 <property name="NSWPAT" value="0" />
 
 <!--
-  Whether to compile with NT-compatible LPC Semantics. This should always be 1.
--->
-<property name="NTLPC" value="1" />
-
-<!--
   Whether to compile with the KD protocol. This will disable support for KDBG
   as well as rossym and symbol lookups, and allow WinDBG to connect to ReactOS.
   This is currently not fully working, and requires kdcom from Windows 2003 or
