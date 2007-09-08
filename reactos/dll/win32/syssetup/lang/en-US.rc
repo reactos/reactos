@@ -248,7 +248,7 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "CharMap.lnk"
+	IDS_SHORT_CHARMAP    "Character Map.lnk"
 END
 
 STRINGTABLE

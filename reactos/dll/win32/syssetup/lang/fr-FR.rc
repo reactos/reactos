@@ -248,7 +248,7 @@ BEGIN
     IDS_SHORT_SNAP       "Capture d'écran.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "CharMap.lnk"
+	IDS_SHORT_CHARMAP    "Table des Caractères.lnk"
 END
 
 STRINGTABLE
