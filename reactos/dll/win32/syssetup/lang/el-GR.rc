@@ -217,6 +217,12 @@ END
 
 STRINGTABLE
 BEGIN
+	IDS_SYS_TOOLS        "System Tools"
+	IDS_CMT_CHARMAP      "CharMap"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP		    "Εγκατάσταση του ReactOS"
     IDS_UNKNOWN_ERROR           "’γνωστο σφάλμα"
     IDS_REGISTERING_COMPONENTS  "Καταχώρηση στοιχείων στο μητρώο..."
@@ -242,6 +248,7 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
+	IDS_SHORT_CHARMAP    "CharMap.lnk"
 END
 
 STRINGTABLE

@@ -237,6 +237,12 @@ END
 
 STRINGTABLE
 BEGIN
+	IDS_SYS_TOOLS        "System Tools"
+	IDS_CMT_CHARMAP      "CharMap"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP		    "ReactOS Setup"
     IDS_UNKNOWN_ERROR           "Unknown error"
     IDS_REGISTERING_COMPONENTS  "Registering components..."
@@ -262,6 +268,7 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
+	IDS_SHORT_CHARMAP    "CharMap.lnk"
 END
 
 STRINGTABLE

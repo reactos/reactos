@@ -198,6 +198,12 @@ END
 
 STRINGTABLE
 BEGIN
+	IDS_SYS_TOOLS        "Служебные"
+	IDS_CMT_CHARMAP      "Таблица символов"
+END
+
+STRINGTABLE
+BEGIN
     IDS_REACTOS_SETUP		"Установка ReactOS"
     IDS_UNKNOWN_ERROR           "Неизвестная ошибка"
     IDS_REGISTERING_COMPONENTS  "Регистрация компонентов..."
@@ -223,6 +229,7 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Пасьянс.lnk"
     IDS_SHORT_WINEMINE   "Сапер.lnk"
+	IDS_SHORT_CHARMAP    "Таблица символов.lnk"
 END
 
 STRINGTABLE
