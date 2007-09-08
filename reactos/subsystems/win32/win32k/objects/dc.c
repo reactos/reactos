@@ -1448,7 +1448,8 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs)
   IntGdiExtSelectClipRgn(dc, dcs->w.hClipRgn, RGN_COPY);
   DC_UnlockDc ( dc );
 #endif
-
+  if(!hDC) return; // Not a MemoryDC or SaveLevel DC, return.
+  
   NtGdiSelectObject( hDC, dcs->w.hBitmap );
   NtGdiSelectObject( hDC, dcs->Dc_Attr.hbrush );
   NtGdiSelectObject( hDC, dcs->Dc_Attr.hlfntNew );
