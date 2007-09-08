@@ -1,4 +1,4 @@
-<module name="input" type="win32dll" extension=".dll" baseaddress="${BASEADDRESS_APPWIZ}"  installbase="system32" installname="input.dll">
+<module name="input" type="win32dll" extension=".dll" baseaddress="${BASEADDRESS_INPUT}"  installbase="system32" installname="input.dll">
 	<importlibrary definition="input.def" />
 	<include base="input">.</include>
 	<define name="UNICODE" />
