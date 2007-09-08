@@ -22,10 +22,25 @@
 #define __WINE_UNICODE_H
 
 #include <stdarg.h>
+#include <typedefs_host.h>
 
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
+// Definitions copied from <winnls.h>
+// We only want to include host headers, so we define them manually
+#define C1_UPPER 1
+#define C1_LOWER 2
+#define C1_DIGIT 4
+#define C1_SPACE 8
+#define C1_PUNCT 16
+#define C1_CNTRL 32
+#define C1_BLANK 64
+#define C1_XDIGIT 128
+#define C1_ALPHA 256
+#define MB_COMPOSITE 2
+#define MB_ERR_INVALID_CHARS 8
+#define WC_COMPOSITECHECK 512
+#define WC_DISCARDNS 16
+#define WC_DEFAULTCHAR 64
+#define WC_NO_BEST_FIT_CHARS 1024
 
 #ifndef WINE_UNICODE_API
 #define WINE_UNICODE_API DECLSPEC_IMPORT

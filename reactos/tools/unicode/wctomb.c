@@ -18,8 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/unicode.h"
 #include <string.h>
+
+#include "wine/unicode.h"
 
 /* search for a character in the unicode_compose_table; helper for compose() */
 static inline int binary_search( WCHAR ch, int low, int high )

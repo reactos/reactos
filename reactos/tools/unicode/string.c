@@ -18,9 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/unicode.h"
+#include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
+
+#include "wine/unicode.h"
 
 extern const WCHAR wine_casemap_lower[];
 extern const WCHAR wine_casemap_upper[];

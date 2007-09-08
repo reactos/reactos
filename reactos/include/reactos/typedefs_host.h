@@ -67,8 +67,8 @@ typedef int BOOL;
 typedef long int W64 LONG_PTR, *PLONG_PTR;
 typedef long unsigned int W64 ULONG_PTR, *PULONG_PTR;
 typedef ULONG_PTR SIZE_T, *PSIZE_T;
-typedef wchar_t WCHAR, *PWCHAR, *PWSTR, *LPWSTR;
-typedef const wchar_t *PCWSTR, *LPCWSTR;
+typedef unsigned short WCHAR, *PWCHAR, *PWSTR, *LPWSTR;
+typedef const unsigned short *PCWSTR, *LPCWSTR;
 typedef int NTSTATUS;
 typedef int POOL_TYPE;
 
