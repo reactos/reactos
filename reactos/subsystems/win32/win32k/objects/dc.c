@@ -2736,7 +2736,7 @@ GetDisplayNumberFromDeviceName(
 
     *DisplayNumber = ((GDIDEVICE *)pDC->GDIDevice)->DisplayNumber;
 
-    DC_UnlockDc(DesktopHDC);
+    DC_UnlockDc(pDC);
     UserReleaseDC(DesktopObject, DesktopHDC, FALSE);
 
     return STATUS_SUCCESS;
@@ -2787,7 +2787,6 @@ IntEnumDisplaySettings(
   static UNICODE_STRING CachedDeviceName;
   PDEVMODEW CachedMode = NULL;
   DEVMODEW DevMode;
-  INT Size, OldSize;
   ULONG DisplayNumber;
 
   if (!NT_SUCCESS(GetDisplayNumberFromDeviceName(pDeviceName, &DisplayNumber)))
@@ -2884,7 +2883,7 @@ IntEnumDisplaySettings(
         }
 
         /*  Call DDI driver's EnableDriver function  */
-        RtlZeroMemory(&DrvEnableData, sizeof (DrvEnableData));
+        RtlZeroMemory(&DrvEnableData, sizeof(DrvEnableData));
 
         if (!GDEnableDriver(DDI_DRIVER_VERSION_NT5_01, sizeof (DrvEnableData), &DrvEnableData))
         {
@@ -2999,20 +2998,9 @@ IntEnumDisplaySettings(
 
   ASSERT(CachedMode != NULL);
 
-  Size = OldSize = pDevMode->dmSize;
-  if (Size > CachedMode->dmSize)
-    Size = CachedMode->dmSize;
-  RtlCopyMemory(pDevMode, CachedMode, Size);
-  RtlZeroMemory((PCHAR)pDevMode + Size, OldSize - Size);
-  pDevMode->dmSize = OldSize;
-
-  Size = OldSize = pDevMode->dmDriverExtra;
-  if (Size > CachedMode->dmDriverExtra)
-    Size = CachedMode->dmDriverExtra;
-  RtlCopyMemory((PCHAR)pDevMode + pDevMode->dmSize,
-                (PCHAR)CachedMode + CachedMode->dmSize, Size);
-  RtlZeroMemory((PCHAR)pDevMode + pDevMode->dmSize + Size, OldSize - Size);
-  pDevMode->dmDriverExtra = OldSize;
+  RtlCopyMemory(pDevMode, CachedMode, pDevMode->dmSize);
+  RtlZeroMemory(pDevMode + pDevMode->dmSize, pDevMode->dmDriverExtra);
+  RtlCopyMemory(pDevMode + pDevMode->dmSize, CachedMode + CachedMode->dmSize, min(pDevMode->dmDriverExtra, CachedMode->dmDriverExtra));
 
   return TRUE;
 }
@@ -3162,7 +3150,7 @@ IntChangeDisplaySettings(
   LONG Ret=0;
   NTSTATUS Status ;
 
-  DPRINT1("display flag : %x\n",dwflags);
+  DPRINT1("display flags : %x\n",dwflags);
 
   if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
   {
@@ -3185,7 +3173,7 @@ IntChangeDisplaySettings(
   if (dwflags == 0)
   {
    /* Dynamically change graphics mode */
-   DPRINT1("flag 0 UNIMPLEMENT \n");
+   DPRINT1("flag 0 UNIMPLEMENTED\n");
    return DISP_CHANGE_FAILED;
   }
 
@@ -3193,7 +3181,7 @@ IntChangeDisplaySettings(
   {
    /* Test reslution */
    dwflags &= ~CDS_TEST;
-   DPRINT1("flag CDS_TEST UNIMPLEMENT");
+   DPRINT1("flag CDS_TEST UNIMPLEMENTED\n");
    Ret = DISP_CHANGE_FAILED;
   }
 
@@ -3202,15 +3190,12 @@ IntChangeDisplaySettings(
    DEVMODEW lpDevMode;
    /* Full Screen */
    dwflags &= ~CDS_FULLSCREEN;
-   DPRINT1("flag CDS_FULLSCREEN partially implemented");
+   DPRINT1("flag CDS_FULLSCREEN partially implemented\n");
    Ret = DISP_CHANGE_FAILED;
 
-   lpDevMode.dmBitsPerPel =0;
-   lpDevMode.dmPelsWidth  =0;
-   lpDevMode.dmPelsHeight =0;
-   lpDevMode.dmDriverExtra =0;
-
+   RtlZeroMemory(&lpDevMode, sizeof(DEVMODEW));
    lpDevMode.dmSize = sizeof(DEVMODEW);
+
    if (!IntEnumDisplaySettings(pDeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode, 0))
      return DISP_CHANGE_FAILED;
 
@@ -3231,7 +3216,7 @@ IntChangeDisplaySettings(
       Ret=DISP_CHANGE_BADPARAM;
     else
     {
-      DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENT");
+      DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENTED\n");
       Ret = DISP_CHANGE_FAILED;
     }
 
@@ -3247,7 +3232,7 @@ IntChangeDisplaySettings(
     HANDLE DevInstRegKey;
     ULONG NewValue;
 
-    DPRINT1("set CDS_UPDATEREGISTRY \n");
+    DPRINT1("set CDS_UPDATEREGISTRY\n");
 
     dwflags &= ~CDS_UPDATEREGISTRY;
 
