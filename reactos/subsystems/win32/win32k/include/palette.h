@@ -16,6 +16,11 @@ typedef struct {
 } ColorShifts;
 
 typedef struct _PALGDI {
+  HGDIOBJ     hHmgr;
+  PVOID       pvEntry;
+  ULONG       lucExcLock;
+  ULONG       Tid;
+
   PALOBJ PalObj;
   XLATEOBJ *logicalToSystem;
   HPALETTE Self;
