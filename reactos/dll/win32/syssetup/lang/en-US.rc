@@ -218,7 +218,7 @@ END
 STRINGTABLE
 BEGIN
 	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
+	IDS_CMT_CHARMAP      "Character Map"
 END
 
 STRINGTABLE

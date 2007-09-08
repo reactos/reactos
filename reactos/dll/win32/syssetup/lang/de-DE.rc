@@ -216,8 +216,8 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
+	IDS_SYS_TOOLS        "Systemprogramme"
+	IDS_CMT_CHARMAP      "Zeichentabelle"
 END
 
 STRINGTABLE
