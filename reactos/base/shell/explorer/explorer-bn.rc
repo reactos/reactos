@@ -327,6 +327,7 @@ BEGIN
     IDS_START               "Kvh©Kvix ZvwjKv"
     IDS_LOGOFF              "Log Off..."
     IDS_SHUTDOWN            "e‹ Kiv..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "cwiPvjbv..."
     IDS_START_HELP          "mvnvh®"
     IDS_SEARCH_FILES        "Abym‹vb..."
@@ -393,4 +394,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

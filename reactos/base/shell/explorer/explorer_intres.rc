@@ -152,6 +152,7 @@ IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
 IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
 IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
 IDI_SHUTDOWN            ICON    DISCARDABLE     "res/shutdown.ico"
+IDI_RESTART             ICON    DISCARDABLE     "res/restart.ico"
 IDI_ARROW               ICON    DISCARDABLE     "res/arrow.ico"
 IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res/arrowsel.ico"
 IDI_APPICON             ICON    DISCARDABLE     "res/appicon.ico"
@@ -243,4 +244,5 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

@@ -332,6 +332,7 @@ BEGIN
     IDS_START               "έναρξη"
     IDS_LOGOFF              "Αποσύνδεση..."
     IDS_SHUTDOWN            "Τερματισμός..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "Εκτέλεση..."
     IDS_START_HELP          "Βοήθεια"
     IDS_SEARCH_FILES        "Αναζήτηση..."
@@ -398,4 +399,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

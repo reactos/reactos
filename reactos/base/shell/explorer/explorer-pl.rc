@@ -49,10 +49,10 @@ BEGIN
     POPUP "&Okna"
     BEGIN
         MENUITEM "Nowe &okno",                 		ID_WINDOW_NEW
-        MENUITEM "&Kaskada\tShift+F5",         		ID_WINDOW_CASCADE
+        MENUITEM "&Kaskadowo\tShift+F5",         		ID_WINDOW_CASCADE
         MENUITEM "&S¹siaduj¹co poziomo",          	ID_WINDOW_TILE_HORZ
         MENUITEM "S¹siaduj¹co &pionowo\tShift+F4",  	ID_WINDOW_TILE_VERT
-        MENUITEM "&Autorozmieszczenie",       		ID_WINDOW_AUTOSORT
+        MENUITEM "&Autorozmieszczanie",       		ID_WINDOW_AUTOSORT
         MENUITEM "Rozmieœæ wed³ug &nazwy",            	ID_WINDOW_ARRANGE
     END
     POPUP "&Narzêdzia"
@@ -62,8 +62,8 @@ BEGIN
     POPUP "Pomo&c"
     BEGIN
         MENUITEM "Explorer &FAQ",            		ID_EXPLORER_FAQ
-        MENUITEM "ReactOS Explorer - &Informacje",      ID_ABOUT_EXPLORER
-        MENUITEM "ReactOS - I&nformacje",               ID_ABOUT_WINDOWS
+        MENUITEM "ReactOS Explorer - &informacje",      ID_ABOUT_EXPLORER
+        MENUITEM "ReactOS - i&nformacje",               ID_ABOUT_WINDOWS
     END
 END
 
@@ -74,7 +74,7 @@ BEGIN
         MENUITEM "&W³aœciwoœci",               	 	ID_DESKTOPBAR_SETTINGS
         MENUITEM "Mened¿er &zadañ",           	 	ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "ReactOS Explorer - &Informacje",    	ID_ABOUT_EXPLORER
+        MENUITEM "ReactOS Explorer - &informacje",    	ID_ABOUT_EXPLORER
     END
 END
 
@@ -82,7 +82,7 @@ IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Otwórz regulacje g³oœnoœci",  	ID_TRAY_VOLUME
+        MENUITEM "&Otwórz regulacjê g³oœnoœci",  	ID_TRAY_VOLUME
         MENUITEM "&Ustaw w³aœciwoœci audio",     	ID_VOLUME_PROPERTIES
     END
 END
@@ -96,7 +96,7 @@ BEGIN
         MENUITEM "&Konfiguruj powiadomienia", 		ID_CONFIG_NOTIFYAREA
         MENUITEM "Ustaw &datê/godzinê",         	ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "ReactOS Explorer - &Informacje",      ID_ABOUT_EXPLORER
+        MENUITEM "ReactOS Explorer - &informacje",      ID_ABOUT_EXPLORER
     END
 END
 
@@ -125,8 +125,8 @@ BEGIN
     POPUP "Pomo&c"
     BEGIN
         MENUITEM "Explorer &FAQ",            		ID_EXPLORER_FAQ
-        MENUITEM "ReactOS Explorer - &Informacje",      ID_ABOUT_EXPLORER
-        MENUITEM "ReactOS - I&nformacje",       	ID_ABOUT_WINDOWS
+        MENUITEM "ReactOS Explorer - &informacje",      ID_ABOUT_EXPLORER
+        MENUITEM "ReactOS - i&nformacje",       	ID_ABOUT_WINDOWS
     END
 END
 
@@ -156,7 +156,7 @@ IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Szukaj programu w menu start"
+CAPTION "Szukaj programu w Menu Start"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filtry:",IDC_STATIC,7,9,18,8
@@ -279,7 +279,7 @@ END
 
 IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Explorer - &Informacje"
+CAPTION "ReactOS Explorer - &informacje"
 FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,104,11
@@ -345,7 +345,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STARTMENU           "Menu start"
+    IDS_STARTMENU           "Menu Start"
     IDS_MINIMIZE_ALL        "Minimalizuj wszystko"
     IDS_DESKTOP_NUM         "Pulpit %d"
     IDS_VOLUME              "G³oœnoœæ"
@@ -358,7 +358,7 @@ BEGIN
     IDS_NOTIFY_AUTOHIDE     "autoukrywanie"
     IDS_SHOW_HIDDEN_ICONS   "Poka¿ ukryte ikony"
     IDS_HIDE_ICONS          "Ukryj ikony"
-    IDS_TERMINATE           "Zakoñcz dzia³anie ROS Explorer"
+    IDS_TERMINATE           "Zakoñcz dzia³anie ReactOS Explorer"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -374,7 +374,7 @@ BEGIN
     IDS_SEARCH_PRG          "ZnajdŸ program..."
     IDS_ALL_USERS           "Wszyscy\\"
     IDS_SEARCH              "Szukaj"
-    IDS_ABOUT_EXPLORER      "ReactOS Explorer - &Informacje"
+    IDS_ABOUT_EXPLORER      "ReactOS Explorer - &informacje"
     IDS_LAUNCH_MANY_PROGRAMS 
                             "Zaznaczy³eœ wiêcej ni¿ jeden program.\nCzy chcesz uruchomiæ je jednoczeœnie?"
     IDS_DESKTOPBAR_SETTINGS "W³aœciwoœci pulpitu"

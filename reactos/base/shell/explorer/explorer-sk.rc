@@ -340,6 +340,7 @@ BEGIN
     IDS_START               "ätart"
     IDS_LOGOFF              "Odhl·siù..."
     IDS_SHUTDOWN            "Vypn˙ù..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "Spustiù..."
     IDS_START_HELP          "PomocnÌk"
     IDS_SEARCH_FILES        "Hæadaù..."
@@ -406,4 +407,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

@@ -330,6 +330,7 @@ BEGIN
     IDS_START               "ｽﾀｰﾄ"
     IDS_LOGOFF              "ログオフ..."
     IDS_SHUTDOWN            "シャットダウン..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "ファイル名を指定して実行..."
     IDS_START_HELP          "ヘルプ"
     IDS_SEARCH_FILES        "ファイルやフォルダ..."
@@ -396,4 +397,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

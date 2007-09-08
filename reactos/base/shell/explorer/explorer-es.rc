@@ -57,7 +57,7 @@ BEGIN
     END
     POPUP "&Tools"
     BEGIN
-        MENUITEM "&Options",                    ID_TOOLS_OPTIONS
+        MENUITEM "&Opciones",                    ID_TOOLS_OPTIONS
     END
     POPUP "A&yuda"
     BEGIN
@@ -312,9 +312,10 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
-    IDS_START               "Iniciar"
+    IDS_START               "Inicio"
     IDS_LOGOFF              "Salir..."
     IDS_SHUTDOWN            "Apagar..."
+    IDS_RESTART             "Reiniciar..."
     IDS_LAUNCH              "Ejecutar..."
     IDS_START_HELP          "Ayuda"
     IDS_SEARCH_FILES        "Buscar..."
@@ -331,7 +332,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Menú Inicio"
-    IDS_MINIMIZE_ALL        "mimimizar todas las ventanas"
+    IDS_MINIMIZE_ALL        "Mimimizar todas las ventanas"
     IDS_DESKTOP_NUM         "Escritorio %d"
     IDS_VOLUME              "Volumen"
     IDS_ITEMS_CUR           "Objetos Actuales"
@@ -381,4 +382,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
+
 

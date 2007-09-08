@@ -134,6 +134,7 @@ BEGIN
     IDS_START               "Începe"
     IDS_LOGOFF              "Închide sesiunea ..."
     IDS_SHUTDOWN            "Oprire calculator ..."
+    IDS_RESTART             "Restart..."
     IDS_LAUNCH              "Pornire ..."
     IDS_START_HELP          "Ajutor"
     IDS_SEARCH_FILES        "Cãutare Files..."
@@ -241,5 +242,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 
