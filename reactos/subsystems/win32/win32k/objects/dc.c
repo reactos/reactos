@@ -2998,9 +2998,9 @@ IntEnumDisplaySettings(
 
   ASSERT(CachedMode != NULL);
 
-  RtlCopyMemory(pDevMode, CachedMode, pDevMode->dmSize);
+  RtlCopyMemory(pDevMode, CachedMode, min(pDevMode->dmSize, CachedMode->dmSize));
   RtlZeroMemory(pDevMode + pDevMode->dmSize, pDevMode->dmDriverExtra);
-  RtlCopyMemory(pDevMode + pDevMode->dmSize, CachedMode + CachedMode->dmSize, min(pDevMode->dmDriverExtra, CachedMode->dmDriverExtra));
+  RtlCopyMemory(pDevMode + min(pDevMode->dmSize, CachedMode->dmSize), CachedMode + CachedMode->dmSize, min(pDevMode->dmDriverExtra, CachedMode->dmDriverExtra));
 
   return TRUE;
 }
