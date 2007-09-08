@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-  <module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true" stdlib="host">
+  <module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true" stdlib="host" usewrc="false">
     <linkerflag>-fexceptions</linkerflag>
     <include base="explorer">.</include>
     <define name="__USE_W32API" />
