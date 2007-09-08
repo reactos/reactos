@@ -3,6 +3,7 @@
 //
 //	Load/Save settings from registry
 //
+#include <stdlib.h>
 #include <windows.h>
 #include <tchar.h>
 #include "globals.h"
@@ -14,7 +15,7 @@ int		g_nNumMessages		 = 0;
 int		g_nMessageSpeed		 = 5;
 TCHAR	g_szFontName[512]	 = _T("Arial");
 
-int		g_nMatrixSpeed		 = 150;
+int		g_nMatrixSpeed		 = 10;
 int		g_nDensity			 = 32;
 int		g_nFontSize			 = 12;
 BOOL	g_fRandomizeMessages = FALSE;

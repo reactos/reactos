@@ -1,34 +1,10 @@
-//Microsoft Developer Studio generated resource script.
-//
 #include "resource.h"
 
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-#include "afxres.h"
-
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// German (Germany) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
 
 IDD_CONFIG DIALOG DISCARDABLE  0, 0, 340, 183
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Matrix ScreenSaver Konfiguration"
+CAPTION "Matrix Bildschirmschoner-Konfiguration"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Dekodierung&sgeschwindigkeit",IDC_STATIC,7,7,133,36
@@ -70,97 +46,7 @@ BEGIN
     CTEXT           "Matrix ScreenSaver www.catch22.org.uk",IDC_ABOUT,143, 158, 75, 18
 END
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_CONFIG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 333
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 176
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#include ""afxres.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_BITMAP1             BITMAP  DISCARDABLE     "matrix.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Cursor
-//
-
-IDC_BLANKCURSOR         CURSOR  DISCARDABLE     "cursor1.cur"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON1               ICON    DISCARDABLE     "icon1.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DESCRIPTION         "Matrix ScreenSaver"
+    IDS_DESCRIPTION         "Matrix Bildschirmschoner"
 END
-
-#endif    // German (Germany) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

@@ -304,7 +304,7 @@ LRESULT WINAPI MatrixWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static POINT ptLast;
 	static POINT ptCursor;
 	static BOOL  fFirstTime = TRUE;
-	
+
 	MATRIX *matrix = GetMatrix(hwnd);
 
 	switch(msg)
@@ -432,7 +432,7 @@ void InitScreenSaveClass(BOOL fPreview)
 	wcx.hbrBackground	= (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wcx.lpszMenuName	= 0;
 	wcx.lpszClassName	= APPNAME;
-	wcx.hIconSm			= 0;	
+	wcx.hIconSm			= 0;
 
 	if(fPreview)
 		wcx.hCursor			= LoadCursor(0, IDC_ARROW);

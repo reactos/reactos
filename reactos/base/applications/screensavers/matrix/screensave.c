@@ -21,13 +21,13 @@
 //#pragma comment(linker, "/OPT:NOWIN98")
 
 //
-//	Added: Multimonitor support!!
+//  Added: Multimonitor support!!
 //
 HMONITOR (WINAPI * pfnEnumDisplayMonitors)(HDC, LPCRECT, MONITORENUMPROC, LPARAM);
 BOOL     (WINAPI * pfnGetMonitorInfo)(HMONITOR, LPMONITORINFO);
 
 //
-//	Callback function for EnumDisplayMonitors API. Use this function
+//  Callback function for EnumDisplayMonitors API. Use this function
 //  to kickstart a screen-saver window for each monitor in the system
 //
 BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, RECT *rcMonitor, LPARAM Param)
@@ -100,9 +100,9 @@ BOOL ScreenSaver(HWND hwndParent)
 //  -p <hwnd>		(preview)
 //  -c <hwnd>		(configure)
 //
-BOOL ParseCommandLine(LPSTR szCmdLine, int *chOption, HWND *hwndParent)
+VOID ParseCommandLine(LPSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 {
-	int ch = *szCmdLine++;
+	UCHAR ch = *szCmdLine++;
 
 	if(ch == '-' || ch == '/')
 		ch = *szCmdLine++;
@@ -126,8 +126,6 @@ BOOL ParseCommandLine(LPSTR szCmdLine, int *chOption, HWND *hwndParent)
 	}
 	else
 		*hwndParent = NULL;
-
-	return TRUE;
 }
 
 //
@@ -135,8 +133,8 @@ BOOL ParseCommandLine(LPSTR szCmdLine, int *chOption, HWND *hwndParent)
 //
 int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int iCmdShow)
 {
-	HWND	hwndParent;
-	int		chOption;
+	HWND   hwndParent;
+	UCHAR  chOption;
 
 	// Make sure that only 1 instance runs at a time - 
 	// Win98 seems to want us to restart every 5 seconds!!
@@ -151,12 +149,12 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int iCmdS
 	
 	switch(chOption)
 	{
-	case 's':	return ScreenSaver(NULL);			// screen save
-	case 'p':	return ScreenSaver(hwndParent);		// preview in small window
-	case 'a':	return ChangePassword(hwndParent);	// ask for password
-	case 'c':	return Configure(hwndParent);		// configuration dialog
-	default:	return Configure(hwndParent);		// configuration dialog
+	case 's':   return ScreenSaver(NULL);           // screen save
+	case 'p':   return ScreenSaver(hwndParent);     // preview in small window
+	case 'a':   return ChangePassword(hwndParent);  // ask for password
+	case 'c':   return Configure(hwndParent);       // configuration dialog
+	default:    return Configure(hwndParent);       // configuration dialog
 	}
 
-	return 0;	
+	return 0;
 }
