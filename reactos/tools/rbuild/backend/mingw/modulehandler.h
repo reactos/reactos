@@ -43,9 +43,6 @@ public:
 
 	static const FileLocation* PassThruCacheDirectory (const FileLocation* fileLocation );
 
-	static DirectoryLocation GetTargetDirectoryTree (
-		const Module& module );
-
 	static const FileLocation* GetTargetFilename (
 		const Module& module,
 		string_list* pclean_files );

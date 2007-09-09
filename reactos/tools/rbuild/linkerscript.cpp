@@ -57,7 +57,7 @@ LinkerScript::ProcessXML()
 			if ( base != NULL )
 			{
 				baseModule = base;
-				basePath = base->GetBasePath ();
+				basePath = base->output->relative_path;
 				referenceResolved = true;
 			}
 		}

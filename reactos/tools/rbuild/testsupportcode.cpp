@@ -69,13 +69,13 @@ TestSupportCode::GenerateTestSupportCodeForModule ( Module& module,
 string
 TestSupportCode::GetHooksFilename ( Module& module )
 {
-	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.GetBasePath () + sSep + "_hooks.c" );
+	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.output->relative_path + sSep + "_hooks.c" );
 }
 
 char*
 TestSupportCode::WriteStubbedSymbolToHooksFile ( char* buffer,
                                                  const StubbedComponent& component,
-	                                         const StubbedSymbol& symbol )
+                                                 const StubbedSymbol& symbol )
 {
 	buffer = buffer + sprintf ( buffer,
 	                            "  {\"%s\", \"%s\", NULL, NULL, NULL},\n",
@@ -135,7 +135,7 @@ TestSupportCode::WriteHooksFile ( Module& module )
 string
 TestSupportCode::GetStubsFilename ( Module& module )
 {
-	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.GetBasePath () + sSep + "_stubs.S" );
+	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.output->relative_path + sSep + "_stubs.S" );
 }
 
 string
@@ -249,7 +249,7 @@ TestSupportCode::WriteStubsFile ( Module& module )
 string
 TestSupportCode::GetStartupFilename ( Module& module )
 {
-	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.GetBasePath () + sSep + "_startup.c" );
+	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.output->relative_path + sSep + "_startup.c" );
 }
 
 bool

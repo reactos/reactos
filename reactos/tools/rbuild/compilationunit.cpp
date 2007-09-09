@@ -34,8 +34,8 @@ CompilationUnit::CompilationUnit ( File* file )
 }
 
 CompilationUnit::CompilationUnit ( const Project* project,
-	                           const Module* module,
-	                           const XMLElement* node )
+                                   const Module* module,
+                                   const XMLElement* node )
 	: project(project),
 	  module(module),
 	  node(node)
@@ -43,7 +43,7 @@ CompilationUnit::CompilationUnit ( const Project* project,
 	const XMLAttribute* att = node->GetAttribute ( "name", true );
 	assert(att);
 	local_name = att->value;
-	name = module->GetBasePath () + cSep + att->value;
+	name = module->output->relative_path + cSep + att->value;
 }
 
 CompilationUnit::~CompilationUnit ()
@@ -101,7 +101,7 @@ CompilationUnit::GetFilename () const
 	if ( files.size () == 0 || files.size () > 1 )
 	{
 		return new FileLocation ( IntermediateDirectory,
-		                          module ? module->GetBasePath () : "",
+		                          module ? module->output->relative_path : "",
 		                          local_name );
 	}
 

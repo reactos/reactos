@@ -65,7 +65,7 @@ SysSetupGenerator::Generate ()
 string
 SysSetupGenerator::GetDirectoryId ( const Module& module )
 {
-	if ( ToLower ( module.installBase ) == "system32" )
+	if ( module.install && ToLower ( module.install->relative_path ) == "system32" )
 		return DIRECTORYID_SYSTEM32;
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -104,7 +104,7 @@ SysSetupGenerator::Generate ( HINF inf,
 	if ( 0 != InfHostAddLine ( context, NULL ) ||
 	     0 != InfHostAddField ( context, GetDirectoryId ( module ).c_str () ) ||
 	     0 != InfHostAddField ( context, "" ) ||
-	     0 != InfHostAddField ( context, module.installName.c_str () ) ||
+	     ( module.install && 0 != InfHostAddField ( context, module.install->name.c_str () ) ) ||
 	     0 != InfHostAddField ( context, GetFlags ( module ).c_str () ) )
 	{
 		InfHostFreeContext ( context );

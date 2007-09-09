@@ -587,7 +587,7 @@ MingwBackend::GetBuildToolDependencies () const
 		{
 			if ( dependencies.length () > 0 )
 				dependencies += " ";
-			dependencies += module.GetDependencyPath ();
+			dependencies += strFile ( module.dependency );
 		}
 	}
 	return dependencies;
@@ -1165,12 +1165,8 @@ MingwBackend::GetModuleInstallTargetFiles (
 		const Module& module = *ProjectNode.modules[i];
 		if ( !module.enabled )
 			continue;
-		if ( module.installName.length () > 0 )
-		{
-			out.push_back ( FileLocation ( InstallDirectory,
-			                               module.installBase,
-			                               module.installName ) );
-		}
+		if ( module.install )
+			out.push_back ( *module.install );
 	}
 }
 
@@ -1230,13 +1226,10 @@ MingwBackend::OutputModuleInstallTargets ()
 		const Module& module = *ProjectNode.modules[i];
 		if ( !module.enabled )
 			continue;
-		if ( module.installName.length () > 0 )
+		if ( module.install )
 		{
 			const Module& aliasedModule = GetAliasedModuleOrModule ( module );
-
-			FileLocation source ( OutputDirectory, aliasedModule.GetBasePath (), aliasedModule.GetTargetName () );
-			FileLocation target ( InstallDirectory, module.installBase, module.installName );
-			OutputInstallTarget ( source, target );
+			OutputInstallTarget ( *aliasedModule.output, *module.install );
 		}
 	}
 }

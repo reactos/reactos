@@ -107,7 +107,7 @@ Bootstrap::Initialize ()
 	if ( att != NULL )
 		nameoncd = att->value;
 	else
-		nameoncd = module->GetTargetName ();
+		nameoncd = module->output->name;
 }
 
 void

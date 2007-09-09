@@ -56,7 +56,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		imports.push_back ( module.non_if_data.libraries[i]->name );
 	}
 
-	string module_type = GetExtension(module.GetTargetName());
+	string module_type = GetExtension(module.output->name);
 	bool lib = (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe") || (module_type == ".scr");
@@ -82,7 +82,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
-	string dsp_path = module.GetBasePath();
+	string dsp_path = module.output->relative_path;
 	vector<string> c_srcs, source_files, header_files, resource_files, includes, libraries;
 	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
@@ -127,7 +127,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
-				module.GetBasePath() );
+				module.output->relative_path );
 			includes.push_back ( path );
 		}
 		const vector<Library*>& libs = data.libraries;

@@ -225,7 +225,7 @@ std::string
 MSVCBackend::OptFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.opt" )
+		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.opt" )
 		);
 }
 
@@ -233,7 +233,7 @@ std::string
 MSVCBackend::SuoFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.suo" )
+		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.suo" )
 		);
 }
 
@@ -241,7 +241,7 @@ std::string
 MSVCBackend::DswFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.GetPath(), "_auto.dsw" )
+		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_auto.dsw" )
 		);
 }
 
@@ -249,7 +249,7 @@ std::string
 MSVCBackend::SlnFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.sln" )
+		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.sln" )
 		);
 }
 
@@ -257,7 +257,7 @@ std::string
 MSVCBackend::NcbFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.ncb" )
+		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.ncb" )
 		);
 }
 
@@ -265,7 +265,7 @@ std::string
 MSVCBackend::DspFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-		ReplaceExtension ( module.GetPath(), "_auto.dsp" )
+		ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_auto.dsp" )
 		);
 }
 
@@ -273,7 +273,7 @@ std::string
 MSVCBackend::VcprojFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-			ReplaceExtension ( module.GetPath(), "_" + _get_vc_dir() + "_auto.vcproj" )
+			ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.vcproj" )
 			);
 }
 
@@ -296,7 +296,7 @@ std::string MSVCBackend::_get_vc_dir ( void ) const
 void 
 MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) const
 {
-	string basepath = module.GetBasePath ();
+	string basepath = module.output->relative_path;
 	string vcdir = _get_vc_dir ();
 	size_t i;
 	string intenv = Environment::GetIntermediatePath () + DEF_SSEP + basepath + DEF_SSEP;
@@ -361,7 +361,7 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 	//files in the output dir
 	for ( i = cfgs.size () / 2; i < cfgs.size (); i++ )
 	{
-		out.push_back ( cfgs[i] + module.GetTargetName () );
+		out.push_back ( cfgs[i] + module.output->name );
 		out.push_back ( cfgs[i] + module.name + ".pdb" );
 		out.push_back ( cfgs[i] + module.name + ".lib" );
 		out.push_back ( cfgs[i] + module.name + ".exp" );
@@ -395,9 +395,9 @@ MSVCBackend::_clean_project_files ( void )
 	{
 		Module& module = *ProjectNode.modules[i];
 		vector<string> out;
-		printf("Cleaning project %s %s %s\n", module.name.c_str (), module.GetBasePath ().c_str (), NcbFileName ( module ).c_str () );
+		printf("Cleaning project %s %s %s\n", module.name.c_str (), module.output->relative_path.c_str (), NcbFileName ( module ).c_str () );
 		
-		string basepath = module.GetBasePath ();
+		string basepath = module.output->relative_path;
 		remove ( NcbFileName ( module ).c_str () );
 		remove ( DspFileName ( module ).c_str () );
 		remove ( DswFileName ( module ).c_str () );
@@ -461,11 +461,11 @@ MSVCBackend::_install_files (const std::string& vcdir, const::string& config)
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-		if ( module.installBase == "" || module.installName == "" )
+		if ( !module.install )
 			continue;
 
-		string inputname = Environment::GetOutputPath () + DEF_SSEP + module.GetBasePath () + DEF_SSEP + vcdir + DEF_SSEP + config + DEF_SSEP + module.GetTargetName ();
-		string installdir = Environment::GetInstallPath () + DEF_SSEP + module.installBase + DEF_SSEP + module.installName;
+		string inputname = Environment::GetOutputPath () + DEF_SSEP + module.output->relative_path + DEF_SSEP + vcdir + DEF_SSEP + config + DEF_SSEP + module.output->name;
+		string installdir = Environment::GetInstallPath () + DEF_SSEP + module.install->relative_path + DEF_SSEP + module.install->name;
 		if ( _copy_file( inputname, installdir ) )
 			printf ("Installed File :'%s'\n",installdir.c_str () );
 	}

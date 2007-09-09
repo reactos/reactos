@@ -35,7 +35,7 @@ ProxyMakefile::~ProxyMakefile ()
 bool
 ProxyMakefile::GenerateProxyMakefile ( Module& module )
 {
-	return module.GenerateInOutputTree ();
+	return module.output->directory == OutputDirectory;
 }
 
 void
@@ -72,7 +72,7 @@ string
 ProxyMakefile::GetPathToTopDirectory ( Module& module )
 {
 	int numberOfDirectories = 1;
-	string basePath = NormalizeFilename ( module.GetBasePath () );
+	string basePath = module.output->relative_path;
 	for ( size_t i = 0; i < basePath.length (); i++ )
 	{
 		if ( basePath[i] == cSep )
@@ -99,12 +99,12 @@ ProxyMakefile::GenerateProxyMakefileForModule ( Module& module,
 	string pathToTopDirectory;
 	if ( outputTree.length () > 0 )
 	{
-		base = outputTree + sSep + module.GetBasePath ();
+		base = outputTree + sSep + module.output->relative_path;
 		pathToTopDirectory = working_directory;
 	}
 	else
 	{
-		base = module.GetBasePath ();
+		base = module.output->relative_path;
 		pathToTopDirectory = GetPathToTopDirectory ( module );
 	}
 	string proxyMakefile = NormalizeFilename ( base + sSep + "GNUmakefile" );

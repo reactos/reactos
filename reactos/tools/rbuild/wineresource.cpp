@@ -103,8 +103,8 @@ WineResource::UnpackResourcesInModule ( Module& module,
 		         module.name.c_str () );
 	}
 
-	string relativeDirectory = module.GetBasePath ();
-	string outputDirectory = Environment::GetIntermediatePath() + sSep + module.GetBasePath ();
+	string relativeDirectory = module.output->relative_path;
+	string outputDirectory = Environment::GetIntermediatePath() + sSep + module.output->relative_path;
 	string parameters = ssprintf ( "-b %s -O %s -f -x %s",
 	                               NormalizeFilename ( relativeDirectory ).c_str (),
 	                               NormalizeFilename ( outputDirectory ).c_str (),
@@ -120,6 +120,6 @@ WineResource::UnpackResourcesInModule ( Module& module,
 		                                  exitcode );
 	}
 	module.non_if_data.includes.push_back( new Include ( module.project,
-	                                                     module.GetBasePath (),
+	                                                     module.output->relative_path,
 	                                                     "$(INTERMEDIATE)" ) );
 }

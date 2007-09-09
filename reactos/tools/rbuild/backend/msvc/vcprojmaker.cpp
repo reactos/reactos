@@ -98,7 +98,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	FILE* OUT = fopen ( vcproj_file.c_str(), "wb" );
 
 	vector<string> imports;
-	string module_type = GetExtension(module.GetTargetName());
+	string module_type = GetExtension(module.output->name);
 	bool lib = (module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe") || (module_type == ".scr");
@@ -131,7 +131,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	bool console = exe && (module.type == Win32CUI);
 	bool include_idl = false;
 
-	string vcproj_path = module.GetBasePath();
+	string vcproj_path = module.output->relative_path;
 	vector<string> source_files, resource_files, header_files, includes, includes_ros, libraries;
 	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
@@ -172,7 +172,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
-				module.GetBasePath() );
+				module.output->relative_path );
 			if ( module.type != RpcServer && module.type != RpcClient )
 			{
 				if ( path.find ("/include/reactos/idl") != string::npos)
@@ -199,7 +199,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<Library*>& libs = data.libraries;
 		for ( i = 0; i < libs.size(); i++ )
 		{
-			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath() + "\\" + _get_vc_dir() + "\\---\\" + libs[i]->name + ".lib";
+			string libpath = outdir + "\\" + libs[i]->importedModule->output->relative_path + "\\" + _get_vc_dir() + "\\---\\" + libs[i]->name + ".lib";
 			libraries.push_back ( libpath );
 		}
 		const vector<Define*>& defs = data.defines;
@@ -267,13 +267,13 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		if ( configuration.UseConfigurationInPath )
 		{
-			fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str (), cfg.name.c_str() );
-			fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str (), cfg.name.c_str() );
+			fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\\%s\"\r\n", outdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str (), cfg.name.c_str() );
+			fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\\%s\"\r\n", intdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str (), cfg.name.c_str() );
 		}
 		else
 		{
-			fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str () );
-			fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str () );
+			fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\"\r\n", outdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str () );
+			fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\"\r\n", intdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str () );
 		}
 
 		fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", exe ? 1 : dll ? 2 : lib ? 4 : -1 );
@@ -375,7 +375,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"2\"\r\n" );
 			string pch_path = Path::RelativeFromDirectory (
 				module.pch->file.name,
-				module.GetBasePath() );
+				module.output->relative_path );
 			string::size_type pos = pch_path.find_last_of ("/");
 			if ( pos != string::npos )
 				pch_path.erase(0, pos+1);         

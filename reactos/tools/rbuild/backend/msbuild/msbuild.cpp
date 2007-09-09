@@ -72,7 +72,7 @@ void MsBuildBackend::Process()
 void
 MsBuildBackend::_generate_makefile ( const Module& module )
 {
-	string makefile = module.GetBasePath() + "\\makefile";
+	string makefile = module.output->relative_path + "\\makefile";
 	FILE* OUT = fopen ( makefile.c_str(), "wb" );
 	fprintf ( OUT, "!INCLUDE $(NTMAKEENV)\\makefile.def\r\n" );
 	fclose ( OUT );
@@ -83,12 +83,12 @@ MsBuildBackend::_generate_sources ( const Module& module )
 {
 	size_t i;
 
-	string module_type = GetExtension(module.GetTargetName());
+	string module_type = GetExtension(module.output->name);
 	vector<string> source_files, resource_files, includes, libraries;
 	vector<string> header_files, common_defines, compiler_flags;
 	vector<string> vars, values;
-	string sourcesfile = module.GetBasePath() + "\\sources";
-	string proj_path = module.GetBasePath();	
+	string sourcesfile = module.output->relative_path + "\\sources";
+	string proj_path = module.output->relative_path;
 
 	FILE* OUT = fopen ( sourcesfile.c_str(), "wb" );
 	fprintf ( OUT, "TARGETNAME=%s\r\n", module.name.c_str() );
@@ -121,7 +121,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 		{
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
-				module.GetBasePath() );
+				module.output->relative_path );
 
 			includes.push_back ( path );
 		}
@@ -220,14 +220,14 @@ MsBuildBackend::_clean_project_files ( void )
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-		printf("Cleaning project %s %s\n", module.name.c_str (), module.GetBasePath ().c_str () );
+		printf("Cleaning project %s %s\n", module.name.c_str (), module.output->relative_path.c_str () );
 		
-		string makefile = module.GetBasePath() + "\\makefile";
-		string sourcesfile = module.GetBasePath() + "\\sources";
+		string makefile = module.output->relative_path + "\\makefile";
+		string sourcesfile = module.output->relative_path + "\\sources";
 
-		string basepath = module.GetBasePath ();
-		remove ( makefile.c_str() );	
-		remove ( sourcesfile.c_str() );	
+		string basepath = module.output->relative_path;
+		remove ( makefile.c_str() );
+		remove ( sourcesfile.c_str() );
 	}
 }
 

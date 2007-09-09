@@ -302,6 +302,15 @@ enum HostType
 	HostTrue
 };
 
+enum DirectoryLocation
+{
+	SourceDirectory,
+	IntermediateDirectory,
+	OutputDirectory,
+	InstallDirectory,
+	TemporaryDirectory,
+};
+
 class Module
 {
 public:
@@ -314,7 +323,6 @@ public:
 	std::string baseaddress;
 	std::string payload;
 	std::string buildtype;
-	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;
 	Metadata* metadata;
@@ -335,14 +343,15 @@ public:
 	bool cplusplus;
 	std::string prefix;
 	HostType host;
-	std::string installBase;
-	std::string installName;
 	std::string aliasedModuleName;
 	bool useWRC;
 	bool allowWarnings;
 	bool enabled;
 	bool useHostStdlib;
 	bool isStartupLib;
+	FileLocation *output; // "path/foo.exe"
+	FileLocation *dependency; // "path/foo.exe" or "path/libfoo.a"
+	FileLocation *install;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -352,12 +361,6 @@ public:
 	                           const XMLAttribute& attribute );
 	bool HasImportLibrary () const;
 	bool IsDLL () const;
-	bool GenerateInOutputTree () const;
-	std::string GetTargetName () const; // "foo.exe"
-	std::string GetDependencyPath () const; // "path/foo.exe" or "path/libfoo.a"
-	std::string GetDependencyTargetName () const; // "foo.exe" or "libfoo.a"
-	std::string GetBasePath () const; // "path"
-	std::string GetPath () const; // "path/foo.exe"
 	std::string GetPathWithPrefix ( const std::string& prefix ) const; // "path/prefixfoo.exe"
 	std::string GetPathToBaseDir() const; // "../" offset to rootdirectory
 	std::string GetEntryPoint(bool leadingUnderscore) const;
@@ -366,9 +369,9 @@ public:
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
 	void InvokeModule () const;
 	void ProcessXML ();
-	void GetSourceFilenames ( string_list& list,
-	                          bool includeGeneratedFiles ) const;
 private:
+	void SetImportLibrary ( ImportLibrary* importLibrary );
+	DirectoryLocation GetTargetDirectoryTree () const;
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;
 	std::string GetDefaultModuleBaseaddress () const;
@@ -825,16 +828,6 @@ private:
 	static std::string ReplaceVariable ( const std::string& name,
 	                                     const std::string& value,
 	                                     std::string path );
-};
-
-
-enum DirectoryLocation
-{
-	SourceDirectory,
-	IntermediateDirectory,
-	OutputDirectory,
-	InstallDirectory,
-	TemporaryDirectory,
 };
 
 
