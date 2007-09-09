@@ -635,7 +635,6 @@ typedef struct _OBJECT_BASIC_INFORMATION
     LARGE_INTEGER CreationTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
 
-#include <pshpack1.h>
 typedef struct _KAPC_STATE {
     LIST_ENTRY  ApcListHead[2];
     PKPROCESS   Process;
@@ -643,7 +642,7 @@ typedef struct _KAPC_STATE {
     BOOLEAN     KernelApcPending;
     BOOLEAN     UserApcPending;
 } KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
-#include <poppack.h>
+#define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
 
 typedef struct _BITMAP_RANGE {
     LIST_ENTRY      Links;

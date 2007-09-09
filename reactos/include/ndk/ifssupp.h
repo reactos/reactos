@@ -103,7 +103,6 @@ typedef struct _REMOTE_PORT_VIEW
     LPC_PVOID ViewBase;
 } REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
 
-#include <pshpack1.h>
 typedef struct _KAPC_STATE
 {
     LIST_ENTRY ApcListHead[2];
@@ -112,7 +111,6 @@ typedef struct _KAPC_STATE
     BOOLEAN KernelApcPending;
     BOOLEAN UserApcPending;
 } KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
-#include <poppack.h>
 
 typedef struct _KQUEUE
 {
