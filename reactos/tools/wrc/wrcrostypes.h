@@ -129,6 +129,29 @@
 #define LANG_URDU            0x20
 #define LANG_UZBEK           0x43
 #define LANG_VIETNAMESE      0x2a
+
+/* non standard; keep the number high enough (but < 0xff) */
+#define LANG_ESPERANTO       0x8f
+#define LANG_WALON           0x90
+#define LANG_CORNISH         0x91
+#define LANG_WELSH           0x92
+#define LANG_BRETON          0x93
+
+/* FIXME: these are not in the Windows header */
+#define LANG_GAELIC          0x94
+#define LANG_MALTESE         0x3a
+#define LANG_RHAETO_ROMANCE  0x17
+#define LANG_SAAMI           0x3b
+#define LANG_SORBIAN         0x2e
+#define LANG_LOWER_SORBIAN   0x2e
+#define LANG_UPPER_SORBIAN   0x2e
+#define LANG_SUTU            0x30
+#define LANG_TSONGA          0x31
+#define LANG_TSWANA          0x32
+#define LANG_VENDA           0x33
+#define LANG_XHOSA           0x34
+#define LANG_ZULU            0x35
+
 #define SUBLANG_AZERI_CYRILLIC   0x02
 #define SUBLANG_CHINESE_SINGAPORE   0x04
 #define SUBLANG_CHINESE_SIMPLIFIED   0x02
