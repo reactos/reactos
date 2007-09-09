@@ -96,7 +96,7 @@ UNICODE_OBJECTS = \
 
 UNICODE_HOST_CFLAGS = \
 	-D__USE_W32API -DWINVER=0x501 -DWINE_UNICODE_API= \
-	-I$(UNICODE_BASE) -Iinclude/reactos/wine -Iinclude -Iinclude/reactos \
+	-I$(UNICODE_BASE) -Iinclude/reactos/wine -Iinclude -Iinclude/psdk -Iinclude/reactos \
 	$(TOOLS_CFLAGS)
 
 .PHONY: unicode

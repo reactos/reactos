@@ -34,7 +34,7 @@ WMC_OBJECTS = \
 
 WMC_HOST_CFLAGS = -I$(WMC_BASE) $(TOOLS_CFLAGS) \
                   -D__USE_W32API -DWINE_UNICODE_API= -I$(UNICODE_BASE) \
-                  -Iinclude/reactos/wine -Iinclude/reactos -Iinclude \
+                  -Iinclude/reactos/wine -Iinclude/reactos -Iinclude -Iinclude/psdk \
                   -I$(INTERMEDIATE_)/include
 
 WMC_HOST_LFLAGS = $(TOOLS_LFLAGS)
