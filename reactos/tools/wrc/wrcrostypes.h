@@ -136,6 +136,7 @@
 #define SUBLANG_SERBIAN_CYRILLIC   0x03
 #define SUBLANG_UZBEK_CYRILLIC   0x02
 
+#include <pshpack2.h>
 typedef struct tagBITMAPFILEHEADER {
    WORD   bfType;
    DWORD  bfSize;
@@ -143,6 +144,7 @@ typedef struct tagBITMAPFILEHEADER {
    WORD   bfReserved2;
    DWORD  bfOffBits;
 } BITMAPFILEHEADER,*LPBITMAPFILEHEADER,*PBITMAPFILEHEADER;
+#include <poppack.h>
 
 typedef int FXPT2DOT30;
 typedef struct tagCIEXYZ {
