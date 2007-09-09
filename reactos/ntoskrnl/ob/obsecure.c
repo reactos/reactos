@@ -774,10 +774,11 @@ NtSetSecurityObject(IN HANDLE Handle,
         SeReleaseSecurityDescriptor((PSECURITY_DESCRIPTOR)CapturedDescriptor,
                                     PreviousMode,
                                     TRUE);
+
+        /* Now we can dereference the object */
+        ObDereferenceObject(Object);
     }
 
-    /* Now we can dereference the object */
-    ObDereferenceObject(Object);
     return Status;
 }
 
