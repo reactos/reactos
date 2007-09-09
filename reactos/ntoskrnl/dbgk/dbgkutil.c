@@ -61,7 +61,7 @@ DbgkpSuspendProcess(VOID)
     PAGED_CODE();
 
     /* Make sure this isn't a deleted process */
-    if (PsGetCurrentProcess()->ProcessDelete)
+    if (!PsGetCurrentProcess()->ProcessDelete)
     {
         /* Freeze all the threads */
         KeFreezeAllThreads();
