@@ -203,24 +203,39 @@ static BOOL
 LoadResolutionSettings(DWORD *ResX, DWORD *ResY, DWORD *ColDepth)
 {
   HKEY hReg;
-  DWORD Type, Size;
+  DWORD Type, Size = sizeof(DWORD);
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                   L"SYSTEM\\CurrentControlSet\\Services\\vmx_svga\\Device0",
                   0, KEY_QUERY_VALUE, &hReg) != ERROR_SUCCESS)
   {
-    return FALSE;
+    DEVMODE CurrentDevMode;
+
+    /* If this key is absent, just get current settings */
+    memset(&CurrentDevMode, 0, sizeof(CurrentDevMode));
+    CurrentDevMode.dmSize = sizeof(CurrentDevMode);
+    if (EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &CurrentDevMode) == TRUE)
+    {
+      *ColDepth = CurrentDevMode.dmBitsPerPel;
+      *ResX = CurrentDevMode.dmPelsWidth;
+      *ResY = CurrentDevMode.dmPelsHeight;
+
+      return TRUE;
+    }
   }
+
   if(RegQueryValueEx(hReg, L"DefaultSettings.BitsPerPel", 0, &Type, (BYTE*)ColDepth, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
     *ColDepth = 8;
+    Size = sizeof(DWORD);
   }
 
   if(RegQueryValueEx(hReg, L"DefaultSettings.XResolution", 0, &Type, (BYTE*)ResX, &Size) != ERROR_SUCCESS ||
      Type != REG_DWORD)
   {
     *ResX = 640;
+    Size = sizeof(DWORD);
   }
 
   if(RegQueryValueEx(hReg, L"DefaultSettings.YResolution", 0, &Type, (BYTE*)ResY, &Size) != ERROR_SUCCESS ||
