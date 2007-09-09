@@ -109,6 +109,13 @@ ClassIoCompletion(
 
 NTSTATUS
 STDCALL
+ClassCompletionRoutine(IN PDEVICE_OBJECT DeviceObject,
+                       IN PIRP Irp,
+                       IN PVOID Context);
+
+
+NTSTATUS
+STDCALL
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -1837,7 +1844,7 @@ Return Value:
 {
     PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
     IO_STATUS_BLOCK ioStatus;
-    ULONG controlType;
+    ULONG controlType, mjFunction;
     PIRP irp;
     PIO_STACK_LOCATION irpStack;
     KEVENT event;
@@ -1845,8 +1852,11 @@ Return Value:
     ULONG retryCount = MAXIMUM_RETRIES;
     NTSTATUS status;
     BOOLEAN retry;
+    LARGE_INTEGER dummy;
 
     PAGED_CODE();
+
+    dummy.QuadPart = 0;
 
     //
     // Write length to SRB.
@@ -1917,12 +1927,13 @@ retry:
 
             controlType = IOCTL_SCSI_EXECUTE_OUT;
             Srb->SrbFlags = SRB_FLAGS_DATA_OUT;
+            mjFunction = IRP_MJ_WRITE;
 
         } else {
 
             controlType = IOCTL_SCSI_EXECUTE_IN;
             Srb->SrbFlags = SRB_FLAGS_DATA_IN;
-
+            mjFunction = IRP_MJ_READ;
         }
 
     } else {
@@ -1930,27 +1941,28 @@ retry:
         BufferLength = 0;
         controlType = IOCTL_SCSI_EXECUTE_NONE;
         Srb->SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER;
+        mjFunction = IRP_MJ_FLUSH_BUFFERS;
     }
 
     //
     // Build device I/O control request with data transfer.
     //
-
-    irp = IoBuildDeviceIoControlRequest(controlType,
-                                        deviceExtension->PortDeviceObject,
-                                        NULL,
-                                        0,
-                                        BufferAddress,
-                                        BufferLength,
-                                        TRUE,
-                                        &event,
-                                        &ioStatus);
+    irp = IoBuildAsynchronousFsdRequest(
+            mjFunction,
+            deviceExtension->DeviceObject,
+            BufferAddress,
+            (BufferAddress) ? BufferLength : 0,
+            &dummy,
+            &ioStatus);
 
     if (irp == NULL) {
         ExFreePool(senseInfoBuffer);
         DebugPrint((1, "ScsiClassSendSrbSynchronous: Can't allocate Irp\n"));
         return(STATUS_INSUFFICIENT_RESOURCES);
     }
+
+    // Set event field
+    irp->UserEvent = &event;
 
     //
     // Disable synchronous transfer for these requests.
@@ -1971,11 +1983,23 @@ retry:
     Srb->ScsiStatus = Srb->SrbStatus = 0;
     Srb->NextSrb = 0;
 
+    // Set completion routine
+    IoSetCompletionRoutine(
+        irp,
+        ClassCompletionRoutine,
+        NULL,
+        TRUE,
+        TRUE,
+        TRUE);
+
     //
     // Get next stack location.
     //
 
     irpStack = IoGetNextIrpStackLocation(irp);
+
+    irpStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    irpStack->Parameters.DeviceIoControl.IoControlCode = controlType;
 
     //
     // Set up SRB for execute scsi request. Save SRB address in next stack
@@ -3551,11 +3575,12 @@ Return Value:
     NTSTATUS status;
     ULONG modifiedIoControlCode;
 
-    // Class can't handle RESET_DEVICE ioctl
-    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_STORAGE_RESET_DEVICE)
-    {
-        status = Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    if (irpStack->Parameters.DeviceIoControl.IoControlCode ==
+        IOCTL_STORAGE_RESET_DEVICE) {
+
+        Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        status = STATUS_UNSUCCESSFUL;
         goto SetStatusAndReturn;
     }
 
@@ -4767,6 +4792,42 @@ Return Value:
     IoCompleteRequest(originalIrp, IO_DISK_INCREMENT);
 
     IoFreeIrp(Irp);
+
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+STDCALL
+ClassCompletionRoutine(IN PDEVICE_OBJECT DeviceObject,
+                       IN PIRP Irp,
+                       IN PVOID Context)
+{
+    PIO_STATUS_BLOCK IoStatusBlock = Irp->UserIosb;
+    PKEVENT Event = Irp->UserEvent;
+    PMDL Mdl;
+
+    *IoStatusBlock = Irp->IoStatus;
+    Irp->UserIosb = NULL;
+    Irp->UserEvent = NULL;
+
+    if(Irp->MdlAddress)
+    {
+        Mdl = Irp->MdlAddress;
+
+        // if necessary - unlock pages
+        if ((Mdl->MdlFlags & MDL_PAGES_LOCKED) &&
+            !(Mdl->MdlFlags & MDL_PARTIAL_HAS_BEEN_MAPPED))
+        {
+                MmUnlockPages(Mdl);
+        }
+
+        // free this mdl
+        IoFreeMdl(Mdl);
+    }
+
+    // free irp and set event to unsignaled state
+    IoFreeIrp(Irp);
+    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
