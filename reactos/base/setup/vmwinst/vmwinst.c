@@ -277,6 +277,7 @@ static BOOL
 SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
 {
   HKEY hReg;
+  DWORD VFreq = 85;
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                   L"SYSTEM\\CurrentControlSet\\Services\\vmx_svga\\Device0",
@@ -297,6 +298,12 @@ SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
   }
 
   if(RegSetValueEx(hReg, L"DefaultSettings.YResolution", 0, REG_DWORD, (BYTE*)&ResY, sizeof(DWORD)) != ERROR_SUCCESS)
+  {
+    RegCloseKey(hReg);
+    return FALSE;
+  }
+
+  if(RegSetValueEx(hReg, L"DefaultSettings.VRefresh", 0, REG_DWORD, (BYTE*)&VFreq, sizeof(DWORD)) != ERROR_SUCCESS)
   {
     RegCloseKey(hReg);
     return FALSE;
