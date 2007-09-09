@@ -855,9 +855,10 @@ VideoPortGetRegistryParameters(
    QUERY_REGISTRY_CALLBACK_CONTEXT Context;
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-   DPRINT("VideoPortGetRegistryParameters ParameterName %S\n", ParameterName);
-
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+
+   DPRINT("VideoPortGetRegistryParameters ParameterName %S, RegPath: %wZ\n",
+      ParameterName, &DeviceExtension->RegistryPath);
 
    Context.HwDeviceExtension = HwDeviceExtension;
    Context.HwContext = HwContext;
@@ -874,7 +875,7 @@ VideoPortGetRegistryParameters(
       &Context,
       NULL)))
    {
-      DPRINT("VideoPortGetRegistryParameters could not find the "
+      DPRINT1("VideoPortGetRegistryParameters could not find the "
         "requested parameter\n");
       return ERROR_INVALID_PARAMETER;
    }
@@ -901,7 +902,9 @@ VideoPortSetRegistryParameters(
 {
    VP_STATUS Status;
 
-   DPRINT("VideoPortSetRegistryParameters ParameterName %S\n", ValueName);
+   DPRINT("VideoPortSetRegistryParameters ParameterName %S, RegPath: %wZ\n",
+      ValueName,
+      &VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->RegistryPath);
    ASSERT_IRQL(PASSIVE_LEVEL);
    Status = RtlWriteRegistryValue(
       RTL_REGISTRY_ABSOLUTE,
@@ -912,7 +915,7 @@ VideoPortSetRegistryParameters(
       ValueLength);
 
    if (Status != ERROR_SUCCESS)
-     DPRINT("VideoPortSetRegistryParameters error 0x%x\n", Status);
+     DPRINT1("VideoPortSetRegistryParameters error 0x%x\n", Status);
 
    return Status;
 }
