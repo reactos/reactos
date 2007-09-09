@@ -3551,6 +3551,14 @@ Return Value:
     NTSTATUS status;
     ULONG modifiedIoControlCode;
 
+    // Class can't handle RESET_DEVICE ioctl
+    if (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_STORAGE_RESET_DEVICE)
+    {
+        status = Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        goto SetStatusAndReturn;
+    }
+
     //
     // If this is a pass through I/O control, set the minor function code
     // and device address and pass it to the port driver.
