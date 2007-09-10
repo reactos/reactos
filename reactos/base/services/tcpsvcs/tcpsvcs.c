@@ -18,7 +18,7 @@ static SERVICE_STATUS hServStatus;
 static SERVICE_STATUS_HANDLE hSStat;
 
 LPCTSTR LogFileName = _T("C:\\tcpsvcs_log.log");
-LPTSTR ServiceName = _T("Simp Tcp");
+LPTSTR ServiceName = _T("tcpsvcs");
 
 static SERVICES
 Services[NUM_SERVICES] =
