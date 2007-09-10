@@ -25,7 +25,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Erweitert"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX Kompatibilitäts-Konfiguration", -1, 7,7,231,60
+	GROUPBOX "Kompatibilitäts-Konfiguration", -1, 7,7,231,60
 	AUTOCHECKBOX "&Erweiterte Textdienste in allen Programmen verwenden.", IDC_SUPPORT_ADV_SERV_CHECKBOX, 14, 19, 210, 10, WS_GROUP
 	LTEXT "Aktivieren Sie diese Funktion, um alle Erweiterten Textdienste in Notepad und anderen Programmen zu aktivieren, die normalerweise keine Sprach- und Handschrifterkennung oder andere Erweiterte Textdienste unterstützen.",-1,14,33,220,25
 	GROUPBOX "Systemkonfiguration", -1, 7,74,231,60
