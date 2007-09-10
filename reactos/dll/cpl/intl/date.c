@@ -35,12 +35,12 @@
 /* GLOBALS ******************************************************************/
 
 #define YEAR_STR_MAX_SIZE        4
-#define MAX_SHORT_FMT_SAMPLES    5
-#define MAX_LONG_FMT_SAMPLES     2
 #define MAX_SHRT_DATE_SEPARATORS 3
 #define STD_DATE_SEP             _T(".")
 #define YEAR_DIFF                (99)
 #define MAX_YEAR                 (9999)
+
+static HWND hwndEnum = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -91,7 +91,7 @@ FindDateSep(const TCHAR *szSourceStr)
 
 /* Setted up short date separator to registry */
 static BOOL
-SetShortDateSep(HWND hwndDlg)
+SetShortDateSep(HWND hwndDlg, LCID lcid)
 {
     TCHAR szShortDateSep[MAX_SAMPLES_STR_SIZE];
     INT nSepStrSize;
@@ -119,14 +119,14 @@ SetShortDateSep(HWND hwndDlg)
     }
 
     /* Save date separator */
-    SetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDATE, szShortDateSep);
+    SetLocaleInfo(lcid, LOCALE_SDATE, szShortDateSep);
 
     return TRUE;
 }
 
 /* Setted up short date format to registry */
 static BOOL
-SetShortDateFormat(HWND hwndDlg)
+SetShortDateFormat(HWND hwndDlg, LCID lcid)
 {
     TCHAR szShortDateFmt[MAX_SAMPLES_STR_SIZE];
     TCHAR szShortDateSep[MAX_SAMPLES_STR_SIZE];
@@ -186,14 +186,14 @@ SetShortDateFormat(HWND hwndDlg)
     free(pszResultStr);
 
     /* Save short date format */
-    SetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SSHORTDATE, szShortDateFmt);
+    SetLocaleInfo(lcid, LOCALE_SSHORTDATE, szShortDateFmt);
 
     return TRUE;
 }
 
 /* Setted up long date format to registry */
 static BOOL
-SetLongDateFormat(HWND hwndDlg)
+SetLongDateFormat(HWND hwndDlg, LCID lcid)
 {
     TCHAR szLongDateFmt[MAX_SAMPLES_STR_SIZE];
     BOOL OpenApostFlg = FALSE;
@@ -238,14 +238,14 @@ SetLongDateFormat(HWND hwndDlg)
     }
 
     /* Save short date format */
-    SetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, szLongDateFmt);
+    SetLocaleInfo(lcid, LOCALE_SLONGDATE, szLongDateFmt);
 
     return TRUE;
 }
 
 /* Init short date separator control box */
 static VOID
-InitShortDateSepSamples(HWND hwndDlg)
+InitShortDateSepSamples(HWND hwndDlg, LCID lcid)
 {
     LPTSTR ShortDateSepSamples[MAX_SHRT_DATE_SEPARATORS] =
     {
@@ -258,7 +258,7 @@ InitShortDateSepSamples(HWND hwndDlg)
     INT nRetCode;
 
     /* Get current short date separator */
-    GetLocaleInfo(LOCALE_USER_DEFAULT,
+    GetLocaleInfo(lcid,
                   LOCALE_SDATE,
                   szShortDateSep,
                   MAX_SAMPLES_STR_SIZE);
@@ -274,7 +274,7 @@ InitShortDateSepSamples(HWND hwndDlg)
     {
         SendMessageW(GetDlgItem(hwndDlg, IDC_SHRTDATESEP_COMBO),
                      CB_ADDSTRING,
-                     nCBIndex,
+                     0,
                      (LPARAM)ShortDateSepSamples[nCBIndex]);
     }
 
@@ -289,7 +289,7 @@ InitShortDateSepSamples(HWND hwndDlg)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATESEP_COMBO),
                     CB_ADDSTRING,
-                    MAX_SHRT_DATE_SEPARATORS+1,
+                    0,
                     (LPARAM)szShortDateSep);
         SendMessageW(GetDlgItem(hwndDlg, IDC_SHRTDATESEP_COMBO),
                      CB_SELECTSTRING,
@@ -298,24 +298,26 @@ InitShortDateSepSamples(HWND hwndDlg)
     }
 }
 
+static BOOL CALLBACK
+ShortDateFormatEnumProc(LPTSTR lpTimeFormatString)
+{
+    SendMessage(hwndEnum,
+                CB_ADDSTRING,
+                0,
+                (LPARAM)lpTimeFormatString);
+
+    return TRUE;
+}
+
 /* Init short date control box */
 VOID
-InitShortDateCB(HWND hwndDlg)
+InitShortDateCB(HWND hwndDlg, LCID lcid)
 {
-    LPTSTR ShortDateFmtSamples[MAX_SHORT_FMT_SAMPLES] =
-    {
-        _T("dd.MM.yyyy"),
-        _T("dd.MM.yy"),
-        _T("d.M.yy"),
-        _T("dd/MM/yy"),
-        _T("yyyy-MM-dd")
-    };
     TCHAR szShortDateFmt[MAX_SAMPLES_STR_SIZE];
-    INT nCBIndex;
     INT nRetCode;
 
     /* Get current short date format */
-    GetLocaleInfo(LOCALE_USER_DEFAULT,
+    GetLocaleInfo(lcid,
                   LOCALE_SSHORTDATE,
                   szShortDateFmt,
                   MAX_SAMPLES_STR_SIZE);
@@ -326,14 +328,9 @@ InitShortDateCB(HWND hwndDlg)
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create standart list of date formats */
-    for (nCBIndex = 0; nCBIndex < MAX_SHORT_FMT_SAMPLES; nCBIndex++)
-    {
-        SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO),
-                    CB_ADDSTRING,
-                    nCBIndex,
-                    (LPARAM)ShortDateFmtSamples[nCBIndex]);
-    }
+    /* Enumerate short date formats */
+    hwndEnum = GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO);
+    EnumDateFormats(ShortDateFormatEnumProc, lcid, DATE_SHORTDATE);
 
     /* Set current item to value from registry */
     nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO),
@@ -346,7 +343,7 @@ InitShortDateCB(HWND hwndDlg)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO),
                     CB_ADDSTRING,
-                    MAX_SHORT_FMT_SAMPLES+1,
+                    0,
                     (LPARAM)szShortDateFmt);
         SendMessage(GetDlgItem(hwndDlg, IDC_SHRTDATEFMT_COMBO),
                     CB_SELECTSTRING,
@@ -357,20 +354,13 @@ InitShortDateCB(HWND hwndDlg)
 
 /* Init long date control box */
 static VOID
-InitLongDateCB(HWND hwndDlg)
+InitLongDateCB(HWND hwndDlg, LCID lcid)
 {
-    /* Where this data stored? */
-    LPTSTR LongDateFmtSamples[MAX_LONG_FMT_SAMPLES] =
-    {
-        _T("d MMMM yyyy 'y.'"),
-        _T("dd MMMM yyyy 'y.'")
-    };
     TCHAR szLongDateFmt[MAX_SAMPLES_STR_SIZE];
-    INT nCBIndex;
     INT nRetCode;
 
     /* Get current long date format */
-    GetLocaleInfo(LOCALE_USER_DEFAULT,
+    GetLocaleInfo(lcid,
                   LOCALE_SLONGDATE,
                   szLongDateFmt,
                   MAX_SAMPLES_STR_SIZE);
@@ -381,14 +371,9 @@ InitLongDateCB(HWND hwndDlg)
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create standart list of date formats */
-    for (nCBIndex = 0; nCBIndex < MAX_LONG_FMT_SAMPLES; nCBIndex++)
-    {
-        SendMessage(GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO),
-                    CB_ADDSTRING,
-                    nCBIndex,
-                    (LPARAM)LongDateFmtSamples[nCBIndex]);
-    }
+    /* Enumerate short long formats */
+    hwndEnum = GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO);
+    EnumDateFormats(ShortDateFormatEnumProc, lcid, DATE_LONGDATE);
 
     /* Set current item to value from registry */
     nRetCode = SendMessage(GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO),
@@ -401,7 +386,7 @@ InitLongDateCB(HWND hwndDlg)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO),
                     CB_ADDSTRING,
-                    MAX_LONG_FMT_SAMPLES+1,
+                    0,
                     (LPARAM)szLongDateFmt);
         SendMessage(GetDlgItem(hwndDlg, IDC_LONGDATEFMT_COMBO),
                     CB_SELECTSTRING,
@@ -412,7 +397,7 @@ InitLongDateCB(HWND hwndDlg)
 
 /* Set up max date value to registry */
 static VOID
-SetMaxDate(HWND hwndDlg)
+SetMaxDate(HWND hwndDlg, LCID lcid)
 {
     TCHAR szMaxDateVal[YEAR_STR_MAX_SIZE];
     HWND hWndYearSpin;
@@ -430,7 +415,7 @@ SetMaxDate(HWND hwndDlg)
     _itot(nSpinVal, szMaxDateVal, DECIMAL_RADIX);
 
     /* Save max date value */
-    SetCalendarInfo(LOCALE_USER_DEFAULT,
+    SetCalendarInfo(lcid,
                     CAL_GREGORIAN,
                     48 , /* CAL_ITWODIGITYEARMAX */
                     (LPCTSTR)&szMaxDateVal);
@@ -438,11 +423,11 @@ SetMaxDate(HWND hwndDlg)
 
 /* Get max date value from registry set */
 static INT
-GetMaxDate(VOID)
+GetMaxDate(LCID lcid)
 {
     INT nMaxDateVal;
 
-    GetCalendarInfo(LOCALE_USER_DEFAULT,
+    GetCalendarInfo(lcid,
                     CAL_GREGORIAN,
                     CAL_ITWODIGITYEARMAX | CAL_RETURN_NUMBER,
                     NULL,
@@ -478,7 +463,7 @@ SetMinData(HWND hwndDlg)
 
 /* Init spin control */
 static VOID
-InitMinMaxDateSpin(HWND hwndDlg)
+InitMinMaxDateSpin(HWND hwndDlg, LCID lcid)
 {
     TCHAR OutBuffer[YEAR_STR_MAX_SIZE];
     HWND hWndYearSpin;
@@ -486,14 +471,14 @@ InitMinMaxDateSpin(HWND hwndDlg)
     hWndYearSpin = GetDlgItem(hwndDlg, IDC_SCR_MAX_YEAR);
 
     /* Init max date value */
-    wsprintf(OutBuffer, _T("%04d"), (DWORD)GetMaxDate());
+    wsprintf(OutBuffer, _T("%04d"), (DWORD)GetMaxDate(lcid));
     SendMessage(GetDlgItem(hwndDlg, IDC_SECONDYEAR_EDIT),
                 WM_SETTEXT,
                 0,
                 (LPARAM)OutBuffer);
 
     /* Init min date value */
-    wsprintf(OutBuffer, _T("%04d"), (DWORD)GetMaxDate()-YEAR_DIFF);
+    wsprintf(OutBuffer, _T("%04d"), (DWORD)GetMaxDate(lcid) - YEAR_DIFF);
     SendMessage(GetDlgItem(hwndDlg, IDC_FIRSTYEAR_EDIT),
                 WM_SETTEXT,
                 0,
@@ -510,7 +495,7 @@ InitMinMaxDateSpin(HWND hwndDlg)
     SendMessage(hWndYearSpin,
                 UDM_SETPOS,
                 0,
-                MAKELONG(GetMaxDate(),0));
+                MAKELONG(GetMaxDate(lcid),0));
 }
 
 /* Update all date locale samples */
@@ -542,16 +527,19 @@ DatePageProc(HWND hwndDlg,
 {
     PGLOBALDATA pGlobalData;
 
+    pGlobalData = (PGLOBALDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
             pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            InitMinMaxDateSpin(hwndDlg);
+            InitMinMaxDateSpin(hwndDlg, pGlobalData->lcid);
             UpdateDateLocaleSamples(hwndDlg, pGlobalData->lcid);
-            InitShortDateCB(hwndDlg);
-            InitLongDateCB(hwndDlg);
-            InitShortDateSepSamples(hwndDlg);
+            InitShortDateCB(hwndDlg, pGlobalData->lcid);
+            InitLongDateCB(hwndDlg, pGlobalData->lcid);
+            InitShortDateSepSamples(hwndDlg, pGlobalData->lcid);
             /* TODO: Add other calendar types */
             break;
 
@@ -595,14 +583,14 @@ DatePageProc(HWND hwndDlg,
         /* If push apply button */
         if (lpnm->code == (UINT)PSN_APPLY)
         {
-            SetMaxDate(hwndDlg);
-            if(!SetShortDateSep(hwndDlg)) break;
-            if(!SetShortDateFormat(hwndDlg)) break;
-            if(!SetLongDateFormat(hwndDlg)) break;
-            InitShortDateCB(hwndDlg);
+            SetMaxDate(hwndDlg, pGlobalData->lcid);
+            if(!SetShortDateSep(hwndDlg, pGlobalData->lcid)) break;
+            if(!SetShortDateFormat(hwndDlg, pGlobalData->lcid)) break;
+            if(!SetLongDateFormat(hwndDlg, pGlobalData->lcid)) break;
+            InitShortDateCB(hwndDlg, pGlobalData->lcid);
             /* FIXME: */
             //Sleep(15);
-            UpdateDateLocaleSamples(hwndDlg, LOCALE_USER_DEFAULT);
+            UpdateDateLocaleSamples(hwndDlg, pGlobalData->lcid);
         }
     }
     break;
