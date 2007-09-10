@@ -120,7 +120,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 		for ( i = 0; i < incs.size(); i++ )
 		{
 			string path = Path::RelativeFromDirectory (
-				incs[i]->directory,
+				incs[i]->directory->relative_path,
 				module.output->relative_path );
 
 			includes.push_back ( path );

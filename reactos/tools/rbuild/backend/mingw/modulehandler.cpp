@@ -105,6 +105,8 @@ MingwModuleHandler::PassThruCacheDirectory (const FileLocation* file )
 {
 	switch ( file->directory )
 	{
+		case SourceDirectory:
+			break;
 		case IntermediateDirectory:
 			backend->AddDirectoryTarget ( file->relative_path, backend->intermediateDirectory );
 			break;
@@ -670,14 +672,7 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 		Include& include = *includes[i];
 		if ( parameters.length () > 0 )
 			parameters += " ";
-		if ( include.root == "intermediate" )
-			path_prefix = "$(INTERMEDIATE)" + sSep;
-		else if (include.root == "output" )
-			path_prefix = "$(OUTPUT)" + sSep;
-		else
-			path_prefix = "";
-
-		parameters += "-I" + path_prefix + include.directory;
+		parameters += "-I" + strDirectory ( include.directory );;
 	}
 	return parameters;
 }
@@ -783,33 +778,11 @@ MingwModuleHandler::GenerateMacro (
 	for ( i = 0; i < data.includes.size(); i++ )
 	{
 		const Include& include = *data.includes[i];
-		string includeDirectory, path_prefix;
-		if ( include.baseModule != NULL &&
-		     ( include.baseModule->type == RpcServer ||
-		       include.baseModule->type == RpcClient ||
-		       include.baseModule->type == IdlHeader) )
-		{
-			path_prefix = "$(INTERMEDIATE)" + sSep;
-			includeDirectory = NormalizeFilename ( include.directory );
-		}
-		else
-			includeDirectory = include.directory;
-
-		if ( include.root == "intermediate" )
-			path_prefix = "$(INTERMEDIATE)" + sSep;
-		else if (include.root == "output" )
-			path_prefix = "$(OUTPUT)" + sSep;
-		else if ( include.root != "" )
-			throw InvalidOperationException ( __FILE__,
-			                                  __LINE__,
-			                                  "Unsupported root prefix '%s'",
-			                                  include.root.c_str () );
-
+		const FileLocation* includeDirectory = include.directory;
 		fprintf (
 			fMakefile,
-			" -I%s%s",
-			path_prefix.c_str(),
-			includeDirectory.c_str() );
+			" -I%s",
+			strDirectory ( includeDirectory ).c_str() );
 	}
 	for ( i = 0; i < data.defines.size(); i++ )
 	{

@@ -118,15 +118,15 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		{
 
 			// explicitly omit win32api directories
-			if ( !strncmp(incs[i]->directory.c_str(), "w32api", 6 ) )
+			if ( !strncmp(incs[i]->directory->relative_path.c_str(), "w32api", 6 ) )
 				continue;
 
 			// explicitly omit include/wine directories
-			if ( !strncmp(incs[i]->directory.c_str(), "include\\wine", 12 ) )
+			if ( !strncmp(incs[i]->directory->relative_path.c_str(), "include\\wine", 12 ) )
 				continue;
 
 			string path = Path::RelativeFromDirectory (
-				incs[i]->directory,
+				incs[i]->directory->relative_path,
 				module.output->relative_path );
 			includes.push_back ( path );
 		}

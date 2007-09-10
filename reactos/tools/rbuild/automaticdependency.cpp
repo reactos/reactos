@@ -367,11 +367,36 @@ AutomaticDependency::ResolveVariablesInPath ( const string& path )
 }
 
 bool
-AutomaticDependency::LocateIncludedFile ( const string& directory,
+AutomaticDependency::LocateIncludedFile ( const FileLocation& directory,
                                           const string& includedFilename,
                                           string& resolvedFilename )
 {
-	string normalizedFilename = NormalizeFilename ( directory + sSep + includedFilename );
+	string path;
+	switch ( directory.directory )
+	{
+		case SourceDirectory:
+			path = "";
+			break;
+		case IntermediateDirectory:
+			path = Environment::GetIntermediatePath ();
+			break;
+		case OutputDirectory:
+			path = Environment::GetOutputPath ();
+			break;
+		default:
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Invalid directory %d.",
+			                                  directory.directory );
+	}
+	if ( directory.relative_path.length () > 0 )
+	{
+		if ( path.length () > 0 )
+			path += sSep;
+		path += directory.relative_path;
+	}
+	
+	string normalizedFilename = NormalizeFilename ( path + sSep + includedFilename );
 	FILE* f = fopen ( normalizedFilename.c_str (), "rb" );
 	if ( f != NULL )
 	{
@@ -418,12 +443,12 @@ AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
                                           string& resolvedFilename )
 {
 	vector<Include*> includes;
-	Include currentDirectory ( module.project, ".", sourceFile->directoryPart );
+	Include currentDirectory ( module.project, SourceDirectory, sourceFile->directoryPart );
 	GetIncludeDirectories ( includes, module, currentDirectory, searchCurrentDirectory );
 	for ( size_t j = 0; j < includes.size (); j++ )
 	{
 		Include& include = *includes[j];
-		if ( LocateIncludedFile ( include.directory,
+		if ( LocateIncludedFile ( *include.directory,
 		                          includedFilename,
 		                          resolvedFilename ) )
 		{
@@ -433,6 +458,9 @@ AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
 			return true;
 		}
 	}
+	/*printf ( "Unable to find %s, included in %s.\n",
+	         includedFilename.c_str (),
+	         sourceFile->filename.c_str () );*/
 	resolvedFilename = "";
 	return false;
 }

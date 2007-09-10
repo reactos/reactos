@@ -25,95 +25,98 @@ using std::vector;
 
 Include::Include ( const Project& project,
                    const XMLElement* includeNode )
-	: project ( project ),
-	  module ( NULL ),
+	: directory ( NULL ),
+	  project ( project ),
 	  node ( includeNode ),
-	  baseModule ( NULL )
+	  module ( NULL )
 {
 }
 
 Include::Include ( const Project& project,
-                   const Module* module,
-                   const XMLElement* includeNode )
-	: project ( project ),
-	  module ( module ),
+                   const XMLElement* includeNode,
+                   const Module* module )
+	: directory ( NULL ),
+	  project ( project ),
 	  node ( includeNode ),
-	  baseModule ( NULL )
+	  module ( module )
 {
 }
 
 Include::Include ( const Project& project,
-                   string directory,
-                   string basePath )
+                   DirectoryLocation root,
+                   const std::string& relative_path )
 	: project ( project ),
-	  module ( NULL ),
-	  node ( NULL ),
-	  baseModule ( NULL )
+	  node ( NULL )
 {
-	this->directory = NormalizeFilename ( basePath + sSep + directory );
-	this->basePath = NormalizeFilename ( basePath );
+	directory = new FileLocation ( root, relative_path, "" );
 }
 
-Include::~Include ()
+Include::~Include()
 {
 }
 
 void
-Include::ProcessXML()
+Include::ProcessXML ()
 {
-	const XMLAttribute* att;
-	att = node->GetAttribute ( "base", false );
+	DirectoryLocation root = SourceDirectory;
+
+	string relative_path;
+	const XMLAttribute* att = node->GetAttribute ( "base", false );
 	if ( att )
 	{
-		bool referenceResolved = false;
-
 		if ( !module )
-		{
 			throw XMLInvalidBuildFileException (
 				node->location,
 				"'base' attribute illegal from global <include>" );
-		}
 
-		if ( !referenceResolved )
+		if ( att->value == project.name )
 		{
-			if ( att->value == project.name )
-			{
-				basePath = ".";
-				referenceResolved = true;
-			}
-			else
-			{
-				const Module* base = project.LocateModule ( att->value );
-				if ( base != NULL )
-				{
-					baseModule = base;
-					basePath = base->output->relative_path;
-					referenceResolved = true;
-				}
-			}
+			relative_path = node->value;
 		}
+		else
+		{
+			const Module* base = project.LocateModule ( att->value );
+			if ( !base )
+				throw XMLInvalidBuildFileException (
+					node->location,
+					"<include> attribute 'base' references non-existant project or module '%s'",
+					att->value.c_str() );
+			root = GetDefaultDirectoryTree ( base );
 
-		if ( !referenceResolved )
-			throw XMLInvalidBuildFileException (
-				node->location,
-				"<include> attribute 'base' references non-existant project or module '%s'",
-				att->value.c_str() );
-		directory = NormalizeFilename ( basePath + sSep + node->value );
+			relative_path = base->output->relative_path;
+			if ( node->value.length () > 0 && node->value != "." )
+				relative_path += sSep + node->value;
+		}
 	}
 	else
-		directory = NormalizeFilename ( node->value );
+		relative_path = node->value;
 
 	att = node->GetAttribute ( "root", false );
 	if ( att )
 	{
-		if ( att->value != "intermediate" && att->value != "output" )
-		{
-			throw InvalidAttributeValueException (
-				node->location,
-				"root",
-				att->value );
-		}
-
-		root = att->value;
+		if ( att->value == "intermediate" )
+			root = IntermediateDirectory;
+		else if ( att->value == "output" )
+			root = OutputDirectory;
+		else
+			throw InvalidAttributeValueException ( node->location,
+			                                       "root",
+			                                       att->value );
 	}
+
+	directory = new FileLocation ( root,
+	                               relative_path,
+	                               "" );
+}
+
+DirectoryLocation
+Include::GetDefaultDirectoryTree ( const Module* module ) const
+{
+	if ( module != NULL &&
+	     ( module->type == RpcServer ||
+	       module->type == RpcClient ||
+	       module->type == IdlHeader) )
+		return IntermediateDirectory;
+	else
+		return SourceDirectory;
 }

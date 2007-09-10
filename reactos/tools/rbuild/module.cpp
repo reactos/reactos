@@ -289,6 +289,10 @@ Module::Module ( const Project& project,
 	else
 		extension = GetDefaultModuleExtension ();
 
+	output = new FileLocation ( GetTargetDirectoryTree (),
+	                            modulePath,
+	                            name + extension );
+
 	att = moduleNode.GetAttribute ( "unicode", false );
 	if ( att != NULL )
 	{
@@ -485,9 +489,6 @@ Module::Module ( const Project& project,
 		}
 	}
 
-	output = new FileLocation ( GetTargetDirectoryTree (),
-	                            modulePath,
-	                            name + extension );
 	SetImportLibrary ( NULL );
 }
 
@@ -658,7 +659,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "include" )
 	{
-		Include* include = new Include ( project, this, &e );
+		Include* include = new Include ( project, &e, this );
 		if ( parseContext.ifData )
 			parseContext.ifData->data.includes.push_back ( include );
 		else
@@ -948,7 +949,9 @@ Module::GetTargetDirectoryTree () const
 			return IntermediateDirectory;
 	}
 	throw InvalidOperationException ( __FILE__,
-	                                  __LINE__ );
+	                                  __LINE__,
+	                                  "Invalid module type %d.",
+	                                  type );
 }
 
 string

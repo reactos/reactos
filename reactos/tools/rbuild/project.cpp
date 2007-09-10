@@ -110,7 +110,8 @@ FileLocation::FileLocation ( const DirectoryLocation directory,
 	     relative_path[0] == '\\' ||
 	     relative_path.find ( '$' ) != string::npos ||
 	     ( relative_path.length () > 1 && ( relative_path[1] == ':' ||
-	                                        relative_path.find_last_of ( "/\\" ) == relative_path.length () - 1 ) )
+	                                        relative_path.find_last_of ( "/\\" ) == relative_path.length () - 1 ) ) ||
+	     ( relative_path.length () > 3 && relative_path.find ( ':' ) != string::npos )
 	     )
 	{
 		throw InvalidOperationException ( __FILE__,
@@ -119,7 +120,7 @@ FileLocation::FileLocation ( const DirectoryLocation directory,
 		                                  relative_path.c_str () );
 	}
 
-	if ( strpbrk ( name.c_str (), "/\\:" ) )
+	if ( name.find_first_of ( "/\\:" ) != string::npos )
 	{
 		throw InvalidOperationException ( __FILE__,
 		                                  __LINE__,

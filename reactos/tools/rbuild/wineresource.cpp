@@ -120,6 +120,6 @@ WineResource::UnpackResourcesInModule ( Module& module,
 		                                  exitcode );
 	}
 	module.non_if_data.includes.push_back( new Include ( module.project,
-	                                                     module.output->relative_path,
-	                                                     "$(INTERMEDIATE)" ) );
+	                                                     IntermediateDirectory,
+	                                                     module.output->relative_path ) );
 }

@@ -171,7 +171,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		for ( i = 0; i < incs.size(); i++ )
 		{
 			string path = Path::RelativeFromDirectory (
-				incs[i]->directory,
+				incs[i]->directory->relative_path,
 				module.output->relative_path );
 			if ( module.type != RpcServer && module.type != RpcClient )
 			{
@@ -182,12 +182,12 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				}
 			}
 			// add to another list win32api and include/wine directories
-			if ( !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) ||
-			     !strncmp(incs[i]->directory.c_str(), "include\\crt", 11 ) ||
-			     !strncmp(incs[i]->directory.c_str(), "include\\GL", 10 ) ||
-				 !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) ||
-				 !strncmp(incs[i]->directory.c_str(), "include\\psdk", 12 ) ||
-			     !strncmp(incs[i]->directory.c_str(), "include\\reactos\\wine", 20 ) )
+			if ( !strncmp(incs[i]->directory->relative_path.c_str(), "include\\ddk", 11 ) ||
+			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ) ||
+			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\GL", 10 ) ||
+				 !strncmp(incs[i]->directory->relative_path.c_str(), "include\\ddk", 11 ) ||
+				 !strncmp(incs[i]->directory->relative_path.c_str(), "include\\psdk", 12 ) ||
+			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\reactos\\wine", 20 ) )
 			{
 				includes_ros.push_back ( path );
 			}

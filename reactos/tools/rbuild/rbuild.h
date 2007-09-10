@@ -386,25 +386,23 @@ private:
 class Include
 {
 public:
-	const Project& project;
-	const Module* module;
-	const XMLElement* node;
-	const Module* baseModule;
-	std::string directory;
-	std::string basePath;
-	std::string root;
+	FileLocation *directory;
 
 	Include ( const Project& project,
 	          const XMLElement* includeNode );
 	Include ( const Project& project,
-	          const Module* module,
-	          const XMLElement* includeNode );
+	          const XMLElement* includeNode,
+	          const Module* module );
 	Include ( const Project& project,
-	          std::string directory,
-	          std::string basePath );
+	          DirectoryLocation directory,
+	          const std::string& relative_path );
 	~Include ();
-	void ProcessXML();
+	void ProcessXML ();
 private:
+	const Project& project;
+	const XMLElement* node;
+	const Module* module;
+	DirectoryLocation GetDefaultDirectoryTree ( const Module* module ) const;
 };
 
 
@@ -769,7 +767,7 @@ public:
 	AutomaticDependency ( const Project& project );
 	~AutomaticDependency ();
 	std::string GetFilename ( const std::string& filename );
-	bool LocateIncludedFile ( const std::string& directory,
+	bool LocateIncludedFile ( const FileLocation& directory,
 	                          const std::string& includedFilename,
 	                          std::string& resolvedFilename );
 	bool LocateIncludedFile ( SourceFile* sourceFile,
