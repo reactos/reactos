@@ -6,7 +6,7 @@ CAPTION "Settings"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Default input language", -1, 7,7,231,53
-	LTEXT "Select one of the installed input languages to use when you start your coputer.",-1,14,18,220,17
+	LTEXT "Select one of the installed input languages to use when you start your computer.",-1,14,18,220,17
 	COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST
 	GROUPBOX "&Installed services", -1, 7,65,231,115
 	LTEXT "Select the services that you want for each input language shown in the list. Use the Add and Remove buttons to modify this list.",-1,14,75,220,17
@@ -15,7 +15,7 @@ BEGIN
 	PUSHBUTTON "A&dd...", IDC_ADD_BUTTON, 179, 124, 53, 14
 	PUSHBUTTON "&Remove...", IDC_REMOVE_BUTTON, 179, 142, 53, 14
 	PUSHBUTTON "&Properties...", IDC_PROP_BUTTON, 179, 160, 53, 14
-	GROUPBOX "Proferences", -1, 7,185,231,36
+	GROUPBOX "Preferences", -1, 7,185,231,36
 	PUSHBUTTON "Language &Bar...", IDC_LANG_BAR_BUTTON, 14, 198, 70, 14
 	PUSHBUTTON "&Key Settings...", IDC_KEY_SETTINGS_BUTTON, 90, 198, 70, 14
 END
@@ -27,10 +27,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Compatibility Configuration", -1, 7,7,231,60
 	AUTOCHECKBOX "&Extend support of advanced text services to all programs", IDC_SUPPORT_ADV_SERV_CHECKBOX, 14, 19, 210, 10, WS_GROUP
-	LTEXT "Select this check box to on advanced text services in Notepad and other programs that do not normally support speech and handwriting recognition or other advanced input services.",-1,14,33,220,25
+	LTEXT "Select this check box to on for active advanced text services in Notepad and other programs that do not normally support speech and handwriting recognition or other advanced input services.",-1,14,33,220,25
 	GROUPBOX "System Configuration", -1, 7,74,231,60
 	AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFF_ADV_TXTSERV_CHECKBOX, 14, 86, 210, 10, WS_GROUP
-	LTEXT "Select this chack box to turn off advanced text services in all programs. Not recommended for East Asian users because this closes the language bar.",-1,14,100,220,25
+	LTEXT "Select this check box to turn off advanced text services in all programs. Not recommended for East Asian users because this closes the language bar.",-1,14,100,220,25
 END
 
 IDD_LANGBAR DIALOG 20, 20, 240, 120

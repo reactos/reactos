@@ -1,7 +1,7 @@
 /*
  * PROJECT:     New device installer
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/newdev/Uk.rc
+ * FILE:        dll/win32/newdev/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for newdev
  * TRANSLATOR:  Artem Reznikov
  */
@@ -17,7 +17,7 @@ BEGIN
     LTEXT           "Ласкаво просимо",IDC_WELCOMETITLE,120,8,195,24
     LTEXT           "Цей майстер встановлює новий драйвер пристрою для:",
                     IDC_STATIC,120,21,195,16
-    LTEXT           "Натисніть 'Далі' для продовження.",IDC_STATIC,120,169,195,17
+    LTEXT           "Натисніть ""Далі"" для продовження.",IDC_STATIC,120,169,195,17
     LTEXT           "НЕВІДОМИЙ ПРИСТРІЙ",IDC_DEVICE,134,36,164,11
     LTEXT           "ПОПЕРЕДЖЕННЯ! УСТАНОВКА СПЕЦІАЛЬНОГО ПРИСТРОЮ МОЖЕ ЗАМОРОЗИТИ ВАШ КОМП'ЮТЕР АБО ЗРОБИТИ ЙОГО НЕЗДАТНИМ ДО ЗАВАНТАЖЕННЯ!",IDC_STATIC,120,59,195,16
     CONTROL         "Встановити драйвер автоматично",IDC_RADIO_AUTO,"Button",
@@ -35,7 +35,7 @@ BEGIN
     LTEXT           "Установка не вдалася",IDC_FINISHTITLE,120,8,195,24
     LTEXT           "Пристрій не встановлено, тому що драйвер не знайдено.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Натисніть 'Назад', якщо у Вас є диск драйвера або знаєте шлях до драйвера.",
+    LTEXT           "Натисніть ""Назад"", якщо у Вас є диск драйвера або знаєте шлях до драйвера.",
                     IDC_STATIC,120,98,181,24
     CONTROL         "Більше не показувати цей діалог",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
@@ -96,7 +96,7 @@ BEGIN
     LTEXT           "Установка завершена",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "Ви маєте перезапустити комп’ютер, щоб закінчити установку:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Натисніть 'Завершити' для виходу з майстра.",IDC_STATIC,120,174,
+    LTEXT           "Натисніть ""Завершити"" для виходу з майстра.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "НЕВІДОМИЙ ПРИСТРІЙ",IDC_DEVICE,148,53,147,12
 END
@@ -110,8 +110,9 @@ BEGIN
     LTEXT           "Установка завершена",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "Майстер закінчив установку драйвера для:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Натисніть 'Завершити' для виходу з майстра.",IDC_STATIC,120,174,
+    LTEXT           "Натисніть ""Завершити"" для виходу з майстра.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "НЕВІДОМИЙ ПРИСТРІЙ",IDC_DEVICE,148,53,147,12
 END
+
 

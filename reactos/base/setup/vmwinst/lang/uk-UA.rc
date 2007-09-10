@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS VMware(r) driver installation utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/setup/vmwinst/Uk.rc
+ * FILE:        base/setup/vmwinst/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for vmwinst
  * TRANSLATOR:  Artem Reznikov
  */
@@ -14,7 +14,7 @@ CAPTION "Установка відеодрайвера"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "Програма установки ReactOS виявила, що Ви запустили ReactOS всередені VMware(r).", -1, 100, 8, 160, 24
-  LTEXT "Якщо Ви бажаєте встановити SVGA драйвер VMware(r), натисніть 'Далі', інакше натисніть 'Скасувати'.", -1, 100, 140, 160, 17
+  LTEXT "Якщо Ви бажаєте встановити SVGA драйвер VMware(r), натисніть ""Далі"", інакше натисніть ""Скасувати"".", -1, 100, 140, 160, 17
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -22,7 +22,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Установка відеодрайвера"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Програма установки ReactOS не включає SVGA драйвер VMware(r).\n\nТому йдіть до меню 'VM' у VMware(r) workstation і виберіть 'Install VMware tools...'\n\n\nНатисніть 'Далі' для продовження або 'Скасувати', щоб пропустити установку SVGA драйвера.",-1,25,25,225,85
+  LTEXT "Програма установки ReactOS не включає SVGA драйвер VMware(r).\n\nТому йдіть до меню ""VM"" у VMware(r) workstation і виберіть ""Install VMware tools...""\n\n\nНатисніть ""Далі"" для продовження або ""Скасувати"", щоб пропустити установку SVGA драйвера.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -60,7 +60,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Установка відеодрайвера"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Програма установки ReactOS не змогла встановити SVGA драйвер VMware(r).\n\n\nНатисніть 'Завершити' для продовження процесу установки.",-1,25,25,225,85
+  LTEXT "Програма установки ReactOS не змогла встановити SVGA драйвер VMware(r).\n\n\nНатисніть ""Завершити"" для продовження процесу установки.",-1,25,25,225,85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -72,7 +72,7 @@ BEGIN
   PUSHBUTTON "Налаштувати параметри екрану", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Скористатися іншим графічним драйвером", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Видалити SVGA драйвер VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Натисніть 'Далі' для продовження або 'Скасувати' для виходу з майстра.", -1, 25, 93, 225, 12
+  LTEXT "Натисніть ""Далі"" для продовження або ""Скасувати"" для виходу з майстра.", -1, 25, 93, 225, 12
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -83,7 +83,7 @@ BEGIN
   LTEXT "Будь ласка оберіть графічний драйвер, який Ви хотіли б використовувати:",-1,25,25,225,15
   PUSHBUTTON "ReactOS VGA драйвер", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "ReactOS VBE драйвер (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-  LTEXT "Натисніть 'Завершити' для завершення операції або 'Скасувати' для виходу з програми установки без збереження змін.", -1, 25, 93, 225, 20
+  LTEXT "Натисніть ""Завершити"" для завершення операції або ""Скасувати"" для виходу з програми установки без збереження змін.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -91,7 +91,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Установка відеодрайвера"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Програма установки ReactOS готова видалити SVGA драйвер VMWare(r)!!!\n\n\nНатисніть 'Завершити' для видалення драйвера або 'Скасувати' щоб залишити його як є.",-1,25,25,225,85
+  LTEXT "Програма установки ReactOS готова видалити SVGA драйвер VMWare(r)!!!\n\n\nНатисніть ""Завершити"" для видалення драйвера або ""Скасувати"" щоб залишити його як є.",-1,25,25,225,85
 END
 
 STRINGTABLE

@@ -1,7 +1,7 @@
 /*
  * Regedit (Ukrainian resources)
  *
- * Copyright 2006 Artem Reznikov
+ * Copyright 2006,2007 Artem Reznikov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,10 +57,10 @@ BEGIN
 		MENUITEM "Завантажити вулик...",		ID_REGISTRY_LOADHIVE, GRAYED
 		MENUITEM "Вивантажити вулик...",		ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
-        MENUITEM "&Підключити мережевий регістр...",
+        MENUITEM "&Підключити мережевий реєстр...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
-        MENUITEM "&Відключити мережевий регістр...",
+        MENUITEM "&Відключити мережевий реєстр...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM SEPARATOR
@@ -112,7 +112,7 @@ BEGIN
     BEGIN
         MENUITEM "&Зміст\tF1",                  ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Про редактор регістра",       ID_HELP_ABOUT
+        MENUITEM "&Про редактор реєстра",       ID_HELP_ABOUT
     END
 END
 
@@ -238,18 +238,18 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Редактор регістра"
+    IDS_APP_TITLE           "Редактор реєстра"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_MENU        "Містить команди для роботи з регістром у цілому"
+    ID_REGISTRY_MENU        "Містить команди для роботи з реєстром у цілому"
     ID_EDIT_MENU            "Містить команди для редагування значень або розділів"
-    ID_VIEW_MENU            "Містить команди для настроювання вікна регістра"
+    ID_VIEW_MENU            "Містить команди для настроювання вікна реєстра"
     ID_FAVOURITES_MENU      "Містить команди для доступу до розділів, що часто вживаються"
-    ID_HELP_MENU            "Містить команди для відображення довідки та інформації про редактор регістра"
+    ID_HELP_MENU            "Містить команди для відображення довідки та інформації про редактор реєстра"
     ID_EDIT_NEW_MENU        "Містить команди для створення нових розділів або значень"
 END
 
@@ -260,21 +260,21 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Додає нове рядкове значення"
     ID_EDIT_NEW_BINARYVALUE "Додає нове двійкове значення"
     ID_EDIT_NEW_DWORDVALUE  "Додає нове DWORD-значення"
-    ID_REGISTRY_IMPORTREGISTRYFILE "Імпортує текстовий файл до регістра"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Імпортує текстовий файл до реєстра"
     ID_REGISTRY_EXPORTREGISTRYFILE
-                            "Експортує весь регістр або його частину в текстовий файл"
+                            "Експортує весь реєстр або його частину в текстовий файл"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
-                            "Підключається до регістру віддаленого комп'ютера"
+                            "Підключається до реєстру віддаленого комп'ютера"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-                            "Відключається від регістру віддаленого комп'ютера"
-    ID_REGISTRY_PRINT       "Друкує весь регістр або його частину"
-/*    ID_HELP_HELPTOPICS      "Відкриває довідку редактора регістра" */
+                            "Відключається від реєстру віддаленого комп'ютера"
+    ID_REGISTRY_PRINT       "Друкує весь реєстр або його частину"
+/*    ID_HELP_HELPTOPICS      "Відкриває довідку редактора реєстра" */
     ID_HELP_ABOUT           "Відображає інформацію про програму, номер версії та авторство"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Виходить з редактора регістра"
+    ID_REGISTRY_EXIT        "Виходить з редактора реєстра"
     ID_FAVOURITES_ADDTOFAVOURITES "Додає розділ до обраного"
     ID_FAVOURITES_REMOVEFAVOURITE "Видаляє розділ з обраного"
     ID_VIEW_STATUSBAR       "Відображує або ховає рядок стану"
@@ -295,7 +295,7 @@ BEGIN
     IDS_BAD_VALUE           "Не можу запросити значення '%s'"
     IDS_UNSUPPORTED_TYPE    "Не можу редагувати розділи цього типу (%ld)"
     IDS_TOO_BIG_VALUE       "Значення завелике (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING "Дані типу REG_MULTI_SZ не можуть містити порожні рядки\nПорожні ряд-ки були видалені зі списку."
+    IDS_MULTI_SZ_EMPTY_STRING "Дані типу REG_MULTI_SZ не можуть містити порожні рядки\nПорожні рядки були видалені зі списку."
     IDS_QUERY_DELETE_KEY_ONE    "Ви впевнені, що хочете видалити цей розділ?"
     IDS_QUERY_DELETE_KEY_MORE   "Ви впевнені, що хочете видалити ці розділи?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Підтвердження видалення розділу"
@@ -304,8 +304,8 @@ BEGIN
     IDS_QUERY_DELETE_CONFIRM "Підтвердження видалення значення"
     IDS_ERR_DELVAL_CAPTION  "Помилка при видаленні значень"
     IDS_ERR_DELETEVALUE     "Неможливо видалити усі задані значення!"
-    IDS_ERR_RENVAL_CAPTION  "Помилка при перейменуванні значеня"
-    IDS_ERR_RENVAL_TOEMPTY  "Не можу перейменувати %s. Ім'я заданого значення порожнє. Спробуйте ін-ше ім'я та повторіть спробу."
+    IDS_ERR_RENVAL_CAPTION  "Помилка при перейменуванні значення"
+    IDS_ERR_RENVAL_TOEMPTY  "Не можу перейменувати %s. Ім'я заданого значення порожнє. Спробуйте інше ім'я та повторіть спробу."
     IDS_NEW_KEY             "Новий розділ #%d"
     IDS_NEW_VALUE           "Нове значення #%d"
 END
@@ -317,16 +317,16 @@ BEGIN
     IDS_VALUE_NOT_SET       "(значення не встановлене)"
     IDS_UNKNOWN_TYPE        "Невідомий тип: (0x%lx)"
     IDS_MY_COMPUTER         "Мій комп'ютер"
-    IDS_IMPORT_REG_FILE     "Імпортувати файл регістру"
-    IDS_EXPORT_REG_FILE     "Експортувати файл регістру"
+    IDS_IMPORT_REG_FILE     "Імпортувати файл реєстру"
+    IDS_EXPORT_REG_FILE     "Експортувати файл реєстру"
     IDS_INVALID_DWORD       "(Неправильне значення DWORD)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_FLT_REGFILES        "Файли регістру"
+    IDS_FLT_REGFILES        "Файли реєстру"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Файли регістру Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Файли реєстру Win9x/NT4 (REGEDIT4)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Усі файли (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
@@ -360,7 +360,7 @@ BEGIN
   IDS_EXPAND                     "&Розгорнути"
   IDS_COLLAPSE                   "&Згорнути"
   IDS_GOTO_SUGGESTED_KEY         "&Перейти до '%s'"
-  IDS_FINISHEDFIND               "Пошук у регістрі завершений."
+  IDS_FINISHEDFIND               "Пошук у реєстрі завершений."
 END
 
 /*****************************************************************/
@@ -376,7 +376,7 @@ STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
 FONT 8, "MS Sans Serif"
 BEGIN
    GROUPBOX "Діапазон експорту",IDC_STATIC,2,0,366,48
-   CONTROL "&Весь регістр",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "&Весь реєстр",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
    CONTROL "Виді&лена гілка",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
@@ -434,7 +434,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
     PUSHBUTTON      "&Скасувати",IDCANCEL,93,29,45,14
-    LTEXT           "Пошук у регістрі...",IDC_STATIC,33,12,83,8
+    LTEXT           "Пошук у реєстрі...",IDC_STATIC,33,12,83,8
 END
 
 /*
@@ -455,7 +455,7 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Відкриває довідку редактора регістра."
+ *    ID_HELP_HELPTOPICS      "Відкриває довідку редактора реєстра."
  *    ID_HELP_ABOUT           "Відображає інформацію про програму, номер версії, та авторські права."
  *END
  */

@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     Matrix ScreenSaver
+ * LICENSE:     Public Domain
+ * FILE:        base/applications/screensavers/matrix/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Matrix ScreenSaver
+ * TRANSLATOR:  Artem Reznikov
+ */
+
 #include "resource.h"
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -7,7 +15,7 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Параметри заставки ""Матриця"""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "&Швидкість Decode",IDC_STATIC,7,7,128,36
+    GROUPBOX        "&Швидкість декодування",IDC_STATIC,7,7,128,36
     LTEXT           "Нижче",IDC_STATIC,13,24,22,8
     CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
                     TBS_BOTH | WS_TABSTOP,38,17,62,22

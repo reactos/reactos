@@ -1,7 +1,7 @@
 /*
  * PROJECT:     Command-line interface
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/shell/cmd/Uk.rc
+ * FILE:        base/shell/cmd/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Command-line interface
  * TRANSLATOR:  Artem Reznikov
  */
@@ -210,7 +210,7 @@ STRING_DIR_HELP2, " Volume in drive %c is %s\n"
 STRING_DIR_HELP3, " Volume in drive %c has no label.\n"
 STRING_DIR_HELP4, " Volume Serial Number is %04X-%04X\n"
 STRING_DIR_HELP5, "\n     Total Files Listed:\n%16i File(s)% 14s bytes\n"
-STRING_DIR_HELP6, "%16i Dir(s)% 15s bytes\n"
+STRING_DIR_HELP6, "%16i Dir(s)% 15s bytes free\n"
 STRING_DIR_HELP7, "\n Directory of %s\n\n"
 STRING_DIR_HELP8, "%16i File(s)% 14s bytes\n"
 
@@ -243,7 +243,10 @@ Type ECHO without a parameter to display the current ECHO setting."
 
 STRING_ECHO_HELP5, "ECHO is %s\n"
 
-STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT\n"
+STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
+  /B            Exits a batch file only.  \n\
+                If run outside of a batch file it will exit cmd.exe\n\
+  ExitCode      This value will be assigned to ERRORLEVEL on exit\n"
 
 STRING_FOR_HELP1, "Runs a specified command for each file in a set of files\n\n\
 FOR %variable IN (set) DO command [parameters]\n\n\
@@ -396,8 +399,8 @@ SHIFT [DOWN]"
 
 STRING_SCREEN_HELP, "move cursor and optionally print text\n\n\
 SCREEN row col [text]\n\n\
-  row         row to wich move the cursor\n\
-  col         column to wich move the cursor"
+  row         row to which move the cursor\n\
+  col         column to which move the cursor"
 
 STRING_SET_HELP, "Displays, sets, or removes environment variables.\n\n\
 SET [variable[=][string]]\n\n\
@@ -499,7 +502,7 @@ RESTORE       restore the window"
 STRING_WINDOW_HELP2, "change console window aspect\n\n\
 ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
-window        tile of window on wich perform actions\n\
+window        tile of window on which perform actions\n\
 /POS          specify window placement and dimensions\n\
 MIN           minimize the window\n\
 MAX           maximize the window\n\
@@ -620,34 +623,34 @@ STRING_TYPE_ERROR1,          "Invalid option '/%s'\n"
 STRING_WINDOW_ERROR1,        "window not found"
 
 
-STRING_ERROR_PARAMETERF_ERROR,     "Parameter format not correct - %c\n"
-STRING_ERROR_INVALID_SWITCH,       "Invalid switch - /%c\n"
-STRING_ERROR_TOO_MANY_PARAMETERS,  "Too many parameters - %s\n"
-STRING_ERROR_PATH_NOT_FOUND,       "Path not found\n"
-STRING_ERROR_FILE_NOT_FOUND,       "File not found\n"
-STRING_ERROR_REQ_PARAM_MISSING,    "Required parameter missing\n"
+STRING_ERROR_PARAMETERF_ERROR,     "Неправильний формат параметра - %c\n"
+STRING_ERROR_INVALID_SWITCH,       "Невірна опція - /%c\n"
+STRING_ERROR_TOO_MANY_PARAMETERS,  "Забагато параметрів - %s\n"
+STRING_ERROR_PATH_NOT_FOUND,       "Шлях не знайдений\n"
+STRING_ERROR_FILE_NOT_FOUND,       "Файл не знайдений\n"
+STRING_ERROR_REQ_PARAM_MISSING,    "Відсутній обов'язковий параметр\n"
 STRING_ERROR_INVALID_DRIVE,        "Invalid drive specification\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Invalid parameter format - %s\n"
 STRING_ERROR_BADCOMMAND,           "Невірна команда або ім'я файлу\n"
-STRING_ERROR_OUT_OF_MEMORY,        "Out of memory error.\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Недостатньо пам'яті.\n"
 STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary file!\n"
-STRING_ERROR_D_PAUSEMSG,           "Press any key to continue . . ."
-STRING_ERROR_DRIVER_NOT_READY,     "Drive not ready"
+STRING_ERROR_D_PAUSEMSG,           "Натисніть будь-яку клавішу для продовження . . ."
+STRING_ERROR_DRIVER_NOT_READY,     "Пристрій не готовий"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
 STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter"
 STRING_VERSION_RUNVER,             " running on %s"
-STRING_COPY_FILE ,                 "        %d file(s) copied\n"
+STRING_COPY_FILE ,                 "        %d файл(ів) скопійовано\n"
 STRING_DELETE_WIPE,                "wiped"
 STRING_FOR_ERROR,                  "bad variable specification."
-STRING_SCREEN_COL,                 "invalid value for col"
-STRING_SCREEN_ROW,                 "invalid value for row"
-STRING_TIMER_TIME                  "Timer %d is %s: "
+STRING_SCREEN_COL,                 "неправильне значення col"
+STRING_SCREEN_ROW,                 "неправильне значення row"
+STRING_TIMER_TIME                  "Таймер %d - %s: "
 
-STRING_INVALID_OPERAND,            "Invalid operand."
-STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'."
-STRING_EXPECTED_NUMBER_OR_VARIABLE,"Expected number or variable name."
-STRING_SYNTAX_COMMAND_INCORRECT,   "The syntax of the command is incorrect."
+STRING_INVALID_OPERAND,            "Невірний операнд."
+STRING_EXPECTED_CLOSE_PAREN,       "Очікується ')'."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Очікується число або ім'я змінної."
+STRING_SYNTAX_COMMAND_INCORRECT,   "Некоректний синтаксис команди."
 
 }
