@@ -69,10 +69,8 @@ GdiDllInitialize (
 	NtCurrentTeb()->GdiTebBatch.Offset = 0;
 	NtCurrentTeb()->GdiBatchCount = 0;
 #endif
-#if 0
   // Very simple, the list will fill itself as it is needed.
         RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
-#endif
 	return TRUE;
 }
 
