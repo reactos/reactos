@@ -14,6 +14,11 @@ typedef struct _APPLET
   APPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
 
+typedef struct _GLOBALDATA
+{
+    LCID lcid;
+} GLOBALDATA, *PGLOBALDATA;
+
 extern HINSTANCE hApplet;
 extern DWORD IsUnattendedSetupEnabled;
 extern DWORD UnattendLCID;

@@ -235,6 +235,7 @@ SetNewLocale(LCID lcid)
 }
 
 /* Location enumerate procedure */
+#if 0
 BOOL
 CALLBACK
 LocationsEnumProc(GEOID gId)
@@ -255,12 +256,14 @@ LocationsEnumProc(GEOID gId)
 
     return TRUE;
 }
+#endif
 
 /* Enumerate all system locations identifiers */
 static
 VOID
 CreateLocationsList(HWND hWnd)
 {
+#if 0
     GEOID userGeoID;
     TCHAR loc[MAX_STR_SIZE];
 
@@ -280,6 +283,7 @@ CreateLocationsList(HWND hWnd)
                 CB_SELECTSTRING,
                 (WPARAM) -1,
                 (LPARAM)loc);
+#endif
 }
 
 DWORD

@@ -301,7 +301,7 @@ OnInitDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 static BOOL
 SetCurrencyDigNum(HWND hwndDlg)
 {
-    TCHAR szFieldDigNumSamples[MAX_FIELD_DIG_SAMPLES][MAX_SAMPLES_STR_SIZE]=
+    LPTSTR szFieldDigNumSamples[MAX_FIELD_DIG_SAMPLES]=
     {
         _T("0;0"),
         _T("3;0"),

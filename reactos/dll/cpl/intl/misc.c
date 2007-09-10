@@ -175,7 +175,7 @@ ReplaceSubStr(LPCTSTR szSourceStr,
 
 
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LCID lcid)
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, PGLOBALDATA pGlobalData)
 {
   ZeroMemory(psp, sizeof(PROPSHEETPAGE));
   psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -183,7 +183,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LCID lcid)
   psp->hInstance = hApplet;
   psp->pszTemplate = MAKEINTRESOURCE(idDlg);
   psp->pfnDlgProc = DlgProc;
-  psp->lParam = (LPARAM)lcid;
+  psp->lParam = (LPARAM)pGlobalData;
 }
 
 
@@ -194,9 +194,15 @@ SetupApplet(LCID lcid)
 {
     PROPSHEETPAGE PsPage[NUM_SHEETS + 1];
     PROPSHEETHEADER psh;
+    PGLOBALDATA pGlobalData;
     TCHAR Caption[MAX_STR_SIZE];
+    INT ret;
 
     LoadString(hApplet, IDS_CUSTOMIZE_TITLE, Caption, sizeof(Caption) / sizeof(TCHAR));
+
+    pGlobalData = (PGLOBALDATA)malloc(sizeof(GLOBALDATA));
+
+    pGlobalData->lcid = lcid;
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -209,18 +215,22 @@ SetupApplet(LCID lcid)
     psh.nStartPage = 0;
     psh.ppsp = PsPage;
 
-    InitPropSheetPage(&PsPage[0], IDD_NUMBERSPAGE, NumbersPageProc, lcid);
-    InitPropSheetPage(&PsPage[1], IDD_CURRENCYPAGE, CurrencyPageProc, lcid);
-    InitPropSheetPage(&PsPage[2], IDD_TIMEPAGE, TimePageProc, lcid);
-    InitPropSheetPage(&PsPage[3], IDD_DATEPAGE, DatePageProc, lcid);
+    InitPropSheetPage(&PsPage[0], IDD_NUMBERSPAGE, NumbersPageProc, pGlobalData);
+    InitPropSheetPage(&PsPage[1], IDD_CURRENCYPAGE, CurrencyPageProc, pGlobalData);
+    InitPropSheetPage(&PsPage[2], IDD_TIMEPAGE, TimePageProc, pGlobalData);
+    InitPropSheetPage(&PsPage[3], IDD_DATEPAGE, DatePageProc, pGlobalData);
 
     if (IsSortPageNeeded(lcid))
     {
         psh.nPages++;
-        InitPropSheetPage(&PsPage[4], IDD_SORTPAGE, SortPageProc, lcid);
+        InitPropSheetPage(&PsPage[4], IDD_SORTPAGE, SortPageProc, pGlobalData);
     }
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    ret = PropertySheet(&psh);
+
+    free(pGlobalData);
+
+    return (LONG)(ret != -1);
 }
 
 /* EOF */

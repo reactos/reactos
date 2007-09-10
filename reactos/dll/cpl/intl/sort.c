@@ -156,14 +156,17 @@ SortPageProc(HWND hwndDlg,
              WPARAM wParam,
              LPARAM lParam)
 {
+    PGLOBALDATA pGlobalData;
+
+    pGlobalData = (PGLOBALDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            {
-              LCID lcid = (LCID)((LPPROPSHEETPAGE)lParam)->lParam;
+            pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-              CreateSortList(GetDlgItem(hwndDlg, IDC_SORTLIST_COMBO), lcid);
-            }
+            CreateSortList(GetDlgItem(hwndDlg, IDC_SORTLIST_COMBO), pGlobalData->lcid);
             break;
 
         case WM_COMMAND:
@@ -172,6 +175,28 @@ SortPageProc(HWND hwndDlg,
                 case IDC_SORTLIST_COMBO:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
+                        LCID NewLcid;
+                        INT iCurSel;
+
+                        iCurSel = SendDlgItemMessage(hwndDlg,
+                                                     IDC_SORTLIST_COMBO,
+                                                     CB_GETCURSEL,
+                                                     0,
+                                                     0);
+                        if (iCurSel == CB_ERR)
+                            break;
+
+                        NewLcid = SendDlgItemMessage(hwndDlg,
+                                                     IDC_SORTLIST_COMBO,
+                                                     CB_GETITEMDATA,
+                                                     iCurSel,
+                                                     0);
+                        if (NewLcid == (LCID)CB_ERR)
+                            break;
+
+                        /* Save the new LCID */
+                        pGlobalData->lcid = NewLcid;
+
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -179,34 +204,9 @@ SortPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                LPNMHDR lpnm = (LPNMHDR)lParam;
-
-                if (lpnm->code == (UINT)PSN_APPLY)
-                {
-
-                    LCID NewLcid;
-                    INT iCurSel;
-
-                    iCurSel = SendDlgItemMessage(hwndDlg,
-                                                 IDC_SORTLIST_COMBO,
-                                                 CB_GETCURSEL,
-                                                 0,
-                                                 0);
-                    if (iCurSel == CB_ERR)
-                        break;
-
-                    NewLcid = SendDlgItemMessage(hwndDlg,
-                                                 IDC_SORTLIST_COMBO,
-                                                 CB_GETITEMDATA,
-                                                 iCurSel,
-                                                 0);
-                    if (NewLcid == (LCID)CB_ERR)
-                        break;
-#if 0
-                    /* FIXME: Set locale ID */
-#endif
-                }
+                /* FIXME: Set locale ID: pGlobalData->lcid */
             }
             break;
     }

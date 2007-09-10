@@ -540,11 +540,15 @@ DatePageProc(HWND hwndDlg,
              WPARAM wParam,
              LPARAM lParam)
 {
+    PGLOBALDATA pGlobalData;
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            pGlobalData = (PGLOBALDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+
             InitMinMaxDateSpin(hwndDlg);
-            UpdateDateLocaleSamples(hwndDlg, LOCALE_USER_DEFAULT);
+            UpdateDateLocaleSamples(hwndDlg, pGlobalData->lcid);
             InitShortDateCB(hwndDlg);
             InitLongDateCB(hwndDlg);
             InitShortDateSepSamples(hwndDlg);
