@@ -1256,11 +1256,26 @@ File::ProcessXML()
 
 std::string File::GetFullPath () const
 {
-	// TODO FIXME take care of file.directory? return a full path?
+	string directory ( "" );
+	switch ( file.directory )
+	{
+		case SourceDirectory:
+			break;
+		case IntermediateDirectory:
+			directory = Environment::GetIntermediatePath () + sSep;
+			break;
+		default:
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Invalid directory %d.",
+			                                  file.directory );
+	}
+
 	if ( file.relative_path.length () > 0 )
-		return file.relative_path + sSep + file.name;
-	else
-		return file.name;
+		directory += file.relative_path + sSep;
+
+
+	return directory + file.name;
 }
 
 
