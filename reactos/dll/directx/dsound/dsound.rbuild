@@ -29,9 +29,11 @@
 	<file>propset.c</file>
 	<file>regsvr.c</file>
 	<file>sound3d.c</file>
-	<file>dxroslayer/dxrosdrv_querydsounddesc.c</file>
-	<file>dxroslayer/dxrosdrv_querydsoundiface.c</file>
-	<file>dxroslayer/dxroslayer.c</file>
-	<file>dxroslayer/getguidfromstring.c</file>
+	<directory name="dxroslayer">
+		<file>dxrosdrv_querydsounddesc.c</file>
+		<file>dxrosdrv_querydsoundiface.c</file>
+		<file>dxroslayer.c</file>
+		<file>getguidfromstring.c</file>
+	</directory>
 	<file>dsound.spec</file>
 </module>
