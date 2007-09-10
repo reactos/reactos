@@ -337,7 +337,7 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size (); i++ )
 		{
-			string file = files[i]->name;
+			string file = files[i]->file.relative_path + sSep + files[i]->file.name;
 			string::size_type pos = file.find_last_of (DEF_SSEP);
 			if ( pos != string::npos )
 				file.erase ( 0, pos+1 );

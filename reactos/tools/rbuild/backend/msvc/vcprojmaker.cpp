@@ -157,8 +157,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
-			// TODO FIXME - do we want the full path of the file here?
-			string file = string(".") + &files[i]->name[vcproj_path.size()];
+			// TODO FIXME - do we want only the name of the file here?
+			string file = files[i]->file.name;
 
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );

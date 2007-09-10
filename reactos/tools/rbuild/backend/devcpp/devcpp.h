@@ -45,7 +45,7 @@ class DevCppBackend : public Backend
 	private:
 
 		void ProcessModules();
-		void ProcessFile(std::string &filename);
+		void ProcessFile(std::string filename);
 		
 		bool CheckFolderAdded(std::string &folder);
 		void AddFolders(std::string &folder);

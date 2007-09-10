@@ -133,7 +133,7 @@ void DevCppBackend::ProcessModules()
 		{
 			File &file = *module.non_if_data.files[k];
 			
-			ProcessFile(file.name);
+			ProcessFile( file.file.relative_path + sSep + file.file.name );
 		}
 	}
 }
@@ -149,7 +149,7 @@ bool FileExists(string &filename)
 	return true;
 }
 
-void DevCppBackend::ProcessFile(string &filepath)
+void DevCppBackend::ProcessFile(string filepath)
 {
 	// Remove the .\ at the start of the filenames
 	if ((filepath[0] == '.') && (filepath[1] == '\\')) filepath.erase(0, 2);

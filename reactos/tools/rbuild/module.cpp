@@ -538,7 +538,7 @@ Module::ProcessXML()
 	for ( i = 0; i < node.subElements.size(); i++ )
 	{
 		ParseContext parseContext;
-		ProcessXMLSubElement ( *node.subElements[i], output->relative_path, "", parseContext );
+		ProcessXMLSubElement ( *node.subElements[i], SourceDirectory, output->relative_path, parseContext );
 	}
 	for ( i = 0; i < invocations.size(); i++ )
 		invocations[i]->ProcessXML ();
@@ -561,15 +561,15 @@ Module::ProcessXML()
 
 void
 Module::ProcessXMLSubElement ( const XMLElement& e,
-                               const string& path,
-                               const string& path_prefix,
+                               DirectoryLocation directory,
+	                           const string& relative_path,
                                ParseContext& parseContext )
 {
 	If* pOldIf = parseContext.ifData;
 	CompilationUnit* pOldCompilationUnit = parseContext.compilationUnit;
 	bool subs_invalid = false;
-	string subpath ( path );
-	string subpath_prefix ( "" );
+	string subpath ( relative_path );
+	DirectoryLocation subdirectory = SourceDirectory;
 	if ( e.name == "file" && e.value.size () > 0 )
 	{
 		bool first = false;
@@ -600,8 +600,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			else if ( !stricmp ( ext.c_str(), ".cxx" ) )
 				cplusplus = true;
 		}
-		File* pFile = new File ( FixSeparator ( path + cSep + e.value ),
-		                         path_prefix,
+		File* pFile = new File ( directory,
+		                         relative_path,
+		                         e.value,
 		                         first,
 		                         switches,
 		                         false );
@@ -644,9 +645,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		if ( root )
 		{
 			if ( root->value == "intermediate" )
-				subpath_prefix = "$(INTERMEDIATE)";
+				subdirectory = IntermediateDirectory;
 			else if ( root->value == "output" )
-				subpath_prefix = "$(OUTPUT)";
+				subdirectory = OutputDirectory;
 			else
 			{
 				throw InvalidAttributeValueException (
@@ -655,7 +656,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 					root->value );
 			}
 		}
-		subpath = GetSubPath ( this->project, e.location, path, att->value );
+		subpath = GetSubPath ( this->project, e.location, relative_path, att->value );
 	}
 	else if ( e.name == "include" )
 	{
@@ -802,14 +803,14 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		if ( pos == string::npos )
 		{
 			pch = new PchFile (
-				e, *this, FileLocation ( SourceDirectory, path, e.value ) );
+				e, *this, FileLocation ( SourceDirectory, relative_path, e.value ) );
 		}
 		else
 		{
 			string dir = e.value.substr ( 0, pos );
 			string name = e.value.substr ( pos + 1);
 			pch = new PchFile (
-				e, *this, FileLocation ( SourceDirectory, path + sSep + dir, name ) );
+				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name ) );
 		}
 		subs_invalid = true;
 	}
@@ -846,7 +847,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			e.name.c_str() );
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath, subpath_prefix, parseContext );
+		ProcessXMLSubElement ( *e.subElements[i], subdirectory, subpath, parseContext );
 	parseContext.ifData = pOldIf;
 	parseContext.compilationUnit = pOldCompilationUnit;
 }
@@ -1233,31 +1234,19 @@ Module::SetImportLibrary ( ImportLibrary* importLibrary )
 }
 
 
-File::File ( const string& _name,
+File::File ( DirectoryLocation directory,
+             const string& relative_path,
+             const string& name,
              bool _first,
-             std::string _switches,
+             const string& _switches,
              bool _isPreCompiledHeader )
-	: name(_name),
-	  path_prefix(""),
+	: file ( directory, relative_path, name ),
 	  first(_first),
 	  switches(_switches),
 	  isPreCompiledHeader(_isPreCompiledHeader)
 {
 }
 
-
-File::File ( const string& _name,
-             const string& _path_prefix,
-             bool _first,
-             std::string _switches,
-             bool _isPreCompiledHeader )
-	: name(_name),
-	  path_prefix(_path_prefix),
-	  first(_first),
-	  switches(_switches),
-	  isPreCompiledHeader(_isPreCompiledHeader)
-{
-}
 
 void
 File::ProcessXML()
@@ -1267,10 +1256,11 @@ File::ProcessXML()
 
 std::string File::GetFullPath () const
 {
-	if ( path_prefix.length () > 0 )
-		return path_prefix + sSep + name;
+	// TODO FIXME take care of file.directory? return a full path?
+	if ( file.relative_path.length () > 0 )
+		return file.relative_path + sSep + file.name;
 	else
-		return name;
+		return file.name;
 }
 
 

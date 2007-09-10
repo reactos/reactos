@@ -37,7 +37,7 @@ WineResource::~WineResource ()
 bool
 WineResource::IsSpecFile ( const File& file )
 {
-	string extension = GetExtension ( file.name );
+	string extension = GetExtension ( file.file.name );
 	if ( extension == ".spec" || extension == ".SPEC" )
 		return true;
 	return false;
@@ -58,7 +58,7 @@ WineResource::IsWineModule ( const Module& module )
 bool
 WineResource::IsResourceFile ( const File& file )
 {
-	string extension = GetExtension ( file.name );
+	string extension = GetExtension ( file.file.name );
 	if ( extension == ".rc" || extension == ".RC" )
 		return true;
 	return false;
@@ -71,7 +71,7 @@ WineResource::GetResourceFilename ( const Module& module )
 	for ( size_t i = 0; i < files.size (); i++ )
 	{
 		if ( IsResourceFile ( *files[i] ) )
-			return files[i]->name;
+			return files[i]->file.relative_path + sSep + files[i]->file.name;
 	}
 	return "";
 }

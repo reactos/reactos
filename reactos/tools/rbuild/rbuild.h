@@ -311,6 +311,20 @@ enum DirectoryLocation
 	TemporaryDirectory,
 };
 
+class FileLocation
+{
+public:
+	DirectoryLocation directory;
+	std::string relative_path;
+	std::string name;
+
+	FileLocation ( const DirectoryLocation directory,
+	               const std::string& relative_path,
+	               const std::string& name );
+
+	FileLocation ( const FileLocation& other );
+};
+
 class Module
 {
 public:
@@ -377,8 +391,8 @@ private:
 	std::string GetDefaultModuleBaseaddress () const;
 	std::string entrypoint;
 	void ProcessXMLSubElement ( const XMLElement& e,
-	                            const std::string& path,
-	                            const std::string& path_prefix,
+	                            DirectoryLocation directory,
+	                            const std::string& relative_path,
 	                            ParseContext& parseContext );
 };
 
@@ -435,21 +449,16 @@ private:
 class File
 {
 public:
-	std::string name;
-	std::string path_prefix;
+	FileLocation file;
 	bool first;
 	std::string switches;
 	bool isPreCompiledHeader;
 
-	File ( const std::string& _name,
+	File ( DirectoryLocation directory,
+	       const std::string& relative_path,
+	       const std::string& name,
 	       bool _first,
-	       std::string _switches,
-	       bool _isPreCompiledHeader );
-
-	File ( const std::string& _name,
-	       const std::string& _path_prefix,
-	       bool _first,
-	       std::string _switches,
+	       const std::string& _switches,
 	       bool _isPreCompiledHeader );
 
 	void ProcessXML();
@@ -826,21 +835,6 @@ private:
 	static std::string ReplaceVariable ( const std::string& name,
 	                                     const std::string& value,
 	                                     std::string path );
-};
-
-
-class FileLocation
-{
-public:
-	DirectoryLocation directory;
-	std::string relative_path;
-	std::string name;
-
-	FileLocation ( const DirectoryLocation directory,
-	               const std::string& relative_path,
-	               const std::string& name );
-
-	FileLocation ( const FileLocation& other );
 };
 
 

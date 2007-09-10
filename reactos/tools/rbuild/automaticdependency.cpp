@@ -321,7 +321,8 @@ AutomaticDependency::GetModuleFiles ( const Module& module,
 
 	if ( module.pch != NULL )
 	{
-		File *file = new File ( module.pch->file.relative_path + sSep + module.pch->file.name , false, "", true );
+		const FileLocation& pch = module.pch->file;
+		File *file = new File ( pch.directory, pch.relative_path, pch.name , false, "", true );
 		files.push_back ( file );
 	}
 }
@@ -541,7 +542,7 @@ AutomaticDependency::CheckAutomaticDependencies ( const Module& module,
 	for ( size_t fi = 0; fi < files.size (); fi++ )
 	{
 		File& file = *files[fi];
-		string normalizedFilename = NormalizeFilename ( file.name );
+		string normalizedFilename = NormalizeFilename ( file.GetFullPath () );
 
 		SourceFile* sourceFile = RetrieveFromCache ( normalizedFilename );
 		if ( sourceFile != NULL )

@@ -336,7 +336,7 @@ MingwModuleHandler::GetCompilationUnitDependencies (
 	for ( size_t i = 0; i < compilationUnit.files.size (); i++ )
 	{
 		File& file = *compilationUnit.files[i];
-		sourceFiles.push_back ( NormalizeFilename ( file.name ) );
+		sourceFiles.push_back ( strFile ( &file.file ) );
 	}
 	return v2s ( sourceFiles, 10 );
 }
@@ -354,7 +354,7 @@ MingwModuleHandler::GetModuleArchiveFilename () const
 bool
 MingwModuleHandler::IsGeneratedFile ( const File& file ) const
 {
-	string extension = GetExtension ( file.name );
+	string extension = GetExtension ( file.file.name );
 	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
@@ -3533,10 +3533,9 @@ MingwTestModuleHandler::Process ()
 void
 MingwTestModuleHandler::GetModuleSpecificCompilationUnits ( vector<CompilationUnit*>& compilationUnits )
 {
-	string basePath = "$(INTERMEDIATE)" + sSep + module.output->relative_path;
-	compilationUnits.push_back ( new CompilationUnit ( new File ( basePath + sSep + "_hooks.c", false, "", false ) ) );
-	compilationUnits.push_back ( new CompilationUnit ( new File ( basePath + sSep + "_stubs.S", false, "", false ) ) );
-	compilationUnits.push_back ( new CompilationUnit ( new File ( basePath + sSep + "_startup.c", false, "", false ) ) );
+	compilationUnits.push_back ( new CompilationUnit ( new File ( IntermediateDirectory, module.output->relative_path + sSep + "..", module.name + "_hooks.c", false, "", false ) ) );
+	compilationUnits.push_back ( new CompilationUnit ( new File ( IntermediateDirectory, module.output->relative_path + sSep + "..", module.name + "_stubs.S", false, "", false ) ) );
+	compilationUnits.push_back ( new CompilationUnit ( new File ( IntermediateDirectory, module.output->relative_path + sSep + "..", module.name + "_startup.c", false, "", false ) ) );
 }
 
 void

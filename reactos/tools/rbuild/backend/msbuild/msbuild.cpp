@@ -113,8 +113,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
-			string file = &files[i]->name[proj_path.size()+1];
-			source_files.push_back ( file );
+			source_files.push_back ( files[i]->file.name );
 		}
 		const vector<Include*>& incs = data.includes;
 		for ( i = 0; i < incs.size(); i++ )

@@ -86,7 +86,7 @@ CompilationUnitSupportCode::WriteCompilationUnitFile ( Module& module,
 	for ( size_t i = 0; i < compilationUnit.files.size () ; i++ )
 	{
 		File& file = *compilationUnit.files[i];
-		s = s + sprintf ( s, "#include <%s>\n", ChangeSeparator ( file.name, '\\', '/' ).c_str () );
+		s = s + sprintf ( s, "#include <%s/%s>\n", ChangeSeparator ( file.file.relative_path, '\\', '/' ).c_str (), file.file.name.c_str () );
 	}
 
 	s = s + sprintf ( s, "\n" );

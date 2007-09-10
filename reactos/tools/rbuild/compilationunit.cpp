@@ -28,8 +28,8 @@ CompilationUnit::CompilationUnit ( File* file )
 	  module(NULL),
 	  node(NULL)
 {
-	local_name = file->name;
-	name = file->name;
+	local_name = file->file.name;
+	name = file->file.relative_path + sSep + file->file.name;
 	files.push_back ( file );
 }
 
@@ -67,7 +67,7 @@ CompilationUnit::IsGeneratedFile () const
 	if ( files.size () != 1 )
 		return false;
 	File* file = files[0];
-	string extension = GetExtension ( file->name );
+	string extension = GetExtension ( file->file.name );
 	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
@@ -78,7 +78,7 @@ CompilationUnit::HasFileWithExtension ( const std::string& extension ) const
 	for ( i = 0; i < files.size (); i++ )
 	{
 		File& file = *files[i];
-		string fileExtension = GetExtension ( file.name );
+		string fileExtension = GetExtension ( file.file.name );
 		if ( !stricmp ( fileExtension.c_str (), extension.c_str () ) )
 			return true;
 	}
@@ -106,28 +106,7 @@ CompilationUnit::GetFilename () const
 	}
 
 	File* file = files[0];
-
-	DirectoryLocation directory;
-	if ( file->path_prefix.length () == 0 )
-		directory = SourceDirectory;
-	else if ( file->path_prefix == "$(INTERMEDIATE)" )
-		directory = IntermediateDirectory;
-	else
-		throw InvalidOperationException ( __FILE__,
-		                                  __LINE__,
-		                                  "Invalid path prefix '%s'",
-		                                  file->path_prefix.c_str () );
-
-	size_t pos = file->name.find_last_of ( "/\\" );
-	assert ( pos != string::npos );
-	string relative_path = file->name.substr ( 0, pos );
-	string name = file->name.substr ( pos + 1 );
-	if ( relative_path.compare ( 0, 15, "$(INTERMEDIATE)") == 0 )
-	{
-		directory = IntermediateDirectory;
-		relative_path.erase ( 0, 16 );
-	}
-	return new FileLocation ( directory, relative_path, name );
+	return new FileLocation ( file->file );
 }
 
 std::string

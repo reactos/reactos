@@ -251,7 +251,7 @@ CBBackend::_get_object_files ( const Module& module, vector<string>& out) const
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size (); i++ )
 		{
-			string file = files[i]->name;
+			string file = files[i]->file.relative_path + sSep + files[i]->file.name;
 			string::size_type pos = file.find_last_of ("\\");
 			if ( pos != string::npos )
 				file.erase ( 0, pos+1 );
@@ -418,7 +418,8 @@ CBBackend::_generate_cbproj ( const Module& module )
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
-			string file = string(".") + &files[i]->name[cbproj_path.size()];
+			string fullpath = files[i]->file.relative_path + sSep + files[i]->file.name;
+			string file = string(".") + &fullpath[cbproj_path.size()];
 
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
