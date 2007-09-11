@@ -1,0 +1,137 @@
+/**
+* translated by Caemyr
+* caemyr@gmail.com
+* https://sourceforge.net/projects/reactospl
+*/
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Program konfiguracyjny ReactOS wykry³ emulator VMware(r).", -1, 100, 8, 160, 24
+  LTEXT "Jeœli chcesz zainstalowaæ sterownik SVGA dla VMware(r), naciœnij 'Dalej', w przeciwnym razie - 'Anuluj'.", -1, 100, 140, 160, 17
+END
+
+IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Program konfiguracyjny ReactOS nie zawiera sterownika SVGA VMware(r).\n\nMusisz wiêc otworzyæ 'VM' w menu Twojej stacji VMware(r) i klikn¹æ na 'Install VMware tools...'\n\n\nNaciœnij 'Dalej', aby kontynuowaæ albo 'Anuluj', by pomin¹æ instalacjê sterownika SVGA.",-1,25,25,225,85
+END
+
+IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
+  CONTROL "", IDC_INSTALLINGPROGRESS, "msctls_progress32", PBS_MARQUEE | WS_CHILD | WS_VISIBLE | WS_BORDER, 25, 80, 225, 8
+END
+
+IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Sterownik SVGA VMware(r) zosta³ zainstalowany pomyœlnie. Proszê wybraæ rozdzielczoœæ ekranu:",-1,25,5,225,20
+  PUSHBUTTON "640x480", 540, 25, 30, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1152x864", 2016, 25, 75, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1280x960", 2240, 110, 30, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1280x1024", 2304, 110, 45, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1400x1050", 2450, 110, 60, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1600x1200", 2800, 110, 75, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
+  LTEXT "Proszê wybraæ iloœæ kolorów:", -1, 25, 93, 225, 12
+  COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
+END
+
+IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Program konfiguracyjny ReactOS Setup nie zdo³a³ zainstalowaæ sterownika SVGA VMware(r).\n\n\nProszê nacisn¹æ 'Zakoñcz', aby kontynuowaæ proces instalacji.",-1,25,25,225,85
+END
+
+IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Sterownik SVGA VMware(r) zosta³ ju¿ zainstalowany.\n\nProszê wybraæ jedn¹ z poni¿szych czynnoœci:",-1,25,5,225,30
+  PUSHBUTTON "Konfiguracja ustawieñ ekranu", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Zmiana sterownika grafiki", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Deinstalacja sterownika SVGA VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+  LTEXT "Proszê nacisn¹æ 'Dalej', aby kontynuowaæ albo 'Anuluj', aby opuœciæ program konfiguracyjny.", -1, 25, 93, 225, 12
+END
+
+IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Proszê wybraæ sterownik grafiki:",-1,25,25,225,15
+  PUSHBUTTON "Sterownik ReactOS VGA", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
+  PUSHBUTTON "Sterownik ReactOS VBE (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+  LTEXT "Proszê nacisn¹æ 'Zakoñcz', by potwierdziæ wybór albo 'Anuluj', by wyjœæ z programu bez zmian.", -1, 25, 93, 225, 20
+END
+
+IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Instalacja sterownika grafiki"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Program konfiguracyjny ReactOS ma zamiar odinstalowaæ sterownik SVGA VMware(r)!\n\n\nNaciœnij 'Zakoñcz', by odinstalowaæ sterownik lub 'Anuluj', by go pozostawiæ.",-1,25,25,225,85
+END
+
+STRINGTABLE
+BEGIN
+  IDS_WIZARD_NAME "Wykryto VMware(r)"
+  IDS_FAILEDTOLOCATEDRIVERS "Program konfiguracyjny ReactOS nie mo¿e znaleŸæ potrzebnych plików.\nProszê upewniæ siê, ¿e w napêdzie znajduje siê CD z VMware(r) tools."
+  IDS_FAILEDTOCOPYFILES "Program konfiguracyjny ReactOS nie by³ w stanie przekopiowaæ niezbêdnych plików.\nProszê upewniæ siê, ¿e w napêdzie znajduje siê CD z VMware(r) tools.\n"
+  IDS_FAILEDTOACTIVATEDRIVER "Inicjalizacja sterownika SVGA VMware(r) nieudana!"
+  IDS_FAILEDTOSELVGADRIVER "Inicjalizacja sterownika VGA ReactOS nieudana!"
+  IDS_FAILEDTOSELVBEDRIVER "Inicjalizacja sterownika VBE ReactOS nieudana!"
+  IDS_UNINSTNOTICE "Nie wszystkie pliki sterownika SVGA VMware(r) zosta³y skasowane.\nProszê usun¹æ je rêcznie, po restarcie systemu."
+  IDS_FAILEDTOADDREGENTRIES "Nie uda³o siê stworzyæ wpisów w rejestrze dla sterownika SVGA VMware(r)!"
+END
+
+STRINGTABLE
+BEGIN
+  10001 "256 kolorów (8BPP)"
+  10002 "65k kolorów (16BPP)"
+  10003 "16m kolorów (32BPP)"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_SEARCHINGFORCDROM "Poszukiwanie CD z VMware(r) Tools..."
+  IDS_COPYINGFILES      "Kopiowanie plików..."
+  IDS_ENABLINGDRIVER    "Inicjalizacja sterownika SVGA VMware(r)..."
+END
+
+STRINGTABLE
+BEGIN
+  IDD_INSERT_VMWARE_TOOLSTITLE     	"Kreator konfiguracji sterownika SVGA VMware(r)"
+  IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Proszê w³o¿yæ CD z VMware tools."
+  IDD_INSTALLING_VMWARE_TOOLSTITLE      "Kreator konfiguracji sterownika SVGA VMware(r)"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Wyszukiwanie i kopiowanie plików sterownika SVGA VMware(r)."
+  IDD_CONFIGTITLE     			"Kreator konfiguracji sterownika SVGA VMware(r)"
+  IDD_CONFIGSUBTITLE     		"Proszê wybraæ rozdzielczoœæ ekranu."
+  IDD_INSTALLATION_FAILEDTITLE     	"Kreator konfiguracji sterownika SVGA VMware(r)"
+  IDD_INSTALLATION_FAILEDSUBTITLE       "Instalacja sterownika SVGA VMware(r) nieudana."
+  IDD_CHOOSEACTIONTITLE    	        "Kreator konfiguracji sterownika SVGA VMware(r)"
+  IDD_CHOOSEACTIONSUBTITLE              "Proszê dokonaæ wyboru."
+  IDD_SELECTDRIVERTITLE                 "Kreator konfiguracji sterownika SVGA VMware(r)"
+  IDD_SELECTDRIVERSUBTITLE              "Proszê wybraæ sterownik."
+  IDD_DOUNINSTALLTITLE                  "Kreator konfiguracji sterownika SVGA VMware(r)"
+  IDD_DOUNINSTALLSUBTITLE               "Deinstalacja sterownika."
+END

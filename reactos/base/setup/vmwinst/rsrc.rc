@@ -1,0 +1,33 @@
+#include <windows.h>
+#include "vmwinst.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 24 DISCARDABLE "manifest.xml"
+
+/* Bitmaps */
+IDB_WATERMARK BITMAP "resources/watermark.bmp"
+IDB_HEADER    BITMAP "resources/header.bmp"
+
+/*
+ * Everything specific to any language goes in one of the specific
+ * files. Note that you can and may override resources which also have
+ * a neutral version. This is to get localized bitmaps for example.
+ */
+#include "lang/cs-CZ.rc"
+#include "lang/da-DK.rc"
+#include "lang/de-DE.rc"
+#include "lang/el-GR.rc"
+#include "lang/en-US.rc"
+#include "lang/es-ES.rc"
+#include "lang/fr-FR.rc"
+#include "lang/hu-HU.rc"
+#include "lang/id-ID.rc"
+#include "lang/it-IT.rc"
+#include "lang/ja-JP.rc"
+#include "lang/lt-LT.rc"
+#include "lang/nb-NO.rc"
+#include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
