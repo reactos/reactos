@@ -42,6 +42,7 @@ HKR, , Icon,           0, "-27"
 %*PNP0C0C.DeviceDesc% = NO_DRV,*PNP0C0C
 %*PNP0C0E.DeviceDesc% = NO_DRV,*PNP0C0E
 %*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
+"VMware SCSI card"    = NO_DRV,PCI\VEN_104B&DEV_1040
 
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
