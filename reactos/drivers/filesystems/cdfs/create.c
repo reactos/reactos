@@ -141,6 +141,10 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
   DPRINT ("Status %lx\n", Status);
   if (!NT_SUCCESS(Status))
     {
+      if (Status == STATUS_NO_MEDIA_IN_DEVICE || Status == STATUS_VERIFY_REQUIRED)
+      {
+          DeviceExt->VolumeDevice->Flags |= DO_VERIFY_VOLUME;
+      }
       DPRINT1 ("Status %lx\n", Status);
       return Status;
     }

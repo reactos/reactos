@@ -199,6 +199,9 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
       NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
       DPRINT1("IoVerifyVolume() returned (Status %lx)\n", NewStatus);
+
+      if (NewStatus == STATUS_SUCCESS || NewStatus == STATUS_WRONG_VOLUME)
+          Status = STATUS_SUCCESS;
     }
 
   DPRINT("Returning Status %x\n", Status);
