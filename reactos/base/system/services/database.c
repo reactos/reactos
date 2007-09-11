@@ -27,6 +27,7 @@ static DWORD dwResumeCount = 1;
 
 /* FUNCTIONS *****************************************************************/
 
+
 PSERVICE
 ScmGetServiceEntryByName(LPWSTR lpServiceName)
 {
@@ -115,13 +116,13 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 
 
 PSERVICE
-ScmGetServiceEntryByThreadId(ULONG ThreadId)
+ScmGetServiceEntryByServiceStatusHandle(ULONG Handle)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
 
-    DPRINT("ScmGetServiceEntryByThreadId() called\n");
-    DPRINT("Finding ThreadId %lu\n", ThreadId);
+    DPRINT("ScmGetServiceEntryByServiceStatusHandle() called\n");
+    DPRINT("looking for %lu\n", Handle);
 
     ServiceEntry = ServiceListHead.Flink;
     while (ServiceEntry != &ServiceListHead)
@@ -129,10 +130,10 @@ ScmGetServiceEntryByThreadId(ULONG ThreadId)
         CurrentService = CONTAINING_RECORD(ServiceEntry,
                                            SERVICE,
                                            ServiceListEntry);
-        DPRINT("Found threadId %lu\n", CurrentService->ThreadId);
-        if (CurrentService->ThreadId == ThreadId)
+
+        if (CurrentService->hServiceStatus == Handle)
         {
-            DPRINT("Found service: '%S'\n", CurrentService->lpDisplayName);
+            DPRINT1("Found service: '%S'\n", CurrentService->lpDisplayName);
             return CurrentService;
         }
 
@@ -567,21 +568,27 @@ ScmControlService(PSERVICE Service,
 {
     PSCM_CONTROL_PACKET ControlPacket;
     DWORD Count;
+    DWORD TotalLength;
 
     DPRINT("ScmControlService() called\n");
 
-    ControlPacket = (SCM_CONTROL_PACKET*) HeapAlloc(GetProcessHeap(),
-                                                    HEAP_ZERO_MEMORY,
-                                                    sizeof(SCM_CONTROL_PACKET));
+    TotalLength = wcslen(Service->lpServiceName) + 1;
+
+    ControlPacket = (SCM_CONTROL_PACKET*)HeapAlloc(GetProcessHeap(),
+                                                   HEAP_ZERO_MEMORY,
+                                                   sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)));
     if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ControlPacket->dwControl = dwControl;
 
+    ControlPacket->dwSize = TotalLength;
+    wcscpy(&ControlPacket->szArguments[0], Service->lpServiceName);
+
     /* Send the start command */
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
-              sizeof(SCM_CONTROL_PACKET),
+              sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)),
               &Count,
               NULL);
 
@@ -591,6 +598,10 @@ ScmControlService(PSERVICE Service,
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
+
+    RtlCopyMemory(lpServiceStatus,
+                  &Service->Status,
+                  sizeof(SERVICE_STATUS));
 
     DPRINT("ScmControlService) done\n");
 
@@ -609,7 +620,7 @@ ScmSendStartCommand(PSERVICE Service,
     PWSTR Ptr;
     DWORD Count;
 
-    DPRINT("ScmSendStartCommand() called\n");
+    DPRINT1("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
     TotalLength = wcslen(Service->lpServiceName) + 1;
@@ -776,14 +787,13 @@ ScmStartUserModeService(PSERVICE Service,
     if (ConnectNamedPipe(Service->ControlPipeHandle, NULL) ?
         TRUE : (dwError = GetLastError()) == ERROR_PIPE_CONNECTED)
     {
-        DWORD dwProcessId = 0;
         DWORD dwRead = 0;
 
         DPRINT("Control pipe connected!\n");
 
-        /* Read thread id from pipe */
+        /* Read SERVICE_STATUS_HANDLE from pipe */
         if (!ReadFile(Service->ControlPipeHandle,
-                      (LPVOID)&dwProcessId,
+                      (LPVOID)&Service->hServiceStatus,
                       sizeof(DWORD),
                       &dwRead,
                       NULL))
@@ -794,7 +804,8 @@ ScmStartUserModeService(PSERVICE Service,
         }
         else
         {
-            DPRINT("Received process id %lu\n", dwProcessId);
+            DPRINT("Received service status %lu\n", Service->hServiceStatus);
+            DPRINT("calling ScmSendStartCommand on %S\n", Service->lpDisplayName);
 
             /* Send start command */
             dwError = ScmSendStartCommand(Service, lpArgs);

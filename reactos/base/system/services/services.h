@@ -41,6 +41,7 @@ typedef struct _SERVICE
     BOOL bDeleted;
     DWORD dwResumeCount;
 
+    SERVICE_STATUS_HANDLE hServiceStatus;
     SERVICE_STATUS Status;
     DWORD dwStartType;
     DWORD dwErrorControl;
@@ -104,7 +105,7 @@ DWORD ScmStartService(PSERVICE Service,
 PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName);
 PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
-PSERVICE ScmGetServiceEntryByThreadId(ULONG ThreadId);
+PSERVICE ScmGetServiceEntryByServiceStatusHandle(ULONG ThreadId);
 DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
