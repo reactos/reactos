@@ -25,17 +25,12 @@
 using std::string;
 using std::vector;
 
-#define CLEAN_FILE(f) clean_files.push_back ( (f)->name.length () > 0 ? strFile ( f ) : strDirectory ( f ) );
+#define CLEAN_FILE(f) clean_files.push_back ( (f).name.length () > 0 ? backend->GetFullName ( f ) : backend->GetFullPath ( f ) );
 
 MingwBackend*
 MingwModuleHandler::backend = NULL;
 FILE*
 MingwModuleHandler::fMakefile = NULL;
-
-extern string
-strDirectory ( const FileLocation *file );
-extern string
-strFile ( const FileLocation *file );
 
 string
 PrefixFilename (
@@ -135,7 +130,7 @@ MingwModuleHandler::GetTargetFilename (
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
-		CLEAN_FILE ( target );
+		CLEAN_FILE ( *target );
 	}
 	return target;
 }
@@ -149,7 +144,7 @@ MingwModuleHandler::GetImportLibraryFilename (
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
-		CLEAN_FILE ( target );
+		CLEAN_FILE ( *target );
 	}
 	return target;
 }
@@ -314,11 +309,11 @@ MingwModuleHandler::GetExtraDependencies (
 	if ( extension == ".idl" || extension == ".IDL" )
 	{
 		if ( (module.type == RpcServer) || (module.type == RpcClient) )
-			return strFile ( GetRpcServerHeaderFilename ( file ) )
+			return backend->GetFullName ( *GetRpcServerHeaderFilename ( file ) )
 			     + " "
-			     + strFile ( GetRpcClientHeaderFilename ( file ) );
+			     + backend->GetFullName ( *GetRpcClientHeaderFilename ( file ) );
 		else if ( module.type == IdlHeader )
-			return strFile ( GetIdlHeaderFilename ( file ) );
+			return backend->GetFullName ( *GetIdlHeaderFilename ( file ) );
 		else
 			return "";
 	}
@@ -336,7 +331,7 @@ MingwModuleHandler::GetCompilationUnitDependencies (
 	for ( size_t i = 0; i < compilationUnit.files.size (); i++ )
 	{
 		File& file = *compilationUnit.files[i];
-		sourceFiles.push_back ( strFile ( &file.file ) );
+		sourceFiles.push_back ( backend->GetFullName ( file.file ) );
 	}
 	return v2s ( sourceFiles, 10 );
 }
@@ -381,8 +376,8 @@ MingwModuleHandler::OutputCopyCommand ( const FileLocation& source,
 	          "\t$(ECHO_CP)\n" );
 	fprintf ( fMakefile,
 	          "\t${cp} %s %s 1>$(NUL)\n",
-	          strFile ( &source ).c_str (),
-	          strFile ( PassThruCacheDirectory ( &destination ) ).c_str () );
+	          backend->GetFullName ( source ).c_str (),
+	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str () );
 }
 
 string
@@ -393,7 +388,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 	if ( ReferenceObjects ( importedModule ) )
 		dep = GetTargetMacro ( importedModule );
 	else
-		dep = strFile ( GetImportLibraryFilename ( importedModule, NULL ) );
+		dep = backend->GetFullName ( *GetImportLibraryFilename ( importedModule, NULL ) );
 	return dep;
 }
 
@@ -434,7 +429,7 @@ MingwModuleHandler::GetModuleDependencies (
 	for ( size_t i = 0; i < v.size (); i++ )
 	{
 		const FileLocation& file = v[i];
-		dependencies.push_back ( strFile ( &file ) );
+		dependencies.push_back ( backend->GetFullName ( file ) );
 	}
 }
 
@@ -524,7 +519,7 @@ MingwModuleHandler::GetObjectFilename (
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
-		CLEAN_FILE ( obj_file );
+		CLEAN_FILE ( *obj_file );
 	}
 	return obj_file;
 }
@@ -580,7 +575,7 @@ MingwModuleHandler::GenerateInstallTarget () const
 	fprintf ( fMakefile,
 	          "%s_install: %s\n",
 	          module.name.c_str (),
-	          strFile ( module.install ).c_str () );
+	          backend->GetFullName ( *module.install ).c_str () );
 }
 
 void
@@ -611,7 +606,7 @@ MingwModuleHandler::GetObjectFilenames ()
 	{
 		if ( objectFilenames.size () > 0 )
 			objectFilenames += " ";
-		objectFilenames += strFile ( GetObjectFilename ( compilationUnits[i]->GetFilename (), NULL ) );
+		objectFilenames += backend->GetFullName ( *GetObjectFilename ( compilationUnits[i]->GetFilename (), NULL ) );
 	}
 	return objectFilenames;
 }
@@ -672,7 +667,7 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 		Include& include = *includes[i];
 		if ( parameters.length () > 0 )
 			parameters += " ";
-		parameters += "-I" + strDirectory ( include.directory );;
+		parameters += "-I" + backend->GetFullPath ( *include.directory );;
 	}
 	return parameters;
 }
@@ -763,7 +758,7 @@ MingwModuleHandler::GenerateMacro (
 	{
 		fprintf ( fMakefile,
 		          " -I%s",
-		          strDirectory ( GetPrecompiledHeaderFilename () ).c_str () );
+		          backend->GetFullPath ( *GetPrecompiledHeaderFilename () ).c_str () );
 	}
 
 	string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags );
@@ -782,7 +777,7 @@ MingwModuleHandler::GenerateMacro (
 		fprintf (
 			fMakefile,
 			" -I%s",
-			strDirectory ( includeDirectory ).c_str() );
+			backend->GetFullPath ( *includeDirectory ).c_str() );
 	}
 	for ( i = 0; i < data.defines.size(); i++ )
 	{
@@ -905,7 +900,7 @@ MingwModuleHandler::GenerateObjectMacros (
 				fprintf ( fMakefile,
 					"%s := %s $(%s)\n",
 					objectsMacro.c_str(),
-					strFile ( GetObjectFilename ( compilationUnit.GetFilename (), NULL ) ).c_str (),
+					backend->GetFullName ( *GetObjectFilename ( compilationUnit.GetFilename (), NULL ) ).c_str (),
 					objectsMacro.c_str() );
 			}
 		}
@@ -923,7 +918,7 @@ MingwModuleHandler::GenerateObjectMacros (
 					fMakefile,
 					"%s%s",
 					( i%10 == 9 ? " \\\n\t" : " " ),
-					strFile ( GetObjectFilename ( compilationUnit.GetFilename (), NULL ) ).c_str () );
+					backend->GetFullName ( *GetObjectFilename ( compilationUnit.GetFilename (), NULL ) ).c_str () );
 			}
 		}
 		fprintf ( fMakefile, "\n" );
@@ -964,7 +959,7 @@ MingwModuleHandler::GenerateObjectMacros (
 			fMakefile,
 			"%s += %s\n",
 			objectsMacro.c_str(),
-			strFile ( GetObjectFilename ( sourceCompilationUnits[i]->GetFilename (), NULL ) ).c_str () );
+			backend->GetFullName ( *GetObjectFilename ( sourceCompilationUnits[i]->GetFilename (), NULL ) ).c_str () );
 	}
 	CleanupCompilationUnitVector ( sourceCompilationUnits );
 }
@@ -985,25 +980,25 @@ MingwModuleHandler::GenerateGccCommand (
 	const string& cc,
 	const string& cflagsMacro )
 {
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	if ( extraDependencies != "" )
 		dependencies += " " + extraDependencies;
 	if ( module.pch && use_pch )
-		dependencies += " " + strFile ( GetPrecompiledHeaderFilename () );
+		dependencies += " " + backend->GetFullName ( *GetPrecompiledHeaderFilename () );
 
 	/* WIDL generated headers may be used */
 	vector<FileLocation> rpcDependencies;
 	GetRpcHeaderDependencies ( rpcDependencies );
-	dependencies += " " + v2s ( rpcDependencies, 5 );
+	dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename (
 		sourceFile, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
-	          strFile ( objectFilename ).c_str (),
+	          backend->GetFullName ( *objectFilename ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( objectFilename ).c_str () );
+	          backend->GetFullPath ( *objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
 	fprintf ( fMakefile,
 	         "\t%s -c $< -o $@ %s\n",
@@ -1017,16 +1012,16 @@ MingwModuleHandler::GenerateGccAssemblerCommand (
 	const string& cc,
 	const string& cflagsMacro )
 {
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename (
 		sourceFile, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
-	          strFile ( objectFilename ).c_str (),
+	          backend->GetFullName ( *objectFilename ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( objectFilename ).c_str () );
+	          backend->GetFullPath ( *objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -x assembler-with-cpp -c $< -o $@ -D__ASM__ %s\n",
@@ -1039,16 +1034,16 @@ MingwModuleHandler::GenerateNasmCommand (
 	const FileLocation* sourceFile,
 	const string& nasmflagsMacro )
 {
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename (
 		sourceFile, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
-	          strFile ( objectFilename ).c_str (),
+	          backend->GetFullName ( *objectFilename ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( objectFilename ).c_str () );
+	          backend->GetFullPath ( *objectFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -f win32 $< -o $@ %s\n",
@@ -1061,7 +1056,7 @@ MingwModuleHandler::GenerateWindresCommand (
 	const FileLocation* sourceFile,
 	const string& windresflagsMacro )
 {
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename ( sourceFile, &clean_files );
@@ -1078,42 +1073,42 @@ MingwModuleHandler::GenerateWindresCommand (
 
 		fprintf ( fMakefile,
 		          "%s: %s $(WRC_TARGET) | %s\n",
-		          strFile ( objectFilename ).c_str (),
+		          backend->GetFullName ( *objectFilename ).c_str (),
 		          dependencies.c_str (),
-		          strDirectory ( objectFilename ).c_str () );
+		          backend->GetFullPath ( *objectFilename ).c_str () );
 		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 		fprintf ( fMakefile,
 		         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
 		         windresflagsMacro.c_str (),
-		         strFile ( sourceFile ).c_str (),
-		         strFile ( &rciFilename ).c_str () );
+		         backend->GetFullName ( *sourceFile ).c_str (),
+		         backend->GetFullName ( rciFilename ).c_str () );
 		fprintf ( fMakefile,
 		         "\t$(Q)$(WRC_TARGET) ${%s} %s %s\n",
 		         windresflagsMacro.c_str (),
-		         strFile ( &rciFilename ).c_str (),
-		         strFile ( &resFilename ).c_str () );
+		         backend->GetFullName ( rciFilename ).c_str (),
+		         backend->GetFullName ( resFilename ).c_str () );
 		fprintf ( fMakefile,
 		         "\t-@${rm} %s 2>$(NUL)\n",
-		         strFile ( &rciFilename ).c_str () );
+		         backend->GetFullName ( rciFilename ).c_str () );
 		fprintf ( fMakefile,
 		         "\t${windres} %s -o $@\n",
-		         strFile ( &resFilename ).c_str () );
+		         backend->GetFullName ( resFilename ).c_str () );
 		fprintf ( fMakefile,
 		         "\t-@${rm} %s 2>$(NUL)\n",
-		         strFile ( &resFilename ).c_str () );
+		         backend->GetFullName ( resFilename ).c_str () );
 	}
 	else
 	{
 		fprintf ( fMakefile,
 		          "%s: %s $(WRC_TARGET) | %s\n",
-		          strFile ( objectFilename ).c_str (),
+		          backend->GetFullName ( *objectFilename ).c_str (),
 		          dependencies.c_str (),
-		          strDirectory ( objectFilename ).c_str () );
+		          backend->GetFullPath ( *objectFilename ).c_str () );
 		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 		fprintf ( fMakefile,
 		         "\t${windres} $(%s) %s -o $@\n",
 		         windresflagsMacro.c_str (),
-		         strFile ( sourceFile ).c_str () );
+		         backend->GetFullName ( *sourceFile ).c_str () );
 	}
 }
 
@@ -1121,41 +1116,41 @@ void
 MingwModuleHandler::GenerateWinebuildCommands (
 	const FileLocation* sourceFile )
 {
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string basename = GetBasename ( sourceFile->name );
 	FileLocation def_file ( IntermediateDirectory,
 	                        sourceFile->relative_path,
 	                        basename + ".spec.def" );
-	CLEAN_FILE ( &def_file );
+	CLEAN_FILE ( def_file );
 
 	FileLocation stub_file ( IntermediateDirectory,
 	                        sourceFile->relative_path,
 	                        basename + ".stubs.c" );
-	CLEAN_FILE ( &stub_file );
+	CLEAN_FILE ( stub_file );
 
 	fprintf ( fMakefile,
 	          "%s: %s $(WINEBUILD_TARGET) | %s\n",
-	          strFile ( &def_file ).c_str (),
+	          backend->GetFullName ( def_file ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( &def_file ).c_str () );
+	          backend->GetFullPath ( def_file ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -o %s --def -E %s\n",
 	          "$(Q)$(WINEBUILD_TARGET)",
-	          strFile ( &def_file ).c_str (),
-	          strFile ( sourceFile ).c_str () );
+	          backend->GetFullName ( def_file ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
 	fprintf ( fMakefile,
 	          "%s: %s $(WINEBUILD_TARGET)\n",
-	          strFile ( &stub_file ).c_str (),
-	          strFile ( sourceFile ).c_str () );
+	          backend->GetFullName ( stub_file ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -o %s --pedll %s\n",
 	          "$(Q)$(WINEBUILD_TARGET)",
-	          strFile ( &stub_file ).c_str (),
-	          strFile ( sourceFile ).c_str () );
+	          backend->GetFullName ( stub_file ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
 }
 
 string
@@ -1189,34 +1184,34 @@ MingwModuleHandler::GenerateWidlCommandsServer (
 	const string& widlflagsMacro )
 {
 	const FileLocation* sourceFile = compilationUnit.GetFilename ();
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string basename = GetBasename ( sourceFile->name );
 
 	const FileLocation *generatedHeaderFilename = GetRpcServerHeaderFilename ( sourceFile );
-	CLEAN_FILE(generatedHeaderFilename);
+	CLEAN_FILE ( *generatedHeaderFilename );
 
 	FileLocation generatedServerFilename ( IntermediateDirectory,
 	                                       sourceFile->relative_path,
 	                                       basename + "_s.c" );
-	CLEAN_FILE(&generatedServerFilename);
+	CLEAN_FILE ( generatedServerFilename );
 
 	fprintf ( fMakefile,
 	          "%s %s: %s $(WIDL_TARGET) | %s\n",
-	          strFile ( &generatedServerFilename ).c_str (),
-	          strFile ( generatedHeaderFilename ).c_str (),
+	          backend->GetFullName ( generatedServerFilename ).c_str (),
+	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( &generatedServerFilename ).c_str () );
+	          backend->GetFullPath ( generatedServerFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
 	          "\t%s %s %s -h -H %s -s -S %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
 	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
-	          strFile ( generatedHeaderFilename ).c_str (),
-	          strFile ( &generatedServerFilename ).c_str (),
-	          strFile ( sourceFile ).c_str () );
+	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
+	          backend->GetFullName ( generatedServerFilename ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
 }
 
 const FileLocation*
@@ -1239,7 +1234,7 @@ MingwModuleHandler::GenerateWidlCommandsEmbeddedTypeLib (
 	const string& widlflagsMacro )
 {
 	const FileLocation* sourceFile = compilationUnit.GetFilename ();
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string basename = GetBasename ( sourceFile->name );
@@ -1252,15 +1247,15 @@ MingwModuleHandler::GenerateWidlCommandsEmbeddedTypeLib (
 	          "%s: %s $(WIDL_TARGET) | %s\n",
 	          GetTargetMacro ( module ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( &EmbeddedTypeLibFilename ).c_str () );
+	          backend->GetFullPath ( EmbeddedTypeLibFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
 	          "\t%s %s %s -t -T %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
 	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
-	          strFile ( &EmbeddedTypeLibFilename ).c_str(),
-	          strFile ( sourceFile ).c_str () );
+	          backend->GetFullName ( EmbeddedTypeLibFilename ).c_str(),
+	          backend->GetFullName ( *sourceFile ).c_str () );
 }
 
 void
@@ -1269,34 +1264,34 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 	const string& widlflagsMacro )
 {
 	const FileLocation* sourceFile = compilationUnit.GetFilename ();
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string basename = GetBasename ( sourceFile->name );
 
 	const FileLocation *generatedHeaderFilename = GetRpcClientHeaderFilename ( sourceFile );
-	CLEAN_FILE(generatedHeaderFilename);
+	CLEAN_FILE ( *generatedHeaderFilename );
 
 	FileLocation generatedClientFilename ( IntermediateDirectory,
 	                                       sourceFile->relative_path,
 	                                       basename + "_c.c" );
-	CLEAN_FILE(&generatedClientFilename);
+	CLEAN_FILE ( generatedClientFilename );
 
 	fprintf ( fMakefile,
 	          "%s %s: %s $(WIDL_TARGET) | %s\n",
-	          strFile ( &generatedClientFilename ).c_str (),
-	          strFile ( generatedHeaderFilename ).c_str (),
+	          backend->GetFullName ( generatedClientFilename ).c_str (),
+	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( &generatedClientFilename ).c_str () );
+	          backend->GetFullPath ( generatedClientFilename ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
 	          "\t%s %s %s -h -H %s -c -C %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
 	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
-	          strFile ( generatedHeaderFilename ).c_str (),
-	          strFile ( &generatedClientFilename ).c_str (),
-	          strFile ( sourceFile ).c_str () );
+	          backend->GetFullName ( *generatedHeaderFilename ).c_str (),
+	          backend->GetFullName ( generatedClientFilename ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
 }
 
 void
@@ -1305,27 +1300,27 @@ MingwModuleHandler::GenerateWidlCommandsIdlHeader (
 	const string& widlflagsMacro )
 {
 	const FileLocation* sourceFile = compilationUnit.GetFilename ();
-	string dependencies = strFile ( sourceFile );
+	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string basename = GetBasename ( sourceFile->name );
 
 	const FileLocation *generatedHeader = GetIdlHeaderFilename ( sourceFile );
-	CLEAN_FILE(generatedHeader);
+	CLEAN_FILE ( *generatedHeader );
 
 	fprintf ( fMakefile,
 	          "%s: %s $(WIDL_TARGET) | %s\n",
-	          strFile( generatedHeader ).c_str (),
+	          backend->GetFullName( *generatedHeader ).c_str (),
 	          dependencies.c_str (),
-	          strDirectory ( generatedHeader ).c_str () );
+	          backend->GetFullPath ( *generatedHeader ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
 	fprintf ( fMakefile,
 	          "\t%s %s %s -h -H %s %s\n",
 	          "$(Q)$(WIDL_TARGET)",
 	          GetWidlFlags ( compilationUnit ).c_str (),
 	          widlflagsMacro.c_str (),
-	          strFile( generatedHeader ).c_str (),
-	          strFile ( sourceFile ).c_str () );
+	          backend->GetFullName ( *generatedHeader ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
 }
 
 void
@@ -1358,7 +1353,7 @@ MingwModuleHandler::GenerateCommands (
 	const string& widlflagsMacro )
 {
 	const FileLocation* sourceFile = compilationUnit.GetFilename ();
-	string filename = strFile ( sourceFile );
+	string filename = backend->GetFullName ( *sourceFile );
 	string extension = GetExtension ( filename );
 	if ( extension == ".c" || extension == ".C" )
 	{
@@ -1436,14 +1431,14 @@ MingwModuleHandler::GenerateBuildMapCode ( const FileLocation *mapTarget )
 	FileLocation mapFilename ( OutputDirectory,
 	                           module.output->relative_path,
 	                           GetBasename ( module.output->name ) + ".map" );
-	CLEAN_FILE ( &mapFilename );
+	CLEAN_FILE ( mapFilename );
 
 	fprintf ( fMakefile,
 	          "\t$(ECHO_OBJDUMP)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)${objdump} -d -S %s > %s\n",
-	          mapTarget ? strFile ( mapTarget ).c_str () :  "$@",
-	          strFile ( &mapFilename ).c_str () );
+	          mapTarget ? backend->GetFullName ( *mapTarget ).c_str () :  "$@",
+	          backend->GetFullName ( mapFilename ).c_str () );
 
 	fprintf ( fMakefile,
 	          "else\n" );
@@ -1454,8 +1449,8 @@ MingwModuleHandler::GenerateBuildMapCode ( const FileLocation *mapTarget )
 	          "\t$(ECHO_NM)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)${nm} --numeric-sort %s > %s\n",
-	          mapTarget ? strFile ( mapTarget ).c_str () :  "$@",
-	          strFile ( &mapFilename ).c_str () );
+	          mapTarget ? backend->GetFullName ( *mapTarget ).c_str () :  "$@",
+	          backend->GetFullName ( mapFilename ).c_str () );
 
 	fprintf ( fMakefile,
 	          "endif\n" );
@@ -1474,7 +1469,7 @@ MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
 	FileLocation nostripFilename ( OutputDirectory,
 	                               module.output->relative_path,
 	                               GetBasename ( filename ) + ".nostrip" + GetExtension ( filename ) );
-	CLEAN_FILE ( &nostripFilename );
+	CLEAN_FILE ( nostripFilename );
 
 	OutputCopyCommand ( *module.output, nostripFilename );
 
@@ -1483,7 +1478,8 @@ MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
 }
 
 void
-MergeStringVector ( const vector<FileLocation>& input,
+MergeStringVector ( const Backend* backend,
+                    const vector<FileLocation>& input,
                     vector<string>& output )
 {
 	int wrap_at = 25;
@@ -1499,7 +1495,7 @@ MergeStringVector ( const vector<FileLocation>& input,
 		}
 		else if ( s.size () > 0)
 			s += " ";
-		s += strFile ( &input[i] );
+		s += backend->GetFullName ( input[i] );
 	}
 	if ( s.length () > 0 )
 		output.push_back ( s );
@@ -1525,7 +1521,8 @@ MingwModuleHandler::GenerateCleanObjectsAsYouGoCode () const
 		GetObjectsVector ( module.non_if_data,
 		                   objectFiles );
 		vector<string> lines;
-		MergeStringVector ( objectFiles,
+		MergeStringVector ( backend,
+		                    objectFiles,
 		                    lines );
 		for ( size_t i = 0; i < lines.size (); i++ )
 		{
@@ -1568,7 +1565,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	const string& pefixupParameters )
 {
 	string target ( GetTargetMacro ( module ) );
-	string target_folder ( strDirectory ( GetTargetFilename ( module, NULL ) ) );
+	string target_folder ( backend->GetFullPath ( *GetTargetFilename ( module, NULL ) ) );
 	const FileLocation *definitionFilename = GetDefinitionFilename ();
 
 	string linkerScriptArgument;
@@ -1580,7 +1577,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	fprintf ( fMakefile,
 		"%s: %s %s $(RSYM_TARGET) $(PEFIXUP_TARGET) | %s\n",
 		target.c_str (),
-		strFile ( definitionFilename ).c_str (),
+		backend->GetFullName ( *definitionFilename ).c_str (),
 		dependencies.c_str (),
 		target_folder.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
@@ -1603,13 +1600,13 @@ MingwModuleHandler::GenerateLinkerCommand (
 		FileLocation temp_exp ( TemporaryDirectory,
 		                        "",
 		                        module.name + ".temp.exp" );
-		CLEAN_FILE ( &temp_exp );
+		CLEAN_FILE ( temp_exp );
 
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s %s\n",
 		          targetName.c_str (),
-		          strFile ( definitionFilename ).c_str (),
-		          strFile ( &temp_exp ).c_str (),
+		          backend->GetFullName ( *definitionFilename ).c_str (),
+		          backend->GetFullName ( temp_exp ).c_str (),
 		          module.mangledSymbols ? "" : "--kill-at",
 		          module.underscoreSymbols ? "--add-underscore" : "" );
 
@@ -1618,7 +1615,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
-		          strFile ( &temp_exp ).c_str (),
+		          backend->GetFullName ( temp_exp ).c_str (),
 		          target.c_str (),
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
@@ -1631,7 +1628,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 		fprintf ( fMakefile,
 		          "\t-@${rm} %s 2>$(NUL)\n",
-		          strFile ( &temp_exp ).c_str () );
+		          backend->GetFullName ( temp_exp ).c_str () );
 	}
 	else
 	{
@@ -1668,7 +1665,7 @@ MingwModuleHandler::GeneratePhonyTarget() const
 	          targetMacro.c_str ());
 	fprintf ( fMakefile, "%s: | %s\n",
 	          targetMacro.c_str (),
-	          strDirectory ( GetTargetFilename ( module, NULL ) ).c_str () );
+	          backend->GetFullPath ( *GetTargetFilename ( module, NULL ) ).c_str () );
 }
 
 void
@@ -1737,23 +1734,23 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	{
 		const FileLocation& baseHeaderFile = module.pch->file;
 		const FileLocation *pchFilename = GetPrecompiledHeaderFilename ();
-		CLEAN_FILE(pchFilename);
-		string dependencies = strFile ( &baseHeaderFile );
+		CLEAN_FILE ( *pchFilename );
+		string dependencies = backend->GetFullName ( baseHeaderFile );
 		/* WIDL generated headers may be used */
 		vector<FileLocation> rpcDependencies;
 		GetRpcHeaderDependencies ( rpcDependencies );
-		dependencies += " " + v2s ( rpcDependencies, 5 );
+		dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 		fprintf ( fMakefile,
 		          "%s: %s\n",
-		          strFile ( pchFilename ).c_str(),
+		          backend->GetFullName ( *pchFilename ).c_str(),
 		          dependencies.c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
 		          "\t%s -o %s %s -g %s\n\n",
 		          module.cplusplus ? cppc.c_str() : cc.c_str(),
-		          strFile ( pchFilename ).c_str(),
+		          backend->GetFullName ( *pchFilename ).c_str(),
 		          cflagsMacro.c_str(),
-		          strFile ( &baseHeaderFile ).c_str() );
+		          backend->GetFullName ( baseHeaderFile ).c_str() );
 	}
 
 	GenerateObjectFileTargets ( module.non_if_data,
@@ -1774,9 +1771,9 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
 
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
-	          strFile ( archiveFilename ).c_str (),
+	          backend->GetFullName ( *archiveFilename ).c_str (),
 	          objs_macro.c_str (),
-	          strDirectory ( archiveFilename ).c_str() );
+	          backend->GetFullPath ( *archiveFilename ).c_str() );
 
 	if ( module.type == StaticLibrary && module.importLibrary )
 	{
@@ -1785,7 +1782,7 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib $@ %s %s\n",
 		          module.importLibrary->dllname.c_str (),
-		          strFile ( definitionFilename ).c_str (),
+		          backend->GetFullName ( *definitionFilename ).c_str (),
 		          module.mangledSymbols ? "" : "--kill-at",
 		          module.underscoreSymbols ? "--add-underscore" : "" );
 	}
@@ -1843,7 +1840,7 @@ MingwModuleHandler::GetModuleTargets ( const Module& module )
 	if ( ReferenceObjects ( module ) )
 		return GetObjectsMacro ( module );
 	else
-		return strFile ( GetTargetFilename ( module, NULL ) ).c_str ();
+		return backend->GetFullName ( *GetTargetFilename ( module, NULL ) ).c_str ();
 }
 
 void
@@ -1938,7 +1935,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		for ( size_t i = 0; i < s.size(); i++ )
 			fprintf ( fMakefile,
 			          " %s",
-			          strFile ( &s[i] ).c_str () );
+			          backend->GetFullName ( s[i] ).c_str () );
 		fprintf ( fMakefile, "\n" );
 	}
 
@@ -2036,12 +2033,12 @@ MingwModuleHandler::GenerateRules ()
 		FileLocation proxyMakefile ( OutputDirectory,
 		                             module.output->relative_path,
 		                            "makefile" );
-		CLEAN_FILE ( &proxyMakefile );
+		CLEAN_FILE ( proxyMakefile );
 	}
 
 	string targetMacro = GetTargetMacro ( module );
-	//CLEAN_FILE ( &targetMacro );
-	CLEAN_FILE ( new FileLocation ( SourceDirectory, "", targetMacro ) );
+	//CLEAN_FILE ( targetMacro );
+	CLEAN_FILE ( FileLocation ( SourceDirectory, "", targetMacro ) );
 
 	// generate phony target for module name
 	fprintf ( fMakefile, ".PHONY: %s\n",
@@ -2062,7 +2059,7 @@ MingwModuleHandler::GenerateRules ()
 	if ( !ReferenceObjects ( module ) )
 	{
 		const FileLocation* ar_target = GenerateArchiveTarget ( ar, objectsMacro );
-		CLEAN_FILE ( ar_target );
+		CLEAN_FILE ( *ar_target );
 	}
 
 	GenerateObjectFileTargets ( cc,
@@ -2130,11 +2127,11 @@ MingwModuleHandler::GenerateInvocations () const
 			          invoke_targets[i].c_str () );
 		fprintf ( fMakefile,
 		          ": %s\n",
-		          NormalizeFilename ( strFile ( invoke.invokeModule->output ) ).c_str () );
+		          NormalizeFilename ( backend->GetFullName ( *invoke.invokeModule->output ) ).c_str () );
 		fprintf ( fMakefile, "\t$(ECHO_INVOKE)\n" );
 		fprintf ( fMakefile,
 		          "\t%s %s\n\n",
-		          NormalizeFilename ( strFile ( invoke.invokeModule->output ) ).c_str (),
+		          NormalizeFilename ( backend->GetFullName ( *invoke.invokeModule->output ) ).c_str (),
 		          invoke.GetParameters ().c_str () );
 	}
 }
@@ -2190,7 +2187,7 @@ MingwModuleHandler::GeneratePreconditionDependencies ()
 	{
 		fprintf ( fMakefile,
 		          "%s: ${%s}\n",
-		          strFile ( &sourceFilenames[i] ).c_str (),
+		          backend->GetFullName ( sourceFilenames[i] ).c_str (),
 		          preconditionDependenciesName.c_str ());
 	}
 	fprintf ( fMakefile, "\n" );
@@ -2239,24 +2236,24 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		fprintf ( fMakefile, "# IMPORT LIBRARY RULE:\n" );
 
 		fprintf ( fMakefile, "%s: %s",
-		          strFile ( library_target ).c_str (),
-		          strFile ( defFilename ).c_str () );
+		          backend->GetFullName ( *library_target ).c_str (),
+		          backend->GetFullName ( *defFilename ).c_str () );
 
 		size_t i, iend = deps.size();
 		for ( i = 0; i < iend; i++ )
 			fprintf ( fMakefile, " %s",
-			          strFile ( &deps[i] ).c_str () );
+			          backend->GetFullName ( deps[i] ).c_str () );
 
 		fprintf ( fMakefile, " | %s\n",
-		          strDirectory ( GetImportLibraryFilename ( module, NULL ) ).c_str () );
+		          backend->GetFullPath ( *GetImportLibraryFilename ( module, NULL ) ).c_str () );
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
 
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s %s\n\n",
 		          module.output->name.c_str (),
-		          strFile ( defFilename ).c_str (),
-		          strFile ( library_target ).c_str (),
+		          backend->GetFullName ( *defFilename ).c_str (),
+		          backend->GetFullName ( *library_target ).c_str (),
 		          module.mangledSymbols ? "" : "--kill-at",
 		          module.underscoreSymbols ? "--add-underscore" : "" );
 	}
@@ -2373,7 +2370,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ()
 	          targetMacro.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),
-	          strDirectory(GetTargetFilename(module,NULL)).c_str () );
+	          backend->GetFullPath ( *GetTargetFilename ( module, NULL ) ).c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s %s -o $@ %s %s\n\n",
@@ -3001,7 +2998,7 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	FileLocation junk_tmp ( TemporaryDirectory,
 	                        "",
 	                        module.name + ".junk.tmp" );
-	CLEAN_FILE ( &junk_tmp );
+	CLEAN_FILE ( junk_tmp );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 	string libsMacro = GetLibsMacro ();
@@ -3012,23 +3009,23 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	          targetMacro.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),
-	          strDirectory(GetTargetFilename(module,NULL)).c_str () );
+	          backend->GetFullPath ( *GetTargetFilename ( module, NULL ) ).c_str () );
 
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 
 	fprintf ( fMakefile,
 	          "\t${ld} %s -N -Ttext=0x8000 -o %s %s %s\n",
 	          GetLinkerMacro ().c_str (),
-	          strFile ( &junk_tmp ).c_str (),
+	          backend->GetFullName ( junk_tmp ).c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str () );
 	fprintf ( fMakefile,
 	          "\t${objcopy} -O binary %s $@\n",
-	          strFile ( &junk_tmp ).c_str () );
+	          backend->GetFullName ( junk_tmp ).c_str () );
 	GenerateBuildMapCode ( &junk_tmp );
 	fprintf ( fMakefile,
 	          "\t-@${rm} %s 2>$(NUL)\n",
-	          strFile ( &junk_tmp ).c_str () );
+	          backend->GetFullName ( junk_tmp ).c_str () );
 }
 
 
@@ -3088,9 +3085,9 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	FileLocation junk_cpy ( TemporaryDirectory,
 	                        "",
 	                        module.name + ".junk.elf" );
-	CLEAN_FILE ( &junk_tmp );
-	CLEAN_FILE ( &junk_elf );
-	CLEAN_FILE ( &junk_cpy );
+	CLEAN_FILE ( junk_tmp );
+	CLEAN_FILE ( junk_elf );
+	CLEAN_FILE ( junk_cpy );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();
 	string libsMacro = GetLibsMacro ();
@@ -3103,34 +3100,36 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),
 	          payload->name.c_str (),
-	          strDirectory(GetTargetFilename(module,NULL)).c_str () );
+	          backend->GetFullPath ( *GetTargetFilename ( module, NULL ) ).c_str () );
 
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
 	fprintf ( fMakefile, "\t$(%s_PREPARE) $(OUTPUT)$(SEP)%s %s\n",
 		module.buildtype.c_str (), 
-		NormalizeFilename( strFile ( payload->output ) ).c_str (),
-		strFile ( &junk_cpy ).c_str () );
+		NormalizeFilename( backend->GetFullName ( *payload->output ) ).c_str (),
+		backend->GetFullName ( junk_cpy ).c_str () );
 
 	fprintf ( fMakefile, "\t${objcopy} $(%s_FLATFORMAT) %s %s\n",
 		module.buildtype.c_str (),
-		strFile ( &junk_cpy ).c_str (),
-		strFile ( &junk_tmp ).c_str () );
+		backend->GetFullName ( junk_cpy ).c_str (),
+		backend->GetFullName ( junk_tmp ).c_str () );
 
 	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -g -o %s\n",
 		module.buildtype.c_str (),
 		linkDepsMacro.c_str (),
-		strFile ( &junk_tmp ).c_str (),
-		strFile ( &junk_elf ).c_str () );
+		backend->GetFullName ( junk_tmp ).c_str (),
+		backend->GetFullName ( junk_elf ).c_str () );
 
 	fprintf ( fMakefile, "\t${objcopy} $(%s_COPYFORMAT) %s $(INTERMEDIATE)$(SEP)%s\n",
 		module.buildtype.c_str (),
-		strFile ( &junk_elf ).c_str (),
-		strFile ( module.output ) .c_str () );
+		backend->GetFullName ( junk_elf ).c_str (),
+		backend->GetFullName ( *module.output ) .c_str () );
 
 	fprintf ( fMakefile,
 	          "\t-@${rm} %s %s %s 2>$(NUL)\n",
-	          strFile ( &junk_tmp ).c_str (), strFile ( &junk_elf ).c_str (), strFile ( &junk_cpy ).c_str () );
+	          backend->GetFullName ( junk_tmp ).c_str (),
+	          backend->GetFullName ( junk_elf ).c_str (),
+	          backend->GetFullName ( junk_cpy ).c_str () );
 }
 
 
@@ -3308,36 +3307,36 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 		IsoName = "ReactOS.iso";
 
 
-	string sourceFiles = v2s ( vSourceFiles, 5 );
+	string sourceFiles = v2s ( backend, vSourceFiles, 5 );
 
 	// fill cdrom
 	GetCdDirectories ( vCdDirectories, bootcdDirectory );
 	GetCdFiles ( vCdFiles );
 	string cdDirectories = "";//v2s ( vCdDirectories, 5 );
-	string cdFiles = v2s ( vCdFiles, 5 );
+	string cdFiles = v2s ( backend, vCdFiles, 5 );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
 	          "%s: all %s %s %s $(CABMAN_TARGET) $(CDMAKE_TARGET) %s\n",
 	          module.name.c_str (),
-	          strFile ( &isoboot ).c_str (),
+	          backend->GetFullName ( isoboot ).c_str (),
 	          sourceFiles.c_str (),
 	          cdFiles.c_str (),
 	          cdDirectories.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
-	          strFile ( &reactosDff ).c_str (),
-	          strDirectory ( &bootcdReactos ).c_str () );
+	          backend->GetFullName ( reactosDff ).c_str (),
+	          backend->GetFullPath ( bootcdReactos ).c_str () );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CABMAN_TARGET) -C %s -RC %s -L %s -N -P $(OUTPUT)\n",
-	          strFile ( &reactosDff ).c_str (),
-	          strFile ( &reactosInf ).c_str (),
-	          strDirectory ( &bootcdReactos ).c_str ());
+	          backend->GetFullName ( reactosDff ).c_str (),
+	          backend->GetFullName ( reactosInf ).c_str (),
+	          backend->GetFullPath ( bootcdReactos ).c_str ());
 	fprintf ( fMakefile,
 	          "\t-@${rm} %s 2>$(NUL)\n",
-	          strFile ( &reactosInf ).c_str () );
+	          backend->GetFullName ( reactosInf ).c_str () );
 	OutputBootstrapfileCopyCommands ( bootcdDirectory );
 	OutputCdfileCopyCommands ( bootcdDirectory );
 
@@ -3347,8 +3346,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CDMAKE_TARGET) -v -j -m -b %s %s REACTOS %s\n",
-	          strFile ( &isoboot ).c_str (),
-	          strDirectory ( &bootcd ).c_str (),
+	          backend->GetFullName ( isoboot ).c_str (),
+	          backend->GetFullPath ( bootcd ).c_str (),
 	          IsoName.c_str() );
 	fprintf ( fMakefile,
 	          "\n" );
@@ -3459,7 +3458,7 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst.inf\n",
-	          cSep, strDirectory ( &reactosSystem32ConfigDirectory ).c_str (),
+	          cSep, backend->GetFullPath ( reactosSystem32ConfigDirectory ).c_str (),
 	          cSep, cSep, cSep, cSep );
 }
 
@@ -3490,15 +3489,15 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	FileLocation livecdReactos ( OutputDirectory,
 	                             livecdReactosNoFixup,
 	                             "" );
-	CLEAN_FILE ( &livecdReactos );
+	CLEAN_FILE ( livecdReactos );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
 	          "%s: all %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
 	          module.name.c_str (),
-	          strFile ( &isoboot) .c_str (),
-	          strDirectory ( &livecdReactos ).c_str () );
+	          backend->GetFullName ( isoboot) .c_str (),
+	          backend->GetFullPath ( livecdReactos ).c_str () );
 	OutputModuleCopyCommands ( livecdDirectory,
 	                           reactosDirectory );
 	OutputNonModuleCopyCommands ( livecdDirectory,
@@ -3509,8 +3508,8 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CDMAKE_TARGET) -v -m -j -b %s %s REACTOS %s\n",
-	          strFile( &isoboot ).c_str (),
-	          strDirectory ( &livecd ).c_str (),
+	          backend->GetFullName( isoboot ).c_str (),
+	          backend->GetFullPath ( livecd ).c_str (),
 	          IsoName.c_str() );
 	fprintf ( fMakefile,
 	          "\n" );
@@ -3654,7 +3653,7 @@ MingwElfExecutableModuleHandler::Process ()
 	          targetMacro.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str (),
-	          strDirectory(GetTargetFilename(module,NULL)).c_str () );
+	          backend->GetFullPath ( *GetTargetFilename ( module, NULL ) ).c_str () );
 
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 

@@ -79,3 +79,48 @@ Backend::Backend ( Project& project,
 Backend::~Backend()
 {
 }
+
+string
+Backend::GetFullPath ( const FileLocation& file ) const
+{
+	string directory;
+	switch ( file.directory )
+	{
+		case SourceDirectory:
+			directory = "";
+			break;
+		case IntermediateDirectory:
+			directory = Environment::GetIntermediatePath ();
+			break;
+		case OutputDirectory:
+			directory = Environment::GetOutputPath ();
+			break;
+		case InstallDirectory:
+			directory = Environment::GetInstallPath ();
+			break;
+		default:
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Invalid directory %d.",
+			                                  file.directory );
+	}
+
+	if ( file.relative_path.length () > 0 )
+	{
+		if ( directory.length () > 0 )
+			directory += sSep;
+		directory += file.relative_path;
+	}
+	return directory;
+}
+
+string
+Backend::GetFullName ( const FileLocation& file ) const
+{
+	string directory = GetFullPath ( file );
+
+	if ( directory.length () > 0 )
+		directory += sSep;
+
+	return directory + file.name;
+}

@@ -35,12 +35,12 @@ using std::map;
 typedef set<string> set_string;
 
 string
-strDirectory ( const FileLocation *file )
+MingwBackend::GetFullPath ( const FileLocation& file ) const
 {
-	MingwModuleHandler::PassThruCacheDirectory ( file );
+	MingwModuleHandler::PassThruCacheDirectory ( &file );
 
 	string directory;
-	switch ( file->directory )
+	switch ( file.directory )
 	{
 		case SourceDirectory:
 			directory = "";
@@ -60,23 +60,24 @@ strDirectory ( const FileLocation *file )
 		default:
 			throw InvalidOperationException ( __FILE__,
 			                                  __LINE__,
-			                                  "Invalid directory." );
+			                                  "Invalid directory %d.",
+			                                  file.directory );
 	}
 
-	if ( file->relative_path.length () > 0 )
+	if ( file.relative_path.length () > 0 )
 	{
 		if ( directory.length () > 0 )
 			directory += sSep;
-		directory += file->relative_path;
+		directory += file.relative_path;
 	}
 	return directory;
 }
 
 string
-strFile ( const FileLocation *file )
+MingwBackend::GetFullName ( const FileLocation& file ) const
 {
 	string directory;
-	switch ( file->directory )
+	switch ( file.directory )
 	{
 		case SourceDirectory:
 			directory = "";
@@ -96,25 +97,25 @@ strFile ( const FileLocation *file )
 		default:
 			throw InvalidOperationException ( __FILE__,
 			                                  __LINE__,
-			                                  "Invalid directory." );
+			                                  "Invalid directory %d.",
+			                                  file.directory );
 	}
 
-	if ( file->relative_path.length () > 0 )
+	if ( file.relative_path.length () > 0 )
 	{
 		if ( directory.length () > 0 )
 			directory += sSep;
-		directory += file->relative_path;
+		directory += file.relative_path;
 	}
 
 	if ( directory.length () > 0 )
 		directory += sSep;
 
-	return directory + file->name;
+	return directory + file.name;
 }
 
-
 string
-v2s ( const vector<FileLocation>& files, int wrap_at )
+v2s ( const Backend* backend, const vector<FileLocation>& files, int wrap_at )
 {
 	if ( !files.size() )
 		return "";
@@ -127,7 +128,7 @@ v2s ( const vector<FileLocation>& files, int wrap_at )
 			s += " \\\n\t\t";
 		else if ( s.size() )
 			s += " ";
-		s += strFile ( &file );
+		s += backend->GetFullName ( file );
 	}
 	return s;
 }
@@ -587,7 +588,7 @@ MingwBackend::GetBuildToolDependencies () const
 		{
 			if ( dependencies.length () > 0 )
 				dependencies += " ";
-			dependencies += strFile ( module.dependency );
+			dependencies += GetFullName ( *module.dependency );
 		}
 	}
 	return dependencies;
@@ -1184,15 +1185,15 @@ MingwBackend::OutputInstallTarget ( const FileLocation& source,
 {
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
-	          strFile( &target ).c_str (),
-	          strFile( &source ).c_str (),
-	          strDirectory( &target ).c_str () );
+	          GetFullName ( target ).c_str (),
+	          GetFullName ( source ).c_str (),
+	          GetFullPath ( target ).c_str () );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_CP)\n" );
 	fprintf ( fMakefile,
 	          "\t${cp} %s %s 1>$(NUL)\n",
-	          strFile( &source ).c_str (),
-	          strFile( &target ).c_str () );
+	          GetFullName ( source ).c_str (),
+	          GetFullName ( target ).c_str () );
 }
 
 void
@@ -1257,7 +1258,7 @@ MingwBackend::GetRegistryTargetFiles ()
 	registry_files.push_back ( FileLocation ( InstallDirectory, system32ConfigDirectory, "software" ) );
 	registry_files.push_back ( FileLocation ( InstallDirectory, system32ConfigDirectory, "system" ) );
 
-	return v2s( registry_files, 6 );
+	return v2s( this, registry_files, 6 );
 }
 
 void
@@ -1274,12 +1275,12 @@ MingwBackend::OutputRegistryInstallTarget ()
 	          "%s: %s %s $(MKHIVE_TARGET)\n",
 	          registryTargetFiles.c_str (),
 	          registrySourceFiles.c_str (),
-	          strDirectory ( &system32 ).c_str () );
+	          GetFullPath ( system32 ).c_str () );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(MKHIVE_TARGET) boot%cbootdata %s boot%cbootdata%chiveinst.inf\n",
-	          cSep, strDirectory ( &system32 ).c_str (),
+	          cSep, GetFullPath ( system32 ).c_str (),
 	          cSep, cSep );
 	fprintf ( fMakefile,
 	          "\n" );
@@ -1290,7 +1291,7 @@ MingwBackend::GenerateInstallTarget ()
 {
 	vector<FileLocation> vInstallTargetFiles;
 	GetInstallTargetFiles ( vInstallTargetFiles );
-	string installTargetFiles = v2s ( vInstallTargetFiles, 5 );
+	string installTargetFiles = v2s ( this, vInstallTargetFiles, 5 );
 	string registryTargetFiles = GetRegistryTargetFiles ();
 
 	fprintf ( fMakefile,

@@ -30,7 +30,7 @@ class Directory;
 class MingwModuleHandler;
 
 extern std::string
-v2s ( const std::vector<FileLocation>& files, int wrap_at );
+v2s ( const Backend* backend, const std::vector<FileLocation>& files, int wrap_at );
 extern std::string
 v2s ( const string_list& v, int wrap_at );
 
@@ -54,6 +54,10 @@ public:
 	Directory* intermediateDirectory;
 	Directory* outputDirectory;
 	Directory* installDirectory;
+
+	std::string GetFullName ( const FileLocation& file ) const;
+	std::string GetFullPath ( const FileLocation& file ) const;
+
 private:
 	void CreateMakefile ();
 	void CloseMakefile () const;
