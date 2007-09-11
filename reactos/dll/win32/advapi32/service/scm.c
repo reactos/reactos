@@ -21,7 +21,7 @@
 
 handle_t BindingHandle = NULL;
 
-static VOID
+VOID
 HandleBind(VOID)
 {
     LPWSTR pszStringBinding;
@@ -1983,38 +1983,6 @@ QueryServiceStatusEx(SC_HANDLE hService,
         SetLastError(dwError);
         return FALSE;
     }
-
-    return TRUE;
-}
-
-/**********************************************************************
- *	SetServiceStatus
- *
- * @implemented
- */
-BOOL STDCALL
-SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
-                 LPSERVICE_STATUS lpServiceStatus)
-{
-    DWORD dwError;
-
-    DPRINT("SetServiceStatus() called\n");
-    DPRINT("ThreadId %lu, data addr %p called\n", hServiceStatus, lpServiceStatus);
-
-    HandleBind();
-
-    /* Call to services.exe using RPC */
-    dwError = ScmrSetServiceStatus(BindingHandle,
-                                   (unsigned long)hServiceStatus,
-                                   lpServiceStatus);
-    if (dwError != ERROR_SUCCESS)
-    {
-        DPRINT1("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
-    }
-
-    DPRINT("SetServiceStatus() done (ret %lu\n", dwError);
 
     return TRUE;
 }
