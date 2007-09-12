@@ -9,7 +9,7 @@
 
 #include "precomp.h"
 
-#define PROGRESSRANGE 8
+#define PROGRESSRANGE 20
 
 VOID
 CompleteProgressBar(HWND hProgDlg)
@@ -21,10 +21,21 @@ CompleteProgressBar(HWND hProgDlg)
 
     if (hProgBar)
     {
-        SendMessage(hProgBar,
-                    PBM_DELTAPOS,
-                    PROGRESSRANGE,
-                    0);
+        INT pos = 0;
+
+        pos = SendMessage(hProgBar,
+                          PBM_GETPOS,
+                          0,
+                          0);
+
+        for (; pos <= PROGRESSRANGE; pos++)
+        {
+            SendMessage(hProgBar,
+                        PBM_DELTAPOS,
+                        pos,
+                        0);
+            Sleep(15);
+        }
     }
 }
 
@@ -82,10 +93,6 @@ ProgressDialogProc(HWND hDlg,
             }
         break;
 
-        case WM_DESTROY:
-            DestroyWindow(hDlg);
-        break;
-
         default:
             return FALSE;
     }
@@ -109,9 +116,6 @@ CreateProgressDialog(HWND hParent,
                             (DLGPROC)ProgressDialogProc);
     if (hProgDlg != NULL)
     {
-        ShowWindow(hProgDlg,
-                   SW_SHOW);
-
         /* write the  info to the progress dialog */
         LoadString(hInstance,
                    Event,

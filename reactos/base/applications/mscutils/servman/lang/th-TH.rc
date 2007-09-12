@@ -77,7 +77,7 @@ CAPTION "เกี่ยวกับการบริการจัดการ"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "โปรแกรมการบริการจัดการ รุ่น 0.8\nลิขสิทธิ์ (C) 2005-2007\nโดย เก้ด เมอร์ฟี่ (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "โปรแกรมการบริการจัดการ รุ่น 0.8\nลิขสิทธิ์ (C) 2005-2007\nโดย เก้ด เมอร์ฟี่ (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 26
   PUSHBUTTON "ปิด", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -168,7 +168,7 @@ END
 IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
 CAPTION "ตัวควบคุมบริการ"
 FONT 8, "MS Shell Dlg",0,0
-STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
   CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13

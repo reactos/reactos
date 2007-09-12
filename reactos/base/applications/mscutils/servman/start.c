@@ -18,6 +18,7 @@ DoStartService(PMAIN_WND_INFO Info,
     SERVICE_STATUS_PROCESS ServiceStatus;
     DWORD BytesNeeded = 0;
     BOOL bRet = FALSE;
+    BOOL bDispErr = TRUE;
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
@@ -33,6 +34,8 @@ DoStartService(PMAIN_WND_INFO Info,
                               0,
                               NULL))
             {
+                bDispErr = FALSE;
+
                 if (QueryServiceStatusEx(hSc,
                                          SC_STATUS_PROCESS_INFO,
                                          (LPBYTE)&ServiceStatus,
@@ -41,19 +44,13 @@ DoStartService(PMAIN_WND_INFO Info,
                 {
                     DWORD dwStartTickCount = GetTickCount();
                     DWORD dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+                    DWORD dwMaxWait = 2000 * 60; // wait for 2 mins
+
+                    IncrementProgressBar(hProgDlg);
 
                     while (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
                     {
                         DWORD dwWaitTime = ServiceStatus.dwWaitHint / 10;
-
-                        if(dwWaitTime < 1000)
-                            dwWaitTime = 500;
-                        else if (dwWaitTime > 10000)
-                            dwWaitTime = 10000;
-
-                        IncrementProgressBar(hProgDlg);
-                        Sleep(dwWaitTime );
-                        IncrementProgressBar(hProgDlg);
 
                         if (!QueryServiceStatusEx(hSc,
                                                   SC_STATUS_PROCESS_INFO,
@@ -73,12 +70,19 @@ DoStartService(PMAIN_WND_INFO Info,
                         }
                         else
                         {
-                            if(GetTickCount() - dwStartTickCount > ServiceStatus.dwWaitHint)
+                            if(GetTickCount() >= dwStartTickCount + dwMaxWait)
                             {
-                                /* No progress made within the wait hint */
+                                /* give up */
                                 break;
                             }
                         }
+
+                        if(dwWaitTime < 200)
+                            dwWaitTime = 200;
+                        else if (dwWaitTime > 10000)
+                            dwWaitTime = 10000;
+
+                        Sleep(dwWaitTime);
                     }
                 }
             }
@@ -92,11 +96,16 @@ DoStartService(PMAIN_WND_INFO Info,
     if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
     {
         CompleteProgressBar(hProgDlg);
-        Sleep(1000);
+        Sleep(500);
         bRet = TRUE;
     }
     else
-        GetError();
+    {
+        if (bDispErr)
+            GetError();
+        else
+            DisplayString(_T("The service failed to start"));
+    }
 
     return bRet;
 }
@@ -114,13 +123,12 @@ DoStart(PMAIN_WND_INFO Info)
 
     if (hProgDlg)
     {
+        IncrementProgressBar(hProgDlg);
+
         bRet = DoStartService(Info,
                               hProgDlg);
 
-        SendMessage(hProgDlg,
-                    WM_DESTROY,
-                    0,
-                    0);
+        DestroyWindow(hProgDlg);
     }
 
     return bRet;

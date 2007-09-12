@@ -12,43 +12,33 @@
 BOOL CALLBACK
 AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HWND  hLicenseEditWnd;
-    HICON hIcon = NULL;
-    TCHAR strLicense[700];
-
     switch (message)
     {
     case WM_INITDIALOG:
-
-        hIcon = (HICON)LoadImage(hInstance,
-                                 MAKEINTRESOURCE(IDI_SM_ICON),
-                                 IMAGE_ICON,
-                                 16,
-                                 16,
-                                 0);
-        if (hIcon)
-        {
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_SMALL,
-                        (LPARAM)hIcon);
-            DestroyIcon(hIcon);
-        }
+    {
+        HWND hLicenseEditWnd;
 
         hLicenseEditWnd = GetDlgItem(hDlg,
                                      IDC_LICENSE_EDIT);
         if (hLicenseEditWnd)
         {
-            LoadString(hInstance,
-                       IDS_LICENSE,
-                       strLicense,
-                       sizeof(strLicense) / sizeof(TCHAR));
+            LPTSTR lpString;
 
-            SetWindowText(hLicenseEditWnd,
-                          strLicense);
+            if (AllocAndLoadString(&lpString,
+                                   hInstance,
+                                   IDS_LICENSE))
+            {
+                SetWindowText(hLicenseEditWnd,
+                              lpString);
+
+                HeapFree(GetProcessHeap(),
+                         0,
+                         lpString);
+            }
         }
 
         return TRUE;
+    }
 
     case WM_COMMAND:
 
