@@ -620,7 +620,7 @@ static  BOOL	MMDRV_InitPerType(LPWINE_MM_DRIVER lpDrv, UINT type, UINT wMsg)
 /**************************************************************************
  * 				MMDRV_Install			[internal]
  */
-static	BOOL	MMDRV_Install(LPCSTR drvRegName, LPCSTR drvFileName, BOOL bIsMapper)
+BOOL MMDRV_Install(LPCSTR drvRegName, LPCSTR drvFileName, BOOL bIsMapper)
 {
     int			i, count = 0;
     LPWINE_MM_DRIVER	lpDrv = &MMDrvs[MMDrvsHi];
@@ -723,6 +723,8 @@ static	BOOL	MMDRV_Install(LPCSTR drvRegName, LPCSTR drvFileName, BOOL bIsMapper)
  */
 BOOL	MMDRV_Init(void)
 {
+/* Redundant code, keeping this for reference only (for now) */
+#if 0
     HKEY	hKey;
     char	driver_buffer[256];
     char	mapper_buffer[256];
@@ -743,13 +745,21 @@ BOOL	MMDRV_Init(void)
             strcpy(driver_buffer, WINE_DEFAULT_WINMM_DRIVER);
     }
 
-    // AG: TESTING:
-    ret |= MMDRV_Install("mmdrv.dll", "mmdrv.dll", FALSE);
+    ret |= MMDRV_Install("beepmidi.dll", "beepmidi.dll", FALSE);
 
     ret |= MMDRV_Install("wavemapper", WINE_DEFAULT_WINMM_MAPPER, TRUE);
     ret |= MMDRV_Install("midimapper", WINE_DEFAULT_WINMM_MIDI, TRUE);
     return ret;
+#else
+    INT driver_count = 0;
 
+    driver_count += LoadRegistryMMEDrivers(NT_MME_DRIVERS_KEY);
+    driver_count += LoadRegistryMMEDrivers(NT_MME_DRIVERS32_KEY);
+
+    /* Explorer doesn't like us failing */
+    return TRUE;
+//    return ( driver_count > 0 );
+#endif
 }
 
 /******************************************************************

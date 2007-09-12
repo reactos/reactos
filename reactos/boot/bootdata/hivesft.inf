@@ -25,6 +25,12 @@ HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\soffice.exe","GlobalFlag",0x00000000,"0x00000002"
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\tlstest.exe","GlobalFlag",0x00000000,"0x00000002"
 
+; MME - TODO: Should not require full paths!
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midimapper",0x00000000,"c:\reactos\system32\midimap.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wavemapper",0x00000000,"c:\reactos\system32\msacm32.dll"
+;HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wave",0x00000000,"sndblst.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midi",0x00000000,"c:\reactos\system32\beepmidi.dll"
+
 ; Mesa OpenGL Driver
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers","DefaultDriver",0x00000000,"Mesa"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\Mesa","Version",0x00010001,0x00000002

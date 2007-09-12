@@ -315,3 +315,14 @@ extern  void            (WINAPI *pFnRestoreThunkLock)(DWORD);
  */
 #define WINE_GDF_EXIST	0x80000000
 #define WINE_GDF_16BIT	0x10000000
+
+/* Modification to take into account Windows NT's registry format */
+
+#define NT_MME_DRIVERS32_KEY \
+    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32"
+
+#define NT_MME_DRIVERS_KEY \
+    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers"
+
+INT LoadRegistryMMEDrivers(char* key);
+BOOL MMDRV_Install(LPCSTR drvRegName, LPCSTR drvFileName, BOOL bIsMapper);
