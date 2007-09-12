@@ -717,7 +717,7 @@ ScmrSetServiceStatus(handle_t BindingHandle,
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    lpService = ScmGetServiceEntryByServiceStatusHandle((ULONG)hServiceStatus);
+    lpService = ScmGetServiceEntryByClientHandle((ULONG)hServiceStatus);
     if (lpService == NULL)
     {
         DPRINT1("lpService == NULL!\n");
