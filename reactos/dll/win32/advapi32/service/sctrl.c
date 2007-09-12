@@ -1,14 +1,13 @@
-/* $Id$
+/*
+ * PROJECT:     ReactOS advapi32
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/advapi32/service/sctrl.c
+ * PURPOSE:     Service control manager functions
+ * COPYRIGHT:   Copyright 1999 Emanuele Aliberti
+ *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/service/sctrl.c
- * PURPOSE:         Service control manager functions
- * PROGRAMMER:      Emanuele Aliberti
- * UPDATE HISTORY:
- *	19990413 EA	created
- *	19990515 EA
  */
+
 
 /* INCLUDES ******************************************************************/
 
@@ -24,7 +23,7 @@ VOID HandleBind(VOID);
 
 typedef struct _ACTIVE_SERVICE
 {
-    SERVICE_STATUS_HANDLE hServiceStatus;
+    CLIENT_HANDLE hService;
     UNICODE_STRING ServiceName;
     union
     {
@@ -226,18 +225,17 @@ ScConnectControlPipe(HANDLE *hPipe)
         return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
     }
 
-    /* HACK: send the SERVICE_STATUS_HANDLE handle */
+    /* Share the SERVICE_HANDLE handle with the SCM */
     WriteFile(*hPipe,
-              (DWORD *)&lpActiveServices->hServiceStatus,
-              sizeof(SERVICE_STATUS_HANDLE),
+              (DWORD *)&lpActiveServices->hService,
+              sizeof(CLIENT_HANDLE),
               &dwBytesWritten,
               NULL);
 
-    DPRINT("Sent SERVICE_STATUS_HANDLE handle %lu\n", lpActiveServices->hServiceStatus);
+    DPRINT("Sent SERVICE_HANDLE %lu\n", lpActiveServices->hService);
 
     return ERROR_SUCCESS;
 }
-
 
 
 static DWORD
@@ -248,12 +246,16 @@ ScStartService(PSCM_CONTROL_PACKET ControlPacket)
     DWORD ThreadId;
 
     DPRINT("ScStartService() called\n");
+    DPRINT("client handle: %lu\n", ControlPacket->hClient);
     DPRINT("Size: %lu\n", ControlPacket->dwSize);
     DPRINT("Service: %S\n", &ControlPacket->szArguments[0]);
 
-    lpService = ScLookupServiceByServiceName(&ControlPacket->szArguments[0]);
+    lpService = (PACTIVE_SERVICE)ControlPacket->hClient;
     if (lpService == NULL)
+    {
+        DPRINT1("Service not found\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
+    }
 
     lpService->Arguments = HeapAlloc(GetProcessHeap(),
                                      HEAP_ZERO_MEMORY,
@@ -291,18 +293,19 @@ ScControlService(PSCM_CONTROL_PACKET ControlPacket)
     DPRINT("Size: %lu\n", ControlPacket->dwSize);
     DPRINT("Service: %S\n", &ControlPacket->szArguments[0]);
 
-    lpService = ScLookupServiceByServiceName(&ControlPacket->szArguments[0]);
+    lpService = (PACTIVE_SERVICE)ControlPacket->hClient;
     if (lpService == NULL)
+    {
+        DPRINT1("Service not found\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
+    }
 
     if (lpService->HandlerFunction)
     {
-        DPRINT("Calling HandlerFunction with %lu\n", ControlPacket->dwControl);
         (lpService->HandlerFunction)(ControlPacket->dwControl);
     }
     else if (lpService->HandlerFunctionEx)
     {
-        DPRINT("Calling HandlerFunctionEx with %lu\n", ControlPacket->dwControl);
         /* FIXME: send correct params */
         (lpService->HandlerFunctionEx)(ControlPacket->dwControl, 0, NULL, NULL);
     }
@@ -333,8 +336,8 @@ ScServiceDispatcher(HANDLE hPipe,
     DPRINT("ScDispatcherLoop() called\n");
 
     ControlPacket = HeapAlloc(GetProcessHeap(),
-                       HEAP_ZERO_MEMORY,
-                       1024);
+                              HEAP_ZERO_MEMORY,
+                              1024);
     if (ControlPacket == NULL)
         return FALSE;
 
@@ -433,9 +436,9 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
     Service->HandlerFunction = lpHandlerProc;
     Service->HandlerFunctionEx = NULL;
 
-    DPRINT("RegisterServiceCtrlHandler returning %lu\n", Service->hServiceStatus);
+    DPRINT("RegisterServiceCtrlHandler returning %lu\n", Service->hService);
 
-    return Service->hServiceStatus;
+    return (SERVICE_STATUS_HANDLE)Service->hService;
 }
 
 
@@ -482,7 +485,6 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
 {
     PACTIVE_SERVICE Service;
 
-    /* FIXME: WinXP can start services with incorrect names */
     Service = ScLookupServiceByServiceName(lpServiceName);
     if (Service == NULL)
     {
@@ -493,9 +495,9 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
     Service->HandlerFunctionEx = lpHandlerProc;
     Service->HandlerContext = lpContext;
 
-    DPRINT("RegisterServiceCtrlHandlerEx returning %lu", Service->hServiceStatus);
+    DPRINT("RegisterServiceCtrlHandlerEx returning %lu", Service->hService);
 
-    return Service->hServiceStatus;
+    return (SERVICE_STATUS_HANDLE)Service->hService;
 }
 
 
@@ -551,7 +553,7 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
 /**********************************************************************
  *	StartServiceCtrlDispatcherA
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
@@ -584,7 +586,7 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
         RtlCreateUnicodeStringFromAsciiz(&lpActiveServices[i].ServiceName,
                                          lpServiceStartTable[i].lpServiceName);
         lpActiveServices[i].Main.lpFuncA = lpServiceStartTable[i].lpServiceProc;
-        lpActiveServices[i].hServiceStatus = (SERVICE_STATUS_HANDLE)&lpActiveServices[i];
+        lpActiveServices[i].hService = (CLIENT_HANDLE)&lpActiveServices[i];
         lpActiveServices[i].bUnicode = FALSE;
     }
 
@@ -629,7 +631,7 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
 /**********************************************************************
  *	StartServiceCtrlDispatcherW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
@@ -662,7 +664,7 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
         RtlCreateUnicodeString(&lpActiveServices[i].ServiceName,
                                lpServiceStartTable[i].lpServiceName);
         lpActiveServices[i].Main.lpFuncW = lpServiceStartTable[i].lpServiceProc;
-        lpActiveServices[i].hServiceStatus = (SERVICE_STATUS_HANDLE)&lpActiveServices[i];
+        lpActiveServices[i].hService = (CLIENT_HANDLE)&lpActiveServices[i];
         lpActiveServices[i].bUnicode = TRUE;
     }
 
