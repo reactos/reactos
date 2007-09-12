@@ -581,7 +581,7 @@ ScmControlService(PSERVICE Service,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ControlPacket->dwControl = dwControl;
-
+    ControlPacket->hClient = Service->hClient;
     ControlPacket->dwSize = TotalLength;
     wcscpy(&ControlPacket->szArguments[0], Service->lpServiceName);
 
