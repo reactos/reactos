@@ -13,6 +13,8 @@
 	<library>msvcrt</library>
 	<library>devmgr</library>
 	<library>gdi32</library>
+	<library>advapi32</library>
 	<file>mmsys.c</file>
+	<file>sounds.c</file>
 	<file>mmsys.rc</file>
 </module>

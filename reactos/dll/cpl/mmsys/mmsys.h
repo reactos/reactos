@@ -27,6 +27,16 @@ MmSysApplet(HWND hwnd,
             LPARAM wParam,
             LPARAM lParam);
 
+/* sounds.c */
+
+INT_PTR
+CALLBACK
+SoundsDlgProc(HWND hwndDlg,
+	        UINT uMsg,
+	        WPARAM wParam,
+	        LPARAM lParam);
+
+
 #endif /* __CPL_MMSYS_H */
 
 /* EOF */

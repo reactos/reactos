@@ -144,24 +144,7 @@ VolumeDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
-/* Sounds property page dialog callback */
-static INT_PTR CALLBACK
-SoundsDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
-    switch(uMsg)
-    {
-        case WM_INITDIALOG:
-        break;
-    }
 
-    return FALSE;
-}
 
 /* Audio property page dialog callback */
 static INT_PTR CALLBACK
