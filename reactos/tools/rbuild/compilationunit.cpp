@@ -67,7 +67,7 @@ CompilationUnit::IsGeneratedFile () const
 	if ( files.size () != 1 )
 		return false;
 	File* file = files[0];
-	string extension = GetExtension ( file->file.name );
+	string extension = GetExtension ( file->file );
 	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
@@ -78,7 +78,7 @@ CompilationUnit::HasFileWithExtension ( const std::string& extension ) const
 	for ( i = 0; i < files.size (); i++ )
 	{
 		File& file = *files[i];
-		string fileExtension = GetExtension ( file.file.name );
+		string fileExtension = GetExtension ( file.file );
 		if ( !stricmp ( fileExtension.c_str (), extension.c_str () ) )
 			return true;
 	}

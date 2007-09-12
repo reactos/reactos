@@ -775,7 +775,6 @@ public:
 
 	AutomaticDependency ( const Project& project );
 	~AutomaticDependency ();
-	std::string GetFilename ( const std::string& filename );
 	bool LocateIncludedFile ( const FileLocation& directory,
 	                          const std::string& includedFilename,
 	                          std::string& resolvedFilename );
@@ -1030,13 +1029,7 @@ GetSubPath (
 	const std::string& att_value );
 
 extern std::string
-GetExtension ( const std::string& filename );
-
-extern std::string
-GetDirectory ( const std::string& filename );
-
-extern std::string
-GetFilename ( const std::string& filename );
+GetExtension ( const FileLocation& file );
 
 extern std::string
 NormalizeFilename ( const std::string& filename );

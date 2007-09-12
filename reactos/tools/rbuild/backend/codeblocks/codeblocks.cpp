@@ -101,6 +101,18 @@ void CBBackend::ProcessModules()
 	}
 }
 
+static std::string
+GetExtension ( const std::string& filename )
+{
+	size_t index = filename.find_last_of ( '/' );
+	if (index == string::npos) index = 0;
+	string tmp = filename.substr( index, filename.size() - index );
+	size_t ext_index = tmp.find_last_of( '.' );
+	if (ext_index != string::npos)
+		return filename.substr ( index + ext_index, filename.size() );
+	return "";
+}
+
 static bool FileExists(string &filename)
 {
 	ifstream file(filename.c_str());
@@ -342,7 +354,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 	string path_basedir = module.GetPathToBaseDir ();
 	string intenv = Environment::GetIntermediatePath ();
 	string outenv = Environment::GetOutputPath ();
-	string module_type = GetExtension(module.output->name);
+	string module_type = GetExtension(*module.output);
 	string cbproj_path = module.output->relative_path;
 	string CompilerVar;
 	string baseaddr;

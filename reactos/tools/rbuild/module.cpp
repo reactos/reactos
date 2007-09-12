@@ -137,7 +137,7 @@ GetSubPath (
 	return FixSeparator(path + cSep + att_value);
 }
 
-string
+static string
 GetExtension ( const string& filename )
 {
 	size_t index = filename.find_last_of ( '/' );
@@ -150,23 +150,9 @@ GetExtension ( const string& filename )
 }
 
 string
-GetDirectory ( const string& filename )
+GetExtension ( const FileLocation& file )
 {
-	size_t index = filename.find_last_of ( cSep );
-	if ( index == string::npos )
-		return "";
-	else
-		return filename.substr ( 0, index );
-}
-
-string
-GetFilename ( const string& filename )
-{
-	size_t index = filename.find_last_of ( cSep );
-	if ( index == string::npos )
-		return filename;
-	else
-		return filename.substr ( index + 1, filename.length () - index );
+	return GetExtension ( file.name );
 }
 
 string

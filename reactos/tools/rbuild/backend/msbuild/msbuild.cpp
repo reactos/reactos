@@ -83,7 +83,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 {
 	size_t i;
 
-	string module_type = GetExtension(module.output->name);
+	string module_type = GetExtension(*module.output);
 	vector<string> source_files, resource_files, includes, libraries;
 	vector<string> header_files, common_defines, compiler_flags;
 	vector<string> vars, values;

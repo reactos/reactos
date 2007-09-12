@@ -23,6 +23,16 @@
 using std::string;
 using std::vector;
 
+static std::string
+GetFilename ( const std::string& filename )
+{
+	size_t index = filename.find_last_of ( cSep );
+	if ( index == string::npos )
+		return filename;
+	else
+		return filename.substr ( index + 1, filename.length () - index );
+}
+
 TestSupportCode::TestSupportCode ( const Project& project )
 	: project ( project )
 {

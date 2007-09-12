@@ -266,7 +266,7 @@ MingwModuleHandler::GetActualSourceFilename (
 {
 	string filename = file->name;
 
-	string extension = GetExtension ( filename );
+	string extension = GetExtension ( *file );
 	if ( extension == ".spec" || extension == ".SPEC" )
 	{
 		string basename = GetBasename ( filename );
@@ -305,7 +305,7 @@ string
 MingwModuleHandler::GetExtraDependencies (
 	const FileLocation *file ) const
 {
-	string extension = GetExtension ( file->name );
+	string extension = GetExtension ( *file );
 	if ( extension == ".idl" || extension == ".IDL" )
 	{
 		if ( (module.type == RpcServer) || (module.type == RpcClient) )
@@ -349,7 +349,7 @@ MingwModuleHandler::GetModuleArchiveFilename () const
 bool
 MingwModuleHandler::IsGeneratedFile ( const File& file ) const
 {
-	string extension = GetExtension ( file.file.name );
+	string extension = GetExtension ( file.file );
 	return ( extension == ".spec" || extension == ".SPEC" );
 }
 
@@ -486,10 +486,9 @@ MingwModuleHandler::GetObjectFilename (
 	const FileLocation* sourceFile,
 	string_list* pclean_files ) const
 {
-	string sourceFilename = sourceFile->name;
 	DirectoryLocation destination_directory;
 	string newExtension;
-	string extension = GetExtension ( sourceFilename );
+	string extension = GetExtension ( *sourceFile );
 	if ( extension == ".rc" || extension == ".RC" )
 		newExtension = ".coff";
 	else if ( extension == ".spec" || extension == ".SPEC" )
@@ -1353,8 +1352,7 @@ MingwModuleHandler::GenerateCommands (
 	const string& widlflagsMacro )
 {
 	const FileLocation* sourceFile = compilationUnit.GetFilename ();
-	string filename = backend->GetFullName ( *sourceFile );
-	string extension = GetExtension ( filename );
+	string extension = GetExtension ( *sourceFile );
 	if ( extension == ".c" || extension == ".C" )
 	{
 		GenerateGccCommand ( sourceFile,
@@ -1419,7 +1417,7 @@ MingwModuleHandler::GenerateCommands (
 	                                  __LINE__,
 	                                  "Unsupported filename extension '%s' in file '%s'",
 	                                  extension.c_str (),
-	                                  filename.c_str () );
+	                                  backend->GetFullName ( *sourceFile ).c_str () );
 }
 
 void
@@ -1465,10 +1463,9 @@ MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
 	fprintf ( fMakefile,
 	          "ifeq ($(ROS_BUILDNOSTRIP),yes)\n" );
 
-	string filename = module.output->name;
 	FileLocation nostripFilename ( OutputDirectory,
 	                               module.output->relative_path,
-	                               GetBasename ( filename ) + ".nostrip" + GetExtension ( filename ) );
+	                               GetBasename ( module.output->name ) + ".nostrip" + GetExtension ( *module.output ) );
 	CLEAN_FILE ( nostripFilename );
 
 	OutputCopyCommand ( *module.output, nostripFilename );
@@ -1881,7 +1878,7 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 			{
 				CompilationUnit& compilationUnit = *library.importedModule->non_if_data.compilationUnits[j];
 				const FileLocation* sourceFile = compilationUnit.GetFilename ();
-				string extension = GetExtension ( sourceFile->name );
+				string extension = GetExtension ( *sourceFile );
 				if ( extension == ".idl" || extension == ".IDL" )
 				{
 					string basename = GetBasename ( sourceFile->name );
@@ -1921,7 +1918,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		{
 			CompilationUnit& compilationUnit = *compilationUnits[i];
 			const FileLocation* sourceFile = compilationUnit.GetFilename ();
-			string extension = GetExtension ( sourceFile->name );
+			string extension = GetExtension ( *sourceFile );
 			if ( extension == ".spec" || extension == ".SPEC" )
 				GetSpecObjectDependencies ( s, sourceFile );
 		}
@@ -2300,7 +2297,7 @@ MingwModuleHandler::GetDefinitionDependencies (
 	{
 		CompilationUnit& compilationUnit = *compilationUnits[i];
 		const FileLocation* sourceFile = compilationUnit.GetFilename ();
-		string extension = GetExtension ( sourceFile->name );
+		string extension = GetExtension ( *sourceFile );
 		if ( extension == ".spec" || extension == ".SPEC" )
 			GetSpecObjectDependencies ( dependencies, sourceFile );
 		if ( extension == ".idl" || extension == ".IDL" )

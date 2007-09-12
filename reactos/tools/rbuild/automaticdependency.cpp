@@ -27,6 +27,18 @@ using std::string;
 using std::vector;
 using std::map;
 
+static std::string
+GetExtension ( const std::string& filename )
+{
+	size_t index = filename.find_last_of ( '/' );
+	if (index == string::npos) index = 0;
+	string tmp = filename.substr( index, filename.size() - index );
+	size_t ext_index = tmp.find_last_of( '.' );
+	if (ext_index != string::npos)
+		return filename.substr ( index + ext_index, filename.size() );
+	return "";
+}
+
 SourceFile::SourceFile ( AutomaticDependency* automaticDependency,
                          const Module& module,
                          const string& filename,
@@ -407,17 +419,6 @@ AutomaticDependency::LocateIncludedFile ( const FileLocation& directory,
 	}
 	resolvedFilename = "";
 	return false;
-}
-
-string
-AutomaticDependency::GetFilename ( const string& filename )
-{
-	size_t index = filename.find_last_of ( cSep );
-	if (index == string::npos)
-		return filename;
-	else
-		return filename.substr ( index + 1,
-		                         filename.length () - index - 1);
 }
 
 void
