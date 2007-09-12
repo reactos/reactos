@@ -2,9 +2,9 @@
 #define __CPL_RESOURCE_H
 
 
-#define IDI_CPLICON	4379
-#define IDI_MUTED_ICON 4380
-#define IDI_MICROPHONE_ICON 4381
+#define IDI_CPLICON         3004
+#define IDI_MUTED_ICON      4393
+#define IDI_MICROPHONE_ICON 4378
 
 #define IDD_HARDWARE	100
 #define IDD_VOLUME	101
