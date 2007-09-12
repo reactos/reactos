@@ -11,9 +11,12 @@
 
 #define SERVICE_CONTROL_START 0
 
+typedef DWORD CLIENT_HANDLE;
+
 typedef struct _SCM_CONTROL_PACKET
 {
     DWORD dwControl;
+    CLIENT_HANDLE hClient;
     DWORD dwSize;
     WCHAR szArguments[1];
 } SCM_CONTROL_PACKET, *PSCM_CONTROL_PACKET;
