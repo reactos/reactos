@@ -133,7 +133,7 @@ ScmGetServiceEntryByClientHandle(ULONG Handle)
 
         if (CurrentService->hClient == Handle)
         {
-            DPRINT1("Found service: '%S'\n", CurrentService->lpDisplayName);
+            DPRINT("Found service: '%S'\n", CurrentService->lpDisplayName);
             return CurrentService;
         }
 
@@ -620,7 +620,7 @@ ScmSendStartCommand(PSERVICE Service,
     PWSTR Ptr;
     DWORD Count;
 
-    DPRINT1("ScmSendStartCommand() called\n");
+    DPRINT("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
     TotalLength = wcslen(Service->lpServiceName) + 1;
