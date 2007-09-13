@@ -1,12 +1,15 @@
 #include <windows.h>
 #include "resource.h"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Multimedia Control Panel\0"
 #define REACTOS_STR_INTERNAL_NAME	"mmsys\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"mmsys.cpl\0"
 #include <reactos/version.rc>
 
+123 24 DISCARDABLE "manifest.xml"
 
 IDI_CPLICON ICON "resources/mmsys.ico"
 IDI_MUTED_ICON ICON "resources/muted.ico"

@@ -2,7 +2,7 @@
 #include <commctrl.h>
 #include "resource.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS System Applet\0"
@@ -13,30 +13,11 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 123 24 DISCARDABLE "manifest.xml"
 
 IDI_CPLSYSTEM   ICON "resources/applet.ico"
-
 IDI_USERPROF    ICON "resources/devmgr.ico"
 IDI_HARDPROF    ICON "resources/devmgr.ico"
 IDI_DEVMGR      ICON "resources/devmgr.ico"
-
 IDB_ROSBMP      BITMAP "resources/rosbitmap.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 
-#include "lang/de-DE.rc"
-#include "lang/en-US.rc"
-#include "lang/fr-FR.rc"
-#include "lang/id-ID.rc"
-#include "lang/it-IT.rc"
-#include "lang/pl-PL.rc"
-#include "lang/ru-RU.rc"
-#include "lang/uk-UA.rc"
-
-/*
-#include "lang/cs-CZ.rc"
-#include "lang/da-DK.rc"
-#include "lang/es-ES.rc"
-#include "lang/hu-HU.rc"
-#include "lang/ja-JP.rc"
-#include "lang/nl-NL.rc"
-#include "lang/sv-SE.rc"
-*/
+#include "rsrc.rc"

@@ -1,0 +1,21 @@
+#include <windows.h>
+#include "resource.h"
+
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
+#include "lang/id-ID.rc"
+#include "lang/it-IT.rc"
+#include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"
+
+/*
+#include "lang/cs-CZ.rc"
+#include "lang/da-DK.rc"
+#include "lang/es-ES.rc"
+#include "lang/hu-HU.rc"
+#include "lang/ja-JP.rc"
+#include "lang/nl-NL.rc"
+#include "lang/sv-SE.rc"
+*/

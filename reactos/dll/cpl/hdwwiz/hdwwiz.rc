@@ -1,5 +1,4 @@
 #include <windows.h>
-
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -14,6 +13,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #else
 #include <reactos/version.rc>
 #endif
+
+123 24 DISCARDABLE "manifest.xml"
 
 IDI_CPLICON ICON "resources/applet.ico"
 
