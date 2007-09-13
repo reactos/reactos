@@ -675,6 +675,20 @@ typedef struct _GDI_TEB_BATCH
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
 //
+// Window Client Information structure
+//
+typedef struct _W32CLTINFO_TEB
+{
+    ULONG Win32ClientInfo0[3];
+    ULONG ulAppCompatFlags;
+    ULONG ulAppCompatFlags2;    
+    ULONG Win32ClientInfo1[5];
+    HWND  hWND;
+    PVOID pvWND;
+    ULONG Win32ClientInfo2[50];
+} W32CLTINFO_TEB, PW32CLTINFO_TEB;
+
+//
 // Initial TEB
 //
 typedef struct _INITIAL_TEB
@@ -733,7 +747,7 @@ typedef struct _TEB
     ULONG GdiClientPID;
     ULONG GdiClientTID;
     PVOID GdiThreadLocalInfo;
-    ULONG Win32ClientInfo[62];
+    W32CLTINFO_TEB Win32ClientInfo;
     PVOID glDispatchTable[0xE9];
     ULONG glReserved1[0x1D];
     PVOID glReserved2;
