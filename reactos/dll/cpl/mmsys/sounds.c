@@ -40,18 +40,27 @@ typedef struct __SOUND_SCHEME_CONTEXT__
     PAPP_CONTEXT AppContext;
 }SOUND_SCHEME_CONTEXT, *PSOUND_SCHEME_CONTEXT;
 
+typedef struct __LABEL_MAP__
+{
+    TCHAR * szName;
+    TCHAR * szDesc;
+    TCHAR * szIcon;
+    struct __LABEL_MAP__ * Next;
+}LABEL_MAP, *PLABEL_MAP;
+
+static PLABEL_MAP s_Map = NULL;
+
 
 BOOL
-LoadEventLabel(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey)
+LoadEventLabel(HKEY hKey, TCHAR * szSubKey)
 {
     HKEY hSubKey;
     DWORD dwData;
     DWORD dwDesc;
     TCHAR szDesc[MAX_PATH];
     TCHAR szData[MAX_PATH];
+    PLABEL_MAP pMap;
 
-
-    LRESULT lResult;
     if (RegOpenKeyEx(hKey,
                      szSubKey,
                      0,
@@ -85,17 +94,32 @@ LoadEventLabel(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey)
         return FALSE;
     }
 
+    pMap = HeapAlloc(GetProcessHeap(), 0, sizeof(LABEL_MAP));
+    if (!pMap)
+    {
+        return FALSE;
+    }
+    pMap->szName = _tcsdup(szSubKey);
+    pMap->szDesc = _tcsdup(szDesc);
+    pMap->szIcon = _tcsdup(szData);
 
-    //FIXME
-    //lResult = SendDlgItemMessage(hwndDlg, 
-    lResult = 0;
+    if (s_Map)
+    {
+        pMap->Next = s_Map;
+        s_Map = pMap;
+    }
+    else
+    {
+        s_Map = pMap;
+        s_Map->Next = 0;
+    }
     return TRUE;
 }
 
 
 
 BOOL
-LoadEventLabels(HWND hwndDlg, HKEY hKey)
+LoadEventLabels()
 {
     HKEY hSubKey;
     DWORD dwCurKey;
@@ -103,8 +127,8 @@ LoadEventLabels(HWND hwndDlg, HKEY hKey)
     DWORD dwName;
     DWORD dwResult;
     DWORD dwCount;
-    if (RegOpenKeyEx(hKey,
-                     _T("EventLabels"),
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+                     _T("AppEvents\\EventLabels"),
                      0,
                      KEY_READ,
                      &hSubKey) != ERROR_SUCCESS)
@@ -128,7 +152,7 @@ LoadEventLabels(HWND hwndDlg, HKEY hKey)
 
         if (dwResult == ERROR_SUCCESS)
         {
-            if (LoadEventLabel(hwndDlg, hSubKey, szName))
+            if (LoadEventLabel(hSubKey, szName))
             {
                 dwCount++;
             }
@@ -140,6 +164,23 @@ LoadEventLabels(HWND hwndDlg, HKEY hKey)
     RegCloseKey(hSubKey);
     return (dwCount != 0);
 }
+PLABEL_MAP FindLabel(TCHAR * szName)
+{
+    PLABEL_MAP pMap = s_Map;
+
+    while(pMap)
+    {
+        if (!_tcscmp(pMap->szName, szName))
+            return pMap;
+
+        pMap = pMap->Next;
+
+    }
+    return NULL;
+}
+
+
+
 
 BOOL
 AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
@@ -189,8 +230,6 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
     return FALSE;
 }
 
-
-
 DWORD
 EnumerateSoundProfiles(HWND hwndDlg, HKEY hKey)
 {
@@ -237,7 +276,7 @@ EnumerateSoundProfiles(HWND hwndDlg, HKEY hKey)
 
         if (dwResult == ERROR_SUCCESS)
         {
-            if (AddSoundProfile(hwndDlg, hSubKey, szName, (!_tcscmp(szName, szDefault))))
+            if (AddSoundProfile(hwndDlg, hSubKey, szName, (!_tcsicmp(szName, szDefault))))
             {
                 dwNumSchemes++;
             }
@@ -292,10 +331,11 @@ PAPP_CONTEXT FindAppContext(PSOUND_SCHEME_CONTEXT pScheme, TCHAR * szAppName)
 
 
 BOOL
-ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName, TCHAR * szAppName, TCHAR * szDefault)
+ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName, TCHAR * szAppName)
 {
     HKEY hSubKey;
     TCHAR szValue[MAX_PATH];
+    TCHAR szBuffer[MAX_PATH];
     DWORD dwValue;
     PSOUND_SCHEME_CONTEXT pScheme;
     PAPP_CONTEXT pAppContext;
@@ -349,10 +389,29 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
         //MessageBox(hwndDlg, szAppName, _T("no appcontext"), MB_OK);
         return FALSE;
     }
-
     pLabelContext = (PLABEL_CONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LABEL_CONTEXT));
+    if (!pLabelContext)
+    {
+        HeapFree(GetProcessHeap(), 0, pLabelContext);
+        if (Create)
+        {
+            HeapFree(GetProcessHeap(), 0, pAppContext);
+        }
+        return FALSE;
+    }
+    dwValue = ExpandEnvironmentStrings(szValue, szBuffer, sizeof(szBuffer) / sizeof(TCHAR));
+    if (dwValue == 0 || dwValue > (sizeof(szBuffer) / sizeof(TCHAR)))
+    {
+        /* fixme */
+        HeapFree(GetProcessHeap(), 0, pLabelContext);
+        if (Create)
+        {
+            HeapFree(GetProcessHeap(), 0, pAppContext);
+        }
+        return FALSE;
+    }
+    _tcscpy(pLabelContext->szValue, szBuffer);
     _tcscpy(pLabelContext->szName, szLabelName);
-    _tcscpy(pLabelContext->szValue, szValue);
     pLabelContext->Next = pAppContext->LabelContext;
     pAppContext->LabelContext = pLabelContext;
     
@@ -367,7 +426,7 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
 
 
 DWORD
-ImportSoundEntry(HWND hwndDlg, HKEY hKey, TCHAR * szLabelName, TCHAR * szAppName, TCHAR * szDefault)
+ImportSoundEntry(HWND hwndDlg, HKEY hKey, TCHAR * szLabelName, TCHAR * szAppName)
 {
     HKEY hSubKey;
     DWORD dwNumProfiles;
@@ -403,7 +462,7 @@ ImportSoundEntry(HWND hwndDlg, HKEY hKey, TCHAR * szLabelName, TCHAR * szAppName
 
         if (dwResult == ERROR_SUCCESS)
         {
-            if (ImportSoundLabel(hwndDlg, hSubKey, szProfile, szLabelName, szAppName, szDefault))
+            if (ImportSoundLabel(hwndDlg, hSubKey, szProfile, szLabelName, szAppName))
             {
                 dwNumProfiles++;
             }
@@ -429,6 +488,7 @@ ImportAppProfile(HWND hwndDlg, HKEY hKey, TCHAR * szAppName)
     DWORD dwNumEntry;
     DWORD dwName;
     TCHAR szName[MAX_PATH];
+    TCHAR szIcon[MAX_PATH];
 
     //MessageBox(hwndDlg, szAppName, _T("Importing...\n"), MB_OK);
 
@@ -453,6 +513,17 @@ ImportAppProfile(HWND hwndDlg, HKEY hKey, TCHAR * szAppName)
         return FALSE;
     }
 
+    dwDefault = sizeof(szIcon) / sizeof(TCHAR);
+    if (RegQueryValueEx(hSubKey,
+                        _T("DispFileName"),
+                        NULL,
+                        NULL,
+                        (LPBYTE)szIcon,
+                        &dwDefault) != ERROR_SUCCESS)
+    {
+        szIcon[0] = _T('\0');
+    }
+
     dwCurKey = 0;
     dwNumEntry = 0;
     do
@@ -468,8 +539,38 @@ ImportAppProfile(HWND hwndDlg, HKEY hKey, TCHAR * szAppName)
                               NULL);
         if (dwResult == ERROR_SUCCESS)
         {
-            if (ImportSoundEntry(hwndDlg, hSubKey, szName, szAppName, szDefault))
+            if (ImportSoundEntry(hwndDlg, hSubKey, szName, szAppName))
             {
+                LRESULT lCount = SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_GETCOUNT, (WPARAM)0, (LPARAM)0);
+                if (lCount != CB_ERR)
+                {
+                    LRESULT lIndex;
+                    LRESULT lResult;
+                    for (lIndex = 0; lIndex < lCount; lIndex++)
+                    {
+                        lResult = SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_GETITEMDATA, (WPARAM)lIndex, (LPARAM)0);
+                        if (lResult != CB_ERR)
+                        {
+                            PAPP_CONTEXT pAppContext;
+                            PSOUND_SCHEME_CONTEXT pScheme = (PSOUND_SCHEME_CONTEXT)lResult;
+                            if (!_tcsicmp(pScheme->szName, _T(".None")))
+                            {
+                                continue;
+                            }
+                            pAppContext = FindAppContext(pScheme, szAppName);
+                            if (pAppContext)
+                            {
+                                _tcscpy(pAppContext->szDesc, szDefault);
+                                _tcscpy(pAppContext->szIcon, szIcon);
+                            }
+
+                        }
+                    }
+
+
+                }
+
+
                 dwNumEntry++;
             }
         }
@@ -523,13 +624,13 @@ ImportSoundProfiles(HWND hwndDlg, HKEY hKey)
 
 
 BOOL
-LoadSoundProfiles(HWND hwndDlg, HKEY hKey)
+LoadSoundProfiles(HWND hwndDlg)
 {
     HKEY hSubKey;
     DWORD dwNumSchemes;
 
-    if (RegOpenKeyEx(hKey,
-                     _T("Schemes"),
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+                     _T("AppEvents\\Schemes"),
                      0,
                      KEY_READ,
                      &hSubKey) != ERROR_SUCCESS)
@@ -548,29 +649,144 @@ LoadSoundProfiles(HWND hwndDlg, HKEY hKey)
     RegCloseKey(hSubKey);
     return FALSE;
 }
+BOOL
+LoadSoundFiles(HWND hwndDlg)
+{
+    TCHAR szPath[MAX_PATH];
+    TCHAR szNone[MAX_PATH];
+    TCHAR * ptr;
+    WIN32_FIND_DATA FileData;
+    HANDLE hFile;
+    LRESULT lResult;
+    UINT length;
+    
+    length = GetWindowsDirectory(szPath, sizeof(szPath) / sizeof(TCHAR));
+    if (length == 0 || length > (sizeof(szPath) / sizeof(TCHAR)))
+    {
+        return FALSE;
+    }
+    if (szPath[length-1] != _T('\\'))
+    {
+        szPath[length] = _T('\\');
+        length++;
+    }
+    _tcscpy(&szPath[length], _T("media\\*"));
+    length += 7;
+
+    hFile = FindFirstFile(szPath, &FileData);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+    if (LoadString(hApplet, IDS_NO_SOUND, szNone, MAX_PATH))
+    {
+        SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)szNone);
+    }
+
+    do
+    {
+        if (FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            continue;
+
+        ptr = _tcsrchr(FileData.cFileName, _T('\\'));
+        if (ptr)
+        {
+            ptr++;
+        }
+        else
+        {
+            ptr = FileData.cFileName;
+        }
+        lResult = SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)ptr);
+        if (lResult != CB_ERR)
+        {
+            _tcscpy(&szPath[length-1], FileData.cFileName);
+            SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)_tcsdup(szPath));
+        }
+    }while(FindNextFile(hFile, &FileData) != 0);
+
+    FindClose(hFile);
+    return TRUE;
+}
 
 
 
 BOOL
-InitSoundSettings(HWND hwndDlg)
+ShowSoundScheme(HWND hwndDlg)
 {
-   HKEY hKey;
+    LRESULT lIndex;
+    PSOUND_SCHEME_CONTEXT pScheme;
+    PAPP_CONTEXT pAppContext;
+    LV_ITEM listItem;
+    LV_COLUMN dummy;
+    HWND hDlgCtrl, hList;
+    RECT rect;
+    int ItemIndex;
+    hDlgCtrl = GetDlgItem(hwndDlg, IDC_SOUND_SCHEME);
+    hList = GetDlgItem(hwndDlg, IDC_SCHEME_LIST);
 
-   if (RegOpenKey(HKEY_CURRENT_USER,
-                  _T("AppEvents"),
-                  &hKey) != ERROR_SUCCESS)
-   {
-      return FALSE;
-   }
-   LoadSoundProfiles(hwndDlg, hKey);
-   //LoadEventLabels(hwndDlg, hKey);
+    lIndex = SendMessage(hDlgCtrl, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+    if (lIndex == CB_ERR)
+    {
+        return FALSE;
+    }
 
-   RegCloseKey(hKey);
-    
-   return TRUE;
+    lIndex = SendMessage(hDlgCtrl, CB_GETITEMDATA, (WPARAM)lIndex, (LPARAM)0);
+    if (lIndex == CB_ERR)
+    {
+        return FALSE;
+    }
+    pScheme = (PSOUND_SCHEME_CONTEXT)lIndex;
+    pAppContext = pScheme->AppContext;
+    if (!pAppContext)
+    {
+        return FALSE;
+    }
+
+    /*  add column for app */
+    GetClientRect(hList, &rect);
+    ZeroMemory(&dummy, sizeof(LV_COLUMN));
+    dummy.mask      = LVCF_WIDTH;
+    dummy.iSubItem  = 0;
+    dummy.cx        = rect.right - rect.left - GetSystemMetrics(SM_CXVSCROLL);
+    (void)ListView_InsertColumn(hList, 0, &dummy);
+    ItemIndex = 0;
+    while(pAppContext)
+    {
+        PLABEL_CONTEXT pLabelContext = pAppContext->LabelContext;
+        if (pLabelContext)
+        {
+#if 0            
+            ZeroMemory(&listItem, sizeof(LV_ITEM));
+            listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
+            listItem.pszText    = pAppContext->szDesc;
+            listItem.lParam     = (LPARAM)pAppContext;
+            listItem.iItem      = ItemIndex;
+            listItem.iImage     = -1;
+            (void)ListView_InsertItem(hList, &listItem);
+            ItemIndex++;
+#endif
+            while(pLabelContext)
+            {
+                PLABEL_MAP pMap = FindLabel(pLabelContext->szName);
+                if (pMap)
+                {
+                    ZeroMemory(&listItem, sizeof(LV_ITEM));
+                    listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
+                    listItem.pszText    = pMap->szDesc;
+                    listItem.lParam     = (LPARAM)pLabelContext;
+                    listItem.iItem      = ItemIndex;
+                    listItem.iImage     = -1;
+                    (void)ListView_InsertItem(hList, &listItem);
+                    ItemIndex++;
+                }
+                pLabelContext = pLabelContext->Next;
+            }
+        }
+        pAppContext = pAppContext->Next;
+    }
+    return TRUE;
 }
-
-
 /* Sounds property page dialog callback */
 INT_PTR
 CALLBACK
@@ -579,13 +795,164 @@ SoundsDlgProc(HWND hwndDlg,
 	        WPARAM wParam,
 	        LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            InitSoundSettings(hwndDlg);
+            LoadEventLabels();
+            LoadSoundProfiles(hwndDlg);
+            LoadSoundFiles(hwndDlg);
+            ShowSoundScheme(hwndDlg);
+            if (wParam == (WPARAM)GetDlgItem(hwndDlg, IDC_SOUND_SCHEME))
+                return TRUE;
+            SetFocus(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME));
+            return FALSE;
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_PLAY_SOUND:
+                {
+                    LRESULT lIndex;
+                    TCHAR szValue[MAX_PATH];
+
+                    lIndex = SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+                    if (lIndex == CB_ERR)
+                    {
+                        break;
+                    }
+                    SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_GETLBTEXT, (WPARAM)lIndex, (LPARAM)szValue);
+                    PlaySound(szValue, NULL, SND_FILENAME);
+                    break;
+                }
+                case IDC_SOUND_SCHEME:
+                {
+                    if (HIWORD(wParam) == CBN_SELENDOK)
+                    {
+                        (void)ListView_DeleteAllItems(GetDlgItem(hwndDlg, IDC_SCHEME_LIST));
+                        ShowSoundScheme(hwndDlg);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_LIST), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_SOUND), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_BROWSE_SOUND), FALSE);
+                    }
+                    break;
+                }
+                case IDC_SOUND_LIST:
+                {
+                    if (HIWORD(wParam) == CBN_SELENDOK)
+                    {
+                        PLABEL_CONTEXT pLabelContext;
+                        INT SelCount;
+                        LVITEM item;
+                        LRESULT lIndex;
+                        SelCount = ListView_GetSelectionMark(GetDlgItem(hwndDlg, IDC_SOUND_LIST));
+                        if (SelCount == -1)
+                        {
+                            break;
+                        }
+                        lIndex = SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+                        if (lIndex == CB_ERR)
+                        {
+                            break;
+                        }
+                        ZeroMemory(&item, sizeof(LVITEM));
+                        item.mask = LVIF_PARAM;
+                        item.iItem = SelCount;
+                        if (ListView_GetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item))
+                        {
+                            TCHAR szValue[MAX_PATH];
+                            pLabelContext = (PLABEL_CONTEXT)item.lParam;
+                            SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_GETLBTEXT, (WPARAM)lIndex, (LPARAM)szValue);
+                            ///
+                            /// should store in current member
+                            /// 
+                            _tcscpy(pLabelContext->szValue, szValue);
+                            if (_tcslen(szValue) && lIndex != 0)
+                            {
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
+                            }
+                            else
+                            {
+                                EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        case WM_NOTIFY:
+        {
+            LVITEM item;
+            PLABEL_CONTEXT pLabelContext;
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+            TCHAR * ptr;
+            switch(lpnm->code)
+            {
+                case LVN_ITEMCHANGED:
+                {
+                    LPNMLISTVIEW nm = (LPNMLISTVIEW)lParam;
+
+                    if ((nm->uNewState & LVIS_SELECTED) == 0)
+                    {
+                        return FALSE;
+                    }
+                    ZeroMemory(&item, sizeof(LVITEM));
+                    item.mask = LVIF_PARAM;
+                    item.iItem = nm->iItem;
+                    if (ListView_GetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item))
+                    {
+                        LRESULT lCount, lIndex, lResult;
+                        pLabelContext = (PLABEL_CONTEXT)item.lParam;
+                        if (!pLabelContext)
+                        {
+                            return FALSE;
+                        }
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_LIST), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_TEXT_SOUND), TRUE);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_BROWSE_SOUND), TRUE);
+                        if (_tcslen(pLabelContext->szValue) == 0)
+                        {
+                            lIndex = SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), FALSE);
+                            break;
+
+                        }
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_PLAY_SOUND), TRUE);
+                        lCount = SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_GETCOUNT, (WPARAM)0, (LPARAM)0);
+                        for (lIndex = 0; lIndex < lCount; lIndex++)
+                        {
+                            lResult = SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_GETITEMDATA, (WPARAM)lIndex, (LPARAM)0);
+                            if (lResult == CB_ERR || lResult == 0)
+                                continue;
+
+                            if (!_tcscmp((TCHAR*)lResult, pLabelContext->szValue))
+                            {
+                                SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_SETCURSEL, (WPARAM)lIndex, (LPARAM)0);
+                                return FALSE;
+                            }
+                        }
+                        ptr = _tcsrchr(pLabelContext->szValue, _T('\\'));
+                        if (ptr)
+                        {
+                            ptr++;
+                        }
+                        else
+                        {
+                            ptr = pLabelContext->szValue;
+                        }
+                        lIndex = SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)ptr);
+                        if (lIndex != CB_ERR)
+                        {
+                            SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_SETITEMDATA, (WPARAM)lIndex, (LPARAM)_tcsdup(pLabelContext->szValue));
+                            SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_SETCURSEL, (WPARAM)lIndex, (LPARAM)0);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
         break;
     }
 
