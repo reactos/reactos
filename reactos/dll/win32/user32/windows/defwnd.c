@@ -1058,8 +1058,7 @@ User32DefWindowProc(HWND hWnd,
         }
 
         case WM_LBUTTONDBLCLK:
-            return (DefWndNCLButtonDblClk(hWnd, HTCLIENT, lParam));
-            
+//            return (DefWndNCLButtonDblClk(hWnd, HTCLIENT, lParam));            
         case WM_NCLBUTTONDBLCLK:
         {
             return (DefWndNCLButtonDblClk(hWnd, wParam, lParam));
