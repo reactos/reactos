@@ -2,7 +2,7 @@
  * IMM32 library
  *
  * Copyright 1998 Patrik Stridvall
- * Copyright 2002, 2003 CodeWeavers, Aric Stewart
+ * Copyright 2002, 2003, 2007 CodeWeavers, Aric Stewart
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,7 @@
 #include "winerror.h"
 #include "wine/debug.h"
 #include "imm.h"
+#include "ddk/imm.h"
 #include "winnls.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
@@ -36,25 +37,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
 static void (*pX11DRV_ForceXIMReset)(HWND);
 
+typedef struct tagIMCCInternal
+{
+    DWORD dwLock;
+    DWORD dwSize;
+} IMCCInternal;
+
 typedef struct tagInputContextData
 {
-        LPBYTE          CompositionString;
-        LPBYTE          CompositionReadingString;
-        LPBYTE          ResultString;
-        LPBYTE          ResultReadingString;
-        DWORD           dwCompStringSize;   /* buffer size */
-        DWORD           dwCompStringLength; /* string length (in bytes) */
-        DWORD           dwCompReadStringSize;
-        DWORD           dwResultStringSize;
-        DWORD           dwResultReadStringSize;
-        HWND            hwnd;
-        BOOL            bOpen;
         BOOL            bInternalState;
         BOOL            bRead;
         BOOL            bInComposition;
-        LOGFONTW        font;
         HFONT           textfont;
-        COMPOSITIONFORM CompForm;
+
+        DWORD           dwLock;
+        INPUTCONTEXT    IMC;
 } InputContextData;
 
 static InputContextData *root_context = NULL;
@@ -77,24 +74,33 @@ static UINT WM_MSIME_DOCUMENTFEED;
  */
 static LRESULT WINAPI IME_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                                           LPARAM lParam);
-static void UpdateDataInDefaultIMEWindow(HWND hwnd);
+static void UpdateDataInDefaultIMEWindow(HWND hwnd, BOOL showable);
 static void ImmInternalPostIMEMessage(UINT, WPARAM, LPARAM);
 static void ImmInternalSetOpenStatus(BOOL fOpen);
+static HIMCC updateResultStr(HIMCC old, LPWSTR resultstr, DWORD len);
 
 static VOID IMM_PostResult(InputContextData *data)
 {
     unsigned int i;
-    TRACE("Posting result as IME_CHAR\n");
+    LPCOMPOSITIONSTRING compstr;
+    LPBYTE compdata;
+    LPWSTR ResultStr;
+    HIMCC newCompStr;
 
-    for (i = 0; i < data->dwResultStringSize / sizeof (WCHAR); i++)
-        ImmInternalPostIMEMessage (WM_IME_CHAR, ((WCHAR*)data->ResultString)[i],
-                     1);
+    TRACE("Posting result as IME_CHAR\n");
+    compdata = ImmLockIMCC(root_context->IMC.hCompStr);
+    compstr = (LPCOMPOSITIONSTRING)compdata;
+    ResultStr = (LPWSTR)(compdata + compstr->dwResultStrOffset);
+
+    for (i = 0; i < compstr->dwResultStrLen; i++)
+        ImmInternalPostIMEMessage (WM_IME_CHAR, ResultStr[i], 1);
+
+    ImmUnlockIMCC(root_context->IMC.hCompStr);
 
     /* clear the buffer */
-    if (data->dwResultStringSize)
-        HeapFree(GetProcessHeap(),0,data->ResultString);
-    data->dwResultStringSize = 0;
-    data->ResultString = NULL;
+    newCompStr = updateResultStr(root_context->IMC.hCompStr, NULL, 0);
+    ImmDestroyIMCC(root_context->IMC.hCompStr);
+    root_context->IMC.hCompStr = newCompStr;
 }
 
 static void IMM_Register(void)
@@ -164,8 +170,8 @@ static void ImmInternalPostIMEMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     HWND target = GetFocus();
     if (!target)
-       PostMessageW(root_context->hwnd,msg,wParam,lParam);
-    else 
+       PostMessageW(root_context->IMC.hWnd,msg,wParam,lParam);
+    else
        PostMessageW(target, msg, wParam, lParam);
 }
 
@@ -173,7 +179,7 @@ static LRESULT ImmInternalSendIMENotify(WPARAM notify, LPARAM lParam)
 {
     HWND target;
 
-    target = root_context->hwnd;
+    target = root_context->IMC.hWnd;
     if (!target) target = GetFocus();
 
     if (target)
@@ -186,36 +192,302 @@ static void ImmInternalSetOpenStatus(BOOL fOpen)
 {
     TRACE("Setting internal state to %s\n",(fOpen)?"OPEN":"CLOSED");
 
-   root_context->bOpen = fOpen;
+   root_context->IMC.fOpen = fOpen;
    root_context->bInternalState = fOpen;
 
    if (fOpen == FALSE)
    {
         ShowWindow(hwndDefault,SW_HIDE);
-
-        if (root_context->dwCompStringSize)
-            HeapFree(GetProcessHeap(),0,root_context->CompositionString);
-        if (root_context->dwCompReadStringSize)
-            HeapFree(GetProcessHeap(),0,root_context->CompositionReadingString);
-        if (root_context->dwResultStringSize)
-            HeapFree(GetProcessHeap(),0,root_context->ResultString);
-        if (root_context->dwResultReadStringSize)
-            HeapFree(GetProcessHeap(),0,root_context->ResultReadingString);
-        root_context->dwCompStringSize = 0;
-        root_context->dwCompStringLength = 0;
-        root_context->CompositionString = NULL;
-        root_context->dwCompReadStringSize = 0;
-        root_context->CompositionReadingString = NULL;
-        root_context->dwResultStringSize = 0;
-        root_context->ResultString = NULL;
-        root_context->dwResultReadStringSize = 0;
-        root_context->ResultReadingString = NULL;
+        ImmDestroyIMCC(root_context->IMC.hCompStr);
+        root_context->IMC.hCompStr = NULL;
     }
     else
         ShowWindow(hwndDefault, SW_SHOWNOACTIVATE);
 
    ImmInternalSendIMENotify(IMN_SETOPENSTATUS, 0);
 }
+
+static int updateField(DWORD origLen, DWORD origOffset, DWORD currentOffset,
+                       LPBYTE target, LPBYTE source, DWORD* lenParam,
+                       DWORD* offsetParam, BOOL wchars )
+{
+     if (origLen > 0 && origOffset > 0)
+     {
+        int truelen = origLen;
+        if (wchars)
+            truelen *= sizeof(WCHAR);
+
+        memcpy(&target[currentOffset], &source[origOffset], truelen);
+
+        *lenParam = origLen;
+        *offsetParam = currentOffset;
+        currentOffset += truelen;
+     }
+     return currentOffset;
+}
+
+static HIMCC updateCompStr(HIMCC old, LPWSTR compstr, DWORD len)
+{
+    /* we need to make sure the CompStr, CompClaus and CompAttr fields are all
+     * set and correct */
+    int needed_size;
+    HIMCC   rc;
+    LPBYTE newdata = NULL;
+    LPBYTE olddata = NULL;
+    LPCOMPOSITIONSTRING new_one;
+    LPCOMPOSITIONSTRING lpcs = NULL;
+    INT current_offset = 0;
+
+    TRACE("%s, %i\n",debugstr_wn(compstr,len),len);
+
+    if (old != NULL)
+    {
+        olddata = ImmLockIMCC(old);
+        lpcs = (LPCOMPOSITIONSTRING)olddata;
+    }
+
+    needed_size = sizeof(COMPOSITIONSTRING) + len * sizeof(WCHAR) +
+                  len + sizeof(DWORD) * 2;
+
+    if (lpcs != NULL)
+    {
+        needed_size += lpcs->dwCompReadAttrLen;
+        needed_size += lpcs->dwCompReadClauseLen;
+        needed_size += lpcs->dwCompReadStrLen * sizeof(DWORD);
+        needed_size += lpcs->dwResultReadClauseLen;
+        needed_size += lpcs->dwResultReadStrLen * sizeof(DWORD);
+        needed_size += lpcs->dwResultClauseLen;
+        needed_size += lpcs->dwResultStrLen * sizeof(DWORD);
+        needed_size += lpcs->dwPrivateSize;
+    }
+    rc = ImmCreateIMCC(needed_size);
+    newdata = ImmLockIMCC(rc);
+    new_one = (LPCOMPOSITIONSTRING)newdata;
+
+    new_one->dwSize = needed_size;
+    current_offset = sizeof(COMPOSITIONSTRING);
+    if (lpcs != NULL)
+    {
+        current_offset = updateField(lpcs->dwCompReadAttrLen,
+                                     lpcs->dwCompReadAttrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompReadAttrLen,
+                                     &new_one->dwCompReadAttrOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwCompReadClauseLen,
+                                     lpcs->dwCompReadClauseOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompReadClauseLen,
+                                     &new_one->dwCompReadClauseOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwCompReadStrLen,
+                                     lpcs->dwCompReadStrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompReadStrLen,
+                                     &new_one->dwCompReadStrOffset, TRUE);
+
+        /* new CompAttr, CompClause, CompStr, dwCursorPos */
+        new_one->dwDeltaStart = 0;
+
+        current_offset = updateField(lpcs->dwResultReadClauseLen,
+                                     lpcs->dwResultReadClauseOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwResultReadClauseLen,
+                                     &new_one->dwResultReadClauseOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwResultReadStrLen,
+                                     lpcs->dwResultReadStrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwResultReadStrLen,
+                                     &new_one->dwResultReadStrOffset, TRUE);
+
+        current_offset = updateField(lpcs->dwResultClauseLen,
+                                     lpcs->dwResultClauseOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwResultClauseLen,
+                                     &new_one->dwResultClauseOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwResultStrLen,
+                                     lpcs->dwResultStrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwResultStrLen,
+                                     &new_one->dwResultStrOffset, TRUE);
+
+        current_offset = updateField(lpcs->dwPrivateSize,
+                                     lpcs->dwPrivateOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwPrivateSize,
+                                     &new_one->dwPrivateOffset, FALSE);
+    }
+
+    /* set new data */
+    /* CompAttr */
+    new_one->dwCompAttrLen = len;
+    if (len > 0)
+    {
+        new_one->dwCompAttrOffset = current_offset;
+        memset(&newdata[current_offset],ATTR_INPUT,len);
+        current_offset += len;
+    }
+
+    /* CompClause */
+    if (len > 0)
+    {
+        new_one->dwCompClauseLen = sizeof(DWORD) * 2;
+        new_one->dwCompClauseOffset = current_offset;
+        *(DWORD*)(&newdata[current_offset]) = 0;
+        current_offset += sizeof(DWORD);
+        *(DWORD*)(&newdata[current_offset]) = len;
+        current_offset += sizeof(DWORD);
+    }
+
+    /* CompStr */
+    new_one->dwCompStrLen = len;
+    if (len > 0)
+    {
+        new_one->dwCompStrOffset = current_offset;
+        memcpy(&newdata[current_offset],compstr,len*sizeof(WCHAR));
+    }
+
+    /* CursorPos */
+    new_one->dwCursorPos = len;
+
+    ImmUnlockIMCC(rc);
+    if (lpcs)
+        ImmUnlockIMCC(old);
+
+    return rc;
+}
+
+static HIMCC updateResultStr(HIMCC old, LPWSTR resultstr, DWORD len)
+{
+    /* we need to make sure the ResultStr and ResultClause fields are all
+     * set and correct */
+    int needed_size;
+    HIMCC   rc;
+    LPBYTE newdata = NULL;
+    LPBYTE olddata = NULL;
+    LPCOMPOSITIONSTRING new_one;
+    LPCOMPOSITIONSTRING lpcs = NULL;
+    INT current_offset = 0;
+
+    TRACE("%s, %i\n",debugstr_wn(resultstr,len),len);
+
+    if (old != NULL)
+    {
+        olddata = ImmLockIMCC(old);
+        lpcs = (LPCOMPOSITIONSTRING)olddata;
+    }
+
+    needed_size = sizeof(COMPOSITIONSTRING) + len * sizeof(WCHAR) +
+                  sizeof(DWORD) * 2;
+
+    if (lpcs != NULL)
+    {
+        needed_size += lpcs->dwCompReadAttrLen;
+        needed_size += lpcs->dwCompReadClauseLen;
+        needed_size += lpcs->dwCompReadStrLen * sizeof(DWORD);
+        needed_size += lpcs->dwCompAttrLen;
+        needed_size += lpcs->dwCompClauseLen;
+        needed_size += lpcs->dwCompStrLen * sizeof(DWORD);
+        needed_size += lpcs->dwResultReadClauseLen;
+        needed_size += lpcs->dwResultReadStrLen * sizeof(DWORD);
+        needed_size += lpcs->dwPrivateSize;
+    }
+    rc = ImmCreateIMCC(needed_size);
+    newdata = ImmLockIMCC(rc);
+    new_one = (LPCOMPOSITIONSTRING)newdata;
+
+    new_one->dwSize = needed_size;
+    current_offset = sizeof(COMPOSITIONSTRING);
+    if (lpcs != NULL)
+    {
+        current_offset = updateField(lpcs->dwCompReadAttrLen,
+                                     lpcs->dwCompReadAttrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompReadAttrLen,
+                                     &new_one->dwCompReadAttrOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwCompReadClauseLen,
+                                     lpcs->dwCompReadClauseOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompReadClauseLen,
+                                     &new_one->dwCompReadClauseOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwCompReadStrLen,
+                                     lpcs->dwCompReadStrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompReadStrLen,
+                                     &new_one->dwCompReadStrOffset, TRUE);
+
+        current_offset = updateField(lpcs->dwCompAttrLen,
+                                     lpcs->dwCompAttrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompAttrLen,
+                                     &new_one->dwCompAttrOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwCompClauseLen,
+                                     lpcs->dwCompClauseOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompClauseLen,
+                                     &new_one->dwCompClauseOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwCompStrLen,
+                                     lpcs->dwCompStrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwCompStrLen,
+                                     &new_one->dwCompStrOffset, TRUE);
+
+        new_one->dwCursorPos = lpcs->dwCursorPos;
+        new_one->dwDeltaStart = 0;
+
+        current_offset = updateField(lpcs->dwResultReadClauseLen,
+                                     lpcs->dwResultReadClauseOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwResultReadClauseLen,
+                                     &new_one->dwResultReadClauseOffset, FALSE);
+
+        current_offset = updateField(lpcs->dwResultReadStrLen,
+                                     lpcs->dwResultReadStrOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwResultReadStrLen,
+                                     &new_one->dwResultReadStrOffset, TRUE);
+
+        /* new ResultClause , ResultStr */
+
+        current_offset = updateField(lpcs->dwPrivateSize,
+                                     lpcs->dwPrivateOffset,
+                                     current_offset, newdata, olddata,
+                                     &new_one->dwPrivateSize,
+                                     &new_one->dwPrivateOffset, FALSE);
+    }
+
+    /* set new data */
+    /* ResultClause */
+    if (len > 0)
+    {
+        new_one->dwResultClauseLen = sizeof(DWORD) * 2;
+        new_one->dwResultClauseOffset = current_offset;
+        *(DWORD*)(&newdata[current_offset]) = 0;
+        current_offset += sizeof(DWORD);
+        *(DWORD*)(&newdata[current_offset]) = len;
+        current_offset += sizeof(DWORD);
+    }
+
+    /* ResultStr */
+    new_one->dwResultStrLen = len;
+    if (len > 0)
+    {
+        new_one->dwResultStrOffset = current_offset;
+        memcpy(&newdata[current_offset],resultstr,len*sizeof(WCHAR));
+    }
+    ImmUnlockIMCC(rc);
+    if (lpcs)
+        ImmUnlockIMCC(old);
+
+    return rc;
+}
+
 
 
 /***********************************************************************
@@ -242,25 +514,25 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
     /*
      * If already associated just return
      */
-    if (data->hwnd == hWnd)
+    if (data->IMC.hWnd == hWnd)
         return hIMC;
 
-    if (IsWindow(data->hwnd))
+    if (IsWindow(data->IMC.hWnd))
     {
         /*
          * Post a message that your context is switching
          */
-        SendMessageW(data->hwnd, WM_IME_SETCONTEXT, FALSE, ISC_SHOWUIALL);
+        SendMessageW(data->IMC.hWnd, WM_IME_SETCONTEXT, FALSE, ISC_SHOWUIALL);
     }
 
-    data->hwnd = hWnd;
+    data->IMC.hWnd = hWnd;
 
-    if (IsWindow(data->hwnd))
+    if (IsWindow(data->IMC.hWnd))
     {
         /*
          * Post a message that your context is switching
          */
-        SendMessageW(data->hwnd, WM_IME_SETCONTEXT, TRUE, ISC_SHOWUIALL);
+        SendMessageW(data->IMC.hWnd, WM_IME_SETCONTEXT, TRUE, ISC_SHOWUIALL);
     }
 
     /*
@@ -313,8 +585,7 @@ HIMC WINAPI ImmCreateContext(void)
 {
     InputContextData *new_context;
 
-    new_context = HeapAlloc(GetProcessHeap(),0,sizeof(InputContextData));
-    ZeroMemory(new_context,sizeof(InputContextData));
+    new_context = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(InputContextData));
 
     return (HIMC)new_context;
 }
@@ -330,14 +601,11 @@ BOOL WINAPI ImmDestroyContext(HIMC hIMC)
 
     if (hIMC)
     {
-        if (data->dwCompStringSize)
-            HeapFree(GetProcessHeap(),0,data->CompositionString);
-        if (data->dwCompReadStringSize)
-            HeapFree(GetProcessHeap(),0,data->CompositionReadingString);
-        if (data->dwResultStringSize)
-            HeapFree(GetProcessHeap(),0,data->ResultString);
-        if (data->dwResultReadStringSize)
-            HeapFree(GetProcessHeap(),0,data->ResultReadingString);
+        ImmDestroyIMCC(root_context->IMC.hCompStr);
+        ImmDestroyIMCC(root_context->IMC.hCandInfo);
+        ImmDestroyIMCC(root_context->IMC.hGuideLine);
+        ImmDestroyIMCC(root_context->IMC.hPrivate);
+        ImmDestroyIMCC(root_context->IMC.hMsgBuf);
 
         if (data->textfont)
         {
@@ -513,88 +781,99 @@ LONG WINAPI ImmGetCompositionStringA(
     CHAR *buf;
     LONG rc = 0;
     InputContextData *data = (InputContextData*)hIMC;
+    LPCOMPOSITIONSTRING compstr;
+    LPBYTE compdata;
 
     TRACE("(%p, 0x%x, %p, %d)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
     if (!data)
        return FALSE;
 
-    if (dwIndex == GCS_RESULTSTR)
-    {
-        TRACE("GSC_RESULTSTR %p %i\n",data->ResultString,
-                                    data->dwResultStringSize);
+    if (!data->IMC.hCompStr)
+       return FALSE;
 
-        buf = HeapAlloc( GetProcessHeap(), 0, data->dwResultStringSize * 3 );
-        rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)data->ResultString,
-                                 data->dwResultStringSize / sizeof(WCHAR), buf,
-                                 data->dwResultStringSize * 3, NULL, NULL);
+    compdata = ImmLockIMCC(data->IMC.hCompStr);
+    compstr = (LPCOMPOSITIONSTRING)compdata;
+
+    if (dwIndex == GCS_RESULTSTR && compstr->dwResultStrLen > 0 &&
+        compstr->dwResultStrOffset > 0)
+    {
+        LPWSTR ResultStr = (LPWSTR)(compdata + compstr->dwResultStrOffset);
+
+        TRACE("GSC_RESULTSTR %p %i\n",ResultStr,
+                                    compstr->dwResultStrLen);
+
+        buf = HeapAlloc( GetProcessHeap(), 0, compstr->dwResultStrLen * 3 );
+        rc = WideCharToMultiByte(CP_ACP, 0, ResultStr,
+                                 compstr->dwResultStrLen , buf,
+                                 compstr->dwResultStrLen * 3, NULL, NULL);
         if (dwBufLen >= rc)
             memcpy(lpBuf,buf,rc);
 
         data->bRead = TRUE;
         HeapFree( GetProcessHeap(), 0, buf );
     }
-    else if (dwIndex == GCS_COMPSTR)
+    else if (dwIndex == GCS_COMPSTR && compstr->dwCompStrLen > 0 &&
+              compstr->dwCompStrOffset > 0)
     {
-         TRACE("GSC_COMPSTR %p %i\n", data->CompositionString, data->dwCompStringLength);
+        LPWSTR CompString = (LPWSTR)(compdata + compstr->dwCompStrOffset);
 
-        buf = HeapAlloc( GetProcessHeap(), 0, data->dwCompStringLength * 3 );
-        rc = WideCharToMultiByte(CP_ACP, 0,(LPWSTR)data->CompositionString,
-                                 data->dwCompStringLength/ sizeof(WCHAR), buf,
-                                 data->dwCompStringLength* 3, NULL, NULL);
+        TRACE("GSC_COMPSTR %p %i\n", CompString, compstr->dwCompStrLen);
+
+        buf = HeapAlloc( GetProcessHeap(), 0, compstr->dwCompStrLen * 3 );
+        rc = WideCharToMultiByte(CP_ACP, 0, CompString,
+                                 compstr->dwCompStrLen, buf,
+                                 compstr->dwCompStrLen * 3, NULL, NULL);
         if (dwBufLen >= rc)
             memcpy(lpBuf,buf,rc);
         HeapFree( GetProcessHeap(), 0, buf );
     }
-    else if (dwIndex == GCS_COMPATTR)
+    else if (dwIndex == GCS_COMPATTR && compstr->dwCompAttrLen > 0 &&
+             compstr->dwCompAttrOffset > 0)
     {
-        TRACE("GSC_COMPATTR %p %i\n", data->CompositionString, data->dwCompStringLength);
+        LPWSTR Compattr = (LPWSTR)(compdata + compstr->dwCompAttrOffset);
+        TRACE("GSC_COMPATTR %p %i\n", Compattr , compstr->dwCompAttrLen);
 
-        rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)data->CompositionString,
-                                 data->dwCompStringLength/ sizeof(WCHAR), NULL,
-                                 0, NULL, NULL);
- 
+        rc = compstr->dwCompAttrLen;
         if (dwBufLen >= rc)
-        {
-            int i=0;
-            for (i = 0;  i < rc; i++)
-                ((LPBYTE)lpBuf)[i] = ATTR_INPUT;
+            memcpy(lpBuf,Compattr,rc);
     }
-    }
-    else if (dwIndex == GCS_COMPCLAUSE)
+    else if (dwIndex == GCS_COMPCLAUSE && compstr->dwCompClauseLen > 0 &&
+             compstr->dwCompClauseOffset > 0)
     {
-        TRACE("GSC_COMPCLAUSE %p %i\n", data->CompositionString, data->dwCompStringLength);
- 
-        rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)data->CompositionString,
-                                 data->dwCompStringLength/ sizeof(WCHAR), NULL,
-                                 0, NULL, NULL);
+        LPWSTR Compclause = (LPWSTR)(compdata + compstr->dwCompClauseOffset);
+        TRACE("GSC_COMPCLAUSE %p %i\n", Compclause, compstr->dwCompClauseLen);
 
-        if (dwBufLen >= sizeof(DWORD)*2)
-        {
-            ((LPDWORD)lpBuf)[0] = 0;
-            ((LPDWORD)lpBuf)[1] = rc;
-        }
-        rc = sizeof(DWORD)*2;
+        rc = compstr->dwCompClauseLen;
+        if (dwBufLen >= compstr->dwCompClauseLen)
+            memcpy(lpBuf,Compclause,rc);
     }
-    else if (dwIndex == GCS_RESULTCLAUSE)
+    else if (dwIndex == GCS_RESULTCLAUSE && compstr->dwResultClauseLen > 0 &&
+             compstr->dwResultClauseOffset > 0)
     {
-        TRACE("GSC_RESULTCLAUSE %p %i\n", data->ResultString, data->dwResultStringSize);
+        LPWSTR Resultclause = (LPWSTR)(compdata + compstr->dwResultClauseOffset);
+        TRACE("GSC_RESULTCLAUSE %p %i\n", Resultclause, compstr->dwResultClauseLen);
 
-        rc = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)data->ResultString,
-                                 data->dwResultStringSize/ sizeof(WCHAR), NULL,
-                                 0, NULL, NULL);
-
-        if (dwBufLen >= sizeof(DWORD)*2)
-        {
-            ((LPDWORD)lpBuf)[0] = 0;
-            ((LPDWORD)lpBuf)[1] = rc;
-        }
-        rc = sizeof(DWORD)*2;
+        rc = compstr->dwResultClauseLen;
+        if (dwBufLen >= compstr->dwResultClauseLen)
+            memcpy(lpBuf,Resultclause,rc);
+    }
+    else if (dwIndex == GCS_CURSORPOS)
+    {
+        TRACE("GSC_CURSORPOS\n");
+        rc = compstr->dwCursorPos;
+    }
+    else if (dwIndex == GCS_DELTASTART)
+    {
+        TRACE("GCS_DELTASTART\n");
+        rc = compstr->dwDeltaStart;
     }
     else
     {
         FIXME("Unhandled index 0x%x\n",dwIndex);
     }
+
+    ImmUnlockIMCC(data->IMC.hCompStr);
 
     return rc;
 }
@@ -608,70 +887,92 @@ LONG WINAPI ImmGetCompositionStringW(
 {
     LONG rc = 0;
     InputContextData *data = (InputContextData*)hIMC;
+    LPCOMPOSITIONSTRING compstr;
+    LPBYTE compdata;
 
     TRACE("(%p, 0x%x, %p, %d)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
     if (!data)
        return FALSE;
 
-    if (dwIndex == GCS_RESULTSTR)
+    if (!data->IMC.hCompStr)
+       return FALSE;
+
+    compdata = ImmLockIMCC(data->IMC.hCompStr);
+    compstr = (LPCOMPOSITIONSTRING)compdata;
+
+    if (dwIndex == GCS_RESULTSTR && compstr->dwResultStrLen > 0 &&
+        compstr->dwResultStrOffset > 0)
     {
+        LPWSTR ResultStr = (LPWSTR)(compdata + compstr->dwResultStrOffset);
         data->bRead = TRUE;
+        rc =  compstr->dwResultStrLen * sizeof(WCHAR);
 
-        if (dwBufLen >= data->dwResultStringSize)
-            memcpy(lpBuf,data->ResultString,data->dwResultStringSize);
-        
-        rc =  data->dwResultStringSize;
+        if (dwBufLen >= rc)
+            memcpy(lpBuf,ResultStr,rc);
     }
-    else if (dwIndex == GCS_RESULTREADSTR)
+    else if (dwIndex == GCS_RESULTREADSTR && compstr->dwResultReadStrLen > 0 &&
+             compstr->dwResultReadStrOffset > 0)
     {
-        if (dwBufLen >= data->dwResultReadStringSize)
-            memcpy(lpBuf,data->ResultReadingString,
-                    data->dwResultReadStringSize);
-        
-        rc = data->dwResultReadStringSize;
-    }   
-    else if (dwIndex == GCS_COMPSTR)
-    {
-        if (dwBufLen >= data->dwCompStringLength)
-            memcpy(lpBuf,data->CompositionString,data->dwCompStringLength);
+        LPWSTR ResultReadString = (LPWSTR)(compdata + compstr->dwResultReadStrOffset);
 
-        rc = data->dwCompStringLength;
+        rc = compstr->dwResultReadStrLen * sizeof(WCHAR);
+        if (dwBufLen >= rc)
+            memcpy(lpBuf,ResultReadString,rc);
     }
-    else if (dwIndex == GCS_COMPATTR)
+    else if (dwIndex == GCS_COMPSTR && compstr->dwCompStrLen > 0 &&
+              compstr->dwCompStrOffset > 0)
     {
-        unsigned int len = data->dwCompStringLength;
-        
-        if (dwBufLen >= len)
-        {
-            unsigned int i=0;
-            for (i = 0;  i < len; i++)
-                ((LPBYTE)lpBuf)[i] = ATTR_INPUT;
-        }
+        LPWSTR CompString = (LPWSTR)(compdata + compstr->dwCompStrOffset);
+        rc = compstr->dwCompStrLen * sizeof(WCHAR);
+        if (dwBufLen >= rc)
+            memcpy(lpBuf,CompString,rc);
+    }
+    else if (dwIndex == GCS_COMPATTR && compstr->dwCompAttrLen > 0 &&
+             compstr->dwCompAttrOffset > 0)
+    {
 
-        rc = len;
+        LPWSTR Compattr = (LPWSTR)(compdata + compstr->dwCompAttrOffset);
+
+        rc = compstr->dwCompAttrLen;
+        if (dwBufLen >= rc)
+            memcpy(lpBuf,Compattr,rc);
     }
-    else if (dwIndex == GCS_COMPCLAUSE)
+    else if (dwIndex == GCS_COMPCLAUSE && compstr->dwCompClauseLen > 0 &&
+             compstr->dwCompClauseOffset > 0)
     {
-        if (dwBufLen >= sizeof(DWORD)*2)
-        {
-            ((LPDWORD)lpBuf)[0] = 0;
-            ((LPDWORD)lpBuf)[1] = data->dwCompStringLength/sizeof(WCHAR);
-        }
-        rc = sizeof(DWORD)*2;
+        LPWSTR Compclause = (LPWSTR)(compdata + compstr->dwCompClauseOffset);
+
+        rc = compstr->dwCompClauseLen;
+        if (dwBufLen >= compstr->dwCompClauseLen)
+            memcpy(lpBuf,Compclause,rc);
     }
-    else if (dwIndex == GCS_COMPREADSTR)
+    else if (dwIndex == GCS_COMPREADSTR && compstr->dwCompReadStrLen > 0 &&
+              compstr->dwCompReadStrOffset > 0)
     {
-        if (dwBufLen >= data->dwCompReadStringSize)
-            memcpy(lpBuf,data->CompositionReadingString,
-                    data->dwCompReadStringSize);
-        
-        rc = data->dwCompReadStringSize;
-    }   
+        LPWSTR CompReadString = (LPWSTR)(compdata + compstr->dwCompReadStrOffset);
+
+        rc = compstr->dwCompReadStrLen * sizeof(WCHAR);
+
+        if (dwBufLen >= rc)
+            memcpy(lpBuf,CompReadString,rc);
+    }
+    else if (dwIndex == GCS_CURSORPOS)
+    {
+        TRACE("GSC_CURSORPOS\n");
+        rc = compstr->dwCursorPos;
+    }
+    else if (dwIndex == GCS_DELTASTART)
+    {
+        TRACE("GCS_DELTASTART\n");
+        rc = compstr->dwDeltaStart;
+    }
     else
     {
         FIXME("Unhandled index 0x%x\n",dwIndex);
     }   
+
+    ImmUnlockIMCC(data->IMC.hCompStr);
 
     return rc;
 }
@@ -688,7 +989,7 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
     if (!data)
         return FALSE;
 
-    memcpy(lpCompForm,&(data->CompForm),sizeof(COMPOSITIONFORM));
+    memcpy(lpCompForm,&(data->IMC.cfCompForm),sizeof(COMPOSITIONFORM));
     return 1;
 }
 
@@ -703,7 +1004,7 @@ HIMC WINAPI ImmGetContext(HWND hWnd)
     if (!root_context)
         return NULL;
 
-    root_context->hwnd = hWnd;
+    root_context->IMC.hWnd = hWnd;
     return (HIMC)root_context;
 }
 
@@ -876,7 +1177,7 @@ BOOL WINAPI ImmGetOpenStatus(HIMC hIMC)
         return FALSE;
   FIXME("(%p): semi-stub\n", hIMC);
 
-  return data->bOpen;
+  return data->IMC.fOpen;
 }
 
 /***********************************************************************
@@ -1022,7 +1323,7 @@ BOOL WINAPI ImmIsUIMessageA(
 {
     BOOL rc = FALSE;
 
-    TRACE("(%p, %x, %d, %ld)\n", hWndIME, msg, wParam, lParam);
+    TRACE("(%p, %x, %ld, %ld)\n", hWndIME, msg, wParam, lParam);
     if ((msg >= WM_IME_STARTCOMPOSITION && msg <= WM_IME_KEYLAST) ||
         (msg >= WM_IME_SETCONTEXT && msg <= WM_IME_KEYUP) ||
         (msg == WM_MSIME_SERVICE) ||
@@ -1052,7 +1353,7 @@ BOOL WINAPI ImmIsUIMessageW(
   HWND hWndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     BOOL rc = FALSE;
-    TRACE("(%p, %d, %d, %ld): stub\n", hWndIME, msg, wParam, lParam);
+    TRACE("(%p, %d, %ld, %ld): stub\n", hWndIME, msg, wParam, lParam);
     if ((msg >= WM_IME_STARTCOMPOSITION && msg <= WM_IME_KEYLAST) ||
         (msg >= WM_IME_SETCONTEXT && msg <= WM_IME_KEYUP) ||
         (msg == WM_MSIME_SERVICE) ||
@@ -1093,56 +1394,60 @@ BOOL WINAPI ImmNotifyIME(
             {
                 case CPS_CANCEL:
                     TRACE("%s - %s\n","NI_COMPOSITIONSTR","CPS_CANCEL");
-                    if (pX11DRV_ForceXIMReset)
-                        pX11DRV_ForceXIMReset(root_context->hwnd);
-                    if (root_context->dwCompStringSize)
                     {
-                        HeapFree(GetProcessHeap(),0,
-                                 root_context->CompositionString);
-                        root_context->dwCompStringSize = 0;
-                        root_context->dwCompStringLength = 0;
-                        root_context->CompositionString = NULL;
+                        HIMCC newCompStr;
+                        if (pX11DRV_ForceXIMReset)
+                            pX11DRV_ForceXIMReset(root_context->IMC.hWnd);
+
+                        newCompStr = updateCompStr(root_context->IMC.hCompStr, NULL, 0);
+                        ImmDestroyIMCC(root_context->IMC.hCompStr);
+                        root_context->IMC.hCompStr = newCompStr;
+
                         ImmInternalPostIMEMessage(WM_IME_COMPOSITION, 0,
                                                   GCS_COMPSTR);
+                        rc = TRUE;
                     }
-                    rc = TRUE;
                     break;
                 case CPS_COMPLETE:
                     TRACE("%s - %s\n","NI_COMPOSITIONSTR","CPS_COMPLETE");
                     if (hIMC != (HIMC)FROM_IME && pX11DRV_ForceXIMReset)
-                        pX11DRV_ForceXIMReset(root_context->hwnd);
-
-                    if (root_context->dwResultStringSize)
+                        pX11DRV_ForceXIMReset(root_context->IMC.hWnd);
                     {
-                        HeapFree(GetProcessHeap(),0,root_context->ResultString);
-                        root_context->dwResultStringSize = 0;
-                        root_context->ResultString = NULL;
-                    }
-                    if (root_context->dwCompStringLength)
-                    {
-                        root_context->ResultString = HeapAlloc(
-                        GetProcessHeap(), 0, root_context->dwCompStringLength);
-                        root_context->dwResultStringSize =
-                                        root_context->dwCompStringLength;
+                        HIMCC newCompStr;
+                        DWORD cplen;
+                        LPWSTR cpstr;
+                        LPCOMPOSITIONSTRING cs = NULL;
+                        LPBYTE cdata = NULL;
 
-                        memcpy(root_context->ResultString,
-                               root_context->CompositionString,
-                               root_context->dwCompStringLength);
+                        /* clear existing result */
+                        newCompStr = updateResultStr(root_context->IMC.hCompStr, NULL, 0);
+                        ImmDestroyIMCC(root_context->IMC.hCompStr);
+                        root_context->IMC.hCompStr = newCompStr;
 
-                        HeapFree(GetProcessHeap(),0,
-                                 root_context->CompositionString);
+                        cdata = ImmLockIMCC(root_context->IMC.hCompStr);
+                        cs = (LPCOMPOSITIONSTRING)cdata;
+                        cplen = cs->dwCompStrLen;
+                        cpstr = (LPWSTR)&(cdata[cs->dwCompStrOffset]);
+                        ImmUnlockIMCC(root_context->IMC.hCompStr);
+                        if (cplen > 0)
+                        {
+                            WCHAR param = cpstr[0];
+                            newCompStr = updateResultStr(root_context->IMC.hCompStr, cpstr, cplen);
+                            ImmDestroyIMCC(root_context->IMC.hCompStr);
+                            root_context->IMC.hCompStr = newCompStr;
+                            newCompStr = updateCompStr(root_context->IMC.hCompStr, NULL, 0);
+                            ImmDestroyIMCC(root_context->IMC.hCompStr);
+                            root_context->IMC.hCompStr = newCompStr;
 
-                        root_context->dwCompStringSize = 0;
-                        root_context->dwCompStringLength = 0;
-                        root_context->CompositionString = NULL;
-                        root_context->bRead = FALSE;
+                            root_context->bRead = FALSE;
 
-                        ImmInternalPostIMEMessage(WM_IME_COMPOSITION, 0,
+                            ImmInternalPostIMEMessage(WM_IME_COMPOSITION, 0,
                                                   GCS_COMPSTR);
 
-                        ImmInternalPostIMEMessage(WM_IME_COMPOSITION,
-                                            root_context->ResultString[0],
+                            ImmInternalPostIMEMessage(WM_IME_COMPOSITION,
+                                            param,
                                             GCS_RESULTSTR|GCS_RESULTCLAUSE);
+                        }
 
                         ImmInternalPostIMEMessage(WM_IME_ENDCOMPOSITION, 0, 0);
                         root_context->bInComposition = FALSE;
@@ -1177,7 +1482,7 @@ BOOL WINAPI ImmNotifyIME(
         default:
             ERR("Unknown\n");
     }
-  
+
     return rc;
 }
 
@@ -1239,8 +1544,8 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
     if (!data)
         return FALSE;
 
-    memcpy(&data->font,lplf,sizeof(LOGFONTA));
-    MultiByteToWideChar(CP_ACP, 0, lplf->lfFaceName, -1, data->font.lfFaceName,
+    memcpy(&data->IMC.lfFont.W,lplf,sizeof(LOGFONTA));
+    MultiByteToWideChar(CP_ACP, 0, lplf->lfFaceName, -1, data->IMC.lfFont.W.lfFaceName,
                         LF_FACESIZE);
 
     ImmInternalSendIMENotify(IMN_SETCOMPOSITIONFONT, 0);
@@ -1251,7 +1556,7 @@ BOOL WINAPI ImmSetCompositionFontA(HIMC hIMC, LPLOGFONTA lplf)
         data->textfont = NULL;
     }
 
-    data->textfont = CreateFontIndirectW(&data->font); 
+    data->textfont = CreateFontIndirectW(&data->IMC.lfFont.W);
     return TRUE;
 }
 
@@ -1266,7 +1571,7 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
     if (!data)
         return FALSE;
 
-    memcpy(&data->font,lplf,sizeof(LOGFONTW));
+    memcpy(&data->IMC.lfFont.W,lplf,sizeof(LOGFONTW));
     ImmInternalSendIMENotify(IMN_SETCOMPOSITIONFONT, 0);
 
     if (data->textfont)
@@ -1274,7 +1579,7 @@ BOOL WINAPI ImmSetCompositionFontW(HIMC hIMC, LPLOGFONTW lplf)
         DeleteObject(data->textfont);
         data->textfont = NULL;
     }
-    data->textfont = CreateFontIndirectW(&data->font); 
+    data->textfont = CreateFontIndirectW(&data->IMC.lfFont.W);
     return TRUE;
 }
 
@@ -1353,35 +1658,33 @@ BOOL WINAPI ImmSetCompositionStringW(
 
     if (dwIndex == SCS_SETSTR)
     {
-	if (!root_context->bInComposition)
-	{
+        HIMCC newCompStr;
+        if (!root_context->bInComposition)
+        {
             ImmInternalPostIMEMessage(WM_IME_STARTCOMPOSITION, 0, 0);
             root_context->bInComposition = TRUE;
-	}
+        }
 
-         flags = GCS_COMPSTR;
+        flags = GCS_COMPSTR;
 
-         if (root_context->dwCompStringLength)
-             HeapFree(GetProcessHeap(),0,root_context->CompositionString);
-
-         root_context->dwCompStringLength = dwCompLen;
-         root_context->dwCompStringSize = dwCompLen;
-
-         if (dwCompLen && lpComp)
-         {
-             root_context->CompositionString = HeapAlloc(GetProcessHeap(), 0,
-                                                     dwCompLen);
-             memcpy(root_context->CompositionString,lpComp,dwCompLen);
+        if (dwCompLen && lpComp)
+        {
+            newCompStr = updateCompStr(root_context->IMC.hCompStr, (LPWSTR)lpComp, dwCompLen / sizeof(WCHAR));
+            ImmDestroyIMCC(root_context->IMC.hCompStr);
+            root_context->IMC.hCompStr = newCompStr;
 
              wParam = ((const WCHAR*)lpComp)[0];
-             flags |= GCS_COMPCLAUSE | GCS_COMPATTR;
-         }
-         else
-             root_context->CompositionString = NULL;
-
+             flags |= GCS_COMPCLAUSE | GCS_COMPATTR | GCS_DELTASTART;
+        }
+        else
+        {
+            newCompStr = updateCompStr(root_context->IMC.hCompStr, NULL, 0);
+            ImmDestroyIMCC(root_context->IMC.hCompStr);
+            root_context->IMC.hCompStr = newCompStr;
+        }
     }
 
-     UpdateDataInDefaultIMEWindow(hwndDefault);
+     UpdateDataInDefaultIMEWindow(hwndDefault,FALSE);
 
      ImmInternalPostIMEMessage(WM_IME_COMPOSITION, wParam, flags);
 
@@ -1405,7 +1708,7 @@ BOOL WINAPI ImmSetCompositionWindow(
     if (!data)
         return FALSE;
 
-    memcpy(&data->CompForm,lpCompForm,sizeof(COMPOSITIONFORM));
+    memcpy(&data->IMC.cfCompForm,lpCompForm,sizeof(COMPOSITIONFORM));
 
     if (IsWindowVisible(hwndDefault))
     {
@@ -1457,7 +1760,7 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
     if (fOpen != data->bInternalState)
     {
         if (fOpen == FALSE && pX11DRV_ForceXIMReset)
-            pX11DRV_ForceXIMReset(data->hwnd);
+            pX11DRV_ForceXIMReset(data->IMC.hWnd);
 
         if (fOpen == FALSE)
             ImmInternalPostIMEMessage(WM_IME_ENDCOMPOSITION,0,0);
@@ -1467,7 +1770,7 @@ BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
         ImmInternalSetOpenStatus(fOpen);
         ImmInternalSetOpenStatus(!fOpen);
 
-        if (data->bOpen == FALSE)
+        if (data->IMC.fOpen == FALSE)
             ImmInternalPostIMEMessage(WM_IME_ENDCOMPOSITION,0,0);
         else
             ImmInternalPostIMEMessage(WM_IME_STARTCOMPOSITION,0,0);
@@ -1547,6 +1850,125 @@ DWORD WINAPI ImmGetImeMenuItemsW( HIMC hIMC, DWORD dwFlags, DWORD dwType,
   return 0;
 }
 
+/***********************************************************************
+*		ImmLockIMC(IMM32.@)
+*/
+LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC hIMC)
+{
+    InputContextData *data = (InputContextData*)hIMC;
+
+    if (!data)
+        return NULL;
+    data->dwLock++;
+    return &data->IMC;
+}
+
+/***********************************************************************
+*		ImmUnlockIMC(IMM32.@)
+*/
+BOOL WINAPI ImmUnlockIMC(HIMC hIMC)
+{
+    InputContextData *data = (InputContextData*)hIMC;
+    data->dwLock--;
+    return (data->dwLock!=0);
+}
+
+/***********************************************************************
+*		ImmGetIMCLockCount(IMM32.@)
+*/
+DWORD WINAPI ImmGetIMCLockCount(HIMC hIMC)
+{
+    InputContextData *data = (InputContextData*)hIMC;
+    return data->dwLock;
+}
+
+/***********************************************************************
+*		ImmCreateIMCC(IMM32.@)
+*/
+HIMCC  WINAPI ImmCreateIMCC(DWORD size)
+{
+    IMCCInternal *internal;
+    int real_size = size + sizeof(IMCCInternal);
+
+    internal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, real_size);
+    if (internal == NULL)
+        return NULL;
+
+    internal->dwSize = size;
+    return  (HIMCC)internal;
+}
+
+/***********************************************************************
+*       ImmDestroyIMCC(IMM32.@)
+*/
+HIMCC WINAPI ImmDestroyIMCC(HIMCC block)
+{
+    HeapFree(GetProcessHeap(),0,block);
+    return NULL;
+}
+
+/***********************************************************************
+*		ImmLockIMCC(IMM32.@)
+*/
+LPVOID WINAPI ImmLockIMCC(HIMCC imcc)
+{
+    IMCCInternal *internal;
+    internal = (IMCCInternal*) imcc;
+
+    internal->dwLock ++;
+    return internal + 1;
+}
+
+/***********************************************************************
+*		ImmUnlockIMCC(IMM32.@)
+*/
+BOOL WINAPI ImmUnlockIMCC(HIMCC imcc)
+{
+    IMCCInternal *internal;
+    internal = (IMCCInternal*) imcc;
+
+    internal->dwLock --;
+    return (internal->dwLock!=0);
+}
+
+/***********************************************************************
+*		ImmGetIMCCLockCount(IMM32.@)
+*/
+DWORD WINAPI ImmGetIMCCLockCount(HIMCC imcc)
+{
+    IMCCInternal *internal;
+    internal = (IMCCInternal*) imcc;
+
+    return internal->dwLock;
+}
+
+/***********************************************************************
+*		ImmReSizeIMCC(IMM32.@)
+*/
+HIMCC  WINAPI ImmReSizeIMCC(HIMCC imcc, DWORD size)
+{
+    IMCCInternal *internal,*newone;
+    int real_size = size + sizeof(IMCCInternal);
+
+    internal = (IMCCInternal*) imcc;
+
+    newone = HeapReAlloc(GetProcessHeap(), 0, internal, real_size);
+    newone->dwSize = size;
+
+    return newone;
+}
+
+/***********************************************************************
+*		ImmGetIMCCSize(IMM32.@)
+*/
+DWORD WINAPI ImmGetIMCCSize(HIMCC imcc)
+{
+    IMCCInternal *internal;
+    internal = (IMCCInternal*) imcc;
+
+    return internal->dwSize;
+}
+
 /*****
  * Internal functions to help with IME window management
  */
@@ -1555,69 +1977,137 @@ static void PaintDefaultIMEWnd(HWND hwnd)
     PAINTSTRUCT ps;
     RECT rect;
     HDC hdc = BeginPaint(hwnd,&ps);
+    LPCOMPOSITIONSTRING compstr;
+    LPBYTE compdata = NULL;
+    HMONITOR monitor;
+    MONITORINFO mon_info;
+    INT offX=0, offY=0;
+
     GetClientRect(hwnd,&rect);
     FillRect(hdc, &rect, (HBRUSH)(COLOR_WINDOW + 1));
 
-    if (root_context->dwCompStringLength && root_context->CompositionString)
+    compdata = ImmLockIMCC(root_context->IMC.hCompStr);
+    compstr = (LPCOMPOSITIONSTRING)compdata;
+
+    if (compstr->dwCompStrLen && compstr->dwCompStrOffset)
     {
         SIZE size;
         POINT pt;
         HFONT oldfont = NULL;
+        LPWSTR CompString;
 
+        CompString = (LPWSTR)(compdata + compstr->dwCompStrOffset);
         if (root_context->textfont)
             oldfont = SelectObject(hdc,root_context->textfont);
 
 
-        GetTextExtentPoint32W(hdc, (LPWSTR)root_context->CompositionString,
-                              root_context->dwCompStringLength / sizeof(WCHAR),
-                              &size);
+        GetTextExtentPoint32W(hdc, CompString, compstr->dwCompStrLen, &size);
         pt.x = size.cx;
         pt.y = size.cy;
         LPtoDP(hdc,&pt,1);
 
-        if (root_context->CompForm.dwStyle == CFS_POINT ||
-            root_context->CompForm.dwStyle == CFS_FORCE_POSITION)
+        /*
+         * How this works based on tests on windows:
+         * CFS_POINT: then we start our window at the point and grow it as large
+         *    as it needs to be for the string.
+         * CFS_RECT:  we still use the ptCurrentPos as a starting point and our
+         *    window is only as large as we need for the string, but we do not
+         *    grow such that our window exceeds the given rect.  Wrapping if
+         *    needed and possible.   If our ptCurrentPos is outside of our rect
+         *    then no window is displayed.
+         * CFS_FORCE_POSITION: appears to behave just like CFS_POINT
+         *    maybe becase the default MSIME does not do any IME adjusting.
+         */
+        if (root_context->IMC.cfCompForm.dwStyle != CFS_DEFAULT)
         {
-            POINT cpt = root_context->CompForm.ptCurrentPos;
-            ClientToScreen(root_context->hwnd,&cpt);
+            POINT cpt = root_context->IMC.cfCompForm.ptCurrentPos;
+            ClientToScreen(root_context->IMC.hWnd,&cpt);
             rect.left = cpt.x;
             rect.top = cpt.y;
+            rect.right = rect.left + pt.x;
+            rect.bottom = rect.top + pt.y;
+            offX=offY=10;
+            monitor = MonitorFromPoint(cpt, MONITOR_DEFAULTTOPRIMARY);
+        }
+        else /* CFS_DEFAULT */
+        {
+            /* Windows places the default IME window in the bottom left */
+            HWND target = root_context->IMC.hWnd;
+            if (!target) target = GetFocus();
+
+            GetWindowRect(target,&rect);
+            rect.top = rect.bottom;
             rect.right = rect.left + pt.x + 20;
             rect.bottom = rect.top + pt.y + 20;
+            offX=offY=10;
+            monitor = MonitorFromWindow(target, MONITOR_DEFAULTTOPRIMARY);
         }
-        else if (root_context->CompForm.dwStyle == CFS_RECT)
+
+        if (root_context->IMC.cfCompForm.dwStyle == CFS_RECT)
         {
-            POINT cpt;
-            cpt.x = root_context->CompForm.rcArea.left;
-            cpt.y = root_context->CompForm.rcArea.top;
-            ClientToScreen(root_context->hwnd,&cpt);
-            rect.left = cpt.x;
-            rect.top = cpt.y;
-            cpt.x = root_context->CompForm.rcArea.right;
-            cpt.y = root_context->CompForm.rcArea.bottom;
-            ClientToScreen(root_context->hwnd,&cpt);
-            rect.right = cpt.x;
-            rect.bottom = cpt.y;
+            RECT client;
+            client =root_context->IMC.cfCompForm.rcArea;
+            MapWindowPoints( root_context->IMC.hWnd, 0, (POINT *)&client, 2 );
+            IntersectRect(&rect,&rect,&client);
+            /* TODO:  Wrap the input if needed */
         }
-        else
+
+        if (root_context->IMC.cfCompForm.dwStyle == CFS_DEFAULT)
         {
-            rect.right = rect.left + pt.x + 20;
-            rect.bottom = rect.top + pt.y + 20;
+            /* make sure we are on the desktop */
+            mon_info.cbSize = sizeof(mon_info);
+            GetMonitorInfoW(monitor, &mon_info);
+
+            if (rect.bottom > mon_info.rcWork.bottom)
+            {
+                int shift = rect.bottom - mon_info.rcWork.bottom;
+                rect.top -= shift;
+                rect.bottom -= shift;
+            }
+            if (rect.left < 0)
+            {
+                rect.right -= rect.left;
+                rect.left = 0;
+            }
+            if (rect.right > mon_info.rcWork.right)
+            {
+                int shift = rect.right - mon_info.rcWork.right;
+                rect.left -= shift;
+                rect.right -= shift;
+            }
         }
-        MoveWindow(hwnd, rect.left, rect.top, rect.right - rect.left ,
-                   rect.bottom - rect.top, FALSE);
-        TextOutW(hdc, 10,10,(LPWSTR)root_context->CompositionString,
-                 root_context->dwCompStringLength / sizeof(WCHAR));
+
+        SetWindowPos(hwnd, HWND_TOPMOST, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE);
+
+        TextOutW(hdc, offX,offY, CompString, compstr->dwCompStrLen);
 
         if (oldfont)
             SelectObject(hdc,oldfont);
     }
+
+    ImmUnlockIMCC(root_context->IMC.hCompStr);
+
     EndPaint(hwnd,&ps);
 }
 
-static void UpdateDataInDefaultIMEWindow(HWND hwnd)
+static void UpdateDataInDefaultIMEWindow(HWND hwnd, BOOL showable)
 {
+    LPCOMPOSITIONSTRING compstr;
+
+    if (root_context->IMC.hCompStr)
+        compstr = ImmLockIMCC(root_context->IMC.hCompStr);
+    else
+        compstr = NULL;
+
+    if (compstr == NULL || compstr->dwCompStrLen == 0)
+        ShowWindow(hwndDefault,SW_HIDE);
+    else if (showable)
+        ShowWindow(hwndDefault,SW_SHOWNOACTIVATE);
+
     RedrawWindow(hwnd,NULL,NULL,RDW_ERASENOW|RDW_INVALIDATE);
+
+    if (compstr != NULL)
+        ImmUnlockIMCC(root_context->IMC.hCompStr);
 }
 
 /*
@@ -1657,12 +2147,12 @@ static LRESULT WINAPI IME_WindowProc(HWND hwnd, UINT msg, WPARAM wParam,
             if (lParam & GCS_RESULTSTR)
                     IMM_PostResult(root_context);
             else
-                 UpdateDataInDefaultIMEWindow(hwnd);
+                 UpdateDataInDefaultIMEWindow(hwnd,TRUE);
             break;
         case WM_IME_STARTCOMPOSITION:
             TRACE("IME message %s, 0x%x, 0x%x\n",
                     "WM_IME_STARTCOMPOSITION", (UINT)wParam, (UINT)lParam);
-            root_context->hwnd = GetFocus();
+            root_context->IMC.hWnd = GetFocus();
             ShowWindow(hwndDefault,SW_SHOWNOACTIVATE);
             break;
         case WM_IME_ENDCOMPOSITION:
@@ -1677,7 +2167,7 @@ static LRESULT WINAPI IME_WindowProc(HWND hwnd, UINT msg, WPARAM wParam,
         case WM_IME_CONTROL:
             TRACE("IME message %s, 0x%x, 0x%x\n","WM_IME_CONTROL",
                 (UINT)wParam, (UINT)lParam);
-            rc = 1; 
+            rc = 1;
             break;
         case WM_IME_NOTIFY:
             TRACE("!! IME NOTIFY\n");

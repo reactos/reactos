@@ -1,4 +1,4 @@
-<module name="imm32" type="win32dll" baseaddress="${BASEADDRESS_IMM32}" installbase="system32" installname="imm32.dll" allowwarnings="true">
+<module name="imm32" type="win32dll" baseaddress="${BASEADDRESS_IMM32}" installbase="system32" installname="imm32.dll" allowwarnings="true" entrypoint="0">
 	<importlibrary definition="imm32.spec.def" />
 	<include base="imm32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
