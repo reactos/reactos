@@ -220,8 +220,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				baseaddr = prop.value;
 		}
 	}
-
-	string include_string;
+    /* include intermediate path for reactos.rc */
+    string version = intdir + "\\include\\reactos";
+    includes.push_back (version);
+	
+    string include_string;
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
 	fprintf ( OUT, "<VisualStudioProject\r\n" );
