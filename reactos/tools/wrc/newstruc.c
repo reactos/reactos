@@ -32,7 +32,7 @@
 #include "utils.h"
 #include "parser.h"
 
-#include <pshpack2.h>
+#include <host/pshpack2.h>
 typedef struct
 {
     DWORD biSize;
@@ -41,7 +41,7 @@ typedef struct
     WORD  biPlanes;
     WORD  biBitCount;
 } BITMAPOS2HEADER;
-#include <poppack.h>
+#include <host/poppack.h>
 
 /* Generate new_* functions that have no parameters (NOTE: no ';') */
 __NEW_STRUCT_FUNC(dialog)
