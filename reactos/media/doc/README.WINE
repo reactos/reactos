@@ -44,7 +44,7 @@ reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/dbghelp         #
 reactos/dll/win32/hhctrl.ocx      # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
-reactos/dll/win32/imm32           # Out of sync
+reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/lz32            # Autosync
