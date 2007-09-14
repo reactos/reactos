@@ -8,11 +8,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_INTERNAL_NAME	"hdwwiz\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"hdwwiz.cpl\0"
 
-#ifdef _MSC_VER
-#include <../../../reactos/version.rc>
-#else
 #include <reactos/version.rc>
-#endif
 
 123 24 DISCARDABLE "manifest.xml"
 
