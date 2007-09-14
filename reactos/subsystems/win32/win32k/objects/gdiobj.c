@@ -403,10 +403,10 @@ GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
 
     RtlZeroMemory(ObjectBody, GetObjectSize(TypeIndex));
 
-    /* On Windows the higher 16 bit of the type field don't contain the
-       full type from the handle, but the base type.
-       (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
-    TypeInfo = (ObjectType & GDI_HANDLE_BASETYPE_MASK) | (ObjectType >> GDI_ENTRY_UPPER_SHIFT);
+      /* FIXME: On Windows the higher 16 bit of the type field don't always match
+         the type from the handle, it is probably a storage type 
+         (type = pen, storage = brush) */
+    TypeInfo = (ObjectType & GDI_HANDLE_TYPE_MASK) | (ObjectType >> GDI_ENTRY_UPPER_SHIFT);
 
     FreeEntry = InterlockedPopEntrySList(&HandleTable->FreeEntriesHead);
     if(FreeEntry != NULL)
@@ -641,7 +641,6 @@ LockHandle:
       if(((ULONG_PTR)PrevProcId & ~0x1) == 0)
       {
         DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!\n", hObj);
-        DPRINT1("Entry->Type = 0x%lx, Entry->KernelData = 0x%p\n", Entry->Type, Entry->KernelData);
         KeRosDumpStackFrames(NULL, 20);
       }
       else
@@ -1061,7 +1060,7 @@ GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle
 }
 
 BOOL INTERNAL_CALL
-GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *phObj)
+GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *hObj)
 {
 /*
  * FIXME !!!!! THIS FUNCTION NEEDS TO BE FIXED - IT IS NOT SAFE WHEN OTHER THREADS
@@ -1070,24 +1069,22 @@ GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *phObj)
   PGDI_TABLE_ENTRY Entry;
   HANDLE ProcessId, LockedProcessId, PrevProcId;
   PETHREAD Thread;
-  HGDIOBJ hObj;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
 
-  ASSERT(phObj);
-  hObj = *phObj;
+  ASSERT(hObj);
 
-  DPRINT("GDIOBJ_ConvertToStockObj: hObj: 0x%08x\n", hObj);
+  DPRINT("GDIOBJ_ConvertToStockObj: hObj: 0x%08x\n", *hObj);
 
   Thread = PsGetCurrentThread();
 
-  if(!GDI_HANDLE_IS_STOCKOBJ(hObj))
+  if(!GDI_HANDLE_IS_STOCKOBJ(*hObj))
   {
     ProcessId = PsGetCurrentProcessId();
     LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
-    Entry = GDI_HANDLE_GET_ENTRY(HandleTable, hObj);
+    Entry = GDI_HANDLE_GET_ENTRY(HandleTable, *hObj);
 
 LockHandle:
     /* lock the object, we must not convert stock objects, so don't check!!! */
@@ -1099,13 +1096,16 @@ LockHandle:
       /* we're locking an object that belongs to our process. First calculate
          the new object type including the stock object flag and then try to
          exchange it.*/
-      /* On Windows the higher 16 bit of the type field don't contain the
-         full type from the handle, but the base type.
-         (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
-      OldType = ((ULONG)hObj & GDI_HANDLE_BASETYPE_MASK) | ((ULONG)hObj >> GDI_ENTRY_UPPER_SHIFT);
+      /* FIXME: On Windows the higher 16 bit of the type field don't always match
+         the type from the handle, it is probably a storage type 
+         (type = pen, storage = brush) */
+      NewType = GDI_HANDLE_GET_TYPE(*hObj);
+      NewType |= GDI_HANDLE_GET_UPPER(*hObj) >> GDI_ENTRY_UPPER_SHIFT;
 
+      /* This is the type that the object should have right now, save it */
+      OldType = NewType;
       /* As the object should be a stock object, set it's flag, but only in the lower 16 bits */
-      NewType = OldType | GDI_ENTRY_STOCK_MASK;
+      NewType |= GDI_ENTRY_STOCK_MASK;
 
       /* Try to exchange the type field - but only if the old (previous type) matches! */
       PrevType = InterlockedCompareExchange(&Entry->Type, NewType, OldType);
@@ -1146,8 +1146,7 @@ LockHandle:
           /* remove the process id lock and make it global */
           (void)InterlockedExchangePointer(&Entry->ProcessId, GDI_GLOBAL_PROCESS);
 
-          hObj = (HGDIOBJ)((ULONG)(hObj) | GDI_HANDLE_STOCK_MASK);
-          *phObj = hObj;
+          *hObj = (HGDIOBJ)((ULONG)(*hObj) | GDI_HANDLE_STOCK_MASK);
 
           /* we're done, successfully converted the object */
           return TRUE;
@@ -1301,7 +1300,6 @@ LockHandle:
       else
       {
         DPRINT1("Attempted to change ownership of an object 0x%x currently being destroyed!!!\n", ObjectHandle);
-        DPRINT1("Entry->Type = 0x%lx, Entry->KernelData = 0x%p\n", Entry->Type, Entry->KernelData);
       }
     }
     else if(PrevProcId == LockedProcessId)
