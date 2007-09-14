@@ -106,6 +106,34 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
    }
 }
 
+
+//
+// Pass the Current Window handle and pointer to the Client Callback.
+// This will help user space programs speed up read access with the window object.
+//
+static VOID
+IntSetTebWndCallback (HWND * hWnd, PVOID * pWnd)
+{
+  HWND hWndS = *hWnd;
+  PWINDOW_OBJECT Window = UserGetWindowObject(*hWnd);
+  PTEB Teb = NtCurrentTeb();
+
+  *hWnd = Teb->Win32ClientInfo.hWND;
+  *pWnd = Teb->Win32ClientInfo.pvWND;
+
+  Teb->Win32ClientInfo.hWND  = hWndS;
+  Teb->Win32ClientInfo.pvWND = (PVOID) Window;
+}
+
+static VOID
+IntRestoreTebWndCallback (HWND hWnd, PVOID pWnd)
+{
+  PTEB Teb = NtCurrentTeb();
+
+  Teb->Win32ClientInfo.hWND  = hWnd;
+  Teb->Win32ClientInfo.pvWND = pWnd;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
@@ -116,7 +144,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               LRESULT Result)
 {
    SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pWnd;
    ULONG ResultLength;
    NTSTATUS Status;
 
@@ -125,6 +153,8 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
    Arguments.Msg = Msg;
    Arguments.Context = CompletionCallbackContext;
    Arguments.Result = Result;
+
+   IntSetTebWndCallback (&hWnd, &pWnd);
 
    UserLeaveCo();
 
@@ -135,6 +165,8 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                                &ResultLength);
 
    UserEnterCo();
+
+   IntRestoreTebWndCallback (hWnd, pWnd);
 
    if (!NT_SUCCESS(Status))
    {
@@ -155,7 +187,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    WINDOWPROC_CALLBACK_ARGUMENTS StackArguments;
    PWINDOWPROC_CALLBACK_ARGUMENTS Arguments;
    NTSTATUS Status;
-   PVOID ResultPointer;
+   PVOID ResultPointer, pWnd;
    ULONG ResultLength;
    ULONG ArgumentLength;
    LRESULT Result;
@@ -187,6 +219,8 @@ co_IntCallWindowProc(WNDPROC Proc,
    ResultPointer = NULL;
    ResultLength = ArgumentLength;
 
+   IntSetTebWndCallback (&Wnd, &pWnd);
+
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_WINDOWPROC,
@@ -207,6 +241,8 @@ co_IntCallWindowProc(WNDPROC Proc,
    _SEH_END;
 
    UserEnterCo();
+
+   IntRestoreTebWndCallback (Wnd, pWnd);
 
    if (!NT_SUCCESS(Status))
    {
