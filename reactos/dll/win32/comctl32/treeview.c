@@ -946,6 +946,8 @@ TREEVIEW_RecalculateVisibleOrder(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *start)
     for (item = start; item != NULL;
          item = TREEVIEW_GetNextListItem(infoPtr, item))
     {
+	if (!ISVISIBLE(item) && order > 0)
+		TREEVIEW_ComputeItemInternalMetrics(infoPtr, item);
 	item->visibleOrder = order;
 	order += item->iIntegral;
     }
@@ -2031,7 +2033,10 @@ TREEVIEW_GetItemRect(const TREEVIEW_INFO *infoPtr, BOOL fTextRect, LPRECT lpRect
 	lpRect->bottom = wineItem->rect.bottom;
 
 	lpRect->left = wineItem->textOffset;
-	lpRect->right = wineItem->textOffset + wineItem->textWidth;
+	if (!wineItem->textWidth)
+		TREEVIEW_ComputeTextWidth(infoPtr, wineItem, 0);
+
+	lpRect->right = wineItem->textOffset + wineItem->textWidth + 4;
     }
     else
     {

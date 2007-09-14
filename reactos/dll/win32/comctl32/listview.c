@@ -6658,7 +6658,16 @@ static INT LISTVIEW_InsertColumnT(LISTVIEW_INFO *infoPtr, INT nColumn,
     
     ZeroMemory(&hdi, sizeof(HDITEMW));
     column_fill_hditem(infoPtr, &hdi, nColumn, lpColumn, isW);
-    
+
+    /*
+     * A mask not including LVCF_WIDTH turns into a mask of width, width 10
+     * (can be seen in SPY) otherwise column never gets added.
+     */
+    if (!(lpColumn->mask & LVCF_WIDTH)) {
+        hdi.mask |= HDI_WIDTH;
+        hdi.cxy = 10;
+    }
+
     /*
      * when the iSubItem is available Windows copies it to the header lParam. It seems
      * to happen only in LVM_INSERTCOLUMN - not in LVM_SETCOLUMN

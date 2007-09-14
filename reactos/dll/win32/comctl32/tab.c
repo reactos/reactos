@@ -255,6 +255,7 @@ static inline LRESULT TAB_SetCurSel (TAB_INFO *infoPtr, INT iItem)
   else {
       if (infoPtr->iSelected != iItem) {
           infoPtr->iSelected=iItem;
+          infoPtr->uFocus=iItem;
           TAB_EnsureSelectionVisible(infoPtr);
           TAB_InvalidateTabArea(infoPtr);
       }

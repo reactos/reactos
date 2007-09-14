@@ -1,6 +1,6 @@
 /*
  * Copyright 2003 Marcelo Duarte
- * Copyright 2006 Américo José Melo
+ * Copyright 2006-2007 Américo José Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,7 @@ BEGIN
   PUSHBUTTON    "Cancelar", IDCANCEL,58,122,50,14
   PUSHBUTTON    "&Aplicar", IDC_APPLY_BUTTON,112,122,50,14,WS_DISABLED
   PUSHBUTTON    "Ajuda",   IDHELP,166,122,50,14,WS_TABSTOP|WS_GROUP
-  CONTROL       "Tab",    IDC_TABCONTROL,"SysTabControl32",WS_CLIPSIBLINGS|WS_GROUP|WS_TABSTOP|TCS_MULTILINE,4,4,212,114
+  CONTROL       "Separador",    IDC_TABCONTROL,"SysTabControl32",WS_CLIPSIBLINGS|WS_GROUP|WS_TABSTOP|TCS_MULTILINE,4,4,212,114
 END
 
 

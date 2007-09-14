@@ -153,8 +153,6 @@ BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc);
 BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc);
 
 #define COMCTL32_VERSION_MINOR 81
-#define WINE_FILEVERSION 5, COMCTL32_VERSION_MINOR, 4704, 1100
-#define WINE_FILEVERSIONSTR "5.81"
 
 /* Our internal stack structure of the window procedures to subclass */
 typedef struct _SUBCLASSPROCS {
