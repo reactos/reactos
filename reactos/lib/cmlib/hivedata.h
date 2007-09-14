@@ -43,7 +43,11 @@ typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 #define HvGetCellType(Cell)             \
     ((ULONG)((Cell & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT))
 
+#ifdef CMLIB_HOST
+#include <host/pshpack1.h>
+#else
 #include <pshpack1.h>
+#endif
 
 /**
  * @name HBASE_BLOCK
@@ -127,7 +131,11 @@ typedef struct _HCELL
    LONG Size;
 } HCELL, *PHCELL;
 
+#ifdef CMLIB_HOST
+#include <host/poppack.h>
+#else
 #include <poppack.h>
+#endif
 
 #define IsFreeCell(Cell)(Cell->Size >= 0)
 #define IsUsedCell(Cell)(Cell->Size < 0)
