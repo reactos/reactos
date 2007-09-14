@@ -20,7 +20,11 @@
 
 #ifndef _CM_
 
+#ifdef CMLIB_HOST
+#include <host/pshpack1.h>
+#else
 #include <pshpack1.h>
+#endif
 
 typedef struct _CM_VIEW_OF_FILE
 {
@@ -147,7 +151,11 @@ typedef struct _CM_KEY_SECURITY
     UCHAR Data[0];
 } CM_KEY_SECURITY, *PCM_KEY_SECURITY;
 
+#ifdef CMLIB_HOST
+#include <host/poppack.h>
+#else
 #include <poppack.h>
+#endif
 
 #endif
 
