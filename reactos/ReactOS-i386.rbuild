@@ -42,7 +42,4 @@
   <compilerflag>-Wpointer-arith</compilerflag>
   <linkerflag>-enable-stdcall-fixup</linkerflag>
 
-    <directory name="sampleproppage">
-        <xi:include href="sampleproppage/sampleproppage.rbuild" />
-    </directory>
 </project>
