@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" xmlns:xi="http://www.w3.org/2001/XInclude">
+<!DOCTYPE group SYSTEM "tools/rbuild/project.dtd">
+<group>
   <xi:include href="baseaddress.rbuild" />
 
   <define name="_REACTOS_" />
@@ -65,4 +65,4 @@
     <xi:include href="subsystems/subsystems.rbuild" />
   </directory>
 
-</project>
+</group>

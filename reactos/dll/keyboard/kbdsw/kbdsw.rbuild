@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdsw" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdsw.dll" allowwarnings="true">
 	<importlibrary definition="kbdsw.def" />
 	<include base="ntoskrnl">include</include>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="clb" type="win32dll" baseaddress="${BASEADDRESS_CLB}" installbase="system32" installname="clb.dll">
 	<importlibrary definition="clb.def" />
 	<include base="clb">.</include>

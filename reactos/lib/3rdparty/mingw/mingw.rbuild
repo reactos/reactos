@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="mingw_common" type="staticlibrary" isstartuplib="true" underscoresymbols="true">
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
@@ -41,4 +41,3 @@
 	<file>dllcrt1.c</file>
 </module>
 </group>
-

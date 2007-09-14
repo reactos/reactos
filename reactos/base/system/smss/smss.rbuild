@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="smss" type="nativecui" installbase="system32" installname="smss.exe">
 	<include base="smss">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>

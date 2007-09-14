@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="tcpip" type="kernelmodedriver" installbase="system32/drivers" installname="tcpip.sys">
 	<importlibrary definition="tcpip.def"></importlibrary>
 	<include base="tcpip">include</include>

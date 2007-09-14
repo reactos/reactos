@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="sermouse" type="kernelmodedriver" installbase="system32/drivers" installname="sermouse.sys">
 	<include base="sermouse">.</include>
 	<define name="__USE_W32API" />

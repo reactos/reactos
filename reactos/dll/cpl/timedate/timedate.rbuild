@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="timedate" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_TIMEDATE}" installbase="system32" installname="timedate.cpl" unicode="yes">
 	<importlibrary definition="timedate.def" />
 	<include base="timedate">.</include>

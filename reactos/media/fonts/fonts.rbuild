@@ -1,5 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group>
-<installfile base="media/fonts">DejaVuSans-Bold.ttf </installfile>                        
+<installfile base="media/fonts">DejaVuSans-Bold.ttf </installfile>
 <installfile base="media/fonts">DejaVuSans.ttf</installfile>
 <installfile base="media/fonts">DejaVuSans-BoldOblique.ttf</installfile>
 <installfile base="media/fonts">DejaVuSansCondensed.ttf</installfile>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="eventlog" type="win32cui" installbase="system32" installname="eventlog.exe">
 	<include base="eventlog">.</include>
 	<include base="eventlog_server">.</include>

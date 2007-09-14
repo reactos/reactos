@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="welcome" type="win32gui" installbase="system32" installname="welcome.exe">
 	<bootstrap base="$(CDOUTPUT)" />
 	<include base="welcome">.</include>

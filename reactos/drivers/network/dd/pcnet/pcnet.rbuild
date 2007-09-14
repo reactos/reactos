@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="pcnet" type="kernelmodedriver" installbase="system32/drivers" installname="pcnet.sys">
 	<include base="pcnet">.</include>
 	<define name="NDIS50_MINIPORT" />

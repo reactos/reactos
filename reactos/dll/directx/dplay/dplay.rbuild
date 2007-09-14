@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dplay" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DPLAY}" installbase="system32" installname="dplay.dll">  
 	<importlibrary definition="dplay.spec.def" />
 	<include base="dinput8">.</include>
@@ -19,7 +21,7 @@
 	<library>winmm</library>
 	<library>dxguid</library>
 	<library>dinput</library>
-      <file>version.rc</file>
+	<file>version.rc</file>
 	<file>dplay_main.c</file>
 	<file>dplay.spec</file>
 </module>

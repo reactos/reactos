@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdes" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdes.dll" allowwarnings="true">
 	<importlibrary definition="kbdes.def" />
 	<include base="ntoskrnl">include</include>

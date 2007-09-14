@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="afd" type="kernelmodedriver" installbase="system32/drivers" installname="afd.sys">
 	<include base="afd">include</include>
 	<include base="ReactOS">include/reactos/drivers</include>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="d3d8" type="win32dll" entrypoint="0" installbase="system32" installname="d3d8.dll" allowwarnings ="true">  
 	<importlibrary definition="d3d8.spec.def" />
 	<include base="d3d8">.</include>

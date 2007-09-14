@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdda" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdda.dll" allowwarnings="true">
 	<importlibrary definition="kbdda.def" />
 	<include base="ntoskrnl">include</include>

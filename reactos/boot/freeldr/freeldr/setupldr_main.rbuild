@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="setupldr_main" type="objectlibrary">
 	<include base="setupldr_main">include</include>
 	<include base="ntoskrnl">include</include>

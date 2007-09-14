@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halppc_generic" type="objectlibrary">
 	<include base="halppc_generic">../include</include>
 	<include base="ntoskrnl">include</include>

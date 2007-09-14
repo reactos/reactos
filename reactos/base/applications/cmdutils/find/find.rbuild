@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="find" type="win32cui" installbase="system32" installname="find.exe">
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>

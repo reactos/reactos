@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="winemine" type="win32gui" installbase="system32" installname="winemine.exe">
 	<include base="winemine">.</include>
 	<define name="__USE_W32API" />

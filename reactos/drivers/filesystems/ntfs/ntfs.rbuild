@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="ntfs" type="kernelmodedriver" installbase="system32/drivers" installname="ntfs.sys">
 	<bootstrap base="$(CDOUTPUT)" />
 	<include base="ntfs">.</include>

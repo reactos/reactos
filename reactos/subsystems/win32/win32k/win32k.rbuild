@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="win32k_base" type="objectlibrary">
 	<include base="win32k">.</include>
 	<include base="win32k">include</include>
@@ -175,3 +178,4 @@
 	<library>freetype</library>
 	<file>win32k.rc</file>
 </module>
+</group>

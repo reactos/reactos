@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halmp" type="kernelmodedll" entrypoint="0">
 	<importlibrary definition="../../hal/hal.def" />
 	<bootstrap base="$(CDOUTPUT)" />

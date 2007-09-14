@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="winlogon" type="win32gui" installbase="system32" installname="winlogon.exe">
 	<include base="winlogon">.</include>
 	<define name="__USE_W32API" />

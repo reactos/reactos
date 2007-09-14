@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdno" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdno.dll" allowwarnings="true">
 	<importlibrary definition="kbdno.def" />
 	<include base="ntoskrnl">include</include>

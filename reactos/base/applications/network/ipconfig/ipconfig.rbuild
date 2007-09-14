@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="ipconfig" type="win32cui" installbase="system32" installname="ipconfig.exe" allowwarnings="true">
 	<include base="ipconfig">.</include>
 	<define name="__USE_W32API" />

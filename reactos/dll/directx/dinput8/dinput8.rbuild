@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dinput8" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DINPUT8}" installbase="system32" installname="dinput8.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput8.spec.def" />
@@ -20,7 +22,7 @@
 	<library>winmm</library>
 	<library>dxguid</library>
 	<library>dinput</library>
-      <file>version.rc</file>
+	<file>version.rc</file>
 	<file>dinput8_main.c</file>
 	<file>dinput8.spec</file>
 </module>

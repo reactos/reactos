@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="route" type="win32cui" installbase="system32" installname="route.exe">
 	<include base="route">.</include>
 	<define name="__USE_W32API" />

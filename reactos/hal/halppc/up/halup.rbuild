@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halppc_up" type="kernelmodedll">
 	<importlibrary definition="../../hal/hal.def" />
 	<bootstrap base="reactos" nameoncd="hal.dll" />

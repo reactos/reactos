@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="odbccp32i" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_ODBCCP32}" installbase="system32" installname="odbccp32.cpl" >
 	<importlibrary definition="odbccp32.def" />
 	<include base="odbccp32">.</include>

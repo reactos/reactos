@@ -1,18 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libxml2" type="staticlibrary" allowwarnings="true">
- 	<library>ntdll</library>
- 	<library>kernel32</library>
- 	<define name="HAVE_CONFIG_H" />
- 	<define name="__USE_W32API" />
- 	<define name="WIN32" />
- 	<define name="_WINDOWS" />
- 	<define name="_MBCS" />
- 	<define name="HAVE_WIN32_THREADS" />
- 	<define name="_REENTRANT" />
- 	<define name="_WINSOCKAPI_" />
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<define name="HAVE_CONFIG_H" />
+	<define name="__USE_W32API" />
+	<define name="WIN32" />
+	<define name="_WINDOWS" />
+	<define name="_MBCS" />
+	<define name="HAVE_WIN32_THREADS" />
+	<define name="_REENTRANT" />
+	<define name="_WINSOCKAPI_" />
 	<define name="LIBXML_STATIC" />
- 	<include base="libxml2">include</include>
- 	<include base="libxml2">.</include>
-        <file>c14n.c</file>
+	<include base="libxml2">include</include>
+	<include base="libxml2">.</include>
+	<file>c14n.c</file>
 	<file>catalog.c</file>
 	<file>chvalid.c</file>
 	<file>debugXML.c</file>

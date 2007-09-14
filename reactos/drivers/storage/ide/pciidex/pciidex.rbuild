@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="pciidex" type="kernelmodedriver" installbase="system32/drivers" installname="pciidex.sys">
 	<importlibrary definition="pciidex.def" />
 	<define name="__USE_W32API" />

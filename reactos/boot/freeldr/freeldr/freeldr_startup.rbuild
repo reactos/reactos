@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="freeldr_startup" type="objectlibrary">
 	<include base="freeldr_startup">include</include>
 	<include base="ntoskrnl">include</include>

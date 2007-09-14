@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
+<!DOCTYPE group SYSTEM "tools/rbuild/project.dtd">
+<group>
 
 <!--
   This file is a template used as a starting point for compile-time
@@ -88,4 +89,4 @@
 -->
 <property name="_WINKD_" value="0" />
 
-</rbuild>
+</group>

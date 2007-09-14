@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="inflib" type="staticlibrary">
 	<include base="inflib">.</include>
 	<define name="__NO_CTYPE_INLINES" />

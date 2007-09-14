@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdbe" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdbe.dll" allowwarnings="true">
 	<importlibrary definition="kbdbe.def" />
 	<include base="ntoskrnl">include</include>

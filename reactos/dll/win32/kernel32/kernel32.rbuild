@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="kernel32_base" type="objectlibrary" allowwarnings="true">
 	<include base="kernel32_base">.</include>
 	<include base="kernel32_base">include</include>
@@ -132,3 +135,4 @@
 	<linkerflag>-nostdlib</linkerflag>
 	<file>kernel32.rc</file>
 </module>
+</group>

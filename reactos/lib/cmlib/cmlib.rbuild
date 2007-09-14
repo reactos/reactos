@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="cmlib" type="staticlibrary">
 	<include base="cmlib">.</include>
 	<define name="__NO_CTYPE_INLINES" />
@@ -5,7 +7,7 @@
 	<define name="_NTSYSTEM_" />
 	<define name="NASSERT" />
 	<pch>cmlib.h</pch>
-    <library>rtl</library>
+	<library>rtl</library>
 	<file>cminit.c</file>
 	<file>hivebin.c</file>
 	<file>hivecell.c</file>

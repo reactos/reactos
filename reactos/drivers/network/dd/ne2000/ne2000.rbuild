@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="ne2000" type="kernelmodedriver" installbase="system32/drivers" installname="ne2000.sys">
 	<include base="ne2000">include</include>
 	<define name="__USE_W32API" />

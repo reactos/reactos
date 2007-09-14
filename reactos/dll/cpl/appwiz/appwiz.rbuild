@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="appwiz" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_APPWIZ}"  installbase="system32" installname="appwiz.cpl">
 	<importlibrary definition="appwiz.def" />
 	<include base="appwiz">.</include>

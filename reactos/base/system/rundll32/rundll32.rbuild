@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="rundll32" type="win32gui" installbase="system32" installname="rundll32.exe">
 	<include base="rundll32">.</include>
 	<define name="UNICODE" />

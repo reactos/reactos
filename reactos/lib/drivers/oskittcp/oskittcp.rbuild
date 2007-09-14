@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="oskittcp" type="staticlibrary" allowwarnings="true">
 	<define name="__REACTOS__">1</define>
 	<define name="__NTDRIVER__"/>

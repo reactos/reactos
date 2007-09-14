@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="pnp_server" type="rpcserver">
 	<include base="ReactOS">.</include>

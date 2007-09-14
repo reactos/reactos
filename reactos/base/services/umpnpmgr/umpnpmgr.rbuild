@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="umpnpmgr" type="win32cui" installbase="system32" installname="umpnpmgr.exe">
 	<include base="umpnpmgr">.</include>
 	<include base="pnp_server">.</include>

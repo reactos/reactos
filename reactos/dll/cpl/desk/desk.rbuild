@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl">
 	<importlibrary definition="desk.def" />
 	<include base="desk">.</include>
@@ -26,7 +28,7 @@
 	<file>desk.c</file>
 	<file>dibitmap.c</file>
 	<file>misc.c</file>
-        <file>preview.c</file>
+	<file>preview.c</file>
 	<file>screensaver.c</file>
 	<file>advappdlg.c</file>
 	<file>settings.c</file>

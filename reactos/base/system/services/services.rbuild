@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="services" type="win32cui" installbase="system32" installname="services.exe">
 	<include base="services">.</include>
 	<include base="scm_server">.</include>

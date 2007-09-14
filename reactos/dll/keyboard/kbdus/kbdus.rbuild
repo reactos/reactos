@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdus" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdus.dll" allowwarnings="true">
 	<importlibrary definition="kbdus.def" />
 	<include base="ntoskrnl">include</include>

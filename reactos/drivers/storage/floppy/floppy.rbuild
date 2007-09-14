@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="floppy" type="kernelmodedriver" installbase="system32/drivers" installname="floppy.sys">
 	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />

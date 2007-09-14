@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="notepad" type="win32gui" installbase="system32" installname="notepad.exe">
 	<include base="notepad">.</include>
 	<define name="__USE_W32API" />

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="vmwinst" type="win32gui" installbase="system32" installname="vmwinst.exe">
 	<include base="vmwinst">.</include>
 	<define name="UNICODE" />

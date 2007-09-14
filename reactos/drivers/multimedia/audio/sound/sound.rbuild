@@ -1,5 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="sound" type="kernelmodedriver">
-        <define name="__USE_W32API" />
+	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<include base="sound">.\include</include>

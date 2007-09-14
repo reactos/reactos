@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<group>
+<!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
+<group xmlns:xi="http://www.w3.org/2001/XInclude">
 <directory name="acledit">
 	<xi:include href="acledit/acledit.rbuild" />
 </directory>

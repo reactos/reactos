@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="finger" type="win32cui" installbase="system32" installname="finger.exe">
 	<include base="finger">.</include>
 	<define name="__USE_W32API" />

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdsk" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdsk.dll" allowwarnings="true">
 	<importlibrary definition="kbdsk.def" />
 	<include base="ntoskrnl">include</include>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="adns" type="staticlibrary" allowwarnings="true">
 	<include base="adns">src</include>
 	<include base="adns">adns_win32</include>

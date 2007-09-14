@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="dosmbr" type="bootsector" >
 	<bootstrap base="loader" nameoncd="dosmbr.bin" />
 	<file>dosmbr.asm</file>
@@ -22,3 +25,4 @@
 	<bootstrap base="loader" nameoncd="isobtrt.bin" />
 	<file>isobtrt.asm</file>
 </module>
+</group>

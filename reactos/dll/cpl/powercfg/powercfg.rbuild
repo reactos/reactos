@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="powercfg" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_PWRCFG}" installbase="system32" installname="powercfg.cpl" allowwarnings="true">
 	<importlibrary definition="powercfg.def" />
 	<include base="powercfg">.</include>

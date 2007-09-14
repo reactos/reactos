@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="msconfig" type="win32gui" installbase="system32" installname="msconfig.exe">
 	<include base="msconfig">.</include>
 	<define name="UNICODE" />

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="bootvid" type="kernelmodedll" entrypoint="DriverEntry@8" installbase="system32/drivers" installname="bootvid.dll">
 	<importlibrary definition="bootvid.def"></importlibrary>
 	<bootstrap base="$(CDOUTPUT)" nameoncd="bootvid.dll" />

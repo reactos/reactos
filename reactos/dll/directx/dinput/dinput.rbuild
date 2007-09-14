@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dinput" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DINPUT}" installbase="system32" installname="dinput.dll" allowwarnings ="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput.spec.def" />

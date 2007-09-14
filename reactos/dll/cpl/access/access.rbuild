@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="access" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_ACCESS}"  installbase="system32" installname="access.cpl" unicode="yes">
 	<importlibrary definition="access.def" />
 	<include base="access">.</include>

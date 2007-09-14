@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="sc" type="win32cui" installbase="system32" installname="sc.exe">
 	<define name="__USE_W32API" />
 	<define name="DEFINE_GUID" />

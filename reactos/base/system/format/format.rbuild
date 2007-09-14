@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="format" type="win32cui" installbase="system32" installname="format.exe" allowwarnings="true">
 	<include base="format">.</include>
 	<define name="__USE_W32API" />

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="freeldr_base" type="objectlibrary">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>

@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
+<group>
 <module name="csr" type="nativecui" installbase="system32" installname="csr.exe">
 	<include base="csr">.</include>
 	<define name="__USE_W32API" />
@@ -11,3 +14,4 @@
 <directory name="csrsrv">
 	<xi:include href="csrsrv/csrsrv.rbuild" />
 </directory>
+</group>

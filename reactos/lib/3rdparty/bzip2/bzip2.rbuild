@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="bzip2" type="kernelmodedll" entrypoint="0" installbase="system32/drivers" installname="bzip2.dll">
 	<importlibrary definition="unbzip2.def" />
 	<define name="BZ_NO_STDIO" />

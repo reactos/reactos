@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="arp" type="win32cui" installbase="system32" installname="arp.exe">
 	<include base="arp">.</include>
 	<define name="__USE_W32API" />
@@ -10,4 +10,3 @@
 	<file>arp.c</file>
 	<file>arp.rc</file>
 </module>
-

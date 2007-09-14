@@ -1,4 +1,5 @@
 <?xml version="1.0" ?>
+<!DOCTYPE project SYSTEM "../../project.dtd">
 <project name="Project" makefile="Makefile">
 	<include>include1</include>
 	<directory name="dir1">

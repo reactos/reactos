@@ -15,7 +15,7 @@
   <define name="_PPC_" />
   <define name="__PowerPC__" />
   <define name="_REACTOS_" />
-  <define name="stdcall" empty="true" />	
+  <define name="stdcall" empty="true" />
   <define name="__stdcall__" empty="true" />
   <define name="fastcall" empty="true" />
   <define name="cdecl" empty="true" />

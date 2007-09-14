@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="main" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl">
 	<importlibrary definition="main.def" />
 	<include base="main">.</include>

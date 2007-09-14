@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="videoprt" type="kernelmodedriver" installbase="system32/drivers" installname="videoprt.sys">
 	<importlibrary definition="videoprt.def" />
 	<include base="videoprt">.</include>

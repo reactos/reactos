@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="msfs" type="kernelmodedriver" installbase="system32/drivers" installname="msfs.sys">
 	<include base="msfs">.</include>
 	<define name="__USE_W32API" />

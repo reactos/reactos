@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="matrix" type="win32scr" installbase="system32" installname="matrix2.scr" allowwarnings="true">
 	<include base="matrix">.</include>
 

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dplayx" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DPLAYX}" installbase="system32" installname="dplayx.dll" allowwarnings ="true">
 	<!-- Won't load correctly in ReactOS yet autoregister infsection="OleControlDlls" type="DllRegisterServer" -->
 	<importlibrary definition="dplayx.spec.def" />
@@ -19,7 +21,7 @@
 	<library>ole32</library>
 	<library>winmm</library>
 	<library>dxguid</library>
-      <file>version.rc</file>
+	<file>version.rc</file>
 	<file>dpclassfactory.c</file>
 	<file>dplay.c</file>
 	<file>dplaysp.c</file>
@@ -30,5 +32,5 @@
 	<file>lobbysp.c</file>
 	<file>name_server.c</file>
 	<file>regsvr.c</file>
-	<file>dplayx.spec</file>	
+	<file>dplayx.spec</file>
 </module>

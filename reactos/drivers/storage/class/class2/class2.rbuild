@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="class2" type="kernelmodedriver" installbase="system32/drivers" installname="class2.sys">
 	<bootstrap base="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />

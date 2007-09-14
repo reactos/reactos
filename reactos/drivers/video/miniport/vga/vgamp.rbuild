@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="vgamp" type="kernelmodedriver" installbase="system32/drivers" installname="vgamp.sys">
 	<include base="vgamp">.</include>
 	<define name="__USE_W32API" />

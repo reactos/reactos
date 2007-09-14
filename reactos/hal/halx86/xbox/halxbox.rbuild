@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halxbox" type="kernelmodedll" entrypoint="0" allowwarnings="true">
 	<importlibrary definition="../../hal/hal.def" />
 	<include base="hal_generic">../include</include>

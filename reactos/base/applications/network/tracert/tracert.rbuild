@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="tracert" type="win32cui" installbase="system32" installname="tracert.exe">
 	<include base="tracert">.</include>
 	<define name="__USE_W32API" />

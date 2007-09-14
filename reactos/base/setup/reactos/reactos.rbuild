@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="reactos" type="win32gui">
 	<bootstrap base="$(CDOUTPUT)" />
 	<include base="reactos">.</include>

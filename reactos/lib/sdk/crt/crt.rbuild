@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="crt" type="staticlibrary">
 	<include base="crt">.</include>
 	<include base="crt">include</include>

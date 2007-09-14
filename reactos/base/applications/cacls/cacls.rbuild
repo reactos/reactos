@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="cacls" type="win32cui" installbase="system32" installname="cacls.exe" unicode="true">
 	<include base="cacls">.</include>
 	<define name="__USE_W32API" />

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dxdiagn" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DXDIAGN}" installbase="system32" installname="dxdiagn.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dxdiagn.spec.def" />
@@ -17,7 +19,7 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>ole32</library>
-      <library>oleaut32</library>
+	<library>oleaut32</library>
 	<library>dxguid</library>
 	<library>strmiids</library>
 	<file>container.c</file>

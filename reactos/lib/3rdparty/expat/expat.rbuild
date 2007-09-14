@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="expat" type="staticlibrary" allowwarnings="true">
 	<include base="expat">.</include>
 	<include base="expat">lib</include>

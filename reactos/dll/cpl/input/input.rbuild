@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="input" type="win32dll" extension=".dll" baseaddress="${BASEADDRESS_INPUT}"  installbase="system32" installname="input.dll">
 	<importlibrary definition="input.def" />
 	<include base="input">.</include>

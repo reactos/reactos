@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="kbdru" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdru.dll" allowwarnings="true">
 	<importlibrary definition="kbdru.def" />
 	<include base="ntoskrnl">include</include>

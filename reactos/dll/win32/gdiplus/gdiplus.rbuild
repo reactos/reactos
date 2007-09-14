@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="gdiplus" type="win32dll" baseaddress="${BASEADDRESS_GDIPLUS}" installbase="system32" installname="gdiplus.dll">
 	<importlibrary definition="gdiplus.def" />
 	<include base="gdiplus">include</include>
