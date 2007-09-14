@@ -75,7 +75,7 @@ typedef int POOL_TYPE;
 
 #define MAXUSHORT USHRT_MAX
 
-#include <pshpack4.h>
+#include <host/pshpack4.h>
 typedef struct _RTL_BITMAP
 {
     ULONG  SizeOfBitMap;
@@ -117,7 +117,7 @@ typedef struct _UNICODE_STRING
     USHORT MaximumLength;
     PWSTR  Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
-#include <poppack.h>
+#include <host/poppack.h>
 
 typedef const UNICODE_STRING *PCUNICODE_STRING;
 
