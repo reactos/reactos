@@ -1,8 +1,7 @@
-<!-- $Id$ -->
 <!ENTITY % CIdentifier "CDATA">
 	<!-- a C identifier -->
 <!ENTITY % Text "CDATA">
-    <!-- used for titles etc. -->
+	<!-- used for titles etc. -->
 
 <!-- XInclude patch -->
 
@@ -14,6 +13,12 @@
 <!ELEMENT xi:fallback (xi:include)>
 
 <!-- rbuild project DTD -->
+
+<!ELEMENT autoregister EMPTY>
+<!ATTLIST autoregister
+	infsection %Text;  #FIXED "OleControlDlls"
+	type (DllRegisterServer|DllInstall|Both) #REQUIRED
+>
 
 <!ELEMENT bootstrap EMPTY>
 <!ATTLIST bootstrap
@@ -29,26 +34,44 @@
 
 <!ELEMENT compilerflag (#PCDATA)>
 
-<!ELEMENT define EMPTY>
+<!ELEMENT define (#PCDATA)>
 <!ATTLIST define
 	name  %CIdentifier; #REQUIRED
 	value %Text;        #IMPLIED
+	empty (true) #IMPLIED
 >
 
-<!ELEMENT directory (directory*|group*|file*|if*|module+|pch*|xi:include*)+>
+<!ELEMENT directory (compilationunit*|directory*|group*|cdfile|file*|if*|ifnot*|module+|pch*|xi:include*)+>
 <!ATTLIST directory
 	name %Text; #REQUIRED
+	root (intermediate|output) #IMPLIED
 >
 
 <!ELEMENT file (#PCDATA)>
 <!ATTLIST file
 	first (true|false) "false"
+	switches %Text; #IMPLIED
 >
 
-<!ELEMENT group (cdfile*|directory*|file*|property*)+>
+<!ELEMENT installfile (#PCDATA)>
+<!ATTLIST installfile
+	base %Text; #IMPLIED
+	root (intermediate|output) #IMPLIED
+>
 
-<!ELEMENT if (compilerflag*|define*|directory*|file*|if*|group*|property*)+>
+<!ELEMENT group (cdfile*|define*|directory*|file*|if*|ifnot*|include*|installfile*|property*|module*|group*|xi:include*)+>
+<!ATTLIST group
+	xmlns:xi  %Text;  #FIXED "http://www.w3.org/2001/XInclude"
+>
+
+<!ELEMENT if (cdfile*|compilerflag*|define*|directory*|file*|if*|ifnot*|installfile*|group*|property*|module*)+>
 <!ATTLIST if
+	property %CIdentifier; #REQUIRED
+	value    %Text;        #REQUIRED
+>
+
+<!ELEMENT ifnot (cdfile*|compilerflag*|define*|directory*|file*|if*|ifnot*|installfile*|group*|property*|module*)+>
+<!ATTLIST ifnot
 	property %CIdentifier; #REQUIRED
 	value    %Text;        #REQUIRED
 >
@@ -56,11 +79,21 @@
 <!ELEMENT include (#PCDATA)>
 <!ATTLIST include
 	base %Text; #IMPLIED
+	root (intermediate|output) #IMPLIED
 >
 
 <!ELEMENT importlibrary EMPTY>
 <!ATTLIST importlibrary
 	definition %Text; #REQUIRED
+	basename %Text; #IMPLIED
+	dllname %Text; #IMPLIED
+>
+
+<!ELEMENT metadata EMPTY>
+<!ATTLIST metadata
+	description %Text; #REQUIRED
+	version %Text; #IMPLIED
+	owner %Text; #IMPLIED
 >
 
 <!ELEMENT library (#PCDATA)>
@@ -72,30 +105,39 @@
 	base %Text; #IMPLIED
 >
 
-<!ELEMENT module (bootstrap*|importlibrary*|define*|include*|library*|directory*|file*|linkerflag*|linkerscript?)*>
+<!ELEMENT compilationunit (file*)>
+<!ATTLIST compilationunit
+	name %Text; #IMPLIED
+>
+
+<!ELEMENT module (autoregister|bootstrap|compilerflag|importlibrary|metadata|if|ifnot|compilationunit|define|include|library|directory|file|linkerflag|linkerscript|pch)*>
 <!ATTLIST module
 	if	%Text; #IMPLIED
 	ifnot	%Text; #IMPLIED
 	name	%CIdentifier; #IMPLIED
-	type	(buildtool|staticlibrary|objectlibrary|kernel|kernelmodedll|kernelmodedriver|nativedll|win32dll|win32cui|win32gui|bootloader|bootsector|iso|test|rpcserver|rpcclient|alias) #REQUIRED
+	type	(buildtool|staticlibrary|objectlibrary|embeddedtypelib|kernel|kernelmodedll|kernelmodedriver|nativedll|nativecui|win32dll|win32ocx|win32cui|win32gui|win32scr|bootloader|bootsector|elfexecutable|idlheader|iso|isoregtest|liveiso|liveisoregtest|test|rpcserver|rpcclient|alias) #REQUIRED
 	extension	%CIdentifier; #IMPLIED
 	entrypoint	%CIdentifier; #IMPLIED
 	baseaddress	%CIdentifier; #IMPLIED
 	mangledsymbols	%Text; #IMPLIED
-	underscoresymbols	(true|false) "false"
+	underscoresymbols	(true|yes|false|no) "no"
 	installbase	%Text; #IMPLIED
 	installname	%Text; #IMPLIED
 	usewrc		%Text; #IMPLIED
 	allowwarnings	(true|false) "false"
 	aliasof %Text; #IMPLIED
+	unicode	(true|yes|false|no) "no"
+	stdlib	(host)	#IMPLIED
+	isstartuplib	(true)	#IMPLIED
+	buildtype %Text; #FIXED "OFWLDR"
 >
 
 <!ELEMENT pch (#PCDATA)>
 
-<!ELEMENT project (compilerflag*|define*|group*|if*|include*|directory*|xi:include*)+>
+<!ELEMENT project (compilerflag*|define*|group*|if*|ifnot*|include*|linkerflag*|directory*|property*|xi:include*)+>
 <!ATTLIST project
-	name      %Text;  #FIXED "ReactOS"
-	makefile  %Text;  #FIXED "makefile.auto"
+	name      (ReactOS|Project) #REQUIRED
+	makefile  %Text;  #REQUIRED
 	xmlns:xi  %Text;  #FIXED "http://www.w3.org/2001/XInclude"
 >
 
