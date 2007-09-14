@@ -679,14 +679,15 @@ typedef struct _GDI_TEB_BATCH
 //
 typedef struct _W32CLTINFO_TEB
 {
-    ULONG Win32ClientInfo0[3];
+    ULONG Win32ClientInfo0[2];
+    ULONG ulWindowsVersion;
     ULONG ulAppCompatFlags;
     ULONG ulAppCompatFlags2;    
     ULONG Win32ClientInfo1[5];
     HWND  hWND;
     PVOID pvWND;
     ULONG Win32ClientInfo2[50];
-} W32CLTINFO_TEB, PW32CLTINFO_TEB;
+} W32CLTINFO_TEB, *PW32CLTINFO_TEB;
 
 //
 // Initial TEB
