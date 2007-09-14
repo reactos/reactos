@@ -30,8 +30,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <typedefs_host.h>
-#include <ntstatus.h>
+#include <host/typedefs.h>
+
+// Definitions copied from <ntstatus.h>
+// We only want to include host headers, so we define them manually
+#define STATUS_SUCCESS                   ((NTSTATUS)0x00000000)
+#define STATUS_UNSUCCESSFUL              ((NTSTATUS)0xC0000001)
+#define STATUS_NOT_IMPLEMENTED           ((NTSTATUS)0xC0000002)
+#define STATUS_INVALID_PARAMETER         ((NTSTATUS)0xC000000D)
+#define STATUS_NO_MEMORY                 ((NTSTATUS)0xC0000017)
+#define STATUS_INSUFFICIENT_RESOURCES    ((NTSTATUS)0xC000009A)
+#define STATUS_OBJECT_NAME_NOT_FOUND     ((NTSTATUS)0xC0000034)
+#define STATUS_INVALID_PARAMETER_2       ((NTSTATUS)0xC00000F0)
+#define STATUS_BUFFER_OVERFLOW           ((NTSTATUS)0x80000005)
 
 NTSTATUS NTAPI
 RtlAnsiStringToUnicodeString(

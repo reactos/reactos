@@ -31,7 +31,7 @@ CMLIB_HOST_OBJECTS = \
 	$(subst $(CMLIB_BASE), $(CMLIB_INT), $(CMLIB_HOST_SOURCES:.c=.o))
 
 CMLIB_HOST_CFLAGS = -O3 -Wall -Wwrite-strings -Wpointer-arith \
-  -I$(CMLIB_BASE) -Iinclude/reactos -Iinclude/psdk \
+  -I$(CMLIB_BASE) -Iinclude/reactos -Iinclude \
   -DCMLIB_HOST
 
 $(CMLIB_HOST_TARGET): $(CMLIB_HOST_OBJECTS) | $(CMLIB_OUT)

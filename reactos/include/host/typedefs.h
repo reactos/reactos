@@ -1,7 +1,7 @@
 /*
   PROJECT:    ReactOS
   LICENSE:    GPL v2 or any later version
-  FILE:       include/reactos/typedefs_host.h
+  FILE:       include/host/typedefs.h
   PURPOSE:    Type definitions and useful macros for host tools
   COPYRIGHT:  Copyright 2007 Hervé Poussineau
 */

@@ -9,7 +9,7 @@
 #ifndef _WRC_ROSTYPES_H
 #define _WRC_ROSTYPES_H
 
-#include <typedefs_host.h>
+#include <host/typedefs.h>
 #include <string.h>
 
 // Definitions copied from various <win....h> files
@@ -159,7 +159,7 @@
 #define SUBLANG_SERBIAN_CYRILLIC   0x03
 #define SUBLANG_UZBEK_CYRILLIC   0x02
 
-#include <pshpack2.h>
+#include <host/pshpack2.h>
 typedef struct tagBITMAPFILEHEADER {
    WORD   bfType;
    DWORD  bfSize;
@@ -167,7 +167,7 @@ typedef struct tagBITMAPFILEHEADER {
    WORD   bfReserved2;
    DWORD  bfOffBits;
 } BITMAPFILEHEADER,*LPBITMAPFILEHEADER,*PBITMAPFILEHEADER;
-#include <poppack.h>
+#include <host/poppack.h>
 
 typedef int FXPT2DOT30;
 typedef struct tagCIEXYZ {

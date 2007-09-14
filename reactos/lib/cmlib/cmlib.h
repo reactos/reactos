@@ -9,10 +9,20 @@
 #define CMLIB_H
 
 #ifdef CMLIB_HOST
-#include <typedefs_host.h>
+#include <host/typedefs.h>
 #include <stdio.h>
 #include <string.h>
-#include <ntstatus.h>
+
+// Definitions copied from <ntstatus.h>
+// We only want to include host headers, so we define them manually
+#define STATUS_SUCCESS                   ((NTSTATUS)0x00000000)
+#define STATUS_NOT_IMPLEMENTED           ((NTSTATUS)0xC0000002)
+#define STATUS_NO_MEMORY                 ((NTSTATUS)0xC0000017)
+#define STATUS_INSUFFICIENT_RESOURCES    ((NTSTATUS)0xC000009A)
+#define STATUS_REGISTRY_CORRUPT          ((NTSTATUS)0xC000014C)
+#define STATUS_NOT_REGISTRY_FILE         ((NTSTATUS)0xC000015C)
+#define STATUS_REGISTRY_RECOVERED        ((NTSTATUS)0x40000009)
+
 #endif
 
 #ifndef _TYPEDEFS_HOST_H

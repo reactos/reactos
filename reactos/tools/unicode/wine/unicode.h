@@ -22,7 +22,7 @@
 #define __WINE_UNICODE_H
 
 #include <stdarg.h>
-#include <typedefs_host.h>
+#include <host/typedefs.h>
 
 // Definitions copied from <winnls.h>
 // We only want to include host headers, so we define them manually
