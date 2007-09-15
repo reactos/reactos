@@ -6,10 +6,10 @@ CAPTION "Volume"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
-    LTEXT "",-1,40,10,194,36
+    LTEXT "",IDC_DEVICE_NAME,40,10,194,36
     GROUPBOX "Device volume", -1, 7,30,230,100
     ICON IDI_CPLICON, IDI_CPLICON, 17,45,32,32
-    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 45, 140, 14
+    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
     LTEXT "Low",-1,62,66,30,17
     LTEXT "High",-1,195,66,30,17
     CHECKBOX "&Mute", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
@@ -29,16 +29,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A sound scheme is a set of sounds applied to events to in ReactOS and programs. You can select an existing scheme or save one you have modified.",-1,8,7,230,40
     LTEXT "Sound s&cheme:",-1,8,42,150,17
-    COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Sav&e As...", -1, 134,70,50,15
     PUSHBUTTON "&Delete", -1, 188,70,50,15
     LTEXT "To change sounds, click a program event in the following list and then select a sound to apply. You can save the changes as a new sound scheme.",-1,8,90,230,40
     LTEXT "&Pogram events:",-1,8,118,150,17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Sounds:",-1,8,194,80,17
-    COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "", -1, 168,205,15,15
-    PUSHBUTTON "&Brouse...", -1, 188,205,50,15
+    LTEXT "&Sounds:",IDC_TEXT_SOUND,8,194,80,17
+    COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15
+    PUSHBUTTON "&Brouse...", IDC_BROWSE_SOUND, 188,205,50,15
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -99,6 +99,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Sons e dispositivos de audio"
     IDS_CPLDESCRIPTION "Altera o esquema de som para o seu computador ou define as configurações para os auto-falantes e dispositivos de gravação."
+    IDS_NO_SOUND "(None)"
 END
 
 

@@ -43,13 +43,6 @@ typedef enum
     HWPD_MAX = HWPD_LARGELIST
 } HWPAGE_DISPLAYMODE, *PHWPAGE_DISPLAYMODE;
 
-typedef struct _IMGINFO
-{
-    HBITMAP hBitmap;
-    INT cxSource;
-    INT cySource;
-} IMGINFO, *PIMGINFO;
-
 HWND WINAPI
 DeviceCreateHardwarePageEx(HWND hWndParent,
                            LPGUID lpGuids,
@@ -66,85 +59,6 @@ const APPLET Applets[NUM_APPLETS] =
 {
   {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, MmSysApplet},
 };
-
-static VOID
-InitImageInfo(PIMGINFO ImgInfo)
-{
-    BITMAP bitmap;
-
-    ZeroMemory(ImgInfo, sizeof(*ImgInfo));
-
-    ImgInfo->hBitmap = LoadImage(hApplet,
-                                 MAKEINTRESOURCE(IDB_SPEAKIMG),
-                                 IMAGE_BITMAP,
-                                 0,
-                                 0,
-                                 LR_DEFAULTCOLOR);
-
-    if (ImgInfo->hBitmap != NULL)
-    {
-        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
-
-        ImgInfo->cxSource = bitmap.bmWidth;
-        ImgInfo->cySource = bitmap.bmHeight;
-    }
-}
-
-/* Volume property page dialog callback */
-//static INT_PTR CALLBACK
-INT_PTR CALLBACK
-VolumeDlgProc(HWND hwndDlg,
-	        UINT uMsg,
-	        WPARAM wParam,
-	        LPARAM lParam)
-{
-    static IMGINFO ImgInfo;
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-
-    switch(uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            InitImageInfo(&ImgInfo);
-            break;
-        }
-        case WM_DRAWITEM:
-        {
-            LPDRAWITEMSTRUCT lpDrawItem;
-            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
-            if(lpDrawItem->CtlID == IDC_SPEAKIMG)
-            {
-                HDC hdcMem;
-                LONG left;
-
-                /* position image in centre of dialog */
-                left = (lpDrawItem->rcItem.right - ImgInfo.cxSource) / 2;
-
-                hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
-                if (hdcMem != NULL)
-                {
-                    SelectObject(hdcMem, ImgInfo.hBitmap);
-                    BitBlt(lpDrawItem->hDC,
-                           left,
-                           lpDrawItem->rcItem.top,
-                           lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
-                           lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
-                           hdcMem,
-                           0,
-                           0,
-                           SRCCOPY);
-                    DeleteDC(hdcMem);
-                }
-            }
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-
 
 /* Audio property page dialog callback */
 static INT_PTR CALLBACK

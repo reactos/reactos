@@ -6,14 +6,14 @@ CAPTION "Lautstärke"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
-    LTEXT "",-1,40,10,194,36
+    LTEXT "",IDC_DEVICE_NAME,40,10,194,36
     GROUPBOX "Gerätelautstärke", -1, 7,30,230,100
     ICON IDI_CPLICON, IDI_CPLICON, 17,45,32,32
-    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 45, 140, 14
+    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
     LTEXT "Niedrig",-1,62,66,30,17
     LTEXT "Hoch",-1,195,66,30,17
     CHECKBOX "Stu&mmschalten", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    CHECKBOX "Lautstärkeregelungs-&Icon in der Taskleiste zeigen", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
+    CHECKBOX "Lautstärkeregelungs-&Icon in der Taskleiste zeigen", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
     PUSHBUTTON "Er&weitert", -1, 150,105,75,15
     GROUPBOX "Lautsprechereintellungen", -1, 7,140,230,80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
@@ -29,16 +29,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Ein Soundschema ist eine Kollektion von Sounds, die bestimmtem Ereignissen in Programmen in ReactOS zugordnet sind. Sie können ein existierendes Schema anwählen oder ein modifiziertes speichern.",-1,8,7,230,40
     LTEXT "Sounds&chema:",-1,8,42,150,17
-    COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Sp&eichern unter...", -1, 134,70,50,15
     PUSHBUTTON "&Löschen", -1, 188,70,50,15
     LTEXT "Um Sounds zu ändern, klicken Sie auf ein Programmereignis in der folgenden Liste und wählen Sie einen Sound. Sie können Änderungen als neue Soundschemata speichern.",-1,8,90,230,40
     LTEXT "&Pogrammereignisse:",-1,8,118,150,17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Sounds:",-1,8,194,80,17
-    COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "", -1, 168,205,15,15
-    PUSHBUTTON "&Durchsuchen...", -1, 188,205,50,15
+    LTEXT "&Sounds:", IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED
+    PUSHBUTTON "&Durchsuchen...", IDC_BROWSE_SOUND, 188,205,81,15, WS_DISABLED
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -99,6 +99,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Sound und Audio Geräte"
     IDS_CPLDESCRIPTION "Ändert das Sound-Schema Ihres Computers, oder konfiguriert die Einstellungen für Ihre Lautsprecher und Aufnahmegeräte."
+    IDS_NO_SOUND "(Kein)"
 END
 
 

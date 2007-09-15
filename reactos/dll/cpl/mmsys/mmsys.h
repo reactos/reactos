@@ -14,6 +14,10 @@ typedef struct _APPLET
 extern HINSTANCE hApplet;
 
 
+#define DRVM_MAPPER 0x2000
+#define DRVM_MAPPER_PREFERRED_GET (DRVM_MAPPER+21) 
+#define DRVM_MAPPER_PREFERRED_SET (DRVM_MAPPER+22) 
+
 /* main.c */
 
 VOID
@@ -32,6 +36,14 @@ MmSysApplet(HWND hwnd,
 INT_PTR
 CALLBACK
 SoundsDlgProc(HWND hwndDlg,
+	        UINT uMsg,
+	        WPARAM wParam,
+	        LPARAM lParam);
+
+/* volume.c */
+
+INT_PTR CALLBACK
+VolumeDlgProc(HWND hwndDlg,
 	        UINT uMsg,
 	        WPARAM wParam,
 	        LPARAM lParam);
