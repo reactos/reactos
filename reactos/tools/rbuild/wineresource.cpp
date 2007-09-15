@@ -111,7 +111,7 @@ WineResource::UnpackResourcesInModule ( Module& module,
 	                               NormalizeFilename ( resourceFilename ).c_str () );
 	string command = FixSeparatorForSystemCommand(bin2res) + " " + parameters;
 
-	Directory( relativeDirectory ).GenerateTree( Environment::GetIntermediatePath(), false );
+	Directory( relativeDirectory ).GenerateTree( IntermediateDirectory, project.configuration.Verbose );
 
 	int exitcode = system ( command.c_str () );
 	if ( exitcode != 0 )

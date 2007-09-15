@@ -172,9 +172,9 @@ MingwBackend::MingwBackend ( Project& project,
                              Configuration& configuration )
 	: Backend ( project, configuration ),
 	  manualBinutilsSetting( false ),
-	  intermediateDirectory ( new Directory ("$(INTERMEDIATE)" ) ),
-	  outputDirectory ( new Directory ( "$(OUTPUT)" ) ),
-	  installDirectory ( new Directory ( "$(INSTALL)" ) )
+	  intermediateDirectory ( new Directory ( "" ) ),
+	  outputDirectory ( new Directory ( "" ) ),
+	  installDirectory ( new Directory ( "" ) )
 {
 	compilerPrefix = "";
 }
@@ -768,10 +768,10 @@ void
 MingwBackend::GenerateDirectories ()
 {
 	printf ( "Creating directories..." );
-	intermediateDirectory->GenerateTree ( "", configuration.Verbose );
-	outputDirectory->GenerateTree ( "", configuration.Verbose );
+	intermediateDirectory->GenerateTree ( IntermediateDirectory, configuration.Verbose );
+	outputDirectory->GenerateTree ( OutputDirectory, configuration.Verbose );
 	if ( !configuration.MakeHandlesInstallDirectories )
-		installDirectory->GenerateTree ( "", configuration.Verbose );
+		installDirectory->GenerateTree ( InstallDirectory, configuration.Verbose );
 	printf ( "done\n" );
 }
 
@@ -1336,7 +1336,7 @@ MingwBackend::GenerateTestTarget ()
 void
 MingwBackend::GenerateDirectoryTargets ()
 {
-	intermediateDirectory->CreateRule ( fMakefile, "" );
-	outputDirectory->CreateRule ( fMakefile, "" );
-	installDirectory->CreateRule ( fMakefile, "" );
+	intermediateDirectory->CreateRule ( fMakefile, "$(INTERMEDIATE)" );
+	outputDirectory->CreateRule ( fMakefile, "$(OUTPUT)" );
+	installDirectory->CreateRule ( fMakefile, "$(INSTALL)" );
 }

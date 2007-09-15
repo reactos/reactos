@@ -120,6 +120,15 @@ public:
 	virtual void ProcessXML();
 };
 
+enum DirectoryLocation
+{
+	SourceDirectory,
+	IntermediateDirectory,
+	OutputDirectory,
+	InstallDirectory,
+	TemporaryDirectory,
+};
+
 class Directory
 {
 public:
@@ -127,20 +136,16 @@ public:
 	directory_map subdirs;
 	Directory ( const std::string& name );
 	void Add ( const char* subdir );
-	void GenerateTree ( const std::string& parent,
+	void GenerateTree ( DirectoryLocation root,
 	                    bool verbose );
-	std::string EscapeSpaces ( std::string path );
 	void CreateRule ( FILE* f,
 	                  const std::string& parent );
 private:
 	bool mkdir_p ( const char* path );
-	std::string ReplaceVariable ( const std::string& name,
-	                              const std::string& value,
-	                              std::string path );
-	std::string GetEnvironmentVariable ( const std::string& name );
-	void ResolveVariablesInPath ( char* buf,
-	                              const std::string& path );
-	bool CreateDirectory ( std::string path );
+	bool CreateDirectory ( const std::string& path );
+	std::string EscapeSpaces ( const std::string& path );
+	void GenerateTree ( const std::string& parent,
+	                    bool verbose );
 };
 
 
@@ -300,15 +305,6 @@ enum HostType
 	HostFalse,
 	HostDefault,
 	HostTrue
-};
-
-enum DirectoryLocation
-{
-	SourceDirectory,
-	IntermediateDirectory,
-	OutputDirectory,
-	InstallDirectory,
-	TemporaryDirectory,
 };
 
 class FileLocation
