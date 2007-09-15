@@ -39,7 +39,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "A&utomaticky posun˙ù hodiny pri  prechode na letn˝ Ëas a sp‰ù",
+    AUTOCHECKBOX "A&utomaticky posun˙ù hodiny pri prechode na letn˝ Ëas a sp‰ù",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 

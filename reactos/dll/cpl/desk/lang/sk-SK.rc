@@ -1,0 +1,194 @@
+/*
+ * FILE:        dll/cpl/desk/lang/sk-SK.rc
+ * PURPOSE:     Slovak Language File for desk
+ * TRANSLATOR:  Kario <kario@szm.sk>
+ * DATE OF TR.: 15-09-2007
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Pozadie"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
+                    70, 10, 105, 70,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
+    LTEXT           "Vyberte obr·zok, ktor˝ chcete pouûiù ako pozadie pracovnej plochy:",
+                    IDC_STATIC, 8, 103, 180, 9
+    PUSHBUTTON      "&Prehæad·vaù...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Farba...", IDC_COLOR_BUTTON, 188, 177, 50, 15
+    LTEXT           "&Umiestnenie:", IDC_STATIC, 188, 138, 36, 9
+    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "äetriË obrazovky"
+FONT 8, "MS Shell Dlg", 0, 0
+BEGIN
+    CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
+                    70, 10, 105, 70, WS_EX_STATICEDGE
+    GROUPBOX        "äetriË o&brazovky",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Nastavenie",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "&Uk·ûka",IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "&PoËkaù",IDC_WAITTEXT, 14, 125, 16, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP, 54, 123, 12, 13
+    LTEXT           "min˙t", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "Pri obnovenÌ chr·niù &heslom.",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
+    GROUPBOX        "Nap·jani&e monitora", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
+                    IDC_STATIC, 14, 166, 146 ,20
+    PUSHBUTTON      "N&ap·janie...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
+END
+
+
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vzhæad"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+    LTEXT           "&Farebn· schÈma:", IDC_STATIC, 7, 140, 64, 7
+    COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Spresniù", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
+END
+
+IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
+CAPTION "Spresnenie vzhæadu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
+                    WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
+
+    LTEXT "P&oloûka:", 8, 5, 160, 50, 9
+    COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT "&Veækosù", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
+    CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
+
+    LTEXT   "&Farba 1:", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT   "Far&ba 2:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    LTEXT "&PÌsmo:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT   "V&eækosù:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
+
+    LTEXT   "Fa&rba:", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
+
+    AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
+
+    PUSHBUTTON "Zruöiù", IDCANCEL, 191, 220, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
+END
+
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Nastavenie"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Display:",1820,3,100,30,8
+    LTEXT           "<none>",IDC_SETTINGS_DEVICE,9,109,224,8
+    GROUPBOX        "&Screen area",1818,3,120,115,43
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
+    LTEXT           "Less",1815,9,130,15,8,NOT WS_GROUP
+    LTEXT           "More",1816,93,130,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Colors",1817,125,120,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
+                    131,148,103,9
+    PUSHBUTTON      "Ad&vanced...",IDC_SETTINGS_ADVANCED,306,165,56,14
+END
+
+IDR_PREVIEW_MENU MENU
+BEGIN
+    MENUITEM "Normal",           ID_MENU_NORMAL
+    MENUITEM "Disabled",         ID_MENU_DISABLED
+    MENUITEM "Selected",         ID_MENU_SELECTED
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Display"
+    IDS_CPLDESCRIPTION "Customizes the desktop display and screen saver."
+    IDS_NONE "(Nie je)"
+    IDS_CENTER "V strede"
+    IDS_STRETCH "Roztiahnuù"
+    IDS_TILE "Dlaûdice"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLOR_4BIT "16 farieb"
+    IDS_COLOR_8BIT "256 farieb"
+    IDS_COLOR_16BIT "High Color (16 bitov)"
+    IDS_COLOR_24BIT "PravÈ farby (24 bitov)"
+    IDS_COLOR_32BIT "PravÈ farby (32 bitov)"
+    IDS_PIXEL "%lux%lu Pixel"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BACKGROUND_COMDLG_FILTER "Obr·zky (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_SUPPORTED_EXT "*.bmp;*.dib"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INACTWIN "NeaktÌvne okno"
+    IDS_ACTWIN   "AktÌvne okno"
+    IDS_WINTEXT  "Text okna"
+    IDS_MESSBOX  "Okno spr·vy"
+    IDS_MESSTEXT "Text spr·vy"
+    IDS_BUTTEXT  "OK"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ELEMENT_1 "Pracovn· plocha"
+    IDS_ELEMENT_2 "Caption of inactive windows"
+    IDS_ELEMENT_3 "Border of inactive windows"
+    IDS_ELEMENT_4 "Caption of active windows"
+    IDS_ELEMENT_5 "Border of active windows"
+    IDS_ELEMENT_6 "Menu"
+    IDS_ELEMENT_7 "Hilited elements"
+    IDS_ELEMENT_8 "Windows"
+    IDS_ELEMENT_9 "Scrollbars"
+    IDS_ELEMENT_10 "3D objects"
+    IDS_ELEMENT_11 "Palette title"
+    IDS_ELEMENT_12 "Symbol title"
+    IDS_ELEMENT_13 "Captionbar"
+    IDS_ELEMENT_14 "Deactivated menu elements"
+    IDS_ELEMENT_15 "Dialog"
+    IDS_ELEMENT_16 "Scrollbar controls"
+    IDS_ELEMENT_17 "Application background"
+    IDS_ELEMENT_18 "Small captionbar"
+    IDS_ELEMENT_19 "Symbol distance (horizontal)"
+    IDS_ELEMENT_20 "Symbol distance (vertical)"
+    IDS_ELEMENT_21 "Quickinfo"
+    IDS_ELEMENT_22 "Symbol"
+END
