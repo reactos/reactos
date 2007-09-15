@@ -10,9 +10,6 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
-	<library>opengl32</library>
-	<library>glu32</library>
-	<library>winmm</library>
 
 	<metadata description = "Default ReactOS Logo screensaver" />
 

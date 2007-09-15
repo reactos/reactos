@@ -16,7 +16,7 @@
 	<library>user32</library>
 	<library>opengl32</library>
 	<library>gdi32</library>
-	<library>advapi32 </library>
+	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>uuid</library>
 	<library>msvcrt</library>

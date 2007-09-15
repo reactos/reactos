@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
-<group>
+<group xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="regedit" type="win32gui" installname="regedit.exe">
 	<include base="regedit">.</include>
 	<define name="__USE_W32API" />

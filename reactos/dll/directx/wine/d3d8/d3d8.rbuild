@@ -16,10 +16,10 @@
 
 	<library>uuid</library>
 	<library>wine</library>
-	<library>user32 </library>
-	<library>opengl32 </library>
-	<library>gdi32 </library>
-	<library>advapi32 </library>
+	<library>user32</library>
+	<library>opengl32</library>
+	<library>gdi32</library>
+	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>wined3d</library>
 
@@ -42,5 +42,4 @@
 	<file>volumetexture.c</file>
 	<file>version.rc</file>
 	<file>d3d8.spec</file>
-
 </module>
