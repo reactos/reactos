@@ -1,10 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="mmsys" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MMSYS}" installbase="system32" installname="mmsys.cpl">
+<module name="mmsys" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MMSYS}" installbase="system32" installname="mmsys.cpl" unicode="yes">
 	<importlibrary definition="mmsys.def" />
 	<include base="mmsys">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
