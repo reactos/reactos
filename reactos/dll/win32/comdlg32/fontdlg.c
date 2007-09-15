@@ -617,6 +617,15 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
         himlTT = ImageList_LoadImageW( COMDLG32_hInstance, MAKEINTRESOURCEW(38),
                 TTBITMAP_XSIZE, 0, CLR_DEFAULT, IMAGE_BITMAP, 0);
 
+    /* Set effect flags */
+    if((lpcf->Flags & CF_EFFECTS) && (lpcf->Flags & CF_INITTOLOGFONTSTRUCT))
+    {
+        if(lpxx->lfUnderline)
+            CheckDlgButton(hDlg, chx2, TRUE);
+        if(lpxx->lfStrikeOut)
+            CheckDlgButton(hDlg, chx1, TRUE);
+    }
+
     if (!(lpcf->Flags & CF_SHOWHELP) || !IsWindow(lpcf->hwndOwner))
         ShowWindow(GetDlgItem(hDlg,pshHelp),SW_HIDE);
     if (!(lpcf->Flags & CF_APPLY))

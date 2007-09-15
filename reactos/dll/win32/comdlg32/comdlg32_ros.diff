@@ -220,7 +220,7 @@ Index: printdlg.c
  		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hLandscapeIcon);
-@@ -2507,15 +2507,15 @@
+@@ -2513,15 +2513,15 @@
  
      /* Save paper orientation into device context */
      if(pda->curdlg.ptPaperSize.x > pda->curdlg.ptPaperSize.y)
@@ -239,7 +239,7 @@ Index: printdlg.c
      else
          FIXME("could not get dialog text for papersize cmbbox?\n");
  
-@@ -2523,7 +2523,7 @@
+@@ -2529,7 +2529,7 @@
      paperword = SendDlgItemMessageA(hDlg,cmb1,CB_GETITEMDATA,
          SendDlgItemMessageA(hDlg, cmb1, CB_GETCURSEL, 0, 0), 0);
      if (paperword != CB_ERR)
@@ -248,7 +248,7 @@ Index: printdlg.c
      else
          FIXME("could not get dialog text for papersize cmbbox?\n");
  
-@@ -2574,9 +2574,9 @@
+@@ -2580,9 +2580,9 @@
  
      /* Save orientation */
      if (pda->dlga->ptPaperSize.x > pda->dlga->ptPaperSize.y)
@@ -260,7 +260,7 @@ Index: printdlg.c
  
      GlobalUnlock(pda->pdlg.hDevNames);
      GlobalUnlock(pda->pdlg.hDevMode);
-@@ -2824,7 +2824,7 @@
+@@ -2834,7 +2834,7 @@
      case cmb3:
  	if(msg == CBN_SELCHANGE){
  	    DEVMODEA *dm = GlobalLock(pda->pdlg.hDevMode);
@@ -269,7 +269,7 @@ Index: printdlg.c
                  SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0), 0);
  	    GlobalUnlock(pda->pdlg.hDevMode);
  	}
-@@ -2847,10 +2847,10 @@
+@@ -2857,10 +2857,10 @@
  	                        DM_IN_BUFFER | DM_OUT_BUFFER | DM_IN_PROMPT);
  	    ClosePrinter(hPrinter);
  	    /* Changing paper */
@@ -282,7 +282,7 @@ Index: printdlg.c
                  DWORD tmp = pda->curdlg.ptPaperSize.x;
                  pda->curdlg.ptPaperSize.x = pda->curdlg.ptPaperSize.y;
                  pda->curdlg.ptPaperSize.y = tmp;
-@@ -2864,7 +2864,7 @@
+@@ -2874,7 +2874,7 @@
  	    count = SendDlgItemMessageA(hDlg, cmb2, CB_GETCOUNT, 0, 0);
  	    if(count != CB_ERR){ 
                  for(i=0; i<count; ++i){
@@ -291,16 +291,16 @@ Index: printdlg.c
  			SendDlgItemMessageA(hDlg, cmb2, CB_SETCURSEL, i, 0);
  			break;
  		    }
-@@ -3168,7 +3168,7 @@
- 	}
-         /* Set orientation radiobutton properly */
-         dm = GlobalLock(pda->dlga->hDevMode);
--        if (dm->u1.s1.dmOrientation == DMORIENT_LANDSCAPE)
-+        if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE)
-             CheckRadioButton(hDlg, rad1, rad2, rad2);
- 	else /* this is default if papersize is not set */
-             CheckRadioButton(hDlg, rad1, rad2, rad1);
-@@ -3213,8 +3213,8 @@
+@@ -3180,7 +3180,7 @@
+         if(pda->dlga->hDevMode)
+         {
+             dm = GlobalLock(pda->dlga->hDevMode);
+-            if (dm->u1.s1.dmOrientation == DMORIENT_LANDSCAPE)
++            if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE)
+                 CheckRadioButton(hDlg, rad1, rad2, rad2);
+             else /* this is default if papersize is not set */
+                 CheckRadioButton(hDlg, rad1, rad2, rad1);
+@@ -3226,8 +3226,8 @@
          PRINTDLG_PS_ChangePrinterA(hDlg, pda);
  	dm = GlobalLock(pda->pdlg.hDevMode);
  	if(dm){
@@ -311,16 +311,16 @@ Index: printdlg.c
              GlobalUnlock(pda->pdlg.hDevMode);
  	    pda->curdlg.ptPaperSize.x = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.x);
  	    pda->curdlg.ptPaperSize.y = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.y);
-@@ -3282,7 +3282,7 @@
- 
-         dm = GlobalLock(pda->dlga->hDevMode);
- 	/* Landscape orientation */
--	if (dm->u1.s1.dmOrientation == DMORIENT_LANDSCAPE)
-+	if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE)
-             CheckRadioButton(hDlg, rad1, rad2, rad2);
- 	else /* this is default if papersize is not set */
-             CheckRadioButton(hDlg, rad1, rad2, rad1);
-@@ -3422,7 +3422,7 @@
+@@ -3297,7 +3297,7 @@
+         {
+             dm = GlobalLock(pda->dlga->hDevMode);
+             /* Landscape orientation */
+-            if (dm->u1.s1.dmOrientation == DMORIENT_LANDSCAPE)
++            if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE)
+                 CheckRadioButton(hDlg, rad1, rad2, rad2);
+             else /* this is default if papersize is not set */
+                 CheckRadioButton(hDlg, rad1, rad2, rad1);
+@@ -3439,7 +3439,7 @@
  	setupdlg->hDevMode = pdlg.hDevMode;
  	setupdlg->hDevNames = pdlg.hDevNames;
          dm = GlobalLock(pdlg.hDevMode);

@@ -390,9 +390,10 @@ BOOL16 WINAPI PrintDlg16(
 	GetPrinterDriverA(hprn, NULL, 3, NULL, 0, &needed);
 	dbuf = HeapAlloc(GetProcessHeap(),0,needed);
 	if (!GetPrinterDriverA(hprn, NULL, 3, (LPBYTE)dbuf, needed, &needed)) {
-            ERR("GetPrinterDriverA failed for %s, le %d, fix your config!\n",
-		    pbuf->pPrinterName,GetLastError());
-            HeapFree(GetProcessHeap(), 0, dbuf);
+	    ERR("GetPrinterDriverA failed for %s, le %d, fix your config!\n",
+	        pbuf->pPrinterName,GetLastError());
+	    HeapFree(GetProcessHeap(), 0, dbuf);
+	    HeapFree(GetProcessHeap(), 0, pbuf);
 	    COMDLG32_SetCommDlgExtendedError(PDERR_RETDEFFAILURE);
 	    return FALSE;
 	}
@@ -506,7 +507,7 @@ BOOL16 WINAPI PrintDlg16(
 	HeapFree(GetProcessHeap(), 0, PrintStructures->lpDevMode);
 	HeapFree(GetProcessHeap(), 0, PrintStructures->lpPrinterInfo);
 	HeapFree(GetProcessHeap(), 0, PrintStructures->lpDriverInfo);
-	HeapFree(GetProcessHeap(), 0, PrintStructures);
+	HeapFree(GetProcessHeap(), 0, ptr16);
     }
     if(bRet && (lppd->Flags & PD_RETURNDC || lppd->Flags & PD_RETURNIC))
         bRet = PRINTDLG_CreateDC16(lppd);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Alexander N. Sørnes
+ * Copyright 2005-2007 Alexander N. Sørnes
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -134,8 +134,8 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Bruk", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Hjelp" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "Effekter",grp1,6,72,84,34,WS_GROUP
-    CHECKBOX	    "Gjennomstre&ket", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "&Understreket", chx2, 10,94,50,10, BS_AUTOCHECKBOX
+    CHECKBOX	    "Gjennomstre&ket", chx1, 10,82,70,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "&Understreket", chx2, 10,94,70,10, BS_AUTOCHECKBOX
     LTEXT           "&Farge:", stc4 ,6,110,30,9
     COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -189,10 +189,10 @@ FONT 8, "MS Shell Dlg"
  LTEXT "Fi&nn:", -1, 4, 8, 42, 8
  EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Finn &kun hele ord", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Skill &mellom store/små bokstaver", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "Retning", grp1, 107, 26, 68, 28
- CONTROL "&Opp", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 20, 12
- CONTROL "&Ned", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
+ CHECKBOX "Skill &mellom store og små bokstaver", chx2, 4, 42, 125, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Retning", grp1, 137, 23, 40, 36
+ CONTROL "&Opp", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 141, 31, 30, 12
+ CONTROL "&Ned", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 141, 44, 30, 12
 
  DEFPUSHBUTTON "&Finn neste", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Avbryt", IDCANCEL	 , 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
@@ -210,7 +210,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Erstatt med:", -1, 4, 26, 48, 8
  EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Finn kun &hele ord", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Skill mellom store og små bokstaver", chx2, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Skill mellom store og små bokstaver", chx2, 5, 62, 125, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
  DEFPUSHBUTTON "&Finn neste", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "E&rsatt", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
