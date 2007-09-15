@@ -31,7 +31,7 @@ Index: propsheet.c
 ===================================================================
 --- propsheet.c	(revision 25766)
 +++ propsheet.c	(working copy)
-@@ -2431,6 +2431,28 @@
+@@ -2434,6 +2434,28 @@
    return FALSE;
  }
  
@@ -60,7 +60,7 @@ Index: propsheet.c
  /******************************************************************************
   *            PROPSHEET_SetWizButtons
   *
-@@ -2453,17 +2475,6 @@
+@@ -2456,17 +2478,6 @@
    EnableWindow(hwndNext, FALSE);
    EnableWindow(hwndFinish, FALSE);
  
@@ -78,7 +78,7 @@ Index: propsheet.c
    if (dwFlags & PSWIZB_BACK)
      EnableWindow(hwndBack, TRUE);
  
-@@ -2493,6 +2504,32 @@
+@@ -2496,6 +2507,32 @@
    }
    else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
      EnableWindow(hwndFinish, TRUE);

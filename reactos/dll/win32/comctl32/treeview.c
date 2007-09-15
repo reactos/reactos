@@ -3801,6 +3801,7 @@ TREEVIEW_EndEditLabelNow(TREEVIEW_INFO *infoPtr, BOOL bCancel)
             if (ptr == NULL)
             {
                 ERR("OutOfMemory, cannot allocate space for label\n");
+                if(newText != tmpText) Free(newText);
                 DestroyWindow(infoPtr->hwndEdit);
                 infoPtr->hwndEdit = 0;
                 return FALSE;
