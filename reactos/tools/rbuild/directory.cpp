@@ -167,13 +167,12 @@ Directory::GenerateTree ( const string& parent,
 
 	if ( parent.size () > 0 )
 	{
-		char buf[256];
 		if ( name.size () > 0 )
 			path = parent + sSep + name;
 		else
 			path = parent;
-		if ( CreateDirectory ( buf ) && verbose )
-			printf ( "Created %s\n", buf );
+		if ( CreateDirectory ( path ) && verbose )
+			printf ( "Created %s\n", path.c_str () );
 	}
 	else
 		path = name;
