@@ -42,6 +42,47 @@ static INT nRepeatArray[REPEATTICKS] = {300, 500, 700, 1000, 1500, 2000};
 static INT nWaitArray[WAITTICKS] = {0, 300, 500, 700, 1000, 1500, 2000, 5000, 10000, 20000};
 
 
+static VOID
+EnableFilterKeysTest(PGLOBAL_DATA pGlobalData)
+{
+    pGlobalData->filterKeys.dwFlags |= FKF_FILTERKEYSON;
+    pGlobalData->filterKeys.dwFlags &= ~FKF_INDICATOR;
+
+    SystemParametersInfo(SPI_SETFILTERKEYS,
+                         sizeof(FILTERKEYS),
+                         &pGlobalData->filterKeys,
+                         0);
+}
+
+
+static VOID
+DisableFilterKeysTest(PGLOBAL_DATA pGlobalData)
+{
+    if (pGlobalData->oldFilterKeys.dwFlags & FKF_FILTERKEYSON)
+    {
+        pGlobalData->filterKeys.dwFlags |= FKF_FILTERKEYSON;
+    }
+    else
+    {
+        pGlobalData->filterKeys.dwFlags &= ~FKF_FILTERKEYSON;
+    }
+
+    if (pGlobalData->oldFilterKeys.dwFlags & FKF_INDICATOR)
+    {
+        pGlobalData->filterKeys.dwFlags |= FKF_INDICATOR;
+    }
+    else
+    {
+        pGlobalData->filterKeys.dwFlags &= ~FKF_INDICATOR;
+    }
+
+    SystemParametersInfo(SPI_SETFILTERKEYS,
+                         sizeof(FILTERKEYS),
+                         &pGlobalData->filterKeys,
+                         0);
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 StickyKeysDlgProc(HWND hwndDlg,
@@ -182,13 +223,31 @@ BounceKeysDlgProc(HWND hwndDlg,
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-                case IDOK:
-                    i = SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_COMBO, CB_GETCURSEL, 0, 0);
-                    if (i != CB_ERR)
+                case IDC_BOUNCE_TIME_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        pGlobalData->filterKeys.iBounceMSec = nBounceArray[i];
+                        i = SendDlgItemMessage(hwndDlg, IDC_BOUNCE_TIME_COMBO, CB_GETCURSEL, 0, 0);
+                        if (i != CB_ERR)
+                        {
+                            pGlobalData->filterKeys.iBounceMSec = nBounceArray[i];
+                        }
                     }
+                    break;
 
+                case IDC_BOUNCE_TEST_EDIT:
+                    switch (HIWORD(wParam))
+                    {
+                        case EN_SETFOCUS:
+                            EnableFilterKeysTest(pGlobalData);
+                            break;
+
+                        case EN_KILLFOCUS:
+                            DisableFilterKeysTest(pGlobalData);
+                            break;
+                    }
+                    break;
+
+                case IDOK:
                     EndDialog(hwndDlg, TRUE);
                     break;
 
@@ -296,25 +355,53 @@ RepeatKeysDlgProc(HWND hwndDlg,
                     EnableWindow(GetDlgItem(hwndDlg, IDC_REPEAT_REPEAT_COMBO), TRUE);
                     break;
 
+                case IDC_REPEAT_DELAY_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_DELAY_COMBO, CB_GETCURSEL, 0, 0);
+                        if (i != CB_ERR)
+                        {
+                            pGlobalData->filterKeys.iDelayMSec = nDelayArray[i];
+                        }
+                    }
+                    break;
+
+                case IDC_REPEAT_REPEAT_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_REPEAT_COMBO, CB_GETCURSEL, 0, 0);
+                        if (i != CB_ERR)
+                        {
+                            pGlobalData->filterKeys.iRepeatMSec = nRepeatArray[i];
+                        }
+                    }
+                    break;
+
+                case IDC_REPEAT_WAIT_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_WAIT_COMBO, CB_GETCURSEL, 0, 0);
+                        if (i != CB_ERR)
+                        {
+                            pGlobalData->filterKeys.iWaitMSec = nWaitArray[i];
+                        }
+                    }
+                    break;
+
+                case IDC_REPEAT_TEST_EDIT:
+                    switch (HIWORD(wParam))
+                    {
+                        case EN_SETFOCUS:
+                            EnableFilterKeysTest(pGlobalData);
+                            break;
+
+                        case EN_KILLFOCUS:
+                            DisableFilterKeysTest(pGlobalData);
+                            break;
+                    }
+                    break;
+
                 case IDOK:
-                    i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_DELAY_COMBO, CB_GETCURSEL, 0, 0);
-                    if (i != CB_ERR)
-                    {
-                        pGlobalData->filterKeys.iDelayMSec = nDelayArray[i];
-                    }
-
-                    i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_REPEAT_COMBO, CB_GETCURSEL, 0, 0);
-                    if (i != CB_ERR)
-                    {
-                        pGlobalData->filterKeys.iRepeatMSec = nRepeatArray[i];
-                    }
-
-                    i = SendDlgItemMessage(hwndDlg, IDC_REPEAT_WAIT_COMBO, CB_GETCURSEL, 0, 0);
-                    if (i != CB_ERR)
-                    {
-                        pGlobalData->filterKeys.iWaitMSec = nWaitArray[i];
-                    }
-
                     EndDialog(hwndDlg, TRUE);
                     break;
 
@@ -402,6 +489,19 @@ FilterKeysDlgProc(HWND hwndDlg,
                                    hwndDlg,
                                    (DLGPROC)BounceKeysDlgProc,
                                    (LPARAM)pGlobalData);
+                    break;
+
+                case IDC_FILTER_TEST_EDIT:
+                    switch (HIWORD(wParam))
+                    {
+                        case EN_SETFOCUS:
+                            EnableFilterKeysTest(pGlobalData);
+                            break;
+
+                        case EN_KILLFOCUS:
+                            DisableFilterKeysTest(pGlobalData);
+                            break;
+                    }
                     break;
 
                 case IDC_FILTER_SOUND_CHECK:
