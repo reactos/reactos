@@ -637,10 +637,11 @@ NtUserUserHandleGrantAccess(
    return 0;
 }
 
-DWORD
+BOOL
 STDCALL
 NtUserValidateHandleSecure(
-   DWORD Unknown0)
+   HANDLE hHdl,
+   BOOL Restricted)
 {
    UNIMPLEMENTED
 

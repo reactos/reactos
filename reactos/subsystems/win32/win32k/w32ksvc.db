@@ -590,7 +590,7 @@ NtUserUpdateLayeredWindow                        9
 NtUserSetLayeredWindowAttributes                 4
 NtUserUpdatePerUserSystemParameters              2
 NtUserUserHandleGrantAccess                      3
-# NtUserValidateHandleSecure                     2 Wrong number of param ?
+NtUserValidateHandleSecure                       2
 # NtUserValidateRect                             2
 # NtUserValidateTimerCallback                    3
 NtUserVkKeyScanEx                                3
@@ -685,7 +685,6 @@ NtUserGetClassInfo                      4
 NtUserInitTask                          11
 NtUserSetCursorIconData                 6
 NtUserUnregisterClass                   2
-NtUserValidateHandleSecure              1
 #
 #ReactOS specify syscall 
 NtGdiSelectObject                       2

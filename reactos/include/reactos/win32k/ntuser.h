@@ -2002,10 +2002,11 @@ NtUserUserHandleGrantAccess(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 NTAPI
 NtUserValidateHandleSecure(
-  DWORD Unknown0);
+  HANDLE hHdl,
+  BOOL Restricted);
 
 DWORD
 NTAPI
