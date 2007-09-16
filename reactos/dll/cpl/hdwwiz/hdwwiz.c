@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS Add hardware control panel
- * FILE:            lib/cpl/hdwwiz/hdwwiz.c
+ * FILE:            dll/cpl/hdwwiz/hdwwiz.c
  * PURPOSE:         ReactOS Add hardware control panel
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  */
@@ -39,7 +39,7 @@ HINSTANCE hApplet = 0;
 /* Applets */
 APPLET Applets[] = 
 {
-	{IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
+    {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
 };
 
 typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
@@ -47,105 +47,108 @@ typedef BOOL (WINAPI *PINSTALL_NEW_DEVICE)(HWND, LPGUID, PDWORD);
 static LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
-	HMODULE hNewDev = NULL;
-	PINSTALL_NEW_DEVICE InstallNewDevice;
-	DWORD Reboot;
-	BOOL ret;
-	LONG rc;
+    HMODULE hNewDev = NULL;
+    PINSTALL_NEW_DEVICE InstallNewDevice;
+    DWORD Reboot;
+    BOOL ret;
+    LONG rc;
 
-	UNREFERENCED_PARAMETER(lParam);
-	UNREFERENCED_PARAMETER(wParam);
-	UNREFERENCED_PARAMETER(uMsg);
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(uMsg);
 
-	hNewDev = LoadLibrary(_T("newdev.dll"));
-	if (!hNewDev)
-	{
-		rc = 1;
-		goto cleanup;
-	}
+    hNewDev = LoadLibrary(_T("newdev.dll"));
+    if (!hNewDev)
+    {
+        rc = 1;
+        goto cleanup;
+    }
 
-	InstallNewDevice = (PINSTALL_NEW_DEVICE)GetProcAddress(hNewDev, (LPCSTR)"InstallNewDevice");
-	if (!InstallNewDevice)
-	{
-		rc = 2;
-		goto cleanup;
-	}
+    InstallNewDevice = (PINSTALL_NEW_DEVICE)GetProcAddress(hNewDev, (LPCSTR)"InstallNewDevice");
+    if (!InstallNewDevice)
+    {
+        rc = 2;
+        goto cleanup;
+    }
 
-	ret = InstallNewDevice(hwnd, NULL, &Reboot);
-	if (!ret)
-	{
-		rc = 3;
-		goto cleanup;
-	}
+    ret = InstallNewDevice(hwnd, NULL, &Reboot);
+    if (!ret)
+    {
+        rc = 3;
+        goto cleanup;
+    }
 
-	if (Reboot != DI_NEEDRESTART && Reboot != DI_NEEDREBOOT)
-	{
-		/* We're done with installation */
-		rc = 0;
-		goto cleanup;
-	}
+    if (Reboot != DI_NEEDRESTART && Reboot != DI_NEEDREBOOT)
+    {
+        /* We're done with installation */
+        rc = 0;
+        goto cleanup;
+    }
 
-	/* We need to reboot */
-	if (SetupPromptReboot(NULL, hwnd, FALSE) == -1)
-	{
-		/* User doesn't want to reboot, or an error occurred */
-		rc = 5;
-		goto cleanup;
-	}
+    /* We need to reboot */
+    if (SetupPromptReboot(NULL, hwnd, FALSE) == -1)
+    {
+        /* User doesn't want to reboot, or an error occurred */
+        rc = 5;
+        goto cleanup;
+    }
 
-	rc = 0;
+    rc = 0;
 
 cleanup:
-	if (hNewDev != NULL)
-		FreeLibrary(hNewDev);
-	return rc;
+    if (hNewDev != NULL)
+        FreeLibrary(hNewDev);
+    return rc;
 }
+
 
 /* Control Panel Callback */
 LONG CALLBACK
 CPlApplet(HWND hwndCpl,
-	UINT uMsg,
-	LPARAM lParam1,
-	LPARAM lParam2)
+          UINT uMsg,
+          LPARAM lParam1,
+          LPARAM lParam2)
 {
-	int i = (int)lParam1;
+    INT i = (INT)lParam1;
 
-	switch (uMsg)
-	{
-		case CPL_INIT:
-			return TRUE;
+    switch (uMsg)
+    {
+        case CPL_INIT:
+            return TRUE;
 
-		case CPL_GETCOUNT:
-			return sizeof(Applets)/sizeof(Applets[0]);
+        case CPL_GETCOUNT:
+            return sizeof(Applets)/sizeof(Applets[0]);
 
-		case CPL_INQUIRE:
-		{
-			CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-			CPlInfo->lData = 0;
-			CPlInfo->idIcon = Applets[i].idIcon;
-			CPlInfo->idName = Applets[i].idName;
-			CPlInfo->idInfo = Applets[i].idDescription;
-			break;
-		}
+        case CPL_INQUIRE:
+            {
+                CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = Applets[i].idIcon;
+                CPlInfo->idName = Applets[i].idName;
+                CPlInfo->idInfo = Applets[i].idDescription;
+            }
+            break;
 
-		case CPL_DBLCLK:
-		{
-			Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
-			break;
-		}
-	}
-	return FALSE;
+        case CPL_DBLCLK:
+            Applets[i].AppletProc(hwndCpl, uMsg, lParam1, lParam2);
+            break;
+    }
+
+    return FALSE;
 }
+
 
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
-	UNREFERENCED_PARAMETER(lpvReserved);
-	switch(dwReason)
-	{
-		case DLL_PROCESS_ATTACH:
-			hApplet = hinstDLL;
-			break;
-	}
-	return TRUE;
+    UNREFERENCED_PARAMETER(lpvReserved);
+
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            hApplet = hinstDLL;
+            break;
+    }
+
+    return TRUE;
 }

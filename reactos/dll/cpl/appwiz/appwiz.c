@@ -19,7 +19,7 @@
 /* $Id$
  *
  * PROJECT:         ReactOS Software Control Panel
- * FILE:            lib/cpl/system/appwiz.c
+ * FILE:            dll/cpl/appwiz/appwiz.c
  * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
  * UPDATE HISTORY:
@@ -49,214 +49,221 @@ HINSTANCE hApplet = 0;
 /* Applets */
 APPLET Applets[NUM_APPLETS] = 
 {
-  {IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
+    {IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };
 
 
 static VOID
 CallUninstall(HWND hwndDlg)
 {
-  STARTUPINFO si;
-  PROCESS_INFORMATION pi;
-  int nIndex;
-  HKEY hKey;
-  DWORD dwType;
-  TCHAR pszUninstallString[MAX_PATH];
-  DWORD dwSize;
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    INT nIndex;
+    HKEY hKey;
+    DWORD dwType;
+    TCHAR pszUninstallString[MAX_PATH];
+    DWORD dwSize;
 
-  nIndex = (int) SendDlgItemMessage(hwndDlg, IDC_SOFTWARELIST, LB_GETCURSEL, 0, 0);
-  if (nIndex == -1)
-  {
-    MessageBox(hwndDlg,
-               _TEXT("No item selected"),
-               _TEXT("Error"),
-               MB_ICONSTOP);
-  }
-  else
-  {
-    hKey = (HKEY)SendDlgItemMessage(hwndDlg, IDC_SOFTWARELIST, LB_GETITEMDATA, (WPARAM)nIndex, 0);
-
-    dwType = REG_SZ;
-    dwSize = MAX_PATH;
-    if (RegQueryValueEx(hKey,
-                        _TEXT("UninstallString"),
-                        NULL,
-                        &dwType,
-                        (LPBYTE)pszUninstallString,
-                        &dwSize) == ERROR_SUCCESS)
+    nIndex = (INT)SendDlgItemMessage(hwndDlg, IDC_SOFTWARELIST, LB_GETCURSEL, 0, 0);
+    if (nIndex == -1)
     {
-      ZeroMemory(&si, sizeof(si));
-      si.cb = sizeof(si);
-      si.wShowWindow = SW_SHOW;
-      if (CreateProcess(NULL,pszUninstallString,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
-      {
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-      }
+        MessageBox(hwndDlg,
+                   _TEXT("No item selected"),
+                   _TEXT("Error"),
+                   MB_ICONSTOP);
     }
     else
     {
-      MessageBox(hwndDlg,
-                 _TEXT("Unable to read UninstallString. This entry is invalid or has been created by an MSI installer."),
-                 _TEXT("Error"),
-                 MB_ICONSTOP);
+        hKey = (HKEY)SendDlgItemMessage(hwndDlg, IDC_SOFTWARELIST, LB_GETITEMDATA, (WPARAM)nIndex, 0);
+
+        dwType = REG_SZ;
+        dwSize = MAX_PATH;
+        if (RegQueryValueEx(hKey,
+                            _TEXT("UninstallString"),
+                            NULL,
+                            &dwType,
+                            (LPBYTE)pszUninstallString,
+                            &dwSize) == ERROR_SUCCESS)
+        {
+            ZeroMemory(&si, sizeof(si));
+            si.cb = sizeof(si);
+            si.wShowWindow = SW_SHOW;
+            if (CreateProcess(NULL,pszUninstallString,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
+            {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+            }
+        }
+        else
+        {
+            MessageBox(hwndDlg,
+                       _TEXT("Unable to read UninstallString. This entry is invalid or has been created by an MSI installer."),
+                       _TEXT("Error"),
+                       MB_ICONSTOP);
+        }
     }
-  }
 }
 
 
-static void FillSoftwareList(HWND hwndDlg)
+static VOID
+FillSoftwareList(HWND hwndDlg)
 {
-  TCHAR pszName[MAX_PATH];
-  TCHAR pszDisplayName[MAX_PATH];
-  TCHAR pszParentKeyName[MAX_PATH];
-  FILETIME FileTime;
-  HKEY hKey;
-  HKEY hSubKey;
-  DWORD dwType;
-  DWORD dwSize;
-  DWORD dwValue = 0;
-  BOOL bIsUpdate = FALSE;
-  BOOL bIsSystemComponent = FALSE;
-  BOOL bShowUpdates = FALSE;
-  int i;
-  ULONG index;
+    TCHAR pszName[MAX_PATH];
+    TCHAR pszDisplayName[MAX_PATH];
+    TCHAR pszParentKeyName[MAX_PATH];
+    FILETIME FileTime;
+    HKEY hKey;
+    HKEY hSubKey;
+    DWORD dwType;
+    DWORD dwSize;
+    DWORD dwValue = 0;
+    BOOL bIsUpdate = FALSE;
+    BOOL bIsSystemComponent = FALSE;
+    BOOL bShowUpdates = FALSE;
+    INT i;
+    ULONG ulIndex;
 
-  bShowUpdates = (SendMessage(GetDlgItem(hwndDlg, IDC_SHOWUPDATES), BM_GETCHECK, 0, 0) == BST_CHECKED);
+    bShowUpdates = (SendMessage(GetDlgItem(hwndDlg, IDC_SHOWUPDATES), BM_GETCHECK, 0, 0) == BST_CHECKED);
 
-  if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                 _TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
-                 &hKey) != ERROR_SUCCESS)
-  {
-    MessageBox(hwndDlg,
-               _TEXT("Unable to open Uninstall Key"),
-               _TEXT("Error"),
-               MB_ICONSTOP);
-    return;
-  }
-
-  i = 0;
-  dwSize = MAX_PATH;
-  while (RegEnumKeyEx (hKey, i, pszName, &dwSize, NULL, NULL, NULL, &FileTime) == ERROR_SUCCESS)
-  {
-    if (RegOpenKey(hKey,pszName,&hSubKey)==ERROR_SUCCESS)
+    if (RegOpenKey(HKEY_LOCAL_MACHINE,
+                   _TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
+                   &hKey) != ERROR_SUCCESS)
     {
-      dwType = REG_DWORD;
-      dwSize = sizeof(DWORD);
-      if (RegQueryValueEx(hSubKey,
-                          _TEXT("SystemComponent"),
-                          NULL,
-                          &dwType,
-                          (LPBYTE)&dwValue,
-                          &dwSize) == ERROR_SUCCESS)
-      {
-        bIsSystemComponent = (dwValue == 0x1);
-      }
-      else {
-        bIsSystemComponent = FALSE;
-      }
-      dwType = REG_SZ;
-      dwSize = MAX_PATH;
-      bIsUpdate = (RegQueryValueEx(hSubKey,
-                          _TEXT("ParentKeyName"),
-                          NULL,
-                          &dwType,
-                          (LPBYTE)pszParentKeyName,
-                          &dwSize) == ERROR_SUCCESS);
-      dwSize = MAX_PATH;
-      if (RegQueryValueEx(hSubKey,
-                          _TEXT("DisplayName"),
-                          NULL,
-                          &dwType,
-                          (LPBYTE)pszDisplayName,
-                          &dwSize) == ERROR_SUCCESS)
-      {
-        if ((!bIsUpdate) && (!bIsSystemComponent))
-        {
-          index = (ULONG) SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_ADDSTRING,0,(LPARAM)pszDisplayName);
-          SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_SETITEMDATA,index,(LPARAM)hSubKey);
-        }
-        else if (bIsUpdate && bShowUpdates)
-        {
-          index = (ULONG) SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_ADDSTRING,0,(LPARAM)pszDisplayName);
-          SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_SETITEMDATA,index,(LPARAM)hSubKey);
-        }
-      }
+        MessageBox(hwndDlg,
+                   _TEXT("Unable to open Uninstall Key"),
+                   _TEXT("Error"),
+                   MB_ICONSTOP);
+        return;
     }
 
+    i = 0;
     dwSize = MAX_PATH;
-    i++;
-  }
+    while (RegEnumKeyEx (hKey, i, pszName, &dwSize, NULL, NULL, NULL, &FileTime) == ERROR_SUCCESS)
+    {
+        if (RegOpenKey(hKey,pszName,&hSubKey) == ERROR_SUCCESS)
+        {
+            dwType = REG_DWORD;
+            dwSize = sizeof(DWORD);
+            if (RegQueryValueEx(hSubKey,
+                                _TEXT("SystemComponent"),
+                                NULL,
+                                &dwType,
+                                (LPBYTE)&dwValue,
+                                &dwSize) == ERROR_SUCCESS)
+            {
+                bIsSystemComponent = (dwValue == 0x1);
+            }
+            else
+            {
+                bIsSystemComponent = FALSE;
+            }
 
-  RegCloseKey(hKey);
+            dwType = REG_SZ;
+            dwSize = MAX_PATH;
+            bIsUpdate = (RegQueryValueEx(hSubKey,
+                                         _TEXT("ParentKeyName"),
+                                         NULL,
+                                         &dwType,
+                                         (LPBYTE)pszParentKeyName,
+                                         &dwSize) == ERROR_SUCCESS);
+            dwSize = MAX_PATH;
+            if (RegQueryValueEx(hSubKey,
+                                _TEXT("DisplayName"),
+                                NULL,
+                                &dwType,
+                                (LPBYTE)pszDisplayName,
+                                &dwSize) == ERROR_SUCCESS)
+            {
+                if ((!bIsUpdate) && (!bIsSystemComponent))
+                {
+                    ulIndex = (ULONG)SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_ADDSTRING,0,(LPARAM)pszDisplayName);
+                    SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_SETITEMDATA,ulIndex,(LPARAM)hSubKey);
+                }
+                else if (bIsUpdate && bShowUpdates)
+                {
+                    ulIndex = (ULONG)SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_ADDSTRING,0,(LPARAM)pszDisplayName);
+                    SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_SETITEMDATA,ulIndex,(LPARAM)hSubKey);
+                }
+            }
+        }
+
+        dwSize = MAX_PATH;
+        i++;
+    }
+
+    RegCloseKey(hKey);
 }
+
 
 /* Property page dialog callback */
 static INT_PTR CALLBACK
-InstallPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+InstallPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  switch (uMsg)
-  {
-    case WM_INITDIALOG:
-      EnableWindow(GetDlgItem(hwndDlg,IDC_INSTALL), FALSE);
-      FillSoftwareList(hwndDlg);
-      break;
+    UNREFERENCED_PARAMETER(lParam);
 
-    case WM_COMMAND:
-      switch (LOWORD(wParam))
-      {
-        case IDC_SHOWUPDATES:
-          if (HIWORD(wParam) == BN_CLICKED)
-          {
-            SendDlgItemMessage(hwndDlg, IDC_SOFTWARELIST, LB_RESETCONTENT, 0, 0);
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            EnableWindow(GetDlgItem(hwndDlg, IDC_INSTALL), FALSE);
             FillSoftwareList(hwndDlg);
-          }
-          break;
-        case IDC_SOFTWARELIST:
-          if (HIWORD(wParam) == LBN_DBLCLK)
-          {
-            CallUninstall(hwndDlg);
-          }
-          break;
+            break;
 
-        case IDC_ADDREMOVE:
-          CallUninstall(hwndDlg);
-          break;
-      }
-      break;
-  }
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_SHOWUPDATES:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        SendDlgItemMessage(hwndDlg, IDC_SOFTWARELIST, LB_RESETCONTENT, 0, 0);
+                        FillSoftwareList(hwndDlg);
+                    }
+                    break;
 
-  return FALSE;
+                case IDC_SOFTWARELIST:
+                    if (HIWORD(wParam) == LBN_DBLCLK)
+                    {
+                        CallUninstall(hwndDlg);
+                    }
+                    break;
+
+                case IDC_ADDREMOVE:
+                    CallUninstall(hwndDlg);
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
 }
 
 
 /* Property page dialog callback */
 static INT_PTR CALLBACK
-RosPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+RosPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(wParam);
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-  }
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
 
-  return FALSE;
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+    }
+
+    return FALSE;
 }
 
 
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 {
-  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-  psp->dwSize = sizeof(PROPSHEETPAGE);
-  psp->dwFlags = PSP_DEFAULT;
-  psp->hInstance = hApplet;
-  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-  psp->pfnDlgProc = DlgProc;
+    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
+    psp->dwSize = sizeof(PROPSHEETPAGE);
+    psp->dwFlags = PSP_DEFAULT;
+    psp->hInstance = hApplet;
+    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pfnDlgProc = DlgProc;
 }
 
 
@@ -265,28 +272,28 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 LONG CALLBACK
 SystemApplet(VOID)
 {
-  PROPSHEETPAGE psp[2];
-  PROPSHEETHEADER psh;
-  TCHAR Caption[1024];
+    PROPSHEETPAGE psp[2];
+    PROPSHEETHEADER psh;
+    TCHAR Caption[1024];
 
-  LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
+    LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
-  ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-  psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE;
-  psh.hwndParent = NULL;
-  psh.hInstance = hApplet;
-  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-  psh.pszCaption = Caption;
-  psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
-  psh.nStartPage = 0;
-  psh.ppsp = psp;
-  psh.pfnCallback = NULL;
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPSHEETPAGE;
+    psh.hwndParent = NULL;
+    psh.hInstance = hApplet;
+    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
+    psh.pszCaption = Caption;
+    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nStartPage = 0;
+    psh.ppsp = psp;
+    psh.pfnCallback = NULL;
 
-  InitPropSheetPage(&psp[0], IDD_PROPPAGEINSTALL, (DLGPROC) InstallPageProc);
-  InitPropSheetPage(&psp[1], IDD_PROPPAGEROSSETUP, (DLGPROC) RosPageProc);
+    InitPropSheetPage(&psp[0], IDD_PROPPAGEINSTALL, (DLGPROC) InstallPageProc);
+    InitPropSheetPage(&psp[1], IDD_PROPPAGEROSSETUP, (DLGPROC) RosPageProc);
 
-  return (LONG)(PropertySheet(&psh) != -1);
+    return (LONG)(PropertySheet(&psh) != -1);
 }
 
 
@@ -294,47 +301,49 @@ SystemApplet(VOID)
 LONG CALLBACK
 CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-  CPLINFO *CPlInfo;
-  DWORD i;
+    CPLINFO *CPlInfo;
+    DWORD i;
 
-  UNREFERENCED_PARAMETER(hwndCPl);
+    UNREFERENCED_PARAMETER(hwndCPl);
 
-  i = (DWORD)lParam1;
-  switch(uMsg)
-  {
-    case CPL_INIT:
-      return TRUE;
+    i = (DWORD)lParam1;
+    switch (uMsg)
+    {
+        case CPL_INIT:
+            return TRUE;
 
-    case CPL_GETCOUNT:
-      return NUM_APPLETS;
+        case CPL_GETCOUNT:
+            return NUM_APPLETS;
 
-    case CPL_INQUIRE:
-      CPlInfo = (CPLINFO*)lParam2;
-      CPlInfo->lData = 0;
-      CPlInfo->idIcon = Applets[i].idIcon;
-      CPlInfo->idName = Applets[i].idName;
-      CPlInfo->idInfo = Applets[i].idDescription;
-      break;
+        case CPL_INQUIRE:
+            CPlInfo = (CPLINFO*)lParam2;
+            CPlInfo->lData = 0;
+            CPlInfo->idIcon = Applets[i].idIcon;
+            CPlInfo->idName = Applets[i].idName;
+            CPlInfo->idInfo = Applets[i].idDescription;
+            break;
 
-    case CPL_DBLCLK:
-      Applets[i].AppletProc();
-      break;
-  }
+        case CPL_DBLCLK:
+            Applets[i].AppletProc();
+            break;
+    }
 
-  return FALSE;
+    return FALSE;
 }
 
 
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
-  UNREFERENCED_PARAMETER(lpvReserved);
-  switch(dwReason)
-  {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-      hApplet = hinstDLL;
-      break;
-  }
-  return TRUE;
+    UNREFERENCED_PARAMETER(lpvReserved);
+
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+        case DLL_THREAD_ATTACH:
+            hApplet = hinstDLL;
+            break;
+    }
+
+    return TRUE;
 }

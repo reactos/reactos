@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS License Manager
- * FILE:            lib/cpl/liccpa
+ * FILE:            dll/cpl/liccpa/liccpa.c
  * PURPOSE:         License Manager GUI
  * 
  * PROGRAMMERS:     Steven Edwards (steven_ed4153@yahoo.com)
@@ -20,108 +20,97 @@
 
 HINSTANCE hApplet = 0;
 
+
 INT_PTR CALLBACK
-DlgMainProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+DlgMainProc(HWND hwndDlg,
+            UINT uMsg,
+            WPARAM wParam,
+            LPARAM lParam)
 {
-  TCHAR szString[256];
+    TCHAR szString[256];
 
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
 
-    case WM_COMMAND:
-    {
-      switch(HIWORD(wParam))
-      {
-        case LBN_DBLCLK:
-        {
-          switch(LOWORD(wParam))
-          {
-          }
-          break;
-        }
-        default:
-        {
-          switch(LOWORD(wParam))
-          {
-            case IDC_OK:
+        case WM_COMMAND:
+            switch (HIWORD(wParam))
             {
-              break;
+                case LBN_DBLCLK:
+                    switch (LOWORD(wParam))
+                    {
+                    }
+                    break;
+
+                default:
+                    switch (LOWORD(wParam))
+                    {
+                        case IDC_OK:
+                            break;
+
+                        case IDC_CANCEL:
+                            EndDialog(hwndDlg, IDC_CANCEL);
+                            break;
+                    }
+                    break;
             }
-            case IDC_CANCEL:
-            {
-              EndDialog(hwndDlg, IDC_CANCEL);
-              break;
-            }
-          }
-          break;
-        }
-      }
-      break;
+            break;
+
+        case WM_CLOSE:
+            EndDialog(hwndDlg, IDC_CANCEL);
+            return TRUE;
     }
-    case WM_CLOSE:
-    {
-      EndDialog(hwndDlg, IDC_CANCEL);
-      return TRUE;
-    }
-  }
-  return FALSE;
+
+    return FALSE;
 }
 
+
 LONG CALLBACK
-CPlApplet(
-	HWND hwndCPl,
-	UINT uMsg,
-	LPARAM lParam1,
-	LPARAM lParam2)
+CPlApplet(HWND hwndCPl,
+          UINT uMsg,
+          LPARAM lParam1,
+          LPARAM lParam2)
 {
-  switch(uMsg)
-  {
-    case CPL_INIT:
+    switch (uMsg)
     {
-      return TRUE;
+        case CPL_INIT:
+            return TRUE;
+
+        case CPL_GETCOUNT:
+            return 1;
+
+        case CPL_INQUIRE:
+            {
+                CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+                CPlInfo->lData = 0;
+                CPlInfo->idIcon = IDC_CPLICON_1;
+                CPlInfo->idName = IDS_CPLNAME_1;
+                CPlInfo->idInfo = IDS_CPLDESCRIPTION_1;
+            }
+            break;
+
+        case CPL_DBLCLK:
+            DialogBox(hApplet, MAKEINTRESOURCE(IDD_PROPPAGE1), NULL, DlgMainProc);
+            break;
     }
-    case CPL_GETCOUNT:
-    {
-      return 1;
-    }
-    case CPL_INQUIRE:
-    {
-      CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-      CPlInfo->lData = 0;
-      CPlInfo->idIcon = IDC_CPLICON_1;
-      CPlInfo->idName = IDS_CPLNAME_1;
-      CPlInfo->idInfo = IDS_CPLDESCRIPTION_1;
-      break;
-    }
-    case CPL_DBLCLK:
-    {
-      DialogBoxParam(hApplet, MAKEINTRESOURCE(IDD_PROPPAGE1), hwndCPl, DlgMainProc, WM_INITDIALOG);
-      break;
-    }
-  }
-  return FALSE;
+
+    return FALSE;
 }
 
 
 BOOL STDCALL
-DllMain(
-	HINSTANCE hinstDLL,
-	DWORD     dwReason,
-	LPVOID    lpvReserved)
+DllMain(HINSTANCE hinstDLL,
+        DWORD dwReason,
+        LPVOID lpvReserved)
 {
-  switch(dwReason)
-  {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-      hApplet = hinstDLL;
-      break;
-  }
-  return TRUE;
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+        case DLL_THREAD_ATTACH:
+            hApplet = hinstDLL;
+            break;
+    }
+
+    return TRUE;
 }
