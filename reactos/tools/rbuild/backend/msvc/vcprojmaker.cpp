@@ -156,6 +156,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
+			if (files[i]->file.directory != SourceDirectory)
+				continue;
+
 			// We want the full path here for directory support later on
 			string path = Path::RelativeFromDirectory (
 				files[i]->file.relative_path,
@@ -622,27 +625,31 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				break;
 		}
 
-		if ( same_folder_index < split_path.size() )
+		if ( same_folder_index < split_path.size() || last_folder.size() > split_path.size() )
 		{
+			int tabStart = 1;
 			if ( split_path.size() > last_folder.size() )
 			{
 				for ( size_t ifolder = last_folder.size(); ifolder < split_path.size(); ifolder++ )
 					indent_tab.push_back('\t');
+				tabStart = split_path.size() - last_folder.size() + 1;
 			}
 			else if ( split_path.size() < last_folder.size() )
 			{
 				indent_tab.resize( split_path.size() + 3 );
+				tabStart = split_path.size() - last_folder.size() + 1;
 			}
 
-			for ( size_t ifolder = last_folder.size(); ifolder > same_folder_index; ifolder-- )
+			for ( size_t ifolder = last_folder.size(), itab = tabStart; ifolder > same_folder_index; ifolder--, itab++ )
 			{
-				fprintf ( OUT, "%s</Filter>\r\n", indent_tab.substr(0, indent_tab.size() - 1).c_str() );
+				fprintf ( OUT, "%s</Filter>\r\n", indent_tab.substr(0, indent_tab.size() - itab).c_str() );
 			}
 
-			for ( size_t ifolder = same_folder_index; ifolder < split_path.size(); ifolder++ )
+			for ( size_t ifolder = same_folder_index, itab = split_path.size() - same_folder_index; ifolder < split_path.size(); ifolder++, itab-- )
 			{
-				fprintf ( OUT, "%s<Filter\r\n", indent_tab.substr(0, indent_tab.size() - 1).c_str() );
-				fprintf ( OUT, "%sName=\"%s\">\r\n", indent_tab.c_str(), split_path[ifolder].c_str() );
+				const string tab = indent_tab.substr(0, indent_tab.size() - itab);
+				fprintf ( OUT, "%s<Filter\r\n", tab.c_str() );
+				fprintf ( OUT, "%s\tName=\"%s\">\r\n", tab.c_str(), split_path[ifolder].c_str() );
 			}
 
 			last_folder = split_path;
@@ -723,7 +730,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	for ( size_t ifolder = last_folder.size(); ifolder > 0; ifolder-- )
 	{
-		indent_tab.resize( ifolder + 3 );
+		indent_tab.resize( ifolder + 2 );
 		fprintf ( OUT, "%s</Filter>\r\n", indent_tab.c_str() );
 	}
 

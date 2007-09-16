@@ -101,6 +101,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
+			if (files[i]->file.directory != SourceDirectory)
+				continue;
+
 			// We want the full path here for directory support later on
 			string path = Path::RelativeFromDirectory (
 				files[i]->file.relative_path,
