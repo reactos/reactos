@@ -82,7 +82,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
-	string dsp_path = module.output->relative_path;
 	vector<string> c_srcs, source_files, header_files, resource_files, includes, libraries;
 	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
@@ -102,8 +101,11 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
-			// TODO FIXME - do we want only the name of the file here?
-			string file = files[i]->file.name;
+			// We want the full path here for directory support later on
+			string path = Path::RelativeFromDirectory (
+				files[i]->file.relative_path,
+				module.output->relative_path );
+			string file = path + std::string("\\") + files[i]->file.name;
 
 			source_files.push_back ( file );
 			if ( !stricmp ( Right(file,2).c_str(), ".c" ) )

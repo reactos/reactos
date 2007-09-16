@@ -131,7 +131,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	bool console = exe && (module.type == Win32CUI);
 	bool include_idl = false;
 
-	string vcproj_path = module.output->relative_path;
 	vector<string> source_files, resource_files, header_files, includes, includes_ros, libraries;
 	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
@@ -157,8 +156,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
-			// TODO FIXME - do we want only the name of the file here?
-			string file = files[i]->file.name;
+			// We want the full path here for directory support later on
+			string path = Path::RelativeFromDirectory (
+				files[i]->file.relative_path,
+				module.output->relative_path );
+			string file = path + std::string("\\") + files[i]->file.name;
 
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
