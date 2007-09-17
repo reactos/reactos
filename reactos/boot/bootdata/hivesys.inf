@@ -394,7 +394,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Debug", \
  "Video Init", \
  "Video", \
- "Video Save SVGA", \
  "Video Save", \
  "File System", \
  "Event log", \
@@ -406,21 +405,14 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
 
 ; Group order, the first DWORD is the count of entries, 
 ; the following dwords are the tag entries for the load order.
-HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","Boot Bus Extender", 0x00000001, \
+HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","Video Save", 0x00000001, \
   0x02, 0x00, 0x00, 0x00, \
   0x01, 0x00, 0x00, 0x00, \
   0x02, 0x00, 0x00, 0x00
 HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","SCSI Miniport", 0x00000001, \
-  0x09, 0x00, 0x00, 0x00, \
+  0x02, 0x00, 0x00, 0x00, \
   0x10, 0x00, 0x00, 0x00, \
-  0x20, 0x00, 0x00, 0x00, \
-  0x30, 0x00, 0x00, 0x00, \
-  0x40, 0x00, 0x00, 0x00, \
-  0x50, 0x00, 0x00, 0x00, \
-  0x60, 0x00, 0x00, 0x00, \
-  0x70, 0x00, 0x00, 0x00, \
-  0x80, 0x00, 0x00, 0x00, \
-  0x90, 0x00, 0x00, 0x00
+  0x20, 0x00, 0x00, 0x00
 
 ; Session Manager stuff
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","BootExecute", 0x00010000, \
@@ -733,10 +725,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
 
 ; VBE SVGA driver
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Group",0x00000000,"Video Save SVGA"
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Group",0x00000000,"Video Save"
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ImagePath",0x00020000,"system32\drivers\vbemp.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Tag",0x00010001,0x00000001
 
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.VRefresh",0x00010001,1
@@ -750,6 +743,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video Save"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Tag",0x00010001,0x00000002
 
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.VRefresh",0x00010001,1
