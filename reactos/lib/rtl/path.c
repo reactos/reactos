@@ -91,92 +91,69 @@ RtlDetermineDosPathNameType_U(PCWSTR Path)
  * @implemented
  */
 ULONG NTAPI
-RtlIsDosDeviceName_U(PWSTR DeviceName)
+RtlIsDosDeviceName_U(PWSTR dos_name)
 {
-   ULONG Type;
-   ULONG Length = 0;
-   ULONG Offset;
-   PWCHAR wc;
-   UNICODE_STRING DeviceNameU;
+    static const WCHAR consoleW[] = {'\\','\\','.','\\','C','O','N',0};
+    static const WCHAR auxW[3] = {'A','U','X'};
+    static const WCHAR comW[3] = {'C','O','M'};
+    static const WCHAR conW[3] = {'C','O','N'};
+    static const WCHAR lptW[3] = {'L','P','T'};
+    static const WCHAR nulW[3] = {'N','U','L'};
+    static const WCHAR prnW[3] = {'P','R','N'};
 
-   if (DeviceName == NULL)
-     {
-	return 0;
-     }
+    const WCHAR *start, *end, *p;
 
-   while (DeviceName[Length])
-     {
-	Length++;
-     }
+    switch(RtlDetermineDosPathNameType_U( dos_name ))
+    {
+    case RtlPathTypeUnknown:
+    case RtlPathTypeUncAbsolute:
+        return 0;
+    case RtlPathTypeLocalDevice:
+        if (!_wcsicmp( dos_name, consoleW ))
+            return MAKELONG( sizeof(conW), 4 * sizeof(WCHAR) );  /* 4 is length of \\.\ prefix */
+        return 0;
+    default:
+        break;
+    }
 
-   Type = RtlDetermineDosPathNameType_U(DeviceName);
-   if (Type <= 1)
-     {
-	return 0;
-     }
+    end = dos_name + wcslen(dos_name) - 1;
+    while (end >= dos_name && *end == ':') end--;  /* remove all trailing ':' */
 
-   if (Type == 6)
-     {
-        DeviceNameU.Length = DeviceNameU.MaximumLength = Length * sizeof(WCHAR);
-	DeviceNameU.Buffer = DeviceName;
-	if (Length == 7 &&
-	    RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_condev, TRUE))
-		return 0x00080006;
-	return 0;
-     }
+    /* find start of file name */
+    for (start = end; start >= dos_name; start--)
+    {
+        if (IS_PATH_SEPARATOR(start[0])) break;
+        /* check for ':' but ignore if before extension (for things like NUL:.txt) */
+        if (start[0] == ':' && start[1] != '.') break;
+    }
+    start++;
 
-   /* name can end with ':' */
-   if (Length && DeviceName[Length - 1 ] == L':')
-     {
-	Length--;
-     }
+    /* remove extension */
+    if ((p = wcschr( start, '.' )))
+    {
+        end = p - 1;
+        if (end >= dos_name && *end == ':') end--;  /* remove trailing ':' before extension */
+    }
+    /* remove trailing spaces */
+    while (end >= dos_name && *end == ' ') end--;
 
-   /* there can be spaces or points at the end of name */
-   wc = DeviceName + Length - 1;
-   while (Length && (*wc == L'.' || *wc == L' '))
-     {
-	Length--;
-	wc--;
-     }
-
-   /* let's find a beginning of name */
-   wc = DeviceName + Length - 1;
-   while (wc > DeviceName && !IS_PATH_SEPARATOR(*(wc - 1)))
-     {
-	wc--;
-     }
-   Offset = wc - DeviceName;
-   Length -= Offset;
-   DeviceNameU.Length = DeviceNameU.MaximumLength = 3 * sizeof(WCHAR);
-   DeviceNameU.Buffer = wc;
-
-   /* check for LPTx or COMx */
-   if (Length == 4 && wc[3] >= L'0' && wc[3] <= L'9')
-     {
-	if (wc[3] == L'0')
-	  {
-	     return 0;
-	  }
-
-	if (RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_lpt, TRUE) ||
-	    RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_com, TRUE))
-	  {
-	     return ((Offset * 2) << 16 ) | 8;
-	  }
-	return 0;
-     }
-
-   /* check for PRN,AUX,NUL or CON */
-   if (Length == 3 &&
-       (RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_prn, TRUE) ||
-        RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_aux, TRUE) ||
-        RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_nul, TRUE) ||
-        RtlEqualUnicodeString(&DeviceNameU, (PUNICODE_STRING)&_con, TRUE)))
-     {
-	return ((Offset * 2) << 16) | 6;
-     }
-
-   return 0;
+    /* now we have a potential device name between start and end, check it */
+    switch(end - start + 1)
+    {
+    case 3:
+        if (_wcsnicmp( start, auxW, 3 ) &&
+            _wcsnicmp( start, conW, 3 ) &&
+            _wcsnicmp( start, nulW, 3 ) &&
+            _wcsnicmp( start, prnW, 3 )) break;
+        return MAKELONG( 3 * sizeof(WCHAR), (start - dos_name) * sizeof(WCHAR) );
+    case 4:
+        if (_wcsnicmp( start, comW, 3 ) && _wcsnicmp( start, lptW, 3 )) break;
+        if (*end <= '0' || *end > '9') break;
+        return MAKELONG( 4 * sizeof(WCHAR), (start - dos_name) * sizeof(WCHAR) );
+    default:  /* can't match anything */
+        break;
+    }
+    return 0;
 }
 
 
@@ -389,7 +366,12 @@ static __inline void collapse_path( WCHAR *path, UINT mark )
         }
         /* skip to the next component */
         while (*p && *p != '\\') p++;
-        if (*p == '\\') p++;
+        if (*p == '\\')
+        {
+            /* remove last dot in previous dir name */
+            if (p > path + mark && p[-1] == '.') memmove( p-1, p, (wcslen(p) + 1) * sizeof(WCHAR) );
+            else p++;
+        }
     }
 
     /* remove trailing spaces and dots (yes, Windows really does that, don't ask) */
@@ -439,7 +421,8 @@ static ULONG get_full_path_helper(
 
     RtlAcquirePebLock();
 
-    cd = &((PCURDIR)&NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->CurrentDirectory.DosPath)->DosPath;
+    //cd = &((PCURDIR)&NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->CurrentDirectory.DosPath)->DosPath;
+    cd = &NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->CurrentDirectory.DosPath;
 
     switch (type = RtlDetermineDosPathNameType_U(name))
     {

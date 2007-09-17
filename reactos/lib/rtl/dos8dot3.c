@@ -238,79 +238,64 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
                        IN OUT POEM_STRING AnsiName OPTIONAL,
                        IN OUT PBOOLEAN SpacesFound OPTIONAL)
 {
-   PANSI_STRING name = AnsiName;
-   ANSI_STRING DummyString;
-   CHAR Buffer[12];
-   char *str;
-   ULONG Length;
-   ULONG i;
-   NTSTATUS Status;
-   BOOLEAN HasSpace = FALSE;
-   BOOLEAN HasDot = FALSE;
+    static const char Illegal[] = "*?<>|\"+=,;[]:/\\\345";
+    int Dot = -1;
+    int i;
+    char Buffer[12];
+    OEM_STRING OemString;
+    BOOLEAN GotSpace = FALSE;
 
-   if (UnicodeName->Length > 24)
-   {
-      return(FALSE); /* name too long */
-   }
+    if (!AnsiName)
+    {
+        OemString.Length = sizeof(Buffer);
+        OemString.MaximumLength = sizeof(Buffer);
+        OemString.Buffer = Buffer;
+        AnsiName = &OemString;
+    }
+    if (RtlUpcaseUnicodeStringToCountedOemString( AnsiName, UnicodeName, FALSE ) != STATUS_SUCCESS)
+        return FALSE;
 
-   if (!name)
-   {
-      name = &DummyString;
-      name->Length = 0;
-      name->MaximumLength = 12;
-      name->Buffer = Buffer;
-   }
+    if (AnsiName->Length > 12) return FALSE;
 
-   Status = RtlUpcaseUnicodeStringToCountedOemString(name,
-            UnicodeName,
-            FALSE);
-   if (!NT_SUCCESS(Status))
-   {
-      return(FALSE);
-   }
+    /* a starting . is invalid, except for . and .. */
+    if (AnsiName->Buffer[0] == '.')
+    {
+        if (AnsiName->Length != 1 && (AnsiName->Length != 2 || AnsiName->Buffer[1] != '.')) return FALSE;
+        if (SpacesFound) *SpacesFound = FALSE;
+        return TRUE;
+    }
 
-   Length = name->Length;
-   str = name->Buffer;
-
-   if (!(Length == 1 && *str == '.') &&
-         !(Length == 2 && *str == '.' && *(str + 1) == '.'))
-   {
-      for (i = 0; i < Length; i++, str++)
-      {
-         switch (*str)
-         {
-            case ' ':
-               HasSpace = TRUE;
-               break;
-
-            case '.':
-               if ((HasDot) ||   /* two or more dots */
-                     (i == 0) ||   /* dot is first char */
-                     (i + 1 == Length) || /* dot is last char */
-                     (Length - i > 4) ||  /* more than 3 chars of extension */
-                     (HasDot == FALSE && i > 8)) /* name is longer than 8 chars */
-                  return(FALSE);
-               HasDot = TRUE;
-               break;
-            default:
-               if (RtlpIsShortIllegal(*str))
-               {
-                  return(FALSE);
-               }
-         }
-      }
-   }
-
-   /* Name is longer than 8 chars and does not have an extension */
-   if (Length > 8 && HasDot == FALSE)
-   {
-      return(FALSE);
-   }
-
-   if (SpacesFound)
-      *SpacesFound = HasSpace;
-
-   return(TRUE);
+    for (i = 0; i < AnsiName->Length; i++)
+    {
+        switch (AnsiName->Buffer[i])
+        {
+        case ' ':
+            /* leading/trailing spaces not allowed */
+            if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
+            GotSpace = TRUE;
+            break;
+        case '.':
+            if (Dot != -1) return FALSE;
+            Dot = i;
+            break;
+        default:
+            if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
+            break;
+        }
+    }
+    /* check file part is shorter than 8, extension shorter than 3
+     * dot cannot be last in string
+     */
+    if (Dot == -1)
+    {
+        if (AnsiName->Length > 8) return FALSE;
+    }
+    else
+    {
+        if (Dot > 8 || (AnsiName->Length - Dot > 4) || Dot == AnsiName->Length - 1) return FALSE;
+    }
+    if (SpacesFound) *SpacesFound = GotSpace;
+    return TRUE;
 }
 
 /*
