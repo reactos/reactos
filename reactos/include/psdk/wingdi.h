@@ -1218,12 +1218,12 @@ typedef struct _ABC {
 	int abcA;
 	UINT abcB;
 	int abcC;
-} ABC,*LPABC;
+} ABC, *PABC, *LPABC;
 typedef struct _ABCFLOAT {
 	FLOAT abcfA;
 	FLOAT abcfB;
 	FLOAT abcfC;
-} ABCFLOAT,*LPABCFLOAT;
+} ABCFLOAT, *PABCFLOAT, *LPABCFLOAT;
 typedef struct tagBITMAP {
 	LONG	bmType;
 	LONG	bmWidth;
@@ -1349,11 +1349,11 @@ typedef struct tagFONTSIGNATURE {
 	DWORD	fsUsb[4];
 	DWORD	fsCsb[2];
 } FONTSIGNATURE, *PFONTSIGNATURE,*LPFONTSIGNATURE;
-typedef struct {
+typedef struct tagCHARSETINFO {
 	UINT ciCharset;
 	UINT ciACP;
 	FONTSIGNATURE fs;
-} CHARSETINFO,*LPCHARSETINFO;
+} CHARSETINFO, *PCHARSETINFO, *LPCHARSETINFO;
 typedef struct  tagCOLORADJUSTMENT {
 	WORD	caSize;
 	WORD	caFlags;
@@ -1476,7 +1476,7 @@ typedef struct tagDIBSECTION {
 	DWORD dsBitfields[3];
 	HANDLE dshSection;
 	DWORD dsOffset;
-} DIBSECTION;
+} DIBSECTION,*PDIBSECTION,*LPDIBSECTION;
 typedef struct _DOCINFOA {
 	int cbSize;
 	LPCSTR lpszDocName;
@@ -1497,12 +1497,17 @@ typedef struct tagEMR {
 } EMR,*PEMR;
 
 #if(WINVER >= 0x0400)
-typedef struct tagEMRGLSRECORD
-{
-    EMR   emr;
-    DWORD cbData;       
-    BYTE  Data[1];
+typedef struct tagEMRGLSRECORD {
+	EMR emr;
+	DWORD cbData;
+	BYTE Data[1];
 } EMRGLSRECORD, *PEMRGLSRECORD;
+typedef struct tagEMRGLSBOUNDEDRECORD {
+	EMR emr;
+	RECTL rclBounds;
+	DWORD cbData;
+	BYTE Data[1];
+} EMRGLSBOUNDEDRECORD, *PEMRGLSBOUNDEDRECORD;
 #endif
 typedef struct tagEMRANGLEARC {
 	EMR emr;
@@ -1537,8 +1542,9 @@ typedef struct tagEMRBITBLT {
 	LONG ySrc;
 	XFORM xformSrc;
 	COLORREF crBkColorSrc;
-	DWORD iUsageSrc;
+    DWORD iUsageSrc;
 	DWORD offBmiSrc;
+	DWORD cbBmiSrc;
 	DWORD offBitsSrc;
 	DWORD cbBitsSrc;
 } EMRBITBLT,*PEMRBITBLT;
@@ -1548,6 +1554,11 @@ typedef struct tagLOGBRUSH {
 	LONG lbHatch;
 } LOGBRUSH,*PLOGBRUSH,*LPLOGBRUSH;
 typedef LOGBRUSH PATTERN,*PPATTERN,*LPPATTERN;
+typedef struct tagLOGBRUSH32 {
+	UINT lbStyle;
+	COLORREF lbColor;
+	ULONG lbHatch;
+} LOGBRUSH32, *PLOGBRUSH32;
 typedef struct tagEMRCREATEBRUSHINDIRECT {
 	EMR emr;
 	DWORD ihBrush;
@@ -1579,6 +1590,14 @@ typedef struct tagLOGCOLORSPACEW {
 	DWORD lcsGammaBlue;
 	WCHAR lcsFilename[MAX_PATH];
 } LOGCOLORSPACEW,*LPLOGCOLORSPACEW;
+typedef struct tagEMRCREATECOLORSPACEW {
+	EMR emr;
+	DWORD ihCS;
+	LOGCOLORSPACEW lcs;
+	DWORD dwFlags;
+	DWORD cbData;
+	BYTE Data[1];
+} EMRCREATECOLORSPACEW, *PEMRCREATECOLORSPACEW;
 typedef struct tagEMRCREATECOLORSPACE {
 	EMR emr;
 	DWORD ihCS;
@@ -1662,7 +1681,7 @@ typedef struct tagPANOSE {
 	BYTE bLetterform;
 	BYTE bMidline;
 	BYTE bXHeight;
-} PANOSE;
+} PANOSE, *LPPANOSE;;
 typedef struct tagLOGFONTA {
 	LONG	lfHeight;
 	LONG	lfWidth;
@@ -1732,7 +1751,7 @@ typedef struct tagEXTLOGPEN {
 	LONG elpHatch;
 	DWORD elpNumEntries;
 	DWORD elpStyleEntry[1];
-} EXTLOGPEN,*PEXTLOGPEN,*LPEXTLOGPEN;
+} EXTLOGPEN,*PEXTLOGPEN,*LPEXTLOGPEN,*NPEXTLOGPEN;
 typedef struct tagEMREXTCREATEPEN {
 	EMR emr;
 	DWORD ihPen;
@@ -1786,7 +1805,7 @@ typedef struct tagEMRFORMAT   {
 	DWORD nVersion;
 	DWORD cbData;
 	DWORD offData;
-} EMRFORMAT;
+} EMRFORMAT, *PEMRFORMAT;
 
 
 typedef struct tagEMRSETCOLORSPACE
@@ -2175,7 +2194,7 @@ typedef struct _RGNDATAHEADER {
 	DWORD nCount;
 	DWORD nRgnSize;
 	RECT rcBound;
-} RGNDATAHEADER;
+} RGNDATAHEADER, *PRGNDATAHEADER;
 typedef struct _RGNDATA {
 	RGNDATAHEADER rdh;
 	char Buffer[1];
@@ -2622,6 +2641,11 @@ typedef int (CALLBACK *OLDFONTENUMPROCA)(ENUMLOGFONTEXA*,NEWTEXTMETRICEXA*,DWORD
 typedef int (CALLBACK *OLDFONTENUMPROCW)(ENUMLOGFONTEXW*,NEWTEXTMETRICEXW*,DWORD,LPARAM);
 typedef OLDFONTENUMPROCA FONTENUMPROCA;
 typedef OLDFONTENUMPROCW FONTENUMPROCW;
+#ifdef UNICODE
+#define OLDFONTENUMPROC  OLDFONTENUMPROCW
+#else
+#define OLDFONTENUMPROC  OLDFONTENUMPROCA
+#endif
 typedef int (CALLBACK *ICMENUMPROCA)(LPSTR,LPARAM);
 typedef int (CALLBACK *ICMENUMPROCW)(LPWSTR,LPARAM);
 typedef void (CALLBACK *GOBJENUMPROC)(LPVOID,LPARAM);

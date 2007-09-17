@@ -27,6 +27,7 @@ extern "C" {
 /* some typedefs for function parameters */
 typedef unsigned int ALG_ID;
 typedef unsigned long HCRYPTPROV;
+typedef unsigned long HCRYPTPROV_LEGACY;
 typedef unsigned long HCRYPTKEY;
 typedef unsigned long HCRYPTHASH;
 typedef void *HCERTSTORE;
@@ -3003,6 +3004,286 @@ typedef struct _CERT_CHAIN_ENGINE_CONFIG
     DWORD       MaximumCachedCertificates;
     DWORD       CycleDetectionModulus;
 } CERT_CHAIN_ENGINE_CONFIG, *PCERT_CHAIN_ENGINE_CONFIG;
+
+/* message-related definitions */
+
+typedef BOOL (WINAPI *PFN_CMSG_STREAM_OUTPUT)(const void *pvArg, BYTE *pbData,
+ DWORD cbData, BOOL fFinal);
+
+#define CMSG_INDEFINITE_LENGTH 0xffffffff
+
+typedef struct _CMSG_STREAM_INFO
+{
+    DWORD cbContent;
+    PFN_CMSG_STREAM_OUTPUT pfnStreamOutput;
+    void *pvArg;
+} CMSG_STREAM_INFO, *PCMSG_STREAM_INFO;
+
+typedef struct _CERT_ISSUER_SERIAL_NUMBER
+{
+    CERT_NAME_BLOB     Issuer;
+    CRYPT_INTEGER_BLOB SerialNumber;
+} CERT_ISSUER_SERIAL_NUMBER, *PCERT_ISSUER_SERIAL_NUMBER;
+
+typedef struct _CERT_ID
+{
+    DWORD dwIdChoice;
+    union {
+        CERT_ISSUER_SERIAL_NUMBER IssuerSerialNumber;
+        CRYPT_HASH_BLOB           KeyId;
+        CRYPT_HASH_BLOB           HashId;
+    } DUMMYUNIONNAME;
+} CERT_ID, *PCERT_ID;
+
+#undef CMSG_DATA /* may be defined by sys/socket.h */
+#define CMSG_DATA                 1
+#define CMSG_SIGNED               2
+#define CMSG_ENVELOPED            3
+#define CMSG_SIGNED_AND_ENVELOPED 4
+#define CMSG_HASHED               5
+#define CMSG_ENCRYPTED            6
+
+#define CMSG_ALL_FLAGS                 (~0U)
+#define CMSG_DATA_FLAG                 (1 << CMSG_DATA)
+#define CMSG_SIGNED_FLAG               (1 << CMSG_SIGNED)
+#define CMSG_ENVELOPED_FLAG            (1 << CMSG_ENVELOPED)
+#define CMSG_SIGNED_AND_ENVELOPED_FLAG (1 << CMSG_SIGNED_AND_ENVELOPED)
+#define CMSG_HASHED_FLAG               (1 << CMSG_HASHED)
+#define CMSG_ENCRYPTED_FLAG            (1 << CMSG_ENCRYPTED)
+
+typedef struct _CMSG_SIGNER_ENCODE_INFO
+{
+    DWORD                      cbSize;
+    PCERT_INFO                 pCertInfo;
+    HCRYPTPROV                 hCryptProv;
+    DWORD                      dwKeySpec;
+    CRYPT_ALGORITHM_IDENTIFIER HashAlgorithm;
+    void                      *pvHashAuxInfo;
+    DWORD                      cAuthAttr;
+    PCRYPT_ATTRIBUTE           rgAuthAttr;
+    DWORD                      cUnauthAttr;
+    PCRYPT_ATTRIBUTE           rgUnauthAttr;
+    CERT_ID                    SignerId;
+    CRYPT_ALGORITHM_IDENTIFIER HashEncryptionAlgorithm;
+    void                      *pvHashEncryptionAuxInfo;
+} CMSG_SIGNER_ENCODE_INFO, *PCMSG_SIGNER_ENCODE_INFO;
+
+typedef struct _CMSG_RECIPIENT_ENCRYPTED_KEY_ENCODE_INFO
+{
+    DWORD cbSize;
+    CRYPT_BIT_BLOB RecipientPublicKey;
+    CERT_ID RecipientId;
+    FILETIME Date;
+    PCRYPT_ATTRIBUTE_TYPE_VALUE pOtherAttr;
+} CMSG_RECIPIENT_ENCRYPTED_KEY_ENCODE_INFO, *PCMSG_RECIPIENT_ENCRYPTED_KEY_ENCODE_INFO;
+
+typedef struct _CMSG_SIGNED_ENCODE_INFO
+{
+    DWORD                    cbSize;
+    DWORD                    cSigners;
+    PCMSG_SIGNER_ENCODE_INFO rgSigners;
+    DWORD                    cCertEncoded;
+    PCERT_BLOB               rgCertEncoded;
+    DWORD                    cCrlEncoded;
+    PCRL_BLOB                rgCrlEncoded;
+    DWORD                    cAttrCertEncoded;
+    PCERT_BLOB               rgAttrCertEncoded;
+} CMSG_SIGNED_ENCODE_INFO, *PCMSG_SIGNED_ENCODE_INFO;
+
+typedef struct _CMSG_KEY_TRANS_RECIPIENT_ENCODE_INFO
+{
+    DWORD cbSize;
+    CRYPT_ALGORITHM_IDENTIFIER KeyEncryptionAlgorithm;
+    void* pvKeyEncryptionAuxInfo;
+    HCRYPTPROV_LEGACY hCryptProv;
+    CRYPT_BIT_BLOB RecipientPublicKey;
+    CERT_ID RecipientId;
+} CMSG_KEY_TRANS_RECIPIENT_ENCODE_INFO, *PCMSG_KEY_TRANS_RECIPIENT_ENCODE_INFO;
+
+typedef struct _CMSG_KEY_AGREE_RECIPIENT_ENCODE_INFO
+{
+    DWORD cbSize;
+    CRYPT_ALGORITHM_IDENTIFIER KeyEncryptionAlgorithm;
+    void* pvKeyEncryptionAuxInfo;
+    CRYPT_ALGORITHM_IDENTIFIER KeyWrapAlgorithm;
+    void* pvKeyWrapAuxInfo;
+    HCRYPTPROV_LEGACY hCryptProv;
+    DWORD dwKeySpec;
+    DWORD dwKeyChoice;
+    union
+    {
+        PCRYPT_ALGORITHM_IDENTIFIER pEphemeralAlgorithm;
+        PCERT_ID pSenderId;
+    } DUMMYUNIONNAME;
+    CRYPT_DATA_BLOB UserKeyingMaterial;
+    DWORD cRecipientEncryptedKeys;
+    PCMSG_RECIPIENT_ENCRYPTED_KEY_ENCODE_INFO* rgpRecipientEncryptedKeys;
+} CMSG_KEY_AGREE_RECIPIENT_ENCODE_INFO, *PCMSG_KEY_AGREE_RECIPIENT_ENCODE_INFO;
+
+typedef struct _CMSG_MAIL_LIST_RECIPIENT_ENCODE_INFO
+{
+    DWORD cbSize;
+    CRYPT_ALGORITHM_IDENTIFIER KeyEncryptionAlgorithm;
+    void* pvKeyEncryptionAuxInfo;
+    HCRYPTPROV hCryptProv;
+    DWORD dwKeyChoice;
+    union
+    {
+        HCRYPTKEY hKeyEncryptionKey;
+        void* pvKeyEncryptionKey;
+    } DUMMYUNIONNAME;
+    CRYPT_DATA_BLOB KeyId;
+    FILETIME Date;
+    PCRYPT_ATTRIBUTE_TYPE_VALUE pOtherAttr;
+} CMSG_MAIL_LIST_RECIPIENT_ENCODE_INFO, *PCMSG_MAIL_LIST_RECIPIENT_ENCODE_INFO;
+
+typedef struct _CMSG_RECIPIENT_ENCODE_INFO
+{
+    DWORD dwRecipientChoice;
+    union
+    {
+        PCMSG_KEY_TRANS_RECIPIENT_ENCODE_INFO pKeyTrans;
+        PCMSG_KEY_AGREE_RECIPIENT_ENCODE_INFO pKeyAgree;
+        PCMSG_MAIL_LIST_RECIPIENT_ENCODE_INFO pMailList;
+    } DUMMYUNIONNAME;
+} CMSG_RECIPIENT_ENCODE_INFO, PCMSG_RECIPIENT_ENCODE_INFO;
+
+typedef struct _CMSG_ENVELOPED_ENCODE_INFO
+{
+    DWORD                       cbSize;
+    HCRYPTPROV                  hCryptProv;
+    CRYPT_ALGORITHM_IDENTIFIER  ContentEncryptionAlgorithm;
+    void                       *pvEncryptionAuxInfo;
+    DWORD                       cRecipients;
+    PCERT_INFO                 *rgpRecipientCert;
+    PCMSG_RECIPIENT_ENCODE_INFO rgCmsRecipients;
+    DWORD                       cCertEncoded;
+    PCERT_BLOB                  rgCertEncoded;
+    DWORD                       cCrlEncoded;
+    PCRL_BLOB                   rgCrlEncoded;
+    DWORD                       cAttrCertEncoded;
+    PCERT_BLOB                  rgAttrCertEncoded;
+    DWORD                       cUnprotectedAttr;
+    PCRYPT_ATTRIBUTE            rgUnprotectedAttr;
+} CMSG_ENVELOPED_ENCODE_INFO, *PCMSG_ENVELOPED_ENCODE_INFO;
+
+typedef struct _CMSG_HASHED_ENCODE_INFO
+{
+    DWORD                      cbSize;
+    HCRYPTPROV                 hCryptProv;
+    CRYPT_ALGORITHM_IDENTIFIER HashAlgorithm;
+    void                      *pvHashAuxInfo;
+} CMSG_HASHED_ENCODE_INFO, *PCMSG_HASHED_ENCODE_INFO;
+
+#define CMSG_BARE_CONTENT_FLAG             0x00000001
+#define CMSG_LENGTH_ONLY_FLAG              0x00000002
+#define CMSG_DETACHED_FLAG                 0x00000004
+#define CMSG_AUTHENTICATED_ATTRIBUTES_FLAG 0x00000008
+#define CMSG_CONTENTS_OCTETS_FLAG          0x00000010
+#define CMSG_MAX_LENGTH_FLAG               0x00000020
+#define CMSG_CMS_ENCAPSULATED_CONTENT_FLAG 0x00000040
+#define CMSG_CRYPT_RELEASE_CONTEXT_FLAG    0x00008000
+
+#define CMSG_CTRL_VERIFY_SIGNATURE       1
+#define CMSG_CTRL_DECRYPT                2
+#define CMSG_CTRL_VERIFY_HASH            5
+#define CMSG_CTRL_ADD_SIGNER             6
+#define CMSG_CTRL_DEL_SIGNER             7
+#define CMSG_CTRL_ADD_SIGNER_UNAUTH_ATTR 8
+#define CMSG_CTRL_DEL_SIGNER_UNAUTH_ATTR 9
+#define CMSG_CTRL_ADD_CERT               10
+#define CMSG_CTRL_DEL_CERT               11
+#define CMSG_CTRL_ADD_CRL                12
+#define CMSG_CTRL_DEL_CRL                13
+#define CMSG_CTRL_ADD_ATTR_CERT          14
+#define CMSG_CTRL_DEL_ATTR_CERT          15
+#define CMSG_CTRL_KEY_TRANS_DECRYPT      16
+#define CMSG_CTRL_KEY_AGREE_DECRYPT      17
+#define CMSG_CTRL_MAIL_LIST_DECRYPT      18
+#define CMSG_CTRL_VERIFY_SIGNATURE_EX    19
+#define CMSG_CTRL_ADD_CMS_SIGNER_INFO    20
+
+typedef struct _CMSG_CTRL_DECRYPT_PARA
+{
+    DWORD cbSize;
+    union
+    {
+        HCRYPTPROV hCryptProv;
+        /*NCRYPT_KEY_HANDLE hNCryptKey;*/
+    } DUMMYUNIONNAME;
+    DWORD dwKeySpec;
+    DWORD dwRecipientIndex;
+} CMSG_CTRL_DECRYPT_PARA, *PCMSG_CTRL_DECRYPT_PARA;
+
+typedef struct _CMSG_CTRL_ADD_SIGNER_UNAUTH_ATTR_PARA
+{
+    DWORD           cbSize;
+    DWORD           dwSignerIndex;
+    CRYPT_DATA_BLOB BLOB;
+} CMSG_CTRL_ADD_SIGNER_UNAUTH_ATTR_PARA, *PCMSG_CTRL_ADD_SIGNER_UNAUTH_ATTR_PARA;
+
+typedef struct _CMSG_CTRL_DEL_SIGNER_UNAUTH_ATTR_PARA
+{
+    DWORD cbSize;
+    DWORD dwSignerIndex;
+    DWORD dwUnauthAttrIndex;
+} CMSG_CTRL_DEL_SIGNER_UNAUTH_ATTR_PARA, *PCMSG_CTRL_DEL_SIGNER_UNAUTH_ATTR_PARA;
+
+#define CMSG_TYPE_PARAM                              1
+#define CMSG_CONTENT_PARAM                           2
+#define CMSG_BARE_CONTENT_PARAM                      3
+#define CMSG_INNER_CONTENT_PARAM                     4
+#define CMSG_SIGNER_COUNT_PARAM                      5
+#define CMSG_SIGNER_INFO_PARAM                       6
+#define CMSG_SIGNER_CERT_INFO_PARAM                  7
+#define CMSG_SIGNER_HASH_ALGORITHM_PARAM             8
+#define CMSG_SIGNER_AUTH_ATTR_PARAM                  9
+#define CMSG_SIGNER_UNAUTH_ATTR_PARAM                10
+#define CMSG_CERT_COUNT_PARAM                        11
+#define CMSG_CERT_PARAM                              12
+#define CMSG_CRL_COUNT_PARAM                         13
+#define CMSG_CRL_PARAM                               14
+#define CMSG_ENVELOPE_ALGORITHM_PARAM                15
+#define CMSG_RECIPIENT_COUNT_PARAM                   17
+#define CMSG_RECIPIENT_INDEX_PARAM                   18
+#define CMSG_RECIPIENT_INFO_PARAM                    19
+#define CMSG_HASH_ALGORITHM_PARAM                    20
+#define CMSG_HASH_DATA_PARAM                         21
+#define CMSG_COMPUTED_HASH_PARAM                     22
+#define CMSG_ENCRYPT_PARAM                           26
+#define CMSG_ENCRYPTED_DIGEST                        27
+#define CMSG_ENCODED_SIGNER                          28
+#define CMSG_ENCODED_MESSAGE                         29
+#define CMSG_VERSION_PARAM                           30
+#define CMSG_ATTR_CERT_COUNT_PARAM                   31
+#define CMSG_ATTR_CERT_PARAM                         32
+#define CMSG_CMS_RECIPIENT_COUNT_PARAM               33
+#define CMSG_CMS_RECIPIENT_INDEX_PARAM               34
+#define CMSG_CMS_RECIPIENT_ENCRYPTED_KEY_INDEX_PARAM 35
+#define CMSG_CMS_RECIPIENT_INFO_PARAM                36
+#define CMSG_UNPROTECTED_ATTR_PARAM                  37
+#define CMSG_SIGNER_CERT_ID_PARAM                    38
+#define CMSG_CMS_SIGNER_INFO_PARAM                   39
+
+#define CMSG_SIGNED_DATA_V1               1
+#define CMSG_SIGNED_DATA_V3               3
+#define CMSG_SIGNED_DATA_PKCS_1_5_VERSION CMSG_SIGNED_DATA_V1
+#define CMSG_SIGNED_DATA_CMS_VERSION      CMSG_SIGNED_DATA_V3
+
+#define CMSG_SIGNER_INFO_V1               1
+#define CMSG_SIGNER_INFO_V3               3
+#define CMSG_SIGNER_INFO_PKCS_1_5_VERSION CMSG_SIGNER_INFO_V1
+#define CMSG_SIGNER_INFO_CMS_VERSION      CMSG_SIGNER_INFO_V3
+
+#define CMSG_HASHED_DATA_V0               0
+#define CMSG_HASHED_DATA_V2               2
+#define CMSG_HASHED_DATA_PKCS_1_5_VERSION CMSG_HASHED_DATA_V0
+#define CMSG_HASHED_DATA_CMS_VERSION      CMSG_HASHED_DATA_V2
+
+#define CMSG_ENVELOPED_DATA_V0               0
+#define CMSG_ENVELOPED_DATA_V2               2
+#define CMSG_ENVELOPED_DATA_PKCS_1_5_VERSION CMSG_ENVELOPED_DATA_V0
+#define CMSG_ENVELOPED_DATA_CMS_VERSION      CMSG_ENVELOPED_DATA_V2
 
 /* function declarations */
 /* advapi32.dll */
