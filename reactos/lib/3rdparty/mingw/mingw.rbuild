@@ -14,12 +14,14 @@
 	<file>isascii.c</file>
 	<file>iscsym.c</file>
 	<file>iscsymf.c</file>
-	<file>pseudo-reloc.c</file>
 	<file>strcasecmp.c</file>
 	<file>strncasecmp.c</file>
 	<file>toascii.c</file>
 	<file>wcscmpi.c</file>
 	<file>_wgetopt.c</file>
+	<if property="ARCH" value="i386">
+	    <file>pseudo-reloc.c</file>
+	</if>
 </module>
 <module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true">
 	<include base="ReactOS">include/crt</include>

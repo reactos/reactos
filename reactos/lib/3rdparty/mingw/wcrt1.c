@@ -214,7 +214,9 @@ __mingw_wCRTStartup (void)
   _mingw32_init_fmode ();
   
    /* Adust references to dllimported data that have non-zero offsets.  */
+#if defined(__i386__)
   _pei386_runtime_relocator ();
+#endif
 
 #if defined(__i386__)
   /* Align the stack to 16 bytes for the sake of SSE ops in main

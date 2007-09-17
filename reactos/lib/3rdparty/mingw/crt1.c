@@ -41,7 +41,10 @@ extern int main (int, char **, char **);
 #define __UNKNOWN_APP    0
 #define __CONSOLE_APP    1
 #define __GUI_APP        2
-__MINGW_IMPORT void __set_app_type(int);
+#ifndef _M_PPC
+__MINGW_IMPORT
+#endif
+void __set_app_type(int);
 #endif /* __MSVCRT__ */
 
 /*  Global _fmode for this .exe, not the one in msvcrt.dll,
@@ -213,7 +216,9 @@ __mingw_CRTStartup (void)
   _mingw32_init_fmode ();
   
    /* Adust references to dllimported data that have non-zero offsets.  */
+#if defined(__i386__)
   _pei386_runtime_relocator ();
+#endif
 
 #if defined(__i386__)
   /* Align the stack to 16 bytes for the sake of SSE ops in main

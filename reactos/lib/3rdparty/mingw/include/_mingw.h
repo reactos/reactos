@@ -72,11 +72,16 @@
 #  endif
 #  define __DECLSPEC_SUPPORTED
 # else /* __declspec */
-#  undef __DECLSPEC_SUPPORTED
-#  undef __MINGW_IMPORT
-#  ifndef _CRTIMP
+#  ifndef __PowerPC__
+#   undef __DECLSPEC_SUPPORTED
+#   undef __MINGW_IMPORT
+#   ifndef _CRTIMP
+#    define _CRTIMP
+#   endif
+#  else  /* __PowerPC__ */
+#   define __declspec(x) 
 #   define _CRTIMP
-#  endif
+#  endif /* __PowerPC__ */
 # endif /* __declspec */
 # ifndef __cdecl
 #  define __cdecl __attribute__ ((__cdecl__))
