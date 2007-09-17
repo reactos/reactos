@@ -10,6 +10,7 @@
 #include "precomp.h"
 
 extern HGDIOBJ stock_objects[];
+BOOL SetStockObjects = FALSE;
 
 /*
  * GDI32.DLL doesn't have an entry point. The initialization is done by a call
@@ -70,7 +71,11 @@ GdiDllInitialize (
 	NtCurrentTeb()->GdiBatchCount = 0;
 #endif
   // Very simple, the list will fill itself as it is needed.
-        RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
+        if(!SetStockObjects)
+        {
+          RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
+          SetStockObjects = TRUE;
+        }
 	return TRUE;
 }
 
