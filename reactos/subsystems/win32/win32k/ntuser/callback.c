@@ -116,7 +116,7 @@ IntSetTebWndCallback (HWND * hWnd, PVOID * pWnd)
 {
   HWND hWndS = *hWnd;
   PWINDOW_OBJECT Window = UserGetWindowObject(*hWnd);
-  PW32CLTINFO_TEB ClientInfo = GetWin32ClientInfo();
+  PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   *hWnd = ClientInfo->hWND;
   *pWnd = ClientInfo->pvWND;
@@ -128,7 +128,7 @@ IntSetTebWndCallback (HWND * hWnd, PVOID * pWnd)
 static VOID
 IntRestoreTebWndCallback (HWND hWnd, PVOID pWnd)
 {
-  PW32CLTINFO_TEB ClientInfo = GetWin32ClientInfo();
+  PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ClientInfo->hWND  = hWnd;
   ClientInfo->pvWND = pWnd;
