@@ -73,6 +73,21 @@ typedef struct _W32THREADINFO
     ULONG_PTR DesktopHeapDelta;
 } W32THREADINFO, *PW32THREADINFO;
 
+/* Window Client Information structure */
+typedef struct _W32CLIENTINFO
+{
+    ULONG Win32ClientInfo0[2];
+    ULONG ulWindowsVersion;
+    ULONG ulAppCompatFlags;
+    ULONG ulAppCompatFlags2;
+    ULONG Win32ClientInfo1[5];
+    HWND  hWND;
+    PVOID pvWND;
+    ULONG Win32ClientInfo2[50];
+} W32CLIENTINFO, *PW32CLIENTINFO;
+
+#define GetWin32ClientInfo() (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo)
+
 PW32THREADINFO GetW32ThreadInfo(VOID);
 PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
