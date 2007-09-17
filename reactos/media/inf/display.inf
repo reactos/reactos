@@ -46,7 +46,7 @@ framebuf.dll
 
 [VGA_Inst.NT.Services]
 AddService = VGA, , VGA_Service_Inst
-AddService = VBE, 0x00000002, VBE_Service_Inst
+AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
 
 [VGA_Service_Inst]
 ServiceType   = 1
@@ -60,7 +60,7 @@ ServiceType   = 1
 StartType     = 1
 ErrorControl  = 0
 ServiceBinary = %12%\vbemp.sys
-LoadOrderGroup = Video SVGA Save
+LoadOrderGroup = Video Save
 
 ;-------------------------------- STRINGS -------------------------------
 
