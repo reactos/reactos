@@ -11,6 +11,44 @@ typedef struct _APPLET
     APPLET_INITPROC AppletProc;
 } APPLET, *PAPPLET;
 
+
+typedef struct _GLOBAL_DATA
+{
+    /* keyboard page */
+    STICKYKEYS stickyKeys;
+    STICKYKEYS oldStickyKeys;
+    FILTERKEYS filterKeys;
+    FILTERKEYS oldFilterKeys;
+    TOGGLEKEYS toggleKeys;
+    TOGGLEKEYS oldToggleKeys;
+    BOOL bKeyboardPref;
+
+    /* sound page */
+    SOUNDSENTRY ssSoundSentry;
+    BOOL bShowSounds;
+
+    /* display page */
+    HIGHCONTRAST highContrast;
+    UINT uCaretBlinkTime;
+    UINT uCaretWidth;
+    BOOL fShowCaret;
+    RECT rcCaret;
+    RECT rcOldCaret;
+
+    /* mouse page */
+    MOUSEKEYS mouseKeys;
+
+    /* general page */
+    ACCESSTIMEOUT accessTimeout;
+    SERIALKEYS serialKeys;
+    TCHAR szActivePort[MAX_PATH];
+    TCHAR szPort[MAX_PATH];
+    BOOL bWarningSounds;
+    BOOL bSoundOnActivation;
+
+} GLOBAL_DATA, *PGLOBAL_DATA;
+
+
 extern HINSTANCE hApplet;
 
 void ShowLastWin32Error(HWND hWndOwner);

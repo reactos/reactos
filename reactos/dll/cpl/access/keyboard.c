@@ -17,17 +17,6 @@
 #include "resource.h"
 #include "access.h"
 
-typedef struct _GLOBAL_DATA
-{
-    STICKYKEYS stickyKeys;
-    STICKYKEYS oldStickyKeys;
-    FILTERKEYS filterKeys;
-    FILTERKEYS oldFilterKeys;
-    TOGGLEKEYS toggleKeys;
-    TOGGLEKEYS oldToggleKeys;
-    BOOL bKeyboardPref;
-} GLOBAL_DATA, *PGLOBAL_DATA;
-
 
 #define BOUNCETICKS 5
 static INT nBounceArray[BOUNCETICKS] = {500, 700, 1000, 1500, 2000};
@@ -666,7 +655,7 @@ KeyboardPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            pGlobalData = (PGLOBAL_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
             if (pGlobalData == NULL)
                 return FALSE;
 
@@ -755,10 +744,6 @@ KeyboardPageProc(HWND hwndDlg,
 
                 return TRUE;
             }
-            break;
-
-        case WM_DESTROY:
-            HeapFree(GetProcessHeap(), 0, pGlobalData);
             break;
     }
 

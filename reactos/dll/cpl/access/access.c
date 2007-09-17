@@ -26,8 +26,9 @@ APPLET Applets[NUM_APPLETS] =
     {IDI_CPLACCESS, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };
 
+
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, PGLOBAL_DATA pGlobalData)
 {
     ZeroMemory(psp, sizeof(PROPSHEETPAGE));
     psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -35,6 +36,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
     psp->hInstance = hApplet;
     psp->pszTemplate = MAKEINTRESOURCE(idDlg);
     psp->pfnDlgProc = DlgProc;
+    psp->lParam = (LPARAM)pGlobalData;
 }
 
 
@@ -43,11 +45,17 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 LONG CALLBACK
 SystemApplet(VOID)
 {
+    PGLOBAL_DATA pGlobalData;
     PROPSHEETPAGE psp[5];
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
+    INT ret;
 
     LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
+
+    pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+    if (pGlobalData == NULL)
+        return 0;
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -60,13 +68,17 @@ SystemApplet(VOID)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_PROPPAGEKEYBOARD, (DLGPROC)KeyboardPageProc);
-    InitPropSheetPage(&psp[1], IDD_PROPPAGESOUND, (DLGPROC)SoundPageProc);
-    InitPropSheetPage(&psp[2], IDD_PROPPAGEDISPLAY, (DLGPROC)DisplayPageProc);
-    InitPropSheetPage(&psp[3], IDD_PROPPAGEMOUSE, (DLGPROC)MousePageProc);
-    InitPropSheetPage(&psp[4], IDD_PROPPAGEGENERAL, (DLGPROC)GeneralPageProc);
+    InitPropSheetPage(&psp[0], IDD_PROPPAGEKEYBOARD, (DLGPROC)KeyboardPageProc, pGlobalData);
+    InitPropSheetPage(&psp[1], IDD_PROPPAGESOUND, (DLGPROC)SoundPageProc, pGlobalData);
+    InitPropSheetPage(&psp[2], IDD_PROPPAGEDISPLAY, (DLGPROC)DisplayPageProc, pGlobalData);
+    InitPropSheetPage(&psp[3], IDD_PROPPAGEMOUSE, (DLGPROC)MousePageProc, pGlobalData);
+    InitPropSheetPage(&psp[4], IDD_PROPPAGEGENERAL, (DLGPROC)GeneralPageProc, pGlobalData);
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    ret = PropertySheet(&psh);
+
+    HeapFree(GetProcessHeap(), 0, pGlobalData);
+
+    return (LONG)(ret != -1);
 }
 
 /* Control Panel Callback */

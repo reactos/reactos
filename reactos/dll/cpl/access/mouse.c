@@ -16,11 +16,6 @@
 #include "resource.h"
 #include "access.h"
 
-typedef struct _GLOBAL_DATA
-{
-    MOUSEKEYS mouseKeys;
-} GLOBAL_DATA, *PGLOBAL_DATA;
-
 
 #define SPEEDTICKS 9
 #define ACCELTICKS 9
@@ -165,7 +160,7 @@ MousePageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            pGlobalData = (PGLOBAL_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
             if (pGlobalData == NULL)
                 return FALSE;
 
@@ -217,10 +212,6 @@ MousePageProc(HWND hwndDlg,
                                      SPIF_UPDATEINIFILE | SPIF_SENDCHANGE /*0*/);
                 return TRUE;
             }
-            break;
-
-        case WM_DESTROY:
-            HeapFree(GetProcessHeap(), 0, pGlobalData);
             break;
     }
 

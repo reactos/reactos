@@ -18,17 +18,6 @@
 #include "access.h"
 
 
-typedef struct _GLOBAL_DATA
-{
-    ACCESSTIMEOUT accessTimeout;
-    SERIALKEYS serialKeys;
-    TCHAR szActivePort[MAX_PATH];
-    TCHAR szPort[MAX_PATH];
-    BOOL bWarningSounds;
-    BOOL bSoundOnActivation;
-} GLOBAL_DATA, *PGLOBAL_DATA;
-
-
 #define BAUDTICKS 6
 static INT nBaudArray[BAUDTICKS] = {300, 1200, 2400, 4800, 9600, 19200};
 
@@ -267,7 +256,7 @@ GeneralPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            pGlobalData = (PGLOBAL_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
             if (pGlobalData == NULL)
                 return FALSE;
 
@@ -367,10 +356,7 @@ GeneralPageProc(HWND hwndDlg,
                 return TRUE;
             }
             break;
-
-        case WM_DESTROY:
-            HeapFree(GetProcessHeap(), 0, pGlobalData);
-            break;    }
+    }
 
     return FALSE;
 }

@@ -16,15 +16,6 @@
 #include "resource.h"
 #include "access.h"
 
-typedef struct _GLOBAL_DATA
-{
-    HIGHCONTRAST highContrast;
-    UINT uCaretBlinkTime;
-    UINT uCaretWidth;
-    BOOL fShowCaret;
-    RECT rcCaret;
-    RECT rcOldCaret;
-} GLOBAL_DATA, *PGLOBAL_DATA;
 
 #define ID_BLINK_TIMER 346
 
@@ -154,7 +145,7 @@ DisplayPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
+            pGlobalData = (PGLOBAL_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
             if (pGlobalData == NULL)
                 return FALSE;
 
@@ -290,7 +281,6 @@ DisplayPageProc(HWND hwndDlg,
 
         case WM_DESTROY:
             KillTimer(hwndDlg, ID_BLINK_TIMER);
-            HeapFree(GetProcessHeap(), 0, pGlobalData);
             break;
     }
 
