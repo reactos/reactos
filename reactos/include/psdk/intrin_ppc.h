@@ -447,23 +447,6 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 
 	return (y & ~mask) != 0;
 }
-
-static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
-{
-	long retval = Comperand;
-	__asm__ __volatile__ (
-	    "sync\n"
-	    "1: lwarx   %0,0,%1\n"
-	    "   subf.   %0,%2,%0\n"
-	    "   bne     2f\n"
-	    "   stwcx.  %3,0,%1\n"
-	    "   bne-    1b\n"
-	    "2: isync"
-	    : "=b" (retval)
-	    : "b" (Destination), "r" (Comperand), "r" (Exchange)
-	    : "cr0", "memory");
-	return retval;
-}
 #endif
 
 static __inline__ __attribute__((always_inline)) long _InterlockedDecrement(volatile long * const lpAddend)
