@@ -17,6 +17,7 @@
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="ntoskrnl" root="intermediate"></include>
+	<include base="ntoskrnl" root="intermediate">include</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>csq</library>
 	<library>hal</library>
