@@ -1482,23 +1482,6 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
    return (HMENU)Handle;
 }
 
-HMENU STDCALL
-NtUserCreateMenu(BOOL PopupMenu)
-{
-   DECLARE_RETURN(HMENU);
-
-   DPRINT("Enter NtUserCreateMenu\n");
-   UserEnterExclusive();
-
-   RETURN(UserCreateMenu(PopupMenu));
-
-CLEANUP:
-   DPRINT("Leave NtUserCreateMenu, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
 
 /*
  * @implemented

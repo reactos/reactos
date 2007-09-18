@@ -3899,7 +3899,7 @@ HMENU STDCALL
 CreateMenu(VOID)
 {
   MenuLoadBitmaps();
-  return NtUserCreateMenu(FALSE);
+  return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENU);
 }
 
 
@@ -3910,7 +3910,7 @@ HMENU STDCALL
 CreatePopupMenu(VOID)
 {
   MenuLoadBitmaps();
-  return NtUserCreateMenu(TRUE);
+  return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENUPOPUP);
 }
 
 

@@ -86,6 +86,14 @@ NtUserCallNoParam(DWORD Routine)
 
    switch(Routine)
    {
+      case NOPARAM_ROUTINE_CREATEMENU:
+         Result = (DWORD)UserCreateMenu(FALSE);
+         break;
+
+      case NOPARAM_ROUTINE_CREATEMENUPOPUP:
+         Result = (DWORD)UserCreateMenu(TRUE);
+         break;
+
       case NOPARAM_ROUTINE_DESTROY_CARET:
          Result = (DWORD)co_IntDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
          break;

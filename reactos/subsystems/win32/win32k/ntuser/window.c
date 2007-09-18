@@ -4730,29 +4730,29 @@ NtUserValidateHandleSecure(
        }
        case otCursorIcon:
        {
-          PCURICON_OBJECT Cursor;
-          if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
-          return FALSE;
+         PCURICON_OBJECT Cursor;
+         if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
+         return FALSE;
        }
        case otHook:
        {
-          PHOOK Hook;
-          if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
-          return FALSE;
+         PHOOK Hook;
+         if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
+         return FALSE;
        }
        case otMonitor:
        {
-          PMONITOR_OBJECT Monitor;
-          if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
-          return FALSE;
+         PMONITOR_OBJECT Monitor;
+         if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
+         return FALSE;
        }
        case otCallProc:
        {
-           WNDPROC_INFO Proc;
-           return UserGetCallProcInfo( handle, &Proc );
+         WNDPROC_INFO Proc;
+         return UserGetCallProcInfo( handle, &Proc );
        }
        default:
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
      }
    }
    else

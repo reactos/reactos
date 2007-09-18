@@ -106,10 +106,6 @@ NtUserCheckMenuItem(
   UINT uIDCheckItem,
   UINT uCheck);
 
-HMENU
-NTAPI
-NtUserCreateMenu(BOOL PopupMenu);
-
 BOOL
 NTAPI
 NtUserDeleteMenu(
@@ -440,6 +436,8 @@ NtUserCallNextHookEx(
   WPARAM wParam,
   LPARAM lParam);
 
+#define NOPARAM_ROUTINE_CREATEMENU            0x0
+#define NOPARAM_ROUTINE_CREATEMENUPOPUP       0x1
 #define NOPARAM_ROUTINE_MSQCLEARWAKEMASK      0x3
 #define NOPARAM_ROUTINE_REGISTER_PRIMITIVE	  0xffff0001 /* Private ROS */
 #define NOPARAM_ROUTINE_DESTROY_CARET         0xffff0002

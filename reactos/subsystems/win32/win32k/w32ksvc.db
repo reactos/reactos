@@ -709,7 +709,6 @@ NtGdiTranslateCharsetInfo               3
 NtGdiUpdateICMRegKey                    4
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2
-NtUserCreateMenu                        1
 NtUserDestroyCursorIcon                 2
 NtUserEnumClipboardFormats              1 
 NtUserGetActiveWindow                   0
