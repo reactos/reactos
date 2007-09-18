@@ -112,7 +112,7 @@ namespace System_
             /* parent process */
             if (bWait)
             {
-                waitpid(pid, NULL, WNOHANG);
+                waitpid(pid, NULL, 0);
             }
         }
 		return pid;
