@@ -26,6 +26,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_CALCICON ICON "calculator.ico"
 
 #include "lang/bg-BG.rc"
+#include "lang/ca-CA.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"

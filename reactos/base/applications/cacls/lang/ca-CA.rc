@@ -1,0 +1,74 @@
+LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_HELP, "Mostra o modifica la llista de control d'accés (ACLs) dels fitxers\n\n\
+CACLS fitxer [/T] [/E] [/C] [/G user:perm [...]] [/R usuari [...]]\n\
+               [/P user:perm [...]] [/D usuari [...]]\n\
+   fitxer        Mostra ACLs.\n\
+   /T            Canvia el ACLs dels fitxers especificats al\n\
+                 directori actual i tots els seus subdirectoris.\n\
+   /E            Edita ACL en comptes de substituir-lo.\n\
+   /C            Continua en cas d'error d'accés.\n\
+   /G user:perm  Assegura els drets d'accés especificats per al usuari.\n\
+                 perm pot ser: R  Lectura\n\
+                               W  Escriptura\n\
+                               C  Modificació (Escriptura)\n\
+                               F  Control total\n\
+   /R usuari     Revoca els drets d'accés especificats per al usuari(només vàlid amb /E).\n\
+   /P user:perm  Canvia els drets d'accés especificats per al usuari.\n\
+                 perm pot ser: N  Cap\n\
+                               R  Lectura\n\
+                               W  Escriptura\n\
+                               C  Modificació (Escriptura)\n\
+                               F  Control total\n\
+   /D usuari     Denega els drets d'accés especificats per al usuari.\n\
+Es possible utilitzar comodins per especificar més d'un fitxer per comanda.\n\
+Podeu especificar més d'un usuari per comanda.\n\n\
+Abreviacions:\n\
+   CI - Container heredat.\n\
+        ACE s'heredarà per directoris.\n\
+   OI - Objecte heredat.\n\
+        ACE s'heredarà per fitxers.\n\
+   IO - Només heredat.\n\
+        ACE no s'aplicarà al directori/fitxer actual.\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(DENEGAT)"
+IDS_SPECIAL_ACCESS, "(accés especial:)"
+IDS_GENERIC_READ, "GENERIC_READ"
+IDS_GENERIC_WRITE, "GENERIC_WRITE"
+IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
+IDS_GENERIC_ALL, "GENERIC_ALL"
+IDS_FILE_GENERIC_EXECUTE, "FILE_GENERIC_EXECUTE"
+IDS_FILE_GENERIC_READ, "FILE_GENERIC_READ"
+IDS_FILE_GENERIC_WRITE, "FILE_GENERIC_WRITE"
+IDS_FILE_READ_DATA, "FILE_READ_DATA"
+IDS_FILE_WRITE_DATA, "FILE_WRITE_DATA"
+IDS_FILE_APPEND_DATA, "FILE_APPEND_DATA"
+IDS_FILE_READ_EA, "FILE_READ_EA"
+IDS_FILE_WRITE_EA, "FILE_WRITE_EA"
+IDS_FILE_EXECUTE, "FILE_EXECUTE"
+IDS_FILE_DELETE_CHILD, "FILE_DELETE_CHILD"
+IDS_FILE_READ_ATTRIBUTES, "FILE_READ_ATTRIBUTES"
+IDS_FILE_WRITE_ATTRIBUTES, "FILE_WRITE_ATTRIBUTES"
+IDS_MAXIMUM_ALLOWED, "MAXIMUM_ALLOWED"
+IDS_ACCESS_SYSTEM_SECURITY, "ACCESS_SYSTEM_SECURITY"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIC_RIGHTS_ALL"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RIGHTS_REQUIRED"
+IDS_SYNCHRONIZE, "SYNCHRONIZE"
+IDS_WRITE_OWNER, "WRITE_OWNER"
+IDS_WRITE_DAC, "WRITE_DAC"
+IDS_READ_CONTROL, "READ_CONTROL"
+IDS_DELETE, "DELETE"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
+}
