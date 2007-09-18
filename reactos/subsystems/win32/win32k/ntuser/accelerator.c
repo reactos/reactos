@@ -69,7 +69,6 @@ CleanupAcceleratorImpl(VOID)
 }
 
 
-static
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 {
    PACCELERATOR_TABLE Accel;

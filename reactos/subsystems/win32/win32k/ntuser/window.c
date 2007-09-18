@@ -4683,5 +4683,84 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
    return TRUE;
 }
 
+/*
+ * NtUserValidateHandleSecure
+ *
+ * Status
+ *    @implemented
+ */
+
+BOOL
+STDCALL
+NtUserValidateHandleSecure(
+   HANDLE handle,
+   BOOL Restricted)
+{
+   if(!Restricted)
+   {
+     UINT uType;
+     {
+       PUSER_HANDLE_ENTRY entry;
+       if (!(entry = handle_to_entry(gHandleTable, handle )))
+       {
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return FALSE;
+       }
+       uType = entry->type;
+     }
+     switch (uType)
+     {
+       case otWindow:
+       {
+         PWINDOW_OBJECT Window;
+         if ((Window = UserGetWindowObject((HWND) handle))) return TRUE;
+         return FALSE;
+       }
+       case otMenu:
+       {
+         PMENU_OBJECT Menu;
+         if ((Menu = UserGetMenuObject((HMENU) handle))) return TRUE;
+         return FALSE;
+       }
+       case otAccel:
+       {
+         PACCELERATOR_TABLE Accel;
+         if ((Accel = UserGetAccelObject((HACCEL) handle))) return TRUE;
+         return FALSE;
+       }
+       case otCursorIcon:
+       {
+          PCURICON_OBJECT Cursor;
+          if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
+          return FALSE;
+       }
+       case otHook:
+       {
+          PHOOK Hook;
+          if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
+          return FALSE;
+       }
+       case otMonitor:
+       {
+          PMONITOR_OBJECT Monitor;
+          if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
+          return FALSE;
+       }
+       case otCallProc:
+       {
+           WNDPROC_INFO Proc;
+           return UserGetCallProcInfo( handle, &Proc );
+       }
+       default:
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+     }
+   }
+   else
+   { /* Is handle entry restricted? */
+     UNIMPLEMENTED
+   }
+   return FALSE;
+}
+
 
 /* EOF */

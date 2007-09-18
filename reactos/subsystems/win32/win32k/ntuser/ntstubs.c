@@ -637,17 +637,6 @@ NtUserUserHandleGrantAccess(
    return 0;
 }
 
-BOOL
-STDCALL
-NtUserValidateHandleSecure(
-   HANDLE hHdl,
-   BOOL Restricted)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 DWORD
 STDCALL
 NtUserWaitForInputIdle(

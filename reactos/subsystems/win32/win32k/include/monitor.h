@@ -22,6 +22,7 @@ NTSTATUS CleanupMonitorImpl();
 
 NTSTATUS IntAttachMonitor(GDIDEVICE *pGdiDevice, ULONG DisplayNumber);
 NTSTATUS IntDetachMonitor(GDIDEVICE *pGdiDevice);
+PMONITOR_OBJECT FASTCALL UserGetMonitorObject(IN HMONITOR);
 
 #endif /* _WIN32K_MONITOR_H */
 

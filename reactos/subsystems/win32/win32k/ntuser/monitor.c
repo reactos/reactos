@@ -120,7 +120,6 @@ IntDestroyMonitorObject(IN PMONITOR_OBJECT pMonitor)
 }
 
 
-static
 PMONITOR_OBJECT FASTCALL
 UserGetMonitorObject(IN HMONITOR hMonitor)
 {

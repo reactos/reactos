@@ -25,6 +25,7 @@ typedef struct tagHOOKTABLE
 
 LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
+PHOOK FASTCALL IntGetHookObject(HHOOK);
 
 #endif /* _WIN32K_HOOK_H */
 
