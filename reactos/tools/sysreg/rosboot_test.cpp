@@ -336,7 +336,7 @@ namespace Sysreg_
         m_PidFile += _T("/pid.txt");
         m_BootCmd += _T(" -pidfile ");
         m_BootCmd += m_PidFile;
-        m_BootCmd += _T(" -vnc 0");
+		m_BootCmd += _T(" -vnc :0");
 #else
 
         if (hasQemuNoRebootOption())
