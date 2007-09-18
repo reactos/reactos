@@ -93,7 +93,7 @@ namespace System_
     	}
 #else
 /********************************************************************************************************************/
-	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs, bool wait)
+	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs, bool bWait)
 	{
 		ProcessID pid;
 
@@ -110,7 +110,7 @@ namespace System_
         else
         {
             /* parent process */
-            if (wait)
+            if (bWait)
             {
                 waitpid(pid, NULL, WNOHANG);
             }
