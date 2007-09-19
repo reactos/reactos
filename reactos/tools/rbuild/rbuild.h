@@ -251,7 +251,7 @@ public:
 	const std::string& GetProjectFilename () const;
 	std::string ResolveProperties ( const std::string& s ) const;
 private:
-	std::string ResolveNextProperty ( std::string& s ) const;
+	std::string ResolveNextProperty ( const std::string& s ) const;
 	const Property* LookupProperty ( const std::string& name ) const;
 	void SetConfigurationOption ( char* s,
 	                              std::string name,

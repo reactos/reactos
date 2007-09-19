@@ -196,7 +196,7 @@ Project::LookupProperty ( const string& name ) const
 }
 
 string
-Project::ResolveNextProperty ( string& s ) const
+Project::ResolveNextProperty ( const string& s ) const
 {
 	size_t i = s.find ( "${" );
 	if ( i == string::npos )
@@ -215,7 +215,7 @@ Project::ResolveNextProperty ( string& s ) const
 			string propertyName = s.substr ( i + 2, propertyNameLength );
 			const Property* property = LookupProperty ( propertyName );
 			if ( property != NULL )
-				return s.replace ( i, propertyNameLength + 3, property->value );
+				return string ( s ).replace ( i, propertyNameLength + 3, property->value );
 		}
 	}
 	return s;
