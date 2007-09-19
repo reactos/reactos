@@ -20,6 +20,7 @@ extern "C" {
 #define DBT_DEVTYP_VOLUME	2
 #define DBT_DEVTYP_PORT	3
 #define DBT_DEVTYP_NET	4
+#define DBT_DEVTYP_DEVICEINTERFACE  5
 #define DBT_APPYBEGIN 0
 #define DBT_APPYEND 1
 #define DBT_DEVNODES_CHANGED 7
@@ -101,6 +102,13 @@ typedef struct _DEV_BROADCAST_VOLUME {
 	DWORD dbcv_unitmask;
 	WORD dbcv_flags;
 } DEV_BROADCAST_VOLUME,*PDEV_BROADCAST_VOLUME;
+typedef struct _DEV_BROADCAST_DEVICEINTERFACE {
+    DWORD dbcc_size;
+    DWORD dbcc_devicetype;
+    DWORD dbcc_reserved;
+    GUID dbcc_classguid;
+    TCHAR dbcc_name[1];
+} DEV_BROADCAST_DEVICEINTERFACE, *PDEV_BROADCAST_DEVICEINTERFACE;
 
 #ifdef UNICODE
 typedef DEV_BROADCAST_PORT_W DEV_BROADCAST_PORT, *PDEV_BROADCAST_PORT;
