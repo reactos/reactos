@@ -108,6 +108,7 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
    entry->type = 0;
+   entry->pti = 0;
    ht->freelist  = entry;
 
    usedHandles--;
@@ -123,6 +124,8 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
       return 0;
    entry->ptr  = object;
    entry->type = type;
+   entry->pti = GetW32ThreadInfo();
+   if (entry->pti->pi->UserHandleTable == NULL) GetW32ProcessInfo();
    if (++entry->generation >= 0xffff)
       entry->generation = 1;
    return entry_to_handle(ht, entry );
