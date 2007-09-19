@@ -12,6 +12,7 @@
 #include <commctrl.h>
 #include <cpl.h>
 #include <stdlib.h>
+#include <tchar.h>
 #include "resource.h"
 #include "access.h"
 
@@ -25,6 +26,135 @@ APPLET Applets[NUM_APPLETS] =
 {
     {IDI_CPLACCESS, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };
+
+
+static BOOL
+ReadSettings(PGLOBAL_DATA pGlobalData)
+{
+    DWORD dwDisposition;
+    DWORD dwLength;
+    HKEY hKey;
+    LONG lError;
+
+    /* Get sticky keys information */
+    pGlobalData->stickyKeys.cbSize = sizeof(STICKYKEYS);
+    if (!SystemParametersInfo(SPI_GETSTICKYKEYS,
+                              sizeof(STICKYKEYS),
+                              &pGlobalData->stickyKeys,
+                              0))
+        return FALSE;
+
+    /* Get filter keys information */
+    pGlobalData->filterKeys.cbSize = sizeof(FILTERKEYS);
+    if (!SystemParametersInfo(SPI_GETFILTERKEYS,
+                              sizeof(FILTERKEYS),
+                              &pGlobalData->filterKeys,
+                              0))
+        return FALSE;
+
+    /* Get toggle keys information */
+    pGlobalData->toggleKeys.cbSize = sizeof(TOGGLEKEYS);
+    if (!SystemParametersInfo(SPI_GETTOGGLEKEYS,
+                              sizeof(TOGGLEKEYS),
+                              &pGlobalData->toggleKeys,
+                              0))
+        return FALSE;
+
+    /* Get keyboard preference information */
+    if (!SystemParametersInfo(SPI_GETKEYBOARDPREF,
+                              0,
+                              &pGlobalData->bKeyboardPref,
+                              0))
+        return FALSE;
+
+    /* Get high contrast information */
+    pGlobalData->highContrast.cbSize = sizeof(HIGHCONTRAST);
+    SystemParametersInfo(SPI_GETHIGHCONTRAST,
+                         sizeof(HIGHCONTRAST),
+                         &pGlobalData->highContrast,
+                         0);
+
+    SystemParametersInfo(SPI_GETCARETWIDTH,
+                         0,
+                         &pGlobalData->uCaretWidth,
+                         0);
+
+    pGlobalData->uCaretBlinkTime = GetCaretBlinkTime();
+
+    /* get sound settings */
+    pGlobalData->ssSoundSentry.cbSize = sizeof(SOUNDSENTRY);
+    SystemParametersInfo(SPI_GETSOUNDSENTRY,
+                         sizeof(SOUNDSENTRY),
+                         &pGlobalData->ssSoundSentry,
+                         0);
+
+    SystemParametersInfo(SPI_GETSHOWSOUNDS,
+                         0,
+                         &pGlobalData->bShowSounds,
+                         0);
+
+    /* Get mouse keys information */
+    pGlobalData->mouseKeys.cbSize = sizeof(MOUSEKEYS);
+    SystemParametersInfo(SPI_GETMOUSEKEYS,
+                         sizeof(MOUSEKEYS),
+                         &pGlobalData->mouseKeys,
+                         0);
+
+    /* Get access timeout information */
+    pGlobalData->accessTimeout.cbSize = sizeof(ACCESSTIMEOUT);
+    SystemParametersInfo(SPI_GETACCESSTIMEOUT,
+                         sizeof(ACCESSTIMEOUT),
+                         &pGlobalData->accessTimeout,
+                         0);
+
+    /* Get serial keys information */
+    pGlobalData->serialKeys.cbSize = sizeof(SERIALKEYS);
+    pGlobalData->serialKeys.lpszActivePort = pGlobalData->szActivePort;
+    pGlobalData->serialKeys.lpszPort = pGlobalData->szPort;
+    SystemParametersInfo(SPI_GETSERIALKEYS,
+                         sizeof(SERIALKEYS),
+                         &pGlobalData->serialKeys,
+                         0);
+
+    pGlobalData->bWarningSounds = TRUE;
+    pGlobalData->bSoundOnActivation = TRUE;
+
+    lError = RegCreateKeyEx(HKEY_CURRENT_USER,
+                            _T("Control Panel\\Accessibility"),
+                            0,
+                            NULL,
+                            REG_OPTION_NON_VOLATILE,
+                            KEY_EXECUTE | KEY_QUERY_VALUE,
+                            NULL,
+                            &hKey,
+                            &dwDisposition);
+    if (lError != ERROR_SUCCESS)
+        return TRUE;
+
+    dwLength = sizeof(BOOL);
+    lError = RegQueryValueEx(hKey,
+                             _T("Warning Sounds"),
+                             NULL,
+                             NULL,
+                             (LPBYTE)&pGlobalData->bWarningSounds,
+                             &dwLength);
+    if (lError != ERROR_SUCCESS)
+        pGlobalData->bWarningSounds = TRUE;
+
+    dwLength = sizeof(BOOL);
+    lError = RegQueryValueEx(hKey,
+                             _T("Sound On Activation"),
+                             NULL,
+                             NULL,
+                             (LPBYTE)&pGlobalData->bSoundOnActivation,
+                             &dwLength);
+    if (lError != ERROR_SUCCESS)
+        pGlobalData->bSoundOnActivation = TRUE;
+
+    RegCloseKey(hKey);
+
+    return TRUE;
+}
 
 
 static VOID
@@ -55,6 +185,9 @@ SystemApplet(VOID)
 
     pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
     if (pGlobalData == NULL)
+        return 0;
+
+    if (!ReadSettings(pGlobalData))
         return 0;
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));

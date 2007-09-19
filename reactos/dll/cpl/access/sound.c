@@ -22,17 +22,6 @@ OnInitDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     TCHAR szBuffer[256];
     UINT i;
 
-    pGlobalData->ssSoundSentry.cbSize = sizeof(SOUNDSENTRY);
-    SystemParametersInfo(SPI_GETSOUNDSENTRY,
-                         sizeof(SOUNDSENTRY),
-                         &pGlobalData->ssSoundSentry,
-                         0);
-
-    SystemParametersInfo(SPI_GETSHOWSOUNDS,
-                         0,
-                         &pGlobalData->bShowSounds,
-                         0);
-
     /* Add strings to the combo-box */
     for (i = 0; i < 4; i++)
     {

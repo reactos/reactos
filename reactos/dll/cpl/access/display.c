@@ -151,20 +151,6 @@ DisplayPageProc(HWND hwndDlg,
 
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            /* Get high contrast information */
-            pGlobalData->highContrast.cbSize = sizeof(HIGHCONTRAST);
-            SystemParametersInfo(SPI_GETHIGHCONTRAST,
-                                 sizeof(HIGHCONTRAST),
-                                 &pGlobalData->highContrast,
-                                 0);
-
-            SystemParametersInfo(SPI_GETCARETWIDTH,
-                                 0,
-                                 &pGlobalData->uCaretWidth,
-                                 0);
-
-            pGlobalData->uCaretBlinkTime = GetCaretBlinkTime();
-
             pGlobalData->fShowCaret = TRUE;
             GetWindowRect(GetDlgItem(hwndDlg, IDC_CURSOR_WIDTH_TEXT), &pGlobalData->rcCaret);
             ScreenToClient(hwndDlg, (LPPOINT)&pGlobalData->rcCaret.left);

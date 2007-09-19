@@ -580,66 +580,6 @@ ToggleKeysDlgProc(HWND hwndDlg,
 }
 
 
-static VOID
-OnInitDialog(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData)
-{
-    /* Get sticky keys information */
-    pGlobalData->stickyKeys.cbSize = sizeof(STICKYKEYS);
-    if (!SystemParametersInfo(SPI_GETSTICKYKEYS,
-                              sizeof(STICKYKEYS),
-                              &pGlobalData->stickyKeys,
-                              0))
-    {
-        return;
-    }
-
-    /* Get filter keys information */
-    pGlobalData->filterKeys.cbSize = sizeof(FILTERKEYS);
-    if (!SystemParametersInfo(SPI_GETFILTERKEYS,
-                              sizeof(FILTERKEYS),
-                              &pGlobalData->filterKeys,
-                              0))
-    {
-        return;
-    }
-
-    /* Get toggle keys information */
-    pGlobalData->toggleKeys.cbSize = sizeof(TOGGLEKEYS);
-    if (!SystemParametersInfo(SPI_GETTOGGLEKEYS,
-                              sizeof(TOGGLEKEYS),
-                              &pGlobalData->toggleKeys,
-                              0))
-    {
-        return;
-    }
-
-    /* Get keyboard preference information */
-    if (!SystemParametersInfo(SPI_GETKEYBOARDPREF,
-                              0,
-                              &pGlobalData->bKeyboardPref,
-                              0))
-    {
-        return;
-    }
-
-    CheckDlgButton(hwndDlg,
-                   IDC_STICKY_BOX,
-                   pGlobalData->stickyKeys.dwFlags & SKF_STICKYKEYSON ? BST_CHECKED : BST_UNCHECKED);
-
-    CheckDlgButton(hwndDlg,
-                   IDC_FILTER_BOX,
-                   pGlobalData->filterKeys.dwFlags & FKF_FILTERKEYSON ? BST_CHECKED : BST_UNCHECKED);
-
-    CheckDlgButton(hwndDlg,
-                   IDC_TOGGLE_BOX,
-                   pGlobalData->toggleKeys.dwFlags & TKF_TOGGLEKEYSON ? BST_CHECKED : BST_UNCHECKED);
-
-    CheckDlgButton(hwndDlg,
-                   IDC_KEYBOARD_EXTRA,
-                   pGlobalData->bKeyboardPref ? BST_CHECKED : BST_UNCHECKED);
-}
-
-
 /* Property page dialog callback */
 INT_PTR CALLBACK
 KeyboardPageProc(HWND hwndDlg,
@@ -660,7 +600,22 @@ KeyboardPageProc(HWND hwndDlg,
                 return FALSE;
 
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
-            OnInitDialog(hwndDlg, pGlobalData);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_STICKY_BOX,
+                           pGlobalData->stickyKeys.dwFlags & SKF_STICKYKEYSON ? BST_CHECKED : BST_UNCHECKED);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_FILTER_BOX,
+                           pGlobalData->filterKeys.dwFlags & FKF_FILTERKEYSON ? BST_CHECKED : BST_UNCHECKED);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_TOGGLE_BOX,
+                           pGlobalData->toggleKeys.dwFlags & TKF_TOGGLEKEYSON ? BST_CHECKED : BST_UNCHECKED);
+
+            CheckDlgButton(hwndDlg,
+                           IDC_KEYBOARD_EXTRA,
+                           pGlobalData->bKeyboardPref ? BST_CHECKED : BST_UNCHECKED);
             return TRUE;
 
         case WM_COMMAND:

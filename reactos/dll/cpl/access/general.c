@@ -131,70 +131,6 @@ FillResetComboBox(HWND hwnd)
 
 
 static VOID
-ReadGlobalData(PGLOBAL_DATA pGlobalData)
-{
-    DWORD dwDisposition;
-    DWORD dwLength;
-    HKEY hKey;
-    LONG lError;
-
-    /* Get access timeout information */
-    pGlobalData->accessTimeout.cbSize = sizeof(ACCESSTIMEOUT);
-    SystemParametersInfo(SPI_GETACCESSTIMEOUT,
-                         sizeof(ACCESSTIMEOUT),
-                         &pGlobalData->accessTimeout,
-                         0);
-
-    /* Get serial keys information */
-    pGlobalData->serialKeys.cbSize = sizeof(SERIALKEYS);
-    pGlobalData->serialKeys.lpszActivePort = pGlobalData->szActivePort;
-    pGlobalData->serialKeys.lpszPort = pGlobalData->szPort;
-    SystemParametersInfo(SPI_GETSERIALKEYS,
-                         sizeof(SERIALKEYS),
-                         &pGlobalData->serialKeys,
-                         0);
-
-    pGlobalData->bWarningSounds = TRUE;
-    pGlobalData->bSoundOnActivation = TRUE;
-
-    lError = RegCreateKeyEx(HKEY_CURRENT_USER,
-                            _T("Control Panel\\Accessibility"),
-                            0,
-                            NULL,
-                            REG_OPTION_NON_VOLATILE,
-                            KEY_EXECUTE | KEY_QUERY_VALUE,
-                            NULL,
-                            &hKey,
-                            &dwDisposition);
-    if (lError != ERROR_SUCCESS)
-        return;
-
-    dwLength = sizeof(BOOL);
-    lError = RegQueryValueEx(hKey,
-                             _T("Warning Sounds"),
-                             NULL,
-                             NULL,
-                             (LPBYTE)&pGlobalData->bWarningSounds,
-                             &dwLength);
-    if (lError != ERROR_SUCCESS)
-        pGlobalData->bWarningSounds = TRUE;
-
-    dwLength = sizeof(BOOL);
-    lError = RegQueryValueEx(hKey,
-                             _T("Sound On Activation"),
-                             NULL,
-                             NULL,
-                             (LPBYTE)&pGlobalData->bSoundOnActivation,
-                             &dwLength);
-    if (lError != ERROR_SUCCESS)
-        pGlobalData->bSoundOnActivation = TRUE;
-
-
-    RegCloseKey(hKey);
-}
-
-
-static VOID
 WriteGlobalData(PGLOBAL_DATA pGlobalData)
 {
     DWORD dwDisposition;
@@ -261,8 +197,6 @@ GeneralPageProc(HWND hwndDlg,
                 return FALSE;
 
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
-
-            ReadGlobalData(pGlobalData);
 
             /* Set access timeout info */
             CheckDlgButton(hwndDlg,

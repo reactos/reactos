@@ -166,13 +166,6 @@ MousePageProc(HWND hwndDlg,
 
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
-            /* Get mouse keys information */
-            pGlobalData->mouseKeys.cbSize = sizeof(MOUSEKEYS);
-            SystemParametersInfo(SPI_GETMOUSEKEYS,
-                                 sizeof(MOUSEKEYS),
-                                 &pGlobalData->mouseKeys,
-                                 0);
-
             /* Set the checkbox */
             CheckDlgButton(hwndDlg,
                            IDC_MOUSE_BOX,
