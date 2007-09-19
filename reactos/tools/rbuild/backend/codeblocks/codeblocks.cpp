@@ -625,7 +625,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 			}
 			else
 			{
-				fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles" : "-nostartfiles -Wl,--nostdlib" );
+				fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.cplusplus ? "-nostartfiles" : "-nostartfiles -Wl,--nostdlib" );
 				fprintf ( OUT, "\t\t\t\t\t<Add library=\"gcc\" />\r\n" );
 			}
 		}
@@ -641,7 +641,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 			else if ( module.type == NativeDLL)
 				fprintf ( OUT, "\t\t\t\t\t<Add option=\"-nostartfiles -Wl,--shared\" />\r\n" );
 
-			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.useHostStdlib ? "-nostartfiles" : "-nostartfiles -Wl,--nostdlib" );
+			fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", module.cplusplus ? "-nostartfiles" : "-nostartfiles -Wl,--nostdlib" );
 			fprintf ( OUT, "\t\t\t\t\t<Add library=\"gcc\" />\r\n" );
 		}
 

@@ -127,7 +127,6 @@
 	allowwarnings	(true|false) "false"
 	aliasof %Text; #IMPLIED
 	unicode	(true|yes|false|no) "no"
-	stdlib	(host)	#IMPLIED
 	isstartuplib	(true)	#IMPLIED
 	buildtype %Text; #FIXED "OFWLDR"
 >

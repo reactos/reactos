@@ -298,25 +298,6 @@ Module::Module ( const Project& project,
 	else
 		isUnicode = false;
 
-	att = moduleNode.GetAttribute ( "stdlib", false );
-	if ( att != NULL )
-	{
-		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "host" ) )
-			useHostStdlib = true;
-		else if ( !stricmp ( p, "default" ) )
-			useHostStdlib = false;
-		else
-		{
-			throw InvalidAttributeValueException (
-				moduleNode.location,
-				"stdlib",
-				att->value );
-		}
-	}
-	else
-		useHostStdlib = false;
-
 	if (isUnicode)
 	{
 		// Always define UNICODE and _UNICODE

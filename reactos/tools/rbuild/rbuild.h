@@ -357,7 +357,6 @@ public:
 	bool useWRC;
 	bool allowWarnings;
 	bool enabled;
-	bool useHostStdlib;
 	bool isStartupLib;
 	FileLocation *output; // "path/foo.exe"
 	FileLocation *dependency; // "path/foo.exe" or "path/libfoo.a"
