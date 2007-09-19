@@ -47,6 +47,12 @@ CreateDeviceDescriptor(WCHAR* path, BOOL is_enabled)
 static HANDLE device_list_file = NULL;
 static PnP_AudioHeader* audio_device_list = NULL;
 
+
+/*
+    TODO: Detect duplicate entries and ignore them! (In case we receive
+    a PnP event for an existing device...)
+*/
+
 BOOL
 AppendAudioDeviceToList(PnP_AudioDevice* device)
 {

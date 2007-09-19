@@ -106,17 +106,19 @@ DEFINE_GUIDSTRUCT("00000000-0000-0000-0000-000000000000", GUID_NULL);
         METHOD_NEITHER, \
         FILE_ANY_ACCESS)
 
+// WAS 2
 #define IOCTL_KS_METHOD \
     CTL_CODE( \
         FILE_DEVICE_KS, \
-        0x002, \
+        0x003, \
         METHOD_NEITHER, \
         FILE_ANY_ACCESS)
 
+// WAS 3
 #define IOCTL_KS_PROPERTY \
     CTL_CODE( \
         FILE_DEVICE_KS, \
-        0x003, \
+        0x000, \
         METHOD_NEITHER, \
         FILE_ANY_ACCESS)
 
@@ -220,6 +222,95 @@ DEFINE_GUIDSTRUCT("97EBAACA-95BD-11D0-A3EA-00A0C9223196", KSCATEGORY_PROXY);
     0x97EBAACBL, 0x95BD, 0x11D0, 0xA3, 0xEA, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96
 DEFINE_GUIDSTRUCT("97EBAACB-95BD-11D0-A3EA-00A0C9223196", KSCATEGORY_QUALITY);
 #define KSCATEGORY_QUALITY DEFINE_GUIDNAMED(KSCATEGORY_QUALITY)
+
+/* ===============================================================
+    Common
+*/
+
+typedef struct
+{
+    GUID Set;
+    ULONG Id;
+    ULONG Flags;
+} KSIDENTIFIER, *PKSIDENTIFIER;
+
+typedef KSIDENTIFIER KSPROPERTY, *PKSPROPERTY;
+typedef KSIDENTIFIER KSMETHOD, *PKSMETHOD;
+typedef KSIDENTIFIER KSEVENT, *PKSEVENT;
+
+typedef KSIDENTIFIER KSDEGRADE, *PKSDEGRADE;
+
+typedef KSIDENTIFIER KSPIN_INTERFACE, *PKSPIN_INTERFACE;
+typedef KSIDENTIFIER KSPIN_MEDIUM, *PKSPIN_MEDIUM;
+
+typedef union
+{
+    struct {
+        ULONG   FormatSize;
+        ULONG   Flags;
+        ULONG   SampleSize;
+        ULONG   Reserved;
+        GUID    MajorFormat;
+        GUID    SubFormat;
+        GUID    Specifier;
+    };
+    LONGLONG    Alignment;
+} KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
+
+typedef struct
+{
+} KSATTRIBUTE, *PKSATTRIBUTE;
+
+
+
+/* ===============================================================
+    Interface Sets - TODO
+*/
+
+#if 0
+#define KSINTERFACESETID_Media
+
+#define KSINTERFACESETID_Standard
+#define KSINTERFACE_STANDARD_STREAMING
+#define KSINTERFACE_STANDARD_LOOPED_STREAMING
+#define KSINTERFACE_STANDARD_CONTROL
+#endif
+
+typedef KSIDENTIFIER KSPIN_INTERFACE, *PKSPIN_INTERFACE;
+
+#define STATIC_KSINTERFACESETID_Standard \
+    0x1A8766A0L, 0x62CE, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("1A8766A0-62CE-11CF-A5D6-28DB04C10000", KSINTERFACESETID_Standard);
+#define KSINTERFACESETID_Standard DEFINE_GUIDNAMED(KSINTERFACESETID_Standard)
+
+typedef enum
+{
+    KSINTERFACE_STANDARD_STREAMING,
+    KSINTERFACE_STANDARD_LOOPED_STREAMING,
+    KSINTERFACE_STANDARD_CONTROL
+} KSINTERFACE_STANDARD;
+
+#define STATIC_KSINTERFACESETID_FileIo \
+    0x8C6F932CL, 0xE771, 0x11D0, 0xB8, 0xFF, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96
+DEFINE_GUIDSTRUCT("8C6F932C-E771-11D0-B8FF-00A0C9223196", KSINTERFACESETID_FileIo);
+#define KSINTERFACESETID_FileIo DEFINE_GUIDNAMED(KSINTERFACESETID_FileIo)
+
+
+/* ===============================================================
+    Mediums
+*/
+
+typedef enum
+{
+    KSINTERFACE_FILEIO_STREAMING
+} KSINTERFACE_FILEIO;
+
+#define KSMEDIUM_TYPE_ANYINSTANCE       0
+
+#define STATIC_KSMEDIUMSETID_Standard \
+    0x4747B320L, 0x62CE, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("4747B320-62CE-11CF-A5D6-28DB04C10000", KSMEDIUMSETID_Standard);
+#define KSMEDIUMSETID_Standard DEFINE_GUIDNAMED(KSMEDIUMSETID_Standard)
 
 
 /* ===============================================================
@@ -341,8 +432,10 @@ typedef enum
     Properties/Methods/Events
 */
 
-#define KSPROPSETID_Pin \
+#define STATIC_KSPROPSETID_Pin\
     0x8C134960L, 0x51AD, 0x11CF, 0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("8C134960-51AD-11CF-878A-94F801C10000", KSPROPSETID_Pin);
+#define KSPROPSETID_Pin DEFINE_GUIDNAMED(KSPROPSETID_Pin)
 
 typedef enum
 {
@@ -362,6 +455,28 @@ typedef enum
     KSPROPERTY_PIN_CONSTRAINEDDATARANGES,
     KSPROPERTY_PIN_PROPOSEDATAFORMAT
 } KSPROPERTY_PIN;
+
+typedef struct
+{
+    KSPROPERTY      Property;
+    ULONG           PinId;
+    ULONG           Reserved;
+} KSP_PIN, *PKSP_PIN;
+
+#define KSINSTANCE_INDETERMINATE    ((ULONG)-1)
+
+typedef struct
+{
+    ULONG  PossibleCount;
+    ULONG  CurrentCount;
+} KSPIN_CINSTANCES, *PKSPIN_CINSTANCES;
+
+typedef struct
+{
+    ULONG   Size;
+    ULONG   Pin;
+    WCHAR   SymbolicLinkName[1];
+} KSPIN_PHYSICALCONNECTION, *PKSPIN_PHYSICALCONNECTION;
 
 
 /* ===============================================================
@@ -605,7 +720,7 @@ typedef enum
     KSPROPERTY_SYNTH_DLS_WAVEFORMAT
 */
 
-#define KSPROPSETID_Sysaudio
+/* #define KSPROPSETID_Sysaudio */
 /*
     KSPROPERTY_SYSAUDIO_COMPONENT_ID 
     KSPROPERTY_SYSAUDIO_CREATE_VIRTUAL_SOURCE 
@@ -629,16 +744,6 @@ typedef enum
 */
 
 
-/* ===============================================================
-    Interface Sets - TODO
-*/
-
-#define KSINTERFACESETID_Media
-
-#define KSINTERFACESETID_Standard
-#define KSINTERFACE_STANDARD_STREAMING
-#define KSINTERFACE_STANDARD_LOOPED_STREAMING
-#define KSINTERFACE_STANDARD_CONTROL
 
 
 /* ===============================================================
@@ -980,39 +1085,6 @@ typedef struct
 
 
 /* ===============================================================
-    Common
-*/
-
-typedef struct
-{
-    GUID Set;
-    ULONG Id;
-    ULONG Flags;
-} KSIDENTIFIER, *PKSIDENTIFIER;
-
-typedef KSIDENTIFIER KSPROPERTY, *PKSPROPERTY;
-typedef KSIDENTIFIER KSMETHOD, *PKSMETHOD;
-typedef KSIDENTIFIER KSEVENT, *PKSEVENT;
-
-typedef KSIDENTIFIER KSDEGRADE, *PKSDEGRADE;
-
-typedef KSIDENTIFIER KSPIN_INTERFACE, *PKSPIN_INTERFACE;
-typedef KSIDENTIFIER KSPIN_MEDIUM, *PKSPIN_MEDIUM;
-
-typedef struct
-{
-} KSDATARANGE, *PKSDATARANGE;
-
-typedef struct
-{
-} KSDATAFORMAT, *PKSDATAFORMAT;
-
-typedef struct
-{
-} KSATTRIBUTE, *PKSATTRIBUTE;
-
-
-/* ===============================================================
     Priorities
 */
 
@@ -1053,6 +1125,12 @@ typedef struct
 
 typedef struct
 {
+    GUID    Manufacturer;
+    GUID    Product;
+    GUID    Component;
+    GUID    Name;
+    ULONG   Version;
+    ULONG   Revision;
 } KSCOMPONENTID, *PKSCOMPONENTID;
 
 typedef struct
@@ -1235,8 +1313,9 @@ typedef struct
 typedef VOID (*PFNKSITEMFREECALLBACK)(
     IN  PKSOBJECT_CREATE_ITEM CreateItem);
 
-typedef struct
-{
+typedef struct {
+    ULONG    Size;
+    ULONG    Count;
 } KSMULTIPLE_ITEM, *PKSMULTIPLE_ITEM;
 
 typedef struct
@@ -1415,14 +1494,6 @@ typedef struct
     HANDLE PinToHandle;
     KSPRIORITY Priority;
 } KSPIN_CONNECT, *PKSPIN_CONNECT;
-
-typedef struct
-{
-} KSP_PIN, *PKSP_PIN;
-
-typedef struct
-{
-} KSPIN_PHYSICALCONNECTION, *PKSPIN_PHYSICALCONNECTION;
 
 
 /* ===============================================================

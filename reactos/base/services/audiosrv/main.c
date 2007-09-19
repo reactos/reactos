@@ -7,28 +7,13 @@
  */
 
 #include <windows.h>
-#include <winuser.h>
-#include <dbt.h>
+
 #include <audiosrv/audiosrv.h>
-#include <pnp_list_manager.h>
+#include "audiosrv.h"
 
-#include <ksmedia.h>
-
-
-
-/* Prototypes */
-
-VOID CALLBACK
-ServiceMain(DWORD argc, char** argv);
-
-DWORD WINAPI
-ServiceControlHandler(
-    DWORD dwControl,
-    DWORD dwEventType,
-    LPVOID lpEventData,
-    LPVOID lpContext);
 
 /* Service table */
+
 SERVICE_TABLE_ENTRY service_table[2] =
 {
     { L"AudioSrv", (LPSERVICE_MAIN_FUNCTION) ServiceMain },
@@ -37,24 +22,7 @@ SERVICE_TABLE_ENTRY service_table[2] =
 
 SERVICE_STATUS_HANDLE service_status_handle;
 SERVICE_STATUS service_status;
-HDEVNOTIFY device_notification_handle = NULL;
 
-/* Synchronization of access to the event list */
-HANDLE device_list_mutex = INVALID_HANDLE_VALUE;
-
-
-/* Implementation */
-
-DWORD
-ProcessDeviceArrival(DEV_BROADCAST_DEVICEINTERFACE* device)
-{
-    PnP_AudioDevice* list_node;
-    list_node = CreateDeviceDescriptor(device->dbcc_name, TRUE);
-    AppendAudioDeviceToList(list_node);
-    DestroyDeviceDescriptor(list_node);
-
-    return NO_ERROR;
-}
 
 DWORD WINAPI
 ServiceControlHandler(
@@ -73,12 +41,7 @@ ServiceControlHandler(
         case SERVICE_CONTROL_STOP :
         case SERVICE_CONTROL_SHUTDOWN :
         {
-            /* FIXME: This function doesn't exist?! */
-/*
-            UnregisterDeviceNotification(device_notification_handle);
-            device_notification_handle = NULL;
-*/
-
+            UnregisterDeviceNotifications();
             DestroyAudioDeviceList();
 
             service_status.dwCurrentState = SERVICE_STOP_PENDING;
@@ -94,23 +57,7 @@ ServiceControlHandler(
 
         case SERVICE_CONTROL_DEVICEEVENT :
         {
-            switch ( dwEventType )
-            {
-                case DBT_DEVICEARRIVAL :
-                {
-                    DEV_BROADCAST_DEVICEINTERFACE* incoming_device =
-                        (DEV_BROADCAST_DEVICEINTERFACE*) lpEventData;
-
-                    return ProcessDeviceArrival(incoming_device);
-                }
-
-                default :
-                {
-                    break;
-                }
-            }
-
-            return NO_ERROR;
+            return HandleDeviceEvent(dwEventType, lpEventData);
         }
 
         default :
@@ -118,28 +65,6 @@ ServiceControlHandler(
     };
 
     /*SetServiceStatus(service_status_handle, &service_status);*/
-}
-
-BOOL
-RegisterForDeviceNotifications()
-{
-    DEV_BROADCAST_DEVICEINTERFACE notification_filter;
-
-    const GUID wdmaud_guid = {STATIC_KSCATEGORY_WDMAUD};
-
-    /* FIXME: This currently lists ALL device interfaces... */
-    ZeroMemory(&notification_filter, sizeof(notification_filter));
-    notification_filter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
-    notification_filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-    notification_filter.dbcc_classguid = wdmaud_guid;
-
-    device_notification_handle =
-        RegisterDeviceNotification((HANDLE) service_status_handle,
-                                   &notification_filter,
-                                   DEVICE_NOTIFY_SERVICE_HANDLE |
-                                   DEVICE_NOTIFY_ALL_INTERFACE_CLASSES);
-
-    return ( device_notification_handle != NULL );
 }
 
 VOID CALLBACK
@@ -173,6 +98,18 @@ ServiceMain(DWORD argc, char** argv)
     /* We want to know when devices are added/removed */
     if ( ! RegisterForDeviceNotifications() )
     {
+        DestroyAudioDeviceList();
+
+        service_status.dwCurrentState = SERVICE_STOPPED;
+        service_status.dwWin32ExitCode = -1;
+        SetServiceStatus(service_status_handle, &service_status);
+        return;
+    }
+
+    /* Now find any devices that already exist on the system */
+    if ( ! ProcessExistingDevices() )
+    {
+        UnregisterDeviceNotifications();
         DestroyAudioDeviceList();
 
         service_status.dwCurrentState = SERVICE_STOPPED;
