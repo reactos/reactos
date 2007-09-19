@@ -1738,9 +1738,10 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		GetRpcHeaderDependencies ( rpcDependencies );
 		dependencies += " " + v2s ( backend, rpcDependencies, 5 );
 		fprintf ( fMakefile,
-		          "%s: %s\n",
+		          "%s: %s | %s\n",
 		          backend->GetFullName ( *pchFilename ).c_str(),
-		          dependencies.c_str() );
+		          dependencies.c_str(),
+		          backend->GetFullPath ( *pchFilename ).c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
 		          "\t%s -o %s %s -g %s\n\n",
