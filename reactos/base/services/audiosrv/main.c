@@ -24,6 +24,17 @@ SERVICE_STATUS_HANDLE service_status_handle;
 SERVICE_STATUS service_status;
 
 
+/* This is for testing only! */
+VOID
+InitializeFakeDevice()
+{
+    PnP_AudioDevice* list_node;
+
+    list_node = CreateDeviceDescriptor(L"ThisDeviceDoesNotReallyExist", TRUE);
+    AppendAudioDeviceToList(list_node);
+    DestroyDeviceDescriptor(list_node);
+}
+
 DWORD WINAPI
 ServiceControlHandler(
     DWORD dwControl,
@@ -86,7 +97,11 @@ ServiceMain(DWORD argc, char** argv)
                                                          NULL);
 
     logmsg("Service status handle %d\n", service_status_handle);
-    /* TODO: Deal with errors */
+    if ( ! service_status_handle )
+    {
+        logmsg("Failed to register service control handler\n");
+        /* FIXME - we should fail */
+    }
 
     /* Set these to defaults */
     service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -126,6 +141,8 @@ ServiceMain(DWORD argc, char** argv)
         return;
 */
     }
+
+    InitializeFakeDevice();
 
     logmsg("Processing existing devices\n");
     /* Now find any devices that already exist on the system */
