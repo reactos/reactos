@@ -56,6 +56,9 @@ ProcessDeviceArrival(DEV_BROADCAST_DEVICEINTERFACE* device);
 BOOL
 RegisterForDeviceNotifications();
 
+VOID
+UnregisterDeviceNotifications();
+
 DWORD
 HandleDeviceEvent(
     DWORD dwEventType,
