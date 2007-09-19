@@ -29,7 +29,7 @@ CreateDeviceDescriptor(WCHAR* path, BOOL is_enabled)
 
     if ( ! device )
     {
-        log("Failed to create a device descriptor (malloc fail)\n");
+        logmsg("Failed to create a device descriptor (malloc fail)\n");
         return NULL;
     }
 
@@ -76,7 +76,7 @@ AppendAudioDeviceToList(PnP_AudioDevice* device)
     /* We DON'T want to overshoot the end of the buffer! */
     if ( audio_device_list->size + device_info_size > audio_device_list->max_size )
     {
-        printf("max_size would be exceeded! Failing...\n");
+        /*printf("max_size would be exceeded! Failing...\n");*/
         return FALSE;
     }
 
@@ -91,7 +91,7 @@ AppendAudioDeviceToList(PnP_AudioDevice* device)
 
     UnlockAudioDeviceList();
 
-    log("Device added to list\n");
+    logmsg("Device added to list\n");
 
     return TRUE;
 }
@@ -112,7 +112,7 @@ CreateAudioDeviceList(DWORD max_size)
        turning up before we're ready... */
     LockAudioDeviceList();
 
-    log("Creating file mapping\n");
+    logmsg("Creating file mapping\n");
     /* Expose our device list to the world */
     device_list_file = CreateFileMapping(INVALID_HANDLE_VALUE,
                                          NULL,
@@ -123,7 +123,7 @@ CreateAudioDeviceList(DWORD max_size)
 
     if ( ! device_list_file )
     {
-        log("Creation of audio device list failed (err %d)\n", GetLastError());
+        logmsg("Creation of audio device list failed (err %d)\n", GetLastError());
 
         UnlockAudioDeviceList();
         KillAudioDeviceListLock();
@@ -131,7 +131,7 @@ CreateAudioDeviceList(DWORD max_size)
         return FALSE;
     }
 
-    log("Mapping view of file\n");
+    logmsg("Mapping view of file\n");
     /* Of course, we'll need to access the list ourselves */
     audio_device_list = MapViewOfFile(device_list_file,
                                       FILE_MAP_WRITE,
@@ -141,7 +141,7 @@ CreateAudioDeviceList(DWORD max_size)
 
     if ( ! audio_device_list )
     {
-        log("MapViewOfFile FAILED (err %d)\n", GetLastError());
+        logmsg("MapViewOfFile FAILED (err %d)\n", GetLastError());
 
         CloseHandle(device_list_file);
         device_list_file = NULL;
@@ -162,7 +162,7 @@ CreateAudioDeviceList(DWORD max_size)
 
     UnlockAudioDeviceList();
 
-    log("Device list created\n");
+    logmsg("Device list created\n");
 
     return TRUE;
 }
@@ -170,7 +170,7 @@ CreateAudioDeviceList(DWORD max_size)
 VOID
 DestroyAudioDeviceList()
 {
-    log("Destroying device list\n");
+    logmsg("Destroying device list\n");
 
     LockAudioDeviceList();
 
