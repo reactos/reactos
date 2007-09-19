@@ -14,5 +14,6 @@ installname="audiosrv.exe" allowwarnings="true">
 	<file>pnp_list_manager.c</file>
 	<file>pnp_list_lock.c</file>
 	<file>pnp.c</file>
+	<file>debug.c</file>
 	<file>audiosrv.rc</file>
 </module>

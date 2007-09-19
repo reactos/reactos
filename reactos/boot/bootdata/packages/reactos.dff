@@ -75,6 +75,7 @@ base\services\rpcss\rpcss.exe                       1
 base\services\tcpsvcs\tcpsvcs.exe                   1
 base\services\tcpsvcs\quotes                        5
 base\services\umpnpmgr\umpnpmgr.exe                 1
+base\services\audiosrv\audiosrv.exe			1
 
 base\setup\setup\setup.exe                          1
 base\setup\vmwinst\vmwinst.exe                      1

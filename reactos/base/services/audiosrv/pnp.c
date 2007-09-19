@@ -127,7 +127,6 @@ RegisterForDeviceNotifications()
 
     const GUID wdmaud_guid = {STATIC_KSCATEGORY_AUDIO};
 
-    /* FIXME: This currently lists ALL device interfaces... */
     ZeroMemory(&notification_filter, sizeof(notification_filter));
     notification_filter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
     notification_filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
@@ -139,6 +138,11 @@ RegisterForDeviceNotifications()
                                    DEVICE_NOTIFY_SERVICE_HANDLE
 /* |
                                    DEVICE_NOTIFY_ALL_INTERFACE_CLASSES*/);
+
+    if ( ! device_notification_handle )
+    {
+        logmsg("RegisterDeviceNotification() failed with error %d\n", GetLastError());
+    }
 
     return ( device_notification_handle != NULL );
 }
@@ -152,7 +156,12 @@ RegisterForDeviceNotifications()
 VOID UnregisterDeviceNotifications()
 {
     /* TODO -- NOT IMPLEMENTED! */
-    device_notification_handle = NULL;
+
+    if ( device_notification_handle )
+    {
+        /* TODO */
+        device_notification_handle = NULL;
+    }
 }
 
 

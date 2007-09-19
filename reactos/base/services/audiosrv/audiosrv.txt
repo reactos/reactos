@@ -10,6 +10,9 @@ have any impact on functionality.
 AudioSrv on Windows creates a mapped file at:
 Global\mmGlobalPnpInfo
 
+The ReactOS audio device list lives at:
+Global\AudioDeviceList
+
 This file appears to contain a list of devices that WinMM accesses and
 subsequently passes to wdmaud.drv
 
@@ -32,7 +35,39 @@ relevant audio devices, and also let AudioSrv in Windows do this. Then
 it should be possible to create a small application that imitates 
 WinMM's actions :)
 
-So far, it doesn't do much... Watch this space!
+
+Current Status
+==============
+
+AudioSrv registers for device notifications and obtains a list of the
+current audio devices in the system (devices registered against the
+KSCATEGORY_AUDIO interface).
+
+ReactOS does not currently have RegisterDeviceNotification implemented,
+so for the moment this service considers the failure of this API call
+to be non-fatal and will proceed without device event notification. This
+behaviour will be amended in a future revision (ie once this API call
+is implemented!)
+
+
+Testing the Service
+===================
+
+The service can be installed on Windows XP (possibly also Vista) like so:
+sc create RosAudioSrv <path to audiosrv.exe>
+net start RosAudioSrv
+
+...and can be removed like so:
+net stop RosAudioSrv
+sc delete RosAudioSrv
+
+You can view a list of the currently available devices (device list is
+identical to the one offered by Windows' own AudioSrv) by running
+my READER.EXE test utility, available in the following package:
+
+http://stuff.silverblade.co.uk/reactos/sharedlist.tar.gz
+
+That's all for now, folks ;)
 
 
 Andrew Greenwood

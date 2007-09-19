@@ -61,4 +61,9 @@ HandleDeviceEvent(
     DWORD dwEventType,
     LPVOID lpEventData);
 
+
+/* Debugging */
+
+void logmsg(char* string, ...);
+
 #endif

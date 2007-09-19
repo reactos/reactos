@@ -480,6 +480,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Tag",0x00010001,0x00000010
 
+; Audio Service
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","DisplayName",0x00000000,"Audio Service"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Description",0x00000000,"Provides audio facilities to applications"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Group",0x00000000,"Audio"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\AudioSrv","Type",0x00010001,0x00000010
+
 ; BusLogic 958 miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Group",0x00000000,"SCSI Miniport"

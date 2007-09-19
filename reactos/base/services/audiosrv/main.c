@@ -35,13 +35,19 @@ ServiceControlHandler(
     {
         case SERVICE_CONTROL_INTERROGATE :
         {
+            logmsg("* Interrogation\n");
             return NO_ERROR;
         }
 
         case SERVICE_CONTROL_STOP :
         case SERVICE_CONTROL_SHUTDOWN :
         {
+            logmsg("* Service Stop/Shutdown request received\n");
+
+            logmsg("Unregistering device notifications\n");
             UnregisterDeviceNotifications();
+
+            logmsg("Destroying audio device list\n");
             DestroyAudioDeviceList();
 
             service_status.dwCurrentState = SERVICE_STOP_PENDING;
@@ -52,11 +58,14 @@ ServiceControlHandler(
 
             SetServiceStatus(service_status_handle, &service_status);
 
+            logmsg("* Service stopped\n");
+
             return NO_ERROR;
         }
 
         case SERVICE_CONTROL_DEVICEEVENT :
         {
+            logmsg("* Device Event\n");
             return HandleDeviceEvent(dwEventType, lpEventData);
         }
 
@@ -70,9 +79,14 @@ ServiceControlHandler(
 VOID CALLBACK
 ServiceMain(DWORD argc, char** argv)
 {
+    logmsg("* Service starting\n");
+    logmsg("Registering service control handler...\n");
     service_status_handle = RegisterServiceCtrlHandlerEx(SERVICE_NAME,
                                                          ServiceControlHandler,
                                                          NULL);
+
+    logmsg("Service status handle %d\n", service_status_handle);
+    /* TODO: Deal with errors */
 
     /* Set these to defaults */
     service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -86,29 +100,38 @@ ServiceMain(DWORD argc, char** argv)
     service_status.dwCurrentState = SERVICE_START_PENDING;
     SetServiceStatus(service_status_handle, &service_status);
 
+    logmsg("Creating audio device list\n");
     /* This creates the audio device list and mutex */
     if ( ! CreateAudioDeviceList(AUDIO_LIST_MAX_SIZE) )
     {
+        logmsg("Failed to create audio device list\n");
         service_status.dwCurrentState = SERVICE_STOPPED;
         service_status.dwWin32ExitCode = -1;
         SetServiceStatus(service_status_handle, &service_status);
         return;
     }
 
+    logmsg("Registering for device notifications\n");
     /* We want to know when devices are added/removed */
     if ( ! RegisterForDeviceNotifications() )
     {
+        /* FIXME: This is not fatal at present as ROS does not support this */
+        logmsg("Failed to register for device notifications\n");
+/*
         DestroyAudioDeviceList();
 
         service_status.dwCurrentState = SERVICE_STOPPED;
         service_status.dwWin32ExitCode = -1;
         SetServiceStatus(service_status_handle, &service_status);
         return;
+*/
     }
 
+    logmsg("Processing existing devices\n");
     /* Now find any devices that already exist on the system */
     if ( ! ProcessExistingDevices() )
     {
+        logmsg("Could not process existing devices\n");
         UnregisterDeviceNotifications();
         DestroyAudioDeviceList();
 
@@ -118,6 +141,7 @@ ServiceMain(DWORD argc, char** argv)
         return;
     }
 
+    logmsg("* Service started");
     /* Tell SCM we are now running, and we may be stopped */
     service_status.dwCurrentState = SERVICE_RUNNING;
     service_status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
@@ -126,6 +150,7 @@ ServiceMain(DWORD argc, char** argv)
 
 int main()
 {
+    logmsg("Audio Service main()\n");
     StartServiceCtrlDispatcher(service_table);
     return 0;
 }
