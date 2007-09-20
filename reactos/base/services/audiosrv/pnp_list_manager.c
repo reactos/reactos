@@ -114,12 +114,12 @@ CreateAudioDeviceList(DWORD max_size)
 
     logmsg("Creating file mapping\n");
     /* Expose our device list to the world */
-    device_list_file = CreateFileMapping(INVALID_HANDLE_VALUE,
-                                         NULL,
-                                         PAGE_READWRITE,
-                                         0,
-                                         max_size,
-                                         AUDIO_LIST_NAME);
+    device_list_file = CreateFileMappingW(INVALID_HANDLE_VALUE,
+                                          NULL,
+                                          PAGE_READWRITE,
+                                          0,
+                                          max_size,
+                                          AUDIO_LIST_NAME);
 
     if ( ! device_list_file )
     {

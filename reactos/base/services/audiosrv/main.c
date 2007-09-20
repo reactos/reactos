@@ -11,15 +11,6 @@
 #include <audiosrv/audiosrv.h>
 #include "audiosrv.h"
 
-
-/* Service table */
-
-SERVICE_TABLE_ENTRY service_table[2] =
-{
-    { L"AudioSrv", (LPSERVICE_MAIN_FUNCTION) ServiceMain },
-    { NULL, NULL }
-};
-
 SERVICE_STATUS_HANDLE service_status_handle;
 SERVICE_STATUS service_status;
 
@@ -88,13 +79,13 @@ ServiceControlHandler(
 }
 
 VOID CALLBACK
-ServiceMain(DWORD argc, char** argv)
+ServiceMain(DWORD argc, LPWSTR argv)
 {
     logmsg("* Service starting\n");
     logmsg("Registering service control handler...\n");
-    service_status_handle = RegisterServiceCtrlHandlerEx(SERVICE_NAME,
-                                                         ServiceControlHandler,
-                                                         NULL);
+    service_status_handle = RegisterServiceCtrlHandlerExW(SERVICE_NAME,
+                                                          ServiceControlHandler,
+                                                          NULL);
 
     logmsg("Service status handle %d\n", service_status_handle);
     if ( ! service_status_handle )
@@ -165,9 +156,17 @@ ServiceMain(DWORD argc, char** argv)
     SetServiceStatus(service_status_handle, &service_status);
 }
 
-int main()
+int wmain()
 {
+    SERVICE_TABLE_ENTRYW service_table[] =
+    {
+        { SERVICE_NAME, (LPSERVICE_MAIN_FUNCTIONW) ServiceMain },
+        { NULL, NULL }
+    };
+
     logmsg("Audio Service main()\n");
-    StartServiceCtrlDispatcher(service_table);
+    if (!StartServiceCtrlDispatcherW(service_table))
+        logmsg("StartServiceCtrlDispatcher failed\n");
+
     return 0;
 }

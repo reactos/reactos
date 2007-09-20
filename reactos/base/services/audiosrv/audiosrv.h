@@ -15,19 +15,6 @@
 extern SERVICE_STATUS_HANDLE service_status_handle;
 
 
-/* main.c */
-
-VOID CALLBACK
-ServiceMain(DWORD argc, char** argv);
-
-DWORD WINAPI
-ServiceControlHandler(
-    DWORD dwControl,
-    DWORD dwEventType,
-    LPVOID lpEventData,
-    LPVOID lpContext);
-
-
 /* List management (pnp_list_manager.c) */
 
 VOID*

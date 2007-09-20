@@ -30,20 +30,20 @@ ProcessExistingDevices()
 {
     SP_DEVICE_INTERFACE_DATA interface_data;
     SP_DEVINFO_DATA device_data;
-    PSP_DEVICE_INTERFACE_DETAIL_DATA detail_data;
+    PSP_DEVICE_INTERFACE_DETAIL_DATA_W detail_data;
     HDEVINFO dev_info;
     DWORD length;
     int index = 0;
 
     const GUID category_guid = {STATIC_KSCATEGORY_AUDIO};
 
-    dev_info = SetupDiGetClassDevsEx(&category_guid,
-                                     NULL,
-                                     NULL,
-                                     DIGCF_PRESENT | DIGCF_DEVICEINTERFACE,
-                                     NULL,
-                                     NULL,
-                                     NULL);
+    dev_info = SetupDiGetClassDevsExW(&category_guid,
+                                      NULL,
+                                      NULL,
+                                      DIGCF_PRESENT | DIGCF_DEVICEINTERFACE,
+                                      NULL,
+                                      NULL,
+                                      NULL);
 
 /*    printf("%s:\n", ClassString); */
 
@@ -57,9 +57,9 @@ ProcessExistingDevices()
                 + (MAX_PATH * sizeof(WCHAR));
 
     detail_data =
-        (PSP_DEVICE_INTERFACE_DETAIL_DATA)HeapAlloc(GetProcessHeap(),
-                                                    0,
-                                                    length);
+        (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)HeapAlloc(GetProcessHeap(),
+                                                      0,
+                                                      length);
 
     while ( 
     SetupDiEnumDeviceInterfaces(dev_info,
@@ -73,15 +73,15 @@ ProcessExistingDevices()
         ZeroMemory(detail_data, length);
 
         /* NOTE: We don't actually use device_data... */
-        detail_data->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+        detail_data->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
         device_data.cbSize = sizeof(device_data);
         device_data.Reserved = 0;
-        SetupDiGetDeviceInterfaceDetail(dev_info,
-                                        &interface_data,
-                                        detail_data,
-                                        length,
-                                        NULL,
-                                        &device_data);
+        SetupDiGetDeviceInterfaceDetailW(dev_info,
+                                         &interface_data,
+                                         detail_data,
+                                         length,
+                                         NULL,
+                                         &device_data);
 
         list_node = CreateDeviceDescriptor(detail_data->DevicePath, TRUE);
         AppendAudioDeviceToList(list_node);
@@ -133,9 +133,9 @@ RegisterForDeviceNotifications()
     notification_filter.dbcc_classguid = wdmaud_guid;
 
     device_notification_handle =
-        RegisterDeviceNotification((HANDLE) service_status_handle,
-                                   &notification_filter,
-                                   DEVICE_NOTIFY_SERVICE_HANDLE
+        RegisterDeviceNotificationW((HANDLE) service_status_handle,
+                                    &notification_filter,
+                                    DEVICE_NOTIFY_SERVICE_HANDLE
 /* |
                                    DEVICE_NOTIFY_ALL_INTERFACE_CLASSES*/);
 
