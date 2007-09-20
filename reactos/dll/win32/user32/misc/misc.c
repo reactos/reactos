@@ -268,3 +268,78 @@ EndTask(
 
     return TRUE;
 }
+
+PUSER_HANDLE_ENTRY
+FASTCALL
+GetUser32Handle(HANDLE handle)
+{
+  PUSER_HANDLE_TABLE ht = gHandleTable;
+  USHORT generation;
+
+  DPRINT1("Main Handle Table %x\n", ht);
+
+  INT Index = (((UINT)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
+
+  if (Index < 0 || Index >= ht->nb_handles) return NULL;
+
+  if (!ht->handles[Index].type) return NULL;
+
+  generation = (UINT)handle >> 16;
+
+  if (generation == ht->handles[Index].generation || !generation || generation == 0xffff)
+     return &ht->handles[Index];
+
+  return NULL;
+}
+
+//
+// Validate Handle and return the pointer to the object.
+//
+PVOID
+FASTCALL
+ValidateHandle(HANDLE handle, UINT uType)
+{
+  PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+
+  if (uType == VALIDATE_TYPE_WIN)
+  {
+     if (handle == ClientInfo->hWND) return ClientInfo->pvWND;
+  }
+
+  PUSER_HANDLE_ENTRY pEntry = GetUser32Handle(handle);
+
+// Must have an entry and must be the same type!
+  if ( (!pEntry) || (pEntry->type != uType) )
+  {
+     switch ( uType )
+     {  // Test (with wine too) confirms these results!
+        case VALIDATE_TYPE_WIN:
+          SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+          break;
+        case VALIDATE_TYPE_MENU:
+          SetLastError(ERROR_INVALID_MENU_HANDLE);
+          break;
+        case VALIDATE_TYPE_CURSOR:
+          SetLastError(ERROR_INVALID_CURSOR_HANDLE);
+          break;
+        case VALIDATE_TYPE_MWPOS:
+          SetLastError(ERROR_INVALID_DWP_HANDLE);
+          break;
+        case VALIDATE_TYPE_HOOK:
+          SetLastError(ERROR_INVALID_HOOK_HANDLE);
+          break;
+        case VALIDATE_TYPE_ACCEL:
+          SetLastError(ERROR_INVALID_ACCEL_HANDLE);
+          break;
+        default:
+          SetLastError(ERROR_INVALID_HANDLE);
+    }
+    return NULL;
+  }
+
+  if (!(NtUserValidateHandleSecure(handle, FALSE))) return NULL;  
+
+  return pEntry->ptr;
+}
+
+
