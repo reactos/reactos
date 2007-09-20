@@ -6,7 +6,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_SOLITAIRE ICON DISCARDABLE "solitaire.ico"
 
 #include "lang/bg-BG.rc"
-#include "lang/ca-CA.rc"
+#include "lang/ca-ES.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"
