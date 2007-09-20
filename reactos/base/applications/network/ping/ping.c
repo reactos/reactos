@@ -1,11 +1,9 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
- * FILE:        apps/net/ping/ping.c
+ * FILE:        base/applications/network/ping/ping.c
  * PURPOSE:     Network test utility
- * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISIONS:
- *   CSH  01/09/2000 Created
+ * PROGRAMMERS:
  */
 
 #include <winsock2.h>
@@ -14,13 +12,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef _MSC_VER
+#define NDEBUG
 
-/* FIXME: Where should this be? */
-#ifdef CopyMemory
-#undef CopyMemory
-#endif
-#define CopyMemory(Destination, Source, Length) memcpy(Destination, Source, Length);
+#ifndef _MSC_VER
 
 /* Should be in the header files somewhere (exported by ntdll.dll) */
 long atol(const char *str);
@@ -33,47 +27,46 @@ char * _i64toa(__int64 value, char *string, int radix);
 
 #endif /* _MSC_VER */
 
-#ifdef DBG
-#undef DBG
-#endif
-
 /* General ICMP constants */
-#define ICMP_MINSIZE		8		/* Minimum ICMP packet size */
-#define ICMP_MAXSIZE		65535	/* Maximum ICMP packet size */
+#define ICMP_MINSIZE        8     /* Minimum ICMP packet size */
+#define ICMP_MAXSIZE        65535 /* Maximum ICMP packet size */
 
 /* ICMP message types */
-#define ICMPMSG_ECHOREQUEST	8		/* ICMP ECHO request message */
-#define ICMPMSG_ECHOREPLY	0		/* ICMP ECHO reply message */
+#define ICMPMSG_ECHOREQUEST 8     /* ICMP ECHO request message */
+#define ICMPMSG_ECHOREPLY   0     /* ICMP ECHO reply message */
 
 #pragma pack(4)
 
 /* IPv4 header structure */
-typedef struct _IPv4_HEADER {
-	unsigned char	IHL:4;
-	unsigned char	Version:4;
-	unsigned char	TOS;
-	unsigned short	Length;
-	unsigned short	Id;
-	unsigned short	FragFlags;
-	unsigned char	TTL;
-	unsigned char	Protocol;
-	unsigned short	Checksum;
-	unsigned int	SrcAddress;
-	unsigned int	DstAddress;
+typedef struct _IPv4_HEADER
+{
+    unsigned char IHL:4;
+    unsigned char Version:4;
+    unsigned char TOS;
+    unsigned short Length;
+    unsigned short Id;
+    unsigned short FragFlags;
+    unsigned char TTL;
+    unsigned char Protocol;
+    unsigned short Checksum;
+    unsigned int SrcAddress;
+    unsigned int DstAddress;
 } IPv4_HEADER, *PIPv4_HEADER;
 
 /* ICMP echo request/reply header structure */
-typedef struct _ICMP_HEADER {
-	unsigned char	Type;
-	unsigned char	Code;
-	unsigned short	Checksum;
-	unsigned short	Id;
-	unsigned short	SeqNum;
+typedef struct _ICMP_HEADER
+{
+    unsigned char Type;
+    unsigned char Code;
+    unsigned short Checksum;
+    unsigned short Id;
+    unsigned short SeqNum;
 } ICMP_HEADER, *PICMP_HEADER;
 
-typedef struct _ICMP_ECHO_PACKET {
-	ICMP_HEADER   Icmp;
-	LARGE_INTEGER Timestamp;
+typedef struct _ICMP_ECHO_PACKET
+{
+    ICMP_HEADER Icmp;
+    LARGE_INTEGER Timestamp;
 } ICMP_ECHO_PACKET, *PICMP_ECHO_PACKET;
 
 #pragma pack(1)
@@ -105,7 +98,7 @@ LARGE_INTEGER       TicksPerMs; /* Ticks per millisecond */
 LARGE_INTEGER       TicksPerUs; /* Ticks per microsecond */
 BOOL                UsePerformanceCounter;
 
-#ifdef DBG
+#ifndef NDEBUG
 /* Display the contents of a buffer */
 static VOID DisplayBuffer(
     PVOID Buffer,
@@ -117,25 +110,25 @@ static VOID DisplayBuffer(
     printf("Buffer (0x%p)  Size (0x%lX).\n", Buffer, Size);
 
     p = (PCHAR)Buffer;
-    for (i = 0; i < Size; i++) {
-      if (i % 16 == 0) {
-        printf("\n");
-      }
-      printf("%02X ", (p[i]) & 0xFF);
+    for (i = 0; i < Size; i++)
+    {
+        if (i % 16 == 0)
+            printf("\n");
+        printf("%02X ", (p[i]) & 0xFF);
     }
 }
-#endif /* DBG */
+#endif /* !NDEBUG */
 
 /* Display usage information on screen */
 static VOID Usage(VOID)
 {
-	printf("\nUsage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n");
-	printf("Options:\n");
-	printf("    -t             Ping the specified host until stopped.\n");
-	printf("                   To stop - type Control-C.\n");
-	printf("    -n count       Number of echo requests to send.\n");
-	printf("    -l size        Send buffer size.\n");
-	printf("    -w timeout     Timeout in milliseconds to wait for each reply.\n\n");
+    printf("\nUsage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n");
+    printf("Options:\n");
+    printf("    -t             Ping the specified host until stopped.\n");
+    printf("                   To stop - type Control-C.\n");
+    printf("    -n count       Number of echo requests to send.\n");
+    printf("    -l size        Send buffer size.\n");
+    printf("    -w timeout     Timeout in milliseconds to wait for each reply.\n\n");
 }
 
 /* Reset configuration to default values */
@@ -153,20 +146,21 @@ static VOID Reset(VOID)
     Timeout               = 1000;
     UsePerformanceCounter = QueryPerformanceFrequency(&PerformanceCounterFrequency);
 
-    if (UsePerformanceCounter) {
+    if (UsePerformanceCounter)
+    {
         /* Performance counters may return incorrect results on some multiprocessor
            platforms so we restrict execution on the first processor. This may fail
            on Windows NT so we fall back to GetCurrentTick() for timing */
-        if (SetThreadAffinityMask (GetCurrentThread(), 1) == 0) {
+        if (SetThreadAffinityMask (GetCurrentThread(), 1) == 0)
             UsePerformanceCounter = FALSE;
-        }
 
         /* Convert frequency to ticks per millisecond */
         TicksPerMs.QuadPart = PerformanceCounterFrequency.QuadPart / 1000;
         /* And to ticks per microsecond */
         TicksPerUs.QuadPart = PerformanceCounterFrequency.QuadPart / 1000000;
     }
-    if (!UsePerformanceCounter) {
+    if (!UsePerformanceCounter)
+    {
         /* 1 tick per millisecond for GetCurrentTick() */
         TicksPerMs.QuadPart = 1;
         /* GetCurrentTick() cannot handle microseconds */
@@ -183,7 +177,8 @@ static ULONG GetULONG(LPSTR String)
     i = 0;
     Length = (UINT)_tcslen(String);
     while ((i < Length) && ((String[i] < '0') || (String[i] > '9'))) i++;
-    if ((i >= Length) || ((String[i] < '0') || (String[i] > '9'))) {
+    if ((i >= Length) || ((String[i] < '0') || (String[i] > '9')))
+    {
         InvalidOption = TRUE;
         return 0;
     }
@@ -198,9 +193,11 @@ static ULONG GetULONG2(LPSTR String1, LPSTR String2, PINT i)
     ULONG Value;
 
     Value = GetULONG(String1);
-    if (InvalidOption) {
+    if (InvalidOption)
+    {
         InvalidOption = FALSE;
-        if (String2[0] != '-') {
+        if (String2[0] != '-')
+        {
             Value = GetULONG(String2);
             if (!InvalidOption)
                 *i += 1;
@@ -216,63 +213,69 @@ static BOOL ParseCmdline(int argc, char* argv[])
     INT i;
     BOOL ShowUsage;
     BOOL FoundTarget;
-//#if 1
-//    lstrcpy(TargetName, "127.0.0.1");
-//    PingCount = 1;
-//    return TRUE;
-//#endif
-    if (argc < 2) {
+    if (argc < 2)
         ShowUsage = TRUE;
-    } else {
+    else
         ShowUsage = FALSE;
-    }
     FoundTarget = FALSE;
     InvalidOption = FALSE;
 
-    for (i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            switch (argv[i][1]) {
-            case 't': NeverStop = TRUE; break;
-            case 'a': ResolveAddresses = TRUE; break;
-            case 'n': PingCount = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
-            case 'l':
-                DataSize = GetULONG2(&argv[i][2], argv[i + 1], &i);
-                if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET)) {
-                    printf("Bad value for option -l, valid range is from 0 to %d.\n",
-                        ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET));
+    for (i = 1; i < argc; i++)
+    {
+        if (argv[i][0] == '-')
+        {
+            switch (argv[i][1])
+            {
+                case 't': NeverStop = TRUE; break;
+                case 'a': ResolveAddresses = TRUE; break;
+                case 'n': PingCount = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
+                case 'l':
+                    DataSize = GetULONG2(&argv[i][2], argv[i + 1], &i);
+                    if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET))
+                    {
+                        printf("Bad value for option -l, valid range is from 0 to %d.\n",
+                            ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET));
+                        return FALSE;
+                   }
+                    break;
+                case 'f': DontFragment = TRUE; break;
+                case 'i': TTLValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
+                case 'v': TOSValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
+                case 'w': Timeout  = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
+                default:
+                    printf("Bad option %s.\n", argv[i]);
+                    Usage();
                     return FALSE;
-                }
-                break;
-            case 'f': DontFragment = TRUE; break;
-            case 'i': TTLValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
-            case 'v': TOSValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
-            case 'w': Timeout  = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
-            default:
-                printf("Bad option %s.\n", argv[i]);
-                Usage();
-                return FALSE;
             }
-            if (InvalidOption) {
+            if (InvalidOption)
+            {
                 printf("Bad option format %s.\n", argv[i]);
                 return FALSE;
             }
-        } else {
-            if (FoundTarget) {
+        }
+        else
+        {
+            if (FoundTarget)
+            {
                 printf("Bad parameter %s.\n", argv[i]);
                 return FALSE;
-            } else {
-				lstrcpy(TargetName, argv[i]);
+            }
+            else
+            {
+                lstrcpy(TargetName, argv[i]);
                 FoundTarget = TRUE;
             }
         }
     }
 
-    if ((!ShowUsage) && (!FoundTarget)) {
+    if ((!ShowUsage) && (!FoundTarget))
+    {
         printf("Name or IP address of destination host must be specified.\n");
         return FALSE;
     }
 
-    if (ShowUsage) {
+    if (ShowUsage)
+    {
         Usage();
         return FALSE;
     }
@@ -284,7 +287,8 @@ static WORD Checksum(PUSHORT data, UINT size)
 {
     ULONG sum = 0;
 
-    while (size > 1) {
+    while (size > 1)
+    {
         sum  += *data++;
         size -= sizeof(USHORT);
     }
@@ -303,20 +307,22 @@ static BOOL Setup(VOID)
 {
     WORD     wVersionRequested;
     WSADATA  WsaData;
-    INT	     Status;
+    INT      Status;
     ULONG    Addr;
     PHOSTENT phe;
 
     wVersionRequested = MAKEWORD(2, 2);
 
     Status = WSAStartup(wVersionRequested, &WsaData);
-    if (Status != 0) {
+    if (Status != 0)
+    {
         printf("Could not initialize winsock dll.\n");
         return FALSE;
     }
 
     IcmpSock = WSASocket(AF_INET, SOCK_RAW, IPPROTO_ICMP, NULL, 0, 0);
-    if (IcmpSock == INVALID_SOCKET) {
+    if (IcmpSock == INVALID_SOCKET)
+    {
         printf("Could not create socket (#%d).\n", WSAGetLastError());
         return FALSE;
     }
@@ -324,30 +330,30 @@ static BOOL Setup(VOID)
     ZeroMemory(&Target, sizeof(Target));
     phe = NULL;
     Addr = inet_addr(TargetName);
-    if (Addr == INADDR_NONE) {
+    if (Addr == INADDR_NONE)
+    {
         phe = gethostbyname(TargetName);
-        if (phe == NULL) {
+        if (phe == NULL)
+        {
             printf("Unknown host %s.\n", TargetName);
             return FALSE;
         }
     }
 
-    if (phe != NULL) {
+    if (phe != NULL)
         CopyMemory(&Target.sin_addr, phe->h_addr, phe->h_length);
-    } else {
+    else
         Target.sin_addr.s_addr = Addr;
-    }
 
-    if (phe != NULL) {
-		Target.sin_family = phe->h_addrtype;
-    } else {
+    if (phe != NULL)
+        Target.sin_family = phe->h_addrtype;
+    else
         Target.sin_family = AF_INET;
-    }
 
-    TargetIP		= inet_ntoa(Target.sin_addr);
-    CurrentSeqNum	= 0;
-    SentCount		= 0;
-	LostCount		= 0;
+    TargetIP = inet_ntoa(Target.sin_addr);
+    CurrentSeqNum = 0;
+    SentCount = 0;
+    LostCount = 0;
     MinRTT.QuadPart = 0;
     MaxRTT.QuadPart = 0;
     SumRTT.QuadPart = 0;
@@ -366,8 +372,10 @@ static VOID Cleanup(VOID)
 
 static VOID QueryTime(PLARGE_INTEGER Time)
 {
-    if (UsePerformanceCounter) {
-        if (QueryPerformanceCounter(Time) == 0) {
+    if (UsePerformanceCounter)
+    {
+        if (QueryPerformanceCounter(Time) == 0)
+        {
             /* This should not happen, but we fall
                back to GetCurrentTick() if it does */
             Time->u.LowPart  = (ULONG)GetTickCount();
@@ -380,7 +388,9 @@ static VOID QueryTime(PLARGE_INTEGER Time)
 
             UsePerformanceCounter = FALSE;
         }
-    } else {
+    }
+    else
+    {
         Time->u.LowPart  = (ULONG)GetTickCount();
         Time->u.HighPart = 0;
     }
@@ -394,7 +404,7 @@ static VOID TimeToMsString(LPSTR String, LARGE_INTEGER Time)
     LargeTime.QuadPart = Time.QuadPart / TicksPerMs.QuadPart;
 
     _i64toa(LargeTime.QuadPart, Convstr, 10);
-	strcpy(String, Convstr);
+    strcpy(String, Convstr);
     strcat(String, "ms");
 }
 
@@ -404,7 +414,7 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 {
     PIPv4_HEADER      IpHeader;
     PICMP_ECHO_PACKET Icmp;
-  	UINT              IphLength;
+    UINT              IphLength;
     CHAR              Time[100];
     LARGE_INTEGER     RelativeTime;
     LARGE_INTEGER     LargeTime;
@@ -414,26 +424,29 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     IphLength = IpHeader->IHL * 4;
 
-    if (size  < IphLength + ICMP_MINSIZE) {
-#ifdef DBG
+    if (size  < IphLength + ICMP_MINSIZE)
+    {
+#ifndef NDEBUG
         printf("Bad size (0x%X < 0x%X)\n", size, IphLength + ICMP_MINSIZE);
-#endif /* DBG */
+#endif /* !NDEBUG */
         return FALSE;
     }
 
     Icmp = (PICMP_ECHO_PACKET)(buffer + IphLength);
 
-    if (Icmp->Icmp.Type != ICMPMSG_ECHOREPLY) {
-#ifdef DBG
+    if (Icmp->Icmp.Type != ICMPMSG_ECHOREPLY)
+    {
+#ifndef NDEBUG
         printf("Bad ICMP type (0x%X should be 0x%X)\n", Icmp->Icmp.Type, ICMPMSG_ECHOREPLY);
-#endif /* DBG */
+#endif /* !NDEBUG */
         return FALSE;
     }
 
-    if (Icmp->Icmp.Id != (USHORT)GetCurrentProcessId()) {
-#ifdef DBG
+    if (Icmp->Icmp.Id != (USHORT)GetCurrentProcessId())
+    {
+#ifndef NDEBUG
         printf("Bad ICMP id (0x%X should be 0x%X)\n", Icmp->Icmp.Id, (USHORT)GetCurrentProcessId());
-#endif /* DBG */
+#endif /* !NDEBUG */
         return FALSE;
     }
 
@@ -441,10 +454,13 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     RelativeTime.QuadPart = (LargeTime.QuadPart - Icmp->Timestamp.QuadPart);
 
-    if ((RelativeTime.QuadPart / TicksPerMs.QuadPart) < 1) {
+    if ((RelativeTime.QuadPart / TicksPerMs.QuadPart) < 1)
+    {
         strcpy(Sign, "<");
         strcpy(Time, "1ms");
-    } else {
+    }
+    else
+    {
         strcpy(Sign, "=");
         TimeToMsString(Time, RelativeTime);
     }
@@ -452,16 +468,17 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     printf("Reply from %s: bytes=%d time%s%s TTL=%d\n", inet_ntoa(from->sin_addr),
       size - IphLength - sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
-    if (RelativeTime.QuadPart < MinRTT.QuadPart || !MinRTTSet) {
-	    MinRTT.QuadPart = RelativeTime.QuadPart;
+    if (RelativeTime.QuadPart < MinRTT.QuadPart || !MinRTTSet)
+    {
+        MinRTT.QuadPart = RelativeTime.QuadPart;
         MinRTTSet = TRUE;
     }
-	if (RelativeTime.QuadPart > MaxRTT.QuadPart)
-	    MaxRTT.QuadPart = RelativeTime.QuadPart;
+    if (RelativeTime.QuadPart > MaxRTT.QuadPart)
+        MaxRTT.QuadPart = RelativeTime.QuadPart;
 
     SumRTT.QuadPart += RelativeTime.QuadPart;
 
-	return TRUE;
+    return TRUE;
 }
 
 /* Send and receive one ping */
@@ -477,7 +494,8 @@ static BOOL Ping(VOID)
     /* Account for extra space for IP header when packet is received */
     Size   = DataSize + 128;
     Buffer = GlobalAlloc(0, Size);
-    if (!Buffer) {
+    if (!Buffer)
+    {
         printf("Not enough free resources available.\n");
         return FALSE;
     }
@@ -488,7 +506,7 @@ static BOOL Ping(VOID)
     /* Assemble ICMP echo request packet */
     Packet->Icmp.Type     = ICMPMSG_ECHOREQUEST;
     Packet->Icmp.Code     = 0;
-    Packet->Icmp.Id	      = (USHORT)GetCurrentProcessId();
+    Packet->Icmp.Id       = (USHORT)GetCurrentProcessId();
     Packet->Icmp.SeqNum   = htons((USHORT)CurrentSeqNum);
     Packet->Icmp.Checksum = 0;
 
@@ -501,31 +519,32 @@ static BOOL Ping(VOID)
 
     CurrentSeqNum++;
 
-	/* Send ICMP echo request */
+    /* Send ICMP echo request */
 
     FD_ZERO(&Fds);
     FD_SET(IcmpSock, &Fds);
     Timeval.tv_sec  = Timeout / 1000;
     Timeval.tv_usec = Timeout % 1000;
     Status = select(0, NULL, &Fds, NULL, &Timeval);
-    if ((Status != SOCKET_ERROR) && (Status != 0)) {
+    if ((Status != SOCKET_ERROR) && (Status != 0))
+    {
 
-#ifdef DBG
+#ifndef NDEBUG
         printf("Sending packet\n");
         DisplayBuffer(Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize);
         printf("\n");
-#endif /* DBG */
+#endif /* !NDEBUG */
 
         Status = sendto(IcmpSock, Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize,
             0, (SOCKADDR*)&Target, sizeof(Target));
         SentCount++;
     }
-    if (Status == SOCKET_ERROR) {
-        if (WSAGetLastError() == WSAEHOSTUNREACH) {
+    if (Status == SOCKET_ERROR)
+    {
+        if (WSAGetLastError() == WSAEHOSTUNREACH)
             printf("Destination host unreachable.\n");
-        } else {
+        else
             printf("Could not transmit data (%d).\n", WSAGetLastError());
-        }
         GlobalFree(Buffer);
         return FALSE;
     }
@@ -537,18 +556,21 @@ static BOOL Ping(VOID)
     Timeval.tv_usec = Timeout % 1000;
 
     Status = select(0, &Fds, NULL, NULL, &Timeval);
-    if ((Status != SOCKET_ERROR) && (Status != 0)) {
+    if ((Status != SOCKET_ERROR) && (Status != 0))
+    {
         Length = sizeof(From);
         Status = recvfrom(IcmpSock, Buffer, Size, 0, &From, &Length);
 
-#ifdef DBG
+#ifndef NDEBUG
         printf("Received packet\n");
         DisplayBuffer(Buffer, Status);
         printf("\n");
-#endif /* DBG */
+#endif /* !NDEBUG */
     }
-    if (Status == SOCKET_ERROR) {
-        if (WSAGetLastError() != WSAETIMEDOUT) {
+    if (Status == SOCKET_ERROR)
+    {
+        if (WSAGetLastError() != WSAETIMEDOUT)
+        {
             printf("Could not receive data (%d).\n", WSAGetLastError());
             GlobalFree(Buffer);
             return FALSE;
@@ -556,14 +578,16 @@ static BOOL Ping(VOID)
         Status = 0;
     }
 
-    if (Status == 0) {
+    if (Status == 0)
+    {
         printf("Request timed out.\n");
         LostCount++;
         GlobalFree(Buffer);
         return TRUE;
     }
 
-    if (!DecodeResponse(Buffer, Status, (PSOCKADDR_IN)&From)) {
+    if (!DecodeResponse(Buffer, Status, (PSOCKADDR_IN)&From))
+    {
         /* FIXME: Wait again as it could be another ICMP message type */
         printf("Request timed out (incomplete datagram received).\n");
         LostCount++;
@@ -584,26 +608,27 @@ int main(int argc, char* argv[])
 
     Reset();
 
-    if ((ParseCmdline(argc, argv)) && (Setup())) {
+    if ((ParseCmdline(argc, argv)) && (Setup()))
+    {
 
         printf("\nPinging %s [%s] with %d bytes of data:\n\n",
             TargetName, TargetIP, DataSize);
 
-		Count = 0;
-		while ((NeverStop) || (Count < PingCount)) {
-			Ping();
-			Sleep(Timeout);
-			Count++;
-		};
+        Count = 0;
+        while ((NeverStop) || (Count < PingCount))
+        {
+            Ping();
+            Sleep(Timeout);
+            Count++;
+        };
 
         Cleanup();
 
-		/* Calculate avarage round trip time */
-        if ((SentCount - LostCount) > 0) {
+        /* Calculate avarage round trip time */
+        if ((SentCount - LostCount) > 0)
             AvgRTT.QuadPart = SumRTT.QuadPart / (SentCount - LostCount);
-        } else {
+        else
             AvgRTT.QuadPart = 0;
-        }
 
         /* Calculate loss percent */
         Count = SentCount ? (LostCount * 100) / SentCount : 0;
@@ -623,7 +648,7 @@ int main(int argc, char* argv[])
         printf("    Minimum = %s, Maximum = %s, Average = %s\n",
             MinTime, MaxTime, AvgTime);
     }
-	return 0;
+    return 0;
 }
 
 /* EOF */
