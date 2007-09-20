@@ -316,10 +316,10 @@ LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
         DPRINT1("%s: Attempted to lock object 0x%x, wrong reuse counter (Handle: 0x%x, Entry: 0x%x)\n",
                 Function, hObj, GDI_HANDLE_GET_REUSECNT(hObj), GDI_ENTRY_GET_REUSECNT(Entry->Type));
     }
-    else if (GDI_HANDLE_GET_TYPE(hObj) != GDI_HANDLE_GET_TYPE(Entry->Type))
+    else if (GDI_HANDLE_GET_TYPE(hObj) != ((Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK))
     {
         DPRINT1("%s: Attempted to lock object 0x%x, type mismatch (Handle: 0x%x, Entry: 0x%x)\n",
-                Function, hObj, GDI_HANDLE_GET_TYPE(hObj), GDI_HANDLE_GET_TYPE(Entry->Type));
+                Function, hObj, GDI_HANDLE_GET_TYPE(hObj), (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK);
     }
     else
     {
@@ -403,10 +403,10 @@ GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
 
     RtlZeroMemory(ObjectBody, GetObjectSize(TypeIndex));
 
-      /* FIXME: On Windows the higher 16 bit of the type field don't always match
-         the type from the handle, it is probably a storage type 
-         (type = pen, storage = brush) */
-    TypeInfo = (ObjectType & GDI_HANDLE_TYPE_MASK) | (ObjectType >> GDI_ENTRY_UPPER_SHIFT);
+    /* On Windows the higher 16 bit of the type field don't contain the
+       full type from the handle, but the base type.
+       (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
+    TypeInfo = (ObjectType & GDI_HANDLE_BASETYPE_MASK) | (ObjectType >> GDI_ENTRY_UPPER_SHIFT);
 
     FreeEntry = InterlockedPopEntrySList(&HandleTable->FreeEntriesHead);
     if(FreeEntry != NULL)
@@ -705,7 +705,7 @@ GDI_CleanupForProcess (PGDI_HANDLE_TABLE HandleTable, struct _EPROCESS *Process)
         Entry++, Index++)
     {
       /* ignore the lock bit */
-      if((HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcId && (Entry->Type & ~GDI_HANDLE_REUSE_MASK) != 0)
+      if((HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcId && (Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0)
       {
         HGDIOBJ ObjectHandle;
 
@@ -1050,7 +1050,7 @@ GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle
 
     Entry = GDI_HANDLE_GET_ENTRY(HandleTable, ObjectHandle);
     Ret = Entry->KernelData != NULL &&
-          (Entry->Type & ~GDI_HANDLE_REUSE_MASK) != 0 &&
+          (Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 &&
           (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcessId;
 
     return Ret;
@@ -1060,7 +1060,7 @@ GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle
 }
 
 BOOL INTERNAL_CALL
-GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *hObj)
+GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *phObj)
 {
 /*
  * FIXME !!!!! THIS FUNCTION NEEDS TO BE FIXED - IT IS NOT SAFE WHEN OTHER THREADS
@@ -1069,22 +1069,24 @@ GDIOBJ_ConvertToStockObj(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ *hObj)
   PGDI_TABLE_ENTRY Entry;
   HANDLE ProcessId, LockedProcessId, PrevProcId;
   PETHREAD Thread;
+  HGDIOBJ hObj;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
 
-  ASSERT(hObj);
+  ASSERT(phObj);
+  hObj = *phObj;
 
-  DPRINT("GDIOBJ_ConvertToStockObj: hObj: 0x%08x\n", *hObj);
+  DPRINT("GDIOBJ_ConvertToStockObj: hObj: 0x%08x\n", hObj);
 
   Thread = PsGetCurrentThread();
 
-  if(!GDI_HANDLE_IS_STOCKOBJ(*hObj))
+  if(!GDI_HANDLE_IS_STOCKOBJ(hObj))
   {
     ProcessId = PsGetCurrentProcessId();
     LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
-    Entry = GDI_HANDLE_GET_ENTRY(HandleTable, *hObj);
+    Entry = GDI_HANDLE_GET_ENTRY(HandleTable, hObj);
 
 LockHandle:
     /* lock the object, we must not convert stock objects, so don't check!!! */
@@ -1096,16 +1098,11 @@ LockHandle:
       /* we're locking an object that belongs to our process. First calculate
          the new object type including the stock object flag and then try to
          exchange it.*/
-      /* FIXME: On Windows the higher 16 bit of the type field don't always match
-         the type from the handle, it is probably a storage type 
-         (type = pen, storage = brush) */
-      NewType = GDI_HANDLE_GET_TYPE(*hObj);
-      NewType |= GDI_HANDLE_GET_UPPER(*hObj) >> GDI_ENTRY_UPPER_SHIFT;
+      OldType = ((ULONG)hObj & GDI_HANDLE_BASETYPE_MASK);
+      OldType |= GDI_HANDLE_GET_UPPER(hObj) >> GDI_ENTRY_UPPER_SHIFT;
 
-      /* This is the type that the object should have right now, save it */
-      OldType = NewType;
       /* As the object should be a stock object, set it's flag, but only in the lower 16 bits */
-      NewType |= GDI_ENTRY_STOCK_MASK;
+      NewType = OldType | GDI_ENTRY_STOCK_MASK;
 
       /* Try to exchange the type field - but only if the old (previous type) matches! */
       PrevType = InterlockedCompareExchange(&Entry->Type, NewType, OldType);
@@ -1146,7 +1143,8 @@ LockHandle:
           /* remove the process id lock and make it global */
           (void)InterlockedExchangePointer(&Entry->ProcessId, GDI_GLOBAL_PROCESS);
 
-          *hObj = (HGDIOBJ)((ULONG)(*hObj) | GDI_HANDLE_STOCK_MASK);
+          hObj = (HGDIOBJ)((ULONG)(hObj) | GDI_HANDLE_STOCK_MASK);
+          *phObj = hObj;
 
           /* we're done, successfully converted the object */
           return TRUE;

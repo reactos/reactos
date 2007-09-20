@@ -94,9 +94,8 @@ GdiQueryTable(VOID)
 BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 {
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-  if(Entry->KernelData != NULL && 
-                        (Entry->Type & GDI_HANDLE_TYPE_MASK) == 
-                                       (LONG)GDI_HANDLE_GET_TYPE(hGdiObj))
+  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 && 
+     (Entry->Type << GDI_ENTRY_UPPER_SHIFT) == GDI_HANDLE_GET_UPPER(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
     if(pid == NULL || pid == CurrentProcessId)
@@ -110,9 +109,8 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
 {
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-  if(Entry->KernelData != NULL && 
-                        (Entry->Type & GDI_HANDLE_TYPE_MASK) == 
-                                       (LONG)GDI_HANDLE_GET_TYPE(hGdiObj))
+  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 && 
+     (Entry->Type << GDI_ENTRY_UPPER_SHIFT) == GDI_HANDLE_GET_UPPER(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
     if(pid == NULL || pid == CurrentProcessId)
