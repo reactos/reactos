@@ -175,6 +175,15 @@ NetClassInstaller(
 	IN HDEVINFO DeviceInfoSet,
 	IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
+	SP_DRVINFO_DATA_W DriverInfoData;
+	SP_DRVINFO_DETAIL_DATA_W DriverInfoDetail;
+	WCHAR SectionName[LINE_LEN];
+	HINF hInf = INVALID_HANDLE_VALUE;
+	INFCONTEXT InfContext;
+	UINT ErrorLine;
+	INT CharacteristicsInt;
+	DWORD Characteristics;
+	LPWSTR BusType = NULL;
 	RPC_STATUS RpcStatus;
 	UUID Uuid;
 	LPWSTR InstanceId = NULL;
@@ -189,11 +198,41 @@ NetClassInstaller(
 	HKEY hNetworkKey = NULL;
 	HKEY hConnectionKey = NULL;
 	SP_DEVINSTALL_PARAMS_W installParams;
-	
+
 	if (InstallFunction != DIF_INSTALLDEVICE)
 		return ERROR_DI_DO_DEFAULT;
 
 	DPRINT("%lu %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
+
+	/* Get driver info details */
+	DriverInfoData.cbSize = sizeof(SP_DRVINFO_DATA_W);
+	if (!SetupDiGetSelectedDriverW(DeviceInfoSet, DeviceInfoData, &DriverInfoData))
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiGetSelectedDriverW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	DriverInfoDetail.cbSize = sizeof(SP_DRVINFO_DETAIL_DATA_W);
+	if (!SetupDiGetDriverInfoDetailW(DeviceInfoSet, DeviceInfoData, &DriverInfoData, &DriverInfoDetail, sizeof(DriverInfoDetail), NULL)
+	 && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiGetDriverInfoDetailW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	hInf = SetupOpenInfFileW(DriverInfoDetail.InfFileName, NULL, INF_STYLE_WIN4, &ErrorLine);
+	if (hInf == INVALID_HANDLE_VALUE)
+	{
+		rc = GetLastError();
+		DPRINT("SetupOpenInfFileW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	if (!SetupDiGetActualSectionToInstallW(hInf, DriverInfoDetail.SectionName, SectionName, LINE_LEN, NULL, NULL))
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiGetActualSectionToInstallW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
 
 	/* Get Instance ID */
 	if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
@@ -202,7 +241,7 @@ NetClassInstaller(
 		rc = ERROR_GEN_FAILURE;
 		goto cleanup;
 	}
-	InstanceId = HeapAlloc(GetProcessHeap(), 0, dwLength);
+	InstanceId = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
 	if (!InstanceId)
 	{
 		DPRINT("HeapAlloc() failed\n");
@@ -215,6 +254,46 @@ NetClassInstaller(
 		DPRINT("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
+
+	/* Get Characteristics and BusType (optional) from .inf file */
+	if (!SetupFindFirstLineW(hInf, SectionName, L"Characteristics", &InfContext))
+	{
+		rc = GetLastError();
+		DPRINT("Unable to find key %S in section %S of file %S (error 0x%lx)\n",
+			L"Characteristics", SectionName, DriverInfoDetail.InfFileName, rc);
+		goto cleanup;
+	}
+	if (!SetupGetIntField(&InfContext, 1, &CharacteristicsInt))
+	{
+		rc = GetLastError();
+		DPRINT("SetupGetIntField() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	Characteristics = (DWORD)CharacteristicsInt;
+	if (SetupFindFirstLineW(hInf, SectionName, L"BusType", &InfContext))
+	{
+		if (!SetupGetStringFieldW(&InfContext, 1, NULL, 0, &dwLength))
+		{
+			rc = GetLastError();
+			DPRINT("SetupGetStringFieldW() failed with error 0x%lx\n", rc);
+			goto cleanup;
+		}
+		BusType = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
+		if (!BusType)
+		{
+			DPRINT("HeapAlloc() failed\n");
+			rc = ERROR_NOT_ENOUGH_MEMORY;
+			goto cleanup;
+		}
+		if (!SetupGetStringFieldW(&InfContext, 1, BusType, dwLength, NULL))
+		{
+			rc = GetLastError();
+			DPRINT("SetupGetStringFieldW() failed with error 0x%lx\n", rc);
+			goto cleanup;
+		}
+	}
+	else
+		BusType = NULL;
 
 	/* Create a new UUID */
 	RpcStatus = UuidCreate(&Uuid);
@@ -254,7 +333,7 @@ NetClassInstaller(
 	}
 	wcscpy(DeviceName, L"\\Device\\");
 	wcscat(DeviceName, UuidString);
-	
+
 	/* Create export name */
 	ExportName = HeapAlloc(GetProcessHeap(), 0, (wcslen(L"\\Device\\Tcpip_") + wcslen(UuidString)) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
 	if (!ExportName)
@@ -331,6 +410,19 @@ NetClassInstaller(
 		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
+	rc = RegSetValueExW(hKey, L"Characteristics", 0, REG_DWORD, (const BYTE*)&Characteristics, sizeof(DWORD));
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	if (BusType)
+		rc = RegSetValueExW(hKey, L"BusType", 0, REG_SZ, (const BYTE*)BusType, (wcslen(BusType) + 1) * sizeof(WCHAR));
+		if (rc != ERROR_SUCCESS)
+		{
+			DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
+			goto cleanup;
+		}
 	rc = RegCreateKeyExW(hKey, L"Linkage", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hLinkageKey, NULL);
 	if (rc != ERROR_SUCCESS)
 	{
@@ -462,8 +554,11 @@ NetClassInstaller(
 	rc = ERROR_SUCCESS;
 
 cleanup:
+	if (hInf != INVALID_HANDLE_VALUE)
+		SetupCloseInfFile(hInf);
 	if (UuidRpcString != NULL)
 		RpcStringFreeW(&UuidRpcString);
+	HeapFree(GetProcessHeap(), 0, BusType);
 	HeapFree(GetProcessHeap(), 0, InstanceId);
 	HeapFree(GetProcessHeap(), 0, UuidString);
 	HeapFree(GetProcessHeap(), 0, DeviceName);

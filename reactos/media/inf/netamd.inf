@@ -23,14 +23,14 @@ DefaultDestDir = 12
 ;----------------------------- PCNET DRIVER -----------------------------
 
 [PCNet_Inst.NT]
+Characteristics = 0x4 ; NCF_PHYSICAL
+BusType = 5 ; PCIBus
 AddReg = PCNet_AddReg.NT
 CopyFiles = PCNet_CopyFiles.NT
 
 [PCNet_AddReg.NT]
-HKR,,Characteristics,0x00010001,0x00000004 ; NCF_PHYSICAL
 HKR,,BUS_TO_SCAN,,"ALL"
 HKR,,BUSTIMER,,"0"
-HKR,,BUSTYPE,,"5"
 HKR,,EXTPHY,,"0"
 HKR,,FDUP,,"0"
 HKR,,LED0,,"10000"

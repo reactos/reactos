@@ -23,12 +23,12 @@ DefaultDestDir = 12
 ;---------------------------- NE2000 DRIVER -----------------------------
 
 [NE2000_Inst.NT]
+Characteristics = 0x4 ; NCF_PHYSICAL
+BusType = 5 ; PCIBus
 AddReg = NE2000_AddReg.NT
 CopyFiles = NE2000_CopyFiles.NT
 
 [NE2000_AddReg.NT]
-HKR,,Characteristics,0x00010001,0x00000004 ; NCF_PHYSICAL
-HKR,,BusType,0x00000000,"5"
 HKR,,Port,0x00000000,"c100"
 HKR,,Irq,0x00000000,"B"
 HKR,,NetworkAddress,0x00000000,"001122334455"
