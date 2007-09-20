@@ -1125,10 +1125,11 @@ CmpAddSubKey(IN PHHIVE Hive,
 {
     PCM_KEY_NODE KeyNode;
     PCM_KEY_INDEX Index;
+    PCM_KEY_FAST_INDEX OldIndex;
     UNICODE_STRING Name;
     HCELL_INDEX IndexCell = HCELL_NIL, CellToRelease = HCELL_NIL, LeafCell;
     PHCELL_INDEX RootPointer = NULL;
-    ULONG Type;
+    ULONG Type, i;
     BOOLEAN IsCompressed;
     PAGED_CODE();
 
@@ -1245,9 +1246,21 @@ CmpAddSubKey(IN PHHIVE Hive,
         if ((Index->Signature == CM_KEY_FAST_LEAF) &&
             (Index->Count >= CmpMaxFastIndexPerHblock))
         {
-            /* Not handled yet */
-            DPRINT1("Fast->Slow Leaf Conversion not yet implemented!\n");
-            ASSERT(FALSE);
+            DPRINT("Doing Fast->Slow Leaf conversion\n");
+
+            /* Mark this cell as dirty */
+            HvMarkCellDirty(Hive, CellToRelease);
+
+            /* Convert */
+            OldIndex = (PCM_KEY_FAST_INDEX)Index;
+
+            for (i=0; i < OldIndex->Count; i++)
+            {
+                Index->List[i] = OldIndex->List[i].Cell;
+            }
+
+            /* Set the new type value */
+            Index->Signature = CM_KEY_INDEX_LEAF;
         }
         else if (((Index->Signature == CM_KEY_INDEX_LEAF) ||
                   (Index->Signature == CM_KEY_HASH_LEAF)) &&
