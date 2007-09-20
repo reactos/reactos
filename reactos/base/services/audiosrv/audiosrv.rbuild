@@ -9,7 +9,6 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
-	<library>ntdll</library>
 	<library>setupapi</library>
 	<file>main.c</file>
 	<file>pnp_list_manager.c</file>
