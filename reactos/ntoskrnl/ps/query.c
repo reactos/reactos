@@ -916,6 +916,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
                 /* Release the lock and rundown */
                 ExReleasePushLockShared(&Process->ProcessLock);
                 KeLeaveCriticalRegion();
+                ExReleaseRundownProtection(&Process->RundownProtect);
             }
             else
             {
