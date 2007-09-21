@@ -624,7 +624,7 @@ CMP_Report_LogOn(
 CMAPI
 CONFIGRET
 WINAPI
-CMP_UnregisterNotification(ULONG luhDevNotify);
+CMP_UnregisterNotification(IN ULONG luhDevNotify);
 
 /* FIXME: Missing CMP_WaitNoPendingInstallEvents */
 /* FIXME: Missing CMP_WaitServicesAvailable */
