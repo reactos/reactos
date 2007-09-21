@@ -474,7 +474,7 @@ CheckUnattendedSetup(VOID)
   if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"Signature", &Context))
     {
       DPRINT("SetupFindFirstLineW() failed for section 'Unattend'\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
 
@@ -482,7 +482,7 @@ CheckUnattendedSetup(VOID)
   if (!INF_GetData(&Context, NULL, &Value))
     {
       DPRINT("INF_GetData() failed for key 'Signature'\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
 
@@ -490,7 +490,7 @@ CheckUnattendedSetup(VOID)
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
       DPRINT("Signature not $ReactOS$\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
 
@@ -498,19 +498,19 @@ CheckUnattendedSetup(VOID)
   if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"UnattendSetupEnabled", &Context))
     {
       DPRINT("Can't find key 'UnattendSetupEnabled'\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
   if (!INF_GetData(&Context, NULL, &Value))
     {
       DPRINT("Can't read key 'UnattendSetupEnabled'\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
   if (_wcsicmp(Value, L"yes") != 0)
     {
       DPRINT("Unattend setup is disabled by 'UnattendSetupEnabled' key!\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
 
@@ -518,13 +518,13 @@ CheckUnattendedSetup(VOID)
   if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
     {
       DPRINT("SetupFindFirstLine() failed for key 'DestinationDiskNumber'\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
   if (!SetupGetIntField(&Context, 1, &IntValue))
     {
       DPRINT("SetupGetIntField() failed for key 'DestinationDiskNumber'\n");
-      SetupCloseInfFile(&UnattendInf);
+      SetupCloseInfFile(UnattendInf);
       return;
     }
   UnattendDestinationDiskNumber = (LONG)IntValue;
