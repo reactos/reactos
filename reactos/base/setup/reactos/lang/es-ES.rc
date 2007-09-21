@@ -1,0 +1,13 @@
+/*
+ *  Spanish language file by Javier Remacha <2007-09-21>
+ */
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "Instalación de ReactOS"
+    IDS_TEXT     "¡No puedes instalar ReactOS directamente desde este CD!\n\nPor favor reinicia tu computadora desde este CD para proceder a instalar ReactOS."
+END
+
+/* EOF */

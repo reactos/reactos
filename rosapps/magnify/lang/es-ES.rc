@@ -1,0 +1,68 @@
+/*
+ *  Spanish language file by Javier Remacha <2007-09-21>
+ */
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDC_MAGNIFIER MENU 
+BEGIN
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM "S&alir",                       IDM_EXIT
+        MENUITEM "&Opciones",                    IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Acerca de...",                  IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS 
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Acerca de"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
+    LTEXT           "Magnifier Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
+    PUSHBUTTON      "Aceptar",IDOK,162,48,50,14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configurar Magnifier"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Salir",IDOK,96,161,50,14
+    PUSHBUTTON      "Ayuda",IDOK,38,161,50,14
+    LTEXT           "Nivel de aumento:",IDC_STATIC,6,12,68,8
+    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Rastreando",IDC_STATIC,7,25,139,59
+    GROUPBOX        "Presentación",IDC_STATIC,7,87,139,57
+    CONTROL         "Seguir el cursor del ratón",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    CONTROL         "Seguir el foco del teclado",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "Seguir la edición de texto",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "Invertir colores",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
+    CONTROL         "Comenzar minimizado",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
+    CONTROL         "Mostrar Magnifier",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "ReactOS Magnifier"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Aceptar",IDOK,193,76,50,14
+    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
+    LTEXT           "Magnifier está pensada para proporcionar un nivel mínimo de funcionalidad para usuarios con pequeñas deficiencias visuales. La mayoría de los usuarios con deficiencias visuales necesitarán una utilidad de mayor ampliación para el uso diario.",IDC_STATIC,36,7,207,33
+    CONTROL         "No volver a mostrar este mensaje",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "Magnifier"
+    IDC_MAGNIFIER           "MAGNIFIER"
+END
