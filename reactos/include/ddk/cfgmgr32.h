@@ -605,7 +605,14 @@ WINAPI
 CMP_Init_Detection(
   IN DWORD  dwMagic);
 
-/* FIXME: Missing CMP_RegisterNotification */
+CMAPI
+CONFIGRET
+WINAPI
+CMP_RegisterNotification(
+  IN HANDLE hRecipient,
+  IN LPVOID lpvNotificationFilter,
+  IN DWORD  dwFlags,
+  OUT PULONG pluhDevNotify);
 
 CMAPI
 CONFIGRET
@@ -614,7 +621,11 @@ CMP_Report_LogOn(
   IN DWORD dwMagic,
   IN DWORD dwProcessId);
 
-/* FIXME: Missing CMP_UnregisterNotification */
+CMAPI
+CONFIGRET
+WINAPI
+CMP_UnregisterNotification(ULONG luhDevNotify);
+
 /* FIXME: Missing CMP_WaitNoPendingInstallEvents */
 /* FIXME: Missing CMP_WaitServicesAvailable */
 
