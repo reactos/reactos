@@ -29,6 +29,10 @@ ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
 ULONG_PTR KiBugCheckData[5];
 
+/* Bugzilla Reporting */
+UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
+UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 PVOID
@@ -179,6 +183,78 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
 
     /* Finish the output */
     DbgPrint("\n");
+}
+
+VOID
+NTAPI
+KeRosDumpTriageForBugZillaReport(VOID)
+{
+    extern BOOLEAN KiFastSystemCallDisable, KiSMTProcessorsPresent;
+    extern ULONG KeI386MachineType, MxcsrFeatureMask;
+    extern BOOLEAN Ke386Pae, Ke386NoExecute;
+
+    DbgPrint("ReactOS has crashed! Please go to http://www.reactos.org/bugzilla/enter_bug.cgi to file a bug!\n");
+#ifdef __i386__
+    DbgPrint("\nHardware Information\n");
+    DbgPrint("Processor Architecture: %d\n"
+             "Feature Bits: %d\n"
+             "System Call Disabled: %d\n"
+             "NPX Present: %d\n"
+             "MXCsr Mask: %d\n"
+             "MXCsr Feature Mask: %d\n"
+             "XMMI Present: %d\n"
+             "FXSR Present: %d\n"
+             "Machine Type: %d\n"
+             "PAE: %d\n"
+             "NX: %d\n"
+             "Processors: %d\n"
+             "Active Processors: %d\n"
+             "Pentium LOCK Bug: %d\n"
+             "Hyperthreading: %d\n"
+             "CPU Manufacturer: %s\n"
+             "CPU Name: %wZ\n"
+             "CPUID: %d\n"
+             "CPU Type: %d\n"
+             "CPU Stepping: %d\n"
+             "CPU Speed: %d\n"
+             "CPU L2 Cache: %d\n"
+             "BIOS Date: %wZ\n"
+             "BIOS Version: %wZ\n"
+             "Video BIOS Date: %wZ\n"
+             "Video BIOS Version: %wZ\n"
+             "Memory: %d\n"
+             "NT Build Number: %lx\n"
+             "NT Build Lab: %s\n",
+             KeProcessorArchitecture,
+             KeFeatureBits,
+             KiFastSystemCallDisable,
+             KeI386NpxPresent,
+             KiMXCsrMask,
+             MxcsrFeatureMask,
+             KeI386XMMIPresent,
+             KeI386FxsrPresent,
+             KeI386MachineType,
+             Ke386Pae,
+             Ke386NoExecute,
+             KeNumberProcessors,
+             KeActiveProcessors,
+             KiI386PentiumLockErrataPresent,
+             KiSMTProcessorsPresent,
+             KeGetCurrentPrcb()->VendorString,
+             &KeRosProcessorName,
+             KeGetCurrentPrcb()->CpuID,
+             KeGetCurrentPrcb()->CpuType,
+             KeGetCurrentPrcb()->CpuStep,
+             KeGetCurrentPrcb()->MHz,
+             ((PKIPCR)KeGetPcr())->SecondLevelCacheSize,
+             &KeRosBiosDate,
+             &KeRosBiosVersion,
+             &KeRosVideoBiosDate,
+             &KeRosVideoBiosVersion,
+             MmStats.NrTotalPages * PAGE_SIZE,
+             NtBuildNumber,
+             NtBuildLab);
+#endif
 }
 
 VOID
@@ -894,6 +970,9 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
              * We'll manually dump the stack for the user.
              */
             KeRosDumpStackFrames(NULL, 0);
+            
+            /* ROS HACK 2: Generate something useful for Bugzilla */
+            KeRosDumpTriageForBugZillaReport();
         }
     }
 
