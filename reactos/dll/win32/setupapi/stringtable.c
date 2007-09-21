@@ -73,7 +73,7 @@ StringTableInitialize(VOID)
     pStringTable->pSlots = MyMalloc(sizeof(TABLE_SLOT) * TABLE_DEFAULT_SIZE);
     if (pStringTable->pSlots == NULL)
     {
-        MyFree(pStringTable->pSlots);
+        MyFree(pStringTable);
         return NULL;
     }
 
@@ -122,7 +122,7 @@ StringTableInitializeEx(DWORD dwMaxExtraDataSize,
     pStringTable->pSlots = MyMalloc(sizeof(TABLE_SLOT) * TABLE_DEFAULT_SIZE);
     if (pStringTable->pSlots == NULL)
     {
-        MyFree(pStringTable->pSlots);
+        MyFree(pStringTable);
         return NULL;
     }
 
