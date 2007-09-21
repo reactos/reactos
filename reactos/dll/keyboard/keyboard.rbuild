@@ -40,6 +40,9 @@
 	<directory name="kbdja">
 		<xi:include href="kbdja/kbdja.rbuild" />
 	</directory>
+	<directory name="kbdlt">
+		<xi:include href="kbdlt/kbdlt.rbuild" />
+	</directory>
 	<directory name="kbdno">
 		<xi:include href="kbdno/kbdno.rbuild" />
 	</directory>

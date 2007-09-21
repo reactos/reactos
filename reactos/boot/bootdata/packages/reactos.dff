@@ -84,6 +84,7 @@ base\shell\cmd\cmd.exe                              1
 base\shell\explorer\explorer.exe                    4
 base\shell\explorer\explorer-cfg-template.xml       4
 base\shell\explorer\notifyhook\notifyhook.dll       1
+base\shell\explorer-new\explorer_new.exe            4   optional
 
 base\system\autochk\autochk.exe                     1
 base\system\format\format.exe                       1
@@ -139,6 +140,7 @@ dll\keyboard\kbdheb\kbdheb.dll                      1
 dll\keyboard\kbdhu\kbdhu.dll                        1
 dll\keyboard\kbdit\kbdit.dll                        1
 dll\keyboard\kbdja\kbdja.dll                        1
+dll\keyboard\kbdlt\kbdlt.dll                        1
 dll\keyboard\kbdno\kbdno.dll                        1
 dll\keyboard\kbdpl1\kbdpl1.dll                      1
 dll\keyboard\kbdpo\kbdpo.dll                        1
@@ -252,7 +254,7 @@ dll\win32\ws2help\ws2help.dll                       1
 dll\win32\wshirda\wshirda.dll                       1
 dll\win32\wsock32\wsock32.dll                       1
 dll\win32\wtsapi32\wtsapi32.dll                     1
-dll\win32\beepmidi\beepmidi.dll				1
+dll\win32\beepmidi\beepmidi.dll                     1
 
 
 ; Drivers
