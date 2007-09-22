@@ -3001,7 +3001,7 @@ typedef struct tagFILTERKEYS {
 	DWORD iDelayMSec;
 	DWORD iRepeatMSec;
 	DWORD iBounceMSec;
-} FILTERKEYS;
+} FILTERKEYS, *LPFILTERKEYS;
 typedef struct tagHIGHCONTRASTA {
 	UINT cbSize;
 	DWORD dwFlags;
@@ -3133,7 +3133,7 @@ typedef struct tagSTICKYKEYS {
 typedef struct tagTOGGLEKEYS {
 	DWORD cbSize;
 	DWORD dwFlags;
-} TOGGLEKEYS;
+} TOGGLEKEYS, *LPTOGGLEKEYS;
 typedef struct tagMOUSEHOOKSTRUCT {
 	POINT pt;
 	HWND hwnd;
