@@ -5,14 +5,14 @@
 			<licence>MPL/GPL/LGPL</licence>
 			<version>1.5.0.12</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/1.5.0.12/win32/en-US/Firefox%20Setup%201.5.0.12.exe</location>
+			<location>http://svn.reactos.org/packages/Firefox%20Setup%201.5.0.12.exe</location>
 		</application>
 		<application name="Firefox 2.0">
 			<regname>Mozilla Firefox (2.0.0.6)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.6</version>
+			<version>2.0.0.7</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.6/win32/en-US/Firefox%20Setup%202.0.0.6.exe</location>
+			<location>http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.7/win32/en-US/Firefox%20Setup%202.0.0.7.exe</location>
 		</application>
 		<application name="Thunderbird 1.5">
 			<regname>Mozilla Thunderbird (1.5)</regname>
@@ -26,7 +26,7 @@
 			<licence>MPL/GPL/LGPL</licence>
 			<version>2.0.0.6</version>
 			<description>The most popular and one of the best free Mail Clients out there.</description>
-			<location>http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/latest/win32/en-US/Thunderbird%20Setup%202.0.0.6.exe</location>
+			<location>http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.6/win32/en-US/Thunderbird%20Setup%202.0.0.6.exe</location>
 		</application>
 		<application name="SeaMonkey">
 			<regname>SeaMonkey (1.1.4)</regname>
