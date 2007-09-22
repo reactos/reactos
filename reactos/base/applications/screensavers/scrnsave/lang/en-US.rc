@@ -1,0 +1,8 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Default ScreenSaver"
+    IDS_TITLE       "About"
+    IDS_TEXT        "No options need to be set."
+END
