@@ -15,3 +15,4 @@ IDB_SERVER 	BITMAP DISCARDABLE	"res/1.bmp"
 
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+#include "lang/sk-SK.rc"
