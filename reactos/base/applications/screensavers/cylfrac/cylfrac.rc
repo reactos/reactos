@@ -10,4 +10,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/version.rc>
 
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
