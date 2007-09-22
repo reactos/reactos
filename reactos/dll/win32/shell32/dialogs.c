@@ -145,7 +145,7 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                         psz = HeapAlloc( GetProcessHeap(), 0, (ic + 2) );
                         GetWindowTextA (htxt, psz, ic + 1) ;
 
-                        if (ShellExecuteA(NULL, "open", psz, NULL, NULL, SW_SHOWNORMAL) < (HINSTANCE)33)
+                        if (ShellExecuteA(NULL, NULL, psz, NULL, NULL, SW_SHOWNORMAL) < (HINSTANCE)33)
                             {
                             char *pszSysMsg = NULL ;
                             FormatMessageA (
