@@ -36,15 +36,42 @@ APPLET Applets[NUM_APPLETS] =
   {IDC_CPLICON_1, IDS_CPLNAME_1, IDS_CPLDESCRIPTION_1, Applet1}
 };
 
-static void
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+static BOOL CALLBACK
+PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 {
-  ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-  psp->dwSize = sizeof(PROPSHEETPAGE);
-  psp->dwFlags = PSP_DEFAULT;
-  psp->hInstance = hApplet;
-  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-  psp->pfnDlgProc = DlgProc;
+    PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
+    if (ppsh != NULL && ppsh->nPages < MAX_POWER_PAGES)
+    {
+        ppsh->phpage[ppsh->nPages++] = hpage;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static BOOL
+InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc)
+{
+    HPROPSHEETPAGE hPage;
+    PROPSHEETPAGE psp;
+
+    if (ppsh->nPages < MAX_POWER_PAGES)
+    {
+        ZeroMemory(&psp, sizeof(psp));
+        psp.dwSize = sizeof(psp);
+        psp.dwFlags = PSP_DEFAULT;
+        psp.hInstance = hApplet;
+        psp.pszTemplate = MAKEINTRESOURCE(idDlg);
+        psp.pfnDlgProc = DlgProc;
+
+        hPage = CreatePropertySheetPage(&psp);
+        if (hPage != NULL)
+        {
+            return PropSheetAddPage(hPage, (LPARAM)ppsh);
+        }
+    }
+
+    return FALSE;
 }
 
 
@@ -81,29 +108,15 @@ PropSheetProc(
   return TRUE;
 }
 
-static BOOL CALLBACK
-PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
-{
-    PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
-    if (ppsh != NULL && ppsh->nPages < MAX_POWER_PAGES)
-    {
-        ppsh->phpage[ppsh->nPages++] = hpage;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 /* First Applet */
 static LONG APIENTRY
 Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)	
 {
-  PROPSHEETPAGE psp[MAX_POWER_PAGES];
+  HPROPSHEETPAGE hpsp[MAX_POWER_PAGES];
   PROPSHEETHEADER psh;
   HPSXA hpsxa = NULL;
   TCHAR Caption[1024];
   SYSTEM_POWER_CAPABILITIES spc;
-  INT i=0;
   LONG ret;
  
   UNREFERENCED_PARAMETER(hwnd);
@@ -116,27 +129,26 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
+  psh.dwFlags =  PSH_USECALLBACK | PSH_PROPTITLE;
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
   psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
   psh.pszCaption = Caption;
-  psh.nPages = 3;
+  psh.nPages = 0;
   psh.nStartPage = 0;
-  psh.ppsp = psp;
+  psh.phpage = hpsp;
   psh.pfnCallback = PropSheetProc;
   
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEPOWERSHEMES, (DLGPROC) powershemesProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSHEMES, (DLGPROC) powershemesProc);
   if (GetPwrCapabilities(&spc))
   {
     if (spc.SystemBatteriesPresent)
 	{
-	  InitPropSheetPage(&psp[i++], IDD_PROPPAGEALARMS, (DLGPROC) alarmsProc);
-	  psh.nPages += 1;
+	  InitPropSheetPage(&psh, IDD_PROPPAGEALARMS, (DLGPROC) alarmsProc);
 	}
   }
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEADVANCED, (DLGPROC) advancedProc);
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEHIBERNATE, (DLGPROC) hibernateProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEADVANCED, (DLGPROC) advancedProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEHIBERNATE, (DLGPROC) hibernateProc);
 
   /* Load additional pages provided by shell extensions */
   hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Power"), MAX_POWER_PAGES - psh.nPages);
