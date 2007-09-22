@@ -12,6 +12,7 @@
 	<library>user32</library>
 	<library>powrprof</library>
 	<library>comctl32</library>
+	<library>shell32</library>
 	<library>msvcrt</library>
 	<file>powercfg.c</file>
 	<file>powershemes.c</file>

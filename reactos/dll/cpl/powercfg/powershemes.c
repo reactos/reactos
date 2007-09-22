@@ -287,9 +287,11 @@ BOOLEAN CreateEnergyList(HWND hwnd)
 	if (!ValidatePowerPolicies(&gGPP,0))
 		return FALSE;
 
+/*
 	if (!SetActivePwrScheme(aps,&gGPP,&pp))
 		return FALSE;
-	
+*/
+
 	if (!GetPwrCapabilities(&spc))
 		return FALSE;
 

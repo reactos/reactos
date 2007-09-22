@@ -11,6 +11,8 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <shlobj.h>
+#include <regstr.h>
 #include <cpl.h>
 
 #include "resource.h"
@@ -79,15 +81,30 @@ PropSheetProc(
   return TRUE;
 }
 
+static BOOL CALLBACK
+PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
+{
+    PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
+    if (ppsh != NULL && ppsh->nPages < MAX_POWER_PAGES)
+    {
+        ppsh->phpage[ppsh->nPages++] = hpage;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /* First Applet */
 static LONG APIENTRY
 Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)	
 {
-  PROPSHEETPAGE psp[5];
+  PROPSHEETPAGE psp[MAX_POWER_PAGES];
   PROPSHEETHEADER psh;
+  HPSXA hpsxa = NULL;
   TCHAR Caption[1024];
   SYSTEM_POWER_CAPABILITIES spc;
   INT i=0;
+  LONG ret;
  
   UNREFERENCED_PARAMETER(hwnd);
   UNREFERENCED_PARAMETER(uMsg);
@@ -120,8 +137,18 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   }
   InitPropSheetPage(&psp[i++], IDD_PROPPAGEADVANCED, (DLGPROC) advancedProc);
   InitPropSheetPage(&psp[i++], IDD_PROPPAGEHIBERNATE, (DLGPROC) hibernateProc);
-  
-  return (LONG)(PropertySheet(&psh) != -1);
+
+  /* Load additional pages provided by shell extensions */
+  hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Power"), MAX_POWER_PAGES - psh.nPages);
+  if (hpsxa != NULL)
+      SHAddFromPropSheetExtArray(hpsxa, PropSheetAddPage, (LPARAM)&psh);
+
+  ret = (LONG)(PropertySheet(&psh) != -1);
+
+  if (hpsxa != NULL)
+    SHDestroyPropSheetExtArray(hpsxa);
+
+  return ret;
 }
 
 /* Control Panel Callback */
