@@ -25,7 +25,7 @@ BEGIN
   EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
   EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
   GROUPBOX "Localisation géographique", -1, 5, 172, 234, 55
-  LTEXT Configurez votre localisation pour que des services puissent vous fournir des informations locales, comme par exemple, les nouvelles et la météo", -1, 14, 184, 210, 24
+  LTEXT "Configurez votre localisation pour que des services puissent vous fournir des informations locales, comme par exemple, les nouvelles et la météo", -1, 14, 184, 210, 24
   COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
