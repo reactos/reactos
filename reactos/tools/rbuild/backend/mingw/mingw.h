@@ -88,7 +88,6 @@ private:
 	std::string GetProxyMakefileTree () const;
 	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();
-	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	bool TryToDetectThisCompiler ( const std::string& compiler );
 	void DetectCompiler ();
 	std::string GetCompilerVersion ( const std::string& compilerCommand );

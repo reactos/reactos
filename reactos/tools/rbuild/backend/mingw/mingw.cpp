@@ -755,15 +755,6 @@ MingwBackend::CheckAutomaticDependencies ()
 	}
 }
 
-bool
-MingwBackend::IncludeDirectoryTarget ( const string& directory ) const
-{
-	if ( directory == "$(INTERMEDIATE)" + sSep + "tools")
-		return false;
-	else
-		return true;
-}
-
 void
 MingwBackend::GenerateDirectories ()
 {
