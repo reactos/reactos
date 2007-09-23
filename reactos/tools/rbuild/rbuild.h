@@ -725,35 +725,27 @@ class SourceFile
 public:
 	SourceFile ( AutomaticDependency* automaticDependency,
 	             const Module& module,
-	             const std::string& filename,
-	             SourceFile* parent,
-	             bool isNonAutomaticDependency );
-	SourceFile* ParseFile ( const std::string& normalizedFilename );
+	             const File& file,
+	             SourceFile* parent );
 	void Parse ();
-	std::string Location () const;
-	std::vector<SourceFile*> files;
+	std::vector<SourceFile*> files; /* List of files included in this file */
+	const File& file;
 	AutomaticDependency* automaticDependency;
 	const Module& module;
-	std::string filename;
-	std::string filenamePart;
-	std::string directoryPart;
 	std::vector<SourceFile*> parents; /* List of files, this file is included from */
-	bool isNonAutomaticDependency;
-	std::string cachedDependencies;
 	time_t lastWriteTime;
 	time_t youngestLastWriteTime; /* Youngest last write time of this file and all children */
 	SourceFile* youngestFile;
 private:
-	void GetDirectoryAndFilenameParts ();
 	void Close ();
 	void Open ();
 	void SkipWhitespace ();
 	bool ReadInclude ( std::string& filename,
 	                   bool& searchCurrentDirectory,
 	                   bool& includeNext );
-	bool IsIncludedFrom ( const std::string& normalizedFilename );
-	SourceFile* GetParentSourceFile ();
-	bool CanProcessFile ( const std::string& extension );
+	bool IsIncludedFrom ( const File& file );
+	SourceFile* ParseFile(const File& file);
+	bool CanProcessFile ( const File& file );
 	bool IsParentOf ( const SourceFile* parent,
 	                  const SourceFile* child );
 	std::string buf;
@@ -771,18 +763,17 @@ public:
 	AutomaticDependency ( const Project& project );
 	~AutomaticDependency ();
 	bool LocateIncludedFile ( const FileLocation& directory,
-	                          const std::string& includedFilename,
-	                          std::string& resolvedFilename );
+	                          const std::string& includedFilename );
 	bool LocateIncludedFile ( SourceFile* sourceFile,
 	                          const Module& module,
 	                          const std::string& includedFilename,
 	                          bool searchCurrentDirectory,
 	                          bool includeNext,
-	                          std::string& resolvedFilename );
+	                          File& resolvedFile );
 	SourceFile* RetrieveFromCacheOrParse ( const Module& module,
-	                                       const std::string& filename,
+	                                       const File& file,
 	                                       SourceFile* parentSourceFile );
-	SourceFile* RetrieveFromCache ( const std::string& filename );
+	SourceFile* RetrieveFromCache ( const File& file );
 	void CheckAutomaticDependencies ( bool verbose );
 	void CheckAutomaticDependenciesForModule ( Module& module,
 	                                           bool verbose );
@@ -792,19 +783,13 @@ private:
 	                                  bool verbose );
 	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 	void GetIncludeDirectories ( std::vector<Include*>& includes,
-	                             const Module& module,
-	                             Include& currentDirectory,
-	                             bool searchCurrentDirectory );
+	                             const Module& module );
 	void GetModuleFiles ( const Module& module,
 	                          std::vector<File*>& files ) const;
 	void ParseFiles ();
 	void ParseFiles ( const Module& module );
 	void ParseFile ( const Module& module,
 	                 const File& file );
-	std::string ReplaceVariable ( const std::string& name,
-	                              const std::string& value,
-	                              std::string path );
-	std::string ResolveVariablesInPath ( const std::string& path );
 	std::map<std::string, SourceFile*> sourcefile_map;
 };
 
