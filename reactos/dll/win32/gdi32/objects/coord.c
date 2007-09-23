@@ -158,7 +158,8 @@ BOOL
 STDCALL
 SetWorldTransform( HDC hDC, CONST XFORM *Xform )
 {
-      return ModifyWorldTransform( hDC, Xform, MWT_MAX+1); // MWT_SETXFORM?
+      /* FIXME  shall we add undoc #define MWT_SETXFORM 4 ?? */
+      return ModifyWorldTransform( hDC, Xform, MWT_MAX+1);
 }
 
 

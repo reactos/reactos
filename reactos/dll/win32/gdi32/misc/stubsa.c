@@ -235,23 +235,6 @@ UpdateICMRegKeyA(
 	return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-RemoveFontResourceExA(
-	LPCSTR lpFileName,
-	DWORD fl,
-	PVOID pdv
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
  * @unimplemented
  */

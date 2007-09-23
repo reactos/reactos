@@ -1173,11 +1173,9 @@ AddFontResourceW ( LPCWSTR lpszFilename )
  */
 BOOL
 STDCALL
-RemoveFontResourceW(
-	LPCWSTR	lpFileName
-	)
+RemoveFontResourceW(LPCWSTR lpFileName)
 {
-  return NtGdiRemoveFontResource ( lpFileName );
+    return RemoveFontResourceExW(lpFileName,0,0);
 }
 
 
@@ -1186,26 +1184,57 @@ RemoveFontResourceW(
  */
 BOOL
 STDCALL
-RemoveFontResourceA(
-	LPCSTR	lpFileName
-	)
+RemoveFontResourceA(LPCSTR lpFileName)
 {
-  NTSTATUS Status;
-  LPWSTR lpFileNameW;
-  BOOL rc = 0;
+    return RemoveFontResourceExA(lpFileName,0,0);
+}
 
-  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
-  if (!NT_SUCCESS (Status))
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceExA(LPCSTR lpFileName,
+                      DWORD fl,
+                      PVOID pdv
+)
+{
+    NTSTATUS Status;
+    LPWSTR lpFileNameW;
+    BOOL rc = 0;
+
+    /* FIXME the flags */
+    /* FIXME the pdv */
+    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
+
+    Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
+    if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
-  else
+    else
     {
-      rc = NtGdiRemoveFontResource ( lpFileNameW );
+        rc = NtGdiRemoveFontResource ( lpFileNameW );
 
-      HEAP_free ( lpFileNameW );
+        HEAP_free ( lpFileNameW );
     }
 
   return rc;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceExW(LPCWSTR lpFileName,
+                      DWORD fl,
+                      PVOID pdv)
+{
+    /* FIXME the flags */
+    /* FIXME the pdv */
+    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
+    return NtGdiRemoveFontResource ( lpFileName);
+}
+
 
 /***********************************************************************
  *           GdiGetCharDimensions

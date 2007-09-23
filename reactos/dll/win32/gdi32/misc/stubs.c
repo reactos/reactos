@@ -23,33 +23,241 @@
 /*
  * @unimplemented
  */
+int
+STDCALL
+SetDIBits(HDC hdc,
+          HBITMAP hbmp,
+          UINT uStartScan,
+          UINT cScanLines,
+          CONST VOID *lpvBits,
+          CONST BITMAPINFO *lpbmi,
+          UINT fuColorUse)
+{
+    /* FIXME share memory */
+    return NtGdiSetDIBits(hdc, hbmp, uStartScan, cScanLines, lpvBits, lpbmi, fuColorUse);
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+SetGraphicsMode(HDC hdc,
+                int iMode)
+{
+    /* FIXME share memory */
+    return NtGdiSetGraphicsMode(hdc, iMode);
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+SetPolyFillMode(HDC hdc,
+                int iPolyFillMode)
+{
+    /* FIXME share memory */
+    return NtGdiSetPolyFillMode(hdc, iPolyFillMode);
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+SetROP2(HDC hdc,
+        int fnDrawMode)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+SetStretchBltMode(HDC hdc, int iStretchMode)
+{
+    /* FIXME share memory */
+    return NtGdiSetStretchBltMode(hdc, iStretchMode);
+}
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
-CancelDC(
-	HDC	a0
-	)
+SetRectRgn(HRGN hrgn,
+           int nLeftRect,
+           int nTopRect,
+           int nRightRect,
+           int nBottomRect)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    /* FIXME metadc stuff */
+    return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
-  
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+SetTextAlign(HDC hdc,
+             UINT fMode)
+{
+    /* FIXME share memory */
+    return NtGdiSetTextAlign(hdc, fMode);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetViewportExtEx(HDC hdc,
+                 int nXExtent,
+                 int nYExtent,
+                 LPSIZE lpSize)
+{
+    /* FIXME share memory */
+    return NtGdiSetViewportExtEx(hdc, nXExtent, nYExtent, lpSize);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetWindowOrgEx(HDC hdc,
+               int X,
+               int Y,
+               LPPOINT lpPoint)
+{
+    /* FIXME share memory */
+    return NtGdiSetWindowOrgEx(hdc,X,Y,lpPoint);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetWindowExtEx(HDC hdc,
+               int nXExtent,
+               int nYExtent,
+               LPSIZE lpSize)
+{
+    /* FIXME share memory */
+    return NtGdiSetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetViewportOrgEx(HDC hdc,
+                 int X,
+                 int Y,
+                 LPPOINT lpPoint)
+{
+    /* FIXME share memory */
+    return NtGdiSetViewportOrgEx(hdc,X,Y,lpPoint);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetBrushOrgEx(HDC hdc,
+              int nXOrg,
+              int nYOrg,
+              LPPOINT lppt)
+{
+    /* FIXME share memory */
+    return NtGdiSetBrushOrg(hdc,nXOrg,nYOrg,lppt);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL 
+STDCALL
+PtInRegion(IN HRGN hrgn,
+           int x,
+           int y)
+{
+    /* FIXME some stuff at user mode need be fixed */
+    return NtGdiPtInRegion(hrgn,x,y);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+RectInRegion(HRGN hrgn,
+             LPCRECT prcl)
+{
+    /* FIXME some stuff at user mode need be fixed */
+    return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+RestoreDC(IN HDC hdc,
+          IN INT iLevel)
+{
+    /* FIXME Sharememory */
+    return NtGdiRestoreDC(hdc, iLevel);
+}
+
+/*
+ * @unimplemented
+ */
+INT
+STDCALL
+SaveDC(IN HDC hdc)
+{
+    /* FIXME Sharememory */
+    return NtGdiSaveDC(hdc);
+}
+
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+CancelDC(HDC hdc)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
 
 /*
  * @unimplemented
  */
 int
 STDCALL
-DrawEscape(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	LPCSTR		a3
-	)
+DrawEscape(HDC  hdc,
+           int a1,
+           int a2,
+           LPCSTR a3)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -58,16 +266,14 @@ DrawEscape(
  */
 int
 STDCALL
-EnumObjects(
-	HDC		a0,
-	int		a1,
-	GOBJENUMPROC	a2,
-	LPARAM		a3
-	)
+EnumObjects(HDC hdc,
+            int a1,
+            GOBJENUMPROC a2,
+            LPARAM a3)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -239,21 +445,6 @@ STDCALL
 SetMetaFileBitsEx(
 	UINT		a0,
 	CONST BYTE	*a1
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-SetSystemPaletteUse(
-	HDC	a0,
-	UINT	a1
 	)
 {
 	UNIMPLEMENTED;
@@ -740,13 +931,11 @@ CheckColorsInGamut(
  */
 HCOLORSPACE
 STDCALL
-GetColorSpace(
-	HDC	hDc
-	)
+GetColorSpace(HDC hDc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -785,10 +974,6 @@ GetDeviceGammaRamp( HDC hdc,
 
     return retValue;
 }
-
-
-    
-
 
 /*
  * @implemented
@@ -1061,13 +1246,6 @@ wglSwapLayerBuffers(
  * === WHERE ARE THEY DEFINED? =============
  */
 
-
-
-
-
-
-
-
 /*
  * @unimplemented
  */
@@ -1121,25 +1299,6 @@ GetGlyphOutlineWow(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetFontEnumeration(
-	DWORD	a0
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 /*
  * @unimplemented
@@ -1383,9 +1542,9 @@ BOOL
 STDCALL
 GdiIsMetaPrintDC(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1395,9 +1554,9 @@ BOOL
 STDCALL
 GdiIsPlayMetafileDC(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1407,9 +1566,9 @@ BOOL
 STDCALL
 GdiValidateHandle(HGDIOBJ hobj)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1419,9 +1578,9 @@ DWORD
 STDCALL
 GetBitmapAttributes(HBITMAP hbm)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1431,9 +1590,9 @@ DWORD
 STDCALL
 GetBrushAttributes(HBRUSH hbr)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1441,17 +1600,16 @@ GetBrushAttributes(HBRUSH hbr)
  */
 BOOL 
 STDCALL
-GetCharABCWidthsI(
-	HDC hdc,
-	UINT giFirst,
-	UINT cgi,
-	LPWORD pgi,
-	LPABC lpabc
+GetCharABCWidthsI(HDC hdc,
+                  UINT giFirst,
+                  UINT cgi,
+                  LPWORD pgi,
+                  LPABC lpabc
 )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1459,17 +1617,16 @@ GetCharABCWidthsI(
  */
 BOOL 
 STDCALL
-GetCharWidthI(
-	HDC hdc,
-	UINT giFirst,
-	UINT cgi,
-	LPWORD pgi,
-	LPINT lpBuffer
+GetCharWidthI(HDC hdc,
+              UINT giFirst,
+              UINT cgi,
+              LPWORD pgi,
+              LPINT lpBuffer
 )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -1508,9 +1665,9 @@ HFONT
 STDCALL
 GetHFONT(HDC dc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1518,13 +1675,12 @@ GetHFONT(HDC dc)
  */
 DWORD 
 STDCALL
-GetLayout(
-	HDC hdc
+GetLayout(HDC hdc
 )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1573,9 +1729,9 @@ BOOL
 STDCALL
 MirrorRgn(HWND hwnd,HRGN hrgn)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -1587,9 +1743,9 @@ DWORD
 STDCALL
 QueryFontAssocStatus(VOID)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1653,14 +1809,12 @@ SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
  */
 DWORD 
 STDCALL
-SetLayout(
-	HDC hdc,
-	DWORD dwLayout
-)
+SetLayout(HDC hdc,
+          DWORD dwLayout)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1670,34 +1824,12 @@ DWORD
 STDCALL
 SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
-SetMagicColors(HDC hdc,PALETTEENTRY peMagic,ULONG Index)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetVirtualResolution(HDC hdc, int cxVirtualDevicePixel,int cyVirtualDevicePixel,int cxVirtualDeviceMm, int cyVirtualDeviceMm)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
@@ -1706,9 +1838,9 @@ int
 STDCALL
 StartFormPage(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1718,8 +1850,8 @@ VOID
 STDCALL
 UnloadNetworkFonts(DWORD unknown)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
 /*
@@ -1760,11 +1892,12 @@ GetTextExtentPointI(HDC hdc,
  */
 BOOL 
 STDCALL
-GdiRealizationInfo(HDC hdc, PREALIZATION_INFO pri)
+GdiRealizationInfo(HDC hdc,
+                   PREALIZATION_INFO pri)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -1774,11 +1907,12 @@ GdiRealizationInfo(HDC hdc, PREALIZATION_INFO pri)
  */
 BOOL 
 STDCALL
-GetETM(HDC hdc,EXTTEXTMETRIC *petm)
+GetETM(HDC hdc,
+       EXTTEXTMETRIC *petm)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1786,11 +1920,14 @@ GetETM(HDC hdc,EXTTEXTMETRIC *petm)
  */
 BOOL
 STDCALL
-GdiAddGlsRecord(HDC hdc,DWORD unknown1,LPCSTR unknown2,LPRECT unknown3)
+GdiAddGlsRecord(HDC hdc,
+                DWORD unknown1,
+                LPCSTR unknown2,
+                LPRECT unknown3)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1800,9 +1937,9 @@ HANDLE
 STDCALL
 GdiConvertMetaFilePict(HGLOBAL hMem)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1812,68 +1949,72 @@ DEVMODEW *
 STDCALL
 GdiConvertToDevmodeW(DEVMODEA *dm)
 {
-  LPDEVMODEW dmw;
-  
-  dmw = HEAP_alloc(sizeof(DEVMODEW));
-#define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, (LPSTR)dm->f, len, dmw->f, len )
-#define COPYN(f) dmw->f = dm->f
-  COPYS(dmDeviceName, CCHDEVICENAME );
-  COPYN(dmSpecVersion);
-  COPYN(dmDriverVersion);
-  switch ( dm->dmSize )
+    LPDEVMODEW dmw;
+
+    dmw = HEAP_alloc(sizeof(DEVMODEW));
+    #define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, (LPSTR)dm->f, len, dmw->f, len )
+    #define COPYN(f) dmw->f = dm->f
+    COPYS(dmDeviceName, CCHDEVICENAME );
+    COPYN(dmSpecVersion);
+    COPYN(dmDriverVersion);
+    switch ( dm->dmSize )
     {
-    case SIZEOF_DEVMODEA_300:
-      dmw->dmSize = SIZEOF_DEVMODEW_300;
-      break;
-    case SIZEOF_DEVMODEA_400:
-      dmw->dmSize = SIZEOF_DEVMODEW_400;
-      break;
-    case SIZEOF_DEVMODEA_500:
-    default: /* FIXME what to do??? */
-      dmw->dmSize = SIZEOF_DEVMODEW_500;
-      break;
+        case SIZEOF_DEVMODEA_300:
+            dmw->dmSize = SIZEOF_DEVMODEW_300;
+            break;
+        case SIZEOF_DEVMODEA_400:
+            dmw->dmSize = SIZEOF_DEVMODEW_400;
+            break;
+        case SIZEOF_DEVMODEA_500:
+            default: /* FIXME what to do??? */
+                dmw->dmSize = SIZEOF_DEVMODEW_500;
+            break;
     }
-  COPYN(dmDriverExtra);
-  COPYN(dmFields);
-  COPYN(dmPosition.x);
-  COPYN(dmPosition.y);
-  COPYN(dmScale);
-  COPYN(dmCopies);
-  COPYN(dmDefaultSource);
-  COPYN(dmPrintQuality);
-  COPYN(dmColor);
-  COPYN(dmDuplex);
-  COPYN(dmYResolution);
-  COPYN(dmTTOption);
-  COPYN(dmCollate);
-  COPYS(dmFormName,CCHFORMNAME);
-  COPYN(dmLogPixels);
-  COPYN(dmBitsPerPel);
-  COPYN(dmPelsWidth);
-  COPYN(dmPelsHeight);
-  COPYN(dmDisplayFlags); // aka dmNup
-  COPYN(dmDisplayFrequency);
+    COPYN(dmDriverExtra);
+    COPYN(dmFields);
+    COPYN(dmPosition.x);
+    COPYN(dmPosition.y);
+    COPYN(dmScale);
+    COPYN(dmCopies);
+    COPYN(dmDefaultSource);
+    COPYN(dmPrintQuality);
+    COPYN(dmColor);
+    COPYN(dmDuplex);
+    COPYN(dmYResolution);
+    COPYN(dmTTOption);
+    COPYN(dmCollate);
+    COPYS(dmFormName,CCHFORMNAME);
+    COPYN(dmLogPixels);
+    COPYN(dmBitsPerPel);
+    COPYN(dmPelsWidth);
+    COPYN(dmPelsHeight);
+    COPYN(dmDisplayFlags); // aka dmNup
+    COPYN(dmDisplayFrequency);
 
-  if ( dm->dmSize <= SIZEOF_DEVMODEA_300 )
-    return dmw; // we're done with 0x300 fields
+    if ( dm->dmSize <= SIZEOF_DEVMODEA_300 )
+    {
+        return dmw; // we're done with 0x300 fields
+    }
 
-  COPYN(dmICMMethod);
-  COPYN(dmICMIntent);
-  COPYN(dmMediaType);
-  COPYN(dmDitherType);
-  COPYN(dmReserved1);
-  COPYN(dmReserved2);
+    COPYN(dmICMMethod);
+    COPYN(dmICMIntent);
+    COPYN(dmMediaType);
+    COPYN(dmDitherType);
+    COPYN(dmReserved1);
+    COPYN(dmReserved2);
 
-  if ( dm->dmSize <= SIZEOF_DEVMODEA_400 )
-    return dmw; // we're done with 0x400 fields
+    if ( dm->dmSize <= SIZEOF_DEVMODEA_400 )
+    {
+        return dmw; // we're done with 0x400 fields
+    }
 
-  COPYN(dmPanningWidth);
-  COPYN(dmPanningHeight);
+    COPYN(dmPanningWidth);
+    COPYN(dmPanningHeight);
 
-  return dmw;
+    return dmw;
 
-#undef COPYN
-#undef COPYS
+    #undef COPYN
+    #undef COPYS
 }
 
 /*
@@ -1883,9 +2024,9 @@ HENHMETAFILE
 STDCALL
 GdiCreateLocalEnhMetaFile(HENHMETAFILE hmo)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1895,9 +2036,9 @@ METAFILEPICT *
 STDCALL
 GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -1906,14 +2047,13 @@ GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
  */
 HANDLE 
 STDCALL
-GdiGetSpoolFileHandle(
-	LPWSTR		pwszPrinterName,
-	LPDEVMODEW	pDevmode,
-	LPWSTR		pwszDocName)
+GdiGetSpoolFileHandle(LPWSTR pwszPrinterName,
+                      LPDEVMODEW pDevmode,
+                      LPWSTR pwszDocName)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1921,12 +2061,11 @@ GdiGetSpoolFileHandle(
  */
 BOOL
 STDCALL
-GdiDeleteSpoolFileHandle(
-	HANDLE	SpoolFileHandle)
+GdiDeleteSpoolFileHandle(HANDLE SpoolFileHandle)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1934,12 +2073,11 @@ GdiDeleteSpoolFileHandle(
  */
 DWORD 
 STDCALL
-GdiGetPageCount(
-	HANDLE	SpoolFileHandle)
+GdiGetPageCount(HANDLE SpoolFileHandle)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1947,12 +2085,11 @@ GdiGetPageCount(
  */
 HDC
 STDCALL
-GdiGetDC(
-	HANDLE	SpoolFileHandle)
+GdiGetDC(HANDLE SpoolFileHandle)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1960,14 +2097,13 @@ GdiGetDC(
  */
 HANDLE 
 STDCALL
-GdiGetPageHandle(
-	HANDLE	SpoolFileHandle,
-	DWORD	Page,
-	LPDWORD	pdwPageType)
+GdiGetPageHandle(HANDLE SpoolFileHandle,
+                 DWORD Page,
+                 LPDWORD pdwPageType)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1975,13 +2111,12 @@ GdiGetPageHandle(
  */
 BOOL
 STDCALL
-GdiStartDocEMF(
-	HANDLE		SpoolFileHandle,
-	DOCINFOW	*pDocInfo)
+GdiStartDocEMF(HANDLE SpoolFileHandle,
+               DOCINFOW *pDocInfo)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1989,12 +2124,11 @@ GdiStartDocEMF(
  */
 BOOL
 STDCALL
-GdiStartPageEMF(
-	HANDLE	SpoolFileHandle)
+GdiStartPageEMF(HANDLE SpoolFileHandle)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2002,16 +2136,15 @@ GdiStartPageEMF(
  */
 BOOL
 STDCALL
-GdiPlayPageEMF(
-	HANDLE	SpoolFileHandle,
-	HANDLE	hemf,
-	RECT	*prectDocument,
-	RECT	*prectBorder,
-	RECT	*prectClip)
+GdiPlayPageEMF(HANDLE SpoolFileHandle,
+               HANDLE hemf,
+               RECT *prectDocument,
+               RECT *prectBorder,
+               RECT *prectClip)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2019,13 +2152,12 @@ GdiPlayPageEMF(
  */
 BOOL
 STDCALL
-GdiEndPageEMF(
-	HANDLE	SpoolFileHandle,
-	DWORD	dwOptimization)
+GdiEndPageEMF(HANDLE SpoolFileHandle,
+              DWORD dwOptimization)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2033,12 +2165,11 @@ GdiEndPageEMF(
  */
 BOOL
 STDCALL
-GdiEndDocEMF(
-	HANDLE	SpoolFileHandle)
+GdiEndDocEMF(HANDLE SpoolFileHandle)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2046,15 +2177,14 @@ GdiEndDocEMF(
  */
 BOOL
 STDCALL
-GdiGetDevmodeForPage(
-	HANDLE		SpoolFileHandle,
-	DWORD		dwPageNumber,
-	PDEVMODEW	*pCurrDM,
-	PDEVMODEW	*pLastDM)
+GdiGetDevmodeForPage(HANDLE SpoolFileHandle,
+                     DWORD dwPageNumber,
+                     PDEVMODEW *pCurrDM,
+                     PDEVMODEW *pLastDM)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2062,25 +2192,24 @@ GdiGetDevmodeForPage(
  */
 BOOL
 STDCALL
-GdiResetDCEMF(
-	HANDLE		SpoolFileHandle,
-	PDEVMODEW	pCurrDM)
+GdiResetDCEMF(HANDLE SpoolFileHandle,
+              PDEVMODEW pCurrDM)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
 HBITMAP 
 STDCALL 
-CreateDIBitmap(HDC
-	hDc, const BITMAPINFOHEADER *Header,
-	DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
-	UINT ColorUse)
+CreateDIBitmap(HDC hDc,
+               const BITMAPINFOHEADER *Header,
+               DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
+               UINT ColorUse)
 {
-	/* FIMXE we need do more thing in user mode */
-	return NtGdiCreateDIBitmap(hDc, Header, Init, Bits, Data,  ColorUse);
+    /* FIMXE we need do more thing in user mode */
+    return NtGdiCreateDIBitmap(hDc, Header, Init, Bits, Data,  ColorUse);
 }
 
 /*
@@ -2089,9 +2218,9 @@ CreateDIBitmap(HDC
 INT
 STDCALL
 CombineRgn(HRGN  hDest,
-                    HRGN  hSrc1,
-                    HRGN  hSrc2,
-                    INT  CombineMode)
+           HRGN  hSrc1,
+           HRGN  hSrc2,
+           INT  CombineMode)
 {
     /* FIXME some part should be done in user mode */
     return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode); 
@@ -2101,12 +2230,11 @@ CombineRgn(HRGN  hDest,
  * @unimplemented
  */
 HBITMAP STDCALL
-CreateBitmap(
-    INT  Width,
-    INT  Height,
-    UINT  Planes,
-    UINT  BitsPixel,
-    PCVOID pUnsafeBits)
+CreateBitmap(INT  Width,
+             INT  Height,
+             UINT  Planes,
+             UINT  BitsPixel,
+             PCVOID pUnsafeBits)
 {
     /* FIXME some part should be done in user mode */
     return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
@@ -2121,9 +2249,9 @@ CreateBitmap(
 LPWSTR STDCALL
 EngGetDriverName(HDEV hdev)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2173,96 +2301,46 @@ EngWideCharToMultiByte( UINT CodePage,
                          NULL);
 }
 
-
-
 /*
  * @unimplemented
  */
 BOOL STDCALL
-STROBJ_bEnum(STROBJ *pstro,ULONG *pc,PGLYPHPOS *ppgpos)
+XFORMOBJ_bApplyXform(XFORMOBJ *pxo,
+                     ULONG iMode,
+                     ULONG cPoints,
+                     PVOID pvIn,
+                     PVOID pvOut)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-STROBJ_bEnumPositionsOnly(STROBJ *pstro,ULONG *pc,PGLYPHPOS *ppgpos)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-STROBJ_bGetAdvanceWidths(STROBJ *pso,ULONG iFirst,ULONG c,POINTQF *pptqD)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
-STROBJ_dwGetCodePage(STROBJ  *pstro)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL
-STROBJ_vEnumStart(STROBJ *pstro)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-XFORMOBJ_bApplyXform(XFORMOBJ *pxo,ULONG iMode,ULONG cPoints,PVOID pvIn,PVOID pvOut)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
  * @unimplemented
  */
 ULONG STDCALL
-XFORMOBJ_iGetXform(XFORMOBJ *pxo,XFORML *pxform)
+XFORMOBJ_iGetXform(XFORMOBJ *pxo,
+                   XFORML *pxform)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
  * @unimplemented
  */
-ULONG STDCALL
+ULONG
+STDCALL
 XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
-		     ULONG PalOutType,
-		     ULONG cPal,
-		     ULONG *OutPal)
+                     ULONG PalOutType,
+                     ULONG cPal,
+                     ULONG *OutPal)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2271,9 +2349,9 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
 HANDLE STDCALL
 XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2281,20 +2359,21 @@ XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo)
  */
 ULONG STDCALL
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
-		ULONG Color)
+                ULONG Color)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
  * @unimplemented
  */
-ULONG * STDCALL
+ULONG *
+STDCALL
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
-  return XlateObj->pulXlate;
+    return XlateObj->pulXlate;
 }
 
 /*
@@ -2302,18 +2381,16 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
  */
 BOOL 
 STDCALL
-GdiPlayEMF
-(
-	LPWSTR     pwszPrinterName,
-	LPDEVMODEW pDevmode,
-	LPWSTR     pwszDocName,
-	EMFPLAYPROC pfnEMFPlayFn,
-	HANDLE     hPageQuery
+GdiPlayEMF(LPWSTR pwszPrinterName,
+           LPDEVMODEW pDevmode,
+           LPWSTR pwszDocName,
+           EMFPLAYPROC pfnEMFPlayFn,
+           HANDLE hPageQuery
 )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 
@@ -2323,16 +2400,13 @@ GdiPlayEMF
  */
 BOOL
 STDCALL
-GdiPlayPrivatePageEMF
-(
-	HANDLE	SpoolFileHandle,
-	DWORD	unknown,
-	RECT	*prectDocument
-)
+GdiPlayPrivatePageEMF(HANDLE SpoolFileHandle,
+                      DWORD unknown,
+                      RECT *prectDocument)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -2340,8 +2414,8 @@ GdiPlayPrivatePageEMF
  */
 VOID STDCALL GdiInitializeLanguagePack(DWORD InitParam)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 }
 
 
@@ -2352,8 +2426,8 @@ INT
 STDCALL
 ExcludeClipRect(IN HDC hdc, IN INT xLeft, IN INT yTop, IN INT xRight, IN INT yBottom)
 {
-	/* FIXME some part need be done on user mode size */
-	return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
+    /* FIXME some part need be done on user mode size */
+    return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
 }
 
 /*
@@ -2363,8 +2437,8 @@ INT
 STDCALL
 ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
 {
-	/* FIXME some part need be done on user mode size */
-	return NtGdiExtSelectClipRgn(hdc,hrgn, iMode);
+    /* FIXME some part need be done on user mode size */
+    return NtGdiExtSelectClipRgn(hdc,hrgn, iMode);
 }
 
 /*
@@ -2390,18 +2464,17 @@ GdiGradientFill(
  */
 BOOL
 STDCALL
-GdiTransparentBlt(
-    IN HDC hdcDst,
-    IN INT xDst,
-    IN INT yDst,
-    IN INT cxDst,
-    IN INT cyDst,
-    IN HDC hdcSrc,
-    IN INT xSrc,
-    IN INT ySrc,
-    IN INT cxSrc,
-    IN INT cySrc,
-    IN COLORREF TransColor
+GdiTransparentBlt(IN HDC hdcDst,
+                  IN INT xDst,
+                  IN INT yDst,
+                  IN INT cxDst,
+                  IN INT cyDst,
+                  IN HDC hdcSrc,
+                  IN INT xSrc,
+                  IN INT ySrc,
+                  IN INT cxSrc,
+                  IN INT cySrc,
+                  IN COLORREF TransColor
 )
 {
     /* FIXME some part need be done in user mode */

@@ -271,21 +271,7 @@ GetEUDCTimeStampExW(LPWSTR lpBaseFaceName)
     return retValue;
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-RemoveFontResourceExW(
-	LPCWSTR lpFileName,
-	DWORD fl,
-	PVOID pdv
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
+
 
 /*
  * @unimplemented
