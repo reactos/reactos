@@ -911,11 +911,16 @@ ScaleWindowExtEx(
  */
 BOOL
 STDCALL
-UnrealizeObject(
-	HGDIOBJ	a0
-	)
+UnrealizeObject(HGDIOBJ  hgdiobj)
 {
-	return NtGdiUnrealizeObject(a0);
+    BOOL retValue = TRUE;
+
+    if (GDI_HANDLE_GET_TYPE(hgdiobj) != GDI_OBJECT_TYPE_BRUSH)
+    {
+        retValue = NtGdiUnrealizeObject(hgdiobj);
+    }
+
+    return retValue;
 }
 
 
@@ -2338,58 +2343,6 @@ EngWideCharToMultiByte( UINT CodePage,
                          NULL);
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-XFORMOBJ_bApplyXform(XFORMOBJ *pxo,
-                     ULONG iMode,
-                     ULONG cPoints,
-                     PVOID pvIn,
-                     PVOID pvOut)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONG STDCALL
-XFORMOBJ_iGetXform(XFORMOBJ *pxo,
-                   XFORML *pxform)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-STDCALL
-XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
-                     ULONG PalOutType,
-                     ULONG cPal,
-                     ULONG *OutPal)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-HANDLE STDCALL
-XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
 
 /*
  * @unimplemented

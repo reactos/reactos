@@ -536,7 +536,16 @@ SwapBuffers@4
 TextOutA@20
 TextOutW@20
 TranslateCharsetInfo@12
-
+UnloadNetworkFonts@4
+UnrealizeObject@4
+UpdateColors@4
+UpdateICMRegKeyA@16
+UpdateICMRegKeyW@16
+WidenPath@4
+XFORMOBJ_bApplyXform@20=NtGdiXFORMOBJ_bApplyXform@20
+XFORMOBJ_iGetXform@8=NtGdiXFORMOBJ_iGetXform@8
+XLATEOBJ_cGetPalette@16=NtGdiXLATEOBJ_cGetPalette@16
+XLATEOBJ_hGetColorTransform@4=NtGdiXLATEOBJ_hGetColorTransform@4
 
 
 ClearBitmapAttributes@8
@@ -605,17 +614,6 @@ GetTextExtentExPointWPri@28
 GetTextExtentPoint32A@16
 SetBitmapAttributes@8
 SetBrushAttributes@8
-UnrealizeObject@4
-UnloadNetworkFonts@4
-UpdateColors@4
-UpdateICMRegKeyA@16
-UpdateICMRegKeyA@16
-UpdateICMRegKeyW@16
-WidenPath@4
-XFORMOBJ_bApplyXform@20
-XFORMOBJ_iGetXform@8
-XLATEOBJ_cGetPalette@16
-XLATEOBJ_hGetColorTransform@4
 XLATEOBJ_iXlate@8
 XLATEOBJ_piVector@4
 bInitSystemAndFontsDirectoriesW@8
