@@ -110,7 +110,7 @@
 			<regname>ReactOS Build Environment 0.3.8</regname>
 			<version>0.3.8</version>
 			<description>Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.</description>
-			<location>http://www.colinfinck.de/pphlogger/dlcount.php?id=reactos&url=files/RosBE-Windows/RosBE-0.3.8.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-0.3.8.exe</location>
 		</application>
 		<application name="MinGW">
 			<regname>MinGW 5.1.3</regname>
