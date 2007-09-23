@@ -1,0 +1,37 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+IDD_DOWNLOAD DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Download..."
+FONT 8, "MS Shell Dlg"
+{
+  CONTROL "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER|PBS_SMOOTH,10,10,200,12
+  LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
+  PUSHBUTTON "Cancel", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  IDS_WINDOW_TITLE 		"Download ! - ReactOS Downloader"
+  IDS_WELCOME_TITLE		"Benvenuto al ReactOS Downloader"
+  IDS_WELCOME 			"Scegli una categoria a sinistra. Questa è la versione 1.0."
+  IDS_NO_APP_TITLE		"Nessuna applicazione selezionata"
+  IDS_NO_APP	  		"Scegli una Applicazione prima di premere il bottone di download, se serve assistenza clicca sul punto di domanda nell'angolo in alto a destra."
+  IDS_UPDATE_TITLE 		"Aggiorna"
+  IDS_UPDATE			"Funzione non ancora implementata."
+  IDS_HELP_TITLE 		"Aiuto"
+  IDS_HELP			"Scegli una categoria a sinistra, poi scegli una applicazione e clicca il bottone download. Per aggiornare le informazioni sulla applicazione clicca il bottone accanto a quello di aiuto."
+  IDS_NO_APPS			"Non ci sono ancora applicazioni in questa categoria. Puoi aiutare aggiungendone altre."
+  IDS_CHOOSE_APP		"Scegli una applicazione."
+  IDS_CHOOSE_SUB		"Scegli una sottocategoria."
+  IDS_CHOOSE_CATEGORY		"Scegli una categoria."
+  IDS_CHOOSE_BOTH		"Scegli una sottocategoria o una applicazione."
+  IDS_XMLERROR_1		"File xml non trovato !"
+  IDS_XMLERROR_2		"Impossibile trattare il contenuto del file xml !"
+  IDS_DOWNLOAD_ERROR		"Download del file impossibile.\nVerifica la connessione a Internet."
+  IDS_VERSION			"Versione: "
+  IDS_LICENCE			"Licenza: "
+  IDS_MAINTAINER		"Manutentore: "
+  IDS_APPS_TITLE		"Applications"
+  IDS_CATS_TITLE		"Categories"
+END

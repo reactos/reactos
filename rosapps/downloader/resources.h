@@ -42,6 +42,9 @@
 #define IDS_VERSION		17
 #define IDS_LICENCE		18
 #define IDS_MAINTAINER		19
+#define IDS_APPS_TITLE    20
+#define IDS_CATS_TITLE    21
+
 
 #define STRING_COUNT		20
 #define	MAX_STRING_LENGHT	0x100

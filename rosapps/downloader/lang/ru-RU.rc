@@ -1,0 +1,39 @@
+//Russian language file. (Dmitry Chapyshev, 2007.06.21)
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_DOWNLOAD DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Загрузка..."
+FONT 8, "MS Shell Dlg"
+{
+  CONTROL "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER|PBS_SMOOTH,10,10,200,12
+  LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
+  PUSHBUTTON "Отмена", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  IDS_WINDOW_TITLE 		"Скачать! - ReactOS Downloader"
+  IDS_WELCOME_TITLE		"Добро пожаловать в ReactOS Downloader"
+  IDS_WELCOME 			"Пожалуйста выберите категорию справа. Версия 1.0."
+  IDS_NO_APP_TITLE		"Приложение не выбрано"
+  IDS_NO_APP	  		"Пожалуйста, выберите приложение прежде, чем нажать кнопку загрузки. Если вам нужна справка, то нажмите кнопку со знаком вопроса в верхнем правом углу."
+  IDS_UPDATE_TITLE 		"Обновить"
+  IDS_UPDATE			"Извените, данная возможность на данным момент недоступна."
+  IDS_HELP_TITLE 		"Справка"
+  IDS_HELP			"Выберите категорию слева, затем выберите приложение и нажмите кнопку загрузки. Для получения информации об обновлениях нажмите кнопку рядом с кнопкой справки."
+  IDS_NO_APPS			"Извените, на данный момент в этой категории приложений нет, но вы можете помочь добавить их."
+  IDS_CHOOSE_APP		"Пожалуйста выберите приложение."
+  IDS_CHOOSE_SUB		"Пожалуйста выберите подкатегорию."
+  IDS_CHOOSE_CATEGORY		"Пожалуйста выберите категорию."
+  IDS_CHOOSE_BOTH		"Пожалуйста выберите подкатегорию или приложение."
+  IDS_XMLERROR_1		"Не удалось найти xml-файл!"
+  IDS_XMLERROR_2		"Не удалось обработать xml-файл!"
+  IDS_DOWNLOAD_ERROR		"Не удается загрузить файл.\nПожалуйста проверьте ваше подключение к интернет."
+  IDS_VERSION			"Версия: "
+  IDS_LICENCE			"Лицензия: "
+  IDS_MAINTAINER		"Производитель: "
+  IDS_APPS_TITLE		"Applications"
+  IDS_CATS_TITLE		"Categories"
+END

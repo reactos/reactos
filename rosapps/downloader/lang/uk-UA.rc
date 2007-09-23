@@ -1,0 +1,45 @@
+/*
+ * PROJECT:     ReactOS Downloader
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        rosapps/downloader/translations/uk.rc
+ * PURPOSE:     Ukraianian Language File for Downloader
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_DOWNLOAD DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Завантаження..."
+FONT 8, "MS Shell Dlg"
+{
+  CONTROL "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER|PBS_SMOOTH,10,10,200,12
+  LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
+  PUSHBUTTON "Скасувати", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  IDS_WINDOW_TITLE 		"Завантажити ! - Завантажувач ReactOS"
+  IDS_WELCOME_TITLE		"Ласкаво просимо у Завантажувач ReactOS"
+  IDS_WELCOME 			"Будь ласка виберіть категорію зліва. Це версія 1.0."
+  IDS_NO_APP_TITLE		"Додаток не вибраний"
+  IDS_NO_APP	  		"Будь ласка, виберіть додаток перш ніж натиснути кнопку завантаження. Якщо Вам потрібна допомога, натисніть кнопку зі знаком питання у верхньому правому кутку."
+  IDS_UPDATE_TITLE 		"Оновити"
+  IDS_UPDATE			"Вибачте, дана можливість ще недоступна."
+  IDS_HELP_TITLE 		"Довідка"
+  IDS_HELP			"Виберіть категорію зліва, потім виберіть додаток і натисніть кнопку завантаження. Для отримання інформації про оновлення натисніть кнопку поряд з кнопкою довідки."
+  IDS_NO_APPS			"Вибачте, в цій категорії ще немає додатків. Ви можете допомогти і додати більше додатків."
+  IDS_CHOOSE_APP		"Будь ласка виберіть додаток."
+  IDS_CHOOSE_SUB		"Будь ласка виберіть підкатегорію."
+  IDS_CHOOSE_CATEGORY		"Будь ласка виберіть категорію."
+  IDS_CHOOSE_BOTH		"Будь ласка виберіть підкатегорію або додаток."
+  IDS_XMLERROR_1		"Не вдалося знайти файл xml !"
+  IDS_XMLERROR_2		"Не вдалося обробити файл xml !"
+  IDS_DOWNLOAD_ERROR		"Неможливо завантажити файл.\nБудь ласка перевірте ваше інтернет-з'єднання."
+  IDS_VERSION			"Версія: "
+  IDS_LICENCE			"Ліцензія: "
+  IDS_MAINTAINER		"Виробник: "
+  IDS_APPS_TITLE		"Applications"
+  IDS_CATS_TITLE		"Categories"
+END

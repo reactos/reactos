@@ -1,0 +1,37 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDD_DOWNLOAD DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Descargar..."
+FONT 8, "MS Shell Dlg"
+{
+  CONTROL "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER|PBS_SMOOTH,10,10,200,12
+  LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
+  PUSHBUTTON "Cancel", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  IDS_WINDOW_TITLE 		"¡Descargar! - Descargador de ReactOS"
+  IDS_WELCOME_TITLE		"Bienvenido al descargador de ReactOS"
+  IDS_WELCOME 			"Por favor selecciona una categoría de la izquierda. Esta es la versión 1.0."
+  IDS_NO_APP_TITLE		"Ninguna aplicación seleccionada"
+  IDS_NO_APP	  		"Please select a Application before you click the download button, if you need assistance please click on the question mark button on the top right corner."
+  IDS_UPDATE_TITLE 		"Actualizar"
+  IDS_UPDATE			"Perdona esta característica no a sido implementada todavía."
+  IDS_HELP_TITLE 		"Ayuda"
+  IDS_HELP			"Selecciona una categoría de la izquierda, entonces selecciona una aplicación y pulda el botón de descargar. Para actualizar la información de la aplicación pulsa el botón junto al botón de ayuda."
+  IDS_NO_APPS			"Perdón, aun no hay ninguna aplicación en esta categoría. Puedes ayudar y añadir más aplicaciones."
+  IDS_CHOOSE_APP		"Por favor selecciona una aplicación."
+  IDS_CHOOSE_SUB		"Por favor selecciona una subcategoría."
+  IDS_CHOOSE_CATEGORY		"Por favor selecciona una categoría."
+  IDS_CHOOSE_BOTH		"Por favor selecciona una subcategoria o una aplicación."
+  IDS_XMLERROR_1		"¡No se a encontrado el archivo xml!"
+  IDS_XMLERROR_2		"¡No se ha podido analizar el archivo xml!"
+  IDS_DOWNLOAD_ERROR		"Imposible descargar el archivo.\nPor favor verifica tu conexión a internet."
+  IDS_VERSION			"Version: "
+  IDS_LICENCE			"Licence: "
+  IDS_MAINTAINER		"Maintainer: "
+  IDS_APPS_TITLE		"Applications"
+  IDS_CATS_TITLE		"Categories"
+END
