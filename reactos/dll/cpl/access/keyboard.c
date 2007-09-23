@@ -547,7 +547,7 @@ ToggleKeysDlgProc(HWND hwndDlg,
 
             memcpy(&pGlobalData->oldToggleKeys,
                    &pGlobalData->toggleKeys,
-                   sizeof(STICKYKEYS));
+                   sizeof(TOGGLEKEYS));
 
             CheckDlgButton(hwndDlg,
                            IDC_TOGGLE_ACTIVATE_CHECK,
