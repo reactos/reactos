@@ -99,8 +99,9 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Son et périphériques audio"
     IDS_CPLDESCRIPTION "Change le modèle de sons de votre ordinateur, ou configure les paramètres de vos hauts-parleurs et de vos périphériques d'enregistrement."
-    IDS_NO_SOUND "(None)"
+    IDS_NO_SOUND "(Aucun)"
 END
+
 
 
 

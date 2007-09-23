@@ -43,11 +43,11 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Gras",IDC_BOLD,"Button",BS_AUTOCHECKBOX | 
                     BS_MULTILINE | WS_TABSTOP,247,134,46,10
-    CTEXT           "Matrix ScreenSaver www.catch22.org.uk",IDC_ABOUT,140,
+    CTEXT           "Écran de veille Matrix www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_DESCRIPTION         "Matrix ScreenSaver"
+    IDS_DESCRIPTION         "Écran de veille Matrix"
 END

@@ -1,0 +1,8 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Cylinders fractal"
+    IDS_TITLE       "Informatie"
+    IDS_TEXT        "Cylinders fractal door unC0Rr.\nSpeciaal voor ReactOS."
+END
