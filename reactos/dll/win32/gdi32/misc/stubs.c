@@ -20,6 +20,45 @@
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+TranslateCharsetInfo(DWORD * lpSrc,
+                     LPCHARSETINFO lpCs,
+                     DWORD dwFlags)
+{
+    /* FIXME share memory */
+    return NtGdiTranslateCharsetInfo(lpSrc, lpCs, dwFlags );
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+StretchDIBits(HDC hdc,
+              int XDest,
+              int YDest,
+              int nDestWidth,
+              int nDestHeight,
+              int XSrc,
+              int YSrc,
+              int nSrcWidth,
+              int nSrcHeight,
+              CONST VOID *lpBits,
+              CONST BITMAPINFO *lpBitsInfo,
+              UINT iUsage,
+              DWORD dwRop)
+
+{
+    /* FIXME share memory */
+    return NtGdiStretchDIBits(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc, 
+                              nSrcWidth, nSrcHeight, lpBits, lpBitsInfo, iUsage, dwRop);
+}
+
 /*
  * @unimplemented
  */
@@ -1832,15 +1871,13 @@ SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int 
 STDCALL
 StartFormPage(HDC hdc)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return StartPage(hdc);
 }
 
 /*

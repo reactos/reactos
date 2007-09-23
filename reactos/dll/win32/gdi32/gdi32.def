@@ -436,7 +436,6 @@ PolyDraw@16
 PolyPatBlt@20
 PolyPolygon@16
 PolyPolyline@16
-
 PolyTextOutA@12
 PolyTextOutW@12
 Polygon@12
@@ -527,6 +526,16 @@ SetWindowOrgEx@16
 SetWorldTransform@8
 StartDocA@8
 StartDocW@8
+StartFormPage@4
+StartPage@4
+StretchBlt@44
+StretchDIBits@52
+StrokeAndFillPath@4
+StrokePath@4
+SwapBuffers@4
+TextOutA@20
+TextOutW@20
+TranslateCharsetInfo@12
 
 
 
@@ -596,16 +605,6 @@ GetTextExtentExPointWPri@28
 GetTextExtentPoint32A@16
 SetBitmapAttributes@8
 SetBrushAttributes@8
-StartFormPage@4
-StartPage@4
-StretchBlt@44
-StretchDIBits@52=NtGdiStretchDIBits@52
-StrokeAndFillPath@4
-StrokePath@4
-SwapBuffers@4
-TextOutA@20
-TextOutW@20
-TranslateCharsetInfo@12=NtGdiTranslateCharsetInfo@12
 UnrealizeObject@4
 UnloadNetworkFonts@4
 UpdateColors@4
