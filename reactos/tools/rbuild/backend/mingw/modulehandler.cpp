@@ -1364,6 +1364,7 @@ MingwModuleHandler::GenerateWidlCommands (
 void
 MingwModuleHandler::GenerateCommands (
 	const CompilationUnit& compilationUnit,
+	const string& extraDependencies,
 	const string& cc,
 	const string& cppc,
 	const string& cflagsMacro,
@@ -1376,7 +1377,7 @@ MingwModuleHandler::GenerateCommands (
 	if ( extension == ".c" || extension == ".C" )
 	{
 		GenerateGccCommand ( sourceFile,
-		                     GetCompilationUnitDependencies ( compilationUnit ),
+		                     GetCompilationUnitDependencies ( compilationUnit ) + extraDependencies,
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1386,7 +1387,7 @@ MingwModuleHandler::GenerateCommands (
 	          extension == ".cxx" || extension == ".CXX" )
 	{
 		GenerateGccCommand ( sourceFile,
-		                     GetCompilationUnitDependencies ( compilationUnit ),
+		                     GetCompilationUnitDependencies ( compilationUnit ) + extraDependencies,
 		                     cppc,
 		                     cflagsMacro );
 		return;
@@ -1414,7 +1415,7 @@ MingwModuleHandler::GenerateCommands (
 	{
 		GenerateWinebuildCommands ( sourceFile );
 		GenerateGccCommand ( GetActualSourceFilename ( sourceFile ),
-		                     "",
+		                     extraDependencies,
 		                     cc,
 		                     cflagsMacro );
 		return;
@@ -1696,11 +1697,24 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& widlflagsMacro )
 {
 	size_t i;
+	string moduleDependencies;
 
 	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
 	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
+		CompilationUnit& compilationUnit = *compilationUnits[i];
+		const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), NULL );
+		if ( GetExtension ( *objectFilename ) == ".h" )
+		{
+			moduleDependencies = ssprintf ( " $(%s_HEADERS)", module.name.c_str () );
+			break;
+		}
+	}
+
+	for ( i = 0; i < compilationUnits.size (); i++ )
+	{
 		GenerateCommands ( *compilationUnits[i],
+		                   moduleDependencies,
 		                   cc,
 		                   cppc,
 		                   cflagsMacro,
@@ -1728,6 +1742,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	for ( i = 0; i < sourceCompilationUnits.size (); i++ )
 	{
 		GenerateCommands ( *sourceCompilationUnits[i],
+		                   moduleDependencies,
 		                   cc,
 		                   cppc,
 		                   cflagsMacro,

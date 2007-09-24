@@ -174,6 +174,7 @@ private:
 	void GenerateWidlCommands ( const CompilationUnit& compilationUnit,
 	                            const std::string& widlflagsMacro );
 	void GenerateCommands ( const CompilationUnit& compilationUnit,
+	                        const std::string& extraDependencies,
 	                        const std::string& cc,
 	                        const std::string& cppc,
 	                        const std::string& cflagsMacro,
