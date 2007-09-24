@@ -95,8 +95,8 @@ IoBuildPartialMdl(IN PMDL SourceMdl,
                   IN PVOID VirtualAddress,
                   IN ULONG Length)
 {
-    PPFN_TYPE TargetPages = (PPFN_TYPE)(TargetMdl + 1);
-    PPFN_TYPE SourcePages = (PPFN_TYPE)(SourceMdl + 1);
+    PPFN_NUMBER TargetPages = (PPFN_NUMBER)(TargetMdl + 1);
+    PPFN_NUMBER SourcePages = (PPFN_NUMBER)(SourceMdl + 1);
     ULONG Offset;
 
     /* Calculate the offset */
@@ -131,7 +131,7 @@ IoBuildPartialMdl(IN PMDL SourceMdl,
     Offset = ((ULONG_PTR)TargetMdl->StartVa - (ULONG_PTR)SourceMdl->StartVa) >>
              PAGE_SHIFT;
     SourcePages += Offset;
-    RtlCopyMemory(TargetPages, SourcePages, Length * sizeof(PFN_TYPE));
+    RtlCopyMemory(TargetPages, SourcePages, Length * sizeof(PFN_NUMBER));
 }
 
 /*

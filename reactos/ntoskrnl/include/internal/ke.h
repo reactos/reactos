@@ -941,6 +941,18 @@ KeDisableInterrupts(
     VOID
 );
 
+VOID
+FASTCALL
+KeAcquireQueuedSpinLockAtDpcLevel(
+    IN OUT PKSPIN_LOCK_QUEUE LockQueue
+);
+
+VOID
+FASTCALL
+KeReleaseQueuedSpinLockFromDpcLevel(
+    IN OUT PKSPIN_LOCK_QUEUE LockQueue
+);
+
 #include "ke_x.h"
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

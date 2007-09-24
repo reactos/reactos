@@ -3460,6 +3460,21 @@ IoVerifyVolume (
     IN BOOLEAN          AllowRawMount
 );
 
+NTHALAPI
+KIRQL
+FASTCALL
+KeAcquireQueuedSpinLock (
+    IN KSPIN_LOCK_QUEUE_NUMBER Number
+);
+
+NTHALAPI
+VOID
+FASTCALL
+KeReleaseQueuedSpinLock (
+    IN KSPIN_LOCK_QUEUE_NUMBER Number,
+    IN KIRQL OldIrql
+);
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -3885,6 +3900,15 @@ RtlCaptureStackBackTrace (
     IN ULONG FramesToCapture,
     OUT PVOID *BackTrace,
     OUT PULONG BackTraceHash OPTIONAL
+);
+
+NTSYSAPI
+SIZE_T
+NTAPI
+RtlCompareMemoryUlong (
+    PVOID Source,
+    SIZE_T Length,
+    ULONG Pattern
 );
 
 NTSYSAPI

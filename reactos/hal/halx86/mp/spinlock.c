@@ -170,7 +170,7 @@ KeReleaseInStackQueuedSpinLock(
  */
 KIRQL
 FASTCALL
-KeAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
+KeAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER Number)
 {
    UNIMPLEMENTED;
    return 0;
@@ -192,7 +192,7 @@ KeAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
  */
 VOID
 FASTCALL
-KeReleaseQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle,
+KeReleaseQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER Number,
                         IN KIRQL OldIrql)
 {
    UNIMPLEMENTED;

@@ -180,7 +180,8 @@ MmDeleteTeb(PEPROCESS Process,
 
 PVOID
 STDCALL
-MmCreateKernelStack(BOOLEAN GuiStack)
+MmCreateKernelStack(BOOLEAN GuiStack,
+                    UCHAR Node)
 {
     PMEMORY_AREA StackArea;
     ULONG i;

@@ -20,6 +20,12 @@
     ((Mask) & 48)
 
 //
+// Set Process Flag routines
+//
+#define PspSetProcessFlag(Process, Flag) \
+ InterlockedOr((PLONG)&Process->Flags, Flag)
+
+//
 // Cross Thread Flag routines
 //
 #define PspSetCrossThreadFlag(Thread, Flag)                 \

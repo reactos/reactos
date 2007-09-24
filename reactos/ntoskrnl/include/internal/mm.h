@@ -802,7 +802,7 @@ MmInitializePageOp(VOID);
 
 PVOID
 NTAPI
-MmCreateKernelStack(BOOLEAN GuiStack);
+MmCreateKernelStack(BOOLEAN GuiStack, UCHAR Node);
 
 VOID
 NTAPI

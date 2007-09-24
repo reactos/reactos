@@ -19,9 +19,9 @@
 
 NTSTATUS STDCALL
 NtFlushVirtualMemory(IN HANDLE ProcessHandle,
-                     IN PVOID BaseAddress,
-                     IN ULONG NumberOfBytesToFlush,
-                     OUT PULONG NumberOfBytesFlushed OPTIONAL)
+                     IN OUT PVOID *BaseAddress,
+                     IN OUT PSIZE_T NumberOfBytesToFlush,
+                     OUT PIO_STATUS_BLOCK IoStatusBlock)
 /*
  * FUNCTION: Flushes virtual memory to file
  * ARGUMENTS:

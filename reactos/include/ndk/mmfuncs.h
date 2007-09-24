@@ -133,9 +133,9 @@ NTSTATUS
 NTAPI
 NtFlushVirtualMemory(
     IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    IN ULONG NumberOfBytesToFlush,
-    OUT PULONG NumberOfBytesFlushed OPTIONAL
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T RegionSize,
+    OUT PIO_STATUS_BLOCK IoStatus
 );
 
 NTSTATUS

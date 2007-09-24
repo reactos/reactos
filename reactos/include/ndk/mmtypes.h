@@ -508,6 +508,22 @@ typedef struct _MM_AVL_TABLE
 } MM_AVL_TABLE, *PMM_AVL_TABLE;
 
 //
+// Actual Section Object
+//
+typedef struct _SECTION
+{
+    MMADDRESS_NODE Address;
+    PSEGMENT Segment;
+    LARGE_INTEGER SizeOfSection;
+    union
+    {
+        ULONG LongFlags;
+        MMSECTION_FLAGS Flags;
+    } u;
+    ULONG InitialPageProtection;
+} SECTION, *PSECTION;
+
+//
 // Memory Manager Working Set Structures
 //
 typedef struct _MMWSLENTRY
@@ -567,11 +583,14 @@ typedef struct _MMSUPPORT_FLAGS
     ULONG BeingTrimmed:1;
     ULONG SessionLeader:1;
     ULONG TrimHard:1;
-    ULONG WorkingSetHard:1;
-    ULONG AddressSpaceBeingDeleted :1;
-    ULONG Available:10;
-    ULONG AllowWorkingSetAdjustment:8;
+    ULONG MaximumWorkingSetHard:1;
+    ULONG ForceTrim:1;
+    ULONG MinimumworkingSetHard:1;
+    ULONG Available0:1;
     ULONG MemoryPriority:8;
+    ULONG GrowWsleHash:1;
+    ULONG AcquiredUnsafe:1;
+    ULONG Available:14;
 } MMSUPPORT_FLAGS, *PMMSUPPORT_FLAGS;
 
 //

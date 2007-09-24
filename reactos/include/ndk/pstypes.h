@@ -191,6 +191,7 @@ Author:
 #define STA_LPC_RECEIVED_MSG_ID_VALID_BIT       0x1
 #define STA_LPC_EXIT_THREAD_CALLED_BIT          0x2
 #define STA_ADDRESS_SPACE_OWNER_BIT             0x4
+#define STA_OWNS_WORKING_SET_BITS               0x1F8
 #endif
 
 #define TLS_EXPANSION_SLOTS                     1024

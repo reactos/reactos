@@ -580,7 +580,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
 
         /* Allocate the DPC Stack */
-        DpcStack = MmCreateKernelStack(FALSE);
+        DpcStack = MmCreateKernelStack(FALSE, 0);
         if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
         Prcb->DpcStack = (PVOID)((ULONG_PTR)DpcStack + KERNEL_STACK_SIZE);
 

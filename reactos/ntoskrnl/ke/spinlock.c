@@ -19,7 +19,7 @@
 
 VOID
 FASTCALL
-KeAcquireQueuedSpinLockAtDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
+KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
 {
 #ifdef CONFIG_SMP
     PKSPIN_LOCK_QUEUE Prev;
@@ -49,7 +49,7 @@ KeAcquireQueuedSpinLockAtDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
 
 VOID
 FASTCALL
-KeReleaseQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
+KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
 {
 #ifdef CONFIG_SMP
     KSPIN_LOCK LockVal;

@@ -113,49 +113,8 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
                          IN POOL_TYPE PoolType,
                          IN ULONG Amount)
 {
-    PEPROCESS_QUOTA_BLOCK QuotaBlock;
-    ULONG NewUsageSize;
-    ULONG NewMaxQuota;
-
-    /* Get current Quota Block */
-    QuotaBlock = Process->QuotaBlock;
-
-    /* Quota Operations are not to be done on the SYSTEM Process */
-    if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
-
-    /* New Size in use */
-    NewUsageSize = QuotaBlock->QuotaEntry[PoolType].Usage + Amount;
-
-    /* Does this size respect the quota? */
-    if (NewUsageSize > QuotaBlock->QuotaEntry[PoolType].Limit)
-    {
-        /* It doesn't, so keep raising the Quota */
-        while (MiRaisePoolQuota(PoolType,
-               QuotaBlock->QuotaEntry[PoolType].Limit,
-               &NewMaxQuota))
-        {
-            /* Save new Maximum Quota */
-            QuotaBlock->QuotaEntry[PoolType].Limit = NewMaxQuota;
-
-            /* See if the new Maximum Quota fulfills our need */
-            if (NewUsageSize <= NewMaxQuota) goto QuotaChanged;
-        }
-
-        return STATUS_QUOTA_EXCEEDED;
-    }
-
-QuotaChanged:
-    /* Save new Usage */
-    QuotaBlock->QuotaEntry[PoolType].Usage = NewUsageSize;
-
-    /* Is this a new peak? */
-    if (NewUsageSize > QuotaBlock->QuotaEntry[PoolType].Peak)
-    {
-        QuotaBlock->QuotaEntry[PoolType].Peak = NewUsageSize;
-    }
-
-    /* All went well */
-    return STATUS_SUCCESS;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*

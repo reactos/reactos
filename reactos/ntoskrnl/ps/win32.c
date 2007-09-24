@@ -52,7 +52,8 @@ PsConvertToGuiThread(VOID)
     if (!Thread->Tcb.LargeStack)
     {
         /* We don't create one */
-        NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE) + KERNEL_LARGE_STACK_SIZE;
+        NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE, 0) +
+                    KERNEL_LARGE_STACK_SIZE;
         if (!NewStack)
         {
             /* Panic in user-mode */

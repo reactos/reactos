@@ -4743,6 +4743,8 @@ typedef ULONG PFN_COUNT;
 typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
+#define FLUSH_MULTIPLE_MAXIMUM 32
+
 typedef enum _MM_SYSTEM_SIZE {
   MmSmallSystem,
   MmMediumSystem,
@@ -8898,6 +8900,11 @@ KeEnterCriticalRegion(
  *   IN BOOLEAN  DmaOperation)
  */
 #define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
+
+#define ExAcquireSpinLock(Lock, OldIrql) KeAcquireSpinLock((Lock), (OldIrql))
+#define ExReleaseSpinLock(Lock, OldIrql) KeReleaseSpinLock((Lock), (OldIrql))
+#define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
+#define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
 
 NTHALAPI
 VOID

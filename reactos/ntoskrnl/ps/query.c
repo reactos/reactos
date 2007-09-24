@@ -26,18 +26,18 @@ NTAPI
 PsReferenceProcessFilePointer(IN PEPROCESS Process,
                               OUT PFILE_OBJECT *FileObject)
 {
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PAGED_CODE();
 
     /* Lock the process */
     ExAcquireRundownProtection(&Process->RundownProtect);
 
     /* Get the section */
-    Section = (PROS_SECTION_OBJECT)Process->SectionObject;
+    Section = Process->SectionObject;
     if (Section)
     {
         /* Get the file object and reference it */
-        *FileObject = MmGetFileObjectForSection(Section);
+        *FileObject = MmGetFileObjectForSection((PVOID)Section);
         ObReferenceObject(*FileObject);
     }
 
