@@ -500,7 +500,7 @@ MingwModuleHandler::GetObjectFilename (
 		else if ( module.type == RpcClient )
 			newExtension = "_c.o";
 		else
-			return NULL;
+			newExtension = ".h";
 	}
 	else
 		newExtension = ".o";
@@ -889,6 +889,7 @@ MingwModuleHandler::GenerateObjectMacros (
 	size_t i;
 
 	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
+	vector<const FileLocation *> headers;
 	if ( compilationUnits.size () > 0 )
 	{
 		for ( i = 0; i < compilationUnits.size (); i++ )
@@ -914,7 +915,9 @@ MingwModuleHandler::GenerateObjectMacros (
 			if ( !compilationUnit.IsFirstFile () )
 			{
 				const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), NULL );
-				if ( objectFilename )
+				if ( GetExtension ( *objectFilename ) == ".h" )
+					headers.push_back ( objectFilename );
+				else
 					fprintf (
 						fMakefile,
 						"%s%s",
@@ -922,6 +925,21 @@ MingwModuleHandler::GenerateObjectMacros (
 						backend->GetFullName ( *objectFilename ).c_str () );
 			}
 		}
+		fprintf ( fMakefile, "\n" );
+	}
+	if ( headers.size () > 0 )
+	{
+		fprintf (
+			fMakefile,
+			"%s_HEADERS %s",
+			module.name.c_str (),
+			assignmentOperation );
+		for ( i = 0; i < headers.size (); i++ )
+			fprintf (
+				fMakefile,
+				"%s%s",
+				( i%10 == 9 ? " \\\n\t" : " " ),
+				backend->GetFullName ( *headers[i] ).c_str () );
 		fprintf ( fMakefile, "\n" );
 	}
 
@@ -2170,7 +2188,7 @@ MingwModuleHandler::GetDefaultDependencies (
 	if ( module.type != BuildTool
 		&& module.name != "psdk" )
 
-		dependencies.push_back ( "$(PSDK_TARGET)" );
+		dependencies.push_back ( "$(PSDK_TARGET) $(PSDK_HEADERS)" );
 }
 
 void
