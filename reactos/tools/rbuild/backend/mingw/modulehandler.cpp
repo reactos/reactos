@@ -2188,7 +2188,7 @@ MingwModuleHandler::GetDefaultDependencies (
 	if ( module.type != BuildTool
 		&& module.name != "psdk" )
 
-		dependencies.push_back ( "$(PSDK_TARGET) $(PSDK_HEADERS)" );
+		dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
 }
 
 void
