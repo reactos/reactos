@@ -251,9 +251,13 @@ Module::Module ( const Project& project,
 
 	xmlbuildFile = Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename () );
 
+	const XMLAttribute* att = moduleNode.GetAttribute ( "name", true );
+	assert(att);
+	name = att->value;
+
 	enabled = true;
 
-	const XMLAttribute* att = moduleNode.GetAttribute ( "if", false );
+	att = moduleNode.GetAttribute ( "if", false );
 	if ( att != NULL )
 		enabled = GetBooleanValue ( project.ResolveProperties ( att->value ) );
 
@@ -261,9 +265,8 @@ Module::Module ( const Project& project,
 	if ( att != NULL )
 		enabled = !GetBooleanValue ( project.ResolveProperties ( att->value ) );
 
-	att = moduleNode.GetAttribute ( "name", true );
-	assert(att);
-	name = att->value;
+	if ( !enabled && project.configuration.Verbose )
+		printf("Module '%s' has been disabled.\n", name.c_str () );
 
 	att = moduleNode.GetAttribute ( "type", true );
 	assert(att);
@@ -483,6 +486,7 @@ Module::ProcessXML()
 {
 	if ( type == Alias )
 	{
+		aliasedModuleName = project.ResolveProperties ( aliasedModuleName );
 		if ( aliasedModuleName == name )
 		{
 			throw XMLInvalidBuildFileException (
@@ -491,7 +495,7 @@ Module::ProcessXML()
 				name.c_str() );
 		}
 		const Module* m = project.LocateModule ( aliasedModuleName );
-		if ( !m )
+		if ( !m && enabled )
 		{
 			throw XMLInvalidBuildFileException (
 				node.location,
@@ -1602,7 +1606,7 @@ Property::Property ( const XMLElement& node_,
 
 	att = node_.GetAttribute ( "name", true );
 	assert(att);
-	name = att->value;
+	name = project.ResolveProperties ( att->value );
 
 	att = node_.GetAttribute ( "value", true );
 	assert(att);
