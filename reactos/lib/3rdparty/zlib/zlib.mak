@@ -33,7 +33,7 @@ ZLIB_HOST_OBJECTS = \
 	$(addprefix $(INTERMEDIATE_), $(ZLIB_HOST_SOURCES:.c=.host.o))
 
 ZLIB_HOST_CFLAGS = -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
-  -Wstrict-prototypes -Wmissing-prototypes
+  -Wstrict-prototypes -Wmissing-prototypes $(TOOLS_CPPFLAGS)
 
 $(ZLIB_HOST_TARGET): $(ZLIB_HOST_OBJECTS) | $(ZLIB_OUT)
 	$(ECHO_AR)

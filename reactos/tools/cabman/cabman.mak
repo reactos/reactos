@@ -29,7 +29,7 @@ CABMAN_SOURCES = $(addprefix $(CABMAN_BASE_), \
 CABMAN_OBJECTS = \
   $(addprefix $(INTERMEDIATE_), $(CABMAN_SOURCES:.cxx=.o))
 
-CABMAN_HOST_CXXFLAGS = -Iinclude/reactos -Ilib/3rdparty/zlib $(TOOLS_CXXFLAGS)
+CABMAN_HOST_CXXFLAGS = -Iinclude/reactos -Ilib/3rdparty/zlib $(TOOLS_CPPFLAGS)
 
 CABMAN_HOST_LIBS = $(ZLIB_HOST_TARGET)
 

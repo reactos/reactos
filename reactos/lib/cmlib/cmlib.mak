@@ -32,7 +32,7 @@ CMLIB_HOST_OBJECTS = \
 
 CMLIB_HOST_CFLAGS = -O3 -Wall -Wwrite-strings -Wpointer-arith \
   -I$(CMLIB_BASE) -Iinclude/reactos -Iinclude \
-  -DCMLIB_HOST
+  -DCMLIB_HOST $(HOST_CFLAGS)
 
 $(CMLIB_HOST_TARGET): $(CMLIB_HOST_OBJECTS) | $(CMLIB_OUT)
 	$(ECHO_AR)

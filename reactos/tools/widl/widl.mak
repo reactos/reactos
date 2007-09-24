@@ -56,11 +56,11 @@ WIDL_SOURCES = $(addprefix $(WIDL_BASE_), \
 WIDL_OBJECTS = \
   $(addprefix $(INTERMEDIATE_), $(WIDL_SOURCES:.c=.o))
 
-WIDL_HOST_CFLAGS = $(TOOLS_CFLAGS) \
+WIDL_HOST_CFLAGS = \
 	-DINT16=SHORT -D__USE_W32API -DYYDEBUG=1 -D__REACTOS__=1 \
 	-I$(WIDL_BASE) -I$(WPP_BASE) \
 	-Iinclude/reactos/wine -Iinclude/reactos -Iinclude -Iinclude/psdk \
-	-I$(INTERMEDIATE_)include
+	-I$(INTERMEDIATE_)include $(TOOLS_CFLAGS)
 
 WIDL_HOST_LFLAGS = $(TOOLS_LFLAGS)
 

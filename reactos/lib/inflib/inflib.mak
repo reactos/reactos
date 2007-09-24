@@ -32,7 +32,7 @@ INFLIB_HOST_OBJECTS = \
 
 INFLIB_HOST_CFLAGS = -O3 -Wall -Wpointer-arith -Wconversion \
   -Wstrict-prototypes -Wmissing-prototypes -DINFLIB_HOST \
-  -Iinclude/reactos -Iinclude
+  -Iinclude/reactos -Iinclude $(HOST_CFLAGS)
 
 $(INFLIB_HOST_TARGET): $(INFLIB_HOST_OBJECTS) | $(INFLIB_OUT)
 	$(ECHO_AR)
