@@ -34,6 +34,10 @@
 		<xi:include href="regexpl/regexpl.rbuild" />
 	</directory>
 
+	<directory name="systeminfo">
+		<xi:include href="systeminfo/systeminfo.rbuild" />
+	</directory>
+
 	<directory name="tcat">
 		<xi:include href="tcat/cat.rbuild" />
 	</directory>
