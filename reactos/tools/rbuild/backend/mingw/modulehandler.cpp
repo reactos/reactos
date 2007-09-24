@@ -1971,12 +1971,13 @@ MingwModuleHandler::GenerateOtherMacros ()
 	}
 	else
 	{
-		globalCflags += " -nostdinc";
 		if ( module.cplusplus )
 		{
 			// HACK: use host headers when building C++
 			globalCflags += " $(HOST_CPPFLAGS)";
 		}
+		else
+			globalCflags += " -nostdinc";
 	}
 
 	// Always force disabling of sibling calls optimisation for GCC
