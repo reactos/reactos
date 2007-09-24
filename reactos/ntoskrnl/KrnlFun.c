@@ -12,8 +12,7 @@
 //  - CMOS Initialization and CMOS Spinlock.
 //
 // Global:
-//  - TODO: Complete the list of bufxies
-//  - Fix boot on VMWare.
+//  - TODO: Complete the list of bugfixes
 //  - Fix weird crash on boot with 0x867-0x872 EIP.
 //  - Fix trap.s AMD64 VMWare "Greatlord Issue".
 //  - Support SSE/MMX.
@@ -29,7 +28,7 @@
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |N|
 // | \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/      \/           | |
 // | BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES BUGFIXES   |F|
-// | KE => Enable new thread scheduler and ensure it works.                                               |E|
+// |                                                                                                      |E|
 // | KD/KDBG => Laptop has special version of ROS without these components. Commit in branch.             |B|
 // | KD => Implement KD64 6.0, compatible with WinDBG                                                     | |
 // | ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||      ||           |M|
