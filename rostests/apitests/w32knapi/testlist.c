@@ -17,6 +17,7 @@
 #include "ntgdi/NtGdiGetRandomRgn.c"
 #include "ntgdi/NtGdiSetBitmapBits.c"
 //#include "ntgdi/NtGdiSTROBJ_vEnumStart.c"
+#include "ntgdi/NtGdiGetDIBits.c"
 
 #include "ntuser/NtUserCountClipboardFormats.c"
 
@@ -40,6 +41,7 @@ TESTENTRY TestList[] =
 	{ L"NtGdiGetRandomRgn", Test_NtGdiGetRandomRgn },
 	{ L"NtGdiSetBitmapBits", Test_NtGdiSetBitmapBits },
 //	{ L"NtGdiSTROBJ_vEnumStart", Test_NtGdiSTROBJ_vEnumStart },
+	{ L"NtGdiGetDIBitsInternal", Test_NtGdiGetDIBitsInternal },
 
 	/* ntuser */
 	{ L"NtUserCountClipboardFormats", Test_NtUserCountClipboardFormats }
