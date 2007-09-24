@@ -282,7 +282,8 @@ IsGUIThread(
   {
     if(bConvert)
     {
-      if (NtUserGetThreadState(THREADSTATE_GETTHREADINFO)) return TRUE;
+      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
+      if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo) return TRUE;
       else
          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
