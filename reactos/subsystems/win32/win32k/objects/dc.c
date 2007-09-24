@@ -1491,7 +1491,7 @@ IntGdiGetDCState(HDC  hDC)
   newdc->hSelf = hnewdc;
   IntGdiCopyToSaveState( dc, newdc);
 
-  DCU_SyncDcAttrtoUser(newdc, -1);
+//  DCU_SyncDcAttrtoUser(newdc, -1);
   DC_UnlockDc( newdc );
   DC_UnlockDc( dc );
   return  hnewdc;
@@ -2145,7 +2145,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     default:
       break;
   }
-  DCU_SyncDcAttrtoUser(dc, -1);
+//  DCU_SyncDcAttrtoUser(dc, -1);
   DC_UnlockDc( dc );
   return objOrg;
 }
