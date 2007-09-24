@@ -269,6 +269,29 @@ EndTask(
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+IsGUIThread(
+    BOOL bConvert)
+{
+  PW32THREADINFO ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+  if (ti == NULL)
+  {
+    if(bConvert)
+    {
+      if (NtUserGetThreadState(THREADSTATE_GETTHREADINFO)) return TRUE;
+      else
+         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    }
+    return FALSE;
+  }
+  else
+    return TRUE;
+}
+
 PUSER_HANDLE_ENTRY
 FASTCALL
 GetUser32Handle(HANDLE handle)

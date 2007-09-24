@@ -544,18 +544,6 @@ GetRegisteredRawInputDevices(
  */
 BOOL
 STDCALL
-IsGUIThread(
-    BOOL bConvert)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 PrintWindow(
     HWND hwnd,
     HDC hdcBlt,
