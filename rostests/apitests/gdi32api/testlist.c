@@ -13,6 +13,7 @@
 #include "tests/GetClipRgn.c"
 #include "tests/GetObject.c"
 #include "tests/GetStockObject.c"
+#include "tests/GetDIBits.c"
 #include "tests/SelectObject.c"
 #include "tests/SetDCPenColor.c"
 #include "tests/SetSysColors.c"
@@ -30,6 +31,7 @@ TESTENTRY TestList[] =
 	{ L"GetClipRgn", Test_GetClipRgn },
 	{ L"GetObject", Test_GetObject },
 	{ L"GetStockObject", Test_GetStockObject },
+	{ L"GetDIBits", Test_GetDIBits },
 	{ L"SetSysColors", Test_SetSysColors },
 	{ L"SelectObject", Test_SelectObject },
 	{ L"SetDCPenColor", Test_SetDCPenColor },
