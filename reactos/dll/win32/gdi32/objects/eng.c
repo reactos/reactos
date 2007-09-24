@@ -19,6 +19,52 @@ EngAcquireSemaphore ( IN HSEMAPHORE hsem )
     RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)hsem);
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL 
+copy_my_glyphset( FD_GLYPHSET *dst_glyphset , FD_GLYPHSET * src_glyphset, ULONG Size)
+{
+    BOOL retValue = FALSE;
+
+    memcpy(src_glyphset, dst_glyphset, Size);
+    if (src_glyphset->cRuns == 0)
+    {
+        retValue = TRUE;
+    }
+
+    /* FIXME copy wrun */
+    return retValue;
+}
+
+FD_GLYPHSET* STDCALL
+EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
+{
+    FD_GLYPHSET * ntfd_glyphset;
+    FD_GLYPHSET * myfd_glyphset = NULL;
+
+    ntfd_glyphset = NtGdiEngComputeGlyphSet(nCodePage,nFirstChar,cChars);
+
+    if (!ntfd_glyphset)
+    {
+        if (ntfd_glyphset->cjThis)
+        {
+            myfd_glyphset = GlobalAlloc(0,ntfd_glyphset->cjThis);
+
+            if (!myfd_glyphset)
+            {
+                if (copy_my_glyphset(myfd_glyphset,ntfd_glyphset,ntfd_glyphset->cjThis) == FALSE)
+                {
+                    GlobalFree(myfd_glyphset);
+                    myfd_glyphset = NULL;
+                }
+            }
+        }
+    }
+    return myfd_glyphset;
+}
+
 /*
  * @implemented
  */
@@ -160,47 +206,20 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
   RtlLeaveCriticalSection( (PRTL_CRITICAL_SECTION) hsem);
 }
 
-BOOL 
-copy_my_glyphset( FD_GLYPHSET *dst_glyphset , FD_GLYPHSET * src_glyphset, ULONG Size)
-{
-    BOOL retValue = FALSE;
 
-    memcpy(src_glyphset, dst_glyphset, Size);
-    if (src_glyphset->cRuns == 0)
-    {
-        retValue = TRUE;
-    }
 
-    /* FIXME copy wrun */
-    return retValue;
-}
 
 /*
- * @unimplemented
+ * @implemented
  */
-FD_GLYPHSET* STDCALL
-EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars)
+INT
+STDCALL 
+EngWideCharToMultiByte( UINT CodePage,
+                        LPWSTR WideCharString,
+                        INT BytesInWideCharString,
+                        LPSTR MultiByteString,
+                        INT BytesInMultiByteString)
 {
-    FD_GLYPHSET * ntfd_glyphset;
-    FD_GLYPHSET * myfd_glyphset = NULL;
-
-    ntfd_glyphset = NtGdiEngComputeGlyphSet(nCodePage,nFirstChar,cChars);
-
-    if (!ntfd_glyphset)
-    {
-        if (ntfd_glyphset->cjThis)
-        {
-            myfd_glyphset = GlobalAlloc(0,ntfd_glyphset->cjThis);
-
-            if (!myfd_glyphset)
-            {
-                if (copy_my_glyphset(myfd_glyphset,ntfd_glyphset,ntfd_glyphset->cjThis) == FALSE)
-                {
-                    GlobalFree(myfd_glyphset);
-                    myfd_glyphset = NULL;
-                }
-            }
-        }
-    }
-    return myfd_glyphset;
+  return WideCharToMultiByte(CodePage, 0, WideCharString, (BytesInWideCharString/sizeof(WCHAR)),
+                             MultiByteString, BytesInMultiByteString, NULL, NULL);
 }

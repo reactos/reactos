@@ -2282,9 +2282,6 @@ CreateBitmap(INT  Width,
     return NtGdiCreateBitmap(Width, Height, Planes, BitsPixel, (LPBYTE) pUnsafeBits);
 }
 
-
-
-
 /*
  * @unimplemented
  */
@@ -2295,30 +2292,6 @@ EngGetDriverName(HDEV hdev)
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
-
-
-/*
- * @unimplemented
- */
-INT STDCALL 
-EngWideCharToMultiByte( UINT CodePage,
-                        LPWSTR WideCharString,
-                        INT BytesInWideCharString,
-                        LPSTR MultiByteString,
-                        INT BytesInMultiByteString)
-{
-  return WideCharToMultiByte(
-                         CodePage,
-                         0,
-                         WideCharString,
-                        (BytesInWideCharString/sizeof(WCHAR)), /* Bytes to (in WCHARs) */
-                         MultiByteString,
-                         BytesInMultiByteString,
-                         NULL,
-                         NULL);
-}
-
 
 /*
  * @unimplemented
