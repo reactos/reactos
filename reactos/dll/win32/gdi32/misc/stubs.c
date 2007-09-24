@@ -2296,30 +2296,6 @@ EngGetDriverName(HDEV hdev)
     return 0;
 }
 
-/*
- * @unimplemented
- * wrong info it is not Obsolete GDI Function as http://www.osronline.com/DDKx/graphics/gdioview_20tj.htm say
- */
-BOOL STDCALL
-EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo)
-{
-#if 0
-    BOOL retValue = FALSE;
-    DHPDEV Dhpdev;
-
-    if ((!hdev) && (!pEMFInfo))
-    {
-        if ((Dhpdev = NtGdiGetDhpdev(hdev)))
-        {
-            /* FIXME check if it support or if it is pEMFInfo we got */
-            /* FIXME copy the data from Dhpdev to pEMFInfo           */
-        }
-    }
-    return retValue;
-#else
-    return FALSE;
-#endif
-}
 
 
 /*

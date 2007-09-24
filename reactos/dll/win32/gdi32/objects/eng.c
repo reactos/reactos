@@ -43,10 +43,11 @@ VOID
 STDCALL
 EngDeleteSemaphore ( IN HSEMAPHORE hsem )
 {
- if (!hsem) return;
-
- RtlDeleteCriticalSection( (PRTL_CRITICAL_SECTION) hsem );
- RtlFreeHeap( GetProcessHeap(), 0, hsem );
+    if (hsem)
+    {
+        RtlDeleteCriticalSection( (PRTL_CRITICAL_SECTION) hsem );
+        RtlFreeHeap( GetProcessHeap(), 0, hsem );
+    }
 }
 
 /*

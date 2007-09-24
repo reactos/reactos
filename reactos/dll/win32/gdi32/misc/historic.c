@@ -20,6 +20,17 @@
  */
 BOOL
 STDCALL
+EngQueryEMFInfo(HDEV hdev,
+                EMFINFO *pEMFInfo)
+{
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
 GdiPlayDCScript(DWORD a0,
                 DWORD a1,
                 DWORD a2,
