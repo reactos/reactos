@@ -114,7 +114,7 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
                          IN ULONG Amount)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
