@@ -500,7 +500,7 @@ MingwModuleHandler::GetObjectFilename (
 		else if ( module.type == RpcClient )
 			newExtension = "_c.o";
 		else
-			newExtension = ".h";
+			return NULL;
 	}
 	else
 		newExtension = ".o";
@@ -913,11 +913,13 @@ MingwModuleHandler::GenerateObjectMacros (
 			CompilationUnit& compilationUnit = *compilationUnits[i];
 			if ( !compilationUnit.IsFirstFile () )
 			{
-				fprintf (
-					fMakefile,
-					"%s%s",
-					( i%10 == 9 ? " \\\n\t" : " " ),
-					backend->GetFullName ( *GetObjectFilename ( compilationUnit.GetFilename (), NULL ) ).c_str () );
+				const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), NULL );
+				if ( objectFilename )
+					fprintf (
+						fMakefile,
+						"%s%s",
+						( i%10 == 9 ? " \\\n\t" : " " ),
+						backend->GetFullName ( *objectFilename ).c_str () );
 			}
 		}
 		fprintf ( fMakefile, "\n" );
