@@ -386,7 +386,22 @@ MingwModuleHandler::GetImportLibraryDependency (
 {
 	string dep;
 	if ( ReferenceObjects ( importedModule ) )
+	{
+		const vector<CompilationUnit*>& compilationUnits = importedModule.non_if_data.compilationUnits;
+		size_t i;
+
 		dep = GetTargetMacro ( importedModule );
+		for ( i = 0; i < compilationUnits.size (); i++ )
+		{
+			CompilationUnit& compilationUnit = *compilationUnits[i];
+			const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), NULL );
+			if ( GetExtension ( *objectFilename ) == ".h" )
+			{
+				dep += ssprintf ( " $(%s_HEADERS)", importedModule.name.c_str () );
+				break;
+			}
+		}
+	}
 	else
 		dep = backend->GetFullName ( *GetImportLibraryFilename ( importedModule, NULL ) );
 	return dep;
