@@ -16,25 +16,17 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
     NTSTATUS Status;
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
-	AFD_DbgPrint(MID_TRACE,("Null Device\n"));
-	return STATUS_NO_SUCH_DEVICE;
+        AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+        return STATUS_NO_SUCH_DEVICE;
     }
 
-    Status = TdiOpenConnectionEndpointFile
-	( &FCB->TdiDeviceName,
-	  &FCB->Connection.Handle,
-	  &FCB->Connection.Object );
+    Status = TdiOpenConnectionEndpointFile(&FCB->TdiDeviceName,
+                                           &FCB->Connection.Handle,
+                                           &FCB->Connection.Object );
 
     if( NT_SUCCESS(Status) ) {
-	Status = TdiAssociateAddressFile
-	    ( FCB->AddressFile.Handle,
-	      FCB->Connection.Object );
-    }
-
-    if( !NT_SUCCESS(Status) ) {
-	TdiCloseDevice( &FCB->Connection.Handle,
-			FCB->Connection.Object );
-	RtlZeroMemory( &FCB->Connection, sizeof(FCB->Connection) );
+        Status = TdiAssociateAddressFile( FCB->AddressFile.Handle,
+                                          FCB->Connection.Object );
     }
 
     return Status;

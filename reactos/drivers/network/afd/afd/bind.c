@@ -14,29 +14,24 @@
 #include "debug.h"
 
 NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
 
     AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
-			    FCB->LocalAddress->Address[0].AddressType));
+                            FCB->LocalAddress->Address[0].AddressType));
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
-	AFD_DbgPrint(MID_TRACE,("Null Device\n"));
-	return STATUS_NO_SUCH_DEVICE;
+        AFD_DbgPrint(MID_TRACE,("Null Device\n"));
+        return STATUS_NO_SUCH_DEVICE;
+    }
+    if( !FCB->LocalAddress ) {
+        AFD_DbgPrint(MID_TRACE,("No local address\n"));
+        return STATUS_UNSUCCESSFUL;
     }
 
-    if( FCB->LocalAddress ) {
-	Status = TdiOpenAddressFile
-	    ( &FCB->TdiDeviceName,
-	      FCB->LocalAddress,
-	      &FCB->AddressFile.Handle,
-	      &FCB->AddressFile.Object );
-    }
-
-    if( !NT_SUCCESS(Status) ) {
-	TdiCloseDevice( &FCB->AddressFile.Handle,
-			FCB->AddressFile.Object );
-	RtlZeroMemory( &FCB->AddressFile, sizeof( FCB->AddressFile ) );
-    }
+    Status = TdiOpenAddressFile(&FCB->TdiDeviceName,
+                                FCB->LocalAddress,
+                                &FCB->AddressFile.Handle,
+                                &FCB->AddressFile.Object );
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
