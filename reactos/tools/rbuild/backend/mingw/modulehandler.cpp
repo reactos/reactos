@@ -1945,7 +1945,21 @@ MingwModuleHandler::GenerateOtherMacros ()
 	if ( !module.allowWarnings )
 		globalCflags += " -Werror";
 	if ( module.host == HostTrue )
-		globalCflags += " $(HOST_CFLAGS)";
+	{
+		if ( module.cplusplus )
+			globalCflags += " $(HOST_CPPFLAGS)";
+		else
+			globalCflags += " $(HOST_CFLAGS)";
+	}
+	else
+	{
+		globalCflags += " -nostdinc";
+		if ( module.cplusplus )
+		{
+			// HACK: use host headers when building C++
+			globalCflags += " $(HOST_CPPFLAGS)";
+		}
+	}
 
 	// Always force disabling of sibling calls optimisation for GCC
 	// (TODO: Move to version-specific once this bug is fixed in GCC)

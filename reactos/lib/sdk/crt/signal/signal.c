@@ -6,9 +6,6 @@
 
 void _default_handler(int signal);
 
-typedef void (*__p_sig_fn_t)(int);
-
-
 typedef struct _sig_element
 {
    int signal;
