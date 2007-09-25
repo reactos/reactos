@@ -108,19 +108,6 @@ LockWorkStation(VOID)
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-UnregisterDeviceNotification(
-  HDEVNOTIFY Handle)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 WaitForInputIdle(
@@ -333,21 +320,6 @@ ClientThreadSetup ( VOID )
 /*
  * @unimplemented
  */
-HDEVNOTIFY
-STDCALL
-RegisterDeviceNotificationW(
-    HANDLE hRecipient,
-    LPVOID NotificationFilter,
-    DWORD Flags
-    )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 GetRawInputDeviceInfoW(
@@ -389,21 +361,6 @@ CsrBroadcastSystemMessageExW(
     WPARAM wParam,
     LPARAM lParam,
     PBSMINFO pBSMInfo)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-HDEVNOTIFY
-STDCALL
-RegisterDeviceNotificationA(
-    HANDLE hRecipient,
-    LPVOID NotificationFilter,
-    DWORD Flags
-    )
 {
   UNIMPLEMENTED;
   return FALSE;

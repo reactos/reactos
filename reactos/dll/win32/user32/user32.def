@@ -549,7 +549,7 @@ RegisterClassExW@4
 RegisterClassW@4
 RegisterClipboardFormatA@4
 RegisterClipboardFormatW@4
-RegisterDeviceNotificationA@12
+RegisterDeviceNotificationA@12=RegisterDeviceNotificationW@12
 RegisterDeviceNotificationW@12
 RegisterHotKey@16
 RegisterLogonProcess@8

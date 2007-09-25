@@ -2,6 +2,17 @@
 
 #include <wine/debug.h>
 
+#ifndef _CFGMGR32_H_
+#define CR_SUCCESS                        0x00000000
+#define CR_OUT_OF_MEMORY                  0x00000002
+#define CR_INVALID_POINTER                0x00000003
+#define CR_FAILURE                        0x00000013
+#define CR_INVALID_DATA                   0x0000001F
+#endif
+
+typedef DWORD (*CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
+typedef DWORD (*CMP_UNREGNOTIFY) (ULONG );
+
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
           does not seem to work properly for stack address space. */
 /* kill `left-hand operand of comma expression has no effect' warning */
@@ -226,6 +237,94 @@ int STDCALL LoadStringW
   }
   /* success */
   return nStringLen;
+}
+
+
+/*
+ * @implemented
+ */
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationW(
+    HANDLE hRecipient,
+    LPVOID NotificationFilter,
+    DWORD Flags
+    )
+{
+  DWORD ConfigRet = 0;
+  CMP_REGNOTIFY RegNotify = NULL;
+  HDEVNOTIFY hDevNotify = NULL;
+  HINSTANCE hSetupApi = LoadLibraryA("SETUPAPI.DLL");
+  if (hSetupApi == NULL) return NULL;
+  RegNotify = (CMP_REGNOTIFY) GetProcAddress ( hSetupApi, "CMP_RegisterNotification");
+  if (RegNotify == NULL)
+  {
+    FreeLibrary ( hSetupApi );
+    return NULL;
+  }
+  ConfigRet  = RegNotify ( hRecipient, NotificationFilter, Flags, (PULONG) &hDevNotify);
+  FreeLibrary ( hSetupApi );
+  if (ConfigRet != CR_SUCCESS) 
+  {
+    switch (ConfigRet)
+    {
+       case CR_OUT_OF_MEMORY:
+         SetLastError (ERROR_NOT_ENOUGH_MEMORY);
+         break;
+       case CR_INVALID_POINTER:
+         SetLastError (ERROR_INVALID_PARAMETER);
+         break;
+       case CR_INVALID_DATA:
+         SetLastError (ERROR_INVALID_DATA);
+         break;
+       case CR_FAILURE:
+       default:
+         SetLastError (ERROR_SERVICE_SPECIFIC_ERROR);
+         break;
+    }
+  }
+  return hDevNotify;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+UnregisterDeviceNotification(
+  HDEVNOTIFY Handle)
+{
+  DWORD ConfigRet = 0;
+  CMP_UNREGNOTIFY UnRegNotify = NULL;
+  HINSTANCE hSetupApi = LoadLibraryA("SETUPAPI.DLL");
+  if (hSetupApi == NULL) return FALSE;
+  UnRegNotify = (CMP_UNREGNOTIFY) GetProcAddress ( hSetupApi, "CMP_UnregisterNotification");
+  if (UnRegNotify == NULL)
+  {
+    FreeLibrary ( hSetupApi );
+    return FALSE;
+  }
+  ConfigRet  = UnRegNotify ( (ULONG) Handle );
+  FreeLibrary ( hSetupApi );
+  if (ConfigRet != CR_SUCCESS) 
+  {
+    switch (ConfigRet)
+    {
+       case CR_INVALID_POINTER:
+         SetLastError (ERROR_INVALID_PARAMETER);
+         break;
+       case CR_INVALID_DATA:
+         SetLastError (ERROR_INVALID_DATA);
+         break;
+       case CR_FAILURE:
+       default:
+         SetLastError (ERROR_SERVICE_SPECIFIC_ERROR);
+         break;
+    }
+    return FALSE;
+  }
+  return TRUE;
 }
 
 /* EOF */
