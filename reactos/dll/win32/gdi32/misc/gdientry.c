@@ -942,7 +942,7 @@ DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
                  LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo)
 {
     /* Create Surface if it does not exits one */
-    if (pSurfaceFrom->hDDSurface)
+    if (!pSurfaceFrom->hDDSurface)
     {
         if (!bDDCreateSurface(pSurfaceFrom, FALSE))
         {
@@ -951,7 +951,7 @@ DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
     }
 
     /* Create Surface if it does not exits one */
-    if (pSurfaceTo->hDDSurface)
+    if (!pSurfaceTo->hDDSurface)
     {
         if (!bDDCreateSurface(pSurfaceTo, FALSE))
         {
