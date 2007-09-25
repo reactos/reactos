@@ -42,3 +42,5 @@
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 BOOL STDCALL NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
 LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
+BOOL FASTCALL IsMetaFile(HDC);
+

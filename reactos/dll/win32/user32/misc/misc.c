@@ -293,6 +293,22 @@ IsGUIThread(
     return TRUE;
 }
 
+BOOL
+FASTCALL
+IsMetaFile(HDC hDc)
+{
+  DWORD Type = GetObjectType((HGDIOBJ) hDc);
+  switch(Type)
+  {
+    case OBJ_METADC:
+    case OBJ_METAFILE:
+    case OBJ_ENHMETADC:
+    case OBJ_ENHMETAFILE:
+      return TRUE;
+  }
+  return FALSE;
+}
+
 PUSER_HANDLE_ENTRY
 FASTCALL
 GetUser32Handle(HANDLE handle)
