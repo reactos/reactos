@@ -13,3 +13,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/nb-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

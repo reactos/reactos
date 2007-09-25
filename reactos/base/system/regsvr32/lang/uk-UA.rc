@@ -1,0 +1,29 @@
+#include "resource.h"
+
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+
+IDS_UsageMessage, "%s\n\nВикористання: regsvr32 [/u] [/s] [/c] [/n] [/i[:параметри]] назва_dll\n\
+/u -	Відмінити реєстрацію сервера\n\
+/s -	Тихий режим: Не виводити повідомлень\n\
+/c -	Вивід в консоль\n\
+/i -	Викликати DllInstall  з додатковими параметрами [параметри]; Коли використовується ключ /u викликається DllUninstall\n\
+/n -	Не викликати DllRegisterServer; цей ключ має використовуватися з /i"
+
+IDS_NoDllSpecified,  "Не вказано ім'я DLL."
+
+IDS_InvalidFlag,     "Невідомий ключ: %s"
+
+IDS_SwitchN_NoI,     "Невідомий ключ: /n використовується лише з ключем /i"
+
+IDS_DllNotLoaded,    "LoadLibrary('%s') завершився аварійно.\nGetLastError повернуло 0x%08x."
+
+IDS_MissingEntry,    "%s було запущено, але точка входу для %s не знайдено.\n\n\
+%s може не експортуватись, чи в пам'яті лежить пошкоджена версія %s. Для того щоб знайти  і видалти %s, використовуйте PView."
+
+IDS_FailureMessage,  "%s в %s завершилося аварійно.\nКод завершення: 0x%08x"
+
+IDS_SuccessMessage   "%s в %s успішно виконано."
+}
