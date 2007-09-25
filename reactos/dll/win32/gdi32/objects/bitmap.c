@@ -1,5 +1,8 @@
 #include "precomp.h"
 
+//#define NDEBUG
+//#include <debug.h>
+
 /*
  * Return the full scan size for a bitmap.
  * 
@@ -151,8 +154,6 @@ CreateCompatibleBitmap(
 
 
 
-
-
 INT 
 STDCALL
 GetDIBits(
@@ -162,16 +163,34 @@ GetDIBits(
     UINT cScanLines,
     LPVOID lpvBits,
     LPBITMAPINFO lpbmi,
-    UINT uUsage
-         )
+    UINT uUsage)
 {
-    return NtGdiGetDIBitsInternal(hDC,
-                                  hbmp,
-                                  uStartScan,
-                                  cScanLines,
-                                  lpvBits,
-                                  lpbmi,
-                                  uUsage,
-                                  DIB_BitmapMaxBitsSize( lpbmi, cScanLines ),
-                                  0);
+    INT ret = 0;
+
+    if (hDC == NULL || !GdiIsHandleValid((HGDIOBJ)hDC))
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+    }
+    else if (lpbmi == NULL)
+    {
+        // XP doesn't run this check and results in a 
+        // crash in DIB_BitmapMaxBitsSize, we'll be more forgiving
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+    }
+    else
+    {
+        UINT cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+
+        ret = NtGdiGetDIBitsInternal(hDC,
+                                     hbmp,
+                                     uStartScan,
+                                     cScanLines,
+                                     lpvBits,
+                                     lpbmi,
+                                     uUsage,
+                                     cjBmpScanSize,
+                                     0);
+    }
+
+    return ret;
 }

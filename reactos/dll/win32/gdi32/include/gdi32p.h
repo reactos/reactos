@@ -192,5 +192,9 @@ int
 STDCALL
 GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv);
 
+VOID
+STDCALL
+GdiSetLastError( DWORD dwErrCode );
+
 /* EOF */
 

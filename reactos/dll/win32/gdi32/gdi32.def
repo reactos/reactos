@@ -328,7 +328,7 @@ GdiReleaseLocalDC@4
 GdiResetDCEMF@8
 GdiSetAttrs@4
 GdiSetBatchLimit@4
-GdiSetLastError@4=SetLastError@4
+GdiSetLastError@4
 GdiSetPixelFormat@8=NtGdiSetPixelFormat@8
 GdiSetServerAttr@8
 GdiStartDocEMF@8

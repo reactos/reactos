@@ -178,3 +178,13 @@ ExtEscape(
 {
 	return NtGdiExtEscape(hDC, NULL, 0, nEscape, cbInput, (LPSTR)lpszInData, cbOutput, lpszOutData);
 }
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+GdiSetLastError(DWORD dwErrCode)
+{
+	SetLastError(dwErrCode);
+}
