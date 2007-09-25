@@ -6,7 +6,6 @@
 #define CR_SUCCESS                        0x00000000
 #define CR_OUT_OF_MEMORY                  0x00000002
 #define CR_INVALID_POINTER                0x00000003
-#define CR_FAILURE                        0x00000013
 #define CR_INVALID_DATA                   0x0000001F
 #endif
 
@@ -277,7 +276,6 @@ RegisterDeviceNotificationW(
        case CR_INVALID_DATA:
          SetLastError (ERROR_INVALID_DATA);
          break;
-       case CR_FAILURE:
        default:
          SetLastError (ERROR_SERVICE_SPECIFIC_ERROR);
          break;
@@ -317,7 +315,6 @@ UnregisterDeviceNotification(
        case CR_INVALID_DATA:
          SetLastError (ERROR_INVALID_DATA);
          break;
-       case CR_FAILURE:
        default:
          SetLastError (ERROR_SERVICE_SPECIFIC_ERROR);
          break;
