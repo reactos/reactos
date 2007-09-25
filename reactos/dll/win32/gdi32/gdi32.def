@@ -146,9 +146,6 @@ DdEntry6@4=NtGdiDdGetDriverState@4
 DdEntry7@12=NtGdiDdAddAttachedSurface@12
 DdEntry8@12=NtGdiDdAlphaBlt@12
 DdEntry9@8=NtGdiDdAttachSurface@8
-
-
-
 DeleteColorSpace@4=NtGdiDeleteColorSpace@4
 DeleteDC@4
 DeleteEnhMetaFile@4
@@ -273,6 +270,7 @@ GdiDeleteLocalDC@4
 GdiDeleteSpoolFileHandle@4
 GdiDescribePixelFormat@16=NtGdiDescribePixelFormat@16
 GdiDllInitialize@12
+GdiDrawStream@12
 GdiEndDocEMF@4
 GdiEndPageEMF@8
 GdiEntry10@8
@@ -338,6 +336,7 @@ GdiTransparentBlt@44
 GdiValidateHandle@4
 GetArcDirection@4
 GetAspectRatioFilterEx@8
+GetBitmapAttributes@4
 GetBitmapBits@12=NtGdiGetBitmapBits@12
 GetBitmapDimensionEx@8=NtGdiGetBitmapDimension@8
 GetBkColor@4
@@ -609,8 +608,8 @@ XFORMOBJ_iGetXform@8=NtGdiXFORMOBJ_iGetXform@8
 XLATEOBJ_cGetPalette@16=NtGdiXLATEOBJ_cGetPalette@16
 XLATEOBJ_hGetColorTransform@4=NtGdiXLATEOBJ_hGetColorTransform@4
 
-GdiDrawStream@12
-GetBitmapAttributes@4
+
+
 GetBrushAttributes@4
 GetGlyphIndicesA@20
 GetTextExtentExPointWPri@28

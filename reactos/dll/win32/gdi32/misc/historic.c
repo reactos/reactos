@@ -265,3 +265,34 @@ SelectFontLocal(HFONT Currenthfnt,
 {
     return newhfnt;
 }
+
+/*
+ * @implemented
+ */
+HBRUSH 
+STDCALL
+GdiGetLocalBrush(HBRUSH hbr)
+{
+    return hbr;
+}
+
+/*
+ * @implemented
+ */
+HDC 
+STDCALL
+GdiGetLocalDC(HDC hdc)
+{
+    return hdc;
+}
+
+/*
+ * @implemented
+ */
+HFONT 
+STDCALL
+GdiGetLocalFont(HFONT hfont)
+{
+    return hfont;
+}
+

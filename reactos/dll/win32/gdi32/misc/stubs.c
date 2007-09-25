@@ -1502,9 +1502,9 @@ HENHMETAFILE
 STDCALL
 GdiConvertEnhMetaFile(HENHMETAFILE hmf)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1514,9 +1514,9 @@ BOOL
 STDCALL
 GdiDrawStream(HDC dc, ULONG l, VOID *v)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1526,45 +1526,9 @@ DWORD
 STDCALL
 GdiGetCodePage(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HBRUSH 
-STDCALL
-GdiGetLocalBrush(HBRUSH hbr)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HDC 
-STDCALL
-GdiGetLocalDC(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HFONT 
-STDCALL
-GdiGetLocalFont(HFONT hfont)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -1574,9 +1538,9 @@ BOOL
 STDCALL
 GdiIsMetaFileDC(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*

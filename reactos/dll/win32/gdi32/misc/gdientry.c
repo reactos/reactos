@@ -485,7 +485,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
         if (!ghDirectDraw)
         {
             /* Create the DC */
-            if ((hdc = CreateDC(L"Display", NULL, NULL, NULL)))
+            if ((hdc = CreateDCW(L"Display", NULL, NULL, NULL)))
             {
                 /* Create the DDraw Object */
                 ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
@@ -509,7 +509,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     else
     {
         /* Using the per-process object, so create it */
-    pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc); 
+         pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc); 
     
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
@@ -830,8 +830,7 @@ WINAPI
 DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
                        BOOL bPrimarySurface)
 {
-	return bDDCreateSurface(pSurfaceLocal, TRUE);
-    //return bDdCreateSurfaceObject(pSurfaceLocal, TRUE);
+    return bDDCreateSurface(pSurfaceLocal, TRUE);
 }
 
 
@@ -911,8 +910,8 @@ DdCreateDIBSection(HDC hdc,
                    HANDLE hSectionApp,
                    DWORD dwOffset)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
 }
 
 /*
@@ -988,6 +987,7 @@ ULONG
 STDCALL 
 DdQueryDisplaySettingsUniqueness()
 {
+    /* FIXME share memory */
  return RemberDdQueryDisplaySettingsUniquenessID;
 }
 

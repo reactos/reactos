@@ -75,10 +75,19 @@ HGDIOBJ
 STDCALL
 GdiFixUpHandle(HGDIOBJ hGdiObj)
 {
- if (((ULONG_PTR)(hGdiObj)) & GDI_HANDLE_UPPER_MASK ) return hGdiObj;
- PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
- return hGdiObj = (HGDIOBJ)(((LONG_PTR)(hGdiObj)) |
-                     (Entry->Type << GDI_ENTRY_UPPER_SHIFT)); // Rebuild handle for Object
+    PGDI_TABLE_ENTRY Entry;
+
+    if (((ULONG_PTR)(hGdiObj)) & GDI_HANDLE_UPPER_MASK )
+    {
+        return hGdiObj;
+    }
+
+    /* FIXME is this right ?? */
+
+    Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+
+   /* Rebuild handle for Object */
+    return hGdiObj = (HGDIOBJ)(((LONG_PTR)(hGdiObj)) | (Entry->Type << GDI_ENTRY_UPPER_SHIFT));
 }
 
 /*
@@ -138,8 +147,14 @@ DWORD
 STDCALL
 GdiSetBatchLimit(DWORD	Limit)
 {
-  DWORD OldLimit = GDI_BatchLimit;
-    if ((!Limit) || (Limit > GDI_BATCH_LIMIT)) return Limit;
+    DWORD OldLimit = GDI_BatchLimit;
+
+    if ( (!Limit) ||
+         (Limit >= GDI_BATCH_LIMIT))
+    {
+        return Limit;
+    }
+
     GdiFlush();
     GDI_BatchLimit = Limit;
     return OldLimit;
@@ -166,17 +181,16 @@ GdiReleaseDC(HDC hdc)
     return 0;
 }
 
-INT STDCALL
-ExtEscape(
-	HDC hDC,
-	int nEscape,
-	int cbInput,
-	LPCSTR lpszInData,
-	int cbOutput,
-	LPSTR lpszOutData
-)
+INT
+STDCALL
+ExtEscape(HDC hDC,
+          int nEscape,
+          int cbInput,
+          LPCSTR lpszInData,
+          int cbOutput,
+          LPSTR lpszOutData)
 {
-	return NtGdiExtEscape(hDC, NULL, 0, nEscape, cbInput, (LPSTR)lpszInData, cbOutput, lpszOutData);
+    return NtGdiExtEscape(hDC, NULL, 0, nEscape, cbInput, (LPSTR)lpszInData, cbOutput, lpszOutData);
 }
 
 /*
@@ -186,5 +200,5 @@ VOID
 STDCALL
 GdiSetLastError(DWORD dwErrCode)
 {
-	SetLastError(dwErrCode);
+    NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrCode;
 }
