@@ -4,6 +4,16 @@
 #pragma GCC system_header
 #endif
 
+#define IF_ADMIN_STATUS_UP              1
+#define IF_ADMIN_STATUS_DOWN            2
+#define IF_ADMIN_STATUS_TESTING         3
+#define IF_OPER_STATUS_NON_OPERATIONAL  0
+#define IF_OPER_STATUS_UNREACHABLE      1
+#define IF_OPER_STATUS_DISCONNECTED     2
+#define IF_OPER_STATUS_CONNECTING       3
+#define IF_OPER_STATUS_CONNECTED        4
+#define IF_OPER_STATUS_OPERATIONAL      5
+
 #define MIB_IF_ADMIN_STATUS_UP 1
 #define MIB_IF_ADMIN_STATUS_DOWN 2
 #define MIB_IF_ADMIN_STATUS_TESTING 3
