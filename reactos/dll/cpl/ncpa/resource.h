@@ -35,6 +35,15 @@
 #define IDS_CANNOT_CREATE_PROPSHEET	3005
 #define IDS_OUT_OF_MEMORY               3006
 #define IDS_CANNOT_SAVE_CHANGES         3007
+#define IDS_STATUS_NON_OPERATIONAL      4001
+#define IDS_STATUS_UNREACHABLE          4002
+#define IDS_STATUS_DISCONNECTED         4003
+#define IDS_STATUS_CONNECTING           4004
+#define IDS_STATUS_CONNECTED            4005
+#define IDS_STATUS_OPERATIONAL          4006
+#define IDS_SPEED_MBPS                  4007
+#define IDS_DURATION_DAY                4008
+#define IDS_DURATION_DAYS               4009
 
 
 /* controls */
@@ -69,6 +78,9 @@
 #define IDC_DETAILSTYPE     127
 #define IDC_DETAILSSUBNET   128
 #define IDC_DETAILSGATEWAY  129
+#define IDC_STATUS          130
+#define IDC_DURATION        131
+#define IDC_SPEED           132
 #endif /* __CPL_RESOURCE_H */
 
 /* EOF */

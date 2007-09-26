@@ -11,6 +11,16 @@ typedef struct
   CPLAPPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
 
+typedef struct
+{
+  WCHAR CurrentAdapterName[MAX_ADAPTER_NAME];
+  UINT_PTR hStatsUpdateTimer;
+  PMIB_IFTABLE pIfTable;
+  DWORD IfTableSize;
+  PIP_ADAPTER_INFO pFirstAdapterInfo;
+  PIP_ADAPTER_INFO pCurrentAdapterInfo;
+} GLOBAL_NCPA_DATA, *PGLOBAL_NCPA_DATA;
+
 extern HINSTANCE hApplet;
 
 extern ULONG DbgPrint(PCCH Fmt, ...);

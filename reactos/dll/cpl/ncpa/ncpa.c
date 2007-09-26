@@ -243,22 +243,27 @@ NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 static INT_PTR CALLBACK
 NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
+	PGLOBAL_NCPA_DATA pGlobalData = (PGLOBAL_NCPA_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
 	switch(uMsg)
 	{
 	case WM_INITDIALOG:
 		{
-			TCHAR *tpszCfgInstanceID;
 			DWORD dwType,dwSize;
 			TCHAR tpszSubKey[MAX_PATH];
 			TCHAR tpszDisplayName[MAX_PATH];
 			HKEY hKey;
-			pPage = (PROPSHEETPAGE *)lParam;
-			tpszCfgInstanceID = (TCHAR*)pPage->lParam;
-			if(!FindNICClassKeyForCfgInstance(tpszCfgInstanceID,tpszSubKey))
+
+			pGlobalData = (PGLOBAL_NCPA_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
+			if (pGlobalData == NULL)
+				return FALSE;
+
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+			if(!FindNICClassKeyForCfgInstance(pGlobalData->CurrentAdapterName, tpszSubKey))
 			{
 				MessageBox(hwndDlg,_T("NIC Entry not found"),_T("Registry error"),MB_ICONSTOP);
-				MessageBox(hwndDlg,tpszCfgInstanceID,tpszSubKey,MB_ICONSTOP);
+				MessageBox(hwndDlg,pGlobalData->CurrentAdapterName,tpszSubKey,MB_ICONSTOP);
 			}
 
 			if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
@@ -272,7 +277,6 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetDlgItemText(hwndDlg,IDC_NETCARDNAME,tpszDisplayName);
 			EnableWindow(GetDlgItem(hwndDlg,IDC_CONFIGURE),FALSE);
 
-			SetWindowLongPtr(hwndDlg,GWL_USERDATA,(DWORD_PTR)lParam);
 			//SetDlgItemTextA(hwndDlg,IDC_NETCARDNAME,Info[pPage->lParam].Description);
 			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E975-E325-11CE-BFC1-08002BE10318}"));
 
@@ -312,62 +316,14 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// drop though
 		case IDC_PROPERTIES:
 			{
-				TCHAR *tpszSubKey = NULL;
-				TCHAR tpszNDIKey[MAX_PATH];
-				TCHAR tpszClsIDText[MAX_PATH];
-				TCHAR *tpszTCPIPClsID = _T("{A907657F-6FDF-11D0-8EFB-00C04FD912B2}");
-				HKEY hNDIKey;
-				DWORD dwType,dwSize;
-				HWND hListBox = GetDlgItem(hwndDlg,IDC_COMPONENTSLIST);
-				int iListBoxIndex = (int) SendMessage(hListBox,LB_GETCURSEL,0,0);
-				if(iListBoxIndex != LB_ERR) 
-					tpszSubKey = (TCHAR*)SendMessage(hListBox,LB_GETITEMDATA,iListBoxIndex,0);
-				if(!tpszSubKey)
-					break;
-				_stprintf(tpszNDIKey,_T("%s\\Ndi"),tpszSubKey);
-
-				RegOpenKeyEx(HKEY_LOCAL_MACHINE,tpszNDIKey,0,KEY_QUERY_VALUE,&hNDIKey);
-				dwSize = sizeof(tpszClsIDText);
-				if(RegQueryValueEx(hNDIKey,_T("ClsId"),NULL,&dwType,(BYTE*)tpszClsIDText,&dwSize)!= ERROR_SUCCESS || dwType != REG_SZ)
-					;//return;
-				RegCloseKey(hNDIKey);
-
-				if(_tcscmp(tpszTCPIPClsID,tpszClsIDText)==0)
+				if(pGlobalData->pCurrentAdapterInfo)
 				{
-					IP_ADAPTER_INFO Adapters[64];
-					IP_ADAPTER_INFO *pAdapter;
-					TCHAR *tpszCfgInstanceID;
-					ULONG ulSize = sizeof(Adapters);
-					memset(&Adapters,0x00,sizeof(Adapters));
-					if(GetAdaptersInfo(Adapters,&ulSize)!=ERROR_SUCCESS)
-						break;;
-					pAdapter = Adapters;
-					tpszCfgInstanceID = (TCHAR*)pPage->lParam;
-					while(pAdapter)
-					{
-						TCHAR tpszAdapterName[MAX_PATH];
-						swprintf(tpszAdapterName,L"%S",pAdapter->AdapterName);
-						DPRINT("IPHLPAPI returned: %S\n", tpszAdapterName);
-						if(_tcscmp(tpszAdapterName,tpszCfgInstanceID)==0)
-						{
-							DisplayTCPIPProperties(hwndDlg,pAdapter);
-							break;
-						} else
-						{
-							DPRINT("... which is not the TCPIP property sheet\n");
-						}
-						pAdapter = pAdapter->Next;
-						if(!pAdapter)
-						{
-							MessageBox(NULL,_T("If you see this, then the IPHLPAPI.DLL probably needs more work because GetAdaptersInfo did not return the expected data."),_T("Error"),MB_ICONSTOP);
-						}
-					}
-
-				} else
-				{
-					MessageBox(NULL,_T("This control panel is incomplete.\r\nUsually, the \"Notify Object\" for this Network component should be invoked here. Reactos lacks the infrastructure to do this right now.\r\n- C++\r\n- DDK Headers for notify objects\r\n- clean header structure, that allow Windows-Compatible COM C++ Code"),_T("Error"),MB_ICONSTOP);
+					DisplayTCPIPProperties(hwndDlg, pGlobalData->pCurrentAdapterInfo);
 				}
-				
+				else
+				{
+					MessageBox(NULL,_T("If you see this, then the IPHLPAPI.DLL probably needs more work because GetAdaptersInfo did not return the expected data."),_T("Error"),MB_ICONSTOP);
+				}				
 			}
 			break;
 		}
@@ -378,7 +334,7 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 static void
-DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
+DisplayNICProperties(HWND hParent, GLOBAL_NCPA_DATA* pGlobalData)
 {
 	PROPSHEETPAGE psp[1];
 	PROPSHEETHEADER psh;
@@ -387,6 +343,13 @@ DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 	DWORD dwType = REG_SZ;
 	TCHAR tpszName[MAX_PATH];
 	DWORD dwSize = sizeof(tpszName);
+	TCHAR tpszCfgInstanceID[MAX_ADAPTER_NAME_LENGTH];
+
+#ifndef _UNICODE
+	WideCharToMultiByte(CP_UTF8, 0, pGlobalData->CurrentAdapterName, -1, tpszCfgInstanceID, MAX_ADAPTER_NAME_LENGTH, 0, 0);
+#else
+	wcscpy(tpszCfgInstanceID, pGlobalData->CurrentAdapterName);
+#endif
 
 	// Get the "Name" for this Connection
 	_stprintf(tpszSubKey,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection"),tpszCfgInstanceID);
@@ -412,21 +375,286 @@ DisplayNICProperties(HWND hParent,TCHAR *tpszCfgInstanceID)
 	psh.pfnCallback = NULL;
 	
 
-	InitPropSheetPage(&psp[0], IDD_NETPROPERTIES, NICPropertyPageProc,(LPARAM)tpszCfgInstanceID);
+	InitPropSheetPage(&psp[0], IDD_NETPROPERTIES, NICPropertyPageProc, (LPARAM)pGlobalData);
 	PropertySheet(&psh);
 	return;
+}
+
+void RefreshNICInfo(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
+{
+	ULONG BufferSize;
+	DWORD ErrRet = 0;
+
+	if (pGlobalData->pFirstAdapterInfo)
+		HeapFree(GetProcessHeap(), 0, pGlobalData->pFirstAdapterInfo);
+
+	BufferSize = sizeof(IP_ADAPTER_INFO);		
+	pGlobalData->pFirstAdapterInfo = (PIP_ADAPTER_INFO) HeapAlloc(GetProcessHeap(), 0, BufferSize);
+	
+	if (GetAdaptersInfo(pGlobalData->pFirstAdapterInfo, &BufferSize) == ERROR_BUFFER_OVERFLOW) 
+	{
+       HeapFree(GetProcessHeap(), 0, pGlobalData->pFirstAdapterInfo);
+       pGlobalData->pFirstAdapterInfo = (PIP_ADAPTER_INFO) HeapAlloc(GetProcessHeap(), 0, BufferSize);
+	}
+
+	if ((ErrRet = GetAdaptersInfo(pGlobalData->pFirstAdapterInfo, &BufferSize)) != NO_ERROR)
+	{
+		MessageBox(hwndDlg, _T("error adapterinfo") ,_T("ncpa.cpl"),MB_ICONSTOP);
+
+		if (pGlobalData->pFirstAdapterInfo)
+			HeapFree(GetProcessHeap(), 0, pGlobalData->pFirstAdapterInfo);
+	}
+}
+
+void UpdateCurrentAdapterInfo(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
+{
+	PIP_INTERFACE_INFO pInfo;
+	ULONG BufferSize = 0;
+	DWORD dwRetVal = 0;
+
+	if (!pGlobalData->pCurrentAdapterInfo)
+		return;
+
+	BufferSize = sizeof(IP_INTERFACE_INFO);
+	pInfo = (PIP_INTERFACE_INFO) HeapAlloc(GetProcessHeap(), 0, BufferSize);
+	if (ERROR_INSUFFICIENT_BUFFER == GetInterfaceInfo(pInfo, &BufferSize))
+	{
+		HeapFree(GetProcessHeap(), 0, pInfo);
+		pInfo = (PIP_INTERFACE_INFO) HeapAlloc(GetProcessHeap(), 0, BufferSize);
+	}
+
+	dwRetVal = GetInterfaceInfo(pInfo, &BufferSize);
+	if (NO_ERROR == dwRetVal)
+	{
+		DWORD i;
+
+		for (i = 0; i < pInfo->NumAdapters; i++)
+		{
+			if (0 == wcscmp(pGlobalData->CurrentAdapterName, pInfo->Adapter[i].Name))
+			{
+				if (pInfo->Adapter[i].Index != pGlobalData->pCurrentAdapterInfo->Index)
+				{
+					RefreshNICInfo(hwndDlg, pGlobalData);
+
+					pGlobalData->pCurrentAdapterInfo = pGlobalData->pFirstAdapterInfo;
+					while (pGlobalData->pCurrentAdapterInfo)
+					{
+						if (pGlobalData->pCurrentAdapterInfo->Index == pInfo->Adapter[i].Index)
+							return;
+
+						pGlobalData->pCurrentAdapterInfo = pGlobalData->pCurrentAdapterInfo->Next;
+					}
+				}
+			}
+		}
+	}
+	else if (ERROR_NO_DATA == dwRetVal)
+		DPRINT("There are no network adapters with IPv4 enabled on the local system\n");
+	else
+		DPRINT1("GetInterfaceInfo failed.\n");
+}
+
+static VOID
+UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
+{
+	DWORD dwRet = NO_ERROR;
+
+	if (pGlobalData->pCurrentAdapterInfo)
+	{
+		if (NULL == pGlobalData->pIfTable)
+		{
+			pGlobalData->IfTableSize = sizeof(MIB_IFTABLE);
+			pGlobalData->pIfTable = (PMIB_IFTABLE)HeapAlloc(GetProcessHeap(), 0, pGlobalData->IfTableSize);
+			if (NULL == pGlobalData->pIfTable)
+			{
+				static BOOL firstError = TRUE;
+				if (firstError)
+				{
+					firstError = FALSE;
+					DPRINT1("Out of memory - could not allocate MIB_IFTABLE(1)");
+					return;
+				}
+			}
+		}
+
+		/* Call GetIfTable once to see if we have a large enough buffer */
+		dwRet = GetIfTable(pGlobalData->pIfTable, &pGlobalData->IfTableSize, FALSE);
+		if (ERROR_INSUFFICIENT_BUFFER == dwRet)
+		{
+			HeapFree(GetProcessHeap(), 0, pGlobalData->pIfTable);
+
+			pGlobalData->pIfTable = (PMIB_IFTABLE)HeapAlloc(GetProcessHeap(), 0, pGlobalData->IfTableSize);
+			if (NULL == pGlobalData->pIfTable)
+			{
+				static BOOL firstError = TRUE;
+				if (firstError)
+				{
+					firstError = FALSE;
+					DPRINT1("Out of memory - could not allocate MIB_IFTABLE(2)");
+				}
+
+				pGlobalData->IfTableSize = 0;
+				return;
+			}
+
+			dwRet = GetIfTable(pGlobalData->pIfTable, &pGlobalData->IfTableSize, FALSE);
+			if (NO_ERROR != dwRet)
+			{
+				HeapFree(GetProcessHeap(), 0, pGlobalData->pIfTable);
+				pGlobalData->pIfTable = NULL;
+				pGlobalData->IfTableSize = 0;
+				return;
+			}
+		}
+	}
+
+	if (NO_ERROR == dwRet)
+	{
+		DWORD i;
+		DWORD PktsOut = 0;
+		DWORD PktsIn = 0;
+		DWORD Mbps = 0;
+		DWORD OperStatus = IF_OPER_STATUS_DISCONNECTED;
+		PMIB_IFROW pIfRow = NULL;
+		TCHAR Buffer[256], LocBuffer[256];
+		SYSTEMTIME TimeConnected;
+		
+		memset(&TimeConnected, 0, sizeof(TimeConnected));
+
+		if (pGlobalData->pCurrentAdapterInfo)
+		{
+			UpdateCurrentAdapterInfo(hwndDlg, pGlobalData);
+
+			for (i = 0; i < pGlobalData->pIfTable->dwNumEntries; i++)
+			{
+				pIfRow = (PMIB_IFROW)&pGlobalData->pIfTable->table[i];
+
+				if (pIfRow->dwIndex == pGlobalData->pCurrentAdapterInfo->Index)
+				{
+					DWORD DurationSeconds;
+					SYSTEMTIME SystemTime;
+					FILETIME SystemFileTime;
+					ULARGE_INTEGER LargeSystemTime;
+
+					PktsOut = pIfRow->dwOutUcastPkts;
+					PktsIn = pIfRow->dwInUcastPkts;
+					Mbps = pIfRow->dwSpeed;
+					OperStatus = pIfRow->dwOperStatus;
+
+					/* TODO: For some unknown reason, this doesn't correspond to the Windows duration */
+					GetSystemTime(&SystemTime);
+					SystemTimeToFileTime(&SystemTime, &SystemFileTime);
+					LargeSystemTime = *(ULARGE_INTEGER *)&SystemFileTime;
+					LargeSystemTime.QuadPart /= 100000ULL;
+					DurationSeconds = ((LargeSystemTime.LowPart - pIfRow->dwLastChange) / 100);
+					TimeConnected.wSecond = (DurationSeconds % 60);
+					TimeConnected.wMinute = (DurationSeconds / 60) % 60;
+					TimeConnected.wHour = (DurationSeconds / (60 * 60)) % 24;
+					TimeConnected.wDay = DurationSeconds / (60 * 60 * 24);
+
+					break;
+				}
+			}
+		}
+
+		_stprintf(Buffer, L"%u", PktsOut);
+		GetNumberFormat(LOCALE_USER_DEFAULT, 0, Buffer, NULL, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
+		SendDlgItemMessage(hwndDlg, IDC_SEND, WM_SETTEXT, 0, (LPARAM)LocBuffer);
+
+		_stprintf(Buffer, L"%u", PktsIn);
+		GetNumberFormat(LOCALE_USER_DEFAULT, 0, Buffer, NULL, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
+		SendDlgItemMessage(hwndDlg, IDC_RECEIVED, WM_SETTEXT, 0, (LPARAM)LocBuffer);
+
+		switch (OperStatus)
+		{
+		case IF_OPER_STATUS_NON_OPERATIONAL:
+			OperStatus = IDS_STATUS_NON_OPERATIONAL;
+			break;
+
+		case IF_OPER_STATUS_UNREACHABLE:
+			OperStatus = IDS_STATUS_UNREACHABLE;
+			break;
+
+		case IF_OPER_STATUS_DISCONNECTED:
+			OperStatus = IDS_STATUS_DISCONNECTED;
+			break;
+
+		case IF_OPER_STATUS_CONNECTING:
+			OperStatus = IDS_STATUS_CONNECTING;
+			break;
+
+		case IF_OPER_STATUS_CONNECTED:
+			OperStatus = IDS_STATUS_CONNECTED;
+			break;
+
+		case IF_OPER_STATUS_OPERATIONAL:
+			/* TODO: Find sub status, waiting for DHCP address, etc. */
+			OperStatus = IDS_STATUS_OPERATIONAL;
+			break;
+
+		default:
+			DPRINT1("Unknown operation status: %d\n", OperStatus);
+			OperStatus = IDS_STATUS_OPERATIONAL;
+			break;
+		}
+		LoadString(hApplet, OperStatus, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
+		SendDlgItemMessage(hwndDlg, IDC_STATUS, WM_SETTEXT, 0, (LPARAM)LocBuffer);
+
+		GetTimeFormat(LOCALE_USER_DEFAULT, 0, &TimeConnected, L"HH':'mm':'ss", LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
+		if (0 == TimeConnected.wDay)
+		{
+			SendDlgItemMessage(hwndDlg, IDC_DURATION, WM_SETTEXT, 0, (LPARAM)LocBuffer);
+		}
+		else
+		{
+			TCHAR DayBuffer[256];
+			if (1 == TimeConnected.wDay)
+			{
+				LoadString(hApplet, IDS_DURATION_DAY, DayBuffer, sizeof(DayBuffer) / sizeof(DayBuffer[0]));
+			}
+			else
+			{
+				LoadString(hApplet, IDS_DURATION_DAYS, DayBuffer, sizeof(DayBuffer) / sizeof(DayBuffer[0]));
+			}
+			_sntprintf(Buffer, 256, DayBuffer, TimeConnected.wDay, LocBuffer);
+			SendDlgItemMessage(hwndDlg, IDC_DURATION, WM_SETTEXT, 0, (LPARAM)Buffer);
+		}
+
+		LoadString(hApplet, IDS_SPEED_MBPS, LocBuffer, sizeof(LocBuffer) / sizeof(LocBuffer[0]));
+		_sntprintf(Buffer, 256, LocBuffer, Mbps / 1000000);
+		SendDlgItemMessage(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)Buffer);
+	}
+	else
+	{
+		static BOOL firstError = TRUE;
+		if (firstError)
+		{
+			firstError = FALSE;
+			DPRINT1("GetIfTable failed with error code: %d\n", dwRet);
+			return;
+		}
+	}
 }
 
 static INT_PTR CALLBACK
 NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	PGLOBAL_NCPA_DATA pGlobalData;
+	pGlobalData = (PGLOBAL_NCPA_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
 	switch(uMsg)
 	{
 	case WM_INITDIALOG:
 		{
-			PROPSHEETPAGE *psp= (PROPSHEETPAGE *)lParam;
+			pGlobalData = (PGLOBAL_NCPA_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
+			if (pGlobalData == NULL)
+				return FALSE;
+
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
 			EnableWindow(GetDlgItem(hwndDlg,IDC_ENDISABLE),FALSE);
-			SetWindowLongPtr(hwndDlg,DWL_USER,(DWORD_PTR)psp->lParam);
+			pGlobalData->hStatsUpdateTimer = SetTimer(hwndDlg, 1, 1000, NULL);
+			UpdateNICStatusData(hwndDlg, pGlobalData);
 		}
 		break;
 	case WM_COMMAND:
@@ -434,11 +662,27 @@ NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case IDC_PROPERTIES:
 			{
-				TCHAR *tpszCfgInstance;
-				tpszCfgInstance = (TCHAR*)GetWindowLong(hwndDlg,DWL_USER);
-				DisplayNICProperties(hwndDlg,tpszCfgInstance);
+				DisplayNICProperties(hwndDlg, pGlobalData);
 			}
 			break;
+		}
+		break;
+	case WM_TIMER:
+		{
+			UpdateNICStatusData(hwndDlg, pGlobalData);
+		}
+		break;
+	case WM_DESTROY:
+		{
+			KillTimer(hwndDlg, pGlobalData->hStatsUpdateTimer);
+			pGlobalData->hStatsUpdateTimer = 0;
+
+			if (pGlobalData->pIfTable)
+			{
+				HeapFree(GetProcessHeap(), 0, pGlobalData->pIfTable);
+				pGlobalData->pIfTable = NULL;
+				pGlobalData->IfTableSize = 0;
+			}
 		}
 		break;
 	}
@@ -448,57 +692,36 @@ NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static INT_PTR CALLBACK
 NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	
+	PGLOBAL_NCPA_DATA pGlobalData;
+	pGlobalData = (PGLOBAL_NCPA_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
 	switch(uMsg)
 	{
 	case WM_INITDIALOG:
-		{
-			TCHAR Buffer[64];
-
-			PIP_ADAPTER_INFO pAdapterInfo = NULL;			
-			ULONG    adaptOutBufLen;
-			
-			DWORD ErrRet = 0;
-		
-    		pAdapterInfo = (IP_ADAPTER_INFO *) malloc( sizeof(IP_ADAPTER_INFO) );
-    		adaptOutBufLen = sizeof(IP_ADAPTER_INFO);		
-    		
-		    if (GetAdaptersInfo( pAdapterInfo, &adaptOutBufLen) == ERROR_BUFFER_OVERFLOW) 
-			{
-		       free(pAdapterInfo);
-		       pAdapterInfo = (IP_ADAPTER_INFO *) malloc (adaptOutBufLen);
-		    }
-		
-		    if ((ErrRet = GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen)) != NO_ERROR)
-			{
-				MessageBox(hwndDlg, _T("error adapterinfo") ,_T("ncpa.cpl"),MB_ICONSTOP);
-
-				if (pAdapterInfo) free(pAdapterInfo);
+		{	
+			pGlobalData = (PGLOBAL_NCPA_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
+			if (pGlobalData == NULL)
 				return FALSE;
-			}    		
-			
-			if (pAdapterInfo)
-			{
-				/*FIXME: select the correct adapter info!!*/
-				
-				if (pAdapterInfo->DhcpEnabled)
+
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
+			if (pGlobalData->pCurrentAdapterInfo)
+			{			
+				TCHAR Buffer[64];
+
+				if (pGlobalData->pCurrentAdapterInfo->DhcpEnabled)
 					LoadString(hApplet, IDS_ASSIGNED_DHCP, Buffer, sizeof(Buffer) / sizeof(TCHAR));
 				else
 					LoadString(hApplet, IDS_ASSIGNED_MANUAL, Buffer, sizeof(Buffer) / sizeof(TCHAR));
 				
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSTYPE, WM_SETTEXT, 0, (LPARAM)Buffer);
-				_stprintf(Buffer, _T("%S"), pAdapterInfo->IpAddressList.IpAddress.String);
+				_stprintf(Buffer, _T("%S"), pGlobalData->pCurrentAdapterInfo->IpAddressList.IpAddress.String);
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSIP, WM_SETTEXT, 0, (LPARAM)Buffer);
-				_stprintf(Buffer, _T("%S"), pAdapterInfo->IpAddressList.IpMask.String);
+				_stprintf(Buffer, _T("%S"), pGlobalData->pCurrentAdapterInfo->IpAddressList.IpMask.String);
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSSUBNET, WM_SETTEXT, 0, (LPARAM)Buffer);
-				_stprintf(Buffer, _T("%S"), pAdapterInfo->GatewayList.IpAddress.String);
+				_stprintf(Buffer, _T("%S"), pGlobalData->pCurrentAdapterInfo->GatewayList.IpAddress.String);
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSGATEWAY, WM_SETTEXT, 0, (LPARAM)Buffer);
-				
-				free(pAdapterInfo);
-			}
-			
-
-			
+			}			
 		}
 		break;
 	case WM_COMMAND:
@@ -530,6 +753,17 @@ DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
 	DWORD dwType = REG_SZ;
 	TCHAR tpszName[MAX_PATH];
 	DWORD dwSize = sizeof(tpszName);
+	PGLOBAL_NCPA_DATA pGlobalData;
+	PIP_ADAPTER_INFO pInfo;
+	WCHAR wcsAdapterName[MAX_ADAPTER_NAME];
+
+	pGlobalData = (PGLOBAL_NCPA_DATA)GetWindowLongPtr(hParent, DWLP_USER);
+
+#ifndef _UNICODE
+	MultiByteToWideChar(CP_UTF8, 0, tpszCfgInstanceID, -1, pGlobalData->CurrentAdapterName, MAX_ADAPTER_NAME);
+#else
+	wcscpy(pGlobalData->CurrentAdapterName, tpszCfgInstanceID);
+#endif
 
 	// Get the "Name" for this Connection
 	_stprintf(tpszSubKey,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection"),tpszCfgInstanceID);
@@ -555,9 +789,25 @@ DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
 	psh.nStartPage = 0;
 	psh.ppsp = psp;
 	psh.pfnCallback = NULL;
-	
-	InitPropSheetPage(&psp[0], IDD_CARDPROPERTIES, NICStatusPageProc, (LPARAM)tpszCfgInstanceID);
-	InitPropSheetPage(&psp[1], IDD_CARDSUPPORT, NICSupportPageProc, (LPARAM)tpszCfgInstanceID);
+
+	RefreshNICInfo(hParent, pGlobalData);
+
+	pGlobalData->pCurrentAdapterInfo = NULL;
+	pInfo = pGlobalData->pFirstAdapterInfo;
+	while (pInfo)
+	{
+		MultiByteToWideChar(CP_UTF8, 0, pInfo->AdapterName, -1, wcsAdapterName, MAX_ADAPTER_NAME);
+		if (0 == wcscmp(wcsAdapterName, pGlobalData->CurrentAdapterName))
+		{
+			pGlobalData->pCurrentAdapterInfo = pInfo;
+			break;
+		}
+
+		pInfo = pInfo->Next;
+	}
+
+	InitPropSheetPage(&psp[0], IDD_CARDPROPERTIES, NICStatusPageProc, (LPARAM)pGlobalData);
+	InitPropSheetPage(&psp[1], IDD_CARDSUPPORT, NICSupportPageProc, (LPARAM)pGlobalData);
 	 
 	PropertySheet(&psh);
 	return;
@@ -682,9 +932,15 @@ NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_INITDIALOG:
 		{
+			PGLOBAL_NCPA_DATA pGlobalData = (PGLOBAL_NCPA_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
+			if (pGlobalData == NULL)
+				return FALSE;
+
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
+
 			EnableWindow(GetDlgItem(hwndDlg,IDC_ADD),FALSE);
 			EnableWindow(GetDlgItem(hwndDlg,IDC_REMOVE),FALSE);
-
+			
 			EnumAdapters(hwndDlg);
 			SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_SETCURSEL,0,0);
 		}
@@ -738,11 +994,17 @@ NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static LONG CALLBACK
 DisplayApplet(VOID)
 {
+	PGLOBAL_NCPA_DATA pGlobalData;
 	PROPSHEETPAGE psp[1];
 	PROPSHEETHEADER psh = {0};
 	TCHAR Caption[1024];
+	int Ret;
 
 	LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
+
+	pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_NCPA_DATA));
+	if (pGlobalData == NULL)
+		return 0;
 
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE;
@@ -755,9 +1017,13 @@ DisplayApplet(VOID)
 	psh.ppsp = psp;
 	psh.pfnCallback = NULL;
 
-	InitPropSheetPage(&psp[0], IDD_PROPPAGENETWORK, NetworkPageProc,0);
+	InitPropSheetPage(&psp[0], IDD_PROPPAGENETWORK, NetworkPageProc, (LPARAM)pGlobalData);
 
-	return (LONG)(PropertySheet(&psh) != -1);
+	Ret = PropertySheet(&psh);
+
+	HeapFree(GetProcessHeap(), 0, pGlobalData);
+
+	return (LONG)(Ret != -1);
 }
 
 /* Control Panel Callback */
@@ -812,5 +1078,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 
 	return TRUE;
 }
+
 
 
