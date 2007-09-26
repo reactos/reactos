@@ -9,13 +9,16 @@
 #define CR_INVALID_DATA                   0x0000001F
 #endif
 
-typedef DWORD (*CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
-typedef DWORD (*CMP_UNREGNOTIFY) (ULONG );
+typedef DWORD STDCALL (*CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
+typedef DWORD STDCALL (*CMP_UNREGNOTIFY) (ULONG );
 
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
           does not seem to work properly for stack address space. */
 /* kill `left-hand operand of comma expression has no effect' warning */
 #define IsBadWritePtr(lp, n) ((DWORD)lp==n?0:0)
+
+
+static HINSTANCE hSetupApi = NULL;
 
 BOOL STDCALL _InternalLoadString
 (
@@ -253,16 +256,16 @@ RegisterDeviceNotificationW(
   DWORD ConfigRet = 0;
   CMP_REGNOTIFY RegNotify = NULL;
   HDEVNOTIFY hDevNotify = NULL;
-  HINSTANCE hSetupApi = LoadLibraryA("SETUPAPI.DLL");
-  if (hSetupApi == NULL) return NULL;
+  if ( hSetupApi == NULL ) hSetupApi = LoadLibraryA("SETUPAPI.DLL");
+  if ( hSetupApi == NULL ) return NULL;
   RegNotify = (CMP_REGNOTIFY) GetProcAddress ( hSetupApi, "CMP_RegisterNotification");
   if (RegNotify == NULL)
   {
     FreeLibrary ( hSetupApi );
+    hSetupApi = NULL;
     return NULL;
   }
   ConfigRet  = RegNotify ( hRecipient, NotificationFilter, Flags, (PULONG) &hDevNotify);
-  FreeLibrary ( hSetupApi );
   if (ConfigRet != CR_SUCCESS) 
   {
     switch (ConfigRet)
@@ -295,16 +298,16 @@ UnregisterDeviceNotification(
 {
   DWORD ConfigRet = 0;
   CMP_UNREGNOTIFY UnRegNotify = NULL;
-  HINSTANCE hSetupApi = LoadLibraryA("SETUPAPI.DLL");
-  if (hSetupApi == NULL) return FALSE;
+  if ( hSetupApi == NULL ) hSetupApi = LoadLibraryA("SETUPAPI.DLL");
+  if ( hSetupApi == NULL ) return FALSE;
   UnRegNotify = (CMP_UNREGNOTIFY) GetProcAddress ( hSetupApi, "CMP_UnregisterNotification");
   if (UnRegNotify == NULL)
   {
     FreeLibrary ( hSetupApi );
+    hSetupApi = NULL;
     return FALSE;
   }
   ConfigRet  = UnRegNotify ( (ULONG) Handle );
-  FreeLibrary ( hSetupApi );
   if (ConfigRet != CR_SUCCESS) 
   {
     switch (ConfigRet)
