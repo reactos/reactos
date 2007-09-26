@@ -233,6 +233,11 @@ HKCR,"CLSID\{00000320-0000-0000-C000-000000000046}\InProcServer32","ThreadingMod
 ;HKCR,"CLSID\{00000323-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"ole32.dll"
 ;HKCR,"CLSID\{00000323-0000-0000-C000-000000000046}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 
+; deskadp.dll shell extension
+HKCR,"CLSID\{42071712-76d4-11d1-8b24-00a0c9068ff3}","",0x00000000,"Display Adapter CPL Extension"
+HKCR,"CLSID\{42071712-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","",0x00020000,"%SystemRoot%\system32\deskadp.dll"
+HKCR,"CLSID\{42071712-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
+
 ; For comcat.dll
 HKCR,"CLSID\{0002E005-0000-0000-C000-000000000046}","",0x00000000,"StdComponentCategoriesMgr"
 HKCR,"CLSID\{0002E005-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"comcat.dll"

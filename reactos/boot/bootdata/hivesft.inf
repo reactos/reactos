@@ -764,6 +764,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","6",0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","7",0x00000000,"time.windows.com"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","8",0x00000000,"time.nist.gov"
 
+; deskadp.dll shell extension
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\PropertySheetHandlers\Display Adapter CPL Extension","",0x00000000,"{42071712-76d4-11d1-8b24-00a0c9068ff3}"
+
 ; Where to download the Mozilla ActiveX control
 HKLM,"SOFTWARE\ReactOS\shdocvw","MozillaUrl",0x00000000,"http://links.reactos.org/mozactivex"
 
