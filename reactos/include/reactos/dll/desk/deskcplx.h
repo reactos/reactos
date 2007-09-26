@@ -43,4 +43,78 @@ typedef struct _DESK_EXT_INTERFACE
     WCHAR BiosString[128];
 } DESK_EXT_INTERFACE, *PDESK_EXT_INTERFACE;
 
+static PDESK_EXT_INTERFACE __inline
+QueryDeskCplExtInterface(IDataObject *pdo)
+{
+    PDESK_EXT_INTERFACE pRecvBuffer, pExtIface = NULL;
+    FORMATETC fetc;
+    STGMEDIUM medium;
+
+    fetc.cfFormat = (CLIPFORMAT)RegisterClipboardFormat(DESK_EXT_EXTINTERFACE);
+    fetc.ptd = NULL;
+    fetc.dwAspect = DVASPECT_CONTENT;
+    fetc.lindex = -1;
+    fetc.tymed = TYMED_HGLOBAL;
+
+    if (SUCCEEDED(IDataObject_GetData(pdo, &fetc, &medium)) && medium.hGlobal != NULL)
+    {
+        /* We always receive the string in unicode! */
+        pRecvBuffer = (PDESK_EXT_INTERFACE)GlobalLock(medium.hGlobal);
+
+        if (pRecvBuffer->cbSize == sizeof(*pRecvBuffer))
+        {
+            pExtIface = LocalAlloc(LMEM_FIXED, sizeof(*pExtIface));
+            if (pExtIface != NULL)
+            {
+                CopyMemory(pExtIface,
+                           pRecvBuffer,
+                           sizeof(*pRecvBuffer));
+            }
+        }
+
+        GlobalUnlock(medium.hGlobal);
+        ReleaseStgMedium(&medium);
+    }
+
+    return pExtIface;
+}
+
+static LPTSTR __inline
+QueryDeskCplString(IDataObject *pdo, UINT cfFormat)
+{
+    FORMATETC fetc;
+    STGMEDIUM medium;
+    SIZE_T BufLen;
+    LPWSTR lpRecvBuffer;
+    LPTSTR lpStr = NULL;
+
+    fetc.cfFormat = (CLIPFORMAT)cfFormat;
+    fetc.ptd = NULL;
+    fetc.dwAspect = DVASPECT_CONTENT;
+    fetc.lindex = -1;
+    fetc.tymed = TYMED_HGLOBAL;
+
+    if (SUCCEEDED(IDataObject_GetData(pdo, &fetc, &medium)) && medium.hGlobal != NULL)
+    {
+        /* We always receive the string in unicode! */
+        lpRecvBuffer = (LPWSTR)GlobalLock(medium.hGlobal);
+
+        BufLen = wcslen(lpRecvBuffer) + 1;
+        lpStr = LocalAlloc(LMEM_FIXED, BufLen * sizeof(TCHAR));
+        if (lpStr != NULL)
+        {
+#ifdef UNICODE
+            wcscpy(lpStr, lpRecvBuffer);
+#else
+            WideCharToMultiByte(CP_APC, 0, lpRecvBuffer, -1, lpStr, BufLen, NULL, NULL);
+#endif
+        }
+
+        GlobalUnlock(medium.hGlobal);
+        ReleaseStgMedium(&medium);
+    }
+
+    return lpStr;
+}
+
 #endif /* __DESKCPLX__H */

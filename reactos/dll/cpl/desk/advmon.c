@@ -73,44 +73,6 @@ AdvGeneralPageProc(HWND hwndDlg,
     return Ret;
 }
 
-static LPTSTR
-QueryDevSettingsString(IDataObject *pdo, UINT cfFormat)
-{
-    FORMATETC fetc;
-    STGMEDIUM medium;
-    SIZE_T BufLen;
-    LPWSTR lpRecvBuffer;
-    LPTSTR lpStr = NULL;
-
-    fetc.cfFormat = (CLIPFORMAT)cfFormat;
-    fetc.ptd = NULL;
-    fetc.dwAspect = DVASPECT_CONTENT;
-    fetc.lindex = -1;
-    fetc.tymed = TYMED_HGLOBAL;
-
-    if (SUCCEEDED(IDataObject_GetData(pdo, &fetc, &medium)) && medium.hGlobal != NULL)
-    {
-        /* We always receive the string in unicode! */
-        lpRecvBuffer = (LPWSTR)GlobalLock(medium.hGlobal);
-
-        BufLen = wcslen(lpRecvBuffer) + 1;
-        lpStr = LocalAlloc(LMEM_FIXED, BufLen * sizeof(TCHAR));
-        if (lpStr != NULL)
-        {
-#ifdef UNICODE
-            wcscpy(lpStr, lpRecvBuffer);
-#else
-            WideCharToMultiByte(CP_APC, 0, lpRecvBuffer, -1, lpStr, BufLen, NULL, NULL);
-#endif
-        }
-
-        GlobalUnlock(medium.hGlobal);
-        ReleaseStgMedium(&medium);
-    }
-
-    return lpStr;
-}
-
 static VOID
 BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
 {
@@ -126,8 +88,8 @@ BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
     uiMonitorName = RegisterClipboardFormat(DESK_EXT_MONITORNAME);
     uiDisplayName = RegisterClipboardFormat(DESK_EXT_DISPLAYNAME);
 
-    lpMonitorName = QueryDevSettingsString(pdo, uiMonitorName);
-    lpDisplayName = QueryDevSettingsString(pdo, uiDisplayName);
+    lpMonitorName = QueryDeskCplString(pdo, uiMonitorName);
+    lpDisplayName = QueryDeskCplString(pdo, uiDisplayName);
 
     _sntprintf(lpBuffer, dwBufferLen, szFormatBuff, lpMonitorName, lpDisplayName);
 
