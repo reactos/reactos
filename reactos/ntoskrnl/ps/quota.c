@@ -59,6 +59,19 @@ PspDestroyQuotaBlock(PEPROCESS Process)
     }
 }
 
+NTSTATUS
+NTAPI
+PsChargeProcessPageFileQuota(IN PEPROCESS Process,
+                             IN SIZE_T Amount)
+{
+    /* Don't do anything for the system process */
+    if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
+    
+    /* Otherwise, not implemented */
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
+}
+
 /*
  * @implemented
  */
@@ -70,14 +83,12 @@ PsChargePoolQuota(IN PEPROCESS Process,
 {
     NTSTATUS Status;
 
+    /* Don't do anything for the system process */
+    if (Process == PsInitialSystemProcess) return;
+    
     /* Charge the usage */
     Status = PsChargeProcessPoolQuota(Process, PoolType, Amount);
-
-    /* Raise Exception */
-    if (!NT_SUCCESS(Status))
-    {
-        ExRaiseStatus(Status);
-    }
+    if (!NT_SUCCESS(Status)) ExRaiseStatus(Status);
 }
 
 /*
@@ -113,6 +124,9 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
                          IN POOL_TYPE PoolType,
                          IN ULONG Amount)
 {
+    /* Don't do anything for the system process */
+    if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
+
     UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
@@ -126,6 +140,9 @@ PsReturnPoolQuota(IN PEPROCESS Process,
                   IN POOL_TYPE PoolType,
                   IN ULONG_PTR Amount)
 {
+    /* Don't do anything for the system process */
+    if (Process == PsInitialSystemProcess) return;
+
     UNIMPLEMENTED;
 }
 
@@ -137,6 +154,9 @@ STDCALL
 PsReturnProcessNonPagedPoolQuota(IN PEPROCESS Process,
                                  IN ULONG_PTR Amount)
 {
+    /* Don't do anything for the system process */
+    if (Process == PsInitialSystemProcess) return;
+
     UNIMPLEMENTED;
 }
 
@@ -148,7 +168,23 @@ STDCALL
 PsReturnProcessPagedPoolQuota(IN PEPROCESS Process,
                               IN ULONG_PTR Amount)
 {
+    /* Don't do anything for the system process */
+    if (Process == PsInitialSystemProcess) return;
+
     UNIMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+PsReturnProcessPageFileQuota(IN PEPROCESS Process,
+                             IN SIZE_T Amount)
+{
+    /* Don't do anything for the system process */
+    if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
+    
+    /* Otherwise, not implemented */
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

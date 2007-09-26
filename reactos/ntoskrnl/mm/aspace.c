@@ -39,11 +39,11 @@ MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 
    if (AddressSpace->Process)
    {
-       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&AddressSpace->Process->AddressCreationLock);
+       ExEnterCriticalRegionAndAcquireFastMutexUnsafe((PFAST_MUTEX)&AddressSpace->Process->AddressCreationLock);
    }
    else
    {
-       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&KernelAddressSpaceLock);
+       ExEnterCriticalRegionAndAcquireFastMutexUnsafe((PFAST_MUTEX)&KernelAddressSpaceLock);
    }
 }
 
@@ -60,11 +60,11 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
    }
    if (AddressSpace->Process)
    {
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Process->AddressCreationLock);
+        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion((PFAST_MUTEX)&AddressSpace->Process->AddressCreationLock);
    }
    else
    {
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&KernelAddressSpaceLock);
+        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion((PFAST_MUTEX)&KernelAddressSpaceLock);
    }
 }
 
@@ -98,11 +98,11 @@ MmInitializeAddressSpace(PEPROCESS Process,
    AddressSpace->MemoryAreaRoot = NULL;
    if (Process)
    {
-       ExInitializeFastMutex(&Process->AddressCreationLock);
+       ExInitializeFastMutex((PFAST_MUTEX)&Process->AddressCreationLock);
    }
    else
    {
-        ExInitializeFastMutex(&KernelAddressSpaceLock);
+        ExInitializeFastMutex((PFAST_MUTEX)&KernelAddressSpaceLock);
    }
    if (Process != NULL)
    {

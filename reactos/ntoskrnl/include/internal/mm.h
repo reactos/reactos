@@ -1457,4 +1457,14 @@ MmCheckSystemImage(
     IN BOOLEAN PurgeSection
 );
 
+FORCEINLINE
+VOID
+NTAPI
+MiSyncThreadProcessViews(IN PKPROCESS Process,
+                         IN PVOID Address,
+                         IN ULONG Size)
+{
+    MmUpdatePageDir((PEPROCESS)Process, Address, Size);
+}
+
 #endif

@@ -248,20 +248,6 @@ typedef struct _MMPTE
 } MMPTE, *PMMPTE;
 
 //
-// Section Information structure
-//
-typedef struct _MI_EXTRA_IMAGE_INFORMATION
-{
-    ULONG SizeOfHeaders;
-} MI_EXTRA_IMAGE_INFORMATION, *PMI_EXTRA_IMAGE_INFORMATION;
-
-typedef struct _MI_SECTION_IMAGE_INFORMATION
-{
-    SECTION_IMAGE_INFORMATION ExportedImageInformation;
-    MI_EXTRA_IMAGE_INFORMATION InternalImageInformation;
-} MI_SECTION_IMAGE_INFORMATION, *PMI_SECTION_IMAGE_INFORMATION;
-
-//
 // Section Extension Information
 //
 typedef struct _MMEXTEND_INFO
@@ -295,12 +281,12 @@ typedef struct _SEGMENT
     PVOID BaseAddress;
     union
     {
-        ULONG ImageCommitment;
+        SIZE_T ImageCommitment;
         PEPROCESS CreatingProcess;
     } u1;
     union
     {
-        PMI_SECTION_IMAGE_INFORMATION ImageInformation;
+        PSECTION_IMAGE_INFORMATION ImageInformation;
         PVOID FirstMappedVa;
     } u2;
     PMMPTE PrototypePte;
@@ -545,7 +531,7 @@ typedef struct _MMWSLE
         PVOID VirtualAddress;
         ULONG Long;
         MMWSLENTRY e1;
-    };
+    } u1;
 } MMWSLE, *PMMWSLE;
 
 typedef struct _MMWSLE_HASH

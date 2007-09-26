@@ -592,7 +592,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
     /* Check if we have a section object and map the system DLL */
-    if (SectionObject) PspMapSystemDll(Process, NULL);
+    if (SectionObject) PspMapSystemDll(Process, NULL, FALSE);
 
     /* Create a handle for the Process */
     CidEntry.Object = Process;

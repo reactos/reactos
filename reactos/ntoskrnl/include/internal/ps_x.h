@@ -20,18 +20,20 @@
     ((Mask) & 48)
 
 //
-// Set Process Flag routines
-//
-#define PspSetProcessFlag(Process, Flag) \
- InterlockedOr((PLONG)&Process->Flags, Flag)
-
-//
 // Cross Thread Flag routines
 //
 #define PspSetCrossThreadFlag(Thread, Flag)                 \
     InterlockedOr((PLONG)&Thread->CrossThreadFlags, Flag)
 #define PspClearCrossThreadFlag(Thread, Flag)               \
     InterlockedAnd((PLONG)&Thread->CrossThreadFlags, ~Flag)
+
+//
+// Process flag routines
+//
+#define PspSetProcessFlag(Process, Flag) \
+    InterlockedOr((PLONG)&Process->Flags, Flag)
+#define PspClearProcessFlag(Process, Flag) \
+    InterlockedAnd((PLONG)&Process->Flags, ~Flag)
 
 VOID
 FORCEINLINE

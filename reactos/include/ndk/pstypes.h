@@ -1177,16 +1177,12 @@ typedef struct _EPROCESS
     EX_PUSH_LOCK AddressCreationLock;
     PETHREAD RotateInProgress;
 #else
-    FAST_MUTEX AddressCreationLock; // FIXME: FAST_MUTEX for XP, KGUARDED_MUTEX for 2K3
+    KGUARDED_MUTEX AddressCreationLock;
     KSPIN_LOCK HyperSpaceLock;
 #endif
     PETHREAD ForkInProgress;
     ULONG HardwareTrigger;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PMM_AVL_TABLE PhysicalVadroot;
-#else
-    MM_AVL_TABLE PhysicalVadroot;
-#endif
+    PMM_AVL_TABLE PhysicalVadRoot;
     PVOID CloneRoot;
     ULONG NumberOfPrivatePages;
     ULONG NumberOfLockedPages;

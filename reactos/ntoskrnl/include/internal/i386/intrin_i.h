@@ -80,6 +80,9 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 
 #define Ke386FnInit()               __asm__("fninit\n\t");
 
+#define Ke386WbInvd()               __asm__("wbinvd\n\t");
+
+
 //
 // CR Macros
 //

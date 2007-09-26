@@ -751,6 +751,15 @@ VOID
 NTAPI
 KeFlushCurrentTb(VOID);
 
+BOOLEAN
+NTAPI
+KeInvalidateAllCaches(VOID);
+
+VOID
+FASTCALL
+KeZeroPages(IN PVOID Address,
+            IN ULONG Size);
+
 VOID
 NTAPI
 KeRosDumpStackFrames(

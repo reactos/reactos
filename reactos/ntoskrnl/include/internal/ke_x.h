@@ -96,7 +96,7 @@ Ke386SanitizeDr(IN PVOID DrAddress,
     PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);                                \
     ASSERT(_Thread == KeGetCurrentThread());                                \
     ASSERT((_Thread->SpecialApcDisable <= 0) &&                             \
            (_Thread->SpecialApcDisable != -32768));                         \
@@ -113,7 +113,7 @@ Ke386SanitizeDr(IN PVOID DrAddress,
     PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);                                \
     ASSERT(_Thread == KeGetCurrentThread());                                \
     ASSERT(_Thread->SpecialApcDisable < 0);                                 \
                                                                             \
@@ -1538,5 +1538,13 @@ KeGetPreviousMode(VOID)
 {
     /* Return the current mode */
     return KeGetCurrentThread()->PreviousMode;
+}
+
+VOID
+FORCEINLINE
+KeFlushProcessTb(VOID)
+{
+    /* Flush the TLB by resetting CR3 */
+    __writecr3(__readcr3());
 }
 

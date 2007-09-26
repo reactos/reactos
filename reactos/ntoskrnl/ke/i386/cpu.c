@@ -78,6 +78,9 @@ BOOLEAN KiSMTProcessorsPresent;
 KIRQL KiOldIrql;
 ULONG KiFreezeFlag;
 
+/* Flush data */
+volatile LONG KiTbFlushTimeStamp;
+
 /* CPU Signatures */
 static const CHAR CmpIntelID[]       = "GenuineIntel";
 static const CHAR CmpAmdID[]         = "AuthenticAMD";
@@ -880,6 +883,27 @@ KeThawExecution(IN BOOLEAN Enable)
 
     /* Re-enable interrupts */
     if (Enable) _enable();
+}
+
+BOOLEAN
+NTAPI
+KeInvalidateAllCaches(VOID)
+{
+    /* Only supported on Pentium Pro and higher */
+    if (KeI386CpuType < 6) return FALSE;
+
+    /* Invalidate all caches */
+    Ke386WbInvd();
+    return TRUE;
+}
+
+VOID
+FASTCALL
+KeZeroPages(IN PVOID Address,
+            IN ULONG Size)
+{
+    /* Not using XMMI in this routine */
+    RtlZeroMemory(Address, Size);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

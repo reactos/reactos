@@ -128,6 +128,11 @@ static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePoin
 	return __sync_lock_test_and_set(Target, Value);
 }
 
+static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
+{
+	return __sync_fetch_and_add(Addend, Value);
+}
+
 static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const Addend, const long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
@@ -236,6 +241,13 @@ static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePoin
 {
 	void * retval = Value;
 	__asm__("xchgl %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
+	return retval;
+}
+
+static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
+{
+	long retval = Value;
+	__asm__("lock; xaddw %[retval], %[Addend]" : [retval] "+r" (retval) : [Addend] "m" (*Addend) : "memory");
 	return retval;
 }
 
@@ -424,6 +436,16 @@ static __inline__ __attribute__((always_inline)) long _InterlockedDecrement(vola
 static __inline__ __attribute__((always_inline)) long _InterlockedIncrement(volatile long * const lpAddend)
 {
 	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
+}
+
+static __inline__ __attribute__((always_inline)) long _InterlockedDecrement16(volatile short * const lpAddend)
+{
+	return _InterlockedExchangeAdd16(lpAddend, -1) - 1;
+}
+
+static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(volatile short * const lpAddend)
+{
+	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
 
 static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset(volatile long * a, const long b)

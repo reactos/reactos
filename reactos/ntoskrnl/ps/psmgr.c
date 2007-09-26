@@ -218,13 +218,14 @@ PspLookupKernelUserEntryPoints(VOID)
 NTSTATUS
 NTAPI
 PspMapSystemDll(IN PEPROCESS Process,
-                IN PVOID *DllBase)
+                IN PVOID *DllBase,
+                IN BOOLEAN UseLargePages)
 {
     NTSTATUS Status;
     LARGE_INTEGER Offset = {{0}};
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
-
+    
     /* Map the System DLL */
     Status = MmMapViewOfSection(PspSystemDllSection,
                                 Process,
@@ -236,7 +237,12 @@ PspMapSystemDll(IN PEPROCESS Process,
                                 ViewShare,
                                 0,
                                 PAGE_READWRITE);
-
+    if (Status != STATUS_SUCCESS)
+    {
+        /* Normalize status code */
+        Status = STATUS_CONFLICTING_ADDRESSES;
+    }
+    
     /* Write the image base and return status */
     if (DllBase) *DllBase = ImageBase;
     return Status;
@@ -316,7 +322,7 @@ PsLocateSystemDll(VOID)
     }
 
     /* Map it */
-    Status = PspMapSystemDll(PsGetCurrentProcess(), &PspSystemDllBase);
+    Status = PspMapSystemDll(PsGetCurrentProcess(), &PspSystemDllBase, FALSE);
     if (!NT_SUCCESS(Status))
     {
         /* Failed, bugcheck */

@@ -9689,6 +9689,20 @@ MmMapLockedPages(
 NTKERNELAPI
 PVOID
 NTAPI
+MmLockPageableDataSection (
+    IN PVOID AddressWithinSection
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmUnlockPageableImageSection(
+    IN PVOID ImageSectionHandle
+);
+
+NTKERNELAPI
+PVOID
+NTAPI
 MmPageEntireDriver(
   IN PVOID  AddressWithinSection);
 
@@ -9747,6 +9761,9 @@ MmUnsecureVirtualMemory(
     ASSERT(((_Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
   } \
 }
+
+#define MmGetProcedureAddress(Address) (Address)
+#define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 NTKERNELAPI
 VOID

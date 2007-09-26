@@ -105,7 +105,8 @@ NTSTATUS
 NTAPI
 PspMapSystemDll(
     IN PEPROCESS Process,
-    OUT PVOID *DllBase
+    OUT PVOID *DllBase,
+    IN BOOLEAN UseLargePages
 );
 
 NTSTATUS
@@ -347,6 +348,23 @@ NTAPI
 PsSuspendThread(
     IN PETHREAD Thread,
     OUT PULONG PreviousCount OPTIONAL
+);
+
+//
+// Process Quotas
+//
+NTSTATUS
+NTAPI
+PsReturnProcessPageFileQuota(
+    IN PEPROCESS Process,
+    IN SIZE_T Amount
+);
+
+NTSTATUS
+NTAPI
+PsChargeProcessPageFileQuota(
+    IN PEPROCESS Process,
+    IN SIZE_T Amount
 );
 
 //
