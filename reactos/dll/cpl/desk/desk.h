@@ -12,6 +12,7 @@
 #include <shlobj.h>
 #include <regstr.h>
 #include <cplext.h>
+#include <dll/desk/deskcplx.h>
 
 #include "resource.h"
 

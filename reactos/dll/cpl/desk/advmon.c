@@ -123,8 +123,8 @@ BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
         szFormatBuff[0] = _T('\0');
     }
 
-    uiMonitorName = RegisterClipboardFormat(TEXT("Monitor Name"));
-    uiDisplayName = RegisterClipboardFormat(TEXT("Display Name"));
+    uiMonitorName = RegisterClipboardFormat(DESK_EXT_MONITORNAME);
+    uiDisplayName = RegisterClipboardFormat(DESK_EXT_DISPLAYNAME);
 
     lpMonitorName = QueryDevSettingsString(pdo, uiMonitorName);
     lpDisplayName = QueryDevSettingsString(pdo, uiDisplayName);

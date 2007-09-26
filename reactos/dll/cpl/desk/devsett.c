@@ -12,37 +12,6 @@
 
 #define DEBUG_DEVSETTINGS
 
-#define DESK_EXT_CALLBACK CALLBACK
-
-typedef PDEVMODEW (DESK_EXT_CALLBACK *PDESK_EXT_ENUMALLMODES)(PVOID Context, DWORD Index);
-typedef PDEVMODEW (DESK_EXT_CALLBACK *PDESK_EXT_GETCURRENTMODE)(PVOID Context);
-typedef BOOL (DESK_EXT_CALLBACK *PDESK_EXT_SETCURRENTMODE)(PVOID Context, const DEVMODEW *pDevMode);
-typedef VOID (DESK_EXT_CALLBACK *PDESK_EXT_GETPRUNINGMODE)(PVOID Context, PBOOL pbModesPruned, PBOOL pbKeyIsReadOnly, PBOOL pbPruningOn);
-typedef VOID (DESK_EXT_CALLBACK *PDESK_EXT_SETPRUNINGMODE)(PVOID Context, BOOL PruningOn);
-
-typedef struct _DESK_EXT_INTERFACE
-{
-    /* NOTE: This structure is binary compatible to XP. The windows shell
-             extensions rely on this structure to be properly filled! */
-    DWORD cbSize;
-
-    PVOID Context; /* This value is passed on to the callback routines */
-
-    /* Callback routines called by the shell extensions */
-    PDESK_EXT_ENUMALLMODES EnumAllModes;
-    PDESK_EXT_SETCURRENTMODE SetCurrentMode;
-    PDESK_EXT_GETCURRENTMODE GetCurrentMode;
-    PDESK_EXT_SETPRUNINGMODE SetPruningMode;
-    PDESK_EXT_GETPRUNINGMODE GetPruningMode;
-
-    /* HardwareInformation.* values provided in the device registry key */
-    WCHAR MemorySize[128];
-    WCHAR ChipType[128];
-    WCHAR DacType[128];
-    WCHAR AdapterString[128];
-    WCHAR BiosString[128];
-} DESK_EXT_INTERFACE, *PDESK_EXT_INTERFACE;
-
 typedef struct _CDevSettings
 {
     const struct IDataObjectVtbl *lpIDataObjectVtbl;
@@ -424,16 +393,16 @@ pCDevSettings_Initialize(PCDevSettings This,
     DPRINT1("This->StateFlags: %x\n", This->StateFlags);
 
     /* Register clipboard formats */
-    This->cfExtInterface = RegisterClipboardFormat(TEXT("Desk.cpl extension interface"));
-    This->cfDisplayDevice = RegisterClipboardFormat(TEXT("Display Device"));
-    This->cfDisplayName = RegisterClipboardFormat(TEXT("Display Name"));
-    This->cfDisplayId = RegisterClipboardFormat(TEXT("Display ID"));
-    This->cfDisplayKey = RegisterClipboardFormat(TEXT("Display Key"));
-    This->cfDisplayStateFlags = RegisterClipboardFormat(TEXT("Display State Flags"));
-    This->cfMonitorName = RegisterClipboardFormat(TEXT("Monitor Name"));
-    This->cfMonitorDevice = RegisterClipboardFormat(TEXT("Monitor Device"));
-    This->cfMonitorId = RegisterClipboardFormat(TEXT("Monitor ID"));
-    This->cfPruningMode = RegisterClipboardFormat(TEXT("Pruning Mode"));
+    This->cfExtInterface = RegisterClipboardFormat(DESK_EXT_EXTINTERFACE);
+    This->cfDisplayDevice = RegisterClipboardFormat(DESK_EXT_DISPLAYDEVICE);
+    This->cfDisplayName = RegisterClipboardFormat(DESK_EXT_DISPLAYNAME);
+    This->cfDisplayId = RegisterClipboardFormat(DESK_EXT_DISPLAYID);
+    This->cfDisplayKey = RegisterClipboardFormat(DESK_EXT_DISPLAYKEY);
+    This->cfDisplayStateFlags = RegisterClipboardFormat(DESK_EXT_DISPLAYSTATEFLAGS);
+    This->cfMonitorName = RegisterClipboardFormat(DESK_EXT_MONITORNAME);
+    This->cfMonitorDevice = RegisterClipboardFormat(DESK_EXT_MONITORDEVICE);
+    This->cfMonitorId = RegisterClipboardFormat(DESK_EXT_MONITORID);
+    This->cfPruningMode = RegisterClipboardFormat(DESK_EXT_PRUNINGMODE);
 
     /* Copy the device name */
     This->pDisplayDevice = pCDevSettings_AllocAndCopyString(DisplayDeviceInfo->DeviceName);
