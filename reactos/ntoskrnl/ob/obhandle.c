@@ -1956,40 +1956,57 @@ ObClearProcessHandleTable(IN PEPROCESS Process)
 *--*/
 NTSTATUS
 NTAPI
-ObpCreateHandleTable(IN PEPROCESS Parent,
-                     IN PEPROCESS Process)
+ObInitProcess(IN PEPROCESS Parent OPTIONAL,
+              IN PEPROCESS Process)
 {
-    PHANDLE_TABLE HandleTable;
-    PAGED_CODE();
-
-    /* Check if we have a parent */
+    PHANDLE_TABLE ParentTable, ObjectTable;
+    
+    /* Check for a parent */
     if (Parent)
     {
-        /* Get the parent's table */
-        HandleTable = ObReferenceProcessHandleTable(Parent);
-        if (!HandleTable) return STATUS_PROCESS_IS_TERMINATING;
-
-        /* Duplicate the parent's */
-        HandleTable = ExDupHandleTable(Process,
-                                       HandleTable,
+        /* Reference the parent's table */
+        ParentTable = ObReferenceProcessHandleTable(Parent);
+        if (!ParentTable) return STATUS_PROCESS_IS_TERMINATING;
+        
+        /* Duplicate it */
+        ObjectTable = ExDupHandleTable(Process,
+                                       ParentTable,
                                        ObpDuplicateHandleCallback,
                                        OBJ_INHERIT);
     }
     else
     {
-        /* Create a new one */
-        HandleTable = ExCreateHandleTable(Process);
+        /* Otherwise just create a new table */
+        ParentTable = NULL;
+        ObjectTable = ExCreateHandleTable(Process);
     }
-
-    /* Now write it */
-    Process->ObjectTable = HandleTable;
-
-    /* Dereference the parent's handle table if we have one */
-    if (Parent) ObDereferenceProcessHandleTable(Parent);
-
-    /* Fail or succeed depending on whether we got a handle table or not */
-    if (!HandleTable) return STATUS_INSUFFICIENT_RESOURCES;
-    return STATUS_SUCCESS;
+    
+    /* Make sure we have a table */
+    if (ObjectTable)
+    {
+        /* Associate it */       
+        Process->ObjectTable = ObjectTable;
+        
+        /* Check for auditing */
+        if (SeDetailedAuditingWithToken(NULL))
+        {
+            /* FIXME: TODO */
+            DPRINT1("Need auditing!\n");
+        }
+        
+        /* Get rid of the old table now */
+        if (ParentTable) ObDereferenceProcessHandleTable(Parent);
+        
+        /* We are done */
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Fail */
+        Process->ObjectTable = NULL;
+        if (ParentTable) ObDereferenceProcessHandleTable(Parent);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 }
 
 /*++

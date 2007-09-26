@@ -471,10 +471,34 @@ MmCreateTeb(PEPROCESS Process,
 }
 
 NTSTATUS
-STDCALL
-MmCreateProcessAddressSpace(IN PEPROCESS Process,
-                            IN PROS_SECTION_OBJECT Section OPTIONAL,
-                            IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
+NTAPI
+MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
+{
+    PVOID BaseAddress;
+    PMEMORY_AREA MemoryArea;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    NTSTATUS Status;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    
+    /* Create the shared data page */
+    BaseAddress = (PVOID)USER_SHARED_DATA;
+    Status = MmCreateMemoryArea(ProcessAddressSpace,
+                                MEMORY_AREA_SHARED_DATA,
+                                &BaseAddress,
+                                PAGE_SIZE,
+                                PAGE_EXECUTE_READ,
+                                &MemoryArea,
+                                FALSE,
+                                0,
+                                BoundaryAddressMultiple);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MmInitializeProcessAddressSpace(IN PEPROCESS Process,
+                                IN PVOID Section OPTIONAL,
+                                IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
 {
     NTSTATUS Status;
     PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
@@ -483,6 +507,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
+    PROS_SECTION_OBJECT SectionObject = Section;
     BoundaryAddressMultiple.QuadPart = 0;
 
     /* Initialize the Addresss Space */
@@ -546,7 +571,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     Process->HasAddressSpace = TRUE;
 
     /* Check if there's a Section Object */
-    if (Section)
+    if (SectionObject)
     {
         UNICODE_STRING FileName;
         PWCHAR szSrc;
@@ -558,7 +583,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         MmUnlockAddressSpace(ProcessAddressSpace);
 
         DPRINT("Mapping process image. Section: %p, Process: %p, ImageBase: %p\n",
-                 Section, Process, &ImageBase);
+                 SectionObject, Process, &ImageBase);
         Status = MmMapViewOfSection(Section,
                                     (PEPROCESS)Process,
                                     (PVOID*)&ImageBase,
@@ -580,7 +605,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
 
         /* Determine the image file name and save it to EPROCESS */
         DPRINT("Getting Image name\n");
-        FileName = Section->FileObject->FileName;
+        FileName = SectionObject->FileObject->FileName;
         szSrc = (PWCHAR)(FileName.Buffer + FileName.Length);
         while (szSrc >= FileName.Buffer)
         {
@@ -608,7 +633,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         if (AuditName)
         {
             /* Setup the audit name */
-            SeInitializeProcessAuditName(Section->FileObject,
+            SeInitializeProcessAuditName(SectionObject->FileObject,
                                          FALSE,
                                          AuditName);
         }

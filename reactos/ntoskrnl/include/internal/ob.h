@@ -191,8 +191,8 @@ ObpDeleteSymbolicLinkName(
 //
 NTSTATUS
 NTAPI
-ObpCreateHandleTable(
-    IN PEPROCESS Parent,
+ObInitProcess(
+    IN PEPROCESS Parent OPTIONAL,
     IN PEPROCESS Process
 );
 

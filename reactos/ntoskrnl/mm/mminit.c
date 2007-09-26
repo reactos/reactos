@@ -432,6 +432,9 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
+        /* Initialize the address space for the system process */
+        MmInitializeProcessAddressSpace(PsGetCurrentProcess(), NULL, NULL);
+
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);
 

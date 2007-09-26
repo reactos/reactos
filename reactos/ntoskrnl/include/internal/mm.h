@@ -612,9 +612,9 @@ MmShowOutOfSpaceMessagePagingFile(VOID);
 
 NTSTATUS
 NTAPI
-MmCreateProcessAddressSpace(
+MmInitializeProcessAddressSpace(
     IN PEPROCESS Process,
-    IN PROS_SECTION_OBJECT Section OPTIONAL,
+    IN PVOID Section OPTIONAL,
     IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL
 );
 
@@ -1189,12 +1189,26 @@ MmGetPfnForProcess(
     PVOID Address
 );
 
+BOOLEAN
+NTAPI
+MmCreateProcessAddressSpace(
+    IN ULONG MinWs,
+    IN PEPROCESS Dest,
+    IN PLARGE_INTEGER DirectoryTableBase
+);
+
 NTSTATUS
 NTAPI
-MmCopyMmInfo(
-    struct _EPROCESS *Src,
-    struct _EPROCESS *Dest,
-    PPHYSICAL_ADDRESS DirectoryTableBase
+MmInitializeHandBuiltProcess(
+    IN PEPROCESS Process,
+    IN PLARGE_INTEGER DirectoryTableBase
+);
+
+
+NTSTATUS
+NTAPI
+MmInitializeHandBuiltProcess2(
+    IN PEPROCESS Process
 );
 
 NTSTATUS

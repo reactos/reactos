@@ -85,11 +85,11 @@ Author:
 #define PS_REQUEST_BREAKAWAY                    1
 #define PS_NO_DEBUG_INHERIT                     2
 #define PS_INHERIT_HANDLES                      4
-#define PS_UNKNOWN_VALUE                        8
+#define PS_LARGE_PAGES                          8
 #define PS_ALL_FLAGS                            (PS_REQUEST_BREAKAWAY | \
                                                  PS_NO_DEBUG_INHERIT  | \
                                                  PS_INHERIT_HANDLES   | \
-                                                 PS_UNKNOWN_VALUE)
+                                                 PS_LARGE_PAGES)
 
 //
 // Process base priorities

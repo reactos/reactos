@@ -325,17 +325,33 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 }
 
 NTSTATUS
+NTAPI
+MmInitializeHandBuiltProcess(IN PEPROCESS Process,
+                             IN PLARGE_INTEGER DirectoryTableBase)
+{
+    /* Share the directory base with the idle process */
+    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
+    
+    /* Initialize the Addresss Space */
+    MmInitializeAddressSpace(Process, (PMADDRESS_SPACE)&Process->VadRoot);
+    
+    /* The process now has an address space */
+    Process->HasAddressSpace = TRUE;
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN
 STDCALL
-MmCopyMmInfo(PEPROCESS Src,
-             PEPROCESS Dest,
-             PPHYSICAL_ADDRESS DirectoryTableBase)
+MmCreateProcessAddressSpace(IN ULONG MinWs,
+                            IN PEPROCESS Process,
+                            IN PLARGE_INTEGER DirectoryTableBase)
 {
    NTSTATUS Status;
    ULONG i, j;
    PFN_TYPE Pfn[7];
    ULONG Count;
 
-   DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
+   DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", MinWs, Process);
 
    Count = Ke386Pae ? 7 : 2;
 
@@ -344,11 +360,12 @@ MmCopyMmInfo(PEPROCESS Src,
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn[i]);
       if (!NT_SUCCESS(Status))
       {
-	 for (j = 0; j < i; j++)
-	 {
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
-	 }
-	 return Status;
+          for (j = 0; j < i; j++)
+          {
+              MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
+          }
+          
+          return FALSE;
       }
    }
 
@@ -400,7 +417,7 @@ MmCopyMmInfo(PEPROCESS Src,
 
    DirectoryTableBase->QuadPart = PFN_TO_PTE(Pfn[0]);
    DPRINT("Finished MmCopyMmInfo(): %I64x\n", DirectoryTableBase->QuadPart);
-   return(STATUS_SUCCESS);
+   return TRUE;
 }
 
 VOID
