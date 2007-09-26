@@ -85,7 +85,7 @@ InitListAllModesDialog(PDESKDISPLAYADAPTER This,
                        HWND hwndListAllModesDlg)
 {
     TCHAR szFormat[64], szBuffer[64], szColors[64], szRefreshRate[64];
-    PDEVMODEW lpDevMode;
+    PDEVMODEW lpDevMode, lpCurrentDevMode;
     DWORD dwIndex = 0;
     INT i;
 
@@ -98,6 +98,8 @@ InitListAllModesDialog(PDESKDISPLAYADAPTER This,
         {
             szFormat[0] = TEXT('\0');
         }
+
+        lpCurrentDevMode = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
 
         do
         {
@@ -133,6 +135,15 @@ InitListAllModesDialog(PDESKDISPLAYADAPTER This,
                                        LB_SETITEMDATA,
                                        (WPARAM)i,
                                        (LPARAM)lpDevMode);
+
+                    if (lpDevMode == lpCurrentDevMode)
+                    {
+                        SendDlgItemMessage(hwndListAllModesDlg,
+                                           IDC_ALLVALIDMODES,
+                                           LB_SETCURSEL,
+                                           (WPARAM)i,
+                                           0);
+                    }
                 }
             }
 
@@ -300,7 +311,6 @@ DisplayAdapterDlgProc(HWND hwndDlg,
                     break;
 
                 case IDC_LISTALLMODES:
-                    MessageBox(hwndDlg, _T("Bla"), NULL, 0);
                     ShowListAllModes(This);
                     break;
             }
