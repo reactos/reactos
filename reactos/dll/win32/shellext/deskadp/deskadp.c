@@ -5,6 +5,54 @@
 
 static HINSTANCE hInstance;
 
+typedef INT_PTR (WINAPI *PDEVICEPROPERTIESEXW)(HWND,LPCWSTR,LPCWSTR,DWORD,BOOL);
+
+static VOID
+ShowAdapterProperties(PDESKDISPLAYADAPTER This)
+{
+    HMODULE hDevMgr;
+    PDEVICEPROPERTIESEXW pDevicePropertiesExW;
+
+    hDevMgr = LoadLibrary(TEXT("devmgr.dll"));
+    if (hDevMgr != NULL)
+    {
+        pDevicePropertiesExW = (PDEVICEPROPERTIESEXW)GetProcAddress(hDevMgr,
+                                                                    "DevicePropertiesExW");
+        if (pDevicePropertiesExW != NULL)
+        {
+            pDevicePropertiesExW(This->hwndDlg,
+                                 NULL,
+                                 This->lpDeviceId,
+                                 0,
+                                 FALSE);
+        }
+
+        FreeLibrary(hDevMgr);
+    }
+}
+
+static VOID
+InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
+{
+    LPTSTR lpAdapterName;
+
+    This->lpDeviceId = QueryDeskCplString(This->pdtobj,
+                                          RegisterClipboardFormat(DESK_EXT_DISPLAYID));
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDC_ADAPTERPROPERTIES),
+                 This->lpDeviceId != NULL && This->lpDeviceId[0] != TEXT('\0'));
+    lpAdapterName = QueryDeskCplString(This->pdtobj,
+                                       RegisterClipboardFormat(DESK_EXT_DISPLAYNAME));
+    if (lpAdapterName != NULL)
+    {
+        SetDlgItemText(This->hwndDlg,
+                       IDC_ADAPTERNAME,
+                       lpAdapterName);
+
+        LocalFree((HLOCAL)lpAdapterName);
+    }
+}
+
 static INT_PTR CALLBACK
 DisplayAdapterDlgProc(HWND hwndDlg,
                       UINT uMsg,
@@ -24,11 +72,23 @@ DisplayAdapterDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
             This = (PDESKDISPLAYADAPTER)((LPCPROPSHEETPAGE)lParam)->lParam;
+            This->hwndDlg = hwndDlg;
             SetWindowLongPtr(hwndDlg,
                              DWL_USER,
                              (LONG_PTR)This);
 
+            InitDisplayAdapterDialog(This);
             Ret = TRUE;
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_ADAPTERPROPERTIES:
+                    ShowAdapterProperties(This);
+                    break;
+            }
+
             break;
     }
 
@@ -48,6 +108,12 @@ IDeskDisplayAdapter_Destroy(PDESKDISPLAYADAPTER This)
     {
         LocalFree((HLOCAL)This->DeskExtInterface);
         This->DeskExtInterface = NULL;
+    }
+
+    if (This->lpDeviceId != NULL)
+    {
+        LocalFree((HLOCAL)This->lpDeviceId);
+        This->lpDeviceId = NULL;
     }
 }
 

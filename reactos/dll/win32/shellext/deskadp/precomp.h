@@ -3,6 +3,7 @@
 
 #define COBJMACROS
 #include <windows.h>
+#include <tchar.h>
 #include <shlobj.h>
 #include <dll/desk/deskcplx.h>
 #include "deskadp.h"

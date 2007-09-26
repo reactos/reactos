@@ -3,4 +3,7 @@
 
 #define IDD_DISPLAYADAPTER  100
 
+#define IDC_ADAPTERNAME 201
+#define IDC_ADAPTERPROPERTIES 201
+
 #endif /* __RESOURCE__H */

@@ -8,8 +8,10 @@ typedef struct _DESKDISPLAYADAPTER
     const struct IClassFactoryVtbl *lpIClassFactoryVtbl;
     DWORD ref;
 
+    HWND hwndDlg;
     PDESK_EXT_INTERFACE DeskExtInterface;
     IDataObject *pdtobj;
+    LPTSTR lpDeviceId;
 } DESKDISPLAYADAPTER, *PDESKDISPLAYADAPTER;
 
 extern LONG dll_refs;
