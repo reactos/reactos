@@ -1846,7 +1846,7 @@ MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
         if (PropPages[i].uiReplaceWith != 0 && hpsxa != NULL &&
             SHReplaceFromPropSheetExtArray(hpsxa, PropPages[i].uiReplaceWith, PropSheetAddPage, (LPARAM)&psh) != 0)
         {
-            /* The shell extension added one or more pages to replace the background page.
+            /* The shell extension added one or more pages to replace a page.
                Don't create the built-in page anymore! */
             continue;
         }
