@@ -51,6 +51,25 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
 
         LocalFree((HLOCAL)lpAdapterName);
     }
+
+    if (This->DeskExtInterface != NULL)
+    {
+        SetDlgItemTextW(This->hwndDlg,
+                        IDC_CHIPTYPE,
+                        This->DeskExtInterface->ChipType);
+        SetDlgItemTextW(This->hwndDlg,
+                        IDC_DACTYPE,
+                        This->DeskExtInterface->DacType);
+        SetDlgItemTextW(This->hwndDlg,
+                        IDC_MEMORYSIZE,
+                        This->DeskExtInterface->MemorySize);
+        SetDlgItemTextW(This->hwndDlg,
+                        IDC_ADAPTERSTRING,
+                        This->DeskExtInterface->AdapterString);
+        SetDlgItemTextW(This->hwndDlg,
+                        IDC_BIOSINFORMATION,
+                        This->DeskExtInterface->BiosString);
+    }
 }
 
 static INT_PTR CALLBACK

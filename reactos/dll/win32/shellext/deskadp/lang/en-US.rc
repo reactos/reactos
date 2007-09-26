@@ -8,5 +8,16 @@ BEGIN
   GROUPBOX "Adapter Type", -1, 7, 3, 237, 50
   LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20
   PUSHBUTTON "&Properties", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+  GROUPBOX "Adapter Information", -1, 7, 56, 237, 75
+  LTEXT "Chip Type:", -1, 13, 68, 58, 8
+  LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8
+  LTEXT "DAC Type:", -1, 13, 80, 58, 8
+  LTEXT "", IDC_DACTYPE, 71, 80, 160, 8
+  LTEXT "Memory Size:", -1, 13, 92, 58, 8
+  LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8
+  LTEXT "Adapter String:", -1, 13, 104, 58, 8
+  LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8
+  LTEXT "BIOS Information:", -1, 13, 116, 58, 8
+  LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8
 END
 
