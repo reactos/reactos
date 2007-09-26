@@ -30,6 +30,7 @@
 #include <devguid.h>
 #include <commctrl.h>
 #include <cpl.h>
+#include <cplext.h>
 
 #include "main.h"
 #include "resource.h"
@@ -49,15 +50,42 @@ APPLET Applets[NUM_APPLETS] =
 };
 
 
-VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+BOOL
+InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc)
 {
-    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-    psp->dwSize = sizeof(PROPSHEETPAGE);
-    psp->dwFlags = PSP_DEFAULT;
-    psp->hInstance = hApplet;
-    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-    psp->pfnDlgProc = DlgProc;
+    HPROPSHEETPAGE hPage;
+    PROPSHEETPAGE psp;
+
+    if (ppsh->nPages < MAX_CPL_PAGES)
+    {
+        ZeroMemory(&psp, sizeof(psp));
+        psp.dwSize = sizeof(psp);
+        psp.dwFlags = PSP_DEFAULT;
+        psp.hInstance = hApplet;
+        psp.pszTemplate = MAKEINTRESOURCE(idDlg);
+        psp.pfnDlgProc = DlgProc;
+
+        hPage = CreatePropertySheetPage(&psp);
+        if (hPage != NULL)
+        {
+            return PropSheetAddPage(hPage, (LPARAM)ppsh);
+        }
+    }
+
+    return FALSE;
+}
+
+BOOL CALLBACK
+PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
+{
+    PROPSHEETHEADER *ppsh = (PROPSHEETHEADER *)lParam;
+    if (ppsh != NULL && ppsh->nPages < MAX_CPL_PAGES)
+    {
+        ppsh->phpage[ppsh->nPages++] = hpage;
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 

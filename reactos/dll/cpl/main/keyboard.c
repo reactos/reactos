@@ -28,13 +28,14 @@
 #include <devguid.h>
 #include <commctrl.h>
 #include <prsht.h>
+#include <shlobj.h>
 #include <cpl.h>
+#include <regstr.h>
 
 #include "main.h"
 #include "resource.h"
 
 #define ID_BLINK_TIMER 345
-
 
 typedef struct _SPEED_DATA
 {
@@ -47,7 +48,6 @@ typedef struct _SPEED_DATA
     BOOL fShowCursor;
     RECT rcCursor;
 } SPEED_DATA, *PSPEED_DATA;
-
 
 /* Property page dialog callback */
 static INT_PTR CALLBACK
@@ -296,9 +296,11 @@ KeybHardwareProc(IN HWND hwndDlg,
 LONG APIENTRY
 KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
-    PROPSHEETPAGE psp[2];
+    HPROPSHEETPAGE hpsp[MAX_CPL_PAGES];
     PROPSHEETHEADER psh;
+    HPSXA hpsxa;
     TCHAR szCaption[256];
+    LONG ret;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
@@ -309,19 +311,31 @@ KeyboardApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.dwFlags =  PSH_PROPTITLE;
     psh.hwndParent = NULL;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_2));
     psh.pszCaption = szCaption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
-    psh.ppsp = psp;
+    psh.phpage = hpsp;
 
-    InitPropSheetPage(&psp[0], IDD_KEYBSPEED, KeyboardSpeedProc);
-    InitPropSheetPage(&psp[1], IDD_HARDWARE, KeybHardwareProc);
+    /* Load additional pages provided by shell extensions */
+    hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Keyboard"), MAX_CPL_PAGES - psh.nPages);
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    /* NOTE: The speed page (CPLPAGE_KEYBOARD_SPEED) cannot be replaced by
+             shell extensions since Win2k! */
+    InitPropSheetPage(&psh, IDD_KEYBSPEED, KeyboardSpeedProc);
+    InitPropSheetPage(&psh, IDD_HARDWARE, KeybHardwareProc);
+
+    if (hpsxa != NULL)
+        SHAddFromPropSheetExtArray(hpsxa, PropSheetAddPage, (LPARAM)&psh);
+
+    ret = (LONG)(PropertySheet(&psh) != -1);
+
+    if (hpsxa != NULL)
+        SHDestroyPropSheetExtArray(hpsxa);
+
+    return ret;
 }
 
 /* EOF */

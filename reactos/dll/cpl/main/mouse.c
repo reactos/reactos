@@ -38,6 +38,9 @@
 #include <tchar.h>
 #include <math.h>
 #include <limits.h>
+#include <shlobj.h>
+#include <cplext.h>
+#include <regstr.h>
 
 #include <stdio.h>
 
@@ -53,7 +56,6 @@
 #define MIN_DOUBLE_CLICK_SPEED		200
 #define MAX_DOUBLE_CLICK_SPEED		900
 #define DEFAULT_WHEEL_SCROLL_LINES	3
-
 
 typedef struct _BUTTON_DATA
 {
@@ -1794,13 +1796,29 @@ WheelProc(IN HWND hwndDlg,
     return FALSE;
 }
 
+static const struct
+{
+    WORD idDlg;
+    DLGPROC DlgProc;
+    UINT uiReplaceWith;
+} PropPages[] =
+{
+    { IDD_PAGE_BUTTON, ButtonProc, CPLPAGE_MOUSE_BUTTONS },
+    { IDD_PAGE_POINTER, PointerProc, 0 },
+    { IDD_PAGE_OPTION, OptionProc, CPLPAGE_MOUSE_PTRMOTION },
+    { IDD_PAGE_WHEEL, WheelProc, CPLPAGE_MOUSE_WHEEL },
+    { IDD_HARDWARE, MouseHardwareProc, 0 },
+};
 
 LONG APIENTRY
 MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-    PROPSHEETPAGE psp[5];
+    HPROPSHEETPAGE hpsp[MAX_CPL_PAGES];
     PROPSHEETHEADER psh;
+    HPSXA hpsxa;
     TCHAR Caption[256];
+    UINT i;
+    LONG ret;
 
     UNREFERENCED_PARAMETER(lParam1);
     UNREFERENCED_PARAMETER(lParam2);
@@ -1811,21 +1829,40 @@ MouseApplet(HWND hwnd, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.dwFlags = PSH_PROPTITLE;
     psh.hwndParent = NULL;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON_1));
     psh.pszCaption = Caption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
-    psh.ppsp = psp;
+    psh.phpage = hpsp;
 
-    InitPropSheetPage(&psp[0], IDD_PAGE_BUTTON, ButtonProc);
-    InitPropSheetPage(&psp[1], IDD_PAGE_POINTER, PointerProc);
-    InitPropSheetPage(&psp[2], IDD_PAGE_OPTION, OptionProc);
-    InitPropSheetPage(&psp[3], IDD_PAGE_WHEEL, WheelProc);
-    InitPropSheetPage(&psp[4], IDD_HARDWARE, MouseHardwareProc);
-    return (LONG)(PropertySheet(&psh) != -1);
+    /* Load additional pages provided by shell extensions */
+    hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Mouse"), MAX_CPL_PAGES - psh.nPages);
+
+    for (i = 0; i != sizeof(PropPages) / sizeof(PropPages[0]); i++)
+    {
+        /* Override the background page if requested by a shell extension */
+        if (PropPages[i].uiReplaceWith != 0 && hpsxa != NULL &&
+            SHReplaceFromPropSheetExtArray(hpsxa, PropPages[i].uiReplaceWith, PropSheetAddPage, (LPARAM)&psh) != 0)
+        {
+            /* The shell extension added one or more pages to replace the background page.
+               Don't create the built-in page anymore! */
+            continue;
+        }
+
+        InitPropSheetPage(&psh, PropPages[i].idDlg, PropPages[i].DlgProc);
+    }
+
+    if (hpsxa != NULL)
+        SHAddFromPropSheetExtArray(hpsxa, PropSheetAddPage, (LPARAM)&psh);
+
+    ret = (LONG)(PropertySheet(&psh) != -1);
+
+    if (hpsxa != NULL)
+        SHDestroyPropSheetExtArray(hpsxa);
+
+    return ret;
 }
 
 /* EOF */
