@@ -54,7 +54,7 @@ IDeskDisplayAdapter_ReplacePage(PDESKDISPLAYADAPTER This,
                                 LPFNADDPROPSHEETPAGE pfnReplacePage,
                                 LPARAM lParam);
 
-static const GUID CLSID_IDeskDisplayAdapter = {0x42071712,0x76d4,0x11d1,{0x8b,0x24,0x00,0xa0,0xc9,0x06,0x8f,0xf9}};
+static const GUID CLSID_IDeskDisplayAdapter = {0x42071712,0x76d4,0x11d1,{0x8b,0x24,0x00,0xa0,0xc9,0x06,0x8f,0xf3}};
 
 ULONG __cdecl DbgPrint(PCCH Format,...);
 
