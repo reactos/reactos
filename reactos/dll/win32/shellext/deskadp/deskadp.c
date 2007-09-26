@@ -129,7 +129,7 @@ InitListAllModesDialog(PDESKDISPLAYADAPTER This,
                 if (i >= 0)
                 {
                     SendDlgItemMessage(hwndListAllModesDlg,
-                                       IDC_ALLVALIDMODES.
+                                       IDC_ALLVALIDMODES,
                                        LB_SETITEMDATA,
                                        (WPARAM)i,
                                        (LPARAM)lpDevMode);
