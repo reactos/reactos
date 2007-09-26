@@ -8,6 +8,198 @@ static HINSTANCE hInstance;
 typedef INT_PTR (WINAPI *PDEVICEPROPERTIESEXW)(HWND,LPCWSTR,LPCWSTR,DWORD,BOOL);
 
 static VOID
+GetColorDescription(PDEVMODEW lpDevMode,
+                    LPTSTR lpBuffer,
+                    DWORD dwBufferLen)
+{
+    UINT uid = 0;
+
+    switch (lpDevMode->dmBitsPerPel)
+    {
+        case 4:
+            uid = IDS_4BPP;
+            break;
+        case 8:
+            uid = IDS_8BPP;
+            break;
+        case 15:
+            uid = IDS_15BPP;
+            break;
+        case 16:
+            uid = IDS_16BPP;
+            break;
+        case 24:
+            uid = IDS_24BPP;
+            break;
+        case 32:
+            uid = IDS_32BPP;
+            break;
+    }
+
+    if (uid == 0 ||
+        !LoadString(hInstance,
+                    uid,
+                    lpBuffer,
+                    dwBufferLen))
+    {
+        lpBuffer[0] = TEXT('\0');
+    }
+}
+
+static VOID
+GetRefreshRateDescription(PDEVMODEW lpDevMode,
+                          LPTSTR lpBuffer,
+                          DWORD dwBufferLen)
+{
+    TCHAR szFormat[64];
+
+    if (lpDevMode->dmDisplayFrequency <= 1)
+    {
+        if (!LoadString(hInstance,
+                        IDS_DEFREFRESHRATE,
+                        lpBuffer,
+                        dwBufferLen))
+        {
+            lpBuffer[0] = TEXT('\0');
+        }
+    }
+    else
+    {
+        if (!LoadString(hInstance,
+                        IDES_REFRESHRATEFMT,
+                        szFormat,
+                        sizeof(szFormat) / sizeof(szFormat[0])))
+        {
+            szFormat[0] = TEXT('\0');
+        }
+
+        _sntprintf(lpBuffer,
+                   dwBufferLen,
+                   szFormat,
+                   lpDevMode->dmDisplayFrequency);
+    }
+}
+
+static VOID
+InitListAllModesDialog(PDESKDISPLAYADAPTER This,
+                       HWND hwndListAllModesDlg)
+{
+    TCHAR szFormat[64], szBuffer[64], szColors[64], szRefreshRate[64];
+    PDEVMODEW lpDevMode;
+    DWORD dwIndex = 0;
+    INT i;
+
+    if (This->DeskExtInterface != NULL)
+    {
+        if (!LoadString(hInstance,
+                        IDS_MODEFMT,
+                        szFormat,
+                        sizeof(szFormat) / sizeof(szFormat[0])))
+        {
+            szFormat[0] = TEXT('\0');
+        }
+
+        do
+        {
+            lpDevMode = This->DeskExtInterface->EnumAllModes(This->DeskExtInterface->Context,
+                                                             dwIndex++);
+            if (lpDevMode != NULL)
+            {
+                GetColorDescription(lpDevMode,
+                                    szColors,
+                                    sizeof(szColors) / sizeof(szColors[0]));
+
+                GetRefreshRateDescription(lpDevMode,
+                                          szRefreshRate,
+                                          sizeof(szRefreshRate) / sizeof(szRefreshRate[0]));
+
+                _sntprintf(szBuffer,
+                           sizeof(szBuffer) / sizeof(szBuffer[0]),
+                           szFormat,
+                           lpDevMode->dmPelsWidth,
+                           lpDevMode->dmPelsHeight,
+                           szColors,
+                           szRefreshRate);
+
+                i = (INT)SendDlgItemMessage(hwndListAllModesDlg,
+                                            IDC_ALLVALIDMODES,
+                                            LB_ADDSTRING,
+                                            0,
+                                            (LPARAM)szBuffer);
+                if (i >= 0)
+                {
+                    SendDlgItemMessage(hwndListAllModesDlg,
+                                       IDC_ALLVALIDMODES.
+                                       LB_SETITEMDATA,
+                                       (WPARAM)i,
+                                       (LPARAM)lpDevMode);
+                }
+            }
+
+        } while (lpDevMode != NULL);
+    }
+}
+
+static INT_PTR CALLBACK
+ListAllModesDlgProc(HWND hwndDlg,
+                    UINT uMsg,
+                    WPARAM wParam,
+                    LPARAM lParam)
+{
+    PDESKDISPLAYADAPTER This;
+    INT_PTR Ret = 0;
+
+    if (uMsg != WM_INITDIALOG)
+    {
+        This = (PDESKDISPLAYADAPTER)GetWindowLongPtr(hwndDlg,
+                                                     DWL_USER);
+    }
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            This = (PDESKDISPLAYADAPTER)lParam;
+            SetWindowLongPtr(hwndDlg,
+                             DWL_USER,
+                             (LONG_PTR)This);
+
+            InitListAllModesDialog(This,
+                                   hwndDlg);
+            Ret = TRUE;
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    break;
+                case IDCANCEL:
+                    EndDialog(hwndDlg,
+                              IDCANCEL);
+                    break;
+            }
+            break;
+
+        case WM_CLOSE:
+            EndDialog(hwndDlg,
+                      IDCANCEL);
+            break;
+    }
+
+    return Ret;
+}
+
+static VOID
+ShowListAllModes(PDESKDISPLAYADAPTER This)
+{
+    DialogBoxParam(hInstance,
+                   MAKEINTRESOURCE(IDD_LISTALLMODES),
+                   This->hwndDlg,
+                   ListAllModesDlgProc,
+                   (LPARAM)This);
+}
+
+static VOID
 ShowAdapterProperties(PDESKDISPLAYADAPTER This)
 {
     HMODULE hDevMgr;
@@ -105,6 +297,11 @@ DisplayAdapterDlgProc(HWND hwndDlg,
             {
                 case IDC_ADAPTERPROPERTIES:
                     ShowAdapterProperties(This);
+                    break;
+
+                case IDC_LISTALLMODES:
+                    MessageBox(hwndDlg, _T("Bla"), NULL, 0);
+                    ShowListAllModes(This);
                     break;
             }
 
