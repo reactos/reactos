@@ -1545,6 +1545,15 @@ HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_if
 }
 
 /*************************************************************************
+ *      SHCreatePropSheetExtArrayEx	[SHELL32.194]
+ */
+HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj)
+{
+	FIXME("(%p,%s,%u,%p)stub\n", hKey, debugstr_w(pszSubKey), max_iface, pDataObj);
+	return NULL;
+}
+
+/*************************************************************************
  *      SHReplaceFromPropSheetExtArray	[SHELL32.170]
  */
 UINT WINAPI SHReplaceFromPropSheetExtArray(HPSXA hpsxa, UINT uPageID, LPFNADDPROPSHEETPAGE lpfnReplaceWith, LPARAM lParam)

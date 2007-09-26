@@ -153,7 +153,7 @@
  165 stdcall -noname SHCreateDirectory(long ptr)
  166 stdcall -noname CallCPLEntry16(long long long long long long)
  167 stdcall -noname SHAddFromPropSheetExtArray(long long long)
- 168 stdcall -noname SHCreatePropSheetExtArray(long str long)
+ 168 stdcall -noname SHCreatePropSheetExtArray(long wstr long)
  169 stdcall -noname SHDestroyPropSheetExtArray(long)
  170 stdcall -noname SHReplaceFromPropSheetExtArray(long long long long)
  171 stdcall -noname PathCleanupSpec(ptr ptr)
@@ -179,7 +179,7 @@
  191 stdcall -noname SHUpdateImageA(str long long long)
  192 stdcall -noname SHUpdateImageW(wstr long long long)
  193 stdcall -noname SHHandleUpdateImage(ptr)
- 194 stub SHCreatePropSheetExtArrayEx
+ 194 stdcall -noname SHCreatePropSheetExtArrayEx(long wstr long ptr)
  195 stdcall -noname SHFree(ptr)
  196 stdcall -noname SHAlloc(long)
  197 stub SHGlobalDefect
