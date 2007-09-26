@@ -10,37 +10,6 @@
 
 #include "desk.h"
 
-/* As slider control can't contain user data, we have to keep an
- * array of RESOLUTION_INFO to have our own associated data.
- */
-typedef struct _RESOLUTION_INFO
-{
-	DWORD dmPelsWidth;
-	DWORD dmPelsHeight;
-} RESOLUTION_INFO, *PRESOLUTION_INFO;
-
-typedef struct _SETTINGS_ENTRY
-{
-	struct _SETTINGS_ENTRY *Blink;
-	struct _SETTINGS_ENTRY *Flink;
-	DWORD dmBitsPerPel;
-	DWORD dmPelsWidth;
-	DWORD dmPelsHeight;
-} SETTINGS_ENTRY, *PSETTINGS_ENTRY;
-
-typedef struct _DISPLAY_DEVICE_ENTRY
-{
-	struct _DISPLAY_DEVICE_ENTRY *Flink;
-	LPTSTR DeviceDescription;
-	LPTSTR DeviceName;
-	PSETTINGS_ENTRY Settings; /* sorted by increasing dmPelsHeight, BPP */
-	DWORD SettingsCount;
-	PRESOLUTION_INFO Resolutions;
-	DWORD ResolutionsCount;
-	PSETTINGS_ENTRY CurrentSettings; /* Points into Settings list */
-	SETTINGS_ENTRY InitialSettings;
-} DISPLAY_DEVICE_ENTRY, *PDISPLAY_DEVICE_ENTRY;
-
 typedef struct _GLOBAL_DATA
 {
 	PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
@@ -76,7 +45,7 @@ UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData, IN BOOL bUpdateThumb)
 }
 
 static PSETTINGS_ENTRY
-GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTINGS_ENTRY* CurrentSettings)
+GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTINGS_ENTRY* CurrentSettings)
 {
 	DEVMODE devmode;
 	DWORD NbSettings = 0;
@@ -168,13 +137,14 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 }
 
 static BOOL
-AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR DeviceName)
+AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN const DISPLAY_DEVICE *DisplayDevice)
 {
 	PDISPLAY_DEVICE_ENTRY newEntry = NULL;
 	LPTSTR description = NULL;
 	LPTSTR name = NULL;
-	DWORD descriptionSize;
-	DWORD nameSize;
+	LPTSTR key = NULL;
+	LPTSTR devid = NULL;
+	DWORD descriptionSize, nameSize, keySize, devidSize;
 	PSETTINGS_ENTRY Current;
 	DWORD ResolutionsCount = 1;
 	DWORD i;
@@ -183,7 +153,7 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR D
 	memset(newEntry, 0, sizeof(DISPLAY_DEVICE_ENTRY));
 	if (!newEntry) goto ByeBye;
 
-	newEntry->Settings = GetPossibleSettings(DeviceName, &newEntry->SettingsCount, &newEntry->CurrentSettings);
+	newEntry->Settings = GetPossibleSettings(DisplayDevice->DeviceName, &newEntry->SettingsCount, &newEntry->CurrentSettings);
 	if (!newEntry->Settings) goto ByeBye;
 
 	newEntry->InitialSettings.dmPelsWidth = newEntry->CurrentSettings->dmPelsWidth;
@@ -219,18 +189,31 @@ AddDisplayDevice(IN PGLOBAL_DATA pGlobalData, IN LPTSTR Description, IN LPTSTR D
 			i++;
 		}
 	}
-	descriptionSize = (_tcslen(Description) + 1) * sizeof(TCHAR);
+	descriptionSize = (_tcslen(DisplayDevice->DeviceString) + 1) * sizeof(TCHAR);
 	description = HeapAlloc(GetProcessHeap(), 0, descriptionSize);
 	if (!description) goto ByeBye;
 
-	nameSize = (_tcslen(DeviceName) + 1) * sizeof(TCHAR);
+	nameSize = (_tcslen(DisplayDevice->DeviceName) + 1) * sizeof(TCHAR);
 	name = HeapAlloc(GetProcessHeap(), 0, nameSize);
 	if (!name) goto ByeBye;
 
-	memcpy(description, Description, descriptionSize);
-	memcpy(name, DeviceName, nameSize);
+	keySize = (_tcslen(DisplayDevice->DeviceKey) + 1) * sizeof(TCHAR);
+	key = HeapAlloc(GetProcessHeap(), 0, keySize);
+	if (!key) goto ByeBye;
+
+	devidSize = (_tcslen(DisplayDevice->DeviceID) + 1) * sizeof(TCHAR);
+	devid = HeapAlloc(GetProcessHeap(), 0, devidSize);
+	if (!devid) goto ByeBye;
+
+	memcpy(description, DisplayDevice->DeviceString, descriptionSize);
+	memcpy(name, DisplayDevice->DeviceName, nameSize);
+	memcpy(key, DisplayDevice->DeviceKey, keySize);
+	memcpy(devid, DisplayDevice->DeviceID, devidSize);
 	newEntry->DeviceDescription = description;
 	newEntry->DeviceName = name;
+	newEntry->DeviceKey = key;
+	newEntry->DeviceID = devid;
+	newEntry->DeviceStateFlags = DisplayDevice->StateFlags;
 	newEntry->Flink = pGlobalData->DisplayDeviceList;
 	pGlobalData->DisplayDeviceList = newEntry;
 	return TRUE;
@@ -256,6 +239,10 @@ ByeBye:
 		HeapFree(GetProcessHeap(), 0, description);
 	if (name != NULL)
 		HeapFree(GetProcessHeap(), 0, name);
+	if (key != NULL)
+		HeapFree(GetProcessHeap(), 0, key);
+	if (devid != NULL)
+		HeapFree(GetProcessHeap(), 0, devid);
 	return FALSE;
 }
 
@@ -307,11 +294,11 @@ OnInitDialog(IN HWND hwndDlg)
 
 	/* Get video cards list */
 	displayDevice.cb = (DWORD)sizeof(DISPLAY_DEVICE);
-	while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, 0))
+	while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, 0x1))
 	{
 		if ((displayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0)
 		{
-			if (AddDisplayDevice(pGlobalData, displayDevice.DeviceString, displayDevice.DeviceName))
+			if (AddDisplayDevice(pGlobalData, &displayDevice))
 				Result++;
 		}
 		iDevNum++;
@@ -518,12 +505,6 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 	/* we shouldn't go there */
 }
 
-static VOID
-OnAdvancedButton()
-{
-	MessageBox(NULL, TEXT("That button doesn't do anything yet"), TEXT("Whoops"), MB_OK);
-}
-
 /* Property page dialog callback */
 INT_PTR CALLBACK
 SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
@@ -543,7 +524,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			DWORD command   = HIWORD(wParam);
 
 			if (controlId == IDC_SETTINGS_ADVANCED && command == BN_CLICKED)
-				OnAdvancedButton();
+				DisplayAdvancedSettings(hwndDlg, pGlobalData->CurrentDisplayDevice);
 			else if (controlId == IDC_SETTINGS_BPP && command == CBN_SELCHANGE)
 				OnBPPChanged(hwndDlg, pGlobalData);
 			break;

@@ -22,6 +22,7 @@
 #define IDD_APPEARANCE                  102
 #define IDD_SETTINGS                    103
 #define IDD_ADVAPPEARANCE               104
+#define IDD_ADVANCED_GENERAL            200
 
 /* Background Page */
 #define IDC_BACKGROUND_LIST             1000
@@ -145,6 +146,9 @@
 #define IDS_ELEMENT_22				3222
 #define IDS_ELEMENT_23				3223
 
+#define IDS_MULTIPLEMONITORS	3300
+#define IDS_UNKNOWNMONITOR	3301
+#define IDS_ADVANCEDTITLEFMT	3302
 
 #endif /* __CPL_DESK_RESOURCE_H__ */
 
