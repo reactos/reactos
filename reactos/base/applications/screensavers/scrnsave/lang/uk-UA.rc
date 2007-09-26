@@ -1,0 +1,16 @@
+/*
+ * PROJECT:     Default ScreenSaver
+ * LICENSE:     Public Domain
+ * FILE:        base/applications/screensavers/scrnsave/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Default ScreenSaver
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Заставка за замовчуванням"
+    IDS_TITLE       "Про"
+    IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."
+END

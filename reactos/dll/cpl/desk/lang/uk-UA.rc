@@ -10,7 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Тло"
+CAPTION "Робочий стіл"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
@@ -44,7 +44,7 @@ BEGIN
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
     LTEXT           "хв", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "За&хист паролем.",IDC_SCREENS_USEPASSCHK,"button",
+    CONTROL         "За&хист паролем",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
     GROUPBOX        "&Енергозбереження", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Щоб змінити параметри живлення монітора, натисніть кнопку ""Живлення"".",
@@ -59,7 +59,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Colorscheme", IDC_STATIC, 7, 140, 64, 7
+    LTEXT           "Колірна схема", IDC_STATIC, 7, 140, 64, 7
     COMBOBOX        IDC_APPEARANCE_UI_ITEM, 7, 169, 120, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Додатково", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
 END
@@ -104,7 +104,7 @@ END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Настройки"
+CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Дисплей:",1820,3,100,30,8
@@ -115,12 +115,19 @@ BEGIN
     LTEXT           "Менше",1815,9,130,15,8,NOT WS_GROUP
     LTEXT           "Більше",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10, NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Кольори",1817,125,120,115,43
+    GROUPBOX        "&Якість кольоропередачі",1817,125,120,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,148,103,9
-    PUSHBUTTON      "Дод&атково...",IDC_SETTINGS_ADVANCED,306,165,56,14
+    PUSHBUTTON      "Дод&атково...",IDC_SETTINGS_ADVANCED,170,165,70,14
+END
+
+IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Загальні"
+FONT 8, "MS Shell Dlg"
+BEGIN
 END
 
 IDR_PREVIEW_MENU MENU
@@ -130,11 +137,18 @@ BEGIN
     MENUITEM "Вибрана",          ID_MENU_SELECTED
 END
 
+STRINGTABLE
+BEGIN
+    IDS_MULTIPLEMONITORS "(Декілька моніторів)"
+    IDS_UNKNOWNMONITOR "(Невідомий монітор)"
+    IDS_ADVANCEDTITLEFMT "%s і %s"
+END
+
 STRINGTABLE 
 BEGIN
-    IDS_CPLNAME "Дисплей"
+    IDS_CPLNAME "Екран"
     IDS_CPLDESCRIPTION "Виберіть відображення робочого столу й зберігача екрану."
-    IDS_NONE "(Немає)"
+    IDS_NONE "(немає)"
     IDS_CENTER "По центру"
     IDS_STRETCH "Розтягнути"
     IDS_TILE "Плиткою"
@@ -144,10 +158,10 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_COLOR_4BIT "16 кольорів"
     IDS_COLOR_8BIT "256 кольорів"
-    IDS_COLOR_16BIT "High Color (16 бітів)"
-    IDS_COLOR_24BIT "True Color (24 біти)"
-    IDS_COLOR_32BIT "True Color (32 біти)"
-    IDS_PIXEL "%lux%lu пікселів"
+    IDS_COLOR_16BIT "Середня (16 біт)"
+    IDS_COLOR_24BIT "Висока (24 біта)"
+    IDS_COLOR_32BIT "Найвища (32 біта)"
+    IDS_PIXEL "%lu на %lu крапок"
 END
 
 STRINGTABLE DISCARDABLE
