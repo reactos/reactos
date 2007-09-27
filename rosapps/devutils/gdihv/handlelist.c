@@ -3,7 +3,7 @@
  *
  *	handlelist.c
  *
- *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> web.de>
+ *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> reactos <dot> org>
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 	INT i, index;
 	HANDLE handle;
 	PGDI_TABLE_ENTRY pEntry;
-	LV_ITEM item;
+	LVITEM item;
 	TCHAR strText[80];
 	TCHAR* str2;
 
@@ -82,13 +82,17 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 	for (i = 0; i<= GDI_HANDLE_COUNT; i++)
 	{
 		pEntry = &GdiHandleTable[i];
-		if (pEntry->KernelData)
+		if ( ((ProcessId != (HANDLE)1) && ((pEntry->Type & GDI_HANDLE_BASETYPE_MASK) != 0)) ||
+		     ((ProcessId == (HANDLE)1) && ((pEntry->Type & GDI_HANDLE_BASETYPE_MASK) == 0)) )
 		{
-			if (ProcessId == (HANDLE)-1 || ProcessId == pEntry->ProcessId)
+			if (ProcessId == (HANDLE)1 || 
+			    ProcessId == (HANDLE)((ULONG)pEntry->ProcessId & 0xfffc))
 			{
+				handle = GDI_HANDLE_CREATE(i, pEntry->Type);
 				index = ListView_GetItemCount(hHandleListCtrl);
 				item.iItem = index;
 				item.iSubItem = 0;
+				item.lParam = (LPARAM)handle;
 
 				wsprintf(strText, L"%d", index);
 				(void)ListView_InsertItem(hHandleListCtrl, &item);
@@ -96,7 +100,6 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 				wsprintf(strText, L"%d", i);
 				ListView_SetItemText(hHandleListCtrl, index, 1, strText);
 
-				handle = GDI_HANDLE_CREATE(i, pEntry->Type);
 				wsprintf(strText, L"%#08x", handle);
 				ListView_SetItemText(hHandleListCtrl, index, 2, strText);
 

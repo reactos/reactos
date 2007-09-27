@@ -3,7 +3,7 @@
  *
  *	proclist.c
  *
- *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> web.de>
+ *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> reactos <dot> org>
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -44,7 +44,8 @@ VOID
 ProcessList_Update(HWND hListCtrl)
 {
 	LV_ITEM item;
-	DWORD ProcessIds[1024], BytesReturned, cProcesses;
+	DWORD ProcessIds[1024], BytesReturned;
+	UINT cProcesses;
 	HANDLE hProcess;
 	WCHAR strText[MAX_PATH] = L"<unknown>";
 	INT i;
@@ -63,12 +64,21 @@ ProcessList_Update(HWND hListCtrl)
 	wsprintf(strText, L"%#08x", 0);
 	ListView_SetItemText(hListCtrl, 0, 1, strText);
 
+	/* Insert "deleted" */
+	item.iItem = 1;
+	item.lParam = 1;
+	item.pszText = L"<deleted>";
+	(void)ListView_InsertItem(hListCtrl, &item);
+	item.pszText = strText;
+	wsprintf(strText, L"%#08x",1);
+	ListView_SetItemText(hListCtrl, 1, 1, strText);
+
 	if (!EnumProcesses(ProcessIds, sizeof(ProcessIds), &BytesReturned ))
 	{
 		return;
 	}
 	cProcesses = BytesReturned / sizeof(DWORD);
-	if (cProcesses == 0)
+	if (cProcesses <= 1)
 	{
 		return;
 	}
@@ -80,7 +90,7 @@ ProcessList_Update(HWND hListCtrl)
 
 		hProcess = 0;
 		/* FIXME: HACK: ROS crashes when using OpenProcess with PROCESS_VM_READ */
-//		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessIds[i]);
+		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessIds[i]);
 		if (hProcess)
 		{
 			GetModuleBaseName(hProcess, NULL, (LPWSTR)strText, MAX_PATH );

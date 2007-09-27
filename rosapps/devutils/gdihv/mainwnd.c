@@ -3,7 +3,7 @@
  *
  *	mainwnd.c
  *
- *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> web.de>
+ *	Copyright (C) 2007	Timo Kreuzer <timo <dot> kreuzer <at> reactos <dot> org>
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -24,6 +24,59 @@
 
 INT g_Separator;
 
+
+static LRESULT
+MainWindow_OnSize(HWND hMainWnd)
+{
+	HWND hProcessListctrl, hHandleListCtrl, hProcessRefresh, hHandleRefresh;
+	RECT rect;
+
+	hProcessListctrl = GetDlgItem(hMainWnd, IDC_PROCESSLIST);
+	hHandleListCtrl = GetDlgItem(hMainWnd, IDC_HANDLELIST);
+	hProcessRefresh = GetDlgItem(hMainWnd, IDC_REFRESHPROCESS);
+	hHandleRefresh = GetDlgItem(hMainWnd, IDC_REFRESHHANDLE);
+
+	GetClientRect(hMainWnd, &rect);
+
+//g_Separator = (rect.right / 2);
+	MoveWindow(hProcessListctrl, 5, 5, g_Separator - 5, rect.bottom - 40, TRUE);
+	MoveWindow(hHandleListCtrl, g_Separator + 5, 5, rect.right - g_Separator - 5, rect.bottom - 40, TRUE);
+	MoveWindow(hProcessRefresh, g_Separator - 90, rect.bottom - 30, 90, 25, TRUE);
+	MoveWindow(hHandleRefresh, rect.right - 90, rect.bottom - 30, 90, 25, TRUE);
+
+	return 0;
+}
+
+
+static LRESULT
+MainWnd_OnNotify(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	LPNMHDR pnmh = (LPNMHDR)lParam;
+
+	switch(pnmh->code)
+	{
+		case LVN_ITEMCHANGED:
+		{
+			LPNMLISTVIEW pnmlv = (LPNMLISTVIEW)pnmh;
+			if ((wParam == IDC_PROCESSLIST)
+				&& (pnmlv->uNewState & LVIS_SELECTED)
+				&& !(pnmlv->uOldState & LVIS_SELECTED))
+			{
+				LV_ITEM item;
+				memset(&item, 0, sizeof(LV_ITEM));
+				item.mask = LVIF_PARAM;
+				item.iItem = pnmlv->iItem;
+				(void)ListView_GetItem(GetDlgItem(hWnd, IDC_PROCESSLIST), &item);
+				HandleList_Update(GetDlgItem(hWnd, IDC_HANDLELIST), (HANDLE)item.lParam);
+				return TRUE;
+			}
+			break;
+		}
+	}
+
+	return 0;
+}
+
 INT_PTR CALLBACK
 MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -34,6 +87,8 @@ MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			RECT rect;
 
 			SendMessage(hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_MAIN)));
+			(void)ListView_SetExtendedListViewStyle(GetDlgItem(hMainWnd, IDC_PROCESSLIST), LVS_EX_FULLROWSELECT);
+			(void)ListView_SetExtendedListViewStyle(GetDlgItem(hMainWnd, IDC_HANDLELIST), LVS_EX_FULLROWSELECT);
 			GetClientRect(hMainWnd, &rect);
 			g_Separator = (rect.right / 2);
 			HandleList_Create(GetDlgItem(hMainWnd, IDC_HANDLELIST));
@@ -43,10 +98,8 @@ MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case WM_SIZE:
-		{
-			MainWindow_OnSize(hMainWnd);
-			break;
-		}
+			return MainWindow_OnSize(hMainWnd);
+
 		case WM_COMMAND:
 		{
 			switch (LOWORD(wParam))
@@ -80,23 +133,10 @@ MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
+
 		case WM_NOTIFY:
-		{
-			if (((LPNMLISTVIEW)lParam)->hdr.code == LVN_ITEMCHANGED
-			        && (wParam == IDC_PROCESSLIST)
-			        && (((LPNMLISTVIEW)lParam)->uNewState & LVIS_SELECTED)
-			        && !(((LPNMLISTVIEW)lParam)->uOldState & LVIS_SELECTED))
-			{
-				LV_ITEM item;
-				memset(&item, 0, sizeof(LV_ITEM));
-				item.mask = LVIF_PARAM;
-				item.iItem = ((LPNMLISTVIEW)lParam)->iItem;
-				(void)ListView_GetItem(GetDlgItem(hMainWnd, IDC_PROCESSLIST), &item);
-				HandleList_Update(GetDlgItem(hMainWnd, IDC_HANDLELIST), (HANDLE)item.lParam);
-				return TRUE;
-				break;
-			}
-		}
+			return MainWnd_OnNotify(hMainWnd, wParam, lParam);
+
 		default:
 		{
 			return FALSE;
@@ -105,23 +145,3 @@ MainWindow_WndProc(HWND hMainWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-VOID
-MainWindow_OnSize(HWND hMainWnd)
-{
-	HWND hProcessListctrl, hHandleListCtrl, hProcessRefresh, hHandleRefresh;
-	RECT rect;
-
-	hProcessListctrl = GetDlgItem(hMainWnd, IDC_PROCESSLIST);
-	hHandleListCtrl = GetDlgItem(hMainWnd, IDC_HANDLELIST);
-	hProcessRefresh = GetDlgItem(hMainWnd, IDC_REFRESHPROCESS);
-	hHandleRefresh = GetDlgItem(hMainWnd, IDC_REFRESHHANDLE);
-
-	GetClientRect(hMainWnd, &rect);
-
-//g_Separator = (rect.right / 2);
-	MoveWindow(hProcessListctrl, 5, 5, g_Separator - 5, rect.bottom - 40, TRUE);
-	MoveWindow(hHandleListCtrl, g_Separator + 5, 5, rect.right - g_Separator - 5, rect.bottom - 40, TRUE);
-	MoveWindow(hProcessRefresh, g_Separator - 90, rect.bottom - 30, 90, 25, TRUE);
-	MoveWindow(hHandleRefresh, rect.right - 90, rect.bottom - 30, 90, 25, TRUE);
-	return;
-}
