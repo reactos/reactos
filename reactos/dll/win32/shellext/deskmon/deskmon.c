@@ -5,135 +5,83 @@
 
 static HINSTANCE hInstance;
 
-#if 0
 #ifdef UNICODE
 typedef INT_PTR (WINAPI *PDEVICEPROPERTIES)(HWND,LPCWSTR,LPCWSTR,BOOL);
 #define FUNC_DEVICEPROPERTIES "DevicePropertiesW"
 #else
-typedef INT_PTR (WINAPI *PDEVICEPROPERTIES)(HWND,LPCWSTR,LPCSTR,BOOL);
+typedef INT_PTR (WINAPI *PDEVICEPROPERTIES)(HWND,LPCSTR,LPCSTR,BOOL);
 #define FUNC_DEVICEPROPERTIES "DevicePropertiesA"
 #endif
 
+static LPTSTR
+GetMonitorDevInstID(LPCTSTR lpDeviceID)
+{
+    /* FIXME: Implement, allocate returned string with LocalAlloc! */
+    return NULL;
+}
+
 static VOID
-ShowMonitorProperties(PDESKMONITOR This,
-                      LPCTSTR lpDevice)
+ShowMonitorProperties(PDESKMONITOR This)
 {
     HMODULE hDevMgr;
     PDEVICEPROPERTIES pDeviceProperties;
+    LPTSTR lpDevInstID;
 
-    hDevMgr = LoadLibrary(TEXT("devmgr.dll"));
-    if (hDevMgr != NULL)
+    if (This->SelMonitor != NULL)
     {
-        pDeviceProperties = (PDEVICEPROPERTIESW)GetProcAddress(hDevMgr,
-                                                               FUNC_DEVICEPROPERTIES);
-        if (pDeviceProperties != NULL)
+        lpDevInstID = GetMonitorDevInstID(This->SelMonitor->dd.DeviceID);
+        if (lpDevInstID != NULL)
         {
-            pDeviceProperties(This->hwndDlg,
-                               NULL,
-                               lpDevice,
-                               FALSE);
-        }
+            hDevMgr = LoadLibrary(TEXT("devmgr.dll"));
+            if (hDevMgr != NULL)
+            {
+                pDeviceProperties = (PDEVICEPROPERTIES)GetProcAddress(hDevMgr,
+                                                                      FUNC_DEVICEPROPERTIES);
+                if (pDeviceProperties != NULL)
+                {
+                    pDeviceProperties(This->hwndDlg,
+                                       NULL,
+                                       This->SelMonitor->dd.DeviceID,
+                                       FALSE);
+                }
 
-        FreeLibrary(hDevMgr);
+                FreeLibrary(hDevMgr);
+            }
+
+            LocalFree((HLOCAL)lpDevInstID);
+        }
     }
 }
-#endif
 
 static VOID
-UpdateMonitorDialogControls(PDESKMONITOR This)
+UpdateMonitorSelection(PDESKMONITOR This)
 {
-    PDEVMODEW lpCurrentMode, lpMode;
-    DWORD dwIndex = 0;
-    TCHAR szBuffer[64];
-    BOOL bHasDef = FALSE;
     INT i;
 
-    /* Fill the refresh rate combo box */
-    SendDlgItemMessage(This->hwndDlg,
-                       IDC_REFRESHRATE,
-                       CB_RESETCONTENT,
-                       0,
-                       0);
-
-    lpCurrentMode = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
-
-    do
+    if (This->dwMonitorCount > 1)
     {
-        lpMode = This->DeskExtInterface->EnumAllModes(This->DeskExtInterface->Context,
-                                                      dwIndex++);
-        if (lpMode != NULL &&
-            lpMode->dmBitsPerPel == lpCurrentMode->dmBitsPerPel &&
-            lpMode->dmPelsWidth == lpCurrentMode->dmPelsWidth &&
-            lpMode->dmPelsHeight == lpCurrentMode->dmPelsHeight)
+        This->SelMonitor = NULL;
+
+        i = (INT)SendDlgItemMessage(This->hwndDlg,
+                                    IDC_MONITORLIST,
+                                    LB_GETCURSEL,
+                                    0,
+                                    0);
+        if (i >= 0)
         {
-            /* We're only interested in refresh rates for the current resolution and color depth */
-
-            if (lpMode->dmDisplayFrequency <= 1)
-            {
-                /* Default hardware frequency */
-                if (bHasDef)
-                    continue;
-
-                bHasDef = TRUE;
-
-                if (!LoadString(hInstance,
-                                IDS_USEDEFFRQUENCY,
-                                szBuffer,
-                                sizeof(szBuffer) / sizeof(szBuffer[0])))
-                {
-                    szBuffer[0] = TEXT('\0');
-                }
-            }
-            else
-            {
-                TCHAR szFmt[64];
-
-                if (!LoadString(hInstance,
-                                IDS_FREQFMT,
-                                szFmt,
-                                sizeof(szFmt) / sizeof(szFmt[0])))
-                {
-                    szFmt[0] = TEXT('\0');
-                }
-
-                _sntprintf(szBuffer,
-                           sizeof(szBuffer) / sizeof(szBuffer[0]),
-                           szFmt,
-                           lpMode->dmDisplayFrequency);
-            }
-
-            i = (INT)SendDlgItemMessage(This->hwndDlg,
-                                        IDC_REFRESHRATE,
-                                        CB_ADDSTRING,
-                                        0,
-                                        (LPARAM)szBuffer);
-            if (i >= 0)
-            {
-                SendDlgItemMessage(This->hwndDlg,
-                                   IDC_REFRESHRATE,
-                                   CB_SETITEMDATA,
-                                   (WPARAM)lpMode,
-                                   0);
-
-                if (lpMode->dmDisplayFrequency == lpCurrentMode->dmDisplayFrequency)
-                {
-                    SendDlgItemMessage(This->hwndDlg,
-                                       IDC_REFRESHRATE,
-                                       CB_SETCURSEL,
-                                       (WPARAM)i,
-                                       0);
-                }
-            }
+            This->SelMonitor = (PDESKMONINFO)SendDlgItemMessage(This->hwndDlg,
+                                                                IDC_MONITORLIST,
+                                                                LB_GETITEMDATA,
+                                                                (WPARAM)i,
+                                                                0);
         }
+    }
+    else
+        This->SelMonitor = This->Monitors;
 
-    } while (lpMode != NULL);
-
-    /* FIXME: Update pruning mode controls */
-
-    /* FIXME: Enable/Disable properties button */
     EnableWindow(GetDlgItem(This->hwndDlg,
                             IDC_MONITORPROPERTIES),
-                 FALSE);
+                 This->SelMonitor != NULL);
 }
 
 static VOID
@@ -143,7 +91,11 @@ InitMonitorDialog(PDESKMONITOR This)
     DISPLAY_DEVICE dd;
     BOOL bRet;
     INT i;
-    DWORD dwIndex = 0;
+    DWORD dwIndex;
+    PDEVMODEW lpCurrentMode, lpMode;
+    TCHAR szBuffer[64];
+    BOOL bHasDef = FALSE;
+    BOOL bAdded = FALSE;
 
     /* Free all allocated monitors */
     pmi = This->Monitors;
@@ -169,6 +121,7 @@ InitMonitorDialog(PDESKMONITOR This)
         if (This->lpDisplayDevice != NULL)
         {
             /* Enumerate all monitors */
+            dwIndex = 0;
             pmilink = &This->Monitors;
 
             do
@@ -273,7 +226,102 @@ InitMonitorDialog(PDESKMONITOR This)
                           IDC_MONITORLIST),
                (This->dwMonitorCount > 1 ? SW_SHOW : SW_HIDE));
 
-    UpdateMonitorDialogControls(This);
+    /* Fill the refresh rate combo box */
+    SendDlgItemMessage(This->hwndDlg,
+                       IDC_REFRESHRATE,
+                       CB_RESETCONTENT,
+                       0,
+                       0);
+
+    lpCurrentMode = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
+    dwIndex = 0;
+
+    do
+    {
+        lpMode = This->DeskExtInterface->EnumAllModes(This->DeskExtInterface->Context,
+                                                      dwIndex++);
+        if (lpMode != NULL &&
+            lpMode->dmBitsPerPel == lpCurrentMode->dmBitsPerPel &&
+            lpMode->dmPelsWidth == lpCurrentMode->dmPelsWidth &&
+            lpMode->dmPelsHeight == lpCurrentMode->dmPelsHeight)
+        {
+            /* We're only interested in refresh rates for the current resolution and color depth */
+
+            if (lpMode->dmDisplayFrequency <= 1)
+            {
+                /* Default hardware frequency */
+                if (bHasDef)
+                    continue;
+
+                bHasDef = TRUE;
+
+                if (!LoadString(hInstance,
+                                IDS_USEDEFFRQUENCY,
+                                szBuffer,
+                                sizeof(szBuffer) / sizeof(szBuffer[0])))
+                {
+                    szBuffer[0] = TEXT('\0');
+                }
+            }
+            else
+            {
+                TCHAR szFmt[64];
+
+                if (!LoadString(hInstance,
+                                IDS_FREQFMT,
+                                szFmt,
+                                sizeof(szFmt) / sizeof(szFmt[0])))
+                {
+                    szFmt[0] = TEXT('\0');
+                }
+
+                _sntprintf(szBuffer,
+                           sizeof(szBuffer) / sizeof(szBuffer[0]),
+                           szFmt,
+                           lpMode->dmDisplayFrequency);
+            }
+
+            i = (INT)SendDlgItemMessage(This->hwndDlg,
+                                        IDC_REFRESHRATE,
+                                        CB_ADDSTRING,
+                                        0,
+                                        (LPARAM)szBuffer);
+            if (i >= 0)
+            {
+                bAdded = TRUE;
+
+                SendDlgItemMessage(This->hwndDlg,
+                                   IDC_REFRESHRATE,
+                                   CB_SETITEMDATA,
+                                   (WPARAM)lpMode,
+                                   0);
+
+                if (lpMode->dmDisplayFrequency == lpCurrentMode->dmDisplayFrequency)
+                {
+                    SendDlgItemMessage(This->hwndDlg,
+                                       IDC_REFRESHRATE,
+                                       CB_SETCURSEL,
+                                       (WPARAM)i,
+                                       0);
+                }
+            }
+        }
+
+    } while (lpMode != NULL);
+
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDS_MONITORSETTINGSGROUP),
+                 bAdded);
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDS_REFRESHRATELABEL),
+                 bAdded);
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDC_REFRESHRATE),
+                 bAdded);
+
+    /* FIXME: Update pruning mode controls */
+
+    UpdateMonitorSelection(This);
 }
 
 static LONG
@@ -315,33 +363,6 @@ ResetMonitorChanges(PDESKMONITOR This)
     }
 }
 
-static BOOL
-UpdateMonitorSelection(PDESKMONITOR This)
-{
-    INT i;
-
-    if (This->dwMonitorCount <= 1)
-        return FALSE;
-
-    i = (INT)SendDlgItemMessage(This->hwndDlg,
-                                IDC_MONITORLIST,
-                                LB_GETCURSEL,
-                                0,
-                                0);
-    if (i >= 0)
-    {
-        This->SelMonitor = (PDESKMONINFO)SendDlgItemMessage(This->hwndDlg,
-                                                            IDC_MONITORLIST,
-                                                            LB_GETITEMDATA,
-                                                            (WPARAM)i,
-                                                            0);
-    }
-    else
-        This->SelMonitor = NULL;
-
-    return TRUE;
-}
-
 static INT_PTR CALLBACK
 MonitorDlgProc(HWND hwndDlg,
                UINT uMsg,
@@ -374,14 +395,12 @@ MonitorDlgProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDC_MONITORPROPERTIES:
+                    ShowMonitorProperties(This);
                     break;
 
                 case IDC_MONITORLIST:
                     if (HIWORD(wParam) == LBN_SELCHANGE)
-                    {
-                        if (UpdateMonitorSelection(This))
-                            UpdateMonitorDialogControls(This);
-                    }
+                        UpdateMonitorSelection(This);
                     break;
             }
             break;
