@@ -137,7 +137,7 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
                            IN UINT uNumberOfGuids,
                            IN HWPAGE_DISPLAYMODE DisplayMode);
 
-#define DPF_UNKNOWN (0x1)
+#define DPF_EXTENDED    (0x1)
 #define DPF_DEVICE_STATUS_ACTION    (0x2)
 
 INT_PTR

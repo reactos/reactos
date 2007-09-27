@@ -1813,10 +1813,10 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 {
     INT_PTR Ret = -1;
 
-    if (dwFlags & ~(DPF_UNKNOWN | DPF_DEVICE_STATUS_ACTION))
+    if (dwFlags & ~(DPF_EXTENDED | DPF_DEVICE_STATUS_ACTION))
     {
         DPRINT1("DevPropertiesExW: Invalid flags: 0x%x\n",
-                dwFlags & ~(DPF_UNKNOWN | DPF_DEVICE_STATUS_ACTION));
+                dwFlags & ~(DPF_EXTENDED | DPF_DEVICE_STATUS_ACTION));
         SetLastError(ERROR_INVALID_FLAGS);
         return -1;
     }
@@ -1907,7 +1907,7 @@ DevicePropertiesA(HWND hWndParent,
     return DevicePropertiesExA(hWndParent,
                                lpMachineName,
                                lpDeviceID,
-                               0,
+                               DPF_EXTENDED,
                                bShowDevMgr);
 }
 
@@ -1944,7 +1944,7 @@ DevicePropertiesW(HWND hWndParent,
     return DevicePropertiesExW(hWndParent,
                                lpMachineName,
                                lpDeviceID,
-                               0,
+                               DPF_EXTENDED,
                                bShowDevMgr);
 }
 
