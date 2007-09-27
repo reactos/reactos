@@ -252,7 +252,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
       IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
       PDC dc = DC_LockDc ( dce->hDC );
-      IntGdiCopyFromSaveState(dc, defaultDCstate); // Was SetDCState.
+      IntGdiCopyFromSaveState(dc, defaultDCstate, dce->hDC ); // Was SetDCState.
 
       dce->DCXFlags &= ~DCX_DCEBUSY;
       if (dce->DCXFlags & DCX_DCEDIRTY)

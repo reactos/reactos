@@ -1365,10 +1365,8 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
 
 VOID
 FASTCALL
-IntGdiCopyFromSaveState(PDC dc, PDC dcs)
-{
-  HDC hDC = dc->hSelf;
- 
+IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
+{ 
   dc->w.flags                   = dcs->w.flags & ~DC_SAVED;
 
   dc->w.hFirstBitmap            = dcs->w.hFirstBitmap;
@@ -1512,7 +1510,7 @@ IntGdiSetDCState ( HDC hDC, HDC hDCSave )
     {
       if ( dcs->w.flags & DC_SAVED )
       {
-        IntGdiCopyFromSaveState( dc, dcs);
+        IntGdiCopyFromSaveState( dc, dcs, dc->hSelf);
       }
       else
       {
