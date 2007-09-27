@@ -812,7 +812,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
 
     /* Make sure that we are in the right page directory */
     MiSyncThreadProcessViews(Process,
-                             Thread,
+                             (PVOID)Thread->StackLimit,
                              KERNEL_STACK_SIZE);
     MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
 
