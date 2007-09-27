@@ -390,6 +390,46 @@ STRING_REN_HELP2, "    %lu file renamed\n"
 
 STRING_REN_HELP3, "    %lu files renamed\n"
 
+STRING_REPLACE_HELP1, "Replaces files.\n\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
+REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [drive1:][path1]filename Specifies the source file or files.\n\
+  [drive2:][path2]         Specifies the directory where files are to be\n\
+                           replaced.\n\
+  /A                       Adds new files to destination directory. Cannot\n\
+                           use with /S or /U switches.\n\
+  /P                       Prompts for confirmation before replacing a file or\n\
+                           adding a source file.\n\
+  /R                       Replaces read-only files as well as unprotected\n\
+                           files.\n\
+  /S                       Replaces files in all subdirectories of the\n\
+                           destination directory. Cannot use with the /A\n\
+                           switch.\n\
+  /W                       Waits for you to insert a disk before beginning.\n\
+  /U                       Replaces (updates) only files that are older than\n\
+                           source files. Cannot use with the /A switch.\n"
+
+STRING_REPLACE_HELP2, "Source path required\n"
+
+STRING_REPLACE_HELP3, "No files replaced\n"
+
+STRING_REPLACE_HELP4, "%lu file(s) replaced\n"
+
+STRING_REPLACE_HELP5, "Replacing %s\n"
+
+STRING_REPLACE_HELP6, "Replace %s\n"
+
+STRING_REPLACE_HELP7, "No files added\n"
+
+STRING_REPLACE_HELP8, "%lu file(s) added\n"
+
+STRING_REPLACE_HELP9, "Add %s (Y/N) "
+
+STRING_REPLACE_HELP10, "Replace %s (Y/N) "
+
+STRING_REPLACE_HELP11, "Adding %s\n"
+
+
 STRING_SHIFT_HELP, "Changes the position of replaceable parameters in a batch file.\n\n\
 SHIFT [DOWN]"
 
@@ -548,6 +588,7 @@ RD       Removes a directory.\n\
 REM      Records comments (remarks) in batch files.\n\
 REN      Renames a file or files.\n\
 RENAME   Renames a file or files.\n\
+REPLACE  Replaces files.\n\
 RMDIR    Removes a directory.\n\
 SCREEN   Move cursor and optionally print text.\n\
 SET      Displays, sets, or removes ReactOS environment variables.\n\
@@ -635,6 +676,14 @@ STRING_ERROR_D_PAUSEMSG,           "Press any key to continue . . ."
 STRING_ERROR_DRIVER_NOT_READY,     "Drive not ready"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
+
+STRING_REPLACE_ERROR1, "Invalid switch - %s\n"
+STRING_REPLACE_ERROR2, "Path not found - %s\n"
+STRING_REPLACE_ERROR3, "The filename, directory name, or volume label syntax is incorrect.\n"
+STRING_REPLACE_ERROR4, "Invalid parameter combination\n"
+STRING_REPLACE_ERROR5, "Access denied - %s\n"
+STRING_REPLACE_ERROR6, "No files found - %s\n"
+STRING_REPLACE_ERROR7, "Extended Error 32\n"
 
 STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter"
 STRING_VERSION_RUNVER,             " running on %s"

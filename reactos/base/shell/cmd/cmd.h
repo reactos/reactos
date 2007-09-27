@@ -347,6 +347,8 @@ INT GetRedirection (LPTSTR, LPTSTR, LPTSTR, LPTSTR, LPINT);
 /* Prototypes for REN.C */
 INT cmd_rename (LPTSTR, LPTSTR);
 
+/* Prototypes for REN.C */
+INT cmd_replace (LPTSTR, LPTSTR);
 
 /* Prototypes for SCREEN.C */
 INT CommandScreen (LPTSTR, LPTSTR);

@@ -47,6 +47,7 @@ pause.c         Implements pause command
 prompt.c        Prompt handling functions
 redir.c         Redirection and piping parsing functions
 ren.c           Implements rename command
+replace.c       Implements replace command
 set.c           Implements set command
 shift.c         Implements shift command
 time.c          Implements time command

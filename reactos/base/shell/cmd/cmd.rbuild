@@ -52,6 +52,7 @@
 		<file>prompt.c</file>
 		<file>redir.c</file>
 		<file>ren.c</file>
+		<file>replace.c</file>
 		<file>screen.c</file>
 		<file>set.c</file>
 		<file>shift.c</file>

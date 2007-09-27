@@ -63,8 +63,13 @@
 #define STRING_TIME_ERROR1                 348
 #define STRING_TYPE_ERROR1                 349
 #define STRING_WINDOW_ERROR1               350
-
-
+#define STRING_REPLACE_ERROR1              351
+#define STRING_REPLACE_ERROR2              352
+#define STRING_REPLACE_ERROR3              353
+#define STRING_REPLACE_ERROR4              354
+#define STRING_REPLACE_ERROR5              355
+#define STRING_REPLACE_ERROR6              356
+#define STRING_REPLACE_ERROR7              357
 
 #define STRING_ATTRIB_HELP                 600
 #define STRING_ALIAS_HELP                  601
@@ -222,6 +227,18 @@
 #define STRING_RMDIR_HELP2                 724
 #define STRING_MD_ERROR                    725
 #define STRING_MD_ERROR2                   726
+
+#define STRING_REPLACE_HELP1               727
+#define STRING_REPLACE_HELP2               728
+#define STRING_REPLACE_HELP3               729
+#define STRING_REPLACE_HELP4               730
+#define STRING_REPLACE_HELP5               731
+#define STRING_REPLACE_HELP6               732
+#define STRING_REPLACE_HELP7               733
+#define STRING_REPLACE_HELP8               734
+#define STRING_REPLACE_HELP9               735
+#define STRING_REPLACE_HELP10              736
+#define STRING_REPLACE_HELP11              737
 
 
 /* These strings are language independent (cmd.rc) */
