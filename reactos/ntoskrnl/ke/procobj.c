@@ -30,27 +30,6 @@ PVOID KeRaiseUserExceptionDispatcher;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-FORCEINLINE
-VOID
-NTAPI
-UpdatePageDirs(IN PKTHREAD Thread,
-               IN PKPROCESS Process)
-{
-    /*
-     * The stack and the thread structure of the current process may be
-     * located in a page which is not present in the page directory of
-     * the process we're attaching to. That would lead to a page fault
-     * when this function returns. However, since the processor can't
-     * call the page fault handler 'cause it can't push EIP on the stack,
-     * this will show up as a stack fault which will crash the entire system.
-     * To prevent this, make sure the page directory of the process we're
-     * attaching to is up-to-date.
-     */
-    MmUpdatePageDir((PEPROCESS)Process,
-                    (PVOID)Thread->StackLimit,
-                    KERNEL_STACK_SIZE);
-}
-
 VOID
 NTAPI
 KiAttachProcess(IN PKTHREAD Thread,
@@ -463,13 +442,15 @@ NTAPI
 KeAttachProcess(IN PKPROCESS Process)
 {
     KLOCK_QUEUE_HANDLE ApcLock;
-    PKTHREAD Thread;
+    PKTHREAD Thread = KeGetCurrentThread();
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory */
-    Thread = KeGetCurrentThread();
-    UpdatePageDirs(Thread, Process);
+    MiSyncThreadProcessViews(Process,
+                             (PVOID)Thread->StackLimit,
+                             Thread->LargeStack ?
+                             KERNEL_STACK_SIZE : KERNEL_LARGE_STACK_SIZE);
 
     /* Check if we're already in that process */
     if (Thread->ApcState.Process == Process) return;
@@ -595,7 +576,10 @@ KeStackAttachProcess(IN PKPROCESS Process,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory */
-    UpdatePageDirs(Thread, Process);
+    MiSyncThreadProcessViews(Process,
+                             (PVOID)Thread->StackLimit,
+                             Thread->LargeStack ?
+                             KERNEL_STACK_SIZE : KERNEL_LARGE_STACK_SIZE);
 
     /* Crash system if DPC is being executed! */
     if (KeIsExecutingDpc())

@@ -40,10 +40,6 @@ KiScanReadyQueues(IN PKDPC Dpc,
     /* Lock the dispatcher and PRCB */
     OldIrql = KiAcquireDispatcherLock();
     KiAcquirePrcbLock(Prcb);
-#ifndef NEW_SCHEDULER
-    goto OldSched;
-#endif
-
     /* Check if there's any thread that need help */
     Summary = Prcb->ReadySummary & ((1 << THREAD_BOOST_PRIORITY) - 2);
     if (Summary)
@@ -76,7 +72,6 @@ KiScanReadyQueues(IN PKDPC Dpc,
                     if (WaitLimit >= Thread->WaitTime)
                     {
                         /* Remove the thread from the queue */
-                        DPRINT1("Thread: %p\n", Thread);
                         NextEntry = NextEntry->Blink;
                         ASSERT((Prcb->ReadySummary & PRIORITY_MASK(Index)));
                         if (RemoveEntryList(NextEntry->Flink))
@@ -114,9 +109,6 @@ KiScanReadyQueues(IN PKDPC Dpc,
     }
 
     /* Release the locks and dispatcher */
-#ifndef NEW_SCHEDULER
-OldSched:
-#endif
     KiReleasePrcbLock(Prcb);
     KiReleaseDispatcherLock(OldIrql);
 

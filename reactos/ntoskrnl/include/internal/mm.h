@@ -1474,7 +1474,7 @@ MmCheckSystemImage(
 FORCEINLINE
 VOID
 NTAPI
-MiSyncThreadProcessViews(IN PKPROCESS Process,
+MiSyncThreadProcessViews(IN PVOID Process,
                          IN PVOID Address,
                          IN ULONG Size)
 {

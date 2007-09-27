@@ -810,11 +810,11 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
 
-    /* ROS Mm HACK */
-    MmUpdatePageDir((PEPROCESS)Process,
-                    (PVOID)Thread->StackLimit,
-                    KERNEL_STACK_SIZE);
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+    /* Make sure that we are in the right page directory */
+    MiSyncThreadProcessViews(Process,
+                             Thread,
+                             KERNEL_STACK_SIZE);
+    MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
 
 #if defined(_M_IX86)
     /* Enter SEH to avoid crashes due to user mode */
@@ -1006,7 +1006,6 @@ KeRevertToUserAffinityThread(VOID)
         /* Lock the PRCB */
         KiAcquirePrcbLock(Prcb);
 
-#ifdef NEW_SCHEDULER
         /* Check if there's no next thread scheduled */
         if (!Prcb->NextThread)
         {
@@ -1015,14 +1014,6 @@ KeRevertToUserAffinityThread(VOID)
             NextThread->State = Standby;
             Prcb->NextThread = NextThread;
         }
-#else
-        /* We need to dispatch a new thread */
-        NextThread = NULL;
-        CurrentThread->WaitIrql = OldIrql;
-        KiDispatchThreadNoLock(Ready);
-        KeLowerIrql(OldIrql);
-        return;
-#endif
 
         /* Release the PRCB lock */
         KiReleasePrcbLock(Prcb);
@@ -1124,7 +1115,6 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
         /* Lock the PRCB */
         KiAcquirePrcbLock(Prcb);
 
-#ifdef NEW_SCHEDULER
         /* Check if there's no next thread scheduled */
         if (!Prcb->NextThread)
         {
@@ -1133,14 +1123,6 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
             NextThread->State = Standby;
             Prcb->NextThread = NextThread;
         }
-#else
-        /* We need to dispatch a new thread */
-        NextThread = NULL;
-        CurrentThread->WaitIrql = OldIrql;
-        KiDispatchThreadNoLock(Ready);
-        KeLowerIrql(OldIrql);
-        return;
-#endif
 
         /* Release the PRCB lock */
         KiReleasePrcbLock(Prcb);
