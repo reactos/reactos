@@ -137,6 +137,13 @@ static VOID STDCALL
 ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 		PVOID Context);
 
+IO_ALLOCATION_ACTION
+STDCALL
+ScsiPortAllocateAdapterChannel(IN PDEVICE_OBJECT DeviceObject,
+                               IN PIRP Irp,
+                               IN PVOID MapRegisterBase,
+                               IN PVOID Context);
+
 static NTSTATUS
 SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		   PUNICODE_STRING RegistryPath);
@@ -336,7 +343,6 @@ ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
                                         SCSI_PORT_DEVICE_EXTENSION,
                                         MiniPortDeviceExtension);
 
-
     /* Initialize our pointers */
     NextMa = DeviceExtension->MappedAddressList;
     LastMa = NextMa;
@@ -384,22 +390,44 @@ ScsiPortGetBusData(IN PVOID DeviceExtension,
 		   IN PVOID Buffer,
 		   IN ULONG Length)
 {
-	if (Length)
-	{
-		/* If Length is non-zero, just forward the call to
-		   HalGetBusData() function */
-		return HalGetBusData(BusDataType,
-		                     SystemIoBusNumber,
-		                     SlotNumber,
-		                     Buffer,
-		                    Length);
-	}
+    DPRINT("ScsiPortGetBusData()\n");
 
-	/* We have a more complex case here */
-	UNIMPLEMENTED;
-	return 0;
+    if (Length)
+    {
+        /* If Length is non-zero, just forward the call to
+        HalGetBusData() function */
+        return HalGetBusData(BusDataType,
+                             SystemIoBusNumber,
+                             SlotNumber,
+                             Buffer,
+                             Length);
+    }
+
+    /* We have a more complex case here */
+    UNIMPLEMENTED;
+    return 0;
 }
 
+/*
+ * @implemented
+ */
+ULONG STDCALL
+ScsiPortSetBusDataByOffset(IN PVOID DeviceExtension,
+                           IN ULONG BusDataType,
+                           IN ULONG SystemIoBusNumber,
+                           IN ULONG SlotNumber,
+                           IN PVOID Buffer,
+                           IN ULONG Offset,
+                           IN ULONG Length)
+{
+    DPRINT("ScsiPortSetBusDataByOffset()\n");
+    return HalSetBusDataByOffset(BusDataType,
+                                 SystemIoBusNumber,
+                                 SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+}
 
 /*
  * @implemented
@@ -461,7 +489,7 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 PVOID STDCALL
 ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
@@ -504,7 +532,7 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 SCSI_PHYSICAL_ADDRESS STDCALL
 ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
@@ -1654,13 +1682,11 @@ SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
             }
             else
             {
-#if 0
                 HalFreeCommonBuffer(DeviceExtension->AdapterObject,
                                     DeviceExtension->CommonBufferLength,
-                                    DeviceExtension->PhysicalCommonBuffer,
+                                    DeviceExtension->PhysicalAddress,
                                     DeviceExtension->SrbExtensionBuffer,
                                     FALSE);
-#endif
             }
     }
 
@@ -1685,8 +1711,6 @@ SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     IoDeleteDevice(DeviceExtension->DeviceObject);
 }
 
-
-
 /*
  * @unimplemented
  */
@@ -1699,7 +1723,6 @@ ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
   DPRINT1("ScsiPortIoMapTransfer()\n");
   UNIMPLEMENTED;
 }
-
 
 /*
  * @unimplemented
@@ -1724,7 +1747,6 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 
   DPRINT("ScsiPortLogError() done\n");
 }
-
 
 /*
  * @implemented
@@ -1875,29 +1897,6 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
     /* Request a DPC after we're done with the interrupt */
     DeviceExtension->InterruptData.Flags |= SCSI_PORT_NOTIFICATION_NEEDED;
 }
-
-
-/*
- * @implemented
- */
-ULONG STDCALL
-ScsiPortSetBusDataByOffset(IN PVOID DeviceExtension,
-			   IN ULONG BusDataType,
-			   IN ULONG SystemIoBusNumber,
-			   IN ULONG SlotNumber,
-			   IN PVOID Buffer,
-			   IN ULONG Offset,
-			   IN ULONG Length)
-{
-  DPRINT("ScsiPortSetBusDataByOffset()\n");
-  return(HalSetBusDataByOffset(BusDataType,
-			       SystemIoBusNumber,
-			       SlotNumber,
-			       Buffer,
-			       Offset,
-			       Length));
-}
-
 
 /*
  * @implemented
@@ -2869,22 +2868,16 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
         DeviceExtension->AdapterObject != NULL &&
         !DeviceExtension->MapRegisters)
     {
-#if 0
         IoAllocateAdapterChannel(
             DeviceExtension->AdapterObject,
             DeviceObject,
             DeviceExtension->PortCapabilities.MaximumPhysicalPages,
-            ScsiPortAllocationRoutine,
+            ScsiPortAllocateAdapterChannel,
             LunExtension
             );
 
         return;
-#else
-        /* TODO: DMA is not implemented yet */
-        ASSERT(FALSE);
-#endif
     }
-
 
     KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
 
@@ -4081,7 +4074,6 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         }
     }
 
-
     /* Flush adapter if needed */
     if (SrbInfo->BaseOfMapRegister)
     {
@@ -4416,8 +4408,6 @@ SpiCompletionRoutine(PDEVICE_OBJECT DeviceObject,
     IoFreeIrp(Irp);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
-
 
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,
@@ -5484,6 +5474,7 @@ SpiMiniportTimerDpc(IN struct _KDPC *Dpc,
                     IN PVOID SystemArgument2)
 {
     DPRINT1("Miniport timer DPC\n");
+    ASSERT(FALSE);
 }
 
 static NTSTATUS
@@ -5616,7 +5607,6 @@ TryNextAd:
         }
     }
 
-
     /* Look at device params */
     Key = NULL;
     if (InternalConfigInfo->Parameter)
@@ -5742,7 +5732,6 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     NTSTATUS Status = STATUS_SUCCESS;
-
 
     KeyValueInformation = (PKEY_VALUE_FULL_INFORMATION) Buffer;
 
@@ -6064,7 +6053,6 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 }
 
-
 NTSTATUS
 STDCALL
 SpQueryDeviceCallout(IN PVOID  Context,
@@ -6086,7 +6074,31 @@ SpQueryDeviceCallout(IN PVOID  Context,
     return STATUS_SUCCESS;
 }
 
+IO_ALLOCATION_ACTION
+STDCALL
+ScsiPortAllocateAdapterChannel(IN PDEVICE_OBJECT DeviceObject,
+                               IN PIRP Irp,
+                               IN PVOID MapRegisterBase,
+                               IN PVOID Context)
+{
+    KIRQL Irql;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
+    /* Guard access with the spinlock */
+    KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+
+    /* Save MapRegisterBase we've got here */
+    DeviceExtension->MapRegisterBase = MapRegisterBase;
+
+    /* Start pending request */
+    KeSynchronizeExecution(DeviceExtension->Interrupt,
+        ScsiPortStartPacket, DeviceObject);
+
+    /* Release spinlock we took */
+    KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+
+    return KeepObject;
+}
 
 static
 NTSTATUS
