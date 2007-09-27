@@ -335,8 +335,8 @@ NtGdiSetDIBitsToDeviceInternal(
     INT ret = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     PDC pDC;
-    HBITMAP hSourceBitmap = NULL;
-    SURFOBJ *pDestSurf = NULL, *pSourceSurf = NULL;
+    HBITMAP hSourceBitmap;
+    SURFOBJ *pDestSurf, *pSourceSurf;
     RECTL rcDest;
     POINTL ptSource;
     INT DIBWidth;
@@ -377,6 +377,7 @@ NtGdiSetDIBitsToDeviceInternal(
     /* Enter SEH, as the bits are user mode */
     _SEH_TRY
     {
+        ProbeForRead(Bits, DIBWidth * abs(bmi->bmiHeader.biHeight), 1);
         hSourceBitmap = EngCreateBitmap(SourceSize,
                                         DIBWidth,
                                         BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
@@ -392,6 +393,7 @@ NtGdiSetDIBitsToDeviceInternal(
         pSourceSurf = EngLockSurface((HSURF)hSourceBitmap);
         if (!pSourceSurf)
         {
+            EngDeleteSurface((HSURF)hSourceBitmap);
             Status = STATUS_UNSUCCESSFUL;
             _SEH_LEAVE;
         }
@@ -412,6 +414,8 @@ NtGdiSetDIBitsToDeviceInternal(
                               NULL,
                               ROP3_TO_ROP4(SRCCOPY));
 
+        EngUnlockSurface(pSourceSurf);
+        EngDeleteSurface((HSURF)hSourceBitmap);
     }
     _SEH_HANDLE
     {
@@ -425,21 +429,7 @@ NtGdiSetDIBitsToDeviceInternal(
         ret = ScanLines;
     }
 
-    if (pSourceSurf)
-    {
-        EngUnlockSurface(pSourceSurf);
-    }
-
-    if (hSourceBitmap)
-    {
-        EngDeleteSurface((HSURF)hSourceBitmap);
-    }
-
-    if (pDestSurf)
-    {
-        EngUnlockSurface(pDestSurf);
-    }
-
+    EngUnlockSurface(pDestSurf);
     DC_UnlockDc(pDC);
 
     return ret;
