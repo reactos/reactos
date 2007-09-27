@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+VOID
+NTAPI
+RtlpGetStackLimits(PULONG_PTR StackBase,
+                   PULONG_PTR StackLimit);
+
 /* DATA **********************************************************************/
 
 KSPIN_LOCK CancelSpinLock;
@@ -48,10 +53,33 @@ NTAPI
 IoGetStackLimits(OUT PULONG LowLimit,
                  OUT PULONG HighLimit)
 {
-    /* Return the limits from the TEB... this is wrong! */
-    DPRINT1("FIXME: IoGetStackLimits returning B*LLSHIT!\n");
-    *LowLimit = (ULONG)NtCurrentTeb()->Tib.StackLimit;
-    *HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    ULONG_PTR DpcStack = (ULONG_PTR)(Prcb->DpcStack);
+    volatile ULONG_PTR StackAddress;
+
+    /* Save our stack address so we always know it's valid */
+    StackAddress = (ULONG_PTR)(&StackAddress);
+    
+    /* Get stack values */
+    RtlpGetStackLimits(LowLimit, HighLimit);
+
+    /* Check if we're outside the stack */
+    if ((StackAddress < *LowLimit) || (StackAddress > *HighLimit))
+    {
+        /* Check if we may be in a DPC */
+        if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+        {
+            /* Check if we really are in a DPC */
+            if ((Prcb->DpcRoutineActive) &&
+                (StackAddress <= DpcStack) &&
+                (StackAddress >= DpcStack - KERNEL_STACK_SIZE))
+            {
+                /* Use the DPC stack limits */
+                *HighLimit = DpcStack;
+                *LowLimit = DpcStack - KERNEL_STACK_SIZE;
+            }
+        }
+    }
 }
 
 /*

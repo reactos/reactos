@@ -222,9 +222,7 @@ KeRosDumpTriageForBugZillaReport(VOID)
              "BIOS Version: %wZ\n"
              "Video BIOS Date: %wZ\n"
              "Video BIOS Version: %wZ\n"
-             "Memory: %d\n"
-             "NT Build Number: %lx\n"
-             "NT Build Lab: %s\n",
+             "Memory: %d\n",
              KeProcessorArchitecture,
              KeFeatureBits,
              KiFastSystemCallDisable,
@@ -251,9 +249,7 @@ KeRosDumpTriageForBugZillaReport(VOID)
              &KeRosBiosVersion,
              &KeRosVideoBiosDate,
              &KeRosVideoBiosVersion,
-             MmStats.NrTotalPages * PAGE_SIZE,
-             NtBuildNumber,
-             NtBuildLab);
+             MmStats.NrTotalPages * PAGE_SIZE);
 #endif
 }
 
@@ -640,7 +636,6 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     PVOID DriverBase;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PULONG_PTR HardErrorParameters;
-    KIRQL OldIrql;
 #ifdef CONFIG_SMP
     LONG i = 0;
 #endif
@@ -976,15 +971,15 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         }
     }
 
-    /* Raise IRQL to HIGH_LEVEL */
-    _disable();
-    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
     /* ROS HACK: Unlock the Kernel Address Space if we own it */
     if (KernelAddressSpaceLock.Owner == KeGetCurrentThread())
     {
         MmUnlockAddressSpace(MmGetKernelAddressSpace());
     }
+    
+    /* Raise IRQL to HIGH_LEVEL */    
+    _disable();
+    KfRaiseIrql(HIGH_LEVEL);
 
     /* Avoid recursion */
     if (!InterlockedDecrement((PLONG)&KeBugCheckCount))
@@ -1006,11 +1001,13 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 #endif
 
         /* Display the BSOD */
+        KfLowerIrql(APC_LEVEL); // This is a nastier hack than any ever before
         KiDisplayBlueScreen(MessageId,
                             IsHardError,
                             HardErrCaption,
                             HardErrMessage,
                             AnsiName);
+        KfRaiseIrql(HIGH_LEVEL);
 
         /* Check if the debugger is disabled but we can enable it */
         if (!(KdDebuggerEnabled) && !(KdPitchDebugger))

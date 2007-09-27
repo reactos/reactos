@@ -797,8 +797,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     if (!KernelStack)
     {
         /* We don't, allocate one */
-        KernelStack = (PVOID)((ULONG_PTR)MmCreateKernelStack(FALSE, 0) +
-                              KERNEL_STACK_SIZE);
+        KernelStack = MmCreateKernelStack(FALSE, 0);
         if (!KernelStack) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Remember for later */
@@ -806,8 +805,8 @@ KeInitThread(IN OUT PKTHREAD Thread,
     }
 
     /* Set the Thread Stacks */
-    Thread->InitialStack = (PCHAR)KernelStack;
-    Thread->StackBase = (PCHAR)KernelStack;
+    Thread->InitialStack = KernelStack;
+    Thread->StackBase = KernelStack;
     Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
 

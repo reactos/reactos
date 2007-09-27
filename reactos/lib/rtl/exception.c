@@ -122,12 +122,11 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                   IN ULONG Count,
                   IN ULONG Flags)
 {
-    PULONG Stack, NewStack;
+    ULONG_PTR Stack, NewStack, StackBegin, StackEnd;
     ULONG Eip;
-    ULONG_PTR StackBegin, StackEnd;
     BOOLEAN Result, StopSearch = FALSE;
     ULONG i = 0;
-
+    
     /* Get current EBP */
 #if defined(_M_IX86)
 #if defined __GNUC__
@@ -136,16 +135,16 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     __asm mov Stack, ebp
 #endif
 #elif defined(_M_MIPS)
-    __asm__("move $sp, %0" : "=r" (Stack) : );
+        __asm__("move $sp, %0" : "=r" (Stack) : );
 #elif defined(_M_PPC)
     __asm__("mr %0,1" : "=r" (Stack) : );
 #else
 #error Unknown architecture
 #endif
-
+    
     /* Set it as the stack begin limit as well */
     StackBegin = (ULONG_PTR)Stack;
-
+    
     /* Check if we're called for non-logging mode */
     if (!Flags)
     {
@@ -155,52 +154,65 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                                         &StackEnd);
         if (!Result) return 0;
     }
-
-    /* Loop the frames */
-    for (i = 0; i < Count; i++)
+    
+    /* Use a SEH block for maximum protection */
+    _SEH_TRY
     {
-        /* Check if we're past the stack */
-        if ((ULONG_PTR)Stack >= StackEnd) break;
-
-        /* Check if this is the first entry */
-#if 0
-        if (!i)
+        /* Loop the frames */
+        for (i = 0; i < Count; i++)
         {
-            if ((ULONG_PTR)Stack != StackBegin) break;
+            /*
+             * Leave if we're past the stack,
+             * if we're before the stack,
+             * or if we've reached ourselves.
+             */
+            if ((Stack >= StackEnd) ||
+                (!i ? (Stack < StackBegin) : (Stack <= StackBegin)) ||
+                ((StackEnd - Stack) < (2 * sizeof(ULONG_PTR))))
+            {
+                /* We're done or hit a bad address */
+                break;
+            }
+            
+            /* Get new stack and EIP */
+            NewStack = *(PULONG_PTR)Stack;
+            Eip = *(PULONG_PTR)(Stack + sizeof(ULONG_PTR));
+            
+            /* Check if the new pointer is above the oldone and past the end */
+            if (!((Stack < NewStack) && (NewStack < StackEnd)))
+            {
+                /* Stop searching after this entry */
+                StopSearch = TRUE;
+            }
+            
+            /* Also make sure that the EIP isn't a stack address */
+            if ((StackBegin < Eip) && (Eip < StackEnd)) break;
+            
+            /* Check if we reached a user-mode address */
+            if (!(Flags) && !(Eip & 0x80000000)) break;
+            
+            /* Save this frame */
+            Callers[i] = (PVOID)Eip;
+            
+            /* Check if we should continue */
+            if (StopSearch)
+            {
+                /* Return the next index */
+                i++;
+                break;
+            }
+            
+            /* Move to the next stack */
+            Stack = NewStack;
         }
-        else
-        {
-            if ((ULONG_PTR)Stack == StackBegin) break;
-        }
-#endif
-
-        /* Make sure there's enough frames */
-        if ((StackEnd - (ULONG_PTR)Stack) < (2 * sizeof(ULONG_PTR))) break;
-
-        /* Get new stack and EIP */
-        NewStack = (PULONG)Stack[0];
-        Eip = Stack[1];
-
-        /* Check if the new pointer is above the oldone and past the end */
-        if (!((Stack < NewStack) && ((ULONG_PTR)NewStack < StackEnd)))
-        {
-            /* Stop searching after this entry */
-            StopSearch = TRUE;
-        }
-
-        /* Also make sure that the EIP isn't a stack address */
-        if ((StackBegin < Eip) && (Eip < StackEnd)) break;
-
-        /* Save this frame */
-        Callers[i] = (PVOID)Eip;
-
-        /* Check if we should continue */
-        if (StopSearch) break;
-
-        /* Move to the next stack */
-        Stack = NewStack;
     }
-
+    _SEH_HANDLE
+    {
+        /* No index */
+        i = 0;
+    }
+    _SEH_END;
+        
     /* Return frames parsed */
     return i;
 }

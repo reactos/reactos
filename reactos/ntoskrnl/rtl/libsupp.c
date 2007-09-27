@@ -197,11 +197,11 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
         /* Check if we are in a DPC and the stack matches */
         if ((Prcb->DpcRoutineActive) &&
             (RegistrationFrameEnd <= DpcStack) &&
-            ((ULONG_PTR)RegistrationFrame >= DpcStack - 4096))
+            ((ULONG_PTR)RegistrationFrame >= DpcStack - KERNEL_STACK_SIZE))
         {
             /* Update the limits to the DPC Stack's */
             *StackHigh = DpcStack;
-            *StackLow = DpcStack - 4096;
+            *StackLow = DpcStack - KERNEL_STACK_SIZE;
             return TRUE;
         }
     }
@@ -218,18 +218,37 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
 {
     PKTHREAD Thread = KeGetCurrentThread();
 
-    /* FIXME: Super native implementation */
-
+    /* Don't even try at ISR level or later */
+    if (KeGetCurrentIrql() > DISPATCH_LEVEL) return FALSE;
+    
     /* Start with defaults */
     *StackBegin = Thread->StackLimit;
     *StackEnd = (ULONG_PTR)Thread->StackBase;
-
-    /* Check if we seem to be on the DPC stack */
-    if ((*StackBegin > Ebp) || (Ebp > *StackEnd))
+    
+    /* Check if EBP is inside the stack */
+    if ((*StackBegin <= Ebp) && (Ebp <= *StackEnd))
     {
-        /* FIXME: TODO */
-        //ASSERT(FALSE);
-        DPRINT1("Stacks: %p %p %p\n", Ebp, *StackBegin, *StackEnd);
+        /* Then make the stack start at EBP */
+        *StackBegin = Ebp;
+    }
+    else
+    {
+        /* Now we're going to assume we're on the DPC stack */
+        *StackEnd = (ULONG_PTR)(KeGetPcr()->Prcb->DpcStack);
+        *StackBegin = *StackEnd - KERNEL_STACK_SIZE;
+        
+        /* Check if we seem to be on the DPC stack */
+        if ((*StackEnd) && (*StackBegin < Ebp) && (Ebp <= *StackEnd))
+        {
+            /* We're on the DPC stack */
+            *StackBegin = Ebp;
+        }
+        else
+        {
+            /* We're somewhere else entirely... use EBP for safety */
+            *StackBegin = Ebp;
+            *StackEnd = (ULONG_PTR)PAGE_ALIGN(*StackBegin);
+        }
     }
 
     /* Return success */

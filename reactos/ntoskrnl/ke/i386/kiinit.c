@@ -582,7 +582,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         /* Allocate the DPC Stack */
         DpcStack = MmCreateKernelStack(FALSE, 0);
         if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
-        Prcb->DpcStack = (PVOID)((ULONG_PTR)DpcStack + KERNEL_STACK_SIZE);
+        Prcb->DpcStack = DpcStack;
 
         /* Allocate the IOPM save area. */
         Ki386IopmSaveArea = ExAllocatePoolWithTag(PagedPool,

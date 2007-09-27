@@ -242,8 +242,9 @@ MmCreateKernelStack(BOOLEAN GuiStack,
         KEBUGCHECK(0);
     }
 
-    /* Return the stack */
-    return KernelStack;
+    /* Return the stack base */
+    return (PVOID)((ULONG_PTR)KernelStack +
+                   (GuiStack ? KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE));
 }
 
 /*

@@ -52,8 +52,7 @@ PsConvertToGuiThread(VOID)
     if (!Thread->Tcb.LargeStack)
     {
         /* We don't create one */
-        NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE, 0) +
-                    KERNEL_LARGE_STACK_SIZE;
+        NewStack = (ULONG_PTR)MmCreateKernelStack(TRUE, 0);
         if (!NewStack)
         {
             /* Panic in user-mode */
@@ -61,15 +60,15 @@ PsConvertToGuiThread(VOID)
             return STATUS_NO_MEMORY;
         }
 
-        /* We're about to switch stacks. Enter a critical region */
-        KeEnterCriticalRegion();
+        /* We're about to switch stacks. Enter a guarded region */
+        KeEnterGuardedRegion();
 
         /* Switch stacks */
         OldStack = KeSwitchKernelStack((PVOID)NewStack,
                                        (PVOID)(NewStack - KERNEL_STACK_SIZE));
 
-        /* Leave the critical region */
-        KeLeaveCriticalRegion();
+        /* Leave the guarded region */
+        KeLeaveGuardedRegion();
 
         /* Delete the old stack */
         MmDeleteKernelStack(OldStack, FALSE);
