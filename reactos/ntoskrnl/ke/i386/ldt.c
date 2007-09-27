@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/ldt.c
@@ -220,4 +219,5 @@ NtSetLdtEntries (ULONG Selector1,
   KeReleaseSpinLock(&LdtLock, oldIrql);
   return STATUS_SUCCESS;
 }
+
 

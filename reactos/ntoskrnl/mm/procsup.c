@@ -498,7 +498,9 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 NTSTATUS
 NTAPI
 MmInitializeProcessAddressSpace(IN PEPROCESS Process,
+                                IN PEPROCESS ProcessClone OPTIONAL,
                                 IN PVOID Section OPTIONAL,
+                                IN OUT PULONG Flags,
                                 IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
 {
     NTSTATUS Status;

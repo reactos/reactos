@@ -555,7 +555,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Set default exit code */
     Process->ExitStatus = STATUS_TIMEOUT;
-    
+
     /* Check if this is the initial process being built */
     if (Parent)
     {
@@ -576,7 +576,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Status = MmInitializeHandBuiltProcess(Process, &DirectoryTableBase);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
-    
+
     /* We now have an address space */
     InterlockedOr((PLONG)&Process->Flags, PSF_HAS_ADDRESS_SPACE_BIT);
 
@@ -596,7 +596,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Set default priority class */
     Process->PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
-    
+
     /* Check if we have a parent */
     if (Parent)
     {
@@ -628,7 +628,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* Initialize the address space */
         Status = MmInitializeProcessAddressSpace(Process,
+                                                 NULL,
                                                  SectionObject,
+                                                 &Flags,
                                                  &Process->
                                                  SeAuditProcessCreationInfo.
                                                  ImageFileName);
@@ -644,13 +646,13 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         }
         else
         {
-            /* This is a system process other than the boot one (MmInit1) */
+            /* This is the initial system process */
             Flags &= ~PS_LARGE_PAGES;
             Status = MmInitializeProcessAddressSpace(Process,
                                                      NULL,
-                                                     &Process->
-                                                     SeAuditProcessCreationInfo.
-                                                     ImageFileName);
+                                                     NULL,
+                                                     &Flags,
+                                                     NULL);
             if (!NT_SUCCESS(Status)) goto CleanupWithRef;
             
             /* Create a dummy image file name */
@@ -670,7 +672,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                           sizeof(OBJECT_NAME_INFORMATION));
         }
     }
-    
+
     /* Check if we have a section object and map the system DLL */
     if (SectionObject) PspMapSystemDll(Process, NULL, FALSE);
 
@@ -680,6 +682,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Process->UniqueProcessId = ExCreateHandle(PspCidTable, &CidEntry);
     if (!Process->UniqueProcessId)
     {
+        /* Fail */
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto CleanupWithRef;
     }
@@ -701,6 +704,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Create PEB only for User-Mode Processes */
     if (Parent)
     {
+        /* Create it */
         Status = MmCreatePeb(Process);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }

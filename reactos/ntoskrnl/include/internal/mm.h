@@ -13,6 +13,7 @@ extern ULONG MmPagedPoolSize;
 extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
+extern ULONG MmNumberOfPhysicalPages;
 
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
@@ -614,7 +615,9 @@ NTSTATUS
 NTAPI
 MmInitializeProcessAddressSpace(
     IN PEPROCESS Process,
+    IN PEPROCESS Clone OPTIONAL,
     IN PVOID Section OPTIONAL,
+    IN OUT PULONG Flags,
     IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL
 );
 

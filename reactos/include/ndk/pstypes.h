@@ -99,6 +99,13 @@ Author:
 #define PROCESS_PRIORITY_NORMAL_FOREGROUND      9
 
 //
+// Process memory priorities
+//
+#define MEMORY_PRIORITY_BACKGROUND             0
+#define MEMORY_PRIORITY_UNKNOWN                1
+#define MEMORY_PRIORITY_FOREGROUND             2
+
+//
 // Process Priority Separation Values (OR)
 //
 #define PSP_VARIABLE_QUANTUMS                   4

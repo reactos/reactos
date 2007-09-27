@@ -799,6 +799,45 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
 }
 
+BOOLEAN
+FASTCALL
+KeInvalidAccessAllowed(IN PVOID TrapInformation OPTIONAL)
+{   
+    ULONG Eip;
+    PKTRAP_FRAME TrapFrame = TrapInformation;
+    VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
+    
+    /* Don't do anything if we didn't get a trap frame */
+    if (!TrapInformation) return FALSE;
+
+    /* Check where we came from */
+    switch (TrapFrame->SegCs)
+    {       
+        /* Kernel mode */
+        case KGDT_R0_CODE:
+
+            /* Allow S-LIST Routine to fail */
+            Eip = (ULONG)&ExpInterlockedPopEntrySListFault;
+            break;
+
+        /* User code */
+        case KGDT_R3_CODE | RPL_MASK:
+
+            /* Allow S-LIST Routine to fail */
+            //Eip = (ULONG)KeUserPopEntrySListFault;
+            Eip = 0;
+            break;
+            
+        default:
+
+            /* Anything else gets a bugcheck */
+            Eip = 0;
+    }
+
+    /* Return TRUE if we want to keep the system up */
+    return (TrapFrame->Eip == Eip) ? TRUE : FALSE;
+}
+
 VOID
 NTAPI
 KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,

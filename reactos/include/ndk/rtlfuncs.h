@@ -2923,6 +2923,13 @@ RtlUniform(
 NTSYSAPI
 ULONG
 NTAPI
+RtlRandom(
+    IN OUT PULONG Seed
+);
+
+NTSYSAPI
+ULONG
+NTAPI
 RtlComputeCrc32(
     IN USHORT PartialCrc,
     IN PUCHAR Buffer,

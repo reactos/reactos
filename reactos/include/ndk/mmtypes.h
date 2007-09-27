@@ -548,7 +548,7 @@ typedef struct _MMWSL
     ULONG NextSlot;
     PMMWSLE Wsle;
     ULONG LastInitializedWsle;
-    ULONG NonDirectcout;
+    ULONG NonDirectCount;
     PMMWSLE_HASH HashTable;
     ULONG HashTableSize;
     ULONG NumberOfCommittedPageTables;

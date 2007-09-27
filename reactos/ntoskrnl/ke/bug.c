@@ -249,7 +249,7 @@ KeRosDumpTriageForBugZillaReport(VOID)
              &KeRosBiosVersion,
              &KeRosVideoBiosDate,
              &KeRosVideoBiosVersion,
-             MmStats.NrTotalPages * PAGE_SIZE);
+             MmNumberOfPhysicalPages * PAGE_SIZE);
 #endif
 }
 
@@ -971,12 +971,6 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         }
     }
 
-    /* ROS HACK: Unlock the Kernel Address Space if we own it */
-    if (KernelAddressSpaceLock.Owner == KeGetCurrentThread())
-    {
-        MmUnlockAddressSpace(MmGetKernelAddressSpace());
-    }
-    
     /* Raise IRQL to HIGH_LEVEL */    
     _disable();
     KfRaiseIrql(HIGH_LEVEL);

@@ -231,7 +231,7 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
-
+#define KERNEL_LARGE_STACK_COMMIT           12288
 
 #define DPFLTR_ERROR_LEVEL                  0
 #define DPFLTR_WARNING_LEVEL                1

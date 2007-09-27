@@ -427,8 +427,8 @@ KiRosBuildOsMemoryMap(VOID)
         {
             /* It's over 16MB, so that memory gets marked as reserve */
             Status = KiRosConfigureArcDescriptor(PageStart,
-                                             PageEnd,
-                                             LoaderReserve);
+                                                 PageEnd,
+                                                 LoaderFree);
         }
         else
         {
@@ -448,7 +448,7 @@ KiRosBuildOsMemoryMap(VOID)
             /* Any code in the memory hole region ends up as reserve */
             Status = KiRosConfigureArcDescriptor(PageStart,
                                                  PageEnd,
-                                                 LoaderReserve);
+                                                 LoaderFree);
         }
 
         /* If we failed, break out, otherwise, go to the next BIOS block */

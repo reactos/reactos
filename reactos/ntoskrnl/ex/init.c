@@ -1483,7 +1483,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                &MsgEntry);
 
     /* Get total RAM size */
-    Size = MmStats.NrTotalPages * PAGE_SIZE / 1024 / 1024;
+    Size = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
 
     /* Create the string */
     StringBuffer = InitBuffer->VersionBuffer;

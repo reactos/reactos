@@ -760,6 +760,10 @@ FASTCALL
 KeZeroPages(IN PVOID Address,
             IN ULONG Size);
 
+BOOLEAN
+FASTCALL
+KeInvalidAccessAllowed(IN PVOID TrapInformation OPTIONAL);
+
 VOID
 NTAPI
 KeRosDumpStackFrames(

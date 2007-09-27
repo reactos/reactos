@@ -38,6 +38,8 @@ PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 
+ULONG MmNumberOfPhysicalPages;
+
 VOID INIT_FUNCTION NTAPI MmInitVirtualMemory(ULONG_PTR LastKernelAddress, ULONG KernelLength);
 
 /* FUNCTIONS ****************************************************************/
@@ -347,6 +349,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     * Free physical memory not used by the kernel
     */
    MmStats.NrTotalPages = MmFreeLdrMemHigher/4;
+   MmNumberOfPhysicalPages = MmStats.NrTotalPages;
    if (!MmStats.NrTotalPages)
    {
       DbgPrint("Memory not detected, default to 8 MB\n");
@@ -427,13 +430,18 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    ULONG Flags = 0;
     if (Phase == 0)
     {
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
         /* Initialize the address space for the system process */
-        MmInitializeProcessAddressSpace(PsGetCurrentProcess(), NULL, NULL);
+        MmInitializeProcessAddressSpace(PsGetCurrentProcess(),
+                                        NULL,
+                                        NULL,
+                                        &Flags,
+                                        NULL);
 
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);
