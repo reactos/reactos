@@ -347,6 +347,7 @@ ApplyDisplayAdapterChanges(PDESKDISPLAYADAPTER This)
         {
             /* Save the new mode */
             This->lpDevModeOnInit = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
+            This->lpSelDevMode = This->lpDevModeOnInit;
             return PSNRET_NOERROR;
         }
         else if (lChangeRet == DISP_CHANGE_RESTART)
