@@ -10,4 +10,7 @@
 	<directory name="deskmon">
 		<xi:include href="deskmon/deskmon.rbuild" />
 	</directory>
+	<directory name="devcpux">
+		<xi:include href="devcpux/devcpux.rbuild" />
+	</directory>
 </group>

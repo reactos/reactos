@@ -1,0 +1,31 @@
+#include <windows.h>
+#include "resource.h"
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Processor Shell Extension\0"
+#define REACTOS_STR_INTERNAL_NAME	"processorext\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"processorext.dll\0"
+#include <reactos/version.rc>
+
+
+DLG_PROCESSORINFO DIALOG DISCARDABLE  0, 0, 200, 220
+STYLE WS_POPUP | WS_POPUP | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "CPU"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Features:",-1,5,23,50,51
+    LTEXT           "Test",IDC_FEATURES,50,23,80,51
+
+    LTEXT           "Model:",-1,5,33,50,51
+    LTEXT           "test",IDC_MODEL,50,33,80,51
+
+    LTEXT           "Stepping:",-1,5,43,50,51
+    LTEXT           "test",IDC_STEPPING,50,43,80,51
+
+
+    LTEXT           "Core Speed:",-1,5,53,50,51
+    LTEXT           "test",IDC_CORESPEED,50,53,80,51
+
+
+END
