@@ -1,6 +1,12 @@
 #ifndef __DESKMON__H
 #define __DESKMON__H
 
+typedef struct _DESKMONINFO
+{
+    DISPLAY_DEVICE dd;
+    struct _DESKMONINFO *Next;
+} DESKMONINFO, *PDESKMONINFO;
+
 typedef struct _DESKMONITOR
 {
     const struct IShellPropSheetExtVtbl *lpIShellPropSheetExtVtbl;
@@ -11,6 +17,11 @@ typedef struct _DESKMONITOR
     HWND hwndDlg;
     PDESK_EXT_INTERFACE DeskExtInterface;
     IDataObject *pdtobj;
+    LPTSTR lpDisplayDevice;
+    DWORD dwMonitorCount;
+    PDESKMONINFO Monitors;
+    PDESKMONINFO SelMonitor;
+    PDEVMODEW lpDevModeOnInit;
 } DESKMONITOR, *PDESKMONITOR;
 
 extern LONG dll_refs;
