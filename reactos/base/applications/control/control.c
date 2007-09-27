@@ -386,46 +386,39 @@ RunControlPanel(LPCTSTR lpName, UINT uIndex)
   return 0;
 }
 
-
-int WINAPI
-_tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+int
+_tmain(int argc, const TCHAR *argv[])
 {
-  LPTSTR lpCommandLine;
-  LPTSTR lpParam;
+  STARTUPINFO si;
 
-  hInst = hInstance;
-  CTL_DEBUG((_T("My Control Panel\r\n")));
+  si.cb = sizeof(si);
+  GetStartupInfo(&si);
 
-  lpCommandLine = GetCommandLine();
+  hInst = GetModuleHandle(NULL);
 
-  CTL_DEBUG((_T("CommandLine: %s\n"), lpCommandLine));
-
-  lpParam = _tcschr(lpCommandLine, _T(' '));
-  if (lpParam == NULL)
+  if (argc <= 1)
     {
       /* No argument on the command line */
-      return RunControlPanelWindow(nCmdShow);
+      return RunControlPanelWindow(si.wShowWindow);
     }
 
-  lpParam++;
-
-  if (_tcsicmp(lpParam, _T("desktop")) == 0)
+  if (_tcsicmp(argv[1], _T("desktop")) == 0)
     {
       return RunControlPanel(_T("desk.cpl"), 0);
     }
-  else if (_tcsicmp(lpParam, _T("date/time")) == 0)
+  else if (_tcsicmp(argv[1], _T("date/time")) == 0)
     {
       return RunControlPanel(_T("timedate.cpl"), 0);
     }
-  else if (_tcsicmp(lpParam, _T("international")) == 0)
+  else if (_tcsicmp(argv[1], _T("international")) == 0)
     {
       return RunControlPanel(_T("intl.cpl"), 0);
     }
-  else if (_tcsicmp(lpParam, _T("mouse")) == 0)
+  else if (_tcsicmp(argv[1], _T("mouse")) == 0)
     {
       return RunControlPanel(_T("main.cpl"), 0);
     }
-  else if (_tcsicmp(lpParam, _T("keyboard")) == 0)
+  else if (_tcsicmp(argv[1], _T("keyboard")) == 0)
     {
       return RunControlPanel(_T("main.cpl"), 1);
     }
