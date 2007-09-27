@@ -384,11 +384,20 @@ ScsiPortGetBusData(IN PVOID DeviceExtension,
 		   IN PVOID Buffer,
 		   IN ULONG Length)
 {
-  return(HalGetBusData(BusDataType,
-		       SystemIoBusNumber,
-		       SlotNumber,
-		       Buffer,
-		       Length));
+	if (Length)
+	{
+		/* If Length is non-zero, just forward the call to
+		   HalGetBusData() function */
+		return HalGetBusData(BusDataType,
+		                     SystemIoBusNumber,
+		                     SlotNumber,
+		                     Buffer,
+		                    Length);
+	}
+
+	/* We have a more complex case here */
+	UNIMPLEMENTED;
+	return 0;
 }
 
 
@@ -1812,40 +1821,56 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
         DeviceExtension->InterruptData.Flags |= SCSI_PORT_NEXT_REQUEST_READY;
         break;
 
-      case NextLuRequest:
-	{
-	  UCHAR PathId;
-	  UCHAR TargetId;
-	  UCHAR Lun;
+    case NextLuRequest:
+        {
+            UCHAR PathId;
+            UCHAR TargetId;
+            UCHAR Lun;
+            PSCSI_PORT_LUN_EXTENSION LunExtension;
 
-	  PathId = (UCHAR) va_arg (ap, int);
-	  TargetId = (UCHAR) va_arg (ap, int);
-	  Lun = (UCHAR) va_arg (ap, int);
+            PathId = (UCHAR) va_arg (ap, int);
+            TargetId = (UCHAR) va_arg (ap, int);
+            Lun = (UCHAR) va_arg (ap, int);
 
-	  DPRINT1 ("Notify: NextLuRequest(PathId %u  TargetId %u  Lun %u)\n",
-		   PathId, TargetId, Lun);
-	  /* FIXME: Implement it! */
-          ASSERT(FALSE);
+            DPRINT("Notify: NextLuRequest(PathId %u  TargetId %u  Lun %u)\n",
+                PathId, TargetId, Lun);
 
-//	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
-//	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT_LU;
+            /* Mark it in the flags field */
+            DeviceExtension->InterruptData.Flags |= SCSI_PORT_NEXT_REQUEST_READY;
 
-	  /* Hack! */
-//	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
-	}
-	break;
+            /* Get the LUN extension */
+            LunExtension = SpiGetLunExtension(DeviceExtension,
+                                              PathId,
+                                              TargetId,
+                                              Lun);
+
+            /* This request should not be processed if */
+            if ((LunExtension && LunExtension->ReadyLun) ||
+                (LunExtension && LunExtension->SrbInfo.Srb))
+            {
+                /* Nothing to do here */
+                break;
+            }
+
+            /* Add this LUN to the list */
+            LunExtension->ReadyLun = DeviceExtension->InterruptData.ReadyLun;
+            DeviceExtension->InterruptData.ReadyLun = LunExtension;
+          }
+          break;
 
       case ResetDetected:
-	DPRINT1("Notify: ResetDetected\n");
-	/* FIXME: ??? */
-	break;
+          DPRINT("Notify: ResetDetected\n");
+          /* Add RESET flags */
+          DeviceExtension->InterruptData.Flags |=
+                SCSI_PORT_RESET | SCSI_PORT_RESET_REPORTED;
+          break;
 
       default:
 	DPRINT1 ("Unsupported notification %lu\n", NotificationType);
 	break;
     }
 
-  va_end(ap);
+    va_end(ap);
 
     /* Request a DPC after we're done with the interrupt */
     DeviceExtension->InterruptData.Flags |= SCSI_PORT_NOTIFICATION_NEEDED;
