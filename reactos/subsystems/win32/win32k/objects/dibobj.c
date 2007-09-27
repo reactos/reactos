@@ -332,8 +332,117 @@ NtGdiSetDIBitsToDeviceInternal(
     IN OPTIONAL HANDLE hcmXform
 )
 {
-  UNIMPLEMENTED;
-  return 0;
+    INT ret = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PDC pDC;
+    HBITMAP hSourceBitmap = NULL;
+    SURFOBJ *pDestSurf = NULL, *pSourceSurf = NULL;
+    RECTL rcDest;
+    POINTL ptSource;
+    INT DIBWidth;
+    SIZEL SourceSize;
+    XLATEOBJ *XlateObj = NULL;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+    if (pDC->IsIC)
+    {
+        DC_UnlockDc(pDC);
+        return 0;
+    }
+
+    pDestSurf = EngLockSurface((HSURF)pDC->w.hBitmap);
+    if (!pDestSurf)
+    {
+        /* FIXME: SetLastError ? */
+        DC_UnlockDc(pDC);
+        return 0;
+    }
+
+    SourceSize.cx = bmi->bmiHeader.biWidth;
+    SourceSize.cy = ScanLines;
+    DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
+
+    rcDest.left = XDest;
+    rcDest.top = YDest;
+    rcDest.right = XDest + Width;
+    rcDest.bottom = YDest + Height;
+    ptSource.x = XSrc;
+    ptSource.y = YSrc;
+
+    /* Enter SEH, as the bits are user mode */
+    _SEH_TRY
+    {
+        hSourceBitmap = EngCreateBitmap(SourceSize,
+                                        DIBWidth,
+                                        BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
+                                        bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
+                                        (PVOID) Bits);
+        if (!hSourceBitmap)
+        {
+            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+            Status = STATUS_NO_MEMORY;
+            _SEH_LEAVE;
+        }
+
+        pSourceSurf = EngLockSurface((HSURF)hSourceBitmap);
+        if (!pSourceSurf)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            _SEH_LEAVE;
+        }
+
+        /* FIXME: handle XlateObj */
+        XlateObj = NULL;
+
+        /* Copy the bits */
+        Status = IntEngBitBlt(pDestSurf,
+                              pSourceSurf,
+                              NULL,
+                              pDC->CombinedClip,
+                              XlateObj,
+                              &rcDest,
+                              &ptSource,
+                              NULL,
+                              NULL,
+                              NULL,
+                              ROP3_TO_ROP4(SRCCOPY));
+
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END
+
+    if (NT_SUCCESS(Status))
+    {
+        /* FIXME: Should probably be only the number of lines actually copied */
+        ret = ScanLines;
+    }
+
+    if (pSourceSurf)
+    {
+        EngUnlockSurface(pSourceSurf);
+    }
+
+    if (hSourceBitmap)
+    {
+        EngDeleteSurface((HSURF)hSourceBitmap);
+    }
+
+    if (pDestSurf)
+    {
+        EngUnlockSurface(pDestSurf);
+    }
+
+    DC_UnlockDc(pDC);
+
+    return ret;
 }
 
 /* Converts a device-dependent bitmap to a DIB */
