@@ -256,7 +256,7 @@ dll\win32\wsock32\wsock32.dll                       1
 dll\win32\wtsapi32\wtsapi32.dll                     1
 dll\win32\beepmidi\beepmidi.dll                     1
 dll\win32\shellext\deskadp\deskadp.dll              1
-dll\win32\shellext\deskadp\deskmon.dll              1
+dll\win32\shellext\deskmon\deskmon.dll              1
 
 ; Drivers
 drivers\base\bootvid\bootvid.dll                    1
