@@ -95,7 +95,7 @@ ScsiDebugPrint(
 ULONG
 _cdecl
 DbgPrint(
-    PCH Format,
+    const CHAR * Format,
     ...
     );
 #endif // USE_DBGPRINT_LOGGER

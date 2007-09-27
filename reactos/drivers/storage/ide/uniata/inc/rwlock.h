@@ -36,4 +36,4 @@ typedef struct _LOCK_STATE {
 #define RWLOCK_FOR_WRITE              TRUE
 #define RWLOCK_FOR_READ               FALSE
 
-#endif __CROSS_NT_RWLOCK__H__
+#endif // __CROSS_NT_RWLOCK__H__

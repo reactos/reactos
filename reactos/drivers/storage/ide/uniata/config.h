@@ -93,6 +93,7 @@
 
  /* ReactOS-specific defines */
  #ifdef USE_REACTOS_DDK
+  #define DDKFASTAPI __attribute__((fastcall))
  #else //USE_REACTOS_DDK
 
   #define DDKAPI          __attribute__((stdcall))
