@@ -1,0 +1,7 @@
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#include "lang/en-US.rc"
+

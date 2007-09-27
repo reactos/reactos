@@ -7,4 +7,7 @@
 	<directory name="deskadp">
 		<xi:include href="deskadp/deskadp.rbuild" />
 	</directory>
+	<directory name="deskmon">
+		<xi:include href="deskmon/deskmon.rbuild" />
+	</directory>
 </group>

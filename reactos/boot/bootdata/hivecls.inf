@@ -238,6 +238,11 @@ HKCR,"CLSID\{42071712-76d4-11d1-8b24-00a0c9068ff3}","",0x00000000,"Display Adapt
 HKCR,"CLSID\{42071712-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","",0x00020000,"%SystemRoot%\system32\deskadp.dll"
 HKCR,"CLSID\{42071712-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 
+; deskmon.dll shell extension
+HKCR,"CLSID\{42071713-76d4-11d1-8b24-00a0c9068ff3}","",0x00000000,"Display Monitor CPL Extension"
+HKCR,"CLSID\{42071713-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","",0x00020000,"%SystemRoot%\system32\deskmon.dll"
+HKCR,"CLSID\{42071713-76d4-11d1-8b24-00a0c9068ff3}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
+
 ; For comcat.dll
 HKCR,"CLSID\{0002E005-0000-0000-C000-000000000046}","",0x00000000,"StdComponentCategoriesMgr"
 HKCR,"CLSID\{0002E005-0000-0000-C000-000000000046}\InProcServer32","",0x00000000,"comcat.dll"
