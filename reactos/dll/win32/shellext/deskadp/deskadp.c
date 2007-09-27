@@ -5,7 +5,7 @@
 
 static HINSTANCE hInstance;
 
-typedef INT_PTR (WINAPI *PDEVICEPROPERTIESEXW)(HWND,LPCWSTR,LPCWSTR,DWORD,BOOL);
+typedef INT_PTR (WINAPI *PDEVICEPROPERTIESW)(HWND,LPCWSTR,LPCWSTR,BOOL);
 
 static VOID
 GetColorDescription(PDEVMODEW lpDevMode,
@@ -214,20 +214,19 @@ static VOID
 ShowAdapterProperties(PDESKDISPLAYADAPTER This)
 {
     HMODULE hDevMgr;
-    PDEVICEPROPERTIESEXW pDevicePropertiesExW;
+    PDEVICEPROPERTIESW pDevicePropertiesW;
 
     hDevMgr = LoadLibrary(TEXT("devmgr.dll"));
     if (hDevMgr != NULL)
     {
-        pDevicePropertiesExW = (PDEVICEPROPERTIESEXW)GetProcAddress(hDevMgr,
-                                                                    "DevicePropertiesExW");
-        if (pDevicePropertiesExW != NULL)
+        pDevicePropertiesW = (PDEVICEPROPERTIESW)GetProcAddress(hDevMgr,
+                                                                "DevicePropertiesW");
+        if (pDevicePropertiesW != NULL)
         {
-            pDevicePropertiesExW(This->hwndDlg,
-                                 NULL,
-                                 This->lpDeviceId,
-                                 0,
-                                 FALSE);
+            pDevicePropertiesW(This->hwndDlg,
+                               NULL,
+                               This->lpDeviceId,
+                               FALSE);
         }
 
         FreeLibrary(hDevMgr);
