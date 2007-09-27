@@ -12,7 +12,6 @@
 #define DESK_EXT_DISPLAYSTATEFLAGS TEXT("Display State Flags")
 #define DESK_EXT_MONITORNAME TEXT("Monitor Name")
 #define DESK_EXT_MONITORDEVICE TEXT("Monitor Device")
-#define DESK_EXT_MONITORID TEXT("Monitor ID")
 
 typedef PDEVMODEW (DESK_EXT_CALLBACK *PDESK_EXT_ENUMALLMODES)(PVOID Context, DWORD Index);
 typedef PDEVMODEW (DESK_EXT_CALLBACK *PDESK_EXT_GETCURRENTMODE)(PVOID Context);
@@ -42,6 +41,8 @@ typedef struct _DESK_EXT_INTERFACE
     WCHAR AdapterString[128];
     WCHAR BiosString[128];
 } DESK_EXT_INTERFACE, *PDESK_EXT_INTERFACE;
+
+LONG WINAPI DisplaySaveSettings(PVOID pContext, HWND hwndPropSheet);
 
 static PDESK_EXT_INTERFACE __inline
 QueryDeskCplExtInterface(IDataObject *pdo)
@@ -115,6 +116,34 @@ QueryDeskCplString(IDataObject *pdo, UINT cfFormat)
     }
 
     return lpStr;
+}
+
+static LONG __inline
+DeskCplExtDisplaySaveSettings(PDESK_EXT_INTERFACE DeskExtInterface,
+                              HWND hwndDlg)
+{
+    typedef LONG (WINAPI *PDISPLAYSAVESETTINGS)(PVOID, HWND);
+    HMODULE hModDeskCpl;
+    PDISPLAYSAVESETTINGS pDisplaySaveSettings;
+    LONG lRet = DISP_CHANGE_BADPARAM;
+
+    /* We could use GetModuleHandle() instead, but then this routine
+       wouldn't work if some other application hosts the shell extension */
+    hModDeskCpl = LoadLibrary(TEXT("desk.cpl"));
+    if (hModDeskCpl != NULL)
+    {
+        pDisplaySaveSettings = (PDISPLAYSAVESETTINGS)GetProcAddress(hModDeskCpl,
+                                                                    "DisplaySaveSettings");
+        if (pDisplaySaveSettings != NULL)
+        {
+            lRet = pDisplaySaveSettings(DeskExtInterface->Context,
+                                        hwndDlg);
+        }
+
+        FreeLibrary(hModDeskCpl);
+    }
+
+    return lRet;
 }
 
 #endif /* __DESKCPLX__H */

@@ -151,6 +151,38 @@ InitListAllModesDialog(PDESKDISPLAYADAPTER This,
     }
 }
 
+static BOOL
+ChangeSelectedMode(PDESKDISPLAYADAPTER This,
+                   HWND hwndListAllModesDlg)
+{
+    INT i;
+    PDEVMODEW lpSelDevMode = NULL;
+    BOOL bRet = FALSE;
+
+    i = (INT)SendDlgItemMessage(hwndListAllModesDlg,
+                                IDC_ALLVALIDMODES,
+                                LB_GETCURSEL,
+                                0,
+                                0);
+
+    if (i >= 0)
+    {
+        lpSelDevMode = (PDEVMODEW)SendDlgItemMessage(hwndListAllModesDlg,
+                                                     IDC_ALLVALIDMODES,
+                                                     LB_GETITEMDATA,
+                                                     (WPARAM)i,
+                                                     0);
+    }
+
+    if (lpSelDevMode != NULL)
+    {
+        This->lpSelDevMode = lpSelDevMode;
+        bRet = TRUE;
+    }
+
+    return bRet;
+}
+
 static INT_PTR CALLBACK
 ListAllModesDlgProc(HWND hwndDlg,
                     UINT uMsg,
@@ -183,7 +215,14 @@ ListAllModesDlgProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDOK:
+                    if (ChangeSelectedMode(This,
+                                           hwndDlg))
+                    {
+                        EndDialog(hwndDlg,
+                                  IDOK);
+                    }
                     break;
+
                 case IDCANCEL:
                     EndDialog(hwndDlg,
                               IDCANCEL);
@@ -203,11 +242,25 @@ ListAllModesDlgProc(HWND hwndDlg,
 static VOID
 ShowListAllModes(PDESKDISPLAYADAPTER This)
 {
-    DialogBoxParam(hInstance,
-                   MAKEINTRESOURCE(IDD_LISTALLMODES),
-                   This->hwndDlg,
-                   ListAllModesDlgProc,
-                   (LPARAM)This);
+    PDEVMODEW lpPrevSel;
+
+    lpPrevSel = This->lpSelDevMode;
+
+    if (This->DeskExtInterface != NULL &&
+        DialogBoxParam(hInstance,
+                       MAKEINTRESOURCE(IDD_LISTALLMODES),
+                       This->hwndDlg,
+                       ListAllModesDlgProc,
+                       (LPARAM)This) == IDOK)
+    {
+        if (lpPrevSel != This->lpSelDevMode)
+        {
+            (void)PropSheet_Changed(GetParent(This->hwndDlg),
+                                    This->hwndDlg);
+            This->DeskExtInterface->SetCurrentMode(This->DeskExtInterface->Context,
+                                                   This->lpSelDevMode);
+        }
+    }
 }
 
 static VOID
@@ -271,6 +324,49 @@ InitDisplayAdapterDialog(PDESKDISPLAYADAPTER This)
         SetDlgItemTextW(This->hwndDlg,
                         IDC_BIOSINFORMATION,
                         This->DeskExtInterface->BiosString);
+
+        This->lpDevModeOnInit = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
+    }
+    else
+        This->lpDevModeOnInit = NULL;
+
+    This->lpSelDevMode = This->lpDevModeOnInit;
+}
+
+static LONG
+ApplyDisplayAdapterChanges(PDESKDISPLAYADAPTER This)
+{
+    LONG lChangeRet;
+
+    if (This->DeskExtInterface != NULL)
+    {
+        /* Change the display settings through desk.cpl */
+        lChangeRet = DeskCplExtDisplaySaveSettings(This->DeskExtInterface,
+                                                   This->hwndDlg);
+        if (lChangeRet == DISP_CHANGE_SUCCESSFUL)
+        {
+            /* Save the new mode */
+            This->lpDevModeOnInit = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
+            return PSNRET_NOERROR;
+        }
+        else if (lChangeRet == DISP_CHANGE_RESTART)
+        {
+            /* Notify desk.cpl that the user needs to reboot */
+            PropSheet_RestartWindows(GetParent(This->hwndDlg));
+            return PSNRET_NOERROR;
+        }
+    }
+
+    return PSNRET_INVALID_NOCHANGEPAGE;
+}
+
+static VOID
+ResetDisplayAdapterChanges(PDESKDISPLAYADAPTER This)
+{
+    if (This->DeskExtInterface != NULL && This->lpDevModeOnInit != NULL)
+    {
+        This->DeskExtInterface->SetCurrentMode(This->DeskExtInterface->Context,
+                                               This->lpDevModeOnInit);
     }
 }
 
@@ -315,6 +411,27 @@ DisplayAdapterDlgProc(HWND hwndDlg,
             }
 
             break;
+
+        case WM_NOTIFY:
+        {
+            NMHDR *nmh = (NMHDR *)lParam;
+
+            switch (nmh->code)
+            {
+                case PSN_APPLY:
+                {
+                    SetWindowLong(hwndDlg,
+                                  DWL_MSGRESULT,
+                                  ApplyDisplayAdapterChanges(This));
+                    break;
+                }
+
+                case PSN_RESET:
+                    ResetDisplayAdapterChanges(This);
+                    break;
+            }
+            break;
+        }
     }
 
     return Ret;

@@ -7,6 +7,8 @@
 
 #include "desk.h"
 
+#include <cfgmgr32.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -23,7 +25,6 @@ typedef struct _CDevSettings
     CLIPFORMAT cfDisplayId; /* "Display ID" */
     CLIPFORMAT cfMonitorName; /* "Monitor Name" */
     CLIPFORMAT cfMonitorDevice; /* "Monitor Device" */
-    CLIPFORMAT cfMonitorId; /* "Monitor ID" */
     CLIPFORMAT cfDisplayKey; /* "Display Key" */
     CLIPFORMAT cfDisplayStateFlags; /* "Display State Flags" */
     CLIPFORMAT cfPruningMode; /* "Pruning Mode" */
@@ -34,7 +35,6 @@ typedef struct _CDevSettings
     PWSTR pDisplayId;
     PWSTR pMonitorName;
     PWSTR pMonitorDevice;
-    PWSTR pMonitorId;
 
     DESK_EXT_INTERFACE ExtInterface;
 
@@ -171,9 +171,47 @@ pCDevSettings_GetMonitorDevice(const WCHAR *pszDisplayDevice)
 static PWSTR
 pCDevSettings_GetDeviceInstanceId(const WCHAR *pszDevice)
 {
-    /* FIXME: Implement */
+    DEVINST DevInst;
+    CONFIGRET cr;
+    ULONG BufLen;
+    LPWSTR lpDevInstId = NULL;
+
     DPRINT1("CDevSettings::GetDeviceInstanceId(%ws) UNIMPLEMENTED!\n", pszDevice);
-    return NULL;
+
+    cr = CM_Locate_DevNodeW(&DevInst,
+                            (DEVINSTID_W)pszDevice,
+                            CM_LOCATE_DEVNODE_NORMAL);
+    if (cr == CR_SUCCESS)
+    {
+        DbgPrint("Success1\n");
+        cr = CM_Get_Device_ID_Size(&BufLen,
+                                   DevInst,
+                                   0);
+        if (cr == CR_SUCCESS)
+        {
+            DbgPrint("Success2\n");
+            lpDevInstId = LocalAlloc(LMEM_FIXED,
+                                     (BufLen + 1) * sizeof(WCHAR));
+
+            if (lpDevInstId != NULL)
+            {
+                DbgPrint("Success3\n");
+                cr = CM_Get_Device_IDW(DevInst,
+                                       lpDevInstId,
+                                       BufLen,
+                                       0);
+
+                if (cr != CR_SUCCESS)
+                {
+                    LocalFree((HLOCAL)lpDevInstId);
+                    lpDevInstId = NULL;
+                }
+                DbgPrint("instance id: %ws\n", lpDevInstId);
+            }
+        }
+    }
+
+    return lpDevInstId;
 }
 
 
@@ -401,7 +439,6 @@ pCDevSettings_Initialize(PCDevSettings This,
     This->cfDisplayStateFlags = RegisterClipboardFormat(DESK_EXT_DISPLAYSTATEFLAGS);
     This->cfMonitorName = RegisterClipboardFormat(DESK_EXT_MONITORNAME);
     This->cfMonitorDevice = RegisterClipboardFormat(DESK_EXT_MONITORDEVICE);
-    This->cfMonitorId = RegisterClipboardFormat(DESK_EXT_MONITORID);
     This->cfPruningMode = RegisterClipboardFormat(DESK_EXT_PRUNINGMODE);
 
     /* Copy the device name */
@@ -411,14 +448,12 @@ pCDevSettings_Initialize(PCDevSettings This,
     DPRINT1("This->pDisplayName: %ws\n", This->pDisplayName);
     This->pDisplayKey = pCDevSettings_AllocAndCopyString(DisplayDeviceInfo->DeviceKey);
     DPRINT1("This->pDisplayKey: %ws\n", This->pDisplayKey);
-    This->pDisplayId = pCDevSettings_GetDeviceInstanceId(This->pDisplayDevice);
+    This->pDisplayId = pCDevSettings_GetDeviceInstanceId(DisplayDeviceInfo->DeviceID);
     DPRINT1("This->pDisplayId: %ws\n", This->pDisplayId);
     This->pMonitorName = pCDevSettings_GetMonitorName(This->pDisplayDevice);
     DPRINT1("This->pMonitorName: %ws\n", This->pMonitorName);
     This->pMonitorDevice = pCDevSettings_GetMonitorDevice(This->pDisplayDevice);
     DPRINT1("This->pMonitorDevice: %ws\n", This->pMonitorDevice);
-    This->pMonitorId = pCDevSettings_GetDeviceInstanceId( This->pMonitorDevice);
-    DPRINT1("This->pMonitorId: %ws\n", This->pMonitorId);
 
     /* Check pruning mode */
     This->bModesPruned = ((DisplayDeviceInfo->DeviceStateFlags & DISPLAY_DEVICE_MODESPRUNED) != 0);
@@ -465,7 +500,6 @@ pCDevSettings_Free(PCDevSettings This)
     pCDevSettings_FreeString(&This->pDisplayId);
     pCDevSettings_FreeString(&This->pMonitorName);
     pCDevSettings_FreeString(&This->pMonitorDevice);
-    pCDevSettings_FreeString(&This->pMonitorId);
 }
 
 static HRESULT STDMETHODCALLTYPE
@@ -561,11 +595,6 @@ CDevSettings_GetData(IDataObject* iface,
         {
             pszRet = This->pMonitorDevice;
             DPRINT1("CDevSettings::GetData returns monitor device %ws\n", pszRet);
-        }
-        else if (pformatetcIn->cfFormat == This->cfMonitorId)
-        {
-            pszRet = This->pMonitorId;
-            DPRINT1("CDevSettings::GetData returns monitor id %ws\n", pszRet);
         }
         else if (pformatetcIn->cfFormat == This->cfExtInterface)
         {
@@ -688,7 +717,6 @@ CDevSettings_QueryGetData(IDataObject* iface,
         pformatetc->cfFormat == This->cfDisplayStateFlags ||
         pformatetc->cfFormat == This->cfMonitorDevice ||
         pformatetc->cfFormat == This->cfMonitorName ||
-        pformatetc->cfFormat == This->cfMonitorId ||
         pformatetc->cfFormat == This->cfPruningMode)
     {
         return S_OK;
@@ -774,7 +802,7 @@ CDevSettings_EnumFormatEtc(IDataObject* iface,
                            IEnumFORMATETC** ppenumFormatEtc)
 {
     HRESULT hr;
-    FORMATETC fetc[10];
+    FORMATETC fetc[9];
     PCDevSettings This = impl_from_IDataObject(iface);
 
     *ppenumFormatEtc = NULL;
@@ -798,8 +826,6 @@ CDevSettings_EnumFormatEtc(IDataObject* iface,
         pCDevSettings_FillFormatEtc(&fetc[7],
                                     This->cfMonitorDevice);
         pCDevSettings_FillFormatEtc(&fetc[8],
-                                    This->cfMonitorId);
-        pCDevSettings_FillFormatEtc(&fetc[9],
                                     This->cfPruningMode);
 
         hr = SHCreateStdEnumFmtEtc(sizeof(fetc) / sizeof(fetc[0]),
@@ -876,4 +902,13 @@ CreateDevSettings(PDISPLAY_DEVICE_ENTRY DisplayDeviceInfo)
     }
 
     return NULL;
+}
+
+LONG WINAPI
+DisplaySaveSettings(PVOID pContext,
+                    HWND hwndPropSheet)
+{
+    //PCDevSettings This = impl_from_IDataObject((IDataObject *)Context);
+    DPRINT("DisplaySaveSettings() UNIMPLEMENTED!\n");
+    return DISP_CHANGE_BADPARAM;
 }
