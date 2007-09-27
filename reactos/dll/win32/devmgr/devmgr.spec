@@ -2,8 +2,8 @@
 
  5 stdcall DeviceProperties_RunDLLA(ptr ptr str long)
  6 stdcall DeviceProperties_RunDLLW(ptr ptr wstr long)
- 7 stdcall DevicePropertiesA(ptr ptr str str long)
- 8 stdcall DevicePropertiesW(ptr ptr wstr wstr long)
+ 7 stdcall DevicePropertiesA(ptr str str long)
+ 8 stdcall DevicePropertiesW(ptr wstr wstr long)
  9 stdcall DeviceManager_ExecuteA(ptr ptr str long)
 10 stdcall DeviceManager_ExecuteW(ptr ptr wstr long)
 11 stdcall DeviceProblemTextA(ptr long long str long)

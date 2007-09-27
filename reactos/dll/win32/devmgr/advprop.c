@@ -1877,6 +1877,80 @@ DevicePropertiesExW(IN HWND hWndParent  OPTIONAL,
 
 /***************************************************************************
  * NAME                                                         EXPORTED
+ *      DevicePropertiesA
+ *
+ * DESCRIPTION
+ *   Invokes the device properties dialog directly
+ *
+ * ARGUMENTS
+ *   hWndParent:    Handle to the parent window
+ *   lpMachineName: Machine Name, NULL is the local machine
+ *   lpDeviceID:    Specifies the device whose properties are to be shown
+ *   bShowDevMgr:   If non-zero it displays the device manager instead of
+ *                  the device property dialog
+ *
+ * RETURN VALUE
+ *   >=0: if no errors occured
+ *   -1:  if errors occured
+ *
+ * REVISIONS
+ *
+ * @implemented
+ */
+int
+WINAPI
+DevicePropertiesA(HWND hWndParent,
+                  LPCSTR lpMachineName,
+                  LPCSTR lpDeviceID,
+                  BOOL bShowDevMgr)
+{
+    return DevicePropertiesExA(hWndParent,
+                               lpMachineName,
+                               lpDeviceID,
+                               0,
+                               bShowDevMgr);
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
+ *      DevicePropertiesW
+ *
+ * DESCRIPTION
+ *   Invokes the device properties dialog directly
+ *
+ * ARGUMENTS
+ *   hWndParent:    Handle to the parent window
+ *   lpMachineName: Machine Name, NULL is the local machine
+ *   lpDeviceID:    Specifies the device whose properties are to be shown
+ *   bShowDevMgr:   If non-zero it displays the device manager instead of
+ *                  the device property dialog
+ *
+ * RETURN VALUE
+ *   >=0: if no errors occured
+ *   -1:  if errors occured
+ *
+ * REVISIONS
+ *
+ * @implemented
+ */
+int
+WINAPI
+DevicePropertiesW(HWND hWndParent,
+                  LPCWSTR lpMachineName,
+                  LPCWSTR lpDeviceID,
+                  BOOL bShowDevMgr)
+{
+    return DevicePropertiesExW(hWndParent,
+                               lpMachineName,
+                               lpDeviceID,
+                               0,
+                               bShowDevMgr);
+}
+
+
+/***************************************************************************
+ * NAME                                                         EXPORTED
  *      DeviceProperties_RunDLLA
  *
  * DESCRIPTION
@@ -1975,8 +2049,7 @@ DeviceProperties_RunDLLW(HWND hWndParent,
     }
 
     DevicePropertiesW(hWndParent,
-                      hInst,
                       szMachineName,
                       szDeviceID,
-                      0);
+                      FALSE);
 }
