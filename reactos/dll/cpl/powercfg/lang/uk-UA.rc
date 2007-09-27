@@ -157,7 +157,7 @@ BEGIN
   IDS_TIMEOUT7 "через 20 хв"
   IDS_TIMEOUT8 "через 25 хв"
   IDS_TIMEOUT9 "через 30 хв"
-  IDS_TIMEOUT10 "через 45 mins"
+  IDS_TIMEOUT10 "через 45 хв"
   IDS_TIMEOUT11 "через 1 годину"
   IDS_TIMEOUT12 "через 2 години"
   IDS_TIMEOUT13 "через 3 години"
@@ -165,4 +165,5 @@ BEGIN
   IDS_TIMEOUT15 "через 5 годин"
   IDS_TIMEOUT16 "ніколи"
 END
+
 

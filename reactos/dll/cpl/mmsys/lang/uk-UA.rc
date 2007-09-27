@@ -32,7 +32,7 @@ END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Звуковий супровід подій"
+CAPTION "Звуки"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Звукова схема визначає звуки, які супроводжують події в системі ReactOS і у програмах. Можна вибрати одну з наявних схем або створити нову.",-1,8,7,230,40
@@ -107,8 +107,9 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Звукові і аудіо пристрої"
     IDS_CPLDESCRIPTION "Зміна звукових схем вашого комп'ютера, настроювання колонок і записуючих пристроїв."
-    IDS_NO_SOUND "(None)"
+    IDS_NO_SOUND "(немає)"
 END
+
 
 
 
