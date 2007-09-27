@@ -60,19 +60,19 @@ CAPTION "Кнопки миші"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Конфігурація кнопок", -1, 5, 5, 230, 70
-  CHECKBOX "&Поміняти призначення кнопок", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
+  CHECKBOX "О&бміняти призначення кнопок", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
   CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
   LTEXT "Встановіть цей прапорець, щоб призначити праву кнопку для виконання таких основних функцій, як вибір і перетягування", -1, 10, 30, 150, 30
   GROUPBOX "Швидкість подвійного клацання", -1, 5, 75, 230, 70
-  LTEXT "Зробіть подвійне клацання по папці. Якщо папка не відкривається або не закривається, виберіть нижчу швидкість.", -1, 10, 85, 150, 30
+  LTEXT "Двічі клацніть по цій папці. Якщо папка не відкривається або не закривається, виберіть нижчу швидкість.", -1, 10, 85, 150, 30
   LTEXT "&Швидкість:   Нижче", -1, 10, 120, 90, 8
   LTEXT "Вище", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
-  GROUPBOX "Заліпанія", -1, 5, 150, 230, 70
-  CHECKBOX "&Вівмкнути Заліпанія", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
+  GROUPBOX "Залипання кнопки миші", -1, 5, 150, 230, 70
+  CHECKBOX "&Увімкнути залипання", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
   PUSHBUTTON "&Параметри...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
-  LTEXT "Дозволяє виконувати виділення і перетягування без утримування кнопки миші натиснутою. Для ввімкнення ненадовго затримайте кнопку в натиснутому положенні. Для вивільнення знову клацніть.", -1, 10, 180, 190, 30
+  LTEXT "Дозволяє виконувати виділення й перетягування, не утримуючи кнопку миші натиснутою. Щоб увімкнути цей режим, ненадовго натисніть кнопку миші. Щоб вимкнути цей режим, натисніть кнопку миші ще раз.", -1, 10, 180, 190, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
@@ -87,7 +87,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 190, 9, 45, 41, WS_EX_STATICEDGE
   LTEXT "&Настройка", -1, 5, 60, 40, 10
   LISTBOX IDC_LISTBOX_CURSOR, 5, 70, 230, 120, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-  CHECKBOX "&Ввімкнути &тінь вказівника", IDC_CHECK_DROP_SHADOW, 5, 200, 100, 10
+  CHECKBOX "Увімкнути &тінь вказівника", IDC_CHECK_DROP_SHADOW, 5, 200, 100, 10
   PUSHBUTTON "&За замовчуванням", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 200, 50, 15
   PUSHBUTTON "&Огляд", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
 END
