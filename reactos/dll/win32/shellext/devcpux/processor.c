@@ -20,17 +20,17 @@ BOOL
 APIENTRY
 DllMain (HANDLE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-    switch (dwReason)
-    {
+	switch (dwReason)
+	{
 		case DLL_THREAD_ATTACH:
 		case DLL_THREAD_DETACH:
-        case DLL_PROCESS_ATTACH:
-        case DLL_PROCESS_DETACH:
-            break;
-    }
+		case DLL_PROCESS_ATTACH:
+		case DLL_PROCESS_DETACH:
+			break;
+	}
 
 	g_hInstance = (HINSTANCE) hInstance;
-    return TRUE;
+	return TRUE;
 }
 
 
@@ -54,10 +54,10 @@ PropSheetExtProc(PSP_PROPSHEETPAGE_REQUEST PropPageRequest, LPFNADDPROPSHEETPAGE
 	PropSheetPage.pfnDlgProc = ProcessorDlgProc;
 
 	hPropSheetPage = CreatePropertySheetPage(&PropSheetPage);
-	if(hPropSheetPage)
+	if(!hPropSheetPage)
 		return FALSE;
 	
-	if(!(*fAddFunc)(hPropSheetPage, lParam)) {
+	if(!(fAddFunc)(hPropSheetPage, lParam)) {
 		DestroyPropertySheetPage (hPropSheetPage);
 		return FALSE;
 	}
@@ -88,7 +88,7 @@ ProcessorDlgProc (HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam)
 			BOOL bFirst = TRUE;
 			SYSTEM_INFO SystemInfo;
 			PROCESSOR_POWER_INFORMATION PowerInfo;
-			
+
 			if (IsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE))
 				AddFeature(szFeatures, L"MMX", &bFirst);
 			if (IsProcessorFeaturePresent(PF_XMMI_INSTRUCTIONS_AVAILABLE))
