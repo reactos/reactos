@@ -133,9 +133,11 @@ UniataQueueRequest(
                 new_cost1 = UniataGetCost(LunExt, AtaReq1, AtaReq);
                 new_cost2 = UniataGetCost(LunExt, AtaReq, AtaReq2);
 
+#ifdef QUEUE_STATISTICS
                 if(new_cost1 == REORDER_COST_INTERSECT ||
                    new_cost2 == REORDER_COST_INTERSECT)
                     chan->IntersectCount++;
+#endif //QUEUE_STATISTICS
 
                 if(new_cost2 > REORDER_COST_RESELECT)
                     break;
@@ -348,7 +350,7 @@ UniataGetNextChannel(
             cost_c = chan->queue_depth * (chan->ChannelSelectWaitCount+1);
         }
     }
-    if(best_c == -1) {
+    if(best_c == 0xFFFFFFFF) {
         KdPrint2((PRINT_PREFIX "  empty queues\n"));
         return NULL;
     }
