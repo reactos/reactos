@@ -247,6 +247,7 @@ INT cmd_goto (LPTSTR, LPTSTR);
 
 /* Prototypes for HISTORY.C */
 #ifdef FEATURE_HISTORY
+LPCTSTR PeekHistory(INT);
 VOID History (INT, LPTSTR);/*add entries browse history*/
 VOID History_move_to_bottom(VOID);/*F3*/
 VOID InitHistory(VOID);

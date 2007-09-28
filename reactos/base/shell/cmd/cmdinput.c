@@ -95,6 +95,9 @@
  *
  *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)
  *        Fixed problems when the screen was scrolled away.
+ *
+ *    28-September-2007 (Hervé Poussineau)
+ *        Added history possibilities to right key.
  */
 
 #include <precomp.h>
@@ -141,6 +144,9 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	BOOL bCharInput;
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
 	TCHAR szPath[MAX_PATH];
+#endif
+#ifdef FEATURE_HISTORY
+	TCHAR PreviousChar;
 #endif
 
 	/* get screen size */
@@ -508,6 +514,20 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						curx++;
 					}
 				}
+#ifdef FEATURE_HISTORY
+				else
+				{
+					LPCTSTR last = PeekHistory(-1);
+					if (last && charcount < _tcslen (last))
+					{
+						PreviousChar = last[current];
+						ConOutChar(PreviousChar);
+						GetCursorXY(&curx, &cury);
+						str[current++] = PreviousChar;
+						charcount++;
+					}
+				}
+#endif
 				break;
 
 			default:
