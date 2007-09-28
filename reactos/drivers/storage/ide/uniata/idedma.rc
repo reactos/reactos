@@ -1,22 +1,19 @@
-#undef  VERSION
-#define VERSION                     "0." UNIATA_VER_STR
-#define VER_FILETYPE                VFT_DRV
-#define VER_FILESUBTYPE             VFT2_DRV_SYSTEM
-#undef  VER_COMPANYNAME_STR
-#define VER_COMPANYNAME_STR         "AlterWare"
-#define VER_FILEDESCRIPTION_STR     "Universal IDE BusMaster (DMA) Miniport Driver"
-#define VER_INTERNALNAME_STR        "uniata.sys\0"
-#define VER_ORIGINALFILENAME_STR    "uniata.sys"
-#define VER_LEGALCOPYRIGHT_YEARS    "1999-2004"
-#define VER_LEGALCOPYRIGHT_STR      "Copyright \251 AlterWare" VER_LEGALCOPYRIGHT_YEARS
-#undef  VER_PRODUCTNAME_STR
-#define VER_PRODUCTNAME_STR         "UniATA"
-#undef  VER_PRODUCTVERSION
-#define VER_PRODUCTVERSION          0,31,2
-#undef  VER_PRODUCTVERSION_STR
-#define VER_PRODUCTVERSION_STR      VERSION
-#undef  VER_LEGALTRADEMARKS_STR
+#include "uniata_ver.h"
 
-#define VER_LANGNEUTRAL
+#define VERSION                         0,38,2,0
+#define VERSION_STR                     "0." UNIATA_VER_STR
+
+#define REACTOS_FILETYPE                VFT_DRV
+#define REACTOS_FILESUBTYPE             VFT2_DRV_SYSTEM
+#define REACTOS_FILEVERSION             VERSION
+#define REACTOS_PRODUCTVERSION          VERSION
+#define REACTOS_STR_COMPANY_NAME        "AlterWare & ReactOS Development Team"
+#define REACTOS_STR_FILE_DESCRIPTION    "Universal IDE BusMaster (DMA) Miniport Driver"
+#define REACTOS_STR_FILE_VERSION        VERSION_STR
+#define REACTOS_STR_INTERNAL_NAME       "uniata.sys"
+#define REACTOS_STR_ORIGINAL_FILENAME   "uniata.sys"
+#define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright 1999-2004 AlterWare, Copyright 2007 ReactOS Team"
+#define REACTOS_STR_PRODUCT_NAME        "UniATA Driver for ReactOS"
+#define REACTOS_STR_PRODUCT_VERSION     VERSION_STR
 
 #include <reactos/version.rc>
