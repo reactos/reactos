@@ -114,13 +114,6 @@ int              check_arp( struct interface_info *ip, struct client_lease *lp )
 
 time_t	scripttime;
 
-/* XXX Added this since it's not in the NDK ;0/ */
-ULONG
-NTAPI
-RtlRandom(
-  IN OUT PULONG  Seed
-  );
-
 /* XXX Implement me */
 int check_arp( struct interface_info *ip, struct client_lease *lp ) {
     return 1;
