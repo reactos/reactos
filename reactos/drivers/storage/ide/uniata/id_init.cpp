@@ -105,7 +105,7 @@ UniataChipDetect(
         PCI_DEV_HW_SPEC_BM( 0730, 1039, 0x00, ATA_UDMA5, "SiS 730"  , SIS100OLD        ),
 
         PCI_DEV_HW_SPEC_BM( 0646, 1039, 0x00, ATA_UDMA6, "SiS 645DX", SIS133NEW        ),
-/*        PCI_DEV_HW_SPEC_BM( 0645, 1039, 0x00, ATA_UDMA6, "SiS 645"  , SIS133NEW        ),
+/*        PCI_DEV_HW_SPEC_BM( 0645, 1039, 0x00, ATA_UDMA6, "SiS 645"  , SIS133NEW        ),*/
 /*        PCI_DEV_HW_SPEC_BM( 0640, 1039, 0x00, ATA_UDMA4, "SiS 640"  , SIS_SOUTH        ),*/
         PCI_DEV_HW_SPEC_BM( 0635, 1039, 0x00, ATA_UDMA5, "SiS 635"  , SIS100NEW        ),
         PCI_DEV_HW_SPEC_BM( 0633, 1039, 0x00, ATA_UDMA5, "SiS 633"  , SIS100NEW        ),
@@ -175,7 +175,7 @@ UniataChipDetect(
         // only by SouthBridge DeviceId
         DevTypeInfo = (BUSMASTER_CONTROLLER_INFORMATION*)&ViaSouthAdapters[0];
         i = AtapiFindListedDev(DevTypeInfo, -1, HwDeviceExtension, SystemIoBusNumber, slotNumber, NULL);
-        if(i != -1) {
+        if(i != 0xFFFFFFFF) {
             KdPrint2((PRINT_PREFIX "VIASOUTH\n"));
             deviceExtension->HwFlags |= VIASOUTH;
         }
@@ -244,7 +244,7 @@ UniataChipDetect(
     i = Ata_is_dev_listed(DevTypeInfo, VendorID, DeviceID, RevID, -1);
 for_ugly_chips:
     KdPrint2((PRINT_PREFIX "i: %#x\n", i));
-    if(i == -1) {
+    if(i == 0xFFFFFFFF) {
         return FALSE;
     }
     deviceExtension->MaxTransferMode =  DevTypeInfo[i].MaxTransferMode;
@@ -299,7 +299,6 @@ for_ugly_chips:
             BaseIoAddressBM = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
                                     4, 0, deviceExtension->NumberChannels*sizeof(IDE_BUSMASTER_REGISTERS));
             for(c=0; c<deviceExtension->NumberChannels; c++) {
-                ULONG unit01 = (c & 1);
                 ULONG unit10 = (c & 2);
                 chan = &deviceExtension->chan[c];
 
@@ -557,7 +556,7 @@ for_ugly_chips:
                tmp32 == ATA_SIS5517) {
                 i = AtapiFindListedDev((BUSMASTER_CONTROLLER_INFORMATION*)&SiSSouthAdapters[0],
                      -1, HwDeviceExtension, SystemIoBusNumber, -1, NULL); 
-                if(i != -1) {
+                if(i != 0xFFFFFFFF) {
                     deviceExtension->HwFlags = (deviceExtension->HwFlags & ~CHIPTYPE_MASK) | SIS133OLD;
                     //deviceExtension->MaxTransferMode = ATA_UDMA6;
                     deviceExtension->MaxTransferMode = SiSSouthAdapters[i].MaxTransferMode;
@@ -822,7 +821,7 @@ AtapiViaSouthBridgeFixup(
                                          &pciData,
                                          PCI_COMMON_HDR_LENGTH);
 
-        if (busDataRead < PCI_COMMON_HDR_LENGTH) {
+        if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
             continue;
         }
 
@@ -863,7 +862,6 @@ AtapiRosbSouthBridgeFixup(
     IN ULONG  slotNumber
     )
 {
-    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     PCI_COMMON_CONFIG     pciData;
     ULONG                 funcNumber;
     ULONG                 busDataRead;
@@ -887,7 +885,7 @@ AtapiRosbSouthBridgeFixup(
                                          &pciData,
                                          PCI_COMMON_HDR_LENGTH);
 
-        if (busDataRead < PCI_COMMON_HDR_LENGTH) {
+        if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
             continue;
         }
 
@@ -915,7 +913,6 @@ AtapiAliSouthBridgeFixup(
     IN ULONG  c
     )
 {
-    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     PCI_COMMON_CONFIG     pciData;
     ULONG                 funcNumber;
     ULONG                 busDataRead;
@@ -941,7 +938,7 @@ AtapiAliSouthBridgeFixup(
                                          &pciData,
                                          PCI_COMMON_HDR_LENGTH);
 
-        if (busDataRead < PCI_COMMON_HDR_LENGTH) {
+        if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
             continue;
         }
 

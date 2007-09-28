@@ -7979,7 +7979,6 @@ DriverEntry(
     PUNICODE_STRING        RegistryPath = (PUNICODE_STRING)Argument2;
     BOOLEAN                ReEnter = FALSE;
     WCHAR                  a;
-    NTSTATUS               status;
 
     PCONFIGURATION_INFORMATION GlobalConfig = IoGetConfigurationInformation();
     BOOLEAN PrimaryClaimed   = FALSE;

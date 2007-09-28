@@ -1258,7 +1258,7 @@ set_new_acard:
     case ATA_ATI_ID:
 
         KdPrint2((PRINT_PREFIX "ATI\n"));
-        if(ChipType = SIIMIO) {
+        if(ChipType == SIIMIO) {
             goto l_ATA_SILICON_IMAGE_ID;
         }
         //goto ATA_SERVERWORKS_ID;

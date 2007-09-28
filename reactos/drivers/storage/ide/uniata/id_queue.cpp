@@ -129,7 +129,7 @@ UniataQueueRequest(
 
             // walk through command queue and find the best
             // place for insertion of the command
-            while (AtaReq1 = AtaReq2->prev_req) {
+            while ((AtaReq1 = AtaReq2->prev_req)) {
                 new_cost1 = UniataGetCost(LunExt, AtaReq1, AtaReq);
                 new_cost2 = UniataGetCost(LunExt, AtaReq, AtaReq2);
 
@@ -181,7 +181,7 @@ UniataQueueRequest(
         AtaReq->prev_req = BestAtaReq1;
 
         AtaReq1 = AtaReq;
-        while(AtaReq1 = AtaReq1->next_req) {
+        while((AtaReq1 = AtaReq1->next_req)) {
             //ASSERT(AtaReq1->ttl);
             AtaReq1->ttl--;
         }

@@ -74,7 +74,7 @@ UniataEnumBusMasterController__(
 VOID
 AtapiDoNothing(VOID)
 {
-    ULONG i = 0;
+    //ULONG i = 0;
     return;
 } // end AtapiDoNothing()
 
@@ -250,7 +250,7 @@ UniataEnumBusMasterController__(
                 if(busDataRead == 2)
                     continue;
 
-                if(busDataRead < PCI_COMMON_HDR_LENGTH)
+                if(busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH)
                     continue;
 
                 VendorID  = pciData.VendorID;
@@ -289,7 +289,7 @@ UniataEnumBusMasterController__(
                 //known = UniataChipDetect(HwDeviceExtension, NULL, -1, ConfigInfo, &SimplexOnly);
                 i = Ata_is_dev_listed((PBUSMASTER_CONTROLLER_INFORMATION)&BusMasterAdapters[0], VendorID, DeviceID, 0, NUM_BUSMASTER_ADAPTERS);
 
-                known = (i != -1);
+                known = (i != 0xFFFFFFFF);
                 if(known) {
                     RaidFlags = BusMasterAdapters[i].RaidFlags;
                     if((RaidFlags & UNIATA_RAID_CONTROLLER) &&
@@ -476,8 +476,8 @@ UniataEnumBusMasterController__(
 /*                        if(known) {
                             RtlCopyMemory(newBMListPtr, (PVOID)&(BusMasterAdapters[i]), sizeof(BUSMASTER_CONTROLLER_INFORMATION));
                         } else {*/
-                        sprintf((PCHAR)vendorStrPtr, "%4.4x", VendorID);
-                        sprintf((PCHAR)deviceStrPtr, "%4.4x", DeviceID);
+                        sprintf((PCHAR)vendorStrPtr, "%4.4x", (UINT)VendorID);
+                        sprintf((PCHAR)deviceStrPtr, "%4.4x", (UINT)DeviceID);
 
                         RtlCopyMemory(&(newBMListPtr->VendorIdStr), (PCHAR)vendorStrPtr, 4);
                         RtlCopyMemory(&(newBMListPtr->DeviceIdStr), (PCHAR)deviceStrPtr, 4);
@@ -591,7 +591,7 @@ AtapiFindListedDev(
     ULONG i;
 
     // set start/end bus
-    if(BusNumber == -1) {
+    if(BusNumber == 0xFFFFFFFF) {
         busNumber  = 0;
         busNumber2 = maxPciBus;
     } else {
@@ -599,7 +599,7 @@ AtapiFindListedDev(
         busNumber2 = BusNumber+1;
     }
     // set start/end slot
-    if(SlotNumber == -1) {
+    if(SlotNumber == 0xFFFFFFFF) {
         slotNumber  = 0;
         slotNumber2 = PCI_MAX_DEVICES;
     } else {
@@ -627,11 +627,11 @@ AtapiFindListedDev(
         if(busDataRead == 2)
             continue;
 
-        if(busDataRead < PCI_COMMON_HDR_LENGTH)
+        if(busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH)
             continue;
 
         i = Ata_is_dev_listed(BusMasterAdapters, pciData.VendorID, pciData.DeviceID, pciData.RevisionID, lim);
-        if(i != -1) {
+        if(i != 0xFFFFFFFF) {
             if(_slotData)
                 *_slotData = slotData;
             return i;
@@ -679,7 +679,7 @@ AtapiFindDev(
                                          &pciData,
                                          PCI_COMMON_HDR_LENGTH);
 
-        if (busDataRead < PCI_COMMON_HDR_LENGTH) {
+        if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
             continue;
         }
 
@@ -733,7 +733,7 @@ UniataFindBusMasterController(
 #ifndef UNIATA_CORE
     // this buffer must be global for UNIATA_CORE build
     PCI_COMMON_CONFIG     pciData;
-#endif UNIATA_CORE
+#endif //UNIATA_CORE
     ULONG                 slotNumber;
     ULONG                 busDataRead;
     ULONG                 SystemIoBusNumber;
@@ -764,7 +764,7 @@ UniataFindBusMasterController(
     BOOLEAN found = FALSE;
     BOOLEAN MasterDev;
     BOOLEAN simplexOnly = FALSE;
-    BOOLEAN skip_find_dev = FALSE;
+    //BOOLEAN skip_find_dev = FALSE;
     BOOLEAN AltInit = FALSE;
 
     SCSI_PHYSICAL_ADDRESS IoBasePort1;
@@ -841,7 +841,7 @@ UniataFindBusMasterController(
                                      PCI_COMMON_HDR_LENGTH);
 
 #ifndef UNIATA_CORE
-    if (busDataRead < PCI_COMMON_HDR_LENGTH) {
+    if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
         KdPrint2((PRINT_PREFIX "busDataRead < PCI_COMMON_HDR_LENGTH => SP_RETURN_ERROR\n"));
         return SP_RETURN_ERROR;
     }
