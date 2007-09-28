@@ -619,7 +619,7 @@ AtapiSoftReset(
     ULONG            DeviceNumber
     )
 {
-    ULONG c = chan->lChannel;
+    //ULONG c = chan->lChannel;
     ULONG i;
     UCHAR dma_status = 0;
     KdPrint2((PRINT_PREFIX "AtapiSoftReset:\n"));
@@ -947,7 +947,7 @@ AtapiTimerDpc(
     KdPrint2((PRINT_PREFIX "AtapiTimerDpc:\n"));
 
     lChannel = deviceExtension->ActiveDpcChan = deviceExtension->FirstDpcChan;
-    if(lChannel == -1) {
+    if(lChannel == (ULONG)-1) {
         KdPrint2((PRINT_PREFIX "AtapiTimerDpc: no items\n"));
         return;
     }
@@ -959,7 +959,7 @@ AtapiTimerDpc(
         chan->HwScsiTimer = NULL;
 
         deviceExtension->FirstDpcChan = chan->NextDpcChan;
-        if(deviceExtension->FirstDpcChan != -1) {
+        if(deviceExtension->FirstDpcChan != (ULONG)-1) {
             recall = TRUE;
         }
 
@@ -968,7 +968,7 @@ AtapiTimerDpc(
         chan->NextDpcChan = -1;
 
         lChannel = deviceExtension->ActiveDpcChan = deviceExtension->FirstDpcChan;
-        if(lChannel == -1) {
+        if(lChannel == (ULONG)-1) {
             KdPrint2((PRINT_PREFIX "AtapiTimerDpc: no more items\n"));
             deviceExtension->FirstDpcChan =
             deviceExtension->ActiveDpcChan = -1;
@@ -1037,7 +1037,7 @@ AtapiQueueTimerDpc(
 
     i = deviceExtension->FirstDpcChan;
     chan = prev_chan = NULL;
-    while(i != -1) {
+    while(i != (ULONG)-1) {
         prev_chan = chan;
         chan = &deviceExtension->chan[i];
         if(chan->DpcTime > time.QuadPart) {
@@ -1822,7 +1822,7 @@ AtapiResetController__(
         max_ldev = (chan->ChannelCtrlFlags & CTRFLAGS_NO_SLAVE) ? 1 : 2;
         if(CompleteType != RESET_COMPLETE_NONE) {
 #ifndef UNIATA_CORE
-            while(CurSrb = UniataGetCurRequest(chan)) {
+            while((CurSrb = UniataGetCurRequest(chan))) {
 
                 PATA_REQ AtaReq = (PATA_REQ)(CurSrb->SrbExtension);
 
@@ -2127,7 +2127,7 @@ MapError(
     PHW_CHANNEL chan = &(deviceExtension->chan[lChannel]);
 //    ULONG i;
     UCHAR errorByte;
-    UCHAR srbStatus;
+    UCHAR srbStatus = SRB_STATUS_SUCCESS;
     UCHAR scsiStatus;
     ULONG ldev = GET_LDEV(Srb);
 
@@ -2966,7 +2966,7 @@ AtapiCallBack__(
         chan->DpcState = DPC_STATE_TIMER;
         if(!AtapiInterrupt__(HwDeviceExtension, lChannel)) {
             InterlockedExchange(&(chan->CheckIntr), CHECK_INTR_IDLE);
-            KdPrint2((PRINT_PREFIX "AtapiCallBack: What's fucking this ???!!!\n"));
+            KdPrint2((PRINT_PREFIX "AtapiCallBack: What's fucking this ???\n"));
         }
         goto ReturnCallback;
     }
@@ -3104,7 +3104,7 @@ AtapiInterrupt(
     ULONG c, _c;
     BOOLEAN status = FALSE;
     ULONG c_state;
-    ULONG i_res;
+    ULONG i_res = 0;
     ULONG pass;
     BOOLEAN checked[AHCI_MAX_PORT];
 
@@ -3253,7 +3253,7 @@ AtapiInterrupt2(
         }
 
         c_count++;
-        if(i_res = AtapiCheckInterrupt__(deviceExtension, (UCHAR)c)) {
+        if((i_res = AtapiCheckInterrupt__(deviceExtension, (UCHAR)c))) {
 
             KdPrint2((PRINT_PREFIX "AtapiInterrupt2: intr\n"));
             if(i_res == 2) {
@@ -3443,7 +3443,7 @@ AtapiCheckInterrupt__(
     ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
 
     ULONG status;
-    ULONG pr_status;
+    ULONG pr_status = 0;
     UCHAR dma_status = 0;
     UCHAR reg8 = 0;
     UCHAR reg32 = 0;
@@ -3583,7 +3583,7 @@ AtapiCheckInterrupt__(
 
             reg32 = AtapiReadPort1(chan, IDX_BM_DeviceSpecific0);
             KdPrint2((PRINT_PREFIX "  Sii DS0 %x\n", reg32));
-            if(reg32 == 0xffffffff) {
+            if(reg32 == (UCHAR)-1) {
                 KdPrint2((PRINT_PREFIX "  Sii mio unexpected\n"));
                 return FALSE;
             }
@@ -3806,11 +3806,11 @@ AtapiInterrupt__(
     PATA_REQ AtaReq = srb ? (PATA_REQ)(srb->SrbExtension) : NULL;
 
     ULONG wordCount = 0, wordsThisInterrupt = DEV_BSIZE/2;
-    ULONG status;
+    ULONG status = SRB_STATUS_SUCCESS;
     UCHAR dma_status = 0;
     ULONG i;
     ULONG k;
-    UCHAR statusByte,interruptReason;
+    UCHAR statusByte = 0,interruptReason;
 
     BOOLEAN atapiDev = FALSE;
 
@@ -5334,7 +5334,7 @@ IdeReadWrite(
     ULONG                ldev = GET_LDEV(Srb);
     UCHAR                DeviceNumber = (UCHAR)(ldev & 1);
     ULONG                startingSector;
-    ULONG                wordCount;
+    ULONG                wordCount = 0;
     UCHAR                statusByte,statusByte2;
     UCHAR                cmd;
     ULONGLONG            lba;
@@ -7670,10 +7670,10 @@ uata_ctl_queue:
 
                     KdPrint2((PRINT_PREFIX "AtapiStartIo: Set transfer mode\n"));
 
-                    if(AtaCtl->SetMode.OrigMode != -1) {
+                    if(AtaCtl->SetMode.OrigMode != (ULONG)-1) {
                         LunExt->OrigTransferMode = (UCHAR)(AtaCtl->SetMode.OrigMode);
                     }
-                    if(AtaCtl->SetMode.MaxMode != -1) {
+                    if(AtaCtl->SetMode.MaxMode != (ULONG)-1) {
                         LunExt->LimitedTransferMode = (UCHAR)(AtaCtl->SetMode.MaxMode);
                         if(LunExt->LimitedTransferMode > 
                            LunExt->OrigTransferMode) {
@@ -7813,7 +7813,7 @@ complete_req:
                                  Srb);
 
             // Remove current Srb & get next one
-            if(Srb = UniataGetCurRequest(chan)) {
+            if((Srb = UniataGetCurRequest(chan))) {
                 AtaReq = (PATA_REQ)(Srb->SrbExtension);
                 if(AtaReq->ReqState > REQ_STATE_QUEUED) {
                     // current request is under precessing, thus
@@ -7851,7 +7851,7 @@ UniataInitAtaCommands()
 {
     int i;
     UCHAR command;
-    UCHAR flags;
+    UCHAR flags = 0;
 
     for(i=0, command=0; i<256; i++, command++) {
 

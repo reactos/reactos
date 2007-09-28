@@ -50,7 +50,7 @@ static const ULONG valid_udma[7] = {0,0,2,0,4,5,6};
 static const CHAR retry_Wdma[MAX_RETRIES+1] = {2, 2, 2,-1,-1,-1};
 static const CHAR retry_Udma[MAX_RETRIES+1] = {6, 2,-1,-1,-1,-1};
 
-PHYSICAL_ADDRESS ph4gb = {0xFFFFFFFF, 0};
+PHYSICAL_ADDRESS ph4gb = {{0xFFFFFFFF, 0}};
 
 VOID
 cyrix_timing (
@@ -242,7 +242,7 @@ retry_DB_IO:
         data = (PUCHAR)(chan->DB_IO);
     } else
     if(!dma_count || ((LONG)(dma_base) == -1)) {
-        AtaReq->dma_base = NULL;
+        AtaReq->dma_base = 0;
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No 1st block\n" ));
         return FALSE;
     }
@@ -257,7 +257,7 @@ retry_DB_IO:
         AtaReq->dma_tab[i].count = (dma_count & 0xffff);
         i++; 
         if (i >= ATA_DMA_ENTRIES) {
-            AtaReq->dma_base = NULL;
+            AtaReq->dma_base = 0;
             KdPrint2((PRINT_PREFIX "too many segments in DMA table\n" ));
             return FALSE;
         }
@@ -272,7 +272,7 @@ retry_DB_IO:
             goto retry_DB_IO;
         } else
         if(!dma_count || !dma_base || ((LONG)(dma_base) == -1)) {
-            AtaReq->dma_base = NULL;
+            AtaReq->dma_base = 0;
             KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No NEXT block\n" ));
             return FALSE;
         }
@@ -783,7 +783,7 @@ AtapiDmaInit(
     if(deviceExtension->BaseIoAddressSATA_0.Addr) {
     //if(ChipFlags & UNIATA_SATA) {
         /****************/
-        /* SATA Generic *
+        /* SATA Generic */
         /****************/
         UCHAR ModeByte;
 

@@ -702,18 +702,19 @@ typedef struct _HW_CHANNEL {
     ULONG       NextDpcChan;
     PHW_TIMER   HwScsiTimer;
     LONGLONG    DpcTime;
-/*
+#if 0
     PHW_TIMER   HwScsiTimer1;
     PHW_TIMER   HwScsiTimer2;
     LONGLONG    DpcTime1;
-/*    PHW_TIMER           CurDpc;
-    LARGE_INTEGER       ActivationTime;*/
+//    PHW_TIMER           CurDpc;
+//    LARGE_INTEGER       ActivationTime;
 
-/*    KDPC                Dpc;
-    KTIMER              Timer;
-    PHW_TIMER           HwScsiTimer;*/
+//    KDPC                Dpc;
+//    KTIMER              Timer;
+//    PHW_TIMER           HwScsiTimer;
 //    KSPIN_LOCK          QueueSpinLock;
 //    KIRQL               QueueOldIrql;
+#endif
     struct _HW_DEVICE_EXTENSION* DeviceExtension;
     struct _HW_LU_EXTENSION* lun[2];
 
@@ -731,7 +732,7 @@ typedef struct _HW_CHANNEL {
     LONGLONG IntersectCount;
     LONGLONG TryReorderCount;
     LONGLONG TryReorderHeadCount;
-    LONGLONG TryReorderTailCount; /* in-order requests */
+    LONGLONG TryReorderTailCount; // in-order requests
 #endif //QUEUE_STATISTICS
 
     //ULONG BaseMemAddress;
@@ -832,7 +833,7 @@ typedef struct _HW_DEVICE_EXTENSION {
     ULONG FirstChannelToCheck;
 #if 1
     HW_LU_EXTENSION lun[IDE_MAX_LUN];
-    HW_CHANNEL chan[AHCI_MAX_PORT/*IDE_MAX_CHAN*/];
+    HW_CHANNEL chan[AHCI_MAX_PORT]; // IDE_MAX_CHAN
 #else
     PHW_LU_EXTENSION lun;
     PHW_CHANNEL chan;
@@ -850,12 +851,12 @@ typedef struct _HW_DEVICE_EXTENSION {
 
     ULONG       ActiveDpcChan;
     ULONG       FirstDpcChan;
-/*
-    PHW_TIMER   HwScsiTimer1;
-    PHW_TIMER   HwScsiTimer2;
-    LONGLONG    DpcTime1;
-    LONGLONG    DpcTime2;
-*/
+
+//    PHW_TIMER   HwScsiTimer1;
+//    PHW_TIMER   HwScsiTimer2;
+//    LONGLONG    DpcTime1;
+//    LONGLONG    DpcTime2;
+
     ULONG          queue_depth;
 
     PDEVICE_OBJECT Isr2DevObj;
@@ -921,8 +922,8 @@ extern UCHAR         pciBuffer[256];
 extern PBUSMASTER_CONTROLLER_INFORMATION BMList;
 extern ULONG         BMListLen;
 
-extern const CHAR retry_Wdma[MAX_RETRIES+1];
-extern const CHAR retry_Udma[MAX_RETRIES+1];
+//extern const CHAR retry_Wdma[MAX_RETRIES+1];
+//extern const CHAR retry_Udma[MAX_RETRIES+1];
 
 extern VOID
 UniataEnumBusMasterController(

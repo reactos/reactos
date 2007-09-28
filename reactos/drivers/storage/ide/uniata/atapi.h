@@ -927,30 +927,6 @@ AtapiSoftReset(
     ULONG            DeviceNumber
     );
 
-/*#define IdeHardReset(BaseIoAddress,result) \
-{\
-    UCHAR statusByte;\
-    ULONG i;\
-    SelectDrive(BaseIoAddress,DeviceNumber); \
-    AtapiWritePort1(&BaseIoAddress->AltStatus,/*IDE_DC_DISABLE_INTERRUPTS | *//*IDE_DC_RESET_CONTROLLER );\
-/*    ScsiPortStallExecution(50 * 1000);\
-    AtapiWritePort1(&BaseIoAddress->AltStatus,IDE_DC_REENABLE_CONTROLLER);\
-    /* 5 seconds for reset */ \
-/*    for (i = 0; i < 1000 * (1+11); i++) {\
-        statusByte = AtapiReadPort1(&BaseIoAddress->AltStatus);\
-        if (statusByte != IDE_STATUS_IDLE && statusByte != IDE_STATUS_SUCCESS) {\
-            ScsiPortStallExecution((i<1000) ? 5 : 500);\
-        } else {\
-            break;\
-        }\
-    }\
-    KdPrint2((PRINT_PREFIX "IdeHardReset: Status %x\n", statusByte)); \
-    if (i == 1000*1000) {\
-        result = FALSE;\
-    }\
-    result = TRUE;\
-}*/
-
 #endif //USER_MODE
 
 #define IS_RDP(OperationCode)\
@@ -1158,7 +1134,7 @@ AtapiDpcDispatch(
     );
  
 
-//#define AtaCommand(de, devn, chan, cmd, cyl, hd, sec, cnt, feat, flg) \
+//#define AtaCommand(de, devn, chan, cmd, cyl, hd, sec, cnt, feat, flg)
 
 extern LONG
 AtaPio2Mode(LONG pio);

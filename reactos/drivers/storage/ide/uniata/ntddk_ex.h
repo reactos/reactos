@@ -1,6 +1,9 @@
 #ifndef __NTDDK_EX__H__
 #define __NTDDK_EX__H__
 
+#undef ASSERT
+#define ASSERT
+
 typedef enum _SYSTEM_INFORMATION_CLASS
 {
     SystemBasicInformation,

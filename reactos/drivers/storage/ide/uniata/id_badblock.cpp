@@ -153,7 +153,7 @@ InitBadBlocks(
         QueryTable[0].DefaultData     = 0;
         QueryTable[0].DefaultLength   = 0;
 
-        RtlZeroMemory(QueryTable + 1, sizeof RTL_QUERY_REGISTRY_TABLE);    // EOF
+        RtlZeroMemory(QueryTable + 1, sizeof(RTL_QUERY_REGISTRY_TABLE));    // EOF
 
         NTSTATUS status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
                                                 L"UniATA\\Parameters\\BadBlocks",

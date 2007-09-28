@@ -83,7 +83,7 @@
 /* ReactOS-specific defines */
 #ifdef DDKAPI
  #define USE_REACTOS_DDK
-#endif DDKAPI
+#endif //DDKAPI
 
 /* Are we under GNU C (mingw) ??? */
 #if __GNUC__ >=3
