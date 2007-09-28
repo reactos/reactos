@@ -59,6 +59,7 @@ void
 Include::ProcessXML ()
 {
 	DirectoryLocation root = SourceDirectory;
+	const Module *base = module;
 
 	string relative_path;
 	const XMLAttribute* att = node->GetAttribute ( "base", false );
@@ -70,23 +71,24 @@ Include::ProcessXML ()
 				"'base' attribute illegal from global <include>" );
 
 		if ( att->value == project.name )
-		{
-			relative_path = node->value;
-		}
+			base = NULL;
 		else
 		{
-			const Module* base = project.LocateModule ( att->value );
+			base = project.LocateModule ( att->value );
 			if ( !base )
 				throw XMLInvalidBuildFileException (
 					node->location,
 					"<include> attribute 'base' references non-existant project or module '%s'",
 					att->value.c_str() );
 			root = GetDefaultDirectoryTree ( base );
-
-			relative_path = base->output->relative_path;
-			if ( node->value.length () > 0 && node->value != "." )
-				relative_path += sSep + node->value;
 		}
+	}
+
+	if ( base )
+	{
+		relative_path = base->output->relative_path;
+		if ( node->value.length () > 0 && node->value != "." )
+			relative_path += sSep + node->value;
 	}
 	else
 		relative_path = node->value;
