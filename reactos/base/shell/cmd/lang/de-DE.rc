@@ -41,7 +41,6 @@ CALL [Laufwerk:][Pfad]Dateiname [Batch-Parameter]\n\n\
   Parameter      Bezeichnet beliebige Angaben in der Befehlszeile, die von\n\
                  dem aufgerufenen Batchprogramm benötigt werden."
 
-
 STRING_CD_HELP,      "Wechselt das Verzeichnis oder zeigt dessen Namen an.\n\n\
 CHDIR [Laufwerk:][Pfad]\n\
 CHDIR[..|.]\n\
@@ -53,12 +52,10 @@ Geben Sie CD Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
 Laufwerk anzuzeigen.\n\
 Mit CD ohne Parameter wird das aktuelle Laufwerk und Verzeichnis angezeigt."
 
-
 STRING_CHCP_HELP,   "Zeigt die aktuelle Codepage oder wechselt sie.\n\n\
 CHCP [nnn]\n\n\
   nnn   Codepage angeben.\n\n\
 Der Befehl CHCP ohne Parameter zeigt die Nummer der aktuellen Codepage an."
-
 
 STRING_CHOICE_HELP, "Wartet auf den Benutzer, welcher aus einer Auswahl eine Option wählen muss.\n\n\
 CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
@@ -92,7 +89,6 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
   /P          CMD wird permanent und führt autoexec.bat aus\n\
               (kann nicht beendet werden).\n\
   /T:bf       Setzt die Hintergrund- und Vordergrund-Farbe (siehe COLOR Befehl)."
-
 
 STRING_COLOR_HELP1, "Legt die standard Hinter- und Vordergrundfarben für die Konsole fest.\n\n\
 COLOR [attr [/F]] \n\n\
@@ -129,7 +125,6 @@ COPY [/V][/Y|/-Y][/A|/B] Quelle [/A|/B]\n\
                Bestätigen auf.\n\n\
 Die Option /Y ist möglicherweise in der Umgebungsvariablen COPYCMD.\n\
 ..."
-
 
 STRING_DATE_HELP1, "\nGeben Sie das neue Datum ein (mm%cdd%cyyyy): "
 
@@ -199,8 +194,6 @@ DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
   /4          Zeigt das Jahr vierstellig an.\n\n\
 Optionen können in der Umgebungsvariablen DIRCMD voreingestellt werden.\n\
 ""-"" vor einer Option setzt die Voreinstellung ausser Kraft, z.B. DIR /-W."
-
-
 
 STRING_DIR_HELP2, " Datenträger in Laufwerk %c ist %s\n"
 STRING_DIR_HELP3, " Datenträger in Laufwerk %c hat keinen Namen\n"
@@ -385,6 +378,46 @@ STRING_REN_HELP2, "    %lu Datei umbennant\n"
 
 STRING_REN_HELP3, "    %lu Dateien umbennant\n"
 
+STRING_REPLACE_HELP1, "Ersetzt Dateien.\n\n\
+REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/A] [/P] [/R] [/W]\n\
+REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [Laufwerk1:][Pfad1]dateiname Bezeichnet die Quelldatei(en).\n\
+  [Laufwerk2:][Pfad2]          Bezeichnet den Pfad in dem die Dateien ersetzt\n\
+                               werden sollen.\n\
+  /A                           Fügt neue Dateien dem Zielpfad hinzu. Kann nicht\n\
+                               mit /S oder /U Parameter genutzt werden.\n\
+  /P                           Wartet auf Bestätigung bevor eine Datei ersetzt\n\
+                               oder eine Quelldatei hinzugefügt wird.\n\
+  /R                           Ersetzt schreibgeschützte Dateien.\n\
+  /S                           Ersetzt Dateien in allen Unterordnern des Ziel-\n\
+                               pfades. Kann nicht mit Parameter /A genutzt\n\
+                               werden.\n\
+  /W                           Wartet vor dem Start bis ein Datenträger\n\
+                               eingelegt wurde.\n\
+  /U                           Ersetzt (aktualisiert) nur Dateien, die älter\n\
+                               sind als die Quelldaten.Kann nicht mit Paramater\n\
+                               /A genutzt werden\n"
+
+STRING_REPLACE_HELP2, "Quellpfad benötigt\n"
+
+STRING_REPLACE_HELP3, "Keine Dateien ersetzt\n"
+
+STRING_REPLACE_HELP4, "%lu Datei(en) ersetzt\n"
+
+STRING_REPLACE_HELP5, "Ersetze %s\n"
+
+STRING_REPLACE_HELP6, "Ersetze %s\n"
+
+STRING_REPLACE_HELP7, "Keine Dateien hinzugefügt\n"
+
+STRING_REPLACE_HELP8, "%lu Datei(en) hinzugefügt\n"
+
+STRING_REPLACE_HELP9, "Füge %s hinzu (Y/N) "
+
+STRING_REPLACE_HELP10, "Ersetze %s (Y/N) "
+
+STRING_REPLACE_HELP11, "Füge %s hinzu\n"
+
 STRING_SHIFT_HELP, "Verändert die Position ersetzbarer Parameter in einem Batchprogramm.\n\n\
 SHIFT [DOWN]"
 
@@ -502,7 +535,6 @@ MAX           maximieren das Fenster\n\
 RESTORE       stellt das Fenster wieder her\n\
 title         neuer Titel"
 
-
 STRING_HELP1, "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\n\n\
   Befehl /?     Um nähere Informationen zu einem bestimmten Befehl\n\
                 zu erhalten.\n\n\
@@ -548,6 +580,7 @@ RD       Entfernt ein Verzeichnis.\n\
 REM      Leitet Kommentare in einer Batchdatei.\n\
 REN      Benennt eine Datei bzw. Dateien um.\n\
 RENAME   Bennent eine Datei bzw. Dateien um.\n\
+REPLACE  Ersetzt Dateien.\n\
 RMDIR    Löscht ein Verzeichnis.\n\
 SCREEN   Bewegt den Cursor und optional die Ausgabe.\n\
 SET      Setzt oder löscht die Umgebungsvariablen bzw. zeigt sie an.\n\
@@ -563,10 +596,8 @@ VERIFY   Legt fest, ob überwacht werden soll, ob Dateien korrekt auf den\n\
          Datenträger geschrieben werden.\n\
 VOL      Zeigt die Datenträgervolumebezeichnung und die Seriennummer an.\n"
 
-
 STRING_CHOICE_OPTION,         "JN"
 STRING_COPY_OPTION,           "JNA"
-
 
 STRING_ALIAS_ERROR,          "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
 STRING_BATCH_ERROR,          "Es trat ein Fehler auf, während die Batch-Datei geöffnet wurde.\n"
@@ -604,21 +635,13 @@ STRING_FREE_ERROR1,          "Ungültiges Laufwerk"
 STRING_FREE_ERROR2,          "keine Bezeichnung"
 STRING_GOTO_ERROR1,          "Keine Sprungmarke für GOTO gesetzt"
 STRING_GOTO_ERROR2,          "Sprungmarke '%s' wurde nicht gefunden\n"
-
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[FEHLER]\n"
-
 STRING_REN_ERROR1,           "MoveFile() ist fehlgeschlagen. Fehler: %lu\n"
-
 STRING_START_ERROR1,         "Derzeit noch kein Batch Support!"
-
 STRING_TIME_ERROR1,          "Ungültige Zeit."
-
 STRING_TYPE_ERROR1,          "Ungültige Option '/%s'\n"
-
 STRING_WINDOW_ERROR1,        "Fenster nicht gefunden"
-
-
 STRING_ERROR_PARAMETERF_ERROR,     "Parameterformat ist nicht korrekt - %c\n"
 STRING_ERROR_INVALID_SWITCH,       "Ungültiger Parameter - /%c\n"
 STRING_ERROR_TOO_MANY_PARAMETERS,  "Zu viele Parameter - %s\n"
@@ -632,9 +655,14 @@ STRING_ERROR_OUT_OF_MEMORY,        "Fehler: Zu wenig Speicher verfügbar.\n"
 STRING_ERROR_CANNOTPIPE,           "Fehler: Cannot pipe! Temporäre Datei kann nicht geöffnet werden!\n"
 STRING_ERROR_D_PAUSEMSG,           "Drücken Sie eine beliebige Taste . . ."
 STRING_ERROR_DRIVER_NOT_READY,     "Laufwerk ist nicht bereit"
-
 STRING_PATH_ERROR,                 "CMD: Nicht in environment '%s'\n"
-
+STRING_REPLACE_ERROR1,             "Ungültiger Parameter - %s\n"
+STRING_REPLACE_ERROR2,             "Pfad wurde nicht gefunden - %s\n"
+STRING_REPLACE_ERROR3,             "The filename, directory name, or volume label syntax is incorrect.\n"
+STRING_REPLACE_ERROR4,             "Invalid parameter combination\n"
+STRING_REPLACE_ERROR5,             "Zugriff verweigert - %s\n"
+STRING_REPLACE_ERROR6,             "Keine Dateien gefunden - %s\n"
+STRING_REPLACE_ERROR7,             "Erweiterter Fehler 32\n"
 STRING_CMD_SHELLINFO,              "\nReactOS Befehlszeilen Interpreter"
 STRING_VERSION_RUNVER,             " läuft in %s"
 STRING_COPY_FILE ,                 "        %d Datei(en) kopiert\n"
@@ -643,7 +671,6 @@ STRING_FOR_ERROR,                  "ungültige Variablenangabe."
 STRING_SCREEN_COL,                 "ungültige Spalten-Angabe"
 STRING_SCREEN_ROW,                 "ungültige Zeilen-Angabe"
 STRING_TIMER_TIME                  "Timer %d ist %s: "
-
 STRING_INVALID_OPERAND,            "Ungültiger Operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Erwartet ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Erwartet Nummer oder Variablennamen."
