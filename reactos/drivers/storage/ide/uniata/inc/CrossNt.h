@@ -119,9 +119,6 @@ int __cdecl CrNtstrcmp (
         const char * dst
         );
 
-#define strlen CrNtstrlen
-#define strcmp CrNtstrcmp
-
 #endif //_DEBUG
 
 #define CROSSNT_DECL_API

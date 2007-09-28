@@ -10,4 +10,10 @@
 	<directory name="pciidex">
 		<xi:include href="pciidex/pciidex.rbuild" />
 	</directory>
+	
+	<!-- Currently excluded from build, someone else please check the driver first
+	<directory name="uniata">
+		<xi:include href="uniata/uniata.rbuild" />
+	</directory>
+	-->
 </group>

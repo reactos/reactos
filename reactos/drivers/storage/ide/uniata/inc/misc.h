@@ -1,28 +1,14 @@
 #ifndef __CROSSNT_MISC__H__
 #define __CROSSNT_MISC__H__
 
-typedef void
-(__fastcall *ptrMOV_DD_SWP)(
-    void* a, // ECX
-    void* b  // EDX
-    );
-extern "C" ptrMOV_DD_SWP _MOV_DD_SWP;
-
 extern "C"
 void
 __fastcall
-_MOV_DD_SWP_i486(
+_MOV_DD_SWP(
     void* a, // ECX
     void* b  // EDX
     );
 
-extern "C"
-void
-__fastcall
-_MOV_DD_SWP_i386(
-    void* a, // ECX
-    void* b  // EDX
-    );
 #define MOV_DD_SWP(a,b) _MOV_DD_SWP(&(a),&(b))
 
 /********************/

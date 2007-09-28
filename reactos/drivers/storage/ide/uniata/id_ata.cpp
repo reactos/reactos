@@ -2648,7 +2648,7 @@ AtapiHwInitialize__(
             for (j = 0; j < 26; j += 2) {
 
                 // Build a buffer based on the identify data.
-                vendorId[j] = RtlUshortByteSwap(((PUCHAR)LunExt->IdentifyData.ModelNumber)[j]);
+                MOV_DW_SWP(vendorId[j], ((PUCHAR)LunExt->IdentifyData.ModelNumber)[j]);
             }
 
             if (!AtapiStringCmp (vendorId, "CD-ROM  CDR", 11)) {
@@ -5569,7 +5569,7 @@ IdeVerify(
                 sectors));
 
     // Get starting sector number from CDB.
-    startingSector = RtlUlongByteSwap((ULONG)((PCDB)Srb->Cdb)->CDB10.LBA);
+    MOV_DD_SWP(startingSector, ((PCDB)Srb->Cdb)->CDB10.LBA);
     MOV_DW_SWP(sectorCount, ((PCDB)Srb->Cdb)->CDB10.TransferBlocks);
 
     KdPrint2((PRINT_PREFIX 
@@ -6345,7 +6345,7 @@ IdeSendCommand(
 
             // Fill in vendor identification fields.
             for (i = 0; i < 24; i += 2) {
-                inquiryData->VendorId[i] = RtlUshortByteSwap(((PUCHAR)identifyData->ModelNumber)[i]);
+                MOV_DW_SWP(inquiryData->VendorId[i], ((PUCHAR)identifyData->ModelNumber)[i]);
             }
 /*
             // Initialize unused portion of product id.
@@ -6356,7 +6356,7 @@ IdeSendCommand(
             // Move firmware revision from IDENTIFY data to
             // product revision in INQUIRY data.
             for (i = 0; i < 4; i += 2) {
-                inquiryData->ProductRevisionLevel[i] = RtlUshortByteSwap(((PUCHAR)identifyData->FirmwareRevision)[i]);
+                MOV_DW_SWP(inquiryData->ProductRevisionLevel[i], ((PUCHAR)identifyData->FirmwareRevision)[i]);
             }
 
             status = SRB_STATUS_SUCCESS;
@@ -7998,14 +7998,7 @@ DriverEntry(
 
     if(!SavedDriverObject) {
         SavedDriverObject = (PDRIVER_OBJECT)DriverObject;
-        // we are here for the 1st time
-        // init CrossNT and get OS version
-        if(!NT_SUCCESS(status = CrNtInit(SavedDriverObject, RegistryPath))) {
-            KdPrint(("UniATA Init: CrNtInit failed with status %#x\n", status));
-            //HalDisplayString((PUCHAR)"DbgPrnHkInitialize: CrNtInit failed\n");
-            return status;
-        }
-        KdPrint(("UniATA Init: OS ver %x.%x (%d)\n", MajorVersion, MinorVersion, BuildNumber));
+        KdPrint(("UniATA Init: OS should be ReactOS\n"));
 
         KeQuerySystemTime(&t0);
         do {

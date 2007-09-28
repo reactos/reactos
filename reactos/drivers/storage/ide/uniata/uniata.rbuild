@@ -5,7 +5,7 @@
 	<define name="__USE_W32API" />
 	<define name="_DEBUG" />
 	<include base="uniata">.</include> 
-	<include base="uniata">inc</include> 
+	<include base="uniata">inc</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>scsiport</library>
@@ -16,7 +16,12 @@
 	<file>id_probe.cpp</file>
 	<file>id_queue.cpp</file>
 	<file>id_sata.cpp</file>
-	<file>ros_glue.cpp</file>
 	<file>stdafx.cpp</file>
 	<file>idedma.rc</file>
+	
+	<directory name="ros_glue">
+		<file>ros_glue.cpp</file>
+		<file>ros_glue_asm.s</file>
+		<file>libgcc2.c</file>
+	</directory>
 </module>
