@@ -16,6 +16,7 @@
 	<file>id_probe.cpp</file>
 	<file>id_queue.cpp</file>
 	<file>id_sata.cpp</file>
+	<file>ros_glue.cpp</file>
 	<file>stdafx.cpp</file>
 	<file>idedma.rc</file>
 </module>

@@ -2648,7 +2648,7 @@ AtapiHwInitialize__(
             for (j = 0; j < 26; j += 2) {
 
                 // Build a buffer based on the identify data.
-                MOV_DW_SWP(vendorId[j], ((PUCHAR)LunExt->IdentifyData.ModelNumber)[j]);
+                vendorId[j] = RtlUshortByteSwap(((PUCHAR)LunExt->IdentifyData.ModelNumber)[j]);
             }
 
             if (!AtapiStringCmp (vendorId, "CD-ROM  CDR", 11)) {
@@ -3054,9 +3054,9 @@ ReturnCallback:
 
         chan = &(deviceExtension->chan[c]);
 
-        if((ULONG)CrNtInterlockedCompareExchange((PVOID*)&(chan->CheckIntr),
-                                      (PVOID)CHECK_INTR_ACTIVE,
-                                      (PVOID)CHECK_INTR_DETECTED) == CHECK_INTR_DETECTED) {
+        if((ULONG)InterlockedCompareExchange(&chan->CheckIntr,
+                                      CHECK_INTR_ACTIVE,
+                                      CHECK_INTR_DETECTED) == CHECK_INTR_DETECTED) {
             //ASSERT(!deviceExtension->simplexOnly);
             chan->DpcState = DPC_STATE_ISR;
             if(!AtapiInterrupt__(HwDeviceExtension, (UCHAR)c)) {
@@ -3144,17 +3144,17 @@ AtapiInterrupt(
                 // if (deviceExtension->chan[c].CheckIntr == CHECK_INTR_DETECTED) {
                 //     deviceExtension->chan[c].CheckIntr = CHECK_INTR_ACTIVE;
                 // }
-                c_state = (ULONG)CrNtInterlockedCompareExchange((PVOID*)&(deviceExtension->chan[c].CheckIntr),
-                                              (PVOID)CHECK_INTR_ACTIVE,
-                                              (PVOID)CHECK_INTR_DETECTED);
+                c_state = (ULONG)InterlockedCompareExchange(&(deviceExtension->chan[c].CheckIntr),
+                                              CHECK_INTR_ACTIVE,
+                                              CHECK_INTR_DETECTED);
                 if(c_state == CHECK_INTR_IDLE) {
                     // c_state = deviceExtension->chan[c].CheckIntr;
                     // if (deviceExtension->chan[c].CheckIntr == CHECK_INTR_IDLE) {
                     //     deviceExtension->chan[c].CheckIntr = CHECK_INTR_ACTIVE
                     // }
-                    c_state = (ULONG)CrNtInterlockedCompareExchange((PVOID*)&(deviceExtension->chan[c].CheckIntr),
-                                                  (PVOID)CHECK_INTR_ACTIVE,
-                                                  (PVOID)CHECK_INTR_IDLE);
+                    c_state = (ULONG)InterlockedCompareExchange(&(deviceExtension->chan[c].CheckIntr),
+                                                  CHECK_INTR_ACTIVE,
+                                                  CHECK_INTR_IDLE);
                 }
             } while(c_state == CHECK_INTR_CHECK);
             KdPrint2((PRINT_PREFIX "AtapiInterrupt(base): locked\n"));
@@ -3241,9 +3241,9 @@ AtapiInterrupt2(
             continue;
         }
 
-        if((ULONG)CrNtInterlockedCompareExchange((PVOID*)&(deviceExtension->chan[c].CheckIntr),
-                                      (PVOID)CHECK_INTR_CHECK,
-                                      (PVOID)CHECK_INTR_IDLE) != CHECK_INTR_IDLE) {
+        if((ULONG)CrNtInterlockedCompareExchange(&(deviceExtension->chan[c].CheckIntr),
+                                      CHECK_INTR_CHECK,
+                                      CHECK_INTR_IDLE) != CHECK_INTR_IDLE) {
             KdPrint2((PRINT_PREFIX "AtapiInterrupt2: !CHECK_INTR_IDLE\n"));
             // hunt on unexpected intr (Some devices generate double interrupts,
             // some controllers (at least CMD649) interrupt twice with small delay.
@@ -3296,9 +3296,9 @@ AtapiInterruptDpc(
 
         if(!(deviceExtension->chan[c].ChannelCtrlFlags & CTRFLAGS_DPC_REQ)) {
 
-            if((ULONG)CrNtInterlockedCompareExchange((PVOID*)&(deviceExtension->chan[c].CheckIntr),
-                                          (PVOID)CHECK_INTR_ACTIVE,
-                                          (PVOID)CHECK_INTR_DETECTED) != CHECK_INTR_DETECTED) {
+            if((ULONG)InterlockedCompareExchange(&(deviceExtension->chan[c].CheckIntr),
+                                          CHECK_INTR_ACTIVE,
+                                          CHECK_INTR_DETECTED) != CHECK_INTR_DETECTED) {
                 continue;
             }
                         
@@ -3350,9 +3350,9 @@ AtapiEnableInterrupts__(
         } else {
             // check if other channel(s) interrupted
             // must do nothing in simplex mode
-            if((ULONG)CrNtInterlockedCompareExchange((PVOID*)&(chan->CheckIntr),
-                                          (PVOID)CHECK_INTR_ACTIVE,
-                                          (PVOID)CHECK_INTR_DETECTED) != CHECK_INTR_DETECTED) {
+            if((ULONG)CrNtInterlockedCompareExchange(&(chan->CheckIntr),
+                                          CHECK_INTR_ACTIVE,
+                                          CHECK_INTR_DETECTED) != CHECK_INTR_DETECTED) {
                 continue;
             }
             //ASSERT(!deviceExtension->simplexOnly);
@@ -5569,7 +5569,7 @@ IdeVerify(
                 sectors));
 
     // Get starting sector number from CDB.
-    MOV_DD_SWP(startingSector, ((PCDB)Srb->Cdb)->CDB10.LBA);
+    startingSector = RtlUlongByteSwap((ULONG)((PCDB)Srb->Cdb)->CDB10.LBA);
     MOV_DW_SWP(sectorCount, ((PCDB)Srb->Cdb)->CDB10.TransferBlocks);
 
     KdPrint2((PRINT_PREFIX 
@@ -6345,7 +6345,7 @@ IdeSendCommand(
 
             // Fill in vendor identification fields.
             for (i = 0; i < 24; i += 2) {
-                MOV_DW_SWP(inquiryData->VendorId[i], ((PUCHAR)identifyData->ModelNumber)[i]);
+                inquiryData->VendorId[i] = RtlUshortByteSwap(((PUCHAR)identifyData->ModelNumber)[i]);
             }
 /*
             // Initialize unused portion of product id.
@@ -6356,7 +6356,7 @@ IdeSendCommand(
             // Move firmware revision from IDENTIFY data to
             // product revision in INQUIRY data.
             for (i = 0; i < 4; i += 2) {
-                MOV_DW_SWP(inquiryData->ProductRevisionLevel[i], ((PUCHAR)identifyData->FirmwareRevision)[i]);
+                inquiryData->ProductRevisionLevel[i] = RtlUshortByteSwap(((PUCHAR)identifyData->FirmwareRevision)[i]);
             }
 
             status = SRB_STATUS_SUCCESS;

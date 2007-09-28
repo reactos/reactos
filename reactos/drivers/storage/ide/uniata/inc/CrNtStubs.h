@@ -16,7 +16,7 @@ KeTestSpinLock,(
     (
     SpinLock
     ))
-
+#if 0
 CROSSNT_DECL(
 LONG,
 __fastcall,
@@ -62,6 +62,12 @@ InterlockedCompareExchange,(
     IN PVOID ExChange,
     IN PVOID Comperand
     ))
+#endif
+
+#define CrNtInterlockedIncrement InterlockedIncrement
+#define CrNtInterlockedDecrement InterlockedDecrement
+#define CrNtInterlockedExchangeAdd InterlockedExchangeAdd
+#define CrNtInterlockedCompareExchange InterlockedCompareExchange
 
 CROSSNT_DECL_EX("HAL.DLL",
 KIRQL,__stdcall,
