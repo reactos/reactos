@@ -696,6 +696,12 @@ BOOL WINAPI SHGetSpecialFolderPathW (HWND hwndOwner, LPWSTR szPath, int nFolder,
 HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal) ;
 
 /**********************************************************************
+ * SHCreateShellFolderView ()
+ */
+
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv);
+
+/**********************************************************************
  * SHGetSetSettings ()
  */
 

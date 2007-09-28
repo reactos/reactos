@@ -154,6 +154,10 @@ interface IShellFolder : IUnknown
 
     typedef DWORD SHCONTF;
 
+    cpp_quote("#define SHCIDS_ALLFIELDS        0x80000000L")
+    cpp_quote("#define SHCIDS_CANONICALONLY    0x10000000L")
+    cpp_quote("#define SHCIDS_BITMASK          0xFFFF0000L")
+    cpp_quote("#define SHCIDS_COLUMNMASK       0x0000FFFFL")
     cpp_quote("#define SFGAO_CANCOPY           DROPEFFECT_COPY")
     cpp_quote("#define SFGAO_CANMOVE           DROPEFFECT_MOVE")
     cpp_quote("#define SFGAO_CANLINK           DROPEFFECT_LINK")
