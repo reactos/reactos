@@ -22,10 +22,12 @@ HvpWriteLog(
    ULONG LastIndex;
    PVOID BlockPtr;
    BOOLEAN Success;
-       return TRUE;
-   
+
+   DPRINT1("FIXME: HvpWriteLog doesn't do anything atm\n");
+   return TRUE;
+
    ASSERT(RegistryHive->ReadOnly == FALSE);
-   
+
    DPRINT("HvpWriteLog called\n");
 
    if (RegistryHive->HiveHeader->Sequence1 !=
