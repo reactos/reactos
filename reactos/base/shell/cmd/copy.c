@@ -46,10 +46,7 @@ enum
 	COPY_RESTART     = 0x080,   /* /Z  */
 	COPY_BINARY      = 0x100,   /* /B  */
 };
- 
-#define BUFF_SIZE 16384         /* 16k = max buffer size */
- 
- 
+
 INT 
 copy (TCHAR source[MAX_PATH], 
 	  TCHAR dest[MAX_PATH], 

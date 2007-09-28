@@ -47,6 +47,9 @@
 /* command line buffer length */
 #define CMDLINE_LENGTH  8192
 
+/* 16k = max buffer size */
+#define BUFF_SIZE 16384
+
 /* global variables */
 extern HANDLE hOut;
 extern HANDLE hIn;
