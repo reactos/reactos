@@ -351,7 +351,7 @@ STDCALL
 DestroyIcon(
   HICON hIcon)
 {
-  return (BOOL)NtUserDestroyCursorIcon((HANDLE)hIcon, 0);
+  return (BOOL)NtUserDestroyCursor((HANDLE)hIcon, 0);
 }
 
 

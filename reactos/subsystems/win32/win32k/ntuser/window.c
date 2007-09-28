@@ -2087,7 +2087,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
                      HINSTANCE hInstance,
                      LPVOID lpParam,
                      DWORD dwShowMode,
-                     BOOL bUnicodeWindow)
+                     BOOL bUnicodeWindow,
+                     DWORD dwUnknown)
 {
    NTSTATUS Status;
    UNICODE_STRING WindowName;

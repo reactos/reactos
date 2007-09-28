@@ -911,7 +911,7 @@ CLEANUP:
  */
 BOOL
 STDCALL
-NtUserDestroyCursorIcon(
+NtUserDestroyCursor(
    HANDLE hCurIcon,
    DWORD Unknown)
 {
@@ -1101,7 +1101,7 @@ CLEANUP:
  */
 BOOL
 STDCALL
-NtUserSetCursorIconContents(
+NtUserSetCursorContents(
    HANDLE hCurIcon,
    PICONINFO IconInfo)
 {
@@ -1112,7 +1112,7 @@ NtUserSetCursorIconContents(
    BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserSetCursorIconContents\n");
+   DPRINT("Enter NtUserSetCursorContents\n");
    UserEnterExclusive();
 
    WinSta = IntGetWinStaObj();
@@ -1164,7 +1164,7 @@ done:
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserSetCursorIconContents, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserSetCursorContents, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

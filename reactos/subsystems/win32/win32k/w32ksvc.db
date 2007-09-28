@@ -312,12 +312,12 @@ NtGdiUpdateColors                                1
 NtGdiWidenPath                                   1
 NtUserActivateKeyboardLayout                     2
 NtUserAlterWindowStyle                           3
-# NtUserAssociateInputContext                    3
+NtUserAssociateInputContext                      3
 NtUserAttachThreadInput                          3
 NtUserBeginPaint                                 2
 NtUserBitBltSysBmp                               8
 NtUserBlockInput                                 1
-# NtUserBuildHimcList                            4
+NtUserBuildHimcList                              4
 NtUserBuildHwndList                              7
 NtUserBuildNameList                              4
 NtUserBuildPropList                              4
@@ -333,24 +333,24 @@ NtUserCallOneParam                               2
 NtUserCallTwoParam                               3
 NtUserChangeClipboardChain                       2
 NtUserChangeDisplaySettings                      5
-# NtUserCheckImeHotKey                           2
+NtUserCheckImeHotKey                             2
 NtUserCheckMenuItem                              3
 NtUserChildWindowFromPointEx                     4
 NtUserClipCursor                                 1
 NtUserCloseClipboard                             0
 NtUserCloseDesktop                               1
 NtUserCloseWindowStation                         1
-# NtUserConsoleControl                           3
+NtUserConsoleControl                             3
 NtUserConvertMemHandle                           2
 NtUserCopyAcceleratorTable                       3
 NtUserCountClipboardFormats                      0
 NtUserCreateAcceleratorTable                     2
 NtUserCreateCaret                                4
 NtUserCreateDesktop                              5
-# NtUserCreateInputContext                       1
+NtUserCreateInputContext                         1
 NtUserCreateLocalMemHandle                       4
-# NtUserCreateWindowEx                          15 Wrong number of param ?
-# NtUserCreateWindowStation                      7   Wrong number of param ?
+NtUserCreateWindowEx                            15
+NtUserCreateWindowStation                        7
 NtUserDdeGetQualityOfService                     3
 NtUserDdeInitialize                              5
 NtUserDdeSetQualityOfService                     3
@@ -358,11 +358,11 @@ NtUserDeferWindowPos                             8
 NtUserDefSetText                                 2
 NtUserDeleteMenu                                 3
 NtUserDestroyAcceleratorTable                    1
-# NtUserDestroyCursor                            2
-# NtUserDestroyInputContext                      1
+NtUserDestroyCursor                              2
+NtUserDestroyInputContext                        1
 NtUserDestroyMenu                                1
 NtUserDestroyWindow                              1
-# NtUserDisableThreadIme                         1
+NtUserDisableThreadIme                           1
 NtUserDispatchMessage                            1
 NtUserDragDetect                                 3
 NtUserDragObject                                 5
@@ -388,9 +388,9 @@ NtUserFillWindow                                 4
 NtUserFlashWindowEx                              1
 NtUserGetAltTabInfo                              6
 NtUserGetAncestor                                2
-# NtUserGetAppImeLevel                           1
+NtUserGetAppImeLevel                             1
 NtUserGetAsyncKeyState                           1
-# NtUserGetAtomName                              2
+NtUserGetAtomName                                2
 NtUserGetCaretBlinkTime                          0
 NtUserGetCaretPos                                1
 # NtUserGetClassInfo                             5   Wrong number of param ?
@@ -413,10 +413,10 @@ NtUserGetDoubleClickTime                         0
 NtUserGetForegroundWindow                        0
 NtUserGetGuiResources                            2
 NtUserGetGUIThreadInfo                           2
-# NtUserGetIconInfo                              6
-# NtUserGetIconSize                              4
+NtUserGetIconInfo                                6
+NtUserGetIconSize                                4
 NtUserGetImeHotKey                               4
-# NtUserGetImeInfoEx                             2
+NtUserGetImeInfoEx                               2
 NtUserGetInternalWindowPos                       3
 NtUserGetKeyboardLayoutList                      2
 NtUserGetKeyboardLayoutName                      1
@@ -433,11 +433,11 @@ NtUserGetObjectInformation                       5
 NtUserGetOpenClipboardWindow                     0
 NtUserGetPriorityClipboardFormat                 2
 NtUserGetProcessWindowStation                    0
-# NtUserGetRawInputBuffer                        3
-# NtUserGetRawInputData                          5
-# NtUserGetRawInputDeviceInfo                    4
-# NtUserGetRawInputDeviceList                    3
-# NtUserGetRegisteredRawInputDevices             3
+NtUserGetRawInputBuffer                          3
+NtUserGetRawInputData                            5
+NtUserGetRawInputDeviceInfo                      4
+NtUserGetRawInputDeviceList                      3
+NtUserGetRegisteredRawInputDevices               3
 NtUserGetScrollBarInfo                           3
 NtUserGetSystemMenu                              2
 NtUserGetThreadDesktop                           2
@@ -448,11 +448,11 @@ NtUserGetUpdateRgn                               3
 NtUserGetWindowDC                                1
 NtUserGetWindowPlacement                         2
 NtUserGetWOWClass                                2
-# NtUserHardErrorControl                         3
+NtUserHardErrorControl                           3
 NtUserHideCaret                                  1
 NtUserHiliteMenuItem                             4
 NtUserImpersonateDdeClientWindow                 2
-# NtUserInitialize                               3
+NtUserInitialize                                 3
 NtUserInitializeClientPfnArrays                  4
 # NtUserInitTask                                12 Wrong number of param ?
 NtUserInternalGetWindowText                      3
@@ -467,13 +467,13 @@ NtUserLockWorkStation                            0
 NtUserMapVirtualKeyEx                            4
 NtUserMenuItemFromPoint                          4
 NtUserMessageCall                                7
-# NtUserMinMaximize                              3
+NtUserMinMaximize                                3
 NtUserMNDragLeave                                0
 NtUserMNDragOver                                 2
 NtUserModifyUserStartupInfoFlags                 2
 NtUserMoveWindow                                 6
 NtUserNotifyIMEStatus                            3
-# NtUserNotifyProcessCreate                      4
+NtUserNotifyProcessCreate                        4
 NtUserNotifyWinEvent                             4
 NtUserOpenClipboard                              2
 NtUserOpenDesktop                                3
@@ -483,26 +483,26 @@ NtUserPaintDesktop                               1
 NtUserPeekMessage                                5
 NtUserPostMessage                                4
 NtUserPostThreadMessage                          4
-# NtUserPrintWindow                              3
-# NtUserProcessConnect                           3
-# NtUserQueryInformationThread                   5
-# NtUserQueryInputContext                        2
+NtUserPrintWindow                                3
+NtUserProcessConnect                             3
+NtUserQueryInformationThread                     5
+NtUserQueryInputContext                          2
 NtUserQuerySendMessage                           1
 NtUserQueryUserCounters                          5
 NtUserQueryWindow                                2
 NtUserRealChildWindowFromPoint                   3
-# NtUserRealInternalGetMessage                   6
-# NtUserRealWaitMessageEx                        2
+NtUserRealInternalGetMessage                     6
+NtUserRealWaitMessageEx                          2
 NtUserRedrawWindow                               4
-# NtUserRegisterClassExWOW                       7
-# NtUserRegisterUserApiHook                      2
+NtUserRegisterClassExWOW                         7
+NtUserRegisterUserApiHook                        2
 NtUserRegisterHotKey                             4
-# NtUserRegisterRawInputDevices                  3
+NtUserRegisterRawInputDevices                    3
 NtUserRegisterTasklist                           1
 NtUserRegisterWindowMessage                      1
 NtUserRemoveMenu                                 3
 NtUserRemoveProp                                 2
-# NtUserResolveDesktop                           4
+NtUserResolveDesktop                             4
 NtUserResolveDesktopForWOW                       1
 NtUserSBGetParms                                 4
 NtUserScrollDC                                   7
@@ -510,7 +510,7 @@ NtUserScrollWindowEx                             8
 NtUserSelectPalette                              3
 NtUserSendInput                                  3
 NtUserSetActiveWindow                            1
-# NtUserSetAppImeLevel                           2
+NtUserSetAppImeLevel                             2
 NtUserSetCapture                                 1
 NtUserSetClassLong                               4
 NtUserSetClassWord                               3
@@ -518,15 +518,15 @@ NtUserSetClipboardData                           3
 NtUserSetClipboardViewer                         1
 NtUserSetConsoleReserveKeys                      2
 NtUserSetCursor                                  1
-# NtUserSetCursorContents                        2
+NtUserSetCursorContents                          2
 # NtUserSetCursorIconData                        4 Wrong number of param ?
 NtUserSetDbgTag                                  2
 NtUserSetFocus                                   1
 NtUserSetImeHotKey                               5
-# NtUserSetImeInfoEx                             1
+NtUserSetImeInfoEx                               1
 NtUserSetImeOwnerWindow                          2
-# NtUserSetInformationProcess                    4
-# NtUserSetInformationThread                     4
+NtUserSetInformationProcess                      4
+NtUserSetInformationThread                       4
 NtUserSetInternalWindowPos                       4
 NtUserSetKeyboardState                           1
 NtUserSetLogonNotifyWindow                       1
@@ -546,7 +546,7 @@ NtUserSetSystemCursor                            2
 NtUserSetSystemMenu                              2
 NtUserSetSystemTimer                             4
 NtUserSetThreadDesktop                           1
-# NtUserSetThreadLayoutHandles                   2
+NtUserSetThreadLayoutHandles                     2
 NtUserSetThreadState                             2
 NtUserSetTimer                                   4
 NtUserSetWindowFNID                              2
@@ -563,17 +563,17 @@ NtUserShowCaret                                  1
 NtUserShowScrollBar                              3
 NtUserShowWindow                                 2
 NtUserShowWindowAsync                            2
-# NtUserSoundSentry                              0
+NtUserSoundSentry                                0
 NtUserSwitchDesktop                              1
 NtUserSystemParametersInfo                       4
-# NtUserTestForInteractiveUser                   1
+NtUserTestForInteractiveUser                     1
 NtUserThunkedMenuInfo                            2
 NtUserThunkedMenuItemInfo                        6
 NtUserToUnicodeEx                                7
 NtUserTrackMouseEvent                            1
 NtUserTrackPopupMenuEx                           6
-# NtUserCalcMenuBar                              5
-# NtUserPaintMenuBar                             6
+NtUserCalcMenuBar                                5
+NtUserPaintMenuBar                               6
 NtUserTranslateAccelerator                       3
 NtUserTranslateMessage                           2
 NtUserUnhookWindowsHookEx                        1
@@ -581,18 +581,18 @@ NtUserUnhookWinEvent                             1
 NtUserUnloadKeyboardLayout                       1
 NtUserUnlockWindowStation                        1
 # NtUserUnregisterClass                          3 Wrong number of param ?
-# NtUserUnregisterUserApiHook                    0
+NtUserUnregisterUserApiHook                      0
 NtUserUnregisterHotKey                           2
 NtUserUpdateInputContext                         3
 NtUserUpdateInstance                             3
 NtUserUpdateLayeredWindow                        9
-# NtUserGetLayeredWindowAttributes               4
+NtUserGetLayeredWindowAttributes                 4
 NtUserSetLayeredWindowAttributes                 4
 NtUserUpdatePerUserSystemParameters              2
 NtUserUserHandleGrantAccess                      3
 NtUserValidateHandleSecure                       2
-# NtUserValidateRect                             2
-# NtUserValidateTimerCallback                    3
+NtUserValidateRect                               2
+NtUserValidateTimerCallback                      3
 NtUserVkKeyScanEx                                3
 NtUserWaitForInputIdle                           3
 NtUserWaitForMsgAndEvent                         1
@@ -600,11 +600,11 @@ NtUserWaitMessage                                0
 NtUserWin32PoolAllocationStats                   6
 NtUserWindowFromPoint                            2
 NtUserYieldTask                                  0
-# NtUserRemoteConnect                            3
-# NtUserRemoteRedrawRectangle                    4
-# NtUserRemoteRedrawScreen                       0
-# NtUserRemoteStopScreenUpdates                  0
-# NtUserCtxDisplayIOCtl                          3
+NtUserRemoteConnect                              3
+NtUserRemoteRedrawRectangle                      4
+NtUserRemoteRedrawScreen                         0
+NtUserRemoteStopScreenUpdates                    0
+NtUserCtxDisplayIOCtl                            3
 NtGdiEngAssociateSurface                         3
 NtGdiEngCreateBitmap                             6
 NtGdiEngCreateDeviceSurface                      4
@@ -676,8 +676,6 @@ NtGdiDrawStream                                  3
 #
 #
 # Wrong number of param ?
-NtUserCreateWindowEx                    14
-NtUserCreateWindowStation               6
 NtUserEnumDisplayMonitors               5
 NtUserFindExistingCursorIcon            4
 NtUserFindWindowEx                      4
@@ -709,7 +707,6 @@ NtGdiTranslateCharsetInfo               3
 NtGdiUpdateICMRegKey                    4
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2
-NtUserDestroyCursorIcon                 2
 NtUserEnumClipboardFormats              1 
 NtUserGetActiveWindow                   0
 NtUserGetCapture                        0
@@ -740,7 +737,6 @@ NtUserSendMessage                       5
 NtUserSendMessageCallback               6
 NtUserSendMessageTimeout                8
 NtUserSendNotifyMessage                 4
-NtUserSetCursorIconContents             2
 NtUserSetScrollBarInfo                  3
 NtUserGetDesktopWindow                  0
 NtGdiAddFontResource                    2

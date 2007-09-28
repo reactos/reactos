@@ -14,6 +14,17 @@
 #include <debug.h>
 
 DWORD
+NTAPI
+NtUserAssociateInputContext(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED
+    return 0;
+}
+
+DWORD
 STDCALL
 NtUserAttachThreadInput(
    DWORD Unknown0,
@@ -40,6 +51,18 @@ NtUserBitBltSysBmp(
    UNIMPLEMENTED
 
    return 0;
+}
+
+DWORD
+NTAPI
+NtUserBuildHimcList(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
 }
 
 DWORD
@@ -682,5 +705,525 @@ NtUserYieldTask(VOID)
 
    return 0;
 }
+
+
+DWORD
+STDCALL
+NtUserCheckImeHotKey(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserConsoleControl(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserCreateInputContext(
+    DWORD dwUnknown1)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserDestroyInputContext(
+    DWORD dwUnknown1)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserDisableThreadIme(
+    DWORD dwUnknown1)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetAppImeLevel(
+    DWORD dwUnknown1)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetAtomName(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetIconInfo(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/* for hints how the prototype might be, see
+   http://forum.grafika.cz/read.php?23,1816012,1816139,quote=1 
+   http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
+DWORD
+NTAPI
+NtUserGetIconSize(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetImeInfoEx(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetRawInputBuffer(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetRawInputData(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetRawInputDeviceInfo(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetRawInputDeviceList(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetRegisteredRawInputDevices(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserHardErrorControl(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserInitialize(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserMinMaximize(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserNotifyProcessCreate(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserPrintWindow(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserProcessConnect(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserQueryInformationThread(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserQueryInputContext(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRealInternalGetMessage(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRealWaitMessageEx(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/* http://www.reactos.org/pipermail/ros-kernel/2003-November/000589.html */
+HWINSTA
+NTAPI
+NtUserRegisterClassExWOW(
+    CONST WNDCLASSEXW* lpwcx,
+    BOOL bUnicodeClass,
+    WNDPROC wpExtra,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6,
+    DWORD dwUnknown7)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRegisterUserApiHook(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRegisterRawInputDevices(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserResolveDesktop(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserSetAppImeLevel(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserSetImeInfoEx(
+    DWORD dwUnknown1)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserSetInformationProcess(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserSetInformationThread(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserSetThreadLayoutHandles(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserSoundSentry(VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserTestForInteractiveUser(
+    DWORD dwUnknown1)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/* http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
+DWORD
+NTAPI
+NtUserCalcMenuBar(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserPaintMenuBar(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserUnregisterUserApiHook(VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserGetLayeredWindowAttributes(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/* ValidateRect gets redirected to NtUserValidateRect:
+   http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
+BOOL
+NTAPI
+NtUserValidateRect(
+    HWND hWnd,
+    CONST RECT *lpRect)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserValidateTimerCallback(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRemoteConnect(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRemoteRedrawRectangle(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRemoteRedrawScreen(VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserRemoteStopScreenUpdates(VOID)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+DWORD
+NTAPI
+NtUserCtxDisplayIOCtl(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 
 /* EOF */

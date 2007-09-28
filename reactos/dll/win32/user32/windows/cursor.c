@@ -153,7 +153,7 @@ CreateCursor(HINSTANCE hInst,
 BOOL STDCALL
 DestroyCursor(HCURSOR hCursor)
 {
-  return (BOOL)NtUserDestroyCursorIcon((HANDLE)hCursor, 0);
+  return (BOOL)NtUserDestroyCursor((HANDLE)hCursor, 0);
 }
 
 

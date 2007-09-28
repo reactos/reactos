@@ -241,7 +241,8 @@ User32CreateWindowEx(DWORD dwExStyle,
 				hInstance,
 				lpParam,
 				SW_SHOW,
-				FALSE);
+				FALSE,
+				0);
 
 #if 0
   DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);

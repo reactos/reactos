@@ -377,7 +377,8 @@ NtUserCreateWindowStation(
    LPSECURITY_ATTRIBUTES lpSecurity,
    DWORD Unknown3,
    DWORD Unknown4,
-   DWORD Unknown5)
+   DWORD Unknown5,
+   DWORD Unknown6)
 {
    PSYSTEM_CURSORINFO CurInfo;
    UNICODE_STRING WindowStationName;

@@ -93,6 +93,21 @@ PW32PROCESSINFO GetW32ProcessInfo(VOID);
 
 DWORD
 NTAPI
+NtUserAssociateInputContext(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
+NtUserBuildHimcList(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
+
+DWORD
+NTAPI
 NtUserBuildMenuItemList(
  HMENU hMenu,
  PVOID Buffer,
@@ -101,10 +116,26 @@ NtUserBuildMenuItemList(
 
 DWORD
 NTAPI
+NtUserCalcMenuBar(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5);
+
+DWORD
+NTAPI
 NtUserCheckMenuItem(
   HMENU hmenu,
   UINT uIDCheckItem,
   UINT uCheck);
+
+DWORD
+NTAPI
+NtUserCtxDisplayIOCtl(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
 
 BOOL
 NTAPI
@@ -528,6 +559,12 @@ NtUserChangeDisplaySettings(
   DWORD dwflags,
   LPVOID lParam);
 
+DWORD
+STDCALL
+NtUserCheckImeHotKey(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
+
 HWND NTAPI
 NtUserChildWindowFromPointEx(HWND Parent,
 			     LONG x,
@@ -552,6 +589,13 @@ BOOL
 NTAPI
 NtUserCloseWindowStation(
   HWINSTA hWinSta);
+
+DWORD
+NTAPI
+NtUserConsoleControl(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
 
 DWORD
 NTAPI
@@ -601,6 +645,11 @@ NtUserCreateDesktop(
 
 DWORD
 NTAPI
+NtUserCreateInputContext(
+    DWORD dwUnknown1);
+
+DWORD
+NTAPI
 NtUserCreateLocalMemHandle(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -623,7 +672,8 @@ NtUserCreateWindowEx(
   HINSTANCE hInstance,
   LPVOID lpParam,
   DWORD dwShowMode,
-  BOOL bUnicodeWindow);
+  BOOL bUnicodeWindow,
+  DWORD dwUnknown);
 
 HWINSTA
 NTAPI
@@ -633,7 +683,8 @@ NtUserCreateWindowStation(
   LPSECURITY_ATTRIBUTES lpSecurity,
   DWORD Unknown3,
   DWORD Unknown4,
-  DWORD Unknown5);
+  DWORD Unknown5,
+  DWORD Unknown6);
 
 DWORD
 NTAPI
@@ -677,12 +728,22 @@ NtUserDestroyAcceleratorTable(
 
 BOOL
 NTAPI
-NtUserDestroyCursorIcon(
+NtUserDestroyCursor(
   HANDLE Handle,
   DWORD Unknown);
 
+DWORD
+NTAPI
+NtUserDestroyInputContext(
+    DWORD dwUnknown1);
+
 BOOLEAN NTAPI
 NtUserDestroyWindow(HWND Wnd);
+
+DWORD
+NTAPI
+NtUserDisableThreadIme(
+    DWORD dwUnknown1);
 
 typedef struct tagNTUSERDISPATCHMESSAGEINFO
 {
@@ -862,11 +923,21 @@ NtUserGetAltTabInfo(
 HWND NTAPI
 NtUserGetAncestor(HWND hWnd, UINT Flags);
 
+DWORD
+NTAPI
+NtUserGetAppImeLevel(
+    DWORD dwUnknown1);
 
 DWORD
 NTAPI
 NtUserGetAsyncKeyState(
   DWORD Unknown0);
+
+DWORD
+NTAPI
+NtUserGetAtomName(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
 
 UINT
 NTAPI
@@ -1007,11 +1078,35 @@ NtUserGetCursorIconSize(
 
 DWORD
 NTAPI
+NtUserGetIconInfo(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6);
+
+DWORD
+NTAPI
+NtUserGetIconSize(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
+
+DWORD
+NTAPI
 NtUserGetImeHotKey(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3);
+
+DWORD
+NTAPI
+NtUserGetImeInfoEx(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
 
 DWORD
 NTAPI
@@ -1059,6 +1154,14 @@ BOOL
 NTAPI
 NtUserGetLastInputInfo(
     PLASTINPUTINFO plii);
+
+DWORD
+NTAPI
+NtUserGetLayeredWindowAttributes(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
 
 DWORD
 NTAPI
@@ -1116,6 +1219,44 @@ NtUserGetPriorityClipboardFormat(
 HWINSTA
 NTAPI
 NtUserGetProcessWindowStation(VOID);
+
+DWORD
+NTAPI
+NtUserGetRawInputBuffer(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
+NtUserGetRawInputData(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5);
+
+DWORD
+NTAPI
+NtUserGetRawInputDeviceInfo(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
+
+DWORD
+NTAPI
+NtUserGetRawInputDeviceList(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
+NtUserGetRegisteredRawInputDevices(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
 
 BOOL
 NTAPI
@@ -1182,9 +1323,23 @@ NtUserGetWOWClass(
 
 DWORD
 NTAPI
+NtUserHardErrorControl(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
 NtUserImpersonateDdeClientWindow(
   DWORD Unknown0,
   DWORD Unknown1);
+
+DWORD
+NTAPI
+NtUserInitialize(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
 
 DWORD
 NTAPI
@@ -1216,6 +1371,19 @@ NtUserInternalGetWindowText(
   LPWSTR lpString,
   INT nMaxCount);
 
+BOOL
+NTAPI
+NtUserInvalidateRect(
+    HWND hWnd,
+    CONST RECT *lpRect,
+    BOOL bErase);
+
+BOOL
+NTAPI
+NtUserInvalidateRgn(
+    HWND hWnd,
+    HRGN hRgn,
+    BOOL bErase);
 
 BOOL
 NTAPI
@@ -1281,6 +1449,13 @@ NtUserMessageCall(
   DWORD Unknown5,
   DWORD Unknown6);
 
+DWORD
+NTAPI
+NtUserMinMaximize(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
 BOOL
 NTAPI
 NtUserGetMinMaxInfo(
@@ -1343,6 +1518,14 @@ NtUserNotifyIMEStatus(
 
 DWORD
 NTAPI
+NtUserNotifyProcessCreate(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
+
+DWORD
+NTAPI
 NtUserNotifyWinEvent(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1380,6 +1563,16 @@ NTAPI
 NtUserPaintDesktop(
   HDC hDC);
 
+DWORD
+NTAPI
+NtUserPaintMenuBar(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6);
+
 BOOL
 NTAPI
 NtUserPeekMessage(
@@ -1407,6 +1600,35 @@ NtUserPostThreadMessage(
 
 DWORD
 NTAPI
+NtUserPrintWindow(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
+NtUserProcessConnect(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
+NtUserQueryInformationThread(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5);
+
+DWORD
+NTAPI
+NtUserQueryInputContext(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
+
+DWORD
+NTAPI
 NtUserQuerySendMessage(
   DWORD Unknown0);
 
@@ -1428,6 +1650,16 @@ NtUserQueryWindow(
   HWND hWnd,
   DWORD Index);
 
+DWORD
+NTAPI
+NtUserRealInternalGetMessage(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6);
+
 UINT
 NTAPI
 NtUserRealizePalette(HDC hDC);
@@ -1439,6 +1671,12 @@ NtUserRealChildWindowFromPoint(
   DWORD Unknown1,
   DWORD Unknown2);
 
+DWORD
+NTAPI
+NtUserRealWaitMessageEx(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
+
 BOOL
 NTAPI
 NtUserRedrawWindow
@@ -1449,19 +1687,29 @@ NtUserRedrawWindow
  UINT flags
 );
 
-BOOL
+HWINSTA
 NTAPI
-NtUserInvalidateRect(
-    HWND hWnd,
-    CONST RECT *lpRect,
-    BOOL bErase);
+NtUserRegisterClassExWOW(
+    CONST WNDCLASSEXW* lpwcx,
+    BOOL bUnicodeClass,
+    WNDPROC wpExtra,
+    DWORD dwUnknown4,
+    DWORD dwUnknown5,
+    DWORD dwUnknown6,
+    DWORD dwUnknown7);
 
-BOOL
+DWORD
 NTAPI
-NtUserInvalidateRgn(
-    HWND hWnd,
-    HRGN hRgn,
-    BOOL bErase);
+NtUserRegisterRawInputDevices(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
+NtUserRegisterUserApiHook(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
 
 /* FIXME: These flag constans aren't what Windows uses. */
 #define REGISTERCLASS_ANSI	2
@@ -1489,7 +1737,6 @@ NtUserRegisterHotKey(HWND hWnd,
 		     UINT fsModifiers,
 		     UINT vk);
 
-		     
 BOOL
 NTAPI
 NtUserGetLastInputInfo(
@@ -1503,8 +1750,39 @@ NtUserRegisterTasklist(
 UINT NTAPI
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageName);
 
+DWORD
+NTAPI
+NtUserRemoteConnect(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
+
+DWORD
+NTAPI
+NtUserRemoteRedrawRectangle(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
+
+DWORD
+NTAPI
+NtUserRemoteRedrawScreen(VOID);
+
+DWORD
+NTAPI
+NtUserRemoteStopScreenUpdates(VOID);
+
 HANDLE NTAPI
 NtUserRemoveProp(HWND hWnd, ATOM Atom);
+
+DWORD
+NTAPI
+NtUserResolveDesktop(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
 
 DWORD
 NTAPI
@@ -1573,7 +1851,7 @@ NtUserSendMessageTimeout(HWND hWnd,
 			 UINT uFlags,
 			 UINT uTimeout,
 			 ULONG_PTR *uResult,
-	                 PNTUSERSENDMESSAGEINFO Info);
+             PNTUSERSENDMESSAGEINFO Info);
 
 BOOL
 NTAPI
@@ -1585,11 +1863,19 @@ NtUserSendNotifyMessage(
 
 HWND NTAPI
 NtUserSetActiveWindow(HWND Wnd);
+
 HWND NTAPI
 NtUserGetActiveWindow(VOID);
 
+DWORD
+NTAPI
+NtUserSetAppImeLevel(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
+
 HWND NTAPI
 NtUserSetCapture(HWND Wnd);
+
 HWND NTAPI
 NtUserGetCapture(VOID);
 
@@ -1599,7 +1885,6 @@ NtUserSetClassLong(
   INT Offset,
   ULONG_PTR  dwNewLong,
   BOOL  Ansi );
-
 
 DWORD
 NTAPI
@@ -1641,7 +1926,7 @@ NtUserSetCursor(
 
 BOOL
 NTAPI
-NtUserSetCursorIconContents(
+NtUserSetCursorContents(
   HANDLE Handle,
   PICONINFO IconInfo);
 
@@ -1677,9 +1962,30 @@ NtUserSetImeHotKey(
 
 DWORD
 NTAPI
+NtUserSetImeInfoEx(
+    DWORD dwUnknown1);
+
+DWORD
+NTAPI
 NtUserSetImeOwnerWindow(
   DWORD Unknown0,
   DWORD Unknown1);
+
+DWORD
+NTAPI
+NtUserSetInformationProcess(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
+
+DWORD
+NTAPI
+NtUserSetInformationThread(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
 
 DWORD
 NTAPI
@@ -1787,6 +2093,12 @@ NtUserSetSystemTimer
  UINT uElapse,
  TIMERPROC lpTimerFunc
 );
+
+DWORD
+NTAPI
+NtUserSetThreadLayoutHandles(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2);
 
 UINT_PTR
 NTAPI
@@ -1902,6 +2214,10 @@ NtUserShowWindowAsync(
   HWND hWnd,
   LONG nCmdShow);
 
+DWORD
+NTAPI
+NtUserSoundSentry(VOID);
+
 BOOL
 NTAPI
 NtUserSwitchDesktop(
@@ -1915,7 +2231,12 @@ NtUserSystemParametersInfo(
   PVOID pvParam,
   UINT fWinIni);
 
-int
+DWORD
+NTAPI
+NtUserTestForInteractiveUser(
+    DWORD dwUnknown1);
+
+INT
 NTAPI
 NtUserToUnicodeEx(
 		  UINT wVirtKey,
@@ -1977,6 +2298,10 @@ NtUserUnregisterHotKey(HWND hWnd,
 
 DWORD
 NTAPI
+NtUserUnregisterUserApiHook(VOID);
+
+DWORD
+NTAPI
 NtUserUpdateInputContext(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -2020,6 +2345,19 @@ NTAPI
 NtUserValidateHandleSecure(
   HANDLE hHdl,
   BOOL Restricted);
+
+BOOL
+NTAPI
+NtUserValidateRect(
+    HWND hWnd,
+    CONST RECT *lpRect);
+
+DWORD
+NTAPI
+NtUserValidateTimerCallback(
+    DWORD dwUnknown1,
+    DWORD dwUnknown2,
+    DWORD dwUnknown3);
 
 DWORD
 NTAPI
