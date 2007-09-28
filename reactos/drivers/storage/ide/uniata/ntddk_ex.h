@@ -1,12 +1,13 @@
 #ifndef __NTDDK_EX__H__
 #define __NTDDK_EX__H__
 
-typedef enum _SYSTEM_INFORMATION_CLASS {
+typedef enum _SYSTEM_INFORMATION_CLASS
+{
     SystemBasicInformation,
     SystemProcessorInformation,
     SystemPerformanceInformation,
     SystemTimeOfDayInformation,
-    SystemPathInformation,
+    SystemPathInformation, /// Obsolete: Use KUSER_SHARED_DATA
     SystemProcessInformation,
     SystemCallCountInformation,
     SystemDeviceInformation,
@@ -32,9 +33,9 @@ typedef enum _SYSTEM_INFORMATION_CLASS {
     SystemUnloadGdiDriverInformation,
     SystemTimeAdjustmentInformation,
     SystemSummaryMemoryInformation,
-    SystemNextEventIdInformation,
-    SystemEventIdsInformation,
-    SystemCrashDumpInformation,
+    SystemMirrorMemoryInformation,
+    SystemPerformanceTraceInformation,
+    SystemObsolete0,
     SystemExceptionInformation,
     SystemCrashDumpStateInformation,
     SystemKernelDebuggerInformation,
@@ -44,12 +45,64 @@ typedef enum _SYSTEM_INFORMATION_CLASS {
     SystemPrioritySeperation,
     SystemPlugPlayBusInformation,
     SystemDockInformation,
-    SystemPowerInformation,
+    SystemPowerInformationNative,
     SystemProcessorSpeedInformation,
     SystemCurrentTimeZoneInformation,
-    SystemLookasideInformation
+    SystemLookasideInformation,
+    SystemTimeSlipNotification,
+    SystemSessionCreate,
+    SystemSessionDetach,
+    SystemSessionInformation,
+    SystemRangeStartInformation,
+    SystemVerifierInformation,
+    SystemAddVerifier,
+    SystemSessionProcessesInformation,
+    SystemLoadGdiDriverInSystemSpaceInformation,
+    SystemNumaProcessorMap,
+    SystemPrefetcherInformation,
+    SystemExtendedProcessInformation,
+    SystemRecommendedSharedDataAlignment,
+    SystemComPlusPackage,
+    SystemNumaAvailableMemory,
+    SystemProcessorPowerInformation,
+    SystemEmulationBasicInformation,
+    SystemEmulationProcessorInformation,
+    SystemExtendedHanfleInformation,
+    SystemLostDelayedWriteInformation,
+    SystemBigPoolInformation,
+    SystemSessionPoolTagInformation,
+    SystemSessionMappedViewInformation,
+    SystemHotpatchInformation,
+    SystemObjectSecurityMode,
+    SystemWatchDogTimerHandler,
+    SystemWatchDogTimerInformation,
+    SystemLogicalProcessorInformation,
+    SystemWo64SharedInformationObosolete,
+    SystemRegisterFirmwareTableInformationHandler,
+    SystemFirmwareTableInformation,
+    SystemModuleInformationEx,
+    SystemVerifierTriageInformation,
+    SystemSuperfetchInformation,
+    SystemMemoryListInformation,
+    SystemFileCacheInformationEx,
+    SystemThreadPriorityClientIdInformation,
+    SystemProcessorIdleCycleTimeInformation,
+    SystemVerifierCancellationInformation,
+    SystemProcessorPowerInformationEx,
+    SystemRefTraceInformation,
+    SystemSpecialPoolInformation,
+    SystemProcessIdInformation,
+    SystemErrorPortInformation,
+    SystemBootEnvironmentInformation,
+    SystemHypervisorInformation,
+    SystemVerifierInformationEx,
+    SystemTimeZoneInformation,
+    SystemImageFileExecutionOptionsInformation,
+    SystemCoverageInformation,
+    SystemPrefetchPathInformation,
+    SystemVerifierFaultsInformation,
+    MaxSystemInfoClass,
 } SYSTEM_INFORMATION_CLASS;
-
 
 NTSYSAPI
 NTSTATUS
@@ -105,7 +158,7 @@ typedef struct _SYSTEM_MODULE_INFORMATION
 } SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
 
 typedef unsigned short  WORD;
-typedef unsigned int    BOOL;
+//typedef unsigned int    BOOL;
 typedef unsigned long   DWORD;
 typedef unsigned char   BYTE;
 
@@ -438,6 +491,7 @@ typedef struct _KTHREAD_HDR {
 */
 } KTHREAD_HDR, *PKTHREAD_HDR;
 
+#ifdef __REACTOS__
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_magic;                     // Magic number
     WORD   e_cblp;                      // Bytes on last page of file
@@ -543,6 +597,7 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
     DWORD   AddressOfNames;         // RVA from base of image
     DWORD   AddressOfNameOrdinals;  // RVA from base of image
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
+#endif
 
 NTHALAPI
 VOID

@@ -4061,7 +4061,7 @@ try_dpc_wait:
 
 #ifndef UNIATA_CORE
                 goto PostToDpc;
-#else UNIATA_CORE
+#else //UNIATA_CORE
                 AtapiStallExecution(TimerValue);
                 goto ServiceInterrupt;
 #endif //UNIATA_CORE
@@ -4109,7 +4109,7 @@ try_dpc_wait:
                     }
 #ifndef UNIATA_CORE
                     goto CallTimerDpc2;
-#else UNIATA_CORE
+#else //UNIATA_CORE
                     AtapiStallExecution(TimerValue);
 #endif //UNIATA_CORE
                 }
@@ -4304,7 +4304,7 @@ PIO_wait_DRQ0:
                         KdPrint2((PRINT_PREFIX "AtapiInterrupt: go to DPC (drq0)\n"));
 #ifndef UNIATA_CORE
                         goto PostToDpc;
-#else UNIATA_CORE
+#else //UNIATA_CORE
                         AtapiStallExecution(TimerValue);
                         goto ServiceInterrupt;
 #endif //UNIATA_CORE
@@ -4815,7 +4815,7 @@ PIO_wait_busy:
                     KdPrint2((PRINT_PREFIX "AtapiInterrupt: go to DPC (busy)\n"));
 #ifndef UNIATA_CORE
                     goto PostToDpc;
-#else UNIATA_CORE
+#else //UNIATA_CORE
                     AtapiStallExecution(TimerValue);
                     goto ServiceInterrupt;
 #endif //UNIATA_CORE
@@ -4873,7 +4873,7 @@ PIO_wait_DRQ:
                         TimerValue = 100;
 #ifndef UNIATA_CORE
                         goto PostToDpc;
-#else UNIATA_CORE
+#else //UNIATA_CORE
                         AtapiStallExecution(TimerValue);
                         goto ServiceInterrupt;
 #endif //UNIATA_CORE
@@ -5018,7 +5018,7 @@ IntrCompleteReq:
             TimerValue = 2000;
 #ifndef UNIATA_CORE
             goto CallTimerDpc;
-#else UNIATA_CORE
+#else //UNIATA_CORE
             AtapiStallExecution(TimerValue);
             goto ServiceInterrupt;
 #endif //UNIATA_CORE
@@ -8057,10 +8057,10 @@ DriverEntry(
       ((WinVer_Id() <= WinVer_NT) ? 0 : sizeof(hwInitializationData.w2k));
 
     // Set entry points.
-    hwInitializationData.comm.HwInitialize = AtapiHwInitialize;
-    hwInitializationData.comm.HwResetBus = AtapiResetController;
-    hwInitializationData.comm.HwStartIo = AtapiStartIo;
-    hwInitializationData.comm.HwInterrupt = AtapiInterrupt;
+    hwInitializationData.comm.HwInitialize = (PHW_INITIALIZE)AtapiHwInitialize;
+    hwInitializationData.comm.HwResetBus = (PHW_RESET_BUS)AtapiResetController;
+    hwInitializationData.comm.HwStartIo = (PHW_STARTIO)AtapiStartIo;
+    hwInitializationData.comm.HwInterrupt = (PHW_INTERRUPT)AtapiInterrupt;
 
     // Specify size of extensions.
     hwInitializationData.comm.DeviceExtensionSize     = sizeof(HW_DEVICE_EXTENSION);
@@ -8072,7 +8072,7 @@ DriverEntry(
     // Set PnP-specific API
     if(WinVer_Id() > WinVer_NT) {
         hwInitializationData.comm.NeedPhysicalAddresses = TRUE;
-        hwInitializationData.w2k.HwAdapterControl = AtapiAdapterControl;
+        hwInitializationData.w2k.HwAdapterControl = (PHW_ADAPTER_CONTROL)AtapiAdapterControl;
     }
 
     KdPrint2((PRINT_PREFIX "\n\nATAPI IDE enum supported BusMaster Devices\n"));

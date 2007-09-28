@@ -6,7 +6,7 @@ extern "C" {
 #include "stddef.h"
 #include "stdarg.h"
 
-//#include "inc\CrossNt.h"
+#include "inc/CrossNt.h"
 
 #include "atapi.h"               // includes scsi.h
 #include "ntdddisk.h"

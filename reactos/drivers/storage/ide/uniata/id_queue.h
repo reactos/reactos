@@ -38,4 +38,4 @@ UniataGetNextChannel(
     IN PHW_CHANNEL chan
     );
 
-#endif __UNIATA_COMMAND_QUEUE_SUPPORT__H__
+#endif //__UNIATA_COMMAND_QUEUE_SUPPORT__H__
