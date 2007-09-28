@@ -20,4 +20,3 @@ BEGIN
   IDS_USEDEFFRQUENCY "Use hardware default setting"
   IDS_FREQFMT "%u Hertz"
 END
-

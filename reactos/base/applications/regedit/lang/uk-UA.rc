@@ -54,8 +54,8 @@ BEGIN
         MENUITEM "&Експорт...",                       ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Завантажити вулик...",		ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Вивантажити вулик...",		ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM "Завантажити файл реєстру...",		ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Вивантажити файл реєстру...",		ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
         MENUITEM "&Підключити мережевий реєстр...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
