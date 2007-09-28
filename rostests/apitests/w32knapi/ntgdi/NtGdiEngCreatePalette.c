@@ -1,17 +1,4 @@
 
-HPALETTE
-APIENTRY
-NtGdiEngCreatePalette(
-    IN ULONG  iMode,
-    IN ULONG  cColors,
-    IN ULONG  *pulColors,
-    IN FLONG  flRed,
-    IN FLONG  flGreen,
-    IN FLONG  flBlue)
-{
-    return (HPALETTE)Syscall(L"NtGdiEngCreatePalette", 6, &iMode);
-}
-
 INT
 Test_NtGdiEngCreatePalette(PTESTINFO pti)
 {

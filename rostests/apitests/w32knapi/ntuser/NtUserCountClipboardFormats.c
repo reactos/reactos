@@ -1,5 +1,3 @@
-#include "../w32knapi.h"
-
 /* First the call stub */
 DWORD STDCALL
 NtUserCountClipboardFormats(VOID)

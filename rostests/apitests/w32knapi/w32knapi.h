@@ -1,26 +1,29 @@
 #ifndef _W32KNAPI_H
 #define _W32KNAPI_H
 
-#define WIN32_NO_STATUS
+/* SDK/NDK Headers */
 #define NTOS_MODE_USER
-#define WINVER 0x501
-
+#define WIN32_NO_STATUS
 #include <windows.h>
+#include <winuser.h>
+#include <windowsx.h>
+#include <winnls32.h>
+#include <ndk/ntndk.h>
 #include <wingdi.h>
 #include <winddi.h>
-#include <ntddk.h>
 #include <d3dnthal.h>
 #include <prntfont.h>
 
 /* Public Win32K Headers */
-#include <win32k/callback.h>
 #include <win32k/ntusrtyp.h>
+#include <win32k/ntuser.h>
+#include <win32k/callback.h>
 #include <win32k/ntgdityp.h>
+#include <ntgdi.h>
 #include <win32k/ntgdihdl.h>
 
-#include <ntgdi.h>
-
 #include "../apitest.h"
+#include "resource.h"
 
 typedef struct
 {

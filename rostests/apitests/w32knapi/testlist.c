@@ -20,6 +20,8 @@
 #include "ntgdi/NtGdiGetDIBits.c"
 
 #include "ntuser/NtUserCountClipboardFormats.c"
+#include "ntuser/NtUserFindExistingCursorIcon.c"
+#include "ntuser/NtUserRedrawWindow.c"
 
 /* The List of tests */
 TESTENTRY TestList[] =
@@ -44,7 +46,9 @@ TESTENTRY TestList[] =
 	{ L"NtGdiGetDIBitsInternal", Test_NtGdiGetDIBitsInternal },
 
 	/* ntuser */
-	{ L"NtUserCountClipboardFormats", Test_NtUserCountClipboardFormats }
+	{ L"NtUserCountClipboardFormats", Test_NtUserCountClipboardFormats },
+	{ L"NtUserFindExistingCursorIcon", Test_NtUserFindExistingCursoricon },
+	{ L"NtUserRedrawWindow", Test_NtUserRedrawWindow }
 };
 
 /* The function that gives us the number of tests */
