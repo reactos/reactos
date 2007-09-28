@@ -21,7 +21,19 @@ typedef struct _DESKMONITOR
     DWORD dwMonitorCount;
     PDESKMONINFO Monitors;
     PDESKMONINFO SelMonitor;
+    PDEVMODEW lpSelDevMode;
     PDEVMODEW lpDevModeOnInit;
+    union
+    {
+        DWORD dwFlags;
+        struct
+        {
+            DWORD bModesPruned : 1;
+            DWORD bKeyIsReadOnly : 1;
+            DWORD bPruningOn : 1;
+        };
+    };
+
 } DESKMONITOR, *PDESKMONITOR;
 
 extern LONG dll_refs;

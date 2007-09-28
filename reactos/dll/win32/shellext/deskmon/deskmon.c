@@ -85,6 +85,144 @@ UpdateMonitorSelection(PDESKMONITOR This)
 }
 
 static VOID
+UpdatePruningControls(PDESKMONITOR This)
+{
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDC_PRUNINGCHECK),
+                 This->bModesPruned && !This->bKeyIsReadOnly);
+    CheckDlgButton(This->hwndDlg,
+                   IDC_PRUNINGCHECK,
+                   (This->bModesPruned && This->bPruningOn) ? BST_CHECKED : BST_UNCHECKED);
+}
+
+static VOID
+GetPruningSettings(PDESKMONITOR This)
+{
+    BOOL bModesPruned = FALSE, bKeyIsReadOnly = FALSE, bPruningOn = FALSE;
+
+    if (This->DeskExtInterface != NULL)
+    {
+        This->DeskExtInterface->GetPruningMode(This->DeskExtInterface->Context,
+                                               &bModesPruned,
+                                               &bKeyIsReadOnly,
+                                               &bPruningOn);
+    }
+
+    /* Check the boolean values against zero before assigning it to the bitfields! */
+    This->bModesPruned = (bModesPruned != FALSE);
+    This->bKeyIsReadOnly = (bKeyIsReadOnly != FALSE);
+    This->bPruningOn = (bPruningOn != FALSE);
+
+    UpdatePruningControls(This);
+}
+
+static VOID
+UpdateRefreshFrequencyList(PDESKMONITOR This)
+{
+    PDEVMODEW lpCurrentMode, lpMode;
+    TCHAR szBuffer[64];
+    DWORD dwIndex;
+    INT i;
+    BOOL bHasDef = FALSE;
+    BOOL bAdded = FALSE;
+
+    /* Fill the refresh rate combo box */
+    SendDlgItemMessage(This->hwndDlg,
+                       IDC_REFRESHRATE,
+                       CB_RESETCONTENT,
+                       0,
+                       0);
+
+    lpCurrentMode = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
+    dwIndex = 0;
+
+    do
+    {
+        lpMode = This->DeskExtInterface->EnumAllModes(This->DeskExtInterface->Context,
+                                                      dwIndex++);
+        if (lpMode != NULL &&
+            lpMode->dmBitsPerPel == lpCurrentMode->dmBitsPerPel &&
+            lpMode->dmPelsWidth == lpCurrentMode->dmPelsWidth &&
+            lpMode->dmPelsHeight == lpCurrentMode->dmPelsHeight)
+        {
+            /* We're only interested in refresh rates for the current resolution and color depth */
+
+            if (lpMode->dmDisplayFrequency <= 1)
+            {
+                /* Default hardware frequency */
+                if (bHasDef)
+                    continue;
+
+                bHasDef = TRUE;
+
+                if (!LoadString(hInstance,
+                                IDS_USEDEFFRQUENCY,
+                                szBuffer,
+                                sizeof(szBuffer) / sizeof(szBuffer[0])))
+                {
+                    szBuffer[0] = TEXT('\0');
+                }
+            }
+            else
+            {
+                TCHAR szFmt[64];
+
+                if (!LoadString(hInstance,
+                                IDS_FREQFMT,
+                                szFmt,
+                                sizeof(szFmt) / sizeof(szFmt[0])))
+                {
+                    szFmt[0] = TEXT('\0');
+                }
+
+                _sntprintf(szBuffer,
+                           sizeof(szBuffer) / sizeof(szBuffer[0]),
+                           szFmt,
+                           lpMode->dmDisplayFrequency);
+            }
+
+            i = (INT)SendDlgItemMessage(This->hwndDlg,
+                                        IDC_REFRESHRATE,
+                                        CB_ADDSTRING,
+                                        0,
+                                        (LPARAM)szBuffer);
+            if (i >= 0)
+            {
+                bAdded = TRUE;
+
+                SendDlgItemMessage(This->hwndDlg,
+                                   IDC_REFRESHRATE,
+                                   CB_SETITEMDATA,
+                                   (WPARAM)i,
+                                   (LPARAM)lpMode);
+
+                if (lpMode->dmDisplayFrequency == lpCurrentMode->dmDisplayFrequency)
+                {
+                    SendDlgItemMessage(This->hwndDlg,
+                                       IDC_REFRESHRATE,
+                                       CB_SETCURSEL,
+                                       (WPARAM)i,
+                                       0);
+                }
+            }
+        }
+
+    } while (lpMode != NULL);
+
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDS_MONITORSETTINGSGROUP),
+                 bAdded);
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDS_REFRESHRATELABEL),
+                 bAdded);
+    EnableWindow(GetDlgItem(This->hwndDlg,
+                            IDC_REFRESHRATE),
+                 bAdded);
+
+    GetPruningSettings(This);
+}
+
+static VOID
 InitMonitorDialog(PDESKMONITOR This)
 {
     PDESKMONINFO pmi, pminext, *pmilink;
@@ -92,10 +230,6 @@ InitMonitorDialog(PDESKMONITOR This)
     BOOL bRet;
     INT i;
     DWORD dwIndex;
-    PDEVMODEW lpCurrentMode, lpMode;
-    TCHAR szBuffer[64];
-    BOOL bHasDef = FALSE;
-    BOOL bAdded = FALSE;
 
     /* Free all allocated monitors */
     pmi = This->Monitors;
@@ -154,6 +288,8 @@ InitMonitorDialog(PDESKMONITOR This)
     }
     else
         This->lpDevModeOnInit = NULL;
+
+    This->lpSelDevMode = This->lpDevModeOnInit;
 
     /* Setup the UI depending on how many monitors are attached */
     if (This->dwMonitorCount == 0)
@@ -226,102 +362,72 @@ InitMonitorDialog(PDESKMONITOR This)
                           IDC_MONITORLIST),
                (This->dwMonitorCount > 1 ? SW_SHOW : SW_HIDE));
 
-    /* Fill the refresh rate combo box */
-    SendDlgItemMessage(This->hwndDlg,
-                       IDC_REFRESHRATE,
-                       CB_RESETCONTENT,
-                       0,
-                       0);
+    UpdateRefreshFrequencyList(This);
+    UpdateMonitorSelection(This);
+}
 
-    lpCurrentMode = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
-    dwIndex = 0;
+static VOID
+UpdatePruningSelection(PDESKMONITOR This)
+{
+    BOOL bPruningOn;
 
-    do
+    if (This->DeskExtInterface != NULL && This->bModesPruned && !This->bKeyIsReadOnly)
     {
-        lpMode = This->DeskExtInterface->EnumAllModes(This->DeskExtInterface->Context,
-                                                      dwIndex++);
-        if (lpMode != NULL &&
-            lpMode->dmBitsPerPel == lpCurrentMode->dmBitsPerPel &&
-            lpMode->dmPelsWidth == lpCurrentMode->dmPelsWidth &&
-            lpMode->dmPelsHeight == lpCurrentMode->dmPelsHeight)
+        bPruningOn = IsDlgButtonChecked(This->hwndDlg,
+                                        IDC_PRUNINGCHECK) != BST_UNCHECKED;
+
+        if (bPruningOn != This->bPruningOn)
         {
-            /* We're only interested in refresh rates for the current resolution and color depth */
+            /* Tell desk.cpl to turn on/off pruning mode */
+            This->bPruningOn = bPruningOn;
+            This->DeskExtInterface->SetPruningMode(This->DeskExtInterface->Context,
+                                                   bPruningOn);
 
-            if (lpMode->dmDisplayFrequency <= 1)
+            /* Fill the refresh rate combobox again, we now receive a filtered
+               or unfiltered device mode list from desk.cpl (depending on whether
+               pruning is active or not) */
+            UpdateRefreshFrequencyList(This);
+
+            (void)PropSheet_Changed(GetParent(This->hwndDlg),
+                                    This->hwndDlg);
+        }
+    }
+}
+
+static VOID
+UpdateRefreshRateSelection(PDESKMONITOR This)
+{
+    PDEVMODEW lpCurrentDevMode;
+    INT i;
+
+    if (This->DeskExtInterface != NULL)
+    {
+        i = (INT)SendDlgItemMessage(This->hwndDlg,
+                                    IDC_REFRESHRATE,
+                                    CB_GETCURSEL,
+                                    0,
+                                    0);
+        if (i >= 0)
+        {
+            lpCurrentDevMode = This->lpSelDevMode;
+            This->lpSelDevMode = (PDEVMODEW)SendDlgItemMessage(This->hwndDlg,
+                                                               IDC_REFRESHRATE,
+                                                               CB_GETITEMDATA,
+                                                               (WPARAM)i,
+                                                               0);
+
+            if (This->lpSelDevMode != NULL && This->lpSelDevMode != lpCurrentDevMode)
             {
-                /* Default hardware frequency */
-                if (bHasDef)
-                    continue;
+                This->DeskExtInterface->SetCurrentMode(This->DeskExtInterface->Context,
+                                                       This->lpSelDevMode);
 
-                bHasDef = TRUE;
+                UpdateRefreshFrequencyList(This);
 
-                if (!LoadString(hInstance,
-                                IDS_USEDEFFRQUENCY,
-                                szBuffer,
-                                sizeof(szBuffer) / sizeof(szBuffer[0])))
-                {
-                    szBuffer[0] = TEXT('\0');
-                }
-            }
-            else
-            {
-                TCHAR szFmt[64];
-
-                if (!LoadString(hInstance,
-                                IDS_FREQFMT,
-                                szFmt,
-                                sizeof(szFmt) / sizeof(szFmt[0])))
-                {
-                    szFmt[0] = TEXT('\0');
-                }
-
-                _sntprintf(szBuffer,
-                           sizeof(szBuffer) / sizeof(szBuffer[0]),
-                           szFmt,
-                           lpMode->dmDisplayFrequency);
-            }
-
-            i = (INT)SendDlgItemMessage(This->hwndDlg,
-                                        IDC_REFRESHRATE,
-                                        CB_ADDSTRING,
-                                        0,
-                                        (LPARAM)szBuffer);
-            if (i >= 0)
-            {
-                bAdded = TRUE;
-
-                SendDlgItemMessage(This->hwndDlg,
-                                   IDC_REFRESHRATE,
-                                   CB_SETITEMDATA,
-                                   (WPARAM)lpMode,
-                                   0);
-
-                if (lpMode->dmDisplayFrequency == lpCurrentMode->dmDisplayFrequency)
-                {
-                    SendDlgItemMessage(This->hwndDlg,
-                                       IDC_REFRESHRATE,
-                                       CB_SETCURSEL,
-                                       (WPARAM)i,
-                                       0);
-                }
+                (void)PropSheet_Changed(GetParent(This->hwndDlg),
+                                        This->hwndDlg);
             }
         }
-
-    } while (lpMode != NULL);
-
-    EnableWindow(GetDlgItem(This->hwndDlg,
-                            IDS_MONITORSETTINGSGROUP),
-                 bAdded);
-    EnableWindow(GetDlgItem(This->hwndDlg,
-                            IDS_REFRESHRATELABEL),
-                 bAdded);
-    EnableWindow(GetDlgItem(This->hwndDlg,
-                            IDC_REFRESHRATE),
-                 bAdded);
-
-    /* FIXME: Update pruning mode controls */
-
-    UpdateMonitorSelection(This);
+    }
 }
 
 static LONG
@@ -338,6 +444,7 @@ ApplyMonitorChanges(PDESKMONITOR This)
         {
             /* Save the new mode */
             This->lpDevModeOnInit = This->DeskExtInterface->GetCurrentMode(This->DeskExtInterface->Context);
+            This->lpSelDevMode = This->lpDevModeOnInit;
             return PSNRET_NOERROR;
         }
         else if (lChangeRet == DISP_CHANGE_RESTART)
@@ -402,6 +509,16 @@ MonitorDlgProc(HWND hwndDlg,
                     if (HIWORD(wParam) == LBN_SELCHANGE)
                         UpdateMonitorSelection(This);
                     break;
+
+                case IDC_PRUNINGCHECK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        UpdatePruningSelection(This);
+                    break;
+
+                case IDC_REFRESHRATE:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                        UpdateRefreshRateSelection(This);
+                    break;
             }
             break;
 
@@ -421,6 +538,10 @@ MonitorDlgProc(HWND hwndDlg,
 
                 case PSN_RESET:
                     ResetMonitorChanges(This);
+                    break;
+
+                case PSN_SETACTIVE:
+                    UpdateRefreshFrequencyList(This);
                     break;
             }
             break;
