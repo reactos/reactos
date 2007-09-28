@@ -384,7 +384,7 @@ NtUserEvent                                      1
 NtUserExcludeUpdateRgn                           2
 NtUserFillWindow                                 4
 # NtUserFindExistingCursorIcon                   3  Wrong number of param ?
-# NtUserFindWindowEx                             5  Wrong number of param ?
+NtUserFindWindowEx                               5
 NtUserFlashWindowEx                              1
 NtUserGetAltTabInfo                              6
 NtUserGetAncestor                                2
@@ -678,7 +678,6 @@ NtGdiDrawStream                                  3
 # Wrong number of param ?
 NtUserEnumDisplayMonitors               5
 NtUserFindExistingCursorIcon            4
-NtUserFindWindowEx                      4
 NtUserGetClassInfo                      4
 NtUserInitTask                          11
 NtUserSetCursorIconData                 6

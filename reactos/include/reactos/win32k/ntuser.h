@@ -902,7 +902,8 @@ NtUserFindWindowEx(
   HWND  hwndParent,
   HWND  hwndChildAfter,
   PUNICODE_STRING  ucClassName,
-  PUNICODE_STRING  ucWindowName
+  PUNICODE_STRING  ucWindowName,
+  DWORD dwUnknown
   );
 
 DWORD

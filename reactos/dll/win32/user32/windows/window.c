@@ -728,7 +728,8 @@ FindWindowExA(HWND hwndParent,
    Result = NtUserFindWindowEx(hwndParent,
                                hwndChildAfter,
                                pucClassName,
-                               pucWindowName);
+                               pucWindowName,
+                               0);
 
    if (!IS_ATOM(lpszClass) && lpszClass != NULL)
       RtlFreeUnicodeString(&ucClassName);
@@ -774,7 +775,8 @@ FindWindowExW(HWND hwndParent,
    return NtUserFindWindowEx(hwndParent,
                              hwndChildAfter,
                              pucClassName,
-                             pucWindowName);
+                             pucWindowName,
+                             0);
 }
 
 
