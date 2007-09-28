@@ -62,12 +62,12 @@ HvpWriteLog(
    /* Write hive block and block bitmap */
    Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_LOG,
                                      0, Buffer, BufferSize);
+   RegistryHive->Free(Buffer);
+
    if (!Success)
    {
       return FALSE;
    }
-
-   RegistryHive->Free(Buffer);
 
    /* Write dirty blocks */
    FileOffset = BufferSize;
