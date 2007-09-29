@@ -16,6 +16,44 @@ typedef struct _MONSL_MONINFO
     LPARAM lParam;
 } MONSL_MONINFO, *PMONSL_MONINFO;
 
+typedef struct _MONSL_MONNMHDR
+{
+    NMHDR hdr;
+    INT Index;
+    /* NOTE: MonitorInfo is only valid if Index >= 0 */
+    MONSL_MONINFO MonitorInfo;
+} MONSL_MONNMHDR, *PMONSL_MONNMHDR;
+
+typedef struct _MONSL_MONNMMONITORCHANGING
+{
+    /* Used with MSLN_MONITORCHANGING */
+    MONSL_MONNMHDR hdr;
+    INT PreviousSelected;
+    BOOL AllowChanging;
+} MONSL_MONNMMONITORCHANGING, *PMONSL_MONNMMONITORCHANGING;
+
+/*
+ * MSLN_MONITORCHANGING
+ *   This notification code is sent through WM_NOTIFY before another monitor
+ *   can be selected. This notification is not sent in response to a
+ *   MSLM_SETCURSEL message.
+ *
+ *   lParam: PMONSL_MONNMMONITORCHANGING
+ *           Change AllowChanging to FALSE to prevent the new monitor to
+ *           be selected.
+ */
+#define MSLN_MONITORCHANGING    101
+
+/*
+ * MSLN_MONITORCHANGED
+ *   This notification code is sent through WM_NOTIFY after a new monitor
+ *   was selected. This notification is not sent in response to a
+ *   MSLM_SETCURSEL message.
+ *
+ *   lParam: PMONSL_MONNMHDR
+ */
+#define MSLN_MONITORCHANGED 101
+
 /*
  * MSLM_SETMONITORSINFO
  *   wParam: DWORD

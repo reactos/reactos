@@ -43,6 +43,54 @@ typedef struct _MONITORSELWND
     HBRUSH hbrDisabled;
 } MONITORSELWND, *PMONITORSELWND;
 
+static LRESULT
+MonSelNotify(IN PMONITORSELWND infoPtr,
+             IN UINT code,
+             IN OUT PVOID data)
+{
+    LRESULT Ret = 0;
+
+    if (infoPtr->hNotify != NULL)
+    {
+        LPNMHDR pnmh = (LPNMHDR)data;
+
+        pnmh->hwndFrom = infoPtr->hSelf;
+        pnmh->idFrom = GetWindowLongPtr(infoPtr->hSelf,
+                                        GWLP_ID);
+        pnmh->code = code;
+
+        Ret = SendMessage(infoPtr->hNotify,
+                          WM_NOTIFY,
+                          (WPARAM)pnmh->idFrom,
+                          (LPARAM)pnmh);
+    }
+
+    return Ret;
+}
+
+static LRESULT
+MonSelNotifyMonitor(IN PMONITORSELWND infoPtr,
+                    IN UINT code,
+                    IN INT Index,
+                    IN OUT PMONSL_MONNMHDR pmonnmh)
+{
+    pmonnmh->Index = Index;
+
+    if (Index >= 0)
+    {
+        pmonnmh->MonitorInfo = infoPtr->MonitorInfo[Index];
+    }
+    else
+    {
+        ZeroMemory(&pmonnmh->MonitorInfo,
+                   sizeof(pmonnmh->MonitorInfo));
+    }
+
+    return MonSelNotify(infoPtr,
+                        code,
+                        pmonnmh);
+}
+
 static HFONT
 MonSelChangeFont(IN OUT PMONITORSELWND infoPtr,
                  IN HFONT hFont,
@@ -450,7 +498,8 @@ MonSelGetMonitorInfo(IN PMONITORSELWND infoPtr,
 
 static BOOL
 MonSelSetCurSelMonitor(IN OUT PMONITORSELWND infoPtr,
-                       IN INT Index)
+                       IN INT Index,
+                       IN BOOL bNotify)
 {
     INT PrevSel;
     BOOL PreventSelect = FALSE;
@@ -466,6 +515,21 @@ MonSelSetCurSelMonitor(IN OUT PMONITORSELWND infoPtr,
                 PreventSelect = TRUE;
             }
 
+            if (!PreventSelect && bNotify)
+            {
+                MONSL_MONNMMONITORCHANGING nmi;
+
+                nmi.PreviousSelected = infoPtr->SelectedMonitor;
+                nmi.AllowChanging = TRUE;
+
+                MonSelNotifyMonitor(infoPtr,
+                                    MSLN_MONITORCHANGING,
+                                    Index,
+                                    &nmi.hdr);
+
+                PreventSelect = (nmi.AllowChanging == FALSE);
+            }
+
             if (!PreventSelect)
             {
                 PrevSel = infoPtr->SelectedMonitor;
@@ -479,6 +543,16 @@ MonSelSetCurSelMonitor(IN OUT PMONITORSELWND infoPtr,
 
                 if (infoPtr->SelectedMonitor >= 0)
                     MonSelRepaintSelected(infoPtr);
+
+                if (bNotify)
+                {
+                    MONSL_MONNMHDR nm;
+
+                    MonSelNotifyMonitor(infoPtr,
+                                        MSLN_MONITORCHANGED,
+                                        Index,
+                                        &nm);
+                }
             }
         }
 
@@ -494,6 +568,7 @@ MonSelCreate(IN OUT PMONITORSELWND infoPtr)
     infoPtr->SelectionFrame.cx = infoPtr->SelectionFrame.cy = 4;
     infoPtr->Margin.cx = infoPtr->Margin.cy = 20;
     infoPtr->SelectedMonitor = -1;
+    infoPtr->ControlExStyle = MSLM_EX_ALLOWSELECTDISABLED;
     return;
 }
 
@@ -813,7 +888,8 @@ MonitorSelWndProc(IN HWND hwnd,
             if (Index >= 0 || (infoPtr->ControlExStyle & MSLM_EX_ALLOWSELECTNONE))
             {
                 MonSelSetCurSelMonitor(infoPtr,
-                                       Index);
+                                       Index,
+                                       TRUE);
             }
 
             /* fall through */
@@ -965,7 +1041,8 @@ MonitorSelWndProc(IN HWND hwnd,
         case MSLM_SETCURSEL:
         {
             Ret = MonSelSetCurSelMonitor(infoPtr,
-                                         (INT)wParam);
+                                         (INT)wParam,
+                                         FALSE);
             break;
         }
 
