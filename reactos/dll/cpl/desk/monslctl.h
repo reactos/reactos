@@ -1,6 +1,10 @@
 #ifndef __MONSLCTL__H
 #define __MONSLCTL__H
 
+/* Control extended styles */
+#define MSLM_EX_ALLOWSELECTNONE 0x1
+#define MSLM_EX_ALLOWSELECTDISABLED 0x2
+
 /* MONSL_MONINFO Flags */
 #define MSL_MIF_DISABLED    0x1
 
@@ -94,6 +98,30 @@ typedef struct _MONSL_MONINFO
  *   Returns non-zero value if successful.
  */
 #define MSLM_GETMONITORINFO (WM_USER + 0x17)
+
+/*
+ * MSLM_SETEXSTYLE
+ *   wParam: Ignored.
+ *   lParam: DWORD
+ *           Can be a combination of the following flags:
+ *             * MSLM_EX_ALLOWSELECTNONE
+ *                 Allow deselecting a monitor by clicking into
+ *                 unused areas of the control.
+ *             * MSLM_EX_ALLOWSELECTDISABLED
+ *                 Allow selecting disabled monitors
+ *
+ *   Returns non-zero value if successful.
+ */
+#define MSLM_SETEXSTYLE (WM_USER + 0x18)
+
+/*
+ * MSLM_GETEXSTYLE
+ *   wParam: Ignored.
+ *   lParam: Ignored
+ *
+ *   Returns the control's extended style flags.
+ */
+#define MSLM_GETEXSTYLE (WM_USER + 0x19)
 
 BOOL RegisterMonitorSelectionControl(IN HINSTANCE hInstance);
 VOID UnregisterMonitorSelectionControl(IN HINSTANCE hInstance);

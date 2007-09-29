@@ -21,15 +21,15 @@ typedef struct _MONITORSELWND
     DWORD UIState;
     union
     {
-        DWORD dwFlags;
+        DWORD dwInternalFlags;
         struct
         {
             UINT Enabled : 1;
             UINT HasFocus : 1;
             UINT CanDisplay : 1;
-            UINT AllowSelectNone : 1;
         };
     };
+    DWORD ControlExStyle;
     DWORD MonitorsCount;
     INT SelectedMonitor;
     PMONSL_MONINFO MonitorInfo;
@@ -363,7 +363,7 @@ MonSelSetMonitorsInfo(IN OUT PMONITORSELWND infoPtr,
                 if (infoPtr->SelectedMonitor >= (INT)infoPtr->MonitorsCount)
                     infoPtr->SelectedMonitor = -1;
 
-                if (!infoPtr->AllowSelectNone && infoPtr->SelectedMonitor < 0)
+                if (!(infoPtr->ControlExStyle & MSLM_EX_ALLOWSELECTNONE) && infoPtr->SelectedMonitor < 0)
                     infoPtr->SelectedMonitor = 0;
 
                 MonSelUpdateMonitorsInfo(infoPtr,
@@ -453,23 +453,33 @@ MonSelSetCurSelMonitor(IN OUT PMONITORSELWND infoPtr,
                        IN INT Index)
 {
     INT PrevSel;
+    BOOL PreventSelect = FALSE;
     BOOL Ret = FALSE;
 
     if (Index == -1 || Index < (INT)infoPtr->MonitorsCount)
     {
         if (Index != infoPtr->SelectedMonitor)
         {
-            PrevSel = infoPtr->SelectedMonitor;
-            infoPtr->SelectedMonitor = Index;
-
-            if (PrevSel >= 0)
+            if ((infoPtr->MonitorInfo[Index].Flags & MSL_MIF_DISABLED) &&
+                !(infoPtr->ControlExStyle & MSLM_EX_ALLOWSELECTDISABLED))
             {
-                MonSelRepaintMonitor(infoPtr,
-                                     PrevSel);
+                PreventSelect = TRUE;
             }
 
-            if (infoPtr->SelectedMonitor >= 0)
-                MonSelRepaintSelected(infoPtr);
+            if (!PreventSelect)
+            {
+                PrevSel = infoPtr->SelectedMonitor;
+                infoPtr->SelectedMonitor = Index;
+
+                if (PrevSel >= 0)
+                {
+                    MonSelRepaintMonitor(infoPtr,
+                                         PrevSel);
+                }
+
+                if (infoPtr->SelectedMonitor >= 0)
+                    MonSelRepaintSelected(infoPtr);
+            }
         }
 
         Ret = TRUE;
@@ -506,6 +516,29 @@ MonSelDestroy(IN OUT PMONITORSELWND infoPtr)
         DeleteObject(infoPtr->hbmDisabledPattern);
         infoPtr->hbmDisabledPattern = NULL;
     }
+}
+
+static BOOL
+MonSelSetExtendedStyle(IN OUT PMONITORSELWND infoPtr,
+                       IN DWORD dwExtendedStyle)
+{
+    if (dwExtendedStyle != infoPtr->ControlExStyle)
+    {
+        infoPtr->ControlExStyle = dwExtendedStyle;
+
+        /* Repaint the control */
+        InvalidateRect(infoPtr->hSelf,
+                       NULL,
+                       TRUE);
+    }
+
+    return TRUE;
+}
+
+static DWORD
+MonSelGetExtendedStyle(IN PMONITORSELWND infoPtr)
+{
+    return infoPtr->ControlExStyle;
 }
 
 static HFONT
@@ -777,7 +810,7 @@ MonitorSelWndProc(IN HWND hwnd,
 
             Index = MonSelHitTest(infoPtr,
                                   &pt);
-            if (Index >= 0 || infoPtr->AllowSelectNone)
+            if (Index >= 0 || (infoPtr->ControlExStyle & MSLM_EX_ALLOWSELECTNONE))
             {
                 MonSelSetCurSelMonitor(infoPtr,
                                        Index);
@@ -883,7 +916,7 @@ MonitorSelWndProc(IN HWND hwnd,
         case WM_ENABLE:
         {
             infoPtr->Enabled = ((BOOL)wParam != FALSE);
-            /* FIXME */
+            MonSelRepaint(infoPtr);
             break;
         }
 
@@ -895,9 +928,7 @@ MonitorSelWndProc(IN HWND hwnd,
                 infoPtr->Enabled = !(((LPSTYLESTRUCT)lParam)->styleNew & WS_DISABLED);
 
                 if (OldEnabled != infoPtr->Enabled)
-                {
-                    /* FIXME */
-                }
+                    MonSelRepaint(infoPtr);
             }
             break;
         }
@@ -957,6 +988,19 @@ MonitorSelWndProc(IN HWND hwnd,
             Ret = MonSelGetMonitorInfo(infoPtr,
                                        (INT)wParam,
                                        (PMONSL_MONINFO)lParam);
+            break;
+        }
+
+        case MSLM_SETEXSTYLE:
+        {
+            Ret = MonSelSetExtendedStyle(infoPtr,
+                                         (DWORD)lParam);
+            break;
+        }
+
+        case MSLM_GETEXSTYLE:
+        {
+            Ret = MonSelGetExtendedStyle(infoPtr);
             break;
         }
 
