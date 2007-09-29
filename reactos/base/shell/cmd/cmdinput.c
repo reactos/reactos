@@ -171,7 +171,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 		ConInKey (&ir);
 
 		if (ir.Event.KeyEvent.dwControlKeyState &
-			(RIGHT_ALT_PRESSED|RIGHT_ALT_PRESSED|
+			(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED|
 			RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED) )
 		{
 
