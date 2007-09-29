@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="fitzlib" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug_Win32">
+				<Option output="$(SolutionDir)Debug_Win32-fitz\libfitzlib_d.a" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug_Win32-fitz" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-O0" />
+					<Add option="-D_WIN32" />
+					<Add option="-DWIN32" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DDEBUG" />
+					<Add option="-DNEED_MATH=1" />
+					<Add option="-DNEED_STRLCPY=1" />
+					<Add option="-DNEED_STRSEP=1" />
+					<Add option="-Dinline=" />
+					<Add option="-D_WIN32_IE=0x0500" />
+					<Add directory="$(PROJECTTOPDIR)\fitz\include" />
+					<Add directory="$(GTK_BASEPATH)\include" />
+					<Add directory="$(GTK_BASEPATH)\include\freetype2" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="$(PROJECTTOPDIR)\fitz\include" />
+					<Add directory="$(GTK_BASEPATH)\include" />
+					<Add directory="$(GTK_BASEPATH)\include\freetype2" />
+				</ResourceCompiler>
+			</Target>
+			<Target title="Release_Win32">
+				<Option output="lib.a" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release_Win32-fitz" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-DWIN32" />
+					<Add option="-D_WIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_WINDOWS" />
+					<Add option="-DNEED_MATH=1" />
+					<Add option="-DNEED_STRLCPY=1" />
+					<Add option="-DNEED_STRSEP=1" />
+					<Add option="-Dinline=__forceinline" />
+					<Add option="-D_WIN32_IE=0x0500" />
+					<Add directory="$(PROJECTTOPDIR)\fitz\include" />
+					<Add directory="$(GTK_BASEPATH)\include" />
+					<Add directory="$(GTK_BASEPATH)\include\freetype2" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="$(PROJECTTOPDIR)\fitz\include" />
+					<Add directory="$(GTK_BASEPATH)\include" />
+					<Add directory="$(GTK_BASEPATH)\include\freetype2" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Unit filename="fitz\base\base_cpudep.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\base_error.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\base_hash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\base_matrix.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\base_memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\base_rect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\base_rune.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\util_getopt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\util_strlcat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\util_strlcpy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\base\util_strsep.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\Dingbats.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusMonL-Bold.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusMonL-BoldObli.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusMonL-Regu.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusMonL-ReguObli.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusRomNo9L-Medi.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusRomNo9L-MediItal.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusRomNo9L-Regu.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusRomNo9L-ReguItal.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusSanL-Bold.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusSanL-BoldItal.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusSanL-Regu.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\NimbusSanL-ReguItal.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\StandardSymL.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\fonts\URWChanceryL-MediItal.cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\include\fitz-base.h" />
+		<Unit filename="fitz\include\fitz-draw.h" />
+		<Unit filename="fitz\include\fitz-stream.h" />
+		<Unit filename="fitz\include\fitz-world.h" />
+		<Unit filename="fitz\include\fitz.h" />
+		<Unit filename="fitz\include\fitz\base_cpudep.h" />
+		<Unit filename="fitz\include\fitz\base_geom.h" />
+		<Unit filename="fitz\include\fitz\base_hash.h" />
+		<Unit filename="fitz\include\fitz\base_math.h" />
+		<Unit filename="fitz\include\fitz\base_pixmap.h" />
+		<Unit filename="fitz\include\fitz\base_runtime.h" />
+		<Unit filename="fitz\include\fitz\base_sysdep.h" />
+		<Unit filename="fitz\include\fitz\draw_misc.h" />
+		<Unit filename="fitz\include\fitz\draw_path.h" />
+		<Unit filename="fitz\include\fitz\stm_buffer.h" />
+		<Unit filename="fitz\include\fitz\stm_crypt.h" />
+		<Unit filename="fitz\include\fitz\stm_filter.h" />
+		<Unit filename="fitz\include\fitz\stm_object.h" />
+		<Unit filename="fitz\include\fitz\stm_stream.h" />
+		<Unit filename="fitz\include\fitz\wld_color.h" />
+		<Unit filename="fitz\include\fitz\wld_font.h" />
+		<Unit filename="fitz\include\fitz\wld_image.h" />
+		<Unit filename="fitz\include\fitz\wld_path.h" />
+		<Unit filename="fitz\include\fitz\wld_shade.h" />
+		<Unit filename="fitz\include\fitz\wld_text.h" />
+		<Unit filename="fitz\include\fitz\wld_tree.h" />
+		<Unit filename="fitz\include\mupdf.h" />
+		<Unit filename="fitz\include\mupdf\annot.h" />
+		<Unit filename="fitz\include\mupdf\base14.h" />
+		<Unit filename="fitz\include\mupdf\content.h" />
+		<Unit filename="fitz\include\mupdf\page.h" />
+		<Unit filename="fitz\include\mupdf\rsrc.h" />
+		<Unit filename="fitz\include\mupdf\syntax.h" />
+		<Unit filename="fitz\include\mupdf\xref.h" />
+		<Unit filename="fitz\include\samus.h" />
+		<Unit filename="fitz\include\samus\fixdoc.h" />
+		<Unit filename="fitz\include\samus\misc.h" />
+		<Unit filename="fitz\include\samus\names.h" />
+		<Unit filename="fitz\include\samus\pack.h" />
+		<Unit filename="fitz\include\samus\xml.h" />
+		<Unit filename="fitz\include\samus\zip.h" />
+		<Unit filename="fitz\include\win_os.h" />
+		<Unit filename="fitz\mupdf\pdf_annot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_build.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_cmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_colorspace1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_colorspace2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_crypt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_debug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_doctor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_fontagl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_fontenc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_fontfile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_function.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_image.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_interpret.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_lex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_nametree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_open.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_outline.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_page.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_pagetree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_parse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_pattern.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_repair.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_resources.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_save.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_shade.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_shade1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_shade4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_store.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_stream.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_type3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_unicode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_xobject.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\mupdf\pdf_xref.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\glyphcache.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\imagedraw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\imagescale.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\imageunpack.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\meshdraw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\pathfill.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\pathscan.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\pathstroke.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\pixmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\porterduff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\raster\render.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\crypt_arc4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\crypt_crc32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\crypt_md5.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_a85d.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_a85e.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_ahxd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_ahxe.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_arc4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_dctd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_dcte.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_faxd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_faxdtab.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_faxe.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_faxetab.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_flate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_lzwd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_lzwe.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_null.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_pipeline.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_predict.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_rld.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\filt_rle.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\obj_array.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\obj_dict.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\obj_parse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\obj_print.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\obj_simple.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\stm_buffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\stm_filter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\stm_misc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\stm_open.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\stm_read.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\stream\stm_write.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\node_misc1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\node_misc2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\node_optimize.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\node_path.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\node_text.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\node_tree.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\res_colorspace.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\res_font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\res_image.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="fitz\world\res_shade.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

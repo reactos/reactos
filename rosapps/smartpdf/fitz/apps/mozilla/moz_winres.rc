@@ -1,0 +1,21 @@
+//
+// MuPDF Plugin description
+//
+
+1 VERSIONINFO
+
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+			VALUE "ProductName", "MuPDF Plug-in\0"
+			VALUE "OriginalFilename", "npmupdf.dll\0"
+			VALUE "FileDescription", "The MuPDF plugin allows you to browse PDF files with a simple light-weight scrolling interface.\0"
+            VALUE "MIMEType", "application/pdf|application/x-mupdf\0"
+			VALUE "FileExtents", "pdf|foo"
+			VALUE "FileOpenName", "Acrobat PDF File|Acrobat PDF File"
+        END
+    END
+END
+

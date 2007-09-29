@@ -1,0 +1,85 @@
+README for the Fitz distribution.
+
+Fitz is a graphics library.
+MuPDF is a PDF parsing and manipulation library.
+Samus is a Metro parser.
+FzView is a PDF and Metro viewer application.
+For Windows, there is also a Mozilla plugin version of the viewer.
+
+The Viewer has three ports: X11, Windows and Carbon.
+The Carbon port is rotting, so don't bother trying it.
+
+This code is under the same licensing scheme as Ghostscript.
+AFPL and one year or major release later GPL.
+Because there have been no major releases yet; AFPL it is.
+
+PREREQUISITES
+
+Before compiling Fitz you need to install thirdy party dependencies.
+
+	zlib
+	libjpeg
+	libpng
+	freetype2
+	expat
+
+There are a few optional dependencies that you don't strictly need.
+You will probably want the versions that Ghostscript maintains.
+
+	jbig2dec
+	jasper
+
+Fitz uses the Perforce Jam build tool. You need the Perforce version 2.5
+or later. Earlier versions (including the FTJam fork) have crippling bugs.
+Boost Jam is not backwards compatible. If you do not have a compiled
+binary for your system, you can find the Jam homepage here:
+
+	http://www.perforce.com/jam/jam.html
+
+The build also uses 'xxd', a hexdump tool that ships with Vim.
+Here's a copy of the source if it's not on your system:
+
+	http://ghostscript.com/~tor/download/xxd.c
+
+I use Mingw and MSYS to compile for Windows. If you use anything
+else, you are on your own.
+
+COMPILING
+
+If all of that is installed, compiling should be a cinch.
+Issue the command 'jam' in the root of the Fitz directory.
+Add a parameter '-sBUILD=release' or '-sBUILD=profile' to
+build release or profile versions.
+
+	$ jam '-sBUILD=release'
+
+If the build fails because it cannot find header files or libraries,
+look first in Jamrules to see if there is anything wrong with the
+search paths or compiler flags for your system.
+
+To compile in the optional jbig2 and jpeg2000 support, you need
+to add the following arguments to jam:
+
+	$ jam '-sHAVE_JBIG2DEC=yes' '-sHAVE_JASPER=yes'
+
+To build the X11 version under MacOS X, add:
+
+	$ jam '-sHAVE_X11=yes'
+
+INSTALLING
+
+There is no install. The command "jam install" will copy the
+compiled binaries (for the specified build -- debug, release or profile)
+into a "dist/" directory.
+
+There is no support for building a shared library.
+
+REPORTING BUGS AND PROBLEMS
+
+Send reports to tor@ghostscript.com.
+
+If you are reporting a problem with PDF parsing,
+please include the problematic file as an attachment.
+
+-- tor
+

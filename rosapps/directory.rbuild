@@ -46,12 +46,10 @@
 	<directory name="imagesoft">
 		<xi:include href="imagesoft/imagesoft.rbuild" />
 	</directory>
-
-	<!--
+	
 	<directory name="lib">
 		<xi:include href="lib/directory.rbuild" />
 	</directory>
-	-->
 
 	<directory name="logevent">
 		<xi:include href="logevent/logevent.rbuild" />
@@ -106,4 +104,13 @@
 	<directory name="winver">
 		<xi:include href="winver/winver.rbuild" />
 	</directory>
+
+<!--
+	<directory name="smartpdf">
+		<xi:include href="smartpdf/fitz.rbuild" />
+		<xi:include href="smartpdf/poppler.rbuild" />	
+		<xi:include href="smartpdf/smartpdf.rbuild" /> 
+	</directory>
+-->
+
 </group>

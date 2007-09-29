@@ -1,0 +1,1 @@
+nmake -f Makefile.vc

@@ -1,0 +1,3339 @@
+2007-01-17  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Sound.h:
+	* poppler/Sound.cc:
+	* qt4/src/poppler-sound.cc: Move most of the sound reading code
+	into the Sound class, so frontends can use it easily.
+	Patch by Pino Toscano <pino@kde.org>.
+
+2007-01-13  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Stream.h:
+	* poppler/Stream.cc: Remove MemStream::setNeedFree method i really did
+	not need it
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-link.cc:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-private.h: Make Document::loadFromData work on
+	documents with a password and don't need to do a malloc and a memcpy.
+
+2007-01-13  Albert Astals Cid <aacid@kde.org>
+
+	* configure.ac
+	* poppler/Makefile.am
+	* qt4/src/Makefile.am
+	* qt4/src/poppler-document.cc
+	* qt4/src/poppler-link.cc
+	* qt4/src/poppler-page.cc
+	* qt4/src/poppler-private.h
+	* qt4/src/poppler-qt4.h: Make the Qt4 frontend compilable even with
+	no Splash backend. Patch by Pino Toscano <pino@kde.org>.
+
+2007-01-13  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Stream.h:
+	* poppler/Stream.cc: Add MemStream::setNeedFree method
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-private.h:
+	* qt4/src/poppler-qt4.h: Add Document::loadFromData method
+
+2007-01-11  Albert Astals Cid <aacid@kde.org>
+
+	* goo/gmem.c: Merge change from xpdf-3.01pl2
+
+2007-01-11  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Catalog.h:
+	* poppler/Catalog.cc: Limit max depth of recursive calls on
+	readPageTree to fix MOAB-06-01-2007
+
+2007-01-06  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Sound.cc
+	* qt4/src/poppler-link.cc
+	* qt4/src/poppler-link.h
+	* qt4/src/poppler-page.cc
+	* qt4/src/poppler-sound.cc: Patch by Pino Toscano
+	<pino@kde.org> to fix some memory leaks when dealing with sounds.
+
+2007-01-04  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-private.h: gmallocn -> new[]
+
+2007-01-04  Albert Astals Cid <aacid@kde.org>
+
+	* qt/poppler-page-transition.cc: Fix memory leak. Patch by 
+	Tobias Koenig <tokoe@kde.org>
+
+2006-12-30  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-document.cc: Add const & to some parameters. Patch
+	by Pino Toscano <pino@kde.org>
+
+2006-12-29  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/UGooString.cc: Patch by Pino Toscano
+	<pino@kde.org> so that QStringToUGooString does not crash.
+
+2006-12-28  Brad Taylor  <brad@getcoded.net>
+	
+	* poppler/glib/poppler-document.h:
+	* poppler/glib/poppler-document.cc: Add poppler_document_new_from_data
+	  to allow loading PDFs out of memory.
+
+2006-12-28  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-embeddedfile.cc:
+	* qt4/src/poppler-document.cc:
+	* qt/poppler-document.cc: Fix memory leaks.
+
+2006-12-28  Albert Astals Cid <aacid@kde.org>
+
+	* goo/GooString.cc
+	* goo/GooString.h
+	* goo/gmem.c
+	* goo/gmem.h
+	* poppler/Lexer.cc
+	* poppler/Lexer.h
+	* poppler/PageLabelInfo.cc
+	* poppler/Parser.cc
+	* poppler/UGooString.cc
+	* poppler/UGooString.h: Patch by Krzysztof Kowalczyk
+	<kkowalczyk@gmail.com> to improve performance.
+	See bug 7808 for details.
+
+2006-12-28  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Annot.cc:
+	* poppler/Annot.h: Add type checking to processing of "Rect". Patch by
+	Scott Turner <scotty1024@mac.com>
+
+2006-12-27  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Catalog.h:
+	* qt4/src/poppler-qt4.h: Remove , after last value of enum. Thanks to
+	André Wöbbeking
+
+2006-12-26  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-page.cc: Add Page::duration() function to the qt4
+	frontend.
+
+2006-12-26  Albert Astals Cid <aacid@kde.org>
+
+	* glib/test-poppler-glib.c:
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* poppler/Page.cc:
+	* poppler/Page.h: Implement /Dur entry in page object. Patch by Carlos
+	Garcia Campos <carlosgc@gnome.org>
+
+2006-12-23  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/PSTokenizer.cc: Enhance PSTokenizer::getToken performance.
+	Patch by Scott Turner <scotty1024@mac.com>. In a random pdf i tested
+	the patchs improves PSTokenizer::getToken performance by 15%
+
+2006-12-23  Albert Astals Cid <aacid@kde.org>
+
+	* qt/poppler-page.cc: Fix memory leak in Page::textList. Patch by
+	Jerry Epplin <jepplin@globalvelocity.com>
+
+	* poppler/Page.cc: Fix memory leak when reading a wrong color map in a
+	thumbnail. Patch by Scott Turner <scotty1024@mac.com>
+
+2006-12-20  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Fix scaling of maskedImage masks. They
+	should be scaled to the size of the image not the size of the mask.
+	Fixes #9403.
+
+2006-12-20  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/GlobalParams.cc: Try to make zero-width lines as close to
+	one pixel wide as we can. Fixes #9393.
+
+2006-12-19  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/SplashOutputDev.cc: Fix gray calculation. Patch by Scott
+	Turner <scotty1024@mac.com>
+
+2006-12-12  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Change a cairo_set_matrix to 
+	cairo_transform so that we don't blindly clobber the existing matrix.
+	Patch by Daniel Colascione.
+	Fixes #9190.
+
+2006-12-09  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/Function.cc: Initialize PostScriptFunction::codeString to
+	NULL so that it can safely deleted if initialization fails.
+	Fixes #9263.
+
+2006-11-23  Albert Astals Cid <aacid@kde.org>
+
+	* m4/libjpeg.m4: Make JPEG library header search work under MSYS.
+	Patch by Alexis	Wilke
+
+2006-11-19  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-link.cc:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-textbox.cc: Fix memory leaks
+	* splash/Splash.cc: Initialize the values of nClipRes
+
+2006-11-18  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-document.cc
+	* qt4/src/poppler-qt4.h: Add int marginRight, int marginBottom, int
+	marginLeft, int marginTop, bool strictMargins to Document::print()
+
+2006-11-15  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/Mainpage.dox:
+	* qt4/src/Doxyfile:
+	* qt4/src/poppler-annotation.h:
+	* qt4/src/poppler-link.h:
+	* qt4/src/poppler-qt4.h: Improve API documentation. Patch by
+	Pino Toscano.
+
+2006-11-15  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-link.cc:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-private.h: Generalize the way we render the pages:
+	merge all the Page::renderTo* functions in only one that renders on
+	a QImage, taking into account the currently chosen backend.
+	It is possible to switch rendering backend using the Document.
+	Patch by Pino Toscano.
+
+	* qt4/tests/stress-poppler-qt4.cpp:
+	* qt4/tests/test-password-qt4.cpp:
+	* qt4/tests/test-poppler-qt4.cpp: Adapt the tests to the changes in
+	the rendering API of Page. Patch by Pino Toscano.
+
+2006-11-13  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/ArthurOutputDev.cc: Small fix to get colors right
+
+2006-11-11  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/PSOutputDev.cc: Fix typo when outputing PS scale
+
+2006-11-07  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: take horizontal scaling into account
+	when updating the font. Also, cleanup some unused code. Fixes #8924.
+
+2006-10-18  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-private.h: Do not crash when opening a
+	encrypted document. Do not crash when unlocking a locked
+	document.
+
+2006-10-12  Albert Astals Cid <aacid@kde.org>
+
+	* splash/Splash.cc:
+	* splash/SplashErrorCodes.h: Do not crash on documents that report a
+	0x0 mask for an image, like
+	http://bugs.kde.org/attachment.cgi?id=18083&action=view
+
+2006-10-08  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Link.cc:
+	* poppler/Link.h:
+	* poppler/Makefile.am:
+	* poppler/Page.cc:
+	* poppler/Page.h:
+	* poppler/Sound.cc:
+	* poppler/Sound.h: Make poppler able to read Sound objects, Sound
+	actions and Opening/Closing page actions. Patch by Pino Toscano.
+
+	* qt4/src/Makefile.am:
+	* qt4/src/poppler-link.cc:
+	* qt4/src/poppler-link.h:
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-sound.cc: Support for sounds, sound links and page
+	actions in the Qt4 backend. Patch by Pino Toscano.
+
+2006-09-30  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-page.cc: PA is optional, H is a name not a string
+
+2006-09-25  Albert Astals Cid <aacid@kde.org>
+
+	* glib/Makefile.am
+	* qt/Makefile.am
+	* qt4/src/Makefile.am
+	* qt4/tests/Makefile.am
+	* test/Makefile.am
+	* utils/Makefile.am: Add FONTCONFIG_CFLAGS FONTCONFIG_LIBS for people
+	that need them. Patch by morfoh@opensde.org. Fixes bug #8415
+
+2006-09-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* NEWS: Update list of bugs fixes, release 0.5.4.
+
+	* configure.ac: Check for gtk+ 2.8 for the gtk+ test case, invert
+	help text for zlib option (#7788, #7661).
+
+	* utils/pdftops.cc: Get duplex setting from GlobalParams.
+
+	* glib/poppler-page.cc (_poppler_page_new): Make PopplerPage
+	reference its document throughout the lifetime of the page (#7005).
+
+	* poppler/Gfx.cc: Remove the right out->updateAll() call.
+
+2006-09-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* NEWS: Sum up changes.
+
+	* configure.ac: Bump release to 0.5.4.
+
+	* poppler/Gfx.cc: Remove last remnant of erroneous type3 commit a
+	while back, fixing #8182.
+
+2006-09-20  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/TextOutputDev.cc: TextFontInfo stores a copy of a pointer
+	to a GfxFont but does not increment the reference count. Fix the
+	problem by calling incRefCnt and decRefCnt appropriately. Fixes #4649
+
+2006-09-19  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/GlobalParams.cc: Add scanEncodingDirs() to automatically
+	scan in any encodings found under ${datadir}/poppler.
+
+	* m4/define-dir.m4: New file, adds AC_DEFINE_DIR macro.
+
+2006-09-13  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Makefile.am (libpoppler_la_LIBADD): Add cairo libs to
+	link if configured.
+
+	* configure.ac: Tighten glib check (#7906), add check for C++
+	compiler (#8048).
+
+2006-09-11  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-annotation.cc:
+	* qt4/src/poppler-annotation.h:
+	* qt4/src/poppler-page.cc: Add support for LinkAnnotation. Patch by
+	Pino Toscano
+
+2006-09-08  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: The work-around for 1x1 imagemasks was
+	not calling cairo_set_source causing the rectangles to be drawn
+	the wrong colour occasionally. Fix by moving the existing call to
+	cairo_set_source above the work-around. Fixes #7113.
+
+2006-09-06  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Avoid crashing in CairoOutputDev if
+	endString is called without a corresponding beginString. Fixes #4515.
+
+2006-09-06  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* configure.ac:
+	* poppler/FlateStream.cc:
+	* poppler/FlateStream.h: Fix FlateStream to not read more than it
+	needs. This has a performance impact because our input buffer is now
+	only 1 byte large, however correctness is better than performance.
+	This should fix #3948.
+
+2006-09-04  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Initialize currentFont to NULL before
+	use. Found by Pascal Terjan. Fixes #7924.
+
+2006-09-03  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Dict.cc:
+	* poppler/Dict.h:
+	* poppler/Object.h:
+	* poppler/Parser.cc: Patch by Krzysztof Kowalczyk to increase speed by
+	means of doing less copies between objects. See bug 8112 for more
+	information.
+
+2006-08-25  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-private.h: Init m_fontInfoScanner to NULL. Discovered by
+	Rafael Rodríguez <rafael.rodriguez.tf@gmail.com>
+
+2006-08-16  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-page.cc: Report correct page size. Backport from Qt4
+	frontend. Patch by Wilfried Huss
+
+2006-08-16  Albert Astals Cid  <aacid@kde.org>
+
+	* configure.ac: Add a warning saying zlib code is not perfect.
+
+2006-08-11  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Catalog.cc: Fix leak
+
+2006-08-10  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/SplashOutputDev.cc: Try to fix refs to fonts yet again.
+
+2006-08-05  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Catalog.cc: The name array can contain references to strings
+	instead of stings themselves, or at least PDF of
+	https://bugs.freedesktop.org/show_bug.cgi?id=7780 does. This makes it
+	work with that file
+	* qt4/src/poppler-embeddedfile.cc: Use UGooString for description
+
+2006-08-05  Albert Astals Cid  <aacid@kde.org>
+
+	* utils/pdftotext.cc:
+	* utils/pdfinfo.cc:
+	* utils/pdffonts.cc: Add the posibility of reading a file from stdin.
+	Patch by Dom Lachowicz
+
+2006-08-03  Albert Astals Cid  <aacid@kde.org>
+
+	* configure.ac: Use the correct variable to output the utils status.
+	Patch by Dom Lachowicz
+
+2006-07-30  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/GfxState.cc: make nGfxBlendModeNames define return the
+	correct size of the gfxBlendModeNames array so it does not access
+	invalid memory areas when the blend mode is not found. Discovered by
+	Krzysztof Kowalczyk
+
+2006-07-29  Albert Astals Cid  <aacid@kde.org>
+
+	* splash/SplashFontEngine.cc:
+	* poppler/SplashOutputDev.cc: Fix memory leak when using embedded
+	fonts in the pdf file. Patch by Krzysztof Kowalczyk
+
+2006-07-29  Albert Astals Cid  <aacid@kde.org>
+
+	* configure.ac: Disable qt and qt4 frontends if splash backend is
+	disabled
+
+2006-07-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc: Don't set font matrix translation
+	(fix from Behdad Esfahbod).
+
+2006-07-27  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Stream.cc: If you are going to test a variable, better
+	initialize it first ;-) Fixes bug 7646
+
+2006-07-26  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-document.cc:
+	* qt/poppler-private.h:
+	* qt/poppler-qt.h: Port the QDomDocument *Document::toc() const method
+	from the qt4 frontend to the qt frontend. Patch by Wilfried Huss
+
+2006-07-25  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-document.cc: Obey kdeprint masters in that a library
+	should output as much device independent PS as posible, so disabling
+	duplex printing for default is a good idea.
+
+2006-07-24  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac:
+	* poppler/Makefile.am: Move fontconfig dependency to libpoppler.
+
+2006-07-18  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/Gfx.cc: fix opCloseStroke to match the behaviour of
+	a separate opClose and opStroke. Previously, opCloseStroke only
+	closes if there is a path however opClose closes unconditionally.
+
+2006-07-18  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/TextOutputDev.cc: call setDefaultCTM() after start page
+	like in Gfx.cc. This fixes a regression caused by the fix to #6948.
+
+2006-07-16  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/GfxState.cc: Do not crash when we can not
+	parse a GfxImageColorMap
+	Fixes crash on pdf that can be found at
+	http://bugs.kde.org/show_bug.cgi?id=130846
+
+2006-06-28  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/DCTStream.cc:
+	* poppler/DCTStream.h: Reset jpeg structures on reset.
+	Fixes crash while printing pdf at
+	http://bugs.kde.org/attachment.cgi?id=16818&action=view
+
+2006-06-25  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-document.cc
+	* qt/poppler-qt.h
+	* qt4/src/poppler-document.cc
+	* qt4/src/poppler-qt4.h: Ask for paper size width and height to pass
+	it to PSOutputDev
+
+2006-06-25  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/Makefile.am
+	* qt/poppler-document.cc
+	* qt/poppler-page.cc
+	* qt/poppler-private.h
+	* qt/poppler-qt.h
+	* qt/poppler-link.cc
+	* qt/poppler-link.h: Adding link support to Qt3 frontend, patch by  
+	Wilfried Huss based on Qt4 code
+
+2006-06-11  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/UGooString.cc: When any of the chars that we
+	are passing to the UGooString is not pdfencodable, do not
+	encode the string, because we loose information if we do,
+	this fixes rendering of 
+	http://publikationen.ub.uni-frankfurt.de/volltexte/2005/890/pdf/TR_abs_g.pdf
+	and other docs with type3 fonts and ligatures
+
+2006-06-01  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-page.cc: Add Rotation parameter that is  passed
+	to the respective output devs
+
+2006-06-01  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-document.cc:
+	* qt/poppler-qt.h: Add printing support, patch by  
+	Stefan Kebekus <stefan.kebekus@math.uni-koeln.de>
+
+2006-06-01  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/PSOutputDev.cc:
+	* poppler/PSOutputDev.h: Change filename parameter to PSOutputDev
+	constructor from char * to const char *.
+
+2006-05-31  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/SplashOutputDev.cc:
+	* splash/Splash.cc: Fix splashModeRGB8Qt mode, that is, make it
+	show images
+
+2006-05-31  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* TODO: Remove items's from my list that are done.
+
+2006-05-31  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h: Change the cairo backend to use the
+	transformation in cairo instead of doing all of the transformations in
+	the OutputDevice. Fixes #6948.
+
+2006-05-31  Kristian Høgsberg  <krh@redhat.com>
+
+	* NEWS: Sum up changes.
+
+	* configure.ac: Bump release to 0.5.3.
+
+2006-05-30  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler-glib.pc.in: 
+	* configure.ac: Add poppler as a private requires if pkg-config
+	supports it.
+
+2006-05-30  Kristian Høgsberg  <krh@redhat.com>
+
+	* test/gtk-cairo-test.cc: Add --page option to gtk-cairo-test.
+
+2006-05-29  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoFontEngine.cc:
+	* poppler/CairoFontEngine.h:
+	* poppler/CairoOutputDev.cc: Allow CairoFont creation to fail more
+	gracefully. Fixes #4030.
+
+2006-05-27  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h: Back out the rest of krh's type3
+	font work. This fixes type3 fonts in CairoOutputDevice.
+
+2006-05-21  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/SplashOutputDev.cc:
+	* qt4/src/poppler-private.h:
+	* splash/Splash.cc:
+	* splash/SplashBitmap.cc:
+	* splash/SplashTypes.h: bring splashModeRGB8 back to the old code
+	(before Frank's patch), create splashModeRGB8Qt that has Frank's 
+	codepath and is used by Qt frontends. Fixes corruption on
+	other programs expecting the old behaviour.
+
+2006-05-23  Kristian Høgsberg  <krh@redhat.com>
+
+	* qt4/src/Makefile.am (libpoppler_qt4_la_SOURCES): Add missing
+	poppler-annotation-helper.h.
+
+2006-05-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Bump release.
+	* NEWS: Sum up changes.
+
+2006-05-22  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Rainer Keller to fix the ImageOutputDev (#6984).
+	
+	* utils/ImageOutputDev.cc (drawImage): Upate to work with new
+	16-bit color representation.
+
+	* utils/ImageOutputDev.h: Return gTrue for needNonText().
+
+2006-05-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoFontEngine.cc:
+	* poppler/CairoFontEngine.h: Back out type3 font work committed by
+	accident.
+
+2006-05-21  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-page.cc:
+	* qt/src/poppler-page.cc: Swap byte order on bigendian machines.
+	Thanks a lot to Jonathan Riddell <jr@jriddell.org> for letting me use
+	his minimac for	testing
+
+2006-05-19  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-action.h: 
+	* glib/poppler-action.cc: Add poppler_dest_get_type(), patch from
+	Kouhei Sutou (#6907).
+
+	* poppler-glib.pc.in (Requires): Add gdk-2.0 dependency, from
+	Kouhei Sutou (#6896).
+
+	* glib/poppler-document.h (POPPLER_TYPE_INDEX_ITER)
+	(POPPLER_TYPE_FONTS_ITER): Add these macros, patch from Kouhei
+	Sutou (#6897).
+
+	* glib/Makefile.am (INCLUDES): Add define for G_LOG_DOMAIN, from
+	Kouhei Sutou (#6899).
+
+	* glib/poppler-document.cc (poppler_document_save): Memleak patch
+	from Paolo Borelli (#6908).
+
+2006-05-19  Kristian Høgsberg  <krh@redhat.com>
+	
+	* TextOutputDev.h:
+	* TextOutputDev.cc:
+	* UnicodeTypeTable.h:
+	* UnicodeTypeTable.cc:
+	* UnicodeCClassTables.h:
+	* UnicodeCompTables.h:
+	* UnicodeDecompTables.h:
+	* gen-unicode-tables.py: Patch from Ed Catmur (#2929) to convert
+	search string and document text to unicode NFKC (compatibility
+	composition) before matching so ligatures match correctly.
+
+2006-05-19  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_prepare_output_dev): Fix the
+	rotation bug for real.
+
+2006-05-19  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Kouhei Sutou (#6905).
+	
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h:
+	* glib/poppler-private.h:
+	* glib/reference/tmpl/poppler-private.sgml:
+	* glib/reference/tmpl/poppler.sgml: Make PopplerPSOutput a proper
+	glib object.
+
+2006-05-19  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_prepare_output_dev): Fix
+	rotation bug (#6913, #6926).
+
+	Memory leak patch from Carlos Garcia Campos (#6947).
+
+	* glib/poppler-action.cc:
+	* glib/poppler-document.cc:
+	* glib/poppler-page.cc:
+	* poppler/CairoFontEngine.cc:
+	* poppler/CairoFontEngine.h:
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h:
+	* poppler/Gfx.cc:
+	* poppler/TextOutputDev.cc:  Fix various memory leaks.
+
+2006-05-19  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-link.cc: Patch by Pino Toscano, ensure the
+	splashoutput is created when parsing the TOC.
+
+2006-05-14  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/FontInfo.cc: Fix possible crash, half patch 
+	by Kouhei Sutou <kou@cozmixng.org>
+
+2006-05-13  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/GfxState.cc:
+	* poppler/GfxState.h: Fix memleak, patch by
+	        Carlos Garcia Campos <carlosgc@gnome.org>
+
+2006-05-13  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-document.cc: leak--
+	* qt4/src/poppler-private.h: Refcount globalparams
+	* qt4/tests/test-poppler-qt4.cpp: Some leaks less
+
+2006-05-12  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/Makefile.am
+	* qt4/src/poppler-annotation-helper.h
+	* qt4/src/poppler-annotation.cc
+	* qt4/src/poppler-annotation.h
+	* qt4/src/poppler-link.cc
+	* qt4/src/poppler-link.h
+	* qt4/src/poppler-page.cc
+	* qt4/src/poppler-qt4.h: Code for annotations stripped from oKular,
+	it's all based on Enrico's work, so ask him for details, the problem
+	is that he left KDE development a while ago.
+	
+
+2006-05-09  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/Makefile.am:
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-link.cc:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-private.h:
+	* qt4/src/poppler-qt4.h: Adding links extraction code, should work as
+	  it is basically stripped out from kpdf
+
+2006-05-05  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Catalog.cc: Fix memleak, patch by  
+	Carlos Garcia Campos <carlosgc@gnome.org>
+
+2006-05-05  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Function.cc: quick fix for KDE bug #126760
+
+2006-05-04  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-page.cc: Implement search functionality 
+
+2006-05-02  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc:
+	* poppler/Gfx.cc:
+	* poppler/GfxFont.cc:
+	* poppler/GfxFont.h:
+	* poppler/GfxState.cc:
+	* poppler/TextOutputDev.cc: Patch from Gary Coady to add reference
+	counting to GfxFont so we don't crash on text selection (#4481).
+
+2006-05-01  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-private.h:
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-textbox.cc: Add nextWord(), hasSpaceAfter() and
+	edge() to TextBox
+
+2006-05-01  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-private.h:
+	* qt4/src/poppler-qt4.h: Add the possibility of setting the paper
+	color
+
+2006-04-29  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/JBIG2Stream.cc: fix memory leak. Bug 6765, reported by
+	Kjartan Maraas.
+
+2006-04-27  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: delete imgStr if some of the cairo
+	functions fail. Fixes coverty reports #2106, #2107, #2077 and 
+	bug #6764. Patch by Kjartan Maraas.
+
+2006-04-23  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-private.h: Protect us against a link not having
+	a destination or a namedDestination
+
+2006-04-18  Albert Astals Cid <aacid@kde.org>
+
+	* goo/GooVector.h: Fix typo that was preventing build with MSVC8
+	Discovered by Reece Dunn <msclrhd@hotmail.com>
+
+2006-04-16  Carlos Garcia Campos  <carlosgc@gnome.org>
+
+	* glib/poppler-action.cc:
+	* glib/poppler-action.h:
+	* glib/poppler-private.h:
+	* glib/poppler.h:
+	Add support for named destinations and named actions.
+	
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h:
+	Allow to find named destinations in document.
+	
+2006-04-12  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h: Add support for masked images to the cairo
+	backend. CairoOutputDevice really should have been refactored before
+	committing this, but the results were so pretty I couldn't resist.
+	Fixes #6174.
+
+2006-04-12  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Fix breakage by krh by only calling
+	cairo_destroy on non-null.
+
+2006-04-11  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac:
+	* poppler-glib.pc.in:
+	* glib/Makefile.am:
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler.h:
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h:
+	* glib/poppler-features.h.in:
+	Make the CairoOutputDev render to a cairo_t instead of a
+	cairo_surface_t and expose that functionality in the glib wrapper
+	(poppler_page_render).
+
+	* test/Makefile.am:
+	* test/gtk-cairo-test.cc:
+	Update gtk-cairo-test to use this new interface and add a spin
+	button for changing page (#5951).
+
+	* utils/Makefile.am (EXTRA_DIST): Fix warning where this was
+	assigned twice.
+	
+2006-04-10  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: take originX and originY into account in
+	drawChar() to draw vertical text properly. Fixes #6551.
+
+2006-04-09  Albert Astals Cid <aacid@kde.org>
+
+	* m4/qt.m4: Improve for systems that need -pthread to be linked when
+	linking Qt. Patch by Diego Pettenò
+
+2006-04-08  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Makefile.am:
+	* qt4/src/Makefile.am: Don't link Qt4 in libpoppler when using Qt4 frontend
+	Patch by Stefan Schweizer
+
+2006-04-05  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/JBIG2Stream.cc: Fix for some buggy JBIG2 documents, patch by
+	Raj Kumar and Paul Walmsley. Fixes bug 6500
+
+2006-04-05  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: use a separate matrix for the softmask.
+	fixes #6492.
+
+2006-04-04  Albert Astals Cid <aacid@kde.org>
+
+	* splash/Splash.cc:
+	* splash/SplashBitmap.cc: Make Splashbitmap RGB8 use 32bits internally
+	* qt/poppler-page.cc:
+	* qt4/src/poppler-page.cc: Adapt to splashbitmap change so copying to
+	QImage is faster.
+	Patch by Frank Meerkötter slightly modified by Albert Astals Cid
+
+2006-04-04  Albert Astals Cid <aacid@kde.org>
+
+	* splash/SplashFTFont.cc: Fix crash when using fixedpoint math. Patch
+	by Frank Meerkoetter
+
+2006-04-02  Albert Astals Cid <aacid@kde.org>
+
+	* m4/qt.m4: Add QtXml lib to Qt4 binding as now it's needed
+	* qt4/src/poppler-document.cc: Add the possibility to get the toc of
+	a file, print it to PS and get a LinkDestination from a "symbolic" name
+	* qt4/src/poppler-page.cc: Add the possibility of getting the defaultCTM
+
+2006-04-01  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/XRef.cc: Fix parsing of some TOCs, bug was due a int to uint
+	comparison, sorry for introducing that bug. Fixes bug 6454
+
+2006-03-20  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* glib/poppler-page.cc: Avoid strdup in poppler_page_get_property and
+	make code cleaner. Combined with the memleak fix closes #6187.
+	Patch by chpe.
+
+2006-03-20  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* glib/poppler-page.cc: Fix memory leak in poppler_page_get_text
+	Patch by chpe.
+
+2006-03-20  Albert Astals Cid <aacid@kde.org>
+
+	* qt/poppler-document.cc:
+	* qt4/src/poppler-document.cc: Use UGooString for dates, fixes KDE
+	bug 123938
+
+2006-03-20  Carlos Garcia Campos  <calosgc@gnome.org>
+
+	reviewed by: Jeff Muizelaar <jeff@infidigm.net>
+
+	* glib/poppler-document.cc: Fix memory leak in poppler_font_info_free
+
+2006-03-20  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoFontEngine.h: remove unused variables
+
+2006-03-19  Albert Astals Cid <aacid@kde.org>
+
+	* utils/HtmlOutputDev.[cc|h]: Fix broken code
+
+2006-03-16  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/Page.cc: Remove a #ifdef that was never defined (nice to
+	have so sucky W args), probably came from gpdf (it's not on xpdf
+	sources) and was causing bugs 6079 and 6167
+
+2006-03-16  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/FontInfo.cc: Embedded fonts don't have a font file
+
+2006-03-14  Albert Astals Cid <aacid@kde.org>
+
+	* qt4/src/poppler-qt4.h: Fix compilation with gcc4.1, patch by  
+	Michael Olbrich
+
+2006-03-11  Albert Astals Cid <aacid@kde.org>
+
+	* poppler/FontInfo.cc:
+	* poppler/FontInfo.h: Add getFile() function that returns
+	the path of the font that is beign used in the system to
+	represent that font
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-fontinfo.cc:
+	* qt4/src/poppler-private.h:
+	* qt4/src/poppler-qt4.h: Add the file() function
+	* qt4/tests/poppler-fonts.cpp: Show the path of the font
+	used to represent each font
+
+2006-03-09  Albert Astals Cid <aacid@kde.org>
+
+	* glib/Makefile.am: Build with cairo disabled, patch by Eduardo de
+	Barros Lima
+
+2006-02-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Bump release to 0.5.1.
+
+	* NEWS: Sum up 0.5.1 changes so far.
+
+	* TextOutputDev.h: add getters for a couple of attributes.
+	
+	* glib/Makefile.am: 
+	* poppler/Makefile.am: Move cairo link dependency to glib bindings.
+
+2006-02-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* goo/gmem.c: (gmalloc), (grealloc):
+	* poppler/JBIG2Stream.cc:
+	* poppler/Stream.cc:
+	* poppler/Stream.h:
+	* splash/SplashXPathScanner.cc:
+
+	More integer overflow fixes from Derek Noonburg (#5922).
+
+2006-02-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/PSOutputDev.cc: Make PSOutputDev constructor respect
+	passed in paper size (#5946, #5749).
+
+2006-02-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc (info_dict_get_string): Refactor
+	_popper_goo_string_to_utf8() out into it's own function.
+
+	* glib/poppler-page.cc (poppler_page_get_property): Use
+	_popper_goo_string_to_utf8() here to convert ucs2 page labels.
+
+	* glib/poppler-page.cc (poppler_page_get_selection_region): Add
+	braces to fix warning.
+
+	* poppler/PageLabelInfo.cc: If the label prefix string has a ucs2
+	marker, append the number part of the label as ucs2 (#5952).
+
+2006-02-25  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Object.cc: Fix warning
+
+2006-02-23  Albert Astals Cid  <aacid@kde.org>
+
+	* utils/Makefile.am: Do not build pdftoppm when SplashOutputDev is
+	disabled as that does not work
+
+2006-02-18  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h:
+	* poppler/GfxState.cc:
+	* poppler/GfxState.h: Add support for drawSoftMaskedImage to
+	CairoOutputDev. Ugly but works.
+
+2006-02-16  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Work around cairo bug when scaling
+	1x1 bitmaps. Fixes #3387. Also gives a performance improvement.
+
+2006-02-16  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/Makefile.am:
+	* qt/Makefile.am:
+	* poppler/Makefile.am:
+	* glib/Makefile.am: Update soname as we are not really compatible
+	anymore with previous releases that had soname 0.0.0
+
+2006-02-13  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/ArthurOutputDev.cc: Make it compile after changing code so
+	we did not pass files to freetype but buffers
+
+2006-02-13  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/PSOutputDev.cc: Commit setupExternalCIDTrueTypeFont patch
+	kpdf got from Takashi Iwai (SuSe) a long time ago
+
+2006-02-06  Albert Astals Cid  <aacid@kde.org>
+
+	* configure.ac:
+	* goo/FixedPoint.h:
+	* splash/Splash.cc:
+	* splash/SplashTypes.h: Various fixes from Frank Meerkötter to enable
+	fixedpoint arithmetic
+
+2006-02-06  Albert Astals Cid  <aacid@kde.org>
+	
+	* poppler/Annot.cc: Fix small leaks
+	* poppler/JBIG2Stream.cc: Remove check improving as really did not
+	improve anything
+	
+2006-02-05  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Gfx.cc: Fix small leak
+	* poppler/GfxFont.cc: I needed that guard in kpdf to fix a crash and
+	it surely does not hurt
+	* poppler/JBIG2Stream.cc: Improve check (comes from kpdf)
+	* poppler/SplashOutputDev.cc: Unneeded var--
+
+2006-02-04  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/Gfx.cc:
+	* poppler/OutputDev.cc:
+	* poppler/OutputDev.h: Let output devices know about pdf grouping
+	operators.
+	Patch by Thorkild Stray.
+
+2006-02-04  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/GlobalParams.cc: Check all fonts returned by fontconfig.
+	Discard the ones that are not truetype or type1. Fixes #5758.
+	Patch by Ed Catmur.
+
+2006-02-04  Albert Astals Cid  <aacid@kde.org>
+
+	* utils/Makefile.am:
+	* utils/pdftoppm.cc: Actually create pdftoppm patch by Stefan
+	Schweizer
+	* utils/pdf2xml.dtd: Added a DTD of the xml pdftohtml creates patch by
+	Stefan Schweizer
+	* poppler/SplashOutputDev.cc: Remove bug from "do not use an external
+	file to pass fonts to Freetype" patch, patch by Stefan Schweizer
+		
+
+2006-02-02  Albert Astals Cid  <aacid@kde.org>
+
+	* splash/SplashXPathScanner.cc: CVE-2006-0301 fix by Derek (xpdf man
+	itslef) got though Dirk Mueller of KDE security team
+
+2006-02-02  Albert Astals Cid  <aacid@kde.org>
+
+	* fofi/FoFiTrueType.cc:
+	* fofi/FoFiTrueType.h:
+	* fofi/FoFiType1C.h:
+	* goo/gfile.cc:
+	* poppler/GfxFont.cc:
+	* poppler/GfxFont.h:
+	* poppler/GlobalParams.cc:
+	* poppler/GlobalParams.h:
+	* poppler/SplashOutputDev.cc:
+	* splash/SplashFTFontEngine.cc:
+	* splash/SplashFTFontEngine.h:
+	* splash/SplashFTFontFile.cc:
+	* splash/SplashFTFontFile.h:
+	* splash/SplashFontEngine.cc:
+	* splash/SplashFontEngine.h:
+	* splash/SplashFontFile.cc:
+	* splash/SplashFontFile.h:
+	* splash/SplashT1FontEngine.cc:
+	* splash/SplashT1FontFile.cc:
+	* splash/SplashT1FontFile.h: Merge patch to not use external file
+	  when passing the font to Freetype, original patch by Takashi Iwai
+	  adapted by me to kpdf rediffed by Stefan Schweizer against poppler
+	  cvs
+
+2006-01-31  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/GlobalParams.cc (GlobalParams::getDisplayFont):
+	Allow ttc fonts to be used.
+
+2006-01-28  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* glib/poppler-attachment.h: fix compile by adding <time.h> include.
+	Acked-by: Jonathan Blanford <jrb@redhat.com>
+
+2006-01-26  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc: Patch from Christian Krause; handle
+	0-width lines (#5545).
+
+Tue Jan 24 01:19:40 2006  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/Makefile.am:
+	* glib/poppler-attachment.cc:
+	* glib/poppler-attachment.h:
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h:
+	* glib/poppler-page.cc:
+	* glib/poppler-private.h:
+	* glib/poppler.h:
+	* glib/test-poppler-glib.c:
+	* glib/reference/tmpl/poppler-enums.sgml:
+	* glib/reference/tmpl/poppler-unused.sgml: glib bindings for the
+	embedded file support.  It doesn't support mtime and ctime yet,
+	but the rest works.
+
+2006-01-23  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac:
+	* poppler/GlobalParams.cc:
+	* poppler/poppler-config.h.in:
+	* utils/pdftohtml.cc:
+	* utils/pdftops.cc: Respect command line paper size settings (#5641).
+	Drop the built-in paper sizes.
+
+2006-01-23  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/test-poppler-glib.c (print_document_info, print_index):
+	Move variable declarations to top (#5692).
+
+	* utils/*.cc: Move config.h #include to top of #include's (#5693).
+
+	* splash/SplashFTFont.cc: Don't use deprecated freetype include
+	files.
+
+2006-01-21  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* TODO: Add my todo list.
+
+2006-01-18  Albert Astals Cid  <aacid@kde.org>
+
+	* glib/poppler-action.cc:
+	* glib/poppler-document.cc:
+	* poppler/Annot.cc:
+	* poppler/Catalog.cc:
+	* poppler/Catalog.h:
+	* poppler/Dict.cc:
+	* poppler/Dict.h:
+	* poppler/FontInfo.cc:
+	* poppler/Function.cc:
+	* poppler/Gfx.cc:
+	* poppler/GfxFont.cc:
+	* poppler/GfxState.cc:
+	* poppler/Link.cc:
+	* poppler/Link.h:
+	* poppler/Makefile.am:
+	* poppler/Object.h:
+	* poppler/Outline.cc:
+	* poppler/PDFDoc.cc:
+	* poppler/PDFDoc.h:
+	* poppler/PSOutputDev.cc:
+	* poppler/Page.cc:
+	* poppler/PageLabelInfo.cc:
+	* poppler/Parser.cc:
+	* poppler/SecurityHandler.cc:
+	* poppler/Stream.cc:
+	* poppler/XRef.cc:
+	* qt/poppler-document.cc:
+	* qt/poppler-page-transition.cc:
+	* qt4/src/Makefile.am:
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-private.h:
+	* qt4/src/poppler-qt4.h:
+	* qt4/tests/Makefile.am:
+	* utils/HtmlOutputDev.cc:
+	* utils/pdffonts.cc:
+	* utils/pdfinfo.cc:
+	* utils/pdftohtml.cc:
+	* utils/pdftotext.cc: Brad patch for embedded document extraction,
+	only has Qt4 bindings for now, needs Qt3 and glib work
+
+2006-01-18  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-page-transition.h:
+	* qt4/src/Doxyfile: Add some more documentation to PageTransition,
+	patch by Stefan Kebekus
+
+2006-01-18  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/CharCodeToUnicode.cc: Fix check for length that was not
+	having into account that there could be \n or \r in tokens an that
+	those do not have to be took into account. Fixes
+	http://bugs.kde.org/show_bug.cgi?id=120310
+
+2006-01-17  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Lexer.cc:
+	* poppler/Lexer.h:
+	* poppler/Parser.cc:
+	* poppler/Parser.h:
+	* poppler/XRef.cc:
+	* poppler/XRef.h: When doing the parsing check with XREF we did not
+	grow too much. Fixes serialata10a.pdf
+
+2006-01-12  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/GlobalParams.cc: Make buildFcPattern() static.
+
+2006-01-11  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/JBIG2Stream.cc:
+	* poppler/Stream.cc: Merge patch to fix CVE-2005-3624,
+	CVE-2005-3625 and CVE-2005-3627 issues.
+
+2006-01-10  Albert Astals Cid  <aacid@kde.org>
+
+	* configure.ac:
+	* m4/qt.m4: Fix bugs created when splitting the code from
+	configure.ac, take QTDIR into account when looking for QtTestLib and
+	do not die if it is not found as it is not mandatory
+	* qt/poppler-page-transition.cc:
+	* qt/poppler-page.cc:
+	* qt/poppler-private.h:
+	* qt4/tests/Makefile.am:
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/Makefile.am: Fix mess created my the moving and renaming of
+	PageTransition.cc
+
+2006-01-10  Kristian Høgsberg  <krh@redhat.com>
+
+	* splash/Makefile.am: Only install splash headers if
+	--enable-xpdf-headers is given.
+
+	* Makefile.am (DISTCHECK_CONFIGURE_FLAGS): Set this here.
+
+2006-01-10  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h:
+	Fix the following fixme in CairoOutputDevice.
+
+	// FIXME: This is quite right yet, we need to accumulate all
+	// glyphs within one text object before we clip.  Right now this
+	// just add this one string.
+
+	The fix uses a strategy similar to the one the Splash backend.
+	textClipPath is used to store the appended path from each call to
+	endString(). The accumulated path is clipped in endTextObject.
+
+2006-01-08  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Don't try and load type3 fonts (#4030).
+
+2006-01-08  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/Page.cc: use colToByte for reading thumbnails (#5420).
+	
+	Patch by Nickolay V. Shmyrev.
+
+2006-01-07  Jeff Muizelaar <jeff@infidigm.net>
+
+	* poppler/CairoOutputDev.cc: Initialize (fill|stroke)_opacity.
+
+2006-01-06  Kristian Høgsberg  <krh@redhat.com>
+
+	* qt/poppler-page.cc:
+	* qt/poppler-private.h:
+	* qt/poppler-qt.h:
+	* qt4/src/Makefile.am: 
+	* qt/Makefile.am: 
+	* poppler/Makefile.am: Move PageTransition to qt bindings, move
+	contents from Private.h to qt/poppler-private.h.
+
+	* poppler/TextOutputDev.cc (visitWord): Remove #warning.
+
+	* utils/Makefile.am (pdfimages_SOURCES): Add ImageOutputDev.h, use
+	dist_man1_MANS so we actually dist the man pages.
+
+	* goo/Makefile.am (poppler_goo_include_HEADERS): Add GooVector.h.
+
+	* glib/reference/Makefile.am: DOC_SOURCE_DIR must be relative to
+	$(srcdir), fix this to make distchek run.
+
+	* m4/qt.m4:
+	* m4/libjpeg.m4: 
+	* acinclude.m4:
+	* configure.ac: Split out Qt and libjpeg checks from configure.ac
+	and acinclude.m4 to m4/qt.m4 and m4/libjpeg.m4.
+
+2006-01-06  Albert Astals Cid  <aacid@kde.org>
+	
+	* poppler/DCTStream.cc: Fix handling of malformed jpeg streams like
+	the one at http://bugs.kde.org/show_bug.cgi?id=119569 
+
+2006-01-02  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-page.cc:
+	* qt/poppler-qt.h:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-qt4.h: Introduce variants of renderTo that return a
+	QImage and do not use a QPixmap so threading is possible.
+	
+2006-01-02  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/PageTransition.cc: Use error() insted of std::cerr
+
+Sun Jan  1 18:50:51 2006  Jonathan Blandford  <jrb@redhat.com>
+
+	* Makefile.am:
+	* autogen.sh:
+	* configure.ac:
+	* gtk-doc.make:
+	* glib/Makefile.am: enable gtk-doc support.
+
+2006-01-01  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-private.h:
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-document.cc: Don't create a SplashOutputDev for
+	every splashRenderToPixmap
+	* qt/poppler-page.cc:
+	* qt/poppler-private.h: Don't create a SplashOutputDev for every
+	renderToPixmap.
+
+Sun Jan  1 15:32:08 2006  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/reference/*: More gtk-doc work.  Not enabled for building
+	by default, but filled in.
+
+Fri Dec 30 21:08:33 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/*{cc,h}: Update inline doc comments.  This is in
+	preparation for gtk-doc support.
+
+2005-12-30  Albert Astals Cid  <aacid@kde.org>
+
+	* utils/HtmlOutputDev.cc:
+	* utils/ImageOutputDev.cc: Fix build when using --disable-libjpeg
+
+2005-12-28  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/src/poppler-private.h (Poppler): delete passwords after we've
+	initialised the PDFDoc
+
+	* qt4/src/poppler-qt4.h: Add warning about deleting the Document
+	when done.
+
+	* qt4/tests/check_*.cpp: Delete the Poppler::Document
+	and Poppler::Page objects to avoid leaks 
+
+	* qt4/tests/check_version.cpp: removed, there is a replacement
+	automated test.
+
+	* qt4/tests/poppler-fonts.cpp (main): Delete Poppler::Document on exit
+	to avoid a memory leak.
+
+	* qt4/tests/stress-poppler-qt4.cpp: Delete Poppler::Document and
+	Poppler::Page objects to avoid leaks.
+
+	* qt4/src/poppler-document.cc (Poppler): Delete *doc in 
+	Document::load(), to avoid a memory leak on failure.
+	Delete font results list, avoid a memory leak
+	Delete font scanner object, avoid a memory leak
+
+2005-12-27  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/src/poppler-qt4.h: 
+	* qt4/src/poppler-document.cc: add convertDate() function that
+	turns char* PDF date strings into QDateTime. This version handles
+	the timezone conversions. Refactored the existing date() method
+	to use it.
+	* qt4/tests/check_dateConversion.cpp: unit tests for convertDate()
+	* qt4/tests/check_metadata.cpp: update to reflect UTC.
+	* qt4/tests/.cvsignore: suppress check_dateConversion
+	
+	* qt4/src/Doxyfile (JAVADOC_AUTOBRIEF): Turned on automatic
+	\brief mode.
+
+	* qt4/src/poppler-qt4.h: Update API documentation. Patch from
+	Stefan Kebekus, with some changes. Removed \brief entries.
+
+2005-12-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* NEWS: Sum up 0.5 changes so far.
+
+	* acinclude.m4: Split jpeg macros out into this file.
+
+	* poppler/Stream.cc: Apply latest CVE-2005-3191 updates.
+
+2005-12-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* utils/Makefile.am: Add parseargs.h to sources and add
+	-I$(top_srcdir)/poppler to INCLUDES.
+
+	* poppler/CairoFontEngine.cc: Apply patch from Hiroyuki Ikezoe to
+	man non-embedded CJK fonts work.
+
+2005-12-18  Albert Astals Cid  <aacid@kde.org>
+
+	* configure.ac: Better jpeg detection, refer to ml PCbsd problem
+	* utils/Makefile.am: Add fontconfig cflags to utils as not always is
+	on /usr/include Fixes build problems on Slackware. Patch adapted from
+	a Giovanni Venturi patch.
+	* poppler/Page.cc: Only discard cropbox sizes one by one and not
+	completely. Jeff and Martin were right.
+	
+2005-12-12  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Page.cc: Ignore cropBox if it seems incorrect.
+
+2005-12-12  Kristian Høgsberg  <krh@redhat.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* goo/GooVector.h:
+	* utils/HtmlFonts.cc:
+	* utils/HtmlFonts.h:
+	* utils/HtmlLinks.cc:
+	* utils/HtmlLinks.h:
+	* utils/HtmlOutputDev.cc:
+	* utils/HtmlOutputDev.h:
+	* utils/ImageOutputDev.cc:
+	* utils/ImageOutputDev.h:
+	* utils/Makefile.am:
+	* utils/parseargs.c:
+	* utils/parseargs.h:
+	* utils/pdffonts.1:
+	* utils/pdffonts.cc:
+	* utils/pdfimages.1:
+	* utils/pdfimages.cc:
+	* utils/pdfinfo.1:
+	* utils/pdfinfo.cc:
+	* utils/pdftohtml.1:
+	* utils/pdftohtml.cc:
+	* utils/pdftoppm.1:
+	* utils/pdftoppm.cc:
+	* utils/pdftops.1:
+	* utils/pdftops.cc:
+	* utils/pdftotext.1:
+	* utils/pdftotext.cc: Add command line utilities from xpdf.
+
+2005-12-10  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/tests/test-poppler-qt4.cpp: The parameters x,y,w,h to the
+	method splashRenderToPixmap are now used. Convenient
+	defaults are provided. The test has been changed accordingly. Some
+	added documentation. Patch by Stefan Kebekus
+	
+2005-12-09  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/GfxState.cc: Use colToByte() for converting GxfColorComp
+	to bytes (really fix #5117).
+
+	* poppler/Stream.cc: Remove duplicated check (#5243).
+
+	* configure.ac: 
+	* poppler/Makefile.am (poppler_includedir): 
+	* goo/Makefile.am (poppler_goo_include_HEADERS): Make installation
+	of xpdf header files optional.
+
+2005-12-08  Albert Astals Cid  <aacid@kde.org>
+
+	* configure.ac: Detect if gettimeofday is available, fixes for correct
+	linking to Qt4 on windows
+	* goo/GooTimer.[cc|h]: Only build if gettimeofday is available
+	* poppler/Gfx.cc: Only use the timer for profiling if gettimeofday is
+	available
+	* poppler/GlobalParams.cc: Remove extra unlockGlobalParams that was
+	making windows hang
+	* splash/SplashFTFontEngine.cc: i need unistd.h on windows also
+	* splash/SplashFontFile.cc: i need unistd.h on windows also
+
+2005-12-08  Albert Astals Cid  <aacid@kde.org>
+
+	* glib/Makefile.am:
+	* poppler/Makefile.am:
+	* qt/Makefile.am:
+	* test/Makefile.am: Remove -DDATADIR we are not using if for anything
+	and it shadows a windows typedef
+
+2005-12-07  Brad Hards  <bradh@frogmouth.net>
+
+	* poppler/PDFDoc.cc: Remove the version check.
+
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-qt4.h: add in a new method infoKeys() - to get
+	  metadata keys
+
+	* qt4/tests/check_metadata.cpp: add unit test for infoKeys().
+
+2005-12-06  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests/check_metadata.cpp : add unit tests
+	for date, more linearization, page sizes, number of pages
+
+2005-12-05  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests/check_fonts.cpp (checkType3): Add another case to fonts
+	unit test
+	(checkTrueType): Add test for TrueType as well.
+
+2005-12-04  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/CairoFontEngine.cc: Correct fix for #5149, i broke it when
+	merging xpdf 3.01 patches
+
+2005-12-04  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/JPXStream.cc: Fix error in merging CAN-2005-3193 fix. Thanks  
+	Daniel Gryniewicz for notifying
+
+2005-12-04  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-qt.h:
+	* qt/poppler-fontinfo.h:
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-fontinfo.cc: Implement copy constructor of FontInfo needed
+	as Q[Value]List<FontInfo> uses it when appending
+
+2005-12-04  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests/.cvsignore: Add unit test to cvs suppressions
+
+	* qt4/src/poppler-qt4.h:
+	  qt4/src/fontinfo.cc: add implementation for
+	FontInfo::typeName()
+
+	* qt4/tests/check_fonts.cpp:
+	* qt4/tests/Makefile.am: add unit test for fonts
+
+	* qt4/src/Mainpage.dox: Minor typo fixes.
+
+2005-12-03  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_set_selection_alpha): Use
+	Nickolays original fix instead of trying to be clever with
+	gdk_pixbuf_fill().
+
+	* poppler/CairoFontEngine.cc: Fix text corruption bug (#5149),
+	a rerun of an old classic (#3340).
+
+	* poppler/GfxState.cc: Fixing another problem with new GfxRGB
+	representation causing images to show up as random pixels (#5117).
+
+2005-12-03  Kristian Høgsberg  <krh@redhat.com>
+
+	* qt/Makefile.am (noinst_PROGRAMS): Only build qt test program if
+	splash is enabled.
+
+	* poppler/CairoOutputDev.cc: Remove unused grid snapping code,
+	sidestepping #4507.
+
+	* glib/poppler-document.h (PopplerPermissions): Breaking enum
+	definition over multiple lines confuses glib-mkenums (#4600).
+
+	* poppler/Makefile.am (libpoppler_la_LIBADD): Add FREETYPE_LIBS
+	(#4515).
+
+	* poppler/TextOutputDev.cc: 
+	* qt/poppler-qt.h: GCC-4.1 fixes (#5031).
+
+2005-12-03  Kristian Høgsberg  <krh@redhat.com>
+
+	Fixes from Nickolay V. Shmyrev:
+	
+	* poppler/TextOutputDev.cc (TextLine::visitSelection,
+	TextBlock::visitSelection): Fix selection crash with zero-width
+	word boxes or zero-height line boxes (#4402).
+
+	* poppler/CairoOutputDev.h: Fix wrong cairo-ft.h include (#4413).
+
+	* poppler/CairoOutputDev.cc (eoFill, fill): 
+	* glib/poppler-page.cc (poppler_page_render_selection): Update to
+	work with new GfxColor definition and use
+	cairo_pattern_create_rgba() to cache cairo_pattern_t's for the
+	fill and stroke colors.
+
+	* glib/poppler-page.cc (poppler_page_set_selection_alpha): Zero
+	out pixbuf first.
+
+2005-12-03  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-document.cc:
+	* qt/poppler-private.h:
+	* qt/poppler-qt.h: Backported font retrieving from Qt4 frontend
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-fontinfo.cc:
+	* qt4/src/poppler-textbox.cc: Remove implementation of that classes
+	from the header, use pimpl
+
+2005-12-03  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-page.cc:
+	* qt4/src/Doxyfile:
+	* qt4/src/poppler-qt4.h:
+	* qt4/tests/test-poppler-qt4.cpp: Updated documentation and removed
+	some BC functions that were not needed as we still do not guarantee
+	BC. Patch by Stefan Kebekus
+
+2005-12-01  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/JPXStream.cc:
+	* poppler/Stream.cc:
+	* poppler/Stream.h: Fix CAN-2005-3193 based on
+	ftp://ftp.foolabs.com/pub/xpdf/xpdf-3.01pl1.patch
+
+2005-11-28  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-page,cc:
+	* qt4/src/poppler-page-qt,h: Fix QPixmap contents generation messed
+	when doing the xpdf 3.01 transition
+	* qt4/tests/test-poppler-qt4.cpp: Use Splash backend by default, added
+	-arthur option to use the Arthur backend
+
+2005-11-27  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/src/poppler-qt4.h: add some missing API documentation
+
+	* qt4/tests: updated unit tests to use Qt4.1 version of
+	QTestlib.
+
+2005-11-25  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-page.cc:
+	* qt4/src/poppler-qt.h: Some more functions, patch by Stefan Kebekus
+
+2005-11-21  Albert Astals Cid  <aacid@kde.org>
+	
+	* test/pdf-inspector.cc: Fix page range
+
+2005-11-21  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/poppler-page.cc:
+	* qt/poppler-qt.h: Some more functions, patch by Stefan Kebekus
+
+2005-11-21  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/Makefile.am: Fix build problems some people were having
+
+2005-11-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/GfxState.cc: Fix the byte_lookup initialization broken
+	by the merges (#4350).  Modify GfxColorSpace::getRGBLine() to work
+	with new GfXColor type.
+
+2005-11-17  Albert Astals Cid  <aacid@kde.org>
+
+	* splash/SplashFTFont.cc: Make it compile using FreeType 2.2.0
+	preversions
+
+2005-11-04  Albert Astals Cid  <aacid@kde.org>
+
+	* glib/poppler-document.cc:
+	* glib/poppler-page.cc: Make it compile using --disable-cairo-output
+
+2005-11-01  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/Stream.h:
+	* poppler/OutputDev.h: Comment some unused parameters to calm down
+	compiler warnings
+
+2005-10-30  Albert Astals Cid  <aacid@kde.org>
+
+	* glib/poppler-page.cc
+	* poppler/ArthurOutputDev.cc
+	* poppler/ArthurOutputDev.h
+	* poppler/CairoOutputDev.cc
+	* poppler/CairoOutputDev.h
+	* poppler/Gfx.cc
+	* poppler/Gfx.h
+	* poppler/GfxState.cc
+	* poppler/GfxState.h
+	* poppler/OutputDev.cc
+	* poppler/OutputDev.h
+	* poppler/PDFDoc.cc
+	* poppler/PDFDoc.h
+	* poppler/PSOutputDev.cc
+	* poppler/PSOutputDev.h
+	* poppler/Page.cc
+	* poppler/Page.h
+	* poppler/SplashOutputDev.cc
+	* poppler/SplashOutputDev.h
+	* poppler/TextOutputDev.cc
+	* poppler/TextOutputDev.h
+	* qt/poppler-page.cc
+	* qt4/src/poppler-page.cc
+	* splash/Splash.cc
+	* splash/Splash.h
+	* splash/SplashBitmap.cc
+	* splash/SplashBitmap.h
+	* splash/SplashPattern.cc
+	* splash/SplashPattern.h
+	* splash/SplashState.cc
+	* splash/SplashState.h
+	* splash/SplashTypes.h
+	* test/gtk-cairo-test.cc
+	* test/gtk-splash-test.cc
+	* test/pdf-inspector.cc: Last xpdf 3.01 merges
+	
+
+2005-10-16  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/poppler-config.h.in (GCC_PRINTF_FORMAT): Remove evil
+	space character in macro definition.
+
+2005-10-16  Albert Astals Cid  <aacid@kde.org>
+
+	* splash/SplashXPathScanner.cc: Merge from xpdf 3.01
+	* splash/SplashScreen.[cc|h]: Merge from xpdf 3.01
+	* splash/SplashFTFont.cc: Merge from xpdf 3.01
+	* poppler/Annot.[cc|h]: Merge from xpdf 3.01
+	* poppler/FontInfo.cc
+	* poppler/Page.cc:
+	* poppler/PSOutputDev.cc: Changes needed due to Annot changes
+	* poppler/Function.[cc|h]: Merge from xpdf 3.01
+	* poppler/Stream.[cc|h]: Merge from xpdf 3.01
+	* poppler/GfxFont.cc: Merge from xpdf 3.01
+	
+2005-10-05  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_render_to_ps): Fix another
+	off-by-one page number error (#4555).
+
+2005-09-26  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* glib/poppler-action.cc:
+
+	Initialize window title even if the action is unknown
+
+2005-09-26  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* glib/poppler-action.cc:
+	* glib/poppler-action.h:
+
+	Implement launch action
+
+2005-09-20  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/GlobalParams.[cc|h]: Merge from xpdf 3.01
+	* poppler/Link.cc: Merge from xpdf 3.01
+	* poppler/Parser.cc: Merge from xpdf 3.01
+	* poppler/TextOutputDev.[cc|h]: Merge from xpdf 3.01
+	* poppler/UnicodeMap.cc: More grealloc -> greallocn
+	* poppler/UnicodeTypeTable.cc: Merge from xpdf 3.01
+	* poppler/XRef.cc: Merge from xpdf 3.01
+
+2005-09-20  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/XRef.cc:
+
+	Remove duplicated initialization
+
+2005-09-20  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/GlobalParams.cc:
+
+	s/G/Goo in not yet compiled plugins code 
+
+2005-09-20  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/Makefile.am:
+
+	Add XPDFPlugin*. Thanks to TSDgeos that noticed this.
+
+	* poppler/XpdfPluginAPI.cc:
+
+	Fixup
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/PDFDoc.cc:
+	* poppler/PDFDoc.h:
+	* poppler/XRef.cc:
+	* poppler/XRef.h:
+
+	Merge more from 3.01
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/XRef.cc:
+
+	Merge some initialization that I lost before
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/XRef.cc:
+
+	Merge change from 3.01
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/CharCodeToUnicode.cc:
+	* poppler/CharCodeToUnicode.h:
+
+	Improvements from xpdf 3.01
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/CMap.cc:
+
+	Improvements from xpdf 3.01
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/NameToUnicodeTable.h:
+	* poppler/UnicodeTypeTable.cc:
+	* poppler/UnicodeTypeTable.h:
+
+	Merge some unicode table changes from xpdf 3.01
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/SplashOutputDev.h:
+	* splash/Splash.cc:
+	* splash/Splash.h:
+
+	Modified region support from xpdf 3.01
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* goo/Makefile.am:
+	* poppler/DCTStream.h:
+	* poppler/Decrypt.cc:
+	* poppler/Decrypt.h:
+	* poppler/FlateStream.h:
+	* poppler/GlobalParams.cc:
+	* poppler/GlobalParams.h:
+	* poppler/Makefile.am:
+	* poppler/PDFDoc.cc:
+	* poppler/PDFDoc.h:
+	* poppler/Parser.cc:
+	* poppler/Parser.h:
+	* poppler/Stream.cc:
+	* poppler/Stream.h:
+	* poppler/XRef.cc:
+	* poppler/XRef.h:
+	* poppler/poppler-config.h.in:
+
+	Merge security plugins support from xpdf 3.01
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* configure.ac:
+	* goo/Makefile.am:
+	* splash/Makefile.am:
+	* splash/SplashFTFont.cc:
+	* splash/SplashMath.h:
+	* splash/SplashTypes.h:
+	* goo/FixedPoint.cc:
+	* goo/FixedPoint.h:
+
+	Merge support for fixed point
+
+2005-09-16  Marco Pesenti Gritti  <mpg@redhat.com>
+
+	* poppler/ArthurOutputDev.cc:
+	* poppler/CairoFontEngine.cc:
+	* poppler/TextOutputDev.cc:
+	* poppler/UnicodeMap.cc:
+
+	Use mallocn when possible
+
+2005-09-16  Albert Astals Cid  <aacid@kde.org>
+	* splash/: Some merges from xpdf 3.01
+
+2005-09-16  Albert Astals Cid  <aacid@kde.org>
+	* configure.ac
+	* splash/SplashFTFontEngine.[cc|h]
+	* poppler/CairoFontEngine.[cc|h]: Merge the xpdf 3.01 change that uses
+	runtime detection of freetype version
+
+2005-09-15  Albert Astals Cid  <aacid@kde.org>
+	* poppler/: Some minor merges from xpdf 3.01
+
+2005-09-14  Albert Astals Cid  <aacid@kde.org>
+	* fofi/
+	* poppler/PSOutputDev.[cc|h]: Merge all xpdf 3.01 changes in fofi
+
+2005-09-06  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Enable A4_PAPER and OPI_SUPPORT by default.  There
+	is no reason to not enable OPI and the paper size should be
+	controlled by the application.
+
+	* test/Makefile.am (EXTRA_DIST): Add pdf-operators.c
+
+2005-09-03  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests/ :
+	* configure.ac: switch qt4 unit tests to use QtTestLib, a more
+	capable system, and easier to maintain.
+
+2005-09-02  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc: Apply Marcos rotation fix.
+
+2005-08-31  Brad Hards  <bradh@frogmouth.net>
+
+	* poppler/JArithmeticDecoder.cc
+	* poppler/JArithmeticDecoder.h
+	* poppler/JBIG2Stream.cc
+	* poppler/JBIG2Stream.h: merge in some of the JBIG2 changes from
+	xpdf 3.0.1.
+
+
+2005-08-29  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac (HAVE_FREETYPE_H): Patch from Hiroyuki Ikezoe: Set
+	HAVE_FREETYPE_217_OR_OLDER to 0 if we found freetype using
+	pkg-config (#4223).
+
+2005-08-28  Brad Hards  <bradh@frogmouth.net>
+
+	* fofi/FoFiTrueType.cc: 
+	* goo/GooHash.cc:
+	* goo/GooHash.h:
+	* goo/GooList.cc:
+	* goo/GooList.h:
+	* goo/GooString.cc:
+	* goo/GooString.h:
+	* goo/gmem.c: merge the Goo* improvements from xpdf 3.0.1. This
+	change is based on martink's work (7-xpdf-3.01-goo-improvements.patch)
+	with some tweaking by me.
+
+2005-08-27  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/FlateStream.cc: Fix predictor leak.
+
+2005-08-27  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* configure.ac: Disable the zlib-based decoder by default. See #3948.
+
+2005-08-27  Brad Hards  <bradh@frogmouth.net>
+
+	* Merge the gmalloc -> gmallocn changes from xpdf 3.0.1. This
+	change is based on martink's work (13-xpdf-3.01-goo-allocn.patch)
+	with some tweaking by me. There may be some residual gmallocn
+	changes still to be merged.
+
+2005-08-24  Martin Kretzschmar  <martink@gnome.org>
+
+	* configure.ac: add /usr/include/qt4 to qt4_incdirs. That's what
+	Debian and Ubuntu use. Maybe we should just use pkg-config. If
+	it's usable with qt4.
+
+	* test/.cvsignore: ignore pdf_inspector binary.
+
+2005-08-24  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/TextOutputDev.cc: Push rotation argument down to
+	GfxState constructor.  This is still not completely functional yet.
+
+	* glib/poppler-page.cc (poppler_page_render_selection): Add
+	rotation argument so API is useful.  Not yet implemented.
+	(poppler_page_prepare_output_dev): Patch from Marco to fix
+	rotation using the cairo backend.
+
+Tue Aug 23 17:21:02 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* test/Makefile.am (gtk_cairo_test_LDADD): add
+	FREETYPE_{CFLAGS,LIBS} to the cairo deps
+	
+Tue Aug 23 13:38:01 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* configure.ac:
+	* poppler/Gfx.cc:
+	* poppler/Gfx.h:
+	* poppler/GlobalParams.cc:
+	* poppler/GlobalParams.h:
+	* poppler/Makefile.am:
+	* poppler/OutputDev.cc:
+	* poppler/OutputDev.h:
+	* poppler/ProfileData.cc:
+	* poppler/ProfileData.h:
+	* test/Makefile.am:
+	* test/pdf-inspector.cc:
+	* test/pdf-inspector.glade:
+	* test/pdf-operators.c: Initial cut at a pdf inspector.  This
+	should help us look at PDF files.
+
+2005-08-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler-private.h:
+	* glib/test-poppler-glib.c: Patch from Marco to simplify the glib
+	rotation API.
+
+2005-08-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Makefile.am (INCLUDES): Add FREETYPE_CFLAGS.
+
+	* configure.ac: Make freetype check use pkg-config if possible.
+
+2005-08-17  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/GfxFont.cc: Add fix discussed in #3131 to only use the
+	MacRoman char map if the font has one or the font dicts specifies
+	/MacRoman.
+
+2005-08-08  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/PDFDoc.cc: Improve the checking for %%EOF
+
+2005-08-06  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h: Use GdkColor for specifying selection
+	colors, we alreay depend on GDK anyway.
+
+2005-08-06  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/PDFDoc.cc: Increase the range for searching %%EOF up to
+	the 1024 bytes pdf spec says adobe checks for, needed
+	to work with http://bugs.kde.org/show_bug.cgi?id=110034 and some other
+	private pdf i got sent
+
+2005-08-06  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/src/poppler-document.cc:
+	* qt4/src/poppler-qt4.h: Add password arguments to document
+	constructor.
+
+	* qt4/src/Doxyfile: Add define so doxygen can extract the
+	API for Qt4 bindings again.
+
+	* qt4/tests/test-password-qt4.cpp: new test framework for
+	encrypted files.
+
+2005-08-05  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/TextOutputDev.cc (visitLine): Round selection
+	coordinates in device space, so selection isn't fuzzy.
+
+	* poppler/GfxState.cc: 
+	* poppler/GfxState.h: Add simple Matrix class.
+
+2005-08-05  Kristian Høgsberg  <krh@redhat.com>
+	
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* poppler/TextOutputDev.cc:
+	* poppler/TextOutputDev.h: Propagate selection colors to the glib API.
+
+2005-08-04  Brad Hards  <bradh@frogmouth.net>
+
+	* poppler/ArthurOutputDev.cc: Fix problem with drawing filled objects
+	that was introduced in Rev 1.4.
+
+2005-08-03  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests/test-poppler-qt4.cpp (keyPressEvent): add support for
+	page-up / page-down keys to change which page is displayed, and
+	q to quit.
+
+2005-08-01  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/DCTStream.[cc|h]: Fix problem in the patch to fix #3299
+
+2005-08-01  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Dan Winship <danw@novell.com>
+	
+	* glib/poppler-page.cc (poppler_page_copy_to_pixbuf): Set alpha to
+	0xff (opaque), not 0x00.
+
+2005-08-01  Brad Hards  <bradh@frogmouth.net>
+
+	* poppler/ArthurOutputDev.cc: Fix up the fill problem with
+	drawing text, where the "middle" of glyphs with a "hole" 
+	(like d, o, p, b, g) got filled. Also remove some debugging
+	code. The glyphs are still ugly though.
+
+2005-07-31  Brad Hards  <bradh@frogmouth.net>
+
+	* poppler/ArthurOutputDev.cc:  An initial version of proper
+	font handling, based on work by Albert Astals Cid. I changed
+	it to stroke the glyphs based on the SplashPath. In the longer
+	term, Arthur should use FreeType paths directly - hopefully
+	that will be less ugly, and not fill everything.
+
+2005-07-29  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests: add test cases for version and facing pagelayout.
+	Also updated .cvsignore for these and a couple of older files.
+
+	* poppler/ArthurOutputDev.cc (startPage): Make sure page is
+	filled white. Earlier versions of Qt4 seemed to have an
+	eggshell coloured background, but it changed to black at 
+	some point.
+
+	* poppler/ArthurOutputDev.cc: remove a couple more TODOs,
+	based on current Qt4 working OK.
+
+2005-07-29  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/TextOutputDev.cc: Finish TextSelectionDumper class for
+	extracting the text from a selection.  Add
+	TextPage::getSelectionText() and TextOutputDev::getSelectionText()
+	methods to expose the new functionality.
+
+	* glib/poppler-page.cc (poppler_page_get_text): Use
+	TextOutputDev::getSelectionText() to get the text from the
+	selection.
+
+	* glib/poppler-document.cc (poppler_document_new_from_file): 
+	* glib/poppler-page.cc (_poppler_page_new): Add extra NULL to
+	g_object_new() constructor to silence gcc warning about missing
+	sentinel.
+
+2005-07-28  Albert Astals Cid  <aacid@kde.org>
+
+	 * poppler/PageLabelInfo.[cc|h]: Fix memory leaks
+
+2005-07-28  Albert Astals Cid  <aacid@kde.org>
+
+	 * glib/poppler-document.cc:
+	 * poppler/CairoFontEngine.[cc|h]:
+	 * poppler/CairoOutputDev.cc:
+	 * poppler/GlobalParams.[cc|h]:
+	 * poppler/SplashOutputDev.[cc|h]:
+	 * qt/poppler-document.cc:
+	 * qt4/src/poppler-document.cc:
+	 * test/gtk-cairo-test.cc:
+	 * test/gtk-splash-test.cc:
+	   Use fontconfig for finding which font use for not embeded fonts
+
+2005-07-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/poppler-config.h.in: Add GCC_PRINTF_FORMAT macro to
+	annotate printf-like functions (#3638).
+	
+	* poppler/Error.h: Add GCC_PRINTF_FORMAT to error().
+
+	* poppler/PSOutputDev.h: Add GCC_PRINTF_FORMAT to
+	PSOutputDev::writePSFmt().
+
+	* poppler/PSOutputDev.cc, poppler/GlobalParams.cc: Quiet new
+	printf warnings.
+
+	* poppler/TextOutputDev.cc (TextBlock::visitSelection): Assign
+	start and stop coordinates in one place so we don't assign the
+	same point to both in some corner cases.
+	(TextWord::visitSelection): Initialize begin to len, not len + 1
+	to fix crash.
+
+	(TextWord::visitSelection, TextLine::visitSelection): Change
+	selection trigger; now midpoint of glyph must be included in
+	selection area for glyph to be in selection.
+
+2005-07-27  Martin Kretzschmar  <martink@gnome.org>
+
+	* poppler/PSOutputDev.cc (PSOutputDev): change the constructor to
+	take paper size and duplex setting parameters.
+	(init): add paper size and duplex parameters.
+	(writeDocSetup): add duplex parameter.
+
+	* poppler/PSOutputDev.h: update declarations.
+
+	* glib/poppler-private.h (struct _PopplerPSFile): store necessary
+	information to eventually construct a PSOutputDev.
+
+	* glib/poppler-page.cc (poppler_page_render_to_ps): initialize the
+	output dev if it doesn't exist yet.
+
+	* glib/poppler-document.cc (poppler_ps_file_new): don't create the
+	PSOutputDev here, just store filename and page range.
+	(poppler_ps_file_set_paper_size, poppler_ps_file_set_duplex): new
+	functions.
+	(poppler_ps_file_free): free the filename which we strdup now.
+
+	* glib/poppler-document.h: add prototypes.
+
+2005-07-26  Albert Astals Cid  <aacid@kde.org>
+
+	 * qt/test-poppler-qt-cpp: Fix mem leak
+
+2005-07-26  Kristian Høgsberg  <krh@redhat.com>
+
+	* fofi/FoFiType1.cc: Make check for end of encoding array a bit
+	more liberal so we don't crash on complex encoding arrays.
+
+2005-07-25  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/DCTStream.cc: Work on bad jpeg data that have garbage before
+	the start marker. Fixes bug #3299
+
+2005-07-22  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/CairoFontEngine.cc: Fix mem leak. Reported in bug #3586 by
+	Kjartan Maraas, initial patch by Martin Kretzschmar.
+
+2005-07-22  Albert Astals Cid  <aacid@kde.org>
+
+	* qt/test-poppler-qt.cpp: Make it possible to change the displayed
+	page using Up and Down keys
+
+2005-07-22  Albert Astals Cid  <aacid@kde.org>
+
+	* splash/Splash.cc: Fix bugs #3728 and #3750
+
+2005-07-20  Martin Kretzschmar  <martink@gnome.org>
+
+	* glib/poppler-document.cc (poppler_fonts_iter_get_name): if the
+	font is a subset, strip the ABCDEF+ tag.
+	(poppler_fonts_iter_get_full_name): does what the old get_name did.
+	(poppler_fonts_iter_get_font_type, poppler_fonts_iter_is_embedded)
+	(poppler_fonts_iter_is_subset): new wrappers.
+
+	* glib/poppler-document.h (PopplerFontType): new enum.
+	Update prototypes.
+
+2005-07-15  Martin Kretzschmar  <martink@gnome.org>
+
+	* test/gtk-cairo-test.cc: update for 2005-06-27 change to actually
+	display something again.
+
+2005-07-10  Brad Hards  <bradh@frogmouth.net>
+
+	* poppler/ArthurOutputDev.cc: General cleanup - removing
+	dead code, and some minor tweaks. No new features.
+
+2005-07-08  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_set_selection_alpha): Add
+	this function to initialize the alpha channel when using the
+	splash backend.
+
+	* poppler/TextOutputDev.cc (visitLine): Add missing scaling of
+	intra-line selection edges.
+
+2005-07-07  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_prepare_output_dev): Account
+	for page rotation when creating the cairo surface.
+
+2005-07-06  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_copy_to_pixbuf): Add out of
+	bounds checking (from Marco).
+
+2005-07-07  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/src/poppler-document.cc: 
+	* qt4/src/poppler-qt4.h: Add pageLayout() function for Qt4
+	bindings
+
+	* qt4/tests/check_pagelayout_single.cpp:
+	* qt4/tests/check_pagelayout_none.cpp:
+	* Makefile.am: Add unit tests for pageLayout()
+
+	* glib/poppler-document.cc (convert_page_mode): Update to
+	reflect the Catalog API change. I'm not that good at glib,
+	so this has a non-zero chance of being pure crackrock.
+
+	* poppler/Catalog.cc:
+	* poppler/Catalog.h: update page mode options to PDF 1.6
+
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-document.cc: add Qt4 bindings for additional 
+	pageMode() value created by change above
+
+	* qt4/src/poppler-qt4.h: minor updates to API docs.
+	
+	* qt4/tests/Makefile.am:
+	* qt4/tests/check_pagemode_*.cpp: unit tests for Qt4 pageMode() call
+	and associated enum. This is the initial checkin for these files
+
+2005-07-06  Albert Astals Cid  <aacid@kde.org>
+
+	* poppler/PDFDoc.[cc|h]: Add checkFooter to check document ends with
+	%%EOF
+	* poppler/GfxFont.[cc|h]: Extract family, stretch and weight from the
+	font descriptor
+
+2005-07-06  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests/Makefile.am:
+	* qt4/tests/check_linearised.cpp: Added unit test for linearised
+	property
+
+	* qt4/tests/poppler-fonts.cpp (main): update to reflect API change,
+	and also to show "[none]" if the font is nameless.
+
+	* qt4/src/poppler-document.cc (Poppler): 
+	* qt4/src/poppler-qt4.h: remove the unicode translation bool,
+	it is really an internal thing.
+
+2005-07-05  Albert Astals Cid  <aacid@kde.org>
+
+	* qt4/src/poppler-document.cc (Poppler): 
+	* qt4/src/poppler-qt4.h: Don't crash with files that have fonts with
+	no name, for example the one found at
+	http://bugs.kde.org/show_bug.cgi?id=101520.
+
+2005-07-05  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/tests/check_author.cpp:
+	* qt4/tests/check_permissions.cpp:
+	* Makefile.am:
+	* .cvsignore: add a couple more test cases
+	
+	* qt4/src/poppler-document.cc (Poppler): 
+	* qt4/src/poppler-qt4.h: Add Qt4 bindings for the 
+	additional user permission properties.
+
+	* poppler/XRef.h:
+	* poppler/Xref.cc:
+	* poppler/PDFDoc.h: Add some more user permissions properties -
+	high resolution printing, document assembly, extraction for
+	accessibility and form completion.
+
+2005-07-04  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/src/poppler-page.cc: fix typo bug that
+	prevented correct detection of upside down pages
+
+	* qt4/tests/check-orientation.cpp: fix path to
+	point to test module.
+	
+	* qt4/.cvsignore: update to reflect new files
+	
+	* qt4/tests/Makefile.am:
+	* qt4/tests/poppler-fonts.cpp: initial import of a simple font
+	metadata listing application.
+	
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-document.cc complete Qt4 font metadata handling
+	
+	* qt4/src/poppler-qt4.h:
+	* qt4/src/poppler-page.cc: change the render API to make it more
+	Qt-like.
+
+	* qt4/tests/test-poppler-qt4.cpp:
+	* qt4/tests/stress-poppler-qt4.cpp: update to reflect changes
+	to render API
+	
+	* poppler/FontInfo.h/cc: make FontInfo::type() return a enum
+	instead of a GooString. As discussed on mailing list, if you
+	want a string representation, you get to make one at the bindings
+	layer (ie typeName() didn't make the grade in the final patch)
+
+	* qt4/tests/poppler-fonts.cpp (main): change order in test
+	code to reflect actual testcase file
+
+2005-07-01  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/TextOutputDev.cc: Make selection also work when dragging
+	backwards in the text flow.  Currently this is a big pile of
+	if-statements, and there is certainly room for improvement.
+
+2005-06-30  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.h: * glib/poppler-page.cc
+	(poppler_page_copy_to_pixbuf): Fix splash compilation (patch from
+	Marco).
+	(poppler_page_render_to_pixbuf): Drop dest_x and dest_y
+	coordinates from this function.  This functionality can be
+	achieved using a sub-GdkPixbuf.
+
+	* glib/test-poppler-glib.c (main): Update test case.
+
+2005-06-29  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-private.h: Move TextOutputDev.h include here from
+	poppler-page.cc
+
+2005-06-29  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac:
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler-private.h:
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h:
+	* poppler/Page.cc:
+	* poppler/Page.h:
+	* poppler/TextOutputDev.cc:
+	* poppler/TextOutputDev.h: Add support for rendering real
+	selection (based on text flow).
+
+2005-06-28  Albert Astals Cid  <aacid@kde.org>
+	
+	* poppler/FontInfo.[cc,h]: Add FontInfo::getType()
+	
+2005-06-28  Albert Astals Cid  <aacid@kde.org>
+	
+	* poppler/ArthurOutputDev.cc: use transformation matrix for image
+	rendering
+
+2005-06-28  Brad Hards  <bradh@frogmouth.net>
+
+	* .cvsignore:
+	* qt4/.cvsignore:
+	* qt4/src/.cvsignore:
+	* qt4/tests/.cvsignore: update to reflect the Qt4 bindings.
+
+2005-06-28  Brad Hards  <bradh@frogmouth.net>
+
+	* qt4/:
+	* Makefile.am:
+	* configure.ac:
+	* poppler-qt4.pc.in: Initial import of Qt4 bindings, based
+	on the Qt3 bindings. API is still in flux.
+
+	* poppler/AuthurOutputDev.[cc,h]:
+	* poppler/Makefile.am: Initial import of Qt4 backend renderer. 
+	Incomplete at this stage.
+
+2005-06-27  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h: Change CairoOutputDev to render to a
+	given surface and let the user create that surface.
+	
+	* glib/poppler-document.cc:
+	* glib/poppler-page.cc:
+	* glib/poppler-private.h: Create the cairo image surface here
+	instead and pass it to the CairoOutputDev for rendering.
+	
+	* poppler/CairoOutputDevImage.cc:
+	* poppler/CairoOutputDevImage.h:
+	* poppler/CairoOutputDevX.cc:
+	* poppler/CairoOutputDevX.h:
+	* poppler/Makefile.am: Remove specialized cairo output devices.
+
+2005-06-26  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc:
+	* poppler/CairoOutputDev.h: Switch back to using drawChar() for
+	text, but utilize the beginString() and endString() hooks so we
+	can use cairo_show_glyphs() efficiently.
+
+2005-06-26  Albert Astals Cid <aacid@kde.org>
+	* qt/poppler-page.cc:
+	* qt/poppler-page.h: Add PageTransition class and 
+	PageTransition* Page::getTransition() const; to the qt frontend.
+
+2005-06-26  Martin Kretzschmar  <martink@gnome.org>
+
+	* glib/.cvsignore: add poppler-enums.[ch].
+
+	* configure.ac: require glib 2.4+ for g_value_take_string and
+	G_DEFINE_TYPE.
+
+2005-06-25  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/Error.h: Maybe fix build on Solaris.
+
+2005-06-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* NEWS:
+	* configure.ac: Bump version to 0.3.3 and sum up changes since
+	last release.
+
+	* glib/poppler-page.cc (poppler_page_find_text): Initialize xMin
+	and yMin to avoid referencing unintialized memory (#3582).
+
+2005-06-20  Martin Kretzschmar  <martink@gnome.org>
+
+	* glib/poppler-document.cc (info_dict_get_string): convert
+	from PDFDocEncoding to UTF-8.
+
+2005-06-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler.h: Clean up glib rotation implementation and add a
+	getter for rotation.  Patch from Marco.
+
+2005-06-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc:
+	* poppler/FontInfo.cc: Fixes from Marco to handle fonts without
+	name (typically type 3 fonts) and fix an iterator bug.
+
+2005-06-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_get_link_mapping): Adjust
+	link coordinates so they're relative to bounding box lower left
+	corner (#3396).
+
+2005-06-17  Kristian Høgsberg  <krh@redhat.com>
+
+	* autogen.sh: Patch from Emil Soleyman-Zomalan to enable checks
+	for automake >= 1.7 (#3554).
+
+2005-06-15  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h: Patch from Marco to get initial status
+	(open or closed) for bookmark subtrees.
+
+2005-06-13  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h:
+	* glib/poppler-private.h:
+	* glib/poppler.h:
+	* glib/test-poppler-glib.c:
+	* poppler/Makefile.am: Patch from Marco to extract font info from
+	document.
+
+2005-06-08  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoFontEngine.cc: Remember to delete tmpFileName.
+	Patch from Nikolai Weibull (#3491).
+
+2005-06-07  Kristian Høgsberg  <krh@redhat.com>
+
+	* qt/test-poppler-qt.cpp: Add stdlib.h include for exit().
+
+2005-06-02  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/TextOutputDev.h:
+	* qt/poppler-qt.h: Patch from Stanislav Brabec <sbrabec@suse.cz>
+	to fix gcc 4.0.1 warnings on undeclared friend classes.
+	
+	* test/gtk-splash-test.cc: Fix from Martin Kretzschmar
+	<martink@gnome.org> to compile with OPI enabled (#2911).
+
+2005-06-02  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Stanislav Brabec <sbrabec@suse.cz>:
+
+	* configure.ac:
+	* poppler-cairo.pc.in:
+	* poppler-glib.pc.in:
+	* poppler-qt.pc.in:
+	* poppler-splash.pc.in: Misc fixes to pkg-config files.
+
+2005-06-01  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* poppler/Error.cc:
+	* poppler/Error.h: Make error handling function setable through
+	setErrorFunction.
+
+	Based on a patch by Albert Astals Cid.
+
+2005-05-29  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/*: Add more meta data properties to poppler document.
+	Patch by Emil Soleyman-Zomalan (#3359).
+
+2005-05-26  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc (clip): Remove snapToGrid so clip()
+	prototype matches what Gfx actually calls (fixes clipping).
+	
+	* poppler/CairoOutputDev.cc: Update fill color, stroke color, fill
+	opacity and stroke opacity from GfxState on restore, since they
+	aren't handled by cairo_restore() (#3362).
+
+	* poppler/CairoOutputDev.cc: Comment out tolerance setting until
+	we figure out how cairo settings relate to pdf settings.
+
+	* poppler/CairoOutputDev.cc: Support fill and stroke opacity.
+	
+	* poppler/GfxState.cc: 
+	* poppler/GfxState.h: Add GfxColorSpace::getRGBLine here and
+	implement in subclasses.
+
+	* poppler/CairoOutputDev.cc (drawImage): Use getRGBLine here.
+
+Mon May 23 00:22:41 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-document.h: Add a permissions flag to the glib
+	bindings.
+
+2005-05-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc (poppler_ps_file_new): Fix off-by-one
+	error spotted by Jürg Billeter.
+
+2005-05-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc: Account for different row vs. column
+	vector conventions between cairo and poppler.
+
+	* poppler/CairoFontEngine.cc: Only get the code to gid map if
+	we're using freetype 2.1.7 or older (#3340).
+
+2005-05-19  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoFontEngine.cc: Only cast to Gfx8BitFont when we
+	know for sure we have a truetype font.
+	GfxCIDFont::getCIDToGIDLen() can return 0 in which case codeToGID
+	will be NULL, and we end up casting it to a Gfx8BitFont (#3265).
+
+2005-05-18  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Require cairo 0.5.0, bump release to 0.3.2.
+
+	* NEWS: Sum up latest changes.
+
+	* glib/poppler-document.cc (poppler_ps_file_new): Take a page
+	range here instead of just number of pages.
+	
+2005-05-17  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDevX.cc: 
+	* test/gtk-cairo-test.cc: Chase the cairo xlib constructor again.
+
+2005-05-16  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Christian Persch (#3300):
+	
+	* configure.ac: Check for glib-mkenums.
+
+	* glib/Makefile.am (poppler-enums.h): Generate glib enums at
+	compile time.
+
+	* glib/poppler-enums.c:
+	* glib/poppler-enums.h: Removed.
+
+2005-05-16  Kristian Høgsberg  <krh@redhat.com>
+	
+	* test/gtk-cairo-test.cc: Update this test case also.
+
+	* poppler/CairoOutputDevX.cc: Track changes to cairo Xlib surface
+	constructors.
+
+	* poppler/CairoFontEngine.cc (cairo_font_face_destroy): Make this
+	static.
+
+Thu May 12 23:10:45 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler.gidl: add metadata file.
+
+2005-05-12  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc: 
+	* poppler/CairoOutputDevX.cc: 
+	* poppler/CairoOutputDevImage.cc: 
+	* test/gtk-cairo-test.cc: Update to latest cairo changes, patch
+	from Jens Taprogge (#3281)
+
+2005-05-11  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler.cc (poppler_get_backend, poppler_get_version): Add
+	these functions so it's easy to tell if poppler is using cairo or
+	splash and what version.
+
+	* glib/test-poppler-glib.c (main): Print out version and backend.
+
+2005-05-06  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/Makefile.am (libpoppler_glib_la_LIBADD): Link poppler-glib
+	against poppler.
+
+	* qt/Makefile.am (libpoppler_qt_la_LIBADD): Ditto for qt.
+
+	* poppler-glib.pc (Libs): Drop -lpoppler from link.
+
+	* poppler-qt.pc (Libs): Ditto for qt.
+
+	* configure.ac: Test for both libqt-mt.la and libqt-mt.so in that
+	order.
+
+2005-05-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc (CairoOutputDev::drawImageMask,
+	CairoOutputDev::drawImage): Track cairo cvs API changes; use
+	cairo_mask() and cairo_paint() for drawing image masks and images.
+
+2005-05-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoOutputDev.cc: Fix matrix convention confusion.
+
+2005-05-04  Kristian Høgsberg  <krh@redhat.com>
+
+	Patches from Albert Astals Cid:
+	
+	* qt/poppler-page.cc (getText): Use QString::fromUtf8() instead of
+	implicit latin1 cast constructor.
+	
+	* qt/test-poppler-qt.cpp (main): Use a QLabel for showing text
+	instead of qDebug.
+
+Wed May  4 02:31:05 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h:
+	* glib/poppler-enums.c: (poppler_permissions_get_type):
+	* glib/poppler-enums.h:
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler.h:
+
+	Register a bunch of boxed types to test introspection, and for
+	LBs.  Also, remove unused 'popper_document_save()' (-:
+
+2005-05-01  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoFontEngine.cc:
+	* poppler/CairoFontEngine.h:
+	* poppler/CairoOutputDev.cc: Back out workaround for cairo 0.4.0
+	font API and port to new cairo head.
+
+2005-05-01  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* splash/SplashFTFont.cc (SplashFTFont::getGlyphPath):
+	Use FT_LOAD_NO_BITMAP to make sure we get outlines loaded instead
+	of bitmaps for use in FT_Outline_Decompose.
+
+	Patch from Albert Astals Cid.
+
+2005-05-01  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* goo/gmem.c: (gmalloc), (grealloc), (gfree):
+	* goo/gmem.h: make memory functions use size_t instead of int.
+	
+	Patch from Takashi Iwai through Albert Astals Cid.
+
+2005-04-30  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* qt/poppler-document.cc (Document::unlock) :
+	* qt/poppler-qt.h (Document::unlock):
+	Add const to the password argument.
+
+	Patch from Albert Astals Cid.
+
+2005-04-30  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* fofi/FoFiType1.cc (FoFiType1::parse):
+	Don't assume Encoding array of Type1 fonts end in "foo def".
+	http://partners.adobe.com/public/developer/en/font/T1_SPEC.PDF says
+	"This sequence of assignments must be followed by an instance of the
+	token def or readonly; such a token may not occur within the sequence
+	of assignments." so it must end with "readonly" "def" "readonly def"
+	(That is what most fonts are using and this is why it was not
+	crashing)
+
+	Patch from Albert Astals Cid.
+
+Fri Apr 29 14:54:44 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* goo/GooTimer.h: New class to do simple timing checks.
+
+	* glib/poppler-document.c: Patch from Martin Kretzschmar to really
+	set the PDF version correct.  Third time's the charm.
+
+2005-04-29  Kristian Høgsberg  <krh@bitplanet.net>
+
+	* configure.ac: Bump release to 0.3.1.
+
+	* NEWS: Write up news for 0.3.1 release.
+
+2005-04-28  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Martin Kretzschmar:
+
+	* poppler/GlobalParams.cc: use UTF-8 as the default text encoding.
+	Fixes Bug 2934.
+
+2005-04-27  Jeff Muizelaar  <jeff@infidigm.net>
+
+	* configure.ac:
+	* poppler/FlateStream.cc:
+	* poppler/FlateStream.h:
+	* poppler/Makefile.am:
+	* poppler/Stream.cc:
+	* poppler/Stream.h: Add a reimplementation of FlateStream using
+	zlib.
+
+2005-04-27  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Catalog.cc (NameTree::lookup): Fix bsearch return value
+	NULL check.  Found by Albert Astals Cid.
+
+Tue Apr 26 13:13:42 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/test-poppler-glib.c (main): add a quick dump-to-text test.
+
+2005-04-24  Kristian Høgsberg  <krh@redhat.com>
+
+	* qt/Makefile.am (libpoppler_qt_la_SOURCES): Add poppler-private.h
+	to SOURCES.
+
+2005-04-23  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoFontEngine.cc: Use the right fileName for loading
+	CID fonts (#3114).
+
+2005-04-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Actually commit version number bump.
+
+2005-04-22  Martin Kretzschmar  <martink@gnome.org>
+
+	* poppler/CairoFontEngine.cc: declare matrix variable before the
+	first goto. Fixes build with gcc 3.3.
+
+Fri Apr 22 00:01:40 2005  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoFontEngine.cc: Hack around semi-broken cairo-0.4.0
+	font API to fix the problem where some glyphs would show up at the
+	wrong sizes.  We now create an FT_Face for each size and font
+	combination we encounter, since an FT_Face can't be shared between
+	several cairo_font_t.
+
+Thu Apr 21 15:43:52 2005  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Outline.cc: 
+	* poppler/Outline.h: Implement the documented behaviour for
+	Outline::getItems() and OutlineItem::getKids() and make
+	documentation more precise (Patch from Marco).
+
+Thu Apr 21 02:25:20 2005  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/CairoFontEngine.cc (CairoFont::getFont): Cache
+	cairo_font_t's for a given CairoFont.  With this patch cairo will
+	recognize glyphs coming from the same font as such and the glyph
+	cache will actually work.
+
+	* glib/poppler-document.cc (poppler_document_new_from_file): Add
+	output device (cairo or splash) to PopplerDocument and initialize
+	it in the constructor.
+
+	* glib/poppler-page.cc (splash_render_to_pixbuf,
+	cairo_render_to_pixbuf): Use output device from associated poppler
+	document instead of creating a new one.
+
+	* poppler-glib.pc.in (Requires): Add Requires: field.
+
+	* poppler/Page.cc (loadThumb): Remove unecessary and buggy call to
+	Stream::addFilters(), reported by Ryan Lortie (#3046).
+
+2005-04-13  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* qt/poppler-page.cc (Page::getText):
+	* qt/poppler-qt.h: add a getText method for getting
+	the text on a page
+
+	* qt/test-poppler-qt.c (PDFDisplay::PDFDisplay): 
+	add the option to display the text on a page
+
+	Patch from Albert Astals Cid.
+
+Tue Apr 19 17:21:19 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-document.cc (poppler_document_get_property): Use
+	%.2g instead.
+
+Tue Apr 19 17:11:52 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-document.cc (poppler_document_get_property): Use %g
+	instead of %f to avoid versioning like PDF-1.50000
+
+Tue Apr 19 15:43:35 2005  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-action.cc (_poppler_action_new): Handle NULL links
+	gracefully (fix from Jeff).
+
+Tue Apr 19 00:20:08 2005  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Catalog.cc: Fix from Marco to make sure we always
+	initialize Catalog::pageLabelInfo.
+
+Sat Apr 16 14:53:15 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/Makefile.am: Create poppler-enums.[ch]
+
+	* glib/poppler.h:
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler-action.h: Try to clean up the headers a bit
+
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h: Add support for document data.
+	Implemented as a lot of GObject properties. 
+
+	* glib/poppler-enums.c:
+	* glib/poppler-enums.h: New autogenerated files.
+
+	* glib/test-poppler-glib.c: Test the new document metadata.  Seems
+	to work nicely, other than the PDF string and View Prefs.
+
+	* poppler/Catalog.cc:
+	* poppler/Catalog.h: Extend to support PageLayout.
+
+2005-04-14  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler-private.h:
+	* glib/poppler.h: Patch from Marco Pesenti Gritti to set page
+	orientaton.
+
+2005-04-13  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* poppler/CairoOutputDevImage.cc (getBitmap): remove unused
+	SplashBitmap. Patch from Albert Astals Cid.
+
+2005-04-12  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Add fontconfig to PKG_CHECK_MODULES for the cairo
+	backend too, since we shouldn't depend on cairo.pc to pull that in
+	for us.
+
+	* poppler/Makefile.am (INCLUDES): Add $(splash_includes) to
+	INCLUDES to make sure the fontconfig include path is added when
+	using the splash backend.
+
+2005-04-09  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* poppler-qt.h:
+	* poppler-document.cc (okToPrint, okToChange, okToCopy):
+	Patch from Albert Astals Cid adding more metadata exports
+
+2005-04-08  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler-qt.pc.in (Libs): Add -lpoppler to Libs.
+
+2005-04-07  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* configure.ac: redo the qt tests from Albert Astals Cid
+
+2005-04-07  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* qt/poppler-document.cc:
+	* qt/poppler-page.cc:
+	* qt/poppler-qt.h:
+	Patch from Albert Astals Cid adding consts and exporting some more
+	metadata.
+
+2005-04-07  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc: 
+	* glib/poppler-document.h:
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler-private.h: Print to PS support from Marco Pesenti
+	Gritti.
+
+Thu Apr  7 12:25:39 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* configure.ac: check for qt, not glib, when enabling the qt
+	subdir
+
+2005-04-06  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* .cvsignore, glib/.cvsignore, qt/.cvsignore:
+	Add more things to .cvsignore.
+	Patch from Martin Kretzschmar.
+
+2005-04-06  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* poppler-page.cc (Page::Page, Page::~Page):
+	Construct and deconstruct the PageData object.
+	Patch from Albert Astals Cid.
+
+2005-04-06  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* Makefile.am, configure.ac: Add configuration for qt wrapper.
+	
+	* poppler-qt.pc.in:
+	* qt/Makefile.am:
+	* qt/poppler-document.cc:
+	* qt/poppler-page.cc:
+	* qt/poppler-private.h:
+	* qt/poppler-qt.h:
+	* qt/test-poppler-qt.cpp:
+	New files.
+
+2005-04-05  Kristian Høgsberg  <krh@redhat.com>
+
+	* NEWS: Attempt to sum up changes since 0.1.2.
+
+	* configure.ac: Bump release to 0.2.0, add AC_DEFINEs for cairo
+	and splash availability.
+
+	* poppler/CairoFontEngine.cc: Disable hinting.
+
+	* glib/poppler-page.cc (poppler_page_render_to_pixbuf): Choose
+	either splash or cairo rendering, based on configure choice.
+	(cairo_render_to_pixbuf): New function to render using the cairo
+	backend.
+	(splash_render_to_pixbuf): Split out the splash code to this
+	function.
+
+2005-04-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* ChangeLog: Add this entry to test commit mailer script.
+	
+	* TODO: Add reminder about using PDF font descriptors with
+	fontconfig.
+
+	* configure.ac: Add checks for mkstemp() and mkstemps().
+
+	* glib/poppler-page.cc (poppler_page_find_text): Reverse
+	y-coordinates so we return PDF style coordinates.
+
+	From Maro Pesenti Gritti <mpgritti@gmail.com>:
+	
+	* configure.ac, poppler/Makefile.am: Check for fontconfig when
+	we're building the splash backend.
+
+	* glib/poppler-page.cc (poppler_page_get_text): New function to
+	select text on page.
+
+2005-04-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_find_text): Reverse list of
+	matches so we get them in the right order.
+
+2005-04-03  Martin Kretzschmar  <martink@gnome.org>
+
+	* poppler/DCTStream.h: Wrap #include <jpeglib.h> in extern "C"
+	Fixes build with unpatched libjpeg.
+
+2005-04-02  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	* poppler/Page.h:
+	* poppler/Page.cc (Page::Page):
+	Some initial infrastructure for supporting transitions.
+
+2005-03-31  Kristian Høgsberg  <krh@redhat.com>
+	
+	* glib/poppler-page.cc (poppler_page_render_to_pixbuf): Clip
+	output to destination pixbuf and fix RGB order.
+
+2005-03-31  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-page.cc (poppler_page_find_text): New function to
+	seach a page for occurrences of a given text string.
+
+	* glib/poppler-page.cc: Add g_return_if_fail() checks to a couple
+	of functions.
+	
+Thu Mar 31 00:26:20 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h (poppler_page_get_link_mapping,
+	poppler_page_free_link_mapping): New functions to get a mapping of
+	links to locations on the current document.
+
+2005-03-30  Jeff Muizelaar <jrmuizel@nit.ca>
+
+	* poppler/DCTStream.h: change x to unsigned int to eliminate
+	comparision warning
+
+2005-03-30  Jeff Muizelaar <jrmuizel@nit.ca>
+
+	* poppler/Catalog.cc: delete pageLabelInfo on deconstruction
+
+Tue Mar 29 23:07:17 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-page.h: Reformat.
+
+Tue Mar 29 22:49:15 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-action.[ch]: New item to encapsulate links.
+	* glib/poppler-document.[ch] (poppler_index_iter_get_action): New
+	function to get the action.  Also, fix some warnings.
+	* glib/poppler-private.h (_poppler_action_new): New function.
+	* glib/test-poppler-glib.c: Fix warnings.
+
+Tue Mar 29 02:36:00 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-document.[ch] (PopplerIndexIter): Add an iter to
+	extract the index from the doc.  Includes a bad hack, for now.
+
+Mon Mar 28 22:02:07 2005  Jonathan Blandford  <jrb@redhat.com>
+
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h (poppler_page_get_thumbnail_size): New
+	function. 
+	* poppler-glib.pc.in: add -lpoppler-glib to the libs line.
+
+2005-03-28  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Page.cc (loadThumb): Backend agnostic method for
+	extracting an embedded thumbnail iamge.
+
+	* poppler/Dict.cc (lookupInt): New convenience method.
+
+	* glib/poppler-page.cc (poppler_page_get_thumbnail): New glib
+	function for getting the embedded thumbnail image for a page.
+
+2005-03-25  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Check for fontconfig for glib bindings.
+
+2005-03-24  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/Makefile.am: Use POPPLER_GLIB_CFLAGS and POPPLER_GLIB_LIBS
+	instead of GTK_TEST_*.  Reported by Adam Jackson <ajax@nwnk.net>.
+
+2005-03-23  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Catalog.cc (indexToLabel, labelToIndex): Add stricter
+	checking of incoming labels and indices.
+
+	* glib/test-poppler-glib.c (main): Change test program to take the
+	page label from the command line.
+
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h: Add poppler_page_get_index() and rename
+	popper_page_get_dimension() to popper_page_get_size()
+
+2005-03-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc: Implement poppler_document_save().
+	
+	* glib/poppler-document.h: Add prototype and format headers
+	properly.
+
+2005-03-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Fix --disable-popper typo reported by Albert.
+	Require exactly cairo 0.4 since CVS cairo has API changes.
+
+2005-03-22  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/Array.cc:
+	* poppler/Array.h: Add getString() convenience method.
+	
+	* poppler/Catalog.cc:
+	* poppler/Catalog.h: Optimize lookup of named destinations.
+
+2005-03-21  Kristian Høgsberg  <krh@redhat.com>
+	
+	* NEWS, TODO: Update these.
+
+2005-03-21  Kristian Høgsberg  <krh@redhat.com>
+
+	From Albert Astals Cid <tsdgeos@yahoo.es>:
+	
+	* poppler/Catalog.cc, poppler/Catalog.h: Parse PageMode setting
+	from the Catalog dict and expose it through getPageMode() method.
+
+2005-03-21  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h: Expose the document title as a GObject
+	property.
+	
+	* glib/poppler-page.cc: Expose the page label as a GObject
+	property.
+	
+	* glib/poppler-private.h: Add the page index to PopplerPage.
+	
+	* glib/test-poppler-glib.c: Print out page label and document
+	title.
+	
+	* poppler/Catalog.cc:
+	* poppler/Catalog.h: Add page label accessors.
+	
+	* poppler/PageLabelInfo.cc:
+	* poppler/PageLabelInfo.h: New files.
+
+	* poppler/Makefile.am: Add new files to sources.
+	
+2005-03-20  Kristian Høgsberg  <krh@redhat.com>
+
+	* glib/poppler-document.cc:
+	* glib/poppler-page.h:
+	* glib/poppler.cc:
+	* poppler/Array.cc:
+	* poppler/Array.h:
+	* poppler/Catalog.cc: Fix up filenames in #include statements and
+	comments.
+
+2005-03-19  Kristian Høgsberg  <krh@redhat.com>
+
+	Land the first bits of the glib wrapper.
+
+	* Makefile.am:
+	* configure.ac: Add new glib subdirectory and configure options
+	for glib wrapper.
+	
+	* glib/Makefile.am:
+	* glib/poppler-document.cc:
+	* glib/poppler-document.h:
+	* glib/poppler-page.cc:
+	* glib/poppler-page.h:
+	* glib/poppler-private.h:
+	* glib/poppler.cc:
+	* glib/poppler.h:
+	* glib/test-poppler-glib.c:
+	* poppler-glib.pc.in: New files.
+
+2005-03-16  Jeff Muizelaar  <jrmuizel@nit.ca>
+
+	From Dan Sheridan <dan.sheridan@postman.org.uk>
+
+	* poppler/XRef.cc (XRef::checkEncrypted):
+	The key length should be 5 for revision 2 documents.
+	
+2005-03-11  Kristian Høgsberg  <krh@redhat.com>
+
+	From  Jeff Muizelaar  <jrmuizel@nit.ca>:
+	
+	* poppler/CairoOutputDev.cc (CairoOutputDev::drawImageMask): Use
+	getLine instead of getPixel.
+	
+	* configure.ac: Add checks for libjpeg.
+
+	* DCTStream.cc, DCTStream.h, Stream.cc, Stream.h, Makefile.am:
+	Conditionally use libjpeg instead of xpdf jpeg decoder.
+	
+2005-03-10  Kristian Høgsberg  <krh@redhat.com>
+
+	From Jeff Muizelaar <jrmuizel@nit.ca>:
+
+	* poppler/CairoFontEngine.cc (CairoFontEngine::getFont):
+	Don't print "Type 3 font!" message.
+
+	* poppler/CairoOutputDev.cc (CairoOutputDev::drawImageMask):
+	Enable image mask drawing and do it properly, albeit slowly.
+
+	* poppler/CairoOutputDev.h
+	(CairoOutputDev::interpretType3Chars): Return true so that 
+	Gfx.cc turns type3 characters into calls to drawImageMask
+	
+2005-03-09  Kristian Høgsberg  <krh@redhat.com>
+
+	* NEWS: Describe 0.1.2 (and 0.1.1) release.
+
+	* configure.ac: Bump poppler version to 0.1.2
+
+2005-03-09  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Bump cairo requirement to 0.4.
+
+2005-03-04  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Jeff Muizelaar <jrmuizel@nit.ca>.  Changed to allocate
+	glyphs using gmalloc.
+
+	* poppler/CairoOutputDev.cc (CairoOutputDev::drawString):
+	Implement drawString instead of drawChar. This change should
+	make clipping to a text path work and has a performance
+	improvement. Currently the code is a little ugly because we
+	can't concat matrices to cairo without losing our current font.
+
+	* poppler/CairoOutputDev.h (CairoOutputDev::useDrawChar):
+	Tell Gfx.cc that it should use drawString instead of drawChar.
+
+2005-03-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* test/gtk-cairo-test.cc (view_load): 
+	* test/gtk-splash-test.cc (view_load): Fix missing return
+	statement, and remove unused variables.
+
+	* configure.ac: Add configure option to enable the default KDE
+	flags as described by Albert Astals Cid <tsdgeos@yahoo.es>.
+
+	* TODO: Update with Jeff's items.
+
+	* .cvsignore:
+	* */.cvsignore: Add these to silence CVS.
+	
+	* configure.ac: Implement same check for gtk+-2.0 tests as for
+	cairo.
+
+2005-03-04  Kristian Høgsberg  <krh@redhat.com>
+
+	* configure.ac: Only fail hard in check for cairo if the user
+	specified --enable-cairo-output (from Brad Hards
+	<bradh@frogmouth.net>).  Print summary of configure results at the
+	end of configure script.
+
+	* poppler/poppler-config.h: Remove this file (noticed by Brad
+	Hards <bradh@frogmouth.net>).
+
+2005-03-03  Kristian Høgsberg  <krh@redhat.com>
+
+	Patch from Jeff Muizelaar <jrmuizel@nit.ca>:
+
+	* poppler/CairoOutputDev.cc (CairoOutputDev::drawImage,
+	CairoOutputDev::drawImageMask): destroy the image surface and
+	free the image buffer.
+	
+2005-03-03  Kristian Høgsberg  <krh@redhat.com>
+
+	* autogen.sh: Add -i to autoreconf invocation.
+
+	* autogen.sh: Add to CVS.
+
+2005-03-01  Kristian Høgsberg  <krh@redhat.com>
+
+	* poppler/*.h: Take config.h out of header files.
+
+	* configure.ac: Bump release to 0.1.1 to build a tar ball that
+	works with CVS evince.
+
+	* poppler.pc.in (Cflags): Change include dir to be poppler.
+
+	* poppler/Makefile.am (poppler_include_HEADERS): Add splash and
+	cairo headers.
+
+2005-02-27  Kristian Høgsberg  <krh@redhat.com>
+
+	* test/gtk-cairo-test.cc: Add cairo test case.
+
+	* configure.ac, poppler/Makefile.am, poppler/Cairo*: Add Alex
+	Larsons cairo output device.
+	
+	* configure.ac, Makefile.am: Make splash backend conditional. 
+	
+	* test/*: Add optional GdkRGB based test program (taken from
+	evince).
+	
+	* goo/*: rename files and functions to GooHash, GooString etc. to
+	avoid nasty glib clash.
+	
+	* poppler.pc.in: New file.
+
+	* configure.ac: Combining bits from evince configure.ac and
+	removing checks only required by the xpdf applications.
+
+	* everything: Created poppler as a fork of xpdf.

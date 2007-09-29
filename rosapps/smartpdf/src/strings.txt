@@ -1,0 +1,210 @@
+﻿# This is a file with translations for Sumatra
+# Lines at the beginning starting with # are comments
+# It must be in utf-8 encoding so when editing make sure
+# you use a proper text editor (notepad++ or notepad2 will work)
+# What follows below is a line listing all languages supported
+# in this file followed by translations themselves
+Languages: en pl fr de
+-
+&File
+pl:Plik
+de:&Datei
+fr:&Fichier
+-
+&Open\tCtrl-O
+pl:Otwórz\tCtrl-O
+de:&Öffnen\tCtrl-O
+fr:Ouvrir\tCtrl-O
+-
+&Close\tCtrl-W
+pl:&Zamknij\tCtrl-W
+de:&Schließen\tCtrl-W
+fr:&Fermer\tCtrl-W
+-
+&Save as
+pl:Zapisz jako
+-
+&Print
+pl:Drukuj
+de:&Drucken
+-
+Make SumatraPDF a default PDF reader
+pl:Zrób domyślnym programem dla PDF
+de:Standardmäßig PDFs öffnen
+-
+E&xit\tCtrl-Q
+pl:Wyjdź\tCtrl-Q
+de:E&nde\tCtrl-Q
+fr:Quitter\tCtrl-Q
+-
+&View
+pl:&Widok
+de:&Ansicht
+fr:&Afffichage
+-
+Single page
+pl:Jedna strona
+de:Einzelnde Seite
+fr:Une seule page
+-
+Facing
+pl:Na przeciwko
+de:Doppelseite
+fr:Page double
+-
+Continuous
+pl:Ciągły
+de:Fortlaufend
+fr:Continue
+-
+Continuous facing
+pl:Ciągły na przeciwko
+de:Fortlaufende Doppelseite
+fr:Continue - Page double
+-
+Rotate left
+pl:Obróć w lewo
+de:Drehung links
+fr:Rotation horaire
+-
+Rotate right
+pl:Obróć w prawo
+de:Drehung rechts
+fr:Rotation antihoraire
+-
+Show toolbar
+pl:Pokaż toolbar
+de:Werkzeugleiste zeigen
+-
+Use MuPDF rendering engine
+pl:Użyj MuPDF do renderowania
+de:MuPDF Renderingengine benutzen
+-
+&Go To
+pl:Idź do
+de:&Gehe zu
+fr:Atteindre
+-
+Next Page
+pl:Następna strona
+de:Nächste Seite
+fr:Page suivante
+-
+Previous Page
+pl:Poprzednia strona
+de:Vorherige Seite
+fr:Page précédente
+-
+First Page\tHome
+pl:Pierwsza strona\tHome
+de:Erste Seite\tHome
+fr:Première page\tHome
+-
+Last Page\tEnd
+pl:Ostatnia strona\tEnd
+de:Letzte Seite\tEnd
+fr:Dernière page\tEnd
+-
+Page...\tCtrl-G
+pl:Strona...\tCtrl-G
+de:Seite...
+-
+&Zoom
+pl:Powiększenie
+de:&Zoom
+-
+Fit &Page\tCtrl-0
+pl:Dopasuj do strony\tCtrl-0
+de:An Seite anpassen\tCtrl-0
+fr:Page entière\tCtrl-0
+-
+Act&ual Size\tCtrl-1
+pl:Prawdziwy rozmiar\tCtrl-1
+de:Tat&sächliche Größe\tCtrl-1
+fr:Taille réelle\tCtrl-1
+-
+Fit Widt&h\tCtrl-2
+pl:Dopasuj do szerokości\tCtrl-2
+de:An Breite Anpassen\tCtrl-2
+fr:Pleine largeur
+-
+6400%
+-
+3200%
+-
+1600%
+-
+800%
+-
+400%
+-
+200%
+-
+150%
+-
+125%
+-
+100%
+-
+50%
+-
+25%
+-
+12.5%
+-
+8.33%
+-
+&Language
+pl:Język
+-
+&English
+pl:&Angielski
+-
+&German
+pl:&Niemiecki
+-
+&Polish
+pl:&Polski
+-
+&French
+pl:&Francuski
+-
+&Help
+pl:&Pomoc
+de:&Hilfe
+-
+&Visit website
+pl:Strona www
+de:&Website
+-
+&About
+pl:O programie
+de:&Über
+-
+Zoom In
+pl:Powiększ
+-
+Zoom Out
+pl:Pomniejsz
+-
+About SumatraPDF
+pl:O programie
+-
+Open
+pl:Otwórz
+de:&Öffnen\tCtrl-O
+-
+SumatraPDF is now a default reader for PDF files.
+pl:SumatraPDF jest teraz domyślnym programem do obsługi plików PDF
+-
+Failed to save a file
+pl:Problem przy zapisywaniu pliku.
+-
+Error loading PDF file.
+pl:Problem przy otwarzaniu pliku.
+-
+Could not open Printer
+pl:Drukarka niedostępna.
+-
+Printing problem.
+pl:Problem z drukowaniem.
