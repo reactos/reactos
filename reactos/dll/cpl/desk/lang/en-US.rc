@@ -101,7 +101,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Settings"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Drag the monitor icons to mach the physical arrangement of your monitors.",-1,3,3,240,10
+    LTEXT           "Drag the monitor icons to match the physical arrangement of your monitors.",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Display:",1820,3,100,30,8
     LTEXT           "<none>",IDC_SETTINGS_DEVICE,9,109,224,8

@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <tchar.h>
+#include <stdio.h>
 #include "monslctl.h"
 
 static const TCHAR szMonitorSelWndClass[] = TEXT("MONITORSELWNDCLASS");
@@ -6,6 +8,8 @@ static const TCHAR szMonitorSelWndClass[] = TEXT("MONITORSELWNDCLASS");
 typedef struct _MONSL_MON
 {
     RECT rc;
+    HFONT hFont;
+    TCHAR szCaption[12];
 } MONSL_MON, *PMONSL_MON;
 
 typedef struct _MONITORSELWND
@@ -23,6 +27,7 @@ typedef struct _MONITORSELWND
             UINT Enabled : 1;
             UINT HasFocus : 1;
             UINT CanDisplay : 1;
+            UINT AllowSelectNone : 1;
         };
     };
     DWORD MonitorsCount;
@@ -233,6 +238,22 @@ MonSelRepaintSelected(IN PMONITORSELWND infoPtr)
 }
 
 static VOID
+MonSelResetMonitors(IN OUT PMONITORSELWND infoPtr)
+{
+    DWORD Index;
+
+    for (Index = 0; Index < infoPtr->MonitorsCount; Index++)
+    {
+        if (infoPtr->Monitors[Index].hFont != NULL)
+        {
+            DeleteObject(infoPtr->Monitors[Index].hFont);
+            infoPtr->Monitors[Index].hFont = NULL;
+        }
+    }
+}
+
+
+static VOID
 MonSelUpdateMonitorsInfo(IN OUT PMONITORSELWND infoPtr,
                          IN BOOL bRepaint)
 {
@@ -278,6 +299,8 @@ MonSelUpdateMonitorsInfo(IN OUT PMONITORSELWND infoPtr,
                                     &infoPtr->Monitors[Index].rc);
         }
 
+        MonSelResetMonitors(infoPtr);
+
         if (bRepaint)
             MonSelRepaint(infoPtr);
     }
@@ -294,15 +317,15 @@ MonSelSetMonitorInfo(IN OUT PMONITORSELWND infoPtr,
                      IN DWORD dwMonitors,
                      IN const MONSL_MONINFO *MonitorsInfo)
 {
-    DWORD dwOldCount;
+    DWORD Index;
     BOOL Ret = TRUE;
-
-    dwOldCount = infoPtr->MonitorsCount;
 
     if (infoPtr->MonitorInfo != NULL)
     {
         LocalFree((HLOCAL)infoPtr->MonitorInfo);
         infoPtr->MonitorInfo = NULL;
+
+        MonSelResetMonitors(infoPtr);
 
         LocalFree((HLOCAL)infoPtr->Monitors);
         infoPtr->Monitors = NULL;
@@ -326,11 +349,20 @@ MonSelSetMonitorInfo(IN OUT PMONITORSELWND infoPtr,
                 ZeroMemory(infoPtr->Monitors,
                            dwMonitors * sizeof(MONSL_MON));
 
+                for (Index = 0; Index < dwMonitors; Index++)
+                {
+                    _stprintf(infoPtr->Monitors[Index].szCaption,
+                              _T("%u"),
+                              Index + 1);
+                }
+
                 infoPtr->MonitorsCount = dwMonitors;
 
                 if (infoPtr->SelectedMonitor >= (INT)infoPtr->MonitorsCount)
                     infoPtr->SelectedMonitor = -1;
-                infoPtr->SelectedMonitor = 0;
+
+                if (!infoPtr->AllowSelectNone && infoPtr->SelectedMonitor < 0)
+                    infoPtr->SelectedMonitor = 0;
 
                 MonSelUpdateMonitorsInfo(infoPtr,
                                          TRUE);
@@ -427,31 +459,94 @@ MonSelDestroy(IN OUT PMONITORSELWND infoPtr)
                          NULL);
 }
 
+static HFONT
+MonSelGetMonitorFont(IN OUT PMONITORSELWND infoPtr,
+                     IN HDC hDC,
+                     IN INT Index)
+{
+    TEXTMETRIC tm;
+    SIZE rcsize;
+    LOGFONT lf;
+    HFONT hPrevFont, hFont;
+    INT len;
+
+    hFont = infoPtr->Monitors[Index].hFont;
+    if (hFont == NULL &&
+        GetObject(infoPtr->hFont,
+                  sizeof(LOGFONT),
+                  &lf) != 0)
+    {
+        rcsize.cx = infoPtr->Monitors[Index].rc.right - infoPtr->Monitors[Index].rc.left -
+                    (2 * infoPtr->SelectionFrame.cx) - 2;
+        rcsize.cy = infoPtr->Monitors[Index].rc.bottom - infoPtr->Monitors[Index].rc.top -
+                    (2 * infoPtr->SelectionFrame.cy) - 2;
+        rcsize.cy = (rcsize.cy * 60) / 100;
+
+        len = _tcslen(infoPtr->Monitors[Index].szCaption);
+
+        hPrevFont = SelectObject(hDC,
+                                 infoPtr->hFont);
+
+        if (GetTextMetrics(hDC,
+                           &tm))
+        {
+            lf.lfWeight = FW_SEMIBOLD;
+            lf.lfHeight = -MulDiv(rcsize.cy - tm.tmExternalLeading,
+                                  GetDeviceCaps(hDC,
+                                                LOGPIXELSY),
+                                  72);
+
+            hFont = CreateFontIndirect(&lf);
+            if (hFont != NULL)
+                infoPtr->Monitors[Index].hFont = hFont;
+        }
+
+        SelectObject(hDC,
+                     hPrevFont);
+    }
+
+    return hFont;
+}
+
 static VOID
-MonSelPaint(IN PMONITORSELWND infoPtr,
+MonSelPaint(IN OUT PMONITORSELWND infoPtr,
             IN HDC hDC,
             IN LPRECT prcUpdate)
 {
+    COLORREF crPrevText;
+    HFONT hFont, hPrevFont;
     HBRUSH hbBk, hbOldBk;
     HPEN hpFg, hpOldFg;
     DWORD Index;
-    RECT rc;
+    RECT rc, rctmp;
+    INT iPrevBkMode;
 
     hbBk = GetSysColorBrush(COLOR_BACKGROUND);
     hpFg = CreatePen(PS_SOLID,
                      0,
-                     GetSysColor(COLOR_WINDOW));
+                     GetSysColor(COLOR_HIGHLIGHTTEXT));
 
     hbOldBk = SelectObject(hDC,
                            hbBk);
     hpOldFg = SelectObject(hDC,
                            hpFg);
+    iPrevBkMode = SetBkMode(hDC,
+                            TRANSPARENT);
+    crPrevText = SetTextColor(hDC,
+                              GetSysColor(COLOR_HIGHLIGHTTEXT));
 
     for (Index = 0; Index < infoPtr->MonitorsCount; Index++)
     {
         MonSelRectToScreen(infoPtr,
                            &infoPtr->Monitors[Index].rc,
                            &rc);
+
+        if (!IntersectRect(&rctmp,
+                           &rc,
+                           prcUpdate))
+        {
+            continue;
+        }
 
         if ((INT)Index == infoPtr->SelectedMonitor)
         {
@@ -475,8 +570,34 @@ MonSelPaint(IN PMONITORSELWND infoPtr,
                   rc.top,
                   rc.right,
                   rc.bottom);
+
+        InflateRect(&rc,
+                    -1,
+                    -1);
+
+        hFont = MonSelGetMonitorFont(infoPtr,
+                                     hDC,
+                                     Index);
+        if (hFont != NULL)
+        {
+            hPrevFont = SelectObject(hDC,
+                                     hFont);
+
+            DrawText(hDC,
+                     infoPtr->Monitors[Index].szCaption,
+                     -1,
+                     &rc,
+                     DT_VCENTER | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
+
+            SelectObject(hDC,
+                         hPrevFont);
+        }
     }
 
+    SetTextColor(hDC,
+                 crPrevText);
+    SetBkMode(hDC,
+              iPrevBkMode);
     SelectObject(hDC,
                  hpOldFg);
     SelectObject(hDC,
@@ -555,7 +676,7 @@ MonitorSelWndProc(IN HWND hwnd,
 
             Index = MonSelHitTest(infoPtr,
                                   &pt);
-            if (Index >= 0)
+            if (Index >= 0 || infoPtr->AllowSelectNone)
             {
                 MonSelSetCurSelMonitor(infoPtr,
                                        Index);
