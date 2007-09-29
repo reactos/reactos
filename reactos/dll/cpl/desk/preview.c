@@ -27,6 +27,7 @@ typedef struct _PREVIEW_DATA
     INT cySizeFrame;
 
     INT cyCaption;
+    INT cyBorder;
     INT cyMenu;
     INT cxScrollbar;
 
@@ -159,6 +160,7 @@ OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
     pPreviewData->cyCaption = GetSystemMetrics(SM_CYCAPTION);
     pPreviewData->cyMenu = GetSystemMetrics(SM_CYMENU);
     pPreviewData->cxScrollbar = GetSystemMetrics(SM_CXVSCROLL);
+    pPreviewData->cyBorder = GetSystemMetrics(SM_CYBORDER);
 
     /* load font info */
     NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
@@ -207,7 +209,7 @@ CalculateItemSize(PPREVIEW_DATA pPreviewData)
     pPreviewData->rcInactiveCaption.left = pPreviewData->rcInactiveFrame.left + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
     pPreviewData->rcInactiveCaption.top = pPreviewData->rcInactiveFrame.top + pPreviewData->cyEdge + pPreviewData->cySizeFrame + 1;
     pPreviewData->rcInactiveCaption.right = pPreviewData->rcInactiveFrame.right - pPreviewData->cxEdge - pPreviewData->cySizeFrame - 1;
-    pPreviewData->rcInactiveCaption.bottom = pPreviewData->rcInactiveCaption.top + pPreviewData->cyCaption;
+    pPreviewData->rcInactiveCaption.bottom = pPreviewData->rcInactiveCaption.top + pPreviewData->cyCaption - pPreviewData->cyBorder;
 
     /* Calculate the inactive caption buttons rectangle */
     pPreviewData->rcInactiveCaptionButtons.left = pPreviewData->rcInactiveCaption.right - 2 - 2 - 3 * 16;
@@ -225,7 +227,7 @@ CalculateItemSize(PPREVIEW_DATA pPreviewData)
     pPreviewData->rcActiveCaption.left = pPreviewData->rcActiveFrame.left + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
     pPreviewData->rcActiveCaption.top = pPreviewData->rcActiveFrame.top + pPreviewData->cxEdge + pPreviewData->cySizeFrame + 1;
     pPreviewData->rcActiveCaption.right = pPreviewData->rcActiveFrame.right - pPreviewData->cxEdge - pPreviewData->cySizeFrame - 1;
-    pPreviewData->rcActiveCaption.bottom = pPreviewData->rcActiveCaption.top + pPreviewData->cyCaption;
+    pPreviewData->rcActiveCaption.bottom = pPreviewData->rcActiveCaption.top + pPreviewData->cyCaption - pPreviewData->cyBorder;
 
     /* Calculate the active caption buttons rectangle */
     pPreviewData->rcActiveCaptionButtons.left = pPreviewData->rcActiveCaption.right - 2 - 2 - 3 * 16;
