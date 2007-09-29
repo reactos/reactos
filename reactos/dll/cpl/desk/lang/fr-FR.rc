@@ -102,6 +102,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Paramètres"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    LTEXT           "Déplacez les icônes de moniteur pour qu'elles correspondent à l'arragement physique de vos moniteurs.",-1,3,3,240,10
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Affichage:",1820,3,100,30,8
     LTEXT           "<aucun>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "&Résolution de l'affichage",1818,3,120,115,43
@@ -118,11 +120,25 @@ BEGIN
     PUSHBUTTON      "A&vancé...",IDC_SETTINGS_ADVANCED,306,165,56,14
 END
 
+IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Général"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
 IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Normal",           ID_MENU_NORMAL
     MENUITEM "Désactivé",         ID_MENU_DISABLED
     MENUITEM "Sélectionné",         ID_MENU_SELECTED
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MULTIPLEMONITORS "(Moniteurs multiples)"
+    IDS_UNKNOWNMONITOR "(Moniteur inconnu)"
+    IDS_ADVANCEDTITLEFMT "%s et %s"
 END
 
 STRINGTABLE 

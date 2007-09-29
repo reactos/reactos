@@ -3,6 +3,7 @@
 /*
  * French resources
  * Sylvain Pétréolle  2005
+ * Pierre Schweitzer  2007
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -34,7 +35,7 @@ Pour créer ou remplacer un alias existant:\n\
 Pour effacer un alias de la liste des alias :\n\
   ALIAS da="
 
-STRING_BEEP_HELP, "Emet un bip par le haut-parleur système.\n\nBEEP"
+STRING_BEEP_HELP, "Émet un bip par le haut-parleur système.\n\nBEEP"
 
 STRING_CALL_HELP, "Appelle un programme batch depuis un autre.\n\n\
 CALL [lecteur:][chemin]fichier [paramètre-batch]\n\n\
@@ -48,6 +49,7 @@ STRING_CD_HELP,      "Change ou affiche le répertoire courant\n\n\
   CD[..|-]\n\n\
   ..   répertoire parent\n\
   -    répertoire précédent\n\n\
+  /D   Changera le lecteur et le répertoire courant.\n\n\
 Taper CD lecteur: pour affiche le répertoire courant sur le disque indiqué.\n\
 Taper CD sans paramètre pour afficher le répertoire courant du disque actuel.\n"
 
@@ -91,7 +93,6 @@ CMD [/[C|K] commande][/P][/Q][/T:ap]\n\n\
                (ne peut être terminé).\n\
   /T:ap        Changer la couleur d'arrière/premier plan\n\
                (voir la commande COLOR.)"
-
 
 STRING_COLOR_HELP1, "Change les couleurs de premier et d'arrière plan.\n\n\
 COLOR [attr [/F]] \n\n\
@@ -154,7 +155,15 @@ ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
   /Q    Silencieux.\n\
   /W    Wipe. Ecrase le fichier avec des nombres aléatoire avant d'effacer.\n\
   /Y    Oui. Efface, même *.*, sans demander.\n\
-  /Z    Zap. Efface les fichiers cachés, en lecture seule et systèmes.\n"
+  /F    Force la suppression des fichiers cachés, en lecture-seul et système.\n\
+  /S    Supprime les fichiers de tous les sous-répertoires.\n\
+  /A    Sélectionne les fichiers à supprimer en fonction des attributs.\n\
+        attributs\n\
+        R     Fichiers en lecture-seule\n\
+        S     Fichiers système\n\
+        A     Archiveable files\n\
+        H     Fichiers cachés\n\
+        -     préfixe signifiant ne pas\n"
 
 STRING_DEL_HELP2, "Tous les fichiers du répertoire seront effacés!\n\
 Etes vous sûr(e) (O/N)?"
@@ -212,6 +221,7 @@ STRING_DIR_HELP5, "\n   Total de fichiers listés :\n%16i Fichier(s)% 14s octets\
 STRING_DIR_HELP6, "%16i fichier(s)% 15s octets\n"
 STRING_DIR_HELP7, "\n Répertoire de %s\n\n"
 STRING_DIR_HELP8, "%16i Rep(s)% 14s octets\n"
+
 STRING_DIRSTACK_HELP1, "Stocke le répertoire courant pour utilisation avec la commande POPD,\n\
 ensuite change de répertoire vers le répertoire spécifié.\n\n\
 PUSHD [chemin | ..]\n\n\
@@ -242,7 +252,10 @@ Taper ECHO sans paramètre pour afficher le réglage ECHO courant."
 
 STRING_ECHO_HELP5, "ECHO est %s\n"
 
-STRING_EXIT_HELP, "Sort de de l'interpréteur de commandes.\n\nEXIT"
+STRING_EXIT_HELP, "Sort de l'interpréteur de commandes.\n\nEXIT [/b] [CodeDeFin]\n\n\
+  /B            Quitte seulement un fichier batch.  \n\
+                En cas de lancement en dehors d'un fichier batch, cmd.exe sera quittée\n\
+  CodeDeFin     ERRORLEVEL prendra cette valeur à la sortie\n"
 
 STRING_FOR_HELP1, "Exécute une commande donnée pour chaque fichier d'un ensemble de fichiers.\n\
 FOR %variable IN (ensemble) do commande [paramètres]\n\n\
@@ -262,11 +275,6 @@ Le numéro de série est %s\n\
 
 STRING_FREE_HELP2, "Affiche les information d'un disque.\n\nFREE [lecteur: ...]"
 
-STRING_GOTO_HELP1,  "Dirige CMD vers une ligne nommée dans un script batch.\n\n\
-GOTO label\n\n\
-  label  Spécifie un champ texte utilisé dans un script batch comme un label.\n\n\
-Vous écrivez un label seul sur une ligne commençant par un deux-points.\n"
-
 STRING_IF_HELP1, "Exécute un traitement conditionnel dans des programmes batch.\n\n\
   IF [NOT] ERRORLEVEL nombre commande\n\
   IF [NOT] chaine1==chaine2 commande\n\
@@ -279,6 +287,11 @@ commande          Indique la commande à lancer si la condition est vérifiée.\n\
 chaine1==chaine2  La condition sera vraie si les deux chaines sont identiques.\n\
 EXIST nomfichier  La condition sera vraie si le fichier spécifié existe.\n\
 DEFINED variable  La condition sera vraie si la variable indiquée est définie."
+
+STRING_GOTO_HELP1,  "Dirige CMD vers une ligne nommée dans un script batch.\n\n\
+GOTO label\n\n\
+  label  Spécifie un champ texte utilisé dans un script batch comme un label.\n\n\
+Vous écrivez un label seul sur une ligne commençant par un deux-points.\n"
 
 STRING_LABEL_HELP1, "Affiche ou change le nom de volume du disque.\n\nLABEL [disque:][nomdevolume]\n"
 
@@ -335,12 +348,6 @@ et indiquer à l'interpréteur de commandes\n\
 de chercher seulement dans le répertoire courant.\n\
 Taper PATH sans paramètres pour afficher le chemin courant.\n"
 
-STRING_PAUSE_HELP1, "Stoppe l'éxécution d'un fichier batch et affiche le message suivant:\n\
-'Appuyer sur une touche pour continuer...' ou un message défini\n\
-par l'utilisateur.\n\n\
-PAUSE\n\
-PAUSE [message]"
-
 STRING_PROMPT_HELP1, "Change l'invite de commandes.\n\n\
 PROMPT [texte]\n\n\
   texte   Indique le nouvel invite de commandes.\n\n\
@@ -363,11 +370,22 @@ des caractères spéciaux suivants:\n\n\
   $_   Retour chariot/saut de ligne\n\
   $$   $ (signe dollar)"
 
+STRING_PAUSE_HELP1, "Stoppe l'éxécution d'un fichier batch et affiche le message suivant:\n\
+'Appuyer sur une touche pour continuer...' ou un message défini\n\
+par l'utilisateur.\n\n\
+PAUSE [message]"
+
 STRING_PROMPT_HELP2, "  $+   Affiche la hauteur de la pile de répertoires"
 
 STRING_PROMPT_HELP3, "\nTaper PROMPT sans paramètres pour changer l'invite à celui défini par défaut."
 
 STRING_REM_HELP, "Démarrer une ligne de commentaire dans un fichier batch.\n\nREM [Commentaire]"
+
+STRING_RMDIR_HELP,   "Supprime un répertoire.\n\n\
+RMDIR [lecteur:]chemin\nRD [lecteur:]chemin\n\
+/S			Supprime tous les fichiers et dossiers dans le répertoire cible\n\
+/Q			N'interroge pas l'utilisateur\n"
+STRING_RMDIR_HELP2,	"Le répertoire n'est pas vide!\n"
 
 STRING_REN_HELP1, "Renomme un(des) fichier(s)/répertoire(s)\n\
 RENAME [/E /N /P /Q /S /T] ancien_nom ... nouveau_nom\n\
@@ -386,9 +404,48 @@ STRING_REN_HELP2, "    %lu fichier renommé\n"
 
 STRING_REN_HELP3, "    %lu fichiers renommés\n"
 
-STRING_RMDIR_HELP,   "Efface un répertoire.\n\n\
-RMDIR [lecteur:]chemin\nRD [lecteur:]chemin"
-STRING_RMDIR_HELP2,	 "Le répertoire n'est pas vide !\n"
+STRING_REPLACE_HELP1, "Remplace les fichiers.\n\n\
+REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/A] [/P] [/R] [/W]\n\
+REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [lecteur1:][chemin1]nomdefichier Spécifie le ou les fichier(s) source.\n\
+  [lecteur2:][chemin2]             Spécifie le répertoire où les fichiers doivent être\n\
+                                   remplacés.\n\
+  /A                               Adds new files to destination directory. Cannot\n\
+                                   use with /S or /U switches.\n\
+  /P                               Prompts for confirmation before replacing a file or\n\
+                                   adding a source file.\n\
+  /R                               Replaces read-only files as well as unprotected\n\
+                                   files.\n\
+  /S                               Replaces files in all subdirectories of the\n\
+                                   destination directory. Cannot use with the /A\n\
+                                   switch.\n\
+  /W                               Waits for you to insert a disk before beginning.\n\
+  /U                               Replaces (updates) only files that are older than\n\
+                                   source files. Cannot use with the /A switch.\n"
+
+STRING_REPLACE_HELP2, "Source path required\n"
+
+STRING_REPLACE_HELP3, "No files replaced\n"
+
+STRING_REPLACE_HELP4, "%lu file(s) replaced\n"
+
+STRING_REPLACE_HELP5, "Replacing %s\n"
+
+STRING_REPLACE_HELP6, "Replace %s\n"
+
+STRING_REPLACE_HELP7, "No files added\n"
+
+STRING_REPLACE_HELP8, "%lu file(s) added\n"
+
+STRING_REPLACE_HELP9, "Add %s (Y/N) "
+
+STRING_REPLACE_HELP10, "Replace %s (Y/N) "
+
+STRING_REPLACE_HELP11, "Adding %s\n"
+
+
+STRING_SHIFT_HELP, "Change la position de paramètres remplaçables dans un fichier batch.\n\n\
+SHIFT [DOWN]"
 
 STRING_SCREEN_HELP, "Déplace le curseur, optionnellement affiche du texte\n\n\
 SCREEN lig col [texte]\n\n\
@@ -400,9 +457,6 @@ SET [variable[=][chaine]]\n\n\
   variable  Indique le nom de la variable d'environnement.\n\
   chaine    Indique une série de caractères à assigner à la variable.\n\n\
 Taper SET sans paramètres pour afficher les variables d'environnement courantes.\n"
-
-STRING_SHIFT_HELP, "Change la position de paramètres remplaçables dans un fichier batch.\n\n\
-SHIFT [DOWN]"
 
 STRING_START_HELP1, "Lance une commande.\n\n\
 START commande\n\n\
@@ -441,7 +495,8 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
 Si aucun de ON, OFF or /S n'est spécifié la commande\n\
 changera l'état du chronomètre sélectionné\n\n"
 
-STRING_TYPE_HELP1, "Affiche le contenu de fichiers textes.\n\nTYPE [lecteur:][chemin]nomfich"
+STRING_TYPE_HELP1, "Affiche le contenu de fichiers textes.\n\nTYPE [lecteur:][chemin]nomfich \n\
+  /P 		  Shows one screen of output at a time.\n"
 
 STRING_VERIFY_HELP1, "Cette commande ne fait rien!!\n\
 Spécifie s'il faut verifier que vos fichiers sont écrits correctement.\
@@ -495,73 +550,78 @@ MAX           maximise la fenêtre\n\
 RESTORE       restaure la fenêtre"
 
 STRING_WINDOW_HELP2, "Change l'aspect de la fenêtre de la console\n\n\
-WINDOW [/POS[=]gauche,haut,largeur,hauteur]\n\
+ACTIVATE 'fenêtre' [/POS[=]gauche,haut,largeur,hauteur]\n\
               [MIN|MAX|RESTORE] ['titre']\n\n\
+fenêtre       titre de la fenêtre sur laquelle effectuer les actions\n\
 /POS          indique la position et les dimensions de la fenêtre\n\
 MIN           minimise la fenêtre\n\
 MAX           maximise la fenêtre\n\
 RESTORE       restaure la fenêtre\n\
 titre         titre de la fenêtre"
 
-STRING_HELP1, "List of all available commands (+ description)\n\n\
-  command /?     For more information on a specific command\n\n\
-?        List all available commands without description).\n\
-ALIAS    Sets, removes or shows aliases.\n\
-ATTRIB   Displays or changes file attributes.\n\
-BEEP     Beep the speaker.\n\
-CALL     Calls one batch program from another.\n\
-CD       Displays the name of or changes the current directory.\n\
-CHCP     Displays or sets the active code page number.\n\
-CHOICE   Waits for the user to choose one of a set of choices.\n\
-CLS      Clears the screen.\n\
-CMD      Starts a new instance of the ReactOS command interpreter.\n\
-COLOR    Sets the default console foreground and background colors.\n\
-COPY     Copies one or more files to another location.\n\
-DATE     Displays or sets the date.\n\
-DELETE   Deletes one or more files.\n\
-DIR      Displays a list of files and subdirectories in a directory.\n\
-ECHO     Displays messages, or turns command echoing on or off.\n\
-ERASE    Deletes one or more files.\n\
-EXIT     Quits the CMD.EXE program (command interpreter).\n\
-FOR      Runs a specified command for each file in a set of files.\n\
-FREE     (free) disc space.\n\
-GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
-         a batch program.\n\
-HELP     Provides Help information for ReactOS commands.\n\
-HISTORY  List alle commands which has been used\n\
-IF       Performs conditional processing in batch programs.\n\
-LABEL    Creates, changes, or deletes the volume label of a disk.\n\
-MD       Creates a directory.\n\
-MKDIR    Creates a directory.\n\
-MOVE     Moves one or more files from one directory to another\n\
-         directory.\n\
-PATH     Displays or sets a search path for executable files.\n\
-PAUSE    Suspends processing of a batch file and displays a message.\n\
-POPD     Restores the previous value of the current directory saved by\n\
+
+STRING_HELP1, "Liste de toutes les commandes disponibles (+ description)\n\n\
+  commande /?    Pour plus d'informations sur une commande spécifique\n\n\
+?        Liste toutes les commandes disponibles sans leur description).\n\
+ALIAS    Défini, supprime ou montre les alias.\n\
+ATTRIB   Affiche ou change les attributs d'un fichier.\n\
+BEEP     Émet un bip par le haut-parleur système.\n\
+CALL     Appeller un programme batch à partir d'un autre.\n\
+CD       Affiche ou change le répertoire courant.\n\
+CHCP     Affiche ou défini le numéro de page de codes.\n\
+CHOICE   Attend après l'utilisateur pour un choix parmi un ensemble de propositions.\n\
+CLS      Efface l'écran.\n\
+CMD      Démarre une nouvelle instance de l'interpréteur de commandes de ReactOS.\n\
+COLOR    Défini les couleurs par défaut pour le premier plan et l'arrière-plan de la console.\n\
+COPY     Copie un ou plusieurs fichiers vers une autre destination.\n\
+DATE     Affiche ou défini la date.\n\
+DELETE   Supprime un ou plusieurs fichiers.\n\
+DIR      Affiche la liste des fichiers et des sous-répertoires du dossier.\n\
+ECHO     Affiche des messages, ou bascule l'affichage des commandes sur on ou off.\n\
+ERASE    Supprime un ou plusieurs fichiers.\n\
+EXIT     Quitte le programme CMD.EXE (interpréteur de commandes).\n\
+FOR      Lance une commande spécifique pour chaque fichier d'un ensemble de fichiers.\n\
+FREE     Espace disque (libre).\n\
+GOTO     Dirige l'interpréteur de commandes de ReactOS vers une ligne nommée\n\
+         dans un script batch.\n\
+HELP     Fournit des informations d'aide pour les commandes de ReactOS.\n\
+HISTORY  Liste toutes les commandes qui ont été utilisées\n\
+IF       Exécute un traitement conditionnel dans des programmes batch.\n\
+LABEL    Créé, change, ou supprime le nom de volume d'un disque.\n\
+MD       Créé un répertoire.\n\
+MKDIR    Créé un répertoire.\n\
+MOVE     Déplace un ou plusieurs fichiers d'un répertoire vers un autre\n\
+         répertoire.\n\
+PATH     Affiche ou défini un chemin de recherche pour les fichiers exécutables.\n\
+PAUSE    Suspend l'exécution d'un fichier batch et affiche un message.\n\
+POPD     Restaure la précédente valeur du répertoire courant sauvegardée par\n\
          PUSHD.\n\
-PROMPT   Changes the command prompt.\n\
-PUSHD    Saves the current directory then changes it.\n\
-RD       Removes a directory.\n\
-REM      Records comments (remarks) in batch files.\n\
-REN      Renames a file or files.\n\
-RENAME   Renames a file or files.\n\
-RMDIR    Removes a directory.\n\
-SCREEN   Move cursor and optionally print text.\n\
-SET      Displays, sets, or removes ReactOS environment variables.\n\
-SHIFT    Shifts the position of replaceable parameters in batch files.\n"
-STRING_HELP2, "START    Starts a separate window to run a specified program or command.\n\
-         Executes command.\n\
-TIME     Displays or sets the system time.\n\
-TIMER    Allow the use of ten stopwaches.\n\
-TITLE    Sets the window title for a CMD.EXE session.\n\
-TYPE     Displays the contents of a text file.\n\
-VER      Displays the ReactOS version.\n\
-VERIFY   Tells ReactOS whether to verify that your files are written\n\
-         correctly to a disk.\n\
-VOL      Displays a disk volume label and serial number.\n"
+PROMPT   Change l'invite de commande.\n\
+PUSHD    Sauvegarde le répertoire courant puis le change.\n\
+RD       Supprime un répertoire.\n\
+REM      Enregistre des commentaires (remarques) dans un fichier batch.\n\
+REN      Renomme un ou plusieurs fichiers.\n\
+RENAME   Renomme un ou plusieurs fichiers.\n\
+REPLACE  Remplace un fichier.\n\
+RMDIR    Supprime un répertoire.\n\
+SCREEN   Déplace le curseur, optionnellement affiche du texte.\n\
+SET      Affiche, défini, ou supprime des variables d'environnement de ReactOS.\n\
+SHIFT    Déplace la position des paramètres remplacables dans un fichier batch.\n"
+STRING_HELP2, "START    Démarre une fenêtre séparer pour lancer un programme spécifié ou une commande.\n\
+         Exécute la commande.\n\
+TIME     Affiche ou défini l'heure du système.\n\
+TIMER    Permet l'utilisation de dix chronomètres.\n\
+TITLE    Défini le titre de la fenêtre pour une session de CMD.EXE.\n\
+TYPE     Affiche le contenu d'un fichier texte.\n\
+VER      Affiche la version de ReactOS.\n\
+VERIFY   Spécifie à ReactOS s'il faut vérifier que vous fichiers sont correctement\n\
+         écrit sur un disque.\n\
+VOL      Affiche le nom de volume d'un disque et son numéro de série.\n"
+
 
 STRING_CHOICE_OPTION         "ON"
 STRING_COPY_OPTION,          "ONT"
+
 
 STRING_ALIAS_ERROR,          "Ligne de commande trop longue après remplacement de l'alias!\n"
 STRING_BATCH_ERROR,          "Erreur à l'ouverture du fichier batch\n"
@@ -624,12 +684,20 @@ STRING_ERROR_REQ_PARAM_MISSING,    "Paramètre requis manquant\n"
 STRING_ERROR_INVALID_DRIVE,        "Lecteur spécifié introuvable\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Format de paramètre incorrect - %s\n"
 STRING_ERROR_BADCOMMAND,           "Commande ou nom de fichier inconnu\n"
-STRING_ERROR_OUT_OF_MEMORY,        "Erreur Pas assez de mémoire.\n"
-STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary file!\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Pas assez de mémoire.\n"
+STRING_ERROR_CANNOTPIPE,           "Erreur!  Impossible de chaîner!  Échec à l'ouverture du fichier temporaire!\n"
 STRING_ERROR_D_PAUSEMSG,           "Appuyez sur une touche pour continuer . . ."
 STRING_ERROR_DRIVER_NOT_READY,     "Lecteur non prêt"
 
 STRING_PATH_ERROR,                 "CMD: Pas dans l'environnement '%s'\n"
+
+STRING_REPLACE_ERROR1, "Commutateur invalide - %s\n"
+STRING_REPLACE_ERROR2, "Chemin non trouvé - %s\n"
+STRING_REPLACE_ERROR3, "La syntaxe du nom de fichier, du répertoire, ou du nom de volume est incorrecte.\n"
+STRING_REPLACE_ERROR4, "Combinaison de paramètres invalide\n"
+STRING_REPLACE_ERROR5, "Accès refusé - %s\n"
+STRING_REPLACE_ERROR6, "Aucun fichier trouvé - %s\n"
+STRING_REPLACE_ERROR7, "Erreur étendue 32\n"
 
 STRING_CMD_SHELLINFO,              "\n Interpréteur de ligne de commandes ReactOS"
 STRING_VERSION_RUNVER,             " tournant sur %s"

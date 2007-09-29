@@ -5,4 +5,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
 #include "lang/uk-UA.rc"

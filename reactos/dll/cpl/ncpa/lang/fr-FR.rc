@@ -20,14 +20,14 @@ BEGIN
  LTEXT "Se connecter en utilisant:", -1, 9,9,217,8
  EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_DISABLED | WS_BORDER | WS_TABSTOP
  PUSHBUTTON "&Configurer", IDC_CONFIGURE, 189, 38, 50, 14
- LTEXT "Les composants cochés sont utilisés par cette connection:", -1, 9, 59, 217, 8
+ LTEXT "Les composants cochés sont utilisés par cette connexion:", -1, 9, 59, 217, 8
  LISTBOX IDC_COMPONENTSLIST, 9, 71, 230, 55, LBS_STANDARD | LBS_NOINTEGRALHEIGHT
  PUSHBUTTON "&Installer", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
  PUSHBUTTON "&Désinstaller", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
  PUSHBUTTON "&Propriétés", IDC_PROPERTIES, 174, 130, 65, 14
  GROUPBOX "Description", -1, 9, 153, 230, 46, BS_GROUPBOX
  LTEXT "Description du composant...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
- CHECKBOX "Afficher l'icone dans la barre des taches", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP
+ CHECKBOX "Afficher l'icône dans la barre des tâches", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP
 END
 
 
@@ -36,8 +36,8 @@ STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Connection", -1, 9, 8, 182, 58, BS_GROUPBOX
- LTEXT "Etat:", -1, 19, 20, 60, 8
+ GROUPBOX "Connexion", -1, 9, 8, 182, 58, BS_GROUPBOX
+ LTEXT "État:", -1, 19, 20, 60, 8
  LTEXT "Durée:", -1, 19, 34, 60, 8
  LTEXT "Vitesse:", -1, 19, 48, 60, 8
  GROUPBOX "Activité", -1, 9, 74, 182, 70, BS_GROUPBOX
@@ -62,18 +62,18 @@ STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Support"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Connection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Address type:", -1, 22, 20, 80, 8
- LTEXT "IP address:", -1, 22, 34, 80, 8
- LTEXT "SubNet mask:", -1, 22, 48, 80, 8
- LTEXT "Default gateway:", -1, 22, 62, 80, 8
+ GROUPBOX "Status de la connexion", -1, 9, 8, 200, 88, BS_GROUPBOX
+ LTEXT "Type d'adresse:", -1, 22, 20, 80, 8
+ LTEXT "Adresse IP:", -1, 22, 34, 80, 8
+ LTEXT "Masque sous-réseau:", -1, 22, 48, 80, 8
+ LTEXT "Passerelle par défaut:", -1, 22, 62, 80, 8
  
  RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
  
- PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
+ PUSHBUTTON "&Détails...", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_TCPIPPROPERTIES DIALOG DISCARDABLE  0, 0, 246, 228
@@ -118,18 +118,18 @@ STRINGTABLE
 BEGIN
   IDS_ERROR "Erreur"
   IDS_ENTER_VALID_IPADDRESS "Vous devez entrer une adresse IP valide"
-  IDS_ENTER_VALID_SUBNET "Vous devez entrer un masque de sous réseau valide"
+  IDS_ENTER_VALID_SUBNET "Vous devez entrer un masque sous-réseau valide"
   IDS_CANNOT_LOAD_CONFIG "Impossible de charger les données de configuration"
   IDS_CANNOT_CREATE_PROPSHEET "Impossible de créer la page de propriétés"
   IDS_OUT_OF_MEMORY "Plus de mémoire"
   IDS_CANNOT_SAVE_CHANGES "Impossible de sauvegarder les changements"
-  IDS_STATUS_NON_OPERATIONAL "Non-operational"
-  IDS_STATUS_UNREACHABLE "No WAN adapter found"
-  IDS_STATUS_DISCONNECTED "Disconnected"
-  IDS_STATUS_CONNECTING "Connecting"
-  IDS_STATUS_CONNECTED "Connected"
-  IDS_STATUS_OPERATIONAL "Connected"
+  IDS_STATUS_NON_OPERATIONAL "Non opérationnel"
+  IDS_STATUS_UNREACHABLE "Aucun adaptateur WAN trouvé"
+  IDS_STATUS_DISCONNECTED "Déconnecté"
+  IDS_STATUS_CONNECTING "En cours de connexion"
+  IDS_STATUS_CONNECTED "Connecté"
+  IDS_STATUS_OPERATIONAL "Connecté"
   IDS_SPEED_MBPS "%d Mbps"
-  IDS_DURATION_DAY "%d day %s"
-  IDS_DURATION_DAYS "%d days %s"
+  IDS_DURATION_DAY "%d jour %s"
+  IDS_DURATION_DAYS "%d jours %s"
 END

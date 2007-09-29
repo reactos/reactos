@@ -4,12 +4,12 @@ STRINGTABLE DISCARDABLE
 {
 
 IDS_USAGE, "SYSTEMINFO [/S system [/U username [/P [password]]]] [/FO format] [/NH]\n\n\
-Discription:\n\
+Description:\n\
   This command line tool enables an administrator to query for basic\n\
   system configuration information.\n\n\
 Parameter List:\n\
   /S      system           Specifies the remote system to connect to.\n\n\
-  /U      [domain\\]user    Specifies the user context under which\n\
+  /U      [domain\\]user   Specifies the user context under which\n\
 	                   the command should execute.\n\n\
   /P      [password]       Specifies the password for the given\n\
 	                   user context. Prompts for input if omitted.\n\n\
