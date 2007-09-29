@@ -39,6 +39,8 @@ typedef struct _MONITORSELWND
     POINT ScrollPos;
     SIZE Margin;
     SIZE SelectionFrame;
+    HBITMAP hbmDisabledPattern;
+    HBRUSH hbrDisabled;
 } MONITORSELWND, *PMONITORSELWND;
 
 static HFONT
@@ -313,9 +315,9 @@ MonSelUpdateMonitorsInfo(IN OUT PMONITORSELWND infoPtr,
 }
 
 static BOOL
-MonSelSetMonitorInfo(IN OUT PMONITORSELWND infoPtr,
-                     IN DWORD dwMonitors,
-                     IN const MONSL_MONINFO *MonitorsInfo)
+MonSelSetMonitorsInfo(IN OUT PMONITORSELWND infoPtr,
+                      IN DWORD dwMonitors,
+                      IN const MONSL_MONINFO *MonitorsInfo)
 {
     DWORD Index;
     BOOL Ret = TRUE;
@@ -393,9 +395,9 @@ MonSelSetMonitorInfo(IN OUT PMONITORSELWND infoPtr,
 }
 
 static DWORD
-MonSelGetMonitorInfo(IN PMONITORSELWND infoPtr,
-                     IN DWORD dwMonitors,
-                     IN OUT PMONSL_MONINFO MonitorsInfo)
+MonSelGetMonitorsInfo(IN PMONITORSELWND infoPtr,
+                      IN DWORD dwMonitors,
+                      IN OUT PMONSL_MONINFO MonitorsInfo)
 {
     if (dwMonitors != 0)
     {
@@ -409,6 +411,41 @@ MonSelGetMonitorInfo(IN PMONITORSELWND infoPtr,
     }
     else
         return infoPtr->MonitorsCount;
+}
+
+static BOOL
+MonSelSetMonitorInfo(IN OUT PMONITORSELWND infoPtr,
+                     IN INT Index,
+                     IN const MONSL_MONINFO *MonitorsInfo)
+{
+    if (Index >= 0 && Index < (INT)infoPtr->MonitorsCount)
+    {
+        CopyMemory(&infoPtr->MonitorInfo[Index],
+                   MonitorsInfo,
+                   sizeof(MONSL_MONINFO));
+
+        MonSelUpdateMonitorsInfo(infoPtr,
+                                 TRUE);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static BOOL
+MonSelGetMonitorInfo(IN PMONITORSELWND infoPtr,
+                     IN INT Index,
+                     IN OUT PMONSL_MONINFO MonitorsInfo)
+{
+    if (Index >= 0 && Index < (INT)infoPtr->MonitorsCount)
+    {
+        CopyMemory(MonitorsInfo,
+                   &infoPtr->MonitorInfo[Index],
+                   sizeof(MONSL_MONINFO));
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 static BOOL
@@ -454,9 +491,21 @@ static VOID
 MonSelDestroy(IN OUT PMONITORSELWND infoPtr)
 {
     /* Free all monitors */
-    MonSelSetMonitorInfo(infoPtr,
-                         0,
-                         NULL);
+    MonSelSetMonitorsInfo(infoPtr,
+                          0,
+                          NULL);
+
+    if (infoPtr->hbrDisabled != NULL)
+    {
+        DeleteObject(infoPtr->hbrDisabled);
+        infoPtr->hbrDisabled = NULL;
+    }
+
+    if (infoPtr->hbmDisabledPattern != NULL)
+    {
+        DeleteObject(infoPtr->hbmDisabledPattern);
+        infoPtr->hbmDisabledPattern = NULL;
+    }
 }
 
 static HFONT
@@ -508,12 +557,44 @@ MonSelGetMonitorFont(IN OUT PMONITORSELWND infoPtr,
     return hFont;
 }
 
+static BOOL
+MonSelDrawDisabledRect(IN OUT PMONITORSELWND infoPtr,
+                       IN HDC hDC,
+                       IN const RECT *prc)
+{
+    BOOL Ret = FALSE;
+
+    if (infoPtr->hbrDisabled == NULL)
+    {
+        static const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
+
+        if (infoPtr->hbmDisabledPattern == NULL)
+        {
+            infoPtr->hbmDisabledPattern = CreateBitmap(8,
+                                                       8,
+                                                       1,
+                                                       1,
+                                                       Pattern);
+        }
+
+        if (infoPtr->hbmDisabledPattern != NULL)
+            infoPtr->hbrDisabled = CreatePatternBrush(infoPtr->hbmDisabledPattern);
+    }
+
+    if (infoPtr->hbrDisabled != NULL)
+    {
+        /* FIXME - implement */
+    }
+
+    return Ret;
+}
+
 static VOID
 MonSelPaint(IN OUT PMONITORSELWND infoPtr,
             IN HDC hDC,
-            IN LPRECT prcUpdate)
+            IN const RECT *prcUpdate)
 {
-    COLORREF crPrevText;
+    COLORREF crPrevText, crPrevText2;
     HFONT hFont, hPrevFont;
     HBRUSH hbBk, hbOldBk;
     HPEN hpFg, hpOldFg;
@@ -556,8 +637,17 @@ MonSelPaint(IN OUT PMONITORSELWND infoPtr,
 
             if (infoPtr->HasFocus && !(infoPtr->UIState & UISF_HIDEFOCUS))
             {
+                /* NOTE: We need to switch the text color to the default, because
+                         DrawFocusRect draws a solid line if the text is white! */
+
+                crPrevText2 = SetTextColor(hDC,
+                                           crPrevText);
+
                 DrawFocusRect(hDC,
                               &rc);
+
+                SetTextColor(hDC,
+                             crPrevText2);
             }
         }
 
@@ -591,6 +681,17 @@ MonSelPaint(IN OUT PMONITORSELWND infoPtr,
 
             SelectObject(hDC,
                          hPrevFont);
+        }
+
+        if (infoPtr->MonitorInfo[Index].Flags & MSL_MIF_DISABLED)
+        {
+            InflateRect(&rc,
+                        1,
+                        1);
+
+            MonSelDrawDisabledRect(infoPtr,
+                                   hDC,
+                                   &rc);
         }
     }
 
@@ -801,19 +902,19 @@ MonitorSelWndProc(IN HWND hwnd,
             break;
         }
 
-        case MSLM_SETMONITORINFO:
+        case MSLM_SETMONITORSINFO:
         {
-            Ret = MonSelSetMonitorInfo(infoPtr,
-                                       (DWORD)wParam,
-                                       (const MONSL_MONINFO *)lParam);
+            Ret = MonSelSetMonitorsInfo(infoPtr,
+                                        (DWORD)wParam,
+                                        (const MONSL_MONINFO *)lParam);
             break;
         }
 
-        case MSLM_GETMONITORINFO:
+        case MSLM_GETMONITORSINFO:
         {
-            Ret = MonSelGetMonitorInfo(infoPtr,
-                                       (DWORD)wParam,
-                                       (PMONSL_MONINFO)lParam);
+            Ret = MonSelGetMonitorsInfo(infoPtr,
+                                        (DWORD)wParam,
+                                        (PMONSL_MONINFO)lParam);
             break;
         }
 
@@ -827,6 +928,35 @@ MonitorSelWndProc(IN HWND hwnd,
         {
             Ret = MonSelHitTest(infoPtr,
                                 (const POINT *)wParam);
+            break;
+        }
+
+        case MSLM_SETCURSEL:
+        {
+            Ret = MonSelSetCurSelMonitor(infoPtr,
+                                         (INT)wParam);
+            break;
+        }
+
+        case MSLM_GETCURSEL:
+        {
+            Ret = infoPtr->SelectedMonitor;
+            break;
+        }
+
+        case MSLM_SETMONITORINFO:
+        {
+            Ret = MonSelSetMonitorInfo(infoPtr,
+                                       (INT)wParam,
+                                       (const MONSL_MONINFO *)lParam);
+            break;
+        }
+
+        case MSLM_GETMONITORINFO:
+        {
+            Ret = MonSelGetMonitorInfo(infoPtr,
+                                       (INT)wParam,
+                                       (PMONSL_MONINFO)lParam);
             break;
         }
 

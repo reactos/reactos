@@ -13,7 +13,7 @@ typedef struct _MONSL_MONINFO
 } MONSL_MONINFO, *PMONSL_MONINFO;
 
 /*
- * MSLM_SETMONITORINFO
+ * MSLM_SETMONITORSINFO
  *   wParam: DWORD
  *           Count of MONSL_MONINFO structures provided as lParam.
  *   lParam: PMONSL_MONINFO
@@ -21,10 +21,10 @@ typedef struct _MONSL_MONINFO
  *
  *   Returns non-zero value if successful.
  */
-#define MSLM_SETMONITORINFO (WM_USER + 0x10)
+#define MSLM_SETMONITORSINFO (WM_USER + 0x10)
 
 /*
- * MSLM_GETMONITORINFO
+ * MSLM_GETMONITORSINFO
  *   wParam: DWORD
  *           Length of MONSL_MONINFO array buffer provided in lParam.
  *   lParam: PMONSL_MONINFO
@@ -32,7 +32,7 @@ typedef struct _MONSL_MONINFO
  *
  *   Returns number of structures copied.
  */
-#define MSLM_GETMONITORINFO (WM_USER + 0x11)
+#define MSLM_GETMONITORSINFO (WM_USER + 0x11)
 
 /*
  * MSLM_GETMONITORINFOCOUNT
@@ -53,6 +53,47 @@ typedef struct _MONSL_MONINFO
  *   Returns the index of the monitor at this point, or -1.
  */
 #define MSLM_HITTEST    (WM_USER + 0x13)
+
+/*
+ * MSLM_SETCURSEL
+ *   wParam: INT
+ *           Selects the monitor with this index. Pass -1 to clear the selection.
+ *   lParam: Ignored.
+ *
+ *   Returns a non-zero value if successful.
+ */
+#define MSLM_SETCURSEL  (WM_USER + 0x14)
+
+/*
+ * MSLM_GETCURSEL
+ *   wParam: Ignored.
+ *   lParam: Ignored.
+ *
+ *   Returns the index of the selected monitor, or -1 if none is currently selected.
+ */
+#define MSLM_GETCURSEL  (WM_USER + 0x15)
+
+/*
+ * MSLM_SETMONITORINFO
+ *   wParam: INT
+ *           Index of the monitor information that is queried.
+ *   lParam: PMONSL_MONINFO
+ *           Pointer to a MONSL_MONINFO structures.
+ *
+ *   Returns non-zero value if successful.
+ */
+#define MSLM_SETMONITORINFO (WM_USER + 0x16)
+
+/*
+ * MSLM_GETMONITORINFO
+ *   wParam: INT
+ *           Index of the monitor information to be changed.
+ *   lParam: PMONSL_MONINFO
+ *           Pointer to a MONSL_MONINFO structures.
+ *
+ *   Returns non-zero value if successful.
+ */
+#define MSLM_GETMONITORINFO (WM_USER + 0x17)
 
 BOOL RegisterMonitorSelectionControl(IN HINSTANCE hInstance);
 VOID UnregisterMonitorSelectionControl(IN HINSTANCE hInstance);
