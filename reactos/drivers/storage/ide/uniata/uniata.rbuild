@@ -16,12 +16,12 @@
 	<file>id_probe.cpp</file>
 	<file>id_queue.cpp</file>
 	<file>id_sata.cpp</file>
-	<file>stdafx.cpp</file>
 	<file>idedma.rc</file>
 	
 	<directory name="ros_glue">
 		<file>ros_glue.cpp</file>
 		<file>ros_glue_asm.s</file>
-		<file>libgcc2.c</file>
 	</directory>
+	
+	<linkerflag>-lgcc</linkerflag>
 </module>
