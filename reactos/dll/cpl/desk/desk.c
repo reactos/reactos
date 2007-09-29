@@ -15,10 +15,11 @@
 
 static LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
-extern INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-extern INT_PTR CALLBACK ScreenSaverPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-extern INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-extern INT_PTR CALLBACK SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK ScreenSaverPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+UINT CALLBACK SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp);
 
 HINSTANCE hApplet = 0;
 
@@ -47,7 +48,7 @@ PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 }
 
 static BOOL
-InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc, LPFNPSPCALLBACK pfnCallback)
 {
     HPROPSHEETPAGE hPage;
     PROPSHEETPAGE psp;
@@ -57,9 +58,12 @@ InitPropSheetPage(PROPSHEETHEADER *ppsh, WORD idDlg, DLGPROC DlgProc)
         ZeroMemory(&psp, sizeof(psp));
         psp.dwSize = sizeof(psp);
         psp.dwFlags = PSP_DEFAULT;
+        if (pfnCallback != NULL)
+            psp.dwFlags |= PSP_USECALLBACK;
         psp.hInstance = hApplet;
         psp.pszTemplate = MAKEINTRESOURCE(idDlg);
         psp.pfnDlgProc = DlgProc;
+        psp.pfnCallback = pfnCallback;
 
         hPage = CreatePropertySheetPage(&psp);
         if (hPage != NULL)
@@ -75,12 +79,13 @@ static const struct
 {
     WORD idDlg;
     DLGPROC DlgProc;
+    LPFNPSPCALLBACK Callback;
 } PropPages[] =
 {
-    { IDD_BACKGROUND, BackgroundPageProc },
-    { IDD_SCREENSAVER, ScreenSaverPageProc },
-    { IDD_APPEARANCE, AppearancePageProc },
-    { IDD_SETTINGS, SettingsPageProc },
+    { IDD_BACKGROUND, BackgroundPageProc, NULL },
+    { IDD_SCREENSAVER, ScreenSaverPageProc, NULL },
+    { IDD_APPEARANCE, AppearancePageProc, NULL },
+    { IDD_SETTINGS, SettingsPageProc, SettingsPageCallbackProc },
 };
 
 /* Display Applet */
@@ -126,7 +131,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
             continue;
         }
 
-        InitPropSheetPage(&psh, PropPages[i].idDlg, PropPages[i].DlgProc);
+        InitPropSheetPage(&psh, PropPages[i].idDlg, PropPages[i].DlgProc, PropPages[i].Callback);
     }
 
     /* NOTE: Don;t call SHAddFromPropSheetExtArray here because this applet only allows

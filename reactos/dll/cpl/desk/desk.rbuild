@@ -34,5 +34,6 @@
 	<file>screensaver.c</file>
 	<file>advappdlg.c</file>
 	<file>settings.c</file>
+	<file>monslctl.c</file>
 	<file>desk.rc</file>
 </module>

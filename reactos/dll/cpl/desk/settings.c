@@ -9,6 +9,7 @@
  */
 
 #include "desk.h"
+#include "monslctl.h"
 
 typedef struct _GLOBAL_DATA
 {
@@ -503,6 +504,26 @@ OnResolutionChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN DWORD NewPo
 	}
 
 	/* we shouldn't go there */
+}
+
+/* Property sheet page callback */
+UINT CALLBACK
+SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
+{
+    UINT Ret = 0;
+
+    switch (uMsg)
+    {
+        case PSPCB_CREATE:
+            Ret = RegisterMonitorSelectionControl(hApplet);
+            break;
+
+        case PSPCB_RELEASE:
+            UnregisterMonitorSelectionControl(hApplet);
+            break;
+    }
+
+    return Ret;
 }
 
 /* Property page dialog callback */
