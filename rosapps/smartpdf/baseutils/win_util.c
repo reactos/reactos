@@ -315,7 +315,7 @@ TCHAR *get_app_data_folder_path(BOOL f_create)
         return tstr_dup(_T(""));
 #else
     /* if all else fails, just use root ("\") directory */
-    return tstr_dup(_T(""));
+    return (TCHAR*)str_dup(_T("")); /* @note: mingw doesn't support tstr_dup */
 #endif
 }
 
@@ -363,7 +363,7 @@ TCHAR *load_string_dup(int str_id)
         assert(0);
         return NULL;
     }
-    return tstr_dup(buf);
+    return (TCHAR*)str_dup(buf); /* @note: mingw doesn't support tstr_dup */
 }
 
 const TCHAR *load_string(int str_id)

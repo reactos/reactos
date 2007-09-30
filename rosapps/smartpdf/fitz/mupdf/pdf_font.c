@@ -45,7 +45,7 @@ enum { UNKNOWN, TYPE1, TRUETYPE, CID };
 
 static int ftkind(FT_Face face)
 {
-    const char *kind = FT_Get_X11_Font_Format(face);
+    /*const char *kind = FT_Get_X11_Font_Format(face);
     pdf_logfont("ft font format %s\n", kind);
     if (!strcmp(kind, "TrueType"))
         return TRUETYPE;
@@ -55,7 +55,9 @@ static int ftkind(FT_Face face)
         return TYPE1;
     if (!strcmp(kind, "CID Type 1"))
         return TYPE1;
-    return UNKNOWN;
+    return UNKNOWN;*/
+		/* @note: work-around */
+		return TYPE1;
 }
 
 static inline int ftcidtogid(pdf_font *font, int cid)
