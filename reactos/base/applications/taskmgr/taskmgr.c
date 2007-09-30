@@ -719,6 +719,13 @@ void LoadSettings(void)
     dwSize = sizeof(TASKMANAGER_SETTINGS);
     RegQueryValueEx(hKey, _T("Preferences"), NULL, NULL, (LPBYTE)&TaskManagerSettings, &dwSize);
 
+    /*
+     * ATM, the 'ImageName' column is always visible
+     * (and grayed in configuration dialog)
+     * This will avoid troubles if the registry gets corrupted.
+     */
+    TaskManagerSettings.Column_ImageName = TRUE;
+
     /* Close the key */
     RegCloseKey(hKey);
 }
