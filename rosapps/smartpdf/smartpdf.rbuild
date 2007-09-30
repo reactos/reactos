@@ -1,4 +1,4 @@
-<module name="smartpdf" type="win32cui" installbase="system32" installname="smartpdf.exe" allowwarnings="true" stdlib="host">
+<module name="smartpdf" type="win32gui" installbase="system32" installname="smartpdf.exe" allowwarnings="true" stdlib="host">
  	<library>ntdll</library>
  	<library>kernel32</library>
  	<library>advapi32</library>
@@ -9,11 +9,11 @@
  	<library>shell32</library>
  	<library>user32</library>
  	<library>winspool</library>
- 	<library>libjpeg</library>
- 	<library>zlib</library>
- 	<library>freetype</library>
  	<library>fitz</library>
  	<library>poppler</library>
+ 	<library>freetype</library>
+ 	<library>libjpeg</library>
+ 	<library>zlib</library>
  	<define name="__USE_W32API" />
  	<define name="WIN32" />
  	<define name="_WIN32" />
