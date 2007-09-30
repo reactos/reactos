@@ -202,7 +202,7 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 	iSuggestionsLength--;
 
 	/* Are we a root key in HKEY_CLASSES_ROOT? */
-	if ((hRootKey == HKEY_CLASSES_ROOT) && pszKeyPath[0] && !_tcschr(pszKeyPath, '\\'))
+	if ((hRootKey == HKEY_CLASSES_ROOT) && pszKeyPath[0] && !_tcschr(pszKeyPath, TEXT('\\')))
 	{
 		do
 		{

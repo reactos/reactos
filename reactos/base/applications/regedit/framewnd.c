@@ -150,7 +150,7 @@ static void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
         /* load appropriate string*/
         LPTSTR lpsz = str;
         /* first newline terminates actual string*/
-        lpsz = _tcschr(lpsz, '\n');
+        lpsz = _tcschr(lpsz, _T('\n'));
         if (lpsz != NULL)
             *lpsz = '\0';
     }
@@ -877,7 +877,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (lRet != ERROR_SUCCESS) hKey = 0;
     }
 
-     switch (LOWORD(wParam)) {
+    switch (LOWORD(wParam)) {
     case ID_EDIT_MODIFY:
         if (valueName && ModifyValue(hWnd, hKey, valueName, FALSE))
             RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
@@ -887,13 +887,23 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
         break;
     case ID_EDIT_RENAME:
-        if(ListView_GetSelectedCount(g_pChildWnd->hListWnd) == 1)
+        if (GetFocus() == g_pChildWnd->hListWnd)
         {
-          item = ListView_GetNextItem(g_pChildWnd->hListWnd, -1, LVNI_SELECTED);
-          if(item > -1)
-          {
-            (void)ListView_EditLabel(g_pChildWnd->hListWnd, item);
-          }
+            if(ListView_GetSelectedCount(g_pChildWnd->hListWnd) == 1)
+            {
+                item = ListView_GetNextItem(g_pChildWnd->hListWnd, -1, LVNI_SELECTED);
+                if(item > -1)
+                {
+                    (void)ListView_EditLabel(g_pChildWnd->hListWnd, item);
+                }
+            }
+        }
+        if (GetFocus() == g_pChildWnd->hTreeWnd)
+        {
+            /* Get focused entry of treeview (if any) */
+            HTREEITEM hItem = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+            if (hItem != NULL)
+                (void)TreeView_EditLabel(g_pChildWnd->hTreeWnd, hItem);
         }
         break;
     case ID_EDIT_DELETE:

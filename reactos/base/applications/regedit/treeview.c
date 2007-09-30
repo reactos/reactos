@@ -602,7 +602,7 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 
 	while(keyPath[0])
 	{
-		s = _tcschr(keyPath, '\\');
+		s = _tcschr(keyPath, TEXT('\\'));
 		lstrcpyn(szPathPart, keyPath, s ? s - keyPath + 1 : _tcslen(keyPath) + 1);
 
 		/* Special case for root to expand root key abbreviations */
@@ -655,4 +655,5 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 
 	return TRUE;
 }
+
 

@@ -1735,7 +1735,7 @@ static LONG RegNextKey(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength)
         /* Go up and find the next sibling key */
         do
         {
-            s = _tcsrchr(lpSubKey, '\\');
+            s = _tcsrchr(lpSubKey, TEXT('\\'));
             if (s)
             {
                 *s = '\0';
@@ -1832,7 +1832,7 @@ LONG RegSearch(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength,
         if (lResult != ERROR_SUCCESS)
             return lResult;
 
-        s = _tcsrchr(lpSubKey, '\\');
+        s = _tcsrchr(lpSubKey, TEXT('\\'));
         s = s ? s + 1 : lpSubKey;
     }
     while(!(dwSearchFlags & RSF_LOOKATKEYS) || !RegSearchCompare(s, pszSearchString, dwSearchFlags));
@@ -1869,5 +1869,6 @@ BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lp
         _sntprintf(pszDest, iDestLength, TEXT("%s"), pszRootKey);
     return TRUE;
 }
+
 
 
