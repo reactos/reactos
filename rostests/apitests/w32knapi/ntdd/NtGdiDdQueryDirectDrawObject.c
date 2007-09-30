@@ -394,7 +394,7 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 
 	/* It is forbein to return a  DDSURFACEDESC2 it should always be DDSURFACEDESC
 		This is only for detected bad drivers that does not follow the rules, if they
-		does not follow tthe rules only not everthing being copy then in gdi32.dll
+		does not follow tthe rules, not everthing being copy then in gdi32.dll
 		gdi32.dll always assume it is DDSURFACEDESC size
 	*/
 	if (puD3dDriverData->dwNumTextureFormats != 0)

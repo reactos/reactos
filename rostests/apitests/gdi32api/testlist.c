@@ -4,6 +4,7 @@
 #include "gdi32api.h"
 
 /* include the tests */
+#include "tests/AddFontResource.c"
 #include "tests/AddFontResourceEx.c"
 #include "tests/CreateCompatibleDC.c"
 #include "tests/CreateFont.c"
@@ -22,6 +23,7 @@
 /* The List of tests */
 TESTENTRY TestList[] =
 {
+	{ L"AddFontResourceA", Test_AddFontResourceA },
 	{ L"AddFontResourceEx", Test_AddFontResourceEx },
 	{ L"CreateCompatibleDC", Test_CreateCompatibleDC },
 	{ L"CreateFont", Test_CreateFont },

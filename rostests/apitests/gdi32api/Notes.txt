@@ -1,0 +1,7 @@
+AddFontResource
+it seam any type of pfm/pfb/fon/fnt been genreate by fontforge
+does not be accpected by Windows 
+
+Notes Loading two font same times does not working 
+as msdn desc how todo it 
+
