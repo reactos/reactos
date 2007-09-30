@@ -117,7 +117,7 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,148,103,9
-    PUSHBUTTON      "A&vancé...",IDC_SETTINGS_ADVANCED,306,165,56,14
+    PUSHBUTTON      "A&vancé...",IDC_SETTINGS_ADVANCED,170,165,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 246, 204
@@ -141,7 +141,7 @@ BEGIN
     IDS_ADVANCEDTITLEFMT "%s et %s"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLNAME "Affichage"
     IDS_CPLDESCRIPTION "Personalise l'affichage du bureau et de l'écran de veille."  

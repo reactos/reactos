@@ -99,6 +99,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    LTEXT           "Drag the monitor icons to match the physical arrangement of your monitors.",-1,3,3,240,10
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Дисплей:",1820,3,100,30,8
     LTEXT           "<нет>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "&Разрешение экрана",1818,3,120,119,43
@@ -112,7 +114,14 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,148,103,9
-    PUSHBUTTON      "До&полнительно",IDC_SETTINGS_ADVANCED,306,165,56,14
+    PUSHBUTTON      "До&полнительно",IDC_SETTINGS_ADVANCED,170,165,70,14
+END
+
+IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 246, 204
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
 END
 
 IDR_PREVIEW_MENU MENU
@@ -120,6 +129,13 @@ BEGIN
     MENUITEM "Обычная",           ID_MENU_NORMAL
     MENUITEM "Отключенная",       ID_MENU_DISABLED
     MENUITEM "Выбранная",         ID_MENU_SELECTED
+END
+
+STRINGTABLE
+BEGIN
+    IDS_MULTIPLEMONITORS "(Multiple Monitors)"
+    IDS_UNKNOWNMONITOR "(Unknown Monitor)"
+    IDS_ADVANCEDTITLEFMT "%s and %s"
 END
 
 STRINGTABLE 
