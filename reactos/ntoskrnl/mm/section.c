@@ -2421,7 +2421,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    Status = ObReferenceObjectByHandle(FileHandle,
                                       FileAccess,
                                       IoFileObjectType,
-                                      UserMode,
+                                      ExGetPreviousMode(),
                                       (PVOID*)(PVOID)&FileObject,
                                       NULL);
    if (!NT_SUCCESS(Status))
