@@ -198,8 +198,8 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
                     WS_TABSTOP,159,121,46,44
-    CONTROL         "Wyœwietlaj &numer wersji",ID_DESKTOP_VERSION,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
+//    CONTROL         "Wyœwietlaj &numer wersji",ID_DESKTOP_VERSION,"Button",
+//                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
