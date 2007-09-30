@@ -112,13 +112,4 @@
 	<directory name="winver">
 		<xi:include href="winver/winver.rbuild" />
 	</directory>
-
-<!--
-	<directory name="smartpdf">
-		<xi:include href="smartpdf/fitz.rbuild" />
-		<xi:include href="smartpdf/poppler.rbuild" />	
-		<xi:include href="smartpdf/smartpdf.rbuild" /> 
-	</directory>
--->
-
 </group>
