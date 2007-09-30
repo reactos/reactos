@@ -1,4 +1,4 @@
-<module name="smartpdf" type="win32gui" installbase="system32" installname="smartpdf.exe" allowwarnings="true" stdlib="host">
+<module name="smartpdf" type="win32gui" installbase="system32" installname="smartpdf.exe" allowwarnings="true" stdlib="host" unicode="yes">
  	<library>ntdll</library>
  	<library>kernel32</library>
  	<library>advapi32</library>
@@ -18,8 +18,6 @@
  	<define name="WIN32" />
  	<define name="_WIN32" />
  	<define name="_WINDOWS" />
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="_DEBUG" />
 	<define name="DEBUG" />
 	<define name="USE_OWN_GET_AUTH_DATA" />
