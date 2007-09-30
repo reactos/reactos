@@ -50,7 +50,6 @@ CcUnpinDataForThread@8
 CcUnpinRepinnedBcb@12
 CcWaitForCurrentLazyWriterActivity@0
 CcSetFileSizes@8
-CcUnpinData@4
 CcZeroData@16
 CmRegisterCallback@12
 CmUnRegisterCallback@8
