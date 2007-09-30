@@ -73,55 +73,64 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
 
     /* Assume failure */
     *Object = NULL;
-
-    /* Check if the caller wants the current process */
-    if (Handle == NtCurrentProcess())
+    
+    /* Check if this is a special handle */
+    if (HandleToLong(Handle) < 0)
     {
-        /* Return handle info */
-        HandleInformation->HandleAttributes = 0;
-        HandleInformation->GrantedAccess = Process->GrantedAccess;
-
-        /* No audit mask */
-        *AuditMask = 0;
-
-        /* Reference ourselves */
-        ObjectHeader = OBJECT_TO_OBJECT_HEADER(Process);
-        InterlockedIncrement(&ObjectHeader->PointerCount);
-
-        /* Return the pointer */
-        *Object = Process;
-        ASSERT(*Object != NULL);
-        return STATUS_SUCCESS;
+        /* Check if the caller wants the current process */
+        if (Handle == NtCurrentProcess())
+        {
+            /* Return handle info */
+            HandleInformation->HandleAttributes = 0;
+            HandleInformation->GrantedAccess = Process->GrantedAccess;
+            
+            /* No audit mask */
+            *AuditMask = 0;
+            
+            /* Reference ourselves */
+            ObjectHeader = OBJECT_TO_OBJECT_HEADER(Process);
+            InterlockedIncrement(&ObjectHeader->PointerCount);
+            
+            /* Return the pointer */
+            *Object = Process;
+            ASSERT(*Object != NULL);
+            return STATUS_SUCCESS;
+        }
+        
+        /* Check if the caller wants the current thread */
+        if (Handle == NtCurrentThread())
+        {
+            /* Return handle information */
+            HandleInformation->HandleAttributes = 0;
+            HandleInformation->GrantedAccess = Thread->GrantedAccess;
+            
+            /* Reference ourselves */
+            ObjectHeader = OBJECT_TO_OBJECT_HEADER(Thread);
+            InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+            
+            /* No audit mask */
+            *AuditMask = 0;
+            
+            /* Return the pointer */
+            *Object = Thread;
+            ASSERT(*Object != NULL);
+            return STATUS_SUCCESS;
+        }
+        
+        /* This is a kernel handle... do we have access? */
+        if (AccessMode == KernelMode)
+        {
+            /* Use the kernel handle table and get the actual handle value */
+            Handle = ObKernelHandleToHandle(Handle);
+            HandleTable = ObpKernelHandleTable;
+        }
+        else
+        {
+            /* This is an illegal attempt to access a kernel handle */
+            return STATUS_INVALID_HANDLE;
+        }
     }
-
-    /* Check if the caller wants the current thread */
-    if (Handle == NtCurrentThread())
-    {
-        /* Return handle information */
-        HandleInformation->HandleAttributes = 0;
-        HandleInformation->GrantedAccess = Thread->GrantedAccess;
-
-        /* Reference ourselves */
-        ObjectHeader = OBJECT_TO_OBJECT_HEADER(Thread);
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
-
-        /* No audit mask */
-        *AuditMask = 0;
-
-        /* Return the pointer */
-        *Object = Thread;
-        ASSERT(*Object != NULL);
-        return STATUS_SUCCESS;
-    }
-
-    /* Check if this is a kernel handle */
-    if (ObIsKernelHandle(Handle, AccessMode))
-    {
-        /* Use the kernel handle table and get the actual handle value */
-        Handle = ObKernelHandleToHandle(Handle);
-        HandleTable = ObpKernelHandleTable;
-    }
-
+        
     /* Enter a critical region while we touch the handle table */
     ASSERT(HandleTable != NULL);
     KeEnterCriticalRegion();
@@ -2053,12 +2062,7 @@ ObKillProcess(IN PEPROCESS Process)
     ExSweepHandleTable(HandleTable,
                        ObpCloseHandleCallback,
                        &Context);
-    //ASSERT(HandleTable->HandleCount == 0);
-    /* HACK: Until the problem is investigated... */
-    if (HandleTable->HandleCount != 0)
-    {
-        DPRINT1("Leaking %d handles!\n", HandleTable->HandleCount);
-    }
+    ASSERT(HandleTable->HandleCount == 0);
 
     /* Leave the critical region */
     KeLeaveCriticalRegion();

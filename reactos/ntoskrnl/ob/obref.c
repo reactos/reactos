@@ -480,70 +480,111 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
     /* Assume failure */
     *Object = NULL;
 
-    /* Check if the caller wants the current process */
-    if ((Handle == NtCurrentProcess()) &&
-        ((ObjectType == PsProcessType) || !(ObjectType)))
+    /* Check if this is a special handle */
+    if (HandleToLong(Handle) < 0)
     {
-        /* Get the current process */
-        CurrentProcess = PsGetCurrentProcess();
-
-        /* Check if the caller wanted handle information */
-        if (HandleInformation)
+        /* Check if this is the current process */
+        if (Handle == NtCurrentProcess())
         {
-            /* Return it */
-            HandleInformation->HandleAttributes = 0;
-            HandleInformation->GrantedAccess = PROCESS_ALL_ACCESS;
+            /* Check if this is the right object type */
+            if ((ObjectType == PsProcessType) || !(ObjectType))
+            {
+                /* Get the current process and granted access */
+                CurrentProcess = PsGetCurrentProcess();
+                GrantedAccess = CurrentProcess->GrantedAccess;
+                
+                /* Validate access */
+                if ((AccessMode == KernelMode) ||
+                    !(~GrantedAccess & DesiredAccess))
+                {                   
+                    /* Check if the caller wanted handle information */
+                    if (HandleInformation)
+                    {
+                        /* Return it */
+                        HandleInformation->HandleAttributes = 0;
+                        HandleInformation->GrantedAccess = GrantedAccess;
+                    }
+                    
+                    /* Reference ourselves */
+                    ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentProcess);
+                    InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+                    
+                    /* Return the pointer */
+                    *Object = CurrentProcess;
+                    ASSERT(*Object != NULL);
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    /* Access denied */
+                    Status = STATUS_ACCESS_DENIED;
+                }
+            }
+            else
+            {
+                /* The caller used this special handle value with a non-process type */
+                Status = STATUS_OBJECT_TYPE_MISMATCH;
+            }
+            
+            /* Return the status */
+            return Status;
         }
-
-        /* Reference ourselves */
-        ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentProcess);
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
-
-        /* Return the pointer */
-        *Object = CurrentProcess;
-        return STATUS_SUCCESS;
-    }
-    else if (Handle == NtCurrentProcess())
-    {
-        /* The caller used this special handle value with a non-process type */
-        return STATUS_OBJECT_TYPE_MISMATCH;
-    }
-
-    /* Check if the caller wants the current thread */
-    if ((Handle == NtCurrentThread()) &&
-        ((ObjectType == PsThreadType) || !(ObjectType)))
-    {
-        /* Get the current thread */
-        CurrentThread = PsGetCurrentThread();
-
-        /* Check if the caller wanted handle information */
-        if (HandleInformation)
+        else if (Handle == NtCurrentThread())
         {
-            /* Return it */
-            HandleInformation->HandleAttributes = 0;
-            HandleInformation->GrantedAccess = THREAD_ALL_ACCESS;
+            /* Check if this is the right object type */
+            if ((ObjectType == PsThreadType) || !(ObjectType))
+            {
+                /* Get the current process and granted access */
+                CurrentThread = PsGetCurrentThread();
+                GrantedAccess = CurrentThread->GrantedAccess;
+                
+                /* Validate access */
+                if ((AccessMode == KernelMode) ||
+                    !(~GrantedAccess & DesiredAccess))
+                {                   
+                    /* Check if the caller wanted handle information */
+                    if (HandleInformation)
+                    {
+                        /* Return it */
+                        HandleInformation->HandleAttributes = 0;
+                        HandleInformation->GrantedAccess = GrantedAccess;
+                    }
+                    
+                    /* Reference ourselves */
+                    ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentThread);
+                    InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
+                    
+                    /* Return the pointer */
+                    *Object = CurrentThread;
+                    ASSERT(*Object != NULL);
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    /* Access denied */
+                    Status = STATUS_ACCESS_DENIED;
+                }
+            }
+            else
+            {
+                /* The caller used this special handle value with a non-process type */
+                Status = STATUS_OBJECT_TYPE_MISMATCH;
+            }
+            
+            /* Return the status */
+            return Status;
         }
-
-        /* Reference ourselves */
-        ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentThread);
-        InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
-
-        /* Return the pointer */
-        *Object = CurrentThread;
-        return STATUS_SUCCESS;
-    }
-    else if (Handle == NtCurrentThread())
-    {
-        /* The caller used this special handle value with a non-thread type */
-        return STATUS_OBJECT_TYPE_MISMATCH;
-    }
-
-    /* Check if this is a kernel handle */
-    if (ObIsKernelHandle(Handle, AccessMode))
-    {
-        /* Use the kernel handle table and get the actual handle value */
-        Handle = ObKernelHandleToHandle(Handle);
-        HandleTable = ObpKernelHandleTable;
+        else if (AccessMode == KernelMode)
+        {
+            /* Use the kernel handle table and get the actual handle value */
+            Handle = ObKernelHandleToHandle(Handle);
+            HandleTable = ObpKernelHandleTable;
+        }
+        else
+        {
+            /* Invalid access, fail */
+            return STATUS_INVALID_HANDLE;
+        }
     }
     else
     {
@@ -565,11 +606,10 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
         {
             /* Get the granted access and validate it */
             GrantedAccess = HandleEntry->GrantedAccess;
-            /* Inherit flags are not a kind of access right, they indicate 
-             * the disposition of access rights.  Therefore, they should not
-             * be considered. */
+            
+            /* Validate access */
             if ((AccessMode == KernelMode) ||
-                !((~GrantedAccess & DesiredAccess & ~VALID_INHERIT_FLAGS)))
+                !(~GrantedAccess & DesiredAccess))
             {
                 /* Reference the object directly since we have its header */
                 InterlockedIncrement(&ObjectHeader->PointerCount);

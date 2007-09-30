@@ -17,7 +17,7 @@
 
 LIST_ENTRY HandleTableListHead;
 EX_PUSH_LOCK HandleTableListLock;
-#define SizeOfHandle(x) sizeof(HANDLE) * x
+#define SizeOfHandle(x) (sizeof(HANDLE) * x)
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
