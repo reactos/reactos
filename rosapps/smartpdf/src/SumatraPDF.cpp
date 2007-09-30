@@ -282,10 +282,10 @@ void CurrLangNameFree() {
     g_currLangName = NULL;
 }
 
-void LaunchBrowser(const TCHAR *url)
+/*void LaunchBrowser(const TCHAR *url)
 {
     launch_url(url);
-}
+}*/
 
 static BOOL pageRenderAbortCb(void *data)
 {
@@ -2703,7 +2703,9 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y)
     if (WS_ABOUT == win->state) {
         url = AboutGetLink(win, x, y);
         if (url == win->url)
-            LaunchBrowser(url);
+            //LaunchBrowser(url);
+						MessageBox(NULL,(TCHAR*)url, TEXT("Extern link blocked"), 0); /* @note: work-around to solve linking issue */
+
         win->url = NULL;
         return;
     }
@@ -4166,7 +4168,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
                     break;
 
                 case IDM_VISIT_WEBSITE:
-                    LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
+                    //LaunchBrowser(_T("http://blog.kowalczyk.info/software/sumatrapdf/"));
+                    MessageBox(NULL, TEXT("http://www.reactos.org/"), TEXT("Extern link blocked"), 0); /* @note: work-around to solve linking issue */
                     break;
 
                 case IDM_LANG_EN:

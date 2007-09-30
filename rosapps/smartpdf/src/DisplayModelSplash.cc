@@ -563,7 +563,9 @@ void DisplayModelSplash::handleLinkURI(LinkURI *linkURI)
     uri = linkURI->getURI()->getCString();
     if (str_empty(uri))
         return;
-    LaunchBrowser(uri);
+    //LaunchBrowser(uri);
+		MessageBox(NULL,(TCHAR*)uri, TEXT("Extern link blocked"), 0); /* @note: work-around to solve linking issue */
+
 }
 
 void DisplayModelSplash::handleLinkLaunch(LinkLaunch* linkLaunch)

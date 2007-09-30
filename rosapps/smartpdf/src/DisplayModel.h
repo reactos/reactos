@@ -329,7 +329,7 @@ bool                displayStateFromDisplayModel(DisplayState *ds, DisplayModel 
 extern DisplaySettings gDisplaySettings;
 
 /* must be implemented somewhere else */
-extern void         LaunchBrowser(const char *uri);
+//extern void         LaunchBrowser(const char *uri);
 
 /* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
    that uniquely identifies rendered page (dm, pageNo, rotation, zoomReal)
