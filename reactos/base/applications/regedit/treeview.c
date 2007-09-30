@@ -218,7 +218,17 @@ BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
             pszNodes[dwActualSize] = '\0';
     }
 
-    /* Now go through all the children in the registry, and check if any have to be added. */
+    /* Now go through all the children in the tree, and check if any have to be removed. */
+    childItem = TreeView_GetChild(hwndTV, hItem);
+    while (childItem) {
+        HTREEITEM nextItem = TreeView_GetNextSibling(hwndTV, childItem);
+        if (RefreshTreeItem(hwndTV, childItem) == FALSE) {
+            (void)TreeView_DeleteItem(hwndTV, childItem);
+        }
+        childItem = nextItem;
+    }
+
+	/* Now go through all the children in the registry, and check if any have to be added. */
     bAddedAny = FALSE;
     for (dwIndex = 0; dwIndex < dwCount; dwIndex++) {
         DWORD cName = dwMaxSubKeyLen, dwSubCount;
@@ -258,15 +268,6 @@ BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
     if (bAddedAny)
         SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
 
-    /* Now go through all the children in the tree, and check if any have to be removed. */
-    childItem = TreeView_GetChild(hwndTV, hItem);
-    while (childItem) {
-        HTREEITEM nextItem = TreeView_GetNextSibling(hwndTV, childItem);
-        if (RefreshTreeItem(hwndTV, childItem) == FALSE) {
-            (void)TreeView_DeleteItem(hwndTV, childItem);
-        }
-        childItem = nextItem;
-    }
     bSuccess = TRUE;
 
 done:

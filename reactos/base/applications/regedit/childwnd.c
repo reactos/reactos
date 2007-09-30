@@ -522,7 +522,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                   HKEY hRootKey;
                   HKEY hKey = NULL;
                   LPNMTVDISPINFO ptvdi;
-                  LONG lResult = ERROR_SUCCESS;
+                  LONG lResult = TRUE;
                   TCHAR szBuffer[MAX_PATH];
 
                   ptvdi = (LPNMTVDISPINFO) lParam;
@@ -533,13 +533,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     keyPath = GetItemPath(pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
                     if (RegOpenKeyEx(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
                     {
-                      lResult = REG_OPENED_EXISTING_KEY;
+                      lResult = FALSE;
                       RegCloseKey(hKey);
                       (void)TreeView_EditLabel(pChildWnd->hTreeWnd, ptvdi->item.hItem);
                     }
                     else
                     {
-                      lResult = RegRenameKey(hRootKey, keyPath, ptvdi->item.pszText);
+                      if (RegRenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
+						  lResult = FALSE;
                     }
                     return lResult;
                   }

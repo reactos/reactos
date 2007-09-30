@@ -949,7 +949,10 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
              MessageBeep(MB_ICONHAND); 
           } else
           if (DeleteKey(hWnd, hKeyRoot, keyPath))
+          {
             DeleteNode(g_pChildWnd->hTreeWnd, 0);
+            RefreshTreeView(g_pChildWnd->hTreeWnd);
+          }
         }
 	break;
     case ID_EDIT_NEW_STRINGVALUE:
