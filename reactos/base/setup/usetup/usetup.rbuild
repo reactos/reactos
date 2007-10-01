@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" allowwarnings="false">
-	<bootstrap base="$(CDOUTPUT)/system32" nameoncd="smss.exe" />
+	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="smss.exe" />
 	<include base="usetup">.</include>
 	<include base="zlib">.</include>
 	<include base="inflib">.</include>

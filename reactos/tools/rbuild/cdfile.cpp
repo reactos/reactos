@@ -39,7 +39,7 @@ CDFile::CDFile ( const Project& project,
                  const string& path )
 	: XmlNode ( project, cdfileNode )
 {
-	const XMLAttribute* att = cdfileNode.GetAttribute ( "base", false );
+	const XMLAttribute* att = cdfileNode.GetAttribute ( "installbase", false );
 	string target_relative_directory;
 	if ( att != NULL )
 		target_relative_directory = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );

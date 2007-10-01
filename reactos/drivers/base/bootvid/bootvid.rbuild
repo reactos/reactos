@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="bootvid" type="kernelmodedll" entrypoint="DriverEntry@8" installbase="system32/drivers" installname="bootvid.dll">
 	<importlibrary definition="bootvid.def"></importlibrary>
-	<bootstrap base="$(CDOUTPUT)" nameoncd="bootvid.dll" />
+	<bootstrap installbase="$(CDOUTPUT)" nameoncd="bootvid.dll" />
 	<include base="bootvid">.</include>
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>

@@ -3,7 +3,7 @@
 <group>
 	<if property="ARCH" value="i386">
 		<module name="freeldr" type="bootloader">
-			<bootstrap base="loader" />
+			<bootstrap installbase="loader" />
 			<library>freeldr_startup</library>
 			<library>freeldr_base64k</library>
 			<library>freeldr_base</library>

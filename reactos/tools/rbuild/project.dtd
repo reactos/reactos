@@ -22,14 +22,14 @@
 
 <!ELEMENT bootstrap EMPTY>
 <!ATTLIST bootstrap
-	base      %Text; #IMPLIED
-	nameoncd  %Text; #IMPLIED
+	installbase %Text; #IMPLIED
+	nameoncd    %Text; #IMPLIED
 >
 
 <!ELEMENT cdfile (#PCDATA)>
 <!ATTLIST cdfile
-	base      %Text; #IMPLIED
-	nameoncd  %Text; #IMPLIED
+	installbase %Text; #IMPLIED
+	nameoncd    %Text; #IMPLIED
 >
 
 <!ELEMENT compilerflag (#PCDATA)>
@@ -55,8 +55,8 @@
 
 <!ELEMENT installfile (#PCDATA)>
 <!ATTLIST installfile
-	base %Text; #IMPLIED
-	root (intermediate|output) #IMPLIED
+	installbase %Text; #IMPLIED
+	root        (intermediate|output) #IMPLIED
 >
 
 <!ELEMENT group (cdfile*|define*|directory*|file*|if*|ifnot*|include*|installfile*|property*|module*|group*|xi:include*)+>

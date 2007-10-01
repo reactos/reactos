@@ -177,10 +177,10 @@ Bootstrap element
 A bootstrap element specifies that the generated file should be put on the bootable CD as a bootstrap file.
 
 Syntax:
-	<bootstrap base="reactos" nameoncd="halmp.dll" />
+	<bootstrap installbase="reactos" nameoncd="halmp.dll" />
 
 Attributes:
-	base - Put file in this directory on the bootable CD. This attribute is optional.
+	installbase - Put file in this directory on the bootable CD. This attribute is optional.
 	nameoncd - Name of file on the bootable CD. This attribute is optional.
 
 Value:
@@ -195,10 +195,10 @@ CDFile element
 A cdfile element specifies the name of a file that is to be put on the bootable CD.
 
 Syntax:
-	<cdfile base="reactos" nameoncd="ReadMe.txt">ReadMe.txt</cdfile>
+	<cdfile installbase="reactos" nameoncd="ReadMe.txt">ReadMe.txt</cdfile>
 
 Attributes:
-	base - Put file in this directory on the bootable CD. This attribute is optional.
+	installbase - Put file in this directory on the bootable CD. This attribute is optional.
 	nameoncd - Name of file on the bootable CD. This attribute is optional.
 
 Value:
@@ -392,10 +392,10 @@ Installfile element
 An installfile element specifies the name of a file that is to be installed when using 'make install'.
 
 Syntax:
-	<installfile base="reactos" newname="ReadMe.txt">ReadMe.txt</installfile>
+	<installfile installbase="reactos" newname="ReadMe.txt">ReadMe.txt</installfile>
 
 Attributes:
-	base - Put file in this directory within the install directory. This attribute is optional.
+	installbase - Put file in this directory within the install directory. This attribute is optional.
 	newname - Name of file within the install directory. This attribute is optional.
 
 Value:

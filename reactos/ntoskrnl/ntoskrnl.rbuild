@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
-	<bootstrap base="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)" />
 	<importlibrary definition="ntoskrnl.def" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />

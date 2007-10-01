@@ -27,7 +27,7 @@ InstallFile::InstallFile ( const Project& project,
                            const string& path )
 	: XmlNode(project, installfileNode )
 {
-	const XMLAttribute* base = node.GetAttribute ( "base", false );
+	const XMLAttribute* base = node.GetAttribute ( "installbase", false );
 	const XMLAttribute* newname = node.GetAttribute ( "newname", false );
 
 	DirectoryLocation source_directory = SourceDirectory;

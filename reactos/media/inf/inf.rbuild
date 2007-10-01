@@ -1,23 +1,23 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group>
-	<installfile base="inf">acpi.inf</installfile>
-	<installfile base="inf">cdrom.inf</installfile>
-	<installfile base="inf">display.inf</installfile>
-	<installfile base="inf">hdc.inf</installfile>
-	<installfile base="inf">keyboard.inf</installfile>
-	<installfile base="inf">layout.inf</installfile>
-	<installfile base="inf">machine.inf</installfile>
-	<installfile base="inf">msmouse.inf</installfile>
-	<installfile base="inf">NET_NIC.inf</installfile>
-	<installfile base="inf">netamd.inf</installfile>
-	<installfile base="inf">netisa.inf</installfile>
-	<installfile base="inf">netrtpnt.inf</installfile>
-	<installfile base="inf">nettcpip.inf</installfile>
-	<installfile base="inf">ports.inf</installfile>
-	<installfile base="inf">scsi.inf</installfile>
-	<installfile base="inf" root="output">syssetup.inf</installfile>
-	<installfile base="inf">usbport.inf</installfile>
-	<installfile base="inf">usbstor.inf</installfile>
-	<installfile base="inf">xboxdisp.inf</installfile>
+	<installfile installbase="inf">acpi.inf</installfile>
+	<installfile installbase="inf">cdrom.inf</installfile>
+	<installfile installbase="inf">display.inf</installfile>
+	<installfile installbase="inf">hdc.inf</installfile>
+	<installfile installbase="inf">keyboard.inf</installfile>
+	<installfile installbase="inf">layout.inf</installfile>
+	<installfile installbase="inf">machine.inf</installfile>
+	<installfile installbase="inf">msmouse.inf</installfile>
+	<installfile installbase="inf">NET_NIC.inf</installfile>
+	<installfile installbase="inf">netamd.inf</installfile>
+	<installfile installbase="inf">netisa.inf</installfile>
+	<installfile installbase="inf">netrtpnt.inf</installfile>
+	<installfile installbase="inf">nettcpip.inf</installfile>
+	<installfile installbase="inf">ports.inf</installfile>
+	<installfile installbase="inf">scsi.inf</installfile>
+	<installfile installbase="inf" root="output">syssetup.inf</installfile>
+	<installfile installbase="inf">usbport.inf</installfile>
+	<installfile installbase="inf">usbstor.inf</installfile>
+	<installfile installbase="inf">xboxdisp.inf</installfile>
 </group>

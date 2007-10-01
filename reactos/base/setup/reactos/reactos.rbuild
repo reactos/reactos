@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="reactos" type="win32gui">
-	<bootstrap base="$(CDOUTPUT)" />
+	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="reactos">.</include>
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>

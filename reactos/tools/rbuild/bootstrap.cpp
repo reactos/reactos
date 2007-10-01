@@ -97,7 +97,7 @@ Bootstrap::Initialize ()
 			"<bootstrap> is not applicable for this module type." );
 	}
 
-	const XMLAttribute* att = node.GetAttribute ( "base", false );
+	const XMLAttribute* att = node.GetAttribute ( "installbase", false );
 	if ( att != NULL )
 		base = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
 	else
