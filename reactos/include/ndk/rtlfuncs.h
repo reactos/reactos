@@ -449,6 +449,15 @@ RtlUnwind(
 // Tracing Functions
 //
 NTSYSAPI
+ULONG
+NTAPI
+RtlWalkFrameChain(
+    OUT PVOID *Callers,
+    IN ULONG Count,
+    IN ULONG Flags
+);
+
+NTSYSAPI
 USHORT
 NTAPI
 RtlLogStackBackTrace(

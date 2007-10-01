@@ -255,6 +255,144 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlWalkFrameChain(OUT PVOID *Callers,
+                  IN ULONG Count,
+                  IN ULONG Flags)
+{
+    ULONG_PTR Stack, NewStack, StackBegin, StackEnd;
+    ULONG Eip;
+    BOOLEAN Result, StopSearch = FALSE;
+    ULONG i = 0;
+    PKTHREAD Thread = KeGetCurrentThread();
+    PTEB Teb;
+    PKTRAP_FRAME TrapFrame;
+    
+    /* Get current EBP */
+#if defined(_M_IX86)
+#if defined __GNUC__
+    __asm__("mov %%ebp, %0" : "=r" (Stack) : );
+#elif defined(_MSC_VER)
+    __asm mov Stack, ebp
+#endif
+#elif defined(_M_MIPS)
+        __asm__("move $sp, %0" : "=r" (Stack) : );
+#elif defined(_M_PPC)
+    __asm__("mr %0,1" : "=r" (Stack) : );
+#else
+#error Unknown architecture
+#endif
+    
+    /* Set it as the stack begin limit as well */
+    StackBegin = (ULONG_PTR)Stack;
+    
+    /* Check if we're called for non-logging mode */
+    if (!Flags)
+    {
+        /* Get the actual safe limits */
+        Result = RtlpCaptureStackLimits((ULONG_PTR)Stack,
+                                        &StackBegin,
+                                        &StackEnd);
+        if (!Result) return 0;
+    }
+    
+    /* Use a SEH block for maximum protection */
+    _SEH_TRY
+    {
+        /* Check if we want the user-mode stack frame */
+        if (Flags == 1)
+        {
+            /* Get the trap frame and TEB */          
+            TrapFrame = Thread->TrapFrame;
+            Teb = Thread->Teb;
+            
+            /* Make sure we can trust the TEB and trap frame */
+            if (!(Teb) || 
+                !((PVOID)((ULONG_PTR)TrapFrame & 0x80000000)) || 
+                ((PVOID)TrapFrame <= (PVOID)Thread->StackLimit) ||
+                ((PVOID)TrapFrame >= (PVOID)Thread->StackBase) ||
+                (KeIsAttachedProcess()) || 
+                (KeGetCurrentIrql() >= DISPATCH_LEVEL))
+            {
+                /* Invalid or unsafe attempt to get the stack */
+                return 0;
+            }
+
+            /* Get the stack limits */
+            StackBegin = (ULONG_PTR)Teb->Tib.StackLimit;
+            StackEnd = (ULONG_PTR)Teb->Tib.StackBase;
+            Stack = TrapFrame->Ebp;
+
+            /* Validate them */
+            if (StackEnd <= StackBegin) return 0;
+            ProbeForRead((PVOID)StackBegin,
+                         StackEnd - StackBegin,
+                         sizeof(CHAR));
+        }
+        
+        /* Loop the frames */
+        for (i = 0; i < Count; i++)
+        {
+            /*
+             * Leave if we're past the stack,
+             * if we're before the stack,
+             * or if we've reached ourselves.
+             */
+            if ((Stack >= StackEnd) ||
+                (!i ? (Stack < StackBegin) : (Stack <= StackBegin)) ||
+                ((StackEnd - Stack) < (2 * sizeof(ULONG_PTR))))
+            {
+                /* We're done or hit a bad address */
+                break;
+            }
+            
+            /* Get new stack and EIP */
+            NewStack = *(PULONG_PTR)Stack;
+            Eip = *(PULONG_PTR)(Stack + sizeof(ULONG_PTR));
+            
+            /* Check if the new pointer is above the oldone and past the end */
+            if (!((Stack < NewStack) && (NewStack < StackEnd)))
+            {
+                /* Stop searching after this entry */
+                StopSearch = TRUE;
+            }
+            
+            /* Also make sure that the EIP isn't a stack address */
+            if ((StackBegin < Eip) && (Eip < StackEnd)) break;
+            
+            /* Check if we reached a user-mode address */
+            if (!(Flags) && !(Eip & 0x80000000)) break;
+            
+            /* Save this frame */
+            Callers[i] = (PVOID)Eip;
+            
+            /* Check if we should continue */
+            if (StopSearch)
+            {
+                /* Return the next index */
+                i++;
+                break;
+            }
+            
+            /* Move to the next stack */
+            Stack = NewStack;
+        }
+    }
+    _SEH_HANDLE
+    {
+        /* No index */
+        i = 0;
+    }
+    _SEH_END;
+    
+    /* Return frames parsed */
+    return i;    
+}
+
 /* RTL Atom Tables ************************************************************/
 
 NTSTATUS

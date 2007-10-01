@@ -136,6 +136,97 @@ KiRosPrintAddress(PVOID address)
     return(FALSE);
 }
 
+PVOID
+NTAPI
+KiRosPcToUserFileHeader(IN PVOID Eip,
+                        OUT PLDR_DATA_TABLE_ENTRY *LdrEntry)
+{
+    PVOID ImageBase, EipBase = NULL;
+    PLDR_DATA_TABLE_ENTRY Entry;
+    PLIST_ENTRY ListHead, NextEntry;
+    
+    /*
+     * We know this is valid because we should only be called after a
+     * succesfull address from RtlWalkFrameChain for UserMode, which
+     * validates everything for us.
+     */
+    ListHead = &KeGetCurrentThread()->
+               Teb->ProcessEnvironmentBlock->Ldr->InLoadOrderModuleList;
+    
+    /* Set list pointers and make sure it's valid */
+    NextEntry = ListHead->Flink;
+    if (NextEntry)
+    {
+        /* Start loop */
+        while (NextEntry != ListHead)
+        {
+            /* Get the loader entry */
+            Entry = CONTAINING_RECORD(NextEntry,
+                                      LDR_DATA_TABLE_ENTRY,
+                                      InLoadOrderLinks);
+            
+            /* Move to the next entry */
+            NextEntry = NextEntry->Flink;
+            ImageBase = Entry->DllBase;
+            
+            /* Check if this is the right one */
+            if (((ULONG_PTR)Eip >= (ULONG_PTR)Entry->DllBase) &&
+                ((ULONG_PTR)Eip < ((ULONG_PTR)Entry->DllBase + Entry->SizeOfImage)))
+            {
+                /* Return this entry */
+                *LdrEntry = Entry;
+                EipBase = ImageBase;
+                break;
+            }
+        }
+    }
+    
+    /* Return the base address */
+    return EipBase;
+}
+
+USHORT
+NTAPI
+KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
+                               IN ULONG FramesToCapture,
+                               OUT PVOID *BackTrace,
+                               OUT PULONG BackTraceHash OPTIONAL)
+{
+    PVOID Frames[2 * 64];
+    ULONG FrameCount;
+    ULONG Hash = 0, i;
+    
+    /* Skip a frame for the caller */
+    FramesToSkip++;
+    
+    /* Don't go past the limit */
+    if ((FramesToCapture + FramesToSkip) >= 128) return 0;
+    
+    /* Do the back trace */
+    FrameCount = RtlWalkFrameChain(Frames, FramesToCapture + FramesToSkip, 1);
+    
+    /* Make sure we're not skipping all of them */
+    if (FrameCount <= FramesToSkip) return 0;
+    
+    /* Loop all the frames */
+    for (i = 0; i < FramesToCapture; i++)
+    {
+        /* Don't go past the limit */
+        if ((FramesToSkip + i) >= FrameCount) break;
+        
+        /* Save this entry and hash it */
+        BackTrace[i] = Frames[FramesToSkip + i];
+        Hash += PtrToUlong(BackTrace[i]);
+    }
+    
+    /* Write the hash */
+    if (BackTraceHash) *BackTraceHash = Hash;
+    
+    /* Clear the other entries and return count */
+    RtlFillMemoryUlong(Frames, 128, 0);
+    return (USHORT)i;
+}
+
 VOID
 NTAPI
 KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
@@ -176,7 +267,38 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
             Addr -= (ULONG_PTR)LdrEntry->DllBase;
             DbgPrint("<%wZ: %x>", &LdrEntry->FullDllName, Addr);
         }
+        else if (Addr)
+        {
+            /* Print only the address */
+            DbgPrint("<%x>", Addr);
+        }
 
+        /* Go to the next frame */
+        DbgPrint("\n");
+    }
+    
+    /* Get the current frames */
+    FrameCount = KeRosCaptureUserStackBackTrace(-1, 32, (PVOID*)Frames, NULL);
+    
+    /* Now loop them */
+    for (i = 0; i < FrameCount; i++)
+    {
+        /* Get the EIP */
+        Addr = Frames[i];
+        
+        /* Get the base for this file */
+        if (KiRosPcToUserFileHeader((PVOID)Addr, &LdrEntry))
+        {
+            /* Print out the module name */
+            Addr -= (ULONG_PTR)LdrEntry->DllBase;
+            DbgPrint("<%wZ: %x>", &LdrEntry->FullDllName, Addr);
+        }
+        else if (Addr)
+        {
+            /* Print only the address */
+            DbgPrint("<%x>", Addr);
+        }
+        
         /* Go to the next frame */
         DbgPrint("\n");
     }

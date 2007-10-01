@@ -15,6 +15,19 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlWalkFrameChain(OUT PVOID *Callers,
+                  IN ULONG Count,
+                  IN ULONG Flags)
+{
+    /* Not implemented for user-mode */
+    return 0;
+}
+
 BOOLEAN
 NTAPI
 RtlpCheckForActiveDebugger(BOOLEAN Type)
