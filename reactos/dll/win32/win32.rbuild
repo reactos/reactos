@@ -22,6 +22,9 @@
 <directory name="beepmidi">
 	<xi:include href="beepmidi/beepmidi.rbuild" />
 </directory>
+<directory name="browseui">
+	<xi:include href="browseui/browseui.rbuild" />
+</directory>
 <directory name="cabinet">
 	<xi:include href="cabinet/cabinet.rbuild" />
 </directory>

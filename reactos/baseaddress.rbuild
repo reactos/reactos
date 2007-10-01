@@ -37,6 +37,7 @@
   <property name="BASEADDRESS_OLEACC" value="0x69640000" />
   <property name="BASEADDRESS_WINMM" value="0x697d0000" />
   <property name="BASEADDRESS_MSIMG32" value="0x69cc0000" />
+  <property name="BASEADDRESS_BROWSEUI" value="0x69cc0000" />
   <property name="BASEADDRESS_NETPLWIZ" value="0x6a240000" />
   <property name="BASEADDRESS_SHELL32" value="0x6a360000" />
   <property name="BASEADDRESS_UNICODE" value="0x6b200000" />
