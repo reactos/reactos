@@ -4857,6 +4857,19 @@ NdisMFreeMapRegisters(
 
 /*
  * VOID
+ * EXPORT
+ * NdisMIndicateReceivePacket(
+ *  IN NDIS_HANDLE  MiniportAdapterHandle,
+ *  IN PPNDIS_PACKET  ReceivePackets,
+ *  IN UINT  NumberOfPackets);
+ */
+#define NdisMIndicateReceivePacket(MiniportAdapterHandle, \
+  ReceivePackets, NumberOfPackets)                        \
+  (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->PacketIndicateHandler)( \
+  MiniportAdapterHandle, ReceivePackets, NumberOfPackets)
+
+/*
+ * VOID
  * NdisMIndicateStatus(
  *  IN NDIS_HANDLE  MiniportAdapterHandle,
  *  IN NDIS_STATUS  GeneralStatus,
