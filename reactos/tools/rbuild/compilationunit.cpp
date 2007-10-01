@@ -102,7 +102,8 @@ CompilationUnit::GetFilename () const
 	{
 		return new FileLocation ( IntermediateDirectory,
 		                          module ? module->output->relative_path : "",
-		                          local_name );
+		                          local_name,
+		                          node );
 	}
 
 	File* file = files[0];

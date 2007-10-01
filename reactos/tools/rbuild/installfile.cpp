@@ -49,12 +49,14 @@ InstallFile::InstallFile ( const Project& project,
 
 	source = new FileLocation ( source_directory,
 	                            path,
-	                            node.value );
+	                            node.value,
+	                            &node );
 	target = new FileLocation ( InstallDirectory,
 	                            base && base->value != "."
 	                                ? base->value
 	                                : "",
 	                            newname
 	                                ? newname->value
-	                                : node.value );
+	                                : node.value,
+	                            &node );
 }

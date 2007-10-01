@@ -101,7 +101,8 @@ ParseContext::ParseContext ()
 
 FileLocation::FileLocation ( const DirectoryLocation directory,
                              const std::string& relative_path,
-                             const std::string& name )
+                             const std::string& name,
+                             const XMLElement *node )
 	: directory ( directory ),
 	  relative_path ( NormalizeFilename ( relative_path ) ),
 	  name ( name )
@@ -114,18 +115,32 @@ FileLocation::FileLocation ( const DirectoryLocation directory,
 	     ( relative_path.length () > 3 && relative_path.find ( ':' ) != string::npos )
 	     )
 	{
-		throw InvalidOperationException ( __FILE__,
-		                                  __LINE__,
-		                                  "Invalid relative path '%s'",
-		                                  relative_path.c_str () );
+		if ( node )
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Invalid relative path '%s' at %s",
+			                                  relative_path.c_str (),
+			                                  node->location.c_str () );
+		else
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Invalid relative path '%s'",
+			                                  relative_path.c_str () );
 	}
 
 	if ( name.find_first_of ( "/\\:" ) != string::npos )
 	{
-		throw InvalidOperationException ( __FILE__,
-		                                  __LINE__,
-		                                  "Invalid file name '%s'",
-		                                  name.c_str () );
+		if ( node )
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Invalid file name '%s' at %s",
+			                                  name.c_str (),
+			                                  node->location.c_str () );
+		else
+			throw InvalidOperationException ( __FILE__,
+			                                  __LINE__,
+			                                  "Invalid file name '%s'",
+			                                  name.c_str () );
 	}
 }
 

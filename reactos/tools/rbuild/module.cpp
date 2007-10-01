@@ -280,7 +280,8 @@ Module::Module ( const Project& project,
 
 	output = new FileLocation ( GetTargetDirectoryTree (),
 	                            modulePath,
-	                            name + extension );
+	                            name + extension,
+	                            &moduleNode );
 
 	att = moduleNode.GetAttribute ( "unicode", false );
 	if ( att != NULL )
@@ -408,7 +409,8 @@ Module::Module ( const Project& project,
 		const XMLAttribute* installbase = moduleNode.GetAttribute ( "installbase", false );
 		install = new FileLocation ( InstallDirectory,
 		                             installbase ? installbase->value : "",
-		                             att->value );
+		                             att->value,
+		                             &moduleNode );
 	}
 	else
 		install = NULL;
@@ -774,14 +776,14 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		if ( pos == string::npos )
 		{
 			pch = new PchFile (
-				e, *this, FileLocation ( SourceDirectory, relative_path, e.value ) );
+				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
 		}
 		else
 		{
 			string dir = e.value.substr ( 0, pos );
 			string name = e.value.substr ( pos + 1);
 			pch = new PchFile (
-				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name ) );
+				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
 		}
 		subs_invalid = true;
 	}
@@ -1556,7 +1558,8 @@ ImportLibrary::ImportLibrary ( const Project& project,
 	{
 		source = new FileLocation ( directory,
 		                            module.output->relative_path,
-		                            definition->value );
+		                            definition->value,
+		                            &node );
 	}
 	else
 	{
@@ -1564,7 +1567,8 @@ ImportLibrary::ImportLibrary ( const Project& project,
 		string name = definition->value.substr ( index + 1);
 		source = new FileLocation ( directory,
 		                            NormalizeFilename ( module.output->relative_path + sSep + dir ),
-		                            name );
+		                            name,
+		                            &node );
 	}
 }
 

@@ -3221,7 +3221,9 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 		if ( m.bootstrap != NULL )
 		{
 			FileLocation targetFile ( OutputDirectory,
-			                          bootcdDirectory + sSep + m.bootstrap->base,
+			                          m.bootstrap->base.length () > 0
+			                                   ? bootcdDirectory + sSep + m.bootstrap->base
+			                                   : bootcdDirectory,
 			                          m.bootstrap->nameoncd );
 			OutputCopyCommand ( *m.output, targetFile );
 		}
@@ -3256,7 +3258,9 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( vector<FileLocation>& out,
 		if ( m.bootstrap != NULL )
 		{
 			FileLocation targetDirectory ( OutputDirectory,
-			                               bootcdDirectory + sSep + m.bootstrap->base,
+			                               m.bootstrap->base.length () > 0
+			                                   ? bootcdDirectory + sSep + m.bootstrap->base
+			                                   : bootcdDirectory,
 			                               "" );
 			out.push_back ( targetDirectory );
 		}

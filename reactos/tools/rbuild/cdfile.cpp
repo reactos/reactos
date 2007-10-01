@@ -50,8 +50,10 @@ CDFile::CDFile ( const Project& project,
 
 	source = new FileLocation ( SourceDirectory,
 	                            path,
-	                            cdfileNode.value );
+	                            cdfileNode.value,
+	                            &cdfileNode );
 	target = new FileLocation ( OutputDirectory,
 	                            target_relative_directory,
-	                            nameoncd ? att->value : cdfileNode.value );
+	                            nameoncd ? att->value : cdfileNode.value,
+	                            &cdfileNode );
 }

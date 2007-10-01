@@ -316,7 +316,8 @@ public:
 
 	FileLocation ( const DirectoryLocation directory,
 	               const std::string& relative_path,
-	               const std::string& name );
+	               const std::string& name,
+	               const XMLElement *node = NULL );
 
 	FileLocation ( const FileLocation& other );
 };

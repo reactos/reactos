@@ -108,7 +108,8 @@ Include::ProcessXML ()
 
 	directory = new FileLocation ( root,
 	                               relative_path,
-	                               "" );
+	                               "",
+	                               node );
 }
 
 DirectoryLocation
