@@ -44,10 +44,6 @@
 //#include "xmlstorage.h"
 #include <precomp.h>
 
-#ifdef __GNUC__
-#include <alloca.h>
-#endif
-
 
 namespace XMLStorage {
 
