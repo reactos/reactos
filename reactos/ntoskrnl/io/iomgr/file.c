@@ -390,27 +390,15 @@ IopParseDevice(IN PVOID ParseObject,
     /* Check if this is a direct open */
     if (!(RemainingName->Length) &&
         !(OpenPacket->RelatedFileObject) &&
-#if 0 // USETUP IS BROKEN!
-        ((DesiredAccess & ~(SYNCHRONIZE |
-                             FILE_READ_ATTRIBUTES |
-                             READ_CONTROL |
-                             ACCESS_SYSTEM_SECURITY |
-                             WRITE_OWNER |
-                             WRITE_DAC)) &&
-#endif
+        (((DesiredAccess & ~(SYNCHRONIZE |
+                            FILE_READ_ATTRIBUTES |
+                            READ_CONTROL |
+                            ACCESS_SYSTEM_SECURITY |
+                            WRITE_OWNER |
+                            WRITE_DAC)) == 0) ||
+         (wcsstr(CompleteName->Buffer, L"Harddisk"))) &&
         !(UseDummyFile))
     {
-        if (DesiredAccess & ~(SYNCHRONIZE |
-                              FILE_READ_ATTRIBUTES |
-                              READ_CONTROL |
-                              ACCESS_SYSTEM_SECURITY |
-                              WRITE_OWNER |
-                              WRITE_DAC))
-        {
-            DPRINT1("FIXME: Broken Parse due to invalid DesiredAccess: %lx\n",
-                    DesiredAccess);
-        }
-
         /* Remember this for later */
         DirectOpen = TRUE;
     }

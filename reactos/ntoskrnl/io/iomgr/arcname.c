@@ -154,7 +154,7 @@ IopGetDiskInformation(IN ULONG i,
 
     /* Get the device pointer */
     Status = IoGetDeviceObjectPointer(&DeviceName,
-                                      FILE_READ_DATA,
+                                      FILE_READ_ATTRIBUTES,
                                       &FileObject,
                                       &DeviceObject);
     *DiskDeviceObject = DeviceObject;

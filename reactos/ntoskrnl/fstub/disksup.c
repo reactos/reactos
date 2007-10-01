@@ -305,7 +305,7 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
 
     /* Get the drives sector size */
     Status = IoGetDeviceObjectPointer(DeviceName,
-        FILE_READ_DATA,
+        FILE_READ_ATTRIBUTES,
         &FileObject,
         &DeviceObject);
     if (!NT_SUCCESS(Status))
@@ -481,10 +481,10 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             NULL);
 
         Status = ZwOpenFile(&FileHandle,
-            0x10001,
+            FILE_READ_DATA | SYNCHRONIZE,
             &ObjectAttributes,
             &StatusBlock,
-            1,
+            FILE_SHARE_READ,
             FILE_SYNCHRONOUS_IO_NONALERT);
         if (NT_SUCCESS(Status))
         {
