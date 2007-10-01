@@ -20,6 +20,7 @@
 	<library>comctl32</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
+	<library>version</library>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>
@@ -60,4 +61,6 @@
 	<file>ros-systray.c</file>
 	<file>shres.rc</file>
 	<file>shell32.spec</file>
+	<file>fprop.c</file>
+	<file>drive.c</file>
 </module>

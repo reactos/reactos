@@ -230,4 +230,9 @@ HRESULT SHELL_RegisterShellFolders(void);
 /* Detect Shell Links */
 BOOL SHELL_IsShortcut(LPCITEMIDLIST);
 
+#define MAX_PROPERTY_SHEET_PAGE    32
+INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam);
+BOOL SH_ShowDriveProperties(WCHAR * drive);
 #endif

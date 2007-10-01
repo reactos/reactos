@@ -305,7 +305,7 @@ static void DoOpenExplore(
 
 	ZeroMemory(&sei, sizeof(sei));
 	sei.cbSize = sizeof(sei);
-	sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
+	sei.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_CLASSNAME;
 	sei.lpIDList = pidlFQ;
 	sei.lpClass = "Folder";
 	sei.hwnd = hwnd;
@@ -395,6 +395,54 @@ static BOOL DoCopyOrCut(
 	}
 	return TRUE;
 }
+static void DoProperties(
+	IContextMenu2 *iface,
+	HWND hwnd)
+{
+	ItemCmImpl *This = (ItemCmImpl *)iface;
+	LPITEMIDLIST	pidlFQ = NULL;
+	SHELLEXECUTEINFOA	sei;
+
+    if (_ILIsMyComputer(This->apidl[0]))
+    {
+        ShellExecuteA(hwnd, "open", "rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
+        return;
+    }
+    else if (_ILIsDesktop(This->apidl[0]))
+    {
+        ShellExecuteA(hwnd, "open", "rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
+        return;
+    }
+    else if (_ILIsDrive(This->apidl[0]))
+    {
+       WCHAR buffer[111];
+       ILGetDisplayName(This->apidl[0], buffer);
+       SH_ShowDriveProperties(buffer);
+       return;
+    }
+    else
+    {
+        pidlFQ = ILCombine(This->pidl, This->apidl[0]);
+    }
+
+	ZeroMemory(&sei, sizeof(sei));
+	sei.cbSize = sizeof(sei);
+	sei.fMask = SEE_MASK_INVOKEIDLIST;
+	sei.lpIDList = pidlFQ;
+	sei.hwnd = hwnd;
+	sei.nShow = SW_SHOWNORMAL;
+	sei.lpVerb = "properties";
+
+    TRACE("DoProperties before ShellExecuteEx\n");
+	ShellExecuteExA(&sei);
+    TRACE("DoProperties after ShellExecuteEx\n");
+
+    if (pidlFQ)
+    {
+	   SHFree(pidlFQ);
+    }
+}
+
 /**************************************************************************
 * ISvItemCm_fnInvokeCommand()
 */
@@ -445,12 +493,7 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
             break;
         case FCIDM_SHVIEW_PROPERTIES:
             TRACE("Verb FCIDM_SHVIEW_PROPERTIES\n");
-            /* Open the property sheet page */
-            /*
-             * FIXME: This just can't work ... the one who added it must
-             * have been mad. - FiN, 17/06/2005
-             * SHObjectProperties(lpcmi->hwnd, SHOP_FILEPATH, NULL, NULL);
-             */
+            DoProperties(iface, lpcmi->hwnd);
             break;
         default:
             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));

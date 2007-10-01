@@ -53,8 +53,9 @@
 #include "shlwapi.h"
 #include "msi.h"
 #include "appmgmt.h"
-
+#include "prsht.h"
 #include "initguid.h"
+#include "shresdef.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -156,10 +157,12 @@ typedef struct
 	LPWSTR        sPathRel;
  	LPWSTR        sProduct;
  	LPWSTR        sComponent;
+    LPWSTR        sLinkPath;
 	volume_info   volume;
 
 	BOOL          bDirty;
         INT           iIdOpen;  /* id of the "Open" entry in the context menu */
+        INT           iIdProperties;
 	IUnknown      *site;
 } IShellLinkImpl;
 
@@ -304,6 +307,8 @@ static ULONG ShellLink_Release( IShellLinkImpl *This )
     HeapFree(GetProcessHeap(), 0, This->sWorkDir);
     HeapFree(GetProcessHeap(), 0, This->sDescription);
     HeapFree(GetProcessHeap(),0,This->sPath);
+    HeapFree(GetProcessHeap(),0,This->sLinkPath);
+
 
     if (This->site)
         IUnknown_Release( This->site );
@@ -386,6 +391,8 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFile
         r = SHCreateStreamOnFileW(pszFileName, dwMode, &stm);
         if( SUCCEEDED( r ) )
         {
+            HeapFree(GetProcessHeap(), 0, This->sLinkPath);
+            This->sLinkPath = _wcsdup(pszFileName);
             r = IPersistStream_Load(StreamThis, stm);
             ShellLink_UpdatePath(This->sPathRel, pszFileName, This->sWorkDir, &This->sPath);
             IStream_Release( stm );
@@ -2441,17 +2448,18 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
 {
     IShellLinkImpl *This = impl_from_IContextMenu(iface);
     static const WCHAR szOpen[] = { 'O','p','e','n',0 };
+    static const WCHAR szProperties[] = { 'P','r','o','p','e','r','t','i','e','s',0 };
     MENUITEMINFOW mii;
     int id = 1;
 
-    TRACE("%p %p %u %u %u %u\n", This,
+    TRACE("ShellLink_QueryContextMenu %p %p %u %u %u %u\n", This,
           hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
 
     if ( !hmenu )
         return E_INVALIDARG;
 
-    memset( &mii, 0, sizeof mii );
-    mii.cbSize = sizeof mii;
+    memset( &mii, 0, sizeof(mii) );
+    mii.cbSize = sizeof (mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
     mii.dwTypeData = (LPWSTR)szOpen;
     mii.cch = strlenW( mii.dwTypeData );
@@ -2459,9 +2467,24 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
     mii.fState = MFS_DEFAULT | MFS_ENABLED;
     mii.fType = MFT_STRING;
     if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
+    {
+        TRACE("ShellLink_QueryContextMenu failed to insert item open");
         return E_FAIL;
+    }
     This->iIdOpen = 0;
 
+    
+    mii.fState = MFS_ENABLED;
+    mii.dwTypeData = (LPWSTR)szProperties;
+    mii.cch = strlenW( mii.dwTypeData );
+    mii.wID = idCmdFirst + id++;
+    if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
+    {
+        TRACE("ShellLink_QueryContextMenu failed to insert item properties");
+        return E_FAIL;
+    }
+    This->iIdProperties = 1;
+    id++;
     return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
 }
 
@@ -2489,6 +2512,252 @@ shelllink_get_msi_component_path( LPWSTR component )
     return path;
 }
 
+/*************************************************************************
+ *
+ * SH_CreatePropertySheetPage [Internal]
+ *
+ * creates a property sheet page from an resource name
+ *
+ */
+
+HPROPSHEETPAGE
+SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam)
+{
+    HRSRC hRes;
+    LPVOID lpsztemplate;
+    PROPSHEETPAGEW ppage;
+
+    if (resname == NULL)
+        return (HPROPSHEETPAGE)0;
+
+    hRes = FindResourceA(shell32_hInstance, resname, (LPSTR)RT_DIALOG);
+
+    if (hRes == NULL)
+    {
+        ERR("failed to find resource name\n");
+        return (HPROPSHEETPAGE)0;
+    }
+    lpsztemplate = LoadResource(shell32_hInstance, hRes);
+    if (lpsztemplate == NULL)
+        return (HPROPSHEETPAGE)0;
+
+    memset(&ppage, 0x0, sizeof(PROPSHEETPAGE));
+    ppage.dwSize = sizeof(PROPSHEETPAGEW);
+    ppage.dwFlags = PSP_DLGINDIRECT;
+    ppage.u.pResource = lpsztemplate;
+    ppage.pfnDlgProc = dlgproc;
+    ppage.lParam = lParam;
+    return CreatePropertySheetPageW(&ppage);
+}
+
+
+INT_PTR CALLBACK ExtendedShortcutProc(      
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+   HWND hDlgCtrl;
+   switch(uMsg)
+   {
+   case WM_INITDIALOG:
+       return TRUE;
+   case WM_COMMAND:
+        hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+		if (LOWORD(wParam) == IDOK)
+        {
+		   if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED )
+	          EndDialog(hwndDlg, 1);
+           else
+              EndDialog(hwndDlg, 0);
+        }
+        else if (LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hwndDlg, 0);
+        }
+        else if (LOWORD(wParam) == 14000)
+        {
+           if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED)
+              SendMessage(hDlgCtrl, BM_SETCHECK, BST_UNCHECKED, 0);
+           else
+              SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
+
+        }
+   }
+   return FALSE;
+}
+
+/**************************************************************************
+ * SH_ShellLinkDlgProc
+ *
+ * dialog proc of the shortcut property dialog
+ */
+
+INT_PTR 
+CALLBACK 
+SH_ShellLinkDlgProc(   
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+    LPPROPSHEETPAGEW ppsp;
+    LPPSHNOTIFY lppsn;
+    IShellLinkImpl *This;
+    HWND hDlgCtrl;
+    WCHAR szBuffer[MAX_PATH];
+    int IconIndex;
+
+    This = (IShellLinkImpl *)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        ppsp = (LPPROPSHEETPAGEW)lParam;
+        if (ppsp == NULL)
+            break;
+     
+        TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n",hwndDlg, lParam, ppsp->lParam);
+
+        This = (IShellLinkImpl *)ppsp->lParam;
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
+
+		TRACE("sArgs: %S sComponent: %S sDescription: %S sIcoPath: %S sPath: %S sPathRel: %S sProduct: %S sWorkDir: %S\n", This->sArgs, This->sComponent ,This->sDescription,
+			This->sIcoPath, This->sPath, This->sPathRel, This->sProduct, This->sWorkDir);
+
+        /* target path */
+        hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
+        if ( hDlgCtrl != NULL )
+            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)This->sPath );
+
+       /* working dir */
+       hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
+       if ( hDlgCtrl != NULL )
+            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)This->sWorkDir );
+
+	   /* description */
+       hDlgCtrl = GetDlgItem( hwndDlg, 14019 );
+       if ( hDlgCtrl != NULL )
+            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)This->sDescription );
+        return TRUE;
+    case WM_NOTIFY:
+       lppsn = (LPPSHNOTIFY) lParam; 
+       if ( lppsn->hdr.code == PSN_APPLY )
+       {
+            /* set working directory */
+            hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
+            SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer );
+            IShellLinkW_fnSetWorkingDirectory((IShellLinkW*)&This->lpvtblw, szBuffer);
+            /* set link destination */
+            hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
+            SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer);
+            if ( !SHELL_ExistsFileW(szBuffer) )
+            {
+                MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
+                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                return TRUE;
+            }
+            IShellLinkW_fnSetPath((IShellLinkW*)&This->lpvtblw, szBuffer);
+
+            TRACE("This %p sLinkPath %S\n", This, This->sLinkPath);
+            IPersistFile_fnSave( (IPersistFile*)&This->lpvtblPersistFile, This->sLinkPath, TRUE );
+            SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+            return TRUE;
+       }
+       break;
+    case WM_COMMAND:
+       switch(LOWORD(wParam))
+       {
+           case 14020:
+               /// 
+               /// FIXME
+               /// open target directory
+               ///
+               return TRUE;
+           case 14021:
+               if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
+               {
+                    IShellLinkW_fnSetIconLocation((IShellLinkW*)&This->lpvtblw, szBuffer, IconIndex);
+                    ///
+                    /// FIXME redraw icon
+               }
+               return TRUE;
+           case 14022:
+               if (DialogBox(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc) > 0)
+               {
+                   ///
+                   /// FIXME
+                   /// store properties
+                   /// http://blogs.msdn.com/vistacompatteam/archive/2006/09/25/771232.aspx
+                   ///
+               }
+               return TRUE;
+       }
+       switch(HIWORD(wParam))
+       {
+           case EN_CHANGE:
+              PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+              break;
+       }
+       break;
+    default:
+        break;
+   }
+   return FALSE;
+}
+
+/**************************************************************************
+ * ShellLink_ShortcutDialog [Internal]
+ *
+ * creates a shortcut property dialog
+ */
+
+static HRESULT WINAPI
+ShellLink_ShowProperties( IShellLinkImpl *This )
+{
+    PROPSHEETHEADERW pinfo;
+    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
+    HPROPSHEETPAGE hpage;
+    UINT numpages = 0;
+
+    TRACE("ShellLink_ShortcutDialog entered\n");
+
+    memset(hppages, 0x0, sizeof(HPROPSHEETPAGE) * MAX_PROPERTY_SHEET_PAGE);
+
+    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)This->sLinkPath);
+    if ( hpage == NULL )
+        return E_FAIL;
+    else
+        hppages[numpages++] = hpage;
+
+	hpage = SH_CreatePropertySheetPage("SHELL_GENERAL_SHORTCUT_DLG", SH_ShellLinkDlgProc, (LPARAM)This);
+	if ( hpage == NULL )
+    {
+        ERR("SH_CreatePropertySheetPage failed\n");
+        DestroyPropertySheetPage(hppages[0]);
+        return E_FAIL;
+	}
+    hppages[numpages++] = hpage;
+
+    ///FIXME
+    /// load extensions
+
+    memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
+    pinfo.dwSize = sizeof(PROPSHEETHEADERW);
+    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
+    pinfo.nPages = numpages;
+	pinfo.u3.phpage = hppages;
+    pinfo.pszCaption = This->sDescription;
+    pinfo.u2.nStartPage = 1;
+
+    if ( PropertySheetW(&pinfo) < 0 )
+        return E_FAIL;
+	else
+        return S_OK;
+}
+
 static HRESULT WINAPI
 ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
 {
@@ -2500,10 +2769,17 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
     LPWSTR path = NULL;
     HRESULT r;
 
-    TRACE("%p %p\n", This, lpici );
+    TRACE("ShellLink_InvokeCommand %p %p\n", This, lpici );
 
     if ( lpici->cbSize < sizeof (CMINVOKECOMMANDINFO) )
         return E_INVALIDARG;
+
+    if ( lpici->lpVerb == MAKEINTRESOURCEA(This->iIdProperties))
+    {
+        ShellLink_ShowProperties(This);
+        return S_OK;
+    }
+
 
     if ( lpici->lpVerb != MAKEINTRESOURCEA(This->iIdOpen) )
     {

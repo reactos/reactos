@@ -1185,6 +1185,7 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
     static const WCHAR wFile[] = {'f','i','l','e',0};
     static const WCHAR wHttp[] = {'h','t','t','p',':','/','/',0};
     static const WCHAR wExplorer[] = {'e','x','p','l','o','r','e','r','.','e','x','e',0};
+    static const WCHAR wProperties[] = { 'p','r','o','p','e','r','t','i','e','s',0 };
     static const DWORD unsupportedFlags =
         SEE_MASK_INVOKEIDLIST  | SEE_MASK_ICON         | SEE_MASK_HOTKEY |
         SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI |
@@ -1271,12 +1272,19 @@ BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc )
         SHGetPathFromIDListW(sei_tmp.lpIDList, wszApplicationName);
         TRACE("-- idlist=%p (%s)\n", sei_tmp.lpIDList, debugstr_w(wszApplicationName));
     }
-
     if ( ERROR_SUCCESS == ShellExecute_FromContextMenu( &sei_tmp ) )
     {
         sei->hInstApp = (HINSTANCE) 33;
         return TRUE;
     }
+    
+    if (sei_tmp.lpVerb && !wcscmp(sei_tmp.lpVerb, wProperties))
+    {
+        SH_ShowPropertiesDialog(sei_tmp.lpFile);
+        sei->hInstApp = (HINSTANCE) 33;
+        return TRUE;
+    }
+
 
     if (sei_tmp.fMask & SEE_MASK_CLASSALL)
     {
