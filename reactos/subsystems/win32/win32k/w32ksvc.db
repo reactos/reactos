@@ -379,11 +379,13 @@ NtUserEndMenu                                    0
 NtUserEndPaint                                   2
 NtUserEnumDisplayDevices                         4
 # NtUserEnumDisplayMonitors                      4 Wrong number of param ?
+NtUserEnumDisplayMonitors                        5
 NtUserEnumDisplaySettings                        4
 NtUserEvent                                      1
 NtUserExcludeUpdateRgn                           2
 NtUserFillWindow                                 4
 # NtUserFindExistingCursorIcon                   3  Wrong number of param ?
+NtUserFindExistingCursorIcon                     4
 NtUserFindWindowEx                               5
 NtUserFlashWindowEx                              1
 NtUserGetAltTabInfo                              6
@@ -394,6 +396,7 @@ NtUserGetAtomName                                2
 NtUserGetCaretBlinkTime                          0
 NtUserGetCaretPos                                1
 # NtUserGetClassInfo                             5   Wrong number of param ?
+NtUserGetClassInfo                               4
 NtUserGetClassName                               3
 NtUserGetClipboardData                           2
 NtUserGetClipboardFormatName                     3
@@ -455,6 +458,7 @@ NtUserImpersonateDdeClientWindow                 2
 NtUserInitialize                                 3
 NtUserInitializeClientPfnArrays                  4
 # NtUserInitTask                                12 Wrong number of param ?
+NtUserInitTask                                  11
 NtUserInternalGetWindowText                      3
 NtUserInvalidateRect                             3
 NtUserInvalidateRgn                              3
@@ -520,6 +524,7 @@ NtUserSetConsoleReserveKeys                      2
 NtUserSetCursor                                  1
 NtUserSetCursorContents                          2
 # NtUserSetCursorIconData                        4 Wrong number of param ?
+NtUserSetCursorIconData                          6
 NtUserSetDbgTag                                  2
 NtUserSetFocus                                   1
 NtUserSetImeHotKey                               5
@@ -581,6 +586,7 @@ NtUserUnhookWinEvent                             1
 NtUserUnloadKeyboardLayout                       1
 NtUserUnlockWindowStation                        1
 # NtUserUnregisterClass                          3 Wrong number of param ?
+NtUserUnregisterClass                            2
 NtUserUnregisterUserApiHook                      0
 NtUserUnregisterHotKey                           2
 NtUserUpdateInputContext                         3
@@ -674,14 +680,6 @@ NtGdiBRUSHOBJ_DeleteRbrush                       2
 NtGdiUMPDEngFreeUserMem                          1
 NtGdiDrawStream                                  3
 #
-#
-# Wrong number of param ?
-NtUserEnumDisplayMonitors               5
-NtUserFindExistingCursorIcon            4
-NtUserGetClassInfo                      4
-NtUserInitTask                          11
-NtUserSetCursorIconData                 6
-NtUserUnregisterClass                   2
 #
 #ReactOS specify syscall 
 NtGdiSelectObject                       2
