@@ -388,6 +388,8 @@ IopParseDevice(IN PVOID ParseObject,
     UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
 
     /* Check if this is a direct open */
+    /* FIXME: Small hack still exists, because there is probably
+              a small bug somewhere in vfat */
     if (!(RemainingName->Length) &&
         !(OpenPacket->RelatedFileObject) &&
         (((DesiredAccess & ~(SYNCHRONIZE |
