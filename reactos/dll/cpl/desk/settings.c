@@ -15,9 +15,6 @@ typedef struct _GLOBAL_DATA
 {
 	PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
 	PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
-	HBITMAP hBitmap;
-	int cxSource;
-	int cySource;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 static VOID
@@ -284,7 +281,6 @@ OnInitDialog(IN HWND hwndDlg)
 	DWORD Result = 0;
 	DWORD iDevNum = 0;
 	DISPLAY_DEVICE displayDevice;
-	BITMAP bitmap;
 	PGLOBAL_DATA pGlobalData;
 
 	pGlobalData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));
@@ -359,15 +355,6 @@ OnInitDialog(IN HWND hwndDlg)
 
 			HeapFree(GetProcessHeap(), 0, pMonitors);
 		}
-	}
-
-	pGlobalData->hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
-	if (pGlobalData->hBitmap != NULL)
-	{
-		GetObject(pGlobalData->hBitmap, sizeof(BITMAP), &bitmap);
-
-		pGlobalData->cxSource = bitmap.bmWidth;
-		pGlobalData->cySource = bitmap.bmHeight;
 	}
 }
 
@@ -657,28 +644,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			break;
 		}
 
-		case WM_PAINT:
-		{
-			PAINTSTRUCT ps;
-			HDC hdc, hdcMem;
-
-			hdc = BeginPaint(hwndDlg, &ps);
-
-			hdcMem = CreateCompatibleDC(hdc);
-			SelectObject(hdcMem, pGlobalData->hBitmap);
-/*
-			TransparentBlt(hdc, 98, 0,
-				       pGlobalData->cxSource,
-				       pGlobalData->cySource, hdcMem, 0, 0,
-				       pGlobalData->cxSource,
-				       pGlobalData->cySource, 0xFF80FF);
-*/
-			DeleteDC(hdcMem);
-			EndPaint(hwndDlg, &ps);
-
-			break;
-		}
-
 		case WM_DESTROY:
 		{
 			PDISPLAY_DEVICE_ENTRY Current = pGlobalData->DisplayDeviceList;
@@ -695,8 +660,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				HeapFree(GetProcessHeap(), 0, Current);
 				Current = Next;
 			}
-
-			DeleteObject(pGlobalData->hBitmap);
 
 			HeapFree(GetProcessHeap(), 0, pGlobalData);
 		}
