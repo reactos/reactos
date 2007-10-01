@@ -1372,18 +1372,14 @@ BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType)
   // Determine Bits Per Pixel
   bits = bmi->bmiHeader.biBitCount;
 
-  //DPRINT1("%d bits\n", bits);
-
   // Determine paletteType from Bits Per Pixel
   if (bits <= 8)
     {
-        //DPRINT1("8\n");
       *paletteType = PAL_INDEXED;
       RedMask = GreenMask = BlueMask = 0;
     }
   else if(bits < 24)
     {
-        //DPRINT1("24\n");
       *paletteType = PAL_BITFIELDS;
       RedMask = 0xf800;
       GreenMask = 0x07e0;
@@ -1391,7 +1387,6 @@ BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType)
     }
   else
     {
-        //DPRINT1("else\n");
       *paletteType = PAL_BGR;
       RedMask = 0xff0000;
       GreenMask = 0x00ff00;
@@ -1409,17 +1404,14 @@ BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType)
 
   if (PAL_INDEXED == *paletteType)
     {
-        //DPRINT1("in\n");
       hPal = PALETTE_AllocPaletteIndexedRGB(ColorCount, (RGBQUAD*)bmi->bmiColors);
     }
   else
     {
-        //DPRINT1("out\n");
       hPal = PALETTE_AllocPalette(*paletteType, ColorCount,
                                   (ULONG*) palEntries,
                                   RedMask, GreenMask, BlueMask );
     }
-  //DPRINT1("returning %p\n", hPal);
 
   return hPal;
 }
