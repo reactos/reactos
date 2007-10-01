@@ -1,6 +1,6 @@
 
  //
- // XML storage classes version 1.2
+ // XML storage C++ classes version 1.2
  //
  // Copyright (c) 2006, 2007 Martin Fuchs <martin-fuchs@gmx.net>
  //
@@ -224,7 +224,7 @@ protected:
 	char*	_buffer;
 	char*	_wptr;
 	size_t	_len;
-	std::string	_buffer_str;	// UF-8 encoded
+	std::string	_buffer_str;	// UTF-8 encoded
 };
 
 bool XMLReaderBase::parse()
@@ -386,7 +386,7 @@ bool XMLReaderBase::parse()
 		buffer.reset();
 	}
 
-	return true;
+	return true; //TODO return false on invalid XML
 }
 
 int XMLReaderBase::eat_endl()

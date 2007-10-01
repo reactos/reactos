@@ -426,7 +426,7 @@ bool Favorites::read(LPCTSTR path)
 {
 	XMLDoc xbel;
 
-	if (!xbel.read(path)) {
+	if (!xbel.read_file(path)) {
 		MessageBox(g_Globals._hwndDesktop, xbel._errors.str(),
 					TEXT("ROS Explorer - reading bookmark file"), MB_OK);
 	}
@@ -457,7 +457,7 @@ void Favorites::write(LPCTSTR path) const
 	xbel._format._doctype._public = "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML";
 	xbel._format._doctype._system = "http://www.python.org/topics/xml/dtds/xbel-1.0.dtd";
 
-	xbel.write(path);
+	xbel.write_file(path);
 }
 
  /// import Internet Explorer bookmarks from Favorites folder
