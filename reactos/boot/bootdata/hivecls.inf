@@ -63,7 +63,7 @@ HKCR,"drvfile","",0x00000000,"Device Driver"
 
 ; Applicatons
 HKCR,".exe","",0x00000000,"exefile"
-HKCR,"exefile","",0x00000000,"ReactOS Applicaton"
+HKCR,"exefile","",0x00000000,"ReactOS Application"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 
@@ -110,6 +110,7 @@ HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\system32\rundll
 ; Show icons for shortcuts in shell views (lnkfile is handled specially in shell32)
 ; Don't display extension for shortcuts
 HKCR,".lnk","",0x00000000,"lnkfile"
+HKCR,"lnkfile","",0x00000000,"Shortcut"
 HKCR,"lnkfile","NeverShowExt",0x00000000,""
 HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
 HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
