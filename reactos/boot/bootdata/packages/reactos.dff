@@ -159,7 +159,7 @@ dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
 dll\win32\aclui\aclui.dll                           1
 dll\win32\avifil32\avifil32.dll                     1
-dll\win32\browseui.dll                              1
+dll\win32\browseui\browseui.dll                     1
 dll\win32\cabinet\cabinet.dll                       1
 dll\win32\cards\cards.dll                           1
 dll\win32\cfgmgr32\cfgmgr32.dll                     1
