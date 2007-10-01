@@ -16,19 +16,10 @@
 
 /* GLOBALS *****************************************************************/
 
-/*
- * Compiler defined symbols
- */
-#if 0
-extern unsigned int _image_base__;
-extern unsigned int _text_start__;
-extern unsigned int _text_end__;
-
-extern unsigned int _init_start__;
-extern unsigned int _init_end__;
-
-extern unsigned int _bss_end__;
-#endif
+BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
+extern KMUTANT MmSystemLoadLock;
+extern ULONG KeMemoryMapRangeCount;
+extern ADDRESS_RANGE KeMemoryMap[64];
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
 MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
@@ -422,9 +413,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmInitializeMdlImplementation();
 }
 
-BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
-extern KMUTANT MmSystemLoadLock;
-
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -433,6 +421,14 @@ MmInitSystem(IN ULONG Phase,
     ULONG Flags = 0;
     if (Phase == 0)
     {
+        /* Initialize Kernel Memory Address Space */
+        MmInit1(MmFreeLdrFirstKrnlPhysAddr,
+                MmFreeLdrLastKrnlPhysAddr,
+                MmFreeLdrLastKernelAddress,
+                KeMemoryMap,
+                KeMemoryMapRangeCount,
+                4096);
+
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
