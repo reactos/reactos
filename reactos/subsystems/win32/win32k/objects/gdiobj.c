@@ -1031,7 +1031,8 @@ GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIOBJ Object)
       GdiHdr->lockline = 0;
    }
 #else
-   InterlockedDecrement((PLONG)&GdiHdr->Locks);
+   if (InterlockedDecrement((PLONG)&GdiHdr->Locks) < 0)
+       DPRINT1("Trying to unlock non-existant object\n");
 #endif
 }
 
