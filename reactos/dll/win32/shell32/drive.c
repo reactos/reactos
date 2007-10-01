@@ -41,7 +41,7 @@
 #include "undocshell.h"
 #include <prsht.h>
 
-#define DRIVE_PROPERTY_PAGES (5)
+#define DRIVE_PROPERTY_PAGES (3)
 
 INT_PTR 
 CALLBACK 
@@ -85,33 +85,6 @@ DriveHardwareDlg(
   return FALSE;
 }
 
-INT_PTR 
-CALLBACK 
-DriveShareDlg(   
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam
-)
-{
-
-
-  return FALSE;
-}
-
-INT_PTR 
-CALLBACK 
-DriveContingentDlg(   
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam
-)
-{
-
-   return FALSE;
-}
-
 static 
 const
 struct
@@ -123,8 +96,6 @@ struct
     { "DRIVE_GENERAL_DLG", DriveGeneralDlg },
     { "DRIVE_EXTRA_DLG", DriveExtraDlg },
     { "DRIVE_HARDWARE_DLG", DriveHardwareDlg },
-    { "DRIVE_SHARE_DLG", DriveShareDlg },
-    { "DRIVE_CONTINGENT_DLG", DriveContingentDlg }
 };
 
 BOOL
