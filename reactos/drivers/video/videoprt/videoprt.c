@@ -203,6 +203,9 @@ IntVideoPortCreateAdapterDeviceObject(
    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
+   DPRINT("HwDeviceExtension size is: 0x%x\n",
+       DriverExtension->InitializationData.HwDeviceExtensionSize);
+
    /* Create the device object. */
    Status = IoCreateDevice(
       DriverObject,
@@ -1165,7 +1168,7 @@ VideoPortCreateSecondaryDisplay(
    IN ULONG Flag)
 {
    DPRINT1("VideoPortCreateSecondaryDisplay: Unimplemented.\n");
-   return NO_ERROR;
+   return ERROR_DEV_NOT_EXIST;
 }
 
 /*
