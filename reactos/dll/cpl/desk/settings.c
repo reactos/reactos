@@ -314,9 +314,21 @@ OnInitDialog(IN HWND hwndDlg)
 	}
 	else if (Result == 1)
 	{
+		MONSL_MONINFO monitors;
+
 		/* Single video adapter */
 		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pGlobalData->DisplayDeviceList->DeviceDescription);
 		OnDisplayDeviceChanged(hwndDlg, pGlobalData, pGlobalData->DisplayDeviceList);
+
+		monitors.Position.x = monitors.Position.y = 0;
+		monitors.Size.cx = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
+		monitors.Size.cy = pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
+		monitors.Flags = 0;
+		SendDlgItemMessage(hwndDlg,
+						   IDC_SETTINGS_MONSEL,
+						   MSLM_SETMONITORSINFO,
+						   1,
+						   (LPARAM)&monitors);
 	}
 	else
 	{
