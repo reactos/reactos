@@ -330,10 +330,35 @@ OnInitDialog(IN HWND hwndDlg)
 						   1,
 						   (LPARAM)&monitors);
 	}
-	else
+	else /* FIXME: incomplete! */
 	{
-		/* FIXME: multi video adapter */
-		/* FIXME: choose selected adapter being the primary one */
+		PMONSL_MONINFO pMonitors;
+		INT i;
+
+		SendDlgItemMessage(hwndDlg, IDC_SETTINGS_DEVICE, WM_SETTEXT, 0, (LPARAM)pGlobalData->DisplayDeviceList->DeviceDescription);
+		OnDisplayDeviceChanged(hwndDlg, pGlobalData, pGlobalData->DisplayDeviceList);
+
+		pMonitors = (PMONSL_MONINFO)HeapAlloc(GetProcessHeap(), 0, sizeof(MONSL_MONINFO) * Result);
+		if (pMonitors)
+		{
+			INT hack = 1280;
+			for (i = 0; i < Result; i++)
+			{
+				pMonitors[i].Position.x = hack * i;
+				pMonitors[i].Position.y = 0;
+				pMonitors[i].Size.cx = pGlobalData->DisplayDeviceList->CurrentSettings->dmPelsWidth;
+				pMonitors[i].Size.cy = pGlobalData->DisplayDeviceList->CurrentSettings->dmPelsHeight;
+				pMonitors[i].Flags = 0;
+			}
+
+			SendDlgItemMessage(hwndDlg,
+							   IDC_SETTINGS_MONSEL,
+							   MSLM_SETMONITORSINFO,
+							   Result,
+							   (LPARAM)pMonitors);
+
+			HeapFree(GetProcessHeap(), 0, pMonitors);
+		}
 	}
 
 	pGlobalData->hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
