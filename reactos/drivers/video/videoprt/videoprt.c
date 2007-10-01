@@ -63,62 +63,6 @@ IntVideoPortImageDirectoryEntryToData(
    return (PVOID)((ULONG_PTR)BaseAddress + Va);
 }
 
-PVOID NTAPI
-IntVideoPortGetProcAddress(
-   IN PVOID HwDeviceExtension,
-   IN PUCHAR FunctionName)
-{
-   SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
-   PVOID BaseAddress;
-   PIMAGE_EXPORT_DIRECTORY ExportDir;
-   PUSHORT OrdinalPtr;
-   PULONG NamePtr;
-   PULONG AddressPtr;
-   ULONG i = 0;
-   NTSTATUS Status;
-
-   DPRINT("VideoPortGetProcAddress(%s)\n", FunctionName);
-
-   RtlInitUnicodeString(&GdiDriverInfo.DriverName, L"videoprt");
-   Status = ZwSetSystemInformation(
-      SystemLoadGdiDriverInformation,
-      &GdiDriverInfo,
-      sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Couldn't get our own module handle?\n");
-      return NULL;
-   }
-
-   BaseAddress = GdiDriverInfo.ImageAddress;
-
-   /* Get the pointer to the export directory */
-   ExportDir = (PIMAGE_EXPORT_DIRECTORY)IntVideoPortImageDirectoryEntryToData(
-      BaseAddress,
-      IMAGE_DIRECTORY_ENTRY_EXPORT);
-
-   /* Search by name */
-   AddressPtr = (PULONG)
-      ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfFunctions);
-   OrdinalPtr = (PUSHORT)
-      ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfNameOrdinals);
-   NamePtr = (PULONG)
-      ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfNames);
-   for (i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
-   {
-      if (!_strnicmp((PCHAR)FunctionName, (PCHAR)((ULONG_PTR)BaseAddress + *NamePtr),
-                     strlen((PCHAR)FunctionName)))
-      {
-         return (PVOID)((ULONG_PTR)BaseAddress +
-                        (ULONG_PTR)AddressPtr[*OrdinalPtr]);
-      }
-   }
-
-   DPRINT("VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
-
-   return NULL;
-}
-
 VOID NTAPI
 IntVideoPortDeferredRoutine(
    IN PKDPC Dpc,

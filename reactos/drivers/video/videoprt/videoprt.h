@@ -34,7 +34,7 @@
 #include <ndk/ntndk.h>
 #include <reactos/helper.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
@@ -221,6 +221,11 @@ IntVideoPortFindAdapter(
    IN PDRIVER_OBJECT DriverObject,
    IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
    IN PDEVICE_OBJECT DeviceObject);
+
+PVOID NTAPI
+IntVideoPortGetProcAddress(
+   IN PVOID HwDeviceExtension,
+   IN PUCHAR FunctionName);
 
 /* int10.c */
 

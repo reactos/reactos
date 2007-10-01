@@ -14,6 +14,7 @@
 	<file>dispatch.c</file>
 	<file>dma.c</file>
 	<file>event.c</file>
+	<file>funclist.c</file>
 	<file>int10.c</file>
 	<file>interrupt.c</file>
 	<file>resource.c</file>
