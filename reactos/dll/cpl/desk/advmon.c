@@ -99,6 +99,9 @@ BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
         LocalFree((HLOCAL)lpDisplayName);
 }
 
+
+typedef HPSXA (WINAPI * CPSEAE)(HKEY,LPCWSTR,UINT,IDataObject*);
+
 BOOL
 DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
 {
@@ -108,6 +111,11 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     HPSXA hpsxaDev, hpsxaDisp;
     BOOL Ret;
     IDataObject *pdo;
+    HMODULE hShell32 = NULL;
+    CPSEAE msvc_SHCreatePropSheetExtArrayEx;
+
+    /* silence gcc warning */
+    msvc_SHCreatePropSheetExtArrayEx = NULL;
 
     /* FIXME: Build the "%s and %s" caption string for the monitor and adapter name */
     szCaption[0] = _T('\0');
@@ -127,11 +135,23 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     if (pdo != NULL)
         BuildAdvPropTitle(pdo, szCaption, sizeof(szCaption) / sizeof(szCaption[0]));
 
+#ifdef _MSC_VER
+    hShell32 = LoadLibrary(_T("shell32.dll"));
+    if(hShell32 == NULL)
+        return FALSE;
+    msvc_SHCreatePropSheetExtArrayEx = (CPSEAE)GetProcAddress(hShell32, (LPCSTR)194);
+    hpsxaDev = msvc_SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
+#else
     hpsxaDev = SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
+#endif
     if (hpsxaDev != NULL)
       SHAddFromPropSheetExtArray(hpsxaDev, PropSheetAddPage, (LPARAM)&psh);
 
+#ifdef _MSC_VER
+    hpsxaDisp = msvc_SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
+#else
     hpsxaDisp = SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Display"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
+#endif
     if (hpsxaDisp != NULL)
       SHAddFromPropSheetExtArray(hpsxaDisp, PropSheetAddPage, (LPARAM)&psh);
 
@@ -144,6 +164,9 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
         SHDestroyPropSheetExtArray(hpsxaDev);
 
     IDataObject_Release(pdo);
+
+    if (hShell32)
+        FreeLibrary(hShell32);
 
     return Ret;
 }
