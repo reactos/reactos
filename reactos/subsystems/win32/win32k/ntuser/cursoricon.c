@@ -621,9 +621,9 @@ CLEANUP:
  */
 BOOL
 STDCALL
-NtUserGetCursorIconInfo(
+NtUserGetIconInfo(
    HANDLE hCurIcon,
-   PICONINFO IconInfo)
+   PICONINFO IconInfo, DWORD UnkOne, DWORD UnkTwo, DWORD UnkThree, DWORD UnkFour )
 {
    ICONINFO ii;
    PCURICON_OBJECT CurIcon;
@@ -632,7 +632,7 @@ NtUserGetCursorIconInfo(
    BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserGetCursorIconInfo\n");
+   DPRINT("Enter NtUserGetIconInfo\n");
    UserEnterExclusive();
 
    if(!IconInfo)
@@ -670,7 +670,7 @@ NtUserGetCursorIconInfo(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetCursorIconInfo, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserGetIconInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

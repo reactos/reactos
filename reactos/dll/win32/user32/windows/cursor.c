@@ -72,7 +72,7 @@ CopyCursor(HCURSOR pcur)
 {
   ICONINFO IconInfo;
 
-  if(NtUserGetCursorIconInfo((HANDLE)pcur, &IconInfo))
+  if(GetIconInfo((HANDLE)pcur, &IconInfo))
   {
     return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
   }

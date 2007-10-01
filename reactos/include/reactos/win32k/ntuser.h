@@ -1066,22 +1066,16 @@ NtUserGetGUIThreadInfo(
 
 BOOL
 NTAPI
-NtUserGetCursorIconInfo(
-  HANDLE Handle,
-  PICONINFO IconInfo);
-
-BOOL
-NTAPI
 NtUserGetCursorIconSize(
   HANDLE Handle,
   BOOL *fIcon,
   SIZE *Size);
 
-DWORD
+BOOL
 NTAPI
 NtUserGetIconInfo(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
+    HANDLE Handle,
+    PICONINFO IconInfo,
     DWORD dwUnknown3,
     DWORD dwUnknown4,
     DWORD dwUnknown5,

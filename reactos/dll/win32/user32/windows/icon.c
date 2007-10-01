@@ -152,7 +152,7 @@ CopyIcon(
 {
   ICONINFO IconInfo;
 
-  if(NtUserGetCursorIconInfo((HANDLE)hIcon, &IconInfo))
+  if(GetIconInfo((HANDLE)hIcon, &IconInfo))
   {
     return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
   }
@@ -400,8 +400,7 @@ GetIconInfo(
   HICON hIcon,
   PICONINFO IconInfo)
 {
-  /* FIXME - copy bitmaps */
-  return (BOOL)NtUserGetCursorIconInfo((HANDLE)hIcon, IconInfo);
+  return NtUserGetIconInfo((HANDLE)hIcon, IconInfo, 0, 0, 0, 0);
 }
 
 
