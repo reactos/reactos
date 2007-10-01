@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: videoprt.rc 21844 2006-05-07 19:34:23Z ion $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Videoport Driver\0"

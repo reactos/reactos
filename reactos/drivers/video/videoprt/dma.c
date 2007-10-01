@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id$
+ * $Id: dma.c 27066 2007-06-07 22:12:10Z greatlrd $
  */
 
 #include "videoprt.h"

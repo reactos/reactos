@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id$
+ * $Id: interrupt.c 21844 2006-05-07 19:34:23Z ion $
  */
 
 #include "videoprt.h"

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id$
+ * $Id: videoprt.c 29323 2007-10-01 08:14:24Z fireball $
  */
 
 

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id$
+ * $Id: int10.c 23763 2006-08-28 23:56:35Z ion $
  */
 
 #include "videoprt.h"

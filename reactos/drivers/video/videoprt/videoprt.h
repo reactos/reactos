@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id$
  */
 
 #ifndef VIDEOPRT_H
@@ -34,7 +33,7 @@
 #include <ndk/ntndk.h>
 #include <reactos/helper.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
