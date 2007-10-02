@@ -46,7 +46,7 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Create Shortcut"
+CAPTION "Verknüpfung erstellen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "Mit diesem Assistenten können Sie Verknüpfungen mit\nlokalen oder vernetzten Programmen, Dateien, Ordnern,\nComputern oder Internetaddressen erstellen.", -1, 120, 15, 200, 30
@@ -58,7 +58,7 @@ END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Select a Title for the Program"
+CAPTION "Bezeichnung für das Programm"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "&Geben Sie den Namen für die Verknüpfung ein:", -1, 120, 15, 150, 10
