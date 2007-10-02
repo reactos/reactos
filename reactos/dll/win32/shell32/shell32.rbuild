@@ -21,6 +21,7 @@
 	<library>shlwapi</library>
 	<library>ole32</library>
 	<library>version</library>
+	<library>devmgr</library>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>
