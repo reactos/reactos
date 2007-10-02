@@ -1081,13 +1081,13 @@ NtUserGetIconInfo(
     DWORD dwUnknown5,
     DWORD dwUnknown6);
 
-DWORD
+BOOL
 NTAPI
 NtUserGetIconSize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+    HANDLE Handle,
+    DWORD Unknown,
+    LONG  *plcx,
+    LONG  *plcy);
 
 DWORD
 NTAPI
