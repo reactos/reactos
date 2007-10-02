@@ -35,7 +35,8 @@
 
 NTSTATUS
 GetSourcePaths(PUNICODE_STRING SourcePath,
-	       PUNICODE_STRING SourceRootPath)
+	       PUNICODE_STRING SourceRootPath,
+	       PUNICODE_STRING SourceRootDir)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING LinkName;
@@ -73,17 +74,19 @@ GetSourcePaths(PUNICODE_STRING SourcePath,
   if (NT_SUCCESS(Status))
     {
       RtlCreateUnicodeString(SourcePath,
-			     SourceName.Buffer);
+                             SourceName.Buffer);
 
       /* strip trailing directory */
       Ptr = wcsrchr(SourceName.Buffer, L'\\');
-//      if ((Ptr != NULL) &&
-//	  (wcsicmp(Ptr, L"\\reactos") == 0))
-      if (Ptr != NULL)
-	*Ptr = 0;
+      if (Ptr)
+          RtlCreateUnicodeString(SourceRootDir, Ptr);
+      else
+          RtlCreateUnicodeString(SourceRootDir, L"");
 
+      if (Ptr != NULL)
+          *Ptr = 0;
       RtlCreateUnicodeString(SourceRootPath,
-			     SourceName.Buffer);
+                             SourceName.Buffer);
     }
 
   NtClose(Handle);

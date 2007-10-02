@@ -74,6 +74,7 @@ typedef enum _PAGE_NUMBER
 
 HANDLE ProcessHeap;
 UNICODE_STRING SourceRootPath;
+UNICODE_STRING SourceRootDir;
 UNICODE_STRING SourcePath;
 BOOLEAN IsUnattendedSetup = FALSE;
 LONG UnattendDestinationDiskNumber;
@@ -635,7 +636,8 @@ SetupStartPage(PINPUT_RECORD Ir)
 
   /* Get the source path and source root path */
   Status = GetSourcePaths(&SourcePath,
-			  &SourceRootPath);
+			  &SourceRootPath,
+			  &SourceRootDir);
   if (!NT_SUCCESS(Status))
     {
       CONSOLE_PrintTextXY(6, 15, "GetSourcePaths() failed (Status 0x%08lx)", Status);
@@ -649,6 +651,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     {
       CONSOLE_PrintTextXY(6, 15, "SourcePath: '%wZ'", &SourcePath);
       CONSOLE_PrintTextXY(6, 16, "SourceRootPath: '%wZ'", &SourceRootPath);
+      CONSOLE_PrintTextXY(6, 17, "SourceRootDir: '%wZ'", &SourceRootDir);
     }
 #endif
 
@@ -2692,7 +2695,7 @@ AddSectionToCopyQueue(HINF InfFile,
       if (!SetupQueueCopy(SetupFileQueue,
 			  SourceCabinet,
 			  SourceRootPath.Buffer,
-			  L"\\reactos",
+			  SourceRootDir.Buffer,
 			  FileKeyName,
 			  DirKeyValue,
 			  TargetFileName))
@@ -3562,6 +3565,7 @@ RunUSetup(VOID)
   /* Initialize global unicode strings */
   RtlInitUnicodeString(&SourcePath, NULL);
   RtlInitUnicodeString(&SourceRootPath, NULL);
+  RtlInitUnicodeString(&SourceRootDir, NULL);
   RtlInitUnicodeString(&InstallPath, NULL);
   RtlInitUnicodeString(&DestinationPath, NULL);
   RtlInitUnicodeString(&DestinationArcPath, NULL);
