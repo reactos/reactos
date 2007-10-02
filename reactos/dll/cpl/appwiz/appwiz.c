@@ -29,7 +29,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <cpl.h>
-
+#include <prsht.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -346,4 +346,98 @@ DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
     }
 
     return TRUE;
+}
+
+INT_PTR
+CALLBACK
+WelcomeDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+            break;
+        case WM_COMMAND:
+            switch(HIWORD(wParam))
+            {
+                case EN_CHANGE:
+                    if (SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_GETTEXTLENGTH, 0, 0))
+                    {
+                        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                    }
+                    else
+                    {
+                        PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+                    }
+            }
+
+    }
+    return FALSE;
+}
+
+INT_PTR
+CALLBACK
+FinishDlgProc(HWND hwndDlg,
+               UINT uMsg,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
+            break;
+    }
+    return FALSE;
+}
+
+
+LONG CALLBACK
+NewLinkHere(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+{
+    PROPSHEETHEADERW psh;
+    HPROPSHEETPAGE ahpsp[2];
+    PROPSHEETPAGE psp;
+    UINT nPages = 0;
+
+    /* Create the Welcome page */
+    psp.dwSize = sizeof(PROPSHEETPAGE);
+    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+    psp.hInstance = hApplet;
+    psp.pfnDlgProc = WelcomeDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_SHORTCUT_LOCATION);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+    /* Create the Finish page */
+    psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+    psp.pfnDlgProc = FinishDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_SHORTCUT_FINISH);
+    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+
+
+    /* Create the property sheet */
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK;
+    psh.hInstance = hApplet;
+    psh.hwndParent = NULL;
+    psh.nPages = nPages;
+    psh.nStartPage = 0;
+    psh.phpage = ahpsp;
+    psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+
+    /* Display the wizard */
+    PropertySheet(&psh);
+
+    return TRUE;
+
+
+
+
+
+
+
+   return FALSE;
 }

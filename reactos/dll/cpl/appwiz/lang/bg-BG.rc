@@ -44,6 +44,28 @@ BEGIN
   LTEXT "Text3",-1,10,55,120,20
 END
 
+IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Create Shortcut"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "This wizard helps you to create shortcuts to local or\nnetwork programs, files, folders, computers, or Internet\naddresses.", -1, 120, 15, 200, 30
+  LTEXT "Type the location of the item:", -1, 120, 50, 120, 10
+  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+  PUSHBUTTON "Browse...", IDC_SHORTCUT_BROWSE, 280, 60, 70, 15, ES_LEFT
+  LTEXT "Click Next to continue.", -1, 120, 100, 90, 10
+END
+
+IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Select a Title for the Program"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "&Type a name for this shortcut:", -1, 120, 15, 150, 10
+  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+  LTEXT "Click Finish to create the shortcut.", -1, 120, 50, 150, 10
+END
+
 STRINGTABLE 
 BEGIN
   IDS_CPLSYSTEMNAME "Добавяне/Премахване на програми"
