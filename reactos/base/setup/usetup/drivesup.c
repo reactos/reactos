@@ -79,12 +79,13 @@ GetSourcePaths(PUNICODE_STRING SourcePath,
       /* strip trailing directory */
       Ptr = wcsrchr(SourceName.Buffer, L'\\');
       if (Ptr)
+      {
           RtlCreateUnicodeString(SourceRootDir, Ptr);
+          *Ptr = 0;
+      }
       else
           RtlCreateUnicodeString(SourceRootDir, L"");
 
-      if (Ptr != NULL)
-          *Ptr = 0;
       RtlCreateUnicodeString(SourceRootPath,
                              SourceName.Buffer);
     }
