@@ -22,6 +22,7 @@
 	<library>ole32</library>
 	<library>version</library>
 	<library>devmgr</library>
+	<library>rtl</library>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>

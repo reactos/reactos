@@ -21,6 +21,11 @@
 #include "config.h"
 #include "wine/port.h"
 #define YDEBUG
+#define LARGEINT_PROTOS
+#define LargeIntegerDivide RtlLargeIntegerDivide
+#define ExtendedIntegerMultiply RtlExtendedIntegerMultiply
+#define ConvertUlongToLargeInteger RtlConvertUlongToLargeInteger
+#define LargeIntegerSubtract RtlLargeIntegerSubtract
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -43,6 +48,7 @@
 #include <initguid.h>
 #include <devguid.h>
 #include <winioctl.h>
+#include <largeint.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -61,19 +67,90 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
 
 #define DRIVE_PROPERTY_PAGES (3)
 
+
+static
+LARGE_INTEGER
+GetFreeBytesShare(LARGE_INTEGER TotalNumberOfFreeBytes, LARGE_INTEGER TotalNumberOfBytes)
+{
+   LARGE_INTEGER Temp, Result, Remainder;
+
+   Temp = LargeIntegerDivide(TotalNumberOfBytes, ConvertUlongToLargeInteger(100), &Remainder);
+   if (Temp.QuadPart >= TotalNumberOfFreeBytes.QuadPart)
+   {
+      Result = ConvertUlongToLargeInteger(1);
+   }else
+   {
+      Result = LargeIntegerDivide(TotalNumberOfFreeBytes, Temp, &Remainder);      
+   }
+
+   return Result;
+}
+
+static
+void
+PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT drawItem)
+{
+   HBRUSH hBrush;
+
+   if (drawItem->CtlID == 14013)
+   {
+      hBrush = CreateSolidBrush(RGB(0, 0, 255));
+      if (hBrush)
+      {
+         FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
+         DeleteObject((HGDIOBJ)hBrush);
+      }
+   }else if (drawItem->CtlID == 14014)
+   {
+      hBrush = CreateSolidBrush(RGB(255, 0, 255));
+      if (hBrush)
+      {
+         FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
+         DeleteObject((HGDIOBJ)hBrush);
+      }
+   }
+   else if (drawItem->CtlID == 14015)
+   {
+      HBRUSH hBlueBrush;
+      HBRUSH hMagBrush;
+      RECT rect;
+      LONG horzsize;
+      LARGE_INTEGER Result;
+
+      hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
+      hMagBrush = CreateSolidBrush(RGB(255, 0, 255));
+      
+      Result.QuadPart = GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+      CopyRect(&rect, &drawItem->rcItem);
+      horzsize = rect.right - rect.left;
+      Result.QuadPart = (Result.QuadPart * horzsize) / 100;
+
+      rect.right = rect.left + Result.QuadPart;
+      FillRect(drawItem->hDC, &rect, hMagBrush);
+      rect.left = rect.right;
+      rect.right = drawItem->rcItem.right;
+      FillRect(drawItem->hDC, &rect, hBlueBrush);
+      DeleteObject(hBlueBrush);
+      DeleteObject(hMagBrush);
+   }
+}
+
 static
 void
 InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
 {
-    WCHAR szVolumeName[MAX_PATH+1] = {0};
+   WCHAR szVolumeName[MAX_PATH+1] = {0};
    DWORD MaxComponentLength = 0;
    DWORD FileSystemFlags = 0;
    WCHAR FileSystemName[MAX_PATH+1] = {0};
+   WCHAR szFormat[50];
+   WCHAR szBuffer[128];
    BOOL ret;
    UINT DriveType;
    ULARGE_INTEGER FreeBytesAvailable;
-   ULARGE_INTEGER TotalNumberOfBytes;
-   ULARGE_INTEGER TotalNumberOfFreeBytes;
+   LARGE_INTEGER TotalNumberOfFreeBytes;
+   LARGE_INTEGER TotalNumberOfBytes;
 
    ret = GetVolumeInformationW(szDrive, szVolumeName, MAX_PATH+1, NULL, &MaxComponentLength, &FileSystemFlags, FileSystemName, MAX_PATH+1);
    if (ret)
@@ -89,24 +166,20 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
    DriveType = GetDriveTypeW(szDrive);
    if (DriveType == DRIVE_FIXED)
    {
-      if(GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable, &TotalNumberOfBytes, &TotalNumberOfFreeBytes))
+
+      if(GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailable, (PULARGE_INTEGER)&TotalNumberOfBytes, (PULARGE_INTEGER)&TotalNumberOfFreeBytes))
       {
          WCHAR szResult[128];
+         LARGE_INTEGER Result;
+#ifdef IOCTL_DISK_GET_LENGTH_INFO_IMPLEMENTED
          HANDLE hVolume;
          DWORD BytesReturned = 0;
-         GET_LENGTH_INFORMATION LengthInformation;
-         if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart - FreeBytesAvailable.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
-             SendDlgItemMessageW(hwndDlg, 14004, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
 
-         if (StrFormatByteSizeW(FreeBytesAvailable.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
-             SendDlgItemMessageW(hwndDlg, 14006, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
-#if 0
          sprintfW(szResult, L"\\\\.\\%c:", towupper(szDrive[0]));
          hVolume = CreateFileW(szResult, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
          if (hVolume != INVALID_HANDLE_VALUE)
          {
-            RtlZeroMemory(&LengthInformation, sizeof(GET_LENGTH_INFORMATION));
-            ret = DeviceIoControl(hVolume, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, (LPVOID)&LengthInformation, sizeof(GET_LENGTH_INFORMATION), &BytesReturned, NULL);
+            ret = DeviceIoControl(hVolume, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, (LPVOID)&TotalNumberOfBytes, sizeof(ULARGE_INTEGER), &BytesReturned, NULL);
             if (ret && StrFormatByteSizeW(LengthInformation.Length.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
                SendDlgItemMessageW(hwndDlg, 14008, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
 
@@ -117,8 +190,32 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
             if (ret && StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
                SendDlgItemMessageW(hwndDlg, 14008, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
 #endif
+
+         if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart - FreeBytesAvailable.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
+             SendDlgItemMessageW(hwndDlg, 14004, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
+
+         if (StrFormatByteSizeW(FreeBytesAvailable.QuadPart, szResult, sizeof(szResult) / sizeof(WCHAR)))
+             SendDlgItemMessageW(hwndDlg, 14006, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szResult);
+
+         Result = GetFreeBytesShare(TotalNumberOfFreeBytes, TotalNumberOfBytes);
+         /* set free bytes percentage */
+         sprintfW(szResult, L"%02d%%", Result.QuadPart);
+         SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
+         /* store free share amount */
+         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)Result.QuadPart);
+         /* store used share amount */
+         Result = LargeIntegerSubtract(ConvertUlongToLargeInteger(100), Result);
+         sprintfW(szResult, L"%02d%%", Result.QuadPart);
+         SendDlgItemMessageW(hwndDlg, 14005, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
+         if (LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+             SendDlgItemMessageW(hwndDlg, 14002, WM_SETTEXT, (WPARAM)0, (LPARAM)szBuffer);
+
       }
    }
+   /* set drive description */
+   SendDlgItemMessageW(hwndDlg, 14010, WM_GETTEXT, (WPARAM)50, (LPARAM)szFormat);
+   sprintfW(szBuffer, szFormat, szDrive);
+   SendDlgItemMessageW(hwndDlg, 14010, WM_SETTEXT, (WPARAM)NULL, (LPARAM)szBuffer);
 }
 
 
@@ -132,6 +229,7 @@ DriveGeneralDlg(
 )
 {
     LPPROPSHEETPAGEW ppsp;
+	LPDRAWITEMSTRUCT drawItem;
 
     WCHAR * lpstr;
     switch(uMsg)
@@ -144,7 +242,15 @@ DriveGeneralDlg(
 
         lpstr = (WCHAR *)ppsp->lParam;
         InitializeGeneralDriveDialog(hwndDlg, lpstr);
-        return TRUE;       
+        return TRUE;     
+	case WM_DRAWITEM:
+		drawItem = (LPDRAWITEMSTRUCT)lParam;
+	    if (drawItem->CtlID >= 14013 && drawItem->CtlID <= 14015)
+        {
+			PaintStaticControls(hwndDlg, drawItem);
+            return TRUE;
+        }
+
    }
 
 

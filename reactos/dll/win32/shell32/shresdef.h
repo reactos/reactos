@@ -86,6 +86,9 @@
 #define IDS_COMMON_PICTURES         69
 #define IDS_COMMON_VIDEO            70
 #define IDS_CDBURN_AREA             71
+#define IDS_DRIVE_FIXED             72
+#define IDS_DRIVE_CDROM             73
+#define IDS_DRIVE_NETWORK           74
 
 /* browse for folder dialog box */
 #define IDD_STATUS		0x3743
