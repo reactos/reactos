@@ -200,7 +200,6 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER 
     WCHAR resultstr[MAX_PATH];
     HWND hDlgCtrl;
     LARGE_INTEGER file_size;
-    WCHAR szFormat[] = { '%','u',' ','B','y','t','e','s',0 };
 
     if (lpfilename == NULL)
         return FALSE;
@@ -250,21 +249,16 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER 
         return FALSE;
     }
     CloseHandle(hFile);
-#if 0
-    if (!StrFormatByteSizeW(file_size.QuadPart, resultstr, sizeof(resultstr)))
+    if (!StrFormatByteSizeW(file_size.QuadPart, resultstr, sizeof(resultstr) / sizeof(WCHAR)))
        return FALSE;
-#else
-    sprintfW(resultstr, szFormat, file_size.QuadPart);
-#endif
-
-   hDlgCtrl = GetDlgItem(hwndDlg, 14011);
-   TRACE("result size %u resultstr %s\n", file_size.QuadPart, debugstr_w(resultstr));
-   SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
+    hDlgCtrl = GetDlgItem(hwndDlg, 14011);
+    TRACE("result size %u resultstr %s\n", file_size.QuadPart, debugstr_w(resultstr));
+    SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
  
-   if (lpfilesize)
+    if (lpfilesize)
        lpfilesize->QuadPart = (ULONGLONG)file_size.QuadPart;
 
-   return TRUE;
+    return TRUE;
 }
 
 /*************************************************************************
@@ -573,7 +567,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf)
 	UINT num_pages = 0;
 	DWORD dwHandle = 0;
 
-    TRACE("SH_ShowPropertiesDialog entered\n");
+    TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(lpf));
 
     if (lpf== NULL)
         return FALSE;

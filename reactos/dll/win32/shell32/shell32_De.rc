@@ -346,7 +346,7 @@ STRINGTABLE DISCARDABLE
 	IDS_COMMON_PICTURES	"Dokumente\\Eigene Bilder"
 	IDS_COMMON_VIDEO	"Dokumente\\Eigene Videos"
 	IDS_CDBURN_AREA		"Lokale Einstellungen\\Anwendungsdaten\\Microsoft\\CD Burning"
-    IDS_DRIVE_FIXED     "Lokaler Datenträger"
-    IDS_DRIVE_CDROM     "CD-Laufwerk"
-    IDS_DRIVE_NETWORK   "Netzwerklaufwerk"
+        IDS_DRIVE_FIXED         "Lokaler Datenträger"
+        IDS_DRIVE_CDROM         "CD-Laufwerk"
+        IDS_DRIVE_NETWORK       "Netzwerklaufwerk"
 }

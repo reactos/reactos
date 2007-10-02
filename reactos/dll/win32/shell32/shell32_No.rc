@@ -203,19 +203,57 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 
 }
 
-DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
+DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
+CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
+  EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
+  LTEXT "Type:", -1, 15, 55, 40, 10
+  LTEXT "", 14002, 110, 55, 100, 10
+
+
+  LTEXT "File system:", -1, 15, 70, 100, 10
+  LTEXT "", 14003, 110, 70, 100, 10
+
+  CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
+  LTEXT "Used space:", -1, 25, 90, 120, 10
+  LTEXT "", 14004, 110, 90, 120, 10
+  LTEXT "", 14005, 200, 90, 40, 10
+
+  CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
+  LTEXT "Free space:", -1, 25, 105, 70, 10
+  LTEXT "", 14006, 110, 105, 120, 10
+  LTEXT "", 14007, 200, 105, 40, 10
+
+  LTEXT "Capacity:", -1, 25, 125, 80, 10
+  LTEXT "", 14008, 110, 125, 120, 10
+  LTEXT "", 14009, 200, 125, 40, 10
+
+  CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
+
+  LTEXT "Drive %s", 14010, 100, 170, 40, 10
+  PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
+  CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 165, 10, WS_DISABLED
+  CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
 }
 
-DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 130
+DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
+CAPTION "Extras"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
+  GROUPBOX "Error-checking", -1, 5, 5, 230, 60
+  LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
+  PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
+  GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
+  LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
+  PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
+  GROUPBOX "Backup", -1, 5, 130, 230, 60
+  LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
+  PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
 }
+
 
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
@@ -296,4 +334,7 @@ STRINGTABLE DISCARDABLE
 	IDS_COMMON_PICTURES         "Dokumenter\\Mine bilder"
 	IDS_COMMON_VIDEO            "Dokumenter\\Mine videoklipp"
 	IDS_CDBURN_AREA             "Lokale innstillinger\\Applikasjon Data\\Microsoft\\CD Brenning"
+        IDS_DRIVE_FIXED             "Lokal Disk"
+        IDS_DRIVE_CDROM             "CDROM"
+        IDS_DRIVE_NETWORK           "Network Disk"
 }
