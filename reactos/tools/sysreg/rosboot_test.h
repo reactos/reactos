@@ -14,8 +14,9 @@
 #include "os_support.h"
 #include "user_types.h"
 #include <vector>
+#ifdef __LINUX__
 #include <unistd.h>
-
+#endif
 
 namespace Sysreg_
 {
@@ -132,22 +133,13 @@ typedef enum DebugState
 
 	DebugState checkDebugData(vector<string> & debug_data);
 
-//---------------------------------------------------------------------------------------
-///
-/// checkTimeOut
-///
-/// Description: this function checks if the ReactOS has run longer than the maximum available
-/// time
-
-	bool isTimeout(double max_timeout);
-
 protected:
 
     string m_EmuType;
     string m_EmuPath;
     string m_HDDImage;
     string m_CDImage;
-    double m_MaxTime;
+    long int m_MaxTime;
     string m_DebugFile;
     string m_SymDir;
     long int m_DelayRead;

@@ -70,15 +70,16 @@ int _tmain(int argc, TCHAR * argv[])
 #if 0
 	SymbolFile::initialize (config, envvar);
 #endif	
-	if (regtest->execute (config))
-	{
-		cout << "The regression test completed successfully" << endl;
-	}
-	else
-	{
-		cout << "The regression test failed" << endl;
-		return -2;
-	}
 
+    for(int i = 0; i < 3; i++)
+    {
+        bool ret = regtest->execute(config);
+        if (!ret)
+        {
+            cout << "The regression test has failed at stage: " << i << endl;
+            return -2;
+        }
+    }
+	cout << "The regression test completed successfully" << endl;
 	return 0;
 }

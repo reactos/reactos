@@ -20,6 +20,11 @@
 #endif
 
 #include "user_types.h"
+#include <ctime>
+#include <vector>
+#include <sys/time.h>
+
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 
 namespace System_
 {
@@ -35,10 +40,8 @@ namespace System_
 	{
 	public:
 #ifdef WIN32
-
 		typedef DWORD ProcessID;
 #else
-
 		typedef pid_t ProcessID;
 #endif
 
@@ -74,8 +77,9 @@ namespace System_
 /// Note: returns true if the process with the given pid was terminated
 ///
 /// @param pid process id of the process to terminate
+/// @param exitcode for the killed process
 
-	static bool terminateProcess(ProcessID pid);
+	static bool terminateProcess(ProcessID pid, int exitcode);
 
 
 //----------------------------------------------------------------------------------------
@@ -88,6 +92,32 @@ namespace System_
 
     static void delayExecution(long sec);
 
+///---------------------------------------------------------------------------------------
+///
+/// initializeTimer
+///
+/// Description: this function initializes an alarm. When the alarm expires, it will terminate
+/// the given process
+
+    static void setAlarm(long sec, OsSupport::ProcessID pid);
+
+///---------------------------------------------------------------------------------------
+///
+/// cancelAlarms
+///
+/// Description: this function cancels all available timers
+
+    static void cancelAlarms();
+
+///---------------------------------------------------------------------------------------
+///
+/// checkAlarms
+///
+/// Description: this function checks for expired alarams
+
+    static void checkAlarms();
+
+
 	protected:
 //---------------------------------------------------------------------------------------
 ///
@@ -98,6 +128,19 @@ namespace System_
 		OsSupport()
 		{}
 
+#ifdef __LINUX__
+        static struct sigaction s_sact;
+#else
+        static HANDLE s_hThread;
+#endif
+
+     typedef struct
+     {
+        struct timeval tm;
+        ProcessID pid;
+     }TIME_ENTRY, *PTIME_ENTRY;
+     typedef std::vector<PTIME_ENTRY> TimeEntryVector;
+     static TimeEntryVector s_Entries;
 	}; // end of class OsSupport
 
 } // end of namespace System_

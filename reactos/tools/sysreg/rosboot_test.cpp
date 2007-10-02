@@ -68,7 +68,7 @@ namespace Sysreg_
 #endif
 
 //---------------------------------------------------------------------------------------
-	RosBootTest::RosBootTest() : m_MaxTime(0.0), m_DelayRead(0)
+	RosBootTest::RosBootTest() : m_MaxTime(65), m_DelayRead(0)
 	{
 
 	}
@@ -142,7 +142,6 @@ namespace Sysreg_
     bool RosBootTest::isFileExisting(string output)
     {
         FILE * file;
-
         file = _tfopen(output.c_str(), _T("r"));
         
         if (file)
@@ -629,10 +628,21 @@ namespace Sysreg_
             cerr << "Error: ROS_EMU_PATH is not set" << endl;
             return false;
         }
+        if (!m_HDDImage.length())
+        {
+            /* only read image once */
+            conf_parser.getStringValue (RosBootTest::ROS_HDD_IMAGE, m_HDDImage);
+        }
+        if (!m_CDImage.length())
+        {
+            /* only read cdimage once */
+            conf_parser.getStringValue (RosBootTest::ROS_CD_IMAGE, m_CDImage);
+        }
+        /* reset boot cmd */
+        m_BootCmd = _T("");
 
-        conf_parser.getStringValue (RosBootTest::ROS_HDD_IMAGE, m_HDDImage);
-        conf_parser.getStringValue (RosBootTest::ROS_CD_IMAGE, m_CDImage);
-        conf_parser.getDoubleValue (RosBootTest::ROS_MAX_TIME, m_MaxTime);
+
+        conf_parser.getIntValue (RosBootTest::ROS_MAX_TIME, m_MaxTime);
 		conf_parser.getStringValue (RosBootTest::ROS_LOG_FILE, m_DebugFile);
         conf_parser.getStringValue (RosBootTest::ROS_SYM_DIR, m_SymDir);
         conf_parser.getIntValue (RosBootTest::ROS_DELAY_READ, m_DelayRead);
@@ -652,7 +662,7 @@ namespace Sysreg_
 
         if (m_Pid)
         {
-			OsSupport::terminateProcess (m_Pid);
+			OsSupport::terminateProcess (m_Pid, 0);
         }
 		delete m_DataSource;
         m_DataSource = NULL;
@@ -741,6 +751,14 @@ namespace Sysreg_
         m_Pid = atoi(buffer);
         fclose(file);
 #endif
+        OsSupport::cancelAlarms();
+        OsSupport::setAlarm (m_MaxTime, m_Pid);
+#ifdef __LINUX__
+        OsSupport::setAlarm(m_MaxTime, _getpid());
+#else
+        OsSupport::setAlarm(m_MaxTime, GetCurrentProcessId());
+#endif
+
         bool ret = analyzeDebugData();
 	cleanup();
 
@@ -912,36 +930,6 @@ namespace Sysreg_
 		return state;
 	}
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::isTimeout(double max_timeout)
-	{
-        if (max_timeout == 0)
-        {
-            // no timeout specified
-            return false;
-        }
-		static time_t start = 0;
-
-		if (!start)
-		{
-			time(&start);
-			return false;
-		}
-
-		time_t stop;
-		time(&stop);
-
-		double elapsed = difftime(stop, start);
-		if (elapsed > max_timeout)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-
-	}
-//---------------------------------------------------------------------------------------
 	bool RosBootTest::analyzeDebugData()
 	{
 		vector<string> vect;
@@ -959,12 +947,7 @@ namespace Sysreg_
 		write_log = file.is_open ();
 		while(1)
 		{
-			if (isTimeout(m_MaxTime))
-			{
-				break;
-			}
 			size_t prev_count = vect.size ();
-
 			if (!m_DataSource->readSource (vect))
 			{
 				continue;				

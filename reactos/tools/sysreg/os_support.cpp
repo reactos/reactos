@@ -11,8 +11,63 @@
 
 namespace System_
 {
+
+    OsSupport::TimeEntryVector OsSupport::s_Entries;
+
+    void OsSupport::checkAlarms()
+    {
+        struct timeval tm;
+        gettimeofday(&tm, 0);
+        for (size_t i = 0; i < s_Entries.size(); i++)
+        {
+            long diffsec = s_Entries[i]->tm.tv_sec - tm.tv_sec;
+            if (diffsec < 0)
+            {
+                cout << "terminating process pid:" << s_Entries[i]->pid << endl;
+                terminateProcess(s_Entries[i]->pid, -2); 
+                free(s_Entries[i]);
+                s_Entries.erase (s_Entries.begin () + i);
+                i = MAX(0, i-1);
+            }
+        }
+
+#ifdef __LINUX__
+        if (s_Entries.size())
+        {
+            long secs = Entries[i]->tm.tv_sec - tm.tv_sec;
+            alarm(secs);
+        }
+#endif
+    }
+
+    void OsSupport::cancelAlarms()
+    {
+
 #ifndef __LINUX__
-	bool OsSupport::terminateProcess(OsSupport::ProcessID pid)
+        if (s_hThread)
+        {
+            TerminateThread(s_hThread, 0);
+            s_hThread = 0;
+        }
+#endif
+
+        for(size_t i = 0; i < s_Entries.size(); i++)
+        {
+            free(s_Entries[i]);
+        }
+
+        s_Entries.clear();
+
+
+    }
+
+
+#ifndef __LINUX__
+
+    HANDLE OsSupport::s_hTimer = INVALID_HANDLE_VALUE;
+    HANDLE OsSupport::s_hThread = 0;
+    static HANDLE hTimer;
+	bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
 	{
 		HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
 		if (!hProcess)
@@ -20,7 +75,7 @@ namespace System_
 			return false;
 		}
 
-		bool ret = TerminateProcess(hProcess, 0);
+		bool ret = TerminateProcess(hProcess, exitcode);
 		CloseHandle(hProcess);
 		return ret;
 	}
@@ -88,9 +143,50 @@ namespace System_
 		return pid;
 	}
    	void OsSupport::delayExecution(long value)
-    	{
-        	Sleep(value * 1000);
-    	}
+    {
+      	Sleep(value * 1000);
+    }
+
+    DWORD WINAPI AlarmThread(LPVOID param)
+    {
+        LARGE_INTEGER   liDueTime;
+
+        hTimer = CreateWaitableTimer(NULL, TRUE, _T("SysRegTimer"));
+        if (!hTimer)
+        {
+            return 0;
+        }
+        liDueTime.QuadPart = -100000000LL;
+        while(1)
+        {
+            SetWaitableTimer(hTimer, &liDueTime, 5000, NULL, NULL, FALSE);
+            WaitForSingleObject(hTimer, INFINITE);
+            OsSupport::checkAlarms ();
+        }
+        return 0;
+    }
+
+    void OsSupport::setAlarm(long secs, OsSupport::ProcessID pid)
+    {
+
+        PTIME_ENTRY entry = (PTIME_ENTRY) malloc(sizeof(TIME_ENTRY));
+        if (entry)
+        {
+            cout << "secs: " << secs << endl;
+            struct timeval tm;
+            gettimeofday(&tm, 0);
+            tm.tv_sec += secs;
+
+            entry->tm = tm;
+            entry->pid = pid;
+            s_Entries.push_back(entry);
+            if (s_Entries.size () == 1)
+            {
+                s_hThread = CreateThread(NULL, 0, AlarmThread, 0, 0, NULL);
+            }
+        }
+    }
+
 #else
 /********************************************************************************************************************/
 	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs, bool bWait)
@@ -118,18 +214,59 @@ namespace System_
 		return pid;
 	}
 
-	bool OsSupport::terminateProcess(OsSupport::ProcessID pid)
+	bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
 	{
 		kill(pid, SIGKILL);
 		return true;
 	}
 
-    	void OsSupport::delayExecution(long value)
-    	{
-			sleep( value );
-    	}
+    void OsSupport::delayExecution(long value)
+    {
+        sleep( value );
+    }
 
+    void handleSignal(int sig)
+    {
+        if (sig == SIGALRM)
+        {
+            OsSupport::checkAlarms();
+        }
+    }
+    void setAlarm(long secs, OsSupport::ProcessID pid)
+    {
+        sigemptyset( &sact.sa_mask );
+        s_sact.sa_flags = 0;
+        s_sact.sa_handler = catcher;
+        sigaction( SIGALRM, &sact, NULL );
 
+        alarm(timeout);
+
+        PTIME_ENTRY entry = (PTIME_ENTRY) malloc(sizeof(TIME_ENTRY));
+        if (entry)
+        {
+            struct timeval tm;
+            gettimeofday(&tm, 0);
+            tm.tv_sec += secs;
+
+            entry->tm = tm;
+            entry->pid = pid;
+            for(int i = 0; i < s_Entries.size(); i++)
+            {
+                if (tm.tv_sec < s_Entries[i]->tm.tv_sec && tm.tv_usec < s_Entries[i]->tm.tv_usec)
+                {
+                    if (i == 0)
+                    {
+                        /* adjust alarm timer to new period */
+                        alarm(secs);
+                    }
+                    s_Entries.insert(s_Entries.begin() + i, entry);
+                    return;
+                }
+            }
+            s_Entries.push_back(entry);
+            alarm(secs);
+        }
+    }
 #endif
 
 } // end of namespace System_
