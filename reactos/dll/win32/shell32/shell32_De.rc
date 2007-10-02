@@ -247,7 +247,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
   CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
   LTEXT "Laufwerk %s", 14010, 100, 170, 40, 10
-  PUSHBUTTON "Bereinigen", 14011, 180, 175, 50, 15, WS_DISABLED
+  PUSHBUTTON "Bereinigen", 14011, 180, 175, 50, 15, WS_TABSTOP
   CHECKBOX "Laufwerk komprimieren, um Speicherplatz zu sparen", 14012, 15, 205, 165, 10, WS_DISABLED
   CHECKBOX "Laufwerk für schnelle Dateisuche indizieren", 14012, 15, 220, 165, 10, WS_DISABLED
 }

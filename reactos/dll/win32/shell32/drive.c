@@ -116,11 +116,13 @@ PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT drawItem)
       RECT rect;
       LONG horzsize;
       LARGE_INTEGER Result;
+      WCHAR szBuffer[20];
 
       hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
       hMagBrush = CreateSolidBrush(RGB(255, 0, 255));
       
-      Result.QuadPart = GetWindowLongPtr(hwndDlg, DWLP_USER);
+      SendDlgItemMessageW(hwndDlg, 14007, WM_GETTEXT, 20, (LPARAM)szBuffer);
+      Result.QuadPart = _wtoi(szBuffer);
 
       CopyRect(&rect, &drawItem->rcItem);
       horzsize = rect.right - rect.left;
@@ -201,8 +203,6 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          /* set free bytes percentage */
          sprintfW(szResult, L"%02d%%", Result.QuadPart);
          SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
-         /* store free share amount */
-         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)Result.QuadPart);
          /* store used share amount */
          Result = LargeIntegerSubtract(ConvertUlongToLargeInteger(100), Result);
          sprintfW(szResult, L"%02d%%", Result.QuadPart);
@@ -230,17 +230,20 @@ DriveGeneralDlg(
 {
     LPPROPSHEETPAGEW ppsp;
 	LPDRAWITEMSTRUCT drawItem;
-
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
     WCHAR * lpstr;
+    WCHAR szPath[MAX_PATH];
+    UINT length;
+
     switch(uMsg)
     {
     case WM_INITDIALOG:
         ppsp = (LPPROPSHEETPAGEW)lParam;
         if (ppsp == NULL)
             break;
-        TRACE("WM_INITDIALOG hwnd %p lParam %p ppsplParam %S\n",hwndDlg, lParam, ppsp->lParam);
-
         lpstr = (WCHAR *)ppsp->lParam;
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lpstr);
         InitializeGeneralDriveDialog(hwndDlg, lpstr);
         return TRUE;     
 	case WM_DRAWITEM:
@@ -250,7 +253,27 @@ DriveGeneralDlg(
 			PaintStaticControls(hwndDlg, drawItem);
             return TRUE;
         }
-
+        break;
+    case WM_COMMAND:
+        if (LOWORD(wParam) == 14011)
+        {
+           lpstr = (WCHAR*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+           ZeroMemory( &si, sizeof(si) );
+           si.cb = sizeof(si);
+           ZeroMemory( &pi, sizeof(pi) );
+           if (!GetSystemDirectoryW(szPath, MAX_PATH))
+              break;
+           wcscat(szPath, L"\\cleanmgr.exe /D ");
+           length = wcslen(szPath);
+           szPath[length] = lpstr[0];
+           szPath[length+1] = L'\0';
+           if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+           {
+              CloseHandle(pi.hProcess);
+              CloseHandle(pi.hThread);
+           }
+        }
+        break;
    }
 
 
