@@ -1,0 +1,27 @@
+/*
+ * PROJECT:     ReactOS more command
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/cmdutils/more/lang/lt-LT.rc
+ * PURPOSE:     Lithuanian Language File
+ * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * DATE:        2007-09-23
+ */
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_USAGE, "Atvaizduoja duomenis puslapiais.\n\n\
+  MORE < [Diskas:][Kelias iki bylos]Bylos vardas\n\
+  Komanda | MORE \n\
+  MORE [Diskas:][Kelias iki bylos]Bylos vardas\n\n\
+  [Diskas:][Kelias iki bylos]Bylos vardas    Byla, kurios turinys turi bûti\n\
+                                             atvaizduotas.\n\
+  Komanda                                    Komanda, kurios rezultatas turi\n\
+                                             bûti atvaizduotas.\n\n\
+  Pasirodþius raginimui ""-- Toliau --"" spauskite bet kurá klaviðà, kad\n\
+  pamatytumëte sekantá puslapá.\n"
+
+  IDS_CONTINUE, " -- Toliau (100%) -- "
+  IDS_FILE_ACCESS, "Nepavyko atverti bylos %s."
+}

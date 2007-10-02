@@ -13,19 +13,19 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
 
-STRING_ATTRIB_HELP,    "Displays or changes file attributes.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n\
+STRING_ATTRIB_HELP,    "Відображення або зміна атрибутів файлу.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
        [/S [/D]]\n\n\
-  +   Sets an attribute\n\
-  -   Clears an attribute\n\
-  R   Read-only file attribute\n\
-  A   Archive file attribute\n\
-  S   System file attribute\n\
-  H   Hidden file attribute\n\
-  /S  Processes matching files in the current directory\n\
-      and all subdirectories\n\
-  /D  Processes directories as well\n\n\
-Type ATTRIB without a parameter to display the attributes of all files.\n"
+  +   Установка атрибуту\n\
+  -   Зняття атрибуту\n\
+  R   Атрибут файлу ""Лише читання""\n\
+  A   Атрибут файлу ""Архівний""\n\
+  S   Атрибут файлу ""Системний""\n\
+  H   Атрибут файлу ""Прихований""\n\
+  /S  Обробка файлів зі вказаними іменами в поточній папці\n\
+      і у всіх її підпапках\n\
+  /D  Обробка також і папок\n\n\
+Введіть ATTRIB без параметра, щоб вивести атрибути всіх файлів.\n"
 
 STRING_ALIAS_HELP,  "Sets, removes or shows aliases.\n\n\
 ALIAS [alias=[command]]\n\n\

@@ -1,0 +1,30 @@
+/*
+ * PROJECT:     ReactOS System Control Panel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/control/lang/lt-LT.rc
+ * PURPOSE:     Lithuanian Language File
+ * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * DATE:        2007-09-23
+ */
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Byla"
+    BEGIN
+        MENUITEM "&Baigti",                     IDM_CLOSE
+    END
+    POPUP "&Rodymas"
+    BEGIN
+        MENUITEM "Didelës piktogramos",         IDM_LARGEICONS
+        MENUITEM "Maþos piktogramos",           IDM_SMALLICONS
+        MENUITEM "Sàraðas",                     IDM_LIST
+        MENUITEM "Detalus sàraðas",             IDM_DETAILS
+    END
+    POPUP "&Pagalba"
+    BEGIN
+        MENUITEM "&Apie",                       IDM_ABOUT
+    END
+END
+

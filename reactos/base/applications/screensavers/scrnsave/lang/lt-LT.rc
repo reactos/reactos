@@ -1,0 +1,17 @@
+/*
+ * PROJECT:     ReactOS Default ScreenSaver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/screensavers/scrnsave/lang/lt-LT.rc
+ * PURPOSE:     Lithuanian Language File
+ * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * DATE:        2007-09-24
+ */
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Standartinë ekrano uþsklanda"
+    IDS_TITLE       "Apie"
+    IDS_TEXT        "Nëra keièiamø parametrø."
+END

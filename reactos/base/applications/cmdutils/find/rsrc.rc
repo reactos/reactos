@@ -4,5 +4,7 @@
 #include "lang/ca-ES.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+#include "lang/it-IT.rc"
+#include "lang/lt-LT.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
