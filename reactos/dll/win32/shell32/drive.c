@@ -266,7 +266,60 @@ DriveExtraDlg(
     LPARAM lParam
 )
 {
+   STARTUPINFOW si;
+   PROCESS_INFORMATION pi;
+   WCHAR szPath[MAX_PATH];
+   WCHAR szArg[MAX_PATH];
+   WCHAR * szDrive;
+   UINT length;
+   LPPROPSHEETPAGEW ppsp;
 
+   switch (uMsg)
+   {
+   case WM_INITDIALOG:
+      ppsp = (LPPROPSHEETPAGEW)lParam;
+      SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)ppsp->lParam);
+      return TRUE;
+   case WM_COMMAND:
+      ZeroMemory( &si, sizeof(si) );
+      si.cb = sizeof(si);
+      ZeroMemory( &pi, sizeof(pi) );
+      if (!GetSystemDirectoryW(szPath, MAX_PATH))
+          break;
+      szDrive = (WCHAR*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+      switch(LOWORD(wParam))
+      {
+         case 14000:
+            ///
+            /// FIXME
+            /// show checkdsk dialog
+            ///
+            break;
+         case 14001:
+            szArg[0] = L'"';
+            wcscpy(&szArg[1], szPath);
+            wcscat(szPath, L"\\mmc.exe");
+            wcscat(szArg, L"\\dfrg.msc\" ");
+            length = wcslen(szArg);
+            szArg[length] = szDrive[0];
+            szArg[length+1] = L':';
+            szArg[length+2] = L'\0';
+            if (CreateProcessW(szPath, szArg, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            {
+               CloseHandle(pi.hProcess);
+               CloseHandle(pi.hThread);
+            }
+            break;
+         case 14002:
+            wcscat(szPath, L"\\ntbackup.exe");
+            if (CreateProcessW(szPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            {
+               CloseHandle(pi.hProcess);
+               CloseHandle(pi.hThread);
+            }
+      }
+      break;
+   }
    return FALSE;
 }
 

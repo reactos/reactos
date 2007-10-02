@@ -252,15 +252,24 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
   CHECKBOX "Laufwerk für schnelle Dateisuche indizieren", 14012, 15, 220, 165, 10, WS_DISABLED
 }
 
-DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 130
+DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Extras"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
+  GROUPBOX "Fehlerüberprüfung", -1, 5, 5, 230, 60
+  LTEXT "Bei Wahl dieser Option wird das Volume\nauf Fehler überprüft.", -1, 40, 25, 160, 20
+  PUSHBUTTON "Jetzt &prüfen", 14000, 130, 45, 90, 15, WS_TABSTOP
+  GROUPBOX "Defragmentierung", -1, 5, 65, 230, 60
+  LTEXT "Bei Wahl dieser Option werden die Dateien auf\ndem Volume defragmentiert.", -1, 40, 85, 160, 20
+  PUSHBUTTON "Jetzt &defragmentieren", 14001, 130, 105, 90, 15, WS_TABSTOP
+  GROUPBOX "Sicherung", -1, 5, 130, 230, 60
+  LTEXT "Bei Wahl dieser Option werden die auf dem\nVolume gespeicherten Dateien gesichert.", -1, 40, 150, 160, 20
+  PUSHBUTTON "Jetzt &sichern", 14002, 130, 170, 90, 15, WS_TABSTOP
 }
 
 
-DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
+DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
