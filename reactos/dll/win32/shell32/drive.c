@@ -44,6 +44,8 @@
 #include <devguid.h>
 #include <winioctl.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 typedef enum
 {
     HWPD_STANDARDLIST = 0,

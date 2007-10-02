@@ -41,6 +41,8 @@
 #include "undocshell.h"
 #include <prsht.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 typedef struct _LANGANDCODEPAGE_ 
   {
     WORD lang;
