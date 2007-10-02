@@ -167,9 +167,20 @@ LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
 VOID RunLoader(VOID)
 {
   ULONG_PTR Base;
-  ULONG Size;
+  ULONG Size, i;
   const char *SourcePath;
   const char *LoadOptions = "", *DbgLoadOptions = "";
+  const char *sourcePaths[] = {
+      "", /* Only for floppy boot */
+#if defined(_M_IX86)
+      "\\I386",
+#elif defined(_M_MPPC)
+      "\\PPC",
+#elif defined(_M_MRX000)
+      "\\MIPS",
+#endif
+      "\\reactos",
+      NULL };
   char szKernelName[256];
 
   HINF InfHandle;
@@ -246,13 +257,21 @@ VOID RunLoader(VOID)
     }
 
   /* Open 'txtsetup.sif' */
-  if (!InfOpenFile (&InfHandle,
-		    MachDiskBootingFromFloppy() ? "\\txtsetup.sif" : "\\reactos\\txtsetup.sif",
-		    &ErrorLine))
+  for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
+  {
+    SourcePath = sourcePaths[i];
+    if (!SourcePath)
     {
       printf("Failed to open 'txtsetup.sif'\n");
       return;
     }
+    strcpy(szKernelName, SourcePath);
+    strcat(szKernelName, "\\txtsetup.sif");
+    if (InfOpenFile (&InfHandle, szKernelName, &ErrorLine))
+      break;
+  }
+  if (!*SourcePath)
+    SourcePath = "\\";
 
 #ifdef DBG
   /* Get load options */  
@@ -284,17 +303,6 @@ VOID RunLoader(VOID)
 #if 0
   printf("LoadOptions: '%s'\n", LoadOptions);
 #endif
-
-  if (MachDiskBootingFromFloppy())
-    {
-      /* Boot from floppy disk */
-      SourcePath = "\\";
-    }
-  else
-    {
-      /* Boot from cdrom */
-      SourcePath = "\\reactos";
-    }
 
   /* Set kernel command line */
   MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
