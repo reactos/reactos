@@ -16,6 +16,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 123 24 DISCARDABLE "manifest.xml"
 
 IDI_CPLSYSTEM ICON "resources/applet.ico"
+IDI_APPICO ICON "resources/1501.ico"
+IDI_INSTICO ICON "resources/1502.ico"
+IDI_RECBINICO ICON "resources/1503.ico"
+IDI_DOWNLOADICO ICON "resources/1504.ico"
+IDI_APPINETICO ICON "resources/1505.ico"
+
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 
 #include "rsrc.rc"

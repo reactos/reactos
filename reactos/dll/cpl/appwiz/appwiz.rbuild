@@ -13,5 +13,9 @@
 	<library>comctl32</library>
 	<library>msvcrt</library>
 	<file>appwiz.c</file>
+	<file>remove.c</file>
+	<file>add.c</file>
+	<file>rossetup.c</file>
+	<file>createlink.c</file>
 	<file>appwiz.rc</file>
 </module>
