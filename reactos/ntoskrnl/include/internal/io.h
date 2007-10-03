@@ -358,6 +358,7 @@ typedef struct _LOAD_UNLOAD_PARAMS
     PUNICODE_STRING ServiceName;
     WORK_QUEUE_ITEM WorkItem;
     KEVENT Event;
+    PDRIVER_OBJECT DriverObject;
 } LOAD_UNLOAD_PARAMS, *PLOAD_UNLOAD_PARAMS;
 
 //
@@ -840,6 +841,12 @@ FASTCALL
 IopLoadServiceModule(
     IN PUNICODE_STRING ServiceName,
     OUT PLDR_DATA_TABLE_ENTRY *ModuleObject
+);
+
+VOID
+NTAPI
+IopLoadUnloadDriver(
+    IN OUT PLOAD_UNLOAD_PARAMS LoadParams
 );
 
 NTSTATUS 

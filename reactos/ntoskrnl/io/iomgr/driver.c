@@ -927,6 +927,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    UNICODE_STRING ServiceName;
    UNICODE_STRING ObjectName;
    PDRIVER_OBJECT DriverObject;
+   LOAD_UNLOAD_PARAMS LoadParams;
    NTSTATUS Status;
    LPWSTR Start;
 
@@ -1019,8 +1020,35 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     * Unload the module and release the references to the device object
     */
 
+    /* Call the load/unload routine, depending on current process */
    if (DriverObject->DriverUnload)
-      (*DriverObject->DriverUnload)(DriverObject);
+   {
+      if (PsGetCurrentProcess() == PsInitialSystemProcess)
+      {
+         /* Just call right away */
+         (*DriverObject->DriverUnload)(DriverObject);
+      }
+      else
+      {
+         /* Load/Unload must be called from system process */
+
+         /* Prepare parameters block */
+         LoadParams.DriverObject = DriverObject;
+         KeInitializeEvent(&LoadParams.Event, NotificationEvent, FALSE);
+
+         ExInitializeWorkItem(&LoadParams.WorkItem,
+             (PWORKER_THREAD_ROUTINE)IopLoadUnloadDriver,
+             (PVOID)&LoadParams);
+
+         /* Queue it */
+         ExQueueWorkItem(&LoadParams.WorkItem, DelayedWorkQueue);
+
+         /* And wait when it completes */
+         KeWaitForSingleObject(&LoadParams.Event, UserRequest, KernelMode,
+             FALSE, NULL);
+      }
+   }
+
    ObDereferenceObject(DriverObject);
    ObDereferenceObject(DriverObject);
    MmUnloadSystemImage(DriverObject->DriverSection);
@@ -1478,6 +1506,17 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    PDRIVER_OBJECT DriverObject;
    WCHAR *cur;
 
+   /* Check if it's an unload request */
+   if (LoadParams->DriverObject)
+   {
+       (*DriverObject->DriverUnload)(DriverObject);
+
+       /* Return success and signal the event */
+       LoadParams->Status = STATUS_SUCCESS;
+      (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
+       return;
+   }
+
    RtlInitUnicodeString(&ImagePath, NULL);
 
    /*
@@ -1675,6 +1714,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     DPRINT("NtLoadDriver('%wZ')\n", &CapturedDriverServiceName);
 
     LoadParams.ServiceName = &CapturedDriverServiceName;
+    LoadParams.DriverObject = NULL;
     KeInitializeEvent(&LoadParams.Event, NotificationEvent, FALSE);
 
     /* Call the load/unload routine, depending on current process */
