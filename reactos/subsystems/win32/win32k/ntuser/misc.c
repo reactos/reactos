@@ -1505,8 +1505,8 @@ UserSystemParametersInfo_StructSet(
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* remove this when all spi are implement */
-    DPRINT1("UserSystemParametersInfo_StructSet SPI Action 0x%x (uiParam: 0x%x, fWinIni: 0x%x)\n",uiAction,  uiParam, fWinIni);
+    DPRINT("UserSystemParametersInfo_StructSet SPI Action 0x%x (uiParam: 0x%x, fWinIni: 0x%x)\n",
+        uiAction, uiParam, fWinIni);
 
     _SEH_TRY
     {
