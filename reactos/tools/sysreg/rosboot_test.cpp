@@ -27,7 +27,6 @@
 #include <assert.h>
 #include <math.h>
 #include <signal.h>
- 
 			
 namespace Sysreg_
 {
@@ -754,7 +753,7 @@ namespace Sysreg_
         OsSupport::cancelAlarms();
         OsSupport::setAlarm (m_MaxTime, m_Pid);
 #ifdef __LINUX__
-        OsSupport::setAlarm(m_MaxTime, _getpid());
+        OsSupport::setAlarm(m_MaxTime, getpid());
 #else
         OsSupport::setAlarm(m_MaxTime, GetCurrentProcessId());
 #endif

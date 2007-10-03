@@ -17,8 +17,9 @@ namespace System_
     void OsSupport::checkAlarms()
     {
         struct timeval tm;
+		size_t i;
         gettimeofday(&tm, 0);
-        for (size_t i = 0; i < s_Entries.size(); i++)
+        for (i = 0; i < s_Entries.size(); i++)
         {
             long diffsec = s_Entries[i]->tm.tv_sec - tm.tv_sec;
             if (diffsec < 0)
@@ -34,7 +35,7 @@ namespace System_
 #ifdef __LINUX__
         if (s_Entries.size())
         {
-            long secs = Entries[i]->tm.tv_sec - tm.tv_sec;
+            long secs = s_Entries[i]->tm.tv_sec - tm.tv_sec;
             alarm(secs);
         }
 #endif
@@ -64,7 +65,6 @@ namespace System_
 
 #ifndef __LINUX__
 
-    HANDLE OsSupport::s_hTimer = INVALID_HANDLE_VALUE;
     HANDLE OsSupport::s_hThread = 0;
     static HANDLE hTimer;
 	bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
