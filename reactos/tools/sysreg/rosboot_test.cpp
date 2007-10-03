@@ -751,10 +751,11 @@ namespace Sysreg_
         fclose(file);
 #endif
         OsSupport::cancelAlarms();
-        OsSupport::setAlarm (m_MaxTime, m_Pid);
 #ifdef __LINUX__
-        OsSupport::setAlarm(m_MaxTime, getpid());
+        //OsSupport::setAlarm (m_MaxTime, m_Pid);
+        //OsSupport::setAlarm(m_MaxTime, getpid());
 #else
+        OsSupport::setAlarm (m_MaxTime, m_Pid);
         OsSupport::setAlarm(m_MaxTime, GetCurrentProcessId());
 #endif
 
