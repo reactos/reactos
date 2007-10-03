@@ -2048,9 +2048,36 @@ NdisMWriteLogData(
     IN  PVOID       LogBuffer,
     IN  UINT        LogBufferSize)
 {
-    UNIMPLEMENTED
+    PUCHAR Buffer = LogBuffer;
+    UINT i, j, idx;
 
-  return NDIS_STATUS_FAILURE;
+    UNIMPLEMENTED;
+    for (i = 0; i < LogBufferSize; i += 16)
+    {
+        DbgPrint("%08x |", i);
+        for (j = 0; j < 16; j++)
+        {
+            idx = i + j;
+            if (idx < LogBufferSize)
+                DbgPrint(" %02x", Buffer[idx]);
+            else
+                DbgPrint("   ");
+        }
+        DbgPrint(" | ");
+        for (j = 0; j < 16; j++)
+        {
+            idx = i + j;
+            if (idx == LogBufferSize)
+                break;
+            if (Buffer[idx] >= ' ') /* FIXME: not portable! replace by if (isprint(Buffer[idx])) ? */
+                DbgPrint("%c", Buffer[idx]);
+            else
+                DbgPrint(".");
+        }
+        DbgPrint("\n");
+    }
+
+    return NDIS_STATUS_FAILURE;
 }
 
 
