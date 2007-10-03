@@ -388,20 +388,30 @@ IopParseDevice(IN PVOID ParseObject,
     UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
 
     /* Check if this is a direct open */
-    /* FIXME: Small hack still exists, because there is probably
-              a small bug somewhere in vfat */
     if (!(RemainingName->Length) &&
         !(OpenPacket->RelatedFileObject) &&
-        (((DesiredAccess & ~(SYNCHRONIZE |
+        ((DesiredAccess & ~(SYNCHRONIZE |
                             FILE_READ_ATTRIBUTES |
                             READ_CONTROL |
                             ACCESS_SYSTEM_SECURITY |
                             WRITE_OWNER |
-                            WRITE_DAC)) == 0) ||
-         (wcsstr(CompleteName->Buffer, L"Harddisk"))) &&
+                            WRITE_DAC)) == 0) &&
         !(UseDummyFile))
     {
         /* Remember this for later */
+        DirectOpen = TRUE;
+    }
+
+    /* FIXME: Small hack still exists, have to check why...
+     * This is triggered multiple times by usetup and then once per boot.
+     */
+    if (!(DirectOpen) &&
+        !(RemainingName->Length) &&
+        !(OpenPacket->RelatedFileObject) &&
+        ((wcsstr(CompleteName->Buffer, L"Harddisk"))) &&
+        !(UseDummyFile))
+    {
+        DPRINT1("Using IopParseDevice() hack\n");
         DirectOpen = TRUE;
     }
 
