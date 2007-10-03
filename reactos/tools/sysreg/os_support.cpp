@@ -189,6 +189,11 @@ namespace System_
 
 #else
 /********************************************************************************************************************/
+
+
+	struct sigaction OsSupport::s_sact;
+
+
 	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs, bool bWait)
 	{
 		ProcessID pid;
@@ -232,14 +237,12 @@ namespace System_
             OsSupport::checkAlarms();
         }
     }
-    void setAlarm(long secs, OsSupport::ProcessID pid)
+    void OsSupport::setAlarm(long secs, OsSupport::ProcessID pid)
     {
-        sigemptyset( &sact.sa_mask );
+        sigemptyset( &s_sact.sa_mask );
         s_sact.sa_flags = 0;
-        s_sact.sa_handler = catcher;
-        sigaction( SIGALRM, &sact, NULL );
-
-        alarm(timeout);
+        s_sact.sa_handler = handleSignal;
+        sigaction( SIGALRM, &s_sact, NULL );
 
         PTIME_ENTRY entry = (PTIME_ENTRY) malloc(sizeof(TIME_ENTRY));
         if (entry)
@@ -250,7 +253,7 @@ namespace System_
 
             entry->tm = tm;
             entry->pid = pid;
-            for(int i = 0; i < s_Entries.size(); i++)
+            for(size_t i = 0; i < s_Entries.size(); i++)
             {
                 if (tm.tv_sec < s_Entries[i]->tm.tv_sec && tm.tv_usec < s_Entries[i]->tm.tv_usec)
                 {
