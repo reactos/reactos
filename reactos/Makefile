@@ -260,77 +260,67 @@ else
   ECHO_STRIP   =
 endif
 
-
-host_gcc = $(Q)gcc
-host_gpp = $(Q)g++
+# Set host compiler/linker
+ifeq ($(HOST_CC),)
+  HOST_CC = gcc
+endif
+ifeq ($(HOST_CPP),)
+  HOST_CPP = g++
+endif
+host_gcc = $(Q)$(HOST_CC)
+host_gpp = $(Q)$(HOST_CPP)
 host_ld = $(Q)ld
 host_ar = $(Q)ar
 host_objcopy = $(Q)objcopy
+
+# Set target compiler/linker
+ifneq ($(ROS_PREFIX),)
+  PREFIX_ := $(ROS_PREFIX)-
+else
+  PREFIX_ :=
+endif
+ifeq ($(TARGET_CC),)
+  TARGET_CC = $(PREFIX_)gcc
+endif
+ifeq ($(TARGET_CPP),)
+  TARGET_CPP = $(PREFIX_)g++
+endif
+gcc = $(Q)$(TARGET_CC)
+gpp = $(Q)$(TARGET_CPP)
+ld = $(Q)$(PREFIX_)ld
+nm = $(Q)$(PREFIX_)nm
+objdump = $(Q)$(PREFIX_)objdump
+ar = $(Q)$(PREFIX_)ar
+objcopy = $(Q)$(PREFIX_)objcopy
+dlltool = $(Q)$(PREFIX_)dlltool
+strip = $(Q)$(PREFIX_)strip
+windres = $(Q)$(PREFIX_)windres
+
+# Set utilities
+ifeq ($(OSTYPE),msys)
+  HOST=mingw32-linux
+endif
 ifeq ($(HOST),mingw32-linux)
 	export EXEPREFIX = ./
-ifeq ($(OSTYPE),msys)
-	export EXEPOSTFIX = .exe
-else
-	export EXEPOSTFIX =
-endif
+	ifeq ($(OSTYPE),msys)
+		export EXEPOSTFIX = .exe
+	else
+		export EXEPOSTFIX =
+	endif
 	export SEP = /
 	mkdir = -$(Q)mkdir -p
-	gcc = $(Q)$(PREFIX)-gcc
-	gpp = $(Q)$(PREFIX)-g++
-	ld = $(Q)$(PREFIX)-ld
-	nm = $(Q)$(PREFIX)-nm
-	objdump = $(Q)$(PREFIX)-objdump
-	ar = $(Q)$(PREFIX)-ar
-	objcopy = $(Q)$(PREFIX)-objcopy
-	dlltool = $(Q)$(PREFIX)-dlltool
-	strip = $(Q)$(PREFIX)-strip
-	windres = $(Q)$(PREFIX)-windres
 	rm = $(Q)rm -f
 	cp = $(Q)cp
 	NUL = /dev/null
 else # mingw32-windows
-	ifeq ($(OSTYPE),msys)
-		HOST=mingw32-linux
-		export EXEPREFIX = ./
-		export EXEPOSTFIX = .exe
-		export SEP = /
-		mkdir = -$(Q)mkdir -p
-		rm = $(Q)rm -f
-		cp = $(Q)cp
-		NUL = /dev/null
-	else
-		export EXEPREFIX =
-		export EXEPOSTFIX = .exe
-		ROS_EMPTY =
-		export SEP = \$(ROS_EMPTY)
-		mkdir = -$(Q)mkdir
-		rm = $(Q)del /f /q
-		cp = $(Q)copy /y
-		NUL = NUL
-	endif
-	ifeq ($(ROS_PREFIX),)
-		gcc = $(Q)gcc
-		gpp = $(Q)g++
-		ld = $(Q)ld
-		nm = $(Q)nm
-		objdump = $(Q)objdump
-		ar = $(Q)ar
-		objcopy = $(Q)objcopy
-		dlltool = $(Q)dlltool
-		strip = $(Q)strip
-		windres = $(Q)windres
-	else
-		gcc = $(Q)$(ROS_PREFIX)-gcc
-		gpp = $(Q)$(ROS_PREFIX)-g++
-		ld = $(Q)$(ROS_PREFIX)-ld
-		nm = $(Q)$(ROS_PREFIX)-nm
-		objdump = $(Q)$(ROS_PREFIX)-objdump
-		ar = $(Q)$(ROS_PREFIX)-ar
-		objcopy = $(Q)$(ROS_PREFIX)-objcopy
-		dlltool = $(Q)$(ROS_PREFIX)-dlltool
-		strip = $(Q)$(ROS_PREFIX)-strip
-		windres = $(Q)$(ROS_PREFIX)-windres
-	endif
+	export EXEPREFIX =
+	export EXEPOSTFIX = .exe
+	ROS_EMPTY =
+	export SEP = \$(ROS_EMPTY)
+	mkdir = -$(Q)mkdir
+	rm = $(Q)del /f /q
+	cp = $(Q)copy /y
+	NUL = NUL
 endif
 
 ifneq ($(ROS_INTERMEDIATE),)
