@@ -277,7 +277,11 @@ host_objcopy = $(Q)objcopy
 ifneq ($(ROS_PREFIX),)
   PREFIX_ := $(ROS_PREFIX)-
 else
-  PREFIX_ :=
+  ifeq ($(HOST),mingw32-linux)
+    PREFIX_ := mingw32-
+  else
+    PREFIX_ :=
+  endif
 endif
 ifeq ($(TARGET_CC),)
   TARGET_CC = $(PREFIX_)gcc
