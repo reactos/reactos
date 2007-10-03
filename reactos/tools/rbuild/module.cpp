@@ -415,12 +415,6 @@ Module::Module ( const Project& project,
 	else
 		install = NULL;
 
-	att = moduleNode.GetAttribute ( "usewrc", false );
-	if ( att != NULL )
-		useWRC = att->value == "true";
-	else
-		useWRC = true;
-
 	att = moduleNode.GetAttribute ( "allowwarnings", false );
 	if ( att == NULL )
 	{

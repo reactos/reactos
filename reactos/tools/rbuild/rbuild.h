@@ -355,7 +355,6 @@ public:
 	std::string prefix;
 	HostType host;
 	std::string aliasedModuleName;
-	bool useWRC;
 	bool allowWarnings;
 	bool enabled;
 	bool isStartupLib;

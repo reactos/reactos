@@ -123,7 +123,6 @@
 	underscoresymbols	(true|yes|false|no) "no"
 	installbase	%Text; #IMPLIED
 	installname	%Text; #IMPLIED
-	usewrc		%Text; #IMPLIED
 	allowwarnings	(true|false) "false"
 	aliasof %Text; #IMPLIED
 	unicode	(true|yes|false|no) "no"

@@ -1095,55 +1095,39 @@ MingwModuleHandler::GenerateWindresCommand (
 
 	const FileLocation *objectFilename = GetObjectFilename ( sourceFile, &clean_files );
 
-	if ( module.useWRC )
-	{
-		string sourceFilenamePart = module.name + "." + ReplaceExtension ( sourceFile->name, "" );
-		FileLocation rciFilename ( TemporaryDirectory,
-		                           "",
-		                           sourceFilenamePart + ".rci.tmp" );
-		FileLocation resFilename ( TemporaryDirectory,
-		                           "",
-		                           sourceFilenamePart + ".res.tmp" );
+	string sourceFilenamePart = module.name + "." + ReplaceExtension ( sourceFile->name, "" );
+	FileLocation rciFilename ( TemporaryDirectory,
+	                           "",
+	                           sourceFilenamePart + ".rci.tmp" );
+	FileLocation resFilename ( TemporaryDirectory,
+	                           "",
+	                           sourceFilenamePart + ".res.tmp" );
 
-		fprintf ( fMakefile,
-		          "%s: %s $(WRC_TARGET) | %s\n",
-		          backend->GetFullName ( *objectFilename ).c_str (),
-		          dependencies.c_str (),
-		          backend->GetFullPath ( *objectFilename ).c_str () );
-		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
-		fprintf ( fMakefile,
-		         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
-		         windresflagsMacro.c_str (),
-		         backend->GetFullName ( *sourceFile ).c_str (),
-		         backend->GetFullName ( rciFilename ).c_str () );
-		fprintf ( fMakefile,
-		         "\t$(Q)$(WRC_TARGET) ${%s} %s %s\n",
-		         windresflagsMacro.c_str (),
-		         backend->GetFullName ( rciFilename ).c_str (),
-		         backend->GetFullName ( resFilename ).c_str () );
-		fprintf ( fMakefile,
-		         "\t-@${rm} %s 2>$(NUL)\n",
-		         backend->GetFullName ( rciFilename ).c_str () );
-		fprintf ( fMakefile,
-		         "\t${windres} %s -o $@\n",
-		         backend->GetFullName ( resFilename ).c_str () );
-		fprintf ( fMakefile,
-		         "\t-@${rm} %s 2>$(NUL)\n",
-		         backend->GetFullName ( resFilename ).c_str () );
-	}
-	else
-	{
-		fprintf ( fMakefile,
-		          "%s: %s $(WRC_TARGET) | %s\n",
-		          backend->GetFullName ( *objectFilename ).c_str (),
-		          dependencies.c_str (),
-		          backend->GetFullPath ( *objectFilename ).c_str () );
-		fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
-		fprintf ( fMakefile,
-		         "\t${windres} $(%s) %s -o $@\n",
-		         windresflagsMacro.c_str (),
-		         backend->GetFullName ( *sourceFile ).c_str () );
-	}
+	fprintf ( fMakefile,
+	          "%s: %s $(WRC_TARGET) | %s\n",
+	          backend->GetFullName ( *objectFilename ).c_str (),
+	          dependencies.c_str (),
+	          backend->GetFullPath ( *objectFilename ).c_str () );
+	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
+	fprintf ( fMakefile,
+	         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
+	         windresflagsMacro.c_str (),
+	         backend->GetFullName ( *sourceFile ).c_str (),
+	         backend->GetFullName ( rciFilename ).c_str () );
+	fprintf ( fMakefile,
+	         "\t$(Q)$(WRC_TARGET) ${%s} %s %s\n",
+	         windresflagsMacro.c_str (),
+	         backend->GetFullName ( rciFilename ).c_str (),
+	         backend->GetFullName ( resFilename ).c_str () );
+	fprintf ( fMakefile,
+	         "\t-@${rm} %s 2>$(NUL)\n",
+	         backend->GetFullName ( rciFilename ).c_str () );
+	fprintf ( fMakefile,
+	         "\t${windres} %s -o $@\n",
+	         backend->GetFullName ( resFilename ).c_str () );
+	fprintf ( fMakefile,
+	         "\t-@${rm} %s 2>$(NUL)\n",
+	         backend->GetFullName ( resFilename ).c_str () );
 }
 
 void

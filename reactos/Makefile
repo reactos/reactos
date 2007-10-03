@@ -298,7 +298,6 @@ ar = $(Q)$(PREFIX_)ar
 objcopy = $(Q)$(PREFIX_)objcopy
 dlltool = $(Q)$(PREFIX_)dlltool
 strip = $(Q)$(PREFIX_)strip
-windres = $(Q)$(PREFIX_)windres
 
 # Set utilities
 ifeq ($(OSTYPE),msys)
