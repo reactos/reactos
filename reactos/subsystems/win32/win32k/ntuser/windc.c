@@ -652,6 +652,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   
    if(Force && !GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, pdce->hDC))
      {
+      DPRINT1("Change ownership for DCE!\n");
       DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
      }
   
@@ -663,6 +664,12 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   
    DCE_Cleanup(pdce);
    ExFreePoolWithTag(pdce, TAG_PDCE);
+
+   if (FirstDce == NULL)
+   {
+     ExFreePoolWithTag(defaultDCstate, TAG_DC);
+     defaultDCstate = NULL;     
+   }
      return ret;
 }
 
