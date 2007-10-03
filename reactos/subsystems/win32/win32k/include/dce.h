@@ -37,7 +37,6 @@ typedef struct tagDCE
 } DCE;  /* PDCE already declared at top of file */
 
 /* internal DCX flags, see psdk/winuser.h for the rest */
-#define DCX_EXCLUDEUPDATE	0x00000100
 #define DCX_DCEEMPTY		0x00000800
 #define DCX_DCEBUSY		0x00001000
 #define DCX_DCEDIRTY		0x00002000
