@@ -80,10 +80,14 @@ HvpAddBin(
 
          BitmapBuffer = RegistryHive->Allocate(BitmapSize, TRUE);
          RtlZeroMemory(BitmapBuffer, BitmapSize);
-         RtlCopyMemory(BitmapBuffer,
-   		    RegistryHive->DirtyVector.Buffer,
-   		    RegistryHive->DirtyVector.SizeOfBitMap / 8);
-         RegistryHive->Free(RegistryHive->DirtyVector.Buffer);
+         if (RegistryHive->DirtyVector.SizeOfBitMap > 0)
+         {
+            ASSERT(RegistryHive->DirtyVector.Buffer);
+            RtlCopyMemory(BitmapBuffer,
+   		       RegistryHive->DirtyVector.Buffer,
+   		       RegistryHive->DirtyVector.SizeOfBitMap / 8);
+            RegistryHive->Free(RegistryHive->DirtyVector.Buffer);
+         }
          RtlInitializeBitMap(&RegistryHive->DirtyVector, BitmapBuffer,
                              BitmapSize * 8);
       }
