@@ -350,6 +350,17 @@ typedef struct _OPEN_PACKET
 } OPEN_PACKET, *POPEN_PACKET;
 
 //
+// Parameters packet for Load/Unload work item's context
+//
+typedef struct _LOAD_UNLOAD_PARAMS
+{
+    NTSTATUS Status;
+    PUNICODE_STRING ServiceName;
+    WORK_QUEUE_ITEM WorkItem;
+    KEVENT Event;
+} LOAD_UNLOAD_PARAMS, *PLOAD_UNLOAD_PARAMS;
+
+//
 // List of Bus Type GUIDs
 //
 typedef struct _IO_BUS_TYPE_GUID_LIST
