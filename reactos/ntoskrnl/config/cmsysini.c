@@ -447,7 +447,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Allocate the unicode buffer */
     Length = LoadString.Length * sizeof(WCHAR) + sizeof(UNICODE_NULL);
-    Buffer = ExAllocatePoolWithTag(PagedPool, Length, 0);
+    Buffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
     if (!Buffer)
     {
         /* Fail */
