@@ -111,6 +111,15 @@ Index: propsheet.c
  }
  
  /******************************************************************************
+@@ -3555,6 +3558,8 @@
+        * from which to switch to the next page */
+       SendMessageW(hwndTabCtrl, TCM_SETCURSEL, psInfo->active_page, 0);
+ 
++      PROPSHEET_UnChanged(hwnd, (HWND)wParam);
++
+       return TRUE;
+     }
+ 
 Index: tooltips.c
 ===================================================================
 --- tooltips.c	(revision 25790)

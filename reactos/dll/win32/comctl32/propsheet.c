@@ -3558,6 +3558,8 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
        * from which to switch to the next page */
       SendMessageW(hwndTabCtrl, TCM_SETCURSEL, psInfo->active_page, 0);
 
+      PROPSHEET_UnChanged(hwnd, (HWND)wParam);
+
       return TRUE;
     }
 
