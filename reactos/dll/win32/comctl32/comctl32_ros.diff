@@ -195,3 +195,31 @@ Index: treeview.c
      return 0;
  }
  
+Index: monthcal.c
+===================================================================
+--- monthcal.c	(revision 29360)
++++ monthcal.c	(working copy)
+@@ -1703,11 +1703,12 @@
+ 
+ 
+ static LRESULT
+-MONTHCAL_KillFocus(const MONTHCAL_INFO *infoPtr)
++MONTHCAL_KillFocus(const MONTHCAL_INFO *infoPtr, HWND hFocusWnd)
+ {
+   TRACE("\n");
+ 
+-  InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
++  if (infoPtr->hwndNotify != hFocusWnd)
++    ShowWindow(infoPtr->hwndSelf, SW_HIDE);
+ 
+   return 0;
+ }
+@@ -2015,7 +2016,7 @@
+     return DLGC_WANTARROWS | DLGC_WANTCHARS;
+ 
+   case WM_KILLFOCUS:
+-    return MONTHCAL_KillFocus(infoPtr);
++    return MONTHCAL_KillFocus(infoPtr, wParam);
+ 
+   case WM_RBUTTONDOWN:
+     return MONTHCAL_RButtonDown(infoPtr, lParam);
