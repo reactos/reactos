@@ -3,5 +3,7 @@ LIBRARY appwiz.cpl
 EXPORTS
 CPlApplet
 NewLinkHere
+NewLinkHereA
+NewLinkHereW
 
 ; EOF

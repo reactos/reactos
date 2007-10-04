@@ -11,6 +11,15 @@ typedef struct
   CPLAPPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
 
+typedef struct
+{
+   WCHAR szTarget[MAX_PATH];
+   WCHAR szWorkingDirectory[MAX_PATH];
+   WCHAR szDescription[MAX_PATH];
+   WCHAR szLinkName[MAX_PATH];
+}CREATE_LINK_CONTEXT, *PCREATE_LINK_CONTEXT;
+
+
 extern HINSTANCE hApplet;
 
 /* remove.c */

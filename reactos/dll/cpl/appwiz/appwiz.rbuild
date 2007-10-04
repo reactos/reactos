@@ -12,6 +12,9 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>msvcrt</library>
+	<library>ole32</library>
+	<library>uuid</library>
+	<library>shell32</library>
 	<file>appwiz.c</file>
 	<file>remove.c</file>
 	<file>add.c</file>

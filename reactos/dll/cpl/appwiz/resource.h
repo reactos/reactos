@@ -40,6 +40,8 @@
 #define IDS_LARGEICONS				2007
 #define IDS_LIST					2008
 #define IDS_DETAILS					2009
+#define IDS_CREATE_SHORTCUT         2010
+#define IDS_ERROR_NOT_FOUND         2011
 
 /* controls */
 #define IDC_INSTALL 			101

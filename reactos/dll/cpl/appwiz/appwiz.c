@@ -141,6 +141,7 @@ DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
     {
         case DLL_PROCESS_ATTACH:
         case DLL_THREAD_ATTACH:
+            CoInitialize(NULL);
             hApplet = hinstDLL;
             break;
     }

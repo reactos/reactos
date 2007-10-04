@@ -97,4 +97,6 @@ BEGIN
 	IDS_LARGEICONS "Large Icons"
 	IDS_LIST "List"
 	IDS_DETAILS "Details"
+    IDS_CREATE_SHORTCUT "Create Shortcut"
+    IDS_ERROR_NOT_FOUND "The file %s was not found."
 END
