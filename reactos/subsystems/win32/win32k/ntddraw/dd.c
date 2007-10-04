@@ -5,7 +5,7 @@
  * FILE:             subsys/win32k/ntddraw/dd.c
  * PROGRAMER:        Magnus Olsen (greatlord@reactos.org)
  * REVISION HISTORY:
- *       19/7-2006  Magnus Olsen
+ *       19/7-2006   Magnus Olsen
  */
 
 #include <w32k.h>
@@ -16,17 +16,16 @@
 #define DdHandleTable GdiHandleTable
 
 /* 
-   DdMapMemory, DdDestroyDriver are not exported as NtGdi Call 
-   This file is compelete for DD_CALLBACKS setup
+   DdMapMemory, DdDestroyDriver are not exported as NtGdi calls
+   This file is complete for DD_CALLBACKS setup
 
-   ToDO fix the NtGdiDdCreateSurface, shall we fix it 
-   from GdiEntry or gdientry callbacks for DdCreateSurface
-   have we miss some thing there 
+   TODO: Fix the NtGdiDdCreateSurface (something is missing in
+   either GdiEntry or GdiEntry's callback for DdCreateSurface)
 */
 
 /************************************************************************/
 /* NtGdiDdCreateSurface                                                 */
-/* status : Bugs out                                                    */
+/* Status : Bugs out                                                    */
 /************************************************************************/
 
 DWORD STDCALL NtGdiDdCreateSurface(
@@ -52,12 +51,11 @@ DWORD STDCALL NtGdiDdCreateSurface(
 
     DD_CREATESURFACEDATA CreateSurfaceData;
 
-    /* FIXME alloc so mayne we need */
+    /* FIXME: Alloc as much as needed */
     PHANDLE *myhSurface;
 
-    /* GCC4  warnns on value are unisitaed,
-       but they are initated in seh 
-    */
+    /* GCC4 gives warnings about uninitialized
+       values, but they are initialized in SEH */
 
     DPRINT1("NtGdiDdCreateSurface\n");
 
@@ -79,11 +77,12 @@ DWORD STDCALL NtGdiDdCreateSurface(
         return ddRVal;
     }
 
-    /* FIXME we only support one surface at moment 
-       this is a hack to prevent more that one surface being create 
-     */
+    /* FIXME: There is only support for one surface at the moment.
+       This is a hack to prevent more than one surface creation */
     if (CreateSurfaceData.dwSCnt > 1)
     {
+        DPRINT1("HACK: Limiting quantity of created surfaces from %d to 1!\n",
+            CreateSurfaceData.dwSCnt);
         CreateSurfaceData.dwSCnt = 1;
     }
 
@@ -110,8 +109,7 @@ DWORD STDCALL NtGdiDdCreateSurface(
         return ddRVal;
     }
 
-    /* see if a surface have been create or not */
-    
+    /* Check if a surface has been created */
     for (i=0;i<CreateSurfaceData.dwSCnt;i++)
     {
         if (!myhSurface[i])
@@ -119,21 +117,21 @@ DWORD STDCALL NtGdiDdCreateSurface(
             myhSurface[i] = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
             if (!myhSurface[i])
             {
-                /* FIXME lock myhSurface*/
-                /* FIXME free myhSurface, and the contain */
-                /* add to attach list */
+                /* FIXME: lock myhSurface*/
+                /* FIXME: free myhSurface, and the contain */
+                /* FIXME: add to attach list */
                 return ddRVal;
             }
             else
             {
-                /* FIXME lock myhSurface*/
-                /* FIXME add to attach list */
+                /* FIXME: lock myhSurface*/
+                /* FIXME: add to attach list */
             }
         }
     }
 
-    /* FIXME we need continue fix more that one createsurface */
-    /* FIXME we need release  myhSurface before any exits*/
+    /* FIXME: more than one surface is not supported here, once again */
+    /* FIXME: we need release  myhSurface before any exits */
 
     phsurface = GDIOBJ_LockObj(DdHandleTable, myhSurface[0], GDI_OBJECT_TYPE_DD_SURFACE);
     if (!phsurface)
@@ -247,10 +245,13 @@ DWORD STDCALL NtGdiDdCreateSurface(
     }
 
 
-    /* FIXME unlock phsurface free phsurface at fail*/
-    /* FIXME unlock hsurface free phsurface at fail*/
-    /* FIXME add support for more that one surface create */
-    /* FIXME alloc memory if it more that one surface */
+    /* FIXME: unlock phsurface, free phsurface at failure */
+    /* FIXME: unlock hsurface, free phsurface at failure */
+    /* FIXME: add support for more than one surface create, once more */
+    /* FIXME: alloc memory if it's more than one surface (5th mention
+              that this long function doesn't support more than one
+              surface creation. I guess it was easier to support it
+              than to write such comments 10 times). */
 
     pLocal = &phsurface->Local;
     pMore = &phsurface->More;
@@ -267,18 +268,18 @@ DWORD STDCALL NtGdiDdCreateSurface(
         pLocal->lpAttachListFrom;
         */
         
-       /* FIXME a countup to next pLocal, pMore, pGlobal */
+       /* FIXME: a countup to next pLocal, pMore, pGlobal */
 
     }
 
-    /* setup DD_CREATESURFACEDATA CreateSurfaceData for the driver */
+    /* Setup DD_CREATESURFACEDATA CreateSurfaceData for the driver */
     CreateSurfaceData.lplpSList = (PDD_SURFACE_LOCAL *) &phsurface->lcllist;
     CreateSurfaceData.lpDDSurfaceDesc = &phsurface->desc;
     CreateSurfaceData.CreateSurface = NULL;
     CreateSurfaceData.ddRVal = DDERR_GENERIC;
     CreateSurfaceData.lpDD = &pDirectDraw->Global;
 
-    /* the CreateSurface crash with lcl convering */
+    /* CreateSurface must crash with lcl converting */
     if ((pDirectDraw->DD.dwFlags & DDHAL_CB32_CREATESURFACE))
     {
         DPRINT1("0x%04x",pDirectDraw->DD.CreateSurface);
@@ -288,7 +289,7 @@ DWORD STDCALL NtGdiDdCreateSurface(
 
     DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,CreateSurfaceData.ddRVal);
 
-    /* FIXME support for more that one surface */
+    /* FIXME: support for more that one surface (once more!!!!) */
     _SEH_TRY
     {
         ProbeForWrite(puSurfaceDescription,  sizeof(DDSURFACEDESC), 1);
@@ -364,17 +365,18 @@ DWORD STDCALL NtGdiDdCreateSurface(
     }
 
 
-    /* FIXME fillin the return handler */
+    /* FIXME: Fil the return handler */
     DPRINT1("GDIOBJ_UnlockObjByPtr\n");
     GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
-    DPRINT1("Retun value is %04x and driver return code is %04x\n",ddRVal,CreateSurfaceData.ddRVal);
+    DPRINT1("Return value is %04x and driver return code is %04x\n",
+        ddRVal, CreateSurfaceData.ddRVal);
     return ddRVal;
 }
 
 /************************************************************************/
 /* NtGdiDdWaitForVerticalBlank                                          */
-/* status : OK working as it should                                     */
+/* status : Works as intended                                           */
 /************************************************************************/
 
 
@@ -440,7 +442,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 
 /************************************************************************/
 /* CanCreateSurface                                                     */
-/* status : OK working as it should                                     */
+/* status : Works as intended                                           */
 /************************************************************************/
 
 DWORD STDCALL NtGdiDdCanCreateSurface(
@@ -523,8 +525,8 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 
 /************************************************************************/
 /* GetScanLine                                                          */
-/* status : is now documented in MSDN and I checked the code it works   */
-/*          like windows 2000                                           */
+/* status : This func is now documented in MSDN, and now it's compatible*/
+/*          with Windows 2000 implementation                            */
 /************************************************************************/
 DWORD STDCALL 
 NtGdiDdGetScanLine( HANDLE hDirectDrawLocal, PDD_GETSCANLINEDATA puGetScanLineData)
