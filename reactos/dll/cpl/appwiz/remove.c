@@ -310,7 +310,8 @@ FindItems(HWND hwndDlg)
 	HWND hList;
 	HWND hEdit;
 	TCHAR szText[1024], szItemText[1024];
-	INT Index,i;
+	INT Index;
+    size_t i;
 	LV_ITEM listItem;
 	BOOL comp = TRUE;
 	
@@ -328,7 +329,7 @@ FindItems(HWND hwndDlg)
 	SendMessage(hList, LVM_DELETEITEM, Index, 0);
 	ListView_GetItemText(hList, Index, 0, (LPTSTR)szItemText, 1024);
 	
-	for (i = 0; i < strlen((char*)szText); i++)
+	for (i = 0; i < _tcslen(szText); i++)
 	{
 		if (szText[i] != szItemText[i]) comp = FALSE;
 	}
@@ -347,8 +348,8 @@ FindItems(HWND hwndDlg)
 INT_PTR CALLBACK
 RemovePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    TCHAR Buf[256];
     UNREFERENCED_PARAMETER(lParam);
-	TCHAR Buf[256];
 
     switch (uMsg)
     {
