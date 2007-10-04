@@ -1,10 +1,6 @@
 # NAME                                      ARG_COUNT
 #
-# Windows XP 2600SP2 Syscall id order, 
-# meaning if we got all stub implement 
-# we can use user32.dll and gdi32.dll 
-# on that OS, this table will be update
-# to a newer windows nt combatible later.
+# Funcs order should match Windows XP 5.1.2600 SP2
 #
 NtGdiAbortDoc                                    1
 NtGdiAbortPath                                   1
