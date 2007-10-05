@@ -741,12 +741,10 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
 VOID FASTCALL
 DceEmptyCache()
 {
-   KeEnterCriticalRegion();
    while (FirstDce != NULL)
    {
       FirstDce = DceFreeDCE(FirstDce, TRUE);
    }
-   KeLeaveCriticalRegion();
 }
 
 VOID FASTCALL
