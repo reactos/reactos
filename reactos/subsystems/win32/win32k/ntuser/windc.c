@@ -248,22 +248,25 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
 
    if (dce->DCXFlags & DCX_CACHE)
    {
-      /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
-      IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
+     if (!(dce->DCXFlags & DCX_NORESETATTRS))
+     {
+       /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
+       IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
-      PDC dc = DC_LockDc ( dce->hDC );
-      IntGdiCopyFromSaveState(dc, defaultDCstate, dce->hDC ); // Was SetDCState.
+       PDC dc = DC_LockDc ( dce->hDC );
+       IntGdiCopyFromSaveState(dc, defaultDCstate, dce->hDC ); // Was SetDCState.
 
-      dce->DCXFlags &= ~DCX_DCEBUSY;
-      if (dce->DCXFlags & DCX_DCEDIRTY)
-      {
+       dce->DCXFlags &= ~DCX_DCEBUSY;
+       if (dce->DCXFlags & DCX_DCEDIRTY)
+       {
          /* don't keep around invalidated entries
           * because SetDCState() disables hVisRgn updates
           * by removing dirty bit. */
          dce->hwndCurrent = 0;
          dce->DCXFlags &= DCX_CACHE;
          dce->DCXFlags |= DCX_DCEEMPTY;
-      }
+       }
+     }
    }
    return 1;
 }
@@ -400,7 +403,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    if (Flags & DCX_NOCLIPCHILDREN)
    {
       Flags |= DCX_CACHE;
-      Flags |= ~(DCX_PARENTCLIP | DCX_CLIPCHILDREN);
+      Flags &= ~(DCX_PARENTCLIP | DCX_CLIPCHILDREN);
    }
 
    if (Flags & DCX_WINDOW)
@@ -474,6 +477,12 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       if (NULL != Dce && Dce->hwndCurrent == (Window ? Window->hSelf : NULL))
       {
          UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
+      }
+      else
+      {
+      /* we should free dce->clip_rgn here, but Windows apparently doesn't */
+         Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN);
+         Dce->hClipRgn = NULL;
       }
 #if 1 /* FIXME */
       UpdateVisRgn = TRUE;
@@ -592,17 +601,18 @@ HWND FASTCALL
 IntWindowFromDC(HDC hDc)
 {
    DCE *Dce;
+   HWND Ret = NULL;
    KeEnterCriticalRegion();
    for (Dce = FirstDce; Dce != NULL; Dce = Dce->next)
    {
       if(Dce->hDC == hDc)
       {
-         KeLeaveCriticalRegion();
-         return Dce->hwndCurrent;
+         Ret = Dce->hwndCurrent;
+         break;
       }
    }
    KeLeaveCriticalRegion();
-   return 0;
+   return Ret;
 }
 
 
