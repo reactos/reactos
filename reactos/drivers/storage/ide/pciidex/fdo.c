@@ -78,7 +78,7 @@ GetBusInterface(
 	Status = STATUS_SUCCESS;
 
 cleanup:
-	ExFreePool(BusInterface);
+	if (BusInterface) ExFreePool(BusInterface);
 	return Status;
 }
 
