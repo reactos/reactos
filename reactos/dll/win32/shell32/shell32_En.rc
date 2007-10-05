@@ -157,16 +157,17 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
  PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
 }
 
-SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 150, 130
+SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 260, 150
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 CAPTION "Extended Properties"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-  LTEXT "Select extended properties for this Shortcut", -1, 5, 30, 150, 10
-  CHECKBOX "Execute as a different user", 14000, 30, 50, 150, 10
-  LTEXT "FIXME Desc", -1, 50, 70, 200, 40
-  PUSHBUTTON "OK", IDOK, 25, 80, 40, 15, WS_VISIBLE
-  PUSHBUTTON "Abort", IDCANCEL, 120, 80, 50, 15, WS_VISIBLE
+  LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 190, 10
+  CHECKBOX "Run with different credentials", 14000, 30, 50, 150, 10
+  LTEXT "This option can allow you to run the this shortcut as another\nuser, or continue as yourself while protecting your computer\nand data from unauthorized program activity.", -1, 50, 60, 200, 40
+  CHECKBOX "Run in seperate memory space", 14001, 30, 100, 90, 10, WS_DISABLED
+  PUSHBUTTON "OK", IDOK, 25, 120, 40, 15, WS_VISIBLE
+  PUSHBUTTON "Abort", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 }
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
@@ -275,6 +276,26 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
 }
 
+RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Run As"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+{
+   LTEXT "Which user account do you want to use to run this program?", -1, 30, 30, 170, 10
+   CHECKBOX "Current User %s", 14000, 5, 45, 150, 10
+   LTEXT "Protect my computer and data from unauthorized program activity", -1, 40, 65, 150, 10, WS_DISABLED
+   CHECKBOX "This option can prevent computer viruses from harming your\ncomputer or personal data, but selecting it might cause the\nprogram to function improperly.", 14001, 40, 80, 150, 10, WS_DISABLED
+   CHECKBOX "The following user:", 14002, 5, 100, 90, 10
+   LTEXT "User name:", -1, 15, 115, 60, 10
+   COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+
+   PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
+   LTEXT "Password:", -1, 15, 140, 60, 10
+   EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
+   PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
+   PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP
+   PUSHBUTTON "Cancel", 14008, 140, 170, 60, 15, WS_TABSTOP
+}
 
 STRINGTABLE DISCARDABLE
 {

@@ -158,6 +158,7 @@ typedef struct
  	LPWSTR        sProduct;
  	LPWSTR        sComponent;
     LPWSTR        sLinkPath;
+    BOOL          bRunAs;
 	volume_info   volume;
 
 	BOOL          bDirty;
@@ -919,6 +920,15 @@ static HRESULT WINAPI IPersistStream_fnLoad(
         r = Stream_LoadAdvertiseInfo( stm, &This->sComponent );
         TRACE("Component    -> %s\n",debugstr_w(This->sComponent));
     }
+    if( hdr.dwFlags & SLDF_RUNAS_USER )
+    {
+       This->bRunAs = TRUE;
+    }
+    else
+    {
+       This->bRunAs = FALSE;
+    }
+
     if( FAILED( r ) )
         goto end;
 
@@ -1106,6 +1116,8 @@ static HRESULT WINAPI IPersistStream_fnSave(
         header.dwFlags |= SLDF_HAS_LOGO3ID;
     if( This->sComponent )
         header.dwFlags |= SLDF_HAS_DARWINID;
+    if( This->bRunAs )
+        header.dwFlags |= SLDF_RUNAS_USER;
 
     SystemTimeToFileTime ( &This->time1, &header.Time1 );
     SystemTimeToFileTime ( &This->time2, &header.Time2 );
@@ -1219,6 +1231,7 @@ HRESULT WINAPI IShellLink_Constructor( IUnknown *pUnkOuter,
 	sl->lpvtblObjectWithSite = &owsvt;
 	sl->iShowCmd = SW_SHOWNORMAL;
 	sl->bDirty = FALSE;
+    sl->bRunAs = FALSE;
 	sl->iIdOpen = -1;
 	sl->site = NULL;
 
@@ -2559,9 +2572,15 @@ INT_PTR CALLBACK ExtendedShortcutProc(
 )
 {
    HWND hDlgCtrl;
+
    switch(uMsg)
    {
    case WM_INITDIALOG:
+       if (lParam)
+       {
+            hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+            SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
+       }
        return TRUE;
    case WM_COMMAND:
         hDlgCtrl = GetDlgItem(hwndDlg, 14000);
@@ -2574,7 +2593,7 @@ INT_PTR CALLBACK ExtendedShortcutProc(
         }
         else if (LOWORD(wParam) == IDCANCEL)
         {
-            EndDialog(hwndDlg, 0);
+            EndDialog(hwndDlg, -1);
         }
         else if (LOWORD(wParam) == 14000)
         {
@@ -2609,6 +2628,7 @@ SH_ShellLinkDlgProc(
     HWND hDlgCtrl;
     WCHAR szBuffer[MAX_PATH];
     int IconIndex;
+    INT_PTR result;
 
     This = (IShellLinkImpl *)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -2685,13 +2705,15 @@ SH_ShellLinkDlgProc(
                }
                return TRUE;
            case 14022:
-               if (DialogBox(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc) > 0)
+               result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc, (LPARAM)This->bRunAs);
+               if (result == 1 || result == 0)
                {
-                   ///
-                   /// FIXME
-                   /// store properties
-                   /// http://blogs.msdn.com/vistacompatteam/archive/2006/09/25/771232.aspx
-                   ///
+                   if ( This->bRunAs != result )
+                   {
+                       PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                   }
+
+                   This->bRunAs = result;
                }
                return TRUE;
        }

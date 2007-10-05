@@ -95,6 +95,7 @@
 #define IDD_TITLE		0x3742
 #define IDD_TREEVIEW		0x3741
 #define SHELL_EXTENDED_SHORTCUT_DLG 0x4000
+#define RUN_AS_DIALOG 0x4001
 
 /* 
  * Do not alter the icon, bitmap + avi resource 
