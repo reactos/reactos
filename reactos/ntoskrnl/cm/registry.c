@@ -55,9 +55,6 @@ CmiHiveSyncDpcRoutine(PKDPC Dpc,
 extern LIST_ENTRY CmiCallbackHead;
 extern FAST_MUTEX CmiCallbackLock;
 
-extern UNICODE_STRING CmpSystemStartOptions;
-extern UNICODE_STRING CmpLoadOptions;
-
 /* FUNCTIONS ****************************************************************/
 
 VOID
