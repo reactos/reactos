@@ -537,6 +537,7 @@ KeyboardThreadMain(PVOID StartContext)
       while (InputThreadsRunning)
       {
          BOOLEAN NumKeys = 1;
+         BOOLEAN bLeftAlt;
          KEYBOARD_INPUT_DATA KeyInput;
          KEYBOARD_INPUT_DATA NextKeyInput;
          LPARAM lParam = 0;
@@ -608,6 +609,21 @@ KeyboardThreadMain(PVOID StartContext)
                    * (For alt, the message that turns on accelerator
                    * display, not sure what for win. Both TODO though.)
                    */
+                   bLeftAlt = FALSE;
+                   if(fsModifiers == MOD_ALT)
+                   {
+                      if(KeyInput.Flags & KEY_E1)
+                      {
+                         gQueueKeyStateTable[VK_RMENU] = 0x80;
+                      }
+                      else
+                      {
+                         gQueueKeyStateTable[VK_LMENU] = 0x80;
+                         bLeftAlt = TRUE;
+                      }
+
+                      gQueueKeyStateTable[VK_MENU] = 0x80;
+                   }
 
                   /* Read the next key before sending this one */
                   do
@@ -650,7 +666,18 @@ KeyboardThreadMain(PVOID StartContext)
                      if (fsModifiers == MOD_WIN)
                         IntKeyboardSendWinKeyMsg();
                      else if (fsModifiers == MOD_ALT)
+                     {
+                        gQueueKeyStateTable[VK_MENU] = 0;
+                        if(bLeftAlt)
+                        {
+                           gQueueKeyStateTable[VK_LMENU] = 0;
+                        }
+                        else
+                        {
+                           gQueueKeyStateTable[VK_RMENU] = 0;
+                        }
                         co_IntKeyboardSendAltKeyMsg();
+                     }
                      continue;
                   }
 
