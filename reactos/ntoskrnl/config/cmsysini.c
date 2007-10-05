@@ -167,12 +167,9 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                            &KeyName,
                            0,
                            REG_SZ,
-                           CmpSystemStartOptions.Buffer,
-                           CmpSystemStartOptions.Length);
+                           CmpLoadOptions.Buffer,
+                           CmpLoadOptions.Length);
     if (!NT_SUCCESS(Status)) goto Quickie;
-
-    /* Free the options now */
-    ExFreePool(CmpSystemStartOptions.Buffer);
 
     /* Setup value name for system boot device */
     RtlInitUnicodeString(&KeyName, L"SystemBootDevice");

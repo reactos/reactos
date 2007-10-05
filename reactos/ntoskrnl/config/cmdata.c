@@ -43,7 +43,6 @@ HIVE_LIST_ENTRY CmpMachineHiveList[5];
 UNICODE_STRING CmSymbolicLinkValueName =
     RTL_CONSTANT_STRING(L"SymbolicLinkValue");
 
-UNICODE_STRING CmpSystemStartOptions;
 UNICODE_STRING CmpLoadOptions;
 
 BOOLEAN CmpShareSystemHives;
