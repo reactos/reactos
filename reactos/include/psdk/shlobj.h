@@ -451,6 +451,11 @@ typedef struct tagBROWSEINFOW {
 #define BIF_EDITBOX            0x0010
 #define BIF_VALIDATE           0x0020
 #define BIF_NEWDIALOGSTYLE     0x0040
+#define BIF_USENEWUI           (BIF_NEWDIALOGSTYLE | BIF_EDITBOX)
+#define BIF_BROWSEINCLUDEURLS  0x0080
+#define BIF_UAHINT             0x0100
+#define BIF_NONEWFOLDERBUTTON  0x0200
+#define BIF_NOTRANSLATETARGETS 0x0400
 
 #define BIF_BROWSEFORCOMPUTER  0x1000
 #define BIF_BROWSEFORPRINTER   0x2000
@@ -561,8 +566,12 @@ HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 #define SFVM_GET_WEBVIEW_THEME        86 /* undocumented */
 #define SFVM_GETDEFERREDVIEWSETTINGS  92 /* undocumented */
 
-
-
+#define SHPPFW_NONE 0
+#define SHPPFW_DIRCREATE 1
+#define SHPPFW_DEFAULT SHPPFW_DIRCREATE
+#define SHPPFW_ASKDIRCREATE 2
+#define SHPPFW_IGNOREFILENAME 4
+#define SHPPFW_NOWRITECHECK 8
 
 /* Types and definitions for the SFM_* parameters */
 #include <pshpack8.h>
