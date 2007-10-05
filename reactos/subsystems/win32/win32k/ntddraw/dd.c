@@ -88,11 +88,11 @@ DWORD STDCALL NtGdiDdCreateSurface(
 
 
     DPRINT1("Setup surface in put handler\n");
-    myhSurface = ExAllocatePoolWithTag( PagedPool, CreateSurfaceData.dwSCnt * sizeof(HANDLE), 0);
+    myhSurface = ExAllocatePool(PagedPool, CreateSurfaceData.dwSCnt * sizeof(HANDLE));
 
     _SEH_TRY
     {
-        ProbeForRead(hSurface,  CreateSurfaceData.dwSCnt * sizeof(HANDLE), 1);
+        ProbeForRead(hSurface, CreateSurfaceData.dwSCnt * sizeof(HANDLE), 1);
         for (i=0;i<CreateSurfaceData.dwSCnt;i++)
         {
             myhSurface[i] = hSurface[i];
