@@ -669,7 +669,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
       else
         break;
 
-    for(i = j; i >= 0; i--) // fixup bottom band
+    for(i = j; i > 0; i--) // fixup bottom band
       if(((PRECT)rgnDst->Buffer + i)->bottom > right)
         ((PRECT)rgnDst->Buffer + i)->bottom = right;
       else
