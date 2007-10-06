@@ -3,7 +3,6 @@
 <module name="logon" type="win32scr" installbase="system32" installname="logon.scr">
 	<include base="logon">.</include>
 	<define name="__USE_W32API" />
-	<define name="__REACTOS__" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 

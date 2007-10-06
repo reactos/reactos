@@ -2,7 +2,6 @@
 	<importlibrary definition="msgina.def" />
 	<include base="msgina">.</include>
 	<include base="msgina">include</include>
-	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>wine</library>

@@ -3,7 +3,6 @@
 <module name="usrmgr" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_USRMGR}" installbase="system32" installname="usrmgr.cpl" unicode="yes">
 	<importlibrary definition="usrmgr.def" />
 	<include base="usrmgr">.</include>
-	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>

@@ -6,7 +6,6 @@
 	<define name="UNICODE" />
 	<define name="LE" />
 	<define name="__USE_W32API" />
-	<define name="__REACTOS__" />
 	<define name="_WIN32_WINNT">0x0500</define>
 	<library>wine</library>
 	<library>ntdll</library>

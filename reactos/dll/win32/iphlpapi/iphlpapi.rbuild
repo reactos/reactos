@@ -4,7 +4,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
-	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<library>wine</library>
 	<library>ntdll</library>

@@ -4,7 +4,6 @@
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="i8042prt">.</include>
 	<define name="__USE_W32API" />
-	<define name="__REACTOS__" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>i8042prt.c</file>
