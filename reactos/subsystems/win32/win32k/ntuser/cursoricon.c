@@ -1376,20 +1376,20 @@ UserDrawIconEx(
    hbmMask = pIcon->IconInfo.hbmMask;
    hbmColor = pIcon->IconInfo.hbmColor;
 
-   if(istepIfAniCur)
+   if (istepIfAniCur)
       DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
 
-   if(!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
    {
       return FALSE;
    }
 
-   if(hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
+   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
    {
       return FALSE;
    }
    
-   if(hbmColor)
+   if (hbmColor)
    {
       IconSize.cx = bmpColor.bmWidth;
       IconSize.cy = bmpColor.bmHeight;
@@ -1405,60 +1405,64 @@ UserDrawIconEx(
       bAlpha = TRUE;
    }
 
-   if(!diFlags)
+   if (!diFlags)
       diFlags = DI_NORMAL;
 
-   if(!cxWidth)
+   if (!cxWidth)
       cxWidth = ((diFlags & DI_DEFAULTSIZE) ? 
          UserGetSystemMetrics(SM_CXICON) : IconSize.cx);
-   
-   if(!cyHeight)
+
+   if (!cyHeight)
       cyHeight = ((diFlags & DI_DEFAULTSIZE) ? 
          UserGetSystemMetrics(SM_CYICON) : IconSize.cy);
 
    DoFlickerFree = (hbrFlickerFreeDraw && 
       (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH));
 
-   if(DoFlickerFree)
+   if (DoFlickerFree || bAlpha)
    {
       RECT r;
       r.right = cxWidth;
       r.bottom = cyHeight;
 
       hdcOff = NtGdiCreateCompatibleDC(hDc);
-      if(!hdcOff)
+      if (!hdcOff)
       {
          DPRINT1("NtGdiCreateCompatibleDC() failed!\n");
          return FALSE;
       }
 
       hbmOff = NtGdiCreateCompatibleBitmap(hDc, cxWidth, cyHeight);
-      if(!hbmOff)
+      if (!hbmOff)
       {
          DPRINT1("NtGdiCreateCompatibleBitmap() failed!\n");
          goto cleanup;
       }
-      
-      hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
-      if(!hOldOffBrush)
-      {
-         DPRINT1("NtGdiSelectObject() failed!\n");
-         goto cleanup;
-      }
-      
+
       hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
-      if(!hOldOffBmp)
+      if (!hOldOffBmp)
       {
          DPRINT1("NtGdiSelectObject() failed!\n");
          goto cleanup;
       }
-      
-      NtGdiPatBlt(hdcOff, 0, 0, r.right, r.bottom, PATCOPY);
+
+      if (DoFlickerFree)
+      {
+          hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
+          if (!hOldOffBrush)
+          {
+             DPRINT1("NtGdiSelectObject() failed!\n");
+             goto cleanup;
+          }
+
+          NtGdiPatBlt(hdcOff, 0, 0, r.right, r.bottom, PATCOPY);
+      }
    }
-   else hdcOff = hDc;
-   
+   else
+       hdcOff = hDc;
+
    hdcMem = NtGdiCreateCompatibleDC(hDc);
-   if(!hdcMem)
+   if (!hdcMem)
    {
       DPRINT1("NtGdiCreateCompatibleDC() failed!\n");
       goto cleanup;
@@ -1469,10 +1473,10 @@ UserDrawIconEx(
    oldFg = NtGdiSetTextColor(hdcOff, RGB(0, 0, 0));
    oldBg = NtGdiSetBkColor(hdcOff, RGB(255, 255, 255));
 
-   if(diFlags & DI_MASK)
+   if (diFlags & DI_MASK)
    {
       hOldMem = NtGdiSelectObject(hdcMem, hbmMask);
-      if(!hOldMem)
+      if (!hOldMem)
       {
          DPRINT("NtGdiSelectObject() failed!\n");
          goto cleanup;
@@ -1483,7 +1487,7 @@ UserDrawIconEx(
                    0, 0, IconSize.cx, IconSize.cy,
                    ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY), FALSE);
 
-      if(!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) 
+      if (!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) 
          && (diFlags & DI_IMAGE))
       {
          DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
@@ -1496,7 +1500,7 @@ UserDrawIconEx(
       
       NtGdiSelectObject(hdcMem, hOldMem);
    }
-   
+
    if(diFlags & DI_IMAGE)
    {
       hOldMem = NtGdiSelectObject(hdcMem, (hbmColor ? hbmColor : hbmMask));
@@ -1510,103 +1514,87 @@ UserDrawIconEx(
       NtGdiSelectObject(hdcMem, hOldMem);
    }
 
-   if(DoFlickerFree)
-   {
-        if (bAlpha)
+    if (bAlpha)
+    {
+        BITMAP bm;
+        BITMAPOBJ *BitmapObj = NULL;
+        PBYTE pBits = NULL;
+        BLENDFUNCTION  BlendFunc;
+        BYTE Red, Green, Blue, Alpha;
+        DWORD Count = 0;
+        INT i, j;
+
+        BitmapObj = BITMAPOBJ_LockBitmap(hbmOff);
+        if (BitmapObj == NULL)
         {
-            BITMAPINFO bi;
-            BITMAP bm;
-            BITMAPOBJ *Bitmap = NULL;
-            PBYTE pBits = NULL;
-            BLENDFUNCTION  BlendFunc;
-            BYTE Red, Green, Blue, Alpha;
-            DWORD Count = 0;
-            INT i, j;
-
-            /* Bitmap header */
-            bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-            bi.bmiHeader.biWidth = cxWidth;
-            bi.bmiHeader.biHeight = cyHeight;
-            bi.bmiHeader.biPlanes = 1;
-            bi.bmiHeader.biBitCount = 32;
-            bi.bmiHeader.biCompression = BI_RGB;
-            bi.bmiHeader.biSizeImage = cxWidth * cyHeight * 4;
-            bi.bmiHeader.biClrUsed = 0;
-            bi.bmiHeader.biClrImportant = 0;
-
-            Bitmap = GDIOBJ_LockObj(GdiHandleTable, hbmOff, GDI_OBJECT_TYPE_BITMAP);
-            if (Bitmap == NULL)
-            {
-                DPRINT1("GDIOBJ_LockObj() failed!\n");
-                goto cleanup;
-            }
-            BITMAP_GetObject(Bitmap, sizeof(BITMAP), &bm);
-
-            /* Buffer */
-            pBits = ExAllocatePoolWithTag(PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
-            if (pBits == NULL)
-            {
-                DPRINT1("ExAllocatePoolWithTag() failed!\n");
-                GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
-                goto cleanup;
-            }
-
-            /* get icon bits */
-            IntGetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
-
-            /* premultiply with the alpha channel value */
-            for (i = 0; i < cyHeight; i++)
-            {
-                for (j = 0; j < cxWidth; j++)
-                {
-                    DWORD OrigPixel = 0;
-                    DWORD AlphaPixel = 0;
- 
-                    OrigPixel = *(DWORD *)(pBits + Count);
- 
-                    Red   = (BYTE)((OrigPixel >>  0) & 0xff);
-                    Green = (BYTE)((OrigPixel >>  8) & 0xff);
-                    Blue  = (BYTE)((OrigPixel >> 16) & 0xff);
-                    Alpha = (BYTE)((OrigPixel >> 24) & 0xff);
- 
-                    Red = (Red * Alpha) / 0xff;
-                    Green = (Green * Alpha) / 0xff;
-                    Blue = (Blue * Alpha) / 0xff;
- 
-                    AlphaPixel = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
- 
-                    *(DWORD *)(pBits + Count) = AlphaPixel;
-                    Count += sizeof (DWORD);
-                }
-            }
-
-            /* set icon bits */
-            IntSetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
-            ExFreePool(pBits);
-
-            GDIOBJ_UnlockObjByPtr(GdiHandleTable, Bitmap);
-
-            BlendFunc.BlendOp = AC_SRC_OVER;
-            BlendFunc.BlendFlags = 0;
-            BlendFunc.SourceConstantAlpha = 255;
-            BlendFunc.AlphaFormat = AC_SRC_ALPHA;
-
-            NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
-                            hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc, 0);
+            DPRINT1("GDIOBJ_LockObj() failed!\n");
+            goto cleanup;
         }
-        else
+        BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+
+        pBits = ExAllocatePoolWithTag(PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
+        if (pBits == NULL)
         {
-            NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, 
-                        cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
+            DPRINT1("ExAllocatePoolWithTag() failed!\n");
+            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            goto cleanup;
         }
-   }
-   
+
+        /* get icon bits */
+        IntGetBitmapBits(BitmapObj, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+
+        /* premultiply with the alpha channel value */
+        for (i = 0; i < cyHeight; i++)
+        {
+            for (j = 0; j < cxWidth; j++)
+            {
+                DWORD OrigPixel = 0;
+                DWORD AlphaPixel = 0;
+
+                OrigPixel = *(DWORD *)(pBits + Count);
+
+                Red   = (BYTE)((OrigPixel >>  0) & 0xff);
+                Green = (BYTE)((OrigPixel >>  8) & 0xff);
+                Blue  = (BYTE)((OrigPixel >> 16) & 0xff);
+                Alpha = (BYTE)((OrigPixel >> 24) & 0xff);
+
+                Red = (Red * Alpha) / 0xff;
+                Green = (Green * Alpha) / 0xff;
+                Blue = (Blue * Alpha) / 0xff;
+
+                AlphaPixel = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
+
+                *(DWORD *)(pBits + Count) = AlphaPixel;
+                Count += sizeof (DWORD);
+            }
+        }
+
+        /* set icon bits */
+        IntSetBitmapBits(BitmapObj, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
+        ExFreePool(pBits);
+
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
+
+        BlendFunc.BlendOp = AC_SRC_OVER;
+        BlendFunc.BlendFlags = 0;
+        BlendFunc.SourceConstantAlpha = 255;
+        BlendFunc.AlphaFormat = AC_SRC_ALPHA;
+
+        NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
+                        hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc, 0);
+    }
+    else if (DoFlickerFree)
+    {
+        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, 
+                    cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
+    }
+
    NtGdiSetTextColor(hdcOff, oldFg);
    NtGdiSetBkColor(hdcOff, oldBg);
    NtGdiSetStretchBltMode(hdcOff, nStretchMode);
-   
+
    Ret = TRUE;
-     
+
 cleanup:
    if(DoFlickerFree)
    {
