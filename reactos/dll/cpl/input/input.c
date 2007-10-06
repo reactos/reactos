@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         input.dll
- * FILE:            dll/win32/input/input.c
- * PURPOSE:         input.dll
- * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         			input.dll
+ * FILE:            			dll/win32/input/input.c
+ * PURPOSE:         			input.dll
+ * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */

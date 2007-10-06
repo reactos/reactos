@@ -13,6 +13,9 @@ typedef struct
 
 extern HINSTANCE hApplet;
 
+#define BEGIN_LAYOUT 5000
+#define END_LAYOUT   5133
+
 /* input.c */
 VOID
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
@@ -44,6 +47,10 @@ ChangeKeySeqDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
 /* inputlangprop.c */
 INT_PTR CALLBACK
 InputLangPropDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
+
+/* misc.c */
+VOID
+CreateKeyboardLayoutList(HWND hWnd);
 
 void ShowLastWin32Error(HWND hWndOwner);
 

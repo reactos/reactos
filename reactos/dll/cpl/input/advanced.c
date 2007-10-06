@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         input.dll
- * FILE:            dll/win32/input/advanced.c
- * PURPOSE:         input.dll
- * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         			input.dll
+ * FILE:            			dll/win32/input/advanced.c
+ * PURPOSE:         			input.dll
+ * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -49,7 +49,17 @@ AdvancedPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
   switch(uMsg)
   {
     case WM_INITDIALOG:
-      break;
+    
+	break;
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+			case IDC_SUPPORT_ADV_SERV_CHECKBOX:
+			case IDC_TURNOFF_ADV_TXTSERV_CHECKBOX:
+				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+			break;
+		}
+	break;
   }
 
   return FALSE;

@@ -113,6 +113,7 @@ dll\cpl\ncpa\ncpa.cpl                               1
 dll\cpl\powercfg\powercfg.cpl                       1
 dll\cpl\sysdm\sysdm.cpl                             1
 dll\cpl\timedate\timedate.cpl                       1
+dll\cpl\input\input.dll                             1
 
 dll\directx\dinput\dinput.dll                       1
 dll\directx\dinput8\dinput8.dll                     1
@@ -482,6 +483,7 @@ modules\rosapps\ramdrv\ramdrv.sys                   1   optional
 modules\rosapps\roshttpd\roshttpd.exe               1   optional
 modules\rosapps\screenshot\screenshot.exe           1   optional
 modules\rosapps\sysutils\chkdsk\chkdsk.exe          1   optional
+modules\rosapps\sysutils\systeminfo\systeminfo.exe  1   optional
 modules\rosapps\sysutils\chklib\chklib.exe          1   optional
 modules\rosapps\sysutils\ctm\ctm.exe                1   optional
 modules\rosapps\sysutils\kill\kill.exe              1   optional

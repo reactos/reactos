@@ -19,13 +19,13 @@
 /*
  *
  * PROJECT:         			input.dll
- * FILE:            			dll/win32/input/changekeyseq.c
+ * FILE:            			dll/win32/input/misc.c
  * PURPOSE:         			input.dll
  * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
-
+ 
 #include <windows.h>
 #include <commctrl.h>
 #include <cpl.h>
@@ -38,37 +38,32 @@
 
 #include "resource.h"
 #include "input.h"
-
-INT_PTR CALLBACK
-ChangeKeySeqDlgProc(HWND hDlg,
-               UINT message,
-               WPARAM wParam,
-               LPARAM lParam)
+ 
+VOID
+CreateKeyboardLayoutList(HWND hWnd)
 {
-    UNREFERENCED_PARAMETER(lParam);
-
-    switch (message)
-    {
-        case WM_INITDIALOG:
-        {
-		
-        }
-        case WM_COMMAND:
-        {
-		    switch (LOWORD(wParam))
-			{
-				case IDOK:
-				
-				break;
-				case IDCANCEL:
-					EndDialog(hDlg,LOWORD(wParam));
-				break;
-			}
-        }
-        break;
-    }
-
-    return FALSE;
+    TCHAR Layout[256];
+    int Index;
+	UINT loIndex;
+	
+    for ( loIndex = BEGIN_LAYOUT; loIndex <= END_LAYOUT; loIndex++ )
+	{
+		LoadString(hApplet,
+				   loIndex,
+				   Layout,
+				   sizeof(Layout) / sizeof(TCHAR));
+		if (strlen((char*)Layout) > 0)
+		{
+			Index = (int) SendMessage(hWnd,
+									  CB_INSERTSTRING,
+									  0,
+									  (LPARAM)Layout);
+			SendMessage(hWnd,
+						CB_SETITEMDATA,
+						Index,
+						(LPARAM)loIndex);
+		}
+	}
 }
 
 /* EOF */

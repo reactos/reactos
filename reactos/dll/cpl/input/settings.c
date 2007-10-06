@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         input.dll
- * FILE:            dll/win32/input/settings.c
- * PURPOSE:         input.dll
- * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         		input.dll
+ * FILE:            		dll/win32/input/settings.c
+ * PURPOSE:         		input.dll
+ * PROGRAMMER:      	Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -39,6 +39,58 @@
 #include "resource.h"
 #include "input.h"
 
+#define BUFSIZE 80
+
+static
+BOOL
+CreateDefaultLangList(HWND hWnd)
+{
+    HKEY hKey;
+    char szPreload[BUFSIZE],szCount[BUFSIZE],Lang[BUFSIZE];
+    DWORD dwBufLen = BUFSIZE, dwBufCLen = BUFSIZE, cValues;
+	LONG lRet;
+	int Count;
+	LCID Lcid;
+
+    if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+	{
+		return FALSE;
+	}
+    RegQueryInfoKey(hKey,NULL,NULL,NULL,NULL,NULL,NULL,&cValues,NULL,NULL,NULL,NULL);
+	
+	if (cValues)
+	{
+	    for (Count = 0; Count < cValues; Count++) 
+        { 
+            szCount[0] = '\0'; 
+            lRet = RegEnumValue(hKey,Count,(LPTSTR)szCount,&dwBufCLen,NULL,NULL,NULL,NULL);
+ 
+			sprintf(szCount,"%d",Count + 1);	
+			RegQueryValueEx(hKey,(LPTSTR)szCount,NULL,NULL,(LPBYTE)szPreload,&dwBufLen);
+			
+			Lcid = wcstoul((LPTSTR)szPreload, NULL, 16);
+			GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, (LPTSTR)Lang, sizeof(Lang));
+
+			SendMessage(hWnd,
+						CB_INSERTSTRING,
+						0,
+						(LPARAM)Lang);
+			if (Count == 0)
+			{
+				SendMessage(hWnd,
+							CB_SELECTSTRING,
+							(WPARAM) -1,
+							(LPARAM)Lang);
+			}
+        }
+
+	}
+				
+	RegCloseKey(hKey);
+	
+	return TRUE;
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
@@ -47,8 +99,8 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
   switch (uMsg)
   {
     case WM_INITDIALOG:
-
-      break;
+		CreateDefaultLangList(GetDlgItem(hwndDlg, IDC_DEFAULT_INPUT_LANG));
+    break;
 
     case WM_COMMAND:
         switch (LOWORD(wParam))
@@ -77,6 +129,12 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
                           hwndDlg,
                           InputLangPropDlgProc);
             break;
+			case IDC_DEFAULT_INPUT_LANG:
+				if (HIWORD(wParam) == CBN_SELCHANGE)
+				{
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+				}
+			break;
         }
       break;
   }
