@@ -412,6 +412,9 @@ Ke386SetEs(IN USHORT Value)
 #error Unknown compiler for inline assembler
 #endif
 
+#define KeArchFnInit() Ke386FnInit()
+#define KeArchHaltProcessor() Ke386HaltProcessor()
+
 #endif
 
 /* EOF */

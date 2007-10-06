@@ -22,6 +22,7 @@
 #include "mingw.h"
 #include "modulehandler.h"
 
+using std::set;
 using std::string;
 using std::vector;
 
@@ -627,14 +628,20 @@ MingwModuleHandler::GetObjectFilenames ()
 
 /* static */ string
 MingwModuleHandler::GenerateGccDefineParametersFromVector (
-	const vector<Define*>& defines )
+	const vector<Define*>& defines,
+        set<string>& used_defs)
 {
 	string parameters;
+
 	for ( size_t i = 0; i < defines.size (); i++ )
 	{
 		Define& define = *defines[i];
+		if (used_defs.find(define.name) != used_defs.end())
+			continue;
 		if (parameters.length () > 0)
 			parameters += " ";
+                if (define.name.find('(') != string::npos)
+                        parameters += "$(QT)";
 		parameters += "-D";
 		parameters += define.name;
 		if (define.value.length () > 0)
@@ -642,6 +649,9 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 			parameters += "=";
 			parameters += define.value;
 		}
+                if (define.name.find('(') != string::npos)
+                        parameters += "$(QT)";
+		used_defs.insert(used_defs.begin(),define.name);
 	}
 	return parameters;
 }
@@ -649,8 +659,9 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 string
 MingwModuleHandler::GenerateGccDefineParameters () const
 {
-	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines );
-	string s = GenerateGccDefineParametersFromVector ( module.non_if_data.defines );
+        set<string> used_defs;
+	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines, used_defs );
+	string s = GenerateGccDefineParametersFromVector ( module.non_if_data.defines, used_defs );
 	if ( s.length () > 0 )
 	{
 		parameters += " ";
@@ -2458,17 +2469,17 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,-T,%s%cntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
+		string linkerParameters = ssprintf ( "-Wl,-T,%s%cntoskrnl_$(ARCH).lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s",
 		                                     module.output->relative_path.c_str (),
 		                                     cSep,
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
-		                        "${gcc}",
-		                        linkerParameters,
-		                        objectsMacro,
-		                        libsMacro,
-		                        "-sections" );
+					"${gcc}",
+					linkerParameters + " $(NTOSKRNL_SHARED)",
+					objectsMacro,
+					libsMacro,
+					"-sections" );
 	}
 	else
 	{
@@ -3708,7 +3719,7 @@ MingwElfExecutableModuleHandler::Process ()
 
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
-	fprintf ( fMakefile, "\t${ld} $(%s_LINKFORMAT) %s %s -g -o %s\n",
+	fprintf ( fMakefile, "\t${gcc} $(%s_LINKFORMAT) %s %s -g -o %s\n",
 	          module.buildtype.c_str(),
 	          objectsMacro.c_str(),
 	          libsMacro.c_str(),

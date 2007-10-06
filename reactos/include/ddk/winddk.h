@@ -9327,6 +9327,35 @@ KeRaiseIrqlToSynchLevel(
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
+#elif defined(__PowerPC__)
+
+NTHALAPI
+VOID
+FASTCALL
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTHALAPI
+KIRQL
+FASTCALL
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
+
+#define KeLowerIrql(a) KfLowerIrql(a)
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
 #else
 
 NTKERNELAPI

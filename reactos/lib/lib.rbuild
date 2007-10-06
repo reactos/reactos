@@ -25,6 +25,9 @@
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
 	</directory>
+	<directory name="ppcmmu">
+		<xi:include href="ppcmmu/ppcmmu.rbuild" />
+	</directory>
 	<directory name="pseh">
 		<xi:include href="pseh/pseh.rbuild" />
 	</directory>

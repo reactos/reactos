@@ -1923,7 +1923,7 @@ NtFlushInstructionCache (
 #if defined(_M_IX86)
     __wbinvd();
 #elif defined(_M_PPC)
-#error Needs to be implemented for PPC architecture!
+    __asm__ __volatile__("tlbsync");
 #elif defined(_M_MIPS)
     DPRINT1("NtFlushInstructionCache() is not implemented\n");
     for (;;);

@@ -311,12 +311,12 @@ VOID
 NTAPI
 KeRosDumpTriageForBugZillaReport(VOID)
 {
+#if 0
     extern BOOLEAN KiFastSystemCallDisable, KiSMTProcessorsPresent;
     extern ULONG KeI386MachineType, MxcsrFeatureMask;
     extern BOOLEAN Ke386Pae, Ke386NoExecute;
 
     DbgPrint("ReactOS has crashed! Please go to http://www.reactos.org/bugzilla/enter_bug.cgi to file a bug!\n");
-#ifdef __i386__
     DbgPrint("\nHardware Information\n");
     DbgPrint("Processor Architecture: %d\n"
              "Feature Bits: %d\n"
@@ -539,7 +539,7 @@ NTAPI
 KiBugCheckDebugBreak(IN ULONG StatusCode)
 {
     /* If KDBG isn't connected, freeze the CPU, otherwise, break */
-    if (KdDebuggerNotPresent) for (;;) Ke386HaltProcessor();
+    if (KdDebuggerNotPresent) for (;;) KeArchHaltProcessor();
     DbgBreakPointWithStatus(StatusCode);
 }
 
@@ -867,8 +867,12 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             if ((TrapFrame) &&
                 (BugCheckCode != KERNEL_MODE_EXCEPTION_NOT_HANDLED))
             {
+#ifdef _M_IX86
                 /* Get EIP */
                 Eip = (PVOID)TrapFrame->Eip;
+#elif defined(_M_PPC)
+                Eip = (PVOID)TrapFrame->Dr0; /* srr0 */
+#endif
             }
             break;
 
@@ -963,9 +967,14 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             /* Check if we have a frame now */
             if (TrapFrame)
             {
+#ifdef _M_IX86
                 /* Get EIP */
                 Eip = (PVOID)TrapFrame->Eip;
                 KiBugCheckData[3] = (ULONG)Eip;
+#elif defined(_M_PPC)
+                Eip = (PVOID)TrapFrame->Dr0; /* srr0 */
+                KiBugCheckData[3] = (ULONG)Eip;
+#endif
 
                 /* Find out if was in the kernel or drivers */
                 DriverBase = KiPcToFileHeader(Eip,
@@ -1164,7 +1173,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         else if (KeBugCheckOwnerRecursionCount > 2)
         {
             /* Halt the CPU */
-            for (;;) Ke386HaltProcessor();
+            for (;;) KeArchHaltProcessor();
         }
     }
 

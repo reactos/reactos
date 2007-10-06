@@ -298,12 +298,14 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
     {
+#ifdef _M_IX86
         /* Check for an invalid page directory in kernel mode */
         if (Mmi386MakeKernelPageTableGlobal(Address))
         {
             /* All is well with the world */
             return STATUS_SUCCESS;
         }
+#endif
     }
 
     /* Keep same old ReactOS Behaviour */

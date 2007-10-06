@@ -13,6 +13,8 @@
 	<define name="_X86_" />
 	<define name="__i386__" />
 
+	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
+
 	<if property="GDB" value="0">
 		<if property="OPTIMIZE" value="1">
 				<compilerflag>-Os</compilerflag>

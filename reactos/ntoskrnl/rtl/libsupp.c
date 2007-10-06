@@ -325,7 +325,11 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             /* Get the stack limits */
             StackBegin = (ULONG_PTR)Teb->Tib.StackLimit;
             StackEnd = (ULONG_PTR)Teb->Tib.StackBase;
+#ifdef _M_IX86
             Stack = TrapFrame->Ebp;
+#elif defined(_M_PPC)
+            Stack = TrapFrame->Gpr1;
+#endif
 
             /* Validate them */
             if (StackEnd <= StackBegin) return 0;

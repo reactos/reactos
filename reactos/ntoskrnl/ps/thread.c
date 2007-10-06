@@ -324,7 +324,8 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         Thread->StartAddress = (PVOID)ThreadContext->Eip;
         Thread->Win32StartAddress = (PVOID)ThreadContext->Eax;
 #elif defined(_M_PPC)
-#error Not implemented yet for PPC architecture!
+	Thread->StartAddress = (PVOID)ThreadContext->Dr0;
+	Thread->Win32StartAddress = (PVOID)ThreadContext->Gpr3;
 #elif defined(_M_MIPS)
         for (;;);
 #else

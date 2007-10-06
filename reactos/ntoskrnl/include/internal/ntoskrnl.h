@@ -281,7 +281,7 @@ DefaultQueryInfoBufferCheck(ULONG Class,
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
  */
-#if defined(_X86_) || defined(_M_AMD64) || defined(_MIPS_)
+#if defined(_X86_) || defined(_M_AMD64) || defined(_MIPS_) || defined(_PPC_)
 
 /* for x86 and x86-64 the MSB is 1 so we can simply test on that */
 #define IsPointerOffset(Ptr) ((LONG_PTR)(Ptr) >= 0)
@@ -314,6 +314,7 @@ C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
 C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
 C_ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
+#ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NextThread) == KPCR_PRCB_NEXT_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
@@ -337,7 +338,6 @@ C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_P
 C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
 
 /* Platform specific checks */
-#ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
 C_ASSERT(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
 C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, SavedExceptionStack) == TF_SAVED_EXCEPTION_STACK);

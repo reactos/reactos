@@ -355,7 +355,7 @@ KiRundownThread(IN PKTHREAD Thread)
     {
         /* Clear it */
         KeGetCurrentPrcb()->NpxThread = NULL;
-        Ke386FnInit();
+        KeArchFnInit();
     }
 }
 
@@ -1529,7 +1529,11 @@ FORCEINLINE
 KeGetCurrentThread(VOID)
 {
     /* Return the current thread */
+#ifdef _M_PPC
+    return ((PKIPCR)KeGetPcr())->PrcbData->CurrentThread;
+#else
     return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+#endif
 }
 
 UCHAR
@@ -1545,6 +1549,10 @@ FORCEINLINE
 KeFlushProcessTb(VOID)
 {
     /* Flush the TLB by resetting CR3 */
+#ifdef _M_PPC
+    __asm__("sync\n\tisync\n\t");
+#else
     __writecr3(__readcr3());
+#endif
 }
 

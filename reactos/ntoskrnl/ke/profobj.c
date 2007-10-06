@@ -233,6 +233,7 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
     LIST_FOR_EACH(Profile, ListHead, KPROFILE, ProfileListEntry)
     {
         /* Check if the source is good, and if it's within the range */
+#ifdef _M_IX86
         if ((Profile->Source != Source) ||
             (TrapFrame->Eip < (ULONG_PTR)Profile->RangeBase) ||
             (TrapFrame->Eip > (ULONG_PTR)Profile->RangeLimit)) {
@@ -244,6 +245,9 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
         BucketValue = (PULONG)((((ULONG_PTR)Profile->Buffer +
                                (TrapFrame->Eip - (ULONG_PTR)Profile->RangeBase))
                                 >> Profile->BucketShift) &~ 0x3);
+#elif defined(_M_PPC) 
+    // XXX arty
+#endif
 
         /* Increment the value */
         ++BucketValue;

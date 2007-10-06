@@ -51,7 +51,7 @@ public:
 		const Module& module,
 		string_list* pclean_files );
 
-	static std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines );
+	static std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines, std::set<std::string> &used_defs );
 	static std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes );
 
 	std::string GetModuleTargets ( const Module& module );

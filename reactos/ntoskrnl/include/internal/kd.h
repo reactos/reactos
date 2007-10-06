@@ -1,6 +1,11 @@
 #ifndef __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
+#ifdef _M_PPC
+#define KdDebuggerEnabled _KdDebuggerEnabled
+#define KdDebuggerNotPresent _KdDebuggerNotPresent
+#endif
+
 //
 // Kernel Debugger Port Definition
 //

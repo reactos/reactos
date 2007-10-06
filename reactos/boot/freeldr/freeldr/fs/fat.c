@@ -242,7 +242,7 @@ BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG Partitio
 	//
 	// Check the boot sector magic
 	//
-	if (! ISFATX(FatType) && SWAPW(FatVolumeBootSector->BootSectorMagic) != 0xaa55)
+	if (! ISFATX(FatType) && FatVolumeBootSector->BootSectorMagic != 0xaa55)
 	{
 		sprintf(ErrMsg, "Invalid boot sector magic on drive 0x%x (expected 0xaa55 found 0x%x)",
 		        DriveNumber, FatVolumeBootSector->BootSectorMagic);

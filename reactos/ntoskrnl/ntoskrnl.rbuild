@@ -18,6 +18,7 @@
 	<include base="ntoskrnl">include</include>
 	<include base="ntoskrnl" root="intermediate"></include>
 	<include base="ntoskrnl" root="intermediate">include</include>
+	<include base="ntoskrnl" root="intermediate">include/internal</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>csq</library>
 	<library>hal</library>
@@ -29,6 +30,7 @@
 	<library>kdcom</library>
 	<library>bootvid</library>
 	<library>wdmguid</library>
+	<library>ppcmmu</library>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
@@ -52,6 +54,17 @@
 				<file>usercall.c</file>
 				<file>v86vdm.c</file>
 				<file>v86m_sup.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file first="true">main_asm.S</file>
+				<file>cpu.c</file>
+				<file>exp.c</file>
+				<file>kiinit.c</file>
+				<file>ppc_irq.c</file>
+				<file>stubs.c</file>
+				<file>systimer.c</file>
 			</directory>
 		</if>
 		<file>apc.c</file>
@@ -90,6 +103,11 @@
 	<directory name="config">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>cmhardwr.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
 				<file>cmhardwr.c</file>
 			</directory>
 		</if>
@@ -133,6 +151,12 @@
 				<file>interlck_asm.S</file>
 				<file>fastinterlck_asm.S</file>
 				<file>ioport.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>ioport.s</file>
+				<file>fastinterlck.c</file>
 			</directory>
 		</if>
 		<file>atom.c</file>
@@ -257,7 +281,12 @@
 		<directory name="kd">
 			<directory name="wrappers">
 				<file>bochs.c</file>
-				<file>gdbstub.c</file>
+				<if property="ARCH" value="i386">
+					<file>gdbstub.c</file>
+				</if>
+				<if property="ARCH" value="powerpc">
+					<file>gdbstub_powerpc.c</file>
+				</if>
 				<file>kdbg.c</file>
 			</directory>
 			<file>kdinit.c</file>
@@ -289,6 +318,12 @@
 	<directory name="mm">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>page.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>pfault.c</file>
 				<file>page.c</file>
 			</directory>
 		</if>

@@ -2,8 +2,9 @@
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="win32k_base" type="objectlibrary">
-	<include base="win32k">.</include>
-	<include base="win32k">include</include>
+	<include base="win32k_base">.</include>
+	<include base="win32k_base">include</include>
+	<include base="win32k_base" root="intermediate">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>

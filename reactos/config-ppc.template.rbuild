@@ -35,6 +35,10 @@
 -->
 <property name="MP" value="0" />
 
+<!--
+        New style kernel debugger 
+-->
+<property name="_WINKD_" value="0" />
 
 <!--
 	Whether to compile in the integrated kernel debugger.

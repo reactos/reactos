@@ -373,8 +373,9 @@ MingwBackend::GenerateHeader () const
 string
 MingwBackend::GenerateIncludesAndDefines ( IfableData& data ) const
 {
+	set<string> used_defs;
 	string includeParameters = MingwModuleHandler::GenerateGccIncludeParametersFromVector ( data.includes );
-	string defineParameters = MingwModuleHandler::GenerateGccDefineParametersFromVector ( data.defines );
+	string defineParameters = MingwModuleHandler::GenerateGccDefineParametersFromVector ( data.defines, used_defs );
 	return includeParameters + " " + defineParameters;
 }
 

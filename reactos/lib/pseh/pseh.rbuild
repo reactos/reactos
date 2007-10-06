@@ -7,5 +7,10 @@
 			<file>framebased.S</file>
 		</directory>
 	</if>
+	<if property="ARCH" value="powerpc">
+		<directory name="powerpc">
+			<file>framebased.S</file>
+		</directory>
+	</if>
 	<file>framebased.c</file>
 </module>

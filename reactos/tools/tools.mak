@@ -50,7 +50,9 @@ include tools/buildno/buildno.mak
 include tools/cabman/cabman.mak
 include tools/cdmake/cdmake.mak
 include tools/gendib/gendib.mak
+ifeq ($(ARCH),powerpc)
 include tools/ofw_interface/ofw_interface.mak
+endif
 include tools/mkhive/mkhive.mak
 include tools/nci/nci.mak
 include tools/pefixup.mak

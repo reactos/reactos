@@ -34,11 +34,17 @@
 #define STACK16ADDR	0x7000	/* The 16-bit stack top will be at 0000:7000 */
 #define STACK32ADDR	0x78000	/* The 32-bit stack top will be at 7000:8000, or 0x78000 */
 
+#ifdef _M_IX86
 #define BIOSCALLBUFFER		0x78000	/* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFSEGMENT	0x7800	/* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET	0x0000	/* Buffer to store temporary data for any Int386() call */
 #define FILESYSBUFFER		0x80000	/* Buffer to store file system data (e.g. cluster buffer for FAT) */
 #define DISKREADBUFFER		0x90000	/* Buffer to store data read in from the disk via the BIOS */
+#elif defined(_M_PPC)
+extern PVOID FsStaticBufferDisk, FsStaticBufferData;
+#define DISKREADBUFFER		FsStaticBufferDisk
+#define FILESYSBUFFER           FsStaticBufferData
+#endif
 
 /* Makes "x" a global variable or label */
 #define EXTERN(x)	.global x; x:

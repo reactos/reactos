@@ -26,6 +26,7 @@
 			<library>cmlib</library>
 			<library>rtl</library>
 			<library>libcntpr</library>
+			<library>ppcmmu</library>
 		</module>
 	</if>
 </group>

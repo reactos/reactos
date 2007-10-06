@@ -2021,7 +2021,7 @@ typedef struct _ACL_SIZE_INFORMATION {
 } ACL_SIZE_INFORMATION;
 
 /* FIXME: add more machines */
-#if defined(_X86_) || defined(unix)
+#if defined(_X86_) || defined(unix) && !defined(__PowerPC__)
 #define SIZE_OF_80387_REGISTERS	80
 #define CONTEXT_i386	0x10000
 #define CONTEXT_i486	0x10000
@@ -2077,7 +2077,8 @@ typedef struct _CONTEXT {
 #define CONTEXT_INTEGER	4L
 #define CONTEXT_DEBUG_REGISTERS	8L
 #define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_FLOATING_POINT|CONTEXT_INTEGER)
-typedef struct _CONTEXT {
+typedef struct _FLOATING_SAVE_AREA
+{
 	double Fpr0;
 	double Fpr1;
 	double Fpr2;
@@ -2111,6 +2112,10 @@ typedef struct _CONTEXT {
 	double Fpr30;
 	double Fpr31;
 	double Fpscr;
+} FLOATING_SAVE_AREA;
+
+typedef struct _CONTEXT {
+        FLOATING_SAVE_AREA FloatSave;
 	DWORD Gpr0;
 	DWORD Gpr1;
 	DWORD Gpr2;
@@ -4101,6 +4106,11 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
     return __readfsdword_winnt(0x18);
 }
 #endif
+#elif defined(_M_PPC)
+static __inline__ struct _TEB * NtCurrentTeb(void)
+{
+    return __readfsdword_winnt(0x18);
+}
 #endif
 
 #elif defined(__WATCOMC__)

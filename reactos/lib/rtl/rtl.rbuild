@@ -25,6 +25,8 @@
 		<file>debug.c</file>
 		<file>except.c</file>
 		<file>interlocked.c</file>
+                <file>rtlmem.s</file>
+                <file>rtlswap.s</file>
 		<file>thread.c</file>
 	</directory>
 	</if>

@@ -1,7 +1,0 @@
-#!/bin/sh -v
-
-export PATH=$PATH:/usr/local/pkg/reactos-powerpc/bin
-powerpc-unknown-linux-gnu-ld \
-	-g -nostartfiles -nostdlib -N -Ttext=0xe00000 \
-	-o freeldr.elf output-ppc/boot/freeldr/freeldr/ofwldr \
-	-Lobj-ppc/lib/ppcmmu -lppcmmu_code -lppcmmu

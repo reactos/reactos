@@ -591,9 +591,11 @@ void MachInit(const char *CmdLine) {
     }
 
     if( strlen(BootPart) == 0 ) {
-	len = ofw_getprop(chosen_package, "bootpath", 
-			  BootPath, sizeof(BootPath));
-	
+	if (ofproxy)
+            len = ofw_getprop(chosen_package, "bootpath", 
+                              BootPath, sizeof(BootPath));
+	else
+            len = 0;
 	if( len < 0 ) len = 0;
 	BootPath[len] = 0;
 	printf( "Boot Path: %s\n", BootPath );

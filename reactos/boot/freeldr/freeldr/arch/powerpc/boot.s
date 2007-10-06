@@ -28,10 +28,18 @@ _start:
 	lwz	%r3,ofw_call_addr@l(%r3)
 	cmpw	%r3,%r31 /* Zero? */
 	mr	%r3,%r31
-	beq	bootme
+	beq	initfp
 		
 	lis	%r3,call_ofw@ha
 	addi	%r3,%r3,call_ofw@l
+        b       bootme
+
+initfp:
+        /* Enabling FP at this point won't hurt, and the varargs scheme we're
+         * using now requires it. */
+        mfmsr   %r0
+        ori     %r0,%r0,8192
+        mtmsr   %r0
 
 bootme:	
 	blr
