@@ -662,7 +662,7 @@ BEGIN
     IDS_MSG_TRAYICONCPUUSAGE      "Использование ЦП: %d%%"
     IDS_STATUS_MEMUSAGE           "Использование памяти: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "Использование ЦП: %3d%%"
-    IDS_STATUS_PROCESSES          "Процесс: %d"
+    IDS_STATUS_PROCESSES          "Процессов: %d"
     IDS_Not_Responding            "Не отвечает"
     IDS_Running                   "Работает"  
 END
