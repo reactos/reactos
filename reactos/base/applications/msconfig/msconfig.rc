@@ -12,6 +12,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME	"msconfig.exe\0"
 #include <reactos/version.rc>
 
+IDI_APPICON   ICON "res/msconfig.ico"
 
 #include "rsrc.rc"
+
 

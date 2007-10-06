@@ -141,11 +141,22 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int             idctrl;
     LPNMHDR         pnmh;
+	static 			HICON hIcon;
 
     switch (message)
     {
         case WM_INITDIALOG:
             hMainWnd = hDlg;
+            hIcon = LoadImage(GetModuleHandle(NULL),
+                              MAKEINTRESOURCE(IDI_APPICON),
+                              IMAGE_ICON,
+                              16,
+                              16,
+                              0);
+            SendMessage(hDlg,
+                        WM_SETICON,
+                        ICON_SMALL,
+                        (LPARAM)hIcon);
             return OnCreate(hDlg);
 
         case WM_COMMAND:
