@@ -91,6 +91,7 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
   {0, 0,                     0,                       NULL},             /* 14 DD_MOTION, unused */
   {0, 0,                     0,                       NULL},             /* 15 META, unused */
   {0, 0,                     0,                       NULL},             /* 16 ENUMFONT, unused */
+  {0, 0,                     0,                       NULL},             /* 17 BMFD, unused */
   {0, 0,                     0,                       NULL},             /* 18 VTFD, unused */
   {0, 0,                     0,                       NULL},             /* 19 TTFD, unused */
   {0, 0,                     0,                       NULL},             /* 1a RC, unused */
