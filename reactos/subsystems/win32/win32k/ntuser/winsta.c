@@ -556,7 +556,7 @@ NtUserCreateWindowStation(
       ExFreePool(FullWindowStationName.Buffer);
    }
 
-   DPRINT("Window station successfully created (%wZ)\n", FullWindowStationName);
+   DPRINT("Window station successfully created (%wZ)\n", &FullWindowStationName);
    ExFreePool(FullWindowStationName.Buffer);
    return WindowStation;
 }
