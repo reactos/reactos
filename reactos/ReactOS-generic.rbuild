@@ -3,7 +3,7 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="baseaddress.rbuild" />
 
-	<define name="_REACTOS_" />
+	<define name="__REACTOS__" />
 	<if property="MP" value="1">
 		<define name="CONFIG_SMP" value="1" />
 	</if>

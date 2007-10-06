@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#if defined( MAC ) || defined( _MAC ) || defined(__powerpc__) && !defined(_REACTOS_)
+#if defined( MAC ) || defined( _MAC ) || defined(__powerpc__) && !defined(__REACTOS__)
     #define __RPC_MAC__
     #define __RPC_WIN32__
     #include <pshpack2.h>

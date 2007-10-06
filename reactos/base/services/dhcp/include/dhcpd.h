@@ -158,7 +158,7 @@ struct client_lease {
 	time_t			 expiry, renewal, rebind;
 	struct iaddr		 address;
 	char			*server_name;
-#ifdef _REACTOS_
+#ifdef __REACTOS__
 	time_t			 obtained;
 	struct iaddr		 serveraddress;
 #endif
@@ -178,7 +178,7 @@ enum dhcp_state {
 	S_BOUND,
 	S_RENEWING,
 	S_REBINDING,
-        S_STATIC
+	S_STATIC
 };
 
 struct client_config {
