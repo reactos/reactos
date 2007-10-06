@@ -10,7 +10,7 @@
  */
 
 /* Define only if used under ReactOS */
-#define __REACTOS__
+//#define __REACTOS__
 
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
