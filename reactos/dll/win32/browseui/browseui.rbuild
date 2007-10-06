@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="browseui" type="win32dll" baseaddress="${BASEADDRESS_BROWSEUI}" installbase="system32" installname="browseui.dll" allowwarnings="true">
-	<autoregister infsection="OleControlDlls" type="Both" />
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="browseui.spec.def" />
 	<include base="browseui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
