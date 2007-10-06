@@ -36,12 +36,12 @@ KiUnexpectedInterrupt()
 
 LONG NTAPI Exi386InterlockedDecrementLong(PLONG Addend)
 {
-    return _InterlockedIncrement(Addend);
+    return _InterlockedDecrement(Addend);
 }
 
 LONG NTAPI Exi386InterlockedIncrementLong(PLONG Addend)
 {
-    return _InterlockedDecrement(Addend);
+    return _InterlockedIncrement(Addend);
 }
 
 LONG NTAPI Exi386InterlockedExchangeUlong(PLONG Target, LONG Exch, LONG Compare)
