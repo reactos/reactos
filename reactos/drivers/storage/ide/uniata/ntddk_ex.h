@@ -494,7 +494,7 @@ typedef struct _KTHREAD_HDR {
 */
 } KTHREAD_HDR, *PKTHREAD_HDR;
 
-#ifdef __REACTOS__
+#ifndef __REACTOS__
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_magic;                     // Magic number
     WORD   e_cblp;                      // Bytes on last page of file
