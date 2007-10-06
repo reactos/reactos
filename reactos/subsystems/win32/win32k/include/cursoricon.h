@@ -73,10 +73,6 @@ VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Pro
 
 BOOL FASTCALL IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc);
 
-BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxWidth, 
-   INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
-PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
-
 #define IntGetSysCursorInfo(WinStaObj) \
   (PSYSTEM_CURSORINFO)((WinStaObj)->SystemCursor)
 
@@ -86,5 +82,4 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 #endif /* _WIN32K_CURSORICON_H */
 
 /* EOF */
-
 

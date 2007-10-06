@@ -125,7 +125,7 @@ IntGdiExtEscape(
          &BitmapObj->SurfObj,
          Escape,
          InSize,
-         (PVOID)((ULONG_PTR)InData),
+         (PVOID)InData,
          OutSize,
          (PVOID)OutData);
    }
@@ -156,18 +156,12 @@ NtGdiExtEscape(
    INT    OutSize,
    OPTIONAL LPSTR  UnsafeOutData)
 {
-   PDC      pDC;
+   PDC      pDC = DC_LockDc(hDC);
    LPVOID   SafeInData = NULL;
    LPVOID   SafeOutData = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    INT      Result;
 
-   if (hDC == 0)
-   {
-       hDC = (HDC)UserGetWindowDC(NULL);
-   }
-
-   pDC = DC_LockDc(hDC);
    if ( pDC == NULL )
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -293,6 +287,15 @@ freeout:
    }
 
    return Result;
+}
+
+INT
+STDCALL
+NtGdiSetAbortProc(HDC  hDC,
+                      ABORTPROC  AbortProc)
+{
+  UNIMPLEMENTED;
+  return 0;
 }
 
 INT

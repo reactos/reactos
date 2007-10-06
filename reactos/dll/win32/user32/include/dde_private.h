@@ -1,3 +1,5 @@
+/* -*- tab-width: 8; c-basic-offset: 4 -*- */
+
 /*
  * DDEML library
  *
@@ -38,7 +40,7 @@
  *      - a popup window (InstanceClass) is created for each instance.
  *      - this window is used to receive all the DDEML events (server registration,
  *	  conversation confirmation...). See the WM_WDML_???? messages for details
- * + when registering a server (DdeNameService) a WDML_SERVER is created
+ * + when registring a server (DdeNameService) a WDML_SERVER is created
  *	- a popup window (ServerNameClass) is created
  * + a conversation is represented by two WDML_CONV structures:
  *	- one on the client side, the other one on the server side
@@ -127,7 +129,6 @@ typedef struct tagWDML_CONV
     struct tagWDML_INSTANCE*	instance;
     HSZ				hszService;	/* pmt used for connection */
     HSZ				hszTopic;	/* pmt used for connection */
-    UINT			magic;		/* magic number to check validity */
     UINT			afCmd;		/* service name flag */
     CONVCONTEXT			convContext;
     HWND			hwndClient;	/* source of conversation (ClientConvClass) */
@@ -137,8 +138,6 @@ typedef struct tagWDML_CONV
     DWORD			wStatus;	/* same bits as convinfo.wStatus */
     DWORD			wConvst;	/* same values as convinfo.wConvst */
 } WDML_CONV;
-
-#define WDML_CONV_MAGIC  0xbabe1234
 
 /* DDE_LINK struct defines hot, warm, and cold links */
 typedef struct tagWDML_LINK {
@@ -156,7 +155,7 @@ typedef struct tagWDML_INSTANCE
     DWORD			threadID;	/* needed to keep instance linked to a unique thread */
     BOOL			monitor;        /* have these two as full Booleans cos they'll be tested frequently */
     BOOL			clientOnly;	/* bit wasteful of space but it will be faster */
-    BOOL			unicode;	/* Flag to indicate Win32 API used to initialise */
+    BOOL			unicode;        /* Flag to indicate Win32 API used to initialise */
     BOOL			win16;          /* flag to indicate Win16 API used to initialize */
     HSZNode*			nodeList;	/* for cleaning upon exit */
     PFNCALLBACK     		callback;
@@ -174,7 +173,7 @@ extern CRITICAL_SECTION WDML_CritSect;		/* protection for instance list */
 /* header for the DDE Data objects */
 typedef struct tagDDE_DATAHANDLE_HEAD
 {
-    WORD	cfFormat;
+    short	cfFormat;
     WORD        bAppOwned;
 } DDE_DATAHANDLE_HEAD;
 
@@ -189,7 +188,7 @@ typedef enum {
 
 extern	HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInst, UINT uType, UINT uFmt, HCONV hConv,
 					    HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
-					    ULONG_PTR dwData1, ULONG_PTR dwData2);
+					    DWORD dwData1, DWORD dwData2);
 extern	HDDEDATA 	WDML_InvokeCallback16(PFNCALLBACK pfn, UINT uType, UINT uFmt, HCONV hConv,
 					      HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
 					      DWORD dwData1, DWORD dwData2);
@@ -236,20 +235,20 @@ extern  BOOL            WDML_IsAppOwned(HDDEDATA hDdeData);
 extern	WDML_INSTANCE*	WDML_GetInstance(DWORD InstId);
 extern	WDML_INSTANCE*	WDML_GetInstanceFromWnd(HWND hWnd);
 /* broadcasting to DDE windows */
-extern	void		WDML_BroadcastDDEWindows(LPCWSTR clsName, UINT uMsg,
+extern	void		WDML_BroadcastDDEWindows(const char* clsName, UINT uMsg,
 						 WPARAM wParam, LPARAM lParam);
 extern	void		WDML_NotifyThreadExit(DWORD tid);
 
-static inline void WDML_ExtractAck(WORD status, DDEACK* da)
+static __inline void WDML_ExtractAck(WORD status, DDEACK* da)
 {
     *da = *((DDEACK*)&status);
 }
 
-extern const WCHAR WDML_szEventClass[]; /* class of window for events (aka instance) */
-extern const char WDML_szServerConvClassA[]; /* ANSI class of window for server side conv */
-extern const WCHAR WDML_szServerConvClassW[]; /* unicode class of window for server side conv */
-extern const char WDML_szClientConvClassA[]; /* ANSI class of window for client side conv */
-extern const WCHAR WDML_szClientConvClassW[]; /* unicode class of window for client side conv */
+extern const char 	WDML_szEventClass[]; 	   /* class of window for events (aka instance) */
+extern const char  	WDML_szServerConvClassA[]; /* class of window for server side conv (ansi) */
+extern const WCHAR 	WDML_szServerConvClassW[]; /* class of window for server side conv (unicode) */
+extern const char  	WDML_szClientConvClassA[]; /* class of window for client side conv (ansi) */
+extern const WCHAR 	WDML_szClientConvClassW[]; /* class of window for client side conv (unicode) */
 
 #define WM_WDML_REGISTER	(WM_USER + 0x200)
 #define WM_WDML_UNREGISTER	(WM_USER + 0x201)
@@ -263,7 +262,7 @@ extern const WCHAR WDML_szClientConvClassW[]; /* unicode class of window for cli
  */
 
 #define	GWL_WDML_INSTANCE	(0)
-#define	GWL_WDML_CONVERSATION	(sizeof(ULONG_PTR))
-#define	GWL_WDML_SERVER		(sizeof(ULONG_PTR))
+#define	GWL_WDML_CONVERSATION	(4)
+#define	GWL_WDML_SERVER		(4)
 
 #endif  /* __WINE_DDEML_PRIVATE_H */

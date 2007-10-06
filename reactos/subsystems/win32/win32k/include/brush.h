@@ -23,11 +23,6 @@ typedef struct
 
 typedef struct
 {
-   HGDIOBJ     hHmgr;
-   PVOID       pvEntry;
-   ULONG       lucExcLock;
-   ULONG       Tid;
-
    ULONG ulStyle;
    HBITMAP hbmPattern;
    HANDLE hbmClient;
@@ -77,8 +72,6 @@ typedef struct
 #define  BRUSHOBJ_FreeBrush(hBrush) GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 #define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj(GdiHandleTable, (HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr(GdiHandleTable, pBrush)
-
-INT FASTCALL BRUSH_GetObject (PGDIBRUSHOBJ GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
 #endif

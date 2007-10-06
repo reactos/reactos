@@ -158,9 +158,6 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    ULONG DestRedMask = 0, DestGreenMask = 0, DestBlueMask = 0;
    ULONG i;
 
-   ASSERT(SourcePalType || PaletteSource);
-   ASSERT(DestPalType || PaletteDest);
-
    XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);
    if (XlateGDI == NULL)
    {
@@ -184,7 +181,6 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    XlateObj->iSrcType = SourcePalType;
    XlateObj->iDstType = DestPalType;
    XlateObj->flXlate = 0;
-   XlateObj->cEntries = 0;
 
    /* Store handles of palettes in internal Xlate GDI object (or NULLs) */
    XlateGDI->SourcePal = PaletteSource;
@@ -241,34 +237,34 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    /* Indexed -> Indexed */
    if (SourcePalType == PAL_INDEXED && DestPalType == PAL_INDEXED)
    {
-      XlateObj->cEntries = SourcePalGDI->NumColors;
-      XlateObj->pulXlate =
-         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, 0);
+      XlateGDI->translationTable =
+         EngAllocMem(0, sizeof(ULONG) * SourcePalGDI->NumColors, 0);
 
       XlateObj->flXlate |= XO_TRIVIAL;
-      for (i = 0; i < XlateObj->cEntries; i++)
+      for (i = 0; i < SourcePalGDI->NumColors; i++)
       {
-         XlateObj->pulXlate[i] = ClosestColorMatch(
+         XlateGDI->translationTable[i] = ClosestColorMatch(
             XlateGDI, SourcePalGDI->IndexedColors + i,
-            DestPalGDI->IndexedColors, XlateObj->cEntries);
-         if (XlateObj->pulXlate[i] != i)
+            DestPalGDI->IndexedColors, DestPalGDI->NumColors);
+         if (XlateGDI->translationTable[i] != i)
             XlateObj->flXlate &= ~XO_TRIVIAL;
       }
 
       XlateObj->flXlate |= XO_TABLE;
+      XlateObj->pulXlate = XlateGDI->translationTable;
       goto end;
    }
 
    /* Indexed -> Bitfields/RGB/BGR */
    if (SourcePalType == PAL_INDEXED)
    {
-      XlateObj->cEntries = SourcePalGDI->NumColors;
-      XlateObj->pulXlate =
-         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, 0);
-      for (i = 0; i < XlateObj->cEntries; i++)
-         XlateObj->pulXlate[i] =
+      XlateGDI->translationTable =
+         EngAllocMem(0, sizeof(ULONG) * SourcePalGDI->NumColors, 0);
+      for (i = 0; i < SourcePalGDI->NumColors; i++)
+         XlateGDI->translationTable[i] =
             ShiftAndMask(XlateGDI, *((ULONG *)&SourcePalGDI->IndexedColors[i]));
       XlateObj->flXlate |= XO_TABLE;
+      XlateObj->pulXlate = XlateGDI->translationTable;
       goto end;
    }
 
@@ -278,15 +274,10 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
     */
 
 end:
-  if (PaletteDest != NULL)
-     if (PaletteDest != PaletteSource)
-         if (DestPalGDI != NULL)
-              PALETTE_UnlockPalette(DestPalGDI);
-     
-      
    if (PaletteSource != NULL)
       PALETTE_UnlockPalette(SourcePalGDI);
-  
+   if (PaletteDest != NULL && PaletteDest != PaletteSource)
+      PALETTE_UnlockPalette(DestPalGDI);
    return XlateObj;
 }
 
@@ -322,7 +313,6 @@ IntEngCreateMonoXlate(
    XlateGDI->SourcePal = PaletteSource;
 
    XlateObj->flXlate = XO_TO_MONO;
-   XlateObj->cEntries = 1;
    XlateObj->pulXlate = &XlateGDI->BackgroundColor;
    switch (SourcePalType)
    {
@@ -378,14 +368,15 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    }
    XlateObj = GDIToObj(XlateGDI, XLATE);
 
-   XlateObj->cEntries = 2;
-   XlateObj->pulXlate = EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, 0);
-   if (XlateObj->pulXlate == NULL)
+   XlateGDI->translationTable = EngAllocMem(0, sizeof(ULONG) * 2, 0);
+   if (XlateGDI->translationTable == NULL)
    {
       PALETTE_UnlockPalette(DestPalGDI);
       EngFreeMem(XlateGDI);
       return NULL;
    }
+
+   XlateObj->pulXlate = XlateGDI->translationTable;
 
    XlateObj->iSrcType = PAL_INDEXED;
    XlateObj->iDstType = DestPalGDI->Mode;
@@ -403,19 +394,19 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    XlateGDI->GreenShift = CalculateShift(RGB(0x00, 0xFF, 0x00)) - CalculateShift(XlateGDI->GreenMask);
    XlateGDI->BlueShift =  CalculateShift(RGB(0x00, 0x00, 0xFF)) - CalculateShift(XlateGDI->BlueMask);
 
-   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, BackgroundColor);
-   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, ForegroundColor);
+   XlateGDI->translationTable[0] = ShiftAndMask(XlateGDI, BackgroundColor);
+   XlateGDI->translationTable[1] = ShiftAndMask(XlateGDI, ForegroundColor);
 
    if (XlateObj->iDstType == PAL_INDEXED)
    {
-      XlateObj->pulXlate[0] =
+      XlateGDI->translationTable[0] =
          ClosestColorMatch(XlateGDI,
-                           (LPPALETTEENTRY)&XlateObj->pulXlate[0],
+                           (LPPALETTEENTRY)&XlateGDI->translationTable[0],
                            DestPalGDI->IndexedColors,
                            DestPalGDI->NumColors);
-      XlateObj->pulXlate[1] =
+      XlateGDI->translationTable[1] =
          ClosestColorMatch(XlateGDI,
-                           (LPPALETTEENTRY)&XlateObj->pulXlate[1],
+                           (LPPALETTEENTRY)&XlateGDI->translationTable[1],
                            DestPalGDI->IndexedColors,
                            DestPalGDI->NumColors);
    }
@@ -462,9 +453,9 @@ EngDeleteXlate(XLATEOBJ *XlateObj)
    XlateGDI = ObjToGDI(XlateObj, XLATE);
 
    if ((XlateObj->flXlate & XO_TABLE) &&
-       XlateObj->pulXlate != NULL)
+       XlateGDI->translationTable != NULL)
    {
-      EngFreeMem(XlateObj->pulXlate);
+      EngFreeMem(XlateGDI->translationTable);
    }
 
    EngFreeMem(XlateGDI);
@@ -476,9 +467,11 @@ EngDeleteXlate(XLATEOBJ *XlateObj)
 PULONG STDCALL
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
+   XLATEGDI *XlateGDI = ObjToGDI(XlateObj, XLATE);
+
    if (XlateObj->iSrcType == PAL_INDEXED)
    {
-      return XlateObj->pulXlate;
+      return XlateGDI->translationTable;
    }
 
    return NULL;
@@ -500,15 +493,9 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 
    if (XlateObj->flXlate & XO_TRIVIAL)
       return Color;
-    
+
    if (XlateObj->flXlate & XO_TABLE)
-   {
-      if (Color >= XlateObj->cEntries)
-          Color %= XlateObj->cEntries;
-
       return XlateObj->pulXlate[Color];
-   }
-
 
    if (XlateObj->flXlate & XO_TO_MONO)
       return Color == XlateObj->pulXlate[0];

@@ -1,7 +1,7 @@
 LIBRARY user32.dll
 
 EXPORTS
-ActivateKeyboardLayout@8=NtUserActivateKeyboardLayout@8
+ActivateKeyboardLayout@8
 AdjustWindowRect@12
 AdjustWindowRectEx@16
 AlignRects@16
@@ -85,7 +85,7 @@ CreateCursor@28
 CreateDesktopA@24
 CreateDesktopW@24
 CreateDialogIndirectParamA@20
-CreateDialogIndirectParamAorW@24
+CreateDialogIndirectParamAorW@20
 CreateDialogIndirectParamW@20
 CreateDialogParamA@20
 CreateDialogParamW@20
@@ -158,7 +158,7 @@ DestroyMenu@4
 DestroyWindow@4
 ;DeviceEventWorker
 DialogBoxIndirectParamA@20
-DialogBoxIndirectParamAorW@24
+DialogBoxIndirectParamAorW@20
 DialogBoxIndirectParamW@20
 DialogBoxParamA@20
 DialogBoxParamW@20
@@ -295,7 +295,7 @@ GetKeyNameTextA@12
 GetKeyNameTextW@12
 GetKeyState@4
 GetKeyboardLayout@4
-GetKeyboardLayoutList@8=NtUserGetKeyboardLayoutList@8
+GetKeyboardLayoutList@8
 GetKeyboardLayoutNameA@4
 GetKeyboardLayoutNameW@4
 GetKeyboardState@4
@@ -387,7 +387,7 @@ GetWindowThreadProcessId@8
 GetWindowWord@8
 GrayStringA@36
 GrayStringW@36
-HideCaret@4=NtUserHideCaret@4
+HideCaret@4
 HiliteMenuItem@16
 IMPGetIMEA@8
 IMPGetIMEW@8
@@ -407,7 +407,7 @@ InsertMenuItemW@16
 InsertMenuW@20
 InternalGetWindowText@12
 IntersectRect@12
-InvalidateRect@12=NtUserInvalidateRect@12
+InvalidateRect@12
 InvalidateRgn@12
 InvertRect@8
 IsCharAlphaA@4
@@ -549,7 +549,7 @@ RegisterClassExW@4
 RegisterClassW@4
 RegisterClipboardFormatA@4
 RegisterClipboardFormatW@4
-RegisterDeviceNotificationA@12=RegisterDeviceNotificationW@12
+RegisterDeviceNotificationA@12
 RegisterDeviceNotificationW@12
 RegisterHotKey@16
 RegisterLogonProcess@8
@@ -662,7 +662,7 @@ SetWindowsHookA@8
 SetWindowsHookExA@16
 SetWindowsHookExW@16
 SetWindowsHookW@8
-ShowCaret@4=NtUserShowCaret@4
+ShowCaret@4
 ShowCursor@4
 ShowOwnedPopups@8
 ShowScrollBar@12
@@ -697,13 +697,13 @@ UnhookWinEvent@4
 UnhookWindowsHook@8
 UnhookWindowsHookEx@4
 UnionRect@12
-UnloadKeyboardLayout@4=NtUserUnloadKeyboardLayout@4
+UnloadKeyboardLayout@4
 UnlockWindowStation@4
 UnpackDDElParam@16
 UnregisterClassA@8
 UnregisterClassW@8
 UnregisterDeviceNotification@4
-UnregisterHotKey@8=NtUserUnregisterHotKey@8
+UnregisterHotKey@8
 UnregisterMessagePumpHook@0
 UnregisterUserApiHook@0
 UpdateLayeredWindow@36

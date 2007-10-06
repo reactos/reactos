@@ -1,94 +1,81 @@
 #ifndef _INT_W32k_DDRAW
 #define _INT_W32k_DDRAW
 
-#include <ddrawint.h>
 #include <ddkernel.h>
+
+#define GDI_OBJECT_TYPE_DIRECTDRAW    0x00600000
+#define GDI_OBJECT_TYPE_DD_SURFACE    0x00610000
+#define GDI_OBJECT_TYPE_DD_VIDEOPORT  0x00620000
+#define GDI_OBJECT_TYPE_DD_PALETTE    0x00630000
+#define GDI_OBJECT_TYPE_DD_CLIPPER    0x00640000
+#define GDI_OBJECT_TYPE_DD_MOTIONCOMP 0x00650000
 
 typedef struct
 {
-    /* for the driver */
-    PDD_SURFACE_LOCAL lcllist[2];
-
-    DDRAWI_DDRAWSURFACE_LCL lcl;
-
-    DDRAWI_DDRAWSURFACE_GBL gpl;
-    DDRAWI_DDRAWSURFACE_MORE more;
-
-    /* DD_CREATESURFACEDATA CreateSurfaceData */
-    DD_CREATESURFACEDATA CreateSurfaceData;
-
-    /* for win32k stuff */
-    DD_SURFACE_LOCAL Local;
-    DD_SURFACE_MORE More;
-    DD_SURFACE_GLOBAL Global;
-    DDSURFACEDESC desc;
-
-    DD_ATTACHLIST AttachList;
-    DD_ATTACHLIST AttachListFrom;
-    BOOL bComplete;
-
-    HANDLE hDirectDrawLocal;
-
+	DD_SURFACE_LOCAL Local;
+	DD_SURFACE_MORE More;
+	DD_SURFACE_GLOBAL Global;
+	DD_ATTACHLIST AttachList;
+	DD_ATTACHLIST AttachListFrom;
+	BOOL bComplete;
 } DD_SURFACE, *PDD_SURFACE;
 
 typedef struct
 {
-    DD_DIRECTDRAW_LOCAL Local;
-    DD_DIRECTDRAW_GLOBAL Global;
+	DD_DIRECTDRAW_LOCAL Local;
+	DD_DIRECTDRAW_GLOBAL Global;
+	// Drv callbacks		
+	PGD_GETDIRECTDRAWINFO            DrvGetDirectDrawInfo; 	
+	PGD_DISABLEDIRECTDRAW            DrvDisableDirectDraw;	
 
-    /* Drv callbacks */
-    PGD_GETDIRECTDRAWINFO            DrvGetDirectDrawInfo;
-    PGD_DISABLEDIRECTDRAW            DrvDisableDirectDraw;
-    PGD_ENABLEDIRECTDRAW             EnableDirectDraw;
+	// DD callbacks
+	DD_CALLBACKS                     DD;
 
-    /* DD callbacks */
-    DD_CALLBACKS                     DD;
+	// Surface callbacks
+	DD_SURFACECALLBACKS              Surf;
 
-    /* Surface callbacks */
-    DD_SURFACECALLBACKS              Surf;
+	// Palette callbacks
+	DD_PALETTECALLBACKS              Pal;
 
-    /* Palette callbacks */
-    DD_PALETTECALLBACKS              Pal;
+	// HAL 
+	DD_HALINFO                       Hal;
 
-    /* HAL */
-    DD_HALINFO                       Hal;
+	// Color Control Callback 
+	DD_COLORCONTROLCALLBACKS         Color;
 
-    /* Color Control Callback */
-    DD_COLORCONTROLCALLBACKS         Color;
+	// D3DHAL_CALLBACKS
+	// D3DHAL_CALLBACKS                 D3dHal;
+	// D3DHAL_CALLBACKS3                D3dHal3;
+	// D3DHAL_D3DEXTENDEDCAPS           D3dHal3Ext;
 
-    /* D3DHAL_CALLBACKS */
-    //D3DHAL_CALLBACKS                 D3dHal;
-    // D3DHAL_CALLBACKS3                D3dHal3;
-    // D3DHAL_D3DEXTENDEDCAPS           D3dHal3Ext;
-
-    /* Heap Callback */
-    PDD_GETHEAPALIGNMENTDATA         HeapData;
-
-    /* Kernel Callback */
-    DD_KERNELCALLBACKS               Kernel;
+	// Heap Callback
+	PDD_GETHEAPALIGNMENTDATA         HeapData;
+	
+	// Kernel Callback
+	DD_KERNELCALLBACKS               Kernel;
     DDKERNELCAPS                     KernelCaps;
 
-    /* Miscellaneous Callback */
-    DD_MISCELLANEOUSCALLBACKS        Misc;
+	// Miscellaneous Callback
+	DD_MISCELLANEOUSCALLBACKS        Misc;
 
-    /* NT-based Callback */
-    PDD_FLIPTOGDISURFACE             DdFlipToGDISurface; 
-    PDD_FREEDRIVERMEMORY             DdFreeDriverMemory; 
-    PDD_SETEXCLUSIVEMODE             DdSetExclusiveMode; 
 
-    /*.Motion Compensation .*/
+    
+	// NT-based Callback 
+	PDD_FLIPTOGDISURFACE             DdFlipToGDISurface; 
+	PDD_FREEDRIVERMEMORY             DdFreeDriverMemory; 
+	PDD_SETEXCLUSIVEMODE             DdSetExclusiveMode; 
+	// Motion Compensation
     PDD_MOCOMPCB_BEGINFRAME          DdMoCompBeginFrame; 
     PDD_MOCOMPCB_CREATE              DdMoCompCreate; 
-    PDD_MOCOMPCB_DESTROY             DdMoCompDestroy; 
-    PDD_MOCOMPCB_ENDFRAME            DdMoCompEndFrame;
-    PDD_MOCOMPCB_GETCOMPBUFFINFO     DdMoCompGetBuffInfo; 
-    PDD_MOCOMPCB_GETFORMATS          DdMoCompGetFormats;
-    PDD_MOCOMPCB_GETGUIDS            DdMoCompGetGuids; 
-    PDD_MOCOMPCB_GETINTERNALINFO     DdMoCompGetInternalInfo; 
-    PDD_MOCOMPCB_QUERYSTATUS         DdMoCompQueryStatus; 
-    PDD_MOCOMPCB_RENDER              DdMoCompRender; 
-
-    /* Video Port Callback */
+	PDD_MOCOMPCB_DESTROY             DdMoCompDestroy; 
+	PDD_MOCOMPCB_ENDFRAME            DdMoCompEndFrame;
+	PDD_MOCOMPCB_GETCOMPBUFFINFO     DdMoCompGetBuffInfo; 
+	PDD_MOCOMPCB_GETFORMATS          DdMoCompGetFormats;
+	PDD_MOCOMPCB_GETGUIDS            DdMoCompGetGuids; 
+	PDD_MOCOMPCB_GETINTERNALINFO     DdMoCompGetInternalInfo; 
+	PDD_MOCOMPCB_QUERYSTATUS         DdMoCompQueryStatus; 
+	PDD_MOCOMPCB_RENDER              DdMoCompRender; 
+	// Video Port Callback 
     PDD_VPORTCB_CANCREATEVIDEOPORT   DdVideoPortCanCreate;
     PDD_VPORTCB_COLORCONTROL         DdVideoPortColorControl;
     PDD_VPORTCB_CREATEVIDEOPORT      DdVideoPortCreate;
@@ -104,17 +91,13 @@ typedef struct
     PDD_VPORTCB_GETSIGNALSTATUS      DdVideoPortGetSignalStatus;
     PDD_VPORTCB_UPDATE               DdVideoPortUpdate;
     PDD_VPORTCB_WAITFORSYNC          DdVideoPortWaitForSync;
-    /* Notify Callback */
+    // Notify Callback 
     //LPDD_NOTIFYCALLBACK NotifyCallback
+	
 
-    /* memory stuff */
-    DWORD dwNumHeaps;
-    PVIDEOMEMORY pvmList;
-
-    DWORD dwNumFourCC;
-    LPDWORD pdwFourCC;
-    
-
+	
+	
+	           
 } DD_DIRECTDRAW, *PDD_DIRECTDRAW;
 
 BOOL INTERNAL_CALL DD_Cleanup(PVOID pDD);

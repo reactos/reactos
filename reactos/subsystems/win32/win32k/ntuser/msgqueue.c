@@ -163,7 +163,7 @@ MsqInsertSystemMessage(MSG* Msg)
    }
 
    KeQueryTickCount(&LargeTickCount);
-   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
+   Msg->time = LargeTickCount.u.LowPart;
    
    /*
     * If we got WM_MOUSEMOVE and there are already messages in the
@@ -479,6 +479,12 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    
+   if( !IntGetScreenDC() ||
+         PsGetCurrentThreadWin32Thread()->MessageQueue == W32kGetPrimitiveMessageQueue() )
+   {
+      RETURN(FALSE);
+   }
+
    WaitObjects[1] = MessageQueue->NewMessages;
    WaitObjects[0] = &HardwareMessageQueueLock;
    do
@@ -694,7 +700,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    Msg.lParam = lParam;
 
    KeQueryTickCount(&LargeTickCount);
-   Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+   Msg.time = LargeTickCount.u.LowPart;
    /* We can't get the Msg.pt point here since we don't know thread
       (and thus the window station) the message will end up in yet. */
 
@@ -713,6 +719,16 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    }
 
    FocusMessageQueue = IntGetFocusMessageQueue();
+   if( !IntGetScreenDC() )
+   {
+      /* FIXME: What to do about Msg.pt here? */
+      if( W32kGetPrimitiveMessageQueue() )
+      {
+         MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg, FALSE, QS_KEY);
+      }
+   }
+   else
+   {
       if (FocusMessageQueue == NULL)
       {
          DPRINT("No focus message queue\n");
@@ -732,6 +748,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
          DPRINT("Invalid focus window handle\n");
       }
    }
+}
 
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
@@ -770,7 +787,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    Mesg.wParam = wParam;
    Mesg.lParam = lParam;
    KeQueryTickCount(&LargeTickCount);
-   Mesg.time = MsqCalculateMessageTime(&LargeTickCount);
+   Mesg.time = LargeTickCount.u.LowPart;
    IntGetCursorLocation(WinSta, &Mesg.pt);
    MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
    ObmDereferenceObject(Window);
@@ -965,13 +982,12 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
    ListHead = &MessageQueue->SentMessagesListHead;
    while (CurrentEntry != ListHead)
    {
+      CurrentEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
       SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                       ListEntry);
       if(SentMessage->Msg.hwnd == Window->hSelf)
       {
          DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
-
-	 RemoveEntryList(&SentMessage->ListEntry);
 
          /* remove the message from the dispatching list */
          if(SentMessage->DispatchingListEntry.Flink != NULL)
@@ -1495,6 +1511,10 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       IntDereferenceMessageQueue(MessageQueue);
    }
 
+   /* if this is the primitive message queue, deregister it */
+   if (MessageQueue == W32kGetPrimitiveMessageQueue())
+      W32kUnregisterPrimitiveMessageQueue();
+
    /* clean it up */
    MsqCleanupMessageQueue(MessageQueue);
 
@@ -1787,7 +1807,7 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Msg->wParam = (WPARAM) Timer->IDEvent;
    Msg->lParam = (LPARAM) Timer->TimerFunc;
    KeQueryTickCount(&LargeTickCount);
-   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
+   Msg->time = LargeTickCount.u.LowPart;
    IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
                         &Msg->pt);
 

@@ -32,26 +32,23 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
+#define NDEBUG
+#include <debug.h>
 
 /* MACROS/DEFINITIONS ********************************************************/
 
 #define DF_END  0x0001
 #define DF_OWNERENABLED 0x0002
 #define CW_USEDEFAULT16 ((short)0x8000)
-#define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
-#define GETDLGINFO(hwnd) (DIALOGINFO*)GetWindowLongPtrW((hwnd),DWLP_ROS_DIALOGINFO)
-#define SETDLGINFO(hwnd, info) SetWindowLongPtrW((hwnd), DWLP_ROS_DIALOGINFO, (LONG_PTR)(info))
+#define DWL_INIT (12)
+#define GETDLGINFO(hwnd) (DIALOGINFO*)GetWindowLongW((hwnd), DWL_INIT)
+#define SETDLGINFO(hwnd, info) SetWindowLongW((hwnd), DWL_INIT, (LONG)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
 #define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
 #define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
 #define DIALOG_CLASS_ATOMA   MAKEINTATOMA(32770)  /* Dialog */
 #define DIALOG_CLASS_ATOMW   MAKEINTATOMW(32770)  /* Dialog */
-
-void STDCALL WinPosActivateOtherWindow(HWND hwnd);
 
 /* INTERNAL STRUCTS **********************************************************/
 
@@ -126,17 +123,47 @@ typedef struct
  */
 const struct builtin_class_descr DIALOG_builtin_class =
 {
-    DIALOG_CLASS_ATOMW,       /* name */
+    DIALOG_CLASS_ATOMW, /* name */
     CS_SAVEBITS | CS_DBLCLKS, /* style  */
-    (WNDPROC) DefDlgProcW,    /* procW */
-    (WNDPROC) DefDlgProcA,    /* procA */
-    DLGWINDOWEXTRA,           /* extra */
-    (LPCWSTR) IDC_ARROW,      /* cursor */
-    0                         /* brush */
+    (WNDPROC) DefDlgProcW,        /* procW */
+    (WNDPROC) DefDlgProcA,        /* procA */
+    DWL_INIT + sizeof(LONG),  /* extra */
+    (LPCWSTR) IDC_ARROW,           /* cursor */
+    0                     /* brush */
 };
 
 
 /* INTERNAL FUNCTIONS ********************************************************/
+
+/***********************************************************************
+ *           DIALOG_GetCharSize
+ *
+ * Despite most of MSDN insisting that the horizontal base unit is
+ * tmAveCharWidth it isn't.  Knowledge base article Q145994
+ * "HOWTO: Calculate Dialog Units When Not Using the System Font",
+ * says that we should take the average of the 52 English upper and lower
+ * case characters.
+ */
+BOOL DIALOG_GetCharSize( HDC hDC, HFONT hFont, SIZE * pSize )
+{
+    HFONT hFontPrev = 0;
+    char *alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    SIZE sz;
+    TEXTMETRICA tm;
+
+    if(!hDC) return FALSE;
+
+    if(hFont) hFontPrev = SelectObject(hDC, hFont);
+    if(!GetTextMetricsA(hDC, &tm)) return FALSE;
+    if(!GetTextExtentPointA(hDC, alphabet, 52, &sz)) return FALSE;
+
+    pSize->cy = tm.tmHeight;
+    pSize->cx = (sz.cx / 26 + 1) / 2;
+
+    if (hFontPrev) SelectObject(hDC, hFontPrev);
+
+    return TRUE;
+}
 
  /***********************************************************************
  *           DIALOG_EnableOwner
@@ -243,7 +270,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
 
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
     {
-        info->windowName = HeapAlloc( GetProcessHeap(), 0, sizeof(L"#65535") );
+        info->windowName = HeapAlloc( GetProcessHeap(), 0, 10 );
         swprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
         info->windowNameFree = TRUE;
         p += 2;
@@ -345,16 +372,16 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
         }
 
         /* Send initialisation messages to the control */
-        if (dlgInfo->hUserFont) SendMessageW( hwndCtrl, WM_SETFONT,
+        if (dlgInfo->hUserFont) SendMessageA( hwndCtrl, WM_SETFONT,
                                              (WPARAM)dlgInfo->hUserFont, 0 );
-        if (SendMessageW(hwndCtrl, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON)
+        if (SendMessageA(hwndCtrl, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON)
         {
             /* If there's already a default push-button, set it back */
             /* to normal and use this one instead. */
             if (hwndDefButton)
-                SendMessageW( hwndDefButton, BM_SETSTYLE, BS_PUSHBUTTON, FALSE );
+                SendMessageA( hwndDefButton, BM_SETSTYLE, BS_PUSHBUTTON, FALSE );
             hwndDefButton = hwndCtrl;
-            dlgInfo->idResult = GetWindowLongPtrA( hwndCtrl, GWLP_ID );
+            dlgInfo->idResult = GetWindowLongA( hwndCtrl, GWL_ID );
         }
     }
     return TRUE;
@@ -426,14 +453,14 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
                     if ((dlgCode & DLGC_STATIC) || (style & 0x0f) == BS_GROUPBOX )
                     {
                         /* set focus to the control */
-                        SendMessageW( hwndDlg, WM_NEXTDLGCTL, (WPARAM)hwndControl, 1);
+                        SendMessageA( hwndDlg, WM_NEXTDLGCTL, (WPARAM)hwndControl, 1);
                         /* and bump it on to next */
-                        SendMessageW( hwndDlg, WM_NEXTDLGCTL, 0, 0);
+                        SendMessageA( hwndDlg, WM_NEXTDLGCTL, 0, 0);
                     }
                     else if (dlgCode & DLGC_BUTTON)
                     {
                         /* send BM_CLICK message to the control */
-                        SendMessageW( hwndControl, BM_CLICK, 0, 0 );
+                        SendMessageA( hwndControl, BM_CLICK, 0, 0 );
                     }
                     return TRUE;
                 }
@@ -524,13 +551,9 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
 static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
 {
     const WORD *p = (const WORD *)template;
-    WORD signature;
-    WORD dlgver;
 
-    signature = GET_WORD(p); p++;
-    dlgver = GET_WORD(p); p++;
-
-    if (signature == 1 && dlgver == 0xffff)  /* DIALOGEX resource */
+    result->style = GET_DWORD(p); p += 2;
+    if (result->style == 0xffff0001)  /* DIALOGEX resource */
     {
         result->dialogEx = TRUE;
         result->helpId   = GET_DWORD(p); p += 2;
@@ -539,7 +562,6 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     }
     else
     {
-        result->style = GET_DWORD(p - 2);
         result->dialogEx = FALSE;
         result->helpId   = 0;
         result->exStyle  = GET_DWORD(p); p += 2;
@@ -593,11 +615,6 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
 
     /* Get the font name */
 
-    result->pointSize = 0;
-    result->weight = FW_DONTCARE;
-    result->italic = FALSE;
-    result->faceName = NULL;
-
     if (result->style & DS_SETFONT)
     {
         result->pointSize = GET_WORD(p);
@@ -607,12 +624,24 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             result->weight = GET_WORD(p); p++;
             result->italic = LOBYTE(GET_WORD(p)); p++;
         }
+        else
+        {
+            result->weight = FW_DONTCARE;
+            result->italic = FALSE;
+        }
         result->faceName = (LPCWSTR)p;
         p += wcslen( result->faceName ) + 1;
     }
+    else
+    {
+        result->pointSize = 0;
+        result->weight = FW_DONTCARE;
+        result->italic = FALSE;
+        result->faceName = NULL;
+    }
 
     /* First control is on dword boundary */
-    return (LPCSTR)((((UINT_PTR)p) + 3) & ~3);
+    return (LPCSTR)((((int)p) + 3) & ~3);
 }
 
  /***********************************************************************
@@ -630,66 +659,72 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     HWND hwnd;
     RECT rect;
     DLG_TEMPLATE template;
-    DIALOGINFO * dlgInfo = NULL;
+    DIALOGINFO * dlgInfo;
     DWORD units = GetDialogBaseUnits();
     BOOL ownerEnabled = TRUE;
-    HMENU hMenu = 0;
-    HFONT hUserFont = 0;
-    UINT flags = 0;
-    UINT xBaseUnit = LOWORD(units);
-    UINT yBaseUnit = HIWORD(units);
 
-      /* Parse dialog template */
+    /* Parse dialog template */
 
     if (!dlgTemplate) return 0;
     dlgTemplate = DIALOG_ParseTemplate32( dlgTemplate, &template );
 
-      /* Load menu */
+    /* Initialise dialog extra data */
 
-    if (template.menuName) hMenu = LoadMenuW( hInst, template.menuName );
+    if (!(dlgInfo = HeapAlloc( GetProcessHeap(), 0, sizeof(*dlgInfo) ))) return 0;
+    dlgInfo->hwndFocus   = 0;
+    dlgInfo->hUserFont   = 0;
+    dlgInfo->hMenu       = 0;
+    dlgInfo->xBaseUnit   = LOWORD(units);
+    dlgInfo->yBaseUnit   = HIWORD(units);
+    dlgInfo->idResult    = 0;
+    dlgInfo->flags       = 0;
+    //dlgInfo->hDialogHeap = 0;
 
-      /* Create custom font if needed */
+    /* Load menu */
+
+    if (template.menuName) dlgInfo->hMenu = LoadMenuW( hInst, template.menuName );
+
+    /* Create custom font if needed */
 
     if (template.style & DS_SETFONT)
     {
-          /* We convert the size to pixels and then make it -ve.  This works
-           * for both +ve and -ve template.pointSize */
+        /* We convert the size to pixels and then make it -ve.  This works
+        * for both +ve and -ve template.pointSize */
         HDC dc;
         int pixels;
         dc = GetDC(0);
         pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
-        hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
-                                          template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
-                                          PROOF_QUALITY, FF_DONTCARE,
-                                          template.faceName );
-        if (hUserFont)
+        dlgInfo->hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
+                                            template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
+                                            PROOF_QUALITY, FF_DONTCARE,
+                                            template.faceName );
+        if (dlgInfo->hUserFont)
         {
             SIZE charSize;
-            HFONT hOldFont = SelectObject( dc, hUserFont );
+            HFONT hOldFont = SelectObject( dc, dlgInfo->hUserFont );
             charSize.cx = GdiGetCharDimensions( dc, NULL, &charSize.cy );
             if (charSize.cx)
             {
-                xBaseUnit = charSize.cx;
-                yBaseUnit = charSize.cy;
+                dlgInfo->xBaseUnit = charSize.cx;
+                dlgInfo->yBaseUnit = charSize.cy;
             }
             SelectObject( dc, hOldFont );
         }
         ReleaseDC(0, dc);
-        TRACE("units = %d,%d\n", xBaseUnit, yBaseUnit );
     }
 
     /* Create dialog main window */
 
     rect.left = rect.top = 0;
-    rect.right = MulDiv(template.cx, xBaseUnit, 4);
-    rect.bottom =  MulDiv(template.cy, yBaseUnit, 8);
+    rect.right = MulDiv(template.cx, dlgInfo->xBaseUnit, 4);
+    rect.bottom =  MulDiv(template.cy, dlgInfo->yBaseUnit, 8);
     if (template.style & WS_CHILD)
         template.style &= ~(WS_CAPTION|WS_SYSMENU);
     if (template.style & DS_MODALFRAME)
         template.exStyle |= WS_EX_DLGMODALFRAME;
     if (template.style & DS_CONTROL)
         template.exStyle |= WS_EX_CONTROLPARENT;
-    AdjustWindowRectEx( &rect, template.style, (hMenu != 0), template.exStyle );
+    AdjustWindowRectEx( &rect, template.style, (dlgInfo->hMenu != 0), template.exStyle );
     rect.right -= rect.left;
     rect.bottom -= rect.top;
 
@@ -706,8 +741,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         }
         else
         {
-            rect.left += MulDiv(template.x, xBaseUnit, 4);
-            rect.top += MulDiv(template.y, yBaseUnit, 8);
+            rect.left += MulDiv(template.x, dlgInfo->xBaseUnit, 4);
+            rect.top += MulDiv(template.y, dlgInfo->yBaseUnit, 8);
         }
         if ( !(template.style & WS_CHILD) )
         {
@@ -719,9 +754,9 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             /* try to fit it into the desktop */
 
             if( (dX = rect.left + rect.right + GetSystemMetrics(SM_CXDLGFRAME)
-                 - GetSystemMetrics(SM_CXSCREEN)) > 0 ) rect.left -= dX;
+                   - GetSystemMetrics(SM_CXSCREEN)) > 0 ) rect.left -= dX;
             if( (dY = rect.top + rect.bottom + GetSystemMetrics(SM_CYDLGFRAME)
-                 - GetSystemMetrics(SM_CYSCREEN)) > 0 ) rect.top -= dY;
+                   - GetSystemMetrics(SM_CYSCREEN)) > 0 ) rect.top -= dY;
             if( rect.left < 0 ) rect.left = 0;
             if( rect.top < 0 ) rect.top = 0;
         }
@@ -730,16 +765,15 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if (modal)
     {
         ownerEnabled = DIALOG_DisableOwner( owner );
-        if (ownerEnabled) flags |= DF_OWNERENABLED;
+        if (ownerEnabled) dlgInfo->flags |= DF_OWNERENABLED;
     }
 
     if (unicode)
     {
-        hwnd = User32CreateWindowEx(template.exStyle, (LPCSTR)template.className, (LPCSTR)template.caption,
-                                    template.style & ~WS_VISIBLE,
-                                    rect.left, rect.top, rect.right, rect.bottom,
-                                    owner, hMenu, hInst, NULL,
-                                    TRUE);
+        hwnd = CreateWindowExW(template.exStyle, template.className, template.caption,
+                               template.style & ~WS_VISIBLE,
+                               rect.left, rect.top, rect.right, rect.bottom,
+                               owner, dlgInfo->hMenu, hInst, NULL );
     }
     else
     {
@@ -758,48 +792,39 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             caption = HeapAlloc( GetProcessHeap(), 0, len );
             WideCharToMultiByte( CP_ACP, 0, template.caption, -1, caption, len, NULL, NULL );
         }
-        hwnd = User32CreateWindowEx(template.exStyle, class, caption,
-                                    template.style & ~WS_VISIBLE,
-                                    rect.left, rect.top, rect.right, rect.bottom,
-                                    owner, hMenu, hInst, NULL,
-                                    FALSE);
+        hwnd = CreateWindowExA(template.exStyle, class, caption,
+                               template.style & ~WS_VISIBLE,
+                               rect.left, rect.top, rect.right, rect.bottom,
+                               owner, dlgInfo->hMenu, hInst, NULL );
         if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
         if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
     }
 
     if (!hwnd)
     {
-        if (hUserFont) DeleteObject( hUserFont );
-        if (hMenu) DestroyMenu( hMenu );
-        if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
+        if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
+        if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
+        if (modal && (dlgInfo->flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
+        HeapFree( GetProcessHeap(), 0, dlgInfo );
         return 0;
     }
 
-    /* moved this from the top of the method to here as DIALOGINFO structure
-    will be valid only after WM_CREATE message has been handled in DefDlgProc
-    All the members of the structure get filled here using temp variables */
+    if (template.helpId)
+        SetWindowContextHelpId( hwnd, template.helpId );
 
-//    dlgInfo = DIALOG_get_info( hwnd, TRUE );
-
-    if (!(dlgInfo = HeapAlloc( GetProcessHeap(), 0, sizeof(*dlgInfo) ))) return 0;
-    SETDLGINFO(hwnd, dlgInfo);
-
-    dlgInfo->hwndFocus   = 0;
-    dlgInfo->hUserFont   = hUserFont;
-    dlgInfo->hMenu       = hMenu;
-    dlgInfo->xBaseUnit   = xBaseUnit;
-    dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = 0;
-    dlgInfo->flags       = flags;
-//    dlgInfo->hDialogHeap = 0;
-
-    if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );
-
-    if (unicode) SetWindowLongPtrW( hwnd, DWLP_DLGPROC, (ULONG_PTR)dlgProc );
-    else SetWindowLongPtrA( hwnd, DWLP_DLGPROC, (ULONG_PTR)dlgProc );
+    if (unicode)
+    {
+        SETDLGINFO(hwnd, dlgInfo); /* maybe SetPropW? */
+        SetWindowLongW( hwnd, DWL_DLGPROC, (LONG)dlgProc );
+    }
+    else
+    {
+        SETDLGINFO(hwnd, dlgInfo);
+        SetWindowLongA( hwnd, DWL_DLGPROC, (LONG)dlgProc );
+    }
 
     if (dlgInfo->hUserFont)
-        SendMessageW( hwnd, WM_SETFONT, (WPARAM)dlgInfo->hUserFont, 0 );
+        SendMessageA( hwnd, WM_SETFONT, (WPARAM)dlgInfo->hUserFont, 0 );
 
     /* Create controls */
 
@@ -822,6 +847,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         }
         return hwnd;
     }
+
     if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
     if( IsWindow(hwnd) ) DestroyWindow( hwnd );
     return 0;
@@ -856,7 +882,7 @@ static void DEFDLG_SaveFocus( HWND hwnd )
     HWND hwndFocus = GetFocus();
 
     if (!hwndFocus || !IsChild( hwnd, hwndFocus )) return;
-    if (!(infoPtr = GETDLGINFO(hwnd))) return;
+	if (!(infoPtr = GETDLGINFO(hwnd))) return;
     infoPtr->hwndFocus = hwndFocus;
     /* Remove default button */
 }
@@ -878,7 +904,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
         infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
        if (!IsWindow( infoPtr->hwndFocus )) return;
     }
-    SetFocus( infoPtr->hwndFocus );    
+    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
 
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
@@ -931,15 +957,15 @@ static BOOL DEFDLG_SetDefId( HWND hwndDlg, DIALOGINFO *dlgInfo, WPARAM wParam)
 
     /* Make sure the old default control is a valid push button ID */
     hwndOld = GetDlgItem( hwndDlg, old_id );
-    if (!hwndOld || !(SendMessageW( hwndOld, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
+    if (!hwndOld || !(SendMessageA( hwndOld, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
         hwndOld = DEFDLG_FindDefButton( hwndDlg );
     if (hwndOld && hwndOld != hwndNew)
-        SendMessageW( hwndOld, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+        SendMessageA( hwndOld, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
 
     if (hwndNew)
     {
         if(dlgcode & DLGC_UNDEFPUSHBUTTON)
-            SendMessageW( hwndNew, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
+            SendMessageA( hwndNew, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
     }
     return TRUE;
 }
@@ -968,15 +994,15 @@ static BOOL DEFDLG_SetDefButton( HWND hwndDlg, DIALOGINFO *dlgInfo, HWND hwndNew
     }
 
     /* Make sure the old default control is a valid push button ID */
-    if (!hwndOld || !(SendMessageW( hwndOld, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
+    if (!hwndOld || !(SendMessageA( hwndOld, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
         hwndOld = DEFDLG_FindDefButton( hwndDlg );
     if (hwndOld && hwndOld != hwndNew)
-        SendMessageW( hwndOld, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
+        SendMessageA( hwndOld, BM_SETSTYLE, BS_PUSHBUTTON, TRUE );
 
     if (hwndNew)
     {
         if(dlgcode & DLGC_UNDEFPUSHBUTTON)
-            SendMessageW( hwndNew, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
+            SendMessageA( hwndNew, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE );
     }
     return TRUE;
 }
@@ -1007,7 +1033,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             return 1;
         }
         case WM_NCDESTROY:
-            if ((dlgInfo = (DIALOGINFO *)SetWindowLongPtrW( hwnd, DWLP_ROS_DIALOGINFO, 0 )))
+            if ((dlgInfo = GETDLGINFO(hwnd)))
             {
                 /* Free dialog heap (if created) */
                 /*if (dlgInfo->hDialogHeap)
@@ -1022,7 +1048,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
              /* Window clean-up */
             return DefWindowProcA( hwnd, msg, wParam, lParam );
 
-	case WM_SHOWWINDOW:
+			case WM_SHOWWINDOW:
             if (!wParam) DEFDLG_SaveFocus( hwnd );
             return DefWindowProcA( hwnd, msg, wParam, lParam );
 
@@ -1070,8 +1096,8 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 if (hwndFocus)
                 {
                     /* always make combo box hide its listbox control */
-                    if (!SendMessageW( hwndFocus, CB_SHOWDROPDOWN, FALSE, 0 ))
-                        SendMessageW( GetParent(hwndFocus), CB_SHOWDROPDOWN, FALSE, 0 );
+                    if (!SendMessageA( hwndFocus, CB_SHOWDROPDOWN, FALSE, 0 ))
+                        SendMessageA( GetParent(hwndFocus), CB_SHOWDROPDOWN, FALSE, 0 );
                 }
             }
             return DefWindowProcA( hwnd, msg, wParam, lParam );
@@ -1083,6 +1109,9 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             PostMessageA( hwnd, WM_COMMAND, MAKEWPARAM(IDCANCEL, BN_CLICKED),
                             (LPARAM)GetDlgItem( hwnd, IDCANCEL ) );
             return 0;
+
+        case WM_NOTIFYFORMAT:
+             return DefWindowProcA( hwnd, msg, wParam, lParam );
     }
     return 0;
 }
@@ -1092,15 +1121,14 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
  */
 static LRESULT DEFDLG_Epilog(HWND hwnd, UINT msg, BOOL fResult)
 {
-
-    // TODO: where's wine's WM_CTLCOLOR from?
+	// TODO: where's wine's WM_CTLCOLOR from?
     if ((msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC) ||
-         msg == WM_CTLCOLOR ||  msg == WM_COMPAREITEM ||
+         /*msg == WM_CTLCOLOR || */ msg == WM_COMPAREITEM ||
          msg == WM_VKEYTOITEM || msg == WM_CHARTOITEM ||
          msg == WM_QUERYDRAGICON || msg == WM_INITDIALOG)
         return fResult;
 
-    return GetWindowLongPtrW( hwnd, DWLP_MSGRESULT );
+    return GetWindowLongA( hwnd, DWL_MSGRESULT );
 }
 
 /***********************************************************************
@@ -1168,37 +1196,37 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
 }
 
 /**********************************************************************
- *	    DIALOG_DlgDirListW
+ *	    DIALOG_DlgDirList
  *
- * Helper function for DlgDirList*W
+ * Helper function for DlgDirList*
  */
-static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
+static INT DIALOG_DlgDirList( HWND hDlg, LPSTR spec, INT idLBox,
                                 INT idStatic, UINT attrib, BOOL combo )
 {
     HWND hwnd;
-    LPWSTR orig_spec = spec;
-    WCHAR any[] = {'*','.','*',0};
+    LPSTR orig_spec = spec;
+    char any[] = "*.*";
 
 #define SENDMSG(msg,wparam,lparam) \
-    ((attrib & DDL_POSTMSGS) ? PostMessageW( hwnd, msg, wparam, lparam ) \
-                             : SendMessageW( hwnd, msg, wparam, lparam ))
+    ((attrib & DDL_POSTMSGS) ? PostMessageA( hwnd, msg, wparam, lparam ) \
+                             : SendMessageA( hwnd, msg, wparam, lparam ))
 
-//    TRACE("%p '%s' %d %d %04x\n",
-//          hDlg, spec ? spec : "NULL", idLBox, idStatic, attrib );
+    DPRINT("%p '%s' %d %d %04x\n",
+          hDlg, spec ? spec : "NULL", idLBox, idStatic, attrib );
 
     /* If the path exists and is a directory, chdir to it */
-    if (!spec || !spec[0] || SetCurrentDirectoryW( spec )) spec = any;
+    if (!spec || !spec[0] || SetCurrentDirectoryA( spec )) spec = any;
     else
     {
-        WCHAR *p, *p2;
+        char *p, *p2;
         p = spec;
-        if ((p2 = strrchrW( p, '\\' ))) p = p2;
-        if ((p2 = strrchrW( p, '/' ))) p = p2;
+        if ((p2 = strrchr( p, '\\' ))) p = p2;
+        if ((p2 = strrchr( p, '/' ))) p = p2;
         if (p != spec)
         {
-            WCHAR sep = *p;
+            char sep = *p;
             *p = 0;
-            if (!SetCurrentDirectoryW( spec ))
+            if (!SetCurrentDirectoryA( spec ))
             {
                 *p = sep;  /* Restore the original spec */
                 return FALSE;
@@ -1207,7 +1235,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
         }
     }
 
-    TRACE( "mask=%s\n", spec );
+    DPRINT( "mask=%s\n", spec );
 
     if (idLBox && ((hwnd = GetDlgItem( hDlg, idLBox )) != 0))
     {
@@ -1223,7 +1251,7 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
             }
             if (SENDMSG( combo ? CB_DIR : LB_DIR,
                        (attrib & (DDL_DIRECTORY | DDL_DRIVES)) | DDL_EXCLUSIVE,
-                         (LPARAM)any ) == LB_ERR)
+                         (LPARAM)"*.*" ) == LB_ERR)
                 return FALSE;
         }
         else
@@ -1236,17 +1264,17 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
 
     if (idStatic && ((hwnd = GetDlgItem( hDlg, idStatic )) != 0))
     {
-        WCHAR temp[MAX_PATH];
-        GetCurrentDirectoryW( sizeof(temp)/sizeof(WCHAR), temp );
-        CharLowerW( temp );
+        char temp[MAX_PATH];
+        GetCurrentDirectoryA( sizeof(temp), temp );
+        CharLowerA( temp );
         /* Can't use PostMessage() here, because the string is on the stack */
-        SetDlgItemTextW( hDlg, idStatic, temp );
+        SetDlgItemTextA( hDlg, idStatic, temp );
     }
 
     if (orig_spec && (spec != orig_spec))
     {
         /* Update the original file spec */
-        WCHAR *p = spec;
+        char *p = spec;
         while ((*orig_spec++ = *p++));
     }
 
@@ -1255,24 +1283,26 @@ static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
 }
 
 /**********************************************************************
- *	    DIALOG_DlgDirListA
+ *	    DIALOG_DlgDirListW
  *
- * Helper function for DlgDirList*A
+ * Helper function for DlgDirList*W
  */
-static INT DIALOG_DlgDirListA( HWND hDlg, LPSTR spec, INT idLBox,
-                               INT idStatic, UINT attrib, BOOL combo )
+static INT DIALOG_DlgDirListW( HWND hDlg, LPWSTR spec, INT idLBox,
+                                 INT idStatic, UINT attrib, BOOL combo )
 {
     if (spec)
     {
-        INT ret, len = MultiByteToWideChar( CP_ACP, 0, spec, -1, NULL, 0 );
-        LPWSTR specW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-        MultiByteToWideChar( CP_ACP, 0, spec, -1, specW, len );
-        ret = DIALOG_DlgDirListW( hDlg, specW, idLBox, idStatic, attrib, combo );
-        WideCharToMultiByte( CP_ACP, 0, specW, -1, spec, 0x7fffffff, NULL, NULL );
-        HeapFree( GetProcessHeap(), 0, specW );
+        LPSTR specA;
+        INT ret;
+
+        HEAP_strdupWtoA ( &specA, spec, lstrlenW(spec) );
+        ret = DIALOG_DlgDirList( hDlg, specA, idLBox, idStatic,
+                                 attrib, combo );
+        MultiByteToWideChar( CP_ACP, 0, specA, -1, spec, 0x7fffffff );
+        HEAP_free( specA );
         return ret;
     }
-    return DIALOG_DlgDirListW( hDlg, NULL, idLBox, idStatic, attrib, combo );
+    return DIALOG_DlgDirList( hDlg, NULL, idLBox, idStatic, attrib, combo );
 }
 
 /**********************************************************************
@@ -1280,25 +1310,25 @@ static INT DIALOG_DlgDirListA( HWND hDlg, LPSTR spec, INT idLBox,
  *
  * Helper function for DlgDirSelect*
  */
-static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
+static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPSTR str, INT len,
                                  INT id, BOOL unicode, BOOL combo )
 {
-    WCHAR *buffer, *ptr;
+    char *buffer, *ptr;
     INT item, size;
     BOOL ret;
     HWND listbox = GetDlgItem( hwnd, id );
 
-    TRACE("%p '%s' %d\n", hwnd, str, id );
+    DPRINT("%p '%s' %d\n", hwnd, str, id );
     if (!listbox) return FALSE;
 
-    item = SendMessageW(listbox, combo ? CB_GETCURSEL : LB_GETCURSEL, 0, 0 );
+    item = SendMessageA(listbox, combo ? CB_GETCURSEL : LB_GETCURSEL, 0, 0 );
     if (item == LB_ERR) return FALSE;
-    size = SendMessageW(listbox, combo ? CB_GETLBTEXTLEN : LB_GETTEXTLEN, 0, 0 );
+    size = SendMessageA(listbox, combo ? CB_GETLBTEXTLEN : LB_GETTEXTLEN, 0, 0 );
     if (size == LB_ERR) return FALSE;
 
     if (!(buffer = HeapAlloc( GetProcessHeap(), 0, size+1 ))) return FALSE;
 
-    SendMessageW( listbox, combo ? CB_GETLBTEXT : LB_GETTEXT, item, (LPARAM)buffer );
+    SendMessageA( listbox, combo ? CB_GETLBTEXT : LB_GETTEXT, item, (LPARAM)buffer );
 
     if ((ret = (buffer[0] == '[')))  /* drive or directory */
     {
@@ -1310,7 +1340,7 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
         }
         else
         {
-            buffer[strlenW(buffer)-1] = '\\';
+            buffer[strlen(buffer)-1] = '\\';
             ptr = buffer + 1;
         }
     }
@@ -1318,12 +1348,12 @@ static BOOL DIALOG_DlgDirSelect( HWND hwnd, LPWSTR str, INT len,
 
     if (unicode)
     {
-        if (len > 0 && !WideCharToMultiByte( CP_ACP, 0, ptr, -1, (LPSTR)str, len, 0, 0 ))
-            ((LPSTR)str)[len-1] = 0;
+        if (len > 0 && !MultiByteToWideChar( CP_ACP, 0, ptr, -1, (LPWSTR)str, len ))
+            ((LPWSTR)str)[len-1] = 0;
     }
-    else lstrcpynW( str, ptr, len );
+    else lstrcpynA( str, ptr, len );
     HeapFree( GetProcessHeap(), 0, buffer );
-    TRACE("Returning %d '%s'\n", ret, str );
+    DPRINT("Returning %d '%s'\n", ret, str );
     return ret;
 }
 
@@ -1351,28 +1381,6 @@ BOOL CALLBACK GetDlgItemEnumProc (HWND hwnd, LPARAM lParam )
  */
 HWND
 STDCALL
-CreateDialogIndirectParamAorW(
-  HINSTANCE hInstance,
-  LPCDLGTEMPLATE lpTemplate,
-  HWND hWndParent,
-  DLGPROC lpDialogFunc,
-  LPARAM lParamInit,
-  DWORD Flags)
-{
-/* FIXME:
- *   This function might be obsolete since I don't think it is exported by NT
- *   Also wine has one more parameter identifying weather it should call
- *   the function with unicode or not 
- */
-  return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , !Flags, FALSE );
-}
-
-
-/*
- * @implemented
- */
-HWND
-STDCALL
 CreateDialogIndirectParamA(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE lpTemplate,
@@ -1380,7 +1388,28 @@ CreateDialogIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
-  return CreateDialogIndirectParamAorW( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, 2 );
+	return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, FALSE, FALSE );
+}
+
+
+/*
+ * @unimplemented
+ */
+HWND
+STDCALL
+CreateDialogIndirectParamAorW(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE lpTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM lParamInit)
+{
+	  /* FIXME:
+	 This function might be obsolete since I don't think it is exported by NT
+     Also wine has one more parameter identifying weather it should call
+	 the function with unicode or not */
+	UNIMPLEMENTED;
+	return (HWND)0;
 }
 
 
@@ -1396,7 +1425,7 @@ CreateDialogIndirectParamW(
   DLGPROC lpDialogFunc,
   LPARAM lParamInit)
 {
-  return CreateDialogIndirectParamAorW( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, 0);
+  	return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit, TRUE, FALSE );
 }
 
 
@@ -1461,9 +1490,9 @@ DefDlgProcA(
     if (!(dlgInfo = GETDLGINFO(hDlg)))
 	    return DefWindowProcA( hDlg, Msg, wParam, lParam );
 
-    SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
+    SetWindowLongW( hDlg, DWL_MSGRESULT, 0 );
 
-    if ((dlgproc = (WNDPROC)GetWindowLongPtrW( hDlg, DWLP_DLGPROC )))
+    if ((dlgproc = (WNDPROC)GetWindowLongA( hDlg, DWL_DLGPROC )))
     {
         /* Call dialog procedure */
         result = CallWindowProcA( dlgproc, hDlg, Msg, wParam, lParam );
@@ -1522,9 +1551,9 @@ DefDlgProcW(
     if (!(dlgInfo = GETDLGINFO(hDlg)))
 	    return DefWindowProcW( hDlg, Msg, wParam, lParam );
 
-    SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
+    SetWindowLongW( hDlg, DWL_MSGRESULT, 0 );
 
-    if ((dlgproc = (WNDPROC)GetWindowLongPtrW( hDlg, DWLP_DLGPROC )))
+    if ((dlgproc = (WNDPROC)GetWindowLongW( hDlg, DWL_DLGPROC )))
     {
         /* Call dialog procedure */
         result = CallWindowProcW( dlgproc, hDlg, Msg, wParam, lParam );
@@ -1569,30 +1598,6 @@ DefDlgProcW(
  */
 INT_PTR
 STDCALL
-DialogBoxIndirectParamAorW(
-  HINSTANCE hInstance,
-  LPCDLGTEMPLATE hDialogTemplate,
-  HWND hWndParent,
-  DLGPROC lpDialogFunc,
-  LPARAM dwInitParam,
-  DWORD Flags)
-{
-/* FIXME:
- *  This function might be obsolete since I don't think it is exported by NT
- *  Also wine has one more parameter identifying weather it should call
- *  the function with unicode or not
- */
-  HWND hWnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, !Flags, TRUE );
-  if (hWnd) return DIALOG_DoDialogBox( hWnd, hWndParent );
-  return -1;
-}
-
-
-/*
- * @implemented
- */
-INT_PTR
-STDCALL
 DialogBoxIndirectParamA(
   HINSTANCE hInstance,
   LPCDLGTEMPLATE hDialogTemplate,
@@ -1600,7 +1605,30 @@ DialogBoxIndirectParamA(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
-  return DialogBoxIndirectParamAorW( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, 2);
+    HWND hwnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, FALSE, TRUE );
+    if (hwnd) return DIALOG_DoDialogBox( hwnd, hWndParent );
+    return -1;
+}
+
+
+/*
+ * @unimplemented
+ */
+INT_PTR
+STDCALL
+DialogBoxIndirectParamAorW(
+  HINSTANCE hInstance,
+  LPCDLGTEMPLATE hDialogTemplate,
+  HWND hWndParent,
+  DLGPROC lpDialogFunc,
+  LPARAM dwInitParam)
+{
+  /* FIXME:
+	 This function might be obsolete since I don't think it is exported by NT
+     Also wine has one more parameter identifying weather it should call
+	 the function with unicode or not */
+  UNIMPLEMENTED;
+  return (INT_PTR)NULL;
 }
 
 
@@ -1616,7 +1644,9 @@ DialogBoxIndirectParamW(
   DLGPROC lpDialogFunc,
   LPARAM dwInitParam)
 {
-  return DialogBoxIndirectParamAorW( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, 0);
+    HWND hwnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, TRUE, TRUE );
+    if (hwnd) return DIALOG_DoDialogBox( hwnd, hWndParent );
+    return -1;
 }
 
 
@@ -1636,8 +1666,8 @@ DialogBoxParamA(
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
 
-    if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG ))) return 0;
-    if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
+	if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG ))) return 0;
+	if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, FALSE, TRUE);
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;
@@ -1660,8 +1690,8 @@ DialogBoxParamW(
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
 
-    if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG ))) return 0;
-    if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
+	if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG ))) return 0;
+	if (!(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc))) return 0;
     hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, TRUE, TRUE);
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;
@@ -1680,12 +1710,12 @@ DlgDirListA(
   int nIDStaticPath,
   UINT uFileType)
 {
-    return DIALOG_DlgDirListA( hDlg, lpPathSpec, nIDListBox, nIDStaticPath, uFileType, FALSE );
+    return DIALOG_DlgDirList( hDlg, lpPathSpec, nIDListBox, nIDStaticPath, uFileType, FALSE );
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
@@ -1696,12 +1726,13 @@ DlgDirListComboBoxA(
   int nIDStaticPath,
   UINT uFiletype)
 {
-  return DIALOG_DlgDirListA( hDlg, lpPathSpec, nIDComboBox, nIDStaticPath, uFiletype, TRUE );
+  UNIMPLEMENTED;
+  return 0;
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
@@ -1712,7 +1743,8 @@ DlgDirListComboBoxW(
   int nIDStaticPath,
   UINT uFiletype)
 {
-  return DIALOG_DlgDirListW( hDlg, lpPathSpec, nIDComboBox, nIDStaticPath, uFiletype, TRUE );
+  UNIMPLEMENTED;
+  return 0;
 }
 
 
@@ -1728,12 +1760,12 @@ DlgDirListW(
   int nIDStaticPath,
   UINT uFileType)
 {
-  return DIALOG_DlgDirListW( hDlg, lpPathSpec, nIDListBox, nIDStaticPath, uFileType, FALSE );
+    return DIALOG_DlgDirListW( hDlg, lpPathSpec, nIDListBox, nIDStaticPath, uFileType, FALSE );
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1743,12 +1775,13 @@ DlgDirSelectComboBoxExA(
   int nCount,
   int nIDComboBox)
 {
-  return DIALOG_DlgDirSelect( hDlg, (LPWSTR)lpString, nCount, nIDComboBox, FALSE, TRUE );
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1758,7 +1791,8 @@ DlgDirSelectComboBoxExW(
   int nCount,
   int nIDComboBox)
 {
-  return DIALOG_DlgDirSelect( hDlg, (LPWSTR)lpString, nCount, nIDComboBox, TRUE, TRUE );
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 
@@ -1773,7 +1807,7 @@ DlgDirSelectExA(
   int nCount,
   int nIDListBox)
 {
-  return DIALOG_DlgDirSelect( hDlg, (LPWSTR)lpString, nCount, nIDListBox, FALSE, FALSE );
+    return DIALOG_DlgDirSelect( hDlg, lpString, nCount, nIDListBox, FALSE, FALSE );
 }
 
 
@@ -1788,7 +1822,7 @@ DlgDirSelectExW(
   int nCount,
   int nIDListBox)
 {
-  return DIALOG_DlgDirSelect( hDlg, lpString, nCount, nIDListBox, TRUE, FALSE );
+    return DIALOG_DlgDirSelect( hDlg, (LPSTR)lpString, nCount, nIDListBox, TRUE, FALSE );
 }
 
 
@@ -1824,8 +1858,6 @@ EndDialog(
 
     SetWindowPos(hDlg, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
                  | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
-
-    if (hDlg == GetActiveWindow()) WinPosActivateOtherWindow( hDlg );
 
     /* unblock dialog loop */
     PostMessageA(hDlg, WM_NULL, 0, 0);
@@ -1866,7 +1898,7 @@ STDCALL
 GetDlgCtrlID(
   HWND hwndCtl)
 {
-	return GetWindowLongPtrW( hwndCtl, GWLP_ID );
+	return GetWindowLongW( hwndCtl, GWL_ID );
 }
 
 
@@ -2192,8 +2224,6 @@ IsDialogMessageW(
 
      if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
 
-    if (hDlg == GetDesktopWindow()) return FALSE;
-
      hDlg = DIALOG_FindMsgDestination(hDlg);
 
      switch(lpMsg->message)
@@ -2248,6 +2278,7 @@ IsDialogMessageW(
                         return FALSE;
                 }
                 return TRUE;
+
             }
             break;
 
@@ -2323,7 +2354,7 @@ IsDlgButtonChecked(
   HWND hDlg,
   int nIDButton)
 {
-  return (UINT)SendDlgItemMessageW( hDlg, nIDButton, BM_GETCHECK, 0, 0 );
+  return (UINT)SendDlgItemMessageA( hDlg, nIDButton, BM_GETCHECK, 0, 0 );
 }
 
 
@@ -2440,13 +2471,13 @@ CheckDlgButton(
   int nIDButton,
   UINT uCheck)
 {
-	SendDlgItemMessageW( hDlg, nIDButton, BM_SETCHECK, uCheck, 0 );
+	SendDlgItemMessageA( hDlg, nIDButton, BM_SETCHECK, uCheck, 0 );
 	return TRUE;
 }
 
 static BOOL CALLBACK CheckRB(HWND hwnd, LPARAM lParam)
 {
-  LONG lChildID = GetWindowLongPtrW(hwnd, GWLP_ID);
+  LONG lChildID = GetWindowLongW(hwnd, GWL_ID);
   RADIOGROUP *lpRadioGroup = (RADIOGROUP *)lParam;
 
   if((lChildID >= lpRadioGroup->firstID) &&

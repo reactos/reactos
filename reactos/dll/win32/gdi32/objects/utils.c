@@ -383,21 +383,3 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 #undef COPYN
 #undef COPYS
 }
-
-VOID
-STDCALL
-EnumLogFontExW2A( LPENUMLOGFONTEXA fontA, CONST ENUMLOGFONTEXW *fontW )
-{
-    LogFontW2A( (LPLOGFONTA)fontA, (CONST LOGFONTW *)fontW );
-
-    WideCharToMultiByte( CP_THREAD_ACP, 0, fontW->elfFullName, -1,
-			 (LPSTR) fontA->elfFullName, LF_FULLFACESIZE, NULL, NULL );
-    fontA->elfFullName[LF_FULLFACESIZE-1] = '\0';
-    WideCharToMultiByte( CP_THREAD_ACP, 0, fontW->elfStyle, -1,
-			 (LPSTR) fontA->elfStyle, LF_FACESIZE, NULL, NULL );
-    fontA->elfStyle[LF_FACESIZE-1] = '\0';
-    WideCharToMultiByte( CP_THREAD_ACP, 0, fontW->elfScript, -1,
-			 (LPSTR) fontA->elfScript, LF_FACESIZE, NULL, NULL );
-    fontA->elfScript[LF_FACESIZE-1] = '\0';
-}
-

@@ -26,6 +26,9 @@ typedef struct _WIN_DC_INFO
   HRGN  hClipRgn;     /* Clip region (may be 0) */
   HRGN  hVisRgn;      /* Visible region (must never be 0) */
   HRGN  hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
+  HPEN  hPen;
+  HBRUSH  hBrush;
+  HFONT  hFont;
   HBITMAP  hBitmap;
   HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
@@ -36,11 +39,38 @@ typedef struct _WIN_DC_INFO
     GdiPath       path;
 /* #endif */
 
+  WORD  ROPmode;
+  WORD  polyFillMode;
+  WORD  stretchBltMode;
+  WORD  relAbsMode;
+  WORD  backgroundMode;
+  COLORREF  backgroundColor;
+  COLORREF  textColor;
+
+  short  brushOrgX;
+  short  brushOrgY;
+
+  WORD  textAlign;         /* Text alignment from SetTextAlign() */
+  short  charExtra;         /* Spacing from SetTextCharacterExtra() */
+  short  breakTotalExtra;   /* Total extra space for justification */
+  short  breakCount;        /* Break char. count */
+  short  breakExtra;        /* breakTotalExtra / breakCount */
+  short  breakRem;          /* breakTotalExtra % breakCount */
+
   RECT   totalExtent;
   BYTE   bitsPerPixel;
 
+  INT  MapMode;
+  INT  GraphicsMode;      /* Graphics mode */
   INT  DCOrgX;            /* DC origin */
   INT  DCOrgY;
+
+#if 0
+    FARPROC     lpfnPrint;         /* AbortProc for Printing */
+#endif
+
+  INT  CursPosX;          /* Current position */
+  INT  CursPosY;
   INT  ArcDirection;
 
   XFORM  xformWorld2Wnd;    /* World-to-window transformation */
@@ -59,42 +89,38 @@ typedef struct _WIN_DC_INFO
 
 typedef struct _DC
 {
-  HGDIOBJ     hHmgr;
-  PVOID       pvEntry;
-  ULONG       lucExcLock;
-  ULONG       Tid;
-
-  DHPDEV      PDev;
-  INT         DC_Type;
-  INT         DC_Flags;
-  PDC_ATTR    pDc_Attr;
-  DC_ATTR     Dc_Attr;
-
-  HDC         hSelf;
-  HDC         hNext;
-  HSURF       FillPatternSurfaces[HS_DDI_MAX];
-  PGDIINFO    GDIInfo;
-  PDEVINFO    DevInfo;
-  HDEV        GDIDevice;
+  HDC  hSelf;
+  HDC  hNext;
+  DHPDEV  PDev;
+  HSURF  FillPatternSurfaces[HS_DDI_MAX];
+  PGDIINFO  GDIInfo;
+  PDEVINFO  DevInfo;
+  HDEV   GDIDevice;
 
   DRIVER_FUNCTIONS  DriverFunctions;
   UNICODE_STRING    DriverName;
-  HANDLE      DeviceDriver;
+  HANDLE  DeviceDriver;
 
-  CLIPOBJ     *CombinedClip;
+  INT  wndOrgX;          /* Window origin */
+  INT  wndOrgY;
+  INT  wndExtX;          /* Window extent */
+  INT  wndExtY;
+  INT  vportOrgX;        /* Viewport origin */
+  INT  vportOrgY;
+  INT  vportExtX;        /* Viewport extent */
+  INT  vportExtY;
 
-  XLATEOBJ    *XlateBrush;
-  XLATEOBJ    *XlatePen;
+  CLIPOBJ *CombinedClip;
 
-  INT         saveLevel;
-  BOOL        IsIC;
+  XLATEOBJ *XlateBrush;
+  XLATEOBJ *XlatePen;
 
-  HPALETTE    PalIndexed;
+  INT  saveLevel;
+  BOOL IsIC;
 
-  WIN_DC_INFO w;
-  
-  HANDLE      hFile;  
-  LPENHMETAHEADER emh;
+  HPALETTE PalIndexed;
+
+  WIN_DC_INFO  w;
 } DC, *PDC;
 
 typedef struct _GDIPOINTER /* should stay private to ENG */
@@ -149,37 +175,15 @@ HDC  FASTCALL RetrieveDisplayHDC(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
 HDC  FASTCALL DC_FindOpenDC(PUNICODE_STRING  Driver);
-VOID FASTCALL DC_FreeDC(HDC);
-VOID FASTCALL DC_AllocateDcAttr(HDC, PEPROCESS);
-VOID FASTCALL DC_FreeDcAttr(HDC, PEPROCESS);
+VOID FASTCALL DC_FreeDC(HDC  DCToFree);
 BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);
 HDC  FASTCALL DC_GetNextDC (PDC pDC);
 VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
 VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
-VOID FASTCALL IntGdiCopyFromSaveState(PDC, PDC, HDC);
-VOID FASTCALL IntGdiCopyToSaveState(PDC, PDC);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
-BOOL FASTCALL DCU_UpdateUserXForms(PDC, ULONG);
-BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC, FLONG);
-BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC, FLONG);
-BOOL FASTCALL DCU_SyncDcAttrtoW32k(PDC, FLONG);
-BOOL FASTCALL DCU_SynchDcAttrtoW32k(HDC, FLONG);
-
-VOID FASTCALL IntGetViewportExtEx(PDC dc, LPSIZE pt);
-VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);
-VOID FASTCALL IntGetWindowExtEx(PDC dc, LPSIZE pt);
-VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
-
 NTSTATUS STDCALL NtGdiFlushUserBatch(VOID);
 
-/* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
-typedef struct
-{
-  LPENHMETAHEADER  emh;
-  BOOL    on_disk;   /* true if metafile is on disk */
-} DD_ENHMETAFILEOBJ, *PDD_ENHMETAFILEOBJ;
-
-#endif /* __WIN32K_DC_H */
+#endif

@@ -13,9 +13,7 @@
 	<library>gdi32</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
-	<library>imm32</library>
 	<library>win32ksys</library>
-
 	<directory name="include">
 		<pch>user32.h</pch>
 	</directory>
@@ -71,7 +69,6 @@
 		<file>paint.c</file>
 		<file>prop.c</file>
 		<file>rect.c</file>
-		<file>spy.c</file>
 		<file>text.c</file>
 		<file>window.c</file>
 		<file>winpos.c</file>

@@ -24,8 +24,7 @@
 #define TAG_TIMERBMP	TAG('T', 'I', 'M', 'B') /* timers bitmap */
 #define TAG_CALLBACK	TAG('C', 'B', 'C', 'K') /* callback memory */
 #define TAG_WINSTA	TAG('W', 'S', 'T', 'A') /* window station */
-#define TAG_PDCE      TAG('U', 's', 'd', 'c') /* dce */
- 
+
 /* objects */
 #define TAG_BEZIER	TAG('B', 'E', 'Z', 'R') /* bezier */
 #define TAG_BITMAP	TAG('B', 'T', 'M', 'P') /* bitmap */
@@ -44,7 +43,6 @@
 #define TAG_PRINT	TAG('P', 'R', 'N', 'T') /* print */
 #define TAG_REGION	TAG('R', 'G', 'N', 'O') /* region */
 #define TAG_GDITEXT	TAG('T', 'X', 'T', 'O') /* text */
-#define TAG_EXTPEN	TAG('X', 'P', 'E', 'N') /* extpen */
 
 /* Eng objects */
 #define TAG_CLIPOBJ	TAG('C', 'L', 'P', 'O') /* clip object */
@@ -59,11 +57,5 @@
 #define TAG_DRIVER	TAG('G', 'D', 'R', 'V') /* video drivers */
 #define TAG_FNTFILE	TAG('F', 'N', 'T', 'F') /* font file */
 #define TAG_SSECTPOOL   TAG('S', 'S', 'C', 'P') /* shared section pool */
-
-
-/* Dx internal tags rember I do not known if it right namees */
-#define TAG_DXPVMLIST TAG('D', 'X', 'P', 'L') /* pmvlist for the driver */
-#define TAG_DXFOURCC TAG('D', 'X', 'F', 'O') /* pdwFourCC for the driver */
-
 
 #endif /* _WIN32K_TAGS_H */

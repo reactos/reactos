@@ -6,11 +6,6 @@
 
 /* Internal region data. Can't use RGNDATA structure because buffer is allocated statically */
 typedef struct _ROSRGNDATA {
-  HGDIOBJ     hHmgr;
-  PVOID       pvEntry;
-  ULONG       lucExcLock;
-  ULONG       Tid;
-
   RGNDATAHEADER rdh;
   PRECT         Buffer;
 } ROSRGNDATA, *PROSRGNDATA, *LPROSRGNDATA;
@@ -21,9 +16,6 @@ typedef struct _ROSRGNDATA {
 #define  RGNDATA_UnlockRgn(pRgn) GDIOBJ_UnlockObjByPtr(GdiHandleTable, pRgn)
 HRGN FASTCALL RGNDATA_AllocRgn(INT n);
 BOOL INTERNAL_CALL RGNDATA_Cleanup(PVOID ObjectBody);
-
-BOOL FASTCALL IntGdiPaintRgn(PDC, HRGN );
-HRGN FASTCALL GdiCreatePolyPolygonRgn(CONST PPOINT, CONST PINT, INT, INT );
 
 #endif
 

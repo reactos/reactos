@@ -23,8 +23,8 @@
 /* INCLUDES *******************************************************************/
 
 #include <user32.h>
-
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \
@@ -410,7 +410,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
          CurrentRect.top += GetSystemMetrics(SM_CYCAPTION);
       }
 
-      NtUserDrawCaption(hWnd, hDC, &TempRect, CaptionFlags);
+      DrawCaption(hWnd, hDC, &TempRect, CaptionFlags);
 
       /* Draw buttons */
       if (Style & WS_SYSMENU)
@@ -751,12 +751,11 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
             }
             else
             {
-               if(!(ExStyle & WS_EX_DLGMODALFRAME))
-                  WindowRect.left += GetSystemMetrics(SM_CXSIZE);
+               WindowRect.left += GetSystemMetrics(SM_CXSIZE);
                WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
             }
          }
-         if (Point.x < WindowRect.left)
+         if (Point.x <= WindowRect.left)
             return HTSYSMENU;
          if (WindowRect.right <= Point.x)
             return HTCLOSE;
@@ -1098,17 +1097,243 @@ AdjustWindowRect(LPRECT lpRect,
 BOOL WINAPI
 DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 {
- return NtUserDrawCaption(hWnd, hDC, lprc, uFlags);
+    NONCLIENTMETRICSW nclm;
+    BOOL result = FALSE;
+    RECT r = *lprc;
+    UINT VCenter = 0, Padding = 0, Height;
+    ULONG Style;
+    WCHAR buffer[256];
+    HFONT hFont = NULL;
+    HFONT hOldFont = NULL;
+    HBRUSH OldBrush = NULL;
+    HDC MemDC = NULL;
+    int ButtonWidth;
+    COLORREF OldTextColor;
+
+#ifdef DOUBLE_BUFFER_CAPTION
+    HBITMAP MemBMP = NULL, OldBMP = NULL;
+
+    MemDC = CreateCompatibleDC(hDC);
+    if (! MemDC) goto cleanup;
+    MemBMP = CreateCompatibleBitmap(hDC, lprc->right - lprc->left, lprc->bottom - lprc->top);
+    if (! MemBMP) goto cleanup;
+    OldBMP = SelectObject(MemDC, MemBMP);
+    if (! OldBMP) goto cleanup;
+#else
+    MemDC = hDC;
+
+    OffsetViewportOrgEx(MemDC, lprc->left, lprc->top, NULL);
+#endif
+
+    Style = GetWindowLongW(hWnd, GWL_STYLE);
+
+    /* Windows behaves like this */
+    Height = GetSystemMetrics(SM_CYCAPTION) - 1;
+
+    VCenter = (lprc->bottom - lprc->top) / 2;
+    Padding = VCenter - (Height / 2);
+
+    r.left = Padding;
+    r.right = r.left + (lprc->right - lprc->left);
+    r.top = Padding;
+    r.bottom = r.top + (Height / 2);
+
+    // Draw the caption background
+    if (uFlags & DC_INBUTTON)
+    {
+        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_BTNFACE : COLOR_BTNSHADOW) );
+        if (! OldBrush) goto cleanup;
+        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
+    }
+    else
+    {
+        if (uFlags & DC_GRADIENT)
+        {
+          static GRADIENT_RECT gcap = {0, 1};
+          TRIVERTEX vert[2];
+          COLORREF Colors[2];
+          LONG xx;
+
+          r.right = (lprc->right - lprc->left);
+          if (uFlags & DC_SMALLCAP)
+            ButtonWidth = GetSystemMetrics(SM_CXSMSIZE) - 2;
+          else
+            ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
+
+          if (Style & WS_SYSMENU)
+          {
+            r.right -= 3 + ButtonWidth;
+            if (! (uFlags & DC_SMALLCAP))
+            {
+              if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
+                r.right -= 2 + 2 * ButtonWidth;
+              else
+                r.right -= 2;
+              r.right -= 2;
+            }
+          }
+
+          Colors[0] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
+          Colors[1] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
+
+          if ((uFlags & DC_ICON) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
+          {
+            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
+            if (!OldBrush) goto cleanup;
+            xx = GetSystemMetrics(SM_CXSIZE) + Padding;
+            /* draw icon background */
+            PatBlt(MemDC, 0, 0, xx, lprc->bottom - lprc->top, PATCOPY);
+            /* For some reason the icon isn't centered correctly... */
+            r.top --;
+            if (UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE))
+              r.left += xx;
+            r.top ++;
+          }
+
+          vert[0].x = r.left;
+          vert[0].y = 0;
+          vert[0].Red = GetRValue(Colors[0]) << 8;
+          vert[0].Green = GetGValue(Colors[0]) << 8;
+          vert[0].Blue = GetBValue(Colors[0]) << 8;
+          vert[0].Alpha = 0;
+
+          vert[1].x = r.right;
+          vert[1].y = lprc->bottom - lprc->top;
+          vert[1].Red = GetRValue(Colors[1]) << 8;
+          vert[1].Green = GetGValue(Colors[1]) << 8;
+          vert[1].Blue = GetBValue(Colors[1]) << 8;
+          vert[1].Alpha = 0;
+
+          GdiGradientFill(MemDC, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
+
+          if(OldBrush)
+          {
+            SelectObject(MemDC, OldBrush);
+            OldBrush = NULL;
+          }
+          xx = lprc->right - lprc->left - r.right;
+          if(xx > 0)
+          {
+            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION));
+            if (!OldBrush) goto cleanup;
+            PatBlt(MemDC, r.right, 0, xx, lprc->bottom - lprc->top, PATCOPY);
+          }
+        }
+        else
+        {
+            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
+            if (! OldBrush) goto cleanup;
+            if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
+        }
+    }
+
+    if ((uFlags & DC_ICON) && !(uFlags & DC_GRADIENT) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
+    {
+        /* For some reason the icon isn't centered correctly... */
+        r.top --;
+        if (UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE))
+          r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
+        r.top ++;
+    }
+    r.top ++;
+    r.left += 2;
+
+    r.bottom = r.top + Height;
+
+  if ((uFlags & DC_TEXT) && (NtUserInternalGetWindowText( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
+  {
+    if(!(uFlags & DC_GRADIENT))
+    {
+    r.right = (lprc->right - lprc->left);
+    if (uFlags & DC_SMALLCAP)
+      ButtonWidth = GetSystemMetrics(SM_CXSMSIZE) - 2;
+    else
+      ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
+
+    if (Style & WS_SYSMENU)
+    {
+      r.right -= 3 + ButtonWidth;
+      if (! (uFlags & DC_SMALLCAP))
+      {
+        if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
+	      r.right -= 2 + 2 * ButtonWidth;
+        else
+	      r.right -= 2;
+        r.right -= 2;
+      }
+    }
+    }
+
+    nclm.cbSize = sizeof(nclm);
+    if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &nclm, 0)) goto cleanup;
+
+    SetBkMode( MemDC, TRANSPARENT );
+    if (uFlags & DC_SMALLCAP)
+        hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
+    else
+        hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
+
+    if (! hFont) goto cleanup;
+
+    hOldFont = SelectObject(MemDC, hFont);
+    if (! hOldFont) goto cleanup;
+
+    if (uFlags & DC_INBUTTON)
+        OldTextColor = SetTextColor(MemDC, GetSysColor(uFlags & DC_ACTIVE ? COLOR_BTNTEXT : COLOR_GRAYTEXT));
+    else
+        OldTextColor = SetTextColor(MemDC, GetSysColor(uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT));
+
+    DrawTextW(MemDC, buffer, wcslen(buffer), &r, DT_VCENTER | DT_END_ELLIPSIS);
+
+    SetTextColor(MemDC, OldTextColor);
+  }
+
+#if 0
+    if (uFlags & DC_BUTTONS)
+    {
+        // Windows XP draws the caption buttons with DC_BUTTONS
+//        r.left += GetSystemMetrics(SM_CXSIZE) + 1;
+//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
+//        r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
+//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
+//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
+    }
+#endif
+
+#ifdef DOUBLE_BUFFER_CAPTION
+    if (! BitBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left, lprc->bottom - lprc->top,
+            MemDC, 0, 0, SRCCOPY)) goto cleanup;
+#endif
+
+    result = TRUE;
+
+    cleanup :
+        if (MemDC)
+        {
+            if (OldBrush) SelectObject(MemDC, OldBrush);
+            if (hOldFont) SelectObject(MemDC, hOldFont);
+            if (hFont) DeleteObject(hFont);
+#ifdef DOUBLE_BUFFER_CAPTION
+            if (OldBMP) SelectObject(MemDC, OldBMP);
+            if (MemBMP) DeleteObject(MemBMP);
+            DeleteDC(MemDC);
+#else
+            OffsetViewportOrgEx(MemDC, -lprc->left, -lprc->top, NULL);
+#endif
+        }
+
+        return result;
 }
 
+
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
 DrawCaptionTempW(
-		 HWND        hWnd,
-		 HDC         hDC,
+		 HWND        hwnd,
+		 HDC         hdc,
 		 const RECT *rect,
 		 HFONT       hFont,
 		 HICON       hIcon,
@@ -1116,13 +1341,12 @@ DrawCaptionTempW(
 		 UINT        uFlags
 		 )
 {
-   UNICODE_STRING Text = {0};
-   RtlInitUnicodeString(&Text, str);
-   return NtUserDrawCaptionTemp(hWnd, hDC, rect, hFont, hIcon, &Text, uFlags);
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1136,21 +1360,8 @@ DrawCaptionTempA(
 		 UINT        uFlags
 		 )
 {
-  LPWSTR strW;
-  INT len;
-  BOOL ret = FALSE;
-
-  if (!(uFlags & DC_TEXT) || !str)
-    return DrawCaptionTempW(hwnd, hdc, rect, hFont, hIcon, NULL, uFlags);
-
-  len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
-  if ((strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
-  {
-    MultiByteToWideChar(CP_ACP, 0, str, -1, strW, len );
-    ret = DrawCaptionTempW(hwnd, hdc, rect, hFont, hIcon, strW, uFlags);
-    HeapFree(GetProcessHeap(), 0, strW);
-  }
-  return ret;
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /***********************************************************************

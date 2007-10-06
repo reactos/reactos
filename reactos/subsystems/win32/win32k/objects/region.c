@@ -669,7 +669,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
       else
         break;
 
-    for(i = j; i > 0; i--) // fixup bottom band
+    for(i = j; i >= 0; i--) // fixup bottom band
       if(((PRECT)rgnDst->Buffer + i)->bottom > right)
         ((PRECT)rgnDst->Buffer + i)->bottom = right;
       else
@@ -1855,13 +1855,12 @@ BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   if(!dc)
     return ret;
 
-  if(dc->Dc_Attr.iMapMode == MM_TEXT) // Requires only a translation
+  if(dc->w.MapMode == MM_TEXT) // Requires only a translation
   {
     if(NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
       goto done;
 
-    NtGdiOffsetRgn(hDest, dc->Dc_Attr.ptlViewportOrg.x - dc->Dc_Attr.ptlWindowOrg.x,
-                                       dc->Dc_Attr.ptlViewportOrg.y - dc->Dc_Attr.ptlWindowOrg.y);
+    NtGdiOffsetRgn(hDest, dc->vportOrgX - dc->wndOrgX, dc->vportOrgY - dc->wndOrgY);
     ret = TRUE;
     goto done;
   }
@@ -2028,6 +2027,35 @@ NtGdiCreateEllipticRgn(INT Left,
       Right - Left, Bottom - Top);
 }
 
+HRGN
+STDCALL
+NtGdiCreateEllipticRgnIndirect(CONST PRECT Rect)
+{
+  RECT SafeRect = {0};
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  _SEH_TRY
+  {
+    ProbeForRead(Rect,
+                 sizeof(RECT),
+                 1);
+    SafeRect = *Rect;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return NULL;
+  }
+
+  return NtGdiCreateRoundRectRgn(SafeRect.left, SafeRect.top, SafeRect.right, SafeRect.bottom,
+                                 SafeRect.right - SafeRect.left, SafeRect.bottom - SafeRect.top);
+}
+
 HRGN STDCALL
 NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 {
@@ -2043,6 +2071,31 @@ NtGdiCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
 
    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
    return NULL;
+}
+
+HRGN STDCALL
+NtGdiCreateRectRgnIndirect(CONST PRECT rc)
+{
+  RECT SafeRc = {0};
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  _SEH_TRY
+  {
+    ProbeForRead(rc,
+                 sizeof(RECT),
+                 1);
+    SafeRc = *rc;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  if (!NT_SUCCESS(Status))
+    {
+      return(NULL);
+    }
+  return(UnsafeIntCreateRectRgnIndirect(&SafeRc));
 }
 
 HRGN
@@ -2345,70 +2398,6 @@ UnsafeIntGetRgnBox(PROSRGNDATA  Rgn,
 }
 
 
-/* See wine, msdn, osr and  Feng Yuan - Windows Graphics Programming Win32 Gdi And Directdraw */
-INT STDCALL
-NtGdiGetRandomRgn(HDC hDC, HRGN hDest, INT iCode)
-{
-    INT ret = 0;
-    PDC pDC;
-    HRGN hSrc = NULL;
-    POINT org;
-
-    pDC = DC_LockDc(hDC);
-    if (pDC == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return -1;
-    }
-
-    switch (iCode)
-    {
-        case 1:
-            hSrc = pDC->w.hClipRgn;
-            break;
-        case 2:
-            //hSrc = dc->hMetaRgn;
-            DPRINT1("hMetaRgn not implemented\n");
-            DC_UnlockDc(pDC);
-            return -1;
-            break;
-        case 3:
-            DPRINT1("hMetaRgn not implemented\n");
-            //hSrc = dc->hMetaClipRgn;
-            if(!hSrc)
-            {
-                hSrc = pDC->w.hClipRgn;
-            }
-            //if(!hSrc) rgn = dc->hMetaRgn;
-            break;
-        case 4:
-            hSrc = pDC->w.hVisRgn;
-            break;
-        default:
-            hSrc = 0;
-    }
-    if (hSrc)
-    {
-        if(NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
-        {
-        	ret = -1;
-        }
-        else
-        {
-        	ret = 1;
-        }
-    }
-    if (iCode == SYSRGN)
-    {
-        IntGdiGetDCOrgEx(pDC, &org);
-        NtGdiOffsetRgn(hDest, org.x, org.y );
-    }
-
-    DC_UnlockDc(pDC);
-
-    return ret;
-}
-
 INT STDCALL
 NtGdiGetRgnBox(HRGN  hRgn,
 	      LPRECT  pRect)
@@ -2493,13 +2482,13 @@ NtGdiOffsetRgn(HRGN  hRgn,
   DPRINT("NtGdiOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
 
   if( !rgn ){
-        DPRINT("NtGdiOffsetRgn: hRgn error\n");
-        return ERROR;
+	  DPRINT("NtGdiOffsetRgn: hRgn error\n");
+	  return ERROR;
   }
 
   if(XOffset || YOffset) {
     int nbox = rgn->rdh.nCount;
-    PRECT pbox = (PRECT)rgn->Buffer;
+	PRECT pbox = (PRECT)rgn->Buffer;
 
     if(nbox && pbox) {
       while(nbox--) {
@@ -2524,11 +2513,13 @@ NtGdiOffsetRgn(HRGN  hRgn,
 }
 
 BOOL
-FASTCALL
-IntGdiPaintRgn(PDC dc, HRGN  hRgn)
+STDCALL
+NtGdiPaintRgn(HDC  hDC,
+                   HRGN  hRgn)
 {
   //RECT box;
-  HRGN tmpVisRgn; //, prevVisRgn;   
+  HRGN tmpVisRgn; //, prevVisRgn;
+  DC *dc = DC_LockDc(hDC);
   PROSRGNDATA visrgn;
   CLIPOBJ* ClipRegion;
   BOOL bRet = FALSE;
@@ -2538,20 +2529,18 @@ IntGdiPaintRgn(PDC dc, HRGN  hRgn)
   BITMAPOBJ *BitmapObj;
 
   if( !dc )
-    return FALSE;
+	return FALSE;
 
-  if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
-  {
-    DC_UnlockDc( dc );
-    return FALSE;
+  if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))){
+	DC_UnlockDc( dc );
+  	return FALSE;
   }
 
 /* ei enable later
   // Transform region into device co-ords
-  if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR)
-  {
+  if(!REGION_LPTODP(hDC, tmpVisRgn, hRgn) || NtGdiOffsetRgn(tmpVisRgn, dc->w.DCOrgX, dc->w.DCOrgY) == ERROR) {
     NtGdiDeleteObject( tmpVisRgn );
-    DC_UnlockDc( dc );
+	DC_UnlockDc( dc );
     return FALSE;
   }
 */
@@ -2563,36 +2552,33 @@ IntGdiPaintRgn(PDC dc, HRGN  hRgn)
   visrgn = RGNDATA_LockRgn(hRgn);
   if (visrgn == NULL)
   {
-    NtGdiDeleteObject( tmpVisRgn );
-    DC_UnlockDc( dc );
+  	DC_UnlockDc( dc );
     return FALSE;
   }
 
-  ClipRegion = IntEngCreateClipRegion(visrgn->rdh.nCount,
-                                      (PRECTL)visrgn->Buffer,
-                                      (PRECTL)&visrgn->rdh.rcBound );
+  ClipRegion = IntEngCreateClipRegion (
+	  visrgn->rdh.nCount, (PRECTL)visrgn->Buffer, (PRECTL)&visrgn->rdh.rcBound );
   ASSERT( ClipRegion );
-  pBrush = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+  pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);
   IntGdiInitBrushInstance(&BrushInst, pBrush, dc->XlateBrush);
 
-  BrushOrigin.x = dc->Dc_Attr.ptlBrushOrigin.x;
-  BrushOrigin.y = dc->Dc_Attr.ptlBrushOrigin.y;
+  BrushOrigin.x = dc->w.brushOrgX;
+  BrushOrigin.y = dc->w.brushOrgY;
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
   /* FIXME - Handle BitmapObj == NULL !!!! */
 
   bRet = IntEngPaint(&BitmapObj->SurfObj,
-                     ClipRegion,
-                     &BrushInst.BrushObject,
-                     &BrushOrigin,
-                     0xFFFF);//FIXME:don't know what to put here
+	 ClipRegion,
+	 &BrushInst.BrushObject,
+	 &BrushOrigin,
+	 0xFFFF);//FIXME:don't know what to put here
 
   BITMAPOBJ_UnlockBitmap(BitmapObj);
-  BRUSHOBJ_UnlockBrush(pBrush);
   RGNDATA_UnlockRgn( visrgn );
-  NtGdiDeleteObject( tmpVisRgn );
 
   // Fill the region
+  DC_UnlockDc( dc );
   return TRUE;
 }
 
@@ -2726,7 +2712,7 @@ NtGdiSetRectRgn(HRGN  hRgn,
 HRGN STDCALL
 NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
 {
-    RECT SafeRect = {0};
+  RECT SafeRect;
   PROSRGNDATA Rgn;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -3407,10 +3393,104 @@ IntCreatePolyPolgonRgn(POINT *Pts,
     return hrgn;
 }
 
+HRGN
+STDCALL
+NtGdiCreatePolygonRgn(CONST PPOINT  pt,
+                      INT  Count,
+                      INT  PolyFillMode)
+{
+   POINT *SafePoints;
+   NTSTATUS Status = STATUS_SUCCESS;
+   HRGN hRgn;
+
+
+   if (pt == NULL || Count == 0 ||
+       (PolyFillMode != WINDING && PolyFillMode != ALTERNATE))
+   {
+      /* Windows doesn't set a last error here */
+      return (HRGN)0;
+   }
+
+   if (Count == 1)
+   {
+      /* can't create a region with only one point! */
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return (HRGN)0;
+   }
+
+   if (Count == 2)
+   {
+      /* Windows creates an empty region! */
+      ROSRGNDATA *rgn;
+
+      if(!(hRgn = RGNDATA_AllocRgn(1)))
+      {
+	 return (HRGN)0;
+      }
+      if(!(rgn = RGNDATA_LockRgn(hRgn)))
+      {
+        NtGdiDeleteObject(hRgn);
+	return (HRGN)0;
+      }
+
+      EMPTY_REGION(rgn);
+
+      RGNDATA_UnlockRgn(rgn);
+      return hRgn;
+   }
+   
+   _SEH_TRY
+   {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      return (HRGN)0;
+   }
+
+   if (!(SafePoints = ExAllocatePoolWithTag(PagedPool, Count * sizeof(POINT), TAG_REGION)))
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return (HRGN)0;
+   }
+
+   _SEH_TRY
+   {
+      /* pointers were already probed! */
+      RtlCopyMemory(SafePoints,
+                    pt,
+                    Count * sizeof(POINT));
+   }
+   _SEH_HANDLE
+   {
+      Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END;
+   if (!NT_SUCCESS(Status))
+   {
+      ExFreePool(SafePoints);
+      SetLastNtError(Status);
+      return (HRGN)0;
+   }
+
+   hRgn = IntCreatePolyPolgonRgn(SafePoints, &Count, 1, PolyFillMode);
+
+   ExFreePool(SafePoints);
+   return hRgn;
+}
 
 HRGN
-FASTCALL
-GdiCreatePolyPolygonRgn(CONST PPOINT  pt,
+STDCALL
+NtGdiCreatePolyPolygonRgn(CONST PPOINT  pt,
                           CONST PINT  PolyCounts,
                           INT  Count,
                           INT  PolyFillMode)

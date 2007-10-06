@@ -43,9 +43,7 @@ typedef struct _CLIPBOARDSYSTEM
 VOID FASTCALL 
 IntClipboardFreeWindow(PWINDOW_OBJECT window);
 
-/*
 UINT FASTCALL
 IntEnumClipboardFormats(UINT format);
-*/
 
 #endif /* _WIN32K_CLIPBOARD_H */

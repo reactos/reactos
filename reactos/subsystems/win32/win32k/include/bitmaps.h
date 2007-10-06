@@ -5,11 +5,6 @@
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ
 {
-//  HGDIOBJ     hHmgr;
-//  PVOID       pvEntry;
-//  ULONG       lucExcLock;
-//  ULONG       Tid;
-
   SURFOBJ     SurfObj;
   FLONG	      flHooks;
   FLONG       flFlags;
@@ -44,7 +39,6 @@ BOOL INTERNAL_CALL BITMAPOBJ_InitBitsLock(BITMAPOBJ *pBMObj);
 void INTERNAL_CALL BITMAPOBJ_CleanupBitsLock(BITMAPOBJ *pBMObj);
 
 INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
-INT     FASTCALL BITMAPOBJ_GetRealBitsPixel(INT nBitsPixel);
 HBITMAP FASTCALL BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);
 INT     FASTCALL DIB_GetDIBWidthBytes (INT  width, INT  depth);
 int     NTAPI  DIB_GetDIBImageBytes (INT  width, INT  height, INT  depth);

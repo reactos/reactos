@@ -9,7 +9,6 @@
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
-#include <assert.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -33,6 +32,7 @@
 #include <win32k/callback.h>
 
 /* WINE Headers */
+#include <wine/debug.h>
 #include <wine/unicode.h>
 
 /* Internal User32 Headers */
@@ -41,6 +41,4 @@
 /* FIXME: Use ntgdi.h then cleanup... */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 BOOL STDCALL NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
-LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
-BOOL FASTCALL IsMetaFile(HDC);
-
+DWORD STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, DWORD *);

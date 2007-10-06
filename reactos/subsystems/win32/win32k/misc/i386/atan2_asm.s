@@ -4,6 +4,7 @@
  * PURPOSE:           Run-Time Library
  * FILE:              lib/rtl/i386/atan.S
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
+ *                    Eric Kohl (ekohl@rz-online.de)
  *
  * Copyright (C) 2002 Michael Ringgaard.
  * All rights reserved. 

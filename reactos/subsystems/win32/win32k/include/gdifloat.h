@@ -80,28 +80,24 @@ static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
 
 #define MulDiv( x, y, z ) EngMulDiv( x, y, z )
 
-#define XDPTOLP(dc,tx) \
-    (MulDiv(((tx)-(dc)->Dc_Attr.ptlViewportOrg.x), (dc)->Dc_Attr.szlWindowExt.cx, (dc)->Dc_Attr.szlViewportExt.cx) + (dc)->Dc_Attr.ptlWindowOrg.x)
-#define YDPTOLP(dc,ty) \
-    (MulDiv(((ty)-(dc)->Dc_Attr.ptlViewportOrg.y), (dc)->Dc_Attr.szlWindowExt.cy, (dc)->Dc_Attr.szlViewportExt.cy) + (dc)->Dc_Attr.ptlWindowOrg.y)
-#define XLPTODP(dc,tx) \
-    (MulDiv(((tx)-(dc)->Dc_Attr.ptlWindowOrg.x), (dc)->Dc_Attr.szlViewportExt.cx, (dc)->Dc_Attr.szlWindowExt.cx) + (dc)->Dc_Attr.ptlViewportOrg.x)
-#define YLPTODP(dc,ty) \
-    (MulDiv(((ty)-(dc)->Dc_Attr.ptlWindowOrg.y), (dc)->Dc_Attr.szlViewportExt.cy, (dc)->Dc_Attr.szlWindowExt.cy) + (dc)->Dc_Attr.ptlViewportOrg.y)
+#define XDPTOLP(dc,x) \
+    (MulDiv(((x)-(dc)->vportOrgX), (dc)->wndExtX, (dc)->vportExtX) + (dc)->wndOrgX)
+#define YDPTOLP(dc,y) \
+    (MulDiv(((y)-(dc)->vportOrgY), (dc)->wndExtY, (dc)->vportExtY) + (dc)->wndOrgY)
+#define XLPTODP(dc,x) \
+    (MulDiv(((x)-(dc)->wndOrgX), (dc)->vportExtX, (dc)->wndExtX) + (dc)->vportOrgX)
+#define YLPTODP(dc,y) \
+    (MulDiv(((y)-(dc)->wndOrgY), (dc)->vportExtY, (dc)->wndExtY) + (dc)->vportOrgY)
 
   /* Device <-> logical size conversion */
 
-#define XDSTOLS(dc,tx) \
-    MulDiv((tx), (dc)->Dc_Attr.szlWindowExt.cx, (dc)->Dc_Attr.szlViewportExt.cx)
-#define YDSTOLS(dc,ty) \
-    MulDiv((ty), (dc)->Dc_Attr.szlWindowExt.cy, (dc)->Dc_Attr.szlViewportExt.cy)
-#define XLSTODS(dc,tx) \
-    MulDiv((tx), (dc)->Dc_Attr.szlViewportExt.cx, (dc)->Dc_Attr.szlWindowExt.cx)
-#define YLSTODS(dc,ty) \
-    MulDiv((ty), (dc)->Dc_Attr.szlViewportExt.cy, (dc)->Dc_Attr.szlWindowExt.cy)
+#define XDSTOLS(dc,x) \
+    MulDiv((x), (dc)->wndExtX, (dc)->vportExtX)
+#define YDSTOLS(dc,y) \
+    MulDiv((y), (dc)->wndExtY, (dc)->vportExtY)
+#define XLSTODS(dc,x) \
+    MulDiv((x), (dc)->vportExtX, (dc)->wndExtX)
+#define YLSTODS(dc,y) \
+    MulDiv((y), (dc)->vportExtY, (dc)->wndExtY)
 
 #endif
-
-VOID FASTCALL XForm2MatrixS( MATRIX_S *, PXFORM);
-VOID FASTCALL MatrixS2XForm( PXFORM, MATRIX_S *);
-

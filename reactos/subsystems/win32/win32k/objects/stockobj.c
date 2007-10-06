@@ -80,11 +80,11 @@ static LOGPEN NullPen =
 
 static LOGFONTW OEMFixedFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
-  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New" }; //Bitstream Vera Sans Mono
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
 
 static LOGFONTW AnsiFixedFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New" }; //Bitstream Vera Sans Mono
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
 
 /*static LOGFONTW AnsiVarFont =
  *{ 10, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
@@ -92,20 +92,20 @@ static LOGFONTW AnsiFixedFont =
 
 static LOGFONTW SystemFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Courier New" }; //Bitstream Vera Sans
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
 
 static LOGFONTW DeviceDefaultFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" }; //Bitstream Vera Sans
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
 
 static LOGFONTW SystemFixedFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New" }; //Bitstream Vera Sans Mono
- 
+  0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Bitstream Vera Sans Mono" };
+
 /* FIXME: Is this correct? */
 static LOGFONTW DefaultGuiFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" }; //Bitstream Vera Sans
+  0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"Bitstream Vera Sans" };
 
 #define NB_STOCK_OBJECTS (DEFAULT_GUI_FONT + 1)
 
@@ -130,9 +130,9 @@ CreateStockObjects(void)
   StockObjects[BLACK_BRUSH] =  IntGdiCreateSolidBrush(RGB(0,0,0));
   StockObjects[NULL_BRUSH] =   IntGdiCreateNullBrush();
 
-  StockObjects[WHITE_PEN] = IntGdiExtCreatePen(WhitePen.lopnStyle, WhitePen.lopnWidth.x, BS_SOLID, WhitePen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
-  StockObjects[BLACK_PEN] = IntGdiExtCreatePen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
-  StockObjects[NULL_PEN] = IntGdiExtCreatePen(NullPen.lopnStyle, NullPen.lopnWidth.x, BS_SOLID, NullPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
+  StockObjects[WHITE_PEN] = IntGdiCreatePenIndirect(&WhitePen);
+  StockObjects[BLACK_PEN] = IntGdiCreatePenIndirect(&BlackPen);
+  StockObjects[NULL_PEN] =  IntGdiCreatePenIndirect(&NullPen);
 
   (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
   (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
@@ -177,16 +177,14 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
 
   for(i = 0; i < nColors; i++)
   {
-    if((UINT)(*Elements) < NUM_SYSCOLORS)
+    if((*Elements) >= 0 && (*Elements) < NUM_SYSCOLORS)
     {
       SysColors[*Elements] = *Colors;
-      IntGdiSetSolidBrushColor(SysColorBrushes[*Elements], *Colors);
-      IntGdiSetSolidPenColor(SysColorPens[*Elements], *Colors);
+      /* FIXME - update the syscolor pens and brushes */
     }
     Elements++;
     Colors++;
   }
-  UserPostMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
 
   return nColors > 0;
 }
@@ -210,12 +208,6 @@ IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
   }
 
   return nBrushes > 0;
-}
-
-HGDIOBJ FASTCALL
-IntGetSysColorBrush(INT Object)
-{
-  return ((Object < 0) || (NUM_SYSCOLORS <= Object)) ? NULL : SysColorBrushes[Object];
 }
 
 BOOL FASTCALL
@@ -262,12 +254,6 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
   return nColors > 0;
 }
 
-DWORD FASTCALL
-IntGetSysColor(INT nIndex)
-{
-  return (NUM_SYSCOLORS <= (UINT)nIndex) ? 0 : SysColors[nIndex];
-}
-
 VOID FASTCALL
 CreateSysColorObjects(VOID)
 {
@@ -296,7 +282,7 @@ CreateSysColorObjects(VOID)
     if(SysColorPens[i] == NULL)
     {
       Pen.lopnColor = SysColors[i];
-      SysColorPens[i] = IntGdiExtCreatePen(Pen.lopnStyle, Pen.lopnWidth.x, BS_SOLID, Pen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
+      SysColorPens[i] = IntGdiCreatePenIndirect(&Pen);
       if(SysColorPens[i] != NULL)
       {
         GDIOBJ_ConvertToStockObj(GdiHandleTable, (HGDIOBJ*)&SysColorPens[i]);

@@ -35,11 +35,11 @@ IntGdiMoveToEx(DC      *dc,
 
   if ( Point )
   {
-    Point->x = dc->Dc_Attr.ptlCurrent.x;
-    Point->y = dc->Dc_Attr.ptlCurrent.y;
+    Point->x = dc->w.CursPosX;
+    Point->y = dc->w.CursPosY;
   }
-  dc->Dc_Attr.ptlCurrent.x = X;
-  dc->Dc_Attr.ptlCurrent.y = Y;
+  dc->w.CursPosX = X;
+  dc->w.CursPosY = Y;
 
   PathIsOpen = PATH_IsPathOpen(dc->w.path);
 
@@ -67,8 +67,8 @@ IntGdiLineTo(DC  *dc,
       if (Ret)
 	  {
 	    // FIXME - PATH_LineTo should maybe do this...
-	    dc->Dc_Attr.ptlCurrent.x = XEnd;
-	    dc->Dc_Attr.ptlCurrent.y = YEnd;
+	    dc->w.CursPosX = XEnd;
+	    dc->w.CursPosY = YEnd;
 	  }
       return Ret;
     }
@@ -81,8 +81,8 @@ IntGdiLineTo(DC  *dc,
           return FALSE;
         }
 
-      Points[0].x = dc->Dc_Attr.ptlCurrent.x;
-      Points[0].y = dc->Dc_Attr.ptlCurrent.y;
+      Points[0].x = dc->w.CursPosX;
+      Points[0].y = dc->w.CursPosY;
       Points[1].x = XEnd;
       Points[1].y = YEnd;
 
@@ -100,7 +100,7 @@ IntGdiLineTo(DC  *dc,
       Bounds.bottom = max(Points[0].y, Points[1].y);
 
       /* get BRUSHOBJ from current pen. */
-      PenBrushObj = PENOBJ_LockPen( dc->Dc_Attr.hpen );
+      PenBrushObj = PENOBJ_LockPen( dc->w.hPen );
       /* FIXME - PenBrushObj can be NULL!!!! Don't assert here! */
       ASSERT(PenBrushObj);
 
@@ -113,7 +113,7 @@ IntGdiLineTo(DC  *dc,
                            Points[0].x, Points[0].y,
                            Points[1].x, Points[1].y,
                            &Bounds,
-                           ROP2_TO_MIX(dc->Dc_Attr.jROP2));
+                           ROP2_TO_MIX(dc->w.ROPmode));
       }
 
       BITMAPOBJ_UnlockBitmap ( BitmapObj );
@@ -122,8 +122,8 @@ IntGdiLineTo(DC  *dc,
 
   if (Ret)
     {
-      dc->Dc_Attr.ptlCurrent.x = XEnd;
-      dc->Dc_Attr.ptlCurrent.y = YEnd;
+      dc->w.CursPosX = XEnd;
+      dc->w.CursPosY = YEnd;
     }
 
   return Ret;
@@ -149,6 +149,7 @@ IntGdiPolyBezier(DC      *dc,
     Pts = GDI_Bezier ( pt, Count, &nOut );
     if ( Pts )
     {
+      DbgPrint("Pts = %p, no = %d\n", Pts, nOut);
       ret = IntGdiPolyline(dc, Pts, nOut);
       ExFreePool(Pts);
     }
@@ -172,8 +173,8 @@ IntGdiPolyBezierTo(DC      *dc,
     npt = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * (Count + 1), TAG_BEZIER);
     if ( npt )
     {
-      npt[0].x = dc->Dc_Attr.ptlCurrent.x;
-      npt[0].y = dc->Dc_Attr.ptlCurrent.y;
+      npt[0].x = dc->w.CursPosX;
+      npt[0].y = dc->w.CursPosY;
       memcpy(npt + 1, pt, sizeof(POINT) * Count);
       ret = IntGdiPolyBezier(dc, npt, Count+1);
       ExFreePool(npt);
@@ -181,8 +182,8 @@ IntGdiPolyBezierTo(DC      *dc,
   }
   if ( ret )
   {
-    dc->Dc_Attr.ptlCurrent.x = pt[Count-1].x;
-    dc->Dc_Attr.ptlCurrent.y = pt[Count-1].y;
+    dc->w.CursPosX = pt[Count-1].x;
+    dc->w.CursPosY = pt[Count-1].y;
   }
 
   return ret;
@@ -204,7 +205,7 @@ IntGdiPolyline(DC      *dc,
       return PATH_Polyline(dc, pt, Count);
 
    /* Get BRUSHOBJ from current pen. */
-   PenBrushObj = PENOBJ_LockPen(dc->Dc_Attr.hpen);
+   PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
    /* FIXME - PenBrushObj can be NULL! Don't assert here! */
    ASSERT(PenBrushObj);
 
@@ -230,7 +231,7 @@ IntGdiPolyline(DC      *dc,
          IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
          Ret = IntEngPolyline(&BitmapObj->SurfObj, dc->CombinedClip,
                               &PenBrushInst.BrushObject, Points, Count,
-                              ROP2_TO_MIX(dc->Dc_Attr.jROP2));
+                              ROP2_TO_MIX(dc->w.ROPmode));
 
          BITMAPOBJ_UnlockBitmap(BitmapObj);
          EngFreeMem(Points);
@@ -262,8 +263,8 @@ IntGdiPolylineTo(DC      *dc,
     POINT *pts = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * (Count + 1), TAG_SHAPE);
     if ( pts )
     {
-      pts[0].x = dc->Dc_Attr.ptlCurrent.x;
-      pts[0].y = dc->Dc_Attr.ptlCurrent.y;
+      pts[0].x = dc->w.CursPosX;
+      pts[0].y = dc->w.CursPosY;
       memcpy( pts + 1, pt, sizeof(POINT) * Count);
       ret = IntGdiPolyline(dc, pts, Count + 1);
       ExFreePool(pts);
@@ -271,13 +272,42 @@ IntGdiPolylineTo(DC      *dc,
   }
   if ( ret )
   {
-    dc->Dc_Attr.ptlCurrent.x = pt[Count-1].x;
-    dc->Dc_Attr.ptlCurrent.y = pt[Count-1].y;
+    dc->w.CursPosX = pt[Count-1].x;
+    dc->w.CursPosY = pt[Count-1].y;
   }
 
   return ret;
 }
 
+INT FASTCALL
+IntGdiGetArcDirection(DC *dc)
+{
+  return dc->w.ArcDirection;
+}
+
+BOOL FASTCALL
+IntGdiArc(DC  *dc,
+          int LeftRect,
+          int TopRect,
+          int RightRect,
+          int BottomRect,
+          int XStartArc,
+          int YStartArc,
+          int XEndArc,
+          int YEndArc)
+{
+  if(PATH_IsPathOpen(dc->w.path))
+  {
+    return PATH_Arc(dc, LeftRect, TopRect, RightRect, BottomRect,
+                    XStartArc, YStartArc, XEndArc, YEndArc);
+  }
+
+  // FIXME
+//   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
+//          XStartArc, YStartArc, XEndArc, YEndArc);
+
+  return TRUE;
+}
 
 BOOL FASTCALL
 IntGdiPolyPolyline(DC      *dc,
@@ -321,6 +351,121 @@ NtGdiAngleArc(
   return FALSE;
 }
 
+BOOL
+STDCALL
+NtGdiArc(HDC  hDC,
+        int  LeftRect,
+        int  TopRect,
+        int  RightRect,
+        int  BottomRect,
+        int  XStartArc,
+        int  YStartArc,
+        int  XEndArc,
+        int  YEndArc)
+{
+  DC *dc;
+  BOOL Ret;
+
+  dc = DC_LockDc (hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  Ret = IntGdiArc(dc,
+                  LeftRect,
+                  TopRect,
+                  RightRect,
+                  BottomRect,
+                  XStartArc,
+                  YStartArc,
+                  XEndArc,
+                  YEndArc);
+
+  DC_UnlockDc( dc );
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiArcTo(HDC  hDC,
+          int  LeftRect,
+          int  TopRect,
+          int  RightRect,
+          int  BottomRect,
+          int  XRadial1,
+          int  YRadial1,
+          int  XRadial2,
+          int  YRadial2)
+{
+  BOOL result;
+  DC *dc;
+
+  dc = DC_LockDc (hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  // Line from current position to starting point of arc
+  if ( !IntGdiLineTo(dc, XRadial1, YRadial1) )
+  {
+    DC_UnlockDc(dc);
+    return FALSE;
+  }
+
+  //dc = DC_LockDc(hDC);
+
+  //if(!dc) return FALSE;
+
+  // Then the arc is drawn.
+  result = IntGdiArc(dc, LeftRect, TopRect, RightRect, BottomRect,
+                     XRadial1, YRadial1, XRadial2, YRadial2);
+
+  //DC_UnlockDc(dc);
+
+  // If no error occured, the current position is moved to the ending point of the arc.
+  if(result)
+    IntGdiMoveToEx(dc, XRadial2, YRadial2, NULL);
+
+  DC_UnlockDc(dc);
+
+  return result;
+}
+
+INT
+STDCALL
+NtGdiGetArcDirection(HDC  hDC)
+{
+  PDC dc = DC_LockDc (hDC);
+  int ret = 0; // default to failure
+
+  if ( dc )
+  {
+    ret = IntGdiGetArcDirection ( dc );
+    DC_UnlockDc(dc);
+  }
+  else
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+  }
+
+  return ret;
+}
 
 BOOL
 STDCALL
@@ -375,16 +520,14 @@ NtGdiMoveToEx(HDC      hDC,
     return TRUE;
   }
 
-  Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
-
   if(Point)
   {
     _SEH_TRY
     {
-      ProbeForWrite(Point,
+      ProbeForRead(Point,
                    sizeof(POINT),
                    1);
-      *Point = SafePoint;
+      SafePoint = *Point;
     }
     _SEH_HANDLE
     {
@@ -400,86 +543,493 @@ NtGdiMoveToEx(HDC      hDC,
     }
   }
 
+  Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
+
   DC_UnlockDc(dc);
   return Ret;
 }
 
+BOOL
+STDCALL
+NtGdiPolyBezier(HDC           hDC,
+               CONST LPPOINT  pt,
+               DWORD          Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL Ret;
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  if(Count > 0)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
+    Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
+    if(!Safept)
+    {
+      DC_UnlockDc(dc);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(dc);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  Ret = IntGdiPolyBezier(dc, Safept, Count);
+
+  ExFreePool(Safept);
+  DC_UnlockDc(dc);
+
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiPolyBezierTo(HDC  hDC,
+                 CONST LPPOINT  pt,
+                 DWORD  Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL Ret;
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  if(Count > 0)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
+    Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_BEZIER);
+    if(!Safept)
+    {
+      DC_UnlockDc(dc);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(dc);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  Ret = IntGdiPolyBezierTo(dc, Safept, Count);
+
+  ExFreePool(Safept);
+  DC_UnlockDc(dc);
+
+  return Ret;
+}
 
 BOOL
 APIENTRY
 NtGdiPolyDraw(
     IN HDC hdc,
-    IN LPPOINT lppt,
-    IN LPBYTE lpbTypes,
-    IN ULONG cCount)
+    IN LPPOINT ppt,
+    IN LPBYTE pjAttr,
+    IN ULONG cpt)
 {
-    PDC dc;
-    BOOL result = FALSE;
-    POINT lastmove;
-    unsigned int i;
+  UNIMPLEMENTED;
+  return FALSE;
+}
 
-    dc = DC_LockDc(hdc); 
-    if(!dc) return FALSE;
+BOOL
+STDCALL
+NtGdiPolyline(HDC            hDC,
+             CONST LPPOINT  pt,
+             int            Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL Ret;
 
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  if(Count >= 2)
+  {
     _SEH_TRY
     {
-        ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
-        ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
-        
-        /* check for each bezierto if there are two more points */
-        for( i = 0; i < cCount; i++ )
-        if( lpbTypes[i] != PT_MOVETO &&
-            lpbTypes[i] & PT_BEZIERTO )
-        {
-            if( cCount < i+3 ) _SEH_LEAVE;
-            else i += 2;
-        }
-    
-        /* if no moveto occurs, we will close the figure here */
-        lastmove.x = dc->Dc_Attr.ptlCurrent.x;
-        lastmove.y = dc->Dc_Attr.ptlCurrent.y;
-    
-        /* now let's draw */
-        for( i = 0; i < cCount; i++ )
-        {
-            if( lpbTypes[i] == PT_MOVETO )
-            {
-                IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL );
-                lastmove.x = dc->Dc_Attr.ptlCurrent.x;
-                lastmove.y = dc->Dc_Attr.ptlCurrent.y;
-            }
-            else if( lpbTypes[i] & PT_LINETO )
-                IntGdiLineTo( dc, lppt[i].x, lppt[i].y );
-            else if( lpbTypes[i] & PT_BEZIERTO )
-            {
-                POINT pts[4];
-                pts[0].x = dc->Dc_Attr.ptlCurrent.x;
-                pts[0].y = dc->Dc_Attr.ptlCurrent.y;
-                RtlCopyMemory(pts + 1, &lppt[i], sizeof(POINT) * 3);
-                IntGdiPolyBezier(dc, pts, 4);
-                i += 2;
-            }
-            else _SEH_LEAVE;
-        
-            if( lpbTypes[i] & PT_CLOSEFIGURE )
-            {
-                if( PATH_IsPathOpen( dc->w.path ) ) IntGdiCloseFigure( dc );
-                else IntGdiLineTo( dc, lastmove.x, lastmove.y );
-            }
-        }
-        
-        result = TRUE;
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
     }
     _SEH_HANDLE
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+      Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
-    DC_UnlockDc(dc);
 
-    return result;
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
+    Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
+    if(!Safept)
+    {
+      DC_UnlockDc(dc);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(dc);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  Ret = IntGdiPolyline(dc, Safept, Count);
+
+  ExFreePool(Safept);
+  DC_UnlockDc(dc);
+
+  return Ret;
 }
 
+BOOL
+STDCALL
+NtGdiPolylineTo(HDC            hDC,
+               CONST LPPOINT  pt,
+               DWORD          Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL Ret;
 
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  if(Count > 0)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
+    Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
+    if(!Safept)
+    {
+      DC_UnlockDc(dc);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(dc);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  Ret = IntGdiPolylineTo(dc, Safept, Count);
+
+  ExFreePool(Safept);
+  DC_UnlockDc(dc);
+
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiPolyPolyline(HDC            hDC,
+                 CONST LPPOINT  pt,
+                 CONST LPDWORD  PolyPoints,
+                 DWORD          Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  LPDWORD SafePolyPoints;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL Ret;
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(dc);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
+
+  if(Count > 0)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(pt,
+                   Count * sizeof(POINT),
+                   1);
+      ProbeForRead(PolyPoints,
+                   Count * sizeof(DWORD),
+                   1);
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    
+    Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(DWORD)) * Count, TAG_SHAPE);
+    if(!Safept)
+    {
+      DC_UnlockDc(dc);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+
+    SafePolyPoints = (LPDWORD)&Safept[Count];
+    
+    _SEH_TRY
+    {
+      /* pointers were already probed */
+      RtlCopyMemory(Safept,
+                    pt,
+                    Count * sizeof(POINT));
+      RtlCopyMemory(SafePolyPoints,
+                    PolyPoints,
+                    Count * sizeof(DWORD));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(dc);
+      ExFreePool(Safept);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(dc);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+  Ret = IntGdiPolyPolyline(dc, Safept, SafePolyPoints, Count);
+
+  ExFreePool(Safept);
+  DC_UnlockDc(dc);
+
+  return Ret;
+}
+
+int
+STDCALL
+NtGdiSetArcDirection(HDC  hDC,
+                    int  ArcDirection)
+{
+  PDC  dc;
+  INT  nOldDirection = 0; // default to FAILURE
+
+  dc = DC_LockDc (hDC);
+  if ( !dc ) return 0;
+
+  if ( ArcDirection == AD_COUNTERCLOCKWISE || ArcDirection == AD_CLOCKWISE )
+  {
+    nOldDirection = dc->w.ArcDirection;
+    dc->w.ArcDirection = ArcDirection;
+  }
+
+  DC_UnlockDc( dc );
+  return nOldDirection;
+}
 /* EOF */

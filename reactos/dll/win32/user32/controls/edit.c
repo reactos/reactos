@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * NOTES
  *
@@ -43,8 +43,8 @@
  */
 
 #include <user32.h>
-
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(edit);
 WINE_DECLARE_DEBUG_CHANNEL(combo);
@@ -141,11 +141,6 @@ typedef struct
 #endif
 	HLOCAL hloc32A;			/* alias for ANSI control receiving EM_GETHANDLE
 				   	   or EM_SETHANDLE */
-	/*
-	 * IME Data
-	 */
-	UINT composition_len;   /* length of composition, 0 == no composition */
-	int composition_start;  /* the character position for the composition */
 } EDITSTATE;
 
 
@@ -208,7 +203,6 @@ static void	EDIT_MoveWordForward(EDITSTATE *es, BOOL extend);
 static void	EDIT_PaintLine(EDITSTATE *es, HDC hdc, INT line, BOOL rev);
 static INT	EDIT_PaintText(EDITSTATE *es, HDC hdc, INT x, INT y, INT line, INT col, INT count, BOOL rev);
 static void	EDIT_SetCaretPos(EDITSTATE *es, INT pos, BOOL after_wrap);
-static void	EDIT_AdjustFormatRect(EDITSTATE *es);
 static void	EDIT_SetRectNP(EDITSTATE *es, LPRECT lprc);
 static void	EDIT_UnlockBuffer(EDITSTATE *es, BOOL force);
 static void	EDIT_UpdateScrollInfo(EDITSTATE *es);
@@ -239,7 +233,7 @@ static void	EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc);
 static void	EDIT_EM_SetHandle16(EDITSTATE *es, HLOCAL16 hloc);
 #endif
 static void	EDIT_EM_SetLimitText(EDITSTATE *es, INT limit);
-static void	EDIT_EM_SetMargins(EDITSTATE *es, INT action, WORD left, WORD right, BOOL repaint);
+static void	EDIT_EM_SetMargins(EDITSTATE *es, INT action, INT left, INT right, BOOL repaint);
 static void	EDIT_EM_SetPasswordChar(EDITSTATE *es, WCHAR c);
 static void	EDIT_EM_SetSel(EDITSTATE *es, UINT start, UINT end, BOOL after_wrap);
 static BOOL	EDIT_EM_SetTabStops(EDITSTATE *es, INT count, LPINT tabs);
@@ -283,7 +277,6 @@ static void	EDIT_WM_Timer(EDITSTATE *es);
 static LRESULT	EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos);
 static void	EDIT_UpdateText(EDITSTATE *es, LPRECT rc, BOOL bErase);
 static void	EDIT_UpdateTextRegion(EDITSTATE *es, HRGN hrgn, BOOL bErase);
-static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es);
 
 LRESULT WINAPI EditWndProcA(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT WINAPI EditWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -445,7 +438,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongPtrW( hwnd, 0 );
 	LRESULT result = 0;
 
-    TRACE("hwnd=%p msg=%x (%s) wparam=%x lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
+        //TRACE("hwnd=%p msg=%x (%s) wparam=%x lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
 
 	if (!es && msg != WM_NCCREATE)
 		return DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
@@ -802,7 +795,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 	/* The following EM_xxx are new to win95 and don't exist for 16 bit */
 
 	case EM_SETMARGINS:
-		EDIT_EM_SetMargins(es, (INT)wParam, LOWORD(lParam), HIWORD(lParam), TRUE);
+		EDIT_EM_SetMargins(es, (INT)wParam, (short)LOWORD(lParam), (short)HIWORD(lParam), TRUE);
 		break;
 
 	case EM_GETMARGINS:
@@ -1055,60 +1048,12 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
                     }
                 }
                 break;
-
-            
-	/* IME messages to make the edit control IME aware */           
-	case WM_IME_SETCONTEXT:
-		break;
-
-	case WM_IME_STARTCOMPOSITION:
-	/* 
-	 * FIXME in IME: This message is not always sent like it should be
-	 */
-		if (es->selection_start != es->selection_end)
-		{
-			static const WCHAR empty_stringW[] = {0};
-			EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
-		}
-		es->composition_start = es->selection_end;
-		es->composition_len = 0;
-		break;
-
-	case WM_IME_COMPOSITION:
-		if (es->composition_len == 0)
-		{
-			if (es->selection_start != es->selection_end)
-			{    
-				static const WCHAR empty_stringW[] = {0};
-				EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
-			}
-
-			es->composition_start = es->selection_end;
-		}
-		EDIT_ImeComposition(hwnd,lParam,es);
-		break;
-
-	case WM_IME_ENDCOMPOSITION:
-		es->composition_len= 0;
-		break;
-
-	case WM_IME_COMPOSITIONFULL:
-		break;
-
-	case WM_IME_SELECT:
-		break;
-
-	case WM_IME_CONTROL:
-		break;
-                
 	default:
 		result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
 		break;
 	}
 
 	if (es) EDIT_UnlockBuffer(es, FALSE);
-
-    TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
 
 	return result;
 }
@@ -1355,7 +1300,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 			es->line_count--;
 		}
 	}
-	else if (delta != 0)
+	else
 	{
 		while (current_line)
 		{
@@ -1456,9 +1401,17 @@ static void EDIT_CalcLineWidth_SL(EDITSTATE *es)
  */
 static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count, INT action)
 {
+#ifdef __REACTOS__
     INT ret;
+#else
+    INT ret, iWndsLocks;
+#endif
 
+    /* To avoid any deadlocks, all the locks on the window structures
+       must be suspended before the control is passed to the application */
 #ifndef __REACTOS__
+    iWndsLocks = WIN_SuspendWndsLock();
+
 	if (es->word_break_proc16) {
 	    HGLOBAL16 hglob16;
 	    SEGPTR segptr;
@@ -1511,6 +1464,9 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 	else
             ret = EDIT_WordBreakProc(es->text + start, index, count, action);
 
+#ifndef __REACTOS__
+    WIN_RestoreWndsLock(iWndsLocks);
+#endif
     return ret;
 }
 
@@ -1724,7 +1680,7 @@ static LPWSTR EDIT_GetPasswordPointer_SL(EDITSTATE *es)
  *
  *	Initially the edit control allocates a HLOCAL32 buffer
  *	(32 bit linear memory handler).  However, 16 bit application
- *	might send an EM_GETHANDLE message and expect a HLOCAL16 (16 bit SEG:OFF
+ *	might send a EM_GETHANDLE message and expect a HLOCAL16 (16 bit SEG:OFF
  *	handler).  From that moment on we have to keep using this 16 bit memory
  *	handler, because it is supposed to be valid at all times after EM_GETHANDLE.
  *	What we do is create a HLOCAL16 buffer, copy the text, and do pointer
@@ -1890,7 +1846,7 @@ static void EDIT_ML_InvalidateText(EDITSTATE *es, INT start, INT end)
  *
  *	EDIT_InvalidateText
  *
- *	Invalidate the text from offset start up to, but not including,
+ *	Invalidate the text from offset start upto, but not including,
  *	offset end.  Useful for (re)painting the selection.
  *	Regions outside the linewidth are not invalidated.
  *	end == -1 means end == TextLength.
@@ -2298,9 +2254,6 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
 {
 	COLORREF BkColor;
 	COLORREF TextColor;
-	LOGFONTW underline_font;
-	HFONT hUnderline = 0;
-	HFONT old_font = 0;
 	INT ret;
 	INT li;
 	INT BkMode;
@@ -2312,20 +2265,9 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
 	BkColor = GetBkColor(dc);
 	TextColor = GetTextColor(dc);
 	if (rev) {
-	        if (es->composition_len == 0)
-	        {
 		SetBkColor(dc, GetSysColor(COLOR_HIGHLIGHT));
 		SetTextColor(dc, GetSysColor(COLOR_HIGHLIGHTTEXT));
 		SetBkMode( dc, OPAQUE);
-	}
-		else
-		{
-			HFONT current = GetCurrentObject(dc,OBJ_FONT);
-			GetObjectW(current,sizeof(LOGFONTW),&underline_font);
-			underline_font.lfUnderline = TRUE;
-	            	hUnderline = CreateFontIndirectW(&underline_font);
-			old_font = SelectObject(dc,hUnderline);
-	        }
 	}
 	li = EDIT_EM_LineIndex(es, line);
 	if (es->style & ES_MULTILINE) {
@@ -2340,19 +2282,9 @@ static INT EDIT_PaintText(EDITSTATE *es, HDC dc, INT x, INT y, INT line, INT col
 			HeapFree(GetProcessHeap(), 0, text);
 	}
 	if (rev) {
-		if (es->composition_len == 0)
-		{
 		SetBkColor(dc, BkColor);
 		SetTextColor(dc, TextColor);
 		SetBkMode( dc, BkMode);
-	}
-		else
-		{
-			if (old_font)
-				SelectObject(dc,old_font);
-			if (hUnderline)
-				DeleteObject(hUnderline);
-	        }
 	}
 	return ret;
 }
@@ -2476,6 +2408,9 @@ static void EDIT_SetRectNP(EDITSTATE *es, LPRECT rc)
  */
 static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 {
+#ifndef __REACTOS__
+	HINSTANCE16 hInstance = GetWindowLongW( es->hwndSelf, GWL_HINSTANCE );
+#endif
 
 	/* Edit window might be already destroyed */
 	if(!IsWindow(es->hwndSelf))
@@ -2496,12 +2431,11 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 	if (force || (es->lock_count == 1)) {
 	    if (es->hloc32W) {
 		CHAR *textA = NULL;
+#ifndef __REACTOS__
+		BOOL _16bit = FALSE;
+#endif
 		UINT countA = 0;
 		UINT countW = strlenW(es->text) + 1;
-#ifndef __REACTOS__
-		STACK16FRAME* stack16 = NULL;
-	        HANDLE16 oldDS = 0;
-#endif
 
 		if(es->hloc32A)
 		{
@@ -2618,7 +2552,7 @@ static void EDIT_UpdateScrollInfo(EDITSTATE *es)
  *
  *	Find the beginning of words.
  *	Note:	unlike the specs for a WordBreakProc, this function only
- *		allows to be called without linebreaks between s[0] up to
+ *		allows to be called without linebreaks between s[0] upto
  *		s[count - 1].  Remember it is only called
  *		internally, so we can decide this for ourselves.
  *
@@ -3072,7 +3006,7 @@ static BOOL EDIT_EM_LineScroll_internal(EDITSTATE *es, INT dx, INT dy)
 		dx = es->text_width - x_offset_in_pixels;
 	nyoff = max(0, es->y_offset + dy);
 	if (nyoff >= es->line_count - lines_per_page)
-		nyoff = max(0, es->line_count - lines_per_page);
+		nyoff = max(0,es->line_count - lines_per_page);
 	dy = (es->y_offset - nyoff) * es->line_height;
 	if (dx || dy) {
 		RECT rc1;
@@ -3535,6 +3469,10 @@ static void EDIT_EM_ScrollCaret(EDITSTATE *es)
  */
 static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 {
+#ifndef __REACTOS__
+	HINSTANCE16 hInstance = GetWindowLongW( es->hwndSelf, GWL_HINSTANCE );
+#endif
+
 	if (!(es->style & ES_MULTILINE))
 		return;
 
@@ -3715,24 +3653,9 @@ static void EDIT_EM_SetLimitText(EDITSTATE *es, INT limit)
  * of the char's width as the margin, but this is not how Windows handles this.
  * For all other fonts Windows sets the margins to zero.
  *
- * FIXME - When EC_USEFONTINFO is used the margins only change if the
- * edit control is equal to or larger than a certain size.
- * Interestingly if one subtracts both the left and right margins from
- * this size one always seems to get an even number.  The extents of
- * the (four character) string "'**'" match this quite closely, so
- * we'll use this until we come up with a better idea.
  */
-static int calc_min_set_margin_size(HDC dc, INT left, INT right)
-{
-    WCHAR magic_string[] = {'\'','*','*','\'', 0};
-    SIZE sz;
-
-    GetTextExtentPointW(dc, magic_string, sizeof(magic_string)/sizeof(WCHAR) - 1, &sz);
-    return sz.cx + left + right;
-}
-
 static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
-			       WORD left, WORD right, BOOL repaint)
+			       INT left, INT right, BOOL repaint)
 {
 	TEXTMETRICW tm;
 	INT default_left_margin  = 0; /* in pixels */
@@ -3745,17 +3668,9 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
             GetTextMetricsW(dc, &tm);
             /* The default margins are only non zero for TrueType or Vector fonts */
             if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE )) {
-                int min_size;
-                RECT rc;
                 /* This must be calculated more exactly! But how? */
-                default_left_margin = tm.tmAveCharWidth / 2;
-                default_right_margin = tm.tmAveCharWidth / 2;
-                min_size = calc_min_set_margin_size(dc, default_left_margin, default_right_margin);
-                GetClientRect(es->hwndSelf, &rc);
-                if(rc.right - rc.left < min_size) {
-                    default_left_margin = es->left_margin;
-                    default_right_margin = es->right_margin;
-                }
+                default_left_margin = tm.tmAveCharWidth / 3;
+                default_right_margin = tm.tmAveCharWidth / 3;
             }
             SelectObject(dc, old_font);
             ReleaseDC(es->hwndSelf, dc);
@@ -4227,7 +4142,7 @@ static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
         EDIT_SetRectNP(es, &clientRect);
 
        if (name && *name) {
-	   EDIT_EM_ReplaceSel(es, FALSE, name, FALSE, FALSE);
+	   EDIT_EM_ReplaceSel(es, FALSE, name, FALSE, TRUE);
 	   /* if we insert text to the editline, the text scrolls out
             * of the window, as the caret is placed after the insert
             * pos normally; thus we reset es->selection... to 0 and
@@ -4326,6 +4241,7 @@ static INT EDIT_WM_GetText(EDITSTATE *es, INT count, LPWSTR dst, BOOL unicode)
 	return strlen(textA);
     }
 }
+
 
 /*********************************************************************
  *
@@ -4790,7 +4706,7 @@ static LRESULT EDIT_WM_NCCreate(HWND hwnd, LPCREATESTRUCTW lpcs, BOOL unicode)
 
 	if (!(es = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*es))))
 		return FALSE;
-        SetWindowLongPtrW( hwnd, 0, (LONG_PTR)es );
+        SetWindowLongPtrW( hwnd, 0, (LONG)es );
 
        /*
         *      Note: since the EDITSTATE has not been fully initialized yet,
@@ -5386,138 +5302,5 @@ static void EDIT_UpdateText(EDITSTATE *es, LPRECT rc, BOOL bErase)
         es->flags &= ~EF_UPDATE;
         EDIT_NOTIFY_PARENT(es, EN_UPDATE);
     }
-    NtUserInvalidateRect(es->hwndSelf, rc, bErase);
-}
-
-/********************************************************************
- * 
- * The Following code is to handle inline editing from IMEs
- */
-
-static void EDIT_GetCompositionStr(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
-{
-    DWORD dwBufLen;
-    LPWSTR lpCompStr = NULL;
-    HIMC hIMC;
-    LPSTR lpCompStrAttr = NULL;
-    DWORD dwBufLenAttr;
-
-    if (!(hIMC = ImmGetContext(hwnd)))
-        return;
-
-    dwBufLen = ImmGetCompositionStringW(hIMC, GCS_COMPSTR, NULL, 0);
-
-    if (dwBufLen <= 0)
-    {
-        ImmReleaseContext(hwnd, hIMC);
-        return;
-    }
-
-    lpCompStr = HeapAlloc(GetProcessHeap(),0,dwBufLen);
-    if (!lpCompStr)
-    {
-        ERR("Unable to allocate IME CompositionString\n");
-        ImmReleaseContext(hwnd,hIMC);
-        return;
-    }
-
-    ImmGetCompositionStringW(hIMC, GCS_COMPSTR, lpCompStr, dwBufLen);
-    lpCompStr[dwBufLen/sizeof(WCHAR)] = 0;
-
-    if (CompFlag & GCS_COMPATTR)
-    {
-        /* 
-         * We do not use the attributes yet. it would tell us what characters
-         * are in transition and which are converted or decided upon
-         */
-        dwBufLenAttr = ImmGetCompositionStringW(hIMC, GCS_COMPATTR, NULL, 0);
-        if (dwBufLenAttr)
-        {
-            dwBufLenAttr ++;
-            lpCompStrAttr = HeapAlloc(GetProcessHeap(),0,dwBufLenAttr);
-            if (!lpCompStrAttr)
-            {
-                ERR("Unable to allocate IME Attribute String\n");
-                HeapFree(GetProcessHeap(),0,lpCompStr);
-                ImmReleaseContext(hwnd,hIMC);
-                return;
-            }
-            ImmGetCompositionStringW(hIMC,GCS_COMPATTR, lpCompStrAttr, 
-                    dwBufLenAttr);
-            lpCompStrAttr[dwBufLenAttr] = 0;
-        }
-        else
-            lpCompStrAttr = NULL;
-    }
-
-    /* check for change in composition start */
-    if (es->selection_end < es->composition_start)
-        es->composition_start = es->selection_end;
-    
-    /* replace existing selection string */
-    es->selection_start = es->composition_start;
-
-    if (es->composition_len > 0)
-        es->selection_end = es->composition_start + es->composition_len;
-    else
-        es->selection_end = es->selection_start;
-
-    EDIT_EM_ReplaceSel(es, FALSE, lpCompStr, TRUE, TRUE);
-    es->composition_len = abs(es->composition_start - es->selection_end);
-
-    es->selection_start = es->composition_start;
-    es->selection_end = es->selection_start + es->composition_len;
-
-    HeapFree(GetProcessHeap(),0,lpCompStrAttr);
-    HeapFree(GetProcessHeap(),0,lpCompStr);
-    ImmReleaseContext(hwnd,hIMC);
-}
-
-static void EDIT_GetResultStr(HWND hwnd, EDITSTATE *es)
-{
-    DWORD dwBufLen;
-    LPWSTR lpResultStr;
-    HIMC    hIMC;
-
-    if ( !(hIMC = ImmGetContext(hwnd)))
-        return;
-
-    dwBufLen = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
-    if (dwBufLen <= 0)
-    {
-        ImmReleaseContext(hwnd, hIMC);
-        return;
-    }
-
-    lpResultStr = HeapAlloc(GetProcessHeap(),0, dwBufLen);
-    if (!lpResultStr)
-    {
-        ERR("Unable to alloc buffer for IME string\n");
-        ImmReleaseContext(hwnd, hIMC);
-        return;
-    }
-
-    ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, lpResultStr, dwBufLen);
-    lpResultStr[dwBufLen/sizeof(WCHAR)] = 0;
-
-    /* check for change in composition start */
-    if (es->selection_end < es->composition_start)
-        es->composition_start = es->selection_end;
-
-    es->selection_start = es->composition_start;
-    es->selection_end = es->composition_start + es->composition_len;
-    EDIT_EM_ReplaceSel(es, TRUE, lpResultStr, TRUE, TRUE);
-    es->composition_start = es->selection_end;
-    es->composition_len = 0;
-
-    HeapFree(GetProcessHeap(),0,lpResultStr);
-    ImmReleaseContext(hwnd, hIMC);
-}
-
-static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
-{
-    if (CompFlag & GCS_RESULTSTR)
-        EDIT_GetResultStr(hwnd,es);
-    if (CompFlag & GCS_COMPSTR)
-        EDIT_GetCompositionStr(hwnd, CompFlag, es);
+    InvalidateRect(es->hwndSelf, rc, bErase);
 }

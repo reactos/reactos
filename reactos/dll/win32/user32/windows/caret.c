@@ -30,7 +30,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
 /* FUNCTIONS *****************************************************************/
 
 void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo)
@@ -107,6 +106,16 @@ GetCaretPos(LPPOINT lpPoint)
  * @implemented
  */
 BOOL STDCALL
+HideCaret(HWND hWnd)
+{
+  return NtUserShowCaret(hWnd, FALSE);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
   return NtUserSetCaretBlinkTime(uMSeconds);
@@ -123,5 +132,14 @@ SetCaretPos(int X,
   return NtUserSetCaretPos(X, Y);
 }
 
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+ShowCaret(HWND hWnd)
+{
+  return NtUserShowCaret(hWnd, TRUE);
+}
 
 /* EOF */

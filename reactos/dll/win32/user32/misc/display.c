@@ -29,9 +29,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
+#define NDEBUG
+#include <debug.h>
 
 #define SIZEOF_DEVMODEA_300 124
 #define SIZEOF_DEVMODEA_400 148
@@ -68,27 +67,25 @@ EnumDisplayDevicesA(
     iDevNum,
     &DisplayDeviceW,
     dwFlags );
-  if (!rc)
-    {
-      /* Copy result from DisplayDeviceW to lpDisplayDevice */
-      lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
-      WideCharToMultiByte(CP_ACP,0,
-        DisplayDeviceW.DeviceName,wcslen(DisplayDeviceW.DeviceName),
-        lpDisplayDevice->DeviceName,sizeof(lpDisplayDevice->DeviceName) / sizeof(lpDisplayDevice->DeviceName[0]),
-        NULL,NULL);
-      WideCharToMultiByte(CP_ACP,0,
-        DisplayDeviceW.DeviceString,wcslen(DisplayDeviceW.DeviceString),
-        lpDisplayDevice->DeviceString,sizeof(lpDisplayDevice->DeviceString) / sizeof(lpDisplayDevice->DeviceString[0]),
-        NULL,NULL);
-      WideCharToMultiByte(CP_ACP,0,
-        DisplayDeviceW.DeviceID,wcslen(DisplayDeviceW.DeviceID),
-        lpDisplayDevice->DeviceID,sizeof(lpDisplayDevice->DeviceID) / sizeof(lpDisplayDevice->DeviceID[0]),
-        NULL,NULL);
-      WideCharToMultiByte(CP_ACP,0,
-        DisplayDeviceW.DeviceKey,wcslen(DisplayDeviceW.DeviceKey),
-        lpDisplayDevice->DeviceKey,sizeof(lpDisplayDevice->DeviceKey) / sizeof(lpDisplayDevice->DeviceKey[0]),
-        NULL,NULL);
-    }
+
+  /* Copy result from DisplayDeviceW to lpDisplayDevice */
+  lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceName,wcslen(DisplayDeviceW.DeviceName),
+     lpDisplayDevice->DeviceName,sizeof(lpDisplayDevice->DeviceName) / sizeof(lpDisplayDevice->DeviceName[0]),
+     NULL,NULL);
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceString,wcslen(DisplayDeviceW.DeviceString),
+     lpDisplayDevice->DeviceString,sizeof(lpDisplayDevice->DeviceString) / sizeof(lpDisplayDevice->DeviceString[0]),
+     NULL,NULL);
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceID,wcslen(DisplayDeviceW.DeviceID),
+     lpDisplayDevice->DeviceID,sizeof(lpDisplayDevice->DeviceID) / sizeof(lpDisplayDevice->DeviceID[0]),
+     NULL,NULL);
+  WideCharToMultiByte(CP_ACP,0,
+     DisplayDeviceW.DeviceKey,wcslen(DisplayDeviceW.DeviceKey),
+     lpDisplayDevice->DeviceKey,sizeof(lpDisplayDevice->DeviceKey) / sizeof(lpDisplayDevice->DeviceKey[0]),
+     NULL,NULL);
 
   RtlFreeUnicodeString ( &Device );
 
@@ -117,6 +114,8 @@ EnumDisplayDevicesW(
     iDevNum,
     lpDisplayDevice,
     dwFlags );
+
+  //RtlFreeUnicodeString ( &Device );
 
   return rc;
 }
@@ -219,8 +218,6 @@ EnumDisplaySettingsExA(
  
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &lpDevModeW,
                                    dwFlags );
-  if (!rc)
-    goto done;
 
 #define COPYS(f,len) WideCharToMultiByte( CP_THREAD_ACP, 0, lpDevModeW.f, len, (LPSTR)lpDevMode->f, len, NULL, NULL )
 #define COPYN(f) lpDevMode->f = lpDevModeW.f
@@ -369,7 +366,7 @@ GetMonitorInfoA(
                                 NULL, NULL);
       if (res == 0)
         {
-          WARN("WideCharToMultiByte() failed!\n");
+          DPRINT("WideCharToMultiByte() failed!\n");
           return FALSE;
         }
     }
@@ -507,6 +504,9 @@ ChangeDisplaySettingsExW(
     pDeviceName = NULL;
 
   rc = NtUserChangeDisplaySettings ( pDeviceName, lpDevMode, hwnd, dwflags, lParam );
+
+  if (lpszDeviceName != NULL)
+    RtlFreeUnicodeString ( pDeviceName );
 
   return rc;
 }

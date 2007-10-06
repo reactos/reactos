@@ -17,6 +17,6 @@ MenuCleanup(VOID);
 VOID
 MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID
-MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar);
+MenuTrackKbdMenuBar(HWND hWnd, ULONG wParam, ULONG Key);
 
 #endif /* __LIB_USER32_INCLUDE_MENU_H */

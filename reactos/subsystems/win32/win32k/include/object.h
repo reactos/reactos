@@ -20,7 +20,6 @@
 typedef struct _USER_HANDLE_ENTRY
 {
     void          *ptr;          /* pointer to object */
-    PW32THREADINFO pti;          // pointer to Win32ThreadInfo
     unsigned short type;         /* object type (0 if free) */
     unsigned short generation;   /* generation counter */
 } USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
@@ -42,11 +41,11 @@ typedef enum _USER_OBJECT_TYPE
   otFree = 0,
   otWindow,
   otMenu,
-  otCursorIcon,
-  otHook = 5,
-  otCallProc = 7,
   otAccel,
-  otMonitor = 12
+  otCursorIcon,
+  otHook,
+  otMonitor,
+  otClass //fixme: remove
   
 } USER_OBJECT_TYPE;
 
@@ -131,8 +130,6 @@ UserDerefObjectCo(PVOID obj)
     ASSERT(obj == UserReferenceEntry->obj);
     ObmDereferenceObject2(obj);
 }
-
-HANDLE FASTCALL ObmObjectToHandle(PVOID obj);
 
 VOID  FASTCALL CreateStockObjects (VOID);
 VOID  FASTCALL CreateSysColorObjects (VOID);

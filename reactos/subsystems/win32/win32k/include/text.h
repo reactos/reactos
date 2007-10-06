@@ -1,17 +1,10 @@
 #ifndef _WIN32K_TEXT_H
 #define _WIN32K_TEXT_H
 
-#define TAG_FINF        TAG('F', 'I', 'N', 'F')
-
 /* GDI logical font object */
 typedef struct
 {
-   HGDIOBJ     hHmgr;
-   PVOID       pvEntry;
-   ULONG       lucExcLock;
-   ULONG       Tid;
-
-   ENUMLOGFONTEXDVW logfont;  //LOGFONTW   logfont;
+   LOGFONTW   logfont;
    FONTOBJ    *Font;
    BOOLEAN Initialized; /* Don't reinitialize for each DC */
 } TEXTOBJ, *PTEXTOBJ;
@@ -31,8 +24,6 @@ BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 VOID FASTCALL IntEnableFontRendering(BOOL Enable);
 INT FASTCALL FontGetObject(PTEXTOBJ TextObj, INT Count, PVOID Buffer);
-VOID FASTCALL IntLoadSystemFonts(VOID);
-INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)

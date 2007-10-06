@@ -69,6 +69,7 @@ CleanupAcceleratorImpl(VOID)
 }
 
 
+static
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 {
    PACCELERATOR_TABLE Accel;
@@ -79,7 +80,7 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
       return NULL;
    }
    
-   Accel= UserGetObject(gHandleTable, hAccel,  otAccel);
+   Accel= UserGetObject(&gHandleTable, hAccel,  otAccel);
    if (!Accel)
    {
       SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
@@ -343,12 +344,7 @@ NtUserCreateAcceleratorTable(
           Entries, EntriesCount);
    UserEnterExclusive();
 
-   if (!Entries || !EntriesCount)
-   {
-      RETURN( (HACCEL) 0 );
-   }
-
-   Accel = ObmCreateObject(gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
+   Accel = ObmCreateObject(&gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
 
    if (Accel == NULL)
    {

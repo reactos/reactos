@@ -398,9 +398,11 @@ CLEANUP:
    END_CLEANUP;
 }
 
+
+
 BOOL
 STDCALL
-NtUserShowCaret(HWND hWnd OPTIONAL)
+NtUserShowCaret(HWND hWnd OPTIONAL, BOOL bShow)
 {
    PWINDOW_OBJECT Window = NULL;
    USER_REFERENCE_ENTRY Ref;
@@ -416,46 +418,18 @@ NtUserShowCaret(HWND hWnd OPTIONAL)
    }
 
    if (Window) UserRefObjectCo(Window, &Ref);
-
-   ret = co_UserShowCaret(Window);
-
+   
+   if (bShow)
+      ret = co_UserShowCaret(Window);
+   else
+      ret = co_UserHideCaret(Window);
+      
    if (Window) UserDerefObjectCo(Window);
 
    RETURN(ret);
 
 CLEANUP:
    DPRINT("Leave NtUserShowCaret, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-BOOL
-STDCALL
-NtUserHideCaret(HWND hWnd OPTIONAL)
-{
-   PWINDOW_OBJECT Window = NULL;
-   USER_REFERENCE_ENTRY Ref;
-   DECLARE_RETURN(BOOL);
-   BOOL ret;
-
-   DPRINT("Enter NtUserHideCaret\n");
-   UserEnterExclusive();
-
-   if(hWnd && !(Window = UserGetWindowObject(hWnd)))
-   {
-      RETURN(FALSE);
-   }
-
-   if (Window) UserRefObjectCo(Window, &Ref);
-
-   ret = co_UserHideCaret(Window);
-
-   if (Window) UserDerefObjectCo(Window);
-
-   RETURN(ret);
-
-CLEANUP:
-   DPRINT("Leave NtUserHideCaret, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

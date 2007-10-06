@@ -44,16 +44,10 @@ IntPatBlt(
    DWORD ROP,
    PGDIBRUSHOBJ BrushObj);
 
-VOID FASTCALL
-IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
-
 /* Pen functions */
 
-HPEN STDCALL
-IntGdiExtCreatePen(DWORD, DWORD, IN ULONG, IN ULONG, IN ULONG_PTR, IN ULONG_PTR, DWORD, PULONG, IN ULONG, IN BOOL, IN OPTIONAL HBRUSH);
-
-VOID FASTCALL
-IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color);
+HPEN FASTCALL
+IntGdiCreatePenIndirect(PLOGPEN lgpn);
 
 /* Line functions */
 
@@ -121,21 +115,11 @@ IntGdiPolyPolygon(DC      *dc,
                   LPINT   PolyCounts,
                   int     Count);
 
-BOOL FASTCALL IntGdiGradientFill(DC *dc,
-    PTRIVERTEX pVertex, 
-    ULONG uVertex, 
-    PVOID pMesh, ULONG uMesh, ULONG ulMode);
-
 /* Rgn functions */
 
 int FASTCALL
 IntGdiGetClipBox(HDC    hDC,
 			     LPRECT rc);
-
-INT
-STDCALL
-IntGdiSelectVisRgn(HDC hdc,
-                     HRGN hrgn);
 
 HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
 void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn);
@@ -159,7 +143,7 @@ IntGdiGetObject(HANDLE handle, INT count, LPVOID buffer);
 HDC FASTCALL
 IntGdiCreateDC(PUNICODE_STRING Driver,
                PUNICODE_STRING Device,
-               PVOID pUMdhpdev,
+               PUNICODE_STRING Output,
                CONST PDEVMODEW InitData,
                BOOL CreateAsIC);
 
@@ -204,17 +188,11 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors);
 BOOL FASTCALL
 IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes);
 
-HGDIOBJ FASTCALL
-IntGetSysColorBrush(INT Object);
-
 BOOL FASTCALL
 IntGetSysColorPens(HPEN *Pens, UINT nPens);
 
 BOOL FASTCALL
 IntGetSysColors(COLORREF *Colors, UINT nColors);
-
-DWORD FASTCALL
-IntGetSysColor(INT nIndex);
 
 /* Other Stuff */
 
@@ -247,60 +225,11 @@ IntChangeDisplaySettings(
   IN DWORD dwflags,
   IN PVOID lParam  OPTIONAL);
 
-HBITMAP
-FASTCALL
-IntCreateCompatibleBitmap(PDC Dc,
-                          INT Width,
-                          INT Height);
-
-HBITMAP STDCALL
-IntGdiCreateBitmap(
-    INT  Width,
-    INT  Height,
-    UINT  Planes,
-    UINT  BitsPixel,
-    IN OPTIONAL LPBYTE pBits);
-
-HDC STDCALL IntGdiGetDCState(HDC  hDC);
-
-WORD STDCALL IntGdiSetHookFlags(HDC hDC, WORD Flags);
-
-VOID STDCALL IntGdiSetDCState ( HDC hDC, HDC hDCSave );
-
-LONG STDCALL IntSetBitmapBits(PBITMAPOBJ bmp, DWORD  Bytes, IN PBYTE Bits);
-
-LONG STDCALL IntGetBitmapBits(PBITMAPOBJ bmp, DWORD Bytes, OUT PBYTE Bits);
-
-UINT STDCALL IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
-
-UINT STDCALL IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
-
-UINT STDCALL
-IntAnimatePalette(HPALETTE hPal, UINT StartIndex,
-   UINT NumEntries, CONST PPALETTEENTRY PaletteColors);
-
-UINT STDCALL
-IntGetPaletteEntries(HPALETTE  hpal,
-                     UINT  StartIndex,
-                     UINT  Entries,
-                     LPPALETTEENTRY  pe);
-
-UINT STDCALL 
-IntSetPaletteEntries(HPALETTE  hpal,
-                      UINT  Start,
-                      UINT  Entries,
-                      CONST LPPALETTEENTRY  pe);
-
-UINT STDCALL
-IntGetSystemPaletteEntries(HDC  hDC,
-                           UINT  StartIndex,
-                           UINT  Entries,
-                           LPPALETTEENTRY  pe);
-UINT STDCALL
-IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors);
-
-UINT STDCALL
-IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors);
+HBITMAP FASTCALL
+IntCreateCompatibleBitmap(
+	PDC Dc,
+	INT Width,
+	INT Height);
 
 #endif /* _WIN32K_INTGDI_H */
 

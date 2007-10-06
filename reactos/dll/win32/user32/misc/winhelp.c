@@ -30,8 +30,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 /* WinHelp internal structure */
 typedef struct
 {

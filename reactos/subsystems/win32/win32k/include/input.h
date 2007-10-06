@@ -30,8 +30,8 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyLayout, BYTE Prefix
 BOOL FASTCALL IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt);
 BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi);
 BOOL FASTCALL IntKeyboardInput(KEYBDINPUT *ki);
-
 BOOL UserInitDefaultKeyboardLayout();
+
 
 #define ThreadHasInputAccess(W32Thread) \
   (TRUE)

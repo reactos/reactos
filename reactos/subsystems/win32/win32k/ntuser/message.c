@@ -378,15 +378,27 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
 
             MsgInfo.HandledByKernel = FALSE;
             Result = 0;
-
-            if (Window->IsSystem)
+            if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
             {
-                MsgInfo.Proc = (!MsgInfo.Ansi ? Window->WndProc : Window->WndProcExtra);
+               if (0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
+               {
+                  /* Both Unicode and Ansi winprocs are real, use whatever
+                     usermode prefers */
+                  MsgInfo.Proc = (MsgInfo.Ansi ? Window->WndProcA
+                                  : Window->WndProcW);
+               }
+               else
+               {
+                  /* Real Unicode winproc */
+                  MsgInfo.Ansi = FALSE;
+                  MsgInfo.Proc = Window->WndProcW;
+               }
             }
             else
             {
-                MsgInfo.Ansi = !Window->Unicode;
-                MsgInfo.Proc = Window->WndProc;
+               /* Must have real Ansi winproc */
+               MsgInfo.Ansi = TRUE;
+               MsgInfo.Proc = Window->WndProcA;
             }
          }
       }
@@ -603,7 +615,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
    {
       /* generate double click messages, if necessary */
       if ((((*HitTest) != HTCLIENT) ||
-            (Window->Class->Style & CS_DBLCLKS)) &&
+            (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS)) &&
             MsqIsDblClk(Msg, Remove))
       {
          Msg->message += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
@@ -1224,7 +1236,7 @@ UserPostMessage(HWND Wnd,
       IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
                            &KernelModeMsg.pt);
       KeQueryTickCount(&LargeTickCount);
-      KernelModeMsg.time = MsqCalculateMessageTime(&LargeTickCount);
+      KernelModeMsg.time = LargeTickCount.u.LowPart;
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
                      NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
                      QS_POSTMESSAGE);
@@ -1389,9 +1401,16 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
          DPRINT1("Failed to pack message parameters\n");
           RETURN( FALSE);
       }
-
-      Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProc, !Window->Unicode, hWnd, Msg, wParam,
-               lParamPacked,lParamBufferSize);
+      if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
+      {
+         Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProcW, FALSE, hWnd, Msg, wParam,
+                  lParamPacked,lParamBufferSize);
+      }
+      else
+      {
+         Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProcA, TRUE, hWnd, Msg, wParam,
+                  lParamPacked,lParamBufferSize);
+      }
 
       if(uResult)
       {
@@ -1561,22 +1580,31 @@ co_IntDoSendMessage(HWND hWnd,
    {
       /* Gather the information usermode needs to call the window proc directly */
       Info.HandledByKernel = FALSE;
-
-      Status = MmCopyFromCaller(&(Info.Ansi), &(UnsafeInfo->Ansi),
-                                sizeof(BOOL));
-      if (! NT_SUCCESS(Status))
+      if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
       {
-         Info.Ansi = ! Window->Unicode;
-      }
-
-      if (Window->IsSystem)
-      {
-          Info.Proc = (!Info.Ansi ? Window->WndProc : Window->WndProcExtra);
+         if (0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
+         {
+            /* Both Unicode and Ansi winprocs are real, see what usermode prefers */
+            Status = MmCopyFromCaller(&(Info.Ansi), &(UnsafeInfo->Ansi),
+                                      sizeof(BOOL));
+            if (! NT_SUCCESS(Status))
+            {
+               Info.Ansi = ! Window->Unicode;
+            }
+            Info.Proc = (Info.Ansi ? Window->WndProcA : Window->WndProcW);
+         }
+         else
+         {
+            /* Real Unicode winproc */
+            Info.Ansi = FALSE;
+            Info.Proc = Window->WndProcW;
+         }
       }
       else
       {
-          Info.Ansi = !Window->Unicode;
-          Info.Proc = Window->WndProc;
+         /* Must have real Ansi winproc */
+         Info.Ansi = TRUE;
+         Info.Proc = Window->WndProcA;
       }
    }
    else
@@ -1700,98 +1728,16 @@ NtUserSendMessageCallback(HWND hWnd,
    return 0;
 }
 
-
-BOOL FASTCALL
-UserSendNotifyMessage(HWND hWnd,
-                      UINT Msg,
-                      WPARAM wParam,
-                      LPARAM lParam)
-{
-   BOOL Result = TRUE;
-   // Basicly the same as IntPostOrSendMessage
-   if (hWnd == HWND_BROADCAST) //Handle Broadcast
-   {
-      HWND *List;
-      PWINDOW_OBJECT DesktopWindow;
-      ULONG i;
-
-      DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
-      List = IntWinListChildren(DesktopWindow);
-      
-      if (List != NULL)
-      {
-         for (i = 0; List[i]; i++)
-         {
-            UserSendNotifyMessage(List[i], Msg, wParam, lParam);
-         }
-         ExFreePool(List);
-      }
-   }
-   else
-   {
-     ULONG_PTR PResult;
-     PWINDOW_OBJECT Window;
-     NTSTATUS Status;
-     MSG UserModeMsg;
-     MSG KernelModeMsg;
-     PMSGMEMORY MsgMemoryEntry;
-
-      if(!(Window = UserGetWindowObject(hWnd))) return FALSE;
-
-      if(Window->MessageQueue != PsGetCurrentThreadWin32Thread()->MessageQueue)
-      { // Send message w/o waiting for it.
-         Result = UserPostMessage(hWnd, Msg, wParam, lParam);
-      }
-      else
-      { // Handle message and callback.
-         UserModeMsg.hwnd = hWnd;
-         UserModeMsg.message = Msg;
-         UserModeMsg.wParam = wParam;
-         UserModeMsg.lParam = lParam;
-         MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
-         Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
-         if (! NT_SUCCESS(Status))
-         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            return FALSE;
-         }
-         Result = co_IntSendMessageTimeoutSingle(
-                                   KernelModeMsg.hwnd, KernelModeMsg.message,
-                                   KernelModeMsg.wParam, KernelModeMsg.lParam,
-                                   SMTO_NORMAL, 0, &PResult);
-
-         Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
-         if (! NT_SUCCESS(Status))
-         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            return FALSE;
-         }
-      }
-   }
-   return Result;
-}
-
-
 BOOL STDCALL
 NtUserSendNotifyMessage(HWND hWnd,
                         UINT Msg,
                         WPARAM wParam,
                         LPARAM lParam)
 {
-   DECLARE_RETURN(BOOL);
+   UNIMPLEMENTED;
 
-   DPRINT("EnterNtUserSendNotifyMessage\n");
-   UserEnterExclusive();
-
-   RETURN(UserSendNotifyMessage(hWnd, Msg, wParam, lParam));
-
-CLEANUP:
-   DPRINT("Leave NtUserSendNotifyMessage, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-
+   return 0;
 }
-
 
 BOOL STDCALL
 NtUserWaitMessage(VOID)

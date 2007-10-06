@@ -1,11 +1,9 @@
 #include <user32.h>
-
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
-PUSER_HANDLE_TABLE gHandleTable = NULL;
-
 
 PUSER32_THREAD_DATA
 User32GetThreadData()
@@ -51,11 +49,7 @@ Init(VOID)
       (PVOID)User32SetupDefaultCursors;
    NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
       (PVOID)User32CallHookProcFromKernel;
-   {
-     PW32THREADINFO ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
-     PW32PROCESSINFO pi = ti->pi;
-     gHandleTable = (PUSER_HANDLE_TABLE) pi->UserHandleTable;
-   }
+
    /* Allocate an index for user32 thread local data. */
    User32TlsIndex = TlsAlloc();
    if (User32TlsIndex != TLS_OUT_OF_INDEXES)
@@ -99,9 +93,6 @@ DllMain(
    {
       case DLL_PROCESS_ATTACH:
          User32Instance = hInstanceDll;
-         if (!NtUserRegisterUserModule(hInstanceDll))
-             return FALSE;
-
          hProcessHeap = RtlGetProcessHeap();
          if (!Init())
             return FALSE;
@@ -110,10 +101,6 @@ DllMain(
             Cleanup();
             return FALSE;
          }
-     
-         /* Initialize message spying */
-        if (!SPY_Init()) return FALSE;
-
          break;
 
       case DLL_THREAD_ATTACH:

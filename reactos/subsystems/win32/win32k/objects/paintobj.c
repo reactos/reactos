@@ -16,49 +16,56 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Errors
- * FILE:             subsys/win32k/misc/error.c
- * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
- */
+/* $Id: paintobj.c 21292 2006-03-11 23:50:04Z jimtabor $ */
 
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
-VOID FASTCALL
-SetLastNtError(NTSTATUS Status)
+BOOL
+STDCALL
+NtGdiGdiFlush(VOID)
 {
-  SetLastWin32Error(RtlNtStatusToDosError(Status));
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
-VOID FASTCALL
-SetLastWin32Error(DWORD Status)
+DWORD
+STDCALL
+NtGdiGdiGetBatchLimit(VOID)
 {
-  PTEB Teb = PsGetCurrentThread()->Tcb.Teb;
-
-  if (NULL != Teb)
-    {
-      Teb->LastErrorValue = Status;
-    }
-}
-
-NTSTATUS FASTCALL
-GetLastNtError()
-{
-  PTEB Teb = PsGetCurrentThread()->Tcb.Teb;
-
-  if ( NULL != Teb )
-    {
-      return Teb->LastStatusValue;
-    }
+  UNIMPLEMENTED;
   return 0;
 }
 
+DWORD
+STDCALL
+NtGdiGdiSetBatchLimit(DWORD  Limit)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+
+DWORD
+APIENTRY
+NtGdiGetBoundsRect(
+    IN HDC hdc,
+    OUT LPRECT prc,
+    IN DWORD f)
+{
+  DPRINT("stub");
+  return  DCB_RESET;   /* bounding rectangle always empty */
+}
+
+DWORD
+APIENTRY
+NtGdiSetBoundsRect(
+    IN HDC hdc,
+    IN LPRECT prc,
+    IN DWORD f)
+{
+  DPRINT("stub");
+  return  DCB_DISABLE;   /* bounding rectangle always empty */
+}
 /* EOF */

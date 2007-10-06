@@ -72,15 +72,16 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
   if (Create)
     {
-      ULONG ViewSize = 0;
+      //ULONG ViewSize = 0;
       LARGE_INTEGER Offset;
-      PVOID UserBase = NULL;
-      NTSTATUS Status;
-      extern PSECTION_OBJECT GlobalUserHeapSection;
+      //PVOID UserBase = NULL;
+      //NTSTATUS Status;
+      //extern PSECTION_OBJECT GlobalUserHeapSection;
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
       /* map the global heap into the process */
       Offset.QuadPart = 0;
+#if 0
       Status = MmMapViewOfSection(GlobalUserHeapSection,
                                   PsGetCurrentProcess(),
                                   &UserBase,
@@ -100,7 +101,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       Win32Process->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
       Win32Process->HeapMappings.UserMapping = UserBase;
       Win32Process->HeapMappings.Count = 1;
-
+#endif
       InitializeListHead(&Win32Process->ClassList);
 
       InitializeListHead(&Win32Process->MenuListHead);
@@ -385,7 +386,7 @@ DriverEntry (
     CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
-    CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;    
+    CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
 
     /*
      * Register our per-process and per-thread structures.

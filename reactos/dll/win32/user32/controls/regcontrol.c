@@ -11,8 +11,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
 {
    WNDCLASSEXW wc;
@@ -46,13 +44,15 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
       RtlInitUnicodeString(&ClassName, Descr->name);
    }
 
-   NtUserRegisterClassEx(
+   NtUserRegisterClassExWOW(
       &wc,
+      &ClassName,
       &ClassName,
       &MenuName,
       Descr->procA,
       REGISTERCLASS_SYSTEM,
-      NULL);
+      0,
+      0);
 }
 
 /***********************************************************************

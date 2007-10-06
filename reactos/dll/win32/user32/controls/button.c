@@ -16,63 +16,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * NOTES
- *
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Oct. 3, 2004, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
- * TODO
- *  Styles
- *  - BS_NOTIFY: is it complete?
- *  - BS_RIGHTBUTTON: same as BS_LEFTTEXT
- *  - BS_TYPEMASK
- *
- *  Messages
- *  - WM_CHAR: Checks a (manual or automatic) check box on '+' or '=', clears it on '-' key.
- *  - WM_SETFOCUS: For (manual or automatic) radio buttons, send the parent window BN_CLICKED
- *  - WM_NCCREATE: Turns any BS_OWNERDRAW button into a BS_PUSHBUTTON button.
- *  - WM_SYSKEYUP
- *  - BCM_GETIDEALSIZE
- *  - BCM_GETIMAGELIST
- *  - BCM_GETTEXTMARGIN
- *  - BCM_SETIMAGELIST
- *  - BCM_SETTEXTMARGIN
- *  
- *  Notifications
- *  - BCN_HOTITEMCHANGE
- *  - BN_DISABLE
- *  - BN_PUSHED/BN_HILITE
- *  + BN_KILLFOCUS: is it OK?
- *  - BN_PAINT
- *  + BN_SETFOCUS: is it OK?
- *  - BN_UNPUSHED/BN_UNHILITE
- *  - NM_CUSTOMDRAW
- *
- *  Structures/Macros/Definitions
- *  - BUTTON_IMAGELIST
- *  - NMBCHOTITEM
- *  - Button_GetIdealSize
- *  - Button_GetImageList
- *  - Button_GetTextMargin
- *  - Button_SetImageList
- *  - Button_SetTextMargin
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <user32.h>
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(button);
+#include <user32.h>
 
 /* GetWindowLong offsets for window extra information */
 #define STATE_GWL_OFFSET  0
 #define HFONT_GWL_OFFSET  (sizeof(LONG))
-#define HIMAGE_GWL_OFFSET (HFONT_GWL_OFFSET+sizeof(HFONT))
-#define NB_EXTRA_BYTES    (HIMAGE_GWL_OFFSET+sizeof(HANDLE))
+#define HIMAGE_GWL_OFFSET (HFONT_GWL_OFFSET*sizeof(LONG))
+#define NB_EXTRA_BYTES    (HIMAGE_GWL_OFFSET*sizeof(LONG))
 
   /* Button state values */
 #define BUTTON_UNCHECKED       0x00
@@ -186,7 +139,7 @@ __inline static HFONT get_button_font( HWND hwnd )
 
 __inline static void set_button_font( HWND hwnd, HFONT font )
 {
-    SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, (LONG_PTR)font );
+    SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, (LONG)font );
 }
 
 __inline static UINT get_button_type( LONG window_style )
@@ -355,7 +308,6 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_CAPTURECHANGED:
-        TRACE("WM_CAPTURECHANGED %p\n", hWnd);
         state = get_button_state( hWnd );
         if (state & BUTTON_BTNPRESSED)
         {
@@ -400,7 +352,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if (unicode) DefWindowProcW( hWnd, WM_SETTEXT, wParam, lParam );
         else DefWindowProcA( hWnd, WM_SETTEXT, wParam, lParam );
         if (btn_type == BS_GROUPBOX) /* Yes, only for BS_GROUPBOX */
-            NtUserInvalidateRect( hWnd, NULL, TRUE );
+            InvalidateRect( hWnd, NULL, TRUE );
         else
             paint_button( hWnd, btn_type, ODA_DRAWENTIRE );
         return 1; /* success. FIXME: check text length */
@@ -415,7 +367,6 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         return (LRESULT)get_button_font( hWnd );
 
     case WM_SETFOCUS:
-        TRACE("WM_SETFOCUS %p\n",hWnd);
         set_button_state( hWnd, get_button_state(hWnd) | BUTTON_HASFOCUS );
         paint_button( hWnd, btn_type, ODA_FOCUS );
         if (style & BS_NOTIFY)
@@ -423,7 +374,6 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_KILLFOCUS:
-        TRACE("WM_KILLFOCUS %p\n",hWnd);
         state = get_button_state( hWnd );
         set_button_state( hWnd, state & ~BUTTON_HASFOCUS );
 	paint_button( hWnd, btn_type, ODA_FOCUS );
@@ -436,7 +386,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_SYSCOLORCHANGE:
-        NtUserInvalidateRect( hWnd, NULL, FALSE );
+        InvalidateRect( hWnd, NULL, FALSE );
         break;
 
 #ifndef __REACTOS__
@@ -473,8 +423,8 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             return 0;
         }
         oldHbitmap = (HBITMAP)SetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET, lParam );
-        NtUserInvalidateRect( hWnd, NULL, FALSE );
-        return (LRESULT)oldHbitmap;
+	InvalidateRect( hWnd, NULL, FALSE );
+	return (LRESULT)oldHbitmap;
 
     case BM_GETIMAGE:
         return GetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET );
@@ -869,6 +819,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     SetBkMode(hDC, oldBkMode);
 }
 
+
 /**********************************************************************
  *       Check Box & Radio Button Functions
  */
@@ -1101,7 +1052,6 @@ static void UB_Paint( HWND hwnd, HDC hDC, UINT action )
         ((action == ODA_DRAWENTIRE) && (state & BUTTON_HASFOCUS)))
         DrawFocusRect( hDC, &rc );
 }
-
 
 /**********************************************************************
  *       Ownerdrawn Button Functions

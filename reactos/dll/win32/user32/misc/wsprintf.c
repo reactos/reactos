@@ -33,11 +33,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(string);
-
-
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */
 #define WPRINTF_PREFIX_HEX  0x0002  /* Prefix hex with 0x ('#' prefix) */
 #define WPRINTF_ZEROPAD     0x0004  /* Pad with zeros ('0' prefix) */
@@ -487,7 +482,7 @@ static INT wvsnprintfW( LPWSTR buffer, UINT maxlen, LPCWSTR spec, va_list args )
  *           wvsprintfA   (USER32.@)
  * @implemented
  */
-INT WINAPI wvsprintfA( LPSTR buffer, LPCSTR spec, va_list args )
+INT STDCALL wvsprintfA( LPSTR buffer, LPCSTR spec, va_list args )
 {
     INT res = wvsnprintfA( buffer, 1024, spec, args );
     return ( res == -1 ) ? 1024 : res;
@@ -498,7 +493,7 @@ INT WINAPI wvsprintfA( LPSTR buffer, LPCSTR spec, va_list args )
  *           wvsprintfW   (USER32.@)
  * @implemented
  */
-INT WINAPI wvsprintfW( LPWSTR buffer, LPCWSTR spec, va_list args )
+INT STDCALL wvsprintfW( LPWSTR buffer, LPCWSTR spec, va_list args )
 {
     INT res = wvsnprintfW( buffer, 1024, spec, args );
     return ( res == -1 ) ? 1024 : res;
@@ -508,7 +503,7 @@ INT WINAPI wvsprintfW( LPWSTR buffer, LPCWSTR spec, va_list args )
  *           wsprintfA   (USER32.@)
  * @implemented
  */
-INT WINAPIV wsprintfA( LPSTR buffer, LPCSTR spec, ... )
+INT CDECL wsprintfA( LPSTR buffer, LPCSTR spec, ... )
 {
     va_list valist;
     INT res;
@@ -523,7 +518,7 @@ INT WINAPIV wsprintfA( LPSTR buffer, LPCSTR spec, ... )
  *           wsprintfW   (USER32.@)
  * @implemented
  */
-INT WINAPIV wsprintfW( LPWSTR buffer, LPCWSTR spec, ... )
+INT CDECL wsprintfW( LPWSTR buffer, LPCWSTR spec, ... )
 {
     va_list valist;
     INT res;

@@ -23,8 +23,8 @@
  */
 
 #include <user32.h>
-
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 /* Start of Hack section */
 

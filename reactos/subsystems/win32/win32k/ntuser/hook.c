@@ -69,7 +69,7 @@ PHOOK FASTCALL IntGetHookObject(HHOOK hHook)
       return NULL;
    }
    
-   Hook = (PHOOK)UserGetObject(gHandleTable, hHook, otHook);
+   Hook = (PHOOK)UserGetObject(&gHandleTable, hHook, otHook);
    if (!Hook)
    {
       SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
@@ -110,7 +110,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
       }
    }
 
-   Hook = ObmCreateObject(gHandleTable, &Handle, otHook, sizeof(HOOK));
+   Hook = ObmCreateObject(&gHandleTable, &Handle, otHook, sizeof(HOOK));
    if (NULL == Hook)
    {
       return NULL;

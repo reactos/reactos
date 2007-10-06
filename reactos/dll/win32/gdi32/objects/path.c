@@ -91,25 +91,16 @@ FlattenPath(
 /*
  * @implemented
  */
-INT
+int
 STDCALL
-GetPath(HDC hdc,
-        LPPOINT pptlBuf,
-        LPBYTE pjTypes,
-        INT cptBuf)
+GetPath(
+	HDC		hdc,
+	LPPOINT		a1,
+	LPBYTE		a2,
+	int		a3
+	)
 {
-    INT retValue = -1;
-
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_METADC)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-    }
-    else
-    {
-        retValue = NtGdiGetPath(hdc,pptlBuf,pjTypes,cptBuf);
-    }
-
-    return retValue;
+	return NtGdiGetPath ( hdc, a1, a2, a3 );
 }
 
 
@@ -176,6 +167,20 @@ WidenPath(
 	)
 {
 	return NtGdiWidenPath ( hdc );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetMiterLimit(
+	HDC	hdc,
+	PFLOAT	a1
+	)
+{
+	return NtGdiGetMiterLimit ( hdc, (PDWORD)a1 );
 }
 
 /*

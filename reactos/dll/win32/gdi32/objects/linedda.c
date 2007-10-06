@@ -43,44 +43,7 @@ BOOL STDCALL LineDDA(INT nXStart, INT nYStart, INT nXEnd, INT nYEnd,
     INT cnt;
     INT dx = nXEnd - nXStart;
     INT dy = nYEnd - nYStart;
-	
-	// optimized for vertical and horizontal lines so we avoid unnecessary math
-	if(nXStart == nXEnd)
-	{
-	  // vertical line - use dx,dy as temp variables so we don't waste stack space
-	  if(nYStart < nYEnd)
-	  {
-	    dx = nYStart;
-	    dy = nYEnd;
-	  } else {
-	    dx = nYEnd;
-	    dy = nYStart;
-	  }
-	  for(cnt = dx; cnt <= dy; cnt++)
-	  {
-	   lpLineFunc(nXStart,cnt,lpData);
-	  } 
-	  return TRUE;
-	}
-	
-	if(nYStart == nYEnd)
-	{
-	  // horizontal line - use dx,dy as temp variables so we don't waste stack space
-	  if(nXStart < nXEnd)
-	  {
-	    dx = nXStart;
-	    dy = nXEnd;
-	  } else {
-	    dx = nXEnd;
-	    dy = nXStart;
-	  }
-	  for(cnt = dx; cnt <= dy; cnt++)
-	  {
-	   lpLineFunc(cnt, nYStart,lpData);
-	  }
-	  return TRUE;
-	}
-	// end of H/V line code
+
     if (dx < 0)  {
       dx = -dx; xadd = -1;
     }

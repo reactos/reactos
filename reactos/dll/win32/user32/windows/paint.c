@@ -29,8 +29,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
@@ -147,6 +147,18 @@ GetUpdateRgn(
 }
 
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+InvalidateRect(
+  HWND hWnd,
+  CONST RECT *lpRect,
+  BOOL bErase)
+{
+  return RedrawWindow( hWnd, lpRect, 0, RDW_INVALIDATE | (bErase ? RDW_ERASE : 0) ); 
+}
 
 
 /*
@@ -159,7 +171,7 @@ InvalidateRgn(
   HRGN hRgn,
   BOOL bErase)
 {
-  return NtUserInvalidateRgn(hWnd, hRgn, bErase);
+  return RedrawWindow(hWnd, NULL, hRgn, RDW_INVALIDATE | (bErase ? RDW_ERASE : 0) ); 
 }
 
 

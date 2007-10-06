@@ -72,6 +72,7 @@ IntGetCursorLocation(PWINSTATION_OBJECT WinSta, POINT *loc)
 }
 
 
+static
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
 {
    PCURICON_OBJECT CurIcon;
@@ -82,7 +83,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
       return NULL;
    }
    
-   CurIcon = (PCURICON_OBJECT)UserGetObject(gHandleTable, hCurIcon, otCursorIcon);
+   CurIcon = (PCURICON_OBJECT)UserGetObject(&gHandleTable, hCurIcon, otCursorIcon);
    if (!CurIcon)
    {
       /* we never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
@@ -396,7 +397,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinSta)
    PCURICON_OBJECT CurIcon;
    HANDLE hCurIcon;
 
-   CurIcon = ObmCreateObject(gHandleTable, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
+   CurIcon = ObmCreateObject(&gHandleTable, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
 
    if(!CurIcon)
    {
@@ -621,9 +622,9 @@ CLEANUP:
  */
 BOOL
 STDCALL
-NtUserGetIconInfo(
+NtUserGetCursorIconInfo(
    HANDLE hCurIcon,
-   PICONINFO IconInfo, DWORD UnkOne, DWORD UnkTwo, DWORD UnkThree, DWORD UnkFour )
+   PICONINFO IconInfo)
 {
    ICONINFO ii;
    PCURICON_OBJECT CurIcon;
@@ -632,7 +633,7 @@ NtUserGetIconInfo(
    BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserGetIconInfo\n");
+   DPRINT("Enter NtUserGetCursorIconInfo\n");
    UserEnterExclusive();
 
    if(!IconInfo)
@@ -670,7 +671,7 @@ NtUserGetIconInfo(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetIconInfo, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserGetCursorIconInfo, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -911,7 +912,7 @@ CLEANUP:
  */
 BOOL
 STDCALL
-NtUserDestroyCursor(
+NtUserDestroyCursorIcon(
    HANDLE hCurIcon,
    DWORD Unknown)
 {
@@ -1101,7 +1102,7 @@ CLEANUP:
  */
 BOOL
 STDCALL
-NtUserSetCursorContents(
+NtUserSetCursorIconContents(
    HANDLE hCurIcon,
    PICONINFO IconInfo)
 {
@@ -1112,7 +1113,7 @@ NtUserSetCursorContents(
    BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserSetCursorContents\n");
+   DPRINT("Enter NtUserSetCursorIconContents\n");
    UserEnterExclusive();
 
    WinSta = IntGetWinStaObj();
@@ -1164,7 +1165,7 @@ done:
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT("Leave NtUserSetCursorContents, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserSetCursorIconContents, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1308,7 +1309,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
       }
       else
       {
-         BitmapStretched = IntGdiCreateBitmap(WidthDest, HeightDest, 1, 1, NULL);
+         BitmapStretched = NtGdiCreateBitmap(WidthDest, HeightDest, 1, 1, NULL);
       }
       if (NULL == BitmapStretched)
       {
@@ -1345,269 +1346,6 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
                         (Rop3), 0)
 #endif /* STRETCH_CAN_SRCCOPY_ONLY */
 
-BOOL 
-UserDrawIconEx(
-   HDC hDc,
-   INT xLeft,
-   INT yTop,
-   PCURICON_OBJECT pIcon,
-   INT cxWidth,
-   INT cyHeight,
-   UINT istepIfAniCur,
-   HBRUSH hbrFlickerFreeDraw,
-   UINT diFlags)
-{
-   BOOL Ret = FALSE;
-   HBITMAP hbmMask, hbmColor;
-   BITMAP bmpMask, bmpColor;
-   COLORREF oldFg, oldBg;
-   BOOL DoFlickerFree;
-   INT nStretchMode;
-   SIZE IconSize;
-        
-   HDC hdcOff;
-   HGDIOBJ hOldOffBrush = 0;
-   HGDIOBJ hOldOffBmp = 0;
-   HBITMAP hbmOff = 0;
-   HDC hdcMem = 0;
-   HGDIOBJ hOldMem;
-   BOOL bAlpha = FALSE;
-   
-   hbmMask = pIcon->IconInfo.hbmMask;
-   hbmColor = pIcon->IconInfo.hbmColor;
-
-   if (istepIfAniCur)
-      DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
-
-   if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
-   {
-      return FALSE;
-   }
-
-   if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
-   {
-      return FALSE;
-   }
-   
-   if (hbmColor)
-   {
-      IconSize.cx = bmpColor.bmWidth;
-      IconSize.cy = bmpColor.bmHeight;
-   }
-   else
-   {
-      IconSize.cx = bmpMask.bmWidth;
-      IconSize.cy = bmpMask.bmHeight / 2;
-   }
-
-   if (bmpColor.bmBitsPixel == 32)
-   {
-      bAlpha = TRUE;
-   }
-
-   if (!diFlags)
-      diFlags = DI_NORMAL;
-
-   if (!cxWidth)
-      cxWidth = ((diFlags & DI_DEFAULTSIZE) ? 
-         UserGetSystemMetrics(SM_CXICON) : IconSize.cx);
-
-   if (!cyHeight)
-      cyHeight = ((diFlags & DI_DEFAULTSIZE) ? 
-         UserGetSystemMetrics(SM_CYICON) : IconSize.cy);
-
-   DoFlickerFree = (hbrFlickerFreeDraw && 
-      (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH));
-
-   if (DoFlickerFree || bAlpha)
-   {
-      RECT r;
-      r.right = cxWidth;
-      r.bottom = cyHeight;
-
-      hdcOff = NtGdiCreateCompatibleDC(hDc);
-      if (!hdcOff)
-      {
-         DPRINT1("NtGdiCreateCompatibleDC() failed!\n");
-         return FALSE;
-      }
-
-      hbmOff = NtGdiCreateCompatibleBitmap(hDc, cxWidth, cyHeight);
-      if (!hbmOff)
-      {
-         DPRINT1("NtGdiCreateCompatibleBitmap() failed!\n");
-         goto cleanup;
-      }
-
-      hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
-      if (!hOldOffBmp)
-      {
-         DPRINT1("NtGdiSelectObject() failed!\n");
-         goto cleanup;
-      }
-
-      if (DoFlickerFree)
-      {
-          hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
-          if (!hOldOffBrush)
-          {
-             DPRINT1("NtGdiSelectObject() failed!\n");
-             goto cleanup;
-          }
-
-          NtGdiPatBlt(hdcOff, 0, 0, r.right, r.bottom, PATCOPY);
-      }
-   }
-   else
-       hdcOff = hDc;
-
-   hdcMem = NtGdiCreateCompatibleDC(hDc);
-   if (!hdcMem)
-   {
-      DPRINT1("NtGdiCreateCompatibleDC() failed!\n");
-      goto cleanup;
-   }
-
-   nStretchMode = NtGdiSetStretchBltMode(hdcOff, STRETCH_DELETESCANS);
-
-   oldFg = NtGdiSetTextColor(hdcOff, RGB(0, 0, 0));
-   oldBg = NtGdiSetBkColor(hdcOff, RGB(255, 255, 255));
-
-   if (diFlags & DI_MASK)
-   {
-      hOldMem = NtGdiSelectObject(hdcMem, hbmMask);
-      if (!hOldMem)
-      {
-         DPRINT("NtGdiSelectObject() failed!\n");
-         goto cleanup;
-      }
-
-      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                   0, 0, IconSize.cx, IconSize.cy,
-                   ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY), FALSE);
-
-      if (!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) 
-         && (diFlags & DI_IMAGE))
-      {
-         DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                      (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                      0, IconSize.cy, IconSize.cx, IconSize.cy, SRCINVERT,
-                      FALSE);
-
-         diFlags &= ~DI_IMAGE;
-      }
-      
-      NtGdiSelectObject(hdcMem, hOldMem);
-   }
-
-   if(diFlags & DI_IMAGE)
-   {
-      hOldMem = NtGdiSelectObject(hdcMem, (hbmColor ? hbmColor : hbmMask));
-
-      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
-                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
-                   0, (hbmColor ? 0 : IconSize.cy), IconSize.cx, IconSize.cy,
-                   ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY),
-                   NULL != hbmColor);
-
-      NtGdiSelectObject(hdcMem, hOldMem);
-   }
-
-    if (bAlpha)
-    {
-        BITMAP bm;
-        BITMAPOBJ *BitmapObj = NULL;
-        PBYTE pBits = NULL;
-        BLENDFUNCTION  BlendFunc;
-        BYTE Red, Green, Blue, Alpha;
-        DWORD Count = 0;
-        INT i, j;
-
-        BitmapObj = BITMAPOBJ_LockBitmap(hbmOff);
-        if (BitmapObj == NULL)
-        {
-            DPRINT1("GDIOBJ_LockObj() failed!\n");
-            goto cleanup;
-        }
-        BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
-
-        pBits = ExAllocatePoolWithTag(PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
-        if (pBits == NULL)
-        {
-            DPRINT1("ExAllocatePoolWithTag() failed!\n");
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
-            goto cleanup;
-        }
-
-        /* get icon bits */
-        IntGetBitmapBits(BitmapObj, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
-
-        /* premultiply with the alpha channel value */
-        for (i = 0; i < cyHeight; i++)
-        {
-            for (j = 0; j < cxWidth; j++)
-            {
-                DWORD OrigPixel = 0;
-                DWORD AlphaPixel = 0;
-
-                OrigPixel = *(DWORD *)(pBits + Count);
-
-                Red   = (BYTE)((OrigPixel >>  0) & 0xff);
-                Green = (BYTE)((OrigPixel >>  8) & 0xff);
-                Blue  = (BYTE)((OrigPixel >> 16) & 0xff);
-                Alpha = (BYTE)((OrigPixel >> 24) & 0xff);
-
-                Red = (Red * Alpha) / 0xff;
-                Green = (Green * Alpha) / 0xff;
-                Blue = (Blue * Alpha) / 0xff;
-
-                AlphaPixel = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
-
-                *(DWORD *)(pBits + Count) = AlphaPixel;
-                Count += sizeof (DWORD);
-            }
-        }
-
-        /* set icon bits */
-        IntSetBitmapBits(BitmapObj, bm.bmWidthBytes * abs(bm.bmHeight), pBits);
-        ExFreePool(pBits);
-
-        BITMAPOBJ_UnlockBitmap(BitmapObj);
-
-        BlendFunc.BlendOp = AC_SRC_OVER;
-        BlendFunc.BlendFlags = 0;
-        BlendFunc.SourceConstantAlpha = 255;
-        BlendFunc.AlphaFormat = AC_SRC_ALPHA;
-
-        NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
-                        hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc, 0);
-    }
-    else if (DoFlickerFree)
-    {
-        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, 
-                    cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
-    }
-
-   NtGdiSetTextColor(hdcOff, oldFg);
-   NtGdiSetBkColor(hdcOff, oldBg);
-   NtGdiSetStretchBltMode(hdcOff, nStretchMode);
-
-   Ret = TRUE;
-
-cleanup:
-   if(DoFlickerFree)
-   {
-      if(hOldOffBmp) NtGdiSelectObject(hdcOff, hOldOffBmp);
-      if(hOldOffBrush) NtGdiSelectObject(hdcOff, hOldOffBrush);
-      if(hbmOff) NtGdiDeleteObject(hbmOff);
-      if(hdcOff) NtGdiDeleteObjectApp(hdcOff);
-   }
-   
-   if(hdcMem) NtGdiDeleteObjectApp(hdcMem);
-   return Ret;
-}
-
 /*
  * @implemented
  */
@@ -1626,29 +1364,167 @@ NtUserDrawIconEx(
    DWORD Unknown0,
    DWORD Unknown1)
 {
-   PCURICON_OBJECT pIcon;
-   BOOL Ret;
+   PCURICON_OBJECT CurIcon;
+   PWINSTATION_OBJECT WinSta;
+   HBITMAP hbmMask, hbmColor;
+   BITMAP bmpMask, bmpColor;
+   BOOL DoFlickerFree;
+   SIZE IconSize;
+   COLORREF oldFg, oldBg;
+   HDC hdcMem, hdcOff = (HDC)0;
+   HBITMAP hbmOff = (HBITMAP)0;
+   HGDIOBJ hOldOffBrush = 0, hOldOffBmp = 0, hOldMem;
+   BOOL Ret = FALSE;
+   INT nStretchMode;
+
+   DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserDrawIconEx\n");
    UserEnterExclusive();
-   
-   if(!(pIcon = UserGetCurIconObject(hIcon)))
+
+   WinSta = IntGetWinStaObj();
+   if(WinSta == NULL)
    {
-      DPRINT1("UserGetCurIconObject() failed!\n");
-      UserLeave();
-      return FALSE;
+      RETURN( FALSE);
+   }
+
+   if (!(CurIcon = UserGetCurIconObject(hIcon)))
+   {
+      ObDereferenceObject(WinSta);
+      RETURN(FALSE);
    }
    
-   Ret = UserDrawIconEx(hdc,
-      xLeft,
-      yTop,
-      pIcon,
-      cxWidth,
-      cyHeight,
-      istepIfAniCur,
-      hbrFlickerFreeDraw,
-      diFlags);
+   hbmMask = CurIcon->IconInfo.hbmMask;
+   hbmColor = CurIcon->IconInfo.hbmColor;
 
+   if(istepIfAniCur)
+      DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
+
+   if(!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+      goto done;
+
+   if(hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
+      goto done;
+
+   if(hbmColor)
+   {
+      IconSize.cx = bmpColor.bmWidth;
+      IconSize.cy = bmpColor.bmHeight;
+   }
+   else
+   {
+      IconSize.cx = bmpMask.bmWidth;
+      IconSize.cy = bmpMask.bmHeight / 2;
+   }
+
+   if(!diFlags)
+      diFlags = DI_NORMAL;
+
+   if(!cxWidth)
+      cxWidth = ((diFlags & DI_DEFAULTSIZE) ? UserGetSystemMetrics(SM_CXICON) : IconSize.cx);
+   if(!cyHeight)
+      cyHeight = ((diFlags & DI_DEFAULTSIZE) ? UserGetSystemMetrics(SM_CYICON) : IconSize.cy);
+
+   DoFlickerFree = (hbrFlickerFreeDraw && (NtGdiGetObjectType(hbrFlickerFreeDraw) == OBJ_BRUSH));
+
+   if(DoFlickerFree)
+   {
+      RECT r;
+      r.right = cxWidth;
+      r.bottom = cyHeight;
+
+      hdcOff = NtGdiCreateCompatibleDC(hdc);
+      if(!hdcOff)
+         goto done;
+
+      hbmOff = NtGdiCreateCompatibleBitmap(hdc, cxWidth, cyHeight);
+      if(!hbmOff)
+      {
+         NtGdiDeleteObjectApp(hdcOff);
+         goto done;
+      }
+      hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
+      hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
+      NtGdiPatBlt(hdcOff, 0, 0, r.right, r.bottom, PATCOPY);
+      NtGdiSelectObject(hdcOff, hbmOff);
+   }
+
+   hdcMem = NtGdiCreateCompatibleDC(hdc);
+   if(!hdcMem)
+      goto cleanup;
+
+   if(!DoFlickerFree)
+      hdcOff = hdc;
+
+   nStretchMode = NtGdiSetStretchBltMode(hdcOff, STRETCH_DELETESCANS);
+
+   oldFg = NtGdiSetTextColor(hdcOff, RGB(0, 0, 0));
+   oldBg = NtGdiSetBkColor(hdcOff, RGB(255, 255, 255));
+
+   if(diFlags & DI_MASK)
+   {
+      hOldMem = NtGdiSelectObject(hdcMem, hbmMask);
+
+      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
+                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
+                   0, 0, IconSize.cx, IconSize.cy,
+                   ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY), FALSE);
+
+      if(!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) && (diFlags & DI_IMAGE))
+      {
+         DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
+                      (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
+                      0, IconSize.cy, IconSize.cx, IconSize.cy, SRCINVERT,
+                      FALSE);
+
+         diFlags &= ~DI_IMAGE;
+      }
+      NtGdiSelectObject(hdcMem, hOldMem);
+   }
+
+   if(diFlags & DI_IMAGE)
+   {
+      hOldMem = NtGdiSelectObject(hdcMem, (hbmColor ? hbmColor : hbmMask));
+
+      DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
+                   (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
+                   0, (hbmColor ? 0 : IconSize.cy), IconSize.cx, IconSize.cy,
+                   ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY),
+                   NULL != hbmColor);
+
+      NtGdiSelectObject(hdcMem, hOldMem);
+   }
+
+   if(DoFlickerFree)
+      NtGdiBitBlt(hdc, xLeft, yTop, cxWidth, cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
+
+   NtGdiSetTextColor(hdcOff, oldFg);
+   NtGdiSetBkColor(hdcOff, oldBg);
+
+   NtGdiSetStretchBltMode(hdcOff, nStretchMode);
+
+   Ret = TRUE;
+
+cleanup:
+   if(DoFlickerFree)
+   {
+
+      NtGdiSelectObject(hdcOff, hOldOffBmp);
+      NtGdiSelectObject(hdcOff, hOldOffBrush);
+      NtGdiDeleteObject(hbmOff);
+      NtGdiDeleteObjectApp(hdcOff);
+   }
+   if(hdcMem)
+      NtGdiDeleteObjectApp(hdcMem);
+
+done:
+   ObDereferenceObject(WinSta);
+
+   RETURN( Ret);
+
+CLEANUP:
+   DPRINT("Leave NtUserDrawIconEx, ret=%i\n",_ret_);
    UserLeave();
-   return Ret;
+   END_CLEANUP;
 }
+

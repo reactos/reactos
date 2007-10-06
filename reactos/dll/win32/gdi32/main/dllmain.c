@@ -9,9 +9,6 @@
 
 #include "precomp.h"
 
-extern HGDIOBJ stock_objects[];
-BOOL SetStockObjects = FALSE;
-
 /*
  * GDI32.DLL doesn't have an entry point. The initialization is done by a call
  * to GdiDllInitialize(). This call is done from the entry point of USER32.DLL.
@@ -37,7 +34,6 @@ GdiProcessSetup (VOID)
         /* map the gdi handle table to user space */
 	GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
 	CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
-	GDI_BatchLimit = NtCurrentTeb()->GdiBatchCount;
 }
 
 
@@ -70,12 +66,7 @@ GdiDllInitialize (
 	NtCurrentTeb()->GdiTebBatch.Offset = 0;
 	NtCurrentTeb()->GdiBatchCount = 0;
 #endif
-  // Very simple, the list will fill itself as it is needed.
-        if(!SetStockObjects)
-        {
-          RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
-          SetStockObjects = TRUE;
-        }
+
 	return TRUE;
 }
 

@@ -1,96 +1,5 @@
 #include "precomp.h"
 
-/* DEFINES *******************************************************************/
-
-
-/* PRIVATE DATA **************************************************************/
-
-PMF_ENTRY hMF_List = NULL;
-DWORD hMFCount = 0;
-
-/* INTERNAL FUNCTIONS ********************************************************/
-
-BOOL
-MF_CreateMFDC ( HGDIOBJ hMDC, 
-                PMETAFILEDC pmfDC )
-{
-  PMF_ENTRY pMFME;
-  
-  pMFME = LocalAlloc(LMEM_ZEROINIT, sizeof(MF_ENTRY));
-  if (!pMFME)
-  {
-    return FALSE;
-  }
-  
-  if (hMF_List == NULL)
-  {
-    hMF_List = pMFME;
-    InitializeListHead(&hMF_List->List);
-  }
-  else
-    InsertTailList(&hMF_List->List, &pMFME->List);
-
-  pMFME->hmDC  = hMDC;
-  pMFME->pmfDC = pmfDC;
-    
-  hMFCount++;
-  return TRUE;
-}
-
-
-PMETAFILEDC
-MF_GetMFDC ( HGDIOBJ hMDC )
-{
-  PMF_ENTRY pMFME = hMF_List;
-
-  do
-  {
-    if ( pMFME->hmDC == hMDC ) return pMFME->pmfDC;
-    pMFME = (PMF_ENTRY) pMFME->List.Flink;
-  }
-  while ( pMFME != hMF_List );
-
-  return NULL;
-}
-
-
-BOOL
-MF_DeleteMFDC ( HGDIOBJ hMDC )
-{
-  PMF_ENTRY pMFME = hMF_List;
-
-  do
-  {
-    if ( pMFME->hmDC == hMDC)
-    {
-       RemoveEntryList(&pMFME->List);
-       LocalFree ( pMFME );
-       hMFCount--;
-       if (!hMFCount) hMF_List = NULL;
-       return TRUE;
-    }
-    pMFME = (PMF_ENTRY) pMFME->List.Flink;
-  }
-  while ( pMFME != hMF_List );
-
-  return FALSE;
-}
-
-/* FUNCTIONS *****************************************************************/
-
-/*
- * @unimplemented
- */
-HMETAFILE
-STDCALL
-CloseMetaFile(
-	HDC	a0
-	)
-{
-	return 0;
-}
-
-
 /*
  * @implemented
  */
@@ -101,7 +10,7 @@ CopyMetaFileW(
 	LPCWSTR		lpszFile
 	)
 {
-  return NULL;
+  return NtGdiCopyMetaFile (hmfSrc, lpszFile);
 }
 
 
@@ -124,7 +33,8 @@ CopyMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
   {
-    rc = CopyMetaFileW( hmfSrc, lpszFileW );
+    rc = NtGdiCopyMetaFile ( hmfSrc, lpszFileW );
+
     HEAP_free ( lpszFileW );
   }
 
@@ -141,50 +51,7 @@ CreateMetaFileW(
 	LPCWSTR		lpszFile
 	)
 {
-  HANDLE hFile;
-  HDC hmDC;
-  PMETAFILEDC pmfDC = LocalAlloc(LMEM_ZEROINIT, sizeof(METAFILEDC));
-  if (!pmfDC) return NULL;
-  
-  pmfDC->mh.mtHeaderSize   = sizeof(METAHEADER) / sizeof(WORD);
-  pmfDC->mh.mtVersion      = 0x0300;
-  pmfDC->mh.mtSize         = pmfDC->mh.mtHeaderSize;
-
-  if (lpszFile)  /* disk based metafile */
-  {
-    pmfDC->mh.mtType = METAFILE_DISK;
-
-    if(!GetFullPathName(  lpszFile,
-                          MAX_PATH,
-         (LPTSTR) &pmfDC->Filename,
-               (LPTSTR*) &lpszFile))
-    {
-//       MFDRV_DeleteDC( dc->physDev );
-       return NULL;
-    }
-
-    if ((hFile = CreateFileW(pmfDC->Filename, GENERIC_WRITE, 0, NULL,
-				CREATE_ALWAYS, 0, 0)) == INVALID_HANDLE_VALUE)
-    {
-//       MFDRV_DeleteDC( dc->physDev );
-       return NULL;
-    }
-
-    if (!WriteFile( hFile, &pmfDC->mh, sizeof(pmfDC->mh), NULL, NULL ))
-    {
-//       MFDRV_DeleteDC( dc->physDev );
-       return NULL;
-    }
-      pmfDC->hFile = hFile; 
-  }
-  else  /* memory based metafile */
-    pmfDC->mh.mtType = METAFILE_MEMORY;
-
-  hmDC = NtGdiCreateClientObj ( GDI_OBJECT_TYPE_METADC );
-
-  MF_CreateMFDC ( hmDC, pmfDC );
-
-  return hmDC;
+  return NtGdiCreateMetaFile ( lpszFile );
 }
 
 
@@ -206,23 +73,11 @@ CreateMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = CreateMetaFileW( lpszFileW );
+      rc = NtGdiCreateMetaFile ( lpszFileW );
+
       HEAP_free ( lpszFileW );
     }
   return rc;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeleteMetaFile(
-	HMETAFILE	a0
-	)
-{
-	return FALSE;
 }
 
 
@@ -235,7 +90,7 @@ GetMetaFileW(
 	LPCWSTR	lpszMetaFile
 	)
 {
-  return NULL;
+  return NtGdiGetMetaFile ( lpszMetaFile );
 }
 
 
@@ -257,11 +112,208 @@ GetMetaFileA(
     SetLastError (RtlNtStatusToDosError(Status));
   else
     {
-      rc = GetMetaFileW( lpszMetaFileW );
+      rc = NtGdiGetMetaFile ( lpszMetaFileW );
+
       HEAP_free ( lpszMetaFileW );
     }
 
   return rc;
 }
 
+
+/*
+ * @implemented
+ */
+HENHMETAFILE 
+STDCALL 
+CopyEnhMetaFileW(
+	HENHMETAFILE	hemfSrc,
+	LPCWSTR		lpszFile
+	)
+{
+  return NtGdiCopyEnhMetaFile ( hemfSrc, lpszFile );
+}
+
+
+/*
+ * @implemented
+ */
+HENHMETAFILE
+STDCALL
+CopyEnhMetaFileA(
+	HENHMETAFILE	hemfSrc,
+	LPCSTR		lpszFile
+	)
+{
+  NTSTATUS Status;
+  LPWSTR lpszFileW;
+  HENHMETAFILE rc = 0;
+
+  Status = HEAP_strdupA2W ( &lpszFileW, lpszFile );
+  if (!NT_SUCCESS (Status))
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+    {
+      rc = NtGdiCopyEnhMetaFile ( hemfSrc, lpszFileW );
+
+      HEAP_free ( lpszFileW );
+    }
+  return rc;
+}
+
+
+/*
+ * @implemented
+ */
+HDC
+STDCALL
+CreateEnhMetaFileW(
+	HDC		hdcRef,
+	LPCWSTR		lpFileName,
+	CONST RECT	*lpRect,
+	LPCWSTR		lpDescription
+	)
+{
+  return NtGdiCreateEnhMetaFile ( hdcRef, lpFileName, (CONST LPRECT)lpRect, lpDescription );
+}
+
+
+/*
+ * @implemented
+ */
+HDC
+STDCALL
+CreateEnhMetaFileA(
+	HDC		hdcRef,
+	LPCSTR		lpFileName,
+	CONST RECT	*lpRect,
+	LPCSTR		lpDescription
+	)
+{
+  NTSTATUS Status;
+  LPWSTR lpFileNameW, lpDescriptionW;
+  HDC rc = 0;
+
+  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
+  if (!NT_SUCCESS (Status))
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+    {
+      Status = HEAP_strdupA2W ( &lpDescriptionW, lpDescription );
+      if (!NT_SUCCESS (Status))
+	SetLastError (RtlNtStatusToDosError(Status));
+      else
+      {
+	rc = NtGdiCreateEnhMetaFile (
+	  hdcRef, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
+
+	HEAP_free ( lpDescriptionW );
+      }
+      HEAP_free ( lpFileNameW );
+    }
+
+  return rc;
+}
+
+/*
+ * @implemented
+ */
+HENHMETAFILE
+STDCALL
+GetEnhMetaFileW(
+	LPCWSTR	lpszMetaFile
+	)
+{
+  return NtGdiGetEnhMetaFile ( lpszMetaFile );
+}
+
+
+/*
+ * @implemented
+ */
+HENHMETAFILE
+STDCALL
+GetEnhMetaFileA(
+	LPCSTR	lpszMetaFile
+	)
+{
+  NTSTATUS Status;
+  LPWSTR lpszMetaFileW;
+  HENHMETAFILE rc = 0;
+
+  Status = HEAP_strdupA2W ( &lpszMetaFileW, lpszMetaFile );
+  if (!NT_SUCCESS (Status))
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+  {
+    rc = NtGdiGetEnhMetaFile ( lpszMetaFileW );
+
+    HEAP_free ( lpszMetaFileW );
+  }
+
+  return rc;
+}
+
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetEnhMetaFileDescriptionW(
+	HENHMETAFILE	hemf,
+	UINT		cchBuffer,
+	LPWSTR		lpszDescription
+	)
+{
+  return NtGdiGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescription );
+}
+
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetEnhMetaFileDescriptionA(
+	HENHMETAFILE	hemf,
+	UINT		cchBuffer,
+	LPSTR		lpszDescription
+	)
+{
+  NTSTATUS Status;
+  LPWSTR lpszDescriptionW;
+  UINT rc;
+
+  if ( lpszDescription && cchBuffer )
+    {
+      lpszDescriptionW = (LPWSTR)HEAP_alloc ( cchBuffer*sizeof(WCHAR) );
+      if ( !lpszDescriptionW )
+	{
+	  SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+	  return 0;
+	}
+    }
+  else
+    lpszDescriptionW = NULL;
+
+  rc = NtGdiGetEnhMetaFileDescription ( hemf, cchBuffer, lpszDescriptionW );
+
+  if ( lpszDescription && cchBuffer )
+    {
+      Status = RtlUnicodeToMultiByteN ( lpszDescription,
+	                                cchBuffer,
+	                                NULL,
+	                                lpszDescriptionW,
+	                                cchBuffer );
+      HEAP_free ( lpszDescriptionW );
+      if ( !NT_SUCCESS(Status) )
+	{
+	  SetLastError (RtlNtStatusToDosError(Status));
+	  return 0;
+	}
+    }
+
+  return rc;
+}
 

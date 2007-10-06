@@ -11,8 +11,8 @@
  */
 
 #include <user32.h>
-
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @unimplemented
@@ -108,6 +108,19 @@ LockWorkStation(VOID)
 /*
  * @unimplemented
  */
+BOOL
+STDCALL
+UnregisterDeviceNotification(
+  HDEVNOTIFY Handle)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 WaitForInputIdle(
@@ -132,6 +145,31 @@ STDCALL
 SetDebugErrorLevel( DWORD dwLevel )
 {
     DbgPrint("(%ld): stub\n", dwLevel);
+}
+
+/* EOF */
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EndTask(
+	HWND    hWnd,
+	BOOL fShutDown,
+	BOOL fForce)
+{
+    SendMessageW(hWnd, WM_CLOSE, 0, 0);
+
+    if (IsWindow(hWnd))
+    {
+        if (fForce)
+            return DestroyWindow(hWnd);
+        else
+            return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -233,8 +271,37 @@ DragObject(
   return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+GetUserObjectSecurity(
+		      HANDLE                hObj,
+		      PSECURITY_INFORMATION pSIRequested,
+		      PSECURITY_DESCRIPTOR  pSID,
+		      DWORD                 nLength,
+		      LPDWORD               lpnLengthNeeded
+		      )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
 
-
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetUserObjectSecurity(
+		      HANDLE                hObj,
+		      PSECURITY_INFORMATION pSIRequested,
+		      PSECURITY_DESCRIPTOR  pSID
+		      )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
 
 /*
  * @unimplemented
@@ -255,7 +322,7 @@ WINAPI
 SetSysColorsTemp(
 		 const COLORREF *pPens,
 		 const HBRUSH   *pBrushes,
-		 INT            n
+		 INT           n
 		 )
 {
   UNIMPLEMENTED;
@@ -320,6 +387,21 @@ ClientThreadSetup ( VOID )
 /*
  * @unimplemented
  */
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationW(
+    HANDLE hRecipient,
+    LPVOID NotificationFilter,
+    DWORD Flags
+    )
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetRawInputDeviceInfoW(
@@ -361,6 +443,21 @@ CsrBroadcastSystemMessageExW(
     WPARAM wParam,
     LPARAM lParam,
     PBSMINFO pBSMInfo)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HDEVNOTIFY
+STDCALL
+RegisterDeviceNotificationA(
+    HANDLE hRecipient,
+    LPVOID NotificationFilter,
+    DWORD Flags
+    )
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -491,6 +588,18 @@ GetRegisteredRawInputDevices(
     PRAWINPUTDEVICE pRawInputDevices,
     PUINT puiNumDevices,
     UINT cbSize)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+IsGUIThread(
+    BOOL bConvert)
 {
   UNIMPLEMENTED;
   return FALSE;

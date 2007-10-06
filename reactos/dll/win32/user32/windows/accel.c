@@ -31,8 +31,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 /* this is the 8 byte accel struct used in Win32 resources (internal only) */
 typedef struct
 {
@@ -187,9 +185,6 @@ BOOL WINAPI DestroyAcceleratorTable(HACCEL hAccel)
  U32_ACCEL_CACHE_ENTRY ** ppEntry;
  ULONG_PTR nUsage = 0;
 
- if (!hAccel)
-  return FALSE;
-
  EnterCriticalSection(&U32AccelCacheLock);
 
  /* see if this accelerator table has been cached */
@@ -233,7 +228,7 @@ HACCEL WINAPI LoadAcceleratorsW(HINSTANCE hInstance, LPCWSTR lpTableName)
  return U32LoadAccelerators
  (
   hInstance,
-  FindResourceExW(hInstance, (LPCWSTR) RT_ACCELERATOR, lpTableName, 0)
+  FindResourceExW(hInstance, MAKEINTRESOURCEW(RT_ACCELERATOR), lpTableName, 0)
  );
 }
 
@@ -245,7 +240,7 @@ HACCEL WINAPI LoadAcceleratorsA(HINSTANCE hInstance, LPCSTR lpTableName)
 {
   HRSRC Accel;
 
-  Accel = FindResourceExA(hInstance, (LPCSTR) RT_ACCELERATOR, lpTableName, 0);
+  Accel = FindResourceExA(hInstance, MAKEINTRESOURCEA(RT_ACCELERATOR), lpTableName, 0);
   if (NULL == Accel)
     {
       return NULL;
@@ -284,8 +279,6 @@ int WINAPI CopyAcceleratorTableW
  */
 HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccl, int cEntries)
 {
- if (!cEntries || !lpaccl) return (HACCEL)0;
-
  return NtUserCreateAcceleratorTable(lpaccl, cEntries);
 }
 
@@ -330,8 +323,6 @@ int WINAPI CopyAcceleratorTableA
 HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccl, int cEntries)
 {
  int i;
-
- if (!cEntries || !lpaccl) return (HACCEL)0;
 
  for(i = 0; i < cEntries; ++ i)
   if(!lpaccl[i].fVirt)

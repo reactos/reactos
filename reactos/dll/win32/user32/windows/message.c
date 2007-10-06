@@ -9,9 +9,8 @@
  */
 
 #include <user32.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
+#define NDEBUG
+#include <debug.h>
 
 /* DDE message exchange
  *
@@ -415,44 +414,9 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_ADDFILE:
     case EM_REPLACESEL:
       {
-        goto ConvertLParamString;
-      }
-
-    case LB_ADDSTRING:
-    case LB_ADDSTRING_LOWER:
-    case LB_ADDSTRING_UPPER:
-    case LB_INSERTSTRING:
-    case LB_INSERTSTRING_UPPER:
-    case LB_INSERTSTRING_LOWER:
-    case LB_FINDSTRING:
-    case LB_FINDSTRINGEXACT:
-    case LB_SELECTSTRING:
-      {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & LBS_HASSTRINGS))
-          {
-            goto ConvertLParamString;
-          }
-        break;
-      }
-
-    case CB_ADDSTRING:
-    case CB_INSERTSTRING:
-    case CB_FINDSTRING:
-    case CB_FINDSTRINGEXACT:
-    case CB_SELECTSTRING:
-      {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & CBS_HASSTRINGS))
-          {
-            UNICODE_STRING UnicodeString;
-
-ConvertLParamString:
-            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
-            UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
-          }
+        UNICODE_STRING UnicodeString;
+        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+        UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
         break;
       }
 
@@ -472,12 +436,12 @@ ConvertLParamString:
             return FALSE;
           }
         xs->cs = *(CREATESTRUCTW *)AnsiMsg->lParam;
-        if (!IS_INTRESOURCE(xs->cs.lpszName))
+        if (HIWORD(xs->cs.lpszName))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszName);
             xs->lpszName = xs->cs.lpszName = UnicodeBuffer.Buffer;
           }
-        if (!IS_ATOM(xs->cs.lpszClass))
+        if (HIWORD(xs->cs.lpszClass))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszClass);
             xs->lpszClass = xs->cs.lpszClass = UnicodeBuffer.Buffer;
@@ -499,7 +463,7 @@ ConvertLParamString:
 
         *cs = *(MDICREATESTRUCTW *)AnsiMsg->lParam;
 
-        if (!IS_ATOM(cs->szClass))
+        if (HIWORD(cs->szClass))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)cs->szClass);
             cs->szClass = UnicodeBuffer.Buffer;
@@ -537,47 +501,11 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_ADDFILE:
     case EM_REPLACESEL:
       {
-        goto FreeLParamString;
-      }
-
-    case LB_ADDSTRING:
-    case LB_ADDSTRING_LOWER:
-    case LB_ADDSTRING_UPPER:
-    case LB_INSERTSTRING:
-    case LB_INSERTSTRING_UPPER:
-    case LB_INSERTSTRING_LOWER:
-    case LB_FINDSTRING:
-    case LB_FINDSTRINGEXACT:
-    case LB_SELECTSTRING:
-      {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & LBS_HASSTRINGS))
-          {
-            goto FreeLParamString;
-          }
+        UNICODE_STRING UnicodeString;
+        RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+        RtlFreeUnicodeString(&UnicodeString);
         break;
       }
-
-    case CB_ADDSTRING:
-    case CB_INSERTSTRING:
-    case CB_FINDSTRING:
-    case CB_FINDSTRINGEXACT:
-    case CB_SELECTSTRING:
-      {
-        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-        if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-            (dwStyle & CBS_HASSTRINGS))
-          {
-            UNICODE_STRING UnicodeString;
-
-FreeLParamString:
-            RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
-            RtlFreeUnicodeString(&UnicodeString);
-          }
-        break;
-      }
-
 
     case WM_NCCREATE:
     case WM_CREATE:
@@ -608,9 +536,12 @@ FreeLParamString:
       {
 	UNICODE_STRING UnicodeString;
         MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)UnicodeMsg->lParam;
-        RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
-        RtlFreeUnicodeString(&UnicodeString);
-        if (!IS_ATOM(cs->szClass))
+        if (HIWORD(cs->szTitle))
+          {
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        if (HIWORD(cs->szClass))
           {
             RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szClass);
             RtlFreeUnicodeString(&UnicodeString);
@@ -709,101 +640,19 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           break;
         }
       case WM_SETTEXT:
-      case CB_DIR:
-      case LB_DIR:
-      case LB_ADDFILE:
         {
-          goto ConvertLParamString;
-	}
-
-      case LB_ADDSTRING:
-      case LB_ADDSTRING_LOWER:
-      case LB_ADDSTRING_UPPER:
-      case LB_INSERTSTRING:
-      case LB_INSERTSTRING_UPPER:
-      case LB_INSERTSTRING_LOWER:
-      case LB_FINDSTRING:
-      case LB_FINDSTRINGEXACT:
-      case LB_SELECTSTRING:
-        {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-              (dwStyle & LBS_HASSTRINGS))
-            {
-              goto ConvertLParamString;
-            }
-          break;
-        }
-
-      case CB_ADDSTRING:
-      case CB_INSERTSTRING:
-      case CB_FINDSTRING:
-      case CB_FINDSTRINGEXACT:
-      case CB_SELECTSTRING:
-        {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-               (dwStyle & CBS_HASSTRINGS))
-            {
-              ANSI_STRING AnsiString;
-              UNICODE_STRING UnicodeString;
-
-ConvertLParamString:
-              RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
-              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
-                                                            &UnicodeString,
-                                                            TRUE)))
-                {
-                  return FALSE;
-                }
-              AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
-            }
-          break;
-        }
-
-      case WM_MDICREATE:
-        {
-          ANSI_STRING AnsiBuffer;
+          ANSI_STRING AnsiString;
           UNICODE_STRING UnicodeString;
-          MDICREATESTRUCTA *cs =
-              (MDICREATESTRUCTA *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
-
-          if (!cs)
-            {
-              return FALSE;
-            }
-
-          *cs = *(MDICREATESTRUCTA *)UnicodeMsg->lParam;
-
-          if (!IS_ATOM(cs->szClass))
-            {
-              RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szClass);
-              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiBuffer,
-                                                            &UnicodeString,
-                                                            TRUE)))
-                {
-                  return FALSE;
-                }
-              cs->szClass = AnsiBuffer.Buffer;
-            }
-
-          RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szTitle);
-          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiBuffer,
+          RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
+          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
                                                         &UnicodeString,
                                                         TRUE)))
             {
-              if (!IS_ATOM(cs->szClass))
-                {
-                  RtlInitAnsiString(&AnsiBuffer, cs->szClass);
-                  RtlFreeAnsiString(&AnsiBuffer);
-                }
               return FALSE;
             }
-          cs->szTitle = AnsiBuffer.Buffer;
-
-          AnsiMsg->lParam = (LPARAM)cs;
+          AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
           break;
-        }
+	}
     }
 
   return TRUE;
@@ -822,7 +671,10 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
         }
       case WM_SETTEXT:
         {
-          goto FreeLParamString;
+          ANSI_STRING AString;
+          RtlInitAnsiString(&AString, (PSTR) AnsiMsg->lParam);
+          RtlFreeAnsiString(&AString);
+          break;
         }
       case WM_CREATE:
       case WM_NCCREATE:
@@ -841,60 +693,6 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           RtlFreeHeap(GetProcessHeap(), 0, Cs);
           break;
         }
-
-      case LB_ADDSTRING:
-      case LB_ADDSTRING_LOWER:
-      case LB_ADDSTRING_UPPER:
-      case LB_INSERTSTRING:
-      case LB_INSERTSTRING_UPPER:
-      case LB_INSERTSTRING_LOWER:
-      case LB_FINDSTRING:
-      case LB_FINDSTRINGEXACT:
-      case LB_SELECTSTRING:
-        {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
-              (dwStyle & LBS_HASSTRINGS))
-            {
-              goto FreeLParamString;
-            }
-          break;
-        }
-
-      case CB_ADDSTRING:
-      case CB_INSERTSTRING:
-      case CB_FINDSTRING:
-      case CB_FINDSTRINGEXACT:
-      case CB_SELECTSTRING:
-        {
-          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
-          if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
-               (dwStyle & CBS_HASSTRINGS))
-            {
-              ANSI_STRING AString;
-
-FreeLParamString:
-              RtlInitAnsiString(&AString, (PSTR) AnsiMsg->lParam);
-              RtlFreeAnsiString(&AString);
-            }
-          break;
-        }
-
-      case WM_MDICREATE:
-        {
-          ANSI_STRING AnsiString;
-          MDICREATESTRUCTA *cs = (MDICREATESTRUCTA *)AnsiMsg->lParam;
-          RtlInitAnsiString(&AnsiString, (PCSTR)cs->szTitle);
-          RtlFreeAnsiString(&AnsiString);
-          if (!IS_ATOM(cs->szClass))
-            {
-              RtlInitAnsiString(&AnsiString, (PCSTR)cs->szClass);
-              RtlFreeAnsiString(&AnsiString);
-            }
-          HeapFree(GetProcessHeap(), 0, cs);
-          break;
-        }
-
     }
 
   return TRUE;
@@ -1142,12 +940,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   MSG UnicodeMsg;
   LRESULT Result;
 
-  if (WndProc == NULL)
-  {
-      WARN("IntCallWindowsProcW() called with WndProc = NULL!\n");
-      return FALSE;
-  }
-
   if (IsAnsiProc)
     {
       UnicodeMsg.hwnd = hWnd;
@@ -1159,7 +951,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
           return FALSE;
         }
       Result = WndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
-
       if (! MsgiUnicodeToAnsiReply(&AnsiMsg, &UnicodeMsg, &Result))
         {
           return FALSE;
@@ -1184,12 +975,6 @@ IntCallWindowProcA(BOOL IsAnsiProc,
   MSG UnicodeMsg;
   LRESULT Result;
 
-  if (WndProc == NULL)
-  {
-      WARN("IntCallWindowsProcA() called with WndProc = NULL!\n");
-      return FALSE;
-  }
-
   if (IsAnsiProc)
     {
       return WndProc(hWnd, Msg, wParam, lParam);
@@ -1206,20 +991,12 @@ IntCallWindowProcA(BOOL IsAnsiProc,
         }
       Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
                        UnicodeMsg.wParam, UnicodeMsg.lParam);
-
       if (! MsgiAnsiToUnicodeReply(&UnicodeMsg, &AnsiMsg, &Result))
         {
           return FALSE;
         }
       return Result;
     }
-}
-
-static BOOL __inline
-IsCallProcHandle(IN WNDPROC lpWndProc)
-{
-    /* FIXME - check for 64 bit architectures... */
-    return ((ULONG_PTR)lpWndProc & 0xFFFF0000) == 0xFFFF0000;
 }
 
 
@@ -1233,27 +1010,21 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-  WNDPROC_INFO wpInfo;
+  BOOL IsHandle;
+  WndProcHandle wphData;
 
   if (lpPrevWndFunc == NULL)
-    {
-      WARN("CallWindowProcA: lpPrevWndFunc == NULL!\n");
-      return 0;
-    }
+    lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
 
-  if (!IsCallProcHandle(lpPrevWndFunc))
-    return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
+  IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
+  if (! IsHandle)
+    {
+      return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
+    }
   else
     {
-       if (NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
-                                      &wpInfo))
-         return IntCallWindowProcA(!wpInfo.IsUnicode, wpInfo.WindowProc,
-                                  hWnd, Msg, wParam, lParam);
-       else
-       {
-         WARN("CallWindowProcA: can not dereference WndProcHandle\n");
-         return 0;
-       }
+      return IntCallWindowProcA(! wphData.IsUnicode, wphData.WindowProc,
+                                hWnd, Msg, wParam, lParam);
     }
 }
 
@@ -1268,29 +1039,19 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-  WNDPROC_INFO wpInfo;
+  BOOL IsHandle;
+  WndProcHandle wphData;
 
-  /* FIXME - can the first parameter be NULL? */
-  if (lpPrevWndFunc == NULL)
+  IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
+  if (! IsHandle)
     {
-      WARN("CallWindowProcA: lpPrevWndFunc == NULL!\n");
-      return 0;
+      return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
     }
-
-  if (!IsCallProcHandle(lpPrevWndFunc))
-    return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
   else
-  {
-    if (NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
-                                      &wpInfo))
-      return IntCallWindowProcW(!wpInfo.IsUnicode, wpInfo.WindowProc,
+    {
+      return IntCallWindowProcW(! wphData.IsUnicode, wphData.WindowProc,
                                 hWnd, Msg, wParam, lParam);
-       else
-       {
-         WARN("CallWindowProcW: can not dereference WndProcHandle\n");
-         return 0;
-       }
-  }
+    }
 }
 
 
@@ -1309,12 +1070,8 @@ DispatchMessageA(CONST MSG *lpmsg)
   if (! Info.HandledByKernel)
     {
       /* We need to send the message ourselves */
-      SPY_EnterMessage(SPY_DISPATCHMESSAGE, Info.Msg.hwnd, Info.Msg.message,
-                       Info.Msg.wParam, Info.Msg.lParam);
       Result = IntCallWindowProcA(Info.Ansi, Info.Proc, Info.Msg.hwnd,
                                   Info.Msg.message, Info.Msg.wParam, Info.Msg.lParam);
-      SPY_ExitMessage(SPY_RESULT_OK, Info.Msg.hwnd, Info.Msg.message, Result,
-                      Info.Msg.wParam, Info.Msg.lParam);
     }
   MsgConversionCleanup(lpmsg, TRUE, TRUE, &Result);
 
@@ -1337,12 +1094,8 @@ DispatchMessageW(CONST MSG *lpmsg)
   if (! Info.HandledByKernel)
     {
       /* We need to send the message ourselves */
-      SPY_EnterMessage(SPY_DISPATCHMESSAGE, Info.Msg.hwnd, Info.Msg.message,
-                       Info.Msg.wParam, Info.Msg.lParam);
       Result = IntCallWindowProcW(Info.Ansi, Info.Proc, Info.Msg.hwnd,
                                   Info.Msg.message, Info.Msg.wParam, Info.Msg.lParam);
-      SPY_ExitMessage(SPY_RESULT_OK, Info.Msg.hwnd, Info.Msg.message, Result,
-                      Info.Msg.wParam, Info.Msg.lParam);
     }
   MsgConversionCleanup(lpmsg, FALSE, TRUE, &Result);
 
@@ -1811,15 +1564,12 @@ SendMessageTimeoutA(
       return FALSE;
     }
 
-  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
-
   Info.Ansi = TRUE;
   Result = NtUserSendMessageTimeout(UcMsg.hwnd, UcMsg.message,
                                     UcMsg.wParam, UcMsg.lParam,
                                     fuFlags, uTimeout, (ULONG_PTR*)lpdwResult, &Info);
   if(!Result)
   {
-      SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
       return FALSE;
   }
   if (! Info.HandledByKernel)
@@ -1841,8 +1591,7 @@ SendMessageTimeoutA(
                                       UcMsg.message, UcMsg.wParam, UcMsg.lParam);
           if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
             {
-                SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
-                return FALSE;
+              return FALSE;
             }
         }
       if(lpdwResult)
@@ -1854,12 +1603,10 @@ SendMessageTimeoutA(
       /* Message sent by kernel. Convert back to Ansi */
       if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
         {
-            SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
-            return FALSE;
+          return FALSE;
         }
     }
 
-  SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
   return Result;
 }
 
@@ -1881,8 +1628,6 @@ SendMessageTimeoutW(
   NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
 
-  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
-
   Info.Ansi = FALSE;
   Result = NtUserSendMessageTimeout(hWnd, Msg, wParam, lParam, fuFlags, uTimeout,
                                     lpdwResult, &Info);
@@ -1892,12 +1637,9 @@ SendMessageTimeoutW(
       Result = IntCallWindowProcW(Info.Ansi, Info.Proc, hWnd, Msg, wParam, lParam);
       if(lpdwResult)
         *lpdwResult = Result;
-
-      SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
       return TRUE;
     }
 
-  SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
   return Result;
 }
 
@@ -1913,30 +1655,8 @@ SendNotifyMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
-  MSG AnsiMsg, UcMsg;
-  MSG KMMsg;
-  LRESULT Result;
-
-  AnsiMsg.hwnd = hWnd;
-  AnsiMsg.message = Msg;
-  AnsiMsg.wParam = wParam;
-  AnsiMsg.lParam = lParam;
-  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
-    {
-      return FALSE;
-    }
-
-  if (! MsgiUMToKMMessage(&UcMsg, &KMMsg, TRUE))
-    {
-      MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-      return FALSE;
-    }
-  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
-                                   KMMsg.wParam, KMMsg.lParam);
-  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
-  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-
-  return Result;
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 
@@ -1951,22 +1671,8 @@ SendNotifyMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
-  MSG UMMsg, KMMsg;
-  LRESULT Result;
-
-  UMMsg.hwnd = hWnd;
-  UMMsg.message = Msg;
-  UMMsg.wParam = wParam;
-  UMMsg.lParam = lParam;
-  if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
-    {
-      return FALSE;
-    }
-  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
-                                   KMMsg.wParam, KMMsg.lParam);
-  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
-
-  return Result;
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 

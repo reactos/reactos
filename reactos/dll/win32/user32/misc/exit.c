@@ -9,8 +9,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 /*
  * Sequence of events:
  *

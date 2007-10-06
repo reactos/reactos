@@ -12,12 +12,14 @@
 
 extern PEPROCESS CsrProcess;
 
-NTSTATUS FASTCALL CsrInit(void);
-NTSTATUS FASTCALL co_CsrNotify(PCSR_API_MESSAGE Request);
-NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
-NTSTATUS WINAPI CsrInsertObject(HANDLE ObjectHandle,
-                                 ACCESS_MASK DesiredAccess,
-                                 PHANDLE Handle);
+extern NTSTATUS FASTCALL CsrInit(void);
+extern NTSTATUS FASTCALL co_CsrNotify(PCSR_API_MESSAGE Request);
+extern NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
+NTSTATUS
+STDCALL
+CsrInsertObject(HANDLE ObjectHandle,
+                ACCESS_MASK DesiredAccess,
+                PHANDLE Handle);
 
 #endif /* CSR_H_INCLUDED */
 

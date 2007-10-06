@@ -14,6 +14,39 @@
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+DeviceCapabilitiesExA(
+	LPCSTR		pDevice,
+	LPCSTR		pPort,
+	WORD		fwCapability,
+	LPSTR		pOutput,
+	CONST DEVMODEA	*pDevMode
+	)
+{
+  UNIMPLEMENTED;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+APIENTRY
+GetOutlineTextMetricsA(
+	HDC			hdc,
+	UINT			cbData,
+	LPOUTLINETEXTMETRICA	lpOTM
+	)
+{
+  UNIMPLEMENTED;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
 
 
 /*
@@ -235,6 +268,36 @@ UpdateICMRegKeyA(
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceExA(
+	LPCSTR lpFileName,
+	DWORD fl,
+	PVOID pdv
+)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+HFONT
+STDCALL
+CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
 /*
  * @unimplemented
  */
@@ -254,37 +317,15 @@ GetGlyphIndicesA(
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 UINT
 STDCALL
-GetStringBitmapA(HDC hdc,
-                 LPSTR psz,
-                 BOOL DoCall,
-                 UINT cj,
-                 BYTE *lpSB)
+GetStringBitmapA(HDC hdc,LPSTR psz,BOOL unknown,UINT cj,BYTE *lpSB)
 {
-
-    NTSTATUS Status;
-    PWSTR pwsz;
-    UINT retValue = 0;
-
-    if (DoCall)
-    {
-        Status = HEAP_strdupA2W ( &pwsz, psz );
-        if ( !NT_SUCCESS (Status) )
-        {
-            SetLastError (RtlNtStatusToDosError(Status));
-        }
-        else
-        {
-            retValue = NtGdiGetStringBitmapW(hdc, pwsz, 1, lpSB, cj);
-            HEAP_free ( pwsz );
-        }
-    }
-
-    return retValue;
-
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 }
 
 

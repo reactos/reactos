@@ -76,13 +76,8 @@
 #define NtUserSetCaretBlinkTime(uMSeconds) \
   (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME)
 
-#define NtUserRegisterUserModule(hInstance) \
-  (BOOL)NtUserCallOneParam((DWORD)hInstance, ONEPARAM_ROUTINE_REGISTERUSERMODULE)
-
-/*
 #define NtUserEnumClipboardFormats(format) \
   (UINT)NtUserCallOneParam(format, ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS)
-*/
 
 #define NtUserWindowFromDC(hDC) \
   (HWND)NtUserCallOneParam((DWORD)hDC, ONEPARAM_ROUTINE_WINDOWFROMDC)
@@ -119,35 +114,20 @@
 
 #define NtUserShowCursor(bShow) \
   NtUserCallOneParam((DWORD)bShow, ONEPARAM_ROUTINE_SHOWCURSOR)
-
-#define ShowCaret(hwnd) \
-  NtUserShowCaret(hwnd)
-
-#define HideCaret(hwnd) \
-  NtUserHideCaret(hwnd)
-
+  
+  
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
-
-/* Critical Section*/
-extern RTL_CRITICAL_SECTION User32Crit;
-
-typedef struct _USER32_TRACKINGLIST {
-    TRACKMOUSEEVENT tme;
-    POINT pos; /* center of hover rectangle */
-    UINT_PTR timer;
-} USER32_TRACKINGLIST,*PUSER32_TRACKINGLIST;
 
 typedef struct _USER32_THREAD_DATA
 {
     MSG LastMessage;
     HKL KeyboardLayoutHandle;
-    USER32_TRACKINGLIST tracking_info; /* TrackMouseEvent stuff */
 } USER32_THREAD_DATA, *PUSER32_THREAD_DATA;
 
 PUSER32_THREAD_DATA User32GetThreadData();
-
+  
 DEVMODEW *
 STDCALL
 GdiConvertToDevmodeW(DEVMODEA *dm);
@@ -174,49 +154,6 @@ extern void SPY_ExitMessage(INT iFlag, HWND hwnd, UINT msg,
                             LRESULT lReturn, WPARAM wParam, LPARAM lParam);
 extern int SPY_Init(void);
 
-
-/* Validate window handle types */
-#define VALIDATE_TYPE_FREE     0
-#define VALIDATE_TYPE_WIN      1
-#define VALIDATE_TYPE_MENU     2
-#define VALIDATE_TYPE_CURSOR   3
-#define VALIDATE_TYPE_MWPOS    4
-#define VALIDATE_TYPE_HOOK     5
-#define VALIDATE_TYPE_CALLPROC 7
-#define VALIDATE_TYPE_ACCEL    8
-#define VALIDATE_TYPE_MONITOR  12
-
-#define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
-#define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
-#define NB_USER_HANDLES  ((LAST_USER_HANDLE - FIRST_USER_HANDLE + 1) >> 1)
-#define USER_HANDLE_TO_INDEX(hwnd) ((LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1)
-
-#define USER_HEADER_TO_BODY(ObjectHeader) \
-  ((PVOID)(((PUSER_OBJECT_HEADER)ObjectHeader) + 1))
-
-#define USER_BODY_TO_HEADER(ObjectBody) \
-  ((PUSER_OBJECT_HEADER)(((PUSER_OBJECT_HEADER)ObjectBody) - 1))
-
-typedef struct _USER_HANDLE_ENTRY
-{
-    void          *ptr;          /* pointer to object */
-    PW32THREADINFO pti;          // pointer to Win32ThreadInfo
-    unsigned short type;         /* object type (0 if free) */
-    unsigned short generation;   /* generation counter */
-} USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
-
-typedef struct _USER_HANDLE_TABLE
-{
-   PUSER_HANDLE_ENTRY handles;
-   PUSER_HANDLE_ENTRY freelist;
-   int nb_handles;
-   int allocated_handles;
-} USER_HANDLE_TABLE, * PUSER_HANDLE_TABLE;
-
-extern PUSER_HANDLE_TABLE gHandleTable;
-
-PUSER_HANDLE_ENTRY FASTCALL GetUser32Handle(HANDLE);
-PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 
 #endif
 /* EOF */

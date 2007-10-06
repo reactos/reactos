@@ -19,26 +19,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Cursors
 //
 
-/* New cursor resources */
-100 CURSOR "resources/ocr_normal.cur"
-101 CURSOR "resources/ocr_ibeam.cur"
-102 CURSOR "resources/ocr_wait.cur"
-103 CURSOR "resources/ocr_cross.cur"
-104 CURSOR "resources/ocr_up.cur"
-105 CURSOR "resources/ocr_sizenwse.cur"
-106 CURSOR "resources/ocr_sizenesw.cur"
-107 CURSOR "resources/ocr_sizewe.cur"
-108 CURSOR "resources/ocr_sizens.cur"
-109 CURSOR "resources/ocr_sizeall.cur"
-110 CURSOR "resources/ocr_no.cur"
-111 CURSOR "resources/ocr_appstarting.cur"
-112 CURSOR "resources/ocr_help.cur"
-113 CURSOR "resources/ocr_pen.cur"
-114 CURSOR "resources/ocr_hand.cur"
-115 CURSOR "resources/ocr_icon.cur"
-116 CURSOR "resources/ocr_cdautostart.cur"
-
-/* Compatible cursor resources (will be removed) */
 32512 CURSOR "resources/ocr_normal.cur"
 32513 CURSOR "resources/ocr_ibeam.cur"
 32514 CURSOR "resources/ocr_wait.cur"
@@ -83,19 +63,13 @@ OBM_MNARROW BITMAP "resources/obm_mnarrow.bmp"
 // Languages
 //
 
+#include "En.rc"
 #include "Da.rc"
 #include "De.rc"
-#include "En.rc"
-#include "Es.rc"
 #include "Fr.rc"
-#include "Hu.rc"
-#include "Id.rc"
-#include "Ja.rc"
 #include "Nl.rc"
-#include "No.rc"
 #include "Pl.rc"
-#include "Ru.rc"
-#include "Sk.rc"
+#include "Ja.rc"
 #include "Sv.rc"
-#include "Uk.rc"
-#include "Gr.rc"
+#include "Hu.rc"
+#include "Es.rc"

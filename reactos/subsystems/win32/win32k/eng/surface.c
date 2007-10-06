@@ -122,12 +122,6 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
   SURFOBJ *SurfObj;
 
   NewBitmap = EngCreateBitmap(Size, DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format)), Format, 0, NULL);
-  if(!NewBitmap) 
-  {
-    DPRINT1("EngCreateBitmap failed\n");
-    return 0;
-  }
-    
   SurfObj = EngLockSurface((HSURF)NewBitmap);
   SurfObj->dhsurf = dhsurf;
   EngUnlockSurface(SurfObj);
@@ -533,17 +527,6 @@ EngEraseSurface(SURFOBJ *Surface,
 #define GDIBdyToHdr(body)                                                      \
   ((PGDIOBJHDR)(body) - 1)
 
-
-/*
- * @implemented
- */
-SURFOBJ * STDCALL
-NtGdiEngLockSurface(IN HSURF Surface)
-{
-    return EngLockSurface(Surface);
-}
-
-
 /*
  * @implemented
  */
@@ -558,16 +541,6 @@ EngLockSurface(IN HSURF Surface)
    return NULL;
 }
 
-
-/*
- * @implemented
- */
-VOID STDCALL
-NtGdiEngUnlockSurface(IN SURFOBJ *Surface)
-{
-    EngUnlockSurface(Surface);
-}
-
 /*
  * @implemented
  */
@@ -577,6 +550,4 @@ EngUnlockSurface(IN SURFOBJ *Surface)
    if (Surface != NULL)
       GDIOBJ_UnlockObjByPtr(GdiHandleTable, Surface);
 }
-
-
 /* EOF */

@@ -28,12 +28,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include FT_GLYPH_H
 #include <freetype/tttables.h>
-#include <freetype/fttrigon.h>
-#include <freetype/ftglyph.h>
-#include <freetype/ftoutln.h>
-#include <freetype/ftwinfnt.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -54,20 +49,6 @@ static FAST_MUTEX FreeTypeLock;
 static LIST_ENTRY FontListHead;
 static FAST_MUTEX FontListLock;
 static BOOL RenderingEnabled = TRUE;
-
-#define MAX_FONT_CACHE 256
-UINT Hits;
-UINT Misses;
-
-typedef struct _FONT_CACHE_ENTRY {
-  LIST_ENTRY ListEntry;
-  int GlyphIndex;
-  FT_Face Face;
-  FT_Glyph Glyph;
-  int Height;
-} FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
-static LIST_ENTRY FontCacheListHead;
-static UINT FontCacheNumEntries;
 
 static PWCHAR ElfScripts[32] = { /* these are in the order of the fsCsb[0] bits */
   L"Western", /*00*/
@@ -136,14 +117,18 @@ static CHARSETINFO FontTci[MAXTCIINDEX] = {
   { SYMBOL_CHARSET, 42 /* CP_SYMBOL */, FS(31)},
 };
 
+VOID FASTCALL
+IntLoadSystemFonts(VOID);
+
+INT FASTCALL
+IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
+
 BOOL FASTCALL
 InitFontSupport(VOID)
 {
    ULONG ulError;
 
    InitializeListHead(&FontListHead);
-   InitializeListHead(&FontCacheListHead);
-   FontCacheNumEntries = 0;
    ExInitializeFastMutex(&FontListLock);
    ExInitializeFastMutex(&FreeTypeLock);
 
@@ -278,8 +263,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    PFONT_ENTRY Entry;
    PSECTION_OBJECT SectionObject;
    ULONG ViewSize = 0;
-   FT_Fixed XScale, YScale;
-   UNICODE_STRING FileNameCopy;
 
    /* Open the font file */
 
@@ -355,25 +338,14 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
       return 0;
    }
 
-   RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, FileName, &FileNameCopy);
-   FontGDI->Filename = FileNameCopy.Buffer;
+   /* FontGDI->Filename = FileName; perform strcpy */
    FontGDI->face = Face;
 
    /* FIXME: Complete text metrics */
-    XScale = Face->size->metrics.x_scale;
-    YScale = Face->size->metrics.y_scale;
-#if 1 /* This (Wine) code doesn't seem to work correctly for us */
-    FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->ascender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->descender, YScale) + 32) >> 6;
-    FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->ascender, YScale) - 
-                                     FT_MulFix(Face->descender, YScale)) >> 6;
-#else
-    FontGDI->TextMetric.tmAscent  = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
-    FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
-    FontGDI->TextMetric.tmHeight = (Face->size->metrics.ascender - Face->size->metrics.descender) >> 6;
-#endif
-
-
+   FontGDI->TextMetric.tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
+   FontGDI->TextMetric.tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
+   FontGDI->TextMetric.tmHeight = (Face->size->metrics.ascender -
+                                   Face->size->metrics.descender) >> 6;
 
    DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
    DPRINT("Num glyphs: %u\n", Face->num_glyphs);
@@ -494,12 +466,11 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
     TextObj = TEXTOBJ_LockText(*NewFont);
     if (NULL != TextObj)
     {
-      memcpy(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
+      memcpy(&TextObj->logfont, lf, sizeof(LOGFONTW));
       if (lf->lfEscapement != lf->lfOrientation)
       {
-        /* this should really depend on whether GM_ADVANCED is set */
-        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation = 
-        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+	/* this should really depend on whether GM_ADVANCED is set */
+	TextObj->logfont.lfOrientation = TextObj->logfont.lfEscapement;
       }
       TEXTOBJ_UnlockText(TextObj);
     }
@@ -520,61 +491,82 @@ TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 
 HFONT
 STDCALL
-NtGdiHfontCreate(
-  IN PENUMLOGFONTEXDVW pelfw,
-  IN ULONG cjElfw,
-  IN LFTYPE lft,
-  IN FLONG  fl,
-  IN PVOID pvCliData )
+NtGdiCreateFont(int  Height,
+               int  Width,
+               int  Escapement,
+               int  Orientation,
+               int  Weight,
+               DWORD  Italic,
+               DWORD  Underline,
+               DWORD  StrikeOut,
+               DWORD  CharSet,
+               DWORD  OutputPrecision,
+               DWORD  ClipPrecision,
+               DWORD  Quality,
+               DWORD  PitchAndFamily,
+               LPCWSTR  Face)
 {
- ENUMLOGFONTEXDVW SafeLogfont;
- HFONT NewFont;
- PTEXTOBJ TextObj;
- NTSTATUS Status = STATUS_SUCCESS;
- 
-  if (NULL != pelfw)
+  LOGFONTW logfont;
+  HFONT NewFont;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  logfont.lfHeight = Height;
+  logfont.lfWidth = Width;
+  logfont.lfEscapement = Escapement;
+  logfont.lfOrientation = Orientation;
+  logfont.lfWeight = Weight;
+  logfont.lfItalic = Italic;
+  logfont.lfUnderline = Underline;
+  logfont.lfStrikeOut = StrikeOut;
+  logfont.lfCharSet = CharSet;
+  logfont.lfOutPrecision = OutputPrecision;
+  logfont.lfClipPrecision = ClipPrecision;
+  logfont.lfQuality = Quality;
+  logfont.lfPitchAndFamily = PitchAndFamily;
+
+  if (NULL != Face)
   {
-    Status = MmCopyFromCaller(&SafeLogfont, pelfw, sizeof(ENUMLOGFONTEXDVW));
+    int Size = sizeof(logfont.lfFaceName) / sizeof(WCHAR);
+    wcsncpy((wchar_t *)logfont.lfFaceName, Face, Size - 1);
+    /* Be 101% sure to have '\0' at end of string */
+    logfont.lfFaceName[Size - 1] = '\0';
+  }
+  else
+  {
+    logfont.lfFaceName[0] = L'\0';
+  }
+
+  if (NT_SUCCESS(Status))
+    {
+    Status = TextIntCreateFontIndirect(&logfont, &NewFont);
+    }
+
+  return NT_SUCCESS(Status) ? NewFont : NULL;
+}
+
+HFONT
+STDCALL
+NtGdiCreateFontIndirect(CONST LPLOGFONTW lf)
+{
+  LOGFONTW SafeLogfont;
+  HFONT NewFont;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if (NULL != lf)
+  {
+    Status = MmCopyFromCaller(&SafeLogfont, lf, sizeof(LOGFONTW));
     if (NT_SUCCESS(Status))
     {
-       NewFont = TEXTOBJ_AllocText();
-       if (NULL != NewFont)
-       {
-          TextObj = TEXTOBJ_LockText(NewFont);
-          
-          if (NULL != TextObj)
-          {
-             RtlCopyMemory ( &TextObj->logfont, 
-                                  &SafeLogfont,
-                                  sizeof(ENUMLOGFONTEXDVW));
-
-             if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement != 
-                 SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
-             {
-        /* this should really depend on whether GM_ADVANCED is set */
-                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation = 
-                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
-             }
-             TEXTOBJ_UnlockText(TextObj);
-          }
-          else
-          {
-/* FIXME */
-/*      ASSERT(FALSE);*/
-            Status = STATUS_INVALID_HANDLE;
-          }
-       }
+      Status = TextIntCreateFontIndirect(&SafeLogfont, &NewFont);
     }
   }
   else
   {
     Status = STATUS_INVALID_PARAMETER;
   }
- 
- return NT_SUCCESS(Status) ? NewFont : NULL;
 
-}                    
-
+  return NT_SUCCESS(Status) ? NewFont : NULL;
+}
 
 BOOL
 STDCALL
@@ -583,7 +575,7 @@ NtGdiCreateScalableFontResource(DWORD  Hidden,
                                      LPCWSTR  FontFile,
                                      LPCWSTR  CurrentPath)
 {
-    DPRINT1("NtGdiCreateScalableFontResource - is unimplemented, have a nice day and keep going");
+	DPRINT1("NtGdiCreateScalableFontResource - is unimplemented, have a nice day and keep going");
   return FALSE;
 }
 
@@ -689,16 +681,17 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
       Descent = pOS2->usWinDescent;
     }
 
-#if 1 /* This (Wine) code doesn't seem to work correctly for us, cmd issue */
+#if 0 /* This (Wine) code doesn't seem to work correctly for us */
   TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
   TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
-#else /* This (ros) code doesn't seem to work correctly for us for it miss 2-3 pixel draw of the font*/
+#else
   TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* units above baseline */
   TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* units below baseline */
 #endif
+  TM->tmInternalLeading = (FT_MulFix(Ascent + Descent
+                                     - Face->units_per_EM, YScale) + 32) >> 6;
 
-  TM->tmInternalLeading = (FT_MulFix(Ascent + Descent - Face->units_per_EM, YScale) + 32) >> 6;
-  TM->tmHeight = TM->tmAscent + TM->tmDescent; // we need add 1 height more after scale it right
+  TM->tmHeight = TM->tmAscent + TM->tmDescent;
 
   /* MSDN says:
    *  el = MAX(0, LineGap - ((WinAscent + WinDescent) - (Ascender - Descender)))
@@ -713,10 +706,8 @@ FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
     {
       TM->tmAveCharWidth = 1;
     }
-
-  /* Correct forumla to get the maxcharwidth from unicode and ansi font */
-  TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
-
+  TM->tmMaxCharWidth = (FT_MulFix(Face->bbox.xMax - Face->bbox.xMin,
+                                  XScale) + 32) >> 6;
   TM->tmWeight = pOS2->usWeightClass;
   TM->tmOverhang = 0;
   TM->tmDigitizedAspectX = 300;
@@ -1321,7 +1312,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
                                 DWORD *Count,
                                 DWORD Size)
 {
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   FONT_FAMILY_INFO_CALLBACK_CONTEXT Context;
   NTSTATUS Status;
 
@@ -1442,108 +1433,6 @@ NtGdiEnumFonts(HDC  hDC,
   UNIMPLEMENTED;
   return 0;
 }
-FT_Glyph STDCALL
-NtGdiGlyphCacheGet(
-   FT_Face Face,
-   INT GlyphIndex,
-   INT Height)
-{
-   PLIST_ENTRY CurrentEntry;
-   PFONT_CACHE_ENTRY FontEntry;
-
-//   DbgPrint("CacheGet\n");
-
-   CurrentEntry = FontCacheListHead.Flink;
-   while (CurrentEntry != &FontCacheListHead)
-   {
-      FontEntry = (PFONT_CACHE_ENTRY)CurrentEntry;
-      if (FontEntry->Face == Face &&
-          FontEntry->GlyphIndex == GlyphIndex &&
-          FontEntry->Height == Height)
-         break;
-      CurrentEntry = CurrentEntry->Flink;
-   }
-
-   if (CurrentEntry == &FontCacheListHead) {
-//      DbgPrint("Miss! %x\n", FontEntry->Glyph);
-/*
-      Misses++;
-      if (Misses>100) {
-         DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
-         Hits = Misses = 0;
-      }
-*/
-      return NULL;
-   }
-
-   RemoveEntryList(CurrentEntry);
-   InsertHeadList(&FontCacheListHead, CurrentEntry);
-
-//   DbgPrint("Hit! %x\n", FontEntry->Glyph);
-/*
-   Hits++;
-
-      if (Hits>100) {
-         DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
-         Hits = Misses = 0;
-      }
-*/
-   return FontEntry->Glyph;
-}
-
-FT_Glyph STDCALL
-NtGdiGlyphCacheSet(
-   FT_Face Face,
-   INT GlyphIndex,
-   INT Height,
-   FT_GlyphSlot GlyphSlot,
-   FT_Render_Mode RenderMode)
-{
-   FT_Glyph GlyphCopy;
-   INT error;
-   PFONT_CACHE_ENTRY NewEntry;
-
-//   DbgPrint("CacheSet.\n"); 
-
-   error = FT_Get_Glyph(GlyphSlot, &GlyphCopy);
-   if (error)
-   {
-      DbgPrint("Failure caching glyph.\n"); 
-      return NULL;
-   };
-   error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
-   if (error)
-   {
-      DbgPrint("Failure rendering glyph.\n"); 
-      return NULL;
-   };
-
-   NewEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_CACHE_ENTRY), TAG_FONT);
-   if (!NewEntry)
-   {
-      DbgPrint("Alloc failure caching glyph.\n");
-      FT_Done_Glyph(GlyphCopy);
-      return NULL;
-   }
-
-   NewEntry->GlyphIndex = GlyphIndex;
-   NewEntry->Face = Face;
-   NewEntry->Glyph = GlyphCopy;
-   NewEntry->Height = Height;
-
-   InsertHeadList(&FontCacheListHead, &NewEntry->ListEntry);
-   if (FontCacheNumEntries++ > MAX_FONT_CACHE) {
-      NewEntry = (PFONT_CACHE_ENTRY)FontCacheListHead.Blink;
-      FT_Done_Glyph(NewEntry->Glyph);
-      RemoveTailList(&FontCacheListHead);
-      ExFreePool(NewEntry);
-      FontCacheNumEntries--;
-   }
-
-//   DbgPrint("Returning the glyphcopy: %x\n", GlyphCopy);
-
-   return GlyphCopy;
-}
 
 BOOL STDCALL
 NtGdiExtTextOut(
@@ -1552,7 +1441,7 @@ NtGdiExtTextOut(
    INT YStart,
    UINT fuOptions,
    CONST RECT *lprc,
-   LPCWSTR UnsafeString,
+   LPCWSTR String,
    UINT Count,
    CONST INT *UnsafeDx)
 {
@@ -1568,8 +1457,6 @@ NtGdiExtTextOut(
    int error, glyph_index, n, i;
    FT_Face face;
    FT_GlyphSlot glyph;
-   FT_Glyph realglyph;
-   FT_BitmapGlyph realglyph2;
    LONGLONG TextLeft, RealXStart;
    ULONG TextTop, previous, BackgroundLeft;
    FT_Bool use_kerning;
@@ -1598,7 +1485,6 @@ NtGdiExtTextOut(
    INT *Dx = NULL;
    POINT Start;
    BOOL DoBreak = FALSE;
-   LPCWSTR String, SafeString = NULL;
 
    // TODO: Write test-cases to exactly match real Windows in different
    // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -1615,34 +1501,12 @@ NtGdiExtTextOut(
       return TRUE;
    }
 
-	/* Check if String is valid */
-   if ((Count > 0xFFFF) || (Count > 0 && UnsafeString == NULL))
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      goto fail;
-   }
-   if (Count > 0)
-   {
-      SafeString = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
-      if (!SafeString)
-      {
-         goto fail;
-      }
-      Status = MmCopyFromCaller(SafeString, UnsafeString, Count * sizeof(WCHAR));
-      if (! NT_SUCCESS(Status))
-      {
-        goto fail;
-      }
-   }
-   String = SafeString;
-
    if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
    {
       // At least one of the two flags were specified. Copy lprc. Once.
       Status = MmCopyFromCaller(&SpecifiedDestRect, lprc, sizeof(RECT));
       if (!NT_SUCCESS(Status))
       {
-         DC_UnlockDc(dc);
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return FALSE;
       }
@@ -1691,7 +1555,7 @@ NtGdiExtTextOut(
    {
       goto fail;
    }
-   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->Dc_Attr.crForegroundClr), 0);
+   hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor), 0);
    if ( !hBrushFg )
    {
       goto fail;
@@ -1702,9 +1566,9 @@ NtGdiExtTextOut(
       goto fail;
    }
    IntGdiInitBrushInstance(&BrushFgInst, BrushFg, NULL);
-   if ((fuOptions & ETO_OPAQUE) || dc->Dc_Attr.jBkMode == OPAQUE)
+   if ((fuOptions & ETO_OPAQUE) || dc->w.backgroundMode == OPAQUE)
    {
-      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->Dc_Attr.crBackgroundClr), 0);
+      hBrushBg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.backgroundColor), 0);
       if ( !hBrushBg )
       {
          goto fail;
@@ -1752,13 +1616,13 @@ NtGdiExtTextOut(
    }
    else
    {
-      if (dc->Dc_Attr.jBkMode == OPAQUE)
+      if (dc->w.backgroundMode == OPAQUE)
       {
          fuOptions |= ETO_OPAQUE;
       }
    }
 
-   TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
+   TextObj = TEXTOBJ_LockText(dc->w.hFont);
    if(TextObj == NULL)
    {
       goto fail;
@@ -1799,17 +1663,17 @@ NtGdiExtTextOut(
 
    Render = IntIsFontRenderingEnabled();
    if (Render)
-      RenderMode = IntGetFontRenderMode(&TextObj->logfont.elfEnumLogfontEx.elfLogFont);
+      RenderMode = IntGetFontRenderMode(&TextObj->logfont);
    else
       RenderMode = FT_RENDER_MODE_MONO;
 
    error = FT_Set_Pixel_Sizes(
       face,
-      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+      TextObj->logfont.lfWidth,
       /* FIXME should set character height if neg */
-      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-      - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+      (TextObj->logfont.lfHeight < 0 ?
+      - TextObj->logfont.lfHeight :
+      TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
    if (error)
    {
       DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -1821,9 +1685,9 @@ NtGdiExtTextOut(
     * Process the vertical alignment and determine the yoff.
     */
 
-   if (dc->Dc_Attr.lTextAlign & TA_BASELINE)
+   if (dc->w.textAlign & TA_BASELINE)
       yoff = 0;
-   else if (dc->Dc_Attr.lTextAlign & TA_BOTTOM)
+   else if (dc->w.textAlign & TA_BOTTOM)
       yoff = -face->size->metrics.descender >> 6;
    else /* TA_TOP */
       yoff = face->size->metrics.ascender >> 6;
@@ -1835,7 +1699,7 @@ NtGdiExtTextOut(
     * Process the horizontal alignment and modify XStart accordingly.
     */
 
-   if (dc->Dc_Attr.lTextAlign & (TA_RIGHT | TA_CENTER))
+   if (dc->w.textAlign & (TA_RIGHT | TA_CENTER))
    {
       ULONGLONG TextWidth = 0;
       LPCWSTR TempText = String;
@@ -1858,31 +1722,16 @@ NtGdiExtTextOut(
 
       for (i = Start; i < Count; i++)
       {
-         if (fuOptions & ETO_GLYPH_INDEX)
-           glyph_index = *TempText;
-         else
-           glyph_index = FT_Get_Char_Index(face, *TempText);
+         glyph_index = FT_Get_Char_Index(face, *TempText);
+         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
-         if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index,
-         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+         if (error)
          {
-             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-             if (error)
-             {
-                DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-             }
-
-             glyph = face->glyph;
-             realglyph = NtGdiGlyphCacheSet(face, glyph_index, 
-                TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
-             if (!realglyph)
-             {
-                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
-                 IntUnLockFreeType;
-                 goto fail;
-             }      
-
+            DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
          }
+
+         glyph = face->glyph;
+
          /* retrieve kerning distance */
          if (use_kerning && previous && glyph_index)
          {
@@ -1891,7 +1740,7 @@ NtGdiExtTextOut(
             TextWidth += delta.x;
          }
 
-         TextWidth += realglyph->advance.x >> 10;
+         TextWidth += glyph->advance.x;
 
          previous = glyph_index;
          TempText++;
@@ -1899,7 +1748,7 @@ NtGdiExtTextOut(
 
       previous = 0;
 
-      if (dc->Dc_Attr.lTextAlign & TA_RIGHT)
+      if (dc->w.textAlign & TA_RIGHT)
       {
          RealXStart -= TextWidth;
       }
@@ -1919,36 +1768,17 @@ NtGdiExtTextOut(
 
    for (i = 0; i < Count; i++)
    {
-      if (fuOptions & ETO_GLYPH_INDEX)
-        glyph_index = *String;
-      else
-        glyph_index = FT_Get_Char_Index(face, *String);
+      glyph_index = FT_Get_Char_Index(face, *String);
+      error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
-      if (!(realglyph = NtGdiGlyphCacheGet(face, glyph_index, 
-      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+      if (error)
       {
-        error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-        if (error)
-        {
-           DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
-           IntUnLockFreeType;
-           goto fail;
-        }
-        glyph = face->glyph;
-        realglyph = NtGdiGlyphCacheSet(face, 
-                                       glyph_index, 
-                                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, 
-                                       glyph, 
-                                       RenderMode);
-        if (!realglyph)
-        {
-            DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
-            IntUnLockFreeType;
-            goto fail;
-        }      
+         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+	 IntUnLockFreeType;
+         goto fail;
       }
-//      DbgPrint("realglyph: %x\n", realglyph);
-//      DbgPrint("TextLeft: %d\n", TextLeft);
+
+      glyph = face->glyph;
 
       /* retrieve kerning distance and move pen position */
       if (use_kerning && previous && glyph_index && NULL == Dx)
@@ -1957,29 +1787,21 @@ NtGdiExtTextOut(
          FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
          TextLeft += delta.x;
       }
-//      DPRINT1("TextLeft: %d\n", TextLeft);
-//      DPRINT1("TextTop: %d\n", TextTop);
 
-      if (realglyph->format == ft_glyph_format_outline)
+      if (glyph->format == ft_glyph_format_outline)
       {
-         DbgPrint("Should already be done\n");
-//         error = FT_Render_Glyph(glyph, RenderMode);
-         error = FT_Glyph_To_Bitmap(&realglyph, RenderMode, 0, 0);
+         error = FT_Render_Glyph(glyph, RenderMode);
          if (error)
          {
             DPRINT1("WARNING: Failed to render glyph!\n");
             goto fail;
          }
       }
-      realglyph2 = (FT_BitmapGlyph)realglyph;
-
-//      DPRINT1("Pitch: %d\n", pitch);
-//      DPRINT1("Advance: %d\n", realglyph->advance.x);
 
       if (fuOptions & ETO_OPAQUE)
       {
          DestRect.left = BackgroundLeft;
-         DestRect.right = (TextLeft + (realglyph->advance.x >> 10) + 32) >> 6;
+         DestRect.right = (TextLeft + glyph->advance.x + 32) >> 6;
          DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
          DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
          IntEngBitBlt(
@@ -1997,21 +1819,15 @@ NtGdiExtTextOut(
          BackgroundLeft = DestRect.right;
       }
 
-      DestRect.left = ((TextLeft + 32) >> 6) + realglyph2->left;
-      DestRect.right = DestRect.left + realglyph2->bitmap.width;
-      DestRect.top = TextTop + yoff - realglyph2->top;
-      DestRect.bottom = DestRect.top + realglyph2->bitmap.rows;
+      DestRect.left = ((TextLeft + 32) >> 6) + glyph->bitmap_left;
+      DestRect.right = DestRect.left + glyph->bitmap.width;
+      DestRect.top = TextTop + yoff - glyph->bitmap_top;
+      DestRect.bottom = DestRect.top + glyph->bitmap.rows;
 
-//      DbgPrint("lrtb %d %d %d %d\n", DestRect.left, DestRect.right,
-//                                     DestRect.top, DestRect.bottom);
-//      DbgPrint("specified lrtb %d %d %d %d\n", SpecifiedDestRect.left, SpecifiedDestRect.right,
-//                                     SpecifiedDestRect.top, SpecifiedDestRect.bottom);
-//      DbgPrint ("dc->w.DCOrgX: %d\n", dc->w.DCOrgX);
-
-      bitSize.cx = realglyph2->bitmap.width;
-      bitSize.cy = realglyph2->bitmap.rows;
-      MaskRect.right = realglyph2->bitmap.width;
-      MaskRect.bottom = realglyph2->bitmap.rows;
+      bitSize.cx = glyph->bitmap.width;
+      bitSize.cy = glyph->bitmap.rows;
+      MaskRect.right = glyph->bitmap.width;
+      MaskRect.bottom = glyph->bitmap.rows;
 
       /*
        * We should create the bitmap out of the loop at the biggest possible
@@ -2024,15 +1840,14 @@ NtGdiExtTextOut(
        * the FreeType bitmap to a temporary bitmap.
        */
 
-      HSourceGlyph = EngCreateBitmap(bitSize, realglyph2->bitmap.pitch,
-                                     (realglyph2->bitmap.pixel_mode == ft_pixel_mode_grays) ?
+      HSourceGlyph = EngCreateBitmap(bitSize, glyph->bitmap.pitch,
+                                     (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ?
                                      BMF_8BPP : BMF_1BPP, BMF_TOPDOWN,
-                                     realglyph2->bitmap.buffer);
+                                     glyph->bitmap.buffer);
       if ( !HSourceGlyph )
       {
         DPRINT1("WARNING: EngLockSurface() failed!\n");
-        // FT_Done_Glyph(realglyph);
-        IntUnLockFreeType;
+	IntUnLockFreeType;
         goto fail;
       }
       SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
@@ -2040,7 +1855,7 @@ NtGdiExtTextOut(
       {
         EngDeleteSurface((HSURF)HSourceGlyph);
         DPRINT1("WARNING: EngLockSurface() failed!\n");
-        IntUnLockFreeType;
+	IntUnLockFreeType;
         goto fail;
       }
 
@@ -2082,13 +1897,11 @@ NtGdiExtTextOut(
 
       if (NULL == Dx)
       {
-         TextLeft += realglyph->advance.x >> 10;
-//         DbgPrint("new TextLeft: %d\n", TextLeft);
+         TextLeft += glyph->advance.x;
       }
       else
       {
          TextLeft += Dx[i] << 6;
-//         DbgPrint("new TextLeft2: %d\n", TextLeft);
       }
       previous = glyph_index;
 
@@ -2109,10 +1922,6 @@ NtGdiExtTextOut(
    }
    BRUSHOBJ_UnlockBrush(BrushFg);
    NtGdiDeleteObject(hBrushFg);
-   if (NULL != SafeString)
-   {
-      ExFreePool((void*)SafeString);
-   }
    if (NULL != Dx)
    {
       ExFreePool(Dx);
@@ -2139,10 +1948,6 @@ fail:
       BRUSHOBJ_UnlockBrush(BrushFg);
       NtGdiDeleteObject(hBrushFg);
    }
-   if (NULL != SafeString)
-   {
-      ExFreePool((void*)SafeString);
-   }
    if (NULL != Dx)
    {
       ExFreePool(Dx);
@@ -2154,123 +1959,22 @@ fail:
 
 BOOL
 STDCALL
+NtGdiGetAspectRatioFilterEx(HDC  hDC,
+                                 LPSIZE  AspectRatio)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+BOOL
+STDCALL
 NtGdiGetCharABCWidths(HDC  hDC,
                            UINT  FirstChar,
                            UINT  LastChar,
                            LPABC  abc)
 {
-   LPABC SafeBuffer;
-   PDC dc;
-   PTEXTOBJ TextObj;
-   PFONTGDI FontGDI;
-   FT_Face face;
-   FT_CharMap charmap, found = NULL;
-   UINT i, glyph_index, BufferSize;
-   HFONT hFont = 0;
-   NTSTATUS Status;
-
-   if (LastChar < FirstChar)
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
-   }
-
-   BufferSize = (LastChar - FirstChar + 1) * sizeof(ABC);
-   SafeBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
-   if (SafeBuffer == NULL)
-   {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-   }
-
-   dc = DC_LockDc(hDC);
-   if (dc == NULL)
-   {
-      ExFreePool(SafeBuffer);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-   hFont = dc->Dc_Attr.hlfntNew;
-   TextObj = TEXTOBJ_LockText(hFont);
-   DC_UnlockDc(dc);
-
-   if (TextObj == NULL)
-   {
-      ExFreePool(SafeBuffer);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-   }
-
-   FontGDI = ObjToGDI(TextObj->Font, FONT);
-
-   face = FontGDI->face;
-   if (face->charmap == NULL)
-   {
-      for (i = 0; i < face->num_charmaps; i++)
-      {
-         charmap = face->charmaps[i];
-         if (charmap->encoding != 0)
-         {
-            found = charmap;
-            break;
-         }
-      }
-
-      if (!found)
-      {
-         DPRINT1("WARNING: Could not find desired charmap!\n");
-         ExFreePool(SafeBuffer);
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
-         return FALSE;
-      }
-
-      IntLockFreeType;
-      FT_Set_Charmap(face, found);
-      IntUnLockFreeType;
-   }
-
-   IntLockFreeType;
-   FT_Set_Pixel_Sizes(face,
-                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                      /* FIXME should set character height if neg */
-                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
-
-   for (i = FirstChar; i <= LastChar; i++)
-   {
-      int adv, lsb, bbx, left, right;
-      
-      glyph_index = FT_Get_Char_Index(face, i);
-      FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-
-      left = (INT)face->glyph->metrics.horiBearingX  & -64;
-      right = (INT)((face->glyph->metrics.horiBearingX + face->glyph->metrics.width) + 63) & -64;
-      adv  = (face->glyph->advance.x + 32) >> 6;
-
-//      int test = (INT)(face->glyph->metrics.horiAdvance + 63) >> 6;
-//      DPRINT1("Advance Wine %d and Advance Ros %d\n",test, adv ); /* It's the same!*/
-
-      lsb = left >> 6;
-      bbx = (right - left) >> 6;
-/*
-      DPRINT1("lsb %d and bbx %d\n", lsb, bbx );
- */
-      SafeBuffer[i - FirstChar].abcA = lsb;
-      SafeBuffer[i - FirstChar].abcB = bbx;
-      SafeBuffer[i - FirstChar].abcC = adv - lsb - bbx;
-   }
-   IntUnLockFreeType;
-   TEXTOBJ_UnlockText(TextObj);
-   Status = MmCopyToCaller(abc, SafeBuffer, BufferSize);
-   if (! NT_SUCCESS(Status))
-     {
-       SetLastNtError(Status);
-       ExFreePool(SafeBuffer);
-       return FALSE;
-     }
-   ExFreePool(SafeBuffer);
-   DPRINT("NtGdiGetCharABCWidths Worked!\n");
-   return TRUE;
+  DPRINT1("NtGdiGetCharABCWidths Is unimplemented, keep going anyway\n");
+  return 1;
 }
 
 BOOL
@@ -2334,7 +2038,7 @@ NtGdiGetCharWidth32(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   hFont = dc->Dc_Attr.hlfntNew;
+   hFont = dc->w.hFont;
    TextObj = TEXTOBJ_LockText(hFont);
    DC_UnlockDc(dc);
 
@@ -2375,11 +2079,11 @@ NtGdiGetCharWidth32(HDC  hDC,
 
    IntLockFreeType;
    FT_Set_Pixel_Sizes(face,
-                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+                      TextObj->logfont.lfWidth,
                       /* FIXME should set character height if neg */
-                      (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                       - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                       TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                      (TextObj->logfont.lfHeight < 0 ?
+                       - TextObj->logfont.lfHeight :
+                       TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
 
    for (i = FirstChar; i <= LastChar; i++)
    {
@@ -2413,44 +2117,6 @@ NtGdiGetFontLanguageInfo(HDC  hDC)
   return 0;
 }
 
-static 
-void 
-FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
-{
-    pt->x.value = vec->x >> 6;
-    pt->x.fract = (vec->x & 0x3f) << 10;
-    pt->x.fract |= ((pt->x.fract >> 6) | (pt->x.fract >> 12));
-    pt->y.value = vec->y >> 6;
-    pt->y.fract = (vec->y & 0x3f) << 10;
-    pt->y.fract |= ((pt->y.fract >> 6) | (pt->y.fract >> 12));
-    return;
-}
-
-/* 
-   This function builds an FT_Fixed from a float. It puts the integer part
-   in the highest 16 bits and the decimal part in the lowest 16 bits of the FT_Fixed.
-   It fails if the integer part of the float number is greater than SHORT_MAX.
-*/
-static inline FT_Fixed FT_FixedFromFloat(float f)
-{
-	short value = f;
-	unsigned short fract = (f - value) * 0xFFFF;
-	return (FT_Fixed)((long)value << 16 | (unsigned long)fract);
-}
-
-/* 
-   This function builds an FT_Fixed from a FIXED. It simply put f.value 
-   in the highest 16 bits and f.fract in the lowest 16 bits of the FT_Fixed.
-*/
-static inline FT_Fixed FT_FixedFromFIXED(FIXED f)
-{
-	return (FT_Fixed)((long)f.value << 16 | (unsigned long)f.fract);
-}
-
-/*
- * Based on WineEngGetGlyphOutline
- *
- */
 ULONG
 APIENTRY
 NtGdiGetGlyphOutline(
@@ -2459,708 +2125,33 @@ NtGdiGetGlyphOutline(
     IN UINT iFormat,
     OUT LPGLYPHMETRICS pgm,
     IN ULONG cjBuf,
-    OUT OPTIONAL PVOID UnsafeBuf,
+    OUT OPTIONAL PVOID pvBuf,
     IN LPMAT2 pmat2,
     IN BOOL bIgnoreRotation)
-{
-  static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
-  PDC dc;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGDI;
-  HFONT hFont = 0;
-  NTSTATUS Status;
-  GLYPHMETRICS gm;
-  ULONG Size;
-  FT_Face ft_face;
-  FT_UInt glyph_index;
-  DWORD width, height, pitch, needed = 0;
-  FT_Bitmap ft_bitmap;
-  FT_Error error;
-  INT left, right, top = 0, bottom = 0;
-  FT_Angle angle = 0;
-  FT_Int load_flags = FT_LOAD_DEFAULT | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
-  FLOAT eM11, widthRatio = 1.0;
-  FT_Matrix transMat = identityMat;
-  BOOL needsTransform = FALSE;
-  INT orientation;
-  LONG aveWidth;
-  INT adv, lsb, bbx; /* These three hold to widths of the unrotated chars */
-  OUTLINETEXTMETRICW *potm;
-  PVOID pvBuf = NULL;
-  int n = 0;
-  FT_CharMap found = 0, charmap;
-
-  DPRINT("%p, %d, %08x, %p, %08lx, %p, %p\n", hdc, wch, iFormat, pgm,
-              cjBuf, UnsafeBuf, pmat2);
-
-  dc = DC_LockDc(hdc);
-  if (!dc)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return GDI_ERROR;
-   }
-  eM11 = dc->w.xformWorld2Vport.eM11;
-  hFont = dc->Dc_Attr.hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
-  DC_UnlockDc(dc);
-  if (!TextObj)
-   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return GDI_ERROR;
-   }
-  FontGDI = ObjToGDI(TextObj->Font, FONT);
-  ft_face = FontGDI->face;
-
-  aveWidth = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth: 0;
-  orientation = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation: 0;
-
-  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
-  if (!potm)
-    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      TEXTOBJ_UnlockText(TextObj);
-      return GDI_ERROR;
-    }
-  IntGetOutlineTextMetrics(FontGDI, Size, potm);
-
-  IntLockFreeType;
-
-  /* During testing, I never saw this used. In here just incase.*/
-  if (ft_face->charmap == NULL)
-    {
-      DPRINT("WARNING: No charmap selected!\n");
-      DPRINT("This font face has %d charmaps\n", ft_face->num_charmaps);
-
-
-      
-      for (n = 0; n < ft_face->num_charmaps; n++)
-      {
-         charmap = ft_face->charmaps[n];
-         DPRINT("found charmap encoding: %u\n", charmap->encoding);
-         if (charmap->encoding != 0)
-         {
-            found = charmap;
-            break;
-         }
-      }
-      if (!found)
-      {
-         DPRINT1("WARNING: Could not find desired charmap!\n");
-      }
-      error = FT_Set_Charmap(ft_face, found);
-      if (error)
-        {
-           DPRINT1("WARNING: Could not set the charmap!\n");
-        }
-    }
-
-//  FT_Set_Pixel_Sizes(ft_face,
-//                     TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
-                     /* FIXME should set character height if neg */
-//                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-//                      TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
-
-  TEXTOBJ_UnlockText(TextObj);
-
-  if (iFormat & GGO_GLYPH_INDEX)
-    {
-       glyph_index = wch;
-       iFormat &= ~GGO_GLYPH_INDEX;
-    }
-  else  glyph_index = FT_Get_Char_Index(ft_face, wch);
-
-  if (orientation || (iFormat != GGO_METRICS && iFormat != GGO_BITMAP) || aveWidth || pmat2)
-        load_flags |= FT_LOAD_NO_BITMAP;
-
-  error = FT_Load_Glyph(ft_face, glyph_index, load_flags);
-  if (error)
-    {
-         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
-	 IntUnLockFreeType;
-	 if (potm) ExFreePool(potm);
-	 return GDI_ERROR;
-    }
-  IntUnLockFreeType;
-
-  if (aveWidth && potm)
-    {
-       widthRatio = (FLOAT)aveWidth * eM11 / 
-                                 (FLOAT) potm->otmTextMetrics.tmAveCharWidth;
-    }
-
-  left = (INT)(ft_face->glyph->metrics.horiBearingX * widthRatio) & -64;
-  right = (INT)((ft_face->glyph->metrics.horiBearingX + 
-                    ft_face->glyph->metrics.width) * widthRatio + 63) & -64;
-
-  adv = (INT)((ft_face->glyph->metrics.horiAdvance * widthRatio) + 63) >> 6;
-  lsb = left >> 6;
-  bbx = (right - left) >> 6;
-
-  DPRINT("Advance = %d, lsb = %d, bbx = %d\n",adv, lsb, bbx);
-
-  IntLockFreeType;
-  
-   /* Scaling transform */
-  if (aveWidth)
-    {
-        FT_Matrix scaleMat;
-        DPRINT("Scaling Trans!\n");
-        scaleMat.xx = FT_FixedFromFloat(widthRatio);
-        scaleMat.xy = 0;
-        scaleMat.yx = 0;
-        scaleMat.yy = (1 << 16);
-        FT_Matrix_Multiply(&scaleMat, &transMat);
-        needsTransform = TRUE;
-    }
-
-    /* Slant transform */
-  if (potm->otmTextMetrics.tmItalic)
-    {
-        FT_Matrix slantMat;
-        DPRINT("Slant Trans!\n");
-        slantMat.xx = (1 << 16);
-        slantMat.xy = ((1 << 16) >> 2);
-        slantMat.yx = 0;
-        slantMat.yy = (1 << 16);
-        FT_Matrix_Multiply(&slantMat, &transMat);
-        needsTransform = TRUE;
-    }
-
-    /* Rotation transform */
-  if (orientation)
-    {
-        FT_Matrix rotationMat;
-        FT_Vector vecAngle;
-        DPRINT("Rotation Trans!\n");
-        angle = FT_FixedFromFloat((float)orientation / 10.0);
-        FT_Vector_Unit(&vecAngle, angle);
-        rotationMat.xx = vecAngle.x;
-        rotationMat.xy = -vecAngle.y;
-        rotationMat.yx = -rotationMat.xy;
-        rotationMat.yy = rotationMat.xx;
-        FT_Matrix_Multiply(&rotationMat, &transMat);
-        needsTransform = TRUE;
-    }
-
-    /* Extra transformation specified by caller */
-  if (pmat2)
-    {
-        FT_Matrix extraMat;
-        DPRINT("MAT2 Matrix Trans!\n");
-        extraMat.xx = FT_FixedFromFIXED(pmat2->eM11);
-        extraMat.xy = FT_FixedFromFIXED(pmat2->eM21);
-        extraMat.yx = FT_FixedFromFIXED(pmat2->eM12);
-        extraMat.yy = FT_FixedFromFIXED(pmat2->eM22);
-        FT_Matrix_Multiply(&extraMat, &transMat);
-        needsTransform = TRUE;
-    }
-
-  if (potm) ExFreePool(potm); /* It looks like we are finished with potm ATM.*/
-
-  if (!needsTransform)
-    {
-        DPRINT("No Need to be Transformed!\n");
-        top = (ft_face->glyph->metrics.horiBearingY + 63) & -64;
-        bottom = (ft_face->glyph->metrics.horiBearingY -
-                  ft_face->glyph->metrics.height) & -64;
-        gm.gmCellIncX = adv;
-        gm.gmCellIncY = 0;
-    }
-  else 
-    {
-        INT xc, yc;
-        FT_Vector vec;
-        for(xc = 0; xc < 2; xc++)
-        {
-          for(yc = 0; yc < 2; yc++)
-            {
-                vec.x = (ft_face->glyph->metrics.horiBearingX +
-                  xc * ft_face->glyph->metrics.width);
-                vec.y = ft_face->glyph->metrics.horiBearingY -
-                  yc * ft_face->glyph->metrics.height;
-                DPRINT("Vec %ld,%ld\n", vec.x, vec.y);
-                FT_Vector_Transform(&vec, &transMat);
-                if(xc == 0 && yc == 0)
-                {
-                    left = right = vec.x;
-                    top = bottom = vec.y;
-                }
-                else
-                {
-                    if(vec.x < left) left = vec.x;
-                    else if(vec.x > right) right = vec.x;
-                    if(vec.y < bottom) bottom = vec.y;
-                    else if(vec.y > top) top = vec.y;
-                }
-            }
-        }
-        left = left & -64;
-        right = (right + 63) & -64;
-        bottom = bottom & -64;
-        top = (top + 63) & -64;
-
-        DPRINT("transformed box: (%d,%d - %d,%d)\n", left, top, right, bottom);
-        vec.x = ft_face->glyph->metrics.horiAdvance;
-        vec.y = 0;
-        FT_Vector_Transform(&vec, &transMat);
-        gm.gmCellIncX = (vec.x+63) >> 6;
-        gm.gmCellIncY = -((vec.y+63) >> 6);
-    }
-  gm.gmBlackBoxX = (right - left) >> 6;
-  gm.gmBlackBoxY = (top - bottom) >> 6;
-  gm.gmptGlyphOrigin.x = left >> 6;
-  gm.gmptGlyphOrigin.y = top >> 6;
-
-  DPRINT("CX %d CY %d BBX %d BBY %d GOX %d GOY %d\n",
-                           gm.gmCellIncX, gm.gmCellIncY,
-                           gm.gmBlackBoxX, gm.gmBlackBoxY,
-                           gm.gmptGlyphOrigin.x, gm.gmptGlyphOrigin.y);
-
-  IntUnLockFreeType;
- 
-  if (pgm)
-    {
-      Status = MmCopyToCaller(pgm, &gm,  sizeof(GLYPHMETRICS));
-      if (! NT_SUCCESS(Status))
-        {
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return GDI_ERROR;
-        }
-      DPRINT("Copied GLYPHMETRICS to User!\n");
-    }
-
-  if (iFormat == GGO_METRICS)
-    { 
-        DPRINT("GGO_METRICS Exit!\n");
-        return 1; /* FIXME */
-    }
-
-  if (ft_face->glyph->format != ft_glyph_format_outline && iFormat != GGO_BITMAP)
-    {
-        DPRINT1("loaded a bitmap\n");
-        return GDI_ERROR;
-    }
-
-  if (UnsafeBuf && cjBuf)
-    {
-       pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, TAG_GDITEXT);
-       if (pvBuf == NULL)
-         {
-           SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-           return GDI_ERROR;
-         }
-       RtlZeroMemory(pvBuf, cjBuf);
-    }
-    
-
-  switch(iFormat)
-    {
-    case GGO_BITMAP:
-        width = gm.gmBlackBoxX;
-        height = gm.gmBlackBoxY;
-        pitch = ((width + 31) >> 5) << 2;
-        needed = pitch * height;
-
-        if(!pvBuf || !cjBuf) break;
-
-        switch(ft_face->glyph->format)
-        {
-          case ft_glyph_format_bitmap:
-           {
-             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
-             INT w = (ft_face->glyph->bitmap.width + 7) >> 3;
-             INT h = ft_face->glyph->bitmap.rows;
-             while(h--)
-             {
-                RtlCopyMemory(dst, src, w);
-                src += ft_face->glyph->bitmap.pitch;
-                dst += pitch;
-             }
-             break;
-           }
-
-          case ft_glyph_format_outline:
-            ft_bitmap.width = width;
-            ft_bitmap.rows = height;
-            ft_bitmap.pitch = pitch;
-            ft_bitmap.pixel_mode = ft_pixel_mode_mono;
-            ft_bitmap.buffer = pvBuf;
-
-            IntLockFreeType;
-            if(needsTransform)
-            {
-               FT_Outline_Transform(&ft_face->glyph->outline, &transMat);
-	    }
-            FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
-            /* Note: FreeType will only set 'black' bits for us. */
-            RtlZeroMemory(pvBuf, needed);
-            FT_Outline_Get_Bitmap(library, &ft_face->glyph->outline, &ft_bitmap);
-            IntUnLockFreeType;
-            break;
-
-          default:
-            DPRINT1("loaded glyph format %x\n", ft_face->glyph->format);
-            if(pvBuf) ExFreePool(pvBuf);
-            return GDI_ERROR;
-        }
-        break;
-
-    case GGO_GRAY2_BITMAP:
-    case GGO_GRAY4_BITMAP:
-    case GGO_GRAY8_BITMAP:
-      {
-        unsigned int mult, row, col;
-        BYTE *start, *ptr;
-
-        width = gm.gmBlackBoxX;
-        height = gm.gmBlackBoxY;
-        pitch = (width + 3) / 4 * 4;
-        needed = pitch * height;
-
-        if(!pvBuf || !cjBuf) break;
-
-        ft_bitmap.width = width;
-        ft_bitmap.rows = height;
-        ft_bitmap.pitch = pitch;
-        ft_bitmap.pixel_mode = ft_pixel_mode_grays;
-        ft_bitmap.buffer = pvBuf;
-
-        IntLockFreeType;
-        if(needsTransform)
-        {
-           FT_Outline_Transform(&ft_face->glyph->outline, &transMat);
-        }
-        FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
-        RtlZeroMemory(ft_bitmap.buffer, cjBuf);
-        FT_Outline_Get_Bitmap(library, &ft_face->glyph->outline, &ft_bitmap);
-        IntUnLockFreeType;
-        
-        if(iFormat == GGO_GRAY2_BITMAP)
-            mult = 4;
-        else if(iFormat == GGO_GRAY4_BITMAP)
-            mult = 16;
-        else if(iFormat == GGO_GRAY8_BITMAP)
-            mult = 64;	    
-        else 
-        {
-            ASSERT(0);
-            break;
-        }
-
-        start = pvBuf;
-        for(row = 0; row < height; row++)
-        {
-            ptr = start;
-            for(col = 0; col < width; col++, ptr++)
-            {
-                *ptr = (((int)*ptr) * mult + 128) / 256;
-            }
-            start += pitch;
-        }
-        break;
-      }
-
-    case GGO_NATIVE:
-      {
-        int contour, point = 0, first_pt;
-        FT_Outline *outline = &ft_face->glyph->outline;
-        TTPOLYGONHEADER *pph;
-        TTPOLYCURVE *ppc;
-        DWORD pph_start, cpfx, type;
-
-        if(cjBuf == 0) pvBuf = NULL; /* This is okay, need cjBuf to allocate. */
-
-        IntLockFreeType;
-        if (needsTransform && pvBuf) FT_Outline_Transform(outline, &transMat);
-
-        for(contour = 0; contour < outline->n_contours; contour++)
-        {
-          pph_start = needed;
-          pph = (TTPOLYGONHEADER *)((char *)pvBuf + needed);
-          first_pt = point;
-          if(pvBuf)
-          {
-            pph->dwType = TT_POLYGON_TYPE;
-            FTVectorToPOINTFX(&outline->points[point], &pph->pfxStart);
-          }
-          needed += sizeof(*pph);
-          point++;
-          while(point <= outline->contours[contour])
-          {
-            ppc = (TTPOLYCURVE *)((char *)pvBuf + needed);
-            type = (outline->tags[point] & FT_Curve_Tag_On) ?
-                                            TT_PRIM_LINE : TT_PRIM_QSPLINE;
-            cpfx = 0;
-            do
-            {
-              if(pvBuf)
-                FTVectorToPOINTFX(&outline->points[point], &ppc->apfx[cpfx]);
-              cpfx++;
-              point++;
-            } while(point <= outline->contours[contour] &&
-                       (outline->tags[point] & FT_Curve_Tag_On) ==
-                       (outline->tags[point-1] & FT_Curve_Tag_On));
-
-                /* At the end of a contour Windows adds the start point, but
-                   only for Beziers */
-            if(point > outline->contours[contour] &&
-                   !(outline->tags[point-1] & FT_Curve_Tag_On))
-            {
-              if(pvBuf)
-                FTVectorToPOINTFX(&outline->points[first_pt], &ppc->apfx[cpfx]);
-              cpfx++;
-            } 
-            else if(point <= outline->contours[contour] &&
-                                outline->tags[point] & FT_Curve_Tag_On)
-            {
-              /* add closing pt for bezier */
-              if(pvBuf)
-                FTVectorToPOINTFX(&outline->points[point], &ppc->apfx[cpfx]);
-              cpfx++;
-              point++;
-            }
-            if(pvBuf)
-            {
-               ppc->wType = type;
-               ppc->cpfx = cpfx;
-            }
-            needed += sizeof(*ppc) + (cpfx - 1) * sizeof(POINTFX);
-          }
-          if(pvBuf) pph->cb = needed - pph_start;
-        }
-        IntUnLockFreeType;
-        break;
-      }
-    case GGO_BEZIER:
-      {
-        /* Convert the quadratic Beziers to cubic Beziers.
-           The parametric eqn for a cubic Bezier is, from PLRM:
-           r(t) = at^3 + bt^2 + ct + r0
-           with the control points:
-           r1 = r0 + c/3
-           r2 = r1 + (c + b)/3
-           r3 = r0 + c + b + a
-
-           A quadratic Beizer has the form:
-           p(t) = (1-t)^2 p0 + 2(1-t)t p1 + t^2 p2
-
-           So equating powers of t leads to:
-           r1 = 2/3 p1 + 1/3 p0
-           r2 = 2/3 p1 + 1/3 p2
-           and of course r0 = p0, r3 = p2
-         */
-
-        int contour, point = 0, first_pt;
-        FT_Outline *outline = &ft_face->glyph->outline;
-        TTPOLYGONHEADER *pph;
-        TTPOLYCURVE *ppc;
-        DWORD pph_start, cpfx, type;
-        FT_Vector cubic_control[4];
-        if(cjBuf == 0) pvBuf = NULL;
-
-        if (needsTransform && pvBuf)
-          {
-            IntLockFreeType;
-            FT_Outline_Transform(outline, &transMat);
-            IntUnLockFreeType;
-          }
-
-        for(contour = 0; contour < outline->n_contours; contour++)
-        {
-            pph_start = needed;
-            pph = (TTPOLYGONHEADER *)((char *)pvBuf + needed);
-            first_pt = point;
-            if(pvBuf)
-            {
-                 pph->dwType = TT_POLYGON_TYPE;
-                 FTVectorToPOINTFX(&outline->points[point], &pph->pfxStart);
-            }
-            needed += sizeof(*pph);
-            point++;
-            while(point <= outline->contours[contour])
-            {
-                ppc = (TTPOLYCURVE *)((char *)pvBuf + needed);
-                type = (outline->tags[point] & FT_Curve_Tag_On) ?
-                TT_PRIM_LINE : TT_PRIM_CSPLINE;
-                cpfx = 0;
-                do
-                {
-                    if(type == TT_PRIM_LINE)
-                    {
-                      if(pvBuf)
-                        FTVectorToPOINTFX(&outline->points[point], &ppc->apfx[cpfx]);
-                        cpfx++;
-                        point++;
-                    }
-                    else
-                    {
-                      /* Unlike QSPLINEs, CSPLINEs always have their endpoint
-                         so cpfx = 3n */
-
-                      /* FIXME: Possible optimization in endpoint calculation
-                         if there are two consecutive curves */
-                        cubic_control[0] = outline->points[point-1];
-                        if(!(outline->tags[point-1] & FT_Curve_Tag_On))
-                        {
-                            cubic_control[0].x += outline->points[point].x + 1;
-                            cubic_control[0].y += outline->points[point].y + 1;
-                            cubic_control[0].x >>= 1;
-                            cubic_control[0].y >>= 1;
-                        }
-                        if(point+1 > outline->contours[contour])
-                            cubic_control[3] = outline->points[first_pt];
-                        else
-                        {
-                            cubic_control[3] = outline->points[point+1];
-                            if(!(outline->tags[point+1] & FT_Curve_Tag_On))
-                            {
-                                cubic_control[3].x += outline->points[point].x + 1;
-                                cubic_control[3].y += outline->points[point].y + 1;
-                                cubic_control[3].x >>= 1;
-                                cubic_control[3].y >>= 1;
-                            }
-                        }
-                        /* r1 = 1/3 p0 + 2/3 p1
-                           r2 = 1/3 p2 + 2/3 p1 */
-                        cubic_control[1].x = (2 * outline->points[point].x + 1) / 3;
-                        cubic_control[1].y = (2 * outline->points[point].y + 1) / 3;
-                        cubic_control[2] = cubic_control[1];
-                        cubic_control[1].x += (cubic_control[0].x + 1) / 3;
-                        cubic_control[1].y += (cubic_control[0].y + 1) / 3;
-                        cubic_control[2].x += (cubic_control[3].x + 1) / 3;
-                        cubic_control[2].y += (cubic_control[3].y + 1) / 3;
-                        if(pvBuf)
-                        {
-                            FTVectorToPOINTFX(&cubic_control[1], &ppc->apfx[cpfx]);
-                            FTVectorToPOINTFX(&cubic_control[2], &ppc->apfx[cpfx+1]);
-                            FTVectorToPOINTFX(&cubic_control[3], &ppc->apfx[cpfx+2]);
-                        }
-                        cpfx += 3;
-                        point++;
-                    }
-                } 
-                while(point <= outline->contours[contour] &&
-                        (outline->tags[point] & FT_Curve_Tag_On) ==
-                        (outline->tags[point-1] & FT_Curve_Tag_On));
-                /* At the end of a contour Windows adds the start point,
-                   but only for Beziers and we've already done that.
-                */
-                if(point <= outline->contours[contour] &&
-                                   outline->tags[point] & FT_Curve_Tag_On)
-                {
-                  /* This is the closing pt of a bezier, but we've already
-                    added it, so just inc point and carry on */
-                    point++;
-                }
-                if(pvBuf)
-                {
-                    ppc->wType = type;
-                    ppc->cpfx = cpfx;
-		}
-                needed += sizeof(*ppc) + (cpfx - 1) * sizeof(POINTFX);
-            }
-            if(pvBuf) pph->cb = needed - pph_start;
-        }
-        break;
-      }
-
-    default:
-        DPRINT1("Unsupported format %d\n", iFormat);
-        if(pvBuf) ExFreePool(pvBuf);
-        return GDI_ERROR;
-    }
-
-  if (pvBuf)
-    {
-       Status = MmCopyToCaller(UnsafeBuf, pvBuf, cjBuf);
-       if (! NT_SUCCESS(Status))
-         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            ExFreePool(pvBuf);
-            return GDI_ERROR;
-         }
-       DPRINT("NtGdiGetGlyphOutline K -> U worked!\n");
-       ExFreePool(pvBuf);
-    }
-
-  DPRINT("NtGdiGetGlyphOutline END and needed %d\n", needed);
-  return needed;
-}
-
-DWORD
-STDCALL
-NtGdiGetKerningPairs(HDC  hDC,
-                     ULONG  NumPairs,
-                     LPKERNINGPAIR  krnpair)
 {
   UNIMPLEMENTED;
   return 0;
 }
 
-/*
- From "Undocumented Windows 2000 Secrets" Appendix B, Table B-2, page
- 472, this is NtGdiGetOutlineTextMetricsInternalW.
- */
-ULONG
+DWORD
 STDCALL
-NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
-                                   ULONG  Data,
-                      OUTLINETEXTMETRICW  *otm,
-                                   TMDIFF *Tmd)
+NtGdiGetKerningPairs(HDC  hDC,
+                           DWORD  NumPairs,
+                           LPKERNINGPAIR  krnpair)
 {
-  PDC dc;
-  PTEXTOBJ TextObj;
-  PFONTGDI FontGDI;
-  HFONT hFont = 0;
-  ULONG Size;
-  OUTLINETEXTMETRICW *potm;
-  NTSTATUS Status;
-  
-  dc = DC_LockDc(hDC);
-  if (dc == NULL)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return 0;
-    }
-  hFont = dc->Dc_Attr.hlfntNew;
-  TextObj = TEXTOBJ_LockText(hFont);
-  DC_UnlockDc(dc);
-  if (TextObj == NULL)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return 0;
-    }
-  FontGDI = ObjToGDI(TextObj->Font, FONT);
-  TEXTOBJ_UnlockText(TextObj);
-  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-  if (!otm) return Size;
-  if (Size > Data)
-    {
-      SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
-      return 0;
-    }
-  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
-  if (NULL == potm)
-    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return 0;
-    }
-  IntGetOutlineTextMetrics(FontGDI, Size, potm);
-  if (otm)
-    {
-      Status = MmCopyToCaller(otm, potm, Size);
-      if (! NT_SUCCESS(Status))
-        {
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          ExFreePool(potm);
-          return 0;
-        }
-    }
-  ExFreePool(potm);
-  return Size;
+  UNIMPLEMENTED;
+  return 0;
 }
 
+UINT
+STDCALL
+NtGdiGetOutlineTextMetrics(HDC  hDC,
+                                UINT  Data,
+                                LPOUTLINETEXTMETRICW  otm)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
 
 BOOL
 APIENTRY
@@ -3172,8 +2163,15 @@ NtGdiGetRasterizerCaps(
   return FALSE;
 }
 
-DWORD
-NtGdiGetCharSet(HDC  hDC)
+
+/*
+ Based on "Undocumented W2k Secrets", Table B-2, page 473.
+ This function does not exist. See note in gdi32/objects/text.c
+ GetTextCharset. This should be moved to include/win32k/ntgdibad.h.
+*/
+UINT
+STDCALL
+NtGdiGetTextCharset(HDC  hDC)
 {
   UNIMPLEMENTED;
   return 0;
@@ -3202,7 +2200,7 @@ NtGdiGetTextCharsetInfo(
          SetLastWin32Error(ERROR_INVALID_HANDLE);
          return Ret;
     }
-  hFont = Dc->Dc_Attr.hlfntNew;
+  hFont = Dc->w.hFont;
   TextObj = TEXTOBJ_LockText(hFont);
   DC_UnlockDc( Dc );
   if ( TextObj == NULL)
@@ -3332,11 +2330,11 @@ TextIntGetTextExtentPoint(PDC dc,
 
   IntLockFreeType;
   error = FT_Set_Pixel_Sizes(face,
-                             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+                             TextObj->logfont.lfWidth,
                              /* FIXME should set character height if neg */
-                             (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                              - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                             (TextObj->logfont.lfHeight < 0 ?
+                              - TextObj->logfont.lfHeight :
+                              TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
   IntUnLockFreeType;
   if (error)
     {
@@ -3384,25 +2382,21 @@ TextIntGetTextExtentPoint(PDC dc,
     }
 
   Size->cx = (TotalWidth + 32) >> 6;
-  Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
+  Size->cy = (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight : TextObj->logfont.lfHeight);
   Size->cy = EngMulDiv(Size->cy, IntGdiGetDeviceCaps(dc, LOGPIXELSY), 72);
 
   return TRUE;
 }
 
-W32KAPI
 BOOL
-APIENTRY
-NtGdiGetTextExtentExW(
-    IN HDC hDC,
-    IN OPTIONAL LPWSTR UnsafeString,
-    IN ULONG Count,
-    IN ULONG MaxExtent,
-    OUT OPTIONAL PULONG UnsafeFit,
-    OUT OPTIONAL PULONG UnsafeDx,
-    OUT LPSIZE UnsafeSize,
-    IN FLONG fl
-)
+STDCALL
+NtGdiGetTextExtentExPoint(HDC hDC,
+                         LPCWSTR UnsafeString,
+                         int Count,
+                         int MaxExtent,
+                         LPINT UnsafeFit,
+                         LPINT UnsafeDx,
+                         LPSIZE UnsafeSize)
 {
   PDC dc;
   LPWSTR String;
@@ -3412,8 +2406,6 @@ NtGdiGetTextExtentExW(
   INT Fit;
   LPINT Dx;
   PTEXTOBJ TextObj;
-
-  /* FIXME: Handle fl */
 
   if (Count < 0)
     {
@@ -3478,15 +2470,15 @@ NtGdiGetTextExtentExW(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
-  TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
   if ( TextObj )
   {
     Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
                                      NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
-    TEXTOBJ_UnlockText(TextObj);
   }
   else
     Result = FALSE;
+  TEXTOBJ_UnlockText(TextObj);
   DC_UnlockDc(dc);
 
   ExFreePool(String);
@@ -3549,7 +2541,7 @@ NtGdiGetTextExtent(HDC hdc,
                    LPSIZE psize,
                    UINT flOpts)
 {
-  return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, 0, NULL, NULL, psize, 0);
+  return NtGdiGetTextExtentExPoint(hdc, lpwsz, cwc, 0, NULL, NULL, psize);
 }
 
 BOOL
@@ -3606,7 +2598,7 @@ NtGdiGetTextExtentPoint32(HDC hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
-  TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
   if ( TextObj != NULL )
   {
     Result = TextIntGetTextExtentPoint (
@@ -3633,22 +2625,13 @@ NtGdiGetTextExtentPoint32(HDC hDC,
   return TRUE;
 }
 
-W32KAPI
-INT
-APIENTRY
-NtGdiGetTextFaceW(
-    IN HDC hDC,
-    IN INT Count,
-    OUT OPTIONAL LPWSTR FaceName,
-    IN BOOL bAliasName
-)
+INT STDCALL
+NtGdiGetTextFace(HDC hDC, INT Count, LPWSTR FaceName)
 {
    PDC Dc;
    HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
-
-   /* FIXME: Handle bAliasName */
 
    Dc = DC_LockDc(hDC);
    if (Dc == NULL)
@@ -3656,13 +2639,13 @@ NtGdiGetTextFaceW(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   hFont = Dc->Dc_Attr.hlfntNew;
+   hFont = Dc->w.hFont;
    DC_UnlockDc(Dc);
 
    TextObj = TEXTOBJ_LockText(hFont);
    ASSERT(TextObj != NULL);
-   Count = min(Count, wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName));
-   Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
+   Count = min(Count, wcslen(TextObj->logfont.lfFaceName));
+   Status = MmCopyToCaller(FaceName, TextObj->logfont.lfFaceName, Count * sizeof(WCHAR));
    TEXTOBJ_UnlockText(TextObj);
    if (!NT_SUCCESS(Status))
    {
@@ -3673,32 +2656,26 @@ NtGdiGetTextFaceW(
    return Count;
 }
 
-W32KAPI
 BOOL
-APIENTRY
-NtGdiGetTextMetricsW(
-    IN HDC hDC,
-    OUT TMW_INTERNAL * pUnsafeTmwi,
-    IN ULONG cj
-)
+STDCALL
+NtGdiGetTextMetrics(HDC hDC,
+                    LPTEXTMETRICW tm)
 {
   PDC dc;
   PTEXTOBJ TextObj;
   PFONTGDI FontGDI;
   NTSTATUS Status = STATUS_SUCCESS;
-  TMW_INTERNAL tmwi;
+  TEXTMETRICW SafeTm;
   FT_Face Face;
   TT_OS2 *pOS2;
   TT_HoriHeader *pHori;
   ULONG Error;
 
-  if (NULL == pUnsafeTmwi)
+  if (NULL == tm)
   {
     SetLastWin32Error(STATUS_INVALID_PARAMETER);
     return FALSE;
   }
-
-  /* FIXME: check cj ? */
 
   if(!(dc = DC_LockDc(hDC)))
   {
@@ -3706,7 +2683,7 @@ NtGdiGetTextMetricsW(
     return FALSE;
   }
 
-  TextObj = TEXTOBJ_LockText(dc->Dc_Attr.hlfntNew);
+  TextObj = TEXTOBJ_LockText(dc->w.hFont);
   if (NULL != TextObj)
     {
       FontGDI = ObjToGDI(TextObj->Font, FONT);
@@ -3714,11 +2691,11 @@ NtGdiGetTextMetricsW(
       Face = FontGDI->face;
       IntLockFreeType;
       Error = FT_Set_Pixel_Sizes(Face,
-	                         TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfWidth,
+	                         TextObj->logfont.lfWidth,
 	                         /* FIXME should set character height if neg */
-                                 (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ?
-                                  - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
-                                  TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
+                                 (TextObj->logfont.lfHeight < 0 ?
+                                  - TextObj->logfont.lfHeight :
+                                  TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
       IntUnLockFreeType;
       if (0 != Error)
 	{
@@ -3727,9 +2704,7 @@ NtGdiGetTextMetricsW(
 	}
       else
 	{
-          memcpy(&tmwi.TextMetric, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
-          /* FIXME: Fill Diff member */
-          RtlZeroMemory(&tmwi.Diff, sizeof(tmwi.Diff));
+          memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
 
           Status = STATUS_SUCCESS;
           IntLockFreeType;
@@ -3750,24 +2725,10 @@ NtGdiGetTextMetricsW(
           IntUnLockFreeType;
 
           if (NT_SUCCESS(Status))
-          {
-              FillTM(&tmwi.TextMetric, FontGDI->face, pOS2, pHori);
-
-              if (cj > sizeof(TMW_INTERNAL))
-                cj = sizeof(TMW_INTERNAL);
-
-              Status = STATUS_SUCCESS;
-              _SEH_TRY
-              {
-                  ProbeForWrite(pUnsafeTmwi, cj, 1);
-                  RtlCopyMemory(pUnsafeTmwi,&tmwi,cj);
-              }
-              _SEH_HANDLE
-              {
-                  Status = _SEH_GetExceptionCode();
-              }
-              _SEH_END
-          }
+            {
+              FillTM(&SafeTm, FontGDI->face, pOS2, pHori);
+              Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
+            }
 	}
       TEXTOBJ_UnlockText(TextObj);
     }
@@ -3827,8 +2788,8 @@ NtGdiSetTextAlign(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return GDI_ERROR;
     }
-  prevAlign = dc->Dc_Attr.lTextAlign;
-  dc->Dc_Attr.lTextAlign = Mode;
+  prevAlign = dc->w.textAlign;
+  dc->w.textAlign = Mode;
   DC_UnlockDc( dc );
   return  prevAlign;
 }
@@ -3848,9 +2809,9 @@ NtGdiSetTextColor(HDC hDC,
     return CLR_INVALID;
   }
 
-  oldColor = dc->Dc_Attr.crForegroundClr;
-  dc->Dc_Attr.crForegroundClr = color;
-  hBrush = dc->Dc_Attr.hbrush;
+  oldColor = dc->w.textColor;
+  dc->w.textColor = color;
+  hBrush = dc->w.hBrush;
   DC_UnlockDc( dc );
   NtGdiSelectObject(hDC, hBrush);
   return  oldColor;
@@ -3864,6 +2825,17 @@ NtGdiSetTextJustification(HDC  hDC,
 {
   UNIMPLEMENTED;
   return FALSE;
+}
+
+BOOL STDCALL
+NtGdiTextOut(
+   HDC hDC,
+   INT XStart,
+   INT YStart,
+   LPCWSTR String,
+   INT Count)
+{
+   return NtGdiExtTextOut(hDC, XStart, YStart, 0, NULL, String, Count, NULL);
 }
 
 DWORD STDCALL
@@ -3886,7 +2858,7 @@ NtGdiGetFontData(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return GDI_ERROR;
    }
-   hFont = Dc->Dc_Attr.hlfntNew;
+   hFont = Dc->w.hFont;
    TextObj = TEXTOBJ_LockText(hFont);
    DC_UnlockDc(Dc);
 
@@ -3960,22 +2932,15 @@ GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
     {
       Score += 25;
     }
-  if (LogFont->lfWeight != FW_DONTCARE)
-  {
-    if (LogFont->lfWeight < Otm->otmTextMetrics.tmWeight)
+  if (LogFont->lfWeight < Otm->otmTextMetrics.tmWeight)
     {
       WeightDiff = Otm->otmTextMetrics.tmWeight - LogFont->lfWeight;
     }
-    else
+  else
     {
       WeightDiff = LogFont->lfWeight - Otm->otmTextMetrics.tmWeight;
     }
-    Score += (1000 - WeightDiff) / (1000 / 25);
-  }
-  else
-  {
-    Score += 25;
-  }
+  Score += (1000 - WeightDiff) / (1000 / 25);
 
   ExFreePool(Otm);
 
@@ -4013,7 +2978,7 @@ static __inline BOOLEAN
 SubstituteFontFamilyKey(PUNICODE_STRING FaceName,
                         LPCWSTR Key)
 {
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   NTSTATUS Status;
   UNICODE_STRING Value;
 
@@ -4081,7 +3046,7 @@ TextIntRealizeFont(HFONT FontHandle)
       return STATUS_SUCCESS;
     }
 
-  if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName))
+  if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.lfFaceName))
     {
       TEXTOBJ_UnlockText(TextObj);
       return STATUS_NO_MEMORY;
@@ -4094,21 +3059,21 @@ TextIntRealizeFont(HFONT FontHandle)
   Win32Process = PsGetCurrentProcessWin32Process();
   IntLockProcessPrivateFonts(Win32Process);
   FindBestFontFromList(&TextObj->Font, &MatchScore,
-                       &TextObj->logfont.elfEnumLogfontEx.elfLogFont, &FaceName,
+                       &TextObj->logfont, &FaceName,
                        &Win32Process->PrivateFontListHead);
   IntUnLockProcessPrivateFonts(Win32Process);
 
   /* Search system fonts */
   IntLockGlobalFonts;
   FindBestFontFromList(&TextObj->Font, &MatchScore,
-                       &TextObj->logfont.elfEnumLogfontEx.elfLogFont, &FaceName,
+                       &TextObj->logfont, &FaceName,
                        &FontListHead);
   IntUnLockGlobalFonts;
 
   if (NULL == TextObj->Font)
     {
       DPRINT1("Requested font %S not found, no fonts loaded at all\n",
-              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName);
+              TextObj->logfont.lfFaceName);
       Status = STATUS_NOT_FOUND;
     }
   else
@@ -4126,288 +3091,17 @@ TextIntRealizeFont(HFONT FontHandle)
 }
 
 INT FASTCALL
-FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
+FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
 {
-  if( Buffer == NULL ) return sizeof(LOGFONTW);
-
-  switch (Count)
-  {
-
-     case sizeof(ENUMLOGFONTEXDVW):
-        RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer, 
-                                            &TFont->logfont,
-                                            sizeof(ENUMLOGFONTEXDVW));
-        break;
-     case sizeof(ENUMLOGFONTEXW):
-        RtlCopyMemory( (LPENUMLOGFONTEXW) Buffer, 
-                                          &TFont->logfont.elfEnumLogfontEx,
-                                          sizeof(ENUMLOGFONTEXW));
-        break;             
-
-     case sizeof(EXTLOGFONTW):
-     case sizeof(ENUMLOGFONTW):
-        RtlCopyMemory((LPENUMLOGFONTW) Buffer, 
-                                    &TFont->logfont.elfEnumLogfontEx.elfLogFont,
-                                       sizeof(ENUMLOGFONTW));
-        break;
-
-     case sizeof(LOGFONTW):
-        RtlCopyMemory((LPLOGFONTW) Buffer,
-                                   &TFont->logfont.elfEnumLogfontEx.elfLogFont,
-                                   sizeof(LOGFONTW));
-        break;
-
-     default:
-        SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
-        return 0;         
-  }
-  return Count;
-}
-
-
-static BOOL FASTCALL
-IntGetFullFileName(
-    POBJECT_NAME_INFORMATION NameInfo,
-    ULONG Size,
-    PUNICODE_STRING FileName)
-{
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE hFile;
-    IO_STATUS_BLOCK IoStatusBlock;
-    ULONG Desired;
-    
-    InitializeObjectAttributes(&ObjectAttributes,
-                               FileName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = ZwOpenFile(
-      &hFile,
-      0, //FILE_READ_ATTRIBUTES,
-      &ObjectAttributes,
-      &IoStatusBlock,
-      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-      0);
-
-    if (!NT_SUCCESS(Status))
+  if (Count < sizeof(LOGFONTW))
     {
-        DPRINT("ZwOpenFile() failed (Status = 0x%lx)\n", Status);
-        return FALSE;
+      SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
+      return 0;
     }
 
-    Status = ZwQueryObject(hFile, ObjectNameInformation, NameInfo, Size, &Desired);
-    ZwClose(hFile);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("ZwQueryObject() failed (Status = %lx)\n", Status);
-        return FALSE;
-    }
+  RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
 
-    return TRUE;
-}
-
-static BOOL FASTCALL
-IntGdiGetFontResourceInfo(
-    IN  PUNICODE_STRING FileName,
-    OUT void *pBuffer,
-    OUT DWORD *pdwBytes,
-    IN  DWORD dwType)
-{
-    UNICODE_STRING EntryFileName;
-    POBJECT_NAME_INFORMATION NameInfo1, NameInfo2;
-    PLIST_ENTRY ListEntry;
-    PFONT_ENTRY FontEntry;
-    FONTFAMILYINFO Info;
-    ULONG Size;
-    BOOL bFound = FALSE;
-
-    /* Create buffer for full path name */
-    Size = sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
-    NameInfo1 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
-    if (!NameInfo1)
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    /* Get the full path name */
-    if (!IntGetFullFileName(NameInfo1, Size, FileName))
-    {
-        ExFreePool(NameInfo1);
-        return FALSE;
-    }
-
-    /* Create a buffer for the entries' names */
-    NameInfo2 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
-    if (!NameInfo2)
-    {
-        ExFreePool(NameInfo1);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    /* Try to find the pathname in the global font list */
-    IntLockGlobalFonts;
-    for (ListEntry = FontListHead.Flink;
-         ListEntry != &FontListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        FontEntry = CONTAINING_RECORD(ListEntry, FONT_ENTRY, ListEntry);
-        if (FontEntry->Font->Filename != NULL)
-        {
-            RtlInitUnicodeString(&EntryFileName , FontEntry->Font->Filename);
-            if (IntGetFullFileName(NameInfo2, Size, &EntryFileName))
-            {
-                if (RtlEqualUnicodeString(&NameInfo1->Name, &NameInfo2->Name, FALSE))
-                {
-                    /* found */
-                    FontFamilyFillInfo(&Info, FontEntry->FaceName.Buffer, FontEntry->Font);
-                    bFound = TRUE;
-                    break;
-                }
-            }
-        }
-    }
-    IntUnLockGlobalFonts;
-
-    /* Free the buffers */
-    ExFreePool(NameInfo1);
-    ExFreePool(NameInfo2);
-
-    if (!bFound && dwType != 5)
-    {
-        /* Font could not be found in system table 
-           dwType == 5 will still handle this */
-        return FALSE;
-    }
-
-    switch(dwType)
-    {
-        case 0: /* FIXME: returns 1 or 2, don't know what this is atm */
-            *(DWORD*)pBuffer = 1;
-            *pdwBytes = sizeof(DWORD);
-            break;
-
-        case 1: /* Copy the full font name */
-            Size = wcslen(Info.EnumLogFontEx.elfFullName) + 1;
-            Size = min(Size , LF_FULLFACESIZE) * sizeof(WCHAR);
-            memcpy(pBuffer, Info.EnumLogFontEx.elfFullName, Size);
-            // FIXME: Do we have to zeroterminate?
-            *pdwBytes = Size;
-            break;
-
-        case 2: /* Copy a LOGFONTW structure */
-            memcpy(pBuffer, &Info.EnumLogFontEx.elfLogFont, sizeof(LOGFONTW));
-            *pdwBytes = sizeof(LOGFONTW);
-            break;
-
-        case 3: /* FIXME: What exactly is copied here? */
-            *(DWORD*)pBuffer = 1;
-            *pdwBytes = sizeof(DWORD*);
-            break;
-
-        case 5: /* Looks like a BOOL that is copied, TRUE, if the font was not found */
-            *(BOOL*)pBuffer = !bFound;
-            *pdwBytes = sizeof(BOOL);
-            break;
-
-        default:
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
-W32KAPI BOOL APIENTRY
-NtGdiGetFontResourceInfoInternalW(
-    IN LPWSTR   pwszFiles,
-    IN ULONG    cwc,
-    IN ULONG    cFiles,
-    IN UINT     cjIn,
-    OUT LPDWORD pdwBytes,
-    OUT LPVOID  pvBuf,
-    IN DWORD    dwType)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    DWORD dwBytes;
-    UNICODE_STRING SafeFileNames;
-    BOOL bRet = FALSE;
-
-    union
-    {
-        LOGFONTW logfontw;
-        WCHAR FullName[LF_FULLFACESIZE];
-    } Buffer;
-
-    /* FIXME: handle cFiles > 0 */
-
-    /* Check for valid dwType values 
-       dwType == 4 seems to be handled by gdi32 only */
-    if (dwType == 4 || dwType > 5)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    /* Check buffers and copy pwszFiles */
-    _SEH_TRY
-    {
-        ProbeForRead(pwszFiles, cwc * sizeof(WCHAR), 1);
-        bRet = RtlCreateUnicodeString(&SafeFileNames, pwszFiles);
-        ProbeForWrite(pdwBytes, sizeof(DWORD), 1);
-        ProbeForWrite(pvBuf, cjIn, 1);
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END
-
-    if(!bRet)
-    {
-        /* Could not create the unicode string, so return instantly */
-        return FALSE;
-    }
-
-    if(!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        /* Free the string for the filename */
-        RtlFreeUnicodeString(&SafeFileNames);
-        return FALSE;
-    }
-
-    bRet = IntGdiGetFontResourceInfo(&SafeFileNames, &Buffer, &dwBytes, dwType);
-
-    /* Check if succeeded and the buffer is big enough */
-    if (bRet && cjIn >= dwBytes)
-    {
-        /* Copy the data back to caller */
-        _SEH_TRY
-        {
-            /* Buffers are already probed */
-            RtlCopyMemory(pvBuf, &Buffer, dwBytes);
-            *pdwBytes = dwBytes;
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END
-
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            bRet = FALSE;
-        }
-    }
-
-    /* Free the string for the filename */
-    RtlFreeUnicodeString(&SafeFileNames);
-
-    return bRet;
+  return sizeof(LOGFONTW);
 }
 
 /* EOF */

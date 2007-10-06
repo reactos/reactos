@@ -15,58 +15,6 @@
 
 #define INITIAL_FAMILY_COUNT 64
 
-/***********************************************************************
- *              TEXTMETRIC conversion functions.
- */
-static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
-{
-    ptmA->tmHeight = ptmW->tmHeight;
-    ptmA->tmAscent = ptmW->tmAscent;
-    ptmA->tmDescent = ptmW->tmDescent;
-    ptmA->tmInternalLeading = ptmW->tmInternalLeading;
-    ptmA->tmExternalLeading = ptmW->tmExternalLeading;
-    ptmA->tmAveCharWidth = ptmW->tmAveCharWidth;
-    ptmA->tmMaxCharWidth = ptmW->tmMaxCharWidth;
-    ptmA->tmWeight = ptmW->tmWeight;
-    ptmA->tmOverhang = ptmW->tmOverhang;
-    ptmA->tmDigitizedAspectX = ptmW->tmDigitizedAspectX;
-    ptmA->tmDigitizedAspectY = ptmW->tmDigitizedAspectY;
-    ptmA->tmFirstChar = ptmW->tmFirstChar > 255 ? 255 : ptmW->tmFirstChar;
-    ptmA->tmLastChar = ptmW->tmLastChar > 255 ? 255 : ptmW->tmLastChar;
-    ptmA->tmDefaultChar = ptmW->tmDefaultChar > 255 ? 255 : ptmW->tmDefaultChar;
-    ptmA->tmBreakChar = ptmW->tmBreakChar > 255 ? 255 : ptmW->tmBreakChar;
-    ptmA->tmItalic = ptmW->tmItalic;
-    ptmA->tmUnderlined = ptmW->tmUnderlined;
-    ptmA->tmStruckOut = ptmW->tmStruckOut;
-    ptmA->tmPitchAndFamily = ptmW->tmPitchAndFamily;
-    ptmA->tmCharSet = ptmW->tmCharSet;
-}
-
-/***********************************************************************
- *           FONT_mbtowc
- *
- * Returns a Unicode translation of str. If count is -1 then str is
- * assumed to be '\0' terminated, otherwise it contains the number of
- * bytes to convert.  If plenW is non-NULL, on return it will point to
- * the number of WCHARs that have been written.  The caller should free
- * the returned LPWSTR from the process heap itself.
- */
-static LPWSTR FONT_mbtowc(LPCSTR str, INT count, INT *plenW)
-{
-    UINT cp = CP_ACP;
-    INT lenW;
-    LPWSTR strW;
-
-    if(count == -1) count = strlen(str);
-    lenW = MultiByteToWideChar(cp, 0, str, count, NULL, 0);
-    strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
-    MultiByteToWideChar(cp, 0, str, count, strW, lenW);
-    DPRINT1("mapped %s -> %s  \n", str, strW);
-    if(plenW) *plenW = lenW;
-    return strW;
-}
-
-
 static BOOL FASTCALL
 MetricsCharConvert(WCHAR w, UCHAR *b)
   {
@@ -277,12 +225,12 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
       if (Unicode)
         {
           Ret = ((FONTENUMPROCW) EnumProc)(
-            &Info[i].EnumLogFontEx,
-            &Info[i].NewTextMetricEx,
+            (LPLOGFONTW)&Info[i].EnumLogFontEx,
+            (LPTEXTMETRICW)&Info[i].NewTextMetricEx,
             Info[i].FontType, lParam);
         }
       else
-        { // Could use EnumLogFontExW2A here?
+        {
           LogFontW2A(&EnumLogFontExA.elfLogFont, &Info[i].EnumLogFontEx.elfLogFont);
           WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfFullName, -1,
                               (LPSTR)EnumLogFontExA.elfFullName, LF_FULLFACESIZE, NULL, NULL);
@@ -293,8 +241,8 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
           NewTextMetricExW2A(&NewTextMetricExA,
                              &Info[i].NewTextMetricEx);
           Ret = ((FONTENUMPROCA) EnumProc)(
-            &EnumLogFontExA,
-            &NewTextMetricExA,
+            (LPLOGFONTA)&EnumLogFontExA,
+            (LPTEXTMETRICA)&NewTextMetricExA,
             Info[i].FontType, lParam);
         }
     }
@@ -383,8 +331,6 @@ GetCharWidthA (
 	LPINT	lpBuffer
 	)
 {
-DPRINT1("GCWA iFirstChar %x\n",iFirstChar);
-
   return GetCharWidth32A ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
@@ -401,35 +347,8 @@ GetCharWidth32A(
 	LPINT	lpBuffer
 	)
 {
-    INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
-    LPSTR str;
-    LPWSTR wstr;
-    BOOL ret = TRUE;
-DPRINT1("GCW32A iFirstChar %x\n",iFirstChar);
-
-    if(count <= 0) return FALSE;
-
-    str = HeapAlloc(GetProcessHeap(), 0, count);
-    for(i = 0; i < count; i++)
-	str[i] = (BYTE)(iFirstChar + i);
-
-    wstr = FONT_mbtowc(str, count, &wlen);
-
-    for(i = 0; i < wlen; i++)
-    {
-        /* FIXME should be NtGdiGetCharWidthW */
-	if(!NtGdiGetCharWidth32 (hdc, wstr[i], wstr[i], lpBuffer))
-	{
-	    ret = FALSE;
-	    break;
-	}
-	lpBuffer++;
-    }
-
-    HeapFree(GetProcessHeap(), 0, str);
-    HeapFree(GetProcessHeap(), 0, wstr);
-
-    return ret;
+   /* FIXME should be NtGdiGetCharWidthW */
+   return NtGdiGetCharWidth32(hdc, iFirstChar, iLastChar, lpBuffer);
 }
 
 
@@ -445,8 +364,6 @@ GetCharWidthW (
 	LPINT	lpBuffer
 	)
 {
-DPRINT1("GCW32w uFirstChar %x\n",iFirstChar);
-
   /* FIXME should be NtGdiGetCharWidthW */
   return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
@@ -552,7 +469,7 @@ GetCharWidthFloatA(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 APIENTRY
@@ -563,9 +480,8 @@ GetCharABCWidthsA(
 	LPABC	lpabc
 	)
 {
-DPRINT1("GCABCWA uFirstChar %x\n",uFirstChar);
-
-return NtGdiGetCharABCWidths(hdc, uFirstChar, uLastChar, lpabc);
+  /* FIXME what to do with uFirstChar and uLastChar ??? */
+  return NtGdiGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
 }
 
 
@@ -581,8 +497,6 @@ GetCharABCWidthsFloatA(
 	LPABCFLOAT	lpABCF
 	)
 {
-DPRINT1("GCABCWFA iFirstChar %x\n",iFirstChar);
-
   /* FIXME what to do with iFirstChar and iLastChar ??? */
   return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
 }
@@ -603,31 +517,8 @@ GetGlyphOutlineA(
 	CONST MAT2	*lpmat2
 	)
 {
-
-    LPWSTR p = NULL;
-    DWORD ret;
-    UINT c;
-    DPRINT1("GetGlyphOutlineA  uChar %x\n", uChar);
-    if(!(uFormat & GGO_GLYPH_INDEX)) {
-        int len;
-        char mbchs[2];
-        if(uChar > 0xff) { /* but, 2 bytes character only */
-            len = 2;
-            mbchs[0] = (uChar & 0xff00) >> 8;
-            mbchs[1] = (uChar & 0xff);
-        } else {
-            len = 1;
-            mbchs[0] = (uChar & 0xff);
-        }
-        p = FONT_mbtowc(mbchs, len, NULL);
-	c = p[0];
-    } else
-        c = uChar;
-    ret = NtGdiGetGlyphOutline(hdc, c, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
-    HeapFree(GetProcessHeap(), 0, p);
-    return ret;
+  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
-
 
 /*
  * @implemented
@@ -644,222 +535,9 @@ GetGlyphOutlineW(
 	CONST MAT2	*lpmat2
 	)
 {
-  DPRINT1("GetGlyphOutlineW  uChar %x\n", uChar);
   return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
 
-
-/*
- * @implemented
- */
-UINT
-APIENTRY
-GetOutlineTextMetricsA(
-	HDC			hdc,
-	UINT			cbData,
-	LPOUTLINETEXTMETRICA	lpOTM
-	)
-{
-    char buf[512], *ptr;
-    UINT ret, needed;
-    OUTLINETEXTMETRICW *lpOTMW = (OUTLINETEXTMETRICW *)buf;
-    OUTLINETEXTMETRICA *output = lpOTM;
-    INT left, len;
-
-    if((ret = GetOutlineTextMetricsW(hdc, 0, NULL)) == 0)
-        return 0;
-    if(ret > sizeof(buf))
-	lpOTMW = HeapAlloc(GetProcessHeap(), 0, ret);
-    GetOutlineTextMetricsW(hdc, ret, lpOTMW);
-
-    needed = sizeof(OUTLINETEXTMETRICA);
-    if(lpOTMW->otmpFamilyName)
-        needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFamilyName), -1,
-				      NULL, 0, NULL, NULL);
-    if(lpOTMW->otmpFaceName)
-        needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFaceName), -1,
-				      NULL, 0, NULL, NULL);
-    if(lpOTMW->otmpStyleName)
-        needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpStyleName), -1,
-				      NULL, 0, NULL, NULL);
-    if(lpOTMW->otmpFullName)
-        needed += WideCharToMultiByte(CP_ACP, 0,
-	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFullName), -1,
-				      NULL, 0, NULL, NULL);
-
-    if(!lpOTM) {
-        ret = needed;
-	goto end;
-    }
-
-    DPRINT("needed = %d\n", needed);
-    if(needed > cbData)
-        /* Since the supplied buffer isn't big enough, we'll alloc one
-           that is and memcpy the first cbData bytes into the lpOTM at
-           the end. */
-        output = HeapAlloc(GetProcessHeap(), 0, needed);
-
-    ret = output->otmSize = min(needed, cbData);
-    FONT_TextMetricWToA( &lpOTMW->otmTextMetrics, &output->otmTextMetrics );
-    output->otmFiller = 0;
-    output->otmPanoseNumber = lpOTMW->otmPanoseNumber;
-    output->otmfsSelection = lpOTMW->otmfsSelection;
-    output->otmfsType = lpOTMW->otmfsType;
-    output->otmsCharSlopeRise = lpOTMW->otmsCharSlopeRise;
-    output->otmsCharSlopeRun = lpOTMW->otmsCharSlopeRun;
-    output->otmItalicAngle = lpOTMW->otmItalicAngle;
-    output->otmEMSquare = lpOTMW->otmEMSquare;
-    output->otmAscent = lpOTMW->otmAscent;
-    output->otmDescent = lpOTMW->otmDescent;
-    output->otmLineGap = lpOTMW->otmLineGap;
-    output->otmsCapEmHeight = lpOTMW->otmsCapEmHeight;
-    output->otmsXHeight = lpOTMW->otmsXHeight;
-    output->otmrcFontBox = lpOTMW->otmrcFontBox;
-    output->otmMacAscent = lpOTMW->otmMacAscent;
-    output->otmMacDescent = lpOTMW->otmMacDescent;
-    output->otmMacLineGap = lpOTMW->otmMacLineGap;
-    output->otmusMinimumPPEM = lpOTMW->otmusMinimumPPEM;
-    output->otmptSubscriptSize = lpOTMW->otmptSubscriptSize;
-    output->otmptSubscriptOffset = lpOTMW->otmptSubscriptOffset;
-    output->otmptSuperscriptSize = lpOTMW->otmptSuperscriptSize;
-    output->otmptSuperscriptOffset = lpOTMW->otmptSuperscriptOffset;
-    output->otmsStrikeoutSize = lpOTMW->otmsStrikeoutSize;
-    output->otmsStrikeoutPosition = lpOTMW->otmsStrikeoutPosition;
-    output->otmsUnderscoreSize = lpOTMW->otmsUnderscoreSize;
-    output->otmsUnderscorePosition = lpOTMW->otmsUnderscorePosition;
-
-
-    ptr = (char*)(output + 1);
-    left = needed - sizeof(*output);
-
-    if(lpOTMW->otmpFamilyName) {
-        output->otmpFamilyName = (LPSTR)(ptr - (char*)output);
-	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFamilyName), -1,
-				  ptr, left, NULL, NULL);
-	left -= len;
-	ptr += len;
-    } else
-        output->otmpFamilyName = 0;
-
-    if(lpOTMW->otmpFaceName) {
-        output->otmpFaceName = (LPSTR)(ptr - (char*)output);
-	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFaceName), -1,
-				  ptr, left, NULL, NULL);
-	left -= len;
-	ptr += len;
-    } else
-        output->otmpFaceName = 0;
-
-    if(lpOTMW->otmpStyleName) {
-        output->otmpStyleName = (LPSTR)(ptr - (char*)output);
-	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpStyleName), -1,
-				  ptr, left, NULL, NULL);
-	left -= len;
-	ptr += len;
-    } else
-        output->otmpStyleName = 0;
-
-    if(lpOTMW->otmpFullName) {
-        output->otmpFullName = (LPSTR)(ptr - (char*)output);
-	len = WideCharToMultiByte(CP_ACP, 0,
-	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFullName), -1,
-				  ptr, left, NULL, NULL);
-	left -= len;
-    } else
-        output->otmpFullName = 0;
-
-    assert(left == 0);
-
-    if(output != lpOTM) {
-        memcpy(lpOTM, output, cbData);
-        HeapFree(GetProcessHeap(), 0, output);
-
-        /* check if the string offsets really fit into the provided size */
-        /* FIXME: should we check string length as well? */
-        if ((UINT_PTR)lpOTM->otmpFamilyName >= lpOTM->otmSize)
-            lpOTM->otmpFamilyName = 0; /* doesn't fit */
-
-        if ((UINT_PTR)lpOTM->otmpFaceName >= lpOTM->otmSize)
-            lpOTM->otmpFaceName = 0; /* doesn't fit */
-
-        if ((UINT_PTR)lpOTM->otmpStyleName >= lpOTM->otmSize)
-            lpOTM->otmpStyleName = 0; /* doesn't fit */
-
-        if ((UINT_PTR)lpOTM->otmpFullName >= lpOTM->otmSize)
-            lpOTM->otmpFullName = 0; /* doesn't fit */
-    }
-
-end:
-    if(lpOTMW != (OUTLINETEXTMETRICW *)buf)
-        HeapFree(GetProcessHeap(), 0, lpOTMW);
-
-    return ret;
-}
-
-
-/*
- * @implemented
- */
-UINT
-APIENTRY
-GetOutlineTextMetricsW(
-	HDC			hdc,
-	UINT			cbData,
-	LPOUTLINETEXTMETRICW	lpOTM
-	)
-{
-  TMDIFF Tmd;   // Should not be zero.
-
-  return NtGdiGetOutlineTextMetricsInternalW(hdc, cbData, lpOTM, &Tmd);
-}
-
-
-/*
- * @implemented
- */
-HFONT
-STDCALL
-CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
-{
-  if (elfexd)
-  {
-    ENUMLOGFONTEXDVW Logfont;
-
-    EnumLogFontExW2A( (LPENUMLOGFONTEXA) elfexd,
-                                      &Logfont.elfEnumLogfontEx );
-
-    RtlCopyMemory( &Logfont.elfDesignVector,
-                           (PVOID) &elfexd->elfDesignVector,
-                                             sizeof(DESIGNVECTOR));
-
-    return NtGdiHfontCreate( &Logfont, 0, 0, 0, NULL);
-  }
-  else return NULL;
-}
-
-
-/*
- * @implemented
- */
-HFONT
-STDCALL
-CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
-{
-  /* Msdn: Note, this function ignores the elfDesignVector member in 
-           ENUMLOGFONTEXDV.
-   */
-  if ( elfexd )
-  {
-   return NtGdiHfontCreate((PENUMLOGFONTEXDVW) elfexd, 0, 0, 0, NULL );
-  }
-  else return NULL;
-}
 
 
 /*
@@ -871,14 +549,11 @@ CreateFontIndirectA(
 	CONST LOGFONTA		*lplf
 	)
 {
-  if (lplf)
-    {
-      LOGFONTW tlf;
+  LOGFONTW tlf;
 
-      LogFontA2W(&tlf, lplf);
-      return CreateFontIndirectW(&tlf);
-    }
-  else return NULL;
+  LogFontA2W(&tlf, lplf);
+
+  return NtGdiCreateFontIndirect(&tlf);
 }
 
 
@@ -891,25 +566,7 @@ CreateFontIndirectW(
 	CONST LOGFONTW		*lplf
 	)
 {
- if (lplf)
- {
-    ENUMLOGFONTEXDVW Logfont;
-
-    RtlCopyMemory( &Logfont.elfEnumLogfontEx.elfLogFont, lplf, sizeof(LOGFONTW));
-    // Need something other than just cleaning memory here.
-    // Guess? Use caller data to determine the rest.
-    RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfFullName,
-                                 sizeof(Logfont.elfEnumLogfontEx.elfFullName));
-    RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfStyle,
-                                 sizeof(Logfont.elfEnumLogfontEx.elfStyle));
-    RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfScript,
-                                 sizeof(Logfont.elfEnumLogfontEx.elfScript));
-    
-    RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
-
-    return CreateFontIndirectExW(&Logfont);
- }
- else return NULL;
+	return NtGdiCreateFontIndirect((CONST LPLOGFONTW)lplf);
 }
 
 
@@ -942,20 +599,8 @@ CreateFontA(
 	RtlInitAnsiString(&StringA, (LPSTR)lpszFace);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = CreateFontW(nHeight, 
-                           nWidth,
-                      nEscapement,
-                     nOrientation,
-                         fnWeight,
-                        fdwItalic,
-                     fdwUnderline,
-                     fdwStrikeOut,
-                       fdwCharSet,
-               fdwOutputPrecision,
-                 fdwClipPrecision,
-                       fdwQuality,
-                fdwPitchAndFamily,
-                   StringU.Buffer);
+        ret = CreateFontW(nHeight, nWidth, nEscapement, nOrientation, fnWeight, fdwItalic, fdwUnderline, fdwStrikeOut,
+                          fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, StringU.Buffer);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -985,35 +630,8 @@ CreateFontW(
 	LPCWSTR	lpszFace
 	)
 {
-  LOGFONTW logfont;
-
-  logfont.lfHeight = nHeight;
-  logfont.lfWidth = nWidth;
-  logfont.lfEscapement = nEscapement;
-  logfont.lfOrientation = nOrientation;
-  logfont.lfWeight = nWeight;
-  logfont.lfItalic = fnItalic;
-  logfont.lfUnderline = fdwUnderline;
-  logfont.lfStrikeOut = fdwStrikeOut;
-  logfont.lfCharSet = fdwCharSet;
-  logfont.lfOutPrecision = fdwOutputPrecision;
-  logfont.lfClipPrecision = fdwClipPrecision;
-  logfont.lfQuality = fdwQuality;
-  logfont.lfPitchAndFamily = fdwPitchAndFamily;
-
-  if (NULL != lpszFace)
-  {
-    int Size = sizeof(logfont.lfFaceName) / sizeof(WCHAR);
-    wcsncpy((wchar_t *)logfont.lfFaceName, lpszFace, Size - 1);
-    /* Be 101% sure to have '\0' at end of string */
-    logfont.lfFaceName[Size - 1] = '\0';
-  }
-  else
-  {
-    logfont.lfFaceName[0] = L'\0';
-  }
-
-  return CreateFontIndirectW(&logfont);
+  return NtGdiCreateFont(nHeight, nWidth, nEscapement, nOrientation, nWeight, fnItalic, fdwUnderline, fdwStrikeOut,
+                         fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, lpszFace);
 }
 
 
@@ -1091,13 +709,11 @@ int
 STDCALL
 AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
-    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
-    {
-        SetLastError( ERROR_INVALID_PARAMETER );
-        return 0;
-    }
+  UNICODE_STRING Filename;
 
-    return GdiAddFontResourceW(lpszFilename, fl,0);
+  /* FIXME handle fl parameter */
+  RtlInitUnicodeString(&Filename, lpszFilename);
+  return NtGdiAddFontResource ( &Filename, fl );
 }
 
 
@@ -1108,26 +724,20 @@ int
 STDCALL
 AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
-    NTSTATUS Status;
-    PWSTR FilenameW;
-    int rc;
+  NTSTATUS Status;
+  PWSTR FilenameW;
+  int rc = 0;
 
-    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
+  Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
+  if ( !NT_SUCCESS (Status) )
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
-        return 0;
-    }
+      rc = AddFontResourceExW ( FilenameW, fl, pvReserved );
 
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
-    {
-        SetLastError (RtlNtStatusToDosError(Status));
-        return 0;
+      HEAP_free ( FilenameW );
     }
-
-    rc = GdiAddFontResourceW ( FilenameW, fl, 0 );
-    HEAP_free ( FilenameW );
-    return rc;
+  return rc;
 }
 
 
@@ -1138,22 +748,7 @@ int
 STDCALL
 AddFontResourceA ( LPCSTR lpszFilename )
 {
-    NTSTATUS Status;
-    PWSTR FilenameW;
-    int rc = 0;
-
-    Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-    if ( !NT_SUCCESS (Status) )
-    {
-        SetLastError (RtlNtStatusToDosError(Status));
-    }
-    else
-    {
-      rc = GdiAddFontResourceW ( FilenameW, 0, 0);
-
-      HEAP_free ( FilenameW );
-    }
-    return rc;
+  return AddFontResourceExA ( lpszFilename, 0, 0 );
 }
 
 
@@ -1164,7 +759,7 @@ int
 STDCALL
 AddFontResourceW ( LPCWSTR lpszFilename )
 {
-    return GdiAddFontResourceW ( lpszFilename, 0, 0 );
+	return AddFontResourceExW ( lpszFilename, 0, 0 );
 }
 
 
@@ -1173,9 +768,11 @@ AddFontResourceW ( LPCWSTR lpszFilename )
  */
 BOOL
 STDCALL
-RemoveFontResourceW(LPCWSTR lpFileName)
+RemoveFontResourceW(
+	LPCWSTR	lpFileName
+	)
 {
-    return RemoveFontResourceExW(lpFileName,0,0);
+  return NtGdiRemoveFontResource ( lpFileName );
 }
 
 
@@ -1184,57 +781,26 @@ RemoveFontResourceW(LPCWSTR lpFileName)
  */
 BOOL
 STDCALL
-RemoveFontResourceA(LPCSTR lpFileName)
+RemoveFontResourceA(
+	LPCSTR	lpFileName
+	)
 {
-    return RemoveFontResourceExA(lpFileName,0,0);
-}
+  NTSTATUS Status;
+  LPWSTR lpFileNameW;
+  BOOL rc = 0;
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-RemoveFontResourceExA(LPCSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv
-)
-{
-    NTSTATUS Status;
-    LPWSTR lpFileNameW;
-    BOOL rc = 0;
-
-    /* FIXME the flags */
-    /* FIXME the pdv */
-    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
-
-    Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
-    if (!NT_SUCCESS (Status))
+  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
+  if (!NT_SUCCESS (Status))
     SetLastError (RtlNtStatusToDosError(Status));
-    else
+  else
     {
-        rc = NtGdiRemoveFontResource ( lpFileNameW );
+      rc = NtGdiRemoveFontResource ( lpFileNameW );
 
-        HEAP_free ( lpFileNameW );
+      HEAP_free ( lpFileNameW );
     }
 
   return rc;
 }
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-RemoveFontResourceExW(LPCWSTR lpFileName,
-                      DWORD fl,
-                      PVOID pdv)
-{
-    /* FIXME the flags */
-    /* FIXME the pdv */
-    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
-    return NtGdiRemoveFontResource ( lpFileName);
-}
-
 
 /***********************************************************************
  *           GdiGetCharDimensions
@@ -1339,78 +905,6 @@ EnumFontsA (
 #endif
 }
 
-#define EfdFontFamilies 3
 
-INT
-STDCALL
-NewEnumFontFamiliesExW(
-    HDC hDC,
-    LPLOGFONTW lpLogfont,
-    FONTENUMPROCW lpEnumFontFamExProcW,
-    LPARAM lParam,
-    DWORD dwFlags)
-{
-	ULONG_PTR idEnum, cbDataSize, cbRetSize;
-	PENUMFONTDATAW pEfdw;
-	PBYTE pBuffer;
-	PBYTE pMax;
-	INT ret = 1;
 
-	/* Open enumeration handle and find out how much memory we need */
-	idEnum = NtGdiEnumFontOpen(hDC,
-	                           EfdFontFamilies,
-	                           0,
-	                           LF_FACESIZE,
-	                           (lpLogfont && lpLogfont->lfFaceName[0])? lpLogfont->lfFaceName : NULL,
-	                           lpLogfont? lpLogfont->lfCharSet : DEFAULT_CHARSET,
-	                           &cbDataSize);
-	if (idEnum == 0)
-	{
-		return 0;
-	}
-	if (cbDataSize == 0)
-	{
-		NtGdiEnumFontClose(idEnum);
-		return 0;
-	}
 
-	/* Allocate memory */
-	pBuffer = HeapAlloc(GetProcessHeap(), 0, cbDataSize);
-	if (pBuffer == NULL)
-	{
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		NtGdiEnumFontClose(idEnum);
-		return 0;
-	}
-
-	/* Do the enumeration */
-	if (!NtGdiEnumFontChunk(hDC, idEnum, cbDataSize, &cbRetSize, (PVOID)pBuffer))
-	{
-		HeapFree(GetProcessHeap(), 0, pBuffer);
-		NtGdiEnumFontClose(idEnum);
-		return 0;
-	}
-
-    /* Get start and end address */
-    pEfdw = (PENUMFONTDATAW)pBuffer;
-	pMax = pBuffer + cbDataSize;
-
-    /* Iterate through the structures */
-    while ((PBYTE)pEfdw < pMax && ret)
-    {
-        PNTMW_INTERNAL pNtmwi = (PNTMW_INTERNAL)((ULONG_PTR)pEfdw + pEfdw->ulNtmwiOffset);
-
-        ret = lpEnumFontFamExProcW(&pEfdw->elfexdv.elfEnumLogfontEx,
-                                   &pNtmwi->ntmw,
-                                   pEfdw->dwFontType,
-                                   lParam);
-
-        pEfdw = (PENUMFONTDATAW)((ULONG_PTR)pEfdw + pEfdw->cbSize);
-	}
-
-	/* Release the memory and close handle */
-	HeapFree(GetProcessHeap(), 0, pBuffer);
-	NtGdiEnumFontClose(idEnum);
-
-	return ret;
-}

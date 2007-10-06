@@ -123,9 +123,8 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
 
 INT
 STDCALL
-NtGdiSetIcmMode(HDC  hDC,
-                ULONG nCommand,
-                ULONG EnableICM) // ulMode
+NtGdiSetICMMode(HDC  hDC,
+                    INT  EnableICM)
 {
   /* FIXME: this should be coded someday  */
   if (EnableICM == ICM_OFF)

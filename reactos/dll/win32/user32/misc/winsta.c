@@ -11,8 +11,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 /*
  * @implemented
  */
@@ -73,7 +71,7 @@ CreateWindowStationW(LPWSTR lpwinsta,
 
   return NtUserCreateWindowStation(&WindowStationName,
 				   dwDesiredAccess,
-				   lpsa, 0, 0, 0, 0);
+				   lpsa, 0, 0, 0);
 }
 
 /*

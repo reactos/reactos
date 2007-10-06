@@ -28,7 +28,7 @@
 #include <debug.h>
 
 int usedHandles=0;
-PUSER_HANDLE_TABLE gHandleTable = NULL;
+USER_HANDLE_TABLE gHandleTable;
 
 
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle )
@@ -71,17 +71,19 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       DPRINT1("Out of user handles!\n");
       return NULL;
 #if 0
-      PUSER_HANDLE_ENTRY new_handles;
+
+      struct user_handle *new_handles;
       /* grow array by 50% (but at minimum 32 entries) */
-      int growth = max( 32, ht->allocated_handles / 2 );
-      int new_size = min( ht->allocated_handles + growth, (LAST_USER_HANDLE-FIRST_USER_HANDLE+1) >> 1 );
-      if (new_size <= ht->allocated_handles)
+      int growth = max( 32, allocated_handles / 2 );
+      int new_size = min( allocated_handles + growth, (LAST_USER_HANDLE-FIRST_USER_HANDLE+1) >> 1 );
+      if (new_size <= allocated_handles)
          return NULL;
-      if (!(new_handles = UserHeapReAlloc( ht->handles, new_size * sizeof(*ht->handles) )))
+      if (!(new_handles = realloc( handles, new_size * sizeof(*handles) )))
          return NULL;
-      ht->handles = new_handles;
-      ht->allocated_handles = new_size;
+      handles = new_handles;
+      allocated_handles = new_size;
 #endif
+
    }
 
    entry = &ht->handles[ht->nb_handles++];
@@ -108,7 +110,6 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
    entry->type = 0;
-   entry->pti = 0;
    ht->freelist  = entry;
 
    usedHandles--;
@@ -124,8 +125,6 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
       return 0;
    entry->ptr  = object;
    entry->type = type;
-   entry->pti = GetW32ThreadInfo();
-   if (entry->pti->pi->UserHandleTable == NULL) GetW32ProcessInfo();
    if (++entry->generation >= 0xffff)
       entry->generation = 1;
    return entry_to_handle(ht, entry );
@@ -218,7 +217,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG s
 {
 
    HANDLE hi;
-   PUSER_OBJECT_HEADER hdr = UserHeapAlloc(size + sizeof(USER_OBJECT_HEADER));//ExAllocatePool(PagedPool, size + sizeof(USER_OBJECT_HEADER));
+   PUSER_OBJECT_HEADER hdr = ExAllocatePool(PagedPool, size + sizeof(USER_OBJECT_HEADER));
    if (!hdr)
       return NULL;
 
@@ -226,8 +225,7 @@ ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG s
    hi = UserAllocHandle(ht, USER_HEADER_TO_BODY(hdr), type );
    if (!hi)
    {
-      //ExFreePool(hdr);
-       UserHeapFree(hdr);
+      ExFreePool(hdr);
       return NULL;
    }
 
@@ -244,7 +242,7 @@ BOOL FASTCALL
 ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
 {
    PUSER_OBJECT_HEADER hdr;
-   PVOID body = UserGetObject(gHandleTable, h, type);
+   PVOID body = UserGetObject(&gHandleTable, h, type);
    if (!body)
       return FALSE;
 
@@ -254,12 +252,11 @@ ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
    hdr->destroyed = TRUE;
    if (hdr->RefCount == 0)
    {
-      UserFreeHandle(gHandleTable, h);
+      UserFreeHandle(&gHandleTable, h);
 
       memset(hdr, 0x55, sizeof(USER_OBJECT_HEADER));
 
-      UserHeapFree(hdr);
-      //ExFreePool(hdr);
+      ExFreePool(hdr);
       return TRUE;
    }
 
@@ -277,12 +274,6 @@ VOID FASTCALL ObmReferenceObject(PVOID obj)
    hdr->RefCount++;
 }
 
-HANDLE FASTCALL ObmObjectToHandle(PVOID obj)
-{
-    PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
-    return hdr->hSelf;
-}
-
 
 BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
 {
@@ -296,12 +287,11 @@ BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
    {
 //      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",usedHandles);
 
-      UserFreeHandle(gHandleTable, hdr->hSelf);
+      UserFreeHandle(&gHandleTable, hdr->hSelf);
 
       memset(hdr, 0x55, sizeof(USER_OBJECT_HEADER));
 
-      UserHeapFree(hdr);
-      //ExFreePool(hdr);
+      ExFreePool(hdr);
 
       return TRUE;
    }
@@ -317,24 +307,15 @@ BOOL FASTCALL ObmCreateHandleTable()
    PVOID mem;
 
    //FIXME: dont alloc all at once! must be mapped into umode also...
-   //mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024*2);
-   mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
+   mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
       DPRINT1("Failed creating handle table\n");
       return FALSE;
    }
 
-   gHandleTable = UserHeapAlloc(sizeof(USER_HANDLE_TABLE));
-   if (gHandleTable == NULL)
-   {
-       UserHeapFree(mem);
-       DPRINT1("Failed creating handle table\n");
-       return FALSE;
-   }
-
    //FIXME: make auto growable
-   UserInitHandleTable(gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
+   UserInitHandleTable(&gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
 
    return TRUE;
 }

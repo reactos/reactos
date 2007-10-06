@@ -77,21 +77,6 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
   return  TRUE;
 }
 
-PGD_ENABLEDRIVER DRIVER_FindExistingDDIDriver(LPCWSTR Name)
-{
-  GRAPHICS_DRIVER *Driver = DriverList;
-  while (Driver && Name)
-  {
-    if (!_wcsicmp(Driver->Name, Name))
-    {
-      return Driver->EnableDriver;
-    }
-    Driver = Driver->Next;
-  }
-
-  return NULL;
-}
-
 PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
 {
   static WCHAR DefaultPath[] = L"\\SystemRoot\\System32\\";
@@ -99,7 +84,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
   GRAPHICS_DRIVER *Driver = DriverList;
   NTSTATUS Status;
-  LPWSTR FullName;
+  WCHAR *FullName;
   LPCWSTR p;
   BOOL PathSeparatorFound;
   BOOL DotFound;
@@ -162,7 +147,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   }
 
   /* If not, then load it */
-  RtlInitUnicodeString (&GdiDriverInfo.DriverName, FullName);
+  RtlInitUnicodeString (&GdiDriverInfo.DriverName, (LPWSTR)FullName);
   Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
   ExFreePool(FullName);
   if (!NT_SUCCESS(Status)) return NULL;

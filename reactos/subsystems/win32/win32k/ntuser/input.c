@@ -39,7 +39,6 @@ extern BYTE gQueueKeyStateTable[];
 
 /* GLOBALS *******************************************************************/
 
-
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
 static CLIENT_ID MouseThreadId;
@@ -48,11 +47,9 @@ static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
+PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
 /* FUNCTIONS *****************************************************************/
-ULONG FASTCALL
-IntSystemParametersInfo(UINT uiAction, UINT uiParam,PVOID pvParam, UINT fWinIni);
-DWORD IntLastInputTick(BOOL LastInputTickSetGet);
 
 #define ClearMouseInput(mi) \
   mi.dx = 0; \
@@ -66,53 +63,6 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet);
   if(mi.dwFlags) \
     IntMouseInput(&mi); \
   ClearMouseInput(mi);
-
-
-DWORD IntLastInputTick(BOOL LastInputTickSetGet)
-{
-	static DWORD LastInputTick = 0;
-	if (LastInputTickSetGet == TRUE)
-	{
-		LARGE_INTEGER TickCount;
-        KeQueryTickCount(&TickCount);
-        LastInputTick = TickCount.u.LowPart * (KeQueryTimeIncrement() / 10000);
-	}
-    return LastInputTick;
-}
-
-BOOL
-STDCALL
-NtUserGetLastInputInfo(PLASTINPUTINFO plii)
-{
-    BOOL ret = TRUE;
-    
-    UserEnterShared();
-    
-    _SEH_TRY
-    {
-        if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
-        {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-            _SEH_LEAVE; 
-        }
-
-        ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
-        
-        plii->dwTime = IntLastInputTick(FALSE);
-    }
-    _SEH_HANDLE
-    {
-        SetLastNtError(_SEH_GetExceptionCode());
-        ret = FALSE;
-    }
-    _SEH_END;
-   
-    UserLeave(); 
-    
-    return ret;
-}
-
 
 VOID FASTCALL
 ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
@@ -198,9 +148,6 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
    SendMouseEvent(mi);
 }
 
-
-
-
 VOID STDCALL
 MouseThreadMain(PVOID StartContext)
 {
@@ -220,7 +167,7 @@ MouseThreadMain(PVOID StartContext)
       KEVENT Event;
       DueTime.QuadPart = (LONGLONG)(-10000000);
       KeInitializeEvent(&Event, NotificationEvent, FALSE);
-      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime); 
       Status = NtOpenFile(&MouseDeviceHandle,
                        FILE_ALL_ACCESS,
                        &MouseObjectAttributes,
@@ -228,9 +175,6 @@ MouseThreadMain(PVOID StartContext)
                        0,
                        FILE_SYNCHRONOUS_IO_ALERT);
    } while (!NT_SUCCESS(Status));
-
-   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
-                       LOW_REALTIME_PRIORITY + 3);
 
    for(;;)
    {
@@ -274,8 +218,7 @@ MouseThreadMain(PVOID StartContext)
             DPRINT1("Win32K: Failed to read from mouse.\n");
             return; //(Status);
          }
-         DPRINT("MouseEvent\n");         
-		 IntLastInputTick(TRUE);
+         DPRINT("MouseEvent\n");
 
          UserEnterExclusive();
 
@@ -487,7 +430,7 @@ KeyboardThreadMain(PVOID StartContext)
       KEVENT Event;
       DueTime.QuadPart = (LONGLONG)(-10000000);
       KeInitializeEvent(&Event, NotificationEvent, FALSE);
-      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime); 
       Status = NtOpenFile(&KeyboardDeviceHandle,
                        FILE_ALL_ACCESS,
                        &KeyboardObjectAttributes,
@@ -512,9 +455,6 @@ KeyboardThreadMain(PVOID StartContext)
       return; //(Status);
    }
 
-   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
-                       LOW_REALTIME_PRIORITY + 3);
-
    IntKeyboardGetIndicatorTrans(KeyboardDeviceHandle,
                                 &IndicatorTrans);
 
@@ -529,15 +469,14 @@ KeyboardThreadMain(PVOID StartContext)
                                      KernelMode,
                                      TRUE,
                                      NULL);
-
       DPRINT( "Keyboard Input Thread Starting...\n" );
+
       /*
        * Receive and process keyboard input.
        */
       while (InputThreadsRunning)
       {
          BOOLEAN NumKeys = 1;
-         BOOLEAN bLeftAlt;
          KEYBOARD_INPUT_DATA KeyInput;
          KEYBOARD_INPUT_DATA NextKeyInput;
          LPARAM lParam = 0;
@@ -546,10 +485,10 @@ KeyboardThreadMain(PVOID StartContext)
          HWND hWnd;
          int id;
 
-         DPRINT("KeyInput @ %08x\n", &KeyInput);
+	 DPRINT("KeyInput @ %08x\n", &KeyInput);
 
          Status = NtReadFile (KeyboardDeviceHandle,
-                              NULL,
+			      NULL,
                               NULL,
                               NULL,
                               &Iosb,
@@ -586,9 +525,6 @@ KeyboardThreadMain(PVOID StartContext)
             return; //(Status);
          }
 
-		 /* Set LastInputTick */
-		 IntLastInputTick(TRUE);
-
          /* Update modifier state */
          fsModifiers = IntKeyboardGetModifiers(&KeyInput);
 
@@ -609,21 +545,6 @@ KeyboardThreadMain(PVOID StartContext)
                    * (For alt, the message that turns on accelerator
                    * display, not sure what for win. Both TODO though.)
                    */
-                   bLeftAlt = FALSE;
-                   if(fsModifiers == MOD_ALT)
-                   {
-                      if(KeyInput.Flags & KEY_E1)
-                      {
-                         gQueueKeyStateTable[VK_RMENU] = 0x80;
-                      }
-                      else
-                      {
-                         gQueueKeyStateTable[VK_LMENU] = 0x80;
-                         bLeftAlt = TRUE;
-                      }
-
-                      gQueueKeyStateTable[VK_MENU] = 0x80;
-                   }
 
                   /* Read the next key before sending this one */
                   do
@@ -666,18 +587,7 @@ KeyboardThreadMain(PVOID StartContext)
                      if (fsModifiers == MOD_WIN)
                         IntKeyboardSendWinKeyMsg();
                      else if (fsModifiers == MOD_ALT)
-                     {
-                        gQueueKeyStateTable[VK_MENU] = 0;
-                        if(bLeftAlt)
-                        {
-                           gQueueKeyStateTable[VK_LMENU] = 0;
-                        }
-                        else
-                        {
-                           gQueueKeyStateTable[VK_RMENU] = 0;
-                        }
                         co_IntKeyboardSendAltKeyMsg();
-                     }
                      continue;
                   }
 
@@ -759,6 +669,9 @@ KeyboardThreadMain(PVOID StartContext)
             }
 
             /* Find the target thread whose locale is in effect */
+            if (!IntGetScreenDC())
+               FocusQueue = W32kGetPrimitiveMessageQueue();
+            else
                FocusQueue = IntGetFocusMessageQueue();
 
             /* This might cause us to lose hot keys, which are important
@@ -816,10 +729,42 @@ KeyboardEscape:
 }
 
 
+NTSTATUS FASTCALL
+UserAcquireOrReleaseInputOwnership(BOOLEAN Release)
+{
+   if (Release && InputThreadsRunning && !pmPrimitiveMessageQueue)
+   {
+      DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveMessageQueue );
+      KeClearEvent(&InputThreadsStart);
+      InputThreadsRunning = FALSE;
+
+      NtAlertThread(KeyboardThreadHandle);
+      NtAlertThread(MouseThreadHandle);
+   }
+   else if (!Release && !InputThreadsRunning)
+   {
+      InputThreadsRunning = TRUE;
+      KeSetEvent(&InputThreadsStart, IO_NO_INCREMENT, FALSE);
+   }
+
+   return(STATUS_SUCCESS);
+}
+
+
 NTSTATUS STDCALL
 NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 {
-   return STATUS_SUCCESS;
+   DECLARE_RETURN(NTSTATUS);
+
+   DPRINT("Enter NtUserAcquireOrReleaseInputOwnership\n");
+   UserEnterExclusive();
+
+   RETURN(UserAcquireOrReleaseInputOwnership(Release));
+
+CLEANUP:
+   DPRINT("Leave NtUserAcquireOrReleaseInputOwnership, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 
@@ -1011,7 +956,7 @@ IntMouseInput(MOUSEINPUT *mi)
    {
       LARGE_INTEGER LargeTickCount;
       KeQueryTickCount(&LargeTickCount);
-      mi->time = MsqCalculateMessageTime(&LargeTickCount);
+      mi->time = LargeTickCount.u.LowPart;
    }
 
    SwapButtons = CurInfo->SwapButtons;

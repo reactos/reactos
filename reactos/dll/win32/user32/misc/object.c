@@ -29,9 +29,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(user32);
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -97,7 +96,7 @@ GetUserObjectInformationA(
   LPWSTR buffer;
   BOOL ret = TRUE;
 
-  TRACE("GetUserObjectInformationA(%x %d %x %d %x)\n", hObj, nIndex,
+  DPRINT("GetUserObjectInformationA(%x %d %x %d %x)\n", hObj, nIndex,
          pvInfo, nLength, lpnLengthNeeded);
 
   if (nIndex != UOI_NAME && nIndex != UOI_TYPE)
@@ -144,7 +143,7 @@ GetUserObjectInformationW(
   DWORD nLength,
   LPDWORD lpnLengthNeeded)
 {
-  TRACE("GetUserObjectInformationW(%x %d %x %d %x)\n", hObj, nIndex,
+  DPRINT("GetUserObjectInformationW(%x %d %x %d %x)\n", hObj, nIndex,
          pvInfo, nLength, lpnLengthNeeded);
   return NtUserGetObjectInformation(hObj, nIndex, pvInfo, nLength, lpnLengthNeeded);
 }

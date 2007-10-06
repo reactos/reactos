@@ -30,8 +30,6 @@
 
 #include <user32.h>
 
-#include <wine/debug.h>
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -72,8 +70,6 @@ GetWindowDC(
 }
 
 
-BOOL STDCALL GdiReleaseDC(HDC hdc);
-
 /*
  * @implemented
  */
@@ -83,14 +79,7 @@ ReleaseDC(
   HWND hWnd,
   HDC hDC)
 {
-  // From msdn: if the DC was not released return zero.
-  //            if the DC was released return one.
-
-  if (!hDC) return FALSE; // Null hDC return zero.
-
-  GdiReleaseDC ( hDC ); // Release locals.
-  // Win 3.1 throw back, hWnd is ignored and not used.  
-  return NtUserCallOneParam( (DWORD) hDC, ONEPARAM_ROUTINE_RELEASEDC);
+  return NtUserReleaseDC(hWnd, hDC);
 }
 
 

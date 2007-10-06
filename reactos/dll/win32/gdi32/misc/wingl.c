@@ -28,11 +28,11 @@
 
 
 
-typedef int  STDCALL (*CHOOSEPIXELFMT) (HDC, CONST PIXELFORMATDESCRIPTOR *);
-typedef BOOL STDCALL (*SETPIXELFMT) (HDC, int, CONST PIXELFORMATDESCRIPTOR *);
-typedef BOOL STDCALL (*SWAPBUFFERS) (HDC hdc);
-typedef int  STDCALL (*DESCRIBEPIXELFMT) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
-typedef int  STDCALL (*GETPIXELFMT) (HDC);
+typedef int  (*CHOOSEPIXELFMT) (HDC, CONST PIXELFORMATDESCRIPTOR *);
+typedef BOOL (*SETPIXELFMT) (HDC, int, CONST PIXELFORMATDESCRIPTOR *);
+typedef BOOL (*SWAPBUFFERS) (HDC hdc);
+typedef int  (*DESCRIBEPIXELFMT) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
+typedef int  (*GETPIXELFMT) (HDC);
 
 
 static CHOOSEPIXELFMT    glChoosePixelFormat   = NULL;
@@ -58,7 +58,7 @@ static BOOL OpenGLEnable(void)
   if(glChoosePixelFormat == NULL) {
         glChoosePixelFormat = (CHOOSEPIXELFMT)GetProcAddress(hOpenGL, "wglChoosePixelFormat");
         if(glChoosePixelFormat == NULL)
-                return(FALSE);
+                return(0);
   }
 
   if(glSetPixelFormat == NULL) {

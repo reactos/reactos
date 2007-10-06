@@ -268,12 +268,6 @@ MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
 VOID FASTCALL
 MsqRemoveTimersWindow(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd);
 
-static __inline LONG
-MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
-{
-    return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
-}
-
 #endif /* _WIN32K_MSGQUEUE_H */
 
 /* EOF */

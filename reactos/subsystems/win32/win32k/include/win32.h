@@ -20,6 +20,7 @@ typedef struct _W32THREAD
 
 #include <poppack.h>
 
+
 typedef struct _W32HEAP_USER_MAPPING
 {
     struct _W32HEAP_USER_MAPPING *Next;

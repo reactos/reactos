@@ -33,12 +33,6 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID FASTCALL
-co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse);
-
-BOOL FASTCALL
-IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse);
-
 /* GLOBALS *******************************************************************/
 
 #define MINMAX_NOSWP  (0x00010000)
@@ -139,8 +133,7 @@ BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
 
     if (!Wnd) return FALSE;
     style = Wnd->Style;
-    if (!(style & WS_VISIBLE) && 
-        Wnd->OwnerThread->ThreadsProcess != CsrProcess) return FALSE;
+    if (!(style & WS_VISIBLE)) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
     return !(style & WS_DISABLED);
 }
@@ -975,8 +968,6 @@ co_WinPosSetWindowPos(
    }
 
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
-    
-    //DPRINT1("co_WinPosDoNCCALCSize");
 
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
@@ -1203,7 +1194,7 @@ co_WinPosSetWindowPos(
                         CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
                         CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY, 0, 0);
             UserReleaseDC(Window, Dc, FALSE);
-            IntValidateParent(Window, CopyRgn, FALSE);
+            IntValidateParent(Window, CopyRgn);
             NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
          else if(VisRgn)
@@ -1230,31 +1221,21 @@ co_WinPosSetWindowPos(
          }
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
-                      /* old code
-            NtGdiOffsetRgn(DirtyRgn, Window->WindowRect.left, Window->WindowRect.top);
-            IntInvalidateWindows(Window, DirtyRgn,
-               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-         }
-         NtGdiDeleteObject(DirtyRgn);
-         */
-
-            PWINDOW_OBJECT Parent = Window->Parent;
-
-            NtGdiOffsetRgn(DirtyRgn,
-                           Window->WindowRect.left,
-                           Window->WindowRect.top);
-            if ((Window->Style & WS_CHILD) &&
-                (Parent) &&
-                !(Parent->Style & WS_CLIPCHILDREN))
+            if (Window->Parent)
             {
-               IntInvalidateWindows(Parent, DirtyRgn,
-                  RDW_ERASE | RDW_INVALIDATE);
-               co_IntPaintWindows(Parent, RDW_ERASENOW, FALSE);
+               NtGdiOffsetRgn(DirtyRgn,
+                  Window->WindowRect.left - Window->Parent->ClientRect.left,
+                  Window->WindowRect.top - Window->Parent->ClientRect.top);
+               co_UserRedrawWindow(Window->Parent, NULL, DirtyRgn,
+                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
             else
             {
-                IntInvalidateWindows(Window, DirtyRgn,
-                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+               NtGdiOffsetRgn(DirtyRgn,
+                  Window->WindowRect.left - Window->ClientRect.left,
+                  Window->WindowRect.top - Window->ClientRect.top);
+               co_UserRedrawWindow(Window, NULL, DirtyRgn,
+                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
          }
          NtGdiDeleteObject(DirtyRgn);
@@ -1404,8 +1385,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          break;
 
       case SW_SHOWNOACTIVATE:
-         //Swp |= SWP_NOZORDER;
-         Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+         Swp |= SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOWNORMAL:
       case SW_SHOWDEFAULT:
@@ -1428,7 +1408,6 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    }
 
    ShowFlag = (Cmd != SW_HIDE);
-   
    if (ShowFlag != WasVisible)
    {
       co_IntSendMessage(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
@@ -1498,7 +1477,6 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
                         MAKELONG(Window->ClientRect.left,
                                  Window->ClientRect.top));
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-      
    }
 
    /* Activate the window if activation is not requested and the window is not minimized */

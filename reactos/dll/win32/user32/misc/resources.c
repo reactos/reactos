@@ -1,24 +1,9 @@
 #include <user32.h>
 
-#include <wine/debug.h>
-
-#ifndef _CFGMGR32_H_
-#define CR_SUCCESS                        0x00000000
-#define CR_OUT_OF_MEMORY                  0x00000002
-#define CR_INVALID_POINTER                0x00000003
-#define CR_INVALID_DATA                   0x0000001F
-#endif
-
-typedef DWORD STDCALL (*CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
-typedef DWORD STDCALL (*CMP_UNREGNOTIFY) (ULONG );
-
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
           does not seem to work properly for stack address space. */
 /* kill `left-hand operand of comma expression has no effect' warning */
 #define IsBadWritePtr(lp, n) ((DWORD)lp==n?0:0)
-
-
-static HINSTANCE hSetupApi = NULL;
 
 BOOL STDCALL _InternalLoadString
 (
@@ -111,71 +96,63 @@ int STDCALL LoadStringA
  int nBufferMax
 )
 {
-  UNICODE_STRING wstrResStr;
-  ANSI_STRING strBuf;
-  INT retSize;
+ UNICODE_STRING wstrResStr;
+ ANSI_STRING strBuf;
+ INT retSize;
 
-  /* parameter validation */
-  if
-  (
-    (nBufferMax < 1) ||
-    (IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
-  )
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
+ /* parameter validation */
+ if
+ (
+  (nBufferMax < 1) ||
+  (IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
+ )
+ {
+  SetLastError(ERROR_INVALID_PARAMETER);
+  return 0;
+ }
 
-  /* get the UNICODE_STRING descriptor of the in-memory image of the string */
-  if(!_InternalLoadString(hInstance, uID, &wstrResStr))
-  {
-    /* failure */
-    return 0;
-  }
+ /* get the UNICODE_STRING descriptor of the in-memory image of the string */
+ if(!_InternalLoadString(hInstance, uID, &wstrResStr))
+  /* failure */
+  return 0;
 
-  /*
-   convert the string. The Unicode string may be in UTF-16 (multi-byte), so we
-   don't alter wstrResStr.Length, and let RtlUnicodeStringToAnsiString truncate
-   it, if necessary
-  */
-  strBuf.Length = 0;
-  strBuf.MaximumLength = nBufferMax * sizeof(CHAR);
-  strBuf.Buffer = lpBuffer;
+ /*
+  convert the string. The Unicode string may be in UTF-16 (multi-byte), so we
+  don't alter wstrResStr.Length, and let RtlUnicodeStringToAnsiString truncate
+  it, if necessary
+ */
+ strBuf.Length = 0;
+ strBuf.MaximumLength = nBufferMax * sizeof(CHAR);
+ strBuf.Buffer = lpBuffer;
 
-  retSize = WideCharToMultiByte(CP_ACP, 0, wstrResStr.Buffer,
-                                wstrResStr.Length / sizeof(WCHAR),
-                                strBuf.Buffer, strBuf.MaximumLength, NULL, NULL);
+ retSize = WideCharToMultiByte(CP_ACP, 0, wstrResStr.Buffer, wstrResStr.Length / sizeof(WCHAR), strBuf.Buffer, strBuf.MaximumLength, NULL, NULL);
 
-  if(!retSize)
-  {
-    /* failure */
-    return 0;
-  }
-  else
-  {
-    strBuf.Length = retSize;
-  }
+ if(!retSize)
+  /* failure */
+  return 0;
+ else 
+  strBuf.Length = retSize;
 
-  /* the ANSI string may not be null-terminated */
-  if(strBuf.Length >= strBuf.MaximumLength)
-  {
-    /* length greater than the buffer? whatever */
-    int nStringLen = strBuf.MaximumLength / sizeof(CHAR) - 1;
+ /* the ANSI string may not be null-terminated */
+ if(strBuf.Length >= strBuf.MaximumLength)
+ {
+  /* length greater than the buffer? whatever */
+  int nStringLen = strBuf.MaximumLength / sizeof(CHAR) - 1;
 
-    /* zero the last character in the buffer */
-    strBuf.Buffer[nStringLen] = 0;
+  /* zero the last character in the buffer */
+  strBuf.Buffer[nStringLen] = 0;
 
-    /* success */
-    return nStringLen;
-  }
-  else
-  {
-    /* zero the last character in the string */
-    strBuf.Buffer[strBuf.Length / sizeof(CHAR)] = 0;
+  /* success */
+  return nStringLen;
+ }
+ else
+ {
+  /* zero the last character in the string */
+  strBuf.Buffer[strBuf.Length / sizeof(CHAR)] = 0;
 
-    /* success */
-    return strBuf.Length / sizeof(CHAR);
-  }
+  /* success */
+  return strBuf.Length / sizeof(CHAR);
+ }
 }
 
 
@@ -190,141 +167,41 @@ int STDCALL LoadStringW
  int nBufferMax
 )
 {
-  UNICODE_STRING wstrResStr;
-  int nStringLen;
+ UNICODE_STRING wstrResStr;
+ int nStringLen;
 
-  /* parameter validation */
-  if
-  (
-    (nBufferMax < 1) ||
-    ((nBufferMax > 0)  && IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0]))) ||
-    /* undocumented: If nBufferMax is 0, LoadStringW will copy a pointer to the 
-       in-memory image of the string to the specified buffer and return the length 
-       of the string in WCHARs */
-    ((nBufferMax == 0) && IsBadWritePtr(lpBuffer, sizeof(lpBuffer)))
-  )
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
+ /* parameter validation */
+ if
+ (
+  (nBufferMax < 1) ||
+  (IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0])))
+ )
+ {
+  SetLastError(ERROR_INVALID_PARAMETER);
+  return 0;
+ }
 
-  /* get the UNICODE_STRING descriptor of the in-memory image of the string */
-  if(!_InternalLoadString(hInstance, uID, &wstrResStr))
-  {
-    /* failure */
-    return 0;
-  }
+ /* get the UNICODE_STRING descriptor of the in-memory image of the string */
+ if(!_InternalLoadString(hInstance, uID, &wstrResStr))
+  /* failure */
+  return 0;
 
-  /* get the length in characters */
-  nStringLen = wstrResStr.Length / sizeof(WCHAR);
+ /* get the length in characters */
+ nStringLen = wstrResStr.Length / sizeof(WCHAR);
 
-  if (nBufferMax > 0)
-  {
-    /* the buffer must be enough to contain the string and the null terminator */
-    if(nBufferMax < (nStringLen + 1))
-    {
-      /* otherwise, the string is truncated */
-      nStringLen = nBufferMax - 1;
-    }
+ /* the buffer must be enough to contain the string and the null terminator */
+ if(nBufferMax < (nStringLen + 1))
+  /* otherwise, the string is truncated */
+  nStringLen = nBufferMax - 1;
 
-    /* copy the string */
-    memcpy(lpBuffer, wstrResStr.Buffer, nStringLen * sizeof(WCHAR));
+ /* copy the string */
+ memcpy(lpBuffer, wstrResStr.Buffer, nStringLen * sizeof(WCHAR));
 
-    /* null-terminate it */
-    lpBuffer[nStringLen] = 0;
-  }
-  else
-  {
-    *((LPWSTR*)lpBuffer) = wstrResStr.Buffer;
-  }
-  /* success */
-  return nStringLen;
-}
+ /* null-terminate it */
+ lpBuffer[nStringLen] = 0;
 
-
-/*
- * @implemented
- */
-HDEVNOTIFY
-STDCALL
-RegisterDeviceNotificationW(
-    HANDLE hRecipient,
-    LPVOID NotificationFilter,
-    DWORD Flags
-    )
-{
-  DWORD ConfigRet = 0;
-  CMP_REGNOTIFY RegNotify = NULL;
-  HDEVNOTIFY hDevNotify = NULL;
-  if ( hSetupApi == NULL ) hSetupApi = LoadLibraryA("SETUPAPI.DLL");
-  if ( hSetupApi == NULL ) return NULL;
-  RegNotify = (CMP_REGNOTIFY) GetProcAddress ( hSetupApi, "CMP_RegisterNotification");
-  if (RegNotify == NULL)
-  {
-    FreeLibrary ( hSetupApi );
-    hSetupApi = NULL;
-    return NULL;
-  }
-  ConfigRet  = RegNotify ( hRecipient, NotificationFilter, Flags, (PULONG) &hDevNotify);
-  if (ConfigRet != CR_SUCCESS) 
-  {
-    switch (ConfigRet)
-    {
-       case CR_OUT_OF_MEMORY:
-         SetLastError (ERROR_NOT_ENOUGH_MEMORY);
-         break;
-       case CR_INVALID_POINTER:
-         SetLastError (ERROR_INVALID_PARAMETER);
-         break;
-       case CR_INVALID_DATA:
-         SetLastError (ERROR_INVALID_DATA);
-         break;
-       default:
-         SetLastError (ERROR_SERVICE_SPECIFIC_ERROR);
-         break;
-    }
-  }
-  return hDevNotify;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-UnregisterDeviceNotification(
-  HDEVNOTIFY Handle)
-{
-  DWORD ConfigRet = 0;
-  CMP_UNREGNOTIFY UnRegNotify = NULL;
-  if ( hSetupApi == NULL ) hSetupApi = LoadLibraryA("SETUPAPI.DLL");
-  if ( hSetupApi == NULL ) return FALSE;
-  UnRegNotify = (CMP_UNREGNOTIFY) GetProcAddress ( hSetupApi, "CMP_UnregisterNotification");
-  if (UnRegNotify == NULL)
-  {
-    FreeLibrary ( hSetupApi );
-    hSetupApi = NULL;
-    return FALSE;
-  }
-  ConfigRet  = UnRegNotify ( (ULONG) Handle );
-  if (ConfigRet != CR_SUCCESS) 
-  {
-    switch (ConfigRet)
-    {
-       case CR_INVALID_POINTER:
-         SetLastError (ERROR_INVALID_PARAMETER);
-         break;
-       case CR_INVALID_DATA:
-         SetLastError (ERROR_INVALID_DATA);
-         break;
-       default:
-         SetLastError (ERROR_SERVICE_SPECIFIC_ERROR);
-         break;
-    }
-    return FALSE;
-  }
-  return TRUE;
+ /* success */
+ return nStringLen;
 }
 
 /* EOF */

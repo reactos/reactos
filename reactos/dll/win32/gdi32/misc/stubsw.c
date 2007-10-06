@@ -13,7 +13,48 @@
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+DeviceCapabilitiesExW(
+	LPCWSTR		pDevice,
+	LPCWSTR		pPort,
+	WORD		fwCapability,
+	LPWSTR		pOutput,
+	CONST DEVMODEW	*pDevMode
+	)
+{
+#if 0
+  /* FIXME no NtGdiDeviceCapabilities???? */
+  return NtGdiDeviceCapabilities ( pDevice,
+				  pPort,
+				  fwCapability,
+				  pOutput,
+				  pDevMode );
+#else
+  UNIMPLEMENTED;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#endif
+}
 
+/*
+ * @unimplemented
+ */
+UINT
+APIENTRY
+GetOutlineTextMetricsW(
+	HDC			hdc,
+	UINT			cbData,
+	LPOUTLINETEXTMETRICW	lpOTM
+	)
+{
+  UNIMPLEMENTED;
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+}
 
 
 /*
@@ -34,23 +75,19 @@ PolyTextOutW(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 DWORD
 STDCALL
-GetKerningPairsW(HDC hdc,
-                 ULONG cPairs,
-                 LPKERNINGPAIR pkpDst)
+GetKerningPairsW(
+	HDC		a0,
+	DWORD		a1,
+	LPKERNINGPAIR	a2
+	)
 {
-    if ((cPairs != 0) || (pkpDst == 0))
-    {
-        return NtGdiGetKerningPairs(hdc,cPairs,pkpDst);
-    }
-    else
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 }
 
 
@@ -211,6 +248,23 @@ UpdateICMRegKeyW(
 /*
  * @unimplemented
  */
+DWORD
+STDCALL
+GetFontResourceInfoW(
+	DWORD	a0,
+	DWORD	a1,
+	DWORD	a2,
+	DWORD	a3
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
@@ -237,41 +291,52 @@ EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
  */
 int
 STDCALL
-GdiAddFontResourceW(LPCWSTR lpszFilename,FLONG fl,DESIGNVECTOR *pdv)
+GdiAddFontResourceW(LPCWSTR filename,FLONG f,DESIGNVECTOR *pdv)
 {
-	UNICODE_STRING Filename;
-	//UNIMPLEMENTED;
-	//SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	//return 0;
-
-	/* FIXME handle fl parameter */
-	RtlInitUnicodeString(&Filename, lpszFilename);
-	return NtGdiAddFontResource ( &Filename, fl );
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+GdiConsoleTextOut(HDC hdc, POLYTEXTW *lpto,UINT nStrings, RECTL *prclBounds)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
 
 /*
- * @implemented
+ * @unimplemented
  */
 DWORD
 STDCALL
-GetEUDCTimeStampExW(LPWSTR lpBaseFaceName)
+GetEUDCTimeStampExW(LPCWSTR str)
 {
-    DWORD retValue = 0;
-
-    if (!lpBaseFaceName)
-    {
-        retValue = NtGdiGetEudcTimeStampEx(NULL,0,FALSE);
-    }
-    else
-    {
-        retValue = NtGdiGetEudcTimeStampEx(lpBaseFaceName, wcslen(lpBaseFaceName), FALSE);
-    }
-
-    return retValue;
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 }
 
-
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceExW(
+	LPCWSTR lpFileName,
+	DWORD fl,
+	PVOID pdv
+)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
 
 /*
  * @unimplemented
@@ -300,6 +365,18 @@ bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unkno
 /*
  * @unimplemented
  */
+HFONT
+STDCALL
+CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetGlyphIndicesW(
@@ -316,25 +393,15 @@ GetGlyphIndicesW(
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 UINT
 STDCALL
-GetStringBitmapW(HDC hdc,
-                 LPWSTR pwsz,
-                 BOOL doCall,
-                 UINT cj,
-                 BYTE *lpSB)
+GetStringBitmapW(HDC hdc,LPWSTR pwsz,BOOL unknown,UINT cj,BYTE *lpSB)
 {
-    UINT retValue = 0;
-
-    if (doCall)
-    {
-        retValue = NtGdiGetStringBitmapW(hdc, pwsz, 1, lpSB, cj);
-    }
-
-    return retValue;
-
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 }
 
 

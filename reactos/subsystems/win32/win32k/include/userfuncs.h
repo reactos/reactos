@@ -75,7 +75,7 @@ BOOL FASTCALL ObmCreateHandleTable();
 
 /******************** HANDLE.C ***************/
 
-extern PUSER_HANDLE_TABLE gHandleTable;
+extern USER_HANDLE_TABLE gHandleTable;
 
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
 VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
@@ -87,6 +87,11 @@ PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE 
 /*************** WINSTA.C ***************/
 
 HWINSTA FASTCALL UserGetProcessWindowStation(VOID);
+
+/*************** INPUT.C ***************/
+
+NTSTATUS FASTCALL
+UserAcquireOrReleaseInputOwnership(BOOLEAN Release);
 
 /*************** WINPOS.C ***************/
 

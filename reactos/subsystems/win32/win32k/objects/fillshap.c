@@ -31,7 +31,7 @@
        &BrushInst.BrushObject,                   \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
-       ROP2_TO_MIX(dc->Dc_Attr.jROP2));
+       ROP2_TO_MIX(dc->w.ROPmode));
 
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && IntEngLineTo(&BitmapObj->SurfObj, \
@@ -39,7 +39,7 @@
        &BrushInst.BrushObject,                   \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
-       ROP2_TO_MIX(dc->Dc_Attr.jROP2));
+       ROP2_TO_MIX(dc->w.ROPmode));
 
 BOOL FASTCALL
 IntGdiPolygon(PDC    dc,
@@ -66,7 +66,6 @@ IntGdiPolygon(PDC    dc,
   ASSERT(BitmapObj);
 
       /* Convert to screen coordinates */
-      IntLPtoDP(dc, UnsafePoints, Count);
       for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
 	{
 	  UnsafePoints[CurrentPoint].x += dc->w.DCOrgX;
@@ -91,43 +90,49 @@ IntGdiPolygon(PDC    dc,
 	}
 
 	/* Now fill the polygon with the current brush. */
-	FillBrushObj = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+	FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 	if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-          ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->Dc_Attr.jROP2), UnsafePoints, Count, DestRect );  
+	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->w.ROPmode), UnsafePoints, Count, DestRect );
 	}
 	BRUSHOBJ_UnlockBrush(FillBrushObj);
 
 	/* get BRUSHOBJ from current pen. */
-	PenBrushObj = PENOBJ_LockPen(dc->Dc_Attr.hpen);
+	PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
 	// Draw the Polygon Edges with the current pen ( if not a NULL pen )
 	if (PenBrushObj && !(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
 	  IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
+	  for ( CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint )
+	  {
+	    POINT To, From; //, Next;
 
-        while(Count-- >1)
-          {
+	    /* Let CurrentPoint be i
+	     * if i+1 > Count, Draw a line from Points[i] to Points[0]
+	     * Draw a line from Points[i] to Points[i+1]
+	     */
+	    From = UnsafePoints[CurrentPoint];
+	    if (Count <= CurrentPoint + 1)
+	      To = UnsafePoints[0];
+	    else
+	      To = UnsafePoints[CurrentPoint + 1];
 
-// DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n",
-//                                 UnsafePoints[0].x, UnsafePoints[0].y,
-//                                 UnsafePoints[1].x, UnsafePoints[1].y );
-                                 
-  	    ret = IntEngLineTo(&BitmapObj->SurfObj,
+	    //DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
+	    ret = IntEngLineTo(&BitmapObj->SurfObj,
 			       dc->CombinedClip,
 			       &PenBrushInst.BrushObject,
-			       UnsafePoints[0].x,          /* From */
-			       UnsafePoints[0].y,
-			       UnsafePoints[1].x,          /* To */
-			       UnsafePoints[1].y,
+			       From.x,
+			       From.y,
+			       To.x,
+			       To.y,
 			       &DestRect,
-			       ROP2_TO_MIX(dc->Dc_Attr.jROP2)); /* MIX */
-             if(!ret) break;
-             UnsafePoints++;
+			       ROP2_TO_MIX(dc->w.ROPmode)); /* MIX */
 	  }
 	}
 	PENOBJ_UnlockPen(PenBrushObj);
       }
+
       BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return ret;
@@ -139,15 +144,44 @@ IntGdiPolyPolygon(DC      *dc,
                   LPINT   PolyCounts,
                   int     Count)
 {
-  while(--Count >=0)
+  int i;
+  LPPOINT pt;
+  LPINT pc;
+  BOOL ret = FALSE; // default to failure
+
+  pt = Points;
+  pc = PolyCounts;
+
+  for (i=0;i<Count;i++)
   {
-    if(!IntGdiPolygon ( dc, Points, *PolyCounts )) return FALSE;
-    Points+=*PolyCounts++;
+    ret = IntGdiPolygon ( dc, pt, *pc );
+    if (ret == FALSE)
+    {
+      return ret;
+    }
+    pt+=*pc++;
   }
-  return TRUE;
+
+  return ret;
 }
 
 /******************************************************************************/
+
+BOOL
+STDCALL
+NtGdiChord(HDC  hDC,
+                int  LeftRect,
+                int  TopRect,
+                int  RightRect,
+                int  BottomRect,
+                int  XRadial1,
+                int  YRadial1,
+                int  XRadial2,
+                int  YRadial2)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
 
 /*
  * NtGdiEllipse
@@ -213,7 +247,7 @@ NtGdiEllipse(
       return TRUE;
    }
 
-   FillBrush = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+   FillBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
    if (NULL == FillBrush)
    {
       DC_UnlockDc(dc);
@@ -221,7 +255,7 @@ NtGdiEllipse(
       return FALSE;
    }
 
-   PenBrush = PENOBJ_LockPen(dc->Dc_Attr.hpen);
+   PenBrush = PENOBJ_LockPen(dc->w.hPen);
    if (NULL == PenBrush)
    {
       BRUSHOBJ_UnlockBrush(FillBrush);
@@ -243,22 +277,20 @@ NtGdiEllipse(
    IntGdiInitBrushInstance(&FillBrushInst, FillBrush, dc->XlateBrush);
    IntGdiInitBrushInstance(&PenBrushInst, PenBrush, dc->XlatePen);
 
+   nLeftRect += dc->w.DCOrgX;
+   nRightRect += dc->w.DCOrgX - 1;
+   nTopRect += dc->w.DCOrgY;
+   nBottomRect += dc->w.DCOrgY - 1;
+
+   RadiusX = max((nRightRect - nLeftRect) >> 1, 1);
+   RadiusY = max((nBottomRect - nTopRect) >> 1, 1);
+   CenterX = nLeftRect + RadiusX;
+   CenterY = nTopRect + RadiusY;
+
    RectBounds.left = nLeftRect;
    RectBounds.right = nRightRect;
    RectBounds.top = nTopRect;
    RectBounds.bottom = nBottomRect;
-
-   IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
-
-   RectBounds.left += dc->w.DCOrgX;
-   RectBounds.right += dc->w.DCOrgX;
-   RectBounds.top += dc->w.DCOrgY;
-   RectBounds.bottom += dc->w.DCOrgY;
-
-   RadiusX = max((RectBounds.right - RectBounds.left) >> 1, 1);
-   RadiusY = max((RectBounds.bottom - RectBounds.top) >> 1, 1);
-   CenterX = RectBounds.left + RadiusX;
-   CenterY = RectBounds.top + RadiusY;
 
    if (RadiusX > RadiusY)
    {
@@ -648,7 +680,7 @@ NtGdiPie(HDC  hDC,
       return TRUE;
     }
 
-  FillBrushObj = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+  FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
   if (NULL == FillBrushObj)
     {
       DC_UnlockDc(dc);
@@ -671,7 +703,7 @@ NtGdiPie(HDC  hDC,
   RectBounds.bottom = Bottom;
 
   SurfObj = (SURFOBJ*) AccessUserObject((ULONG)dc->Surface);
-  HPenToBrushObj(&PenBrushObj, dc->Dc_Attr.hpen);
+  HPenToBrushObj(&PenBrushObj, dc->w.hPen);
 
   /* Number of points for the circle is 4 * sqrt(2) * Radius, start
      and end line have at most Radius points, so allocate at least
@@ -805,29 +837,97 @@ extern BOOL FillPolygon(PDC dc,
 
 #endif
 
-
-ULONG_PTR
+BOOL
 STDCALL
-NtGdiPolyPolyDraw( IN HDC hDC,
-                   IN PPOINT Points,
-                   IN PULONG PolyCounts,
-                   IN ULONG Count,
-                   IN INT iFunc )
+NtGdiPolygon(HDC          hDC,
+             CONST PPOINT UnsafePoints,
+             int          Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL Ret = FALSE;
+
+  if ( Count < 2 )
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  _SEH_TRY
+  {
+    ProbeForRead(UnsafePoints,
+                 Count * sizeof(POINT),
+                 1);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+  
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+
+  dc = DC_LockDc(hDC);
+  if(!dc)
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+  else
+  {
+    if (dc->IsIC)
+    {
+      DC_UnlockDc(dc);
+      /* Yes, Windows really returns TRUE in this case */
+      return TRUE;
+    }
+    Safept = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * Count, TAG_SHAPE);
+    if(!Safept)
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    else
+    {
+      _SEH_TRY
+      {
+        /* pointer was already probed! */
+        RtlCopyMemory(Safept,
+                      UnsafePoints,
+                      Count * sizeof(POINT));
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if(!NT_SUCCESS(Status))
+        SetLastNtError(Status);
+      else
+        Ret = IntGdiPolygon(dc, Safept, Count);
+
+      ExFreePool(Safept);
+    }
+    DC_UnlockDc(dc);
+  }
+
+  return Ret;
+}
+
+
+BOOL
+STDCALL
+NtGdiPolyPolygon(HDC           hDC,
+                 CONST LPPOINT Points,
+                 CONST LPINT   PolyCounts,
+                 int           Count)
 {
   DC *dc;
   LPPOINT Safept;
   LPINT SafePolyPoints;
   NTSTATUS Status = STATUS_SUCCESS;
-  BOOL Ret = TRUE;
-  INT nPoints, nEmpty, nInvalid, i;
-  
-  if (iFunc == GdiPolyPolyRgn)
-  {
-   return (ULONG_PTR) GdiCreatePolyPolygonRgn((CONST PPOINT)  Points,
-                                            (CONST PINT)  PolyCounts,
-                                                               Count,
-                                                           (INT) hDC);
-  }
+  BOOL Ret;
+
   dc = DC_LockDc(hDC);
   if(!dc)
   {
@@ -865,17 +965,22 @@ NtGdiPolyPolyDraw( IN HDC hDC,
       return FALSE;
     }
   
-    SafePolyPoints = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_SHAPE);
-    if(!SafePolyPoints)
+    Safept = ExAllocatePoolWithTag(PagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
+    if(!Safept)
     {
       DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
+    SafePolyPoints = (LPINT)&Safept[Count];
+    
     _SEH_TRY
     {
       /* pointers already probed! */
+      RtlCopyMemory(Safept,
+                    Points,
+                    Count * sizeof(POINT));
       RtlCopyMemory(SafePolyPoints,
                     PolyCounts,
                     Count * sizeof(INT));
@@ -889,67 +994,6 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     if(!NT_SUCCESS(Status))
     {
       DC_UnlockDc(dc);
-      ExFreePool(SafePolyPoints);
-      SetLastNtError(Status);
-      return FALSE;
-    }
-    /* validate poligons */
-    nPoints = 0;
-    nEmpty = 0;
-    nInvalid = 0;
-    for (i = 0; i < Count; i++)
-    {
-      if (SafePolyPoints[i] == 0)
-      {
-         nEmpty++;
-      }
-      if (SafePolyPoints[i] == 1)
-      {
-         nInvalid++;
-      }
-      nPoints += SafePolyPoints[i];
-    }
-
-    if (nEmpty == Count)
-    {
-      /* if all polygon counts are zero, return without setting a last error code. */
-      ExFreePool(SafePolyPoints);
-      return FALSE;
-    }
-    if (nInvalid != 0)
-    {
-     /* if at least one poly count is 1, fail */
-     ExFreePool(SafePolyPoints);
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-     return FALSE;
-    }
-
-    Safept = ExAllocatePoolWithTag(PagedPool, nPoints * sizeof(POINT), TAG_SHAPE);
-    if(!Safept)
-    {
-      DC_UnlockDc(dc);
-      ExFreePool(SafePolyPoints);
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-      return FALSE;
-    }
-
-    _SEH_TRY
-    {
-      /* pointers already probed! */
-      RtlCopyMemory(Safept,
-                    Points,
-                    nPoints * sizeof(POINT));
-    }
-    _SEH_HANDLE
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if(!NT_SUCCESS(Status))
-    {
-      DC_UnlockDc(dc);
-      ExFreePool(SafePolyPoints);
       ExFreePool(Safept);
       SetLastNtError(Status);
       return FALSE;
@@ -962,34 +1006,13 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     return FALSE;
   }
 
-  switch(iFunc)
-  {
-    case GdiPolyPolygon:
-         Ret = IntGdiPolyPolygon(dc, Safept, SafePolyPoints, Count);
-         break;
-    case GdiPolyPolyLine:
-         Ret = IntGdiPolyPolyline(dc, Safept, (LPDWORD) SafePolyPoints, Count);
-         break;
-    case GdiPolyBezier:
-         Ret = IntGdiPolyBezier(dc, Safept, *PolyCounts);
-         break;
-    case GdiPolyLineTo:
-         Ret = IntGdiPolylineTo(dc, Safept, *PolyCounts);
-         break;
-    case GdiPolyBezierTo:
-         Ret = IntGdiPolyBezierTo(dc, Safept, *PolyCounts);
-         break;
-    default:
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         Ret = FALSE;
-  }
-  ExFreePool(SafePolyPoints);
+  Ret = IntGdiPolyPolygon(dc, Safept, SafePolyPoints, Count);
+
   ExFreePool(Safept);
   DC_UnlockDc(dc);
 
-  return (ULONG_PTR) Ret;
+  return Ret;
 }
-
 
 BOOL
 FASTCALL
@@ -1026,7 +1049,7 @@ IntRectangle(PDC dc,
     DestRect.top = TopRect;
     DestRect.bottom = BottomRect;
 
-    FillBrushObj = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+    FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
 
     if ( FillBrushObj )
     {
@@ -1050,7 +1073,7 @@ IntRectangle(PDC dc,
     BRUSHOBJ_UnlockBrush(FillBrushObj);
 
     /* get BRUSHOBJ from current pen. */
-    PenBrushObj = PENOBJ_LockPen(dc->Dc_Attr.hpen);
+    PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
     if (PenBrushObj == NULL)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1066,7 +1089,7 @@ IntRectangle(PDC dc,
 
     if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
     {
-      Mix = ROP2_TO_MIX(dc->Dc_Attr.jROP2);
+      Mix = ROP2_TO_MIX(dc->w.ROPmode);
       ret = ret && IntEngLineTo(&BitmapObj->SurfObj,
 			 dc->CombinedClip,
 			 &PenBrushInst.BrushObject,
@@ -1191,7 +1214,7 @@ IntRoundRect(
     return FALSE;
   }
 
-  FillBrushObj = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+  FillBrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
   if (FillBrushObj)
   {
     if (FillBrushObj->flAttrs & GDIBRUSH_IS_NULL)
@@ -1206,7 +1229,7 @@ IntRoundRect(
     }
   }
 
-  PenBrushObj = PENOBJ_LockPen(dc->Dc_Attr.hpen);
+  PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
   if (PenBrushObj)
   {
     if (PenBrushObj->flAttrs & GDIBRUSH_IS_NULL)
@@ -1653,20 +1676,6 @@ NtGdiGradientFill(
   DC_UnlockDc(dc);
   ExFreePool(SafeVertex);
   return Ret;
-}
-
-BOOL STDCALL
-NtGdiExtFloodFill(
-	HDC  hDC,
-	INT  XStart,
-	INT  YStart,
-	COLORREF  Color,
-	UINT  FillType)
-{
-	DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
-
-	/* lie and say we succeded */
-	return TRUE;
 }
 
 /* EOF */

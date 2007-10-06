@@ -35,7 +35,7 @@
 
 #include <w32k.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -307,6 +307,8 @@ co_IntInitializeDesktopGraphics(VOID)
    }
    DC_SetOwnership(ScreenDeviceContext, NULL);
 
+   UserAcquireOrReleaseInputOwnership(FALSE);
+
    /* Setup the cursor */
    co_IntLoadDefaultCursors();
 
@@ -316,6 +318,7 @@ co_IntInitializeDesktopGraphics(VOID)
 VOID FASTCALL
 IntEndDesktopGraphics(VOID)
 {
+   UserAcquireOrReleaseInputOwnership(TRUE);
    if (NULL != ScreenDeviceContext)
    {
       DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());
@@ -377,8 +380,7 @@ NtUserCreateWindowStation(
    LPSECURITY_ATTRIBUTES lpSecurity,
    DWORD Unknown3,
    DWORD Unknown4,
-   DWORD Unknown5,
-   DWORD Unknown6)
+   DWORD Unknown5)
 {
    PSYSTEM_CURSORINFO CurInfo;
    UNICODE_STRING WindowStationName;

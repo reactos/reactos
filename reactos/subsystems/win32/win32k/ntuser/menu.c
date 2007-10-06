@@ -127,7 +127,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
       return NULL;
    }
    
-   Menu = (PMENU_OBJECT)UserGetObject(gHandleTable, hMenu, otMenu);
+   Menu = (PMENU_OBJECT)UserGetObject(&gHandleTable, hMenu, otMenu);
    if (!Menu)
    {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -212,19 +212,7 @@ IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem,
    FreeMenuText(MenuItem);
    if(RemoveFromList)
    {
-      PMENU_ITEM CurItem = Menu->MenuItemList;
-      while(CurItem)
-      {
-         if (CurItem->Next == MenuItem)
-         {
-            CurItem->Next = MenuItem->Next;
-            break;
-         }
-         else
-         {
-            CurItem = CurItem->Next;
-         }
-      }
+      /* FIXME - Remove from List */
       Menu->MenuInfo.MenuItemCount--;
    }
    if(bRecurse && MenuItem->hSubMenu)
@@ -289,7 +277,6 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
 {
    if(Menu)
    {
-      PWINDOW_OBJECT Window;
       PWINSTATION_OBJECT WindowStation;
       NTSTATUS Status;
 
@@ -309,14 +296,6 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
                                          NULL);
       if(NT_SUCCESS(Status))
       {
-         if (Menu->MenuInfo.Wnd)
-         {
-            Window = UserGetWindowObject(Menu->MenuInfo.Wnd);
-            if (Window)
-            {
-               Window->IDMenu = 0;
-            }
-         }
          ObmDeleteObject(Menu->MenuInfo.Self, otMenu);
          ObDereferenceObject(WindowStation);
          return TRUE;
@@ -331,7 +310,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    PMENU_OBJECT Menu;
 
    Menu = (PMENU_OBJECT)ObmCreateObject(
-             gHandleTable, Handle,
+             &gHandleTable, Handle,
              otMenu, sizeof(MENU_OBJECT));
 
    if(!Menu)
@@ -440,7 +419,7 @@ IntCloneMenu(PMENU_OBJECT Source)
       return NULL;
 
    Menu = (PMENU_OBJECT)ObmCreateObject(
-             gHandleTable, &hMenu,
+             &gHandleTable, &hMenu,
              otMenu, sizeof(MENU_OBJECT));
 
    if(!Menu)
@@ -704,10 +683,6 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
 {
    NTSTATUS Status;
 
-   if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
-   {
-      lpmii->fType = MenuItem->fType;
-   }
    if(lpmii->fMask & MIIM_BITMAP)
    {
       lpmii->hbmpItem = MenuItem->hbmpItem;
@@ -721,6 +696,10 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
    {
       lpmii->dwItemData = MenuItem->dwItemData;
    }
+   if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
+   {
+      lpmii->fType = MenuItem->fType;
+   }
    if(lpmii->fMask & MIIM_ID)
    {
       lpmii->wID = MenuItem->wID;
@@ -733,9 +712,7 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
    {
       lpmii->hSubMenu = MenuItem->hSubMenu;
    }
-
-   if ((lpmii->fMask & MIIM_STRING) ||
-      ((lpmii->fMask & MIIM_TYPE) && (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING)))
+   if (lpmii->fMask & (MIIM_STRING | MIIM_TYPE))
    {
       if (lpmii->dwTypeData == NULL)
       {
@@ -758,7 +735,6 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
    {
       lpmii->Rect = MenuItem->Rect;
       lpmii->XTab = MenuItem->XTab;
-      lpmii->Text = MenuItem->Text.Buffer;
    }
 
    return TRUE;
@@ -768,60 +744,18 @@ BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
    PMENU_OBJECT SubMenuObject;
-   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
 
    if(!MenuItem || !MenuObject || !lpmii)
    {
       return FALSE;
    }
-   if( lpmii->fType & ~fTypeMask)
-   {
-     DbgPrint("IntSetMenuItemInfo invalid fType flags %x\n", lpmii->fType & ~fTypeMask);
-     lpmii->fMask &= ~(MIIM_TYPE | MIIM_FTYPE);
-   }
-   if(lpmii->fMask &  MIIM_TYPE)
-   {
-      if(lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP))
-      {
-         DbgPrint("IntSetMenuItemInfo: Invalid combination of fMask bits used\n");
-         /* this does not happen on Win9x/ME */
-         SetLastNtError( ERROR_INVALID_PARAMETER);
-         return FALSE;
-      }
-      /*
-       * Delete the menu item type when changing type from
-       * MF_STRING.
-       */
-      if (MenuItem->fType != lpmii->fType &&
-            MENU_ITEM_TYPE(MenuItem->fType) == MFT_STRING)
-      {
-         FreeMenuText(MenuItem);
-         RtlInitUnicodeString(&MenuItem->Text, NULL);
-      }
-      if(lpmii->fType & MFT_BITMAP)
-      {
-         if(lpmii->hbmpItem)
-           MenuItem->hbmpItem = lpmii->hbmpItem;
-         else
-         { /* Win 9x/Me stuff */
-           MenuItem->hbmpItem = (HBITMAP)((ULONG_PTR)(LOWORD(lpmii->dwTypeData)));
-         }
-      }
-      MenuItem->fType |= lpmii->fType;
-   }
-   if (lpmii->fMask & MIIM_FTYPE )
-   {
-      if(( lpmii->fType & MFT_BITMAP))
-      {
-         DbgPrint("IntSetMenuItemInfo: Can not use FTYPE and MFT_BITMAP.\n");
-         SetLastNtError( ERROR_INVALID_PARAMETER);
-         return FALSE;
-      }
-      MenuItem->fType |= lpmii->fType; /* Need to save all the flags, this fixed MFT_RIGHTJUSTIFY */
-   }
+
+   MenuItem->fType &= ~MENU_ITEM_TYPE(MenuItem->fType);
+   MenuItem->fType |= MENU_ITEM_TYPE(lpmii->fType);
+
    if(lpmii->fMask & MIIM_BITMAP)
    {
-         MenuItem->hbmpItem = lpmii->hbmpItem;
+      MenuItem->hbmpItem = lpmii->hbmpItem;
    }
    if(lpmii->fMask & MIIM_CHECKMARKS)
    {
@@ -831,6 +765,21 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    if(lpmii->fMask & MIIM_DATA)
    {
       MenuItem->dwItemData = lpmii->dwItemData;
+   }
+   if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
+   {
+      /*
+       * Delete the menu item type when changing type from
+       * MF_STRING.
+       */
+      if (MenuItem->fType != lpmii->fType &&
+            MENU_ITEM_TYPE(MenuItem->fType) == MF_STRING)
+      {
+         FreeMenuText(MenuItem);
+         RtlInitUnicodeString(&MenuItem->Text, NULL);
+      }
+      MenuItem->fType &= ~MENU_ITEM_TYPE(MenuItem->fType);
+      MenuItem->fType |= MENU_ITEM_TYPE(lpmii->fType);
    }
    if(lpmii->fMask & MIIM_ID)
    {
@@ -868,9 +817,8 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
          MenuItem->fType &= ~MF_POPUP;
       }
    }
-
-   if ((lpmii->fMask & MIIM_STRING) ||
-      ((lpmii->fMask & MIIM_TYPE) && (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING)))
+   if ((lpmii->fMask & (MIIM_TYPE | MIIM_STRING)) &&
+         (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING))
    {
       FreeMenuText(MenuItem);
 
@@ -910,7 +858,6 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    {
       MenuItem->Rect = lpmii->Rect;
       MenuItem->XTab = lpmii->XTab;
-      lpmii->Text = MenuItem->Text.Buffer; /* Send back new allocated string or zero */
    }
 
    return TRUE;
@@ -1070,7 +1017,6 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
          mii.hSubMenu = CurItem->hSubMenu;
          mii.Rect = CurItem->Rect;
          mii.XTab = CurItem->XTab;
-         mii.Text = CurItem->Text.Buffer;
 
          Status = MmCopyToCaller(Buf, &mii, sizeof(ROSMENUITEMINFO));
          if (! NT_SUCCESS(Status))
@@ -1449,38 +1395,44 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
 {
    PWINSTATION_OBJECT WinStaObject;
    HANDLE Handle;
-   NTSTATUS Status;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
-   if (CsrProcess != CurrentProcess)
-   {
-      /*
-       * CsrProcess does not have a Win32WindowStation
-	   *
-	   */
-
-      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
+   NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                      KernelMode,
                      0,
                      &WinStaObject);
 
-       if (!NT_SUCCESS(Status))
-       {
-          DPRINT1("Validation of window station handle (0x%X) failed\n",
-             CurrentProcess->Win32WindowStation);
-          SetLastNtError(Status);
-          return (HMENU)0;
-       }
-       IntCreateMenu(&Handle, !PopupMenu);
-       ObDereferenceObject(WinStaObject);
-   }
-   else
+   if (!NT_SUCCESS(Status))
    {
-       IntCreateMenu(&Handle, !PopupMenu);
+      DPRINT("Validation of window station handle (0x%X) failed\n",
+             PsGetCurrentProcess()->Win32WindowStation);
+      SetLastNtError(Status);
+      return (HMENU)0;
    }
 
+   IntCreateMenu(&Handle, !PopupMenu);
+
+   ObDereferenceObject(WinStaObject);
    return (HMENU)Handle;
 }
+
+
+
+HMENU STDCALL
+NtUserCreateMenu(BOOL PopupMenu)
+{
+   DECLARE_RETURN(HMENU);
+
+   DPRINT("Enter NtUserCreateMenu\n");
+   UserEnterExclusive();
+
+   RETURN(UserCreateMenu(PopupMenu));
+
+CLEANUP:
+   DPRINT("Leave NtUserCreateMenu, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
+
 
 
 /*

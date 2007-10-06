@@ -172,7 +172,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     palPtr->palPalEntry[i].peFlags = 0;
   }
 
-  hpalette = NtGdiCreatePaletteInternal(palPtr,NB_RESERVED_COLORS);
+  hpalette = NtGdiCreatePalette(palPtr);
   ExFreePool(palPtr);
 
 #ifndef NO_MAPPING
@@ -338,17 +338,5 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
   return iRemapped;
 }
 #endif
-
-INT FASTCALL
-PALETTE_GetObject(PPALGDI pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer)
-{
-  if (!lpBuffer)
-  {
-    return sizeof(WORD);
-  }
-  if ((UINT)cbCount < sizeof(WORD)) return 0;
-  *((WORD*)lpBuffer) = (WORD)pGdiObject->NumColors;
-  return sizeof(WORD);
-}
 
 /* EOF */

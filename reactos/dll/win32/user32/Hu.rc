@@ -2,7 +2,7 @@
  * Copyright 2005 Robert Horvath - Hungarian translation - talley at cubeclub.hu
 */
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -12,7 +12,7 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
 STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-FONT 8, "MS Shell Dlg"
+FONT 8, "Bitstream Vera Sans"
 CAPTION "Select Window"
 BEGIN
   LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL

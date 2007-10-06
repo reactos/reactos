@@ -89,7 +89,6 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       /* FIXME: IntIsWindow */
 
-      CHECKPOINT;
       co_IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == UserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
       co_IntPostOrSendMessage(hWnd, WM_ACTIVATE,
@@ -159,8 +158,7 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       return FALSE;
    }
 
-   if (0 == (Window->Style & WS_VISIBLE) &&
-       Window->OwnerThread->ThreadsProcess != CsrProcess)
+   if (0 == (Window->Style & WS_VISIBLE))
    {
       DPRINT("Failed - Invisible\n");
       return FALSE;
@@ -202,7 +200,6 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
 
-   CHECKPOINT;
    co_IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
    co_IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
 
@@ -275,9 +272,8 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window != 0)
    {
-      if ((!(Window->Style & WS_VISIBLE) &&
-           Window->OwnerThread->ThreadsProcess != CsrProcess) ||
-          (Window->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
+      if (!(Window->Style & WS_VISIBLE) ||
+            (Window->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
          return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
       }
@@ -304,37 +300,27 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
 
 static
 HWND FASTCALL
-co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
+co_IntSetFocusWindow(PWINDOW_OBJECT Window)
 {
    HWND hWndPrev = 0;
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
-   if (Window)
-      ASSERT_REFS_CO(Window);
+   ASSERT_REFS_CO(Window);
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    ASSERT(ThreadQueue != 0);
 
    hWndPrev = ThreadQueue->FocusWindow;
-
-   if (Window != 0)
+   if (hWndPrev == Window->hSelf)
    {
-      if (hWndPrev == Window->hSelf)
-      {
-         return hWndPrev;
-      }
-
-      ThreadQueue->FocusWindow = Window->hSelf;
-
-      co_IntSendKillFocusMessages(hWndPrev, Window->hSelf);
-      co_IntSendSetFocusMessages(hWndPrev, Window->hSelf);
+      return hWndPrev;
    }
-   else
-   {
-      ThreadQueue->FocusWindow = 0;
- 
-      co_IntSendKillFocusMessages(hWndPrev, 0);
-   }
+
+   ThreadQueue->FocusWindow = Window->hSelf;
+
+   co_IntSendKillFocusMessages(hWndPrev, Window->hSelf);
+   co_IntSendSetFocusMessages(hWndPrev, Window->hSelf);
+
    return hWndPrev;
 }
 
@@ -572,23 +558,16 @@ NtUserSetFocus(HWND hWnd)
    DPRINT("Enter NtUserSetFocus(%x)\n", hWnd);
    UserEnterExclusive();
 
-   if (hWnd)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      if (!(Window = UserGetWindowObject(hWnd)))
-      {
-         RETURN(NULL);
-      }
+      RETURN(NULL);
+   }
 
-      UserRefObjectCo(Window, &Ref);
-      ret = co_UserSetFocus(Window);
-      UserDerefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
+   ret = co_UserSetFocus(Window);
+   UserDerefObjectCo(Window);
    
-      RETURN(ret);
-   }
-   else
-   {
-      RETURN( co_UserSetFocus(0));
-   }
+   RETURN(ret);
 
 CLEANUP:
    DPRINT("Leave NtUserSetFocus, ret=%i\n",_ret_);
