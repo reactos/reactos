@@ -264,6 +264,7 @@ Author:
 #define FX_ERROR_SELECTOR                       0xC
 #define FX_DATA_OFFSET                          0x10
 #define FX_DATA_SELECTOR                        0x14
+#define FX_MXCSR                                0x18
 
 //
 // NPX States

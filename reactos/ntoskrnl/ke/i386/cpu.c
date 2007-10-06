@@ -798,20 +798,18 @@ ULONG_PTR
 NTAPI
 Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 {
-#if 0 // needs kitrap13
     PKIDTENTRY IdtEntry;
 
     /* Get the IDT Entry for Interrupt 19 */
-    IdtEntry = ((PKIPCR)KeGetPcr())->IDT[19];
+    IdtEntry = &((PKIPCR)KeGetPcr())->IDT[19];
 
     /* Set it up */
     IdtEntry->Selector = KGDT_R0_CODE;
-    IdtEntry->Offset = (KiTrap13 & 0xFFFF);
-    IdtEntry->ExtendedOffset = (KiTrap13 >> 16) & 0xFFFF;
+    IdtEntry->Offset = ((ULONG_PTR)KiTrap19 & 0xFFFF);
+    IdtEntry->ExtendedOffset = ((ULONG_PTR)KiTrap19 >> 16) & 0xFFFF;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Dpl = 0;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Present = 1;
     ((PKIDT_ACCESS)&IdtEntry->Access)->SegmentType = I386_INTERRUPT_GATE;
-#endif
 
     /* Enable XMMI exceptions */
     __writecr4(__readcr4() | CR4_XMMEXCPT);

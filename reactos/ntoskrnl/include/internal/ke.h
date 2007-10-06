@@ -142,6 +142,7 @@ extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG KiIdleSummary;
+extern VOID __cdecl KiTrap19(VOID);
 extern VOID __cdecl KiTrap8(VOID);
 extern VOID __cdecl KiTrap2(VOID);
 extern VOID __cdecl KiFastCallEntry(VOID);
