@@ -24,9 +24,6 @@ BEGIN
     AUTOCHECKBOX    "&Показване на времето", IDC_OPT_SHOWTIME, 7 ,51 ,100 ,10, WS_TABSTOP
     AUTOCHECKBOX    "Лента &състояние", IDC_OPT_STATUSBAR, 7, 66, 100, 10, WS_TABSTOP
 
-    AUTOCHECKBOX    "&Показване на времето", IDC_OPT_SHOWTIME, 7 ,51 ,100 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "Лента &състояние", IDC_OPT_STATUSBAR, 7, 66, 100, 10, WS_TABSTOP
-
     DEFPUSHBUTTON   "Добре", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Отказ", IDCANCEL, 101, 97, 50, 14
 END
