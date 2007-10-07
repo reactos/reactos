@@ -264,14 +264,14 @@ NtGdiCreateCompatibleDC(HDC hDC)
   return hNewDC;
 }
 
-static BOOL FASTCALL
+static BOOLEAN FASTCALL
 GetRegistryPath(PUNICODE_STRING RegistryPath, ULONG DisplayNumber)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   WCHAR DeviceNameBuffer[20];
   NTSTATUS Status;
 
-  swprintf(DeviceNameBuffer, L"\\Device\\Video%d", DisplayNumber);
+  swprintf(DeviceNameBuffer, L"\\Device\\Video%lu", DisplayNumber);
   RtlInitUnicodeString(RegistryPath, NULL);
   RtlZeroMemory(QueryTable, sizeof(QueryTable));
   QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
@@ -285,11 +285,11 @@ GetRegistryPath(PUNICODE_STRING RegistryPath, ULONG DisplayNumber)
                                   NULL);
   if (! NT_SUCCESS(Status))
     {
-      DPRINT1("No \\Device\\Video%d value in DEVICEMAP\\VIDEO found\n", DisplayNumber);
+      DPRINT1("No \\Device\\Video%lu value in DEVICEMAP\\VIDEO found\n", DisplayNumber);
       return FALSE;
     }
 
-  DPRINT("RegistryPath %S\n", RegistryPath->Buffer);
+  DPRINT("RegistryPath %wZ\n", RegistryPath);
 
   return TRUE;
 }
@@ -380,103 +380,48 @@ DevModeCallback(IN PWSTR ValueName,
 static BOOL FASTCALL
 SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
 {
-  static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
-  static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
-  static WCHAR ControlSet[] = L"CONTROLSET";
-  static WCHAR Insert[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
   UNICODE_STRING RegistryPath;
-  BOOL Valid;
-  PWCHAR AfterControlSet;
-  PWCHAR ProfilePath;
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   NTSTATUS Status;
+  BOOLEAN Valid = TRUE;
 
-  if (! GetRegistryPath(&RegistryPath, DisplayNumber))
+  if (!GetRegistryPath(&RegistryPath, DisplayNumber))
     {
       DPRINT("GetRegistryPath failed\n");
       return FALSE;
     }
 
-  Valid = (0 == _wcsnicmp(RegistryPath.Buffer, RegistryMachineSystem,
-                          wcslen(RegistryMachineSystem)));
-  if (Valid)
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+  QueryTable[0].QueryRoutine = DevModeCallback;
+  QueryTable[0].Flags = 0;
+  QueryTable[0].Name = NULL;
+  QueryTable[0].EntryContext = NULL;
+  QueryTable[0].DefaultType = REG_NONE;
+  QueryTable[0].DefaultData = NULL;
+  QueryTable[0].DefaultLength = 0;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                  RegistryPath.Buffer,
+                                  QueryTable,
+                                  DevMode,
+                                  NULL);
+  if (! NT_SUCCESS(Status))
     {
-      AfterControlSet = RegistryPath.Buffer + wcslen(RegistryMachineSystem);
-      if (0 == _wcsnicmp(AfterControlSet, CurrentControlSet, wcslen(CurrentControlSet)))
-        {
-          AfterControlSet += wcslen(CurrentControlSet);
-        }
-      else if (0 == _wcsnicmp(AfterControlSet, ControlSet, wcslen(ControlSet)))
-        {
-          AfterControlSet += wcslen(ControlSet);
-          while (L'0' <= *AfterControlSet && L'9' <= *AfterControlSet)
-            {
-              AfterControlSet++;
-            }
-          Valid = (L'\\' == *AfterControlSet);
-          AfterControlSet++;
-        }
-      else
-        {
-          Valid = FALSE;
-        }
-    }
-
-  if (Valid)
-    {
-      ProfilePath = ExAllocatePoolWithTag(PagedPool,
-                                          (wcslen(RegistryPath.Buffer) +
-                                           wcslen(Insert) + 1) * sizeof(WCHAR),
-                                          TAG_DC);
-      if (NULL != ProfilePath)
-        {
-          wcsncpy(ProfilePath, RegistryPath.Buffer, AfterControlSet - RegistryPath.Buffer);
-          wcscpy(ProfilePath + (AfterControlSet - RegistryPath.Buffer), Insert);
-          wcscat(ProfilePath, AfterControlSet);
-
-          RtlZeroMemory(QueryTable, sizeof(QueryTable));
-          QueryTable[0].QueryRoutine = DevModeCallback;
-          QueryTable[0].Flags = 0;
-          QueryTable[0].Name = NULL;
-          QueryTable[0].EntryContext = NULL;
-          QueryTable[0].DefaultType = REG_NONE;
-          QueryTable[0].DefaultData = NULL;
-          QueryTable[0].DefaultLength = 0;
-
-          Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                          ProfilePath,
-                                          QueryTable,
-                                          DevMode,
-                                          NULL);
-          if (! NT_SUCCESS(Status))
-            {
-              DPRINT("RtlQueryRegistryValues for %S failed with status 0x%08x\n",
-                     ProfilePath, Status);
-              Valid = FALSE;
-            }
-          else
-            {
-              DPRINT("dmBitsPerPel %d dmDisplayFrequency %d dmPelsWidth %d dmPelsHeight %d\n",
-                     DevMode->dmBitsPerPel, DevMode->dmDisplayFrequency,
-                     DevMode->dmPelsWidth, DevMode->dmPelsHeight);
-              if (0 == DevMode->dmBitsPerPel || 0 == DevMode->dmDisplayFrequency
-                  || 0 == DevMode->dmPelsWidth || 0 == DevMode->dmPelsHeight)
-                {
-                  DPRINT("Not all required devmode members are set\n");
-                  Valid = FALSE;
-                }
-            }
-
-          ExFreePool(ProfilePath);
-        }
-      else
-        {
-          Valid = FALSE;
-        }
+      DPRINT("RtlQueryRegistryValues for %wZ failed with status 0x%08x\n",
+             &RegistryPath, Status);
+      Valid = FALSE;
     }
   else
     {
-      DPRINT1("Unparsable registry path %S in DEVICEMAP\\VIDEO0", RegistryPath.Buffer);
+      DPRINT("dmBitsPerPel %d dmDisplayFrequency %d dmPelsWidth %d dmPelsHeight %d\n",
+             DevMode->dmBitsPerPel, DevMode->dmDisplayFrequency,
+             DevMode->dmPelsWidth, DevMode->dmPelsHeight);
+      if (0 == DevMode->dmBitsPerPel || 0 == DevMode->dmDisplayFrequency
+          || 0 == DevMode->dmPelsWidth || 0 == DevMode->dmPelsHeight)
+        {
+          DPRINT("Not all required devmode members are set\n");
+          Valid = FALSE;
+        }
     }
 
   RtlFreeUnicodeString(&RegistryPath);
@@ -2721,6 +2666,137 @@ IntEnumDisplaySettings(
 
   return TRUE;
 }
+
+static NTSTATUS FASTCALL
+GetVideoDeviceName(
+  OUT PUNICODE_STRING VideoDeviceName,
+  IN PCUNICODE_STRING DisplayDevice) /* ex: "\.\DISPLAY1" or "\??\DISPLAY1" */
+{
+  UNICODE_STRING Prefix = RTL_CONSTANT_STRING(L"\\??\\");
+  UNICODE_STRING ObjectName;
+  UNICODE_STRING KernelModeName = { 0, };
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  USHORT LastSlash;
+  ULONG Length;
+  HANDLE LinkHandle = NULL;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(VideoDeviceName, NULL);
+
+  /* Get device name (DisplayDevice is "\.\xxx") */
+  for (LastSlash = DisplayDevice->Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
+  {
+    if (DisplayDevice->Buffer[LastSlash - 1] == L'\\')
+      break;
+  }
+
+  if (LastSlash == 0)
+  {
+    DPRINT1("Invalid device name '%wZ'\n", DisplayDevice);
+    Status = STATUS_OBJECT_NAME_INVALID;
+    goto cleanup;
+  }
+  ObjectName = *DisplayDevice;
+  ObjectName.Length -= LastSlash * sizeof(WCHAR);
+  ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
+  ObjectName.Buffer += LastSlash;
+
+  /* Create "\??\xxx" (ex: "\??\DISPLAY1") */
+  KernelModeName.MaximumLength = Prefix.Length + ObjectName.Length + sizeof(UNICODE_NULL);
+  KernelModeName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                KernelModeName.MaximumLength,
+                                                TAG_DC);
+  if (!KernelModeName.Buffer)
+  {
+    Status = STATUS_NO_MEMORY;
+    goto cleanup;
+  }
+  RtlCopyUnicodeString(&KernelModeName, &Prefix);
+  Status = RtlAppendUnicodeStringToString(&KernelModeName, &ObjectName);
+  if (!NT_SUCCESS(Status))
+    goto cleanup;
+
+  /* Open \??\xxx (ex: "\??\DISPLAY1") */
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &KernelModeName,
+                             OBJ_KERNEL_HANDLE,
+                             NULL,
+                             NULL);
+  Status = ZwOpenSymbolicLinkObject(&LinkHandle,
+                                    GENERIC_READ,
+                                    &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Unable to open symbolic link %wZ (Status 0x%08lx)\n", &KernelModeName, Status);
+    Status = STATUS_NO_SUCH_DEVICE;
+    goto cleanup;
+  }
+
+  Status = ZwQuerySymbolicLinkObject(LinkHandle, VideoDeviceName, &Length);
+  if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
+  {
+    DPRINT1("Unable to query symbolic link %wZ (Status 0x%08lx)\n", &KernelModeName, Status);
+    Status = STATUS_NO_SUCH_DEVICE;
+    goto cleanup;
+  }
+  VideoDeviceName->MaximumLength = Length;
+  VideoDeviceName->Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                  VideoDeviceName->MaximumLength + sizeof(UNICODE_NULL),
+                                                  TAG_DC);
+  if (!VideoDeviceName->Buffer)
+  {
+    Status = STATUS_NO_MEMORY;
+    goto cleanup;
+  }
+  Status = ZwQuerySymbolicLinkObject(LinkHandle, VideoDeviceName, NULL);
+  VideoDeviceName->Buffer[VideoDeviceName->MaximumLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Unable to query symbolic link %wZ (Status 0x%08lx)\n", &KernelModeName, Status);
+    Status = STATUS_NO_SUCH_DEVICE;
+    goto cleanup;
+  }
+  Status = STATUS_SUCCESS;
+
+cleanup:
+  if (!NT_SUCCESS(Status) && VideoDeviceName->Buffer)
+    ExFreePoolWithTag(VideoDeviceName->Buffer, TAG_DC);
+  if (KernelModeName.Buffer)
+    ExFreePoolWithTag(KernelModeName.Buffer, TAG_DC);
+  if (LinkHandle)
+    ZwClose(LinkHandle);
+  return Status;
+}
+
+static NTSTATUS FASTCALL
+GetVideoRegistryKey(
+  OUT PUNICODE_STRING RegistryPath,
+  IN PCUNICODE_STRING DeviceName) /* ex: "\Device\Video0" */
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(RegistryPath, NULL);
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].Name = DeviceName->Buffer;
+  QueryTable[0].EntryContext = RegistryPath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
+                                  L"VIDEO",
+                                  QueryTable,
+                                  NULL,
+                                  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("No %wZ value in DEVICEMAP\\VIDEO found (Status 0x%08lx)\n", DeviceName, Status);
+      return STATUS_NO_SUCH_DEVICE;
+    }
+
+  DPRINT("RegistryPath %wZ\n", RegistryPath);
+  return STATUS_SUCCESS;
+}
+
 LONG
 FASTCALL
 IntChangeDisplaySettings(
@@ -2736,7 +2812,7 @@ IntChangeDisplaySettings(
   LONG Ret=0;
   NTSTATUS Status ;
 
-  DPRINT1("display flag : %x\n",dwflags);
+  DPRINT1("display flags : %x\n",dwflags);
 
   if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
   {
@@ -2759,7 +2835,7 @@ IntChangeDisplaySettings(
   if (dwflags == 0)
   {
    /* Dynamically change graphics mode */
-   DPRINT1("flag 0 UNIMPLEMENT \n");
+   DPRINT1("flag 0 UNIMPLEMENTED\n");
    return DISP_CHANGE_FAILED;
   }
 
@@ -2767,26 +2843,23 @@ IntChangeDisplaySettings(
   {
    /* Test reslution */
    dwflags &= ~CDS_TEST;
-   DPRINT1("flag CDS_TEST UNIMPLEMENT");
+   DPRINT1("flag CDS_TEST UNIMPLEMENTED\n");
    Ret = DISP_CHANGE_FAILED;
   }
-  
+
   if ((dwflags & CDS_FULLSCREEN) == CDS_FULLSCREEN)
   {
-   DEVMODE lpDevMode;
+   DEVMODEW lpDevMode;
    /* Full Screen */
    dwflags &= ~CDS_FULLSCREEN;
-   DPRINT1("flag CDS_FULLSCREEN partially implemented");
+   DPRINT1("flag CDS_FULLSCREEN partially implemented\n");
    Ret = DISP_CHANGE_FAILED;
 
-   lpDevMode.dmBitsPerPel =0;
-   lpDevMode.dmPelsWidth  =0;
-   lpDevMode.dmPelsHeight =0;
-   lpDevMode.dmDriverExtra =0;
+   RtlZeroMemory(&lpDevMode, sizeof(DEVMODEW));
+   lpDevMode.dmSize = sizeof(DEVMODEW);
 
-   lpDevMode.dmSize = sizeof(DEVMODE);
-   Status = IntEnumDisplaySettings(pDeviceName,  ENUM_CURRENT_SETTINGS, &lpDevMode, 0);
-   if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+   if (!IntEnumDisplaySettings(pDeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode, 0))
+     return DISP_CHANGE_FAILED;
 
    DPRINT1("Req Mode     : %d x %d x %d\n", DevMode->dmPelsWidth,DevMode->dmPelsHeight,DevMode->dmBitsPerPel);
    DPRINT1("Current Mode : %d x %d x %d\n", lpDevMode.dmPelsWidth,lpDevMode.dmPelsHeight, lpDevMode.dmBitsPerPel);
@@ -2795,148 +2868,126 @@ IntChangeDisplaySettings(
    if ((lpDevMode.dmBitsPerPel == DevMode->dmBitsPerPel) &&
        (lpDevMode.dmPelsWidth  == DevMode->dmPelsWidth) &&
        (lpDevMode.dmPelsHeight == DevMode->dmPelsHeight))
-	   Ret = DISP_CHANGE_SUCCESSFUL; 
+         Ret = DISP_CHANGE_SUCCESSFUL;
   }
 
   if ((dwflags & CDS_VIDEOPARAMETERS) == CDS_VIDEOPARAMETERS)
-  {  
+  {
     dwflags &= ~CDS_VIDEOPARAMETERS;
-    if (lParam == NULL) Ret=DISP_CHANGE_BADPARAM;
-	else
-	{
-		DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENT");
-		Ret = DISP_CHANGE_FAILED;
-	}
+    if (lParam == NULL)
+      Ret=DISP_CHANGE_BADPARAM;
+    else
+    {
+      DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENTED\n");
+      Ret = DISP_CHANGE_FAILED;
+    }
 
-  }    
+  }
 
   if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
-  {  
-  
-	  	UNICODE_STRING ObjectName;
-		UNICODE_STRING KernelModeName;
-	  	WCHAR KernelModeNameBuffer[256];
-		UNICODE_STRING RegistryKey;
-		WCHAR RegistryKeyBuffer[512];
-		PDEVICE_OBJECT DeviceObject;		
-		ULONG LastSlash;
-		OBJECT_ATTRIBUTES ObjectAttributes;
-		HANDLE DevInstRegKey;
-		ULONG NewValue;
-		
+  {
 
-		DPRINT1("set CDS_UPDATEREGISTRY \n");
-		
-		dwflags &= ~CDS_UPDATEREGISTRY;	
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING RegistryKey;
+    UNICODE_STRING InDeviceName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE DevInstRegKey;
+    ULONG NewValue;
 
-		/* Get device name (pDeviceName is "\.\xxx") */
-		for (LastSlash = pDeviceName->Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
-		{
-			if (pDeviceName->Buffer[LastSlash - 1] == L'\\')
-				break;
-		}
-		
-		if (LastSlash == 0) return DISP_CHANGE_RESTART;
-		ObjectName = *pDeviceName;
-		ObjectName.Length -= LastSlash * sizeof(WCHAR);
-		ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
-		ObjectName.Buffer += LastSlash;
+    DPRINT1("set CDS_UPDATEREGISTRY\n");
 
-		KernelModeName.Length = 0;
-		KernelModeName.MaximumLength = sizeof(KernelModeNameBuffer);
-		KernelModeName.Buffer = KernelModeNameBuffer;
+    dwflags &= ~CDS_UPDATEREGISTRY;
 
-		/* Open \??\xxx (ex: "\??\DISPLAY1") */
-		Status = RtlAppendUnicodeToString(&KernelModeName, L"\\??\\");
-		
-		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
-		Status = RtlAppendUnicodeStringToString(&KernelModeName, &ObjectName);
-		
-		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
-		Status = ObReferenceObjectByName(
-			&KernelModeName,
-			OBJ_CASE_INSENSITIVE,
-			NULL,
-			0,
-			IoDeviceObjectType,
-			KernelMode,
-			NULL,
-			(PVOID*)&DeviceObject);
+    /* Check if pDeviceName is NULL, we need to retrieve it */
+    if (pDeviceName == NULL)
+    {     
+      WCHAR szBuffer[MAX_DRIVER_NAME];
+      PDC DC;
+      PWINDOW_OBJECT Wnd=NULL;
+      HWND hWnd; 
+      HDC hDC;
+      
+      hWnd = IntGetDesktopWindow();
+      if (!(Wnd = UserGetWindowObject(hWnd)))
+      {
+          return FALSE;
+      }
+      
+      hDC = (HDC)UserGetWindowDC(Wnd);
 
-		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
-		/* Get associated driver name (ex: "VBE") */
-		for (LastSlash = DeviceObject->DriverObject->DriverName.Length / sizeof(WCHAR); LastSlash > 0; LastSlash--)
-		{
-			if (DeviceObject->DriverObject->DriverName.Buffer[LastSlash - 1] == L'\\')
-				break;
-		}
+      DC = DC_LockDc(hDC);
+      if (NULL == DC)
+      {
+         return FALSE;
+      }
+      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", ((GDIDEVICE *)DC->GDIDevice)->DisplayNumber);
+      DC_UnlockDc(DC);
 
-		if (LastSlash == 0) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
-		ObjectName = DeviceObject->DriverObject->DriverName;
-		ObjectName.Length -= LastSlash * sizeof(WCHAR);
-		ObjectName.MaximumLength -= LastSlash * sizeof(WCHAR);
-		ObjectName.Buffer += LastSlash;
-
-		RegistryKey.Length = 0;
-		RegistryKey.MaximumLength = sizeof(RegistryKeyBuffer);
-		RegistryKey.Buffer = RegistryKeyBuffer;
-
-		/* Open registry key */
-		Status = RtlAppendUnicodeToString(&RegistryKey,
-			L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\");
-		
-		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
-		Status = RtlAppendUnicodeStringToString(&RegistryKey, &ObjectName);
-
-		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
-		Status = RtlAppendUnicodeToString(&RegistryKey,
-			L"\\Device0");
-
-		if (!NT_SUCCESS(Status)) { ObDereferenceObject(DeviceObject); return DISP_CHANGE_FAILED; }
-
-		InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
-			OBJ_CASE_INSENSITIVE, NULL, NULL);
-		Status = ZwOpenKey(&DevInstRegKey, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes);
-		ObDereferenceObject(DeviceObject);
-		if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
-
-		/* Update needed fields */
-		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)
-		{
-			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.BitsPerPel");
-			NewValue = DevMode->dmBitsPerPel;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
-		}
-
-		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSWIDTH)
-		{
-			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.XResolution");
-			NewValue = DevMode->dmPelsWidth;			
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
-		}
-
-		if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSHEIGHT)
-		{
-			RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.YResolution");
-			NewValue = DevMode->dmPelsHeight;
-			Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));			
-		}
-
-		ZwClose(DevInstRegKey);
-		if (NT_SUCCESS(Status))
-			Ret = DISP_CHANGE_RESTART;
-		else
-			/* return DISP_CHANGE_NOTUPDATED when we can save to reg only vaild for NT */ 
-			Ret = DISP_CHANGE_NOTUPDATED;
-		
+      RtlInitUnicodeString(&InDeviceName, szBuffer);
+      pDeviceName = &InDeviceName;
     }
- 
- if (dwflags != 0)  
+
+    Status = GetVideoDeviceName(&DeviceName, pDeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Unable to get destination of '%wZ' (Status 0x%08lx)\n", pDeviceName, Status);
+      return DISP_CHANGE_FAILED;
+    }
+    Status = GetVideoRegistryKey(&RegistryKey, &DeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Unable to get registry key for '%wZ' (Status 0x%08lx)\n", &DeviceName, Status);
+      ExFreePoolWithTag(DeviceName.Buffer, TAG_DC);
+      return DISP_CHANGE_FAILED;
+    }
+    ExFreePoolWithTag(DeviceName.Buffer, TAG_DC);
+
+    InitializeObjectAttributes(&ObjectAttributes, &RegistryKey,
+      OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = ZwOpenKey(&DevInstRegKey, GENERIC_READ | GENERIC_WRITE, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Unable to open registry key %wZ (Status 0x%08lx)\n", &RegistryKey, Status);
+      ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+      return DISP_CHANGE_FAILED;
+    }
+    ExFreePoolWithTag(RegistryKey.Buffer, TAG_DC);
+
+    /* Update needed fields */
+    if (NT_SUCCESS(Status) && DevMode->dmFields & DM_BITSPERPEL)
+    {
+      RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.BitsPerPel");
+      NewValue = DevMode->dmBitsPerPel;
+      Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+    }
+
+    if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSWIDTH)
+    {
+      RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.XResolution");
+      NewValue = DevMode->dmPelsWidth;
+      Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+    }
+
+    if (NT_SUCCESS(Status) && DevMode->dmFields & DM_PELSHEIGHT)
+    {
+      RtlInitUnicodeString(&RegistryKey, L"DefaultSettings.YResolution");
+      NewValue = DevMode->dmPelsHeight;
+      Status = ZwSetValueKey(DevInstRegKey, &RegistryKey, 0, REG_DWORD, &NewValue, sizeof(NewValue));
+    }
+
+    ZwClose(DevInstRegKey);
+    if (NT_SUCCESS(Status))
+      Ret = DISP_CHANGE_RESTART;
+    else
+      /* return DISP_CHANGE_NOTUPDATED when we can save to reg only valid for NT */
+      Ret = DISP_CHANGE_NOTUPDATED;
+    }
+
+ if (dwflags != 0)
     Ret = DISP_CHANGE_BADFLAGS;
 
   return Ret;
 }
-
 
 NTSTATUS
 APIENTRY
