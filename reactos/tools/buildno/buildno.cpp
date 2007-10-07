@@ -260,6 +260,7 @@ write_h (int build, char *buildstr)
 	  if (memcmp(s1, orig, length) == 0)
 	    {
 	      fclose(h);
+		  free(s1);
 	      return;
 	    }
 	}
@@ -273,6 +274,7 @@ write_h (int build, char *buildstr)
 	       "%s: can not create file \"%s\"!\n",
 	       argv0,
 	       filename);
+	  free(s1);
       return;
     }
   fwrite(s1, 1, strlen(s1), h);
@@ -411,6 +413,8 @@ main (int argc, char * argv [])
 	{
 		printf ("%s: no code generated", argv [0]);
 	}
+
+	free(kernel_version_build_type);
 
 	return EXIT_SUCCESS;
 }

@@ -860,6 +860,7 @@ XMLLoadFile (
 
 	if ( !f->open ( filename ) )
 	{
+		delete f;
 		throw XMLFileNotFoundException ( "(virtual)", filename );
 		return NULL;
 	}
@@ -884,6 +885,7 @@ XMLLoadFile (
 		{
 			string location = e->location;
 			delete e;
+			delete f;
 			throw XMLException ( location, "internal tool error: xi:include doesn't have a parent" );
 			return NULL;
 		}
@@ -899,6 +901,7 @@ XMLLoadFile (
 		{
 			string location = e->location;
 			delete e;
+			delete f;
 			throw XMLException ( location, "internal tool error: couldn't find xi:include in parent's sub-elements" );
 			return NULL;
 		}
@@ -910,6 +913,7 @@ XMLLoadFile (
 		e->attributes.resize ( 0 );
 		delete e;
 	}
+	delete f;
 	return head;
 }
 
