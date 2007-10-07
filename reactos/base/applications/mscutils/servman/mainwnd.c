@@ -144,9 +144,7 @@ UpdateServiceCount(PMAIN_WND_INFO Info)
                     0,
                     (LPARAM)szNumServices);
 
-        HeapFree(ProcessHeap,
-                 0,
-                 lpNumServices);
+        LocalFree(lpNumServices);
     }
 }
 

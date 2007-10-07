@@ -312,9 +312,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
                             lvItem.iItem,
                             (LPARAM)&lvItem);
 
-                HeapFree(ProcessHeap,
-                         0,
-                         lpStartup);
+                LocalFree(lpStartup);
 
                 /* set Log On As */
                 lvItem.pszText = pServiceConfig->lpServiceStartName;

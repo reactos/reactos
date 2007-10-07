@@ -224,7 +224,8 @@ InitImageList(UINT StartResource,
 {
     HBITMAP hBitmap;
     HIMAGELIST hImageList;
-    INT i, Ret;
+    UINT i;
+	INT Ret;
 
     /* Create the toolbar icon image list */
     hImageList = ImageList_Create(Width,

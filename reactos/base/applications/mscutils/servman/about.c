@@ -31,9 +31,7 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 SetWindowText(hLicenseEditWnd,
                               lpString);
 
-                HeapFree(GetProcessHeap(),
-                         0,
-                         lpString);
+                LocalFree(lpString);
             }
         }
 

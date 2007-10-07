@@ -269,7 +269,7 @@ DlgProc(HWND hDlg,
                     TCHAR ch;
                     HWND hMap = GetDlgItem(hDlg, IDC_FONTMAP);
 
-                    ch = SendMessage(hMap, FM_GETCHAR, 0, 0);
+                    ch = (TCHAR) SendMessage(hMap, FM_GETCHAR, 0, 0);
 
                     if (ch)
                     {

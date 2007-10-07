@@ -76,9 +76,7 @@ SetServiceStatusText(PSERVICEPROPSHEET dlgInfo,
                            WM_SETTEXT,
                            0,
                            (LPARAM)lpStatus);
-        HeapFree(ProcessHeap,
-                 0,
-                 lpStatus);
+        LocalFree(lpStatus);
     }
 }
 
@@ -108,9 +106,7 @@ SetStartupType(LPTSTR lpServiceName,
                         CB_ADDSTRING,
                         0,
                         (LPARAM)lpBuf);
-            HeapFree(ProcessHeap,
-                     0,
-                     lpBuf);
+            LocalFree(lpBuf);
         }
     }
 
