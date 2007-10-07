@@ -2777,7 +2777,8 @@ MingwAddImplicitLibraries( Module &module )
 	if ( module.type != Win32DLL
 	  && module.type != Win32OCX
 	  && module.type != Win32CUI
-	  && module.type != Win32GUI )
+	  && module.type != Win32GUI
+	  && module.type != Win32SCR )
 	{
 		// no implicit libraries
 		return;
