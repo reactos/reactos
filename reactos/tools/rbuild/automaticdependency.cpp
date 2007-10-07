@@ -18,6 +18,7 @@
  */
 #include "pch.h"
 #include <assert.h>
+#include <algorithm> 
 
 #include "rbuild.h"
 

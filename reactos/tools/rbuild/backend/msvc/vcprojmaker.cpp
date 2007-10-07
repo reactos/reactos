@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 #include <stdio.h>
 
