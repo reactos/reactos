@@ -61,6 +61,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
 
+UINT64 _strtoui64( const char *nptr, char **endptr, int base );
+
 #ifndef N_UNDF
 #define N_UNDF		0x00
 #endif
@@ -435,13 +437,13 @@ static int stabs_pts_read_range_value(struct ParseTypedefData* ptd, struct pts_r
         break;
     case '-':
         prv->sign = -1;
-        prv->val = strtoull(++ptd->ptr, &last, 10);
+        prv->val = _strtoui64(++ptd->ptr, &last, 10);
         ptd->ptr = last;
         break;
     case '+':
     default:    
         prv->sign = 1;
-        prv->val = strtoull(ptd->ptr, &last, 10);
+        prv->val = _strtoui64(ptd->ptr, &last, 10);
         ptd->ptr = last;
         break;
     }
