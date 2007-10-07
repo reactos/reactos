@@ -31,7 +31,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static
@@ -725,7 +725,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
    if (!Desktop)
    {
-      DPRINT1("IntShellHookNotify: No desktop!\n");
+      DPRINT("IntShellHookNotify: No desktop!\n");
       return;
    }
 

@@ -11,8 +11,8 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
-#undef NDEBUG
+#define NDEBUG
+//#undef NDEBUG
 #include <debug.h>
 
 /* registered Logon process */

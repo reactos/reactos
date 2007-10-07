@@ -2537,7 +2537,6 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 
    if (Wnd->hSelf == IntGetDesktopWindow())
    {
-      DPRINT1("Wnd->hSelf = %p, returning NULL\n", Wnd->hSelf);
       return NULL;
    }
 
