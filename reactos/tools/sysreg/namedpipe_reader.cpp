@@ -70,10 +70,18 @@ namespace System_
 		else
 		{
 			cout << "NamedPipeReader::openPipe> successfully opened pipe" << endl;
-            m_BufferLength = 100;
-            m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
+            
+            if (!m_Buffer)
+            {
+                m_BufferLength = 100;
+                m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
+            }
+
 #ifdef UNICODE
-            m_WBuffer = (WCHAR*)malloc(sizeof(WCHAR) * m_BufferLength);
+            if (!m_WBuffer)
+            {
+                m_WBuffer = (WCHAR*)malloc(sizeof(WCHAR) * m_BufferLength);
+            }
 #endif
 		    ConnectNamedPipe(h_Pipe,
                  			 0);
@@ -90,8 +98,11 @@ namespace System_
 		else
 		{
             cout << "NamedPipeReader::openPipe> successfully opened pipe handle: "<< h_Pipe << endl << "Src: " << PipeCmd << endl;
-            m_BufferLength = 100;
-            m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
+            if (!m_Buffer)
+            {
+                m_BufferLength = 100;
+                m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
+            }
 			return true;
 		}
 #endif
@@ -240,12 +251,14 @@ namespace System_
         if (!m_Buffer)
         {
             cerr << "Error: no memory" << endl;
+            return false;
         }
 
 #ifdef UNICODE
         if (!m_WBuffer)
         {
             cerr << "Error: no memory" << endl;
+            return false;
         }
 #endif
 
