@@ -89,7 +89,7 @@ namespace System_
 		}
 		else
 		{
-			cout << "NamedPipeReader::openPipe> successfully opened pipe" << endl;
+            cout << "NamedPipeReader::openPipe> successfully opened pipe handle: "<< h_Pipe << endl << "Src: " << PipeCmd << endl;
             m_BufferLength = 100;
             m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
 			return true;
@@ -255,7 +255,7 @@ namespace System_
             memset(m_Buffer, 0x0, m_BufferLength * sizeof(char));
             long cbRead = 0;
                     
-            if (!readPipe(m_Buffer, 100, cbRead))
+            if (!readPipe(m_Buffer, m_BufferLength-1, cbRead))
                 break;
 
 #ifdef UNICODE
@@ -263,9 +263,9 @@ namespace System_
             if (!UnicodeConverter::ansi2Unicode(m_Buffer, m_WBuffer, cbRead))
                 break;
             extractLines(m_WBuffer, vect, append_line, cbRead);
-#endif
+#else
             extractLines(m_Buffer, vect, append_line, cbRead);
-
+#endif
 
         }while (append_line);
 
