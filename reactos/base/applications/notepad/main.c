@@ -328,6 +328,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     case WM_CLOSE:
         if (DoCloseFile()) {
+			if (Globals.hFont)
+				DeleteObject(Globals.hFont);
             DestroyWindow(hWnd);
         }
         break;
