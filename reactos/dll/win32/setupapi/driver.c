@@ -124,7 +124,6 @@ AddKnownDriverToList(
     HANDLE hFile = INVALID_HANDLE_VALUE;
     BOOL Result = FALSE;
     PLIST_ENTRY PreviousEntry;
-    LPWSTR pDot;
     BOOL ret = FALSE;
 
     driverInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DriverInfoElement));
@@ -158,9 +157,6 @@ AddKnownDriverToList(
 
     /* Fill SectionName field */
     lstrcpynW(driverInfo->Details.SectionName, SectionName, LINE_LEN);
-    pDot = strchrW(driverInfo->Details.SectionName, '.');
-    if (pDot)
-        *pDot = UNICODE_NULL;
 
     /* Fill DrvDescription field */
     lstrcpynW(driverInfo->Details.DrvDescription, DriverDescription, LINE_LEN);
@@ -271,7 +267,8 @@ AddDriverToList(
     Result = SetupGetStringFieldW(
         &ContextDevice,
         1,
-        SectionName, LINE_LEN,
+        SectionName,
+        LINE_LEN,
         NULL);
     if (!Result)
         goto cleanup;
