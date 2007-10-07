@@ -271,6 +271,13 @@ GetServiceList(PMAIN_WND_INFO Info,
 
     *NumServices = 0;
 
+    if (Info->pAllServices != NULL)
+    {
+        HeapFree(ProcessHeap,
+                     0,
+                     Info->pAllServices);
+    }
+
     ScHandle = OpenSCManager(NULL,
                              NULL,
                              SC_MANAGER_ENUMERATE_SERVICE);

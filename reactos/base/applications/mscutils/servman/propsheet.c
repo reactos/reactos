@@ -180,6 +180,9 @@ InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
                            WM_SETTEXT,
                            0,
                            (LPARAM)pServiceConfig->lpBinaryPathName);
+        HeapFree(ProcessHeap,
+                         0,
+                         pServiceConfig);
     }
 
 

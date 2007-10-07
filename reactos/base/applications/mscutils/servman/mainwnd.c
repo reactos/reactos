@@ -162,7 +162,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
     for (i = ID_START; i <= ID_RESTART; i++)
     {
         EnableMenuItem(hMainMenu, i, MF_GRAYED);
-        EnableMenuItem(Info->hShortcutMenu, ID_START, MF_GRAYED);
+        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_START, MF_GRAYED);
         SendMessage(Info->hTool, TB_SETSTATE, i,
                     (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
     }
@@ -175,7 +175,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
             SendMessage(Info->hTool, TB_SETSTATE, ID_DELETE,
                        (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
             EnableMenuItem(hMainMenu, ID_DELETE, MF_ENABLED);
-            EnableMenuItem(Info->hShortcutMenu, ID_DELETE, MF_ENABLED);
+            EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_DELETE, MF_ENABLED);
         }
 
         Flags = Info->pCurrentService->ServiceStatusProcess.dwControlsAccepted;
@@ -184,7 +184,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
         if (State == SERVICE_STOPPED)
         {
             EnableMenuItem(hMainMenu, ID_START, MF_ENABLED);
-            EnableMenuItem(Info->hShortcutMenu, ID_START, MF_ENABLED);
+            EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_START, MF_ENABLED);
             SendMessage(Info->hTool, TB_SETSTATE, ID_START,
                    (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
         }
@@ -192,7 +192,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
         if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
         {
             EnableMenuItem(hMainMenu, ID_STOP, MF_ENABLED);
-            EnableMenuItem(Info->hShortcutMenu, ID_STOP, MF_ENABLED);
+            EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_STOP, MF_ENABLED);
             SendMessage(Info->hTool, TB_SETSTATE, ID_STOP,
                    (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
         }
@@ -200,7 +200,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
         if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
         {
             EnableMenuItem(hMainMenu, ID_PAUSE, MF_ENABLED);
-            EnableMenuItem(Info->hShortcutMenu, ID_PAUSE, MF_ENABLED);
+            EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_PAUSE, MF_ENABLED);
             SendMessage(Info->hTool, TB_SETSTATE, ID_PAUSE,
                    (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
         }
@@ -208,7 +208,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
         if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
         {
             EnableMenuItem(hMainMenu, ID_RESTART, MF_ENABLED);
-            EnableMenuItem(Info->hShortcutMenu, ID_RESTART, MF_ENABLED);
+            EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_RESTART, MF_ENABLED);
             SendMessage(Info->hTool, TB_SETSTATE, ID_RESTART,
                    (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
         }
@@ -218,8 +218,8 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
         /* disable tools which rely on a selected service */
         EnableMenuItem(hMainMenu, ID_PROP, MF_GRAYED);
         EnableMenuItem(hMainMenu, ID_DELETE, MF_GRAYED);
-        EnableMenuItem(Info->hShortcutMenu, ID_PROP, MF_GRAYED);
-        EnableMenuItem(Info->hShortcutMenu, ID_DELETE, MF_GRAYED);
+        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_PROP, MF_GRAYED);
+        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_DELETE, MF_GRAYED);
         SendMessage(Info->hTool, TB_SETSTATE, ID_PROP,
                    (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
         SendMessage(Info->hTool, TB_SETSTATE, ID_DELETE,
@@ -347,8 +347,6 @@ InitMainWnd(PMAIN_WND_INFO Info)
     /* Create Popup Menu */
     Info->hShortcutMenu = LoadMenu(hInstance,
                                    MAKEINTRESOURCE(IDR_POPUP));
-    Info->hShortcutMenu = GetSubMenu(Info->hShortcutMenu,
-                                     0);
 
     Info->bIsUserAnAdmin = IsUserAnAdmin();
     if (Info->bIsUserAnAdmin)
@@ -365,7 +363,7 @@ InitMainWnd(PMAIN_WND_INFO Info)
                            ID_CREATE,
                            MF_ENABLED);
         }
-        EnableMenuItem(Info->hShortcutMenu,
+        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0),
                        ID_CREATE,
                        MF_ENABLED);
     }
@@ -766,7 +764,7 @@ MainWndProc(HWND hwnd,
                 GetWindowRect(Info->hListView, &lvRect);
                 if (PtInRect(&lvRect, pt))
                 {
-                    TrackPopupMenuEx(Info->hShortcutMenu,
+                    TrackPopupMenuEx(GetSubMenu(Info->hShortcutMenu, 0),
                                      TPM_RIGHTBUTTON,
                                      xPos,
                                      yPos,

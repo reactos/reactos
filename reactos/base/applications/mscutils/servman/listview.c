@@ -42,10 +42,10 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
         EnableMenuItem(hMainMenu,
                        ID_PROP,
                        MF_ENABLED);
-        EnableMenuItem(Info->hShortcutMenu,
+        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0),
                        ID_PROP,
                        MF_ENABLED);
-        SetMenuDefaultItem(Info->hShortcutMenu,
+        SetMenuDefaultItem(GetSubMenu(Info->hShortcutMenu, 0),
                            ID_PROP,
                            MF_BYCOMMAND);
     }
@@ -58,7 +58,7 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
         EnableMenuItem(hMainMenu,
                        ID_DELETE,
                        MF_ENABLED);
-        EnableMenuItem(Info->hShortcutMenu,
+        EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0),
                        ID_DELETE,
                        MF_ENABLED);
     }
