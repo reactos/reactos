@@ -1,0 +1,72 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005
+ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+STRING_HELP,  "Употреба: %S устройство: [-FS:файлова_система] [-V:етикет] [-Q] [-A:размер] [-C]\n\n\
+  [drive:]         Указва устройството за оразмеряване.\n\
+  -FS:файлова_система  Указва вида на дайловата система (%s).\n\
+  -V:етикет         Указва етикет за тома.\n\
+  -Q               Извършва бързо оразмеряване (форматиране).\n\
+  -A:размер        Overrides the default allocation unit size. Default settings\n\
+                   are strongly recommended for general use\n\
+                   NTFS supports 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   FAT supports 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   NTFS compression is not supported for allocation unit sizes\n\
+                   above 4096.\n\
+  -C               Файловте, създадени на новия том ще бъдат сбивани по\n\
+                   подразбиране.\n\n"
+
+STRING_COMPLETE   "%lu на сто готови.\r"
+
+STRING_FORMAT_FAIL "FormatEx was unable to complete successfully.\n\n"
+
+STRING_NO_SUPPORT  "Действието не се поддържа"
+
+STRING_FMIFS_FAIL  "Could not located FMIFS entry points.\n\n"
+
+STRING_UNKNOW_ARG  "Неизвестен ключ: %S\n"
+
+STRING_DRIVE_PARM  "Задължителният ключ за името на устройството липсва.\n\n"
+
+STRING_ERROR_DRIVE_TYPE  "Неуспешно определяне вида на устройството"
+
+STRING_INSERT_DISK       "Сложете нова дискета в устройство %C:\n,след което натиснете Enter..."
+
+STRING_NO_VOLUME         "Неуспешно определяне на тома"
+
+STRING_NO_VOLUME_SIZE    "Неуспешно определяне на размера на тома"
+
+STRING_FILESYSTEM        "ВИд на файловата система: %S.\n"
+
+STRING_LABEL_NAME_EDIT  "Въведете сегашния етикет на устройство %C: "
+
+STRING_ERROR_LABEL     "An incorrect volume label was entered for this drive.\n"
+
+STRING_YN_FORMAT       "\nВНИМАНИЕ, ВСИЧКИ ДАННИ НА ПОСТОЯННОТО ЗАПАМЕТЯВАЩО\n\
+УСТРОЙСТВО %C: ЩЕ БЪДАТ УНИЩОЖЕНИ!\nДа продължа ли с форматирането('Y' за 'да'/'N' за 'не')? "
+
+STRING_YES_NO_FAQ      "YN"
+
+STRING_VERIFYING       "Проверка"
+
+STRING_FAST_FMT        "Бързо оразмеряване"
+
+STRING_CREATE_FSYS     "Creating file system structures.\n"
+
+STRING_FMT_COMPLETE    "Оразмеряването приключи.\n"
+
+STRING_VOL_COMPRESS    "Томът не поддържа сбиване.\n"
+
+STRING_ENTER_LABEL     "Етикет (11 знака или Enter за нищо)? "
+
+STRING_NO_LABEL        "Неуспежно поставяне на етикет"
+
+STRING_FREE_SPACE     "\n%I64d байта общо дисково пространство.\n%I64d байта достъпни.\n"
+
+STRING_SERIAL_NUMBER   "\nПроизводствен номер на носителя: %04X-%04X\n"
+}

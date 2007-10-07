@@ -1,0 +1,162 @@
+// English (en) resources by Lohegrim (Lohnegrim at gmx dot net)
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 250, 220
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Наредби на захранването"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  ICON IDI_ACDC, IDI_ACDC, 7,7,28,22
+  LTEXT "Изберете най- подходящата настройка за този компютър. Обърнете внимание, че промяната на долните настройки ще променят избраната наредба.",
+	-1,45,13,194,36
+  GROUPBOX "За&хранване", -1, 7,57,240,46
+  COMBOBOX IDC_ENERGYLIST, 14,70,224,92, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  PUSHBUTTON "&Запис като...", -1, 100,85,75,15,WS_DISABLED
+  PUSHBUTTON "&Изтриване", -1, 180,85,55,15,WS_DISABLED
+  GROUPBOX "Неизвестно", IDC_GRPDETAIL, 7,108,240,105
+  LTEXT "Когато компютърът се:",IDC_SAT,15,120,60,18
+  LTEXT "Захранва от мрежата",IDC_SAC,100,120,45,18
+  ICON IDI_AC, IDC_IAC, 75,115,25,15
+  LTEXT "Захранва от батерии",IDC_SDC,197,120,45,18
+  ICON IDI_DC, IDC_IDC, 165,115,25,15
+  LTEXT "Изключване на &монитора:",IDC_MONITOR,15,140,80,20
+  COMBOBOX IDC_MONITORACLIST, 100,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_MONITORDCLIST, 175,140,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Изключване на &твърдите дискове:",IDC_DISK,15,160,80,20
+  COMBOBOX IDC_DISKACLIST, 100,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_DISKDCLIST, 175,155,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Системата из&чаква:",IDC_STANDBY,15,180,80,10
+  COMBOBOX IDC_STANDBYACLIST, 100,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_STANDBYDCLIST, 175,175,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Системата за&спива:",IDC_HYBERNATE,15,195,80,10
+  COMBOBOX IDC_HYBERNATEACLIST, 100,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_HYBERNATEDCLIST, 175,190,65,150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Тревоги"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Тревога при слаба батерия",-1,10,15,235,95
+    CONTROL         "Тревога за &слаба батерия при ниво под:",IDC_ALARM1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
+    LTEXT           "неизвестно",IDC_ALARMVALUE1,200,25,40,10
+    LTEXT           "0%",-1,20,40,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
+    LTEXT           "100%",-1,215,40,25,10
+    PUSHBUTTON      "Действие при &тревога...",-1,20,70,70,15,WS_DISABLED
+    LTEXT           "Уведомяване:",-1,95,70,50,10
+    LTEXT           "Неизвестно",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Действие:",-1,95,80,45,10
+    LTEXT           "Неизвестно",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Изпълняване на приложение:",-1,95,90,50,10
+    LTEXT           "Неизвестно",IDC_ALARMPROG1,150,90,40,10
+
+    GROUPBOX        "Тревога за разредена батерия",-1,10,115,235,95
+    CONTROL         "Тревога за разредена батерия при разреждане до:",IDC_ALARM2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
+    LTEXT           "неизвестно",IDC_ALARMVALUE2,200,125,40,10
+    LTEXT           "0%",-1,20,140,15,15
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ | 
+                    TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
+    LTEXT           "100%",-1,215,140,25,10
+    PUSHBUTTON      "&Действие при тревога...",-1,20,170,70,15,WS_DISABLED
+    LTEXT           "Известяване:",-1,95,170,50,10
+    LTEXT           "Unknown",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Действие:",-1,95,180,45,10
+    LTEXT           "Unknown",IDC_ALARMAKTION2,145,180,95,10
+    LTEXT           "Запуск на приложение:",-1,95,190,50,10
+    LTEXT           "Unknown",IDC_ALARMPROG2,150,190,40,10
+END
+
+IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Разширени"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
+    LTEXT           "Изберете енергоспестяващи настройки.",-1,30,5,205,20
+    GROUPBOX        "Възможности",-1,5,35,225,55
+    CONTROL         "Винаги има значе в задачната лента",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,45,200,10
+    CONTROL         "&Искане на парола при излизане от озчакване",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,55,200,10
+    CONTROL         "&Затъмняване на екрана при работа от батерии.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,65,200,10
+    GROUPBOX        "Клавиши за захранване",-1,5,100,230,105
+    LTEXT           "&При затваряне на капака на преносимия ми компютър:", IDC_SLIDCLOSE,10,110,210,10
+    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "П&ри натискане на копчето за изключване на компютъра:", IDC_SPOWERBUTTON,10,135,210,10
+    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Пр&и натискане на копчето за приспиване на компютара:", IDC_SSLEEPBUTTON,10,165,210,10
+    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOG DISCARDABLE  0, 0, 250, 220
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Заспиване"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
+    LTEXT           "Когато компютърът ви заспи, той съхранява съдържанието на паметта си на твърдия диск, а когато се събуди го връща обратно.",
+                    -1,35,5,195,35
+    GROUPBOX        "Заспиване",-1,5,45,235,25
+    CONTROL         "Включване на за&спиването",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,55,210,10
+    GROUPBOX        "Дисково място за заспиване",-1,5,80,240,60
+    LTEXT           "Свободнио дисково място:",-1,10,90,155,10
+    LTEXT           "Неизвестно",IDC_FREESPACE,180,90,70,10
+    LTEXT           "Необходимо дисково място за заспиване:",-1,10,100,155,10
+    LTEXT           "Неизвестно",IDC_SPACEFORHIBERNATEFILE,180,100,55,10
+    LTEXT           "Трябва да освободите дисково пространство, за да може да заспива компютърът ви. ",IDC_TOLESSFREESPACE,10,115,220,20
+END
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME_1 "Захранване"
+  IDS_CPLDESCRIPTION_1 "Настройка на енергоспестяването на компютъра."
+  IDS_PROCENT "%i%%"
+  IDS_SOUND "Звук"
+  IDS_TEXT "Текст"
+  IDS_CONFIG1 "Настройки за захранваща наредба %1"
+  IDS_CONFIG2 "Разширени настройки за %1"
+
+  IDS_SIZEBYTS "%i байта"
+  IDS_SIZEMB "%i МБ"
+
+  IDS_NOACTION "Не прави нищо"
+
+  IDS_PowerActionNone1 "Бездействие"
+  IDS_PowerActionUnknown "Неизвестно"
+  IDS_PowerActionSleep "Зачакване"
+  IDS_PowerActionHibernate "Заспиване"
+  IDS_PowerActionShutdown "Изключване"
+  IDS_PowerActionRestart "Презапуск"
+  IDS_PowerActionShutdownOff "Изключване"
+  IDS_PowerActionWarmEject "Запитване"
+  IDS_PowerActionNone2 "Няма"
+
+  IDS_TIMEOUT1 "След 1 минута"
+  IDS_TIMEOUT2 "След 2 минути"
+  IDS_TIMEOUT3 "След 3 минути"
+  IDS_TIMEOUT4 "След 5 минути"
+  IDS_TIMEOUT5 "След 10 минути"
+  IDS_TIMEOUT6 "След 15 минути"
+  IDS_TIMEOUT7 "След 20 минути"
+  IDS_TIMEOUT8 "След 25 минути"
+  IDS_TIMEOUT9 "След 30 минути"
+  IDS_TIMEOUT10 "След 45 минути"
+  IDS_TIMEOUT11 "След 1 час"
+  IDS_TIMEOUT12 "След 2 часа"
+  IDS_TIMEOUT13 "След 3 часа"
+  IDS_TIMEOUT14 "След 4 часа"
+  IDS_TIMEOUT15 "След 5 часа"
+  IDS_TIMEOUT16 "Никога"
+END
+

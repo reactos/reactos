@@ -1,0 +1,12 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "Неуспешно зареждане на библиотека '%s'"
+IDS_MissingEntry, "Липсваща входна точка:%s\nв %s"
+}

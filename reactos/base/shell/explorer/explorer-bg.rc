@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// Български
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -91,9 +91,9 @@ IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Показване на скрити значки",          ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Показване на &копчета за значките",           ID_SHOW_ICON_BUTTON
-        MENUITEM "На&стройка на известяването...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "&Показване на скрити значета",          ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Показване на &копчета за значетата",           ID_SHOW_ICON_BUTTON
+        MENUITEM "На&стройка на уведомителката...", ID_CONFIG_NOTIFYAREA
         MENUITEM "Сверяване на дата/&време...",        ID_CONFIG_TIME
         MENUITEM SEPARATOR
         MENUITEM "&За изследователя...",          ID_ABOUT_EXPLORER
@@ -170,36 +170,36 @@ END
 IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Свойства на работната площ"
-FONT 8, "MS Sans Serif"
+FONT 7, "MS Sans Serif"
 BEGIN
-    LTEXT           "Изберете начин на подравняване:",
+    LTEXT           "Изберете начин на подреждане:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,7,121,46,44
-    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "кръгово",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
-                    BS_BOTTOM | WS_TABSTOP,110,121,46,44
+    CONTROL         "Горен ляв надолу",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,6,25,60,44
+    CONTROL         "Горен ляв надясно",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,67,25,60,44
+    CONTROL         "Горен десен наляво",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,127,25,60,44
+    CONTROL         "Горен десен надолу",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,188,25,60,44
+    CONTROL         "Долен ляв нагоре",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,6,73,60,44
+    CONTROL         "Долен ляв надясно",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,67,73,60,44
+    CONTROL         "Долен десен наляво",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,127,73,60,44
+    CONTROL         "Долен десен нагоре",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,188,73,60,44
+    CONTROL         "Странично надолу",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,6,121,60,44
+    CONTROL         "По ръбовете",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,67,121,60,44
+    CONTROL         "Кръгово",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,127,121,60,44
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
-                    WS_TABSTOP,159,121,46,44
-//    CONTROL         "Показване на &версията",ID_DESKTOP_VERSION,"Button",
-//                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,120,10
+                    WS_TABSTOP,188,121,60,44
+    CONTROL         "Показване на &версията",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,120,10
 END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
@@ -209,10 +209,10 @@ FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "Показване на &часовника",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,152,100,10
-    CONTROL         "&Показване на неползваните значки",
+    CONTROL         "&Показване на неползваните значета",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,174,143,10
-    PUSHBUTTON      "Из&вестяване...",ID_CONFIG_NOTIFYAREA,153,173,52,14
+    PUSHBUTTON      "У&ведомителка...",ID_CONFIG_NOTIFYAREA,150,173,62,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
@@ -226,7 +226,7 @@ IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Настройка на уведомителните значки"
+CAPTION "Настройка на уведомителните значета"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
@@ -235,7 +235,7 @@ BEGIN
     EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
     LTEXT           "&Заглавие на прозореца:",IDC_LABEL2,7,63,44,8
     EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
-    LTEXT           "&Module Path:",IDC_LABEL3,7,81,43,8
+    LTEXT           "&Път:",IDC_LABEL3,7,81,43,8
     EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
     GROUPBOX        "&Начин на изобразяване",IDC_LABEL4,7,96,157,28
     CONTROL         "&показване",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
@@ -248,7 +248,7 @@ BEGIN
     LTEXT           "&Променено на:",IDC_LABEL6,3,132,54,8
     EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
                     ES_READONLY
-    CONTROL         "&показване на скрити",ID_SHOW_HIDDEN_ICONS,"Button",
+    CONTROL         "&Показване на скрити",ID_SHOW_HIDDEN_ICONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,2,154,85,10
     DEFPUSHBUTTON   "&Добре",IDOK,91,153,50,14,WS_GROUP
     PUSHBUTTON      "&Отказ" ,IDCANCEL,151,153,50,14
@@ -330,7 +330,7 @@ BEGIN
     IDS_START               "Пуск"
     IDS_LOGOFF              "Изход..."
     IDS_SHUTDOWN            "Изключване..."
-    IDS_RESTART             "Restart..."
+    IDS_RESTART             "Презапускане..."
     IDS_LAUNCH              "Изпълняване..."
     IDS_START_HELP          "Помощ"
     IDS_SEARCH_FILES        "Търсене"
@@ -338,7 +338,7 @@ BEGIN
     IDS_FAVORITES           "Любимки"
     IDS_PROGRAMS            "Приложения"
     IDS_SETTINGS            "Настройки"
-    IDS_EXPLORE             "Изследване"
+    IDS_EXPLORE             "Изследовател"
     IDS_EMPTY               "(Празно)"
     IDS_RECENT              "Скорошни книжа"
     IDS_ADMIN               "Управление"
@@ -347,7 +347,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Пусков изборник"
-    IDS_MINIMIZE_ALL        "смаляване на всички прозорци"
+    IDS_MINIMIZE_ALL        "Смаляване на всички прозорци"
     IDS_DESKTOP_NUM         "Работна площ %d"
     IDS_VOLUME              "Сила на звука"
     IDS_ITEMS_CUR           "текущи предмети"
@@ -357,8 +357,8 @@ BEGIN
     IDS_NOTIFY_SHOW         "показване"
     IDS_NOTIFY_HIDE         "скриване"
     IDS_NOTIFY_AUTOHIDE     "самоскриване"
-    IDS_SHOW_HIDDEN_ICONS   "Показване на скритите значки"
-    IDS_HIDE_ICONS          "Скриване на значки"
+    IDS_SHOW_HIDDEN_ICONS   "Показване на скритите значета"
+    IDS_HIDE_ICONS          "Скриване на значета"
     IDS_TERMINATE           "Прекратяване на изследователя"
 END
 
@@ -371,7 +371,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Изборник за настройки"
     IDS_CONTROL_PANEL       "Крило за управление"
     IDS_PRINTERS            "Печатачи"
-    IDS_BROWSE              "Обзор към файлове"
+    IDS_BROWSE              "Файлов обзор"
     IDS_SEARCH_PRG          "Търсене на приложение..."
     IDS_ALL_USERS           "Всички потребители\\"
     IDS_SEARCH              "Търсене"

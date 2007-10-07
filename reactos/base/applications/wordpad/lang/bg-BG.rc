@@ -56,14 +56,14 @@ BEGIN
     MENUITEM "&Шрифт...",        -1 GRAYED
     MENUITEM "Водачи",     -1, GRAYED
     MENUITEM "Абзац...",    -1, GRAYED
-    MENUITEM "закачалки (tab)...",         -1, GRAYED
+    MENUITEM "Закачалки (tab)...",         -1, GRAYED
   END
   POPUP "&Прозорец"
   BEGIN
     MENUITEM "&Надипляне",           ID_WINDOW_CASCADE
     MENUITEM "Водо&равно настелване", ID_WINDOW_TILE_HORZ
     MENUITEM "От&весно настелване",   ID_WINDOW_TILE_VERT
-    MENUITEM "&Подреждане на значките",     ID_WINDOW_ARRANGE
+    MENUITEM "&Подреждане на значетата",     ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
     MENUITEM "Сле&дващ\tCtrl+F6",     ID_WINDOW_NEXT
   END
@@ -84,15 +84,15 @@ BEGIN
 END
 
 
-IDD_NEWDOCSEL DIALOGEX 6,6,169,67
+IDD_NEWDOCSEL DIALOGEX 6,6,170,67
 CAPTION "Нов"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   LTEXT "Вид на новия документ:", IDC_STATIC, 4, 3, 130, 9
-  LISTBOX IDC_LIST, 4, 16, 116, 46, WS_TABSTOP
-  PUSHBUTTON "&Добре", IDOK, 122, 16, 44, 13
-  PUSHBUTTON "&Отказ", IDCANCEL, 122, 33, 44, 13
+  LISTBOX IDC_LIST, 1, 16, 125, 46, WS_TABSTOP //Удължен
+  PUSHBUTTON "&Добре", IDOK, 128, 16, 40, 13
+  PUSHBUTTON "&Отказ", IDCANCEL, 128, 33, 40, 13
 END
 
 
@@ -102,7 +102,7 @@ FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "Тетрадка (Wordpad) II v0.1\nВъзпроизводствено право (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON "Затвяряне", IDOK, 65, 162, 44, 15
+  PUSHBUTTON "Затваряне", IDOK, 65, 162, 44, 15
   ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -157,13 +157,13 @@ BEGIN
   IDS_HINT_CASCADE      " Подреждане на прозорците така, че да се застъпват."
   IDS_HINT_TILE_HORZ    " Подреждане на прозорците като незастъпващи се плочки."
   IDS_HINT_TILE_VERT    " Подреждане на прозорците като незастъпващи се плочки."
-  IDS_HINT_ARRANGE      " Подреждане на значките в дъното на прозореца."
+  IDS_HINT_ARRANGE      " Подреждане на значетата в дъното на прозореца."
   IDS_HINT_NEXT         " Задействане на следващия прозорец."
 
   IDS_HINT_SYS_RESTORE  " Връщане на прозореца в обичайния му размер."
   IDS_HINT_SYS_MOVE     " Преместване на този прозорец."
   IDS_HINT_SYS_SIZE     " Преоразмерява този прозорец."
-  IDS_HINT_SYS_MINIMIZE " Смалява прозореца в значка."
+  IDS_HINT_SYS_MINIMIZE " Смалява прозореца в значе."
   IDS_HINT_SYS_MAXIMIZE " Разширява прозореца, за да запълни работното поле."
 END
 

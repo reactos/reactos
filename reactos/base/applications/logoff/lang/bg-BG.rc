@@ -1,0 +1,15 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "Приключва работата.\n\n\
+  /v\t\tПоказва сведения за извършениете действия.\n\
+  /?\t\tПоказава тези сведения.\n\n"
+
+IDS_LOGOFF_REMOTE, "Приключва работата на далечна машина."
+IDS_LOGOFF_LOCAL, "Приключва текущата работа на тази машина."
+
+IDS_ILLEGAL_PARAM, "Неправилни параметри\n"
+}
+/* EOF */

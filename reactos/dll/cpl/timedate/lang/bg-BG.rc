@@ -47,7 +47,7 @@ BEGIN
     AUTOCHECKBOX    "Самосверяване през интернет от сървър за времето", IDC_AUTOSYNC,
                     11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT           "Сървър:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON      "Онови веднага", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON      "Обнови веднага", IDC_UPDATEBUTTON, 187, 22, 60, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
     LTEXT           "Сверяването може да се осъществи само, когато компютърът ви е свързан с интернет.", -1, 12, 114, 225, 25

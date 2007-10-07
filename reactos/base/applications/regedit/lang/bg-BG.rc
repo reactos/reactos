@@ -55,7 +55,7 @@ BEGIN
 
         MENUITEM SEPARATOR
 		MENUITEM "Зареждане на рой...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Изоставя роя...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM "Изоставяне на рой...",				ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
         MENUITEM "&Свързване с мрежов регистър...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -97,7 +97,7 @@ BEGIN
     BEGIN
         MENUITEM "&Лента на състоянието",                 ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "Раз&цепване",                      ID_VIEW_SPLIT
+        MENUITEM "Раз&делител",                      ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "О&пресняване\tF5",                ID_VIEW_REFRESH
     END
@@ -219,8 +219,8 @@ BEGIN
     LTEXT           "&Стойност:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
     GROUPBOX        "Основа",IDC_STATIC,130,35,116,39
-    AUTORADIOBUTTON "&Шестнадесетична",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
-    AUTORADIOBUTTON "&Десетична",IDC_FORMAT_DEC,141,59,60,10
+    AUTORADIOBUTTON "&Шестнадесетична",IDC_FORMAT_HEX,141,46,95,10,WS_GROUP
+    AUTORADIOBUTTON "&Десетична",IDC_FORMAT_DEC,141,59,95,10
     DEFPUSHBUTTON   "Добре",IDOK,142,82,50,14
     PUSHBUTTON      "Отказ",IDCANCEL,196,82,50,14
 END
@@ -376,7 +376,7 @@ STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
 FONT 8, "MS Shell Dlg"
 BEGIN
    GROUPBOX "Област за износ",IDC_STATIC,2,0,366,48
-   CONTROL "Вси&чки",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "Вси&чки",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10,50,11
    CONTROL "Из&брания клон",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
@@ -406,24 +406,24 @@ END
 
 IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Find"
+CAPTION "Търсене"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "&Намери следващо",IDOK,197,7,50,14
+    DEFPUSHBUTTON   "&Търси още",IDOK,197,7,50,14
     PUSHBUTTON      "Отказ",IDCANCEL,197,24,50,14
     GROUPBOX        "Търсене в",IDC_STATIC,7,25,63,51
     LTEXT           "&Търсене на:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
     CONTROL         "&Ключове",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,14,36,35,8
+                    WS_TABSTOP,14,36,55,8
     CONTROL         "&Стойности",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,14,48,36,8
+                    WS_TABSTOP,14,48,55,8
     CONTROL         "&Данни",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,14,60,42,8
+                    WS_TABSTOP,14,60,55,8
     CONTROL         "Съвпадение само при &цели низове",IDC_MATCHSTRING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+                    BS_AUTOCHECKBOX | WS_TABSTOP,72,39,133,13
     CONTROL         "Отчитане на &гЛавНоСТта",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,83,48,90,12
+                    WS_TABSTOP,72,53,102,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
@@ -434,7 +434,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
     PUSHBUTTON      "&Отказ",IDCANCEL,93,29,45,14
-    LTEXT           "Претърсвам регистъра...",IDC_STATIC,33,12,83,8
+    LTEXT           "Претърсване на регистъра...",IDC_STATIC,33,12,105,8
 END
 
 /*

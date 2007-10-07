@@ -5,6 +5,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* IDI_WINLOGON ICON "resources/winlogon.ico" */
 
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
