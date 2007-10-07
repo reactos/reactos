@@ -2774,6 +2774,15 @@ MingwAddImplicitLibraries( Module &module )
 {
 	Library* pLibrary;
 
+	if ( module.type != Win32DLL
+	  && module.type != Win32OCX
+	  && module.type != Win32CUI
+	  && module.type != Win32GUI )
+	{
+		// no implicit libraries
+		return;
+	}
+
 	if ( !module.isDefaultEntryPoint )
 	{
 		if ( module.GetEntryPoint(false) == "0" )
