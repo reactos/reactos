@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
-<module name="ntdll" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
+<module name="ntdll" type="nativedll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
 	<bootstrap installbase="$(CDOUTPUT)/system32" />
 	<importlibrary definition="def/ntdll.def" />
 	<include base="ntdll">inc</include>
