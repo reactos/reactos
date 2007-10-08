@@ -27,7 +27,7 @@
 #include <assert.h>
 #include <math.h>
 #include <signal.h>
-#include <io.h>
+//#include <io.h>
 
 namespace Sysreg_
 {
@@ -283,7 +283,7 @@ namespace Sysreg_
 
 #ifdef __LINUX__
 
-        if (_mktemp(pipename))
+        if (mktemp(pipename))
         {
             string temp = pipename;
             m_Src = "/tmp/" + temp;
