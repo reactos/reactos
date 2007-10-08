@@ -598,10 +598,13 @@ namespace Sysreg_
 #ifdef __LINUX__        
 	if (mkfifo(m_Src.c_str(), 400))
 	{
+/*	
 	    if (errno != EEXIST)
 	    {
             	cerr <<"Error: mkfifo failed with " << errno << endl;
             }
+*/
+	    return false;
 	}
 
 #endif
