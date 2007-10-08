@@ -13,6 +13,9 @@
 #ifdef WIN32
 #include <io.h>
 #include <dos.h>
+#include <windows.h>
+int __cdecl strcasecmp (const char * __sz1, const char * __sz2)
+	{return _stricmp (__sz1, __sz2);}
 #else
 #include <sys/io.h>
 #include <errno.h>

@@ -77,9 +77,11 @@ int main(int argc, char * argv[])
         if (!ret)
         {
             cout << "The regression test has failed at stage: " << i << endl;
+			delete regtest;
             return -2;
         }
     }
 	cout << "The regression test completed successfully" << endl;
+	delete regtest;
 	return 0;
 }

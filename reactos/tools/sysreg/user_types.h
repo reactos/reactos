@@ -18,26 +18,12 @@
 #define pclose _pclose
 #endif
 
-	typedef std::basic_string<char> string;
-	typedef std::basic_istringstream<char> istringstream;
+typedef std::basic_string<char> string;
+typedef std::basic_istringstream<char> istringstream;
 
-
-#ifdef UNICODE
-
-	using std::wcout;
-	using std::wcerr;
-	using std::endl;
-
-#define cout wcout
-#define cerr wcerr
-
-#else
-
-	using std::cout;
-	using std::cerr;
-	using std::endl;
-
-#endif
+using std::cout;
+using std::cerr;
+using std::endl;
 
 
 #endif // end of USER_TYPES_H__ 
