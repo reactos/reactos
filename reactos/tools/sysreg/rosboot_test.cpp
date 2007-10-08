@@ -128,16 +128,6 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
     void RosBootTest::getDefaultHDDImage(string & img)
     {
-#ifndef __LINUX__
-        char buffer[MAX_PATH];
-        if (GetCurrentDirectory(MAX_PATH, buffer))
-        {
-            img = buffer;
-            img += "\\output-i386";
-
-        }
-        else
-#endif
         img = "output-i386";
 
         EnvironmentVariable::getValue("ROS_OUTPUT", img);
