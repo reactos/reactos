@@ -29,6 +29,7 @@
 #include <signal.h>
 #ifndef __LINUX__
 #include <io.h>
+#include <errno.h>
 #endif
 
 namespace Sysreg_
@@ -359,7 +360,7 @@ namespace Sysreg_
         m_PidFile += "/pid.txt";
         m_BootCmd += " -pidfile ";
         m_BootCmd += m_PidFile;
-	m_BootCmd += " -vnc :0";
+	//m_BootCmd += " -nographic";
 #else
 
         if (hasQemuNoRebootOption())
