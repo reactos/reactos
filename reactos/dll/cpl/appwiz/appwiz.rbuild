@@ -19,5 +19,6 @@
 	<file>add.c</file>
 	<file>rossetup.c</file>
 	<file>createlink.c</file>
+	<file>updates.c</file>
 	<file>appwiz.rc</file>
 </module>

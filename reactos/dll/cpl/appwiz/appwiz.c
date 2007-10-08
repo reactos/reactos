@@ -28,17 +28,6 @@
  *	09-25-2007 Modify
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <tchar.h>
-#include <process.h>
-
-#include "resource.h"
 #include "appwiz.h"
 
 #define NUM_APPLETS	(1)
@@ -71,7 +60,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 LONG CALLBACK
 SystemApplet(VOID)
 {
-    PROPSHEETPAGE psp[3];
+    PROPSHEETPAGE psp[4];
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
 
@@ -90,8 +79,9 @@ SystemApplet(VOID)
     psh.pfnCallback = NULL;
 
     InitPropSheetPage(&psp[0], IDD_PROPPAGEINSTALL, (DLGPROC) RemovePageProc);
-	InitPropSheetPage(&psp[1], IDD_PROPPAGEADD, (DLGPROC) AddPageProc);
-    InitPropSheetPage(&psp[2], IDD_PROPPAGEROSSETUP, (DLGPROC) RosPageProc);
+	InitPropSheetPage(&psp[1], IDD_PROPPAGEUPDATES, (DLGPROC) UpdatesPageProc);
+	InitPropSheetPage(&psp[2], IDD_PROPPAGEADD, (DLGPROC) AddPageProc);
+    InitPropSheetPage(&psp[3], IDD_PROPPAGEROSSETUP, (DLGPROC) RosPageProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }

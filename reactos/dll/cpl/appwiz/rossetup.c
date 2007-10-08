@@ -19,7 +19,7 @@
 /* 
  *
  * PROJECT:         		ReactOS Software Control Panel
- * FILE:            		dll/cpl/appwiz/appwiz.c
+ * FILE:            		dll/cpl/appwiz/rossetup.c
  * PURPOSE:         		ReactOS Software Control Panel
  * PROGRAMMERS:	Gero Kuehn (reactos.filter@gkware.com)
  *				Dmitry Chapyshev (lentind@yandex.ru)
@@ -28,17 +28,6 @@
  *	09-25-2007 Modify
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <tchar.h>
-#include <process.h>
-
-#include "resource.h"
 #include "appwiz.h"
 
 

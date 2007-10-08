@@ -21,6 +21,8 @@ IDI_INSTICO ICON "resources/1502.ico"
 IDI_RECBINICO ICON "resources/1503.ico"
 IDI_DOWNLOADICO ICON "resources/1504.ico"
 IDI_APPINETICO ICON "resources/1505.ico"
+IDI_UPDATES ICON "resources/updates.ico"
+IDI_REACTOS ICON "resources/reactos.ico"
 
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 
