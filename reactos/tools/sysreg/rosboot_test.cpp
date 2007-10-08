@@ -27,7 +27,9 @@
 #include <assert.h>
 #include <math.h>
 #include <signal.h>
+#ifndef __LINUX__
 #include <io.h>
+#endif
 
 namespace Sysreg_
 {
@@ -291,8 +293,9 @@ namespace Sysreg_
         }
         else
         {
+        
             pipe = "pipe:/tmp/qemu";
-		    m_Src = "/tmp/qemu";
+	    m_Src = "/tmp/qemu";
         }
 
         qemudir = "/usr/share/qemu";
@@ -356,7 +359,7 @@ namespace Sysreg_
         m_PidFile += "/pid.txt";
         m_BootCmd += " -pidfile ";
         m_BootCmd += m_PidFile;
-		m_BootCmd += " -vnc :0";
+	m_BootCmd += " -vnc :0";
 #else
 
         if (hasQemuNoRebootOption())
@@ -369,46 +372,27 @@ namespace Sysreg_
 //----------------------------------------------------------------------------------------
     bool RosBootTest::extractPipeFromBootCmd()
     {
-		string::size_type pos = m_BootCmd.find("-serial");
+	string::size_type pos = m_BootCmd.find("-serial pipe:");
         if (pos == string::npos)
         {
-            /* no debug options provided */
-            return false;
+            	/* no debug options provided */
+		cerr << "Error: provided boot cmd does not specify a pipe debugging port" << endl;
+            	return false;
         }
 
-        string pipe = m_BootCmd.substr(pos + 7, m_BootCmd.size() - pos -7);
-	    pos = pipe.find("pipe:");
-		if (pos == 0)
-		{
-		    pipe = pipe.substr(pos + 5, pipe.size() - pos - 5);
-            pos = pipe.find(" ");
-            if (pos != string::npos)
-            {
-                pipe = pipe.substr(0, pos);
-            }
+        string pipe = m_BootCmd.substr(pos + 13, m_BootCmd.size() - pos - 13);
+        pos = pipe.find(" ");
+        if (pos != string::npos)
+        {
+           pipe = pipe.substr(0, pos);
+        }
 #ifdef __LINUX__
-            m_Src = pipe;
+        m_Src = pipe;
 #else
-			m_Src = "\\\\.\\pipe\\" + pipe.substr(0, pos);
+	m_Src = "\\\\.\\pipe\\" + pipe.substr(0, pos);
 #endif
-            m_DebugPort = "pipe";
-            return true;
-        }
-        pos = pipe.find("stdio");
-        if (pos == 0)
-		{
-#ifdef __LINUX__
-			m_Src = m_BootCmd;
-            m_DebugPort = "stdio";
-            return true;
-#else					
-			cerr << "Error: reading from stdio is not supported for windows hosts - use pipes" << endl;
-			return false;	
-#endif				
-		}
-
-        cerr << "Error: no valid debug port specified - use stdio / pipes" << endl;
-        return false;
+        m_DebugPort = "pipe";
+        return true;
     }
 //----------------------------------------------------------------------------------------
     bool RosBootTest::configureHDDImage()
@@ -610,11 +594,23 @@ namespace Sysreg_
                 return false;
             }
         }
+#ifdef __LINUX__        
+	if (mkfifo(m_Src.c_str(), 400))
+	{
+	    if (errno != EEXIST)
+	    {
+            	cerr <<"Error: mkfifo failed with " << errno << endl;
+            }
+	}
+
+#endif
         if (m_PidFile.length () && isFileExisting(m_PidFile))
         {
             cerr << "Deleting pid file " << m_PidFile << endl;
             remove(m_PidFile.c_str ());
         }
+
+
 
         cerr << "Opening Data Source:" << m_BootCmd << endl;
         m_DataSource = new NamedPipeReader();
