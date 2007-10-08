@@ -360,7 +360,7 @@ namespace Sysreg_
         m_PidFile += "/pid.txt";
         m_BootCmd += " -pidfile ";
         m_BootCmd += m_PidFile;
-	//m_BootCmd += " -nographic";
+	m_BootCmd += " -nographic";
 #else
 
         if (hasQemuNoRebootOption())
