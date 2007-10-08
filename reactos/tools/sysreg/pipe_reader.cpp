@@ -83,12 +83,12 @@ namespace System_
 
 	bool PipeReader::readSource(vector<string> & lines)
 	{
-		TCHAR * buf = (TCHAR*)malloc(100 * sizeof(TCHAR));
+		char * buf = (char*)malloc(100 * sizeof(char));
 //#ifdef NDEBUG
-		memset(buf, 0x0, sizeof(TCHAR) * 100);
+		memset(buf, 0x0, sizeof(char) * 100);
 //#endif
 
-		TCHAR * res = _fgetts(buf, 100, m_File);
+		char * res = fgets(buf, 100, m_File);
 		if (!res)
 		{
 			//cerr << "Error: PipeReader::readPipe failed" << endl;

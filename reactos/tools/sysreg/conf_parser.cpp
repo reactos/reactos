@@ -29,14 +29,9 @@ namespace Sysreg_
 	}
 
 //---------------------------------------------------------------------------------------
-	bool ConfigParser::parseFile(TCHAR * FileName)
+	bool ConfigParser::parseFile(char * FileName)
 	{
-		FILE * file;
-#ifdef UNICODE
-		file = _tfopen(FileName, _T("rt,ccs=UNICODE"));
-#else
-		file = fopen(FileName, "rt");
-#endif
+		FILE * file = fopen(FileName, "rt");
 		if (!file)
 		{
 			cerr << "Error: ConfigParser::parseFile failed to open configuration file " << FileName << endl;
@@ -45,16 +40,16 @@ namespace Sysreg_
 		bool ret = false;
 		while (!feof(file))
 		{
-			TCHAR buffer[500];
-			TCHAR * buf;
+			char buffer[500];
+			char * buf;
 
-			buf = _fgetts(buffer, sizeof(buffer) / sizeof(TCHAR), file);
+			buf = fgets(buffer, sizeof(buffer) / sizeof(char), file);
 			if (buf)
 			{
-				if (buffer[0] != _T(';'))
+				if (buffer[0] != ';')
 				{
 					string s_buffer = string(buffer);
-					string::size_type ws_pos = s_buffer.find_first_of (_T("="));
+					string::size_type ws_pos = s_buffer.find_first_of ("=");
 
 					if (ws_pos != string::npos && ws_pos > 0 && ws_pos < s_buffer.size())
 					{
@@ -101,7 +96,7 @@ namespace Sysreg_
 			return false;
 		}
 
-        ConfValue = _tcstod(it->second.c_str(), NULL);
+        ConfValue = strtod(it->second.c_str(), NULL);
         return true;
     }
 //-----------------------------------------------------------------------------------------
@@ -114,7 +109,7 @@ namespace Sysreg_
 			return false;
 		}
 
-        ConfValue = _tcstol(it->second.c_str(), NULL, 10);
+        ConfValue = strtol(it->second.c_str(), NULL, 10);
         return true;
     }
 

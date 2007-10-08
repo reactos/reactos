@@ -23,11 +23,7 @@ namespace System_
 //---------------------------------------------------------------------------------------
     bool FileReader::openSource(const string & filename)
 	{
-#ifdef UNICODE
-		m_File = (FILE*)_tfopen(filename.c_str(), _T("rb,ccs=UNICODE"));
-#else
 		m_File = fopen((char*)filename.c_str(), (char*)"rb");
-#endif
 
 		if (m_File)
 		{
@@ -69,34 +65,18 @@ namespace System_
 		char szBuffer[256];
 		int readoffset = 0;
 
-#ifdef UNICODE
-		wchar_t wbuf[512];
-		int wbuf_offset = 0;
-
-		if (m_BufferedLines.length ())
-		{
-			wcscpy(wbuf, m_BufferedLines.c_str ());
-			wbuf_offset = m_BufferedLines.length ();
-		}
-#else
 		if (m_BufferedLines.length())
 		{
 			strcpy(szBuffer, m_BufferedLines.c_str());
 			readoffset = m_BufferedLines.length();
 		}
-#endif
 
 		do
 		{
 			if (total_length < num)
 			{
-#ifdef UNICODE
-				memmove(wbuf, &wbuf[total_length], (num - total_length) * sizeof(wchar_t));
-				wbuf_offset = num - total_length;
-#else
 				memmove(szBuffer, &szBuffer[total_length], num - total_length);
 				readoffset = num - total_length;
-#endif
 			}
 
 			num = fread(&szBuffer[readoffset], 
@@ -113,32 +93,16 @@ namespace System_
 				}
 				break;
 			}
-			TCHAR * ptr;
-#ifdef UNICODE
-			int i = 0;
-			int conv;
-			while((conv = mbtowc(&wbuf[wbuf_offset+i], &szBuffer[i], num)))
-			{
-				i += conv;
-				if (i == num)
-					break;
+			char * ptr;
+			char * offset = szBuffer;
 
-				assert(wbuf_offset + i < 512);
-			}
-			wbuf[wbuf_offset + num] = L'\0';
-
-			TCHAR * offset = wbuf;
-#else
-
-			TCHAR * offset = szBuffer;
-#endif
 			total_length = 0;
-			while((ptr = _tcsstr(offset, _T("\x0D\x0A"))) != NULL)
+			while((ptr = strstr(offset, "\x0D\x0A")) != NULL)
 			{
 				long length = ((long )ptr - (long)offset);
-				length /= sizeof(TCHAR);
+				length /= sizeof(char);
 
-				offset[length] = _T('\0');
+				offset[length] = '\0';
 
 				string line = offset;
 				lines.push_back (line);
@@ -155,11 +119,7 @@ namespace System_
 
 		if (total_length < num)
 		{
-#ifdef UNICODE
-		m_BufferedLines = &wbuf[total_length];
-#else
-		m_BufferedLines = &szBuffer[total_length];
-#endif
+		    m_BufferedLines = &szBuffer[total_length];
 		}
 
 		return ret;

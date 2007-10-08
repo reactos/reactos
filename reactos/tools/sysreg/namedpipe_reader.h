@@ -118,7 +118,8 @@ protected:
 /// @param vect vector storing the extracted lines
 /// @param append_line if the line isnt fully read, the line is appended
 
-	void extractLines(TCHAR * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead);
+	void extractLines(char * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead);
+    void insertLine(std::vector<string> & vect, string line, bool append_line);
 
     bool readPipe(char * buffer, int bufferlength, long & read);
 
@@ -130,6 +131,7 @@ protected:
     WCHAR * m_WBuffer;
 #endif
 
+    static const char * s_LineBreak;
 	}; // end of class NamedPipeReader
 
 } // end of namespace System_

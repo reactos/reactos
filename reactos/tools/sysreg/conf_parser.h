@@ -62,7 +62,7 @@ namespace Sysreg_
 /// @param FileName path to configuration file
 /// @return bool
 
-	bool parseFile(TCHAR * FileName);
+	bool parseFile(char * FileName);
 
 //--------------------------------------------------------------------------------------
 ///

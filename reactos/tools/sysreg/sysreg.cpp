@@ -22,17 +22,17 @@ using Sysreg_::RosBootTest;
 using System_::SymbolFile;
 #endif
 
-static const TCHAR USAGE[] = 
-_T("sysreg.exe [conf_file]\nconfiguration file (default: sysreg.cfg)");
+static const char USAGE[] = 
+"sysreg.exe [conf_file]\nconfiguration file (default: sysreg.cfg)";
 
 
 
 
-int _tmain(int argc, TCHAR * argv[])
+int main(int argc, char * argv[])
 {
 	ConfigParser config;
-	TCHAR DefaultConfig[] = _T("sysreg.cfg");
-	TCHAR *ConfigFile;
+	char DefaultConfig[] = "sysreg.cfg";
+	char *ConfigFile;
 
 	if ((argc > 2))
 	{
@@ -65,7 +65,7 @@ int _tmain(int argc, TCHAR * argv[])
 	}
 	
 	string envvar;
-	string ros = _T("ROS_OUTPUT");
+	string ros = "ROS_OUTPUT";
 	config.getStringValue (ros, envvar);
 #if 0
 	SymbolFile::initialize (config, envvar);

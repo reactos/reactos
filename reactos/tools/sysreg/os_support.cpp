@@ -14,11 +14,15 @@ namespace System_
 
     OsSupport::TimeEntryVector OsSupport::s_Entries;
 
+    //int gettimeofday(struct timeval *tv, void * tz);
+
     void OsSupport::checkAlarms()
     {
         struct timeval tm;
 		size_t i;
-        gettimeofday(&tm, 0);
+#if 0
+//        gettimeofday(&tm, 0);
+#endif
         for (i = 0; i < s_Entries.size(); i++)
         {
             long diffsec = s_Entries[i]->tm.tv_sec - tm.tv_sec;
@@ -67,6 +71,40 @@ namespace System_
 
     HANDLE OsSupport::s_hThread = 0;
     static HANDLE hTimer;
+#if 0
+__inline int gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+    FILETIME        ft;
+    LARGE_INTEGER   li;
+    __int64         t;
+    static int      tzflag;
+
+    if (tv)
+    {
+        GetSystemTimeAsFileTime(&ft);
+        li.LowPart  = ft.dwLowDateTime;
+        li.HighPart = ft.dwHighDateTime;
+        t  = li.QuadPart;       /* In 100-nanosecond intervals */
+        t -= EPOCHFILETIME;     /* Offset to the Epoch time */
+        t /= 10;                /* In microseconds */
+        tv->tv_sec  = (long)(t / 1000000);
+        tv->tv_usec = (long)(t % 1000000);
+    }
+
+    if (tz)
+    {
+        if (!tzflag)
+        {
+            _tzset();
+            tzflag++;
+        }
+        tz->tz_minuteswest = _timezone / 60;
+        tz->tz_dsttime = _daylight;
+    }
+
+    return 0;
+}
+#endif
 	bool OsSupport::terminateProcess(OsSupport::ProcessID pid, int exitcode)
 	{
 		HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
@@ -80,14 +118,14 @@ namespace System_
 		return ret;
 	}
 
-	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs, bool wait)
+	OsSupport::ProcessID OsSupport::createProcess(char *procname, int procargsnum, char **procargs, bool wait)
 	{
 		STARTUPINFO siStartInfo;
 		PROCESS_INFORMATION piProcInfo; 
 		OsSupport::ProcessID pid;
         DWORD length = 0;
-        TCHAR * szBuffer;
-        TCHAR * cmd;
+        char * szBuffer;
+        char * cmd;
 		ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
 		ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
 
@@ -99,29 +137,36 @@ namespace System_
         {
             for (int i = 1; i < procargsnum; i++)
             {
-                length += _tcslen(procargs[i]);
+                length += strlen(procargs[i]);
             }
 
             length += procargsnum;
-            szBuffer = (TCHAR*)malloc(length * sizeof(TCHAR));
+            szBuffer = (char*)malloc(length * sizeof(char));
             length = 0;
             for (int i = 1; i < procargsnum; i++)
             {
-                _tcscpy(&szBuffer[length], procargs[i]);
-                length += _tcslen(procargs[i]);
-                szBuffer[length] = _T(' ');
+                strcpy(&szBuffer[length], procargs[i]);
+                length += strlen(procargs[i]);
+                if (i + 1 < procargsnum)
+                {
+                    szBuffer[length] = ' ';
+                }
+                else
+                {
+                    szBuffer[length] = '\0';
+                }
                 length++;
             }
-            length = _tcslen(procname) + _tcslen(szBuffer) + 2;
-            cmd = (TCHAR*)malloc(length * sizeof(TCHAR));
-            _tcscpy(cmd, procname);
-            _tcscat(cmd, _T(" "));
-            _tcscat(cmd, szBuffer);
+            length = strlen(procname) + strlen(szBuffer) + 2;
+            cmd = (char*)malloc(length * sizeof(char));
+            strcpy(cmd, procname);
+            strcat(cmd, " ");
+            strcat(cmd, szBuffer);
             free(szBuffer);
         }
         else
         {
-            cmd = _tcsdup(procname);
+            cmd = _strdup(procname);
 
         }
 		if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &siStartInfo, &piProcInfo))
@@ -151,7 +196,7 @@ namespace System_
     {
         LARGE_INTEGER   liDueTime;
 
-        hTimer = CreateWaitableTimer(NULL, TRUE, _T("SysRegTimer"));
+        hTimer = CreateWaitableTimer(NULL, TRUE, "SysRegTimer");
         if (!hTimer)
         {
             return 0;
@@ -168,13 +213,16 @@ namespace System_
 
     void OsSupport::setAlarm(long secs, OsSupport::ProcessID pid)
     {
-
+        return;
         PTIME_ENTRY entry = (PTIME_ENTRY) malloc(sizeof(TIME_ENTRY));
         if (entry)
         {
             cout << "secs: " << secs << endl;
             struct timeval tm;
+#if 0
             gettimeofday(&tm, 0);
+#else
+#endif
             tm.tv_sec += secs;
 
             entry->tm = tm;
@@ -194,7 +242,7 @@ namespace System_
 	struct sigaction OsSupport::s_sact;
 
 
-	OsSupport::ProcessID OsSupport::createProcess(TCHAR *procname, int procargsnum, TCHAR **procargs, bool bWait)
+	OsSupport::ProcessID OsSupport::createProcess(char *procname, int procargsnum, char **procargs, bool bWait)
 	{
 		ProcessID pid;
 

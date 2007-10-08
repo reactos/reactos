@@ -22,7 +22,10 @@
 #include "user_types.h"
 #include <ctime>
 #include <vector>
+
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
 
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 
@@ -66,7 +69,7 @@ namespace System_
 ///
 ///
 
-		static ProcessID createProcess(TCHAR * procname, int procargsnum, TCHAR ** procargs, bool wait);
+		static ProcessID createProcess(char * procname, int procargsnum, char ** procargs, bool wait);
 
 //---------------------------------------------------------------------------------------
 ///

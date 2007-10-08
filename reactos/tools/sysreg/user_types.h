@@ -14,32 +14,12 @@
 #include <iostream>
 
 #ifndef __LINUX__
- #include <tchar.h>
-#else
- #define TCHAR char
- #define tstrcpy strcpy
- #define _tcstok strtok
- #define _tcschr strchr
- #define _tcscat strcat
- #define _tcscpy(str1, str2) strcpy(str1, str2)
- #define _tcslen(str1) strlen(str1)
- #define _tcstod strtod
- #define _tcscmp strcmp
- #define _tcstoul strtoul
- #define _tcsncmp strncmp
- #define _tremove remove
- #define _ttoi atoi
- #define _T(x) x
- #define _tfopen fopen
- #define _tcsstr strstr
- #define _fgetts fgets
- #define _tgetenv getenv
- #define _tmain main
- #define _tcstol strtol
+#define popen _popen
+#define pclose _pclose
 #endif
 
-	typedef std::basic_string<TCHAR> string;
-	typedef std::basic_istringstream<TCHAR> istringstream;
+	typedef std::basic_string<char> string;
+	typedef std::basic_istringstream<char> istringstream;
 
 
 #ifdef UNICODE

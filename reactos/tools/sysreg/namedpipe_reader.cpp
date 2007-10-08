@@ -9,7 +9,6 @@
  */
 
 #include "namedpipe_reader.h"
-#include "unicode.h"
 
 #include <iostream>
 #include <assert.h>
@@ -18,13 +17,15 @@ namespace System_
 {
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
+#ifdef __LINUX__
+    const char * NamedPipeReader::s_LineBreak = "\x0A\0";
+#else
+    const char * NamedPipeReader::s_LineBreak = "\x0D\x0A\0";
+#endif
 	using std::vector;
 //---------------------------------------------------------------------------------------
     NamedPipeReader::NamedPipeReader() : DataSource(), h_Pipe(NULLVAL), m_Buffer(0)
 	{
-#ifdef UNICODE
-        m_WBuffer = 0;
-#endif
 	}
 
 //---------------------------------------------------------------------------------------
@@ -32,10 +33,6 @@ namespace System_
 	{
         if (m_Buffer)
             free(m_Buffer);
-#ifdef UNICODE
-        if (m_WBuffer)
-            free(m_WBuffer);
-#endif
 	}
 
 	bool NamedPipeReader::isSourceOpen()
@@ -76,14 +73,7 @@ namespace System_
                 m_BufferLength = 100;
                 m_Buffer = (char*)malloc(sizeof(char) * m_BufferLength);
             }
-
-#ifdef UNICODE
-            if (!m_WBuffer)
-            {
-                m_WBuffer = (WCHAR*)malloc(sizeof(WCHAR) * m_BufferLength);
-            }
-#endif
-		    ConnectNamedPipe(h_Pipe,
+            ConnectNamedPipe(h_Pipe,
                  			 0);
             return true;
 		}
@@ -112,6 +102,7 @@ namespace System_
 
 	bool NamedPipeReader::closeSource() 
 	{
+        cerr << "NamedPipeReader::closePipe> entered" << endl;
 		if (h_Pipe == NULLVAL)
 		{
 			cerr << "NamedPipeReader::closePipe> pipe is not open" << endl;
@@ -127,19 +118,87 @@ namespace System_
 		return true;
 	}
 //---------------------------------------------------------------------------------------
-	void NamedPipeReader::extractLines(TCHAR * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead)
+    void NamedPipeReader::insertLine(std::vector<string> & vect, string line, bool append_line)
+    {
+        if (append_line && vect.size ())
+        {
+            string prev = vect[vect.size () - 1];
+            prev += line;
+            vect[vect.size () - 1] = prev;
+        }
+        else
+        {
+            vect.push_back (line);
+        }
+
+    }
+//---------------------------------------------------------------------------------------
+	void NamedPipeReader::extractLines(char * buffer, std::vector<string> & vect, bool & append_line, unsigned long cbRead)
 	{
-		TCHAR * offset = _tcschr(buffer, _T('\x0D'));
-		DWORD buf_offset = 0;
+#if 0
+        long  offset = 0;
+        size_t start_size = vect.size ();
+        char * start = buffer;
+        buffer[cbRead] = _T('\0');
+		char * end = strstr(buffer, s_LineBreak);
+
+        //cout << "extractLines entered with append_line: " << append_line << " cbRead: " << cbRead << "buffer: " << buffer << endl;
+
+        do
+        {
+            if (end)
+            {
+                end[0] = _T('\0');
+                string line = start;
+                end += (sizeof(s_LineBreak) / sizeof(char));
+                start = end;
+                offset += line.length() + (sizeof(s_LineBreak) / sizeof(char));
+
+              //  cout << "Offset: "<< offset << "cbRead: " << cbRead << "line: " << line << endl;
+                insertLine(vect, line, append_line);
+                if (append_line)
+                {
+                    append_line = false;
+                }
+            }
+            else
+            {
+                string line = start;
+//                cout << "inserting line start_size: " << start_size << "current: " << vect.size () << "line length: "<< line.length () << endl;
+                if (!line.length ())
+                {
+                    if (start_size == vect.size ())
+                        append_line = true;
+                    break;
+                }
+                if (start_size == vect.size ())
+                {
+                    insertLine(vect, line, true);
+                }
+                else
+                {
+                    insertLine(vect, line, false);
+                }
+                append_line = true;
+                break;
+            }
+
+            end = strstr(end, s_LineBreak);
+
+        }while(append_line);
+
+#else
+        DWORD buf_offset = 0;
+		char * offset = strchr(buffer, '\x0D');
 		while(offset)
 		{
 			///
 			/// HACKHACK
-			/// due to some mysterious reason, _tcschr / _tcsstr sometimes returns
+			/// due to some mysterious reason, strchr / strstr sometimes returns
 			/// not always the offset to the CR character but to the next LF
 			/// in MSVC 2005 (Debug Modus)
 
-			if (offset[0] == _T('\x0A'))
+			if (offset[0] == '\x0A')
 			{
 				if (buf_offset)
 				{
@@ -152,10 +211,10 @@ namespace System_
 				}
 			}
 
-			if (offset[0] == _T('\x0D'))
+			if (offset[0] == '\x0D')
 			{
 				buf_offset += 2;
-				offset[0] = _T('\0');
+				offset[0] = '\0';
 				offset +=2;
 			}
 			else
@@ -188,11 +247,11 @@ namespace System_
 			}
 			buffer = offset;
 
-			offset = _tcsstr(buffer, _T("\n"));
+			offset = strstr(buffer, "\n");
 		}
 		if (buf_offset < cbRead)
 		{
-			buffer[cbRead - buf_offset] = _T('\0');
+			buffer[cbRead - buf_offset] = '\0';
 			string line = buffer;
 			if (append_line)
 			{
@@ -212,6 +271,7 @@ namespace System_
 		{
 			append_line = false;
 		}
+#endif
 	}
 //---------------------------------------------------------------------------------------
     bool NamedPipeReader::readPipe(char * buffer, int bufferlength, long & bytesread)
@@ -254,32 +314,16 @@ namespace System_
             return false;
         }
 
-#ifdef UNICODE
-        if (!m_WBuffer)
-        {
-            cerr << "Error: no memory" << endl;
-            return false;
-        }
-#endif
-
 		bool append_line = false;
 		do
 		{
             memset(m_Buffer, 0x0, m_BufferLength * sizeof(char));
             long cbRead = 0;
-                    
+
             if (!readPipe(m_Buffer, m_BufferLength-1, cbRead))
                 break;
 
-#ifdef UNICODE
-            memset(m_WBuffer, 0x0, m_BufferLength * sizeof(WCHAR));
-            if (!UnicodeConverter::ansi2Unicode(m_Buffer, m_WBuffer, cbRead))
-                break;
-            extractLines(m_WBuffer, vect, append_line, cbRead);
-#else
             extractLines(m_Buffer, vect, append_line, cbRead);
-#endif
-
         }while (append_line);
 
     return (vect.size () - lines);

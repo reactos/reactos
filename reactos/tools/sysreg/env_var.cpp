@@ -39,7 +39,7 @@ namespace System_
 			return true;
 		}
 		
-		TCHAR * value = _tgetenv(EnvName.c_str ());
+		char * value = getenv(EnvName.c_str ());
 		
 		if (!value)
 		{
@@ -47,7 +47,7 @@ namespace System_
 			return false;
 		}
 
-		if (!_tcslen(value))
+		if (!strlen(value))
 		{
 			cerr << "EnvironmentVariable::getValue found no value for " << EnvName << endl;
 			return false;
