@@ -59,7 +59,7 @@ namespace Sysreg_
 						if (value[value.length () -1] == 0xA)
 						{
 							// remove newline char
-							value[value.length ()-1] = _T('\0');
+							value[value.length ()-1] = '\0';
 						}
 */
 //                        cerr << "name: "<< name << "value: "<< value << "|" << endl;

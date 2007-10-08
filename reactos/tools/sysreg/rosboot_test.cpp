@@ -191,7 +191,7 @@ namespace Sysreg_
                              "create",
                              "-f",
 #ifdef __LINUX__
-                            _T("raw"),
+                            "raw",
 #else
                             "vmdk",
 #endif
