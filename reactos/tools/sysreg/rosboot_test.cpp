@@ -27,7 +27,8 @@
 #include <assert.h>
 #include <math.h>
 #include <signal.h>
-			
+#include <io.h>
+
 namespace Sysreg_
 {
 	using std::vector;
@@ -273,7 +274,7 @@ namespace Sysreg_
     {
         string pipe;
         string qemudir;
-
+        char pipename[] = "qemuXXXXXX";
         if (m_MaxMem.length() == 0)
         {
             /* set default memory size to 64M */
@@ -281,14 +282,35 @@ namespace Sysreg_
         }
 
 #ifdef __LINUX__
-        pipe = "pipe:/tmp/qemu";
-		m_Src = "/tmp/qemu";
+
+        if (_mktemp(pipename))
+        {
+            string temp = pipename;
+            m_Src = "/tmp/" + temp;
+            pipe = "pipe:" + m_Src;
+        }
+        else
+        {
+            pipe = "pipe:/tmp/qemu";
+		    m_Src = "/tmp/qemu";
+        }
+
         qemudir = "/usr/share/qemu";
         m_DebugPort = "pipe";
 #else		
-		pipe = "pipe:qemu";
-		m_Src = "\\\\.\\pipe\\qemu";
+        if (_mktemp(pipename))
+        {
+            string temp = pipename;
+    		pipe = "pipe:" + temp;
+		    m_Src = "\\\\.\\pipe\\" + temp;
+        }
+        else
+        {
+    		pipe = "pipe:qemu";
+		    m_Src = "\\\\.\\pipe\\qemu";
+        }
         m_DebugPort = "pipe";
+
         if (!getQemuDir(qemudir))
         {
             return false;

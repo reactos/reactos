@@ -50,7 +50,7 @@ namespace System_
 			return false;
 		}
 #ifndef __LINUX__
-		h_Pipe = CreateFile("\\\\.\\pipe\\qemu", //PipeCmd.c_str(),
+		h_Pipe = CreateFile(PipeCmd.c_str(),
 			                GENERIC_WRITE | GENERIC_READ,
 			                0,
 			                NULL,
@@ -139,7 +139,7 @@ namespace System_
         long  offset = 0;
         size_t start_size = vect.size ();
         char * start = buffer;
-        buffer[cbRead] = _T('\0');
+        buffer[cbRead] = '\0';
 		char * end = strstr(buffer, s_LineBreak);
 
         //cout << "extractLines entered with append_line: " << append_line << " cbRead: " << cbRead << "buffer: " << buffer << endl;
@@ -148,7 +148,7 @@ namespace System_
         {
             if (end)
             {
-                end[0] = _T('\0');
+                end[0] = '\0';
                 string line = start;
                 end += (sizeof(s_LineBreak) / sizeof(char));
                 start = end;
