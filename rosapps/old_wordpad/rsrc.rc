@@ -1,0 +1,18 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "resource.h"
+
+#include "lang/bg-BG.rc"
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/fi-FI.rc"
+#include "lang/fr-FR.rc"
+#include "lang/it-IT.rc"
+#include "lang/nb-NO.rc"
+#include "lang/nl-NL.rc"
+#include "lang/pl-PL.rc"
+#include "lang/ru-RU.rc"
+#include "lang/th-TH.rc"
+#include "lang/uk-UA.rc"
+#include "lang/zh-CN.rc"
+#include "lang/el-GR.rc"

@@ -1,0 +1,170 @@
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Fil"
+  BEGIN
+    MENUITEM "&Ny...",         ID_NEW
+    MENUITEM "&Åpne...",        ID_OPEN
+    MENUITEM SEPARATOR
+    MENUITEM "&Lukk\tCtrl+F4", ID_CLOSE, GRAYED
+    MENUITEM "L&ukk alt",      ID_CLOSEALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Lagre",           ID_SAVE, GRAYED
+    MENUITEM "Lagre &som...",     ID_SAVEAS, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Forhåndsvisning",  ID_PRINTPRE, GRAYED
+    MENUITEM "&Skriv ut...",       ID_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Utskrift &format...",  ID_PAGESETUP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "A&vslutt\tAlt+F4",   ID_EXIT
+  END
+  POPUP "&Rediger"
+  BEGIN
+    MENUITEM "&Angre",           ID_UNDO, GRAYED
+    MENUITEM "&Gjenta",           ID_REDO, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Klipp &ut",            ID_CUT, GRAYED
+    MENUITEM "&Kopier",           ID_COPY, GRAYED
+    MENUITEM "&Lim inn",          ID_PASTE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Rens",           -1, GRAYED
+    MENUITEM "Merk &alt",     ID_SELALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Finn...\tCtrl+F",-1, GRAYED
+    MENUITEM "Finn neste",       -1, GRAYED
+    MENUITEM "Erstatt\tCtrl+H", -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Objektegenskaper",-1, GRAYED
+    MENUITEM "Objekt",          -1, GRAYED
+  END
+  POPUP "&Vis"
+  BEGIN
+    MENUITEM "&Verktøylinje",        -1, CHECKED
+    MENUITEM "&Formatlinje",     -1, CHECKED
+    MENUITEM "&Linjal",          -1, CHECKED
+    MENUITEM "&Statuslinje",     ID_STATUSBAR, CHECKED
+  END
+  POPUP "&Sett inn"
+  BEGIN
+    MENUITEM "&Dato og tid...",-1, GRAYED
+    MENUITEM "&Objekt...",       -1, GRAYED
+  END
+  POPUP "&Format"
+  BEGIN
+    MENUITEM "&Skrift...",        -1 GRAYED
+    MENUITEM "Punktmerking",     -1, GRAYED
+    MENUITEM "Avsnitt...",    -1, GRAYED
+    MENUITEM "Tabulatorer...",         -1, GRAYED
+  END
+  POPUP "&Vindu"
+  BEGIN
+    MENUITEM "&Cascade",           ID_WINDOW_CASCADE
+    MENUITEM "Hele &Horisontalt", ID_WINDOW_TILE_HORZ
+    MENUITEM "Hele &Vertikalt",  ID_WINDOW_TILE_VERT
+    MENUITEM "&Ordne Ikoner",     ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "Nes&te\tCtrl+F6",     ID_WINDOW_NEXT
+  END
+  POPUP "&Hjelp"
+  BEGIN
+    MENUITEM "&Om...",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+
+    MENUITEM SEPARATOR
+
+  END
+END
+
+
+IDD_NEWDOCSEL DIALOGEX 6,6,159,67
+CAPTION "Ny"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  LTEXT "Ny dokument Type:", IDC_STATIC, 4, 3, 72, 9
+  LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
+  PUSHBUTTON "&OK", IDOK, 112, 16, 44, 13
+  PUSHBUTTON "&Avbryt", IDCANCEL, 112, 33, 44, 13
+END
+
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "Om WordPad"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "WordPad II v0.1\nCopyright (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON "Lukk", IDOK, 65, 162, 44, 15
+  ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE           "Denne programet er gratis programvare; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_DEFAULT_NAME      "Dokument %1!u!"
+  IDS_READY             " Klar."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_DOC_TYPE_RICH_TEXT    "Rik Tekst Dokument"
+  IDS_DOC_TYPE_UNICODE_TEXT "Tekst Dokument"
+  IDS_DOC_TYPE_TEXT         "Unicode Tekst Dokument"
+END
+
+
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW       "Ny"
+  IDS_TOOLTIP_OPEN      "Åpen"
+  IDS_TOOLTIP_SAVE      "Lagre"
+  IDS_TOOLTIP_PRINTPRE  "Forhåndsvisning"
+  IDS_TOOLTIP_PRINT     "Skriv ut"
+  IDS_TOOLTIP_CUT       "Klipp ut"
+  IDS_TOOLTIP_COPY      "Kopiere"
+  IDS_TOOLTIP_PASTE     "Paste"
+  IDS_TOOLTIP_UNDO      "Angre"
+  IDS_TOOLTIP_REDO      "Gjenta"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " Opprette et nytt dokument."
+  IDS_HINT_OPEN         " Åpene en eksisterende dokument."
+  IDS_HINT_CLOSE        " Lukk dette vinduet."
+  IDS_HINT_CLOSEALL     " Lukk alle vinduer."
+  IDS_HINT_SAVE         " Lagre aktive dokument."
+  IDS_HINT_SAVEAS       " Lagre aktive dokument med nytt navn."
+  IDS_HINT_PRINT        " Skriv ut aktive dokument."
+  IDS_HINT_PRINTPRE     " Forhåndsvis utskrevet dokument."
+  IDS_HINT_PAGESETUP    " Endre side utsende instillinger."
+  IDS_HINT_EXIT         " Avslutt denne applikasjonen."
+
+  IDS_HINT_CASCADE      " Ordne vinduer så de ikke overlapper."
+  IDS_HINT_TILE_HORZ    " Ordne vinduer som de ikke overlapper tittelen."
+  IDS_HINT_TILE_VERT    " Ordne vinduer som de ikke overlapper tittelen."
+  IDS_HINT_ARRANGE      " Ordne ikoner ved knappen av vinduet."
+  IDS_HINT_NEXT         " Aktivere neste vindu."
+
+  IDS_HINT_SYS_RESTORE  " Endre vinduet til normal størrelse."
+  IDS_HINT_SYS_MOVE     " Flytt vinduet."
+  IDS_HINT_SYS_SIZE     " Endre vinduet størrelse."
+  IDS_HINT_SYS_MINIMIZE " Endre vinduet til en ikon."
+  IDS_HINT_SYS_MAXIMIZE " Endre vinduet til å fylle skjermen."
+END
+
+

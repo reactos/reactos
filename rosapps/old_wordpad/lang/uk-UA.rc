@@ -1,0 +1,177 @@
+/*
+ * PROJECT:     ReactOS Document Editor
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/wordpad/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for WordPad
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Файл"
+  BEGIN
+    MENUITEM "&Створити...",           ID_NEW
+    MENUITEM "&Відкрити...",           ID_OPEN
+    MENUITEM SEPARATOR
+    MENUITEM "&Закрити\tCtrl+F4",      ID_CLOSE, GRAYED
+    MENUITEM "З&акрити все",           ID_CLOSEALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "З&берегти",              ID_SAVE, GRAYED
+    MENUITEM "Зберегти &як...",        ID_SAVEAS, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Попередній перегляд",   ID_PRINTPRE, GRAYED
+    MENUITEM "Друк&...",               ID_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Пара&метри сторінки...", ID_PAGESETUP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "В&ихід\tAlt+F4",         ID_EXIT
+  END
+  POPUP "&Правка"
+  BEGIN
+    MENUITEM "&Скасувати",           ID_UNDO, GRAYED
+    MENUITEM "Пов&торити",           ID_REDO, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Вирізати",            ID_CUT, GRAYED
+    MENUITEM "&Копіювати",           ID_COPY, GRAYED
+    MENUITEM "Вст&авити",            ID_PASTE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "О&чистити",            -1, GRAYED
+    MENUITEM "Виді&лити все",        ID_SELALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "З&найти...\tCtrl+F",   -1, GRAYED
+    MENUITEM "Зна&йти далі",         -1, GRAYED
+    MENUITEM "&Замінити\tCtrl+H",    -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Властивості об'&єкта", -1, GRAYED
+    MENUITEM "Об'єкт",               -1, GRAYED
+  END
+  POPUP "&Вигляд"
+  BEGIN
+    MENUITEM "Панель &інструментів", -1, CHECKED
+    MENUITEM "П&анель форматування", -1, CHECKED
+    MENUITEM "&Лінійка",             -1, CHECKED
+    MENUITEM "&Рядок стану",         ID_STATUSBAR, CHECKED
+  END
+  POPUP "Вст&авка"
+  BEGIN
+    MENUITEM "&Дата й час...",  -1, GRAYED
+    MENUITEM "О&б'єкт...",      -1, GRAYED
+  END
+  POPUP "Фор&мат"
+  BEGIN
+    MENUITEM "&Шрифт...",       -1 GRAYED
+    MENUITEM "&Маркер",         -1, GRAYED
+    MENUITEM "&Абзац...",       -1, GRAYED
+    MENUITEM "&Табуляція...",   -1, GRAYED
+  END
+  POPUP "&Вікно"
+  BEGIN
+    MENUITEM "&Каскадом",          ID_WINDOW_CASCADE
+    MENUITEM "&Горизонтально",     ID_WINDOW_TILE_HORZ
+    MENUITEM "&Вертикально",       ID_WINDOW_TILE_VERT
+    MENUITEM "Упорядкувати &значки", ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "&Наступне\tCtrl+F6", ID_WINDOW_NEXT
+  END
+  POPUP "&Довідка"
+  BEGIN
+    MENUITEM "&Про програму...",   ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+
+    MENUITEM SEPARATOR
+
+  END
+END
+
+
+IDD_NEWDOCSEL DIALOGEX 6,6,159,67
+CAPTION "Новий документ"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  LTEXT "Тип нового документа:", IDC_STATIC, 4, 3, 72, 9
+  LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
+  PUSHBUTTON "&OK", IDOK, 112, 16, 44, 13
+  PUSHBUTTON "&Скасувати", IDCANCEL, 112, 33, 44, 13
+END
+
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "Про програму WordPad"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "WordPad II v0.1\nCopyright (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON "Закрити", IDOK, 65, 162, 44, 15
+  ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_DEFAULT_NAME      "Документ %1!u!"
+  IDS_READY             " Виконано."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_DOC_TYPE_RICH_TEXT    "Документ у форматі RTF"
+  IDS_DOC_TYPE_UNICODE_TEXT "Текстовий документ"
+  IDS_DOC_TYPE_TEXT         "Текстовий документ у кодуванні Юнікод"
+END
+
+
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW       "Створити"
+  IDS_TOOLTIP_OPEN      "Відкрити"
+  IDS_TOOLTIP_SAVE      "Зберегти"
+  IDS_TOOLTIP_PRINTPRE  "Попередній перегляд"
+  IDS_TOOLTIP_PRINT     "Друк"
+  IDS_TOOLTIP_CUT       "Вирізати"
+  IDS_TOOLTIP_COPY      "Копіювати"
+  IDS_TOOLTIP_PASTE     "Вставити"
+  IDS_TOOLTIP_UNDO      "Скасувати"
+  IDS_TOOLTIP_REDO      "Повернути"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " Створення нового документа."
+  IDS_HINT_OPEN         " Відкриття існуючого документа."
+  IDS_HINT_CLOSE        " Закриття цього вікна."
+  IDS_HINT_CLOSEALL     " Закриття всіх вікон."
+  IDS_HINT_SAVE         " Збереження активного документа."
+  IDS_HINT_SAVEAS       " Збереження активного документа під новим ім'ям."
+  IDS_HINT_PRINT        " Друк активного документа."
+  IDS_HINT_PRINTPRE     " Попередній перегляд документа перед друком."
+  IDS_HINT_PAGESETUP    " Зміна параметрів сторінки."
+  IDS_HINT_EXIT         " Вихід з цієї програми."
+
+  IDS_HINT_CASCADE      " Розташування вікон з перекриттям."
+  IDS_HINT_TILE_HORZ    " Розташування вікон без перекриття."
+  IDS_HINT_TILE_VERT    " Розташування вікон без перекриття."
+  IDS_HINT_ARRANGE      " Упорядкування значків в нижній частині вікна."
+  IDS_HINT_NEXT         " Перехід до вікна наступного документа."
+
+  IDS_HINT_SYS_RESTORE  " Відновлення вихідних розмірів вікна."
+  IDS_HINT_SYS_MOVE     " Зміна розташування вікна."
+  IDS_HINT_SYS_SIZE     " Зміна розмірів вікна."
+  IDS_HINT_SYS_MINIMIZE " Згортання вікна до значка."
+  IDS_HINT_SYS_MAXIMIZE " Розгортання вікна до розмірів екрана."
+END
+

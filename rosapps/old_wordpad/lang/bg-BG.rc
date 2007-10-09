@@ -1,0 +1,170 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Файл"
+  BEGIN
+    MENUITEM "&Нов...",         ID_NEW
+    MENUITEM "&Отваряне...",        ID_OPEN
+    MENUITEM SEPARATOR
+    MENUITEM "&Затваряне\tCtrl+F4", ID_CLOSE, GRAYED
+    MENUITEM "За&тваряне на всички",      ID_CLOSEALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Запис",           ID_SAVE, GRAYED
+    MENUITEM "Запис &като...",     ID_SAVEAS, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Печатен из&глед",  ID_PRINTPRE, GRAYED
+    MENUITEM "Раз&печатване...",       ID_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Настройка на &страницата...",  ID_PAGESETUP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Из&ход\tAlt+F4",   ID_EXIT
+  END
+  POPUP "&Обработка"
+  BEGIN
+    MENUITEM "&Отмяна",           ID_UNDO, GRAYED
+    MENUITEM "&Връщане",           ID_REDO, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "От&рязване",            ID_CUT, GRAYED
+    MENUITEM "За&помняне",           ID_COPY, GRAYED
+    MENUITEM "&Поставяне",          ID_PASTE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Изчистване",           -1, GRAYED
+    MENUITEM "Избор на вси&чки",     ID_SELALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&Търсене...\tCtrl+F",-1, GRAYED
+    MENUITEM "Търсене на следващото",       -1, GRAYED
+    MENUITEM "Замяна\tCtrl+H", -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Свойства на предмета",-1, GRAYED
+    MENUITEM "Предмет",          -1, GRAYED
+  END
+  POPUP "Из&глед"
+  BEGIN
+    MENUITEM "Лента за &средства",        -1, CHECKED
+    MENUITEM "Лента за о&формление",     -1, CHECKED
+    MENUITEM "&Линия",          -1, CHECKED
+    MENUITEM "&Лента на състоянието",     ID_STATUSBAR, CHECKED
+  END
+  POPUP "&Поставяне"
+  BEGIN
+    MENUITEM "&Дата и време...",-1, GRAYED
+    MENUITEM "&Предмет...",       -1, GRAYED
+  END
+  POPUP "&Оформление"
+  BEGIN
+    MENUITEM "&Шрифт...",        -1 GRAYED
+    MENUITEM "Водачи",     -1, GRAYED
+    MENUITEM "Абзац...",    -1, GRAYED
+    MENUITEM "Закачалки (tab)...",         -1, GRAYED
+  END
+  POPUP "&Прозорец"
+  BEGIN
+    MENUITEM "&Надипляне",           ID_WINDOW_CASCADE
+    MENUITEM "Водо&равно настелване", ID_WINDOW_TILE_HORZ
+    MENUITEM "От&весно настелване",   ID_WINDOW_TILE_VERT
+    MENUITEM "&Подреждане на значетата",     ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "Сле&дващ\tCtrl+F6",     ID_WINDOW_NEXT
+  END
+  POPUP "Помо&щ"
+  BEGIN
+    MENUITEM "&За...",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+
+    MENUITEM SEPARATOR
+
+  END
+END
+
+
+IDD_NEWDOCSEL DIALOGEX 6,6,170,67
+CAPTION "Нов"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  LTEXT "Вид на новия документ:", IDC_STATIC, 4, 3, 130, 9
+  LISTBOX IDC_LIST, 1, 16, 125, 46, WS_TABSTOP //Удължен
+  PUSHBUTTON "&Добре", IDOK, 128, 16, 40, 13
+  PUSHBUTTON "&Отказ", IDCANCEL, 128, 33, 40, 13
+END
+
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "За приложението"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "Тетрадка (Wordpad) II v0.1\nВъзпроизводствено право (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON "Затваряне", IDOK, 65, 162, 44, 15
+  ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_DEFAULT_NAME      "Документ %1!u!"
+  IDS_READY             " Готов."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_DOC_TYPE_RICH_TEXT    "Обогатен словесен документ (RTF)"
+  IDS_DOC_TYPE_UNICODE_TEXT "Словесен документ"
+  IDS_DOC_TYPE_TEXT         "Словесен документ в УНИКОД"
+END
+
+
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW       "Нов"
+  IDS_TOOLTIP_OPEN      "Отваряне"
+  IDS_TOOLTIP_SAVE      "Запис"
+  IDS_TOOLTIP_PRINTPRE  "Печатен изглед"
+  IDS_TOOLTIP_PRINT     "Печат"
+  IDS_TOOLTIP_CUT       "Изрязване"
+  IDS_TOOLTIP_COPY      "Запомняне"
+  IDS_TOOLTIP_PASTE     "Поставяне"
+  IDS_TOOLTIP_UNDO      "Връщане"
+  IDS_TOOLTIP_REDO      "Отмяна"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " Създава нов документ."
+  IDS_HINT_OPEN         " Отвяря съшествуващ документ."
+  IDS_HINT_CLOSE        " Затваря този прозорец."
+  IDS_HINT_CLOSEALL     " Затваря всички прозорци."
+  IDS_HINT_SAVE         " Записва текущия документ."
+  IDS_HINT_SAVEAS       " Записва текущия документ под ново име."
+  IDS_HINT_PRINT        " Разпечатва текущия документ."
+  IDS_HINT_PRINTPRE     " Преглед на текущия документ."
+  IDS_HINT_PAGESETUP    " Променя настройките за подредбата на страницата."
+  IDS_HINT_EXIT         " Излиза от това приложение."
+
+  IDS_HINT_CASCADE      " Подреждане на прозорците така, че да се застъпват."
+  IDS_HINT_TILE_HORZ    " Подреждане на прозорците като незастъпващи се плочки."
+  IDS_HINT_TILE_VERT    " Подреждане на прозорците като незастъпващи се плочки."
+  IDS_HINT_ARRANGE      " Подреждане на значетата в дъното на прозореца."
+  IDS_HINT_NEXT         " Задействане на следващия прозорец."
+
+  IDS_HINT_SYS_RESTORE  " Връщане на прозореца в обичайния му размер."
+  IDS_HINT_SYS_MOVE     " Преместване на този прозорец."
+  IDS_HINT_SYS_SIZE     " Преоразмерява този прозорец."
+  IDS_HINT_SYS_MINIMIZE " Смалява прозореца в значе."
+  IDS_HINT_SYS_MAXIMIZE " Разширява прозореца, за да запълни работното поле."
+END
+
+

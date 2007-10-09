@@ -1,0 +1,189 @@
+/*
+ *  ReactOS Document Editor
+ *
+ *  Copyright (C) 2006 Ged Murphy
+ *  Copyright (C) 2006 Sumath Aowsakulsutthi (Thai translation)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "แ&ฟ้ม"
+  BEGIN
+    MENUITEM "ใ&หม่...",        ID_NEW
+    MENUITEM "เ&ปิด...",        ID_OPEN
+    MENUITEM SEPARATOR
+    MENUITEM "ปิ&ด\tCtrl+F4",   ID_CLOSE, GRAYED
+    MENUITEM "ปิด &ทั้งหมด",    ID_CLOSEALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&บันทึก",         ID_SAVE, GRAYED
+    MENUITEM "บันทึก เป็&น...", ID_SAVEAS, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&ภาพก่อนพิมพ์",   ID_PRINTPRE, GRAYED
+    MENUITEM "&พิมพ์...",       ID_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&ตั้งค่าหน้ากระดาษ...", ID_PAGESETUP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&ออกจากโปรแกรม\tAlt+F4", ID_EXIT
+  END
+  POPUP "แ&ก้ไข"
+  BEGIN
+    MENUITEM "เ&ลิกทำ",         ID_UNDO, GRAYED
+    MENUITEM "&ย้อนกลับ",       ID_REDO, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "&ตัด",            ID_CUT, GRAYED
+    MENUITEM "&คัดลอก",         ID_COPY, GRAYED
+    MENUITEM "&วาง",            ID_PASTE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ล้า&ง",           -1, GRAYED
+    MENUITEM "เ&ลือกทั้งหมด",   ID_SELALL, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ค้น&หา...\tCtrl+F",-1, GRAYED
+    MENUITEM "หาต่อไป",         -1, GRAYED
+    MENUITEM "แทนที่\tCtrl+H",  -1, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "คุณสมบัติของวัตถุ",-1, GRAYED
+    MENUITEM "วัตถุ",           -1, GRAYED
+  END
+  POPUP "&มุมมอง"
+  BEGIN
+    MENUITEM "แ&ถบเครื่องมือ",  -1, CHECKED
+    MENUITEM "แถบ&รูปแบบ",      -1, CHECKED
+    MENUITEM "แถบไม้บรรทั&ด",   -1, CHECKED
+    MENUITEM "แถบ&สถานะ",       ID_STATUSBAR, CHECKED
+  END
+  POPUP "แทร&ก"
+  BEGIN
+    MENUITEM "&วันที่และเวลา...",-1, GRAYED
+    MENUITEM "วั&ตถุ...",       -1, GRAYED
+  END
+  POPUP "&รูปแบบ"
+  BEGIN
+    MENUITEM "&ตัวอักษร...",    -1 GRAYED
+    MENUITEM "หัวข้อย่อย",      -1, GRAYED
+    MENUITEM "ระยะบรรทัด...",   -1, GRAYED
+    MENUITEM "ตั้งกั้นหน้า...", -1, GRAYED
+  END
+  POPUP "&หน้าต่าง"
+  BEGIN
+    MENUITEM "จัดเป็น&ชั้น",    ID_WINDOW_CASCADE
+    MENUITEM "จัดแนว&นอน",      ID_WINDOW_TILE_HORZ
+    MENUITEM "จัดแนว&ตั้ง",     ID_WINDOW_TILE_VERT
+    MENUITEM "&จัดเรียงสัญรูป", ID_WINDOW_ARRANGE
+    MENUITEM SEPARATOR
+    MENUITEM "&ถัดไป\tCtrl+F6", ID_WINDOW_NEXT
+  END
+  POPUP "&ช่วยเหลือ"
+  BEGIN
+    MENUITEM "&เกี่ยวกับ...",   ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "เปิดหน้าต่างใหม่"
+  BEGIN
+
+    MENUITEM SEPARATOR
+
+  END
+END
+
+
+IDD_NEWDOCSEL DIALOGEX 6,6,159,67
+CAPTION "สร้างใหม่"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  LTEXT "รูปแบบเอกสารใหม่:", IDC_STATIC, 4, 3, 72, 9
+  LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
+  PUSHBUTTON "&ตกลง", IDOK, 112, 16, 44, 13
+  PUSHBUTTON "&ยกเลิก", IDCANCEL, 112, 33, 44, 13
+END
+
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "เกี่ยวกับ WordPad"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "WordPad II v0.1\nสงวนลิขสิทธิ์ (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON "ปิด", IDOK, 65, 162, 44, 15
+  ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_DEFAULT_NAME      "เอกสาร %1!u!"
+  IDS_READY             " เสร็จแล้ว."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_DOC_TYPE_RICH_TEXT    "Rich Text Document"
+  IDS_DOC_TYPE_UNICODE_TEXT "Text Document"
+  IDS_DOC_TYPE_TEXT         "Unicode Text Document"
+END
+
+
+
+/* Tooltips */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_NEW       "ใหม่"
+  IDS_TOOLTIP_OPEN      "เปิด"
+  IDS_TOOLTIP_SAVE      "บันทึก"
+  IDS_TOOLTIP_PRINTPRE  "ภาพก่อนพิมพ์"
+  IDS_TOOLTIP_PRINT     "พิมพ์"
+  IDS_TOOLTIP_CUT       "ตัด"
+  IDS_TOOLTIP_COPY      "คัดลอก"
+  IDS_TOOLTIP_PASTE     "วาง"
+  IDS_TOOLTIP_UNDO      "เลิกทำ"
+  IDS_TOOLTIP_REDO      "ย้อนกลับ"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " สร้างเอกสารใหม่"
+  IDS_HINT_OPEN         " เปิดเอกสารที่ได้ทำแล้ว"
+  IDS_HINT_CLOSE        " ปิดหน้าต่างนี้"
+  IDS_HINT_CLOSEALL     " ปิดหน้าต่างทั้งหมด"
+  IDS_HINT_SAVE         " บันทึกเอกสารปัจจุบัน"
+  IDS_HINT_SAVEAS       " บันทึกเอกสารปัจจุบันด้วยชื่อใหม่"
+  IDS_HINT_PRINT        " พิมพ์เอกสารปัจจุบัน"
+  IDS_HINT_PRINTPRE     " มองภาพก่อนพิมพ์ของเอกสาร"
+  IDS_HINT_PAGESETUP    " เปลี่ยนการตั้งค่าหน้ากระดาษ"
+  IDS_HINT_EXIT         " ออกจากโปรแกรมนี้"
+
+  IDS_HINT_CASCADE      " จัดเรียงหน้าต่างให้วางซ้อนกัน"
+  IDS_HINT_TILE_HORZ    " จัดเรียงหน้าต่างวางเรียงในแนวนอน"
+  IDS_HINT_TILE_VERT    " จัดเรียงหน้าต่างวางเรียงในแนวตั้ง"
+  IDS_HINT_ARRANGE      " จัดเรียงสัญรูปที่ด้านล่างของหน้าต่าง"
+  IDS_HINT_NEXT         " ทำงานที่หน้าต่างถัดไป"
+
+  IDS_HINT_SYS_RESTORE  " ฟื้นฟูหน้าต่างนี้สู่ขนาดปกติ"
+  IDS_HINT_SYS_MOVE     " เคลื่อนย้ายหน้าต่างนี้"
+  IDS_HINT_SYS_SIZE     " เปลี่ยนขนาดหน้าต่างนี้"
+  IDS_HINT_SYS_MINIMIZE " ย่อขนาดหน้าต่างนี้ไปเป็นสัญรูป"
+  IDS_HINT_SYS_MAXIMIZE " ขยายขนาดหน้าต่างนี้ให้พอดีกับจอภาพ"
+END
