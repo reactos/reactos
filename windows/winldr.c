@@ -95,6 +95,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Construct SystemRoot and ArcBoot from SystemPath */
 	PathSeparator = strstr(SystemPath, "\\") - SystemPath;
 	strncpy(ArcBoot, SystemPath, PathSeparator);
+	ArcBoot[PathSeparator] = 0;
 	strcpy(SystemRoot, &SystemPath[PathSeparator]);
 	strcat(SystemRoot, "\\");
 
