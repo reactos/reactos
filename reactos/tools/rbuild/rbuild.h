@@ -214,7 +214,9 @@ public:
 	std::vector<Module*> modules;
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<If*> ifs;
+	int asmFiles; // number of .asm files in compilationUnits
 
+	IfableData();
 	~IfableData();
 	void ProcessXML();
 	void ExtractModules( std::vector<Module*> &modules );

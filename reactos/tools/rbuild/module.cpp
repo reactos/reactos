@@ -183,6 +183,11 @@ ToLower ( string filename )
 	return filename;
 }
 
+IfableData::IfableData( )
+	: asmFiles ( 0 )
+{
+}
+
 void IfableData::ExtractModules( std::vector<Module*> &modules )
 {
 	size_t i;
@@ -582,11 +587,27 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				parseContext.ifData->data.compilationUnits.push_back ( pCompilationUnit );
 			else
 			{
-				string ext = GetExtension ( e.value );
-				if ( !stricmp ( ext.c_str(), ".idl" ) )
-					non_if_data.compilationUnits.insert ( non_if_data.compilationUnits.begin(), pCompilationUnit );
-				else
+				string ext = ToLower ( GetExtension ( e.value ) );
+				if ( ext == ".idl" )
+				{
+					// put .idl files at the start of the module
+					non_if_data.compilationUnits.insert (
+						non_if_data.compilationUnits.begin(),
+						pCompilationUnit );
+				}
+				else if ( ext == ".asm" || ext == ".s" )
+				{
+					// put .asm files at the end of the module
 					non_if_data.compilationUnits.push_back ( pCompilationUnit );
+					non_if_data.asmFiles++;
+				}
+				else
+				{
+					// put other files in the middle
+					non_if_data.compilationUnits.insert (
+						non_if_data.compilationUnits.end() - non_if_data.asmFiles,
+						pCompilationUnit );
+				}
 			}
 		}
 		if ( parseContext.ifData )
