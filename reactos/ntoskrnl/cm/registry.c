@@ -97,11 +97,21 @@ CmiWorkerThread(PVOID Param)
                     !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
                 {
                     ObDereferenceObject(CurrentKey);
+                    if (CurrentEntry == CmiKeyObjectListHead.Blink)
+                    {
+                        DPRINT("Registry loop detected! Crashing\n");
+                        KEBUGCHECK(0);
+                    }
                     CurrentEntry = CmiKeyObjectListHead.Blink;
                     Count++;
                 }
                 else
                 {
+                    if (CurrentEntry == CurrentEntry->Blink)
+                    {
+                        DPRINT("Registry loop detected! Crashing\n");
+                        KEBUGCHECK(0);
+                    }
                     CurrentEntry = CurrentEntry->Blink;
                 }
             }
