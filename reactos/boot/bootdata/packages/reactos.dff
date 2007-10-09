@@ -67,7 +67,7 @@ base\applications\mscutils\servman\servman.exe          1
 base\applications\shutdown\shutdown.exe                 1
 base\applications\sndvol32\sndvol32.exe                 1
 base\applications\taskmgr\taskmgr.exe                   1
-base\applications\wine_wordpad\wordpad.exe              1
+base\applications\wordpad\wordpad.exe                   1
 
 base\services\dhcp\dhcp.exe                         1
 base\services\eventlog\eventlog.exe                 1
