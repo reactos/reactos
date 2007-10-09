@@ -64,4 +64,7 @@
 <directory name="wordpad">
 	<xi:include href="wordpad/wordpad.rbuild" />
 </directory>
+<directory name="wine_wordpad">
+	<xi:include href="wine_wordpad/wine_wordpad.rbuild" />
+</directory>
 </group>

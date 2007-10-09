@@ -1,0 +1,76 @@
+/*
+ * Copyright 2004 by Krzysztof Foltman
+ * Copyright 2007 by Alexander N. Sørnes <alex@thehandofagony.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include <windef.h>
+#include <winuser.h>
+
+#include "resource.h"
+
+MAINACCELTABLE ACCELERATORS
+BEGIN
+    "1",          ID_BACK_1,          VIRTKEY, CONTROL
+    "2",          ID_BACK_2,          VIRTKEY, CONTROL
+    "L",          ID_ALIGN_LEFT,      VIRTKEY, CONTROL    
+    "E",          ID_ALIGN_CENTER,    VIRTKEY, CONTROL    
+    "R",          ID_ALIGN_RIGHT,     VIRTKEY, CONTROL    
+    "F",          ID_FIND,            VIRTKEY, CONTROL
+    VK_F3,        ID_FIND_NEXT,       VIRTKEY
+    "H",          ID_REPLACE,         VIRTKEY, CONTROL
+    "A",          ID_EDIT_SELECTALL,  VIRTKEY, CONTROL    
+    "X",          ID_EDIT_CUT,        VIRTKEY, CONTROL    
+    "C",          ID_EDIT_COPY,       VIRTKEY, CONTROL    
+    "Z",          ID_EDIT_UNDO,       VIRTKEY, CONTROL    
+    "Y",          ID_EDIT_REDO,       VIRTKEY, CONTROL    
+    "B",          ID_FORMAT_BOLD,     VIRTKEY, CONTROL    
+    "I",          ID_FORMAT_ITALIC,   VIRTKEY, CONTROL    
+    "U",          ID_FORMAT_UNDERLINE,VIRTKEY, CONTROL
+    "N",          ID_FILE_NEW,        VIRTKEY, CONTROL    
+    "O",          ID_FILE_OPEN,       VIRTKEY, CONTROL    
+    "S",          ID_FILE_SAVE,       VIRTKEY, CONTROL    
+    "P",          ID_PRINT,           VIRTKEY, CONTROL
+END
+
+/* @makedep: toolbar.bmp */
+IDB_TOOLBAR BITMAP "toolbar.bmp"
+
+/* @makedep: formatbar.bmp */
+IDB_FORMATBAR BITMAP "formatbar.bmp"
+
+/* @makedep: wordpad.ico */
+IDI_WORDPAD ICON "wordpad.ico"
+
+/* @makedep: rtf.ico */
+IDI_RTF ICON "rtf.ico"
+
+/* @makedep: wri.ico */
+IDI_WRI ICON "wri.ico"
+
+/* @makedep: txt.ico */
+IDI_TXT ICON "txt.ico"
+
+#include "De.rc"
+#include "En.rc"
+#include "Fr.rc"
+#include "Hu.rc"
+#include "Ko.rc"
+#include "Nl.rc"
+#include "No.rc"
+#include "Pl.rc"
+#include "Ru.rc"
+#include "Tr.rc"
