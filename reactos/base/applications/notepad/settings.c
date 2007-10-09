@@ -22,9 +22,7 @@
 
 #include <notepad.h>
 
-static const TCHAR s_szRegistryKey[] = { 'S','o','f','t','w','a','r','e',
-	'\\','M','i','c','r','o','s','o','f','t',
-	'\\','N','o','t','e','p','a','d',0 };
+static LPCTSTR s_szRegistryKey = _T("Software\\Microsoft\\Notepad");
 
 
 static LONG HeightFromPointSize(DWORD dwPointSize)
@@ -55,49 +53,31 @@ static DWORD PointSizeFromHeight(LONG lHeight)
 	return dwPointSize;
 }
 
-static BOOL QueryGeneric(HKEY hKey, LPCSTR pszValueName, DWORD dwExpectedType,
+static BOOL QueryGeneric(HKEY hKey, LPCTSTR pszValueNameT, DWORD dwExpectedType,
 	LPVOID pvResult, DWORD dwResultSize)
 {
-	WCHAR szValueW[32];
-	LPCTSTR pszValueNameT;
 	DWORD dwType, cbData;
-	LPVOID *pTemp;
-	BOOL bSuccess = FALSE;
+    LPVOID *pTemp = _alloca(dwResultSize);
 
-#ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, 0, pszValueName, -1, szValueW, sizeof(szValueW) / sizeof(szValueW[0]));
-	pszValueNameT = szValueW;
-#else
-	pszValueNameT = pszValueName;
-#endif
-
-	pTemp = HeapAlloc(GetProcessHeap(), 0, dwResultSize);
-	if (!pTemp)
-		goto done;
-	memset(pTemp, 0, dwResultSize);
+    ZeroMemory(pTemp, dwResultSize);
 
 	cbData = dwResultSize;
 	if (RegQueryValueEx(hKey, pszValueNameT, NULL, &dwType, (LPBYTE) pTemp, &cbData) != ERROR_SUCCESS)
-		goto done;
+        return FALSE;
 
 	if (dwType != dwExpectedType)
-		goto done;
+        return FALSE;
 
 	memcpy(pvResult, pTemp, cbData);
-	bSuccess = TRUE;
-
-done:
-	if (pTemp)
-		HeapFree(GetProcessHeap(), 0, pTemp);
-	return bSuccess;
+    return TRUE;
 }
 
-static BOOL QueryDword(HKEY hKey, LPCSTR pszValueName, DWORD *pdwResult)
+static BOOL QueryDword(HKEY hKey, LPCTSTR pszValueName, DWORD *pdwResult)
 {
 	return QueryGeneric(hKey, pszValueName, REG_DWORD, pdwResult, sizeof(*pdwResult));
 }
 
-static BOOL QueryByte(HKEY hKey, LPCSTR pszValueName, BYTE *pbResult)
+static BOOL QueryByte(HKEY hKey, LPCTSTR pszValueName, BYTE *pbResult)
 {
 	DWORD dwResult;
 	if (!QueryGeneric(hKey, pszValueName, REG_DWORD, &dwResult, sizeof(dwResult)))
@@ -108,7 +88,7 @@ static BOOL QueryByte(HKEY hKey, LPCSTR pszValueName, BYTE *pbResult)
 	return TRUE;
 }
 
-static BOOL QueryBool(HKEY hKey, LPCSTR pszValueName, BOOL *pbResult)
+static BOOL QueryBool(HKEY hKey, LPCTSTR pszValueName, BOOL *pbResult)
 {
 	DWORD dwResult;
 	if (!QueryDword(hKey, pszValueName, &dwResult))
@@ -117,9 +97,9 @@ static BOOL QueryBool(HKEY hKey, LPCSTR pszValueName, BOOL *pbResult)
 	return TRUE;
 }
 
-static BOOL QueryString(HKEY hKey, LPCSTR pszValueName, LPTSTR pszResult, DWORD dwResultSize)
+static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD dwResultSize)
 {
-	return QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultSize * sizeof(*pszResult));
+    return QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultSize * sizeof(TCHAR));
 }
 
 void LoadSettings(void)
@@ -130,20 +110,20 @@ void LoadSettings(void)
 
 	if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
 	{
-		QueryByte(hKey,		"lfCharSet",		&Globals.lfFont.lfCharSet);
-		QueryByte(hKey,		"lfClipPrecision",	&Globals.lfFont.lfClipPrecision);
-		QueryDword(hKey,	"lfEscapement",		(DWORD*)&Globals.lfFont.lfEscapement);
-		QueryString(hKey,	"lfFaceName",		Globals.lfFont.lfFaceName, sizeof(Globals.lfFont.lfFaceName) / sizeof(Globals.lfFont.lfFaceName[0]));
-		QueryByte(hKey,		"lfItalic",			&Globals.lfFont.lfItalic);
-		QueryDword(hKey,	"lfOrientation",	(DWORD*)&Globals.lfFont.lfOrientation);
-		QueryByte(hKey,		"lfOutPrecision",	&Globals.lfFont.lfOutPrecision);
-		QueryByte(hKey,		"lfPitchAndFamily",	&Globals.lfFont.lfPitchAndFamily);
-		QueryByte(hKey,		"lfQuality",		&Globals.lfFont.lfQuality);
-		QueryByte(hKey,		"lfStrikeOut",		&Globals.lfFont.lfStrikeOut);
-		QueryByte(hKey,		"lfUnderline",		&Globals.lfFont.lfUnderline);
-		QueryDword(hKey,	"lfWeight",			(DWORD*)&Globals.lfFont.lfWeight);
-		QueryDword(hKey,	"iPointSize",		&dwPointSize);
-		QueryBool(hKey,     "fWrap",            &Globals.bWrapLongLines);
+        QueryByte(hKey,     _T("lfCharSet"),        &Globals.lfFont.lfCharSet);
+        QueryByte(hKey,     _T("lfClipPrecision"),  &Globals.lfFont.lfClipPrecision);
+        QueryDword(hKey,    _T("lfEscapement"),     (DWORD*)&Globals.lfFont.lfEscapement);
+        QueryString(hKey,   _T("lfFaceName"),       Globals.lfFont.lfFaceName, sizeof(Globals.lfFont.lfFaceName) / sizeof(Globals.lfFont.lfFaceName[0]));
+        QueryByte(hKey,     _T("lfItalic"),         &Globals.lfFont.lfItalic);
+        QueryDword(hKey,    _T("lfOrientation"),    (DWORD*)&Globals.lfFont.lfOrientation);
+        QueryByte(hKey,     _T("lfOutPrecision"),   &Globals.lfFont.lfOutPrecision);
+        QueryByte(hKey,     _T("lfPitchAndFamily"), &Globals.lfFont.lfPitchAndFamily);
+        QueryByte(hKey,     _T("lfQuality"),        &Globals.lfFont.lfQuality);
+        QueryByte(hKey,     _T("lfStrikeOut"),      &Globals.lfFont.lfStrikeOut);
+        QueryByte(hKey,     _T("lfUnderline"),      &Globals.lfFont.lfUnderline);
+        QueryDword(hKey,    _T("lfWeight"),         (DWORD*)&Globals.lfFont.lfWeight);
+        QueryDword(hKey,    _T("iPointSize"),       &dwPointSize);
+        QueryBool(hKey,     _T("fWrap"),            &Globals.bWrapLongLines);
 
 		if (dwPointSize != 0)
 			Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
@@ -160,33 +140,13 @@ void LoadSettings(void)
 	}
 }
 
-static BOOL SaveDword(HKEY hKey, LPCSTR pszValueName, DWORD dwValue)
+static BOOL SaveDword(HKEY hKey, LPCTSTR pszValueNameT, DWORD dwValue)
 {
-	WCHAR szValueW[32];
-	LPCTSTR pszValueNameT;
-
-#ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, 0, pszValueName, -1, szValueW, sizeof(szValueW) / sizeof(szValueW[0]));
-	pszValueNameT = szValueW;
-#else
-	pszValueNameT = pszValueName;
-#endif
-
 	return RegSetValueEx(hKey, pszValueNameT, 0, REG_DWORD, (LPBYTE) &dwValue, sizeof(dwValue)) == ERROR_SUCCESS;
 }
 
-static BOOL SaveString(HKEY hKey, LPCSTR pszValueName, LPCTSTR pszValue)
+static BOOL SaveString(HKEY hKey, LPCTSTR pszValueNameT, LPCTSTR pszValue)
 {
-	WCHAR szValueW[32];
-	LPCTSTR pszValueNameT;
-
-#ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, 0, pszValueName, -1, szValueW, sizeof(szValueW) / sizeof(szValueW[0]));
-	pszValueNameT = szValueW;
-#else
-	pszValueNameT = pszValueName;
-#endif
-
 	return RegSetValueEx(hKey, pszValueNameT, 0, REG_SZ, (LPBYTE) pszValue, (DWORD) _tcslen(pszValue) * sizeof(*pszValue)) == ERROR_SUCCESS;
 }
 
@@ -198,20 +158,20 @@ void SaveSettings(void)
 	if (RegCreateKeyEx(HKEY_CURRENT_USER, s_szRegistryKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition)
 		== ERROR_SUCCESS)
 	{
-		SaveDword(hKey,		"lfCharSet",		Globals.lfFont.lfCharSet);
-		SaveDword(hKey,		"lfClipPrecision",	Globals.lfFont.lfClipPrecision);
-		SaveDword(hKey,		"lfEscapement",		Globals.lfFont.lfEscapement);
-		SaveString(hKey,	"lfFaceName",		Globals.lfFont.lfFaceName);
-		SaveDword(hKey,		"lfItalic",			Globals.lfFont.lfItalic);
-		SaveDword(hKey,		"lfOrientation",	Globals.lfFont.lfOrientation);
-		SaveDword(hKey,		"lfOutPrecision",	Globals.lfFont.lfOutPrecision);
-		SaveDword(hKey,		"lfPitchAndFamily",	Globals.lfFont.lfPitchAndFamily);
-		SaveDword(hKey,		"lfQuality",		Globals.lfFont.lfQuality);
-		SaveDword(hKey,		"lfStrikeOut",		Globals.lfFont.lfStrikeOut);
-		SaveDword(hKey,		"lfUnderline",		Globals.lfFont.lfUnderline);
-		SaveDword(hKey,		"lfWeight",			Globals.lfFont.lfWeight);
-		SaveDword(hKey,		"iPointSize",		PointSizeFromHeight(Globals.lfFont.lfHeight));
-		SaveDword(hKey,		"fWrap",			Globals.bWrapLongLines ? 1 : 0);
+        SaveDword(hKey,     _T("lfCharSet"),        Globals.lfFont.lfCharSet);
+        SaveDword(hKey,     _T("lfClipPrecision"),  Globals.lfFont.lfClipPrecision);
+        SaveDword(hKey,     _T("lfEscapement"),     Globals.lfFont.lfEscapement);
+        SaveString(hKey,    _T("lfFaceName"),       Globals.lfFont.lfFaceName);
+        SaveDword(hKey,     _T("lfItalic"),         Globals.lfFont.lfItalic);
+        SaveDword(hKey,     _T("lfOrientation"),    Globals.lfFont.lfOrientation);
+        SaveDword(hKey,     _T("lfOutPrecision"),   Globals.lfFont.lfOutPrecision);
+        SaveDword(hKey,     _T("lfPitchAndFamily"), Globals.lfFont.lfPitchAndFamily);
+        SaveDword(hKey,     _T("lfQuality"),        Globals.lfFont.lfQuality);
+        SaveDword(hKey,     _T("lfStrikeOut"),      Globals.lfFont.lfStrikeOut);
+        SaveDword(hKey,     _T("lfUnderline"),      Globals.lfFont.lfUnderline);
+        SaveDword(hKey,     _T("lfWeight"),         Globals.lfFont.lfWeight);
+        SaveDword(hKey,     _T("iPointSize"),       PointSizeFromHeight(Globals.lfFont.lfHeight));
+        SaveDword(hKey,     _T("fWrap"),            Globals.bWrapLongLines ? 1 : 0);
 
 		RegCloseKey(hKey);
 	}

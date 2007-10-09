@@ -59,7 +59,7 @@ BOOL CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 
 /* utility functions */
 VOID ShowLastError(void);
-BOOL FileExists(LPCWSTR szFilename);
-BOOL HasFileExtension(LPCWSTR szFilename);
+BOOL FileExists(LPCTSTR szFilename);
+BOOL HasFileExtension(LPCTSTR szFilename);
 BOOL DoCloseFile(void);
-void DoOpenFile(LPCWSTR szFileName);
+void DoOpenFile(LPCTSTR szFileName);

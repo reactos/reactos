@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define SIZEOF(a) sizeof(a)/sizeof((a)[0])
+#define SIZEOF(a) (sizeof(a)/sizeof((a)[0]))
 
 #include "notepad_res.h"
 
@@ -50,19 +50,19 @@ typedef struct
   LOGFONT    lfFont;
   BOOL       bWrapLongLines;
   BOOL       bShowStatusBar;
-  WCHAR      szFindText[MAX_PATH];
-  WCHAR      szReplaceText[MAX_PATH];
-  WCHAR      szFileName[MAX_PATH];
-  WCHAR      szFileTitle[MAX_PATH];
-  WCHAR      szFilter[2 * MAX_STRING_LEN + 100];
-  WCHAR      szMarginTop[MAX_PATH];
-  WCHAR      szMarginBottom[MAX_PATH];
-  WCHAR      szMarginLeft[MAX_PATH];
-  WCHAR      szMarginRight[MAX_PATH];
-  WCHAR      szHeader[MAX_PATH];
-  WCHAR      szFooter[MAX_PATH];
-  WCHAR      szStatusBarLine[MAX_PATH];
-  WCHAR      szStatusBarCol[MAX_PATH];
+  TCHAR      szFindText[MAX_PATH];
+  TCHAR      szReplaceText[MAX_PATH];
+  TCHAR      szFileName[MAX_PATH];
+  TCHAR      szFileTitle[MAX_PATH];
+  TCHAR      szFilter[2 * MAX_STRING_LEN + 100];
+  TCHAR      szMarginTop[MAX_PATH];
+  TCHAR      szMarginBottom[MAX_PATH];
+  TCHAR      szMarginLeft[MAX_PATH];
+  TCHAR      szMarginRight[MAX_PATH];
+  TCHAR      szHeader[MAX_PATH];
+  TCHAR      szFooter[MAX_PATH];
+  TCHAR      szStatusBarLine[MAX_PATH];
+  TCHAR      szStatusBarCol[MAX_PATH];
   int        iEncoding;
   int        iEoln;
 
@@ -71,7 +71,7 @@ typedef struct
 
 extern NOTEPAD_GLOBALS Globals;
 
-VOID SetFileName(LPCWSTR szFileName);
+VOID SetFileName(LPCTSTR szFileName);
 
 /* from text.c */
 BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int *piEoln);
