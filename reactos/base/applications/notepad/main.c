@@ -431,21 +431,7 @@ static int AlertFileDoesNotExist(LPCTSTR szFileName)
 
 static void HandleCommandLine(LPTSTR cmdline)
 {
-    TCHAR delimiter;
     int opt_print=0;
-
-    /* skip white space */
-    while (*cmdline == ' ') cmdline++;
-
-    /* skip executable name */
-    delimiter = (*cmdline == _T('"') ? _T('"') : _T(' '));
-
-    do
-    {
-        cmdline++;
-    }
-    while (*cmdline && *cmdline != delimiter);
-    if (*cmdline == delimiter) cmdline++;
 
     while (*cmdline == _T(' ') || *cmdline == _T('-') || *cmdline == _T('/'))
     {
