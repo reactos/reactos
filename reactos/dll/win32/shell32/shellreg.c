@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -30,9 +30,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "shlobj.h"
-#include "winerror.h"
 #include "winreg.h"
-#include "winnls.h"
 
 #include "undocshell.h"
 #include "wine/winbase16.h"
@@ -65,6 +63,16 @@ HRESULT WINAPI SHRegOpenKeyW (
 {
 	WARN("%p %s %p\n",hkey,debugstr_w(lpszSubKey),retkey);
 	return RegOpenKeyW( hkey, lpszSubKey, retkey );
+}
+
+/*************************************************************************
+ * SHRegQueryValueA   [SHELL32.508]
+ *
+ */
+HRESULT WINAPI SHRegQueryValueA(HKEY hkey, LPSTR lpSubKey, LPSTR lpValue, LPDWORD lpcbValue)
+{
+	TRACE("(%p %s %p %p)\n", hkey, debugstr_a(lpSubKey), lpValue, lpcbValue);
+	return RegQueryValueA(hkey, lpSubKey, lpValue, (LONG*)lpcbValue);
 }
 
 /*************************************************************************

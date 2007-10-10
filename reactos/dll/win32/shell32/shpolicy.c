@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES:
  *
@@ -133,7 +133,7 @@ static const char strNoClose[] = {"NoClose"};
 static const char strNoRun[] = {"NoRun"};
 
 /* policy data array */
-POLICYDATA sh32_policy_table[] =
+static POLICYDATA sh32_policy_table[] =
 {
   {
     REST_NORUN,
@@ -796,7 +796,7 @@ POLICYDATA sh32_policy_table[] =
     0,
     0,
     SHELL_NO_POLICY
-	}
+  }
 };
 
 /*************************************************************************

@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -115,7 +115,7 @@ static ULONG WINAPI IDropTargetHelper_fnAddRef (IDropTargetHelper * iface)
     IDropTargetHelperImpl *This = (IDropTargetHelperImpl *)iface;
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, refCount - 1);
+    TRACE ("(%p)->(count=%u)\n", This, refCount - 1);
 
     return refCount;
 }
@@ -125,7 +125,7 @@ static ULONG WINAPI IDropTargetHelper_fnRelease (IDropTargetHelper * iface)
     IDropTargetHelperImpl *This = (IDropTargetHelperImpl *)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, refCount + 1);
+    TRACE ("(%p)->(count=%u)\n", This, refCount + 1);
 
     if (!refCount) {
         TRACE("-- destroying (%p)\n", This);
@@ -143,7 +143,7 @@ static HRESULT WINAPI IDropTargetHelper_fnDragEnter (
 	DWORD dwEffect)
 {
     IDropTargetHelperImpl *This = (IDropTargetHelperImpl *)iface;
-    FIXME ("(%p)->(%p %p %p 0x%08lx)\n", This,hwndTarget, pDataObject, ppt, dwEffect);
+    FIXME ("(%p)->(%p %p %p 0x%08x)\n", This,hwndTarget, pDataObject, ppt, dwEffect);
     return E_NOTIMPL;
 }
 
@@ -157,14 +157,14 @@ static HRESULT WINAPI IDropTargetHelper_fnDragLeave (IDropTargetHelper * iface)
 static HRESULT WINAPI IDropTargetHelper_fnDragOver (IDropTargetHelper * iface, POINT* ppt, DWORD dwEffect)
 {
     IDropTargetHelperImpl *This = (IDropTargetHelperImpl *)iface;
-    FIXME ("(%p)->(%p 0x%08lx)\n", This, ppt, dwEffect);
+    FIXME ("(%p)->(%p 0x%08x)\n", This, ppt, dwEffect);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IDropTargetHelper_fnDrop (IDropTargetHelper * iface, IDataObject* pDataObject, POINT* ppt, DWORD dwEffect)
 {
     IDropTargetHelperImpl *This = (IDropTargetHelperImpl *)iface;
-    FIXME ("(%p)->(%p %p 0x%08lx)\n", This, pDataObject, ppt, dwEffect);
+    FIXME ("(%p)->(%p %p 0x%08x)\n", This, pDataObject, ppt, dwEffect);
     return E_NOTIMPL;
 }
 

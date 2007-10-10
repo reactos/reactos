@@ -26,7 +26,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wine/debug.h"
-#include "wingdi.h"
 #include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -106,7 +105,7 @@ static const char * DumpEvent( LONG event )
 #undef DUMPEV
 }
 
-static const char * NodeName(LPNOTIFICATIONLIST item)
+static const char * NodeName(const NOTIFICATIONLIST *item)
 {
     const char *str;
     WCHAR path[MAX_PATH];

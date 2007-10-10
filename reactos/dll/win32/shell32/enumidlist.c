@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -116,7 +116,7 @@ BOOL CreateFolderEnumList(
     static const WCHAR dot[] = { '.',0 };
     static const WCHAR dotdot[] = { '.','.',0 };
 
-    TRACE("(%p)->(path=%s flags=0x%08lx)\n", list, debugstr_w(lpszPath), dwFlags);
+    TRACE("(%p)->(path=%s flags=0x%08x)\n", list, debugstr_w(lpszPath), dwFlags);
 
     if(!lpszPath || !lpszPath[0]) return FALSE;
 
@@ -246,7 +246,7 @@ static ULONG WINAPI IEnumIDList_fnAddRef(
 	IEnumIDListImpl *This = (IEnumIDListImpl *)iface;
 	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(%lu)\n", This, refCount - 1);
+	TRACE("(%p)->(%u)\n", This, refCount - 1);
 
 	return refCount;
 }
@@ -259,7 +259,7 @@ static ULONG WINAPI IEnumIDList_fnRelease(
 	IEnumIDListImpl *This = (IEnumIDListImpl *)iface;
 	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(%lu)\n", This, refCount + 1);
+	TRACE("(%p)->(%u)\n", This, refCount + 1);
 
 	if (!refCount) {
 	  TRACE(" destroying IEnumIDList(%p)\n",This);
@@ -285,7 +285,7 @@ static HRESULT WINAPI IEnumIDList_fnNext(
 	HRESULT  hr = S_OK;
 	LPITEMIDLIST  temp;
 
-	TRACE("(%p)->(%ld,%p, %p)\n",This,celt,rgelt,pceltFetched);
+	TRACE("(%p)->(%d,%p, %p)\n",This,celt,rgelt,pceltFetched);
 
 /* It is valid to leave pceltFetched NULL when celt is 1. Some of explorer's
  * subsystems actually use it (and so may a third party browser)
@@ -329,7 +329,7 @@ static HRESULT WINAPI IEnumIDList_fnSkip(
 	DWORD    dwIndex;
 	HRESULT  hr = S_OK;
 
-	TRACE("(%p)->(%lu)\n",This,celt);
+	TRACE("(%p)->(%u)\n",This,celt);
 
 	for(dwIndex = 0; dwIndex < celt; dwIndex++)
 	{ if(!This->mpCurrent)

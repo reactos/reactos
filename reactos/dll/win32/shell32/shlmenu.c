@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -32,7 +32,6 @@
 #include "undocshell.h"
 #include "shlwapi.h"
 #include "shell32_main.h"
-#include "shlguid.h"
 
 #include "pidl.h"
 #include "wine/debug.h"
@@ -90,7 +89,7 @@ static LPFMINFO FM_GetMenuInfo(HMENU hmenu)
 
 	if ((menudata == 0) || (MenuInfo.cbSize != sizeof(MENUINFO)))
 	{
-	  ERR("menudata corrupt: %p %lu\n", menudata, MenuInfo.cbSize);
+	  ERR("menudata corrupt: %p %u\n", menudata, MenuInfo.cbSize);
 	  return 0;
 	}
 
@@ -115,9 +114,7 @@ static LPFMINFO FM_SetMenuParameter(
 
 	menudata = FM_GetMenuInfo(hmenu);
 
-	if ( menudata->pidl)
-	{ SHFree(menudata->pidl);
-	}
+	SHFree(menudata->pidl);
 
 	menudata->uID = uID;
 	menudata->pidl = ILClone(pidl);
@@ -155,7 +152,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 
 	if ((menudata == 0) || (MenuInfo.cbSize != sizeof(MENUINFO)))
 	{
-	  ERR("menudata corrupt: %p %lu\n", menudata, MenuInfo.cbSize);
+	  ERR("menudata corrupt: %p %u\n", menudata, MenuInfo.cbSize);
 	  return 0;
 	}
 
@@ -267,7 +264,7 @@ HMENU WINAPI FileMenu_Create (
 
 	HMENU hMenu = CreatePopupMenu();
 
-	TRACE("0x%08lx 0x%08x %p 0x%08x 0x%08x  hMenu=%p\n",
+	TRACE("0x%08x 0x%08x %p 0x%08x 0x%08x  hMenu=%p\n",
 	crBorderColor, nBorderWidth, hBorderBmp, nSelHeight, uFlags, hMenu);
 
 	menudata = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FMINFO));
@@ -299,9 +296,7 @@ void WINAPI FileMenu_Destroy (HMENU hmenu)
 
 	menudata = FM_GetMenuInfo(hmenu);
 
-	if ( menudata->pidl)
-	{ SHFree( menudata->pidl);
-	}
+	SHFree( menudata->pidl);
 	HeapFree(GetProcessHeap(), 0, menudata);
 
 	DestroyMenu (hmenu);
@@ -375,7 +370,7 @@ static BOOL FileMenu_AppendItemW(
 	menudata = (LPFMINFO)MenuInfo.dwMenuData;
 	if ((menudata == 0) || (MenuInfo.cbSize != sizeof(MENUINFO)))
 	{
-	  ERR("menudata corrupt: %p %lu\n", menudata, MenuInfo.cbSize);
+	  ERR("menudata corrupt: %p %u\n", menudata, MenuInfo.cbSize);
 	  return 0;
 	}
 
@@ -485,7 +480,7 @@ HMENU WINAPI FileMenu_FindSubMenuByPidl(
 int WINAPI FileMenu_AppendFilesForPidl(
 	HMENU	hmenu,
 	LPCITEMIDLIST	pidl,
-	BOOL	bAddSeperator)
+	BOOL	bAddSeparator)
 {
 	LPFMINFO	menudata;
 
@@ -495,10 +490,10 @@ int WINAPI FileMenu_AppendFilesForPidl(
 
 	FM_InitMenuPopup(hmenu, pidl);
 
-	if (bAddSeperator)
+	if (bAddSeparator)
 	  FileMenu_AppendItemW (hmenu, FM_SEPARATOR, 0, 0, 0, FM_DEFAULT_HEIGHT);
 
-	TRACE("%p %p 0x%08x\n",hmenu, pidl,bAddSeperator);
+	TRACE("%p %p 0x%08x\n",hmenu, pidl,bAddSeparator);
 
 	return 0;
 }
@@ -637,7 +632,7 @@ LRESULT WINAPI FileMenu_DrawItem(
 	Shell_GetImageList(0, &hImageList);
 	ImageList_Draw(hImageList, pMyItem->iIconIndex, lpdis->hDC, xi, yi, ILD_NORMAL);
 
-	TRACE("-- 0x%04lx 0x%04lx 0x%04lx 0x%04lx\n", TextRect.left, TextRect.top, TextRect.right, TextRect.bottom);
+	TRACE("-- 0x%04x 0x%04x 0x%04x 0x%04x\n", TextRect.left, TextRect.top, TextRect.right, TextRect.bottom);
 
 	SetTextColor(lpdis->hDC, clrPrevText);
 	SetBkColor(lpdis->hDC, clrPrevBkgnd);
@@ -666,7 +661,7 @@ LRESULT WINAPI FileMenu_HandleMenuChar(
 	HMENU	hMenu,
 	WPARAM	wParam)
 {
-	FIXME("%p 0x%08x\n",hMenu,wParam);
+	FIXME("%p 0x%08lx\n",hMenu,wParam);
 	return 0;
 }
 
@@ -692,8 +687,7 @@ BOOL WINAPI FileMenu_DeleteAllItems (HMENU hmenu)
 	for (i = 0; i < GetMenuItemCount( hmenu ); i++)
 	{ GetMenuItemInfoW(hmenu, i, TRUE, &mii );
 
-	  if (mii.dwItemData)
-	    SHFree((LPFMINFO)mii.dwItemData);
+	  SHFree((LPFMINFO)mii.dwItemData);
 
 	  if (mii.hSubMenu)
 	    FileMenu_Destroy(mii.hSubMenu);
@@ -799,7 +793,7 @@ DWORD WINAPI FileMenu_GetItemExtent (HMENU hMenu, UINT uPos)
 	FIXME("%p 0x%08x\n", hMenu, uPos);
 
 	if (GetMenuItemRect(0, hMenu, uPos, &rect))
-	{ FIXME("0x%04lx 0x%04lx 0x%04lx 0x%04lx\n",
+	{ FIXME("0x%04x 0x%04x 0x%04x 0x%04x\n",
 	  rect.right, rect.left, rect.top, rect.bottom);
 	  return ((rect.right-rect.left)<<16) + (rect.top-rect.bottom);
 	}
@@ -833,7 +827,7 @@ void WINAPI FileMenu_AbortInitMenu (void)
  */
 LPVOID WINAPI SHFind_InitMenuPopup (HMENU hMenu, HWND hWndParent, DWORD w, DWORD x)
 {
-	FIXME("hmenu=%p hwnd=%p 0x%08lx 0x%08lx stub\n",
+	FIXME("hmenu=%p hwnd=%p 0x%08x 0x%08x stub\n",
 		hMenu,hWndParent,w,x);
 	return NULL; /* this is supposed to be a pointer */
 }
@@ -872,7 +866,7 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	WCHAR		szName[256];
 	UINT		uTemp, uIDMax = uIDAdjust;
 
-	TRACE("hmenu1=%p hmenu2=%p 0x%04x 0x%04x 0x%04x  0x%04lx\n",
+	TRACE("hmenu1=%p hmenu2=%p 0x%04x 0x%04x 0x%04x  0x%04x\n",
 		 hmDst, hmSrc, uInsert, uIDAdjust, uIDAdjustMax, uFlags);
 
 	if (!hmDst || !hmSrc)
