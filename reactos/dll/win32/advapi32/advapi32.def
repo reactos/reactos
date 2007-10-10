@@ -501,8 +501,8 @@ RegGetValueA@28
 RegGetValueW@28
 RegLoadKeyA@12
 RegLoadKeyW@12
-RegLoadMUIStringA@24
-RegLoadMUIStringW@24
+RegLoadMUIStringA@28
+RegLoadMUIStringW@28
 RegNotifyChangeKeyValue@20
 RegOpenCurrentUser@8
 RegOpenKeyA@12

@@ -4858,12 +4858,13 @@ LONG STDCALL
 RegLoadMUIStringW(IN HKEY hKey,
                   IN LPCWSTR pszValue  OPTIONAL,
                   OUT LPWSTR pszOutBuf,
-                  IN ULONG cbOutBuf,
-                  IN ULONG Reserved,
+                  IN DWORD cbOutBuf,
+                  OUT LPDWORD pcbData OPTIONAL,
+                  IN DWORD Flags,
                   IN LPCWSTR pszDirectory  OPTIONAL)
 {
-    FIXME("RegLoadMUIStringW(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
-          hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
+    FIXME("RegLoadMUIStringW(0x%p, 0x%p, 0x%p, 0x%x, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+          hKey, pszValue, pszOutBuf, cbOutBuf, pcbData, Flags, pszDirectory);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -4877,12 +4878,13 @@ LONG STDCALL
 RegLoadMUIStringA(IN HKEY hKey,
                   IN LPCSTR pszValue  OPTIONAL,
                   OUT LPSTR pszOutBuf,
-                  IN ULONG cbOutBuf,
-                  IN ULONG Reserved,
+                  IN DWORD cbOutBuf,
+                  OUT LPDWORD pcbData OPTIONAL,
+                  IN DWORD Flags,
                   IN LPCSTR pszDirectory  OPTIONAL)
 {
-    FIXME("RegLoadMUIStringA(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
-          hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
+    FIXME("RegLoadMUIStringA(0x%p, 0x%p, 0x%p, 0x%x, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+          hKey, pszValue, pszOutBuf, cbOutBuf, pcbData, Flags, pszDirectory);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
