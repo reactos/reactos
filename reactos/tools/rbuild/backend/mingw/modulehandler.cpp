@@ -1598,7 +1598,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	string linkerScriptArgument;
 	if ( module.linkerScript != NULL )
-		linkerScriptArgument = ssprintf ( "-Wl,-T,%s", module.linkerScript->directory.c_str () );
+		linkerScriptArgument = ssprintf ( "-Wl,-T,%s", backend->GetFullName ( module.linkerScript->file ).c_str () );
 	else
 		linkerScriptArgument = "";
 
@@ -2469,9 +2469,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,-T,%s%cntoskrnl_$(ARCH).lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s",
-		                                     module.output->relative_path.c_str (),
-		                                     cSep,
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s",
 		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,

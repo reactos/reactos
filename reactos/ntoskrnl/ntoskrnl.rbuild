@@ -422,4 +422,5 @@
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
+	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </module>

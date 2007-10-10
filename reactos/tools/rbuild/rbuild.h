@@ -625,16 +625,13 @@ private:
 class LinkerScript
 {
 public:
-	const Project& project;
-	const Module* module;
 	const XMLElement& node;
-	const Module* baseModule;
-	std::string directory;
-	std::string basePath;
+	const Module& module;
+	FileLocation file;
 
-	LinkerScript ( const Project& project,
-	               const Module* module,
-	               const XMLElement& node );
+	LinkerScript ( const XMLElement& node,
+	               const Module& module,
+	               const FileLocation& file );
 	~LinkerScript ();
 	void ProcessXML();
 };

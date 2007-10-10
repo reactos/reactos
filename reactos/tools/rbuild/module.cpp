@@ -748,13 +748,31 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "linkerscript" )
 	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<linkerscript> is not a valid sub-element of <if>" );
+		}
 		if ( linkerScript )
 		{
 			throw XMLInvalidBuildFileException (
 				e.location,
 				"Only one <linkerscript> is valid per module" );
 		}
-		linkerScript = new LinkerScript ( project, this, e );
+		size_t pos = e.value.find_last_of ( "/\\" );
+		if ( pos == string::npos )
+		{
+			linkerScript = new LinkerScript (
+				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
+		}
+		else
+		{
+			string dir = e.value.substr ( 0, pos );
+			string name = e.value.substr ( pos + 1);
+			linkerScript = new LinkerScript (
+				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
+		}
 		subs_invalid = true;
 	}
 	else if ( e.name == "component" )
