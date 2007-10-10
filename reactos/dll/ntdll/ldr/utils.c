@@ -731,38 +731,30 @@ NTSTATUS NTAPI
 LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
             IN PULONG LoadFlags OPTIONAL,
             IN PUNICODE_STRING Name,
-            OUT PVOID *BaseAddress OPTIONAL)
+            OUT PVOID *BaseAddress /* also known as HMODULE*, and PHANDLE 'DllHandle' */)
 {
   NTSTATUS              Status;
-  PLDR_DATA_TABLE_ENTRY           Module;
+  PLDR_DATA_TABLE_ENTRY Module;
+
+  PPEB Peb = NtCurrentPeb();
 
   TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
             Name,
             SearchPath ? L" from " : L"",
             SearchPath ? SearchPath : L"");
 
-  if (Name == NULL)
+  Status = LdrpLoadModule(SearchPath, LoadFlags ? *LoadFlags : 0, Name, &Module, BaseAddress);
+
+  if (NT_SUCCESS(Status) &&
+      (!LoadFlags || 0 == (*LoadFlags & LOAD_LIBRARY_AS_DATAFILE)))
     {
-      if (BaseAddress)
-        *BaseAddress = NtCurrentPeb()->ImageBaseAddress;
-      return STATUS_SUCCESS;
+      RtlEnterCriticalSection(Peb->LoaderLock);
+      Status = LdrpAttachProcess();
+      RtlLeaveCriticalSection(Peb->LoaderLock);
     }
 
-  if (BaseAddress)
-    *BaseAddress = NULL;
+  *BaseAddress = NT_SUCCESS(Status) ? Module->DllBase : NULL;
 
-  Status = LdrpLoadModule(SearchPath, LoadFlags ? *LoadFlags : 0, Name, &Module, BaseAddress);
-  if (NT_SUCCESS(Status)
-  && (!LoadFlags || 0 == (*LoadFlags & LOAD_LIBRARY_AS_DATAFILE)))
-    {
-      RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
-      Status = LdrpAttachProcess();
-      RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
-      if (NT_SUCCESS(Status) && BaseAddress)
-        {
-          *BaseAddress = Module->DllBase;
-        }
-   }
   return Status;
 }
 
@@ -1324,7 +1316,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
 }
 
 static NTSTATUS
-LdrpGetOrLoadModule(PWCHAR SerachPath,
+LdrpGetOrLoadModule(PWCHAR SearchPath,
                     PCHAR Name,
                     PLDR_DATA_TABLE_ENTRY* Module,
                     BOOLEAN Load)
@@ -1345,7 +1337,7 @@ LdrpGetOrLoadModule(PWCHAR SerachPath,
    Status = LdrFindEntryForName (&DllName, Module, Load);
    if (Load && !NT_SUCCESS(Status))
      {
-       Status = LdrpLoadModule(SerachPath,
+       Status = LdrpLoadModule(SearchPath,
                                NtCurrentPeb()->Ldr->Initialized ? 0 : LDRP_PROCESS_CREATION_TIME,
                                &DllName,
                                Module,
