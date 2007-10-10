@@ -661,6 +661,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG InitialStack;
     PKGDTENTRY Gdt;
     PKIDTENTRY Idt;
+    KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
 
@@ -721,6 +722,19 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Load Ring 3 selectors for DS/ES */
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+
+    /* Save NMI and double fault traps */
+    RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
+    RtlCopyMemory(&DoubleFaultEntry, &Idt[8], sizeof(KIDTENTRY));
+
+    /* Copy kernel's trap handlers */
+    RtlCopyMemory(Idt,
+                  (PVOID)KiIdtDescriptor.Base,
+                  KiIdtDescriptor.Limit + 1);
+
+    /* Restore NMI and double fault */
+    RtlCopyMemory(&Idt[2], &NmiEntry, sizeof(KIDTENTRY));
+    RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
 
 AppCpuInit:
     /* Loop until we can release the freeze lock */
