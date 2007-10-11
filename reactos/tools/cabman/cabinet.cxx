@@ -80,13 +80,13 @@ void DumpBuffer(void* Buffer, ULONG Size)
 		NULL);                          // No attribute template
 	if (FileHandle == INVALID_HANDLE_VALUE)
 	{
-		DPRINT(MID_TRACE, ("ERROR OPENING '%d'.\n", (ULONG)GetLastError()));
+		DPRINT(MID_TRACE, ("ERROR OPENING '%lu'.\n", (ULONG)GetLastError()));
 		return;
 	}
 
 	if (!WriteFile(FileHandle, Buffer, Size, &BytesWritten, NULL))
 	{
-		DPRINT(MID_TRACE, ("ERROR WRITING '%d'.\n", (ULONG)GetLastError()));
+		DPRINT(MID_TRACE, ("ERROR WRITING '%lu'.\n", (ULONG)GetLastError()));
 	}
 
 	CloseFile(FileHandle);
@@ -144,7 +144,7 @@ ULONG CCFDATAStorage::Create(char* FileName)
 		NULL);                          // No attribute template
 	if (FileHandle == INVALID_HANDLE_VALUE)
 	{
-		DPRINT(MID_TRACE, ("ERROR '%d'.\n", (ULONG)GetLastError()));
+		DPRINT(MID_TRACE, ("ERROR '%lu'.\n", (ULONG)GetLastError()));
 		return CAB_STATUS_CANNOT_CREATE;
 	}
 #else /* !WIN32 */
@@ -154,7 +154,7 @@ ULONG CCFDATAStorage::Create(char* FileName)
 		/*
 	FileHandle = fopen(FullName, "w+b");
 	if (FileHandle == NULL) {
-		DPRINT(MID_TRACE, ("ERROR '%d'.\n", (ULONG)errno));
+		DPRINT(MID_TRACE, ("ERROR '%lu'.\n", (ULONG)errno));
 		return CAB_STATUS_CANNOT_CREATE;
 	}
 		*/
@@ -200,7 +200,7 @@ ULONG CCFDATAStorage::Truncate()
 	FileHandle = tmpfile();
 	if (FileHandle == NULL)
 	{
-		DPRINT(MID_TRACE, ("ERROR '%d'.\n", (ULONG)errno));
+		DPRINT(MID_TRACE, ("ERROR '%lu'.\n", (ULONG)errno));
 		return CAB_STATUS_FAILURE;
 	}
 #endif
@@ -662,7 +662,7 @@ ULONG CCabinet::Open()
 		if ((Status = ReadBlock(&CABHeader, sizeof(CFHEADER), &BytesRead))
 			!= CAB_STATUS_SUCCESS)
 		{
-			DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+			DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 			return CAB_STATUS_INVALID_CAB;
 		}
 
@@ -687,7 +687,7 @@ ULONG CCabinet::Open()
 			if ((Status = ReadBlock(&Size, sizeof(ULONG), &BytesRead))
 				!= CAB_STATUS_SUCCESS)
 			{
-				DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+				DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 				return CAB_STATUS_INVALID_CAB;
 			}
 			CabinetReserved = Size & 0xFFFF;
@@ -762,7 +762,7 @@ ULONG CCabinet::Open()
 			if ((Status = ReadBlock(&FolderNode->Folder,
 				sizeof(CFFOLDER), &BytesRead)) != CAB_STATUS_SUCCESS)
 			{
-				DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+				DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 				return CAB_STATUS_INVALID_CAB;
 			}
 		}
@@ -771,7 +771,7 @@ ULONG CCabinet::Open()
 		Status = ReadFileTable();
 		if (Status != CAB_STATUS_SUCCESS)
 		{
-			DPRINT(MIN_TRACE, ("ReadFileTable() failed (%d).\n", (ULONG)Status));
+			DPRINT(MIN_TRACE, ("ReadFileTable() failed (%lu).\n", (ULONG)Status));
 			return Status;
 		}
 
@@ -782,7 +782,7 @@ ULONG CCabinet::Open()
 			Status = ReadDataBlocks(FolderNode);
 			if (Status != CAB_STATUS_SUCCESS)
 			{
-				DPRINT(MIN_TRACE, ("ReadDataBlocks() failed (%d).\n", (ULONG)Status));
+				DPRINT(MIN_TRACE, ("ReadDataBlocks() failed (%lu).\n", (ULONG)Status));
 				return Status;
 			}
 			FolderNode = FolderNode->Next;
@@ -916,7 +916,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 	Status = LocateFile(FileName, &File);
 	if (Status != CAB_STATUS_SUCCESS)
 	{
-		DPRINT(MID_TRACE, ("Cannot locate file (%d).\n", (ULONG)Status));
+		DPRINT(MID_TRACE, ("Cannot locate file (%lu).\n", (ULONG)Status));
 		return Status;
 	}
 
@@ -936,7 +936,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 			return CAB_STATUS_UNSUPPCOMP;
 	}
 
-	DPRINT(MAX_TRACE, ("Extracting file at uncompressed offset (0x%X)  Size (%d bytes)  AO (0x%X)  UO (0x%X).\n",
+	DPRINT(MAX_TRACE, ("Extracting file at uncompressed offset (0x%lX)  Size (%lu bytes)  AO (0x%lX)  UO (0x%lX).\n",
 		(ULONG)File->File.FileOffset,
 		(ULONG)File->File.FileSize,
 		(ULONG)File->DataBlock->AbsoluteOffset,
@@ -1057,13 +1057,13 @@ ULONG CCabinet::ExtractFile(char* FileName)
 	{
 		do
 		{
-			DPRINT(MAX_TRACE, ("CO (0x%lX)    ReuseBlock (%d)    Offset (0x%lX)   Size (%ld)  BytesLeftInBlock (%ld)\n",
+			DPRINT(MAX_TRACE, ("CO (0x%lX)    ReuseBlock (%lu)    Offset (0x%lX)   Size (%ld)  BytesLeftInBlock (%ld)\n",
 				File->DataBlock->UncompOffset, (ULONG)ReuseBlock, Offset, Size,
 				BytesLeftInBlock));
 
 			if (/*(CurrentDataNode != File->DataBlock) &&*/ (!ReuseBlock) || (BytesLeftInBlock <= 0))
 			{
-				DPRINT(MAX_TRACE, ("Filling buffer. ReuseBlock (%d)\n", (ULONG)ReuseBlock));
+				DPRINT(MAX_TRACE, ("Filling buffer. ReuseBlock (%lu)\n", (ULONG)ReuseBlock));
 
 				CurrentBuffer  = Buffer;
 				TotalBytesRead = 0;
@@ -1076,11 +1076,11 @@ ULONG CCabinet::ExtractFile(char* FileName)
 					{
 						CloseFile(DestFile);
 						FreeMemory(Buffer);
-						DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+						DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 						return CAB_STATUS_INVALID_CAB;
 					}
 
-					DPRINT(MAX_TRACE, ("Data block: Checksum (0x%X)  CompSize (%d bytes)  UncompSize (%d bytes)\n",
+					DPRINT(MAX_TRACE, ("Data block: Checksum (0x%lX)  CompSize (%lu bytes)  UncompSize (%lu bytes)\n",
 						(ULONG)CFData.Checksum,
 						(ULONG)CFData.CompSize,
 						(ULONG)CFData.UncompSize));
@@ -1097,7 +1097,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 					{
 						CloseFile(DestFile);
 						FreeMemory(Buffer);
-						DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+						DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 						return CAB_STATUS_INVALID_CAB;
 					}
 
@@ -1145,7 +1145,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 						Status = LocateFile(TempName, &File);
 						if (Status == CAB_STATUS_NOFILE)
 						{
-							DPRINT(MID_TRACE, ("Cannot locate file (%d).\n", (ULONG)Status));
+							DPRINT(MID_TRACE, ("Cannot locate file (%lu).\n", (ULONG)Status));
 							return Status;
 						}
 
@@ -1171,7 +1171,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 						}
 #endif
 
-						DPRINT(MAX_TRACE, ("Continuing extraction of file at uncompressed offset (0x%X)  Size (%d bytes)  AO (0x%X)  UO (0x%X).\n",
+						DPRINT(MAX_TRACE, ("Continuing extraction of file at uncompressed offset (0x%lX)  Size (%lu bytes)  AO (0x%lX)  UO (0x%lX).\n",
 							(ULONG)File->File.FileOffset,
 							(ULONG)File->File.FileSize,
 							(ULONG)File->DataBlock->AbsoluteOffset,
@@ -1208,7 +1208,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 			}
 			else
 			{
-				DPRINT(MAX_TRACE, ("Using same buffer. ReuseBlock (%d)\n", (ULONG)ReuseBlock));
+				DPRINT(MAX_TRACE, ("Using same buffer. ReuseBlock (%lu)\n", (ULONG)ReuseBlock));
 
 				BytesToWrite = BytesLeftInBlock;
 
@@ -1221,7 +1221,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 				{
 					CloseFile(DestFile);
 					FreeMemory(Buffer);
-					DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+					DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 					return CAB_STATUS_INVALID_CAB;
 				}
 
@@ -1262,7 +1262,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
 			if (Size < BytesToWrite)
 				BytesToWrite = Size;
 
-			DPRINT(MAX_TRACE, ("Offset (0x%X)  CurrentOffset (0x%X)  ToWrite (%d)  Skipped (%d)(%d)  Size (%d).\n",
+			DPRINT(MAX_TRACE, ("Offset (0x%lX)  CurrentOffset (0x%lX)  ToWrite (%lu)  Skipped (%lu)(%lu)  Size (%lu).\n",
 				(ULONG)Offset,
 				(ULONG)CurrentOffset,
 				(ULONG)BytesToWrite,
@@ -2081,7 +2081,7 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
 {
 	PCFDATA_NODE Node;
 
-	DPRINT(MAX_TRACE, ("FileName '%s'  FileOffset (0x%X)  FileSize (%d).\n",
+	DPRINT(MAX_TRACE, ("FileName '%s'  FileOffset (0x%lX)  FileSize (%lu).\n",
 		(char*)File->FileName,
 		(ULONG)File->File.FileOffset,
 		(ULONG)File->File.FileSize));
@@ -2089,7 +2089,7 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
 	Node = CurrentFolderNode->DataListHead;
 	while (Node != NULL)
 	{
-		DPRINT(MAX_TRACE, ("GetAbsoluteOffset(): Comparing (0x%X, 0x%X) (%d).\n",
+		DPRINT(MAX_TRACE, ("GetAbsoluteOffset(): Comparing (0x%lX, 0x%lX) (%lu).\n",
 			(ULONG)Node->UncompOffset,
 			(ULONG)Node->UncompOffset + Node->Data.UncompSize,
 			(ULONG)Node->Data.UncompSize));
@@ -2137,7 +2137,7 @@ ULONG CCabinet::LocateFile(char* FileName,
 			CurrentFolderNode = LocateFolderNode(Node->File.FileControlID);
 			if (!CurrentFolderNode)
 			{
-				DPRINT(MID_TRACE, ("Folder with index number (%d) not found.\n",
+				DPRINT(MID_TRACE, ("Folder with index number (%lu) not found.\n",
 					(ULONG)Node->File.FileControlID));
 				return CAB_STATUS_INVALID_CAB;
 			}
@@ -2187,7 +2187,7 @@ ULONG CCabinet::ReadString(char* String, ULONG MaxLength)
 		Status = ReadBlock(&String[Offset], Size, &BytesRead);
 		if ((Status != CAB_STATUS_SUCCESS) || (BytesRead != Size))
 		{
-			DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+			DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 			return CAB_STATUS_INVALID_CAB;
 		}
 
@@ -2276,7 +2276,7 @@ ULONG CCabinet::ReadFileTable()
 		if ((Status = ReadBlock(&File->File, sizeof(CFFILE),
 			&BytesRead)) != CAB_STATUS_SUCCESS)
 		{
-			DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+			DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 			return CAB_STATUS_INVALID_CAB;
 		}
 
@@ -2292,7 +2292,7 @@ ULONG CCabinet::ReadFileTable()
 		if (Status != CAB_STATUS_SUCCESS)
 			return Status;
 
-		DPRINT(MAX_TRACE, ("Found file '%s' at uncompressed offset (0x%X).  Size (%d bytes)  ControlId (0x%X).\n",
+		DPRINT(MAX_TRACE, ("Found file '%s' at uncompressed offset (0x%lX).  Size (%lu bytes)  ControlId (0x%lX).\n",
 			(char*)File->FileName,
 			(ULONG)File->File.FileOffset,
 			(ULONG)File->File.FileSize,
@@ -2357,11 +2357,11 @@ ULONG CCabinet::ReadDataBlocks(PCFFOLDER_NODE FolderNode)
 		if ((Status = ReadBlock(&Node->Data, sizeof(CFDATA),
 			&BytesRead)) != CAB_STATUS_SUCCESS)
 		{
-			DPRINT(MIN_TRACE, ("Cannot read from file (%d).\n", (ULONG)Status));
+			DPRINT(MIN_TRACE, ("Cannot read from file (%lu).\n", (ULONG)Status));
 			return CAB_STATUS_INVALID_CAB;
 		}
 
-		DPRINT(MAX_TRACE, ("AbsOffset (0x%X)  UncompOffset (0x%X)  Checksum (0x%X)  CompSize (%d)  UncompSize (%d).\n",
+		DPRINT(MAX_TRACE, ("AbsOffset (0x%lX)  UncompOffset (0x%lX)  Checksum (0x%lX)  CompSize (%lu)  UncompSize (%lu).\n",
 			(ULONG)AbsoluteOffset,
 			(ULONG)UncompOffset,
 			(ULONG)Node->Data.Checksum,
@@ -2648,7 +2648,7 @@ ULONG CCabinet::ComputeChecksum(void* Buffer,
 	/* FIXME: Doesn't seem to be correct. EXTRACT.EXE
 	   won't accept checksums computed by this routine */
 
-	DPRINT(MIN_TRACE, ("Checksumming buffer (0x%p)  Size (%d)\n", Buffer, Size));
+	DPRINT(MIN_TRACE, ("Checksumming buffer (0x%p)  Size (%lu)\n", Buffer, Size));
 
 	UlongCount = Size / 4;              // Number of ULONGs
 	Checksum   = Seed;                  // Init checksum
@@ -3141,7 +3141,7 @@ ULONG CCabinet::CommitDataBlocks(PCFFOLDER_NODE FolderNode)
 		Status = ScratchFile->ReadBlock(&DataNode->Data, InputBuffer, &BytesRead);
 		if (Status != CAB_STATUS_SUCCESS)
 		{
-			DPRINT(MIN_TRACE, ("Cannot read from scratch file (%d).\n", (ULONG)Status));
+			DPRINT(MIN_TRACE, ("Cannot read from scratch file (%lu).\n", (ULONG)Status));
 			return Status;
 		}
 
@@ -3241,7 +3241,7 @@ ULONG CCabinet::WriteDataBlock()
 	// FIXME: MAKECAB.EXE does not like this checksum algorithm
 	//DataNode->Data.Checksum = ComputeChecksum(CurrentOBuffer, DataNode->Data.CompSize, 0);
 
-	DPRINT(MAX_TRACE, ("Writing block. Checksum (0x%X)  CompSize (%d)  UncompSize (%d).\n",
+	DPRINT(MAX_TRACE, ("Writing block. Checksum (0x%lX)  CompSize (%lu)  UncompSize (%lu).\n",
 		(ULONG)DataNode->Data.Checksum,
 		(ULONG)DataNode->Data.CompSize,
 		(ULONG)DataNode->Data.UncompSize));

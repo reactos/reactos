@@ -391,14 +391,14 @@ bool CCABManager::CreateSimpleCabinet()
 	Status = NewCabinet();
 	if (Status != CAB_STATUS_SUCCESS)
 	{
-		DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (ULONG)Status));
+		DPRINT(MIN_TRACE, ("Cannot create cabinet (%lu).\n", (ULONG)Status));
 		return false;
 	}
 
 	Status = AddFile(FileName);
 	if (Status != CAB_STATUS_SUCCESS)
 	{
-		DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%d).\n", (ULONG)Status));
+		DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%lu).\n", (ULONG)Status));
 		return false;
 	}
 
@@ -407,7 +407,7 @@ bool CCABManager::CreateSimpleCabinet()
 		Status = CloseDisk();
 	if (Status != CAB_STATUS_SUCCESS)
 	{
-		DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (ULONG)Status));
+		DPRINT(MIN_TRACE, ("Cannot write disk (%lu).\n", (ULONG)Status));
 		return false;
 	}
 
@@ -514,7 +514,7 @@ bool CCABManager::ExtractFromCabinet()
 						return false;
 
 					default:
-						printf("Unspecified error code (%d).\n", (ULONG)Status);
+						printf("Unspecified error code (%lu).\n", (ULONG)Status);
 						return false;
 				}
 			} while (FindNext(&Search) == CAB_STATUS_SUCCESS);
