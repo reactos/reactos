@@ -1,5 +1,5 @@
 <module name="green" type="kernelmodedriver" installbase="system32/drivers" installname="green.sys">
-	<bootstrap base="reactos" />
+	<bootstrap installbase="reactos" />
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
