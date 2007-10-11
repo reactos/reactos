@@ -15,7 +15,7 @@ namespace System_
     OsSupport::TimeEntryVector OsSupport::s_Entries;
 
     //int gettimeofday(struct timeval *tv, void * tz);
-
+//------------------------------------------------------------------------
     void OsSupport::checkAlarms()
     {
         struct timeval tm;
@@ -44,7 +44,11 @@ namespace System_
         }
 #endif
     }
-
+    bool OsSupport::hasAlarms ()
+    {
+        return (s_Entries.size () != 0);
+    }
+//------------------------------------------------------------------------
     void OsSupport::cancelAlarms()
     {
 
@@ -283,6 +287,18 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
         if (sig == SIGALRM)
         {
             OsSupport::checkAlarms();
+        }
+        else if (sig == SIGCHLD)
+        {
+            if (OsSupport::hasAlarms())
+            {
+                ///
+                /// FIXME
+                ///
+                /// there are expiriation alarms active and a child died unexpectly
+                /// lets commit suicide
+                exit(-2);
+            }
         }
     }
     void OsSupport::setAlarm(long secs, OsSupport::ProcessID pid)

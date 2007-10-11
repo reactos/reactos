@@ -120,6 +120,13 @@ namespace System_
 
     static void checkAlarms();
 
+///---------------------------------------------------------------------------------------
+///
+/// hasAlarms
+///
+/// Description: this function checks wether there are alarms set active
+
+    static bool hasAlarms();
 
 	protected:
 //---------------------------------------------------------------------------------------
