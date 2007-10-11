@@ -51,6 +51,7 @@ DoStop(PMAIN_WND_INFO Info)
                                        BytesNeeded,
                                        &BytesNeeded))
                 {
+#if 0
                     if (lpServiceConfig->lpDependencies)
                     {
                         TCHAR str[500];
@@ -63,6 +64,7 @@ DoStop(PMAIN_WND_INFO Info)
                     }
                     else
                     {
+#endif
                             hProgDlg = CreateProgressDialog(Info->hMainWnd,
                                                             Info->pCurrentService->lpServiceName,
                                                             IDS_PROGRESS_INFO_STOP);
@@ -74,7 +76,7 @@ DoStop(PMAIN_WND_INFO Info)
 
                                 DestroyWindow(hProgDlg);
                             }
-                    }
+                    //}
 
                     HeapFree(ProcessHeap,
                              0,
