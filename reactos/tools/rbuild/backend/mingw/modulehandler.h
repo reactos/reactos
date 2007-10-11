@@ -57,6 +57,7 @@ public:
 	std::string GetModuleTargets ( const Module& module );
 	void GetObjectsVector ( const IfableData& data,
 	                        std::vector<FileLocation>& objectFiles ) const;
+	void GenerateSourceMacro();
 	void GenerateObjectMacro();
 	void GenerateTargetMacro();
 	void GenerateOtherMacros();
@@ -139,9 +140,10 @@ private:
 	void GenerateMacros ( const char* op,
 	                      const IfableData& data,
 	                      const std::vector<LinkerFlag*>* linkerFlags );
+	void GenerateSourceMacros ( const char* assignmentOperation,
+	                            const IfableData& data );
 	void GenerateObjectMacros ( const char* assignmentOperation,
-	                            const IfableData& data,
-	                            const std::vector<LinkerFlag*>* linkerFlags );
+	                            const IfableData& data );
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;
@@ -221,6 +223,7 @@ public:
 	std::string windresflagsMacro;
 	std::string widlflagsMacro;
 	std::string linkerflagsMacro;
+	std::string sourcesMacro;
 	std::string objectsMacro;
 	std::string libsMacro;
 	std::string linkDepsMacro;

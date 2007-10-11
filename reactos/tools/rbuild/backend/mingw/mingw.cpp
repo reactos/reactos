@@ -261,6 +261,8 @@ MingwBackend::ProcessModules ()
 	size_t iend = v.size ();
 
 	for ( i = 0; i < iend; i++ )
+		v[i]->GenerateSourceMacro();
+	for ( i = 0; i < iend; i++ )
 		v[i]->GenerateObjectMacro();
 	fprintf ( fMakefile, "\n" );
 	for ( i = 0; i < iend; i++ )

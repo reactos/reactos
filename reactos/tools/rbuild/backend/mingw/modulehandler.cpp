@@ -907,10 +907,76 @@ MingwModuleHandler::GetModuleSpecificCompilationUnits ( vector<CompilationUnit*>
 }
 
 void
+MingwModuleHandler::GenerateSourceMacros (
+	const char* assignmentOperation,
+	const IfableData& data )
+{
+	size_t i;
+
+	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
+	vector<const FileLocation *> headers;
+	if ( compilationUnits.size () > 0 )
+	{
+		fprintf (
+			fMakefile,
+			"%s %s",
+			sourcesMacro.c_str (),
+			assignmentOperation );
+		for ( i = 0; i < compilationUnits.size(); i++ )
+		{
+			CompilationUnit& compilationUnit = *compilationUnits[i];
+			fprintf (
+				fMakefile,
+				"%s%s",
+				( i%10 == 9 ? " \\\n\t" : " " ),
+				backend->GetFullName ( *compilationUnit.GetFilename () ).c_str () );
+		}
+		fprintf ( fMakefile, "\n" );
+	}
+
+	const vector<If*>& ifs = data.ifs;
+	for ( i = 0; i < ifs.size(); i++ )
+	{
+		If& rIf = *ifs[i];
+		if ( rIf.data.defines.size()
+			|| rIf.data.includes.size()
+			|| rIf.data.libraries.size()
+			|| rIf.data.compilationUnits.size()
+			|| rIf.data.compilerFlags.size()
+			|| rIf.data.ifs.size() )
+		{
+			fprintf (
+				fMakefile,
+				"%s (\"$(%s)\",\"%s\")\n",
+				rIf.negated ? "ifneq" : "ifeq",
+				rIf.property.c_str(),
+				rIf.value.c_str() );
+			GenerateSourceMacros (
+				"+=",
+				rIf.data );
+			fprintf (
+				fMakefile,
+				"endif\n\n" );
+		}
+	}
+
+	vector<CompilationUnit*> sourceCompilationUnits;
+	GetModuleSpecificCompilationUnits ( sourceCompilationUnits );
+	for ( i = 0; i < sourceCompilationUnits.size (); i++ )
+	{
+		fprintf (
+			fMakefile,
+			"%s += %s\n",
+			sourcesMacro.c_str(),
+			backend->GetFullName ( *sourceCompilationUnits[i]->GetFilename () ).c_str () );
+	}
+	CleanupCompilationUnitVector ( sourceCompilationUnits );
+}
+
+void
 MingwModuleHandler::GenerateObjectMacros (
 	const char* assignmentOperation,
-	const IfableData& data,
-	const vector<LinkerFlag*>* linkerFlags )
+	const IfableData& data )
 {
 	size_t i;
 
@@ -988,8 +1054,7 @@ MingwModuleHandler::GenerateObjectMacros (
 				rIf.value.c_str() );
 			GenerateObjectMacros (
 				"+=",
-				rIf.data,
-				NULL );
+				rIf.data );
 			fprintf (
 				fMakefile,
 				"endif\n\n" );
@@ -1887,14 +1952,26 @@ MingwModuleHandler::GetModuleTargets ( const Module& module )
 }
 
 void
+MingwModuleHandler::GenerateSourceMacro ()
+{
+	sourcesMacro = ssprintf ( "%s_SOURCES", module.name.c_str ());
+
+	GenerateSourceMacros (
+		"=",
+		module.non_if_data );
+
+	// future references to the macro will be to get its values
+	sourcesMacro = ssprintf ("$(%s)", sourcesMacro.c_str ());
+}
+
+void
 MingwModuleHandler::GenerateObjectMacro ()
 {
 	objectsMacro = ssprintf ("%s_OBJS", module.name.c_str ());
 
 	GenerateObjectMacros (
 		"=",
-		module.non_if_data,
-		&module.linkerFlags );
+		module.non_if_data );
 
 	// future references to the macro will be to get its values
 	objectsMacro = ssprintf ("$(%s)", objectsMacro.c_str ());
