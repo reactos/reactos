@@ -1,77 +1,1538 @@
-Index: shell32_main.c
+Index: autocomplete.c
 ===================================================================
---- shell32_main.c	(revision 26448)
-+++ shell32_main.c	(working copy)
-@@ -509,23 +509,59 @@
-     /* get the iconlocation */
-     if (SUCCEEDED(hr) && (flags & SHGFI_ICONLOCATION ))
-     {
--        UINT uDummy,uFlags;
-+        if (!(flags & SHGFI_USEFILEATTRIBUTES))
-+        {
-+            UINT uDummy,uFlags;
- 
--        hr = IShellFolder_GetUIObjectOf(psfParent, 0, 1,
--               (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconA,
--               &uDummy, (LPVOID*)&pei);
--        if (SUCCEEDED(hr))
-+            hr = IShellFolder_GetUIObjectOf(psfParent, 0, 1,
-+                   (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconA,
-+                   &uDummy, (LPVOID*)&pei);
-+            if (SUCCEEDED(hr))
-+            {
-+                hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
-+                        szLocation, MAX_PATH, &iIndex, &uFlags);
-+                psfi->iIcon = iIndex;
-+
-+                if (!(uFlags & GIL_NOTFILENAME))
-+                    lstrcpyW (psfi->szDisplayName, szLocation);
-+                else
-+                    ret = FALSE;
-+
-+                IExtractIconA_Release(pei);
-+            }
-+        }
-+        else
-         {
--            hr = IExtractIconW_GetIconLocation(pei, uGilFlags,
--                    szLocation, MAX_PATH, &iIndex, &uFlags);
--            psfi->iIcon = iIndex;
+--- autocomplete.c	(revision 29513)
++++ autocomplete.c	(working copy)
+@@ -38,7 +38,7 @@
+ #include <stdarg.h>
+ #include <stdlib.h>
+ #include <string.h>
 -
--            if (!(uFlags & GIL_NOTFILENAME))
--                lstrcpyW (psfi->szDisplayName, szLocation);
-+            if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-+            {
-+                strcpyW(psfi->szDisplayName, swShell32Name);
-+                psfi->iIcon = SIC_GetIconIndex(swShell32Name, -IDI_SHELL_FOLDER, 0);
-+            }
-             else
--                ret = FALSE;
-+            {
-+                WCHAR sTemp [MAX_PATH];
-+                WCHAR * szExt;
-+                DWORD dwNr=0;
-+                static const WCHAR p1W[] = {'%','1',0};
++#include <stdio.h>
+ #define COBJMACROS
  
--            IExtractIconA_Release(pei);
-+                lstrcpynW(sTemp, szFullPath, MAX_PATH);
+ #include "wine/debug.h"
+Index: changenotify.c
+===================================================================
+--- changenotify.c	(revision 29513)
++++ changenotify.c	(working copy)
+@@ -178,7 +178,7 @@
+ 
+     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
+ 
+-    DeleteCriticalSection(&SHELL32_ChangenotifyCS);
++    // DeleteCriticalSection(&SHELL32_ChangenotifyCS); // static
+ }
+ 
+ /*************************************************************************
+Index: control.c
+===================================================================
+--- control.c	(revision 29513)
++++ control.c	(working copy)
+@@ -464,6 +464,7 @@
+ void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
+                                 LPCSTR cmdline, INT cmdshow )
+ {
++#if !defined(__CYGWIN__) && !defined (__MINGW32__) && !defined(_MSC_VER)
+     WORD args[5];
+     SEGPTR cmdline_seg;
+ 
+@@ -478,6 +479,10 @@
+     args[0] = cmdshow;
+     WOWCallback16Ex( proc, WCB16_PASCAL, sizeof(args), args, NULL );
+     UnMapLS( cmdline_seg );
++#else
++    FIXME( "proc %lx hwnd %p inst %p cmdline %s cmdshow %d\n",
++           proc, hwnd, inst, debugstr_a(cmdline), cmdshow );
++#endif
+ }
+ 
+ /*************************************************************************
+Index: iconcache.c
+===================================================================
+--- iconcache.c	(revision 29513)
++++ iconcache.c	(working copy)
+@@ -306,9 +306,23 @@
+ 	HICON 	hiconLargeShortcut;
+ 	HICON	hiconSmallShortcut;
+ 
+-        PrivateExtractIconsW( sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, 0, 1, 0 );
+-        PrivateExtractIconsW( sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, 0, 1, 0 );
++#if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER)
++	static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
+ 
++	if (!PrivateExtractIconExW) {
++	    HMODULE hUser32 = GetModuleHandleA("user32");
++	    PrivateExtractIconExW = (UINT(WINAPI*)(LPCWSTR,int,HICON*,HICON*,UINT)) GetProcAddress(hUser32, "PrivateExtractIconExW");
++	}
 +
-+                psfi->iIcon = 0;
-+                szExt = (LPWSTR) PathFindExtensionW(sTemp);
-+                if ( szExt &&
-+                     HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&
-+                     HCR_GetDefaultIconW(sTemp, sTemp, MAX_PATH, &dwNr))
-+                {
-+                    if (!lstrcmpW(p1W,sTemp))            /* icon is in the file */
-+                        strcpyW(psfi->szDisplayName, szFullPath);
-+                    else
-+                        strcpyW(psfi->szDisplayName, sTemp);
++        if (PrivateExtractIconExW)
++	    PrivateExtractIconExW(sSourceFile, dwSourceIndex, &hiconLarge, &hiconSmall, 1);
++	else
++#endif
++	{
++	    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, 0);
++	    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, 0);
++	}
 +
-+                    psfi->iIcon = SIC_GetIconIndex(psfi->szDisplayName, dwNr, 0);
-+                    if (psfi->iIcon == -1)
-+                        psfi->iIcon = 0;
-+                }
+ 	if ( !hiconLarge ||  !hiconSmall)
+ 	{
+ 	  WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
+@@ -458,7 +472,7 @@
+ 	ShellBigIconList = 0;
+ 
+ 	LeaveCriticalSection(&SHELL32_SicCS);
+-	DeleteCriticalSection(&SHELL32_SicCS);
++	//DeleteCriticalSection(&SHELL32_SicCS); //static
+ }
+ 
+ /*****************************************************************************
+@@ -672,6 +686,19 @@
+  */
+ UINT WINAPI ExtractIconExW(LPCWSTR lpszFile, INT nIconIndex, HICON * phiconLarge, HICON * phiconSmall, UINT nIcons)
+ {
++	/* get entry point of undocumented function PrivateExtractIconExW() in user32 */
++#if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER)
++	static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
++
++	if (!PrivateExtractIconExW) {
++	    HMODULE hUser32 = GetModuleHandleA("user32");
++	    PrivateExtractIconExW = (UINT(WINAPI*)(LPCWSTR,int,HICON*,HICON*,UINT)) GetProcAddress(hUser32, "PrivateExtractIconExW");
++
++	    if (!PrivateExtractIconExW)
++		return 0;
++	}
++#endif
++
+ 	TRACE("%s %i %p %p %i\n", debugstr_w(lpszFile), nIconIndex, phiconLarge, phiconSmall, nIcons);
+ 
+ 	return PrivateExtractIconExW(lpszFile, nIconIndex, phiconLarge, phiconSmall, nIcons);
+Index: regsvr.c
+===================================================================
+--- regsvr.c	(revision 29513)
++++ regsvr.c	(working copy)
+@@ -669,6 +669,7 @@
+ static const WCHAR wszRecycleBin[] = { 'T','r','a','s','h', 0 };
+ 
+ static struct regsvr_namespace const namespace_extensions_list[] = {
++#if 0
+     {   
+         &CLSID_UnixDosFolder,
+         wszDesktop,
+@@ -684,6 +685,7 @@
+         wszDesktop,
+         wszRecycleBin
+     },
++#endif
+     { NULL }
+ };
+ 
+Index: shell32.spec
+===================================================================
+--- shell32.spec	(revision 29513)
++++ shell32.spec	(working copy)
+@@ -247,7 +247,7 @@
+  654 stdcall @(long long) shell32_654 # ReadCabinetState@8
+ 
+  660 stdcall -noname FileIconInit(long)
+- 680 stdcall -noname IsUserAdmin()
++ 680 stdcall IsUserAnAdmin()
+ 
+  714 stdcall @(ptr) SHELL32_714 # PathIsTemporaryW
+  730 stdcall -noname RestartDialogEx(long wstr long long)
+@@ -368,7 +368,7 @@
+ @ stdcall SHQueryRecycleBinA(str ptr)
+ @ stdcall SHQueryRecycleBinW(wstr ptr)
+ @ stdcall SHSetLocalizedName(wstr wstr long)
+-@ stdcall SHUpdateRecycleBinIcon()
++@ stub SHUpdateRecycleBinIcon
+ @ stdcall SheChangeDirA(str)
+ @ stub SheChangeDirExA
+ @ stub SheChangeDirExW
+Index: shell32_De.rc
+===================================================================
+--- shell32_De.rc	(revision 29513)
++++ shell32_De.rc	(working copy)
+@@ -128,7 +128,7 @@
+  ICON "", 1088, 10, 10, 14, 16
+  LTEXT "", 100, 30, 10, 137, 10
+  LTEXT "", 101, 30, 22, 137, 10
+- LTEXT "WINE wurde für Sie gekeltert von:", 98, 8, 55, 137, 10
++ LTEXT "ReactOS wurde Ihnen zur Verfügung gestellt von:", 98, 8, 55, 170, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -137,14 +137,178 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Geben sie den Namen eines Programmes, eines Ordners, eines Dokumentes oder einer Internet-Ressource ein, die geöffnet werden soll", 12289, 36, 11, 182, 18
+- LTEXT "Ö&ffnen:", 12305, 7, 39, 24, 10
++ LTEXT "Geben Sie den Namen eines Programms, eines Ordners, eines Dokuments oder einer Internetressource an.", 12289, 36, 11, 182, 18
++ LTEXT "&Öffnen:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+  PUSHBUTTON "Abbrechen", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+  PUSHBUTTON "&Durchsuchen...", 12288, 170, 63, 50, 14, WS_TABSTOP
+ }
+ 
++SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Verknüpfung"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++ ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
++ LTEXT "Zeiltyp:", 14004, 10, 30, 50, 10
++ LTEXT "", 14005, 70, 30, 150, 10
++ LTEXT "Zielpfad:", 14006, 10, 40, 70, 10
++ LTEXT "", 14007, 70, 40, 150, 10
++ LTEXT "Ziel:", 14008, 10, 55, 45, 10
++ EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
++ LTEXT "&Starten in:",14010, 10, 65, 45, 10
++ EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
++ LTEXT "&Tastenkombination:", 14014, 10, 80, 45, 10
++ EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
++ LTEXT "Ausführen:", 14016, 10, 90, 45, 10
++ EDITTEXT 14017, 70, 90, 150, 10
++ LTEXT "K&ommentar:", 14018, 10, 100, 45, 10
++ EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
++ PUSHBUTTON "&Ziel finden...", 14020, 10, 115, 60, 14, ES_LEFT
++ PUSHBUTTON "I&con wechseln...", 14021, 80, 115, 60, 14, ES_LEFT
++ PUSHBUTTON "Er&weitert...", 14022, 150, 115, 60, 14, ES_LEFT
++}
++
++SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
++CAPTION "Erweiterte Einstellungen"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 190, 10
++  CHECKBOX "Als anderer Benutzer ausführen", 14000, 30, 50, 150, 10
++  LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter\neinem anderen oder Ihrem eingenen Bentzerkonto auszuführen\nwährend der Computer und Ihre Daten vor unautorisierten\nProgrammaktivitäten geschützt werden können.", -1, 50, 60, 200, 40
++  CHECKBOX "In getrennten Speicherbereich ausführen", 14001, 30, 100, 90, 10, WS_DISABLED
++  PUSHBUTTON "OK", IDOK, 25, 120, 40, 15, WS_VISIBLE
++  PUSHBUTTON "Abbrechen", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
++}
++
++SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Allgemein"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++ ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
++ EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
++ LTEXT "Dateityp:", 14004, 10, 30, 50, 10
++ LTEXT "Datei", 14005, 70, 30, 150, 10
++ LTEXT "Öffnen mit:", 14006, 10, 40, 50, 10
++ LTEXT "", 14007, 70, 40, 150, 10
++ LTEXT "Pfad:", 14008, 10, 55, 45, 10
++ LTEXT "", 14009, 70, 55, 200, 10
++ LTEXT "Größe:",14010, 10, 65, 45, 10
++ LTEXT "", 14011, 70, 65, 150, 10
++ LTEXT "Erstellt:", 14014, 10, 80, 45, 10
++ LTEXT "", 14015, 70, 80, 150, 10
++ LTEXT "Geändert:", 14016, 10, 90, 45, 10
++ LTEXT "", 14017, 70, 90, 150, 10
++ LTEXT "Zugegriffen:", 14018, 10, 100, 45, 10
++ LTEXT "", 14019, 70, 100, 150, 10
++ LTEXT "Attribute:", 14020, 10, 115, 45, 10
++ CHECKBOX "&Schreibgeschützt", 14021, 70, 115, 45, 10
++ CHECKBOX "&Versteckt", 14022, 130, 115, 50, 10
++ CHECKBOX "&Archiv", 14023, 180, 115, 45, 10
++}
++
++SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Version"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++  LTEXT "Dateiversion: ", 14000, 10, 10, 45, 10
++  LTEXT "", 14001, 70, 10, 150, 10
++  LTEXT "Beschreibung: ", 14002, 10, 20, 45, 10
++  LTEXT "", 14003, 70, 20, 150, 10
++  LTEXT "Copyright: ", 14004, 10, 30, 45, 10
++  LTEXT "", 14005, 70, 30, 150, 10
++  GROUPBOX "Weitere Versionsinformationen: ", 14006, 10, 45, 220, 90
++  LTEXT "Elementname: ", 14007, 20, 55, 50, 10
++  LTEXT "Wert: ", 14008, 130, 55, 45, 10
++  LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
++  EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT|WS_BORDER|WS_VSCROLL|WS_GROUP|ES_MULTILINE|ES_READONLY
++
++}
++
++DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Allgemein"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++  EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
++  LTEXT "Typ:", -1, 15, 55, 40, 10
++  LTEXT "", 14002, 110, 55, 100, 10
++
++
++  LTEXT "Dateisystem:", -1, 15, 70, 100, 10
++  LTEXT "", 14003, 110, 70, 100, 10
++
++  CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
++  LTEXT "Belegter Speicher:", -1, 25, 90, 120, 10
++  LTEXT "", 14004, 110, 90, 120, 10
++  LTEXT "", 14005, 200, 90, 40, 10
++
++  CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
++  LTEXT "Freier Speicher:", -1, 25, 105, 70, 10
++  LTEXT "", 14006, 110, 105, 120, 10
++  LTEXT "", 14007, 200, 105, 40, 10
++
++  LTEXT "Speicherkapazität:", -1, 25, 125, 80, 10
++  LTEXT "", 14008, 110, 125, 120, 10
++  LTEXT "", 14009, 200, 125, 40, 10
++
++  CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
++
++  LTEXT "Laufwerk %s", 14010, 100, 170, 40, 10
++  PUSHBUTTON "Bereinigen", 14011, 180, 175, 50, 15, WS_TABSTOP
++  CHECKBOX "Laufwerk komprimieren, um Speicherplatz zu sparen", 14012, 15, 205, 165, 10, WS_DISABLED
++  CHECKBOX "Laufwerk für schnelle Dateisuche indizieren", 14012, 15, 220, 165, 10, WS_DISABLED
++}
++
++DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Extras"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++  GROUPBOX "Fehlerüberprüfung", -1, 5, 5, 230, 60
++  LTEXT "Bei Wahl dieser Option wird das Volume\nauf Fehler überprüft.", -1, 40, 25, 160, 20
++  PUSHBUTTON "Jetzt &prüfen", 14000, 130, 45, 90, 15, WS_TABSTOP
++  GROUPBOX "Defragmentierung", -1, 5, 65, 230, 60
++  LTEXT "Bei Wahl dieser Option werden die Dateien auf\ndem Volume defragmentiert.", -1, 40, 85, 160, 20
++  PUSHBUTTON "Jetzt &defragmentieren", 14001, 130, 105, 90, 15, WS_TABSTOP
++  GROUPBOX "Sicherung", -1, 5, 130, 230, 60
++  LTEXT "Bei Wahl dieser Option werden die auf dem\nVolume gespeicherten Dateien gesichert.", -1, 40, 150, 160, 20
++  PUSHBUTTON "Jetzt &sichern", 14002, 130, 170, 90, 15, WS_TABSTOP
++}
++
++DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Hardware"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++}
++
++RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Ausführen als"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++   LTEXT "Which user account do you want to use to run this program?", -1, 30, 30, 170, 10
++   CHECKBOX "Aktueller Benutzer %s", 14000, 5, 45, 150, 10
++   LTEXT "Computer vor unauthorisierten Programmaktiviäten schützen", -1, 40, 65, 150, 10, WS_DISABLED
++   CHECKBOX "Diese Einstellung kann Computerviren daran hindern, ihrem\nComputer und/oder Ihren persönlichen Daten zu schaden, aber\nes kann auch Programme daran hindern, Ordnungsgemäß zu arbeiten.", 14001, 40, 80, 150, 10, WS_DISABLED
++   CHECKBOX "Folgender Benutzer:", 14002, 5, 100, 90, 10
++   LTEXT "Benutzername:", -1, 15, 115, 60, 10
++   COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
++
++   PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
++   LTEXT "Passwort:", -1, 15, 140, 60, 10
++   EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
++   PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
++   PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP
++   PUSHBUTTON "Abbrechen", 14008, 140, 170, 60, 15, WS_TABSTOP
++}
++
++
+ STRINGTABLE DISCARDABLE
+ {
+         /* columns in the shellview */
+@@ -194,10 +358,10 @@
+ 	    "the folder?"
+ 
+         /* message box strings */
+-        IDS_RESTART_TITLE       "Neustarten"
+-        IDS_RESTART_PROMPT      "Möchten Sie, dass ein simulierter Windows Neustart durchgeführt wird ?"
+-        IDS_SHUTDOWN_TITLE      "Anhalten"
+-        IDS_SHUTDOWN_PROMPT     "Möchten Sie die aktuelle Wine Sitzung beenden ?"
++        IDS_RESTART_TITLE       "Neu starten"
++        IDS_RESTART_PROMPT      "Möchten Sie das System neu starten?"
++        IDS_SHUTDOWN_TITLE      "Herunterfahren"
++        IDS_SHUTDOWN_PROMPT     "Möchten Sie das System herunterfahren?"
+ 
+         /* shell folder path default values */
+ 	IDS_PROGRAMS		"Startmenü\\Programme"
+@@ -227,4 +391,7 @@
+ 	IDS_COMMON_PICTURES	"Dokumente\\Eigene Bilder"
+ 	IDS_COMMON_VIDEO	"Dokumente\\Eigene Videos"
+ 	IDS_CDBURN_AREA		"Lokale Einstellungen\\Anwendungsdaten\\Microsoft\\CD Burning"
++        IDS_DRIVE_FIXED         "Lokaler Datenträger"
++        IDS_DRIVE_CDROM         "CD-Laufwerk"
++        IDS_DRIVE_NETWORK       "Netzwerklaufwerk"
+ }
+Index: shell32_En.rc
+===================================================================
+--- shell32_En.rc	(revision 29513)
++++ shell32_En.rc	(working copy)
+@@ -16,7 +16,7 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
++LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+ 
+ MENU_001 MENU DISCARDABLE
+ BEGIN
+@@ -145,7 +145,7 @@
+  ICON "", 1088, 10, 10, 14, 16
+  LTEXT "", 100, 30, 10, 137, 10
+  LTEXT "", 101, 30, 22, 137, 10
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -154,7 +154,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -162,6 +162,172 @@
+  PUSHBUTTON "&Browse...", 12288, 170, 63, 50, 14, WS_TABSTOP
+ }
+ 
++SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Shortcut"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++ ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
++ LTEXT "Target type:", 14004, 10, 30, 50, 10
++ LTEXT "", 14005, 70, 30, 150, 10
++ LTEXT "Target location:", 14006, 10, 40, 70, 10
++ LTEXT "", 14007, 70, 40, 150, 10
++ LTEXT "Target:", 14008, 10, 55, 45, 10
++ EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
++ LTEXT "&Start in:",14010, 10, 65, 45, 10
++ EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
++ LTEXT "Shortcut &key:", 14014, 10, 80, 45, 10
++ EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
++ LTEXT "Run:", 14016, 10, 90, 45, 10
++ EDITTEXT 14017, 70, 90, 150, 10
++ LTEXT "C&omment:", 14018, 10, 100, 45, 10
++ EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
++ PUSHBUTTON "&Find Target...", 14020, 10, 115, 60, 14, ES_LEFT
++ PUSHBUTTON "&Change Icon...", 14021, 80, 115, 60, 14, ES_LEFT
++ PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
++}
++
++SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 260, 150
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
++CAPTION "Extended Properties"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++  LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 190, 10
++  CHECKBOX "Run with different credentials", 14000, 30, 50, 150, 10
++  LTEXT "This option can allow you to run the this shortcut as another\nuser, or continue as yourself while protecting your computer\nand data from unauthorized program activity.", -1, 50, 60, 200, 40
++  CHECKBOX "Run in seperate memory space", 14001, 30, 100, 90, 10, WS_DISABLED
++  PUSHBUTTON "OK", IDOK, 25, 120, 40, 15, WS_VISIBLE
++  PUSHBUTTON "Abort", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
++}
++
++SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "General"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++ ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
++ EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
++ LTEXT "Type of file:", 14004, 10, 30, 50, 10
++ LTEXT "File", 14005, 70, 30, 150, 10
++ LTEXT "Opens with:", 14006, 10, 40, 50, 10
++ LTEXT "", 14007, 70, 40, 150, 10
++ LTEXT "Location:", 14008, 10, 55, 45, 10
++ LTEXT "", 14009, 70, 55, 200, 10
++ LTEXT "Size:",14010, 10, 65, 45, 10
++ LTEXT "", 14011, 70, 65, 150, 10
++ LTEXT "Created:", 14014, 10, 80, 45, 10
++ LTEXT "", 14015, 70, 80, 150, 10
++ LTEXT "Modified:", 14016, 10, 90, 45, 10
++ LTEXT "", 14017, 70, 90, 150, 10
++ LTEXT "Accessed:", 14018, 10, 100, 45, 10
++ LTEXT "", 14019, 70, 100, 150, 10
++ LTEXT "Attributes:", 14020, 10, 115, 45, 10
++ CHECKBOX "&Read-only", 14021, 70, 115, 45, 10
++ CHECKBOX "&Hidden", 14022, 130, 115, 50, 10
++ CHECKBOX "&Archive", 14023, 180, 115, 45, 10
++}
++
++SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Version"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++  LTEXT "File version: ", 14000, 10, 10, 45, 10
++  LTEXT "", 14001, 70, 10, 150, 10
++  LTEXT "Description: ", 14002, 10, 20, 45, 10
++  LTEXT "", 14003, 70, 20, 150, 10
++  LTEXT "Copyright: ", 14004, 10, 30, 45, 10
++  LTEXT "", 14005, 70, 30, 150, 10
++  GROUPBOX "Other version information: ", 14006, 10, 45, 220, 90
++  LTEXT "Item name: ", 14007, 20, 55, 50, 10
++  LTEXT "Value: ", 14008, 130, 55, 45, 10
++  LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
++  EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT|WS_BORDER|WS_VSCROLL|WS_GROUP|ES_MULTILINE|ES_READONLY
++
++}
++
++DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "General"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++  EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
++  LTEXT "Type:", -1, 15, 55, 40, 10
++  LTEXT "", 14002, 110, 55, 100, 10
++
++
++  LTEXT "File system:", -1, 15, 70, 100, 10
++  LTEXT "", 14003, 110, 70, 100, 10
++
++  CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
++  LTEXT "Used space:", -1, 25, 90, 120, 10
++  LTEXT "", 14004, 110, 90, 120, 10
++  LTEXT "", 14005, 200, 90, 40, 10
++
++  CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
++  LTEXT "Free space:", -1, 25, 105, 70, 10
++  LTEXT "", 14006, 110, 105, 120, 10
++  LTEXT "", 14007, 200, 105, 40, 10
++
++  LTEXT "Capacity:", -1, 25, 125, 80, 10
++  LTEXT "", 14008, 110, 125, 120, 10
++  LTEXT "", 14009, 200, 125, 40, 10
++
++  CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
++
++  LTEXT "Drive %s", 14010, 100, 170, 40, 10
++  PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
++  CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 165, 10, WS_DISABLED
++  CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
++}
++
++DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Tools"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++  GROUPBOX "Error-checking", -1, 5, 5, 230, 60
++  LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
++  PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
++  GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
++  LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
++  PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
++  GROUPBOX "Backup", -1, 5, 130, 230, 60
++  LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
++  PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
++}
++
++
++
++DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Hardware"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++}
++
++RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
++STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
++CAPTION "Run As"
++FONT 8, "MS Shell Dlg", 0, 0, 0x0
++{
++   LTEXT "Which user account do you want to use to run this program?", -1, 30, 30, 170, 10
++   CHECKBOX "Current User %s", 14000, 5, 45, 150, 10
++   LTEXT "Protect my computer and data from unauthorized program activity", -1, 40, 65, 150, 10, WS_DISABLED
++   CHECKBOX "This option can prevent computer viruses from harming your\ncomputer or personal data, but selecting it might cause the\nprogram to function improperly.", 14001, 40, 80, 150, 10, WS_DISABLED
++   CHECKBOX "The following user:", 14002, 5, 100, 90, 10
++   LTEXT "User name:", -1, 15, 115, 60, 10
++   COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
++
++   PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
++   LTEXT "Password:", -1, 15, 140, 60, 10
++   EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
++   PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
++   PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP
++   PUSHBUTTON "Cancel", 14008, 140, 170, 60, 15, WS_TABSTOP
++}
++
++
+ STRINGTABLE DISCARDABLE
+ {
+         /* columns in the shellview */
+@@ -211,10 +377,10 @@
+ 	    "the folder?"
+ 
+         /* message box strings */
+-        IDS_RESTART_TITLE       "Restart"
+-        IDS_RESTART_PROMPT      "Do you want to simulate a Windows reboot?"
+-        IDS_SHUTDOWN_TITLE      "Shutdown"
+-        IDS_SHUTDOWN_PROMPT     "Do you want to shutdown your Wine session?"
++	IDS_RESTART_TITLE	"Restart"
++	IDS_RESTART_PROMPT	"Do you want to restart the system?"
++	IDS_SHUTDOWN_TITLE	"Shutdown"
++	IDS_SHUTDOWN_PROMPT	"Do you want to shutdown?"
+ 
+         /* shell folder path default values */
+ 	IDS_PROGRAMS                "Start Menu\\Programs"
+@@ -244,4 +410,7 @@
+ 	IDS_COMMON_PICTURES         "Documents\\My Pictures"
+ 	IDS_COMMON_VIDEO            "Documents\\My Video"
+ 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
++        IDS_DRIVE_FIXED             "Local Disk"
++        IDS_DRIVE_CDROM             "CDROM"
++        IDS_DRIVE_NETWORK           "Network Disk"
+ }
+Index: shell32_main.h
+===================================================================
+--- shell32_main.h	(revision 29513)
++++ shell32_main.h	(working copy)
+@@ -239,4 +239,8 @@
+ /* Detect Shell Links */
+ BOOL SHELL_IsShortcut(LPCITEMIDLIST);
+ 
++INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
++INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
++HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam);
++BOOL SH_ShowDriveProperties(WCHAR * drive);
+ #endif
+Index: shelllink.c
+===================================================================
+--- shelllink.c	(revision 29513)
++++ shelllink.c	(working copy)
+@@ -53,8 +53,9 @@
+ #include "shlwapi.h"
+ #include "msi.h"
+ #include "appmgmt.h"
+-
++#include "prsht.h"
+ #include "initguid.h"
++#include "shresdef.h"
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(shell);
+ 
+@@ -86,6 +87,7 @@
+ 
+ #define SHLINK_LOCAL  0
+ #define SHLINK_REMOTE 1
++#define MAX_PROPERTY_SHEET_PAGE 32
+ 
+ typedef struct _LOCATION_INFO
+ {
+@@ -157,9 +159,11 @@
+  	LPWSTR        sProduct;
+  	LPWSTR        sComponent;
+ 	volume_info   volume;
+-
++    LPWSTR        sLinkPath;
++    BOOL          bRunAs;
+ 	BOOL          bDirty;
+         INT           iIdOpen;  /* id of the "Open" entry in the context menu */
++        INT           iIdProperties; /* id of the "Properties" entry in the context menu */
+ 	IUnknown      *site;
+ } IShellLinkImpl;
+ 
+@@ -304,6 +308,7 @@
+     HeapFree(GetProcessHeap(), 0, This->sWorkDir);
+     HeapFree(GetProcessHeap(), 0, This->sDescription);
+     HeapFree(GetProcessHeap(),0,This->sPath);
++    HeapFree(GetProcessHeap(),0,This->sLinkPath);
+ 
+     if (This->site)
+         IUnknown_Release( This->site );
+@@ -386,6 +391,8 @@
+         r = SHCreateStreamOnFileW(pszFileName, dwMode, &stm);
+         if( SUCCEEDED( r ) )
+         {
++            HeapFree(GetProcessHeap(), 0, This->sLinkPath);
++            This->sLinkPath = _wcsdup(pszFileName);
+             r = IPersistStream_Load(StreamThis, stm);
+             ShellLink_UpdatePath(This->sPathRel, pszFileName, This->sWorkDir, &This->sPath);
+             IStream_Release( stm );
+@@ -919,6 +926,15 @@
+         r = Stream_LoadAdvertiseInfo( stm, &This->sComponent );
+         TRACE("Component    -> %s\n",debugstr_w(This->sComponent));
+     }
++    if( hdr.dwFlags & SLDF_RUNAS_USER )
++    {
++       This->bRunAs = TRUE;
++    }
++    else
++    {
++       This->bRunAs = FALSE;
++    }
++
+     if( FAILED( r ) )
+         goto end;
+ 
+@@ -1089,6 +1105,8 @@
+         header.dwFlags |= SLDF_HAS_LOGO3ID;
+     if( This->sComponent )
+         header.dwFlags |= SLDF_HAS_DARWINID;
++    if( This->bRunAs )
++        header.dwFlags |= SLDF_RUNAS_USER;
+ 
+     SystemTimeToFileTime ( &This->time1, &header.Time1 );
+     SystemTimeToFileTime ( &This->time2, &header.Time2 );
+@@ -1204,6 +1222,7 @@
+ 	sl->bDirty = FALSE;
+ 	sl->iIdOpen = -1;
+ 	sl->site = NULL;
++    sl->bRunAs = FALSE;
+ 
+ 	TRACE("(%p)->()\n",sl);
+ 
+@@ -2452,6 +2471,7 @@
+ {
+     IShellLinkImpl *This = impl_from_IContextMenu(iface);
+     static WCHAR szOpen[] = { 'O','p','e','n',0 };
++    static WCHAR szProperties[] = { 'P','r','o','p','e','r','t','i','e','s',0 };
+     MENUITEMINFOW mii;
+     int id = 1;
+ 
+@@ -2461,10 +2481,10 @@
+     if ( !hmenu )
+         return E_INVALIDARG;
+ 
+-    memset( &mii, 0, sizeof mii );
+-    mii.cbSize = sizeof mii;
++    memset( &mii, 0, sizeof(mii) );
++    mii.cbSize = sizeof (mii);
+     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+-    mii.dwTypeData = szOpen;
++    mii.dwTypeData = (LPWSTR)szOpen;
+     mii.cch = strlenW( mii.dwTypeData );
+     mii.wID = idCmdFirst + id++;
+     mii.fState = MFS_DEFAULT | MFS_ENABLED;
+@@ -2473,6 +2493,18 @@
+         return E_FAIL;
+     This->iIdOpen = 0;
+ 
++    mii.fState = MFS_ENABLED;
++    mii.dwTypeData = (LPWSTR)szProperties;
++    mii.cch = strlenW( mii.dwTypeData );
++    mii.wID = idCmdFirst + id++;
++    if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
++    {
++        TRACE("ShellLink_QueryContextMenu failed to insert item properties");
++        return E_FAIL;
++    }
++    This->iIdProperties = 1;
++    id++;
++
+     return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
+ }
+ 
+@@ -2500,7 +2532,223 @@
+     return path;
+ }
+ 
++INT_PTR CALLBACK ExtendedShortcutProc(      
++    HWND hwndDlg,
++    UINT uMsg,
++    WPARAM wParam,
++    LPARAM lParam
++)
++{
++   HWND hDlgCtrl;
++
++   switch(uMsg)
++   {
++   case WM_INITDIALOG:
++       if (lParam)
++       {
++            hDlgCtrl = GetDlgItem(hwndDlg, 14000);
++            SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
++       }
++       return TRUE;
++   case WM_COMMAND:
++        hDlgCtrl = GetDlgItem(hwndDlg, 14000);
++		if (LOWORD(wParam) == IDOK)
++        {
++		   if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED )
++	          EndDialog(hwndDlg, 1);
++           else
++              EndDialog(hwndDlg, 0);
++        }
++        else if (LOWORD(wParam) == IDCANCEL)
++        {
++            EndDialog(hwndDlg, -1);
++        }
++        else if (LOWORD(wParam) == 14000)
++        {
++           if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED)
++              SendMessage(hDlgCtrl, BM_SETCHECK, BST_UNCHECKED, 0);
++           else
++              SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
++
++        }
++   }
++   return FALSE;
++}
++
++/**************************************************************************
++ * SH_ShellLinkDlgProc
++ *
++ * dialog proc of the shortcut property dialog
++ */
++
++INT_PTR 
++CALLBACK 
++SH_ShellLinkDlgProc(   
++    HWND hwndDlg,
++    UINT uMsg,
++    WPARAM wParam,
++    LPARAM lParam
++)
++{
++    LPPROPSHEETPAGEW ppsp;
++    LPPSHNOTIFY lppsn;
++    IShellLinkImpl *This;
++    HWND hDlgCtrl;
++    WCHAR szBuffer[MAX_PATH];
++    int IconIndex;
++    INT_PTR result;
++
++    This = (IShellLinkImpl *)GetWindowLongPtr(hwndDlg, DWLP_USER);
++
++    switch(uMsg)
++    {
++    case WM_INITDIALOG:
++        ppsp = (LPPROPSHEETPAGEW)lParam;
++        if (ppsp == NULL)
++            break;
++     
++        TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n",hwndDlg, lParam, ppsp->lParam);
++
++        This = (IShellLinkImpl *)ppsp->lParam;
++        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)This);
++
++		TRACE("sArgs: %S sComponent: %S sDescription: %S sIcoPath: %S sPath: %S sPathRel: %S sProduct: %S sWorkDir: %S\n", This->sArgs, This->sComponent ,This->sDescription,
++			This->sIcoPath, This->sPath, This->sPathRel, This->sProduct, This->sWorkDir);
++
++        /* target path */
++        hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
++        if ( hDlgCtrl != NULL )
++            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)This->sPath );
++
++       /* working dir */
++       hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
++       if ( hDlgCtrl != NULL )
++            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)This->sWorkDir );
++
++	   /* description */
++       hDlgCtrl = GetDlgItem( hwndDlg, 14019 );
++       if ( hDlgCtrl != NULL )
++            SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)This->sDescription );
++        return TRUE;
++    case WM_NOTIFY:
++       lppsn = (LPPSHNOTIFY) lParam; 
++       if ( lppsn->hdr.code == PSN_APPLY )
++       {
++            /* set working directory */
++            hDlgCtrl = GetDlgItem( hwndDlg, 14011 );
++            SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer );
++            IShellLinkW_fnSetWorkingDirectory((IShellLinkW*)&This->lpvtblw, szBuffer);
++            /* set link destination */
++            hDlgCtrl = GetDlgItem( hwndDlg, 14009 );
++            SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer);
++            if ( !SHELL_ExistsFileW(szBuffer) )
++            {
++                MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
++                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
++                return TRUE;
 +            }
++            IShellLinkW_fnSetPath((IShellLinkW*)&This->lpvtblw, szBuffer);
++
++            TRACE("This %p sLinkPath %S\n", This, This->sLinkPath);
++            IPersistFile_fnSave( (IPersistFile*)&This->lpvtblPersistFile, This->sLinkPath, TRUE );
++            SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
++            return TRUE;
++       }
++       break;
++    case WM_COMMAND:
++       switch(LOWORD(wParam))
++       {
++           case 14020:
++               /// 
++               /// FIXME
++               /// open target directory
++               ///
++               return TRUE;
++           case 14021:
++               if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
++               {
++                    IShellLinkW_fnSetIconLocation((IShellLinkW*)&This->lpvtblw, szBuffer, IconIndex);
++                    ///
++                    /// FIXME redraw icon
++               }
++               return TRUE;
++           case 14022:
++               result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(SHELL_EXTENDED_SHORTCUT_DLG), hwndDlg, ExtendedShortcutProc, (LPARAM)This->bRunAs);
++               if (result == 1 || result == 0)
++               {
++                   if ( This->bRunAs != result )
++                   {
++                       PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
++                   }
++
++                   This->bRunAs = result;
++               }
++               return TRUE;
++       }
++       switch(HIWORD(wParam))
++       {
++           case EN_CHANGE:
++              PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
++              break;
++       }
++       break;
++    default:
++        break;
++   }
++   return FALSE;
++}
++
++/**************************************************************************
++ * ShellLink_ShortcutDialog [Internal]
++ *
++ * creates a shortcut property dialog
++ */
++
+ static HRESULT WINAPI
++ShellLink_ShowProperties( IShellLinkImpl *This )
++{
++    PROPSHEETHEADERW pinfo;
++    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
++    HPROPSHEETPAGE hpage;
++    UINT numpages = 0;
++
++    TRACE("ShellLink_ShortcutDialog entered\n");
++
++    memset(hppages, 0x0, sizeof(HPROPSHEETPAGE) * MAX_PROPERTY_SHEET_PAGE);
++
++    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)This->sLinkPath);
++    if ( hpage == NULL )
++        return E_FAIL;
++    else
++        hppages[numpages++] = hpage;
++
++	hpage = SH_CreatePropertySheetPage("SHELL_GENERAL_SHORTCUT_DLG", SH_ShellLinkDlgProc, (LPARAM)This);
++	if ( hpage == NULL )
++    {
++        ERR("SH_CreatePropertySheetPage failed\n");
++        DestroyPropertySheetPage(hppages[0]);
++        return E_FAIL;
++	}
++    hppages[numpages++] = hpage;
++
++    ///FIXME
++    /// load extensions
++
++    memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
++    pinfo.dwSize = sizeof(PROPSHEETHEADERW);
++    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
++    pinfo.nPages = numpages;
++	pinfo.u3.phpage = hppages;
++    pinfo.pszCaption = This->sDescription;
++    pinfo.u2.nStartPage = 1;
++
++    if ( PropertySheetW(&pinfo) < 0 )
++        return E_FAIL;
++	else
++        return S_OK;
++}
++
++static HRESULT WINAPI
+ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
+ {
+     IShellLinkImpl *This = impl_from_IContextMenu(iface);
+@@ -2516,6 +2764,12 @@
+     if ( lpici->cbSize < sizeof (CMINVOKECOMMANDINFO) )
+         return E_INVALIDARG;
+ 
++    if ( lpici->lpVerb == MAKEINTRESOURCEA(This->iIdProperties))
++    {
++        ShellLink_ShowProperties(This);
++        return S_OK;
++    }
++
+     if ( lpici->lpVerb != MAKEINTRESOURCEA(This->iIdOpen) )
+     {
+         ERR("Unknown id %d != %d\n", (INT)lpici->lpVerb, This->iIdOpen );
+Index: shellole.c
+===================================================================
+--- shellole.c	(revision 29513)
++++ shellole.c	(working copy)
+@@ -69,11 +69,13 @@
+ 	{&CLSID_DragDropHelper, &IDropTargetHelper_Constructor},
+ 	{&CLSID_ControlPanel,	&IControlPanel_Constructor},
+ 	{&CLSID_AutoComplete,   &IAutoComplete_Constructor},
++#if 0
+ 	{&CLSID_UnixFolder,     &UnixFolder_Constructor},
+ 	{&CLSID_UnixDosFolder,  &UnixDosFolder_Constructor},
+ 	{&CLSID_FolderShortcut, &FolderShortcut_Constructor},
+ 	{&CLSID_MyDocuments,    &MyDocuments_Constructor},
+ 	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
++#endif
+ 	{NULL,NULL}
+ };
+ 
+Index: shellord.c
+===================================================================
+--- shellord.c	(revision 29513)
++++ shellord.c	(working copy)
+@@ -1265,9 +1265,70 @@
+  * IsUserAdmin					[SHELL32.680] NT 4.0
+  *
+  */
+-HRESULT WINAPI IsUserAdmin(void)
+-{	FIXME("stub\n");
+-	return TRUE;
++
++BOOL WINAPI IsUserAnAdmin(VOID)
++{
++    SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
++    HANDLE hToken;
++    DWORD dwSize;
++    PTOKEN_GROUPS lpGroups;
++    PSID lpSid;
++    DWORD i;
++    BOOL bResult = FALSE;
++
++    TRACE("\n");
++
++    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
++    {
++        return FALSE;
++    }
++
++    if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize))
++    {
++        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
++        {
++            CloseHandle(hToken);
++            return FALSE;
++        }
++    }
++
++    lpGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
++    if (lpGroups == NULL)
++    {
++        CloseHandle(hToken);
++        return FALSE;
++    }
++
++    if (!GetTokenInformation(hToken, TokenGroups, lpGroups, dwSize, &dwSize))
++    {
++        HeapFree(GetProcessHeap(), 0, lpGroups);
++        CloseHandle(hToken);
++        return FALSE;
++    }
++
++    CloseHandle(hToken);
++
++    if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
++                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
++                                  &lpSid))
++    {
++        HeapFree(GetProcessHeap(), 0, lpGroups);
++        return FALSE;
++    }
++
++    for (i = 0; i < lpGroups->GroupCount; i++)
++    {
++        if (EqualSid(lpSid, lpGroups->Groups[i].Sid))
++        {
++            bResult = TRUE;
++            break;
++        }
++    }
++
++    FreeSid(lpSid);
++    HeapFree(GetProcessHeap(), 0, lpGroups);
++
++    return bResult;
+ }
+ 
+ /*************************************************************************
+@@ -1584,14 +1645,6 @@
+ }
+ 
+ /*************************************************************************
+- *      SHCreatePropSheetExtArray	[SHELL32.168]
+- */
+-HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface)
+-{
+-    return SHCreatePropSheetExtArrayEx(hKey, pszSubKey, max_iface, NULL);
+-}
+-
+-/*************************************************************************
+  *      SHCreatePropSheetExtArrayEx	[SHELL32.194]
+  */
+ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj)
+@@ -1695,6 +1748,15 @@
+ }
+ 
+ /*************************************************************************
++ *      SHCreatePropSheetExtArray	[SHELL32.168]
++ */
++HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface)
++{
++    return SHCreatePropSheetExtArrayEx(hKey, pszSubKey, max_iface, NULL);
++}
++
++
++/*************************************************************************
+  *      SHReplaceFromPropSheetExtArray	[SHELL32.170]
+  */
+ UINT WINAPI SHReplaceFromPropSheetExtArray(HPSXA hpsxa, UINT uPageID, LPFNADDPROPSHEETPAGE lpfnReplaceWith, LPARAM lParam)
+Index: shellpath.c
+===================================================================
+--- shellpath.c	(revision 29513)
++++ shellpath.c	(working copy)
+@@ -24,6 +24,7 @@
+  *
+  */
+ 
++#define symlink(A, B)
+ #include "config.h"
+ #include "wine/port.h"
+ 
+@@ -1977,7 +1978,7 @@
+  
+     if (szBasePath[cLen-1] != '/') szBasePath[cLen++] = '/';
+  
+-    if (!WideCharToMultiByte(CP_UNIXCP, 0, wszSubPath, -1, szBasePath + cLen,
++    if (!WideCharToMultiByte(CP_ACP, 0, wszSubPath, -1, szBasePath + cLen,
+                              FILENAME_MAX - cLen, NULL, NULL))
+     {
+         return FALSE;
+@@ -1988,7 +1989,7 @@
+  
+     return TRUE;
+ }
+-
++#if 0
+ /******************************************************************************
+  * _SHCreateSymbolicLinks  [Internal]
+  * 
+@@ -2040,7 +2041,7 @@
+             for (i = 0; i < sizeof(aidsMyStuff)/sizeof(aidsMyStuff[0]); i++) {
+                 strcpy(szMyStuffTarget, szPersonalTarget);
+                 if (_SHAppendToUnixPath(szMyStuffTarget, MAKEINTRESOURCEW(aidsMyStuff[i])))
+-                    mkdir(szMyStuffTarget, 0777);
++                    mkdir(szMyStuffTarget);
+             }
+         } 
+         else
+@@ -2061,7 +2062,7 @@
+         for (i = 0; i < sizeof(aidsMyStuff)/sizeof(aidsMyStuff[0]); i++) {
+             strcpy(szMyStuffTarget, szPersonalTarget);
+             if (_SHAppendToUnixPath(szMyStuffTarget, MAKEINTRESOURCEW(aidsMyStuff[i])))
+-                mkdir(szMyStuffTarget, 0777);
++                mkdir(szMyStuffTarget);
          }
      }
  
+@@ -2108,6 +2109,7 @@
+         }
+     }
+ }
++#endif
+ 
+ /* Register the default values in the registry, as some apps seem to depend
+  * on their presence.  The set registered was taken from Windows XP.
+@@ -2120,7 +2122,9 @@
+      * 'My Video', 'My Music' and 'Desktop' in advance, so that the
+      * _SHRegister*ShellFolders() functions will find everything nice and clean
+      * and thus will not attempt to create them in the profile directory. */
++#if 0
+     _SHCreateSymbolicLinks();
++#endif
+     
+     hr = _SHRegisterUserShellFolders(TRUE);
+     if (SUCCEEDED(hr))
+Index: shfldr_desktop.c
+===================================================================
+--- shfldr_desktop.c	(revision 29513)
++++ shfldr_desktop.c	(working copy)
+@@ -165,9 +165,11 @@
+     else if (PathGetDriveNumberW (lpszDisplayName) >= 0)
+     {
+         /* it's a filesystem path with a drive. Let MyComputer/UnixDosFolder parse it */
++#if 0
+         if (UNIXFS_is_rooted_at_desktop()) 
+             pidlTemp = _ILCreateGuid(PT_GUID, &CLSID_UnixDosFolder);
+         else
++#endif
+             pidlTemp = _ILCreateMyComputer ();
+         szNext = lpszDisplayName;
+     }
+Index: shfldr_mycomp.c
+===================================================================
+--- shfldr_mycomp.c	(revision 29513)
++++ shfldr_mycomp.c	(working copy)
+@@ -695,20 +695,8 @@
+ 
+     if (SUCCEEDED (hr))
+     {
+-        /* Win9x always returns ANSI strings, NT always returns Unicode strings */
+-        if (GetVersion() & 0x80000000)
+-        {
+-            strRet->uType = STRRET_CSTR;
+-            if (!WideCharToMultiByte(CP_ACP, 0, pszPath, -1, strRet->u.cStr, MAX_PATH,
+-                    NULL, NULL))
+-                strRet->u.cStr[0] = '\0';
+-            CoTaskMemFree(pszPath);
+-        }
+-        else
+-        {
+-            strRet->uType = STRRET_WSTR;
+-            strRet->u.pOleStr = pszPath;
+-        }
++        strRet->uType = STRRET_WSTR;
++        strRet->u.pOleStr = pszPath;
+     }
+     else
+         CoTaskMemFree(pszPath);
+Index: shlexec.c
+===================================================================
+--- shlexec.c	(revision 29513)
++++ shlexec.c	(working copy)
+@@ -1300,6 +1300,7 @@
+     static const WCHAR wFile[] = {'f','i','l','e',0};
+     static const WCHAR wHttp[] = {'h','t','t','p',':','/','/',0};
+     static const WCHAR wExplorer[] = {'e','x','p','l','o','r','e','r','.','e','x','e',0};
++    static const WCHAR wProperties[] = { 'p','r','o','p','e','r','t','i','e','s',0 };
+     static const DWORD unsupportedFlags =
+         SEE_MASK_INVOKEIDLIST  | SEE_MASK_ICON         | SEE_MASK_HOTKEY |
+         SEE_MASK_CONNECTNETDRV | SEE_MASK_FLAG_DDEWAIT | SEE_MASK_FLAG_NO_UI |
+@@ -1405,6 +1406,13 @@
+         return TRUE;
+     }
+ 
++    if (sei_tmp.lpVerb && !wcscmp(sei_tmp.lpVerb, wProperties))
++    {
++        SH_ShowPropertiesDialog(sei_tmp.lpFile);
++        sei->hInstApp = (HINSTANCE) 33;
++        return TRUE;
++    }
++
+     if (sei_tmp.fMask & SEE_MASK_CLASSALL)
+     {
+ 	/* launch a document by fileclass like 'WordPad.Document.1' */
+Index: shlfileop.c
+===================================================================
+--- shlfileop.c	(revision 29513)
++++ shlfileop.c	(working copy)
+@@ -1303,8 +1303,8 @@
+         return ERROR_SUCCESS;
+ 
+     /* Windows also checks only the first item */
+-    bTrash = (lpFileOp->fFlags & FOF_ALLOWUNDO)
+-        && TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
++    bTrash = (lpFileOp->fFlags & FOF_ALLOWUNDO);
++        //&& TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
+ 
+     if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (!bTrash && lpFileOp->fFlags & FOF_WANTNUKEWARNING))
+         if (!confirm_delete_list(lpFileOp->hwnd, lpFileOp->fFlags, bTrash, flFrom))
+@@ -1325,8 +1325,10 @@
+         if (bTrash)
+         {
+             BOOL bDelete;
++#if 0
+             if (TRASH_TrashFile(fileEntry->szFullPath))
+                 continue;
++#endif
+ 
+             /* Note: Windows silently deletes the file in such a situation, we show a dialog */
+             if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (lpFileOp->fFlags & FOF_WANTNUKEWARNING))
+@@ -1696,16 +1698,6 @@
+ }
+ 
+ /***********************************************************************
+- *              SHPathPrepareForWriteA (SHELL32.@)
+- */
+-HRESULT WINAPI SHPathPrepareForWriteA(HWND hwnd, IUnknown *modless, LPCSTR path, DWORD flags)
+-{
+-    WCHAR wpath[MAX_PATH];
+-    MultiByteToWideChar( CP_ACP, 0, path, -1, wpath, MAX_PATH);
+-    return SHPathPrepareForWriteW(hwnd, modless, wpath, flags);
+-}
+-
+-/***********************************************************************
+  *              SHPathPrepareForWriteW (SHELL32.@)
+  */
+ HRESULT WINAPI SHPathPrepareForWriteW(HWND hwnd, IUnknown *modless, LPCWSTR path, DWORD flags)
+@@ -1767,3 +1759,13 @@
+     else
+         return HRESULT_FROM_WIN32(ERROR_DIRECTORY);
+ }
++
++/***********************************************************************
++ *              SHPathPrepareForWriteA (SHELL32.@)
++ */
++HRESULT WINAPI SHPathPrepareForWriteA(HWND hwnd, IUnknown *modless, LPCSTR path, DWORD flags)
++{
++    WCHAR wpath[MAX_PATH];
++    MultiByteToWideChar( CP_ACP, 0, path, -1, wpath, MAX_PATH);
++    return SHPathPrepareForWriteW(hwnd, modless, wpath, flags);
++}
+Index: shlview.c
+===================================================================
+--- shlview.c	(revision 29513)
++++ shlview.c	(working copy)
+@@ -68,6 +68,8 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(shell);
+ 
++#undef SV_CLASS_NAME
++
+ static const WCHAR SV_CLASS_NAME[] = {'S','H','E','L','L','D','L','L','_','D','e','f','V','i','e','w',0};
+ 
+ typedef struct
+Index: shres.rc
+===================================================================
+--- shres.rc	(revision 29513)
++++ shres.rc	(working copy)
+@@ -35,88 +35,8 @@
+ 	VK_F5, FCIDM_SHVIEW_REFRESH, VIRTKEY
+ END
+ 
+-/* @makedep: document.ico */
+-IDI_SHELL_DOCUMENT ICON document.ico
+ 
+-/* @makedep: folder.ico */
+-IDI_SHELL_FOLDER ICON folder.ico
+ 
+-/* @makedep: folder_open.ico */
+-IDI_SHELL_FOLDER_OPEN ICON folder_open.ico
+-
+-/* FIXME: Following three resources are not yet added */
+-/* @makedep: folder_open.ico */
+-IDI_SHELL_FOLDER_OPEN_SMALL ICON folder_open.ico
+-/* @makedep: folder_open.ico */
+-IDI_SHELL_FOLDER_OPEN_LARGE ICON folder_open.ico
+-/* @makedep: folder_open.ico */
+-IDI_SHELL_FOLDER_SMALL_XP ICON folder_open.ico
+-
+-/* @makedep: floppy.ico */
+-IDI_SHELL_FLOPPY ICON floppy.ico
+-
+-/* @makedep: drive.ico */
+-IDI_SHELL_DRIVE ICON drive.ico
+-
+-/* @makedep: netdrive.ico */
+-IDI_SHELL_NETDRIVE ICON netdrive.ico
+-
+-/* @makedep: netdrive2.ico */
+-IDI_SHELL_NETDRIVE2 ICON netdrive2.ico
+-
+-/* @makedep: cdrom.ico */
+-IDI_SHELL_CDROM ICON cdrom.ico
+-
+-/* @makedep: ramdisk.ico */
+-IDI_SHELL_RAMDISK ICON ramdisk.ico
+-
+-/* @makedep: mycomputer.ico */
+-IDI_SHELL_MY_COMPUTER ICON mycomputer.ico
+-
+-/* @makedep: printer.ico */
+-IDI_SHELL_PRINTER ICON printer.ico
+-
+-/* @makedep: shortcut.ico */
+-IDI_SHELL_SHORTCUT ICON shortcut.ico
+-
+-/* @makedep: desktop.ico */
+-IDI_SHELL_DESKTOP ICON desktop.ico
+-
+-/* @makedep: trash_file.ico */
+-IDI_SHELL_FULL_RECYCLE_BIN ICON trash_file.ico
+-
+-/* @makedep: trash_file.ico */
+-IDI_SHELL_TRASH_FILE ICON trash_file.ico
+-
+-/* @makedep: delete.ico */
+-IDI_SHELL_CONFIRM_DELETE ICON delete.ico
+-
+-/* @makedep: mydocs.ico */
+-IDI_SHELL_MY_DOCUMENTS ICON mydocs.ico
+-
+-/* @makedep: searching.avi */
+-IDR_AVI_SEARCHING AVI searching.avi
+-
+-/* @makedep: searching.avi */
+-IDR_AVI_SEARCH AVI searching.avi
+-
+-/* @makedep: searching.avi */
+-IDR_AVI_FILEMOVE AVI searching.avi
+-
+-/* @makedep: searching.avi */
+-IDR_AVI_FILECOPY AVI searching.avi
+-
+-/* @makedep: searching.avi */
+-IDR_AVI_FINDCOMPUTER AVI searching.avi
+-
+-/* @makedep: searching.avi */
+-IDR_AVI_FILENUKE AVI searching.avi
+-
+-/* @makedep: searching.avi */
+-IDR_AVI_FILEDELETE AVI searching.avi
+-
+-/*--------------------- END FIXME ------------------------*/
+-
+ /*
+  * Everything that does not depend on language,
+  * like textless bitmaps etc, go into the
+@@ -125,7 +45,20 @@
+  */
+ #include "shell32_xx.rc"
+ 
++
++
++
+ /*
++ * This include a set of Shell32 icons, 
++ * bitmaps and avi files. Licence's can be
++ * found in the corresponding directorys
++ */
++#include "icon_res.rc"
++//#include "bitmap_res.rc"
++#include "avi_res.rc"
++
++
++/*
+  * Everything specific to any language goes
+  * in one of the specific files.
+  * Note that you can and may override resources
+Index: shresdef.h
+===================================================================
+--- shresdef.h	(revision 29513)
++++ shresdef.h	(working copy)
+@@ -78,6 +78,9 @@
+ #define IDS_COMMON_PICTURES         69
+ #define IDS_COMMON_VIDEO            70
+ #define IDS_CDBURN_AREA             71
++#define IDS_DRIVE_FIXED             72
++#define IDS_DRIVE_CDROM             73
++#define IDS_DRIVE_NETWORK           74
+ 
+ #define IDS_CREATEFOLDER_DENIED     128
+ #define IDS_CREATEFOLDER_CAPTION    129
+@@ -109,6 +112,7 @@
+ #define IDD_STATUS		0x3743
+ #define IDD_TITLE		0x3742
+ #define IDD_TREEVIEW		0x3741
++#define SHELL_EXTENDED_SHORTCUT_DLG 0x4000
+ 
+ #define IDI_SHELL_DOCUMENT           1
+ #define IDI_SHELL_FOLDER             4
+Index: shv_item_cmenu.c
+===================================================================
+--- shv_item_cmenu.c	(revision 29513)
++++ shv_item_cmenu.c	(working copy)
+@@ -38,6 +38,9 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(shell);
+ 
++/* ugly hack for cut&paste files */
++BOOL fileMoving = FALSE;
++
+ /**************************************************************************
+ *  IContextMenu Implementation
+ */
+@@ -254,6 +257,9 @@
+ 	  if(uFlags & CMF_CANRENAME)
+ 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
+ 
++	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
++	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
++
+ 	  return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (FCIDM_SHVIEWLAST));
+ 	}
+ 	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
+@@ -294,7 +300,7 @@
+ 
+ 	ZeroMemory(&sei, sizeof(sei));
+ 	sei.cbSize = sizeof(sei);
+-	sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
++	sei.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_CLASSNAME;
+ 	sei.lpIDList = pidlFQ;
+ 	sei.lpClass = "Folder";
+ 	sei.hwnd = hwnd;
+@@ -382,6 +388,54 @@
+ 	}
+ 	return TRUE;
+ }
++static void DoProperties(
++	IContextMenu2 *iface,
++	HWND hwnd)
++{
++	ItemCmImpl *This = (ItemCmImpl *)iface;
++	LPITEMIDLIST	pidlFQ = NULL;
++	SHELLEXECUTEINFOA	sei;
++
++    if (_ILIsMyComputer(This->apidl[0]))
++    {
++        ShellExecuteA(hwnd, "open", "rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
++        return;
++    }
++    else if (_ILIsDesktop(This->apidl[0]))
++    {
++        ShellExecuteA(hwnd, "open", "rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL);
++        return;
++    }
++    else if (_ILIsDrive(This->apidl[0]))
++    {
++       WCHAR buffer[111];
++       ILGetDisplayName(This->apidl[0], buffer);
++       SH_ShowDriveProperties(buffer);
++       return;
++    }
++    else
++    {
++        pidlFQ = ILCombine(This->pidl, This->apidl[0]);
++    }
++
++	ZeroMemory(&sei, sizeof(sei));
++	sei.cbSize = sizeof(sei);
++	sei.fMask = SEE_MASK_INVOKEIDLIST;
++	sei.lpIDList = pidlFQ;
++	sei.hwnd = hwnd;
++	sei.nShow = SW_SHOWNORMAL;
++	sei.lpVerb = "properties";
++
++    TRACE("DoProperties before ShellExecuteEx\n");
++	ShellExecuteExA(&sei);
++    TRACE("DoProperties after ShellExecuteEx\n");
++
++    if (pidlFQ)
++    {
++	   SHFree(pidlFQ);
++    }
++}
++
+ /**************************************************************************
+ * ISvItemCm_fnInvokeCommand()
+ */
+@@ -430,6 +484,10 @@
+             TRACE("Verb FCIDM_SHVIEW_CUT\n");
+             DoCopyOrCut(iface, lpcmi->hwnd, TRUE);
+             break;
++        case FCIDM_SHVIEW_PROPERTIES:
++            TRACE("Verb FCIDM_SHVIEW_PROPERTIES\n");
++            DoProperties(iface, lpcmi->hwnd);
++            break;
+         default:
+             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));
+         }
