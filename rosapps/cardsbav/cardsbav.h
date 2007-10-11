@@ -42,12 +42,6 @@
 #define ectGREENO			7
 #define ectSAVEEDGESMASK	0x80000000
 
-/* Microsoft card dimensions */
-/*
-#define CARD_WIDTH		110
-#define CARD_HEIGHT		198
-*/
-/* MacSolitaireX's card dimensions */
 #define CARD_WIDTH		110
 #define CARD_HEIGHT		198
 
