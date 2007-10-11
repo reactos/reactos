@@ -533,7 +533,19 @@ static UINT ICO_ExtractIconExW(
 	  {
 	    const IMAGE_RESOURCE_DIRECTORY *xresdir;
 	    xresdir = find_entry_by_id(iconresdir, LOWORD(pIconId[i]), rootresdir);
+	    if (!xresdir)
+	    {
+	      WARN("find_entry_by_id failed\n");
+	      ret = 0xFFFFFFFF;
+	      goto end;
+	    }
 	    xresdir = find_entry_default(xresdir, rootresdir);
+	    if (!xresdir)
+	    {
+	      WARN("find_entry_default failed\n");
+	      ret = 0xFFFFFFFF;
+	      goto end;
+	    }
 	    idataent = (PIMAGE_RESOURCE_DATA_ENTRY)xresdir;
 	    idata = NULL;
 
