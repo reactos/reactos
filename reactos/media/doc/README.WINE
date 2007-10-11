@@ -72,7 +72,7 @@ reactos/dll/win32/riched32        # Autosync
 reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_10
 reactos/dll/win32/sensapi         # Autosync
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
-reactos/dll/win32/shell32         # Synced to Wine-0_9_5
+reactos/dll/win32/shell32         # Synced to Wine-0_9_46
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
