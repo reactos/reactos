@@ -35,26 +35,26 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
     }
 
     lpServiceConfig = GetServiceConfig(dlgInfo->pService->lpServiceName);
-    if (lpServiceConfig && lpServiceConfig->dwStartType != SERVICE_DISABLED)
+    if (State == SERVICE_STOPPED &&
+        lpServiceConfig && lpServiceConfig->dwStartType != SERVICE_DISABLED)
     {
-        if (State == SERVICE_STOPPED)
-        {
-            hButton = GetDlgItem(hwndDlg, IDC_START);
-            EnableWindow (hButton, TRUE);
-        }
-        else if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
-        {
-            hButton = GetDlgItem(hwndDlg, IDC_STOP);
-            EnableWindow (hButton, TRUE);
-        }
-        else if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
-        {
-            hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
-            EnableWindow (hButton, TRUE);
-        }
-
+        hButton = GetDlgItem(hwndDlg, IDC_START);
+        EnableWindow (hButton, TRUE);
         HeapFree(GetProcessHeap(), 0, lpServiceConfig);
     }
+    else if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
+    {
+        hButton = GetDlgItem(hwndDlg, IDC_STOP);
+        EnableWindow (hButton, TRUE);
+    }
+    else if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
+    {
+        hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
+        EnableWindow (hButton, TRUE);
+    }
+
+    /* set the main toolbar */
+    SetMenuAndButtonStates(dlgInfo->Info);
 }
 
 
@@ -365,6 +365,7 @@ GeneralPageProc(HWND hwndDlg,
                 {
                     case PSN_APPLY:
                         SaveDlgInfo(dlgInfo, hwndDlg);
+                        SetButtonStates(dlgInfo, hwndDlg);
                     break;
                 }
             }

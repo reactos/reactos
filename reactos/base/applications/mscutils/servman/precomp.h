@@ -60,6 +60,7 @@ typedef struct _MENU_HINT
     UINT HintId;
 } MENU_HINT, *PMENU_HINT;
 
+VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info);
 VOID UpdateServiceCount(PMAIN_WND_INFO Info);
 VOID ChangeListViewText(PMAIN_WND_INFO Info, ENUM_SERVICE_STATUS_PROCESS* pService, UINT Column);
 BOOL InitMainWindowImpl(VOID);

@@ -151,7 +151,6 @@ UpdateServiceCount(PMAIN_WND_INFO Info)
 
 VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 {
-    LPQUERY_SERVICE_CONFIG lpServiceConfig;
     HMENU hMainMenu;
     UINT i;
 
@@ -169,6 +168,9 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 
     if (Info->SelectedItem != NO_ITEM_SELECTED)
     {
+        LPQUERY_SERVICE_CONFIG lpServiceConfig = NULL;
+        DWORD Flags, State;
+
         /* allow user to delete service */
         if (Info->bIsUserAnAdmin)
         {
@@ -178,14 +180,13 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
             EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_DELETE, MF_ENABLED);
         }
 
+        Flags = Info->pCurrentService->ServiceStatusProcess.dwControlsAccepted;
+        State = Info->pCurrentService->ServiceStatusProcess.dwCurrentState;
+
         lpServiceConfig = GetServiceConfig(Info->pCurrentService->lpServiceName);
+
         if (lpServiceConfig && lpServiceConfig->dwStartType != SERVICE_DISABLED)
         {
-            DWORD Flags, State;
-
-            Flags = Info->pCurrentService->ServiceStatusProcess.dwControlsAccepted;
-            State = Info->pCurrentService->ServiceStatusProcess.dwCurrentState;
-
             if (State == SERVICE_STOPPED)
             {
                 EnableMenuItem(hMainMenu, ID_START, MF_ENABLED);
@@ -193,23 +194,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
                 SendMessage(Info->hTool, TB_SETSTATE, ID_START,
                        (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
             }
-
-            if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
-            {
-                EnableMenuItem(hMainMenu, ID_STOP, MF_ENABLED);
-                EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_STOP, MF_ENABLED);
-                SendMessage(Info->hTool, TB_SETSTATE, ID_STOP,
-                       (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
-            }
-
-            if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
-            {
-                EnableMenuItem(hMainMenu, ID_PAUSE, MF_ENABLED);
-                EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_PAUSE, MF_ENABLED);
-                SendMessage(Info->hTool, TB_SETSTATE, ID_PAUSE,
-                       (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
-            }
-
+            
             if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
             {
                 EnableMenuItem(hMainMenu, ID_RESTART, MF_ENABLED);
@@ -219,6 +204,22 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
             }
 
             HeapFree(GetProcessHeap(), 0, lpServiceConfig);
+        }
+
+        if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
+        {
+            EnableMenuItem(hMainMenu, ID_STOP, MF_ENABLED);
+            EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_STOP, MF_ENABLED);
+            SendMessage(Info->hTool, TB_SETSTATE, ID_STOP,
+                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+        }
+
+        if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
+        {
+            EnableMenuItem(hMainMenu, ID_PAUSE, MF_ENABLED);
+            EnableMenuItem(GetSubMenu(Info->hShortcutMenu, 0), ID_PAUSE, MF_ENABLED);
+            SendMessage(Info->hTool, TB_SETSTATE, ID_PAUSE,
+                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
         }
     }
     else
@@ -396,6 +397,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
                 Info->bDlgOpen = TRUE;
                 OpenPropSheet(Info);
                 Info->bDlgOpen = FALSE;
+                SetMenuAndButtonStates(Info);
             }
         }
         break;
