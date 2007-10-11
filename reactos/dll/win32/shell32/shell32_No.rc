@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005-2007 Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -13,15 +13,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 MENU_001 MENU DISCARDABLE
 BEGIN
 	MENUITEM "&Store ikoner",	FCIDM_SHVIEW_BIGICON
-	MENUITEM "&Små ikoner",		FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Små ikoner",	FCIDM_SHVIEW_SMALLICON
 	MENUITEM "&Liste",		FCIDM_SHVIEW_LISTVIEW
 	MENUITEM "&Detaljer",		FCIDM_SHVIEW_REPORTVIEW
 END
@@ -45,17 +45,17 @@ BEGIN
 	  BEGIN
 	    MENUITEM "Etter &navn",	0x30	/* column 0 */
 	    MENUITEM "Etter &type",	0x32	/* column 2 */
-	    MENUITEM "Etter &størrelse",0x31	/* ... */
+	    MENUITEM "Etter &størrelse",	0x31	/* ... */
 	    MENUITEM "Etter &dato",	0x33
 	    MENUITEM SEPARATOR
-	    MENUITEM "Ordne &automatisk", FCIDM_SHVIEW_AUTOARRANGE
+	    MENUITEM "Ordne &automatisk",	FCIDM_SHVIEW_AUTOARRANGE
 	  END
 	  MENUITEM "Still opp ikoner",	FCIDM_SHVIEW_SNAPTOGRID
 	  MENUITEM SEPARATOR
 	  MENUITEM "Oppdater",		FCIDM_SHVIEW_REFRESH
 	  MENUITEM SEPARATOR
 	  MENUITEM "Lim inn",		FCIDM_SHVIEW_INSERT
-	  MENUITEM "Lim inn som snarvei", FCIDM_SHVIEW_INSERTLINK
+	  MENUITEM "Lim inn som snarvei",	FCIDM_SHVIEW_INSERTLINK
 	  MENUITEM SEPARATOR
 	  POPUP "Ny"
 	  BEGIN
@@ -83,7 +83,7 @@ BEGIN
 	  MENUITEM SEPARATOR
 	  MENUITEM "&Opprett snarvei",	FCIDM_SHVIEW_CREATELINK
 	  MENUITEM "&Slett",		FCIDM_SHVIEW_DELETE
-	  MENUITEM "&Gi nytt navn",	FCIDM_SHVIEW_RENAME
+	  MENUITEM "&Gi nytt navn",		FCIDM_SHVIEW_RENAME
 	  MENUITEM SEPARATOR
 	  MENUITEM "Egenska&per",	FCIDM_SHVIEW_PROPERTIES
 	END
@@ -104,6 +104,19 @@ FONT 8, "MS Shell Dlg"
 	4, 40, 180, 120
 }
 
+SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Meldings"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON "&Ja", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Ja til &alt", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Nei", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Avbry&t", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    ICON "", IDD_ICON, 10, 10, 16, 16
+    LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
+}
+
 SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Om %s"
@@ -114,7 +127,7 @@ FONT 10, "MS Shell Dlg"
  ICON "", 1088, 10, 10, 14, 16
  LTEXT "", 100, 30, 10, 137, 10
  LTEXT "", 101, 30, 22, 137, 10
- LTEXT "ReactOS er laget av", 98, 8, 55, 137, 10
+ LTEXT "Wine er laget av", 98, 8, 55, 137, 10
 }
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
@@ -128,141 +141,8 @@ FONT 8, "MS Shell Dlg"
  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
  PUSHBUTTON "Avbryt", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "&Bla gjennom . . .", 12288, 170, 63, 54, 14, WS_TABSTOP
+ PUSHBUTTON "&Bla . . .", 12288, 170, 63, 50, 14, WS_TABSTOP
 }
-
-
-SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Shortcut"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
- ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
- LTEXT "Target type:", 14004, 10, 30, 50, 10
- LTEXT "", 14005, 70, 30, 150, 10
- LTEXT "Target location:", 14006, 10, 40, 70, 10
- LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Target:", 14008, 10, 55, 45, 10
- EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
- LTEXT "&Start in:",14010, 10, 65, 45, 10
- EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
- LTEXT "Shortcut &key:", 14014, 10, 80, 45, 10
- EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
- LTEXT "Run:", 14016, 10, 90, 45, 10
- EDITTEXT 14017, 70, 90, 150, 10
- LTEXT "C&omment:", 14018, 10, 100, 45, 10
- EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
- PUSHBUTTON "&Find Target...", 14020, 10, 115, 60, 14, ES_LEFT
- PUSHBUTTON "&Change Icon...", 14021, 80, 115, 60, 14, ES_LEFT
- PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
-}
-
-SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
- ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
- EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
- LTEXT "Type of file:", 14004, 10, 30, 50, 10
- LTEXT "%s File", 14005, 70, 30, 150, 10
- LTEXT "Opens with:", 14006, 10, 40, 50, 10
- LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Location:", 14008, 10, 55, 45, 10
- LTEXT "", 14009, 70, 55, 200, 10
- LTEXT "Size:",14010, 10, 65, 45, 10
- LTEXT "", 14011, 70, 65, 150, 10
- LTEXT "Created:", 14014, 10, 80, 45, 10
- LTEXT "", 14015, 70, 80, 150, 10
- LTEXT "Modied:", 14016, 10, 90, 45, 10
- LTEXT "", 14017, 70, 90, 150, 10
- LTEXT "Accessed:", 14018, 10, 100, 45, 10
- LTEXT "", 14019, 70, 100, 150, 10
- LTEXT "Attributes:", 14020, 10, 115, 45, 10
- CHECKBOX "&Read-only", 14021, 70, 115, 45, 10
- CHECKBOX "&Hidden", 14022, 130, 115, 50, 10
- CHECKBOX "&Archive", 14023, 180, 115, 45, 10
-}
-
-SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-  LTEXT "File version: ", 14000, 10, 10, 45, 10
-  LTEXT "", 14001, 70, 10, 150, 10
-  LTEXT "Description: ", 14002, 10, 20, 45, 10
-  LTEXT "", 14003, 70, 20, 150, 10
-  LTEXT "Copyright: ", 14004, 10, 30, 45, 10
-  LTEXT "", 14005, 70, 30, 150, 10
-  GROUPBOX "Other version information: ", 14006, 10, 45, 220, 90
-  LTEXT "Item name: ", 14007, 20, 55, 50, 10
-  LTEXT "Value: ", 14008, 130, 55, 45, 10
-  LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
-  EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT|WS_BORDER|WS_VSCROLL|WS_GROUP|ES_MULTILINE|ES_READONLY
-
-}
-
-DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Allgemein"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-  EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
-  LTEXT "Type:", -1, 15, 55, 40, 10
-  LTEXT "", 14002, 110, 55, 100, 10
-
-
-  LTEXT "File system:", -1, 15, 70, 100, 10
-  LTEXT "", 14003, 110, 70, 100, 10
-
-  CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
-  LTEXT "Used space:", -1, 25, 90, 120, 10
-  LTEXT "", 14004, 110, 90, 120, 10
-  LTEXT "", 14005, 200, 90, 40, 10
-
-  CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
-  LTEXT "Free space:", -1, 25, 105, 70, 10
-  LTEXT "", 14006, 110, 105, 120, 10
-  LTEXT "", 14007, 200, 105, 40, 10
-
-  LTEXT "Capacity:", -1, 25, 125, 80, 10
-  LTEXT "", 14008, 110, 125, 120, 10
-  LTEXT "", 14009, 200, 125, 40, 10
-
-  CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
-
-  LTEXT "Drive %s", 14010, 100, 170, 40, 10
-  PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-  CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 165, 10, WS_DISABLED
-  CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
-}
-
-DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Extras"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-  GROUPBOX "Error-checking", -1, 5, 5, 230, 60
-  LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
-  PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
-  GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
-  LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
-  PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
-  GROUPBOX "Backup", -1, 5, 130, 230, 60
-  LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-  PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
-}
-
-
-
-DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-}
-
 
 STRINGTABLE DISCARDABLE
 {
@@ -278,10 +158,13 @@ STRINGTABLE DISCARDABLE
 	IDS_SHV_COLUMN9		"Kommentarer"
 	IDS_SHV_COLUMN10	"Eier"
 	IDS_SHV_COLUMN11	"Gruppe"
+	IDS_SHV_COLUMN_DELFROM	"Opprinnelig plassering"
+	IDS_SHV_COLUMN_DELDATE	"Dato slettet"
 
         /* special folders */
 	IDS_DESKTOP		"Skrivebord"
 	IDS_MYCOMPUTER		"Min datamaskin"
+	IDS_RECYCLEBIN_FOLDER_NAME      "Papirkurv"
 
         /* context menus */
 	IDS_VIEW_LARGE		"&Store ikoner"
@@ -292,19 +175,28 @@ STRINGTABLE DISCARDABLE
 	IDS_OPEN		"Åpne"
 
 	IDS_CREATEFOLDER_DENIED "Kunne ikke opprette ny mappe: tilgang nektet."
-	IDS_CREATEFOLDER_CAPTION "Feil ved oppretting av ny mappe"
+	IDS_CREATEFOLDER_CAPTION "Klarte ikke opprette ny mappe"
 	IDS_DELETEITEM_CAPTION "Bekreft filsletting"
 	IDS_DELETEFOLDER_CAPTION "Bekreft sletting av mappe"
-	IDS_DELETEITEM_TEXT "Virkelig slette '%1'?"
+	IDS_DELETEITEM_TEXT "Virkelig slette «%1»?"
 	IDS_DELETEMULTIPLE_TEXT "Virkelig slette disse %1 elementene?"
-	IDS_OVERWRITEFILE_TEXT "Overskrive filen '%1'?"
+	IDS_DELETESELECTED_TEXT "Virkelig slette valgte element(er)??"
+	IDS_TRASHITEM_TEXT "Virkelig legge «%1» i papirkurven?"
+	IDS_TRASHFOLDER_TEXT "Virkelig legge «%1» og alt innholdet i papirkurven?"
+	IDS_TRASHMULTIPLE_TEXT "Virkelig legge disse %1 valgte elementene i papirkurven?"
+	IDS_CANTTRASH_TEXT "Elementet «%1» kan ikke legges i papirkurven. Vil du slette det i stedet?"
+	IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
 	IDS_OVERWRITEFILE_CAPTION "Bekreft overskriving av fil"
+	IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\n"\
+	    "If the files in the destination folder have the same names as files in the\n"\
+	    "selected folder they will be replaced. Do you still want to move or copy\n"\
+	    "the folder?"
 
         /* message box strings */
         IDS_RESTART_TITLE       "Starte på nytt"
-        IDS_RESTART_PROMPT      "Vil du starte på nytt?"
+        IDS_RESTART_PROMPT      "Vil du simulere en omstart av Windows?"
         IDS_SHUTDOWN_TITLE      "Avslutt"
-        IDS_SHUTDOWN_PROMPT     "Vil du slå av maskinen?"
+        IDS_SHUTDOWN_PROMPT     "Vil du avslutte Wine-økten?"
 
         /* shell folder path default values */
 	IDS_PROGRAMS                "Start-meny\\Programmer"
@@ -312,29 +204,26 @@ STRINGTABLE DISCARDABLE
 	IDS_FAVORITES               "Favoritter"
 	IDS_STARTUP                 "Start-meny\\Programmer\\Oppstart"
 	IDS_RECENT                  "Siste"
-	IDS_SENDTO                  "Send til"
+	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "Start-meny"
-	IDS_MYMUSIC                 "Mine dokumenter\\Min musikk"
-	IDS_MYVIDEO                 "Mine dokumenter\\Mine videoklipp"
+	IDS_MYMUSIC                 "Min musikk"
+	IDS_MYVIDEO                 "Mine videoklipp"
 	IDS_DESKTOPDIRECTORY        "Skrivebord"
 	IDS_NETHOOD                 "NetHood"
 	IDS_TEMPLATES               "Maler"
-	IDS_APPDATA                 "Applikasjon Data"
+	IDS_APPDATA                 "Programdata"
 	IDS_PRINTHOOD               "Skrivere"
-	IDS_LOCAL_APPDATA           "Lokale innstillinger\\Applikasjon Data"
-	IDS_INTERNET_CACHE          "Lokale innstillinger\\Midlertidig Internett Filer"
-	IDS_COOKIES                 "Informasjonskapsler"
-	IDS_HISTORY                 "Lokale innstillinger\\Historie"
-	IDS_PROGRAM_FILES           "Program Filer"
-	IDS_MYPICTURES              "Mine dokumenter\\Mine bilder"
+	IDS_LOCAL_APPDATA           "Lokale innstillinger\\Programdata"
+	IDS_INTERNET_CACHE          "Lokale innstillinger\\Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Lokale innstillinger\\Logg"
+	IDS_PROGRAM_FILES           "Programfiler"
+	IDS_MYPICTURES              "Mine bilder"
 	IDS_PROGRAM_FILES_COMMON    "Programfiler\\Fellesfiler"
 	IDS_COMMON_DOCUMENTS        "Dokumenter"
 	IDS_ADMINTOOLS              "Start-meny\\Programmer\\Administrative verktøy"
 	IDS_COMMON_MUSIC            "Dokumenter\\Min musikk"
 	IDS_COMMON_PICTURES         "Dokumenter\\Mine bilder"
 	IDS_COMMON_VIDEO            "Dokumenter\\Mine videoklipp"
-	IDS_CDBURN_AREA             "Lokale innstillinger\\Applikasjon Data\\Microsoft\\CD Brenning"
-        IDS_DRIVE_FIXED             "Lokal Disk"
-        IDS_DRIVE_CDROM             "CDROM"
-        IDS_DRIVE_NETWORK           "Network Disk"
+	IDS_CDBURN_AREA             "Lokale innstillinger\\Programdata\\Microsoft\\CD Burning"
 }

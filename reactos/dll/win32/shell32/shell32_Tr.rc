@@ -1,0 +1,216 @@
+/*
+ * Copyright 2006 Fatih Aþýcý
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+MENU_001 MENU DISCARDABLE
+BEGIN
+	MENUITEM "Bü&yük Simgeler",	FCIDM_SHVIEW_BIGICON
+	MENUITEM "Kü&çük Simgeler",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Liste",		FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Ayrýntýlý",		FCIDM_SHVIEW_REPORTVIEW
+END
+
+/*
+ shellview background menu
+*/
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  POPUP "&Görünüm"
+	  BEGIN
+            MENUITEM "Bü&yük Simgeler",	FCIDM_SHVIEW_BIGICON
+            MENUITEM "Kü&çük Simgeler",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "&Liste",		FCIDM_SHVIEW_LISTVIEW
+	    MENUITEM "&Ayrýntýlý",	FCIDM_SHVIEW_REPORTVIEW
+	  END
+	  MENUITEM SEPARATOR
+	  POPUP "&Simgeleri Düzenle"
+	  BEGIN
+	    MENUITEM "&Ada Göre",	0x30	/* column 0 */
+	    MENUITEM "&Türe Göre",	0x32	/* column 2 */
+	    MENUITEM "&Boyuta Göre",	0x31	/* ... */
+	    MENUITEM "&Zamana Göre",	0x33
+	    MENUITEM SEPARATOR
+	    MENUITEM "&Otomatik Düzenle",	FCIDM_SHVIEW_AUTOARRANGE
+	  END
+	  MENUITEM "Izgaraya Uydur",	FCIDM_SHVIEW_SNAPTOGRID
+	  MENUITEM SEPARATOR
+	  MENUITEM "Yenile",		FCIDM_SHVIEW_REFRESH
+	  MENUITEM SEPARATOR
+	  MENUITEM "Yapýþtýr",		FCIDM_SHVIEW_INSERT
+	  MENUITEM "Kýsayol Yapýþtýr",	FCIDM_SHVIEW_INSERTLINK
+	  MENUITEM SEPARATOR
+	  POPUP "Yeni"
+	  BEGIN
+	    MENUITEM "Yeni &Dizin",	FCIDM_SHVIEW_NEWFOLDER
+	    MENUITEM "Yeni &Kýsayol",	FCIDM_SHVIEW_NEWLINK
+	    MENUITEM SEPARATOR
+	  END
+	  MENUITEM SEPARATOR
+	  MENUITEM "Özellikler",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+/*
+ shellview item menu
+*/
+MENU_SHV_FILE MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  MENUITEM "A&raþtýr",		FCIDM_SHVIEW_EXPLORE
+	  MENUITEM "&Aç",		FCIDM_SHVIEW_OPEN
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Kes",		FCIDM_SHVIEW_CUT
+	  MENUITEM "K&opyala",		FCIDM_SHVIEW_COPY
+	  MENUITEM SEPARATOR
+	  MENUITEM "Kýsayol O&luþtur",	FCIDM_SHVIEW_CREATELINK
+	  MENUITEM "&Sil",		FCIDM_SHVIEW_DELETE
+	  MENUITEM "&Yeniden Adlandýr",	FCIDM_SHVIEW_RENAME
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Özellikler",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Dizine Gözat"
+FONT 8, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "Tamam", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Ýptal", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+ LTEXT "", IDD_TITLE, 4, 4, 180, 12
+ LTEXT "", IDD_STATUS, 4, 25, 180, 12
+ CONTROL "", IDD_TREEVIEW, "SysTreeView32",
+ 	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
+	WS_BORDER | WS_TABSTOP,
+	4, 40, 180, 120
+}
+
+SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "%s Hakkýnda"
+FONT 10, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "Tamam", IDOK, 153, 133, 50, 12, WS_TABSTOP
+ LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+ ICON "", 1088, 10, 10, 14, 16
+ LTEXT "", 100, 30, 10, 137, 10
+ LTEXT "", 101, 30, 22, 137, 10
+ LTEXT "Wine'ý size sunan geliþtiriciler:", 98, 8, 55, 137, 10
+}
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+ ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+ LTEXT "Herhangi bir program, dizin, belge veya Internet kaynaðý seçin ve Wine sizin için açsýn.", 12289, 36, 11, 182, 18
+ LTEXT "&Aç:", 12305, 7, 39, 24, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ DEFPUSHBUTTON "Tamam", IDOK, 62, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Ýptal", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Gözat...", 12288, 170, 63, 50, 14, WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+        /* columns in the shellview */
+	IDS_SHV_COLUMN1		"Dosya"
+	IDS_SHV_COLUMN2		"Boyut"
+	IDS_SHV_COLUMN3		"Tür"
+	IDS_SHV_COLUMN4		"Düzenlenme"
+	IDS_SHV_COLUMN5		"Öznitelikler"
+	IDS_SHV_COLUMN6		"Boyut"
+	IDS_SHV_COLUMN7		"Kullanýlabilir Alan"
+	IDS_SHV_COLUMN8		"Ad"
+	IDS_SHV_COLUMN9		"Açýklamalar"
+	IDS_SHV_COLUMN10	"Sahip"
+	IDS_SHV_COLUMN11	"Grup"
+        IDS_SHV_COLUMN_DELFROM  "Özgün konum"
+        IDS_SHV_COLUMN_DELDATE  "Silinme tarihi"
+
+        /* special folders */
+	IDS_DESKTOP		"Masaüstü"
+	IDS_MYCOMPUTER		"Bilgisayarým"
+        IDS_RECYCLEBIN_FOLDER_NAME      "Çöp"
+
+        /* context menus */
+	IDS_VIEW_LARGE		"Bü&yük Simgeler"
+	IDS_VIEW_SMALL		"Kü&çük Simgeler"
+	IDS_VIEW_LIST		"&Liste"
+	IDS_VIEW_DETAILS	"&Ayrýntýlý"
+	IDS_SELECT		"Seç"
+	IDS_OPEN		"Aç"
+
+	IDS_CREATEFOLDER_DENIED "Yeni dizin oluþturulamýyor: Eriþim engellendi."
+	IDS_CREATEFOLDER_CAPTION "Dizin oluþturma sýrasýnda hata"
+	IDS_DELETEITEM_CAPTION "Dosya silmeyi onayla"
+	IDS_DELETEFOLDER_CAPTION "Dizin silmeyi onayla"
+	IDS_DELETEITEM_TEXT "'%1' öðesini silmek istediðinizden emin misiniz?"
+	IDS_DELETEMULTIPLE_TEXT "Bu %1 öðeyi silmek istediðinizden emin misiniz?"
+        IDS_DELETESELECTED_TEXT "Seçili öðeleri silmek istediðinizden emin misiniz?"
+        IDS_TRASHITEM_TEXT "'%1' adlý öðeyi çöpe göndermek istediðinizden emin misiniz?"
+        IDS_TRASHFOLDER_TEXT "'%1' adlý öðeyi ve tüm içeriðini çöpe göndermek istediðinizden emin misiniz?"
+        IDS_TRASHMULTIPLE_TEXT "Bu %1 öðeyi çöpe göndermek istediðinizden emin misiniz?"
+        IDS_CANTTRASH_TEXT "'%1' adlý öðe çöpe gönderilemiyor. Tamamen silmek ister misiniz?"
+	IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
+	IDS_OVERWRITEFILE_CAPTION "Dosya Üzerine Yazmayý Onayla"
+	IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\n"\
+	    "If the files in the destination folder have the same names as files in the\n"\
+	    "selected folder they will be replaced. Do you still want to move or copy\n"\
+	    "the folder?"
+
+        /* message box strings */
+        IDS_RESTART_TITLE       "Yeniden Baþlat"
+        IDS_RESTART_PROMPT      "Windows Yeniden Baþlatma taklit edilsin mi?"
+        IDS_SHUTDOWN_TITLE      "Oturumu Kapat"
+        IDS_SHUTDOWN_PROMPT     "Wine oturumunuzu kapatmak istediðinizden emin misiniz?"
+
+        /* shell folder path default values */
+	IDS_PROGRAMS                "Start Menu\\Programlar"
+	IDS_PERSONAL                "Belgelerim"
+	IDS_FAVORITES               "Sýk Kullanýlanlar"
+	IDS_STARTUP                 "Start Menu\\Programlar\\Baþlangýç"
+	IDS_RECENT                  "Recent"
+	IDS_SENDTO                  "SendTo"
+	IDS_STARTMENU               "Start Menu"
+	IDS_MYMUSIC                 "Belgelerim\\Müziðim"
+	IDS_MYVIDEO                 "Belgelerim\\Vidyolarým"
+	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Templates"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
+	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Local Settings\\History"
+	IDS_PROGRAM_FILES           "Program Files"
+	IDS_MYPICTURES              "Belgelerim\\Resimlerim"
+	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
+	IDS_COMMON_DOCUMENTS        "Belgeler"
+	IDS_ADMINTOOLS              "Start Menu\\Programlar\\Yönetimsel Araçlar"
+	IDS_COMMON_MUSIC            "Belgeler\\Müziðim"
+	IDS_COMMON_PICTURES         "Belgeler\\Resimlerim"
+	IDS_COMMON_VIDEO            "Belgeler\\Videolarým"
+	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+}

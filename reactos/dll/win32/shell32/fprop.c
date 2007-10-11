@@ -18,9 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define COBJMACROS
+#define NONAMELESSUNION
+#define YDEBUG
+
 #include "config.h"
 #include "wine/port.h"
-#define YDEBUG
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -39,15 +42,60 @@
 #include "shell32_main.h"
 #include "shresdef.h"
 #include "undocshell.h"
-#include <prsht.h>
+#include "prsht.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+#define MAX_PROPERTY_SHEET_PAGE 32
 
 typedef struct _LANGANDCODEPAGE_ 
   {
     WORD lang;
     WORD code;
 } LANGANDCODEPAGE, *LPLANGANDCODEPAGE;
+
+/*************************************************************************
+ *
+ * SH_CreatePropertySheetPage [Internal]
+ *
+ * creates a property sheet page from an resource name
+ *
+ */
+HPROPSHEETPAGE
+SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam)
+{
+    HRSRC hRes;
+    LPVOID lpsztemplate;
+    PROPSHEETPAGEW ppage;
+
+    if (resname == NULL)
+        return (HPROPSHEETPAGE)0;
+
+    hRes = FindResourceA(shell32_hInstance, resname, (LPSTR)RT_DIALOG);
+
+    if (hRes == NULL)
+    {
+        ERR("failed to find resource name\n");
+        return (HPROPSHEETPAGE)0;
+    }
+    lpsztemplate = LoadResource(shell32_hInstance, hRes);
+    if (lpsztemplate == NULL)
+        return (HPROPSHEETPAGE)0;
+
+    memset(&ppage, 0x0, sizeof(PROPSHEETPAGEW));
+    ppage.dwSize = sizeof(PROPSHEETPAGEW);
+    ppage.dwFlags = PSP_DLGINDIRECT;
+    ppage.u.pResource = lpsztemplate;
+    ppage.pfnDlgProc = dlgproc;
+    ppage.lParam = lParam;
+    return CreatePropertySheetPageW(&ppage);
+}
+
+
+
+
+
+
 
 /*************************************************************************
  *
@@ -616,7 +664,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf)
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
     pinfo.nPages = num_pages;
-    pinfo.phpage = hppages;
+    pinfo.u3.phpage = hppages;
     pinfo.pszCaption = wFileName;
     return (PropertySheetW(&pinfo) != -1);
 }

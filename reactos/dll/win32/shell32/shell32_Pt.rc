@@ -1,6 +1,7 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2003 Marcelo Duarte
+ * Copyright 2006-2007 Américo José Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,10 +15,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 MENU_001 MENU DISCARDABLE
 BEGIN
@@ -27,9 +28,12 @@ BEGIN
 	MENUITEM "&Detalhes",		FCIDM_SHVIEW_REPORTVIEW
 END
 
+
 /*
  shellview background menu
 */
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -69,9 +73,53 @@ BEGIN
 	END
 END
 
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  POPUP "&Mostrar"
+	  BEGIN
+	    MENUITEM "Ícones &grandes",	FCIDM_SHVIEW_BIGICON
+	    MENUITEM "Ícones &pequenos",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "&Lista",		FCIDM_SHVIEW_LISTVIEW
+	    MENUITEM "&Detalhes",	FCIDM_SHVIEW_REPORTVIEW
+	  END
+	  MENUITEM SEPARATOR
+	  POPUP "O&rganizar ícones"
+	  BEGIN
+	    MENUITEM "Por &nome",	0x30	/* column 0 */
+	    MENUITEM "Por &tipo",	0x32	/* column 2 */
+	    MENUITEM "Por ta&manho",	0x31	/* ... */
+	    MENUITEM "Por &data",	0x33
+	    MENUITEM SEPARATOR
+	    MENUITEM "Auto organi&zar",	FCIDM_SHVIEW_AUTOARRANGE
+	  END
+	  MENUITEM "Alin&har ícones",	FCIDM_SHVIEW_SNAPTOGRID
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Actualizar",		FCIDM_SHVIEW_REFRESH
+	  MENUITEM SEPARATOR
+	  MENUITEM "Co&lar",		FCIDM_SHVIEW_INSERT
+	  MENUITEM "Colar a&talho",	FCIDM_SHVIEW_INSERTLINK
+	  MENUITEM SEPARATOR
+	  POPUP "Novo"
+	  BEGIN
+	    MENUITEM "&Pasta",	FCIDM_SHVIEW_NEWFOLDER
+	    MENUITEM "&Atalho",	FCIDM_SHVIEW_NEWLINK
+	    MENUITEM SEPARATOR
+	  END
+	  MENUITEM SEPARATOR
+	  MENUITEM "Propriedades",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+
 /*
  shellview item menu
 */
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -90,6 +138,9 @@ BEGIN
 	END
 END
 
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
 CAPTION "Procurar pasta"
@@ -105,6 +156,9 @@ FONT 8, "MS Shell Dlg"
 	4, 40, 180, 120
 }
 
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Sobre %s"
@@ -115,8 +169,26 @@ FONT 10, "MS Shell Dlg"
  ICON "", 1088, 10, 10, 14, 16
  LTEXT "", 100, 30, 10, 137, 10
  LTEXT "", 101, 30, 22, 137, 10
- LTEXT "ReactOS foi disponibilizado por:", 98, 8, 55, 137, 10
+ LTEXT "Wine foi disponibilizado por:", 98, 8, 55, 137, 10
 }
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Acerca do %s"
+FONT 10, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+ LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+ ICON "", 1088, 10, 10, 14, 16
+ LTEXT "", 100, 30, 10, 137, 10
+ LTEXT "", 101, 30, 22, 137, 10
+ LTEXT "Wine disponibilizado por:", 98, 8, 55, 137, 10
+}
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
@@ -124,7 +196,23 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 {
  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
- LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o ReactOS irá abrí-lo para você.", 12289, 36, 11, 182, 18
+ LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o Wine irá abrí-lo para você.", 12289, 36, 11, 182, 18
+ LTEXT "&Abrir:", 12305, 7, 39, 24, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Cancelar", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Procurar...", 12288, 170, 63, 50, 14, WS_TABSTOP
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+ ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+ LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o Wine irá abrí-lo.", 12289, 36, 11, 182, 18
  LTEXT "&Abrir:", 12305, 7, 39, 24, 10
  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -133,135 +221,7 @@ FONT 8, "MS Shell Dlg"
 }
 
 
-SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Shortcut"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
- ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
- LTEXT "Target type:", 14004, 10, 30, 50, 10
- LTEXT "", 14005, 70, 30, 150, 10
- LTEXT "Target location:", 14006, 10, 40, 70, 10
- LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Target:", 14008, 10, 55, 45, 10
- EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
- LTEXT "&Start in:",14010, 10, 65, 45, 10
- EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
- LTEXT "Shortcut &key:", 14014, 10, 80, 45, 10
- EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
- LTEXT "Run:", 14016, 10, 90, 45, 10
- EDITTEXT 14017, 70, 90, 150, 10
- LTEXT "C&omment:", 14018, 10, 100, 45, 10
- EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
- PUSHBUTTON "&Find Target...", 14020, 10, 115, 60, 14, ES_LEFT
- PUSHBUTTON "&Change Icon...", 14021, 80, 115, 60, 14, ES_LEFT
- PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
-}
-
-SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
- ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
- EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
- LTEXT "Type of file:", 14004, 10, 30, 50, 10
- LTEXT "%s File", 14005, 70, 30, 150, 10
- LTEXT "Opens with:", 14006, 10, 40, 50, 10
- LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Location:", 14008, 10, 55, 45, 10
- LTEXT "", 14009, 70, 55, 200, 10
- LTEXT "Size:",14010, 10, 65, 45, 10
- LTEXT "", 14011, 70, 65, 150, 10
- LTEXT "Created:", 14014, 10, 80, 45, 10
- LTEXT "", 14015, 70, 80, 150, 10
- LTEXT "Modied:", 14016, 10, 90, 45, 10
- LTEXT "", 14017, 70, 90, 150, 10
- LTEXT "Accessed:", 14018, 10, 100, 45, 10
- LTEXT "", 14019, 70, 100, 150, 10
- LTEXT "Attributes:", 14020, 10, 115, 45, 10
- CHECKBOX "&Read-only", 14021, 70, 115, 45, 10
- CHECKBOX "&Hidden", 14022, 130, 115, 50, 10
- CHECKBOX "&Archive", 14023, 180, 115, 45, 10
-}
-
-SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-  LTEXT "File version: ", 14000, 10, 10, 45, 10
-  LTEXT "", 14001, 70, 10, 150, 10
-  LTEXT "Description: ", 14002, 10, 20, 45, 10
-  LTEXT "", 14003, 70, 20, 150, 10
-  LTEXT "Copyright: ", 14004, 10, 30, 45, 10
-  LTEXT "", 14005, 70, 30, 150, 10
-  GROUPBOX "Other version information: ", 14006, 10, 45, 220, 90
-  LTEXT "Item name: ", 14007, 20, 55, 50, 10
-  LTEXT "Value: ", 14008, 130, 55, 45, 10
-  LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
-  EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT|WS_BORDER|WS_VSCROLL|WS_GROUP|ES_MULTILINE|ES_READONLY
-
-}
-
-DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-  EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
-  LTEXT "Type:", -1, 15, 55, 40, 10
-  LTEXT "", 14002, 110, 55, 100, 10
-
-
-  LTEXT "File system:", -1, 15, 70, 100, 10
-  LTEXT "", 14003, 110, 70, 100, 10
-
-  CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
-  LTEXT "Used space:", -1, 25, 90, 120, 10
-  LTEXT "", 14004, 110, 90, 120, 10
-  LTEXT "", 14005, 200, 90, 40, 10
-
-  CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
-  LTEXT "Free space:", -1, 25, 105, 70, 10
-  LTEXT "", 14006, 110, 105, 120, 10
-  LTEXT "", 14007, 200, 105, 40, 10
-
-  LTEXT "Capacity:", -1, 25, 125, 80, 10
-  LTEXT "", 14008, 110, 125, 120, 10
-  LTEXT "", 14009, 200, 125, 40, 10
-
-  CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
-
-  LTEXT "Drive %s", 14010, 100, 170, 40, 10
-  PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-  CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 165, 10, WS_DISABLED
-  CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
-}
-
-DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Tools"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-  GROUPBOX "Error-checking", -1, 5, 5, 230, 60
-  LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
-  PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
-  GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
-  LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
-  PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
-  GROUPBOX "Backup", -1, 5, 130, 230, 60
-  LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-  PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
-}
-
-
-DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-{
-}
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE DISCARDABLE
 {
@@ -296,14 +256,18 @@ STRINGTABLE DISCARDABLE
 	IDS_DELETEFOLDER_CAPTION "Confirmar exclusão de pasta"
 	IDS_DELETEITEM_TEXT "Você tem certeza que deseja excluir '%1'?"
 	IDS_DELETEMULTIPLE_TEXT "Você tem certeza que deseja excluir estes %1 itens?"
-	IDS_OVERWRITEFILE_TEXT "Sobreescrever arquivo %1?"
+	IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
 	IDS_OVERWRITEFILE_CAPTION "Confirmar sobreescrever arquivo"
+	IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\n"\
+	    "If the files in the destination folder have the same names as files in the\n"\
+	    "selected folder they will be replaced. Do you still want to move or copy\n"\
+	    "the folder?"
 
         /* message box strings */
 	IDS_RESTART_TITLE       "Reiniciar"
 	IDS_RESTART_PROMPT      "Você quer simular a reinicialização do Windows?"
 	IDS_SHUTDOWN_TITLE      "Desligar"
-	IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no ReactOS?"
+	IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no Wine?"
 
         /* shell folder path default values */
 	IDS_PROGRAMS                "Menu Iniciar\\Programas"
@@ -313,8 +277,8 @@ STRINGTABLE DISCARDABLE
 	IDS_RECENT                  "Recent"
 	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "Menu Iniciar"
-	IDS_MYMUSIC                 "Meus Documentos\\Minhas Músicas"
-	IDS_MYVIDEO                 "Meus Documentos\\Meus Vídeos"
+	IDS_MYMUSIC                 "Minhas Músicas"
+	IDS_MYVIDEO                 "Meus Vídeos"
 	IDS_DESKTOPDIRECTORY        "Desktop"
 	IDS_NETHOOD                 "NetHood"
 	IDS_TEMPLATES               "Templates"
@@ -325,7 +289,7 @@ STRINGTABLE DISCARDABLE
 	IDS_COOKIES                 "Cookies"
 	IDS_HISTORY                 "Configurações locais\\Histórico"
 	IDS_PROGRAM_FILES           "Arquivos de programas"
-	IDS_MYPICTURES              "Meus Documentos\\Minhas Imagens"
+	IDS_MYPICTURES              "Minhas Imagens"
 	IDS_PROGRAM_FILES_COMMON    "Arquivos de programas\\Arquivos comuns"
 	IDS_COMMON_DOCUMENTS        "Documentos"
 	IDS_ADMINTOOLS              "Menu Iniciar\\Programas\\Ferramentas Administrativas"
@@ -333,7 +297,78 @@ STRINGTABLE DISCARDABLE
 	IDS_COMMON_PICTURES         "Documentos\\Minhas Imagens"
 	IDS_COMMON_VIDEO            "Documentos\\Meus Vídeos"
 	IDS_CDBURN_AREA             "Configurações locais\\Dados de aplicativos\\Microsoft\\CD Burning"
-        IDS_DRIVE_FIXED             "Lokal Disk"
-        IDS_DRIVE_CDROM             "CDROM"
-        IDS_DRIVE_NETWORK           "Network Disk"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE DISCARDABLE
+{
+        /* columns in the shellview */
+	IDS_SHV_COLUMN1		"Ficheiro"
+	IDS_SHV_COLUMN2		"Tamanho"
+	IDS_SHV_COLUMN3		"Tipo"
+	IDS_SHV_COLUMN4		"Modificado"
+	IDS_SHV_COLUMN5		"Atributos"
+	IDS_SHV_COLUMN6		"Tamanho"
+	IDS_SHV_COLUMN7		"Disponível"
+	IDS_SHV_COLUMN8		"Nome"
+	IDS_SHV_COLUMN9		"Comentários"
+	IDS_SHV_COLUMN10	"Dono"
+	IDS_SHV_COLUMN11	"Grupo"
+
+        /* special folders */
+	IDS_DESKTOP		"Ambiente de trabalho"
+	IDS_MYCOMPUTER		"O Meu Computador"
+
+        /* context menus */
+	IDS_VIEW_LARGE		"Ícones &grandes"
+	IDS_VIEW_SMALL		"Ícones &pequenos"
+	IDS_VIEW_LIST		"&Lista"
+	IDS_VIEW_DETAILS	"&Detalhes"
+	IDS_SELECT		"Seleccionar"
+	IDS_OPEN		"Abrir"
+
+	IDS_CREATEFOLDER_DENIED "Não é possível criar nova pasta: Permissão negada."
+	IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
+	IDS_DELETEITEM_CAPTION "Confirmar exclusão do ficheiro"
+	IDS_DELETEFOLDER_CAPTION "Confirmar exclusão da pasta"
+	IDS_DELETEITEM_TEXT "Tem certeza que deseja excluir '%1'?"
+	IDS_DELETEMULTIPLE_TEXT "Tem certeza que deseja excluir estes %1 itens?"
+	IDS_OVERWRITEFILE_TEXT "Substituir ficheiro %1?"
+	IDS_OVERWRITEFILE_CAPTION "Confirmar substituição de ficheiro"
+
+        /* message box strings */
+	IDS_RESTART_TITLE       "Reiniciar"
+	IDS_RESTART_PROMPT      "Deseja simular a reinicialização do Windows?"
+	IDS_SHUTDOWN_TITLE      "Desligar"
+	IDS_SHUTDOWN_PROMPT     "Deseja finalizar esta sessão do Wine?"
+
+        /* shell folder path default values */
+	IDS_PROGRAMS                "Menu Iniciar\\Programas"
+	IDS_PERSONAL                "OS Meus Documentos"
+	IDS_FAVORITES               "Favoritos"
+	IDS_STARTUP                 "Menu Iniciar\\Programas\\Iniciar"
+	IDS_RECENT                  "Recentes"
+	IDS_SENDTO                  "Enviar Para"
+	IDS_STARTMENU               "Menu Iniciar"
+	IDS_MYMUSIC                 "As Minhas Músicas"
+	IDS_MYVIDEO                 "Os Meus Vídeos"
+	IDS_DESKTOPDIRECTORY        "Ambiente de Trabalho"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Modelos"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Definições locais\\Application Data"
+	IDS_INTERNET_CACHE          "Definições locais\\Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Definições locais\\Histórico"
+	IDS_PROGRAM_FILES           "Programas"
+	IDS_MYPICTURES              "As Minhas Imagens"
+	IDS_PROGRAM_FILES_COMMON    "Programas\\Ficheiros comuns"
+	IDS_COMMON_DOCUMENTS        "Os Meus Documentos"
+	IDS_ADMINTOOLS              "Menu Iniciar\\Programas\\Ferramentas Administrativas"
+	IDS_COMMON_MUSIC            "Os Meus Documentos\\As Minhas Músicas"
+	IDS_COMMON_PICTURES         "Os Meus Documentos\\As Minhas Imagens"
+	IDS_COMMON_VIDEO            "Os Meus Documentos\\Os Meus Vídeos"
+	IDS_CDBURN_AREA             "Definições locais\\Application Data\\Microsoft\\CD Burning"
 }

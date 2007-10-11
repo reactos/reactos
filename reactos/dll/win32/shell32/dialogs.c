@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -52,8 +52,8 @@ typedef struct
 typedef BOOL (*LPFNOFN) (OPENFILENAMEA *) ;
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-INT_PTR CALLBACK RunDlgProc (HWND, UINT, WPARAM, LPARAM) ;
-void FillList (HWND, char *) ;
+static INT_PTR CALLBACK RunDlgProc (HWND, UINT, WPARAM, LPARAM) ;
+static void FillList (HWND, char *) ;
 
 
 /*************************************************************************
@@ -66,7 +66,7 @@ BOOL WINAPI PickIconDlg(
 	DWORD nMaxFile,
 	LPDWORD lpdwIconIndex)
 {
-	FIXME("(%p,%s,%08lx,%p):stub.\n",
+	FIXME("(%p,%s,%08x,%p):stub.\n",
 	  hwndOwner, lpstrFile, nMaxFile,lpdwIconIndex);
 	return 0xffffffff;
 }
@@ -116,7 +116,7 @@ void WINAPI RunFileDlg(
 }
 
 /* Dialog procedure for RunFileDlg */
-INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     int ic ;
     char *psz, szMsg[256] ;
@@ -145,7 +145,7 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                         psz = HeapAlloc( GetProcessHeap(), 0, (ic + 2) );
                         GetWindowTextA (htxt, psz, ic + 1) ;
 
-                        if (ShellExecuteA(NULL, NULL, psz, NULL, NULL, SW_SHOWNORMAL) < (HINSTANCE)33)
+                        if (ShellExecuteA(NULL, "open", psz, NULL, NULL, SW_SHOWNORMAL) < (HINSTANCE)33)
                             {
                             char *pszSysMsg = NULL ;
                             FormatMessageA (
@@ -162,7 +162,6 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 
                             HeapFree(GetProcessHeap(), 0, psz);
                             SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                            SetFocus(htxt);
                             return TRUE ;
                             }
                         FillList (htxt, psz) ;
@@ -218,19 +217,15 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                         return TRUE ;
                         }
 
-                    if(ofnProc (&ofn))
-                       {
-                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
-                        SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
-                        SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
-                        }
-                    else
-                        {
-                        SetFocus(GetDlgItem(hwnd, 12288));
-                        }
+                    ofnProc (&ofn) ;
+
+                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                    SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
+                    SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
 
                     FreeLibrary (hComdlg) ;
+
                     return TRUE ;
                     }
                 }
@@ -240,7 +235,7 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
     }
 
 /* This grabs the MRU list from the registry and fills the combo for the "Run" dialog above */
-void FillList (HWND hCb, char *pszLatest)
+static void FillList (HWND hCb, char *pszLatest)
     {
     HKEY hkey ;
 /*    char szDbgMsg[256] = "" ; */
@@ -252,7 +247,7 @@ void FillList (HWND hCb, char *pszLatest)
 
     if (ERROR_SUCCESS != RegCreateKeyExA (
         HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU",
-        0, "", REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey, NULL))
+        0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey, NULL))
         MessageBoxA (hCb, "Unable to open registry key !", "Nix", MB_OK) ;
 
     RegQueryValueExA (hkey, "MRUList", NULL, NULL, NULL, &icList) ;
@@ -411,16 +406,6 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
     return 0;
 }
 
-/*************************************************************************
- * LogoffWindowsDialog				[SHELL32.54]
- */
-
-int WINAPI LogoffWindowsDialog(DWORD uFlags)
-{
-    ERR("LogoffWindowsDialog is UNIMPLEMENTED\n");
-    ExitWindowsEx(EWX_LOGOFF, 0);
-    return 0;
-}
 
 /*************************************************************************
  * RestartDialog				[SHELL32.59]

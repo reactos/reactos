@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -117,30 +117,86 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	return TRUE;
 }
 
+static const WCHAR swShell[] = {'s','h','e','l','l','\\',0};
+static const WCHAR swOpen[] = {'o','p','e','n',0};
+static const WCHAR swCommand[] = {'\\','c','o','m','m','a','n','d',0};
+
+BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len )
+{
+        WCHAR sTemp[MAX_PATH];
+        LONG size;
+        HKEY hkey;
+
+	TRACE("%p %s %p\n", hkeyClass, debugstr_w(szVerb), szDest);
+
+        if (szVerb)
+        {
+            lstrcpynW(szDest, szVerb, len);
+            return TRUE;
+        }
+
+        size=len;
+        *szDest='\0';
+        if (!RegQueryValueW(hkeyClass, swShell, szDest, &size) && *szDest)
+        {
+            /* The MSDN says to first try the default verb */
+            lstrcpyW(sTemp, swShell);
+            lstrcatW(sTemp, szDest);
+            lstrcatW(sTemp, swCommand);
+            if (!RegOpenKeyExW(hkeyClass, sTemp, 0, 0, &hkey))
+            {
+                RegCloseKey(hkey);
+                TRACE("default verb=%s\n", debugstr_w(szDest));
+                return TRUE;
+            }
+        }
+
+        /* then fallback to 'open' */
+        lstrcpyW(sTemp, swShell);
+        lstrcatW(sTemp, swOpen);
+        lstrcatW(sTemp, swCommand);
+        if (!RegOpenKeyExW(hkeyClass, sTemp, 0, 0, &hkey))
+        {
+            RegCloseKey(hkey);
+            lstrcpynW(szDest, swOpen, len);
+            TRACE("default verb=open\n");
+            return TRUE;
+        }
+
+        /* and then just use the first verb on Windows >= 2000 */
+        if (!RegEnumKeyW(hkeyClass, 0, szDest, len) && *szDest)
+        {
+            TRACE("default verb=first verb=%s\n", debugstr_w(szDest));
+            return TRUE;
+        }
+
+        TRACE("no default verb!\n");
+	return FALSE;
+}
 
 BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len )
 {
-        static const WCHAR swShell[] = {'s','h','e','l','l','\\',0};
-        static const WCHAR swCommand[] = {'\\','c','o','m','m','a','n','d',0};
-	BOOL	ret = FALSE;
+	WCHAR sTempVerb[MAX_PATH];
+	BOOL ret;
 
 	TRACE("%p %s %s %p\n", hkeyClass, debugstr_w(szClass), debugstr_w(szVerb), szDest);
 
 	if (szClass)
             RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, 0x02000000, &hkeyClass);
+        if (!hkeyClass)
+            return FALSE;
+        ret = FALSE;
 
-        if (hkeyClass)
-	{
-	    WCHAR sTemp[MAX_PATH];
-	    lstrcpyW(sTemp, swShell);
-	    lstrcatW(sTemp, szVerb);
-	    lstrcatW(sTemp, swCommand);
-
-	    ret = (ERROR_SUCCESS == SHGetValueW(hkeyClass, sTemp, NULL, NULL, szDest, &len));
-
-	    if (szClass)
-	       RegCloseKey(hkeyClass);
-	}
+        if (HCR_GetDefaultVerbW(hkeyClass, szVerb, sTempVerb, sizeof(sTempVerb)))
+        {
+            WCHAR sTemp[MAX_PATH];
+            lstrcpyW(sTemp, swShell);
+            lstrcatW(sTemp, sTempVerb);
+            lstrcatW(sTemp, swCommand);
+            ret = (ERROR_SUCCESS == SHGetValueW(hkeyClass, sTemp, NULL, NULL, szDest, &len));
+        }
+        if (szClass)
+            RegCloseKey(hkeyClass);
 
 	TRACE("-- %s\n", debugstr_w(szDest) );
 	return ret;
@@ -154,7 +210,7 @@ BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LP
 static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 {
 	char	xriid[50];
-    sprintf( xriid, "CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+    sprintf( xriid, "CLSID\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
                  riid->Data1, riid->Data2, riid->Data3,
                  riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
                  riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7] );
@@ -164,31 +220,31 @@ static BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey)
 	return !RegOpenKeyExA(HKEY_CLASSES_ROOT, xriid, 0, KEY_READ, hkey);
 }
 
-static BOOL HCR_RegGetDefaultIconW(HKEY hkey, LPWSTR szDest, DWORD len, LPDWORD dwNr)
+static BOOL HCR_RegGetDefaultIconW(HKEY hkey, LPWSTR szDest, DWORD len, int* picon_idx)
 {
-	DWORD dwType;
-	WCHAR sTemp[MAX_PATH];
-	WCHAR sNum[5];
+    DWORD dwType;
+    WCHAR sTemp[MAX_PATH];
+    WCHAR sNum[5];
 
-	if (!RegQueryValueExW(hkey, NULL, 0, &dwType, (LPBYTE)szDest, &len))
-	{
+    if (!RegQueryValueExW(hkey, NULL, 0, &dwType, (LPBYTE)szDest, &len))
+    {
       if (dwType == REG_EXPAND_SZ)
-	  {
-	    ExpandEnvironmentStringsW(szDest, sTemp, MAX_PATH);
-	    lstrcpynW(szDest, sTemp, len);
-	  }
-	  if (ParseFieldW (szDest, 2, sNum, 5))
-             *dwNr = atoiW(sNum);
+      {
+        ExpandEnvironmentStringsW(szDest, sTemp, MAX_PATH);
+        lstrcpynW(szDest, sTemp, len);
+      }
+      if (ParseFieldW (szDest, 2, sNum, 5))
+             *picon_idx = atoiW(sNum);
           else
-             *dwNr=0; /* sometimes the icon number is missing */
-	  ParseFieldW (szDest, 1, szDest, len);
+             *picon_idx=0; /* sometimes the icon number is missing */
+      ParseFieldW (szDest, 1, szDest, len);
           PathUnquoteSpacesW(szDest);
-	  return TRUE;
-	}
-	return FALSE;
+      return TRUE;
+    }
+    return FALSE;
 }
 
-static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, LPDWORD dwNr)
+static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, int* picon_idx)
 {
 	DWORD dwType;
 	char sTemp[MAX_PATH];
@@ -202,9 +258,9 @@ static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, LPDWORD d
 	    lstrcpynA(szDest, sTemp, len);
 	  }
 	  if (ParseFieldA (szDest, 2, sNum, 5))
-             *dwNr=atoi(sNum);
+             *picon_idx=atoi(sNum);
           else
-             *dwNr=0; /* sometimes the icon number is missing */
+             *picon_idx=0; /* sometimes the icon number is missing */
 	  ParseFieldA (szDest, 1, szDest, len);
           PathUnquoteSpacesA(szDest);
 	  return TRUE;
@@ -212,7 +268,7 @@ static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, LPDWORD d
 	return FALSE;
 }
 
-BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, LPDWORD dwNr)
+BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_idx)
 {
         static const WCHAR swDefaultIcon[] = {'\\','D','e','f','a','u','l','t','I','c','o','n',0};
 	HKEY	hkey;
@@ -226,19 +282,19 @@ BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, LPDWORD dwNr
 
 	if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, 0x02000000, &hkey))
 	{
-	  ret = HCR_RegGetDefaultIconW(hkey, szDest, len, dwNr);
+	  ret = HCR_RegGetDefaultIconW(hkey, szDest, len, picon_idx);
 	  RegCloseKey(hkey);
 	}
 
         if(ret)
-            TRACE("-- %s %li\n", debugstr_w(szDest), *dwNr );
+            TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
         else
             TRACE("-- not found\n");
 
 	return ret;
 }
 
-BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, LPDWORD dwNr)
+BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, int* picon_idx)
 {
 	HKEY	hkey;
 	char	sTemp[MAX_PATH];
@@ -250,24 +306,24 @@ BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, LPDWORD dwNr)
 
 	if (!RegOpenKeyExA(HKEY_CLASSES_ROOT, sTemp, 0, 0x02000000, &hkey))
 	{
-	  ret = HCR_RegGetDefaultIconA(hkey, szDest, len, dwNr);
+	  ret = HCR_RegGetDefaultIconA(hkey, szDest, len, picon_idx);
 	  RegCloseKey(hkey);
 	}
-	TRACE("-- %s %li\n", szDest, *dwNr );
+	TRACE("-- %s %i\n", szDest, *picon_idx);
 	return ret;
 }
 
-BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, LPDWORD dwNr)
+BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, int* picon_idx)
 {
 	HKEY	hkey;
 	BOOL	ret = FALSE;
 
 	if (HCR_RegOpenClassIDKey(riid, &hkey))
 	{
-	  ret = HCR_RegGetDefaultIconW(hkey, szDest, len, dwNr);
+	  ret = HCR_RegGetDefaultIconW(hkey, szDest, len, picon_idx);
 	  RegCloseKey(hkey);
 	}
-	TRACE("-- %s %li\n", debugstr_w(szDest), *dwNr );
+	TRACE("-- %s %i\n", debugstr_w(szDest), *picon_idx);
 	return ret;
 }
 
@@ -287,8 +343,11 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
  	szDest[0] = 0;
 	if (HCR_RegOpenClassIDKey(riid, &hkey))
 	{
-	  if (!RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len))
-	  {
+          static const WCHAR wszLocalizedString[] = 
+            { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
+          if (!RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) ||
+              !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len))
+          {
 	    ret = TRUE;
 	  }
 	  RegCloseKey(hkey);
@@ -319,8 +378,9 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
 	szDest[0] = 0;
 	if (HCR_RegOpenClassIDKey(riid, &hkey))
 	{
-	  if (!RegQueryValueExA(hkey,"",0,NULL,(LPBYTE)szDest,&len))
-	  {
+          if (!RegLoadMUIStringA(hkey,"LocalizedString",szDest,len,NULL,0,NULL) ||
+              !RegQueryValueExA(hkey,"",0,NULL,(LPBYTE)szDest,&len))
+          {
 	    ret = TRUE;
 	  }
 	  RegCloseKey(hkey);
@@ -419,7 +479,7 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
         }
     }
 
-    TRACE("-- *pdwAttributes == 0x%08lx\n", *pdwAttributes);
+    TRACE("-- *pdwAttributes == 0x%08x\n", *pdwAttributes);
 
     return TRUE;
 }

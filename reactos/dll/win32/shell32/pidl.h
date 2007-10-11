@@ -201,6 +201,7 @@ DWORD	_ILGetDrive		(LPCITEMIDLIST, LPSTR, UINT);
 /*
  * testing simple pidls
  */
+BOOL	_ILIsUnicode		(LPCITEMIDLIST pidl);
 BOOL	_ILIsDesktop		(LPCITEMIDLIST pidl);
 BOOL	_ILIsMyComputer		(LPCITEMIDLIST pidl);
 BOOL	_ILIsDrive		(LPCITEMIDLIST pidl);
@@ -241,9 +242,7 @@ LPITEMIDLIST	_ILCreateGuidFromStrW(LPCWSTR szGUID);
 
 /* Commonly used PIDLs representing file system objects. */
 LPITEMIDLIST	_ILCreateDesktop	(void);
-LPITEMIDLIST	_ILCreateFromFindDataA(WIN32_FIND_DATAA *stffile);
-LPITEMIDLIST	_ILCreateFromFindDataW(WIN32_FIND_DATAW *stffile);
-HRESULT		_ILCreateFromPathA	(LPCSTR szPath, LPITEMIDLIST* ppidl);
+LPITEMIDLIST	_ILCreateFromFindDataW(const WIN32_FIND_DATAW *stffile);
 HRESULT		_ILCreateFromPathW	(LPCWSTR szPath, LPITEMIDLIST* ppidl);
 
 /* Other helpers */
@@ -261,6 +260,7 @@ LPITEMIDLIST	_ILCreateDrive		(LPCWSTR);
  */
 LPPIDLDATA	_ILGetDataPointer	(LPCITEMIDLIST);
 LPSTR		_ILGetTextPointer	(LPCITEMIDLIST);
+LPWSTR		_ILGetTextPointerW	(LPCITEMIDLIST);
 LPSTR		_ILGetSTextPointer	(LPCITEMIDLIST);
 IID		*_ILGetGUIDPointer	(LPCITEMIDLIST pidl);
 FileStructW     *_ILGetFileStructW      (LPCITEMIDLIST pidl);
@@ -275,8 +275,8 @@ BOOL	pcheck	(LPCITEMIDLIST pidl);
  * aPidl helper
  */
 void _ILFreeaPidl(LPITEMIDLIST * apidl, UINT cidl);
-LPITEMIDLIST * _ILCopyaPidl(LPCITEMIDLIST * apidlsrc, UINT cidl);
-LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, LPIDA cida);
+LPITEMIDLIST * _ILCopyaPidl(const LPCITEMIDLIST * apidlsrc, UINT cidl);
+LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, const CIDA * cida);
 
 BOOL WINAPI ILGetDisplayNameExA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPSTR path, DWORD type);
 BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type);

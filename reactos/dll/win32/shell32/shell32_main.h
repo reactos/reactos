@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_SHELL_MAIN_H
@@ -57,14 +57,15 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags );
 
 /* Classes Root */
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot);
+BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
 BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
-BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, LPDWORD dwNr);
-BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, LPDWORD dwNr);
+BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_idx);
+BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, int* picon_idx);
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len);
 
 /* ANSI versions of above functions, supposed to go away as soon as they are not used anymore */
 BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot);
-BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, LPDWORD dwNr);
+BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, int* picon_idx);
 BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len);
 
 BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD dwAttributes);
@@ -96,7 +97,9 @@ HRESULT WINAPI UnixFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID 
 HRESULT WINAPI UnixDosFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv);
 HRESULT WINAPI FolderShortcut_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv);
 HRESULT WINAPI MyDocuments_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv);
-extern HRESULT CPanel_GetIconLocationW(LPITEMIDLIST, LPWSTR, UINT, int*);
+HRESULT WINAPI RecycleBin_Constructor(IUnknown * pUnkOuter, REFIID riif, LPVOID *ppv);
+HRESULT WINAPI ShellFSFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv);
+extern HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST, LPWSTR, UINT, int*);
 HRESULT WINAPI CPanel_ExtractIconA(LPITEMIDLIST pidl, LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 HRESULT WINAPI CPanel_ExtractIconW(LPITEMIDLIST pidl, LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
@@ -125,6 +128,7 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
     (((kst)&(MK_CONTROL|MK_SHIFT)) ? DROPEFFECT_COPY :\
     DROPEFFECT_MOVE))
 
+
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
 HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
 HGLOBAL RenderSHELLIDLISTOFFSET (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
@@ -144,10 +148,15 @@ void FreeChangeNotifications(void);
 #define ASK_DELETE_MULTIPLE_ITEM  3
 #define ASK_CREATE_FOLDER         4
 #define ASK_OVERWRITE_FILE        5
+#define ASK_DELETE_SELECTED       6
+#define ASK_TRASH_FILE            7
+#define ASK_TRASH_FOLDER          8
+#define ASK_TRASH_MULTIPLE_ITEM   9
+#define ASK_CANT_TRASH_ITEM      10
+#define ASK_OVERWRITE_FOLDER     11
 
-BOOL SHELL_DeleteDirectoryA(LPCSTR pszDir, BOOL bShowUI);
-BOOL SHELL_DeleteFileA(LPCSTR pszFile, BOOL bShowUI);
-BOOL SHELL_ConfirmDialog(int nKindOfDialog, LPCSTR szDir);
+BOOL SHELL_DeleteDirectoryW(HWND hwnd, LPCWSTR pwszDir, BOOL bShowUI);
+BOOL SHELL_ConfirmYesNoW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir);
 
 /* 16-bit functions */
 void        WINAPI DragAcceptFiles16(HWND16 hWnd, BOOL16 b);
@@ -166,7 +175,7 @@ BOOL16      WINAPI AboutDlgProc16(HWND16,UINT16,WPARAM16,LPARAM);
 void WINAPI _InsertMenuItem (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
 			UINT wID, UINT fType, LPCSTR dwTypeData, UINT fState);
 
-inline static BOOL SHELL_OsIsUnicode(void)
+static inline BOOL SHELL_OsIsUnicode(void)
 {
     /* if high-bit of version is 0, we are emulating NT */
     return !(GetVersion() & 0x80000000);
@@ -177,26 +186,26 @@ inline static BOOL SHELL_OsIsUnicode(void)
 	  SHFree(*ptr); \
 	  *ptr = NULL; \
 	};
-inline static void __SHCloneStrA(char ** target,const char * source)
+static inline void __SHCloneStrA(char ** target,const char * source)
 {
-	*target = (char*)SHAlloc(strlen(source)+1);
+	*target = SHAlloc(strlen(source)+1);
 	strcpy(*target, source);
 }
 
-inline static void __SHCloneStrWtoA(char ** target, const WCHAR * source)
+static inline void __SHCloneStrWtoA(char ** target, const WCHAR * source)
 {
 	int len = WideCharToMultiByte(CP_ACP, 0, source, -1, NULL, 0, NULL, NULL);
 	*target = SHAlloc(len);
 	WideCharToMultiByte(CP_ACP, 0, source, -1, *target, len, NULL, NULL);
 }
 
-inline static void __SHCloneStrW(WCHAR ** target, const WCHAR * source)
+static inline void __SHCloneStrW(WCHAR ** target, const WCHAR * source)
 {
-	*target = (WCHAR*)SHAlloc( (strlenW(source)+1) * sizeof(WCHAR) );
-	strcpyW(*target, source);
+	*target = SHAlloc( (lstrlenW(source)+1) * sizeof(WCHAR) );
+	lstrcpyW(*target, source);
 }
 
-inline static WCHAR * __SHCloneStrAtoW(WCHAR ** target, const char * source)
+static inline WCHAR * __SHCloneStrAtoW(WCHAR ** target, const char * source)
 {
 	int len = MultiByteToWideChar(CP_ACP, 0, source, -1, NULL, 0);
 	*target = SHAlloc(len*sizeof(WCHAR));
@@ -230,7 +239,6 @@ HRESULT SHELL_RegisterShellFolders(void);
 /* Detect Shell Links */
 BOOL SHELL_IsShortcut(LPCITEMIDLIST);
 
-#define MAX_PROPERTY_SHEET_PAGE    32
 INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam);

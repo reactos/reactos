@@ -1,7 +1,6 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2004 Henning Gerhardt
- * Copyright 2007 Daniel Reimer 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -28,6 +27,9 @@ BEGIN
 	MENUITEM "&Details",		FCIDM_SHVIEW_REPORTVIEW
 END
 
+/*
+ shellview background menu
+*/
 MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -67,6 +69,9 @@ BEGIN
 	END
 END
 
+/*
+ shellview item menu
+*/
 MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -87,7 +92,7 @@ END
 
 SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Nach Verzeichnis durchsuchen"
+CAPTION "Verzeichnis auswählen"
 FONT 8, "MS Shell Dlg"
 {
  DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -98,6 +103,19 @@ FONT 8, "MS Shell Dlg"
  	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
 	WS_BORDER | WS_TABSTOP,
 	4, 40, 180, 120
+}
+
+SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Meldung"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON "&Ja", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Ja zu &allen", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Nein", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Abbrechen", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    ICON "", IDD_ICON, 10, 10, 16, 16
+    LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 }
 
 SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
@@ -290,6 +308,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
    PUSHBUTTON "Abbrechen", 14008, 140, 170, 60, 15, WS_TABSTOP
 }
 
+
 STRINGTABLE DISCARDABLE
 {
         /* columns in the shellview */
@@ -304,10 +323,13 @@ STRINGTABLE DISCARDABLE
 	IDS_SHV_COLUMN9		"Kommentar"
 	IDS_SHV_COLUMN10	"Besitzer"
 	IDS_SHV_COLUMN11	"Gruppe"
+	IDS_SHV_COLUMN_DELFROM	"Ursprung"
+	IDS_SHV_COLUMN_DELDATE	"Gelöscht am"
 
         /* special folders */
 	IDS_DESKTOP		"Desktop"
 	IDS_MYCOMPUTER		"Arbeitsplatz"
+	IDS_RECYCLEBIN_FOLDER_NAME      "Müll"
 
         /* context menus */
 	IDS_VIEW_LARGE		"&Große Symbole"
@@ -319,12 +341,21 @@ STRINGTABLE DISCARDABLE
 
 	IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
 	IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf"
-	IDS_DELETEITEM_CAPTION "Bestätigung: Datei löschen"
+	IDS_DELETEITEM_CAPTION "Bestätigung: Objekt löschen"
 	IDS_DELETEFOLDER_CAPTION "Bestätigung: Verzeichnis löschen"
-	IDS_DELETEITEM_TEXT "Sind Sie sich sicher, dass Sie die Datei '%1' löschen möchten ?"
-	IDS_DELETEMULTIPLE_TEXT "Sind Sie sich sicher, dass Sie diese %1 Dateien löschen möchten ?"
-	IDS_OVERWRITEFILE_TEXT "Möchten Sie, dass die Datei '%1' überschrieben wird ?"
+	IDS_DELETEITEM_TEXT "Sind Sie sich sicher, dass Sie '%1' löschen möchten?"
+	IDS_DELETEMULTIPLE_TEXT "Sind Sie sich sicher, dass Sie diese %1 Objekte löschen möchten?"
+	IDS_DELETESELECTED_TEXT "Sind Sie sich sicher, dass Sie die ausgewählten Objekte löschen möchten?"
+	IDS_TRASHITEM_TEXT "Sind Sie sich sicher, dass Sie '%1' in Müll verschieben möchten?"
+	IDS_TRASHFOLDER_TEXT "Sind Sie sich sicher, dass Sie '%1' und seinen Inhalt in den Müll verschieben möchten?"
+	IDS_TRASHMULTIPLE_TEXT "Sind Sie sich sicher, dass Sie diese %1 Dateien in den Müll verschieben möchten?"
+	IDS_CANTTRASH_TEXT "Das Objekt '%1' kann nicht in den Müll verschoben werden. Möchten Sie es stattdessen löschen?"
+	IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
 	IDS_OVERWRITEFILE_CAPTION "Bestätigung: Datei überschreiben"
+	IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\n"\
+	    "If the files in the destination folder have the same names as files in the\n"\
+	    "selected folder they will be replaced. Do you still want to move or copy\n"\
+	    "the folder?"
 
         /* message box strings */
         IDS_RESTART_TITLE       "Neu starten"
@@ -340,8 +371,8 @@ STRINGTABLE DISCARDABLE
 	IDS_RECENT		"Recent"
 	IDS_SENDTO		"SendTo"
 	IDS_STARTMENU		"Startmenü"
-	IDS_MYMUSIC		"Eigene Dateien\\Meine Musik"
-	IDS_MYVIDEO		"Eigene Dateien\\Meine Videos"
+	IDS_MYMUSIC		"Meine Musik"
+	IDS_MYVIDEO		"Meine Videos"
 	IDS_DESKTOPDIRECTORY	"Desktop"
 	IDS_NETHOOD		"Netzwerkumgebung"
 	IDS_TEMPLATES		"Vorlagen"
@@ -352,7 +383,7 @@ STRINGTABLE DISCARDABLE
 	IDS_COOKIES		"Cookies"
 	IDS_HISTORY		"Lokale Einstellungen\\Verlauf"
 	IDS_PROGRAM_FILES	"Programme"
-	IDS_MYPICTURES		"Eigene Dateien\\Eigene Bilder"
+	IDS_MYPICTURES		"Eigene Bilder"
 	IDS_PROGRAM_FILES_COMMON "Programme\\Gemeinsame Dateien"
 	IDS_COMMON_DOCUMENTS	"Dokumente"
 	IDS_ADMINTOOLS		"Startmenü\\Programme\\Verwaltung"

@@ -26,6 +26,7 @@
 #define ExtendedIntegerMultiply RtlExtendedIntegerMultiply
 #define ConvertUlongToLargeInteger RtlConvertUlongToLargeInteger
 #define LargeIntegerSubtract RtlLargeIntegerSubtract
+#define MAX_PROPERTY_SHEET_PAGE 32
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>

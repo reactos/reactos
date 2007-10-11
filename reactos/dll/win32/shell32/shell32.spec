@@ -4,8 +4,10 @@
 # This list was updated to dll version 4.72
 
    2 stdcall -noname SHChangeNotifyRegister(long long long long long ptr)
+   3 stdcall SHDefExtractIconA(str long long ptr ptr long)
    4 stdcall -noname SHChangeNotifyDeregister(long)
    5 stdcall -noname SHChangeNotifyUpdateEntryList(long long long long)
+   6 stdcall SHDefExtractIconW(wstr long long ptr ptr long)
    9 stub -noname PifMgr_OpenProperties
   10 stub -noname PifMgr_GetProperties
   11 stub -noname PifMgr_SetProperties
@@ -44,10 +46,9 @@
   48 stdcall -noname PathSetDlgItemPath(long long ptr) PathSetDlgItemPathAW
   49 stdcall -noname PathQualify(ptr) PathQualifyAW
   50 stdcall -noname PathStripToRoot(ptr) PathStripToRootAW
-  51 stdcall -noname PathResolve(str long long) PathResolveAW
+  51 stdcall PathResolve(str long long) PathResolveAW
   52 stdcall -noname PathGetArgs(str) PathGetArgsAW
   53 stdcall DoEnvironmentSubst(long long) DoEnvironmentSubstAW
-  54 stdcall -noname LogoffWindowsDialog(ptr)
   55 stdcall -noname PathQuoteSpaces(ptr) PathQuoteSpacesAW
   56 stdcall -noname PathUnquoteSpaces(str) PathUnquoteSpacesAW
   57 stdcall -noname PathGetDriveNumber(str) PathGetDriveNumberAW
@@ -58,7 +59,7 @@
   62 stdcall -noname PickIconDlg(long long long long)
   63 stdcall -noname GetFileNameFromBrowse(long long long long str str str)
   64 stdcall -noname DriveType(long)
-  65 stub -noname InvalidateDriveType
+  65 stdcall -noname InvalidateDriveType(long)
   66 stdcall -noname IsNetDrive(long)
   67 stdcall -noname Shell_MergeMenus(long long long long long long)
   68 stdcall -noname SHGetSetSettings(ptr long long)
@@ -118,6 +119,7 @@
  125 stdcall -noname FileMenu_AddFilesForPidl(long long long ptr long long ptr)
  126 stdcall -noname SHOutOfMemoryMessageBox(long long long)
  127 stdcall -noname SHWinHelp(long long long long)
+ 128 stdcall -noname SHDllGetClassObject(ptr ptr ptr) DllGetClassObject
  129 stdcall -noname DAD_AutoScroll(long ptr ptr)
  130 stdcall -noname DAD_DragEnter(long)
  131 stdcall -noname DAD_DragEnterEx(long double)
@@ -134,6 +136,7 @@
  145 stdcall -noname PathFindOnPath(ptr ptr) PathFindOnPathAW
  146 stdcall -noname RLBuildListOfPaths()
  147 stdcall -noname SHCLSIDFromString(long long) SHCLSIDFromStringAW
+ 148 stdcall -noname SHMapIDListToImageListIndexAsync(ptr ptr ptr long ptr ptr ptr ptr ptr)
  149 stdcall -noname SHFind_InitMenuPopup(long long long long)
 
  151 stdcall -noname SHLoadOLE(long)
@@ -167,8 +170,8 @@
  179 stdcall -noname SHGetNewLinkInfoA(str str ptr long long)
  180 stdcall -noname SHGetNewLinkInfoW(wstr wstr ptr long long)
  181 stdcall -noname RegisterShellHook(long long)
- 182 varargs -noname ShellMessageBoxW(long long long str long)
- 183 varargs -noname ShellMessageBoxA(long long long str long)
+ 182 varargs -noname ShellMessageBoxW(long long wstr wstr long)
+ 183 varargs -noname ShellMessageBoxA(long long str str long)
  184 stdcall -noname ArrangeWindows(long long long long long)
  185 stub SHHandleDiskFull
  186 stdcall -noname ILGetDisplayNameEx(ptr ptr ptr long)
@@ -213,7 +216,7 @@
  505 stdcall SHRegCloseKey (long)
  506 stdcall SHRegOpenKeyA (long str long)
  507 stdcall SHRegOpenKeyW (long wstr long)
- 508 stub SHRegQueryValueA
+ 508 stdcall SHRegQueryValueA(long str ptr ptr)
  509 stdcall SHRegQueryValueExA(long str ptr ptr ptr ptr)
  510 stdcall SHRegQueryValueW (long long long long)
  511 stdcall SHRegQueryValueExW (long wstr ptr ptr ptr ptr)
@@ -297,9 +300,9 @@
 @ stub InternalExtractIconListA
 @ stub InternalExtractIconListW
 @ stub OCInstall
-@ stub OpenAs_RunDLL
-@ stub OpenAs_RunDLLA
-@ stub OpenAs_RunDLLW
+@ stdcall OpenAs_RunDLL(long long str long) OpenAs_RunDLLA
+@ stdcall OpenAs_RunDLLA(long long str long)
+@ stdcall OpenAs_RunDLLW(long long wstr long)
 @ stub PrintersGetCommand_RunDLL
 @ stub PrintersGetCommand_RunDLLA
 @ stub PrintersGetCommand_RunDLLW
@@ -319,8 +322,6 @@
 @ stdcall SHCreateDirectoryExA(long str ptr)
 @ stdcall SHCreateDirectoryExW(long wstr ptr)
 @ stub SHCreateProcessAsUserW
-@ stdcall SHDefExtractIconA(str long long ptr ptr long)
-@ stdcall SHDefExtractIconW(wstr long long ptr ptr long)
 @ stdcall SHEmptyRecycleBinA(long str long)
 @ stdcall SHEmptyRecycleBinW(long wstr long)
 @ stub SHExtractIconsW
@@ -359,13 +360,14 @@
 @ stdcall SHHelpShortcuts_RunDLLW(long long long long)
 @ stub SHInvokePrinterCommandA
 @ stub SHInvokePrinterCommandW
-@ stub SHIsFileAvailableOffline
+@ stdcall SHIsFileAvailableOffline(wstr ptr)
 @ stdcall SHLoadInProc(long)
-@ stub SHLoadNonloadedIconOverlayIdentifiers
-@ stub SHPathPrepareForWriteA
-@ stub SHPathPrepareForWriteW
+@ stdcall SHLoadNonloadedIconOverlayIdentifiers()
+@ stdcall SHPathPrepareForWriteA(long ptr str long)
+@ stdcall SHPathPrepareForWriteW(long ptr wstr long)
 @ stdcall SHQueryRecycleBinA(str ptr)
 @ stdcall SHQueryRecycleBinW(wstr ptr)
+@ stdcall SHSetLocalizedName(wstr wstr long)
 @ stub SHUpdateRecycleBinIcon
 @ stdcall SheChangeDirA(str)
 @ stub SheChangeDirExA

@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -49,18 +49,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 extern HRESULT WINAPI IFSFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
-const WCHAR sShell32[12] = {'S','H','E','L','L','3','2','.','D','L','L','\0'};
-const WCHAR sOLE32[10] = {'O','L','E','3','2','.','D','L','L','\0'};
+static const WCHAR sShell32[12] = {'S','H','E','L','L','3','2','.','D','L','L','\0'};
 
-HINSTANCE hShellOle32 = 0;
 /**************************************************************************
  * Default ClassFactory types
  */
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
-IClassFactory * IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, REFIID riidInst);
+static IClassFactory * IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, REFIID riidInst);
 
 /* this table contains all CLSID's of shell32 objects */
-struct {
+static const struct {
 	REFIID			riid;
 	LPFNCREATEINSTANCE	lpfnCI;
 } InterfaceTable[] = {
@@ -71,15 +69,16 @@ struct {
 	{&CLSID_DragDropHelper, &IDropTargetHelper_Constructor},
 	{&CLSID_ControlPanel,	&IControlPanel_Constructor},
 	{&CLSID_AutoComplete,   &IAutoComplete_Constructor},
+#if 0
+	{&CLSID_UnixFolder,     &UnixFolder_Constructor},
+	{&CLSID_UnixDosFolder,  &UnixDosFolder_Constructor},
+	{&CLSID_FolderShortcut, &FolderShortcut_Constructor},
+	{&CLSID_MyDocuments,    &MyDocuments_Constructor},
+	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
+#endif
 	{NULL,NULL}
 };
 
-/*************************************************************************
- * SHCoCreateInstance [SHELL32.102]
- *
- * NOTES
- *     exported by ordinal
- */
 
 /* FIXME: this should be SHLWAPI.24 since we can't yet import by ordinal */
 
@@ -99,8 +98,22 @@ DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
 
 }
 
-/************************************************************************/
-
+/*************************************************************************
+ * SHCoCreateInstance [SHELL32.102]
+ *
+ * Equivalent to CoCreateInstance. Under Windows 9x this function could sometimes
+ * use the shell32 built-in "mini-COM" without the need to load ole32.dll - see
+ * SHLoadOLE for details.
+ *
+ * Under wine if a "LoadWithoutCOM" value is present or the object resides in
+ * shell32.dll the function will load the object manually without the help of ole32
+ *
+ * NOTES
+ *     exported by ordinal
+ *
+ * SEE ALSO
+ *     CoCreateInstace, SHLoadOLE
+ */
 HRESULT WINAPI SHCoCreateInstance(
 	LPCWSTR aclsid,
 	const CLSID *clsid,
@@ -110,7 +123,7 @@ HRESULT WINAPI SHCoCreateInstance(
 {
 	DWORD	hres;
 	IID	iid;
-	CLSID * myclsid = (CLSID*)clsid;
+	const	CLSID * myclsid = clsid;
 	WCHAR	sKeyName[MAX_PATH];
 	const	WCHAR sCLSID[7] = {'C','L','S','I','D','\\','\0'};
 	WCHAR	sClassID[60];
@@ -183,7 +196,7 @@ HRESULT WINAPI SHCoCreateInstance(
 		hres = E_ACCESSDENIED;
 	        goto end;
 	    } else if (! SUCCEEDED(hres = DllGetClassObject(myclsid, &IID_IClassFactory, (LPVOID*)&pcf))) {
-		    TRACE("GetClassObject failed 0x%08lx\n", hres);
+		    TRACE("GetClassObject failed 0x%08x\n", hres);
 		    goto end;
 	    }
 
@@ -202,7 +215,7 @@ HRESULT WINAPI SHCoCreateInstance(
 end:
 	if(hres!=S_OK)
 	{
-	  ERR("failed (0x%08lx) to create CLSID:%s IID:%s\n",
+	  ERR("failed (0x%08x) to create CLSID:%s IID:%s\n",
               hres, shdebugstr_guid(myclsid), shdebugstr_guid(refiid));
 	  ERR("class not found in registry\n");
 	}
@@ -212,7 +225,8 @@ end:
 }
 
 /*************************************************************************
- * DllGetClassObject   [SHELL32.@]
+ * DllGetClassObject     [SHELL32.@]
+ * SHDllGetClassObject   [SHELL32.128]
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
@@ -248,8 +262,16 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 /*************************************************************************
  * SHCLSIDFromString				[SHELL32.147]
  *
+ * Under Windows 9x this was an ANSI version of CLSIDFromString. It also allowed
+ * to avoid dependency on ole32.dll (see SHLoadOLE for details).
+ *
+ * Under Windows NT/2000/XP this is equivalent to CLSIDFromString
+ *
  * NOTES
  *     exported by ordinal
+ *
+ * SEE ALSO
+ *     CLSIDFromString, SHLoadOLE
  */
 DWORD WINAPI SHCLSIDFromStringA (LPCSTR clsid, CLSID *id)
 {
@@ -264,7 +286,7 @@ DWORD WINAPI SHCLSIDFromStringW (LPCWSTR clsid, CLSID *id)
 	TRACE("(%p(%s) %p)\n", clsid, debugstr_w(clsid), id);
 	return CLSIDFromString((LPWSTR)clsid, id);
 }
-DWORD WINAPI SHCLSIDFromStringAW (LPVOID clsid, CLSID *id)
+DWORD WINAPI SHCLSIDFromStringAW (LPCVOID clsid, CLSID *id)
 {
 	if (SHELL_OsIsUnicode())
 	  return SHCLSIDFromStringW (clsid, id);
@@ -272,135 +294,11 @@ DWORD WINAPI SHCLSIDFromStringAW (LPVOID clsid, CLSID *id)
 }
 
 /*************************************************************************
- *	Shell Memory Allocator
- */
-
-/* set the vtable later */
-static const IMallocVtbl VT_Shell_IMalloc32;
-
-/* this is the static object instance */
-typedef struct {
-	const IMallocVtbl *lpVtbl;
-	DWORD dummy;
-} _ShellMalloc;
-
-static _ShellMalloc Shell_Malloc = { &VT_Shell_IMalloc32,1};
-
-/* this is the global allocator of shell32 */
-static IMalloc * ShellTaskAllocator = NULL;
-
-/******************************************************************************
- *              IShellMalloc_QueryInterface        [VTABLE]
- */
-static HRESULT WINAPI IShellMalloc_fnQueryInterface(LPMALLOC iface, REFIID refiid, LPVOID *obj)
-{
-	TRACE("(%s,%p)\n",shdebugstr_guid(refiid),obj);
-	if (IsEqualIID(refiid, &IID_IUnknown) || IsEqualIID(refiid, &IID_IMalloc)) {
-		*obj = (LPMALLOC) &Shell_Malloc;
-		return S_OK;
-	}
-	return E_NOINTERFACE;
-}
-
-/******************************************************************************
- *              IShellMalloc_AddRefRelease        [VTABLE]
- */
-static ULONG WINAPI IShellMalloc_fnAddRefRelease(LPMALLOC iface)
-{
-        return 1;
-}
-
-/******************************************************************************
- *		IShellMalloc_Alloc [VTABLE]
- */
-static LPVOID WINAPI IShellMalloc_fnAlloc(LPMALLOC iface, DWORD cb)
-{
-        LPVOID addr;
-
-	addr = (LPVOID) LocalAlloc(LMEM_ZEROINIT, cb);
-        TRACE("(%p,%ld);\n",addr,cb);
-        return addr;
-}
-
-/******************************************************************************
- *		IShellMalloc_Realloc [VTABLE]
- */
-static LPVOID WINAPI IShellMalloc_fnRealloc(LPMALLOC iface, LPVOID pv, DWORD cb)
-{
-        LPVOID addr;
-
-	if (pv) {
-		if (cb) {
-			addr = (LPVOID) LocalReAlloc((HANDLE) pv, cb, LMEM_ZEROINIT | LMEM_MOVEABLE);
-		} else {
-			LocalFree((HANDLE) pv);
-			addr = NULL;
-		}
-	} else {
-		if (cb) {
-			addr = (LPVOID) LocalAlloc(LMEM_ZEROINIT, cb);
-		} else {
-			addr = NULL;
-		}
-	}
-
-        TRACE("(%p->%p,%ld)\n",pv,addr,cb);
-        return addr;
-}
-
-/******************************************************************************
- *		IShellMalloc_Free [VTABLE]
- */
-static VOID WINAPI IShellMalloc_fnFree(LPMALLOC iface, LPVOID pv)
-{
-        TRACE("(%p)\n",pv);
-	LocalFree((HANDLE) pv);
-}
-
-/******************************************************************************
- *		IShellMalloc_GetSize [VTABLE]
- */
-static DWORD WINAPI IShellMalloc_fnGetSize(LPMALLOC iface, LPVOID pv)
-{
-        DWORD cb = (DWORD) LocalSize((HANDLE)pv);
-        TRACE("(%p,%ld)\n", pv, cb);
-	return cb;
-}
-
-/******************************************************************************
- *		IShellMalloc_DidAlloc [VTABLE]
- */
-static INT WINAPI IShellMalloc_fnDidAlloc(LPMALLOC iface, LPVOID pv)
-{
-        TRACE("(%p)\n",pv);
-        return -1;
-}
-
-/******************************************************************************
- * 		IShellMalloc_HeapMinimize [VTABLE]
- */
-static VOID WINAPI IShellMalloc_fnHeapMinimize(LPMALLOC iface)
-{
-	TRACE("()\n");
-}
-
-static const IMallocVtbl VT_Shell_IMalloc32 =
-{
-	IShellMalloc_fnQueryInterface,
-	IShellMalloc_fnAddRefRelease,
-	IShellMalloc_fnAddRefRelease,
-	IShellMalloc_fnAlloc,
-	IShellMalloc_fnRealloc,
-	IShellMalloc_fnFree,
-	IShellMalloc_fnGetSize,
-	IShellMalloc_fnDidAlloc,
-	IShellMalloc_fnHeapMinimize
-};
-
-/*************************************************************************
  *			 SHGetMalloc			[SHELL32.@]
  *
- * Return the shell IMalloc interface.
+ * Equivalent to CoGetMalloc(MEMCTX_TASK, ...). Under Windows 9x this function
+ * could use the shell32 built-in "mini-COM" without the need to load ole32.dll -
+ * see SHLoadOLE for details. 
  *
  * PARAMS
  *  lpmal [O] Destination for IMalloc interface.
@@ -409,66 +307,54 @@ static const IMallocVtbl VT_Shell_IMalloc32 =
  *  Success: S_OK. lpmal contains the shells IMalloc interface.
  *  Failure. An HRESULT error code.
  *
- * NOTES
- *  This function will use CoGetMalloc() if OLE32.DLL is already loaded.
- *  If not it uses an internal implementation as a fallback.
+ * SEE ALSO
+ *  CoGetMalloc, SHLoadOLE
  */
 HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal)
 {
 	TRACE("(%p)\n", lpmal);
-
-	if (!ShellTaskAllocator)
-	{
-		HMODULE hOle32 = GetModuleHandleA("OLE32.DLL");
-		/* this is very suspect. we should not being using a different
-		 * allocator from deallocator based on something undeterministic
-		 * like whether ole32 is loaded. as it happens currently, they
-		 * both map to the same allocator deep down, but this could
-		 * change in the future. */
-		if(hOle32) {
-			CoGetMalloc(MEMCTX_TASK, &ShellTaskAllocator);
-			TRACE("got ole32 IMalloc\n");
-		}
-		if(!ShellTaskAllocator) {
-			ShellTaskAllocator = (IMalloc* ) &Shell_Malloc;
-			TRACE("use fallback allocator\n");
-		}
-	}
-	*lpmal = ShellTaskAllocator;
-	return  S_OK;
+	return CoGetMalloc(MEMCTX_TASK, lpmal);
 }
 
 /*************************************************************************
  * SHAlloc					[SHELL32.196]
  *
+ * Equivalent to CoTaskMemAlloc. Under Windows 9x this function could use
+ * the shell32 built-in "mini-COM" without the need to load ole32.dll -
+ * see SHLoadOLE for details. 
+ *
  * NOTES
  *     exported by ordinal
+ *
+ * SEE ALSO
+ *     CoTaskMemAlloc, SHLoadOLE
  */
 LPVOID WINAPI SHAlloc(DWORD len)
 {
-	IMalloc * ppv;
-	LPBYTE ret;
+	LPVOID ret;
 
-	if (!ShellTaskAllocator) SHGetMalloc(&ppv);
-
-	ret = (LPVOID) IMalloc_Alloc(ShellTaskAllocator, len);
-	TRACE("%lu bytes at %p\n",len, ret);
-	return (LPVOID)ret;
+	ret = CoTaskMemAlloc(len);
+	TRACE("%u bytes at %p\n",len, ret);
+	return ret;
 }
 
 /*************************************************************************
  * SHFree					[SHELL32.195]
  *
+ * Equivalent to CoTaskMemFree. Under Windows 9x this function could use
+ * the shell32 built-in "mini-COM" without the need to load ole32.dll -
+ * see SHLoadOLE for details. 
+ *
  * NOTES
  *     exported by ordinal
+ *
+ * SEE ALSO
+ *     CoTaskMemFree, SHLoadOLE
  */
 void WINAPI SHFree(LPVOID pv)
 {
-	IMalloc * ppv;
-
 	TRACE("%p\n",pv);
-	if (!ShellTaskAllocator) SHGetMalloc(&ppv);
-	IMalloc_Free(ShellTaskAllocator, pv);
+	CoTaskMemFree(pv);
 }
 
 /*************************************************************************
@@ -513,7 +399,7 @@ static const IClassFactoryVtbl dclfvt;
  *  IDefClF_fnConstructor
  */
 
-IClassFactory * IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, REFIID riidInst)
+static IClassFactory * IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, REFIID riidInst)
 {
 	IDefClFImpl* lpclf;
 
@@ -558,7 +444,7 @@ static ULONG WINAPI IDefClF_fnAddRef(LPCLASSFACTORY iface)
 	IDefClFImpl *This = (IDefClFImpl *)iface;
 	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
+	TRACE("(%p)->(count=%u)\n", This, refCount - 1);
 
 	return refCount;
 }
@@ -570,7 +456,7 @@ static ULONG WINAPI IDefClF_fnRelease(LPCLASSFACTORY iface)
 	IDefClFImpl *This = (IDefClFImpl *)iface;
 	ULONG refCount = InterlockedDecrement(&This->ref);
 	
-	TRACE("(%p)->(count=%lu)\n", This, refCount + 1);
+	TRACE("(%p)->(count=%u)\n", This, refCount + 1);
 
 	if (!refCount)
 	{
@@ -737,10 +623,8 @@ UINT WINAPI DragQueryFileA(
 	}
 
 	i = strlen(lpDrop);
-	i++;
 	if (!lpszFile ) goto end;   /* needed buffer size */
-	i = (lLength > i) ? i : lLength;
-	lstrcpynA (lpszFile,  lpDrop,  i);
+	lstrcpynA (lpszFile, lpDrop, lLength);
 end:
 	GlobalUnlock(hDrop);
 	return i;
@@ -795,11 +679,8 @@ UINT WINAPI DragQueryFileW(
 	}
 
 	i = strlenW(lpwDrop);
-	i++;
 	if ( !lpszwFile) goto end;   /* needed buffer size */
-
-	i = (lLength > i) ? i : lLength;
-	lstrcpynW (lpszwFile, lpwDrop, i);
+	lstrcpynW (lpszwFile, lpwDrop, lLength);
 end:
 	GlobalUnlock(hDrop);
 	return i;
