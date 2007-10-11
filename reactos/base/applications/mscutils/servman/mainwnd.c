@@ -700,9 +700,11 @@ MainWndProc(HWND hwnd,
                 {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
 
-                    ListViewSelectionChanged(Info, pnmv);
-                    SetMenuAndButtonStates(Info);
-
+                    if (pnmv->uNewState != 0)
+                    {
+                        ListViewSelectionChanged(Info, pnmv);
+                        SetMenuAndButtonStates(Info);
+                    }
                 }
                 break;
 
