@@ -51,7 +51,7 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 	PLOADER_PARAMETER_BLOCK LoaderBlock;
 
 	/* Allocate and zero-init the LPB */
-	LoaderBlock = MmAllocateMemory(sizeof(LOADER_PARAMETER_BLOCK));
+	LoaderBlock = MmHeapAlloc(sizeof(LOADER_PARAMETER_BLOCK));
 	RtlZeroMemory(LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
 
 	/* Init three critical lists, used right away */
@@ -60,7 +60,7 @@ AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 	InitializeListHead(&LoaderBlock->BootDriverListHead);
 
 	/* Alloc space for NLS (it will be converted to VA in WinLdrLoadNLS) */
-	LoaderBlock->NlsData = MmAllocateMemory(sizeof(NLS_DATA_BLOCK));
+	LoaderBlock->NlsData = MmHeapAlloc(sizeof(NLS_DATA_BLOCK));
 	if (LoaderBlock->NlsData == NULL)
 	{
 		UiMessageBox("Failed to allocate memory for NLS table data!");
@@ -104,32 +104,32 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	DbgPrint((DPRINT_WINDOWS, "Options: %s\n", Options));
 
 	/* Fill Arc BootDevice */
-	LoaderBlock->ArcBootDeviceName = MmAllocateMemory(strlen(ArcBoot)+1);
+	LoaderBlock->ArcBootDeviceName = MmHeapAlloc(strlen(ArcBoot)+1);
 	strcpy(LoaderBlock->ArcBootDeviceName, ArcBoot);
 	LoaderBlock->ArcBootDeviceName = PaToVa(LoaderBlock->ArcBootDeviceName);
 
 	/* Fill Arc HalDevice, it matches ArcBoot path */
-	LoaderBlock->ArcHalDeviceName = MmAllocateMemory(strlen(ArcBoot)+1);
+	LoaderBlock->ArcHalDeviceName = MmHeapAlloc(strlen(ArcBoot)+1);
 	strcpy(LoaderBlock->ArcHalDeviceName, ArcBoot);
 	LoaderBlock->ArcHalDeviceName = PaToVa(LoaderBlock->ArcHalDeviceName);
 
 	/* Fill SystemRoot */
-	LoaderBlock->NtBootPathName = MmAllocateMemory(strlen(SystemRoot)+1);
+	LoaderBlock->NtBootPathName = MmHeapAlloc(strlen(SystemRoot)+1);
 	strcpy(LoaderBlock->NtBootPathName, SystemRoot);
 	LoaderBlock->NtBootPathName = PaToVa(LoaderBlock->NtBootPathName);
 
 	/* Fill NtHalPathName */
-	LoaderBlock->NtHalPathName = MmAllocateMemory(strlen(HalPath)+1);
+	LoaderBlock->NtHalPathName = MmHeapAlloc(strlen(HalPath)+1);
 	strcpy(LoaderBlock->NtHalPathName, HalPath);
 	LoaderBlock->NtHalPathName = PaToVa(LoaderBlock->NtHalPathName);
 
 	/* Fill load options */
-	LoaderBlock->LoadOptions = MmAllocateMemory(strlen(Options)+1);
+	LoaderBlock->LoadOptions = MmHeapAlloc(strlen(Options)+1);
 	strcpy(LoaderBlock->LoadOptions, Options);
 	LoaderBlock->LoadOptions = PaToVa(LoaderBlock->LoadOptions);
 
 	/* Arc devices */
-	LoaderBlock->ArcDiskInformation = (PARC_DISK_INFORMATION)MmAllocateMemory(sizeof(ARC_DISK_INFORMATION));
+	LoaderBlock->ArcDiskInformation = (PARC_DISK_INFORMATION)MmHeapAlloc(sizeof(ARC_DISK_INFORMATION));
 	InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
 	/* Convert ARC disk information from freeldr to a correct format */
@@ -138,7 +138,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		PARC_DISK_SIGNATURE ArcDiskInfo;
 
 		/* Get the ARC structure */
-		ArcDiskInfo = (PARC_DISK_SIGNATURE)MmAllocateMemory(sizeof(ARC_DISK_SIGNATURE));//&BldrDiskInfo[i];
+		ArcDiskInfo = (PARC_DISK_SIGNATURE)MmHeapAlloc(sizeof(ARC_DISK_SIGNATURE));//&BldrDiskInfo[i];
 		RtlZeroMemory(ArcDiskInfo, sizeof(ARC_DISK_SIGNATURE));
 
 		/* Copy the data over */
@@ -179,7 +179,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	List_PaToVa(&LoaderBlock->BootDriverListHead);
 
 	/* Initialize Extension now */
-	Extension = MmAllocateMemory(sizeof(LOADER_PARAMETER_EXTENSION));
+	Extension = MmHeapAlloc(sizeof(LOADER_PARAMETER_EXTENSION));
 	if (Extension == NULL)
 	{
 		UiMessageBox("Failed to allocate LPB Extension!");

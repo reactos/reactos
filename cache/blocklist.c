@@ -98,7 +98,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 	// We will need to add the block to the
 	// drive's list of cached blocks. So allocate
 	// the block memory.
-	CacheBlock = MmAllocateMemory(sizeof(CACHE_BLOCK));
+	CacheBlock = MmHeapAlloc(sizeof(CACHE_BLOCK));
 	if (CacheBlock == NULL)
 	{
 		return NULL;
@@ -111,7 +111,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 	CacheBlock->BlockData = MmAllocateMemory(CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 	if (CacheBlock->BlockData ==NULL)
 	{
-		MmFreeMemory(CacheBlock);
+		MmHeapFree(CacheBlock);
 		return NULL;
 	}
 
@@ -119,7 +119,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 	if (!MachDiskReadLogicalSectors(CacheDrive->DriveNumber, (BlockNumber * CacheDrive->BlockSize), CacheDrive->BlockSize, (PVOID)DISKREADBUFFER))
 	{
 		MmFreeMemory(CacheBlock->BlockData);
-		MmFreeMemory(CacheBlock);
+		MmHeapFree(CacheBlock);
 		return NULL;
 	}
 	RtlCopyMemory(CacheBlock->BlockData, (PVOID)DISKREADBUFFER, CacheDrive->BlockSize * CacheDrive->BytesPerSector);
@@ -177,7 +177,7 @@ BOOLEAN CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 
 	// Free the block memory and the block structure
 	MmFreeMemory(CacheBlockToFree->BlockData);
-	MmFreeMemory(CacheBlockToFree);
+	MmHeapFree(CacheBlockToFree);
 
 	// Update the cache data
 	CacheBlockCount--;

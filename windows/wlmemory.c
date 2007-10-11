@@ -162,6 +162,9 @@ MempAllocatePageTables()
 	PhysicalPageTablesBuffer = &Buffer[MM_PAGE_SIZE*2];
 	KernelPageTablesBuffer = PhysicalPageTablesBuffer + NumPageTables*MM_PAGE_SIZE;
 
+	// Mark physical PTE's buffer as FirmwareTemporary
+	//MmSetMemoryType(KernelPageTablesBuffer, NumPageTables*MM_PAGE_SIZE, LoaderFirmwareTemporary);
+
 	// Zero counters of page tables used
 	PhysicalPageTables = 0;
 	KernelPageTables = 0;
@@ -842,117 +845,8 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	// Some unused descriptors should go here
 	// ...
 
-	//
-	// Fill IDT with Traps
-	//
-#if 0
-	pIdt[0].Offset = (i386DivideByZero | KSEG0_BASE) & 0xFFFF;
-	pIdt[0].ExtendedOffset = 0x8; // Selector
-	pIdt[0].Access = 0x8F00;
-	pIdt[0].Selector = (i386DivideByZero | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[1].Offset = (i386DebugException | KSEG0_BASE) & 0xFFFF;
-	pIdt[1].ExtendedOffset = 0x8; // Selector
-	pIdt[1].Access = 0x8F00;
-	pIdt[1].Selector = (i386DebugException | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[2].Offset = (i386NMIException | KSEG0_BASE) & 0xFFFF;
-	pIdt[2].ExtendedOffset = 0x8; // Selector
-	pIdt[2].Access = 0x8F00;
-	pIdt[2].Selector = (i386NMIException | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[3].Offset = (i386Breakpoint | KSEG0_BASE) & 0xFFFF;
-	pIdt[3].ExtendedOffset = 0x8; // Selector
-	pIdt[3].Access = 0x8F00;
-	pIdt[3].Selector = (i386Breakpoint | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[4].Offset = (i386Overflow | KSEG0_BASE) & 0xFFFF;
-	pIdt[4].ExtendedOffset = 0x8; // Selector
-	pIdt[4].Access = 0x8F00;
-	pIdt[4].Selector = (i386Overflow | KSEG0_BASE) >> 16; // Extended Offset
-
-	pIdt[5].Selector = (i386BoundException | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[5].Offset = (i386BoundException | KSEG0_BASE) & 0xFFFF;
-	pIdt[5].ExtendedOffset = 0x8; // Selector
-	pIdt[5].Access = 0x8F00;
-
-	pIdt[6].Selector = (i386InvalidOpcode | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[6].Offset = (i386InvalidOpcode | KSEG0_BASE) & 0xFFFF;
-	pIdt[6].ExtendedOffset = 0x8; // Selector
-	pIdt[6].Access = 0x8F00;
-
-	pIdt[7].Selector = (i386FPUNotAvailable | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[7].Offset = (i386FPUNotAvailable | KSEG0_BASE) & 0xFFFF;
-	pIdt[7].ExtendedOffset = 0x8; // Selector
-	pIdt[7].Access = 0x8F00;
-
-	pIdt[8].Selector = (i386DoubleFault | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[8].Offset = (i386DoubleFault | KSEG0_BASE) & 0xFFFF;
-	pIdt[8].ExtendedOffset = 0x8; // Selector
-	pIdt[8].Access = 0x8F00;
-
-	pIdt[9].Selector = (i386CoprocessorSegment | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[9].Offset = (i386CoprocessorSegment | KSEG0_BASE) & 0xFFFF;
-	pIdt[9].ExtendedOffset = 0x8; // Selector
-	pIdt[9].Access = 0x8F00;
-
-	pIdt[10].Selector = (i386InvalidTSS | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[10].Offset = (i386InvalidTSS | KSEG0_BASE) & 0xFFFF;
-	pIdt[10].ExtendedOffset = 0x8; // Selector
-	pIdt[10].Access = 0x8F00;
-
-	pIdt[11].Selector = (i386SegmentNotPresent | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[11].Offset = (i386SegmentNotPresent | KSEG0_BASE) & 0xFFFF;
-	pIdt[11].ExtendedOffset = 0x8; // Selector
-	pIdt[11].Access = 0x8F00;
-
-	pIdt[12].Selector = (i386StackException | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[12].Offset = (i386StackException | KSEG0_BASE) & 0xFFFF;
-	pIdt[12].ExtendedOffset = 0x8; // Selector
-	pIdt[12].Access = 0x8F00;
-
-	pIdt[13].Selector = (i386GeneralProtectionFault | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[13].Offset = (i386GeneralProtectionFault | KSEG0_BASE) & 0xFFFF;
-	pIdt[13].ExtendedOffset = 0x8; // Selector
-	pIdt[13].Access = 0x8F00;
-
-	pIdt[14].Selector = (i386PageFault | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[14].Offset = (i386PageFault | KSEG0_BASE) & 0xFFFF;
-	pIdt[14].ExtendedOffset = 0x8; // Selector
-	pIdt[14].Access = 0x8F00;
-
-	pIdt[15].Selector = 0; // Extended Offset
-	pIdt[15].Offset = 0;
-	pIdt[15].ExtendedOffset = 0; // Selector
-	pIdt[15].Access = 0;
-
-	pIdt[16].Selector = (i386CoprocessorError | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[16].Offset = (i386CoprocessorError | KSEG0_BASE) & 0xFFFF;
-	pIdt[16].ExtendedOffset = 0x8; // Selector
-	pIdt[16].Access = 0x8F00;
-
-	pIdt[17].Selector = (i386AlignmentCheck | KSEG0_BASE) >> 16; // Extended Offset
-	pIdt[17].Offset = (i386AlignmentCheck | KSEG0_BASE) & 0xFFFF;
-	pIdt[17].ExtendedOffset = 0x8; // Selector
-	pIdt[17].Access = 0x8F00;
-#endif
-
-	/*for (i=0; i<16; i++)
-	{
-		//pIdt[i].Offset = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) & 0xFFFF;
-		//pIdt[i].ExtendedOffset = 0x8; // Selector
-		//pIdt[i].Access = 0x8F00;
-		//pIdt[i].Selector = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) >> 16; // Extended Offset
-
-		pIdt[i].Offset = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) & 0xFFFF;
-		pIdt[i].ExtendedOffset = ((ULONG_PTR)i386GeneralProtectionFault | KSEG0_BASE) >> 16; // Extended Offset
-		pIdt[i].Access = 0x8F00;
-		pIdt[i].Selector = 0x8;
-	}*/
-
 	// Copy the old IDT
 	RtlCopyMemory(pIdt, (PVOID)OldIdt.Base, OldIdt.Limit);
-
 
 	// Mask interrupts
 	//asm("cli\n"); // they are already masked before enabling paged mode

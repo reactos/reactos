@@ -44,6 +44,9 @@ ULONG		TotalPagesInLookupTable = 0;
 ULONG		FreePagesInLookupTable = 0;
 ULONG		LastFreePageHint = 0;
 
+extern ULONG_PTR	MmHeapPointer;
+extern ULONG_PTR	MmHeapStart;
+
 BOOLEAN MmInitializeMemoryManager(VOID)
 {
 	BIOS_MEMORY_MAP	BiosMemoryMap[32];
@@ -110,8 +113,40 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 
 	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
 
+	MmInitializeHeap(PageLookupTableAddress);
+
 	DbgPrint((DPRINT_MEMORY, "Memory Manager initialized. %d pages available.\n", FreePagesInLookupTable));
 	return TRUE;
+}
+
+VOID MmInitializeHeap(PVOID PageLookupTable)
+{
+	ULONG PagesNeeded;
+	ULONG HeapStart;
+
+	// HACK: Make it so it doesn't overlap kernel space
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x100, 0xFF, LoaderSystemCode);
+
+	// Find contigious memory block for HEAP:STACK
+	PagesNeeded = HEAP_PAGES + STACK_PAGES;
+	HeapStart = MmFindAvailablePages(PageLookupTable, TotalPagesInLookupTable, PagesNeeded, FALSE);
+
+	// Unapply the hack
+	MmMarkPagesInLookupTable(PageLookupTableAddress, 0x100, 0xFF, LoaderFree);
+
+	if (HeapStart == 0)
+	{
+		UiMessageBox("Critical error: Can't allocate heap!");
+		return;
+	}
+
+	// Initialize BGET
+	bpool(HeapStart << MM_PAGE_SHIFT, PagesNeeded << MM_PAGE_SHIFT);
+
+	// Mark those pages as used
+	MmMarkPagesInLookupTable(PageLookupTableAddress, HeapStart, PagesNeeded, LoaderOsloaderHeap);
+
+	DbgPrint((DPRINT_MEMORY, "Heap initialized, base 0x%08x, pages %d\n", (HeapStart << MM_PAGE_SHIFT), PagesNeeded));
 }
 
 #ifdef DBG
@@ -295,10 +330,12 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
+#if 0
 		if ((Index <= (StartPage + 16)) || (Index >= (StartPage+PageCount-16)))
 		{
 			DbgPrint((DPRINT_MEMORY, "Index = %d StartPage = %d PageCount = %d\n", Index, StartPage, PageCount));
 		}
+#endif
 		RealPageLookupTable[Index].PageAllocated = PageAllocated;
 		RealPageLookupTable[Index].PageAllocationLength = (PageAllocated != LoaderFree) ? 1 : 0;
 	}

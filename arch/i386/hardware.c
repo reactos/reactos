@@ -581,7 +581,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA ComponentRoot,
 		(int)DiskCount, (DiskCount == 1) ? "": "s"));
 
 	/* Create DiskController */
-	DiskComponentData = (PCONFIGURATION_COMPONENT_DATA)MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
+	DiskComponentData = (PCONFIGURATION_COMPONENT_DATA)MmHeapAlloc(sizeof(CONFIGURATION_COMPONENT_DATA));
 	RtlZeroMemory(DiskComponentData, sizeof(CONFIGURATION_COMPONENT_DATA));
 
 	DiskComponent = &DiskComponentData->ComponentEntry;
@@ -634,7 +634,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA ComponentRoot,
 	}
 
 	/* Get harddisk Int13 geometry data */
-	Int13Drives = MmAllocateMemory(sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount);
+	Int13Drives = MmHeapAlloc(sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount);
 	memset(Int13Drives, 0, sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount);
 
 	for (i = 0; i < DiskCount; i++)
@@ -744,7 +744,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA ComponentRoot,
 	DeviceData = (PVOID)((ULONG_PTR)ResourceList + sizeof(CM_PARTIAL_RESOURCE_LIST));
 	memcpy(DeviceData, (PVOID)Int13Drives, DeviceDataSize);
 
-	MmFreeMemory(Int13Drives);
+	MmHeapFree(Int13Drives);
 
 	/* Now fill the 2nd partial resource descriptor */
 	ResourceDescriptor = (PCM_PARTIAL_RESOURCE_DESCRIPTOR)((ULONG_PTR)ResourceList +

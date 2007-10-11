@@ -669,7 +669,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 	NTSTATUS Status;
 	ULONG PathLength;
 
-	BootDriverEntry = MmAllocateMemory(sizeof(BOOT_DRIVER_LIST_ENTRY));
+	BootDriverEntry = MmHeapAlloc(sizeof(BOOT_DRIVER_LIST_ENTRY));
 
 	if (!BootDriverEntry)
 		return FALSE;
@@ -686,14 +686,21 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 
 		BootDriverEntry->FilePath.Length = 0;
 		BootDriverEntry->FilePath.MaximumLength = PathLength + sizeof(WCHAR);
-		BootDriverEntry->FilePath.Buffer = MmAllocateMemory(PathLength);
+		BootDriverEntry->FilePath.Buffer = MmHeapAlloc(PathLength);
 
 		if (!BootDriverEntry->FilePath.Buffer)
+		{
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, ImagePath);
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 	}
 	else
 	{
@@ -701,29 +708,44 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 		PathLength = wcslen(ServiceName)*sizeof(WCHAR) + sizeof(L"system32\\drivers\\.sys");;
 		BootDriverEntry->FilePath.Length = 0;
 		BootDriverEntry->FilePath.MaximumLength = PathLength+sizeof(WCHAR);
-		BootDriverEntry->FilePath.Buffer = MmAllocateMemory(PathLength);
+		BootDriverEntry->FilePath.Buffer = MmHeapAlloc(PathLength);
 
 		if (!BootDriverEntry->FilePath.Buffer)
+		{
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, L"system32\\drivers\\");
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, ServiceName);
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 
 		Status = RtlAppendUnicodeToString(&BootDriverEntry->FilePath, L".sys");
 		if (!NT_SUCCESS(Status))
+		{
+			MmHeapFree(BootDriverEntry->FilePath.Buffer);
+			MmHeapFree(BootDriverEntry);
 			return FALSE;
+		}
 	}
 
 	// Add registry path
 	PathLength = (wcslen(RegistryPath)+wcslen(ServiceName))*sizeof(WCHAR);
 	BootDriverEntry->RegistryPath.Length = 0;
 	BootDriverEntry->RegistryPath.MaximumLength = PathLength;//+sizeof(WCHAR);
-	BootDriverEntry->RegistryPath.Buffer = MmAllocateMemory(PathLength);
+	BootDriverEntry->RegistryPath.Buffer = MmHeapAlloc(PathLength);
 	if (!BootDriverEntry->RegistryPath.Buffer)
 		return FALSE;
 

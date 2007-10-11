@@ -52,6 +52,10 @@ typedef struct
 //
 #define LOADER_HIGH_ZONE ((16*1024*1024) >> MM_PAGE_SHIFT) //16Mb page
 
+// HEAP and STACK size
+#define HEAP_PAGES	0x100//0x18
+#define STACK_PAGES	0x00
+
 typedef struct
 {
 	TYPE_OF_MEMORY	PageAllocated;					// Type of allocated memory (LoaderFree if this memory is free)
@@ -97,6 +101,7 @@ PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries);			// Returns a pointer
 
 //BOOLEAN	MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
 BOOLEAN	MmInitializeMemoryManager(VOID);
+VOID	MmInitializeHeap(PVOID PageLookupTable);
 PVOID	MmAllocateMemory(ULONG MemorySize);
 PVOID	MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType);
 VOID	MmFreeMemory(PVOID MemoryPointer);
@@ -105,5 +110,8 @@ VOID	MmChangeAllocationPolicy(BOOLEAN PolicyAllocatePagesFromEnd);
 //VOID	MmFreeLowMemory(PVOID MemoryPointer);
 PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
+
+PVOID	MmHeapAlloc(ULONG MemorySize);
+VOID	MmHeapFree(PVOID MemoryPointer);
 
 #endif // defined __MEMORY_H

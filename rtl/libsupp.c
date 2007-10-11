@@ -33,7 +33,7 @@ STDCALL
 RtlpAllocateMemory(ULONG Bytes,
                    ULONG Tag)
 {
-	return MmAllocateMemory(Bytes);
+	return MmHeapAlloc(Bytes);
 }
 
 
@@ -42,5 +42,5 @@ STDCALL
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
-	return MmFreeMemory(Mem);
+	return MmHeapFree(Mem);
 }

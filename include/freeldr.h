@@ -74,6 +74,7 @@
 #include <keycodes.h>
 #include <ver.h>
 #include <cmdline.h>
+#include <bget.h>
 /* Needed by boot manager */
 #include <bootmgr.h>
 #include <oslist.h>
