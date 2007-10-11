@@ -1,6 +1,7 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2004 Henning Gerhardt
+ * Copyright 2007 Daniel Reimer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -95,14 +96,32 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_
 CAPTION "Verzeichnis auswählen"
 FONT 8, "MS Shell Dlg"
 {
- DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Abbrechen", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Abbrechen", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
  LTEXT "", IDD_TITLE, 4, 4, 180, 12
  LTEXT "", IDD_STATUS, 4, 25, 180, 12
  CONTROL "", IDD_TREEVIEW, "SysTreeView32",
  	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
 	WS_BORDER | WS_TABSTOP,
 	4, 40, 180, 120
+}
+
+SHNEWBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Verzeichnis auswählen"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "", IDD_TITLE, 10, 8, 198, 24
+ LTEXT "", IDD_STATUS, 10, 25, 198, 12
+ LTEXT "Ordner:", IDD_FOLDER, 10, 156, 40, 12
+ CONTROL "", IDD_TREEVIEW, "SysTreeView32",
+	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
+	WS_BORDER | WS_TABSTOP,
+	12, 38, 194, 105
+ EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Neuen Ordner erstellen", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Abbrechen", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
@@ -140,9 +159,9 @@ FONT 8, "MS Shell Dlg"
  LTEXT "Geben Sie den Namen eines Programms, eines Ordners, eines Dokuments oder einer Internetressource an.", 12289, 36, 11, 182, 18
  LTEXT "&Öffnen:", 12305, 7, 39, 24, 10
  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
- DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "Abbrechen", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "&Durchsuchen...", 12288, 170, 63, 50, 14, WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
+ PUSHBUTTON "Abbrechen", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
+ PUSHBUTTON "&Durchsuchen...", 12288, 160, 63, 59, 14, WS_TABSTOP
 }
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
@@ -157,17 +176,17 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
  LTEXT "", 14007, 70, 40, 150, 10
  LTEXT "Ziel:", 14008, 10, 55, 45, 10
  EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
- LTEXT "&Starten in:",14010, 10, 65, 45, 10
+ LTEXT "&Starten in:",14010, 10, 65, 57, 10
  EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
- LTEXT "&Tastenkombination:", 14014, 10, 80, 45, 10
+ LTEXT "&Kurztasten:", 14014, 10, 80, 57, 10
  EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
- LTEXT "Ausführen:", 14016, 10, 90, 45, 10
+ LTEXT "Ausführen:", 14016, 10, 90, 57, 10
  EDITTEXT 14017, 70, 90, 150, 10
- LTEXT "K&ommentar:", 14018, 10, 100, 45, 10
+ LTEXT "K&ommentar:", 14018, 10, 100, 57, 10
  EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
- PUSHBUTTON "&Ziel finden...", 14020, 10, 115, 60, 14, ES_LEFT
- PUSHBUTTON "I&con wechseln...", 14021, 80, 115, 60, 14, ES_LEFT
- PUSHBUTTON "Er&weitert...", 14022, 150, 115, 60, 14, ES_LEFT
+ PUSHBUTTON "&Ziel finden...", 14020, 10, 115, 63, 14, ES_LEFT
+ PUSHBUTTON "I&con wechseln...", 14021, 83, 115, 63, 14, ES_LEFT
+ PUSHBUTTON "Er&weitert...", 14022, 156, 115, 63, 14, ES_LEFT
 }
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
@@ -175,11 +194,11 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Erweiterte Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 190, 10
-  CHECKBOX "Als anderer Benutzer ausführen", 14000, 30, 50, 150, 10
-  LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter\neinem anderen oder Ihrem eingenen Bentzerkonto auszuführen\nwährend der Computer und Ihre Daten vor unautorisierten\nProgrammaktivitäten geschützt werden können.", -1, 50, 60, 200, 40
-  CHECKBOX "In getrennten Speicherbereich ausführen", 14001, 30, 100, 90, 10, WS_DISABLED
-  PUSHBUTTON "OK", IDOK, 25, 120, 40, 15, WS_VISIBLE
+LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 210, 10
+  CHECKBOX "Als anderer Benutzer ausführen", 14000, 25, 50, 150, 10
+  LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter einem anderen oder Ihrem eingenen Bentzerkonto auszuführen während der Computer und Ihre Daten vor unautorisierten Programmaktivitäten geschützt werden können.", -1, 50, 60, 175, 40
+  CHECKBOX "In getrennten Speicherbereich ausführen", 14001, 25, 100, 150, 10, WS_DISABLED
+  PUSHBUTTON "OK", IDOK, 25, 120, 50, 15, WS_VISIBLE
   PUSHBUTTON "Abbrechen", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 }
 
@@ -205,9 +224,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
  LTEXT "Zugegriffen:", 14018, 10, 100, 45, 10
  LTEXT "", 14019, 70, 100, 150, 10
  LTEXT "Attribute:", 14020, 10, 115, 45, 10
- CHECKBOX "&Schreibgeschützt", 14021, 70, 115, 45, 10
- CHECKBOX "&Versteckt", 14022, 130, 115, 50, 10
- CHECKBOX "&Archiv", 14023, 180, 115, 45, 10
+ CHECKBOX "&Schreibgeschützt", 14021, 70, 115, 67, 10 
+ CHECKBOX "&Versteckt", 14022, 140, 115, 50, 10
+ CHECKBOX "&Archiv", 14023, 190, 115, 45, 10
 }
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
@@ -260,7 +279,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 
   LTEXT "Laufwerk %s", 14010, 100, 170, 40, 10
   PUSHBUTTON "Bereinigen", 14011, 180, 175, 50, 15, WS_TABSTOP
-  CHECKBOX "Laufwerk komprimieren, um Speicherplatz zu sparen", 14012, 15, 205, 165, 10, WS_DISABLED
+  CHECKBOX "Laufwerk komprimieren, um Speicherplatz zu sparen", 14012, 15, 205, 180, 10, WS_DISABLED
   CHECKBOX "Laufwerk für schnelle Dateisuche indizieren", 14012, 15, 220, 165, 10, WS_DISABLED
 }
 
@@ -271,13 +290,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
   GROUPBOX "Fehlerüberprüfung", -1, 5, 5, 230, 60
   LTEXT "Bei Wahl dieser Option wird das Volume\nauf Fehler überprüft.", -1, 40, 25, 160, 20
-  PUSHBUTTON "Jetzt &prüfen", 14000, 130, 45, 90, 15, WS_TABSTOP
+  PUSHBUTTON "Jetzt &prüfen...", 14000, 130, 45, 90, 15, WS_TABSTOP
   GROUPBOX "Defragmentierung", -1, 5, 65, 230, 60
   LTEXT "Bei Wahl dieser Option werden die Dateien auf\ndem Volume defragmentiert.", -1, 40, 85, 160, 20
-  PUSHBUTTON "Jetzt &defragmentieren", 14001, 130, 105, 90, 15, WS_TABSTOP
+  PUSHBUTTON "Jetzt &defragmentieren...", 14001, 130, 105, 90, 15, WS_TABSTOP
   GROUPBOX "Sicherung", -1, 5, 130, 230, 60
   LTEXT "Bei Wahl dieser Option werden die auf dem\nVolume gespeicherten Dateien gesichert.", -1, 40, 150, 160, 20
-  PUSHBUTTON "Jetzt &sichern", 14002, 130, 170, 90, 15, WS_TABSTOP
+  PUSHBUTTON "Jetzt &sichern...", 14002, 130, 170, 90, 15, WS_TABSTOP
 }
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
@@ -292,16 +311,16 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ausführen als"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-   LTEXT "Which user account do you want to use to run this program?", -1, 30, 30, 170, 10
-   CHECKBOX "Aktueller Benutzer %s", 14000, 5, 45, 150, 10
-   LTEXT "Computer vor unauthorisierten Programmaktiviäten schützen", -1, 40, 65, 150, 10, WS_DISABLED
-   CHECKBOX "Diese Einstellung kann Computerviren daran hindern, ihrem\nComputer und/oder Ihren persönlichen Daten zu schaden, aber\nes kann auch Programme daran hindern, Ordnungsgemäß zu arbeiten.", 14001, 40, 80, 150, 10, WS_DISABLED
-   CHECKBOX "Folgender Benutzer:", 14002, 5, 100, 90, 10
-   LTEXT "Benutzername:", -1, 15, 115, 60, 10
+   LTEXT "Welches Benutzerkonto wollen Sie zum starten dieser Anwendung verwenden?", -1, 10, 20, 220, 20
+   CHECKBOX "Aktueller Benutzer %s", 14000, 10, 45, 150, 10
+   LTEXT "Computer vor unauthorisierten Programmaktiviäten schützen", -1, 25, 57, 200, 10, WS_DISABLED
+   CHECKBOX "Diese Einstellung kann Computerviren daran hindern, ihrem Computer oder Ihren persönlichen Daten zu schaden, aber es kann auch Programme daran hindern, Ordnungsgemäß zu arbeiten.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+   CHECKBOX "Folgender Benutzer:", 14002,  10, 100, 90, 10
+   LTEXT "Benutzername:", -1, 20, 115, 60, 10
    COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 
    PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
-   LTEXT "Passwort:", -1, 15, 140, 60, 10
+   LTEXT "Passwort:", -1, 20, 140, 60, 10
    EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
    PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
    PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP

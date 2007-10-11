@@ -94,8 +94,8 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_
 CAPTION "Browse for Folder"
 FONT 8, "MS Shell Dlg"
 {
- DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancel", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancel", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
  LTEXT "", IDD_TITLE, 4, 4, 180, 12
  LTEXT "", IDD_STATUS, 4, 25, 180, 12
  CONTROL "", IDD_TREEVIEW, "SysTreeView32",
@@ -117,7 +117,7 @@ FONT 8, "MS Shell Dlg"
 	WS_BORDER | WS_TABSTOP,
 	12, 38, 194, 105
  EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 70, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Cancel", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 }
@@ -157,9 +157,9 @@ FONT 8, "MS Shell Dlg"
  LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
  LTEXT "&Open:", 12305, 7, 39, 24, 10
  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
- DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "Cancel", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "&Browse...", 12288, 170, 63, 50, 14, WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
+ PUSHBUTTON "Cancel", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
+ PUSHBUTTON "&Browse...", 12288, 160, 63, 59, 14, WS_TABSTOP
 }
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
@@ -174,29 +174,29 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
  LTEXT "", 14007, 70, 40, 150, 10
  LTEXT "Target:", 14008, 10, 55, 45, 10
  EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
- LTEXT "&Start in:",14010, 10, 65, 45, 10
+ LTEXT "&Start in:",14010, 10, 65, 57, 10
  EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
- LTEXT "Shortcut &key:", 14014, 10, 80, 45, 10
+ LTEXT "Shortcut &key:", 14014, 10, 80, 57, 10
  EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
- LTEXT "Run:", 14016, 10, 90, 45, 10
+ LTEXT "Run:", 14016, 10, 90, 57, 10
  EDITTEXT 14017, 70, 90, 150, 10
- LTEXT "C&omment:", 14018, 10, 100, 45, 10
+ LTEXT "C&omment:", 14018, 10, 100, 57, 10
  EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
- PUSHBUTTON "&Find Target...", 14020, 10, 115, 60, 14, ES_LEFT
- PUSHBUTTON "&Change Icon...", 14021, 80, 115, 60, 14, ES_LEFT
- PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
+ PUSHBUTTON "&Find Target...", 14020, 10, 115, 63, 14, ES_LEFT
+ PUSHBUTTON "&Change Icon...", 14021, 83, 115, 63, 14, ES_LEFT
+ PUSHBUTTON "A&dvanced...", 14022, 156, 115, 63, 14, ES_LEFT
 }
 
-SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 260, 150
+SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 CAPTION "Extended Properties"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-  LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 190, 10
-  CHECKBOX "Run with different credentials", 14000, 30, 50, 150, 10
-  LTEXT "This option can allow you to run the this shortcut as another\nuser, or continue as yourself while protecting your computer\nand data from unauthorized program activity.", -1, 50, 60, 200, 40
-  CHECKBOX "Run in seperate memory space", 14001, 30, 100, 90, 10, WS_DISABLED
-  PUSHBUTTON "OK", IDOK, 25, 120, 40, 15, WS_VISIBLE
+  LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
+  CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
+  LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
+  CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
+  PUSHBUTTON "OK", IDOK, 25, 120, 50, 15, WS_VISIBLE
   PUSHBUTTON "Abort", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 }
 
@@ -222,9 +222,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
  LTEXT "Accessed:", 14018, 10, 100, 45, 10
  LTEXT "", 14019, 70, 100, 150, 10
  LTEXT "Attributes:", 14020, 10, 115, 45, 10
- CHECKBOX "&Read-only", 14021, 70, 115, 45, 10
- CHECKBOX "&Hidden", 14022, 130, 115, 50, 10
- CHECKBOX "&Archive", 14023, 180, 115, 45, 10
+ CHECKBOX "&Read-only", 14021, 70, 115, 67, 10
+ CHECKBOX "&Hidden", 14022, 140, 115, 50, 10
+ CHECKBOX "&Archive", 14023, 190, 115, 45, 10
 }
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
@@ -277,7 +277,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 
   LTEXT "Drive %s", 14010, 100, 170, 40, 10
   PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-  CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 165, 10, WS_DISABLED
+  CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 180, 10, WS_DISABLED
   CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
 }
 
@@ -299,7 +299,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 
 
 
-DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
+DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -311,16 +311,16 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Run As"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-   LTEXT "Which user account do you want to use to run this program?", -1, 30, 30, 170, 10
-   CHECKBOX "Current User %s", 14000, 5, 45, 150, 10
-   LTEXT "Protect my computer and data from unauthorized program activity", -1, 40, 65, 150, 10, WS_DISABLED
-   CHECKBOX "This option can prevent computer viruses from harming your\ncomputer or personal data, but selecting it might cause the\nprogram to function improperly.", 14001, 40, 80, 150, 10, WS_DISABLED
-   CHECKBOX "The following user:", 14002, 5, 100, 90, 10
-   LTEXT "User name:", -1, 15, 115, 60, 10
+   LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
+   CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
+   LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
+   CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE 
+   CHECKBOX "The following user:", 14002, 10, 100, 90, 10
+   LTEXT "User name:", -1, 20, 115, 60, 10
    COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 
    PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
-   LTEXT "Password:", -1, 15, 140, 60, 10
+   LTEXT "Password:", -1, 20, 140, 60, 10
    EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
    PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
    PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP
