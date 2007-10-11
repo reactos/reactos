@@ -1304,7 +1304,9 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom)
 
     /* Windows also checks only the first item */
     bTrash = (lpFileOp->fFlags & FOF_ALLOWUNDO);
-        //&& TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
+#if 0
+        && TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
+#endif
 
     if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (!bTrash && lpFileOp->fFlags & FOF_WANTNUKEWARNING))
         if (!confirm_delete_list(lpFileOp->hwnd, lpFileOp->fFlags, bTrash, flFrom))

@@ -74,8 +74,8 @@ static const struct {
 	{&CLSID_UnixDosFolder,  &UnixDosFolder_Constructor},
 	{&CLSID_FolderShortcut, &FolderShortcut_Constructor},
 	{&CLSID_MyDocuments,    &MyDocuments_Constructor},
-	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
 #endif
+	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
 	{NULL,NULL}
 };
 

@@ -2,6 +2,7 @@
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shell32.spec.def" />
 	<include base="shell32">.</include>
+	<include base="recyclebin">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
@@ -11,6 +12,7 @@
 	<define name="COM_NO_WINDOWS_H" />
 	<library>wine</library>
 	<library>uuid</library>
+	<library>recyclebin</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
@@ -64,4 +66,5 @@
 	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
+	<file>recyclebin.c</file>
 </module>

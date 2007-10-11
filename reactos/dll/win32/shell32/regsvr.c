@@ -680,12 +680,12 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         wszDesktop,
         wszMyDocuments
     },
+#endif
     {   
         &CLSID_RecycleBin,
         wszDesktop,
         wszRecycleBin
     },
-#endif
     { NULL }
 };
 
