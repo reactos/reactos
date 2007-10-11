@@ -135,11 +135,11 @@ IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached",   ID_MENU_ATTACHED
-        MENUITEM "&Primary",    ID_MENU_PRIMARY
+        MENUITEM "&Angefügt",   ID_MENU_ATTACHED
+        MENUITEM "&Primär",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify",   ID_MENU_IDENTIFY
-        MENUITEM "P&roperties", ID_MENU_PROPERTIES
+        MENUITEM "&Identifizieren",   ID_MENU_IDENTIFY
+        MENUITEM "&Eigenschaften", ID_MENU_PROPERTIES
     END
 END
 
