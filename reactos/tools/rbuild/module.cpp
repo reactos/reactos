@@ -1234,7 +1234,7 @@ void
 Module::SetImportLibrary ( ImportLibrary* importLibrary )
 {
 	this->importLibrary = importLibrary;
-	dependency = new FileLocation ( IntermediateDirectory,
+	dependency = new FileLocation ( HasImportLibrary () ? IntermediateDirectory : output->directory,
 	                                output->relative_path,
 	                                HasImportLibrary () ? "lib" + name + ".a" : output->name );
 }
