@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <string.h>
@@ -30,7 +30,6 @@
 #include "windef.h"
 #include "wingdi.h"
 #include "pidl.h"
-#include "shlguid.h"
 #include "undocshell.h"
 #include "shlobj.h"
 
@@ -38,9 +37,6 @@
 #include "shellfolder.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-/* ugly hack for cut&psate files */
-BOOL fileMoving = FALSE;
 
 /**************************************************************************
 *  IContextMenu Implementation
@@ -147,7 +143,7 @@ static ULONG WINAPI ISvItemCm_fnAddRef(IContextMenu2 *iface)
 	ItemCmImpl *This = (ItemCmImpl *)iface;
 	ULONG refCount = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(count=%lu)\n", This, refCount - 1);
+	TRACE("(%p)->(count=%u)\n", This, refCount - 1);
 
 	return refCount;
 }
@@ -160,7 +156,7 @@ static ULONG WINAPI ISvItemCm_fnRelease(IContextMenu2 *iface)
 	ItemCmImpl *This = (ItemCmImpl *)iface;
 	ULONG refCount = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(count=%li)\n", This, refCount + 1);
+	TRACE("(%p)->(count=%i)\n", This, refCount + 1);
 
 	if (!refCount)
 	{
@@ -169,8 +165,7 @@ static ULONG WINAPI ISvItemCm_fnRelease(IContextMenu2 *iface)
 	  if(This->pSFParent)
 	    IShellFolder_Release(This->pSFParent);
 
-	  if(This->pidl)
-	    SHFree(This->pidl);
+	  SHFree(This->pidl);
 
 	  /*make sure the pidl is freed*/
 	  _ILFreeaPidl(This->apidl, This->cidl);
@@ -257,13 +252,10 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, "&Delete", MFS_ENABLED);
 
 	  if(uFlags & CMF_CANRENAME)
-	  {
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
-	  }
 
 	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
 	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
-
 
 	  return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (FCIDM_SHVIEWLAST));
 	}
@@ -375,8 +367,6 @@ static BOOL DoCopyOrCut(
 	LPSHELLBROWSER	lpSB;
 	LPSHELLVIEW	lpSV;
 	LPDATAOBJECT    lpDo;
-
-    fileMoving = bCut;
 
 	TRACE("(%p)->(wnd=%p,bCut=0x%08x)\n",This, hwnd, bCut);
 
@@ -525,7 +515,7 @@ static HRESULT WINAPI ISvItemCm_fnGetCommandString(
 
 	HRESULT  hr = E_INVALIDARG;
 
-	TRACE("(%p)->(idcom=%x flags=%x %p name=%p len=%x)\n",This, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+	TRACE("(%p)->(idcom=%lx flags=%x %p name=%p len=%x)\n",This, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
 
 	switch(uFlags)
 	{
@@ -578,7 +568,7 @@ static HRESULT WINAPI ISvItemCm_fnHandleMenuMsg(
 {
 	ItemCmImpl *This = (ItemCmImpl *)iface;
 
-	TRACE("(%p)->(msg=%x wp=%x lp=%lx)\n",This, uMsg, wParam, lParam);
+	TRACE("(%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
 
 	return E_NOTIMPL;
 }
