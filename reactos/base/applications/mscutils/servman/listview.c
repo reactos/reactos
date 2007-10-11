@@ -235,6 +235,11 @@ RefreshServiceList(PMAIN_WND_INFO Info)
     DWORD NumServices;
     DWORD Index;
 
+    SendMessage (Info->hListView,
+                 WM_SETREDRAW,
+                 FALSE,
+                 0);
+
     (void)ListView_DeleteAllItems(Info->hListView);
 
     if (GetServiceList(Info, &NumServices))
@@ -331,7 +336,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
         UpdateServiceCount(Info);
     }
 
-    /* turn redraw flag on. It's turned off initially via the LBS_NOREDRAW flag */
+    /* turn redraw flag on. */
     SendMessage (Info->hListView,
                  WM_SETREDRAW,
                  TRUE,
