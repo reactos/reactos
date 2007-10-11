@@ -9,7 +9,7 @@
 
 #include "precomp.h"
 
-static BOOL
+BOOL
 Control(PMAIN_WND_INFO Info,
         HWND hProgDlg,
         DWORD Control)
@@ -114,25 +114,6 @@ Control(PMAIN_WND_INFO Info,
 
 }
 
-BOOL DoStop(PMAIN_WND_INFO Info)
-{
-    BOOL ret = FALSE;
-    HWND hProgDlg;
-
-    hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->pCurrentService->lpServiceName,
-                                    IDS_PROGRESS_INFO_STOP);
-    if (hProgDlg)
-    {
-        ret = Control(Info,
-                      hProgDlg,
-                      SERVICE_CONTROL_STOP);
-
-        DestroyWindow(hProgDlg);
-    }
-
-    return ret;
-}
 
 BOOL DoPause(PMAIN_WND_INFO Info)
 {
@@ -154,6 +135,7 @@ BOOL DoPause(PMAIN_WND_INFO Info)
     return ret;
 }
 
+
 BOOL DoResume(PMAIN_WND_INFO Info)
 {
     BOOL ret = FALSE;
@@ -173,4 +155,3 @@ BOOL DoResume(PMAIN_WND_INFO Info)
 
     return ret;
 }
-

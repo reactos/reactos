@@ -75,6 +75,7 @@ BOOL CreateListView(PMAIN_WND_INFO Info);
 BOOL DoStart(PMAIN_WND_INFO Info);
 
 /* control */
+BOOL Control(PMAIN_WND_INFO Info, HWND hProgDlg, DWORD Control);
 BOOL DoStop(PMAIN_WND_INFO Info);
 BOOL DoPause(PMAIN_WND_INFO Info);
 BOOL DoResume(PMAIN_WND_INFO Info);
