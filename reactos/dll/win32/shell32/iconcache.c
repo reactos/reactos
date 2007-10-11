@@ -15,14 +15,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
 #include "wine/port.h"
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #ifdef HAVE_UNISTD_H
@@ -40,7 +39,6 @@
 
 #include "shellapi.h"
 #include "objbase.h"
-#include "shlguid.h"
 #include "pidl.h"
 #include "shell32_main.h"
 #include "undocshell.h"
@@ -98,7 +96,7 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
 }
 
 /* declare SIC_LoadOverlayIcon() */
-static int SIC_LoadOverlayIcon(int idx);
+static int SIC_LoadOverlayIcon(int icon_idx);
 
 /*****************************************************************************
  * SIC_OverlayShortcutImage			[internal]
@@ -474,6 +472,7 @@ void SIC_Destroy(void)
 	ShellBigIconList = 0;
 
 	LeaveCriticalSection(&SHELL32_SicCS);
+	//DeleteCriticalSection(&SHELL32_SicCS); //static
 }
 
 /*****************************************************************************
@@ -481,7 +480,7 @@ void SIC_Destroy(void)
  *
  * Load a shell overlay icon and return its icon cache index.
  */
-static int SIC_LoadOverlayIcon(int idx)
+static int SIC_LoadOverlayIcon(int icon_idx)
 {
 	WCHAR buffer[1024], wszIdx[8];
 	HKEY hKeyShellIcons;
@@ -496,13 +495,13 @@ static int SIC_LoadOverlayIcon(int idx)
 	static const WCHAR wszNumFmt[] = {'%','d',0};
 
 	iconPath = swShell32Name;	/* default: load icon from shell32.dll */
-	iconIdx = idx;
+	iconIdx = icon_idx;
 
 	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszShellIcons, 0, KEY_READ, &hKeyShellIcons) == ERROR_SUCCESS)
 	{
 	    DWORD count = sizeof(buffer);
 
-	    sprintfW(wszIdx, wszNumFmt, idx);
+	    sprintfW(wszIdx, wszNumFmt, icon_idx);
 
 	    /* read icon path and index */
 	    if (RegQueryValueExW(hKeyShellIcons, wszIdx, NULL, NULL, (LPBYTE)buffer, &count) == ERROR_SUCCESS)
@@ -628,6 +627,19 @@ int WINAPI SHMapPIDLToSystemImageListIndex(
 	    return -1;
 
 	return Index;
+}
+
+/*************************************************************************
+ * SHMapIDListToImageListIndexAsync  [SHELL32.148]
+ */
+HRESULT WINAPI SHMapIDListToImageListIndexAsync(IUnknown *pts, IShellFolder *psf,
+                                                LPCITEMIDLIST pidl, UINT flags,
+                                                void *pfn, void *pvData, void *pvHint,
+                                                int *piIndex, int *piIndexSel)
+{
+    FIXME("(%p, %p, %p, 0x%08x, %p, %p, %p, %p, %p)\n",
+            pts, psf, pidl, flags, pfn, pvData, pvHint, piIndex, piIndexSel);
+    return E_FAIL;
 }
 
 /*************************************************************************
