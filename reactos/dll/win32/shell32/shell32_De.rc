@@ -1,6 +1,7 @@
 /*
  * Copyright 1998 Juergen Schmied
  * Copyright 2004 Henning Gerhardt
+ * Copyright 2007 Daniel Reimer 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,9 +28,6 @@ BEGIN
 	MENUITEM "&Details",		FCIDM_SHVIEW_REPORTVIEW
 END
 
-/*
- shellview background menu
-*/
 MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -69,9 +67,6 @@ BEGIN
 	END
 END
 
-/*
- shellview item menu
-*/
 MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -132,69 +127,69 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "&Durchsuchen...", 12288, 170, 63, 50, 14, WS_TABSTOP
 }
 
-
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Shortcut"
+CAPTION "Verknüpfung"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
  ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
- LTEXT "Target type:", 14004, 10, 30, 50, 10
+ LTEXT "Zeiltyp:", 14004, 10, 30, 50, 10
  LTEXT "", 14005, 70, 30, 150, 10
- LTEXT "Target location:", 14006, 10, 40, 70, 10
+ LTEXT "Zielpfad:", 14006, 10, 40, 70, 10
  LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Target:", 14008, 10, 55, 45, 10
+ LTEXT "Ziel:", 14008, 10, 55, 45, 10
  EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
- LTEXT "&Start in:",14010, 10, 65, 45, 10
+ LTEXT "&Starten in:",14010, 10, 65, 45, 10
  EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
- LTEXT "Shortcut &key:", 14014, 10, 80, 45, 10
+ LTEXT "&Tastenkombination:", 14014, 10, 80, 45, 10
  EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
- LTEXT "Run:", 14016, 10, 90, 45, 10
+ LTEXT "Ausführen:", 14016, 10, 90, 45, 10
  EDITTEXT 14017, 70, 90, 150, 10
- LTEXT "C&omment:", 14018, 10, 100, 45, 10
+ LTEXT "K&ommentar:", 14018, 10, 100, 45, 10
  EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
- PUSHBUTTON "&Find Target...", 14020, 10, 115, 60, 14, ES_LEFT
- PUSHBUTTON "&Change Icon...", 14021, 80, 115, 60, 14, ES_LEFT
- PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
+ PUSHBUTTON "&Ziel finden...", 14020, 10, 115, 60, 14, ES_LEFT
+ PUSHBUTTON "I&con wechseln...", 14021, 80, 115, 60, 14, ES_LEFT
+ PUSHBUTTON "Er&weitert...", 14022, 150, 115, 60, 14, ES_LEFT
 }
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Extended Properties"
+CAPTION "Erweiterte Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-  LTEXT "Select extended properties for this Shortcut", -1, 5, 30, 150, 10
-  CHECKBOX "Execute as a different user", 14000, 30, 50, 150, 10
-  LTEXT "FIXME Desc", -1, 50, 70, 200, 40
-  PUSHBUTTON "OK", IDOK, 25, 130, 40, 15, WS_VISIBLE
-  PUSHBUTTON "Abbrechen", IDCANCEL, 120, 130, 50, 15, WS_VISIBLE
+LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 190, 10
+  CHECKBOX "Als anderer Benutzer ausführen", 14000, 30, 50, 150, 10
+  LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter\neinem anderen oder Ihrem eingenen Bentzerkonto auszuführen\nwährend der Computer und Ihre Daten vor unautorisierten\nProgrammaktivitäten geschützt werden können.", -1, 50, 60, 200, 40
+  CHECKBOX "In getrennten Speicherbereich ausführen", 14001, 30, 100, 90, 10, WS_DISABLED
+  PUSHBUTTON "OK", IDOK, 25, 120, 40, 15, WS_VISIBLE
+  PUSHBUTTON "Abbrechen", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 }
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
  ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
  EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
- LTEXT "Type of file:", 14004, 10, 30, 50, 10
- LTEXT "File", 14005, 70, 30, 150, 10
- LTEXT "Opens with:", 14006, 10, 40, 50, 10
+ LTEXT "Dateityp:", 14004, 10, 30, 50, 10
+ LTEXT "Datei", 14005, 70, 30, 150, 10
+ LTEXT "Öffnen mit:", 14006, 10, 40, 50, 10
  LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Location:", 14008, 10, 55, 45, 10
+ LTEXT "Pfad:", 14008, 10, 55, 45, 10
  LTEXT "", 14009, 70, 55, 200, 10
- LTEXT "Size:",14010, 10, 65, 45, 10
+ LTEXT "Größe:",14010, 10, 65, 45, 10
  LTEXT "", 14011, 70, 65, 150, 10
- LTEXT "Created:", 14014, 10, 80, 45, 10
+ LTEXT "Erstellt:", 14014, 10, 80, 45, 10
  LTEXT "", 14015, 70, 80, 150, 10
- LTEXT "Modied:", 14016, 10, 90, 45, 10
+ LTEXT "Geändert:", 14016, 10, 90, 45, 10
  LTEXT "", 14017, 70, 90, 150, 10
- LTEXT "Accessed:", 14018, 10, 100, 45, 10
+ LTEXT "Zugegriffen:", 14018, 10, 100, 45, 10
  LTEXT "", 14019, 70, 100, 150, 10
- LTEXT "Attributes:", 14020, 10, 115, 45, 10
- CHECKBOX "&Read-only", 14021, 70, 115, 45, 10
- CHECKBOX "&Hidden", 14022, 130, 115, 50, 10
- CHECKBOX "&Archive", 14023, 180, 115, 45, 10
+ LTEXT "Attribute:", 14020, 10, 115, 45, 10
+ CHECKBOX "&Schreibgeschützt", 14021, 70, 115, 45, 10
+ CHECKBOX "&Versteckt", 14022, 130, 115, 50, 10
+ CHECKBOX "&Archiv", 14023, 180, 115, 45, 10
 }
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
@@ -202,15 +197,15 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-  LTEXT "File version: ", 14000, 10, 10, 45, 10
+  LTEXT "Dateiversion: ", 14000, 10, 10, 45, 10
   LTEXT "", 14001, 70, 10, 150, 10
-  LTEXT "Description: ", 14002, 10, 20, 45, 10
+  LTEXT "Beschreibung: ", 14002, 10, 20, 45, 10
   LTEXT "", 14003, 70, 20, 150, 10
   LTEXT "Copyright: ", 14004, 10, 30, 45, 10
   LTEXT "", 14005, 70, 30, 150, 10
-  GROUPBOX "Other version information: ", 14006, 10, 45, 220, 90
-  LTEXT "Item name: ", 14007, 20, 55, 50, 10
-  LTEXT "Value: ", 14008, 130, 55, 45, 10
+  GROUPBOX "Weitere Versionsinformationen: ", 14006, 10, 45, 220, 90
+  LTEXT "Elementname: ", 14007, 20, 55, 50, 10
+  LTEXT "Wert: ", 14008, 130, 55, 45, 10
   LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
   EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT|WS_BORDER|WS_VSCROLL|WS_GROUP|ES_MULTILINE|ES_READONLY
 
@@ -221,7 +216,6 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-  //ICON
   EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
   LTEXT "Typ:", -1, 15, 55, 40, 10
   LTEXT "", 14002, 110, 55, 100, 10
@@ -268,12 +262,32 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
   PUSHBUTTON "Jetzt &sichern", 14002, 130, 170, 90, 15, WS_TABSTOP
 }
 
-
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
+}
+
+RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ausführen als"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+{
+   LTEXT "Which user account do you want to use to run this program?", -1, 30, 30, 170, 10
+   CHECKBOX "Aktueller Benutzer %s", 14000, 5, 45, 150, 10
+   LTEXT "Computer vor unauthorisierten Programmaktiviäten schützen", -1, 40, 65, 150, 10, WS_DISABLED
+   CHECKBOX "Diese Einstellung kann Computerviren daran hindern, ihrem\nComputer und/oder Ihren persönlichen Daten zu schaden, aber\nes kann auch Programme daran hindern, Ordnungsgemäß zu arbeiten.", 14001, 40, 80, 150, 10, WS_DISABLED
+   CHECKBOX "Folgender Benutzer:", 14002, 5, 100, 90, 10
+   LTEXT "Benutzername:", -1, 15, 115, 60, 10
+   COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+
+   PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
+   LTEXT "Passwort:", -1, 15, 140, 60, 10
+   EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
+   PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
+   PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP
+   PUSHBUTTON "Abbrechen", 14008, 140, 170, 60, 15, WS_TABSTOP
 }
 
 STRINGTABLE DISCARDABLE
