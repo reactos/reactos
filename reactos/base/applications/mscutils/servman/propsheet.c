@@ -21,13 +21,12 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
                 HWND hwndDlg)
 {
     HWND hButton;
+    LPQUERY_SERVICE_CONFIG lpServiceConfig;
     DWORD Flags, State;
     UINT i;
-    LPQUERY_SERVICE_CONFIG lpServiceConfig;
 
     Flags = dlgInfo->pService->ServiceStatusProcess.dwControlsAccepted;
     State = dlgInfo->pService->ServiceStatusProcess.dwCurrentState;
-    lpServiceConfig = GetServiceConfig(dlgInfo->pService->lpServiceName);
 
     for (i = IDC_START; i <= IDC_RESUME; i++)
     {
@@ -35,26 +34,27 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         EnableWindow (hButton, FALSE);
     }
 
-    if ( (State == SERVICE_STOPPED) && (lpServiceConfig->dwStartType != SERVICE_DISABLED) )
+    lpServiceConfig = GetServiceConfig(dlgInfo->pService->lpServiceName);
+    if (lpServiceConfig && lpServiceConfig->dwStartType != SERVICE_DISABLED)
     {
-        hButton = GetDlgItem(hwndDlg, IDC_START);
-        EnableWindow (hButton, TRUE);
-    }
-    else if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
-    {
-        hButton = GetDlgItem(hwndDlg, IDC_STOP);
-        EnableWindow (hButton, TRUE);
-    }
-    else if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
-    {
-        hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
-        EnableWindow (hButton, TRUE);
-    }
+        if (State == SERVICE_STOPPED)
+        {
+            hButton = GetDlgItem(hwndDlg, IDC_START);
+            EnableWindow (hButton, TRUE);
+        }
+        else if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
+        {
+            hButton = GetDlgItem(hwndDlg, IDC_STOP);
+            EnableWindow (hButton, TRUE);
+        }
+        else if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
+        {
+            hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
+            EnableWindow (hButton, TRUE);
+        }
 
-    HeapFree(ProcessHeap,
-                 0,
-                 lpServiceConfig);
-
+        HeapFree(GetProcessHeap(), 0, lpServiceConfig);
+    }
 }
 
 
@@ -491,5 +491,4 @@ OpenPropSheet(PMAIN_WND_INFO Info)
 
     return Ret;
 }
-
 
