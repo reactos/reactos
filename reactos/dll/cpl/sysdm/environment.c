@@ -519,7 +519,7 @@ SetAllVars(HWND hwndDlg,
                               0,
                               Type,
                               (LPBYTE) VarData->lpRawValue,
-                              (DWORD) (_tcslen(VarData->lpRawValue)* sizeof(TCHAR))+1))  // was _tcsclen. lstrlen?
+                              (DWORD)(_tcslen(VarData->lpRawValue) + 1) * sizeof(TCHAR)))
             {
                 RegCloseKey(hk);
                 return;
