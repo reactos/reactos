@@ -23,9 +23,11 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
     HWND hButton;
     DWORD Flags, State;
     UINT i;
+    LPQUERY_SERVICE_CONFIG lpServiceConfig;
 
     Flags = dlgInfo->pService->ServiceStatusProcess.dwControlsAccepted;
     State = dlgInfo->pService->ServiceStatusProcess.dwCurrentState;
+    lpServiceConfig = GetServiceConfig(dlgInfo->pService->lpServiceName);
 
     for (i = IDC_START; i <= IDC_RESUME; i++)
     {
@@ -33,7 +35,7 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         EnableWindow (hButton, FALSE);
     }
 
-    if (State == SERVICE_STOPPED)
+    if ( (State == SERVICE_STOPPED) && (lpServiceConfig->dwStartType != SERVICE_DISABLED) )
     {
         hButton = GetDlgItem(hwndDlg, IDC_START);
         EnableWindow (hButton, TRUE);
@@ -48,6 +50,11 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         hButton = GetDlgItem(hwndDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
     }
+
+    HeapFree(ProcessHeap,
+                 0,
+                 lpServiceConfig);
+
 }
 
 
@@ -484,4 +491,5 @@ OpenPropSheet(PMAIN_WND_INFO Info)
 
     return Ret;
 }
+
 
