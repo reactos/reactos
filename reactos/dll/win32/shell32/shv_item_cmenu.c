@@ -38,6 +38,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/* ugly hack for cut&paste files */
+BOOL fileMoving = FALSE;
+
 /**************************************************************************
 *  IContextMenu Implementation
 */
