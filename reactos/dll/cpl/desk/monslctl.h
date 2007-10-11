@@ -4,6 +4,9 @@
 /* Control extended styles */
 #define MSLM_EX_ALLOWSELECTNONE 0x1
 #define MSLM_EX_ALLOWSELECTDISABLED 0x2
+#define MSLM_EX_HIDENUMBERONSINGLE  0x4
+#define MSLM_EX_HIDENUMBERS 0x8
+#define MSLM_EX_SELECTONRIGHTCLICK  0x10
 
 /* MONSL_MONINFO Flags */
 #define MSL_MIF_DISABLED    0x1
@@ -23,6 +26,13 @@ typedef struct _MONSL_MONNMHDR
     /* NOTE: MonitorInfo is only valid if Index >= 0 */
     MONSL_MONINFO MonitorInfo;
 } MONSL_MONNMHDR, *PMONSL_MONNMHDR;
+
+typedef struct _MONSL_MONNMBUTTONCLICKED
+{
+    /* Used with MSLN_MONITORCHANGING */
+    MONSL_MONNMHDR hdr;
+    POINT pt;
+} MONSL_MONNMBUTTONCLICKED, *PMONSL_MONNMBUTTONCLICKED;
 
 typedef struct _MONSL_MONNMMONITORCHANGING
 {
@@ -52,7 +62,19 @@ typedef struct _MONSL_MONNMMONITORCHANGING
  *
  *   lParam: PMONSL_MONNMHDR
  */
-#define MSLN_MONITORCHANGED 101
+#define MSLN_MONITORCHANGED 102
+
+/*
+ * MSLN_RBUTTONUP
+ *   This notification code is sent through WM_NOTIFY after the user did a
+ *   right click on the control. If the control's extended style
+ *   MSLM_EX_SELECTONRIGHTCLICK is set and the user clicked on a monitor,
+ *   that monitor is selected and relevant notifications are sent before
+ *   this notification is sent.
+ *
+ *   lParam: PMONSL_MONNMBUTTONCLICKED
+ */
+#define MSLN_RBUTTONUP  103
 
 /*
  * MSLM_SETMONITORSINFO
@@ -146,7 +168,15 @@ typedef struct _MONSL_MONNMMONITORCHANGING
  *                 Allow deselecting a monitor by clicking into
  *                 unused areas of the control.
  *             * MSLM_EX_ALLOWSELECTDISABLED
- *                 Allow selecting disabled monitors
+ *                 Allow selecting disabled monitors.
+ *             * MSLM_EX_HIDENUMBERONSINGLE
+ *                 Hides the monitor number if the control only
+ *                 displays one monitor.
+ *             * MSLM_EX_HIDENUMBERS
+ *                 Does not show monitor numbers.
+ *             * MSLM_EX_SELECTONRIGHTCLICK
+ *                 Selects a monitor when the user right clicks
+ *                 on it.
  *
  *   Returns non-zero value if successful.
  */
@@ -160,6 +190,20 @@ typedef struct _MONSL_MONNMMONITORCHANGING
  *   Returns the control's extended style flags.
  */
 #define MSLM_GETEXSTYLE (WM_USER + 0x19)
+
+/*
+ * MSLM_GETMONITORRECT
+ *   wParam: INT
+ *           Index of the monitor whose display rectangle is queried.
+ *   lParam: PRECT
+ *           Pointer to a RECT structure that receives the rectangle
+ *           in coordinates relative to the control's client area.
+ *
+ *   Returns a positive value if the rectangle is visible.
+ *   Returns zero if the rectangle is invisible.
+ *   Returns a negative value if the index is not valid.
+ */
+#define MSLM_GETMONITORRECT (WM_USER + 0x20)
 
 BOOL RegisterMonitorSelectionControl(IN HINSTANCE hInstance);
 VOID UnregisterMonitorSelectionControl(IN HINSTANCE hInstance);

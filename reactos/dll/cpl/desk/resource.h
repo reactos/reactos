@@ -71,6 +71,12 @@
 #define ID_MENU_DISABLED     2102
 #define ID_MENU_SELECTED     2103
 
+#define IDM_MONITOR_MENU    2110
+#define ID_MENU_ATTACHED    2111
+#define ID_MENU_PRIMARY     2112
+#define ID_MENU_IDENTIFY    2113
+#define ID_MENU_PROPERTIES  2114
+
 /* Settings Page */
 
 #define IDS_PIXEL				2301

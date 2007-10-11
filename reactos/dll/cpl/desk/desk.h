@@ -35,6 +35,10 @@ typedef struct _DIBITMAP
 
 extern HINSTANCE hApplet;
 
+HMENU
+LoadPopupMenu(IN HINSTANCE hInstance,
+              IN LPCTSTR lpMenuName);
+
 PDIBITMAP DibLoadImage(LPTSTR lpFilename);
 VOID DibFreeImage(PDIBITMAP lpBitmap);
 

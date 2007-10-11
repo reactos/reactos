@@ -644,6 +644,106 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			break;
 		}
 
+        case WM_CONTEXTMENU:
+        {
+            HWND hwndMonSel;
+            HMENU hPopup;
+            UINT uiCmd;
+            POINT pt, ptClient;
+            INT Index;
+
+            pt.x = (SHORT)LOWORD(lParam);
+            pt.y = (SHORT)HIWORD(lParam);
+
+            hwndMonSel = GetDlgItem(hwndDlg,
+                                    IDC_SETTINGS_MONSEL);
+            if ((HWND)wParam == hwndMonSel)
+            {
+                if (pt.x == -1 && pt.y == -1)
+                {
+                    RECT rcMon;
+
+                    Index = (INT)SendMessage(hwndMonSel,
+                                             MSLM_GETCURSEL,
+                                             0,
+                                             0);
+
+                    if (Index >= 0 &&
+                        (INT)SendMessage(hwndMonSel,
+                                         MSLM_GETMONITORRECT,
+                                         Index,
+                                         (LPARAM)&rcMon) > 0)
+                    {
+                        pt.x = rcMon.left + ((rcMon.right - rcMon.left) / 2);
+                        pt.y = rcMon.top + ((rcMon.bottom - rcMon.top) / 2);
+                    }
+                    else
+                        pt.x = pt.y = 0;
+
+                    MapWindowPoints(hwndMonSel,
+                                    NULL,
+                                    &pt,
+                                    1);
+                }
+                else
+                {
+                    ptClient = pt;
+                    MapWindowPoints(NULL,
+                                    hwndMonSel,
+                                    &ptClient,
+                                    1);
+
+                    Index = (INT)SendMessage(hwndMonSel,
+                                             MSLM_HITTEST,
+                                             (WPARAM)&ptClient,
+                                             0);
+                }
+
+                if (Index >= 0)
+                {
+                    hPopup = LoadPopupMenu(hApplet,
+                                           MAKEINTRESOURCE(IDM_MONITOR_MENU));
+                    if (hPopup != NULL)
+                    {
+                        /* FIXME: Enable/Disable menu items */
+                        EnableMenuItem(hPopup,
+                                       ID_MENU_ATTACHED,
+                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+                        EnableMenuItem(hPopup,
+                                       ID_MENU_PRIMARY,
+                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+                        EnableMenuItem(hPopup,
+                                       ID_MENU_IDENTIFY,
+                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+                        EnableMenuItem(hPopup,
+                                       ID_MENU_PROPERTIES,
+                                       MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+
+                        uiCmd = (UINT)TrackPopupMenu(hPopup,
+                                                     TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                                                     pt.x,
+                                                     pt.y,
+                                                     0,
+                                                     hwndDlg,
+                                                     NULL);
+
+                        switch (uiCmd)
+                        {
+                            case ID_MENU_ATTACHED:
+                            case ID_MENU_PRIMARY:
+                            case ID_MENU_IDENTIFY:
+                            case ID_MENU_PROPERTIES:
+                                /* FIXME: Implement */
+                                break;
+                        }
+
+                        DestroyMenu(hPopup);
+                    }
+                }
+            }
+            break;
+        }
+
 		case WM_DESTROY:
 		{
 			PDISPLAY_DEVICE_ENTRY Current = pGlobalData->DisplayDeviceList;

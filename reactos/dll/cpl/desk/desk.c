@@ -34,6 +34,33 @@ APPLET Applets[NUM_APPLETS] =
     }
 };
 
+HMENU
+LoadPopupMenu(IN HINSTANCE hInstance,
+              IN LPCTSTR lpMenuName)
+{
+    HMENU hMenu, hSubMenu = NULL;
+
+    hMenu = LoadMenu(hInstance,
+                     lpMenuName);
+
+    if (hMenu != NULL)
+    {
+        hSubMenu = GetSubMenu(hMenu,
+                              0);
+        if (hSubMenu != NULL &&
+            !RemoveMenu(hMenu,
+                        0,
+                        MF_BYPOSITION))
+        {
+            hSubMenu = NULL;
+        }
+
+        DestroyMenu(hMenu);
+    }
+
+    return hSubMenu;
+}
+
 static BOOL CALLBACK
 PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam)
 {

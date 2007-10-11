@@ -496,6 +496,32 @@ MonSelGetMonitorInfo(IN PMONITORSELWND infoPtr,
     return FALSE;
 }
 
+static INT
+MonSelGetMonitorRect(IN OUT PMONITORSELWND infoPtr,
+                     IN INT Index,
+                     OUT PRECT prc)
+{
+    RECT rc, rcClient;
+
+    if (Index < 0 || Index >= infoPtr->MonitorsCount)
+        return -1;
+
+    if (!infoPtr->CanDisplay)
+        return 0;
+
+    MonSelRectToScreen(infoPtr,
+                       &infoPtr->Monitors[Index].rc,
+                       prc);
+
+    rcClient.left = rcClient.top = 0;
+    rcClient.right = infoPtr->ClientSize.cx;
+    rcClient.bottom = infoPtr->ClientSize.cy;
+
+    return IntersectRect(&rc,
+                         &rcClient,
+                         prc) != FALSE;
+}
+
 static BOOL
 MonSelSetCurSelMonitor(IN OUT PMONITORSELWND infoPtr,
                        IN INT Index,
@@ -568,7 +594,8 @@ MonSelCreate(IN OUT PMONITORSELWND infoPtr)
     infoPtr->SelectionFrame.cx = infoPtr->SelectionFrame.cy = 4;
     infoPtr->Margin.cx = infoPtr->Margin.cy = 20;
     infoPtr->SelectedMonitor = -1;
-    infoPtr->ControlExStyle = MSLM_EX_ALLOWSELECTDISABLED;
+    infoPtr->ControlExStyle = MSLM_EX_ALLOWSELECTDISABLED | MSLM_EX_HIDENUMBERONSINGLE |
+        MSLM_EX_SELECTONRIGHTCLICK;
     return;
 }
 
@@ -709,6 +736,10 @@ MonSelPaint(IN OUT PMONITORSELWND infoPtr,
     DWORD Index;
     RECT rc, rctmp;
     INT iPrevBkMode;
+    BOOL bHideNumber;
+
+    bHideNumber = (infoPtr->ControlExStyle & MSLM_EX_HIDENUMBERS) ||
+        ((infoPtr->MonitorsCount == 1) && (infoPtr->ControlExStyle & MSLM_EX_HIDENUMBERONSINGLE));
 
     hbBk = GetSysColorBrush(COLOR_BACKGROUND);
     hpFg = CreatePen(PS_SOLID,
@@ -773,22 +804,25 @@ MonSelPaint(IN OUT PMONITORSELWND infoPtr,
                     -1,
                     -1);
 
-        hFont = MonSelGetMonitorFont(infoPtr,
-                                     hDC,
-                                     Index);
-        if (hFont != NULL)
+        if (!bHideNumber)
         {
-            hPrevFont = SelectObject(hDC,
-                                     hFont);
+            hFont = MonSelGetMonitorFont(infoPtr,
+                                         hDC,
+                                         Index);
+            if (hFont != NULL)
+            {
+                hPrevFont = SelectObject(hDC,
+                                         hFont);
 
-            DrawText(hDC,
-                     infoPtr->Monitors[Index].szCaption,
-                     -1,
-                     &rc,
-                     DT_VCENTER | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
+                DrawText(hDC,
+                         infoPtr->Monitors[Index].szCaption,
+                         -1,
+                         &rc,
+                         DT_VCENTER | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
 
-            SelectObject(hDC,
-                         hPrevFont);
+                SelectObject(hDC,
+                             hPrevFont);
+            }
         }
 
         if (infoPtr->MonitorInfo[Index].Flags & MSL_MIF_DISABLED)
@@ -811,6 +845,41 @@ MonSelPaint(IN OUT PMONITORSELWND infoPtr,
                  hpOldFg);
     SelectObject(hDC,
                  hbOldBk);
+}
+
+static VOID
+MonSelContextMenu(IN OUT PMONITORSELWND infoPtr,
+                  IN SHORT x,
+                  IN SHORT y)
+{
+    MONSL_MONNMBUTTONCLICKED nm;
+    INT Index;
+
+    if (!infoPtr->HasFocus)
+        SetFocus(infoPtr->hSelf);
+
+    nm.pt.x = x;
+    nm.pt.y = y;
+
+    Index = MonSelHitTest(infoPtr,
+                          &nm.pt);
+
+    MonSelNotifyMonitor(infoPtr,
+                        MSLN_RBUTTONUP,
+                        Index,
+                        (PMONSL_MONNMHDR)&nm);
+
+    /* Send a WM_CONTEXTMENU notification */
+    MapWindowPoints(infoPtr->hSelf,
+                    NULL,
+                    &nm.pt,
+                    1);
+
+    SendMessage(infoPtr->hSelf,
+                WM_CONTEXTMENU,
+                (WPARAM)infoPtr->hSelf,
+                MAKELPARAM(nm.pt.x,
+                           nm.pt.y));
 }
 
 static LRESULT CALLBACK
@@ -873,9 +942,16 @@ MonitorSelWndProc(IN HWND hwnd,
             break;
         }
 
+        case WM_RBUTTONDOWN:
+        {
+            if (!(infoPtr->ControlExStyle & MSLM_EX_SELECTONRIGHTCLICK))
+                break;
+
+            /* fall through */
+        }
+
         case WM_LBUTTONDBLCLK:
         case WM_LBUTTONDOWN:
-        case WM_RBUTTONDOWN:
         {
             INT Index;
             POINT pt;
@@ -899,6 +975,14 @@ MonitorSelWndProc(IN HWND hwnd,
         {
             if (!infoPtr->HasFocus)
                 SetFocus(hwnd);
+            break;
+        }
+
+        case WM_RBUTTONUP:
+        {
+            MonSelContextMenu(infoPtr,
+                              (SHORT)LOWORD(lParam),
+                              (SHORT)HIWORD(lParam));
             break;
         }
 
@@ -1078,6 +1162,14 @@ MonitorSelWndProc(IN HWND hwnd,
         case MSLM_GETEXSTYLE:
         {
             Ret = MonSelGetExtendedStyle(infoPtr);
+            break;
+        }
+
+        case MSLM_GETMONITORRECT:
+        {
+            Ret = (LRESULT)MonSelGetMonitorRect(infoPtr,
+                                                (INT)wParam,
+                                                (PRECT)lParam);
             break;
         }
 
