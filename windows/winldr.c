@@ -232,7 +232,7 @@ void WinLdrSetupForNt(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Allocate space for new GDT + IDT */
 	BlockSize = NUM_GDT*sizeof(KGDTENTRY) + NUM_IDT*sizeof(KIDTENTRY);//FIXME: Use GDT/IDT limits here?
 	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
-	*GdtIdt = (PKGDTENTRY)MmAllocateMemory(NumPages * MM_PAGE_SIZE);
+	*GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
 
 	if (*GdtIdt == NULL)
 	{
