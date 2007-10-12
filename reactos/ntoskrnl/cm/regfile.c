@@ -27,7 +27,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
             IN PUNICODE_STRING FileName,
             IN ULONG Flags)
 {
-    PEREGISTRY_HIVE Hive;
+    PEREGISTRY_HIVE Hive = NULL;
     NTSTATUS Status;
     BOOLEAN Allocate = TRUE;
 
@@ -43,7 +43,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CmpInitHiveFromFile() failed (Status %lx)\n", Status);
-        ExFreePool(Hive);
+        if (Hive) ExFreePool(Hive);
         return Status;
     }
 
