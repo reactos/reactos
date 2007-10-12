@@ -312,14 +312,94 @@ LogoffShutdownThread(LPVOID Parameter)
 	return 1;
 }
 
+
+static NTSTATUS
+CreateLogoffSecurityAttributes(
+	OUT PSECURITY_ATTRIBUTES* ppsa)
+{
+#if 1
+	DPRINT1("CreateSecurityAttributes needs implementation!\n");
+	*ppsa = 0;
+	return STATUS_UNSUCCESSFUL;
+#else
+	/* The following code is no only incomplete, it's a mess and uncompilable */
+	/* Still, it gives some ideas about data types and functions involved and */
+	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES 
+	/* instance for a thread, to allow that  thread to ImpersonateLoggedOnUser(). */
+	/* Specifically THREAD_SET_THREAD_TOKEN is required. */
+	PSECURITY_DESCRIPTOR psd = 0;
+	PSECURITY_ATTRIBUTES psa = 0;
+	ACL rgAcls[2];
+	EXPLICIT_ACCESS ea[2];
+
+	/* set up the required security attributes to be able to shut down */
+	psd = HeapAlloc(GetProcessHeap(), 0, SECURITY_DESCRIPTOR_MIN_LENGTH);
+	psa = HeapAlloc(GetProcessHeap(), 0, sizeof(SECURITY_ATTRIBUTES));
+	if (!psd || !psa)
+	{
+		DPRINT("Failed to allocate memory for a security descriptor!\n");
+		return STATUS_NO_MEMORY;
+	}
+
+	if (!InitializeSecurityDescriptor(psd, SECURITY_DESCRIPTOR_REVISION))
+	{
+		HeapFree(GetProcessHeap(), 0, psd);
+		DPRINT("Failed to initialize security descriptor for logoff thread!\n");
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	// Initialize an EXPLICIT_ACCESS structure for an ACE.
+	// The ACE will allow this thread to log off (and shut down the system, currently).
+	ZeroMemory(ea, sizeof(ea));
+	ea[0].grfAccessPermissions = KEY_READ;
+	ea[0].grfAccessMode = SET_ACCESS;
+	ea[0].grfInheritance= NO_INHERITANCE;
+	ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+	ea[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+	ea[0].Trustee.ptstrName  = (LPTSTR) pEveryoneSID;
+
+	if (!SetSecurityDescriptorDacl(pSD, 
+	        TRUE,     // bDaclPresent flag   
+	        pACL, 
+	        FALSE))   // not a default DACL 
+	{
+		DPRINT("SetSecurityDescriptorDacl Error %u\n", GetLastError());
+		HeapFree(GetProcessHeap(), 0, psd);
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	psa->nLength = sizeof(sa);
+	psa->lpSecurityDescriptor = psd;
+	psa->bInheritHandle = FALSE;
+
+	*ppsa = psa;
+
+	return STATUS_SUCCESS;
+#endif
+}
+
+static void
+DestroyLogoffSecurityAttributes(
+	IN PSECURITY_ATTRIBUTES psa)
+{
+	if (psa)
+	{
+		HeapFree(GetProcessHeap(), 0, psa->lpSecurityDescriptor);
+		HeapFree(GetProcessHeap(), 0, psa);
+	}
+}
+
+
 static NTSTATUS
 HandleLogoff(
 	IN OUT PWLSESSION Session,
 	IN UINT Flags)
 {
 	PLOGOFF_SHUTDOWN_DATA LSData;
+	PSECURITY_ATTRIBUTES psa;
 	HANDLE hThread;
 	DWORD exitCode;
+	NTSTATUS Status;
 
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
@@ -333,8 +413,26 @@ HandleLogoff(
 	LSData->Flags = Flags;
 	LSData->Session = Session;
 
+	Status = CreateLogoffSecurityAttributes(&psa);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Failed to create a required security descriptor. Error 0x%08x\n", Status);
+#if 1
+		DPRINT("Attempting to continue without it.\n");
+#else
+		DPRINT("Aborting logoff\n");
+		HeapFree(GetProcessHeap(), 0, LSData);
+		return Status;
+#endif
+	}
+
 	/* Run logoff thread */
-	hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+	hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+
+	/* we're done with the SECURITY_DESCRIPTOR */
+	DestroyLogoffSecurityAttributes(psa);
+	psa = NULL;
+
 	if (!hThread)
 	{
 		ERR("Unable to create logoff thread, error %lu\n", GetLastError());
