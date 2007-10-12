@@ -36,7 +36,6 @@ BEGIN
 END
 
 
-
 /*
  * Everything that does not depend on language,
  * like textless bitmaps etc, go into the

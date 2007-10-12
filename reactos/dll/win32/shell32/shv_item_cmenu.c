@@ -396,6 +396,13 @@ static void DoProperties(
 	LPITEMIDLIST	pidlFQ = NULL;
 	SHELLEXECUTEINFOA	sei;
 
+    /*
+     * FIXXME
+     *
+     * The IShellFolder interface GetUIObject should create the specific item and then query if it has an IContextMenu interface
+     * If yes return interface to it.
+     */
+
     if (_ILIsMyComputer(This->apidl[0]))
     {
         ShellExecuteA(hwnd, "open", "rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
@@ -412,6 +419,12 @@ static void DoProperties(
        ILGetDisplayName(This->apidl[0], buffer);
        SH_ShowDriveProperties(buffer);
        return;
+    }
+    else if (_ILIsBitBucket(This->apidl[0]))
+    {
+       ///FIXME
+       WCHAR szDrive = 'C';
+       SH_ShowRecycleBinProperties(szDrive);
     }
     else
     {

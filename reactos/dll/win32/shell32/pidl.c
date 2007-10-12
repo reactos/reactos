@@ -1633,6 +1633,16 @@ BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
         return IsEqualIID(iid, &CLSID_MyComputer);
     return FALSE;
 }
+BOOL _ILIsBitBucket(LPCITEMIDLIST pidl)
+{
+    REFIID iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n",pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_RecycleBin);
+    return FALSE;
+}
 
 BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)
 {

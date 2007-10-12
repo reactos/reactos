@@ -62,7 +62,7 @@ typedef struct _LANGANDCODEPAGE_
  *
  */
 HPROPSHEETPAGE
-SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam)
+SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle)
 {
     HRSRC hRes;
     LPVOID lpsztemplate;
@@ -88,6 +88,11 @@ SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM lParam)
     ppage.u.pResource = lpsztemplate;
     ppage.pfnDlgProc = dlgproc;
     ppage.lParam = lParam;
+    ppage.pszTitle = szTitle;
+    if (szTitle)
+    {
+        ppage.dwFlags |= PSP_USETITLE;
+    }
     return CreatePropertySheetPageW(&ppage);
 }
 
@@ -645,7 +650,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf)
         FIXME("directory / drive resources are missing\n");
         return FALSE;
     }
-    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)wFileName);
+    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)wFileName, NULL);
 
     if (hpage == NULL)
         return FALSE;
@@ -654,7 +659,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf)
     num_pages++;
     if ( GetFileVersionInfoSizeW(lpf, &dwHandle) )
 	{
-         if ( (hpage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)lpf))!= NULL)
+         if ( (hpage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)lpf, NULL))!= NULL)
          {
               hppages[num_pages] = hpage;
 		      num_pages++;

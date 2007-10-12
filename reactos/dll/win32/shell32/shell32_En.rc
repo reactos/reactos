@@ -327,6 +327,19 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
    PUSHBUTTON "Cancel", 14008, 140, 170, 60, 15, WS_TABSTOP
 }
 
+BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Recycle Bin Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+{
+  CONTROL "", -1, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
+  GROUPBOX "Settings for selected location", -1, 10, 80, 220, 70
+  RADIOBUTTON "&Custom size:", -1, 20, 90, 80, 10
+  EDITTEXT -1, 90, 90, 50, 10, WS_TABSTOP
+  LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
+  RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", -1, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
+  RADIOBUTTON"&Display delete confirmation dialog", -1, 20, 155, 140, 10, WS_TABSTOP
+}
 
 STRINGTABLE DISCARDABLE
 {

@@ -411,8 +411,8 @@ SH_ShowDriveProperties(WCHAR * drive)
    BOOL ret;
    UINT i;
 
-   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-   psh.dwSize = sizeof(PROPSHEETHEADER);
+   ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+   psh.dwSize = sizeof(PROPSHEETHEADERW);
    //psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE;
    psh.hwndParent = NULL;
    psh.nStartPage = 0;

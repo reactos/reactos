@@ -22,6 +22,8 @@
 #define YDEBUG
 #define COBJMACROS
 #define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#define MAX_PROPERTY_SHEET_PAGE 32
 
 #include <stdarg.h>
 
@@ -40,6 +42,7 @@
 #include "enumidlist.h"
 #include "xdg.h"
 #include "recyclebin.h"
+#include <prsht.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
 
@@ -102,13 +105,24 @@ typedef struct tagRecycleBin
 {
     const IShellFolder2Vtbl *lpVtbl;
     const IPersistFolder2Vtbl *lpPersistFolderVtbl;
+    const IContextMenuVtbl *lpCmt;
     LONG refCount;
+
+    INT iIdOpen;
+    INT iIdEmpty;
+    INT iIdProperties;
 
     LPITEMIDLIST pidl;
 } RecycleBin;
 
+static const IContextMenuVtbl recycleBincmVtbl;
 static const IShellFolder2Vtbl recycleBinVtbl;
 static const IPersistFolder2Vtbl recycleBinPersistVtbl;
+
+static RecycleBin *impl_from_IContextMenu(IContextMenu *iface)
+{
+    return (RecycleBin *)((char *)iface - FIELD_OFFSET(RecycleBin, lpCmt));
+}
 
 static RecycleBin *impl_from_IPersistFolder(IPersistFolder2 *iface)
 {
@@ -130,6 +144,7 @@ HRESULT WINAPI RecycleBin_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *
     ZeroMemory(obj, sizeof(RecycleBin));
     obj->lpVtbl = &recycleBinVtbl;
     obj->lpPersistFolderVtbl = &recycleBinPersistVtbl;
+    obj->lpCmt = &recycleBincmVtbl;
     if (FAILED(ret = IUnknown_QueryInterface((IUnknown *)obj, riid, ppOutput)))
     {
         RecycleBin_Destructor(obj);
@@ -159,6 +174,9 @@ static HRESULT WINAPI RecycleBin_QueryInterface(IShellFolder2 *iface, REFIID rii
     if (IsEqualGUID(riid, &IID_IPersist) || IsEqualGUID(riid, &IID_IPersistFolder)
             || IsEqualGUID(riid, &IID_IPersistFolder2))
         *ppvObject = &This->lpPersistFolderVtbl;
+
+    if (IsEqualGUID(riid, &IID_IContextMenu))
+        *ppvObject = &This->lpCmt;
 
     if (*ppvObject != NULL)
     {
@@ -246,7 +264,7 @@ CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
 }
 
 PDELETED_FILE_DETAILS_W
-UnpackDetailsFromPidl(LPITEMIDLIST pidl)
+UnpackDetailsFromPidl(LPCITEMIDLIST pidl)
 {
     return (PDELETED_FILE_DETAILS_W)&pidl->mkid.abID[1];
 }
@@ -568,3 +586,201 @@ HRESULT WINAPI SHUpdateRecycleBinIcon(void)
     FIXME("stub\n");
     return S_OK;
 }
+static HRESULT WINAPI
+RecycleBin_IContextMenu_QueryInterface( IContextMenu* iface, REFIID riid, void** ppvObject )
+{
+    return RecycleBin_QueryInterface((IShellFolder2 *)impl_from_IContextMenu(iface), riid, ppvObject);
+}
+
+static ULONG WINAPI
+RecycleBin_IContextMenu_AddRef( IContextMenu* iface )
+{
+    return RecycleBin_AddRef((IShellFolder2 *)impl_from_IContextMenu(iface));
+}
+
+static ULONG WINAPI
+RecycleBin_IContextMenu_Release( IContextMenu* iface )
+{
+    return RecycleBin_Release((IShellFolder2 *)impl_from_IContextMenu(iface));
+}
+
+static HRESULT WINAPI
+RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
+                            UINT idCmdFirst, UINT idCmdLast, UINT uFlags )
+{
+    RecycleBin * This = impl_from_IContextMenu(iface);
+    static WCHAR szOpen[] = { 'O','p','e','n',0 };
+    static WCHAR szEmpty[] = { 'E','m','p','t','y',' ','R','e','c','y','c','l','e',' ','B','i','n',0 };
+    static WCHAR szProperties[] = { 'P','r','o','p','e','r','t','i','e','s',0 };
+    MENUITEMINFOW mii;
+    int id = 1;
+
+    TRACE("%p %p %u %u %u %u\n", This,
+          hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags );
+
+    if ( !hmenu )
+        return E_INVALIDARG;
+
+    memset( &mii, 0, sizeof(mii) );
+    mii.cbSize = sizeof (mii);
+    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+    mii.dwTypeData = (LPWSTR)szOpen;
+    mii.cch = strlenW( mii.dwTypeData );
+    mii.wID = idCmdFirst + id++;
+    mii.fState = MFS_ENABLED;
+    mii.fType = MFT_STRING;
+    if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
+        return E_FAIL;
+    This->iIdOpen = 0;
+
+    mii.fState = MFS_ENABLED;
+    mii.dwTypeData = (LPWSTR)szEmpty;
+    mii.cch = strlenW( mii.dwTypeData );
+    mii.wID = idCmdFirst + id++;
+    if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
+    {
+        TRACE("RecycleBin_IContextMenu_QueryContextMenu failed to insert item properties");
+        return E_FAIL;
+    }
+    This->iIdEmpty = 1;
+    id++;
+
+    mii.fState = MFS_ENABLED;
+    mii.dwTypeData = (LPWSTR)szProperties;
+    mii.cch = strlenW( mii.dwTypeData );
+    mii.wID = idCmdFirst + id++;
+    if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
+    {
+        TRACE("RecycleBin_IContextMenu_QueryContextMenu failed to insert item properties");
+        return E_FAIL;
+    }
+    This->iIdProperties = 2;
+    id++;
+
+    return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
+}
+
+static HRESULT WINAPI
+RecycleBin_IContextMenu_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
+{
+    RecycleBin * This = impl_from_IContextMenu(iface);
+
+    TRACE("%p %p\n", This, lpici );
+
+    return E_FAIL;
+}
+
+static HRESULT WINAPI
+RecycleBin_IContextMenu_GetCommandString( IContextMenu* iface, UINT_PTR idCmd, UINT uType,
+                            UINT* pwReserved, LPSTR pszName, UINT cchMax )
+{
+    RecycleBin * This = impl_from_IContextMenu(iface);
+
+    FIXME("%p %lu %u %p %p %u\n", This,
+          idCmd, uType, pwReserved, pszName, cchMax );
+
+    return E_NOTIMPL;
+}
+
+static const IContextMenuVtbl recycleBincmVtbl =
+{
+    RecycleBin_IContextMenu_QueryInterface,
+    RecycleBin_IContextMenu_AddRef,
+    RecycleBin_IContextMenu_Release,
+    RecycleBin_IContextMenu_QueryContextMenu,
+    RecycleBin_IContextMenu_InvokeCommand,
+    RecycleBin_IContextMenu_GetCommandString
+};
+
+INT_PTR 
+CALLBACK 
+RecycleBinGeneralDlg(   
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+
+
+    return FALSE;
+}
+
+void
+InitializeBitBucketDlg(HWND hwndDlg)
+{
+   WCHAR CurDrive = L'A';
+   WCHAR szDrive[] = L"A:\\";
+   DWORD dwDrives;
+   WCHAR szName[MAX_PATH+1];
+   DWORD MaxComponent, Flags;
+
+   dwDrives = GetLogicalDrives();
+   do
+   {
+     if ((dwDrives & 0x1))
+     {
+        UINT Type = GetDriveTypeW(szDrive);
+        if (Type == DRIVE_FIXED) //FIXME
+        {
+            if (!GetVolumeInformationW(szDrive, szName, MAX_PATH+1, NULL, &MaxComponent, &Flags, NULL, 0))
+            {
+                wcscpy(szName, szDrive);
+            }
+        }
+     }
+     CurDrive++;
+     szDrive[0] = CurDrive;
+     dwDrives = (dwDrives >> 1);
+   }while(dwDrives);
+
+
+}
+
+
+
+INT_PTR 
+CALLBACK 
+BitBucketDlg(   
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+)
+{
+
+
+    return FALSE;
+}
+
+BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
+{
+   HPROPSHEETPAGE hpsp[1];
+   PROPSHEETHEADERW psh;
+   HPROPSHEETPAGE hprop;
+
+   BOOL ret;
+
+
+   ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+   psh.dwSize = sizeof(PROPSHEETHEADERW);
+   psh.hwndParent = NULL;
+   psh.u3.phpage = hpsp;
+
+   hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", BitBucketDlg, (LPARAM)0, NULL);
+   if (!hprop)
+   {
+       ERR("Failed to create property sheet");
+       return FALSE;
+   }
+   hpsp[psh.nPages] = hprop;
+   psh.nPages++;
+
+
+   ret = PropertySheetW(&psh);
+   if (ret < 0)
+       return FALSE;
+   else
+       return TRUE;
+}
+
