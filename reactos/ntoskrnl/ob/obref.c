@@ -494,6 +494,9 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                 GrantedAccess = CurrentProcess->GrantedAccess;
                 
                 /* Validate access */
+                /* ~GrantedAccess = RefusedAccess.*/
+                /* ~GrantedAccess & DesiredAccess = list of refused bits. */
+                /* !(~GrantedAccess & DesiredAccess) == TRUE means ALL requested rights are granted */
                 if ((AccessMode == KernelMode) ||
                     !(~GrantedAccess & DesiredAccess))
                 {                   
@@ -539,6 +542,9 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                 GrantedAccess = CurrentThread->GrantedAccess;
                 
                 /* Validate access */
+                /* ~GrantedAccess = RefusedAccess.*/
+                /* ~GrantedAccess & DesiredAccess = list of refused bits. */
+                /* !(~GrantedAccess & DesiredAccess) == TRUE means ALL requested rights are granted */
                 if ((AccessMode == KernelMode) ||
                     !(~GrantedAccess & DesiredAccess))
                 {                   
@@ -608,6 +614,9 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
             GrantedAccess = HandleEntry->GrantedAccess;
             
             /* Validate access */
+            /* ~GrantedAccess = RefusedAccess.*/
+            /* ~GrantedAccess & DesiredAccess = list of refused bits. */
+            /* !(~GrantedAccess & DesiredAccess) == TRUE means ALL requested rights are granted */
             if ((AccessMode == KernelMode) ||
                 !(~GrantedAccess & DesiredAccess))
             {
