@@ -30,6 +30,38 @@
 
 #include "appwiz.h"
 
+HWND UpdInfoDialog;
+
+static
+INT_PTR CALLBACK
+InfoPropDlgProc(HWND hDlg,
+               UINT message,
+               WPARAM wParam,
+               LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch (message)
+    {
+        case WM_INITDIALOG:
+        {
+			CallInformation(hDlg, UpdInfoDialog, IDC_UPDATESLIST);
+        }
+        case WM_COMMAND:
+        {
+		    switch (LOWORD(wParam))
+			{
+				case IDCANCEL:
+					EndDialog(hDlg,LOWORD(wParam));
+				break;
+			}
+        }
+        break;
+    }
+
+    return FALSE;
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 UpdatesPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -42,62 +74,56 @@ UpdatesPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-			AddItemsToViewControl(hwndDlg);
+			AddItemsToViewControl(hwndDlg, IDC_UPD_VIEW_COMBO);
 			LoadString(hApplet, IDS_UPDATESLIST, Buf, sizeof(Buf) / sizeof(TCHAR));
-			AddListColumn(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),Buf);
-			FillSoftwareList(hwndDlg, TRUE);
+			AddListColumn(GetDlgItem(hwndDlg, IDC_UPDATESLIST),Buf);
+			FillSoftwareList(hwndDlg, TRUE, IDC_UPDATESLIST);
+			UpdInfoDialog = hwndDlg;
         break;
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-				case IDC_FIND_EDIT:
+				case IDC_UPD_FIND_EDIT:
 					if (HIWORD(wParam) == EN_CHANGE)
 					{
-					    FindItems(hwndDlg);
+					    FindItems(hwndDlg,IDC_UPDATESLIST,IDC_UPD_FIND_EDIT,IDC_UPD_REMOVE,IDC_UPD_INFO_BUTTON);
 					}
 				break;
 				case ID_UPD_INFORMATION:
-				case IDC_INFO_BUTTON:
+				case IDC_UPD_INFO_BUTTON:
+				{
+					if (IsItemSelected(hwndDlg, IDC_SOFTWARELIST))
 					DialogBox(hApplet,
 							  MAKEINTRESOURCE(IDD_INFORMATION),
 							  hwndDlg,
 							  InfoPropDlgProc);
+				}
 				break;
 				case ID_UPD_REMOVE:
-				case IDC_ADDREMOVE:
-                    CallUninstall(hwndDlg, IDC_SOFTWARELIST, TRUE);
+				case IDC_UPD_REMOVE:
+                    CallUninstall(hwndDlg, IDC_UPDATESLIST, IDC_UPD_REMOVE, IDC_UPD_INFO_BUTTON, TRUE);
                 break;
-				case IDC_VIEW_COMBO:
+				case IDC_UPD_VIEW_COMBO:
 					if (HIWORD(wParam) == CBN_SELCHANGE)
-					{
-						GetCurrentView(hwndDlg);
-					}
+						GetCurrentView(hwndDlg, IDC_UPD_VIEW_COMBO, IDC_UPDATESLIST);
 				break;
 			}
 		break;
 		case WM_NOTIFY:
 			switch (LOWORD(wParam))
 			{
-                case IDC_SOFTWARELIST:
+                case IDC_UPDATESLIST:
 					switch (((LPNMHDR)lParam)->code)
 					{
 						case NM_DBLCLK:
-							CallUninstall(hwndDlg, IDC_SOFTWARELIST, TRUE);
+							CallUninstall(hwndDlg, IDC_UPDATESLIST, IDC_UPD_REMOVE, IDC_UPD_INFO_BUTTON, TRUE);
 						break;
 						case NM_CLICK:
 						{
-							INT nIndex;
-							nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
-							if (nIndex == -1)
-							{
-								EnableWindow(GetDlgItem(hwndDlg, IDC_ADDREMOVE),FALSE);
-								EnableWindow(GetDlgItem(hwndDlg, IDC_INFO_BUTTON),FALSE);
-							}
+							if (!IsItemSelected(hwndDlg, IDC_UPDATESLIST))
+								ButtonStatus(hwndDlg, FALSE, IDC_UPD_REMOVE, IDC_UPD_INFO_BUTTON);
 							else
-							{
-								EnableWindow(GetDlgItem(hwndDlg, IDC_ADDREMOVE),TRUE);
-								EnableWindow(GetDlgItem(hwndDlg, IDC_INFO_BUTTON),TRUE);
-							}
+								ButtonStatus(hwndDlg, TRUE, IDC_UPD_REMOVE, IDC_UPD_INFO_BUTTON);
 						}
 						break;
 					}
@@ -109,7 +135,8 @@ UpdatesPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowPopupMenu(hwndDlg,
 						  IDR_POPUP_UPD,
 						  GET_X_LPARAM(lParam),
-						  GET_Y_LPARAM(lParam));
+						  GET_Y_LPARAM(lParam),
+						  IDC_UPDATESLIST);
 		}
 		break;
     }

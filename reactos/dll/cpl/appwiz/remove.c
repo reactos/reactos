@@ -30,14 +30,77 @@
 
 #include "appwiz.h"
 
-VOID
-CallInformation(HWND hwndDlg)
-{
+HWND InfoDialog;
 
+BOOL
+GetInfoItem(HWND hwndDlg, HKEY hKey, LPCTSTR RegName, UINT Control)
+{
+	DWORD dwSize = 1024;
+	TCHAR pszInfoString[1024];
+
+    if (RegQueryValueEx(hKey,
+                        RegName,
+                        NULL,
+                        NULL,
+                        (LPBYTE)pszInfoString,
+                        &dwSize) == ERROR_SUCCESS)
+    {
+		SendMessage(GetDlgItem(hwndDlg, Control), WM_SETTEXT, -1, (LPARAM)pszInfoString);
+		return TRUE;
+    }
+	else
+	{
+		dwSize = 1024;
+		LoadString(hApplet, IDS_NO_INFORMATION, pszInfoString, sizeof(pszInfoString) / sizeof(TCHAR));
+		SendMessage(GetDlgItem(hwndDlg, Control), WM_SETTEXT, -1, (LPARAM)pszInfoString);
+		return FALSE;
+	}
 }
 
 VOID
-CallUninstall(HWND hwndDlg, UINT Control, BOOL isUpdate)
+CallInformation(HWND hwndDlg, HWND infDlg, UINT Control)
+{
+    INT nIndex;
+    HKEY hKey;
+	TCHAR Buf[256],Title[256];
+	
+	nIndex = (INT)SendMessage(GetDlgItem(infDlg, Control),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
+    if (nIndex != -1)
+    {
+		LVITEM item;
+		
+		ZeroMemory(&item, sizeof(LVITEM));
+		item.mask = LVIF_PARAM;
+		item.iItem = nIndex;
+		(void)ListView_GetItem(GetDlgItem(infDlg,Control),&item);
+        hKey = (HKEY)item.lParam;
+
+		if (!GetInfoItem(hwndDlg, hKey, L"DisplayName", IDS_INFO_DISPNAME))
+        {
+			LoadString(hApplet, IDS_UNABLEREAD_INFORMATION, Buf, sizeof(Buf) / sizeof(TCHAR));
+			LoadString(hApplet, IDS_ERROR, Title, sizeof(Title) / sizeof(TCHAR));
+            MessageBox(hwndDlg,
+                       Buf,
+                       Title,
+                       MB_ICONSTOP);
+			return;
+        }
+		
+		(void)GetInfoItem(hwndDlg, hKey, L"RegOwner", 		IDS_INFO_REGOWNER);
+		(void)GetInfoItem(hwndDlg, hKey, L"ProductID", 		IDS_INFO_PRODUCTID);
+		(void)GetInfoItem(hwndDlg, hKey, L"Publisher", 		IDS_INFO_PUBLISHER);
+		(void)GetInfoItem(hwndDlg, hKey, L"DisplayVersion", IDS_INFO_VERSION);
+		(void)GetInfoItem(hwndDlg, hKey, L"Contact", 		IDS_INFO_CONTACT);
+		(void)GetInfoItem(hwndDlg, hKey, L"HelpLink", 		IDS_INFO_SUPPORTINFO);
+		(void)GetInfoItem(hwndDlg, hKey, L"HelpTelephone", 	IDS_INFO_SUPPORTPHONE);
+		(void)GetInfoItem(hwndDlg, hKey, L"URLUpdateInfo", 	IDS_INFO_PRODUCT_UPDATES);
+		(void)GetInfoItem(hwndDlg, hKey, L"Readme", 		IDS_INFO_README);
+		(void)GetInfoItem(hwndDlg, hKey, L"Comments", 		IDS_INFO_COMMENTS);
+    }
+}
+
+VOID
+CallUninstall(HWND hwndDlg, UINT Control, UINT RemBtn, UINT InfoBtn, BOOL isUpdate)
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
@@ -49,23 +112,14 @@ CallUninstall(HWND hwndDlg, UINT Control, BOOL isUpdate)
 	TCHAR Buf[256],Title[256];
 	
 	nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, Control),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
-    if (nIndex == -1)
-    {
-		LoadString(hApplet, IDS_NOITEM_SELECTED, Buf, sizeof(Buf) / sizeof(TCHAR));
-		LoadString(hApplet, IDS_CPLSYSTEMNAME, Title, sizeof(Title) / sizeof(TCHAR));
-        MessageBox(hwndDlg,
-                   Buf,
-                   Title,
-                   MB_ICONINFORMATION);
-    }
-    else
+    if (nIndex != -1)
     {
 		LVITEM item;
 		
 		ZeroMemory(&item, sizeof(LVITEM));
 		item.mask = LVIF_PARAM;
 		item.iItem = nIndex;
-		(void)ListView_GetItem(GetDlgItem(hwndDlg,IDC_SOFTWARELIST),&item);
+		(void)ListView_GetItem(GetDlgItem(hwndDlg,Control),&item);
         hKey = (HKEY)item.lParam;
 
         dwType = REG_SZ;
@@ -82,12 +136,13 @@ CallUninstall(HWND hwndDlg, UINT Control, BOOL isUpdate)
             si.wShowWindow = SW_SHOW;
             if (CreateProcess(NULL,pszUninstallString,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
             {
+				ButtonStatus(hwndDlg, FALSE, RemBtn, InfoBtn);
 				WaitForSingleObject(pi.hProcess, INFINITE);
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
 				// Update software list
-				(void)ListView_DeleteAllItems(GetDlgItem(hwndDlg, IDC_SOFTWARELIST));
-				FillSoftwareList(hwndDlg, isUpdate);
+				(void)ListView_DeleteAllItems(GetDlgItem(hwndDlg, Control));
+				FillSoftwareList(hwndDlg, isUpdate, Control);
             }
         }
         else
@@ -118,7 +173,7 @@ AddListColumn(HWND hList, LPTSTR Caption)
 }
 
 static VOID
-AddItemToList(HWND hwndDlg, LPARAM hSubKey, LPTSTR pszDisplayName, INT ItemIndex)
+AddItemToList(HWND hwndDlg, LPARAM hSubKey, LPTSTR pszDisplayName, INT ItemIndex, UINT Control)
 {
 	int index;
 	HIMAGELIST hImgListSmall;
@@ -153,7 +208,7 @@ AddItemToList(HWND hwndDlg, LPARAM hSubKey, LPTSTR pszDisplayName, INT ItemIndex
 	ImageList_AddIcon(hImgListLarge,hIcon);
 	DestroyIcon(hIcon);
 	
-	hList = GetDlgItem(hwndDlg, IDC_SOFTWARELIST);
+	hList = GetDlgItem(hwndDlg, Control);
 	
 	ZeroMemory(&listItem, sizeof(LV_ITEM));
 	listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
@@ -163,12 +218,35 @@ AddItemToList(HWND hwndDlg, LPARAM hSubKey, LPTSTR pszDisplayName, INT ItemIndex
 	listItem.iImage     = index;
 	(void)ListView_InsertItem(hList, &listItem);
 	
-	(void)ListView_SetImageList(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),hImgListSmall,LVSIL_SMALL);
-	(void)ListView_SetImageList(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),hImgListLarge,LVSIL_NORMAL);
+	(void)ListView_SetImageList(hList,hImgListSmall,LVSIL_SMALL);
+	(void)ListView_SetImageList(hList,hImgListLarge,LVSIL_NORMAL);
 }
 
 VOID
-FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates)
+SetNoneAppMsg(HWND hwndDlg, BOOL IsUpdates)
+{
+	TCHAR Buf[256];
+	
+	if (IsUpdates)
+	{
+		LoadString(hApplet, IDS_NONE_UPD, Buf, sizeof(Buf) / sizeof(TCHAR));
+		AddItemToList(hwndDlg, -1, (LPTSTR)Buf, 0, IDC_UPDATESLIST);
+		EnableWindow(GetDlgItem(hwndDlg, IDC_UPD_FIND_EDIT),FALSE);
+		EnableWindow(GetDlgItem(hwndDlg, IDC_UPD_VIEW_COMBO),FALSE);
+		EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATESLIST),FALSE);
+	}
+	else
+	{
+		LoadString(hApplet, IDS_NONE_APP, Buf, sizeof(Buf) / sizeof(TCHAR));
+		AddItemToList(hwndDlg, -1, (LPTSTR)Buf, 0, IDC_SOFTWARELIST);
+		EnableWindow(GetDlgItem(hwndDlg, IDC_FIND_EDIT),FALSE);
+		EnableWindow(GetDlgItem(hwndDlg, IDC_VIEW_COMBO),FALSE);
+		EnableWindow(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),FALSE);
+	}
+}
+
+VOID
+FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates, UINT Control)
 {
     TCHAR pszName[MAX_PATH];
     TCHAR pszDisplayName[MAX_PATH];
@@ -183,6 +261,7 @@ FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates)
     BOOL bIsSystemComponent = FALSE;
     INT ItemIndex = 0;
 	TCHAR Buf[256],Title[256];
+	BOOL IsAdd = FALSE;
 
     if (RegOpenKey(HKEY_LOCAL_MACHINE,
                    TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
@@ -237,11 +316,13 @@ FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates)
             {
                 if ((!bIsUpdate) && (!bIsSystemComponent) && (!bShowUpdates))
                 {
-					AddItemToList(hwndDlg, (LPARAM)hSubKey, (LPTSTR)pszDisplayName, ItemIndex);
+					AddItemToList(hwndDlg, (LPARAM)hSubKey, (LPTSTR)pszDisplayName, ItemIndex, Control);
+					IsAdd = TRUE;
                 }
                 else if (bIsUpdate && bShowUpdates)
                 {
-					AddItemToList(hwndDlg, (LPARAM)hSubKey, (LPTSTR)pszDisplayName, ItemIndex);
+					AddItemToList(hwndDlg, (LPARAM)hSubKey, (LPTSTR)pszDisplayName, ItemIndex, Control);
+					IsAdd = TRUE;
                 }
             }
         }
@@ -251,16 +332,19 @@ FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates)
     }
 
     RegCloseKey(hKey);
+	
+	if (!IsAdd) SetNoneAppMsg(hwndDlg, bShowUpdates);
+	
 }
 
 VOID
-AddItemsToViewControl(HWND hwndDlg)
+AddItemsToViewControl(HWND hwndDlg, UINT Control)
 {
 	TCHAR Buf[256];
 	int Index;
 	HWND hList;
 	
-	hList = GetDlgItem(hwndDlg, IDC_VIEW_COMBO);
+	hList = GetDlgItem(hwndDlg, Control);
 	// Large Icons
 	LoadString(hApplet, IDS_LARGEICONS, Buf, sizeof(Buf) / sizeof(TCHAR));
     Index = (int)SendMessage(hList,
@@ -300,7 +384,7 @@ AddItemsToViewControl(HWND hwndDlg)
 }
 
 VOID
-FindItems(HWND hwndDlg)
+FindItems(HWND hwndDlg, UINT ListControl, UINT EditControl, UINT RemBtn, UINT InfoBtn)
 {
 	HWND hList;
 	HWND hEdit;
@@ -310,8 +394,8 @@ FindItems(HWND hwndDlg)
 	LV_ITEM listItem;
 	BOOL comp = TRUE;
 	
-	hList = GetDlgItem(hwndDlg, IDC_SOFTWARELIST);
-	hEdit = GetDlgItem(hwndDlg, IDC_FIND_EDIT);
+	hList = GetDlgItem(hwndDlg, ListControl);
+	hEdit = GetDlgItem(hwndDlg, EditControl);
 	
 	SendMessage(hEdit, WM_GETTEXT, 128, (LPARAM)szText);
 	
@@ -330,45 +414,41 @@ FindItems(HWND hwndDlg)
 	}
 	ListView_SetItemState(hList, Index, LVIS_SELECTED | LVIS_FOCUSED, -1);
 	if (comp)
-	{
-		EnableWindow(GetDlgItem(hwndDlg, IDC_ADDREMOVE),TRUE);
-	}
+		ButtonStatus(hwndDlg, TRUE, RemBtn, InfoBtn);
 	else
-	{
-		EnableWindow(GetDlgItem(hwndDlg, IDC_ADDREMOVE),FALSE);
-	}
+		ButtonStatus(hwndDlg, FALSE, RemBtn, InfoBtn);
 }
 
 VOID
-GetCurrentView(HWND hwndDlg)
+GetCurrentView(HWND hwndDlg, UINT ViewControl, UINT ListControl)
 {
 	int nCurrSel;
-	nCurrSel = (int)SendMessage(GetDlgItem(hwndDlg, IDC_VIEW_COMBO),
+	nCurrSel = (int)SendMessage(GetDlgItem(hwndDlg, ViewControl),
 								CB_GETCURSEL,
 								(WPARAM)0,
 								(LPARAM)0);
 	switch (nCurrSel)
 	{
 		case 0:
-			SetWindowLong(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),
+			SetWindowLong(GetDlgItem(hwndDlg, ListControl),
 						  GWL_STYLE, LVS_ICON | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
 		break;
 		case 1:
-			SetWindowLong(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),
+			SetWindowLong(GetDlgItem(hwndDlg, ListControl),
 						  GWL_STYLE,LVS_LIST | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
 		break;
 		case 2:
-			SetWindowLong(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),
+			SetWindowLong(GetDlgItem(hwndDlg, ListControl),
 						  GWL_STYLE,LVS_REPORT | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
 		break;
 	}
 }
 
 VOID
-ShowPopupMenu(HWND hwndDlg, UINT ResMenu, INT xPos, INT yPos)
+ShowPopupMenu(HWND hwndDlg, UINT ResMenu, INT xPos, INT yPos, UINT Control)
 {
 	INT nIndex;
-	nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
+	nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, Control),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
 	if ( nIndex != -1)
 	{
 		POINT pt;
@@ -377,7 +457,7 @@ ShowPopupMenu(HWND hwndDlg, UINT ResMenu, INT xPos, INT yPos)
 			
 		GetCursorPos(&pt);
 			
-		GetWindowRect(GetDlgItem(hwndDlg, IDC_SOFTWARELIST), &lvRect);
+		GetWindowRect(GetDlgItem(hwndDlg, Control), &lvRect);
 		if (PtInRect(&lvRect, pt))
 		{
 			hMenu = GetSubMenu(LoadMenu(hApplet, MAKEINTRESOURCE(ResMenu)),0);
@@ -392,6 +472,7 @@ ShowPopupMenu(HWND hwndDlg, UINT ResMenu, INT xPos, INT yPos)
 	}
 }
 
+static
 INT_PTR CALLBACK
 InfoPropDlgProc(HWND hDlg,
                UINT message,
@@ -404,15 +485,12 @@ InfoPropDlgProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-
+			CallInformation(hDlg, InfoDialog, IDC_SOFTWARELIST);
         }
         case WM_COMMAND:
         {
 		    switch (LOWORD(wParam))
 			{
-				case IDOK:
-				
-				break;
 				case IDCANCEL:
 					EndDialog(hDlg,LOWORD(wParam));
 				break;
@@ -422,6 +500,22 @@ InfoPropDlgProc(HWND hDlg,
     }
 
     return FALSE;
+}
+
+BOOL
+IsItemSelected(HWND hwndDlg, UINT Control)
+{
+	INT nIndex;
+	nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, Control),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
+	if (nIndex != -1) return TRUE;
+	return FALSE;
+}
+
+VOID
+ButtonStatus(HWND hwndDlg, BOOL Status, UINT RemBtn, UINT InfoBtn)
+{
+	EnableWindow(GetDlgItem(hwndDlg, RemBtn),Status);
+	EnableWindow(GetDlgItem(hwndDlg, InfoBtn),Status);
 }
 
 /* Property page dialog callback */
@@ -434,10 +528,11 @@ RemovePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_INITDIALOG:
-			AddItemsToViewControl(hwndDlg);
+			AddItemsToViewControl(hwndDlg, IDC_VIEW_COMBO);
 			LoadString(hApplet, IDS_APPLIST, Buf, sizeof(Buf) / sizeof(TCHAR));
 			AddListColumn(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),Buf);
-			FillSoftwareList(hwndDlg, FALSE);
+			FillSoftwareList(hwndDlg, FALSE, IDC_SOFTWARELIST);
+			InfoDialog = hwndDlg;
         break;
 
         case WM_COMMAND:
@@ -446,25 +541,26 @@ RemovePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case IDC_FIND_EDIT:
 					if (HIWORD(wParam) == EN_CHANGE)
 					{
-					    FindItems(hwndDlg);
+					    FindItems(hwndDlg,IDC_SOFTWARELIST,IDC_FIND_EDIT,IDC_ADDREMOVE,IDC_INFO_BUTTON);
 					}
 				break;
 				case ID_APP_MODIFYREMOVE:
                 case IDC_ADDREMOVE:
-                    CallUninstall(hwndDlg, IDC_SOFTWARELIST, FALSE);
+                    CallUninstall(hwndDlg, IDC_SOFTWARELIST, IDC_ADDREMOVE, IDC_INFO_BUTTON, FALSE);
                 break;
 				case ID_APP_INFORMATION:
 				case IDC_INFO_BUTTON:
+				{
+					if (IsItemSelected(hwndDlg, IDC_SOFTWARELIST))
 					DialogBox(hApplet,
 							  MAKEINTRESOURCE(IDD_INFORMATION),
 							  hwndDlg,
 							  InfoPropDlgProc);
+				}
 				break;
 				case IDC_VIEW_COMBO:
 					if (HIWORD(wParam) == CBN_SELCHANGE)
-					{
-						GetCurrentView(hwndDlg);
-					}
+						GetCurrentView(hwndDlg, IDC_VIEW_COMBO, IDC_SOFTWARELIST);
 				break;
             }
             break;
@@ -476,33 +572,18 @@ RemovePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					switch (((LPNMHDR)lParam)->code)
 					{
 						case NM_DBLCLK:
-							CallUninstall(hwndDlg, IDC_SOFTWARELIST, FALSE);
+							CallUninstall(hwndDlg, IDC_SOFTWARELIST, IDC_ADDREMOVE, IDC_INFO_BUTTON, FALSE);
 						break;
 						case NM_CLICK:
 						{
-							INT nIndex;
-							nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, IDC_SOFTWARELIST),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
-							if (nIndex == -1)
-							{
-								EnableWindow(GetDlgItem(hwndDlg, IDC_ADDREMOVE),FALSE);
-								EnableWindow(GetDlgItem(hwndDlg, IDC_INFO_BUTTON),FALSE);
-							}
+							if (!IsItemSelected(hwndDlg, IDC_SOFTWARELIST))
+								ButtonStatus(hwndDlg, FALSE, IDC_ADDREMOVE, IDC_INFO_BUTTON);
 							else
-							{
-								EnableWindow(GetDlgItem(hwndDlg, IDC_ADDREMOVE),TRUE);
-								EnableWindow(GetDlgItem(hwndDlg, IDC_INFO_BUTTON),TRUE);
-							}
+								ButtonStatus(hwndDlg, TRUE, IDC_ADDREMOVE, IDC_INFO_BUTTON);
 						}
 						break;
 					}
                 break;
-			}
-		}
-		break;
-		case WM_MENUSELECT:
-		{
-			switch((UINT)LOWORD(wParam))
-			{
 			}
 		}
 		break;
@@ -511,7 +592,8 @@ RemovePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShowPopupMenu(hwndDlg,
 						  IDR_POPUP_APP,
 						  GET_X_LPARAM(lParam),
-						  GET_Y_LPARAM(lParam));
+						  GET_Y_LPARAM(lParam),
+						  IDC_SOFTWARELIST);
 		}
 		break;
     }

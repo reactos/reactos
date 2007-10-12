@@ -44,32 +44,35 @@ extern HINSTANCE hApplet;
 INT_PTR CALLBACK
 RemovePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-INT_PTR CALLBACK
-InfoPropDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-
 VOID
 AddListColumn(HWND hList, LPTSTR Caption);
 
 VOID
-FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates);
+FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates, UINT Control);
 
 VOID
-AddItemsToViewControl(HWND hwndDlg);
+AddItemsToViewControl(HWND hwndDlg, UINT Control);
 
 VOID
-FindItems(HWND hwndDlg);
+FindItems(HWND hwndDlg, UINT ListControl, UINT EditControl, UINT RemBtn, UINT InfoBtn);
 
 VOID
-CallUninstall(HWND hwndDlg, UINT Control, BOOL isUpdate);
+CallUninstall(HWND hwndDlg, UINT Control, UINT RemBtn, UINT InfoBtn, BOOL isUpdate);
 
 VOID
-GetCurrentView(HWND hwndDlg);
+GetCurrentView(HWND hwndDlg, UINT ViewControl, UINT ListControl);
 
 VOID
-CallInformation(HWND hwndDlg);
+CallInformation(HWND hwndDlg, HWND infDlg, UINT Control);
 
 VOID
-ShowPopupMenu(HWND hwndDlg, UINT ResMenu, INT xPos, INT yPos);
+ShowPopupMenu(HWND hwndDlg, UINT ResMenu, INT xPos, INT yPos, UINT Control);
+
+BOOL
+IsItemSelected(HWND hwndDlg, UINT Control);
+
+VOID
+ButtonStatus(HWND hwndDlg, BOOL Status, UINT RemBtn, UINT InfoBtn);
 
 /* add.c */
 INT_PTR CALLBACK
