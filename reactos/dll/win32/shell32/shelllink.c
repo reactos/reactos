@@ -2595,6 +2595,7 @@ SH_ShellLinkDlgProc(
     IShellLinkImpl *This;
     HWND hDlgCtrl;
     WCHAR szBuffer[MAX_PATH];
+    WCHAR * ptr;
     int IconIndex;
     INT_PTR result;
 
@@ -2643,10 +2644,20 @@ SH_ShellLinkDlgProc(
             SendMessageW( hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)szBuffer);
             if ( !SHELL_ExistsFileW(szBuffer) )
             {
+                //FIXME load localized error msg
                 MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
                 SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
                 return TRUE;
             }
+            ptr = wcsrchr(szBuffer, L'.');
+            if (ptr && !wcsnicmp(ptr, L".lnk", 4))
+            {
+                // FIXME load localized error msg
+                MessageBoxW( hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR );
+                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                return TRUE;
+            }
+
             IShellLinkW_fnSetPath((IShellLinkW*)&This->lpvtblw, szBuffer);
 
             TRACE("This %p sLinkPath %S\n", This, This->sLinkPath);
