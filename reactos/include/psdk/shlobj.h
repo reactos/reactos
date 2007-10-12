@@ -65,6 +65,7 @@ int          WINAPI SHMapPIDLToSystemImageListIndex(IShellFolder*,LPCITEMIDLIST,
 HRESULT      WINAPI SHStartNetConnectionDialog(HWND,LPCSTR,DWORD);
 VOID         WINAPI SHUpdateImageA(LPCSTR,INT,UINT,INT);
 VOID         WINAPI SHUpdateImageW(LPCWSTR,INT,UINT,INT);
+INT          WINAPI PickIconDlg(HWND,LPWSTR,UINT,int *);
 #define             SHUpdateImage WINELIB_NAME_AW(SHUpdateImage)
 int          WINAPI RestartDialog(HWND,LPCWSTR,DWORD);
 int          WINAPI RestartDialogEx(HWND,LPCWSTR,DWORD,DWORD);
