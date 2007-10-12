@@ -49,6 +49,7 @@
   51 stdcall PathResolve(str long long) PathResolveAW
   52 stdcall -noname PathGetArgs(str) PathGetArgsAW
   53 stdcall DoEnvironmentSubst(long long) DoEnvironmentSubstAW
+  54 stdcall -noname LogoffWindowsDialog(ptr)
   55 stdcall -noname PathQuoteSpaces(ptr) PathQuoteSpacesAW
   56 stdcall -noname PathUnquoteSpaces(str) PathUnquoteSpacesAW
   57 stdcall -noname PathGetDriveNumber(str) PathGetDriveNumberAW

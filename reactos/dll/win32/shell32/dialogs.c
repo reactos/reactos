@@ -406,6 +406,16 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
     return 0;
 }
 
+/************************************************************************* 	 
+ * LogoffWindowsDialog                          [SHELL32.54] 	 
+ */ 	 
+               
+int WINAPI LogoffWindowsDialog(DWORD uFlags) 	 
+{ 	 
+   ERR("LogoffWindowsDialog is UNIMPLEMENTED\n"); 	 
+   ExitWindowsEx(EWX_LOGOFF, 0); 	 
+   return 0; 	 
+}
 
 /*************************************************************************
  * RestartDialog				[SHELL32.59]
