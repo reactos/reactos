@@ -84,12 +84,6 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
  * Shell Common Dialogs
  */
 
-BOOL WINAPI PickIconDlg(
-	HWND hwndOwner,
-	LPSTR lpstrFile,
-	DWORD nMaxFile,
-	LPDWORD lpdwIconIndex);
-
 /* RunFileDlg flags */
 #define RFF_NOBROWSE       0x01
 #define RFF_NODEFAULT      0x02

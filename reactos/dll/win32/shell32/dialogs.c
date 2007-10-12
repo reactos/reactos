@@ -62,9 +62,9 @@ static void FillList (HWND, char *) ;
  */
 BOOL WINAPI PickIconDlg(
 	HWND hwndOwner,
-	LPSTR lpstrFile,
-	DWORD nMaxFile,
-	LPDWORD lpdwIconIndex)
+	LPWSTR lpstrFile,
+	UINT nMaxFile,
+	INT* lpdwIconIndex)
 {
 	FIXME("(%p,%s,%08x,%p):stub.\n",
 	  hwndOwner, lpstrFile, nMaxFile,lpdwIconIndex);
