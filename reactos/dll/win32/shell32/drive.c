@@ -420,7 +420,7 @@ SH_ShowDriveProperties(WCHAR * drive)
 
    for (i = 0; i < DRIVE_PROPERTY_PAGES; i++)
    {
-       HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive);
+       HPROPSHEETPAGE hprop = SH_CreatePropertySheetPage(PropPages[i].resname, PropPages[i].dlgproc, (LPARAM)drive, NULL);
        if (hprop)
        {
           hpsp[psh.nPages] = hprop;

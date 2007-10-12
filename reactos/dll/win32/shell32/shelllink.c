@@ -2716,13 +2716,13 @@ ShellLink_ShowProperties( IShellLinkImpl *This )
 
     memset(hppages, 0x0, sizeof(HPROPSHEETPAGE) * MAX_PROPERTY_SHEET_PAGE);
 
-    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)This->sLinkPath);
+    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)This->sLinkPath, NULL);
     if ( hpage == NULL )
         return E_FAIL;
     else
         hppages[numpages++] = hpage;
 
-	hpage = SH_CreatePropertySheetPage("SHELL_GENERAL_SHORTCUT_DLG", SH_ShellLinkDlgProc, (LPARAM)This);
+	hpage = SH_CreatePropertySheetPage("SHELL_GENERAL_SHORTCUT_DLG", SH_ShellLinkDlgProc, (LPARAM)This, NULL);
 	if ( hpage == NULL )
     {
         ERR("SH_CreatePropertySheetPage failed\n");
