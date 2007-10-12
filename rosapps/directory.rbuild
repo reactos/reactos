@@ -112,4 +112,8 @@
 	<directory name="winver">
 		<xi:include href="winver/winver.rbuild" />
 	</directory>
+
+	<directory name="write">
+		<xi:include href="write/write.rbuild" />
+	</directory>
 </group>

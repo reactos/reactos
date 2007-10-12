@@ -509,6 +509,7 @@ modules\rosapps\templates\dialog.exe                1   optional
 modules\rosapps\templates\mdi.exe                   1   optional
 modules\rosapps\winefile\winefile.exe               1   optional
 modules\rosapps\winver\winver.exe                   1   optional
+modules\rosapps\write\write.exe                     1   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe   7   optional
 modules\rostests\winetests\cabinet\cabinet_winetest.exe     7   optional
 modules\rostests\winetests\comctl32\comctl32_winetest.exe   7   optional
