@@ -409,21 +409,20 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
 /*************************************************************************
  * NTSHChangeNotifyRegister			[SHELL32.640]
  * NOTES
- *   Idlist is an array of structures and Count specifies how many items in the array
- *   (usually just one I think).
+ *   Idlist is an array of structures and Count specifies how many items in the array.
+ *   count should always be one when calling SHChangeNotifyRegister, or
+ *   SHChangeNotifyDeregister will not work properly.
  */
-DWORD WINAPI NTSHChangeNotifyRegister(
+ULONG WINAPI NTSHChangeNotifyRegister(
     HWND hwnd,
-    LONG events1,
-    LONG events2,
-    DWORD msg,
+    int fSources,
+    LONG fEvents,
+    UINT msg,
     int count,
     SHChangeNotifyEntry *idlist)
 {
-    FIXME("(%p,0x%08x,0x%08x,0x%08x,0x%08x,%p):semi stub.\n",
-		hwnd,events1,events2,msg,count,idlist);
-
-    return (DWORD) SHChangeNotifyRegister(hwnd, events1, events2, msg, count, idlist);
+    return SHChangeNotifyRegister(hwnd, fSources | SHCNRF_NewDelivery,
+                                  fEvents, msg, count, idlist);
 }
 
 /*************************************************************************
