@@ -324,7 +324,7 @@ CreateLogoffSecurityAttributes(
 #else
 	/* The following code is no only incomplete, it's a mess and uncompilable */
 	/* Still, it gives some ideas about data types and functions involved and */
-	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES 
+	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES */ 
 	/* instance for a thread, to allow that  thread to ImpersonateLoggedOnUser(). */
 	/* Specifically THREAD_SET_THREAD_TOKEN is required. */
 	PSECURITY_DESCRIPTOR psd = 0;
