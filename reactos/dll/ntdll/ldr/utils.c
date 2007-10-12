@@ -753,6 +753,9 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
       RtlLeaveCriticalSection(Peb->LoaderLock);
     }
 
+ if ((!Module) && (NT_SUCCESS(Status)))
+    return Status;
+
   *BaseAddress = NT_SUCCESS(Status) ? Module->DllBase : NULL;
 
   return Status;
