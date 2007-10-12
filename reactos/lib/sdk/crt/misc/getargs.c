@@ -192,7 +192,18 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
    ignorespace = 0;
    doexpand = expand_wildcards;
 
+   if (__argv && _environ)
+   {
+      *argv = __argv;
+      *env = _environ;
+      *argc = __argc;
+      return;
+   }
+
+   __argc = 0;
+
    len = strlen(_acmdln);
+
 
    while (_acmdln[i])
    {
@@ -261,6 +272,16 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
    afterlastspace = 0;
    ignorespace = 0;
    doexpand = expand_wildcards;
+
+   if (__wargv && __winitenv)
+   {
+      *wargv = __wargv;
+      *wenv = __winitenv;
+      *argc = __argc;
+      return;
+   }
+
+   __argc = 0;
 
    len = wcslen(_wcmdln);
 
