@@ -599,3 +599,50 @@ static const IContextMenu2Vtbl cmvt =
 	ISvItemCm_fnGetCommandString,
 	ISvItemCm_fnHandleMenuMsg
 };
+
+/*************************************************************************
+ * SHCreateDefaultContextMenu			[SHELL32.325] Vista API
+ *
+ */
+
+HRESULT SHCreateDefaultContextMenu(      
+	const DEFCONTEXTMENU *pdcm,
+	REFIID riid,
+	void **ppv)
+{
+
+
+
+   return E_FAIL;
+}
+
+/*************************************************************************
+ * CDefFolderMenu_Create2			[SHELL32.701]
+ *
+ */
+
+INT CDefFolderMenu_Create2(
+	LPCITEMIDLIST pidlFolder,
+	HWND hwnd,
+	UINT cidl,
+	LPCITEMIDLIST *apidl,
+	IShellFolder *psf,
+	LPFNDFMCALLBACK lpfn,
+	UINT nKeys,
+	HKEY *ahkeyClsKeys,
+	IContextMenu **ppcm)
+{
+   DEFCONTEXTMENU pdcm;
+
+   pdcm.hwnd = hwnd;
+   pdcm.pcmcb = NULL; //FIXME
+   pdcm.pidlFolder = pidlFolder;
+   pdcm.psf = psf;
+   pdcm.cidl = cidl;
+   pdcm.apidl = apidl;
+   pdcm.punkAssociationInfo = NULL;
+   pdcm.cKeys = nKeys;
+   pdcm.aKeys = ahkeyClsKeys;
+
+   return SHCreateDefaultContextMenu(&pdcm, &IID_IContextMenu, (void**)ppcm);
+}
