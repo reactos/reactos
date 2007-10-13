@@ -38,6 +38,7 @@
 static const LPSTR EVENT_SOURCE_APPLICATION	= "Application";
 static const LPSTR EVENT_SOURCE_SECURITY	= "Security";
 static const LPSTR EVENT_SOURCE_SYSTEM		= "System";
+static const TCHAR szWindowClass[] = _T("EVENTVWR");			// the main window class name
 
 //MessageFile message buffer size
 #define EVENT_MESSAGE_FILE_BUFFER			1024*10      
@@ -51,7 +52,6 @@ static const LPSTR EVENT_SOURCE_SYSTEM		= "System";
 // Global Variables:
 HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 
 // Globals
 HWND hwndMainWindow;         // Main window
@@ -90,7 +90,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_EVENTVWR, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization:

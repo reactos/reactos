@@ -1,50 +1,10 @@
-// Microsoft Visual C++ generated resource script.
-//
-#include "resource.h"
-
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-#define APSTUDIO_HIDDEN_SYMBOLS
-#include "windows.h"
-#undef APSTUDIO_HIDDEN_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
-
-/////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
-#endif //_WIN32
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_EVENTVWR            ICON                    "res\\eventvwr.ico"
-IDI_WARNINGICON         ICON                    "res\\warning.ico"
-IDI_INFORMATIONICON     ICON                    "res\\info.ico"
-IDI_ERRORICON           ICON                    "res\\error.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
 
 IDC_EVENTVWR MENU 
 BEGIN
     POPUP "&Log"
     BEGIN
-        MENUITEM "&Aplication",                 ID_LOG_APPLICATION, CHECKED
+        MENUITEM "&Application",                ID_LOG_APPLICATION, CHECKED
         MENUITEM "&Security",                   ID_LOG_SECURITY
         MENUITEM "&System",                     ID_LOG_SYSTEM
         MENUITEM SEPARATOR
@@ -54,32 +14,20 @@ BEGIN
     BEGIN
         MENUITEM "&Refresh",                    IDM_REFRESH
     END
-    MENUITEM "&Options",                    ID_OPTIONS
+    MENUITEM "&Options",                        ID_OPTIONS
     POPUP "&Help"
     BEGIN
         MENUITEM "H&elp",                       IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About ...",                  IDM_ABOUT
+        MENUITEM "&About...",                   IDM_ABOUT
     END
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
 
 IDC_EVENTVWR ACCELERATORS 
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
@@ -134,78 +82,8 @@ BEGIN
     CONTROL         "&Word",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
 END
 
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "#include ""windows.h""\r\n"
-    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
-BEGIN
-    IDD_EVENTDETAILDIALOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 269
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 275
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE				"Event Viewer"
-    IDC_EVENTVWR				"EVENTVWR"
-	IDC_EVENTSTRINGIDNOTFOUND	"The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
+    IDS_APP_TITLE				      "Event Viewer"
+  	IDC_EVENTSTRINGIDNOTFOUND	"The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
 END
-
-#endif    // English (U.S.) resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

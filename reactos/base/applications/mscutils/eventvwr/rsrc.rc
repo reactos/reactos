@@ -3,4 +3,10 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+// Shared icons
+IDI_EVENTVWR            ICON  "res/eventvwr.ico"
+IDI_WARNINGICON         ICON  "res/warning.ico"
+IDI_INFORMATIONICON     ICON  "res/info.ico"
+IDI_ERRORICON           ICON  "res/error.ico"
+
 #include "lang/en-US.rc"
