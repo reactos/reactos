@@ -465,6 +465,11 @@ MmCreateTeb(PEPROCESS Process,
         Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
     }
 
+    /* Initialize the static unicode string */
+    Teb->StaticUnicodeString.Length = 0;
+    Teb->StaticUnicodeString.MaximumLength = sizeof(Teb->StaticUnicodeBuffer);
+    Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
+
     /* Return TEB Address */
     DPRINT("Allocated: %x\n", Teb);
     if (Attached) KeDetachProcess();

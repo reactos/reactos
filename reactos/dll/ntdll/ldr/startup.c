@@ -377,11 +377,6 @@ LdrpInit(PCONTEXT Context,
        /* Load execution options */
        LoadImageFileExecutionOptions(Peb);
 
-       /* Initialize the static teb string */
-       NtCurrentTeb()->StaticUnicodeString.Length = 0;
-       NtCurrentTeb()->StaticUnicodeString.MaximumLength = sizeof(NtCurrentTeb()->StaticUnicodeBuffer);
-       NtCurrentTeb()->StaticUnicodeString.Buffer = NtCurrentTeb()->StaticUnicodeBuffer;
-
        /* build full ntdll path */
        wcscpy (FullNtDllPath, SharedUserData->NtSystemRoot);
        wcscat (FullNtDllPath, L"\\system32\\ntdll.dll");
