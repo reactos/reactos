@@ -2399,7 +2399,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     return  NULL;
   }
 
-  DC_AllocateDcAttr(hDC, NULL);
+  DC_AllocateDcAttr(hDC);
 
   NewDC = DC_LockDc(hDC);
   /* FIXME - Handle NewDC == NULL! */
@@ -2482,14 +2482,12 @@ DC_InitDC(HDC  DCHandle)
 
 VOID
 FASTCALL
-DC_AllocateDcAttr(HDC hDC, PEPROCESS Owner)
+DC_AllocateDcAttr(HDC hDC)
 {
-//#if 0
   PVOID NewMem = NULL;
   HANDLE Pid = NtCurrentProcess();
   ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE it will allocate that size
 
-  if(Owner) Pid = PsGetProcessId(Owner);
   NTSTATUS Status = ZwAllocateVirtualMemory(Pid,
                                         &NewMem,
                                               0,
@@ -2519,19 +2517,17 @@ DC_AllocateDcAttr(HDC hDC, PEPROCESS Owner)
      pDC->pDc_Attr = NewMem; // Store pointer
   }
   DC_UnlockDc(pDC);
-//#endif  
 }
 
 VOID
 FASTCALL
-DC_FreeDcAttr(HDC  DCToFree,  PEPROCESS Owner)
+DC_FreeDcAttr(HDC  DCToFree )
 {
   HANDLE Pid = NtCurrentProcess();
   PDC pDC = DC_LockDc(DCToFree);
   if (pDC->pDc_Attr == &pDC->Dc_Attr) return; // Internal DC object!
   pDC->pDc_Attr = NULL;
   DC_UnlockDc(pDC);
-  if(Owner) Pid = PsGetProcessId(Owner);
 
   KeEnterCriticalRegion();
   {
@@ -2557,9 +2553,8 @@ DC_FreeDcAttr(HDC  DCToFree,  PEPROCESS Owner)
 VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
-//#if 0
-  DC_FreeDcAttr(DCToFree, NULL);
-//#endif
+  DC_FreeDcAttr(DCToFree);
+
   if (!GDIOBJ_FreeObj(GdiHandleTable, DCToFree, GDI_OBJECT_TYPE_DC))
   {
     DPRINT("DC_FreeDC failed\n");

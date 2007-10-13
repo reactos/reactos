@@ -320,7 +320,6 @@ HGDIOBJ
 STDCALL
 GetDCObject( HDC hDC, INT iType)
 {
-#if 0
  if((iType == GDI_OBJECT_TYPE_BRUSH) ||
     (iType == GDI_OBJECT_TYPE_EXTPEN)||
     (iType == GDI_OBJECT_TYPE_PEN)   ||
@@ -348,7 +347,6 @@ GetDCObject( HDC hDC, INT iType)
    }   
    return hGO;
  }
-#endif
  return NtGdiGetDCObject( hDC, iType );
 }
 

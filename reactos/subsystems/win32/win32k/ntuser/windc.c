@@ -153,6 +153,8 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
      }
     else
     {
+       DPRINT("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
+       DC_FreeDcAttr(pDce->hDC);         // Free the dcattr!
        DC_SetOwnership(pDce->hDC, NULL); // This hDC is inaccessible!
     }
   
@@ -267,6 +269,10 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          dce->DCXFlags |= DCX_DCEEMPTY;
        }
      }
+     DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
+     DC_FreeDcAttr(dce->hDC);         // Free the dcattr.
+     DC_SetOwnership(dce->hDC, NULL); // Set hDC inaccessible mode.
+     dce->pProcess = NULL;            // Reset ownership.
    }
    return 1;
 }
@@ -543,6 +549,15 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       DceUpdateVisRgn(Dce, Window, Flags);
    }
 
+   if (Dce->DCXFlags & DCX_CACHE)
+   {
+      DPRINT("ENTER!!!!!! DCX_CACHE!!!!!!   hDC-> %x\n", Dce->hDC);
+      // Need to set ownership so Sync dcattr will work.
+      DC_SetOwnership( Dce->hDC, PsGetCurrentProcess());
+      DC_AllocateDcAttr( Dce->hDC );         // Allocate new dcattr
+      DCU_SynchDcAttrtoUser( Dce->hDC, -1);  // Copy data from dc to dcattr
+      Dce->pProcess = PsGetCurrentProcess(); // Set the temp owning process
+   }
    return(Dce->hDC);
 }
 
