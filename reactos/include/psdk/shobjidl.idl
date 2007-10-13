@@ -1326,3 +1326,24 @@ interface IFileSystemBindData : IUnknown
     HRESULT GetFindData(
                 [out] WIN32_FIND_DATAW *pfd);
 }
+
+/*****************************************************************************
+ * IContextMenuCB interface
+ */
+
+[
+    object,
+    uuid(3409e930-5a39-11d1-83fa-00a0c90dc849),
+    pointer_default(unique)
+]
+interface IContextMenuCB : IUnknown
+{
+    HRESULT CallBack( 
+                [in] IShellFolder *psf,
+                [in] HWND hwndOwner,
+                [in] IDataObject *pdtobj,
+                [in] UINT uMsg,
+                [in] WPARAM wParam,
+                [in] LPARAM lParam);
+
+}

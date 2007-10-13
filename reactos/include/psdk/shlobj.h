@@ -1372,6 +1372,28 @@ HRESULT      WINAPI ILSaveToStream(LPSTREAM,LPCITEMIDLIST);
 
 #include <poppack.h>
 
+/****************************************************************************
+ * SHCreateDefaultContextMenu API
+ */
+
+typedef struct 
+{
+  HWND hwnd;
+  IContextMenuCB *pcmcb;
+  LPCITEMIDLIST pidlFolder;
+  IShellFolder *psf;
+  UINT cidl;
+  LPCITEMIDLIST* apidl;
+  IUnknown *punkAssociationInfo;
+  UINT cKeys;
+  const HKEY *aKeys;
+}DEFCONTEXTMENU;
+
+HRESULT SHCreateDefaultContextMenu(const DEFCONTEXTMENU *,REFIID,void **ppv);
+
+typedef HRESULT (CALLBACK * LPFNDFMCALLBACK)(IShellFolder*,HWND,IDataObject*,UINT,WPARAM,LPARAM);
+INT CDefFolderMenu_Create2(LPCITEMIDLIST,HWND,UINT,LPCITEMIDLIST*,IShellFolder*,LPFNDFMCALLBACK,UINT,HKEY *,IContextMenu **);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
