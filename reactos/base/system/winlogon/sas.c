@@ -318,7 +318,7 @@ CreateLogoffSecurityAttributes(
 	OUT PSECURITY_ATTRIBUTES* ppsa)
 {
 #if 1
-	DPRINT1("CreateSecurityAttributes needs implementation!\n");
+	DPRINT1("CreateLogoffSecurityAttributes needs implementation!\n");
 	*ppsa = 0;
 	return STATUS_UNSUCCESSFUL;
 #else
@@ -329,21 +329,55 @@ CreateLogoffSecurityAttributes(
 	/* Specifically THREAD_SET_THREAD_TOKEN is required. */
 	PSECURITY_DESCRIPTOR psd = 0;
 	PSECURITY_ATTRIBUTES psa = 0;
-	ACL rgAcls[2];
+	BYTE* pMem;
+	PACL pACL;
 	EXPLICIT_ACCESS ea[2];
 
+	*ppsa = NULL;
+
+	// Let's first try to enumerate what kind of data we need for this to ever work:
+	// 1.  The Winlogon SID, to be able to give it THREAD_SET_THREAD_TOKEN.
+	// 2.  The users SID (the user trying to logoff, or rather shut down the system).
+	// 3.  At least two EXPLICIT_ACCESS instances:
+	// 3.1 One for Winlogon itself, giving it the rights
+	//     required to THREAD_SET_THREAD_TOKEN (as it's needed to successfully call
+	//     ImpersonateLoggedOnUser).
+	// 3.2 One for the user, to allow *that* thread to perform its work.
+	// 4.  An ACL to hold the these EXPLICIT_ACCESS ACE's.
+	// 5.  A SECURITY_DESCRIPTOR to hold the ACL, and finally.
+	// 6.  A SECURITY_ATTRIBUTES instance to pull all of this required stuff
+	//     together, to hand it to CreateThread.
+	//
+	// However, it seems struct LOGOFF_SHUTDOWN_DATA doesn't contain
+	// these required SID's, why they'd have to be added.
+	// The Winlogon's own SID should probably only be created once,
+	// while the user's SID obviously must be created for each new user.
+	// Might as well store it when the user logs on?
+
 	/* set up the required security attributes to be able to shut down */
-	psd = HeapAlloc(GetProcessHeap(), 0, SECURITY_DESCRIPTOR_MIN_LENGTH);
-	psa = HeapAlloc(GetProcessHeap(), 0, sizeof(SECURITY_ATTRIBUTES));
-	if (!psd || !psa)
+	/* To save space and time, allocate a single block of memory holding */
+	/* both SECURITY_ATTRIBUTES and SECURITY_DESCRIPTOR */
+	pMem = HeapAlloc(GetProcessHeap(),
+	                 0,
+	                 sizeof(SECURITY_ATTRIBUTES) +
+	                 SECURITY_DESCRIPTOR_MIN_LENGTH +
+	                 sizeof(ACL));
+	if (!pMem)
 	{
-		DPRINT("Failed to allocate memory for a security descriptor!\n");
+		DPRINT("Failed to allocate memory for logoff security descriptor!\n");
 		return STATUS_NO_MEMORY;
 	}
 
+	/* Note that the security descriptor needs to be in _absolute_ format, */
+	/* meaning its members must be pointers to other structures, rather */
+	/* than the relative format using offsets */
+	psa = (PSECURITY_ATTRIBUTES)pMem;
+	psd = (PSECURITY_DESCRIPTOR)(pMem + sizeof(SECURITY_ATTRIBUTES));
+	pACL = (PACL)(((PBYTE)psd) + SECURITY_DESCRIPTOR_MIN_LENGTH);
+
 	if (!InitializeSecurityDescriptor(psd, SECURITY_DESCRIPTOR_REVISION))
 	{
-		HeapFree(GetProcessHeap(), 0, psd);
+		HeapFree(GetProcessHeap(), 0, pMem);
 		DPRINT("Failed to initialize security descriptor for logoff thread!\n");
 		return STATUS_UNSUCCESSFUL;
 	}
@@ -351,11 +385,11 @@ CreateLogoffSecurityAttributes(
 	// Initialize an EXPLICIT_ACCESS structure for an ACE.
 	// The ACE will allow this thread to log off (and shut down the system, currently).
 	ZeroMemory(ea, sizeof(ea));
-	ea[0].grfAccessPermissions = KEY_READ;
-	ea[0].grfAccessMode = SET_ACCESS;
+	ea[0].grfAccessPermissions = THREAD_SET_THREAD_TOKEN;
+	ea[0].grfAccessMode = SET_ACCESS; // GRANT_ACCESS?
 	ea[0].grfInheritance= NO_INHERITANCE;
 	ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
-	ea[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+	ea[0].Trustee.TrusteeType = TRUSTEE_IS_USER;
 	ea[0].Trustee.ptstrName  = (LPTSTR) pEveryoneSID;
 
 	if (!SetSecurityDescriptorDacl(pSD, 
@@ -364,7 +398,7 @@ CreateLogoffSecurityAttributes(
 	        FALSE))   // not a default DACL 
 	{
 		DPRINT("SetSecurityDescriptorDacl Error %u\n", GetLastError());
-		HeapFree(GetProcessHeap(), 0, psd);
+		HeapFree(GetProcessHeap(), 0, pMem);
 		return STATUS_UNSUCCESSFUL;
 	}
 
@@ -378,13 +412,12 @@ CreateLogoffSecurityAttributes(
 #endif
 }
 
-static void
+static VOID
 DestroyLogoffSecurityAttributes(
 	IN PSECURITY_ATTRIBUTES psa)
 {
 	if (psa)
 	{
-		HeapFree(GetProcessHeap(), 0, psa->lpSecurityDescriptor);
 		HeapFree(GetProcessHeap(), 0, psa);
 	}
 }
