@@ -1,0 +1,211 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_EVENTVWR            ICON                    "res\\eventvwr.ico"
+IDI_WARNINGICON         ICON                    "res\\warning.ico"
+IDI_INFORMATIONICON     ICON                    "res\\info.ico"
+IDI_ERRORICON           ICON                    "res\\error.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_EVENTVWR MENU 
+BEGIN
+    POPUP "&Log"
+    BEGIN
+        MENUITEM "&Aplication",                 ID_LOG_APPLICATION, CHECKED
+        MENUITEM "&Security",                   ID_LOG_SECURITY
+        MENUITEM "&System",                     ID_LOG_SYSTEM
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Refresh",                    IDM_REFRESH
+    END
+    MENUITEM "&Options",                    ID_OPTIONS
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "H&elp",                       IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About ...",                  IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_EVENTVWR ACCELERATORS 
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
+    LTEXT           "ReactOS Event Viewer Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
+    DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
+END
+
+IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER 
+CAPTION "Wait.."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Loading Event Logs. Please wait ...",IDC_STATIC,49,15,119,8,SS_NOPREFIX
+END
+
+IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Event Detail"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Close",IDOK,12,258,50,14
+    PUSHBUTTON      "&Previous",IDPREVIOUS,78,258,50,14
+    PUSHBUTTON      "&Next",IDNEXT,144,258,50,14
+    PUSHBUTTON      "&Help",IDHELP,210,258,50,14
+    EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
+    LTEXT           "&Description:",IDC_STATIC,15,70,39,8
+    LTEXT           "Date:",IDC_STATIC,14,14,36,8
+    LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
+    LTEXT           "Time:",IDC_STATIC,14,27,36,8
+    LTEXT           "Static",IDC_EVENTTIMESTATIC,56,27,72,8
+    LTEXT           "&User:",IDC_STATIC,14,41,36,8
+    LTEXT           "Static",IDC_EVENTUSERSTATIC,56,41,72,8
+    LTEXT           "&Computer:",IDC_STATIC,14,54,36,8
+    LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
+    LTEXT           "EventID :",IDC_STATIC,133,15,36,8
+    LTEXT           "Static",IDC_EVENTIDSTATIC,175,15,87,8
+    LTEXT           "Source:",IDC_STATIC,133,28,36,8
+    LTEXT           "Static",IDC_EVENTSOURCESTATIC,175,28,87,8
+    LTEXT           "Type:",IDC_STATIC,133,42,36,8
+    LTEXT           "Static",IDC_EVENTTYPESTATIC,175,42,87,8
+    LTEXT           "Category:",IDC_STATIC,133,55,36,8
+    LTEXT           "Static",IDC_EVENTCATEGORYSTATIC,175,55,87,8
+    EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
+    LTEXT           "D&ata",IDC_STATIC,14,194,16,8
+    CONTROL         "&Bytes",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
+    CONTROL         "&Word",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_EVENTDETAILDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 275
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE				"Event Viewer"
+    IDC_EVENTVWR				"EVENTVWR"
+	IDC_EVENTSTRINGIDNOTFOUND	"The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
