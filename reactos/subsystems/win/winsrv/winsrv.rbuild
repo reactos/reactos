@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="winsrv" type="win32dll" entrypoint="0">
+<module name="winsrv" type="win32dll">
 	<importlibrary definition="winsrv.def" />
 	<include base="winsrv">.</include>
 	<include base="csr">include</include>

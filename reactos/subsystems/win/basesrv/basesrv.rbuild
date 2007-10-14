@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="basesrv" type="win32dll" entrypoint="0">
+<module name="basesrv" type="win32dll">
 	<importlibrary definition="basesrv.def" />
 	<include base="basesrv">.</include>
 	<include base="csr">include</include>
