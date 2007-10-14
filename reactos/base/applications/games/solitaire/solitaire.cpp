@@ -169,8 +169,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
                 ,//|WS_CLIPCHILDREN,      // window style
                 CW_USEDEFAULT,            // initial x position
                 CW_USEDEFAULT,            // initial y position
-                600,                      // initial x size
-                450,                      // initial y size
+                0,                        // The real size will be computed in WndProc through WM_GETMINMAXINFO
+                0,                        // The real size will be computed in WndProc through WM_GETMINMAXINFO
                 NULL,                     // parent window handle
                 NULL,                     // use window class menu
                 hInst,                    // program instance handle
@@ -255,11 +255,17 @@ VOID ShowGameOptionsDlg(HWND hwnd)
 
             if (dwOptions & OPTION_SHOW_STATUS)
             {
+                RECT rc;
+
                 ShowWindow(hwndStatus, SW_SHOW);
                 GetWindowRect(hwndStatus, &rcStatus);
                 nStatusHeight = rcStatus.bottom - rcStatus.top;
                 MoveWindow(SolWnd, 0, 0, nWidth, nHeight-nStatusHeight, TRUE);
                 MoveWindow(hwndStatus, 0, nHeight-nStatusHeight, nWidth, nHeight, TRUE);
+
+                // Force the window to process WM_GETMINMAXINFO again
+                GetWindowRect(hwndMain, &rc);
+                SetWindowPos(hwndMain, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
             }
             else
             {
@@ -443,110 +449,127 @@ VOID ShowDeckOptionsDlg(HWND hwnd)
 //-----------------------------------------------------------------------------
 LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-    static int nWidth, nHeight;
-    int parts[] = { 100, -1 };
-    int ret;
-    RECT rc;
-    int nStatusHeight = 0;
-
-    MINMAXINFO *mmi;
+    static int nWidth, nHeight, nStatusHeight;
 
     switch(iMsg)
     {
-    case WM_CREATE:
-        hwndStatus = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, _T("Ready"), hwnd, 0);
-
-        //SendMessage(hwndStatus, SB_SIMPLE, (WPARAM)TRUE, 0);
-
-        SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
-        SendMessage(hwndStatus, SB_SETTEXT, 0 | SBT_NOBORDERS, (LPARAM)"");
-
-        SolWnd.Create(hwnd, WS_EX_CLIENTEDGE, WS_CHILD|WS_VISIBLE, 0, 0, 0, 0);
-
-        CreateSol();
-
-        NewGame();
-
-        dwAppStartTime = GetTickCount();
-
-        return 0;
-
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-
-    case WM_SIZE:
-        nWidth  = LOWORD(lParam);
-        nHeight = HIWORD(lParam);
-
-        if (dwOptions & OPTION_SHOW_STATUS)
+        case WM_CREATE:
         {
-            GetWindowRect(hwndStatus, &rc);
-            nStatusHeight = rc.bottom - rc.top;
-            MoveWindow(SolWnd, 0, 0, nWidth, nHeight-nStatusHeight, TRUE);
-            MoveWindow(hwndStatus, 0, nHeight-nStatusHeight, nWidth, nHeight, TRUE);
-        }
-        else
-        {
-            MoveWindow(SolWnd, 0, 0, nWidth, nHeight, TRUE);
-        }
-        //parts[0] = nWidth - 256;
-        //SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
-        return 0;
+            int parts[] = { 100, -1 };
+            RECT rcStatus;
 
-    case WM_GETMINMAXINFO:
-        mmi = (MINMAXINFO *)lParam;
-        mmi->ptMinTrackSize.x = 600;
-        mmi->ptMinTrackSize.y = 400;
-        return 0;
+            hwndStatus = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, _T("Ready"), hwnd, 0);
 
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case IDM_GAME_NEW:
-            //simulate a button click on the new button..
+            //SendMessage(hwndStatus, SB_SIMPLE, (WPARAM)TRUE, 0);
+
+            SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
+            SendMessage(hwndStatus, SB_SETTEXT, 0 | SBT_NOBORDERS, (LPARAM)"");
+
+            // The status bar height is fixed and needed later in WM_SIZE and WM_GETMINMAXINFO
+            // Force the window to process WM_GETMINMAXINFO again
+            GetWindowRect(hwndStatus, &rcStatus);
+            nStatusHeight = rcStatus.bottom - rcStatus.top;
+            SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOZORDER);
+
+            SolWnd.Create(hwnd, WS_EX_CLIENTEDGE, WS_CHILD|WS_VISIBLE, 0, 0, 0, 0);
+
+            CreateSol();
+
             NewGame();
-            return 0;
 
-        case IDM_GAME_DECK:
-            ShowDeckOptionsDlg(hwnd);
-            return 0;
+            dwAppStartTime = GetTickCount();
 
-        case IDM_GAME_OPTIONS:
-            ShowGameOptionsDlg(hwnd);
-            return 0;
-
-        case IDM_HELP_CONTENTS:
-            WinHelp(hwnd, szHelpPath, HELP_CONTENTS, 0);//HELP_KEY, (DWORD)"How to play");
-            return 0;
-
-        case IDM_HELP_ABOUT:
-            MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
-            return 0;
-
-        case IDM_GAME_EXIT:
-            PostMessage(hwnd, WM_CLOSE, 0, 0);
             return 0;
         }
 
-        return 0;
-
-    case WM_CLOSE:
-        if (fGameStarted == false)
-        {
-            DestroyWindow(hwnd);
+        case WM_DESTROY:
+            PostQuitMessage(0);
             return 0;
-        }
-        else
-        {
-            ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
-            if (ret == IDOK)
+
+        case WM_SIZE:
+            nWidth  = LOWORD(lParam);
+            nHeight = HIWORD(lParam);
+
+            if (dwOptions & OPTION_SHOW_STATUS)
             {
-                WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);
-                DestroyWindow(hwnd);
+                MoveWindow(SolWnd, 0, 0, nWidth, nHeight - nStatusHeight, TRUE);
+                MoveWindow(hwndStatus, 0, nHeight - nStatusHeight, nWidth, nHeight, TRUE);
             }
+            else
+            {
+                MoveWindow(SolWnd, 0, 0, nWidth, nHeight, TRUE);
+            }
+            //parts[0] = nWidth - 256;
+            //SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
+            return 0;
+
+        case WM_GETMINMAXINFO:
+        {
+            MINMAXINFO *mmi;
+
+            mmi = (MINMAXINFO *)lParam;
+            mmi->ptMinTrackSize.x = X_BORDER + NUM_ROW_STACKS * (__cardwidth + X_ROWSTACK_BORDER) + X_BORDER;
+            mmi->ptMinTrackSize.y = GetSystemMetrics(SM_CYCAPTION) +
+                                    GetSystemMetrics(SM_CYMENU) +
+                                    Y_BORDER +
+                                    __cardheight +
+                                    Y_ROWSTACK_BORDER +
+                                    6 * Y_ROWSTACK_CARDOFFSET +
+                                    __cardheight +
+                                    Y_BORDER +
+                                    (dwOptions & OPTION_SHOW_STATUS ? nStatusHeight : 0);
+            return 0;
         }
-        return 0;
+
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+            case IDM_GAME_NEW:
+                //simulate a button click on the new button..
+                NewGame();
+                return 0;
+
+            case IDM_GAME_DECK:
+                ShowDeckOptionsDlg(hwnd);
+                return 0;
+
+            case IDM_GAME_OPTIONS:
+                ShowGameOptionsDlg(hwnd);
+                return 0;
+
+            case IDM_HELP_CONTENTS:
+                WinHelp(hwnd, szHelpPath, HELP_CONTENTS, 0);//HELP_KEY, (DWORD)"How to play");
+                return 0;
+
+            case IDM_HELP_ABOUT:
+                MessageBox(hwnd, MsgAbout, szAppName, MB_OK|MB_ICONINFORMATION);
+                return 0;
+
+            case IDM_GAME_EXIT:
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
+                return 0;
+            }
+
+            return 0;
+
+        case WM_CLOSE:
+            if (fGameStarted == false)
+            {
+                DestroyWindow(hwnd);
+                return 0;
+            }
+            else
+            {
+                int ret;
+
+                ret = MessageBox(hwnd, MsgQuit, szAppName, MB_OKCANCEL|MB_ICONQUESTION);
+                if (ret == IDOK)
+                {
+                    WinHelp(hwnd, szHelpPath, HELP_QUIT, 0);
+                    DestroyWindow(hwnd);
+                }
+            }
+            return 0;
     }
 
     return DefWindowProc (hwnd, iMsg, wParam, lParam);

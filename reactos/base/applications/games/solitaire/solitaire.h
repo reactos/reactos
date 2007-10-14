@@ -17,11 +17,20 @@ extern DWORD dwOptions;
 void CreateSol();
 void NewGame(void);
 
-#define NUM_ROW_STACKS 7
-#define DECK_ID			1
-#define PILE_ID			2
-#define SUIT_ID			4
-#define ROW_ID			10
+#define NUM_ROW_STACKS     7
+#define DECK_ID            1
+#define PILE_ID            2
+#define SUIT_ID            4
+#define ROW_ID             10
+
+// Various metrics used for placing the objects and computing the minimum window size
+#define X_BORDER                 20
+#define X_PILE_BORDER            18
+#define X_ROWSTACK_BORDER        10
+#define X_SUITSTACK_BORDER       10
+#define Y_BORDER                 20
+#define Y_ROWSTACK_BORDER        32
+#define Y_ROWSTACK_CARDOFFSET    14
 
 extern CardRegion *pDeck;
 extern CardRegion *pPile;

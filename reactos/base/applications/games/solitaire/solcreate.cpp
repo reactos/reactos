@@ -6,10 +6,6 @@
 
 #include "solitaire.h"
 
-const int yBorder = 20;
-const int xBorder = 20;
-const int yRowStacks = yBorder + 128;
-
 CardRegion *pDeck;
 CardRegion *pPile;
 CardRegion *pSuitStack[4];
@@ -18,7 +14,7 @@ CardRegion *pRowStack[NUM_ROW_STACKS];
 extern CardStack activepile;
 
 HBITMAP hbmBitmap;
-HDC        hdcBitmap;
+HDC     hdcBitmap;
 
 void CreateSol()
 {
@@ -30,7 +26,7 @@ void CreateSol()
     activepile.Clear();
 
 
-    pDeck = SolWnd.CreateRegion(DECK_ID, true, xBorder, yBorder, 2, 1);
+    pDeck = SolWnd.CreateRegion(DECK_ID, true, X_BORDER, Y_BORDER, 2, 1);
     pDeck->SetEmptyImage(CS_EI_SUNK);
     pDeck->SetThreedCount(6);
     pDeck->SetDragRule(CS_DRAG_NONE, 0);
@@ -39,7 +35,7 @@ void CreateSol()
     pDeck->SetDblClickProc(DeckClickProc);
     pDeck->SetFaceDirection(CS_FACE_DOWN, 0);
 
-    pPile = SolWnd.CreateRegion(PILE_ID, true, 110, yBorder, CS_DEFXOFF, 1);
+    pPile = SolWnd.CreateRegion(PILE_ID, true, X_BORDER + __cardwidth + X_PILE_BORDER, Y_BORDER, CS_DEFXOFF, 1);
     pPile->SetEmptyImage(CS_EI_NONE);
     pPile->SetDragRule(CS_DRAG_TOP, 0);
     pPile->SetDropRule(CS_DROP_NONE, 0);
@@ -51,10 +47,9 @@ void CreateSol()
     //
     for(i = 0; i < 4; i++)
     {
-        pSuitStack[i] = SolWnd.CreateRegion(SUIT_ID+i, true, 0, yBorder, 0, 0);
+        pSuitStack[i] = SolWnd.CreateRegion(SUIT_ID+i, true, 0, Y_BORDER, 0, 0);
         pSuitStack[i]->SetEmptyImage(CS_EI_SUNK);
-        //pSuitStack[i]->SetPlacement(CS_XJUST_RIGHT, 0, -i * (__cardwidth + 4) - xBorder, 0);
-        pSuitStack[i]->SetPlacement(CS_XJUST_CENTER, 0, i * (__cardwidth + 10) , 0);
+        pSuitStack[i]->SetPlacement(CS_XJUST_CENTER, 0, i * (__cardwidth + X_SUITSTACK_BORDER) , 0);
 
         pSuitStack[i]->SetDropRule(CS_DROP_CALLBACK, SuitStackDropProc);
         pSuitStack[i]->SetDragRule(CS_DRAG_TOP);
@@ -67,12 +62,12 @@ void CreateSol()
     //
     for(i = 0; i < NUM_ROW_STACKS; i++)
     {
-        pRowStack[i] = SolWnd.CreateRegion(ROW_ID+i, true, 0, yRowStacks, 0, 14);
+        pRowStack[i] = SolWnd.CreateRegion(ROW_ID+i, true, 0, Y_BORDER + __cardheight + Y_ROWSTACK_BORDER, 0, Y_ROWSTACK_CARDOFFSET);
         pRowStack[i]->SetEmptyImage(CS_EI_SUNK);
         pRowStack[i]->SetFaceDirection(CS_FACE_DOWNUP, i);
         
         pRowStack[i]->SetPlacement(CS_XJUST_CENTER, 0, 
-            (i - NUM_ROW_STACKS/2) * (__cardwidth + 10),     0);
+            (i - NUM_ROW_STACKS/2) * (__cardwidth + X_ROWSTACK_BORDER),     0);
 
         pRowStack[i]->SetEmptyImage(CS_EI_NONE);
 
