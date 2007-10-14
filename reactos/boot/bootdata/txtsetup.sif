@@ -94,6 +94,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 
 [KeyboardLayout]
 00000455 = "Burmese"
+00000405 = "Czech (QWERTY)"
 00000406 = "Danish (Denmark)"
 00000813 = "Dutch (Belgium)"
 00000809 = "English (United Kingdom)"
@@ -124,6 +125,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000080C = kbdbe.dll
 00000813 = kbdbe.dll
 00000455 = kbdbur.dll
+00000405 = kbdcz1.dll
 00000406 = kbdda.dll
 00010409 = kbddv.dll
 0000040A = kbdes.dll

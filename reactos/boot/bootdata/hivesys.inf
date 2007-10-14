@@ -92,6 +92,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000455","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000455","Layout Text",0x00000000,"Burmese"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000414","Layout File",0x00000000,"kbdno.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000414","Layout Text",0x00000000,"Norwegian"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000405","Layout File",0x00000000,"kbdcz1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000405","Layout Text",0x00000000,"Czech (QWERTY)"
 
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"

@@ -7,6 +7,9 @@
 	<directory name="kbdbur">
 		<xi:include href="kbdbur/kbdbur.rbuild" />
 	</directory>
+	<directory name="kbdcz1">
+		<xi:include href="kbdcz1/kbdcz1.rbuild" />
+	</directory>
 	<directory name="kbdda">
 		<xi:include href="kbdda/kbdda.rbuild" />
 	</directory>
