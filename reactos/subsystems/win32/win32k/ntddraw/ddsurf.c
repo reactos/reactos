@@ -9,43 +9,7 @@
  */
 
 #include <w32k.h>
-#include <reactos/drivers/directx/dxg.h>
-
-//#define NDEBUG
 #include <debug.h>
-
-extern PDRVFN gpDxFuncs;
-
-typedef DWORD (NTAPI *PGD_DDALPHABLT)(HANDLE, HANDLE, PDD_BLTDATA);
-typedef BOOL (NTAPI *PGD_DDATTACHSURFACE)(HANDLE, HANDLE);
-typedef DWORD (NTAPI *PGD_DXDDUNATTACHSURFACE)(HANDLE, HANDLE);
-typedef DWORD (NTAPI *PGD_DXDDDESTROYSURFACE)(HANDLE, BOOL);
-typedef DWORD (NTAPI *PGD_DXDDFLIP)(HANDLE, HANDLE, HANDLE, HANDLE, PDD_FLIPDATA);
-/* Does not exists in win32k or dxg.sys PDD_SURFCB_SETCLIPLIST  SetClipList; */
-typedef DWORD (NTAPI *PGD_DXDDLOCK)(HANDLE, PDD_LOCKDATA, HDC);
-typedef DWORD (NTAPI *PGD_DXDDUNLOCK(HANDLE, PDD_UNLOCKDATA );
-typedef DWORD (NTAPI *PGD_DDBLT)(HANDLE, HANDLE, PDD_BLTDATA);
-typedef DWORD (NTAPI *PGD_DXDDSETCOLORKEY)(HANDLE, PDD_SETCOLORKEYDATA);
-typedef DWORD (NTAPI *PGD_DDADDATTACHEDSURFACE)(HANDLE, HANDLE,PDD_ADDATTACHEDSURFACEDATA);
-typedef DWORD (NTAPI *PGD_DXDDGETBLTSTATUS)(HANDLE, PDD_GETBLTSTATUSDATA);
-typedef DWORD (NTAPI *PGD_DXDDGETFLIPSTATUS)(HANDLE, PDD_GETFLIPSTATUSDATA);
-typedef DWORD (NTAPI *PGD_DXDDUPDATEOVERLAY)(HANDLE, HANDLE, PDD_UPDATEOVERLAYDATA);
-typedef DWORD (NTAPI *PGD_DXDDSETOVERLAYPOSITION)(HANDLE, HANDLE, PDD_SETOVERLAYPOSITIONDATA);
-/* from MSDN LPVOID  reserved4; are not inuse */
-/* Does not exists in win32k or dxg.sys PDD_SURFCB_SETPALETTE  SetPalette */
-
-#define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
-    if (gpDxFuncs) \
-    { \
-        for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
-        { \
-            if (gpDxFuncs[i].iFunc == INDEX)  \
-            { \
-                FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
-                break;  \
-            }  \
-        } \
-    }
 
 /************************************************************************/
 /* NtGdiDdDestroySurface                                                */

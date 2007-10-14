@@ -2059,29 +2059,6 @@ NtGdiConvertMetafileRect(
     return 0;
 }
 
-
-
-
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDxgGenericThunk(
-    IN ULONG_PTR ulIndex,
-    IN ULONG_PTR ulHandle,
-    IN OUT SIZE_T *pdwSizeOfPtr1,
-    IN OUT  PVOID pvPtr1,
-    IN OUT SIZE_T *pdwSizeOfPtr2,
-    IN OUT  PVOID pvPtr2)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
  /*
  * @unimplemented
  */

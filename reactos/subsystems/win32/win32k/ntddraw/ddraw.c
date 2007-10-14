@@ -5,40 +5,11 @@
  * FILE:             subsys/win32k/ntddraw/ddraw.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
-         from 2003 to year 2007
- *       rewrote almost all code Peter did.
- *       only few line are left from him
+ *       19/1-2006   Magnus Olsen
  */
 
 #include <w32k.h>
-#include <reactos/drivers/directx/dxg.h>
-
-//#define NDEBUG
 #include <debug.h>
-
-/* swtich this off to get rid of all dx debug msg */
-#define DX_DEBUG
-
-
-
-
-typedef DWORD (NTAPI *PGD_DXDDREENABLEDIRECTDRAWOBJECT)(HANDLE, BOOL);
-typedef DWORD (NTAPI *PGD_DXDDGETDRIVERINFO)(HANDLE, PDD_GETDRIVERINFODATA);
-typedef DWORD (NTAPI *PGD_DXDDGETAVAILDRIVERMEMORY(HANDLE, PDD_GETAVAILDRIVERMEMORYDATA);
-typedef DWORD (NTAPI *PGD_DXDDSETEXCLUSIVEMODE)(HANDLE, PDD_SETEXCLUSIVEMODEDATA);
-typedef NTSTATUS (NTAPI *PGD_DXDDSTARTUPDXGRAPHICS) (ULONG, PDRVENABLEDATA, ULONG, PDRVENABLEDATA, PULONG, PEPROCESS);
-typedef NTSTATUS (NTAPI *PGD_DXDDCLEANUPDXGRAPHICS) (VOID);
-typedef HANDLE (NTAPI *PGD_DDCREATEDIRECTDRAWOBJECT) (HDC hdc);
-typedef DWORD (NTAPI *PGD_DDGETDRIVERSTATE)(PDD_GETDRIVERSTATEDATA);
-typedef DWORD (NTAPI *PGD_DDCOLORCONTROL)(HANDLE hSurface,PDD_COLORCONTROLDATA puColorControlData);
-typedef HANDLE (NTAPI *PGD_DXDDCREATESURFACEOBJECT)(HANDLE, HANDLE, PDD_SURFACE_LOCAL, PDD_SURFACE_MORE, PDD_SURFACE_GLOBAL, BOOL);
-typedef BOOL (NTAPI *PGD_DXDDDELETEDIRECTDRAWOBJECT)(HANDLE);
-typedef BOOL (NTAPI *PGD_DXDDDELETESURFACEOBJECT)(HANDLE);
-typedef DWORD (NTAPI *PGD_DXDDFLIPTOGDISURFACE)(HANDLE, PDD_FLIPTOGDISURFACEDATA);
-typedef DWORD (NTAPI *PGD_DXDDGETAVAILDRIVERMEMORY)(HANDLE , PDD_GETAVAILDRIVERMEMORYDATA);
-typedef BOOL (NTAPI *PGD_DXDDQUERYDIRECTDRAWOBJECT)(HANDLE, DD_HALINFO*, DWORD*,  LPD3DNTHAL_CALLBACKS, LPD3DNTHAL_GLOBALDRIVERDATA,
-                                                    PDD_D3DBUFCALLBACKS, LPDDSURFACEDESC, DWORD *, VIDEOMEMORY *, DWORD *, DWORD *);
-
 
 PGD_DXDDSTARTUPDXGRAPHICS gpfnStartupDxGraphics = NULL;
 PGD_DXDDCLEANUPDXGRAPHICS gpfnCleanupDxGraphics = NULL;
@@ -48,21 +19,6 @@ PDRVFN gpDxFuncs;
 HANDLE ghDxGraphics;
 ULONG gdwDirectDrawContext;
 ULONG gcEngFuncs;
-
-#define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
-    if (gpDxFuncs) \
-    { \
-        for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
-        { \
-            if (gpDxFuncs[i].iFunc == INDEX)  \
-            { \
-                FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
-                break;  \
-            }  \
-        } \
-    }
-
-
 
 /************************************************************************/
 /* DirectX graphic/video driver loading and cleanup start here          */
@@ -203,6 +159,33 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 }
 
 
+
+/************************************************************************/
+/* NtGdiDxgGenericThunk                                                 */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDxgGenericThunk(ULONG_PTR ulIndex,
+                     ULONG_PTR ulHandle,
+                     SIZE_T *pdwSizeOfPtr1,
+                     PVOID pvPtr1,
+                     SIZE_T *pdwSizeOfPtr2,
+                     PVOID pvPtr2)
+{
+    PGD_DXGENERICTRUNK pfnDxgGenericThunk = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDriverState, pfnDxgGenericThunk);
+
+    if (pfnDdGetDriverState == NULL)
+    {
+        DPRINT1("Warring no pfnDxgGenericThunk");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDxgGenericThunk");
+    return pfnDxgGenericThunk(ulIndex, ulHandle, pdwSizeOfPtr1, pvPtr1, pdwSizeOfPtr2, pvPtr2);
+}
 
 /************************************************************************/
 /* NtGdiDdGetDriverState                                                */

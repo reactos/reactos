@@ -14,42 +14,7 @@
  */
 
 #include <w32k.h>
-#include <reactos/drivers/directx/dxg.h>
-
-//#define NDEBUG
 #include <debug.h>
-
-/********************************************************************************/
-/*                D3D interface from DXG.SYS                                    */
-/********************************************************************************/
-
-extern PDRVFN gpDxFuncs;
-
-typedef DWORD (NTAPI *PGD_DXDDDESTROYD3DBUFFER)(HANDLE);
-typedef DWORD (NTAPI *PGD_DDCANCREATED3DBUFFER)(HANDLE, PDD_CANCREATESURFACEDATA);
-typedef DWORD (NTAPI *PGD_DXDDUNLOCKD3D)(HANDLE, PDD_UNLOCKDATA);
-typedef DWORD (NTAPI *PGD_DXDDLOCKD3D)(HANDLE, PDD_LOCKDATA);
-typedef DWORD (NTAPI *PGD_D3DVALIDATETEXTURESTAGESTATE)(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA);
-typedef DWORD (NTAPI *PGD_D3DDRAWPRIMITIVES2)(HANDLE, HANDLE, LPD3DNTHAL_DRAWPRIMITIVES2DATA, FLATPTR *, DWORD *, FLATPTR *, DWORD *);
-typedef DWORD (NTAPI *PGD_DDCREATED3DBUFFER)(HANDLE, HANDLE *, DDSURFACEDESC *, DD_SURFACE_GLOBAL *, DD_SURFACE_LOCAL *, DD_SURFACE_MORE *, PDD_CREATESURFACEDATA , HANDLE *);
-typedef BOOL (NTAPI *PGD_D3DCONTEXTCREATE)(HANDLE, HANDLE, HANDLE, LPD3DNTHAL_CONTEXTCREATEDATA);
-typedef DWORD (NTAPI *PGD_D3DCONTEXTDESTROY)(LPD3DNTHAL_CONTEXTDESTROYDATA);
-typedef DWORD (NTAPI *PGD_D3DCONTEXTDESTROYALL)(LPD3DNTHAL_CONTEXTDESTROYALLDATA);
-
-#define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
-    if (gpDxFuncs) \
-    { \
-        for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
-        { \
-            if (gpDxFuncs[i].iFunc == INDEX)  \
-            { \
-                FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
-                break;  \
-            }  \
-        } \
-    }
-
-
 
 /************************************************************************/
 /* NtGdiDdCanCreateD3DBuffer                                            */

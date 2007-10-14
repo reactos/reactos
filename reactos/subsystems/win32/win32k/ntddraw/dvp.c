@@ -11,30 +11,11 @@
 
 
 #include <w32k.h>
-#include <reactos/drivers/directx/dxg.h>
-
-//#define NDEBUG
 #include <debug.h>
 
 /********************************************************************************/
 /*                DVP interface from DXG.SYS                                    */
 /********************************************************************************/
-
-extern PDRVFN gpDxFuncs;
-
-
-typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTFLIPSTATUS)(hDirectDraw, puGetVPortFlipStatusData);
-typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTINPUTFORMATS)(HANDLE, PDD_GETVPORTINPUTFORMATDATA);
-typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTLINE)(HANDLE, PDD_GETVPORTLINEDATA);
-typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS)(HANDLE, PDD_GETVPORTOUTPUTFORMATDATA);
-typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTCONNECTINFO)(HANDLE, PDD_GETVPORTCONNECTDATA);
-typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOSIGNALSTATUS)(HANDLE, PDD_GETVPORTSIGNALDATA);
-typedef DWORD (NTAPI *PGD_DXDVPUPDATEVIDEOPORT)(HANDLE, HANDLE*, HANDLE*, PDD_UPDATEVPORTDATA);
-typedef DWORD (NTAPI *PGD_DXDVPWAITFORVIDEOPORTSYNC)(hVideoPort, puWaitForVPortSyncData);
-typedef DWORD (NTAPI *PGD_DXDVPACQUIRENOTIFICATION)(HANDLE, HANDLE*, LPDDVIDEOPORTNOTIFY);
-typedef DWORD (NTAPI *PGD_DXDVPRELEASENOTIFICATION)(HANDLE, HANDLE);
-typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTFIELD)(HANDLE, PDD_GETVPORTFIELDDATA);
-
 
 
 /************************************************************************/

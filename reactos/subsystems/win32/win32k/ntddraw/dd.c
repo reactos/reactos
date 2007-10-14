@@ -9,34 +9,7 @@
  */
 
 #include <w32k.h>
-
-//#define NDEBUG
 #include <debug.h>
-#include <reactos/drivers/directx/dxg.h>
-
-
-
-extern PDRVFN gpDxFuncs;
-
-typedef DWORD (NTAPI *PGD_DDCREATESURFACE)(HANDLE, HANDLE *, DDSURFACEDESC *, DD_SURFACE_GLOBAL *, DD_SURFACE_LOCAL *, DD_SURFACE_MORE *, PDD_CREATESURFACEDATA , HANDLE *);
-typedef DWORD (NTAPI *PGD_DXDDWAITFORVERTICALBLANK)(HANDLE, PDD_WAITFORVERTICALBLANKDATA);
-typedef DWORD (NTAPI *PGD_DDCANCREATESURFACE)(HANDLE hDirectDrawLocal, PDD_CANCREATESURFACEDATA puCanCreateSurfaceData);
-typedef DWORD (NTAPI *PGD_DXDDGETSCANLINE)(HANDLE, PDD_GETSCANLINEDATA);
-typedef DWORD (NTAPI *PGD_DXDDCREATESURFACEEX)(HANDLE,HANDLE,DWORD);
-
-#define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
-    if (gpDxFuncs) \
-    { \
-        for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
-        { \
-            if (gpDxFuncs[i].iFunc == INDEX)  \
-            { \
-                FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
-                break;  \
-            }  \
-        } \
-    }
-
 
 /************************************************************************/
 /* NtGdiDdCreateSurface                                                 */
@@ -167,5 +140,4 @@ NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
     return pfnDdCreateSurfaceEx(hDirectDrawLocal,puGetScanLineData);
 
 }
-
 
