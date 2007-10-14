@@ -37,16 +37,16 @@ RtlImageNtHeader (IN PVOID BaseAddress)
   PIMAGE_NT_HEADERS NtHeader;
   PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
 
-  if (DosHeader && DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+  if (DosHeader && SWAPW(DosHeader->e_magic) != IMAGE_DOS_SIGNATURE)
     {
-      DPRINT1("DosHeader->e_magic %x\n", DosHeader->e_magic);
-      DPRINT1("NtHeader 0x%lx\n", ((ULONG_PTR)BaseAddress + DosHeader->e_lfanew));
+      DPRINT1("DosHeader->e_magic %x\n", SWAPW(DosHeader->e_magic));
+      DPRINT1("NtHeader 0x%lx\n", ((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew)));
     }
 
-  if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
+  if (DosHeader && SWAPW(DosHeader->e_magic) == IMAGE_DOS_SIGNATURE)
     {
-      NtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)BaseAddress + DosHeader->e_lfanew);
-      if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
+      NtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew));
+      if (SWAPD(NtHeader->Signature) == IMAGE_NT_SIGNATURE)
 	return NtHeader;
     }
 
@@ -79,16 +79,16 @@ RtlImageDirectoryEntryToData(PVOID BaseAddress,
 	if (NtHeader == NULL)
 		return NULL;
 
-	if (Directory >= NtHeader->OptionalHeader.NumberOfRvaAndSizes)
+	if (Directory >= SWAPD(NtHeader->OptionalHeader.NumberOfRvaAndSizes))
 		return NULL;
 
-	Va = NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress;
+	Va = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress);
 	if (Va == 0)
 		return NULL;
 
-	*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
+	*Size = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].Size);
 
-	if (MappedAsImage || Va < NtHeader->OptionalHeader.SizeOfHeaders)
+	if (MappedAsImage || Va < SWAPD(NtHeader->OptionalHeader.SizeOfHeaders))
 		return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
 	/* image mapped as ordinary file, we must find raw pointer */
@@ -111,14 +111,14 @@ RtlImageRvaToSection (
 	ULONG Va;
 	ULONG Count;
 
-	Count = NtHeader->FileHeader.NumberOfSections;
+	Count = SWAPW(NtHeader->FileHeader.NumberOfSections);
 	Section = (PIMAGE_SECTION_HEADER)((ULONG)&NtHeader->OptionalHeader +
-	                                  NtHeader->FileHeader.SizeOfOptionalHeader);
+	                                  SWAPW(NtHeader->FileHeader.SizeOfOptionalHeader));
 	while (Count)
 	{
-		Va = Section->VirtualAddress;
+		Va = SWAPD(Section->VirtualAddress);
 		if ((Va <= Rva) &&
-		    (Rva < Va + Section->SizeOfRawData))
+		    (Rva < Va + SWAPD(Section->SizeOfRawData)))
 			return Section;
 		Section++;
 	}
@@ -144,8 +144,8 @@ RtlImageRvaToVa (
 		Section = *SectionHeader;
 
 	if (Section == NULL ||
-	    Rva < Section->VirtualAddress ||
-	    Rva >= Section->VirtualAddress + Section->SizeOfRawData)
+	    Rva < SWAPD(Section->VirtualAddress) ||
+	    Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->SizeOfRawData))
 	{
 		Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
 		if (Section == NULL)
@@ -157,8 +157,8 @@ RtlImageRvaToVa (
 
 	return (PVOID)((ULONG_PTR)BaseAddress +
 	               Rva +
-	               Section->PointerToRawData -
-	               (ULONG_PTR)Section->VirtualAddress);
+	               SWAPD(Section->PointerToRawData) -
+	               (ULONG_PTR)SWAPD(Section->VirtualAddress));
 }
 
 PIMAGE_BASE_RELOCATION
@@ -178,8 +178,8 @@ LdrProcessRelocationBlockLongLong(
 
     for (i = 0; i < Count; i++)
     {
-        Offset = *TypeOffset & 0xFFF;
-        Type = *TypeOffset >> 12;
+        Offset = SWAPW(*TypeOffset) & 0xFFF;
+        Type = SWAPW(*TypeOffset) >> 12;
         ShortPtr = (PUSHORT)(RVA(Address, Offset));
 
         /*
@@ -204,19 +204,19 @@ LdrProcessRelocationBlockLongLong(
             break;
 
         case IMAGE_REL_BASED_LOW:
-            *ShortPtr += LOWORD(Delta);
+            *ShortPtr = SWAPW(*ShortPtr) + LOWORD(Delta);
             break;
 
         case IMAGE_REL_BASED_HIGHLOW:
             LongPtr = (PULONG)RVA(Address, Offset);
-            *LongPtr += (ULONG)Delta;
+            *LongPtr = SWAPD(*LongPtr) + (ULONG)Delta;
             break;
 
         case IMAGE_REL_BASED_HIGHADJ:
         case IMAGE_REL_BASED_MIPS_JMPADDR:
         default:
             DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
-            DPRINT1("Address %x, Current %d, Count %d, *TypeOffset %x\n", Address, i, Count, *TypeOffset);
+            DPRINT1("Address %x, Current %d, Count %d, *TypeOffset %x\n", Address, i, Count, SWAPW(*TypeOffset));
             return (PIMAGE_BASE_RELOCATION)NULL;
         }
 
@@ -250,27 +250,27 @@ LdrRelocateImageWithBias(
     if (NtHeaders == NULL)
         return Invalid;
 
-    if (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
+    if (SWAPW(NtHeaders->FileHeader.Characteristics) & IMAGE_FILE_RELOCS_STRIPPED)
     {
         return Conflict;
     }
 
     RelocationDDir = &NtHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
 
-    if (RelocationDDir->VirtualAddress == 0 || RelocationDDir->Size == 0)
+    if (SWAPD(RelocationDDir->VirtualAddress) == 0 || SWAPD(RelocationDDir->Size) == 0)
     {
         return Success;
     }
 
-    Delta = (ULONG_PTR)BaseAddress - NtHeaders->OptionalHeader.ImageBase + AdditionalBias;
-    RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)BaseAddress + RelocationDDir->VirtualAddress);
-    RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
+    Delta = (ULONG_PTR)BaseAddress - SWAPD(NtHeaders->OptionalHeader.ImageBase) + AdditionalBias;
+    RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)BaseAddress + SWAPD(RelocationDDir->VirtualAddress));
+    RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + SWAPD(RelocationDDir->Size));
 
     while (RelocationDir < RelocationEnd &&
-        RelocationDir->SizeOfBlock > 0)
+	   SWAPW(RelocationDir->SizeOfBlock) > 0)
     {
-        Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
-        Address = (ULONG_PTR)RVA(BaseAddress, RelocationDir->VirtualAddress);
+        Count = (SWAPW(RelocationDir->SizeOfBlock) - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
+        Address = (ULONG_PTR)RVA(BaseAddress, SWAPD(RelocationDir->VirtualAddress));
         TypeOffset = (PUSHORT)(RelocationDir + 1);
 
         RelocationDir = LdrProcessRelocationBlockLongLong(Address,

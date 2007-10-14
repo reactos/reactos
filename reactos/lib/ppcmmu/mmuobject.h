@@ -1,7 +1,6 @@
 #ifndef _LIBMMU_MMUOBJECT_H
 #define _LIBMMU_MMUOBJECT_H
 
-MmuPageCallback callback;
 void initme();
 void mmusetramsize(paddr_t size);
 int mmuaddpage(ppc_map_info_t *info, int count);

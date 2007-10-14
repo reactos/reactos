@@ -66,7 +66,7 @@ void PpcPrepVideoPrepareForReactOS(BOOLEAN setup)
     pci_setup(&pci1_desc);
 }
 
-int mmu_initialized = 0;
+VOID PpcInitializeMmu(int max);
 
 ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 			   ULONG MaxMemoryMapSize )
@@ -75,12 +75,7 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     BiosMemoryMap[0].Type = 1;
     BiosMemoryMap[0].BaseAddress = 0xe80000;
     BiosMemoryMap[0].Length = (64 * 1024 * 1024) - BiosMemoryMap[0].BaseAddress;
-    if(!mmu_initialized)
-    {
-	MmuInit();
-	mmu_initialized = 1;
-    }
-    MmuSetMemorySize(BiosMemoryMap[0].Length + BiosMemoryMap[0].BaseAddress);
+    PpcInitializeMmu(BiosMemoryMap[0].BaseAddress + BiosMemoryMap[0].Length);
     return 1;
 }
 
@@ -93,7 +88,7 @@ void PpcPrepInit()
     ide_setup( &ide1_desc );
 
     MachVtbl.DiskReadLogicalSectors = PpcPrepDiskReadLogicalSectors;
-    
+
     MachVtbl.ConsKbHit   = PpcPrepConsKbHit;
     MachVtbl.ConsGetCh   = PpcPrepConsGetCh;
 

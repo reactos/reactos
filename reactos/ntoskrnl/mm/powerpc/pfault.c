@@ -35,7 +35,7 @@ VOID MmpPpcTrapFrameToTrapFrame(ppc_trap_frame_t *frame, PKTRAP_FRAME Tf)
     Tf->Dr3 = frame->dsisr;
 }
 
-int KiPageFaultHandler(int inst, ppc_trap_frame_t *frame)
+int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     KPROCESSOR_MODE Mode;
@@ -46,9 +46,9 @@ int KiPageFaultHandler(int inst, ppc_trap_frame_t *frame)
     PVOID TrapInfo = NULL;
     
     /* get the faulting address */
-    if (inst)
+    if (trap == 4) /* Instruction miss */
 	VirtualAddr = frame->srr0;
-    else
+    else /* Data miss */
 	VirtualAddr = frame->dar;
     
     /* MSR_PR */

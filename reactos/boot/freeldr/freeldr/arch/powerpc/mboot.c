@@ -90,6 +90,8 @@ NTAPI
 LdrPEFixupImports(IN PVOID DllBase,
                   IN PCHAR DllName);
 
+VOID PpcInitializeMmu(int max);
+
 /* FUNCTIONS *****************************************************************/
 
 /*++
@@ -111,10 +113,10 @@ LdrPEFixupImports(IN PVOID DllBase,
 
 typedef void (*KernelEntryFn)( void * );
 
-int MmuPageMiss(int inst, ppc_trap_frame_t *trap)
+int MmuPageMiss(int trapCode, ppc_trap_frame_t *trap)
 {
     int i;
-    printf("inst %x\n", inst);
+    printf("TRAP %x\n", trapCode);
     for( i = 0; i < 40; i++ )
 	printf("r[%d] %x\n", i, trap->gpr[i]);
     printf("HALT!\n");
@@ -143,6 +145,8 @@ FrLdrStartup(ULONG Magic)
 		 (PCHAR)reactos_modules[i].String);
     }
 
+    PpcInitializeMmu(0);
+
     /* We'll use vsid 1 for freeldr (expendable) */
     MmuAllocVsid(1, 0xff);
     MmuSetVsid(0, 8, 1);
@@ -150,7 +154,8 @@ FrLdrStartup(ULONG Magic)
     MmuAllocVsid(0, 0xff00);
     MmuSetVsid(8, 16, 0);
 
-    MmuSetPageCallback(MmuPageMiss);
+    MmuSetTrapHandler(3, MmuPageMiss);
+    MmuSetTrapHandler(4, MmuPageMiss);
 
     info = MmAllocateMemory((KernelMemorySize >> PAGE_SHIFT) * sizeof(*info));
 
@@ -420,6 +425,10 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	printf("No peheader section encountered :-(\n");
 	return 0;
     }
+    else
+    {
+        printf("DOS SIG: %s\n", (PCHAR)MemLoadAddr);
+    }
 
     /* Save the Image Base */
     NtHeader->OptionalHeader.ImageBase = SWAPD(KernelAddr);
@@ -673,7 +682,7 @@ FrLdrLoadModule(FILE *ModuleImage,
         *ModuleSize = LocalModuleSize;
     }
 
-    return(ModuleData->ModStart);
+    return NextModuleBase;
 }
 
 PVOID
@@ -685,7 +694,7 @@ FrLdrMapImage(IN FILE *Image, IN PCHAR ShortName, IN ULONG ImageType)
     if (ImageType == 1)
     {
         if(FrLdrMapKernel(Image))
-            return (PVOID)KernelBase;
+            return (PVOID)KernelMemory;
         else
             return NULL;
     }

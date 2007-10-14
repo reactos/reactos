@@ -1,6 +1,8 @@
 #ifndef PPCMMU_H
 #define PPCMMU_H
 
+#include <string.h>
+
 /* PPC MMU object --
  * Always called from kernel mode, maps the first 16 megabytes and uses 16
  * bytes per page between 0x30000 and 16 megs.  Maximum memory size is 3 gig.
@@ -13,25 +15,37 @@
  * 0x30000 -- Full map
  *
  * Actions:
- * 00 -- Initialize
+ *
+ * 1** -- MMU Related
+ *
+ * 100 -- Initialize
  *  -- No arguments
- * 01 -- Map page
+ * 101 -- Map page
  *  r4 -- virtual address
  *  r5 -- ppc_map_info_t
- * 02 -- Erase page
+ * 102 -- Erase page
  *  r4 -- virtual address
- * 03 -- Set segment VSID
+ * 103 -- Set segment VSID
  *  r4 -- Start seg
  *  r5 -- End seg
  *  r6 -- Vsid
- * 04 -- Set page miss callback
- *  r4 -- Callback address (VA)
- * 05 -- Query page
+ * 104 -- Set trap callback
+ *  r4 -- Trap number
+ *  r5 -- Callback address (VA)
+ * 105 -- Query page
  *  r4 -- Page addr
  *  r5 -- Address of info struct
- * 06 -- Unit Test
- * 07 -- Turn on paging
- * 08 -- Unmap process
+ * 106 -- Unit Test
+ * 107 -- Turn on paging
+ * 108 -- Unmap process
+ *
+ * 2** -- Debug Stub and Interrupt Vectoring
+ *
+ * 200 -- GDB Initialize
+ *  r4 -- Device type
+ *  r4 -- Serial port addr
+ * 201 -- GDB Enter
+ *  r4 -- Signal number
  */
 
 #define MMUCODE 0x10000
@@ -91,10 +105,11 @@ typedef struct _ppc_map_info_t {
 
 typedef struct _ppc_trap_frame_t {
     unsigned long gpr[32];
-    unsigned long lr, cr, ctr, srr0, srr1, dsisr, dar, xer;
+    unsigned long long fpr[32];
+    unsigned long srr0, srr1, cr, lr, ctr, xer, mq, dsisr, dar;
 } ppc_trap_frame_t;
 
-typedef int (*MmuPageCallback)(int inst, ppc_trap_frame_t *trap);
+typedef int (*MmuTrapHandler)(int trapid, ppc_trap_frame_t *trap);
 
 #include "mmuutil.h"
 
@@ -160,69 +175,80 @@ static inline int PPCMMU(int action, void *arg1, void *arg2, void *arg3)
  */
 static inline void _MmuInit(void *_start, void *_end)
 {
-    int target = MMUCODE;
+    int target = MMUCODE, copy;
     int *start = (int *)_start;
     while(start < (int *)_end)
     {
-	SetPhys(target, *start++);
+        memcpy(&copy, start++, sizeof(int));
+	SetPhys(target, copy);
 	target += sizeof(int);
     }
-    PPCMMU(0, 0, 0, 0);
+    PPCMMU(0x100, 0, 0, 0);
 }
 
 static inline void MmuMapPage(ppc_map_info_t *info, int count)
 {
-    PPCMMU(1, info, (void *)count, 0);
+    PPCMMU(0x101, info, (void *)count, 0);
 }
 
 static inline void MmuUnmapPage(ppc_map_info_t *info, int count)
 {
-    PPCMMU(2, info, (void *)count, 0);
+    PPCMMU(0x102, info, (void *)count, 0);
 }
 
 static inline void MmuSetVsid(int start, int end, int vsid)
 {
-    PPCMMU(3, (void *)start, (void *)end, (void *)vsid);
+    PPCMMU(0x103, (void *)start, (void *)end, (void *)vsid);
 }
 
-static inline MmuPageCallback MmuSetPageCallback(MmuPageCallback cb)
+static inline MmuTrapHandler MmuSetTrapHandler(int trap, MmuTrapHandler cb)
 {
-    return (MmuPageCallback)PPCMMU(4, (void *)cb, 0, 0);
+    return (MmuTrapHandler)PPCMMU(0x104, (void *)trap, (void *)cb, 0);
 }
 
 static inline void MmuInqPage(ppc_map_info_t *info, int count)
 {
-    PPCMMU(5, info, (void *)count, 0);
+    PPCMMU(0x105, info, (void *)count, 0);
 }
 
 static inline int MmuUnitTest()
 {
-    return PPCMMU(6, 0, 0, 0);
+    return PPCMMU(0x106, 0, 0, 0);
 }
 
 static inline int MmuTurnOn(void *fun, void *arg)
 {
-    return PPCMMU(7, fun, arg, 0);
+    return PPCMMU(0x107, fun, arg, 0);
 }
 
 static inline void MmuSetMemorySize(paddr_t size)
 {
-    PPCMMU(8, (void *)size, 0, 0);
+    PPCMMU(0x108, (void *)size, 0, 0);
 }
 
 static inline paddr_t MmuGetFirstPage()
 {
-    return (paddr_t)PPCMMU(9, 0, 0, 0);
+    return (paddr_t)PPCMMU(0x109, 0, 0, 0);
 }
 
 static inline void *MmuAllocVsid(int vsid, int mask)
 {
-    return (void *)PPCMMU(10, (void *)vsid, (void *)mask, 0);
+    return (void *)PPCMMU(0x10a, (void *)vsid, (void *)mask, 0);
 }
 
 static inline void MmuRevokeVsid(int vsid, int mask)
 {
-    PPCMMU(11, (void *)vsid, (void *)mask, 0);
+    PPCMMU(0x10b, (void *)vsid, (void *)mask, 0);
+}
+
+static inline void MmuDbgInit(int deviceType, int devicePort)
+{
+    PPCMMU(0x200, (void *)deviceType, (void *)devicePort, 0);
+}
+
+static inline void MmuDbgEnter(int signal)
+{
+    PPCMMU(0x201, (void *)signal, 0, 0);
 }
 
 #endif/*PPCMMU_H*/

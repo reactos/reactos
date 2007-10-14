@@ -40,7 +40,7 @@ Actions:
 11 revoke vsid
 */
 
-MmuPageCallback callback;
+MmuTrapHandler callback[0x30];
 typedef struct _MmuFreePage {
     int page;
     struct _MmuFreePage *next;
@@ -59,7 +59,7 @@ typedef struct _MmuVsidInfo {
 MmuFreePage *FreeList;
 // Pages are allocated one by one until NextPage == RamSize >> PPC_PAGE_SHIFT
 // Then we take only from the free list
-int Clock = 0, TreeAlloc = 0;
+int Clock = 0, TreeAlloc = 0, GdbAttach = 0;
 paddr_t RamSize, FirstUsablePage, NextPage;
 MmuVsidTree *NextTreePage = 0;
 MmuFreeTree *FreeTree;
@@ -67,146 +67,8 @@ MmuVsidInfo *Segs[16], *VsidHead = 0;
 
 extern void fmtout(const char *fmt, ...);
 int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr);
-
-__asm__(".text\n\t"
-	".globl mmumain\n\t"
-	".globl _mmumain\n\t"
-	".globl oldstack\n\t"
-	"mmumain:\n\t"
-	"lis 7,oldstack@ha\n\t"
-	"addi 7,7,oldstack@l\n\t"
-	"mflr 0\n\t"
- 	"stw 1,0(7)\n\t"
-	"lis 1,2\n\t"
-	"subi 1,1,16\n\t"
-	"stw 0,0(1)\n\t"
-	"bl _mmumain\n\t"
-	"lis 7,oldstack@ha\n\t"
-	"addi 7,7,oldstack@l\n\t"
-	"lwz 0,0(1)\n\t"
-	"lwz 1,0(7)\n\t"
-	"mtlr 0\n\t"
-	"blr\n"
-	"oldstack:\n\t"
-	".long 0\n\t");
-
-__asm__(".text\n\t"
-	".globl data_miss_finish_start\n"
-	"data_miss_finish_start:\n\t"
-	"lwz 2,8(1)\n\t"
-	"lwz 3,12(1)\n\t"
-	"lwz 4,16(1)\n\t"
-	"lwz 5,20(1)\n\t"
-	"lwz 6,24(1)\n\t"
-	"lwz 7,28(1)\n\t"
-	"lwz 8,32(1)\n\t"
-	"lwz 9,36(1)\n\t"
-	"lwz 10,40(1)\n\t"
-	"lwz 11,44(1)\n\t"
-	"lwz 12,48(1)\n\t"
-	"lwz 13,52(1)\n\t"
-	"lwz 14,56(1)\n\t"
-	"lwz 15,60(1)\n\t"
-	"lwz 16,64(1)\n\t"
-	"lwz 17,68(1)\n\t"
-	"lwz 18,72(1)\n\t"
-	"lwz 19,76(1)\n\t"
-	"lwz 20,80(1)\n\t"
-	"lwz 21,84(1)\n\t"
-	"lwz 22,88(1)\n\t"
-	"lwz 23,92(1)\n\t"
-	"lwz 24,96(1)\n\t"
-	"lwz 25,100(1)\n\t"
-	"lwz 26,104(1)\n\t"
-	"lwz 27,108(1)\n\t"
-	"lwz 28,112(1)\n\t"
-	"lwz 29,116(1)\n\t"
-	"lwz 30,120(1)\n\t"
-	"lwz 31,124(1)\n\t"
-	"lwz 0,128(1)\n\t"
-	"mtlr 0\n\t"
-	"lwz 0,132(1)\n\t"
-	"mtcr 0\n\t"
-	"lwz 0,136(1)\n\t"
-	"mtctr 0\n\t"
-	"lwz 0,0(1)\n\t"
-	"mfsprg1 1\n\t"
-	"rfi\n\t");
-	
-/*
- * Trap frame:
- * r0 .. r32
- * lr, ctr, srr0, srr1, dsisr
- */
-__asm__(".text\n\t"
-	".globl data_miss_start\n\t"
-	".globl data_miss_end\n\t"
-	"data_miss_start:\n\t"
-	"mtsprg1 1\n\t"
-	"lis 1,2\n\t"
-	"subi 1,1,256\n\t"
-	"stw 0,0(1)\n\t"
-	"mfsprg1 0\n\t"
-	"stw 0,4(1)\n\t"
-	"stw 2,8(1)\n\t"
-	"stw 3,12(1)\n\t"
-	"stw 4,16(1)\n\t"
-	"stw 5,20(1)\n\t"
-	"stw 6,24(1)\n\t"
-	"stw 7,28(1)\n\t"
-	"stw 8,32(1)\n\t"
-	"stw 9,36(1)\n\t"
-	"stw 10,40(1)\n\t"
-	"stw 11,44(1)\n\t"
-	"stw 12,48(1)\n\t"
-	"stw 13,52(1)\n\t"
-	"stw 14,56(1)\n\t"
-	"stw 15,60(1)\n\t"
-	"stw 16,64(1)\n\t"
-	"stw 17,68(1)\n\t"
-	"stw 18,72(1)\n\t"
-	"stw 19,76(1)\n\t"
-	"stw 20,80(1)\n\t"
-	"stw 21,84(1)\n\t"
-	"stw 22,88(1)\n\t"
-	"stw 23,92(1)\n\t"
-	"stw 24,96(1)\n\t"
-	"stw 25,100(1)\n\t"
-	"stw 26,104(1)\n\t"
-	"stw 27,108(1)\n\t"
-	"stw 28,112(1)\n\t"
-	"stw 29,116(1)\n\t"
-	"stw 30,120(1)\n\t"
-	"stw 31,124(1)\n\t"
-	"mflr 0\n\t"
-	"stw 0,128(1)\n\t"
-	"mfcr 0\n\t"
-	"stw 0,132(1)\n\t"
-	"mfctr 0\n\t"
-	"stw 0,136(1)\n\t"
-	"mfsrr0 0\n\t"
-	"stw 0,140(1)\n\t"
-	"mfsrr1 0\n\t"
-	"stw 0,144(1)\n\t"
-	"mfdsisr 0\n\t"
-	"stw 0,148(1)\n\t"
-	"mfdar 0\n\t"
-	"stw 0,152(1)\n\t"
-	"mfxer 0\n\t"
-	"stw 0,156(1)\n\t"
-	"li 3,100\n\t"
-	"mr 4,1\n\t"
-	"lis 5,data_miss_finish_start@ha\n\t"
-	"addi 5,5,data_miss_finish_start@l\n\t"
-	"mtlr 5\n\t"
-	"lis 5,_mmumain@ha\n\t"
-	"addi 5,5,_mmumain@l\n\t"
-	"mtctr 5\n\t"
-	"bctr\n"
-	"data_miss_end:\n\t"
-	".space 4");
-
-extern int data_miss_end, data_miss_start;
+void SerialSetUp(int deviceType, void *deviceAddr, int baud);
+void TakeException(int n, int *tf);
 
 int _mmumain(int action, void *arg1, void *arg2, void *arg3)
 {
@@ -216,30 +78,62 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
 
     switch(action)
     {
-    case 0:
-	initme();
-	break;
-    case 1:
-	ret = mmuaddpage(arg1, (int)arg2);
-	break;
-    case 2:
-	mmudelpage(arg1, (int)arg2);
-	break;
+        /* Trap Handlers */
     case 3:
-	mmusetvsid((int)arg1, (int)arg2, (int)arg3);
+	if(!ptegreload(trap_frame, trap_frame->dar))
+	{
+	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
+	    if (!callback[action](action,arg1)) hang(action, arg1);
+	}
 	break;
     case 4:
-	/* Miss callback = arg1 */
-	ret = (int)callback;
-	callback = arg1;
+	if(!ptegreload(trap_frame, trap_frame->srr0))
+	{
+	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
+	    if (!callback[action](action,arg1)) hang(action, arg1);
+	}
 	break;
+
+    case 0:
+    case 2:
     case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 0xa:
+        if (!callback[action](action,arg1)) hang(action, arg1);
+        break;
+
+    case 0x20:
+        // Single step
+        TakeException(action, arg1);
+        break;
+
+        /* MMU Functions */
+    case 0x100:
+	initme();
+	break;
+    case 0x101:
+	ret = mmuaddpage(arg1, (int)arg2);
+	break;
+    case 0x102:
+	mmudelpage(arg1, (int)arg2);
+	break;
+    case 0x103:
+	mmusetvsid((int)arg1, (int)arg2, (int)arg3);
+	break;
+    case 0x104:
+	ret = (int)callback[(int)arg1];
+	callback[(int)arg1] = (MmuTrapHandler)arg2;
+	break;
+    case 0x105:
 	mmugetpage(arg1, (int)arg2);
 	break;
-    case 6:
+    case 0x106:
 	ret = mmunitest();
 	break;
-    case 7:
+    case 0x107:
 	__asm__("mfmsr 3\n\t"
 		"ori 3,3,0x30\n\t"
 		"mtmsr 3\n\t"
@@ -251,31 +145,25 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
 		: : "r" (HTABORG), "r" (arg2), "r" (fun));
 	/* BYE ! */
 	break;
-    case 8:
+    case 0x108:
 	mmusetramsize((paddr_t)arg1);
 	break;
-    case 9:
+    case 0x109:
 	return FirstUsablePage;
-    case 10:
+    case 0x10a:
 	mmuallocvsid((int)arg1, (int)arg2);
 	break;
-    case 11:
+    case 0x10b:
 	mmufreevsid((int)arg1, (int)arg2);
 	break;
-    case 100:
-	if(!ptegreload(trap_frame, trap_frame->dar))
-	{
-	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    callback(0,arg1);
-	}
-	break;
-    case 101:
-	if(!ptegreload(trap_frame, trap_frame->srr0))
-	{
-	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    callback(1,arg1);
-	}
-	break;
+
+    case 0x200:
+        SerialSetUp((int)arg1, arg2, 9600);
+        break;
+    case 0x201:
+        TakeException((int)arg1, (int *)arg2);
+        break;
+
     default:
 	while(1);
     }
@@ -351,27 +239,66 @@ void mmusetramsize(paddr_t ramsize)
     }
 }
 
+int ignore(int trapCode, ppc_trap_frame_t *trap)
+{
+    return 1;
+}
+
+int hang(int trapCode, ppc_trap_frame_t *trap)
+{
+    if (!GdbAttach)
+    {
+        GdbAttach = 1;
+        SerialSetUp(0, (void *)0x800003f8, 9600);
+    }
+    TakeException(trapCode, (int *)trap);
+    return 1;
+}
+
+int fpenable(int trapCode, ppc_trap_frame_t *trap)
+{
+        /* Turn on FP */
+        trap->srr0 |= 8192;
+        return 1;
+}
+
+extern int trap_start[], trap_end[];
+void copy_trap_handler(int trap)
+{
+    int i;
+    paddr_t targetArea = trap * 0x100;
+
+    /* Set target addr */
+    trap_end[0] = (int)_mmumain;
+
+    for (i = 0; i <= trap_end - trap_start; i++)
+    {
+        SetPhys(targetArea + (i * sizeof(int)), trap_start[i]);
+    }
+}
+
 void initme()
 {
     int i;
-    int *target, *start;
 
     for(i = 0; i < HTABSIZ / sizeof(int); i++)
     {
 	((int *)HTABORG)[i] = 0;
     }
 
-    for(target = (int *)0x300, start = &data_miss_start; start < &data_miss_end; start++, target++)
+    /* Default to hang on unknown exception */
+    for(i = 0; i < 30; i++)
     {
-	SetPhys((paddr_t)target, *start);
+        callback[i] = hang;
+        if (i != 1) /* Preserve reset handler */
+            copy_trap_handler(i);
     }
-    
-    (&data_miss_start)[50]++;
-    
-    for(target = (int *)0x400, start = &data_miss_start; start < &data_miss_end; start++, target++)
-    {
-	SetPhys((paddr_t)target, *start);
-    }
+
+    /* Floating point exception */
+    callback[8] = fpenable;
+
+    /* Ignore decrementer and EE */
+    callback[9] = ignore;
 }
 
 ppc_map_t *allocpage()

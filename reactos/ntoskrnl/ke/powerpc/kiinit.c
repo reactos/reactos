@@ -218,7 +218,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     for(;;);
 }
 
-extern int KiPageFaultHandler(int inst, ppc_trap_frame_t *frame);
+extern int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame);
 
 /* Use this for early boot additions to the page table */
 VOID
@@ -233,7 +233,8 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     __asm__("mr 13,%0" : : "r" (KPCR_BASE));
 
     /* Set the page fault handler to the kernel */
-    MmuSetPageCallback(KiPageFaultHandler);
+    MmuSetTrapHandler(3,KiPageFaultHandler);
+    MmuSetTrapHandler(4,KiPageFaultHandler);
 
     // Make 0xf... special
     MmuAllocVsid(2, 0x8000);

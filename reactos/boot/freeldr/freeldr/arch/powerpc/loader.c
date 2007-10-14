@@ -96,11 +96,13 @@ LdrPEGetExportByName(PVOID BaseAddress,
         BaseAddress = (PVOID)((ULONG_PTR)BaseAddress - KSEG0_BASE + (ULONG)KernelMemory);
     }
 
+    DbgPrint("Exports: RtlImageDirectoryEntryToData\n");
     ExportDir = (PIMAGE_EXPORT_DIRECTORY)
         RtlImageDirectoryEntryToData(BaseAddress,
                                      TRUE,
                                      IMAGE_DIRECTORY_ENTRY_EXPORT,
                                      &ExportDirSize);
+    DbgPrint("RtlImageDirectoryEntryToData done\n");
     if (!ExportDir)
     {
         DbgPrint("LdrPEGetExportByName(): no export directory!\n");
@@ -324,11 +326,13 @@ LdrPEFixupImports(IN PVOID DllBase,
     printf("Fixing up %x (%s)\n", DllBase, DllName);
 
     /*  Process each import module  */
+    DbgPrint("FixupImports: RtlImageDirectoryEntryToData\n");
     ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)
         RtlImageDirectoryEntryToData(DllBase,
                                      TRUE,
                                      IMAGE_DIRECTORY_ENTRY_IMPORT,
                                      &Size);
+    DbgPrint("RtlImageDirectoryEntryToData done\n");
     while (ImportModuleDirectory && ImportModuleDirectory->Name)
     {
         /*  Check to make sure that import lib is kernel  */

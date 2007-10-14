@@ -16,6 +16,14 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL()
 #endif
 
+#ifdef _PPC_
+#define SWAPD(x) ((((x)&0xff)<<24)|(((x)&0xff00)<<8)|(((x)>>8)&0xff00)|(((x)>>24)&0xff))
+#define SWAPW(x) ((((x)&0xff)<<8)|(((x)>>8)&0xff))
+#else
+#define SWAPD(x) x
+#define SWAPW(x) x
+#endif
+
 VOID
 NTAPI
 RtlpGetStackLimits(PULONG_PTR StackBase,

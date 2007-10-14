@@ -22,7 +22,7 @@ SECTIONS
   }
   .rodata :
   {
-    *(.rodata)
+    *(.rodata*)
     *(.got2)
     *(.eh_frame)
   }

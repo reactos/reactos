@@ -5,16 +5,23 @@ AR=powerpc-unknown-elf-ar
 OBJCOPY=powerpc-unknown-elf-objcopy
 LDSCRIPT=-Wl,-T,$S/ldscript
 PPCMMU_TARGETS=$O/libppcmmu_code.a
+MMUOBJECT_OBJS=$O/devint.o $O/mmuobject.o $O/mmuutil_object.o $O/mmutest.o $O/gdblib.o
 
 $O/mmuutil_object.o: $S/mmuutil.c | $O
 	$(CC) -Iinclude/reactos/libs -g -c -o $@ $S/mmuutil.c
 
-$O/libppcmmu_code.a: $O/mmuobject.o $O/mmuutil_object.o $O/mmutest.o | $O
-	$(CC) -Wl,-N -nostartfiles -nostdlib -o $O/mmuobject -Ttext=0x10000 $(LDSCRIPT) -Wl,-u,mmumain -Wl,-u,data_miss_start -Wl,-u,data_miss_end $O/mmuobject.o $O/mmuutil_object.o $O/mmutest.o
+$O/libppcmmu_code.a: $(MMUOBJECT_OBJS) | $O
+	$(CC) -Wl,-N -nostartfiles -nostdlib -o $O/mmuobject -Ttext=0x10000 $(LDSCRIPT) -Wl,-u,mmumain -Wl,-u,data_miss_start -Wl,-u,data_miss_end $(MMUOBJECT_OBJS)
 	$(OBJCOPY) -O binary $O/mmuobject mmucode
 	$(OBJCOPY) -I binary -O elf32-powerpc -B powerpc:common mmucode $O/mmucode.o
 	mkdir -p `dirname $@`
 	$(AR) cr $@ $O/mmucode.o
+
+$O/gdblib.o: $S/gdblib.c | $O
+	$(CC) -Iinclude/reactos -Iinclude/reactos/libs -g -c -o $@ $S/gdblib.c
+
+$O/devint.o: $S/devint.s | $O
+	$(CC) -Iinclude/reactos -Iinclude/reactos/libs -g -c -o $@ $S/devint.s
 
 $O/mmuobject.o: $S/mmuobject.c $S/mmuobject.h | $O
 	$(CC) -Iinclude/reactos -Iinclude/reactos/libs -g -c -o $@ $S/mmuobject.c

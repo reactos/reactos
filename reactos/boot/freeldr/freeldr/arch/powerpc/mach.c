@@ -287,6 +287,20 @@ VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
     }
 }
 
+int mmu_initialized = 0;
+int mem_range_end;
+VOID PpcInitializeMmu(int max_mem)
+{
+    if(!mmu_initialized)
+    {
+	MmuInit();
+	MmuDbgInit(0, 0x800003f8);
+        MmuSetMemorySize(mem_range_end > max_mem ? mem_range_end : max_mem);
+        //MmuDbgEnter(0x20);
+	mmu_initialized = 1;
+    }
+}
+
 /* 
  * Get memory the proper openfirmware way
  */
@@ -321,6 +335,14 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 	       i, 
 	       (int)BiosMemoryMap[slots].BaseAddress,
 	       (int)BiosMemoryMap[slots].Length);
+        
+        // Track end of ram
+        if (BiosMemoryMap[slots].BaseAddress + BiosMemoryMap[slots].Length > 
+            mem_range_end)
+        {
+            mem_range_end = 
+                BiosMemoryMap[slots].BaseAddress + BiosMemoryMap[slots].Length;
+        }
 
 	/* Hack for pearpc */
 	if( kernel_mem ) {
@@ -378,6 +400,8 @@ BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
 	RemainingPath[0] = 0;
     }
     *Device = 0;
+    // Hack to be a bit easier on ram
+    CacheSizeLimit = 64 * 1024;
     return MachDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
 }
 
@@ -492,28 +516,11 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 extern int _bss;
 typedef unsigned int uint32_t;
 
-void PpcOfwInit()
+void PpcDefaultMachVtbl()
 {
-    chosen_package = ofw_finddevice( "/chosen" );
-
-    ofw_getprop(chosen_package, "bootargs",
-		CmdLine, sizeof(CmdLine));
-    ofw_getprop( chosen_package, "stdin",
-		 (char *)&stdin_handle, sizeof(stdin_handle) );
-    ofw_getprop( chosen_package, "stdout",
-		 (char *)&stdout_handle, sizeof(stdout_handle) );
-    ofw_getprop( chosen_package, "mmu",
-		 (char *)&mmu_handle, sizeof(mmu_handle) );
-
     MachVtbl.ConsPutChar = PpcOfwPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;
     MachVtbl.ConsGetCh   = PpcConsGetCh;
-
-    printf( "chosen_package %x, stdin_handle is %x\n", 
-	    chosen_package, stdin_handle );
-    printf("virt2phys (0xe00000,D) -> %x\n", PpcVirt2phys(0xe00000,0));
-    printf("virt2phys (0xe01000,D) -> %x\n", PpcVirt2phys(0xe01000,0));
-
     MachVtbl.VideoClearScreen = PpcVideoClearScreen;
     MachVtbl.VideoSetDisplayMode = PpcVideoSetDisplayMode;
     MachVtbl.VideoGetDisplaySize = PpcVideoGetDisplaySize;
@@ -545,6 +552,20 @@ void PpcOfwInit()
     MachVtbl.RTCGetCurrentDateTime = PpcRTCGetCurrentDateTime;
 
     MachVtbl.HwDetect = PpcHwDetect;
+}
+
+void PpcOfwInit()
+{
+    chosen_package = ofw_finddevice( "/chosen" );
+
+    ofw_getprop(chosen_package, "bootargs",
+		CmdLine, sizeof(CmdLine));
+    ofw_getprop( chosen_package, "stdin",
+		 (char *)&stdin_handle, sizeof(stdin_handle) );
+    ofw_getprop( chosen_package, "stdout",
+		 (char *)&stdout_handle, sizeof(stdout_handle) );
+    ofw_getprop( chosen_package, "mmu",
+		 (char *)&mmu_handle, sizeof(mmu_handle) );
 
     // Allow forcing prep for broken OFW
     if(!strncmp(CmdLine, "bootprep", 8))
@@ -561,6 +582,7 @@ void PpcOfwInit()
 
 void PpcInit( of_proxy the_ofproxy ) {
     ofproxy = the_ofproxy;
+    PpcDefaultMachVtbl();
     if(ofproxy) PpcOfwInit();
     else PpcPrepInit();
 }
