@@ -27,7 +27,7 @@ void CreateSol()
     activepile.Clear();
 
     // Compute the value for yRowStackCardOffset based on the height of the card, so the card number isn't hidden on larger cards
-    yRowStackCardOffset = __cardheight / 6.7;
+    yRowStackCardOffset = (int)(__cardheight / 6.7);
 
     pDeck = SolWnd.CreateRegion(DECK_ID, true, X_BORDER, Y_BORDER, 2, 1);
     pDeck->SetEmptyImage(CS_EI_SUNK);
