@@ -37,7 +37,6 @@ typedef BOOL (NTAPI *PGD_DXDDDELETEDIRECTDRAWOBJECT)(HANDLE);
 typedef BOOL (NTAPI *PGD_DXDDDELETESURFACEOBJECT)(HANDLE);
 
 typedef DWORD (NTAPI *PGD_DXDDDESTROYD3DBUFFER)(HANDLE);
-
 typedef DWORD (NTAPI *PGD_DXDDFLIPTOGDISURFACE)(HANDLE, PDD_FLIPTOGDISURFACEDATA);
 typedef DWORD (NTAPI *PGD_DXDDGETAVAILDRIVERMEMORY)(HANDLE , PDD_GETAVAILDRIVERMEMORYDATA);
 
@@ -51,10 +50,8 @@ typedef DWORD (NTAPI *PGD_DXDDGETSCANLINE)(
 typedef DWORD (NTAPI *PGD_DXDDLOCK)(
 typedef DWORD (NTAPI *PGD_DXDDLOCKD3D)(
 typedef DWORD (NTAPI *PGD_DXDDQUERYDIRECTDRAWOBJECT)(
-typedef DWORD (NTAPI *PGD_DXDDQUERYMOCOMPSTATUS)(
 typedef DWORD (NTAPI *PGD_DXDDREENABLEDIRECTDRAWOBJECT)(
 typedef DWORD (NTAPI *PGD_DXDDRELEASEDC)(
-typedef DWORD (NTAPI *PGD_DXDDRENDERMOCOMP)(
 typedef DWORD (NTAPI *PGD_DXDDRESETVISRGN)(
 typedef DWORD (NTAPI *PGD_DXDDSETCOLORKEY)(
 typedef DWORD (NTAPI *PGD_DXDDSETEXCLUSIVEMODE)(
@@ -196,24 +193,7 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 
 }
 
-HANDLE
-STDCALL
-NtGdiDdCreateMoComp(HANDLE hDirectDraw, PDD_CREATEMOCOMPDATA puCreateMoCompData)
-{
-    PGD_DXDDCREATEMOCOMP pfnDdCreateMoComp = NULL;
-    INT i;
 
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateMoComp, pfnDdCreateMoComp);
-
-    if (pfnDdCreateMoComp == NULL)
-    {
-        DPRINT1("Warring no pfnDdCreateMoComp");
-        return DDHAL_DRIVER_NOTHANDLED;
-    }
-
-    DPRINT1("Calling on dxg.sys DdCreateMoComp");
-    return pfnDdCreateMoComp(hDirectDraw, puCreateMoCompData);
-}
 
 
 DWORD
@@ -281,25 +261,7 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
     return pfnDdAttachSurface(hSurfaceFrom,hSurfaceTo);
 }
 
-DWORD
-STDCALL
-NtGdiDdBeginMoCompFrame(HANDLE hMoComp,
-                        PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData)
-{
-    PGD_DDBEGINMOCOMPFRAME pfnDdBeginMoCompFrame = NULL;
-    INT i;
 
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdBeginMoCompFrame, pfnDdBeginMoCompFrame);
-
-    if (pfnDdBeginMoCompFrame == NULL)
-    {
-        DPRINT1("Warring no pfnDdBeginMoCompFrame");
-        return DDHAL_DRIVER_NOTHANDLED;
-    }
-
-    DPRINT1("Calling on dxg.sys DdBeginMoCompFrame");
-    return pfnDdBeginMoCompFrame(hMoComp,puBeginFrameData);
-}
 
 DWORD
 STDCALL
@@ -406,25 +368,7 @@ NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
     return pfnDdDeleteSurfaceObject(hSurface);
 }
 
-DWORD 
-STDCALL
-NtGdiDdDestroyMoComp(HANDLE hMoComp,
-                     PDD_DESTROYMOCOMPDATA puBeginFrameData)
-{
-    PGD_DXDDDESTROYMOCOMP pfnDxDdDestroyMoComp = NULL;
-    INT i;
 
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDestroyMoComp, pfnDxDdDestroyMoComp);
-
-    if (pfnDxDdDestroyMoComp == NULL)
-    {
-        DPRINT1("Warring no pfnDxDdDestroyMoComp");
-        return DDHAL_DRIVER_NOTHANDLED;
-    }
-
-    DPRINT1("Calling on dxg.sys DxDdDestroyMoComp");
-    return pfnDxDdDestroyMoComp(hMoComp, puBeginFrameData);
-}
 
 
 
@@ -447,15 +391,6 @@ NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
     DPRINT1("Calling on dxg.sys pfnDdDestroyD3DBuffer");
     return pfnDdDestroyD3DBuffer(hSurface);
 }
-
-
-
-
-typedef DWORD (NTAPI *PGD_DXDDENDMOCOMPFRAME)(HANDLE, PDD_ENDMOCOMPFRAMEDATA);
-typedef DWORD (NTAPI *PGD_DXDDFLIPTOGDISURFACE)(HANDLE, PDD_FLIPTOGDISURFACEDATA);
-typedef DWORD (NTAPI *PGD_DXDDGETAVAILDRIVERMEMORY)(HANDLE , PDD_GETAVAILDRIVERMEMORYDATA);
-
-
 
 /************************************************************************/
 /* DIRECT DRAW OBJECT                                                   */
