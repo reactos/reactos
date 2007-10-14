@@ -30,7 +30,7 @@ void NewGame(void);
 #define X_SUITSTACK_BORDER       10
 #define Y_BORDER                 20
 #define Y_ROWSTACK_BORDER        32
-#define Y_ROWSTACK_CARDOFFSET    14
+extern int yRowStackCardOffset;
 
 extern CardRegion *pDeck;
 extern CardRegion *pPile;

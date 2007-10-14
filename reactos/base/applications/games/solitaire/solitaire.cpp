@@ -465,15 +465,15 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
             SendMessage(hwndStatus, SB_SETTEXT, 0 | SBT_NOBORDERS, (LPARAM)"");
 
+            SolWnd.Create(hwnd, WS_EX_CLIENTEDGE, WS_CHILD|WS_VISIBLE, 0, 0, 0, 0);
+
+            CreateSol();
+
             // The status bar height is fixed and needed later in WM_SIZE and WM_GETMINMAXINFO
             // Force the window to process WM_GETMINMAXINFO again
             GetWindowRect(hwndStatus, &rcStatus);
             nStatusHeight = rcStatus.bottom - rcStatus.top;
             SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOZORDER);
-
-            SolWnd.Create(hwnd, WS_EX_CLIENTEDGE, WS_CHILD|WS_VISIBLE, 0, 0, 0, 0);
-
-            CreateSol();
 
             NewGame();
 
@@ -514,7 +514,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                                     Y_BORDER +
                                     __cardheight +
                                     Y_ROWSTACK_BORDER +
-                                    6 * Y_ROWSTACK_CARDOFFSET +
+                                    6 * yRowStackCardOffset +
                                     __cardheight +
                                     Y_BORDER +
                                     (dwOptions & OPTION_SHOW_STATUS ? nStatusHeight : 0);

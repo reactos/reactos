@@ -15,6 +15,7 @@ extern CardStack activepile;
 
 HBITMAP hbmBitmap;
 HDC     hdcBitmap;
+int     yRowStackCardOffset;
 
 void CreateSol()
 {
@@ -25,6 +26,8 @@ void CreateSol()
 
     activepile.Clear();
 
+    // Compute the value for yRowStackCardOffset based on the height of the card, so the card number isn't hidden on larger cards
+    yRowStackCardOffset = __cardheight / 6.7;
 
     pDeck = SolWnd.CreateRegion(DECK_ID, true, X_BORDER, Y_BORDER, 2, 1);
     pDeck->SetEmptyImage(CS_EI_SUNK);
@@ -62,7 +65,7 @@ void CreateSol()
     //
     for(i = 0; i < NUM_ROW_STACKS; i++)
     {
-        pRowStack[i] = SolWnd.CreateRegion(ROW_ID+i, true, 0, Y_BORDER + __cardheight + Y_ROWSTACK_BORDER, 0, Y_ROWSTACK_CARDOFFSET);
+        pRowStack[i] = SolWnd.CreateRegion(ROW_ID+i, true, 0, Y_BORDER + __cardheight + Y_ROWSTACK_BORDER, 0, yRowStackCardOffset);
         pRowStack[i]->SetEmptyImage(CS_EI_SUNK);
         pRowStack[i]->SetFaceDirection(CS_FACE_DOWNUP, i);
         
