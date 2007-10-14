@@ -851,31 +851,10 @@ EngQuerySystemAttribute(
    return FALSE;
 }
 
-/*
- * @unimplemented
- */
-FLATPTR STDCALL
-HeapVidMemAllocAligned(
-   IN LPVIDMEM lpVidMem,
-   IN DWORD dwWidth,
-   IN DWORD dwHeight,
-   IN LPSURFACEALIGNMENT lpAlignment,
-   OUT LPLONG lpNewPitch)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
 
-/*
- * @unimplemented
- */
-VOID STDCALL
-VidMemFree(
-   IN LPVMEMHEAP pvmh,
-   IN FLATPTR ptr)
-{
-   UNIMPLEMENTED;
-}
+
+
+
 
 /*
  * @unimplemented
@@ -888,18 +867,7 @@ BRUSHOBJ_hGetColorTransform(
    return NULL;
 }
 
-/*
- * @unimplemented
- */
-PVOID STDCALL
-EngAllocPrivateUserMem(
-   IN PDD_SURFACE_LOCAL  psl,
-   IN SIZE_T  cj,
-   IN ULONG  tag)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
+
 
 /*
  * @unimplemented
@@ -920,17 +888,6 @@ EngDeleteFile(
 {
    UNIMPLEMENTED;
    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL
-EngFreePrivateUserMem(
-   IN PDD_SURFACE_LOCAL  psl,
-   IN PVOID  pv)
-{
-   UNIMPLEMENTED;
 }
 
 /*

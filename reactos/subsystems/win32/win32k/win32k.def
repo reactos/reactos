@@ -15,7 +15,6 @@ CLIPOBJ_ppoGetPath@4
 EngAlphaBlend@28
 EngAcquireSemaphore@4
 EngAllocMem@12
-EngAllocPrivateUserMem@12
 EngAllocUserMem@8
 EngAssociateSurface@12
 EngBitBlt@44
@@ -53,7 +52,6 @@ EngFindImageProcAddress@8
 EngFindResource@16
 EngFreeMem@4
 EngFreeModule@4
-EngFreePrivateUserMem@8
 EngFreeUserMem@4
 EngGetCurrentCodePage@8=ntoskrnl.RtlGetCurrentCodePage
 EngGetCurrentProcessId@0
@@ -151,7 +149,6 @@ FONTOBJ_pifi@4
 FONTOBJ_pvTrueTypeFontFile@8
 FONTOBJ_pxoGetXform@4
 FONTOBJ_vGetInfo@12
-HeapVidMemAllocAligned@20
 HT_ComputeRGBGammaTable@24
 HT_Get8BPPFormatPalette@16
 PALOBJ_cGetColors@16
@@ -175,7 +172,6 @@ RtlUpcaseUnicodeToMultiByteN@20=NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
 STROBJ_bEnum@12
 STROBJ_dwGetCodePage@4
 STROBJ_vEnumStart@4
-VidMemFree@8
 Win32kInitialize@0
 WNDOBJ_bEnum@12
 WNDOBJ_cEnumStart@16
@@ -190,4 +186,12 @@ _abnormal_termination=NTOSKRNL._abnormal_termination
 _except_handler2=NTOSKRNL._except_handler2
 _global_unwind2=NTOSKRNL._global_unwind2
 _local_unwind2=NTOSKRNL._local_unwind2
+EngLockDirectDrawSurface@4
+EngUnlockDirectDrawSurface@4
+EngDxIoctl@12
+EngAllocPrivateUserMem@12
+HeapVidMemAllocAligned@20
+VidMemFree@8
+EngFreePrivateUserMem@8
+
 ;EOF
