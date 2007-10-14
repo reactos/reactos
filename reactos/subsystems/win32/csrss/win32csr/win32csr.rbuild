@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="win32csr" type="win32dll" entrypoint="0" installbase="system32" installname="win32csr.dll">
+<module name="win32csr" type="win32dll" installbase="system32" installname="win32csr.dll">
 	<importlibrary definition="win32csr.def" />
 	<include base="win32csr">.</include>
 	<include base="csrss">include</include>
