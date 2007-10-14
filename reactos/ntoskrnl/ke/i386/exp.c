@@ -460,7 +460,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                           MAXIMUM_SUPPORTED_EXTENSION);
 
             /* Remove reserved bits from MXCSR */
-            FxSaveArea->U.FxArea.MXCsr &= ~0xFFBF;
+            FxSaveArea->U.FxArea.MXCsr &= KiMXCsrMask;
 
             /* Mask out any invalid flags */
             FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
