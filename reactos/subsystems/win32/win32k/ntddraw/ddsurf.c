@@ -307,5 +307,57 @@ NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
     return pfnDdSetOverlayPosition(hSurfaceSource,hSurfaceDestination,puSetOverlayPositionData);
 }
 
+/************************************************************************/
+/* This is not part of the ddsurface interface but it have              */
+/* deal with the surface                                                */
+/************************************************************************/
 
+
+/************************************************************************/
+/* NtGdiDdAlphaBlt                                                      */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdAlphaBlt(HANDLE hSurfaceDest,
+                HANDLE hSurfaceSrc,
+                PDD_BLTDATA puBltData)
+{
+    PGD_DDALPHABLT pfnDdAlphaBlt = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdAlphaBlt, pfnDdAlphaBlt);
+
+    if (pfnDdAlphaBlt == NULL)
+    {
+        DPRINT1("Warring no pfnDdAlphaBlt");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys DdAlphaBlt");
+    return pfnDdAlphaBlt(hSurfaceDest,hSurfaceSrc,puBltData);
+}
+
+/************************************************************************/
+/* NtGdiDdAttachSurface                                                 */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
+                     HANDLE hSurfaceTo
+)
+{
+    PGD_DDATTACHSURFACE pfnDdAttachSurface = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdAttachSurface, pfnDdAttachSurface);
+
+    if (pfnDdAttachSurface == NULL)
+    {
+        DPRINT1("Warring no pfnDdAttachSurface");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdAttachSurface");
+    return pfnDdAttachSurface(hSurfaceFrom,hSurfaceTo);
+}
 

@@ -25,7 +25,7 @@
 
 extern PDRVFN gpDxFuncs;
 
-
+typedef DWORD (NTAPI *PGD_DDCANCREATED3DBUFFER)(HANDLE, PDD_CANCREATESURFACEDATA);
 typedef DWORD (NTAPI *PGD_DXDDUNLOCKD3D)(HANDLE, PDD_UNLOCKDATA);
 typedef DWORD (NTAPI *PGD_DXDDLOCKD3D)(HANDLE, PDD_LOCKDATA);
 typedef DWORD (NTAPI *PGD_D3DVALIDATETEXTURESTAGESTATE)(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA);
@@ -50,7 +50,29 @@ typedef DWORD (NTAPI *PGD_D3DCONTEXTDESTROYALL)(LPD3DNTHAL_CONTEXTDESTROYALLDATA
 
 
 
+/************************************************************************/
+/* NtGdiDdCanCreateD3DBuffer                                            */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
+                          PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
+)
+{
+    PGD_DDCANCREATED3DBUFFER pfnDdCanCreateD3DBuffer = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCanCreateD3DBuffer, pfnDdCanCreateD3DBuffer);
+
+    if (pfnDdCanCreateD3DBuffer == NULL)
+    {
+        DPRINT1("Warring no pfnDdCanCreateD3DBuffer");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys DdCanCreateD3DBuffer");
+    return pfnDdCanCreateD3DBuffer(hDirectDraw,puCanCreateSurfaceData);
+}
 
 /************************************************************************/
 /* NtGdiD3dContextCreate                                                */
@@ -154,6 +176,28 @@ NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
 }
 
 /************************************************************************/
+/* NtGdiDdDestroyD3DBuffer                                              */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
+{
+    PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDestroyD3DBuffer, pfnDdDestroyD3DBuffer);
+
+    if (pfnDdDestroyD3DBuffer == NULL)
+    {
+        DPRINT1("Warring no pfnDdDestroyD3DBuffer");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdDestroyD3DBuffer");
+    return pfnDdDestroyD3DBuffer(hSurface);
+}
+
+/************************************************************************/
 /* NtGdiD3dDrawPrimitives2                                              */
 /************************************************************************/
 DWORD
@@ -227,6 +271,9 @@ NtGdiD3dValidateTextureStageState(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
     return pfnD3dValidateTextureStageState(pData);
 }
 
+/************************************************************************/
+/* NtGdiDdUnlockD3D                                                     */
+/************************************************************************/
 DWORD
 STDCALL
 NtGdiDdUnlockD3D(HANDLE hSurface,
