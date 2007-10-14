@@ -22,6 +22,12 @@
 
 extern PDRVFN gpDxFuncs;
 
+
+typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTFLIPSTATUS)(hDirectDraw, puGetVPortFlipStatusData);
+typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTINPUTFORMATS)(HANDLE, PDD_GETVPORTINPUTFORMATDATA);
+typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTLINE)(HANDLE, PDD_GETVPORTLINEDATA);
+typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS)(HANDLE, PDD_GETVPORTOUTPUTFORMATDATA);
+typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOPORTCONNECTINFO)(HANDLE, PDD_GETVPORTCONNECTDATA);
 typedef DWORD (NTAPI *PGD_DXDVPGETVIDEOSIGNALSTATUS)(HANDLE, PDD_GETVPORTSIGNALDATA);
 typedef DWORD (NTAPI *PGD_DXDVPUPDATEVIDEOPORT)(HANDLE, HANDLE*, HANDLE*, PDD_UPDATEVPORTDATA);
 typedef DWORD (NTAPI *PGD_DXDVPWAITFORVIDEOPORTSYNC)(hVideoPort, puWaitForVPortSyncData);
@@ -110,7 +116,19 @@ STDCALL
 NtGdiDvpGetVideoPortFlipStatus(HANDLE hDirectDraw,
                                PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData)
 {
+    PGD_DXDVPGETVIDEOPORTFLIPSTATUS pfnDvpGetVideoPortFlipStatus = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortFlipStatus, pfnDvpGetVideoPortFlipStatus);
+
+    if (pfnDvpGetVideoPortFlipStatus == NULL)
+    {
+        DPRINT1("Warring no pfnDvpGetVideoPortFlipStatus");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortFlipStatus");
+    return pfnDvpGetVideoPortFlipStatus(hDirectDraw, puGetVPortFlipStatusData);
 }
 
 
@@ -122,7 +140,19 @@ STDCALL
 NtGdiDvpGetVideoPortInputFormats(HANDLE hVideoPort,
                                  PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData)
 {
+    PGD_DXDVPGETVIDEOPORTINPUTFORMATS pfnDvpGetVideoPortInputFormats = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortInputFormats, pfnDvpGetVideoPortInputFormats);
+
+    if (pfnDvpGetVideoPortInputFormats == NULL)
+    {
+        DPRINT1("Warring no pfnDvpGetVideoPortInputFormats");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortInputFormats");
+    return pfnDvpGetVideoPortInputFormats(hVideoPort, puGetVPortInputFormatData);
 }
 
 
@@ -134,7 +164,19 @@ STDCALL
 NtGdiDvpGetVideoPortLine(HANDLE hVideoPort,
                          PDD_GETVPORTLINEDATA puGetVPortLineData)
 {
+    PGD_DXDVPGETVIDEOPORTLINE pfnDvpGetVideoPortLine = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortLine, pfnDvpGetVideoPortLine);
+
+    if (pfnDvpGetVideoPortLine == NULL)
+    {
+        DPRINT1("Warring no pfnDvpGetVideoPortLine");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortLine");
+    return pfnDvpGetVideoSignalStatus(hVideoPort, puGetVPortLineData);
 }
 
 
@@ -146,7 +188,20 @@ STDCALL
 NtGdiDvpGetVideoPortOutputFormats(HANDLE hVideoPort,
                                   PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData)
 {
+    PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS pfnDvpGetVideoPortOutputFormats = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortOutputFormats, puGetVPortOutputFormatData);
+
+    if (pfnDvpGetVideoSignalStatus == NULL)
+    {
+        DPRINT1("Warring no pfnDvpGetVideoPortOutputFormats");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortOutputFormats");
+    return pfnDvpGetVideoPortOutputFormats(hVideoPort, puGetVPortOutputFormatData);
+ 
 }
 
 
@@ -158,7 +213,19 @@ STDCALL
 NtGdiDvpGetVideoPortConnectInfo(HANDLE hDirectDraw,
                                 PDD_GETVPORTCONNECTDATA puGetVPortConnectData)
 {
+    PGD_DXDVPGETVIDEOPORTCONNECTINFO pfnDvpGetVideoPortConnectInfo = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortConnectInfo, pfnDvpGetVideoPortConnectInfo);
+
+    if (pfnDvpGetVideoPortConnectInfo == NULL)
+    {
+        DPRINT1("Warring no pfnDvpGetVideoPortConnectInfo");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortConnectInfo");
+    return pfnDvpGetVideoPortConnectInfo(hVideoPort, puGetVPortConnectData);
 }
 
 
