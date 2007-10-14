@@ -55,15 +55,7 @@ HANDLE STDCALL NtGdiDdGetDxHandle(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdLockD3D(
-    HANDLE hSurface,
-    PDD_LOCKDATA puLockData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 BOOL STDCALL NtGdiDdReleaseDC(
     HANDLE hSurface
@@ -102,15 +94,7 @@ VOID STDCALL NtGdiDdUnattachSurface(
 	UNIMPLEMENTED
 }
 
-DWORD STDCALL NtGdiDdUnlockD3D(
-    HANDLE hSurface,
-    PDD_UNLOCKDATA puUnlockData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 
 /* EOF */
