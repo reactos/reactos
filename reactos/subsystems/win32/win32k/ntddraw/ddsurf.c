@@ -16,6 +16,7 @@
 
 extern PDRVFN gpDxFuncs;
 
+typedef DWORD (NTAPI *PGD_DXDDUNATTACHSURFACE)(HANDLE, HANDLE);
 typedef DWORD (NTAPI *PGD_DXDDDESTROYSURFACE)(HANDLE, BOOL);
 typedef DWORD (NTAPI *PGD_DXDDFLIP)(HANDLE, HANDLE, HANDLE, HANDLE, PDD_FLIPDATA);
 /* Does not exists in win32k or dxg.sys PDD_SURFCB_SETCLIPLIST  SetClipList; */
@@ -360,4 +361,28 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
     DPRINT1("Calling on dxg.sys pfnDdAttachSurface");
     return pfnDdAttachSurface(hSurfaceFrom,hSurfaceTo);
 }
+
+/************************************************************************/
+/* NtGdiDdUnattachSurface                                               */
+/************************************************************************/
+VOID
+STDCALL
+NtGdiDdUnattachSurface(HANDLE hSurface,
+                       HANDLE hSurfaceAttached)
+{
+    PGD_DXDDUNATTACHSURFACE pfnDdUnattachSurface = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnattachSurface, pfnDdUnattachSurface);
+
+    if (pfnDdUnattachSurface == NULL)
+    {
+        DPRINT1("Warring no pfnDdUnattachSurface");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdUnattachSurface");
+    return pfnDdUnattachSurface(hSurface,hSurfaceAttached);
+}
+
 

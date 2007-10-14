@@ -13,16 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-DWORD STDCALL NtGdiDdCreateSurfaceEx(
-    HANDLE hDirectDraw,
-    HANDLE hSurface,
-    DWORD dwSurfaceHandle
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdFlipToGDISurface(
     HANDLE hDirectDraw,
@@ -86,13 +77,7 @@ BOOL STDCALL NtGdiDdSetGammaRamp(
 	return 0;
 }
 
-VOID STDCALL NtGdiDdUnattachSurface(
-    HANDLE hSurface,
-    HANDLE hSurfaceAttached
-)
-{
-	UNIMPLEMENTED
-}
+
 
 
 

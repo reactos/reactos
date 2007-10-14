@@ -18,15 +18,11 @@
 
 extern PDRVFN gpDxFuncs;
 
-/* is not longer in use PDD_DESTROYDRIVER  DestroyDriver */
 typedef DWORD (NTAPI *PGD_DDCREATESURFACE)(HANDLE, HANDLE *, DDSURFACEDESC *, DD_SURFACE_GLOBAL *, DD_SURFACE_LOCAL *, DD_SURFACE_MORE *, PDD_CREATESURFACEDATA , HANDLE *);
-/* see ddsurf.c for  PDD_SETCOLORKEY  SetColorKey; */
-/* is not longer in use PDD_SETMODE  SetMode; */
 typedef DWORD (NTAPI *PGD_DXDDWAITFORVERTICALBLANK)(HANDLE, PDD_WAITFORVERTICALBLANKDATA);
 typedef DWORD (NTAPI *PGD_DDCANCREATESURFACE)(HANDLE hDirectDrawLocal, PDD_CANCREATESURFACEDATA puCanCreateSurfaceData);
-/* is not longer in use PDD_CREATEPALETTE  CreatePalette; */
 typedef DWORD (NTAPI *PGD_DXDDGETSCANLINE)(HANDLE, PDD_GETSCANLINEDATA);
-/* is not longer in use PDD_MAPMEMORY  MapMemory; */
+typedef DWORD (NTAPI *PGD_DXDDCREATESURFACEEX)(HANDLE,HANDLE,DWORD);
 
 #define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
     if (gpDxFuncs) \
@@ -139,6 +135,37 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
 
     DPRINT1("Calling on dxg.sys pfnDdGetScanLine");
     return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
+}
+
+
+/************************************************************************/
+/* This is not part of the ddsurface interface but it have              */
+/* deal with the surface                                                */
+/************************************************************************/
+
+/************************************************************************/
+/* NtGdiDdCreateSurfaceEx                                               */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
+                       HANDLE hSurface,
+                       DWORD dwSurfaceHandle)
+{
+    PGD_DXDDCREATESURFACEEX pfnDdCreateSurfaceEx  = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateSurfaceEx, pfnDdCreateSurfaceEx);
+
+    if (pfnDdCreateSurfaceEx == NULL)
+    {
+        DPRINT1("Warring no pfnDdCreateSurfaceEx");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdCreateSurfaceEx");
+    return pfnDdCreateSurfaceEx(hDirectDrawLocal,puGetScanLineData);
+
 }
 
 

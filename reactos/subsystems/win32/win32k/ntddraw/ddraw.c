@@ -22,6 +22,10 @@
 
 
 
+typedef DWORD (NTAPI *PGD_DXDDREENABLEDIRECTDRAWOBJECT)(HANDLE, BOOL);
+typedef DWORD (NTAPI *PGD_DXDDGETDRIVERINFO)(HANDLE, PDD_GETDRIVERINFODATA);
+typedef DWORD (NTAPI *PGD_DXDDGETAVAILDRIVERMEMORY(HANDLE, PDD_GETAVAILDRIVERMEMORYDATA);
+typedef DWORD (NTAPI *PGD_DXDDSETEXCLUSIVEMODE)(HANDLE, PDD_SETEXCLUSIVEMODEDATA);
 typedef NTSTATUS (NTAPI *PGD_DXDDSTARTUPDXGRAPHICS) (ULONG, PDRVENABLEDATA, ULONG, PDRVENABLEDATA, PULONG, PEPROCESS);
 typedef NTSTATUS (NTAPI *PGD_DXDDCLEANUPDXGRAPHICS) (VOID);
 typedef HANDLE (NTAPI *PGD_DDCREATEDIRECTDRAWOBJECT) (HDC hdc);
@@ -354,169 +358,107 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
 }
 
 
-
+/************************************************************************/
+/* NtGdiDdReenableDirectDrawObject                                      */
+/************************************************************************/
 
 
 BOOL
-STDCALL NtGdiDdReenableDirectDrawObject(
-    HANDLE hDirectDrawLocal,
-    BOOL *pubNewMode
-)
+STDCALL
+NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
+                                BOOL *pubNewMode)
 {
-    BOOL Ret=FALSE;
-    NTSTATUS Status = FALSE;
-    PDD_DIRECTDRAW pDirectDraw;
+    PGD_DXDDREENABLEDIRECTDRAWOBJECT pfnDdReenableDirectDrawObject = NULL;
+    INT i;
 
-    if (hDirectDrawLocal == NULL)
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdReenableDirectDrawObject, pfnDdReenableDirectDrawObject);
+
+    if (pfnDdReenableDirectDrawObject == NULL)
     {
-       return Ret;
-    }
-
-    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
-                                 GDI_OBJECT_TYPE_DIRECTDRAW);
-
-    if (!pDirectDraw)
-    {
-        return Ret;
-    }
-
-    /* 
-     * FIXME detect mode change thic code maybe are not correct
-     * if we call on intEnableDriver it will cause some memory leak
-     * we need free the alloc memory before we call on it
-     */
-    Ret = intEnableDriver(pDirectDraw);
-
-    _SEH_TRY
-    {
-        ProbeForWrite(pubNewMode, sizeof(BOOL), 1);
-        *pubNewMode = Ret;
-    }
-    _SEH_HANDLE 
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    if(!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return Ret;
-    }
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-
-    return Ret;
-
-}
-
-
-
-DWORD STDCALL NtGdiDdGetDriverInfo(
-    HANDLE hDirectDrawLocal,
-    PDD_GETDRIVERINFODATA puGetDriverInfoData)
-
-{
-    DWORD  ddRVal = 0;
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
-                                                GDI_OBJECT_TYPE_DIRECTDRAW);
-
-    DPRINT1("NtGdiDdGetDriverInfo\n");
-
-    if (pDirectDraw == NULL) 
-    {
+        DPRINT1("Warring no pfnDdReenableDirectDrawObject");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    /* it exsist two version of NtGdiDdGetDriverInfo we need check for both flags */
-    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
-         ddRVal++;
-
-    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFO2))
-         ddRVal++;
-
-    /* Now we are doing the call to drv DrvGetDriverInfo */
-    if   (ddRVal == 2)
-    {
-        DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED");         
-        ddRVal = DDHAL_DRIVER_NOTHANDLED;
-    }
-    else
-    {
-        ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
-    }
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-
-    return ddRVal;
+    DPRINT1("Calling on dxg.sys pfnDdReenableDirectDrawObject");
+    return pfnDdReenableDirectDrawObject(hDirectDrawLocal, pubNewMode);
 }
 
 
+/************************************************************************/
+/* NtGdiDdGetDriverInfo                                                 */
+/************************************************************************/
 
+DWORD
+STDCALL
+NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
+                     PDD_GETDRIVERINFODATA puGetDriverInfoData)
 
-
-DWORD STDCALL NtGdiDdGetAvailDriverMemory(
-    HANDLE hDirectDrawLocal,
-    PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
-)
 {
-	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DXDDGETDRIVERINFO pfnDdGetDriverInfo = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdGetAvailDriverMemory\n");
-#endif
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDriverInfo, pfnDdGetDriverInfo);
 
-	/* backup the orignal PDev and info */
-	lgpl = puGetAvailDriverMemoryData->lpDD;
+    if (pfnDdGetDriverInfo == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetDriverInfo");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* use our cache version instead */
-	puGetAvailDriverMemoryData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-   // ddRVal = pDirectDraw->DdGetAvailDriverMemory(puGetAvailDriverMemoryData); 
- 
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    DPRINT1("Calling on dxg.sys pfnDdGetDriverInfo");
+    return pfnDdGetDriverInfo(hDirectDrawLocal, puGetDriverInfoData);
 
 
-	/* But back the orignal PDev */
-	puGetAvailDriverMemoryData->lpDD = lgpl;
-
-	return ddRVal;
 }
 
 
-
-
-DWORD STDCALL NtGdiDdSetExclusiveMode(
-    HANDLE hDirectDraw,
-    PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
-)
+/************************************************************************/
+/* NtGdiDdGetAvailDriverMemory                                          */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdGetAvailDriverMemory(HANDLE hDirectDrawLocal,
+                            PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData)
 {
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DXDDGETAVAILDRIVERMEMORY pfnDdGetAvailDriverMemory = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetAvailDriverMemory, pfnDdGetAvailDriverMemory);
 
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdSetExclusiveMode\n");
-#endif
+    if (pfnDdGetAvailDriverMemory == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetAvailDriverMemory");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* backup the orignal PDev and info */
-	lgpl = puSetExclusiveModeData->lpDD;
+    DPRINT1("Calling on dxg.sys pfnDdGetAvailDriverMemory");
+    return pfnDdGetAvailDriverMemory(hDirectDrawLocal, puGetAvailDriverMemoryData);
+}
 
-	/* use our cache version instead */
-	puSetExclusiveModeData->lpDD = &pDirectDraw->Global;
 
-	/* make the call */
-    ddRVal = pDirectDraw->DdSetExclusiveMode(puSetExclusiveModeData);
+/************************************************************************/
+/* NtGdiDdSetExclusiveMode                                              */
+/************************************************************************/
 
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+DWORD
+STDCALL
+NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
+                        PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData)
+{
+    PGD_DXDDSETEXCLUSIVEMODE pfnDdSetExclusiveMode = NULL;
+    INT i;
 
-	/* But back the orignal PDev */
-	puSetExclusiveModeData->lpDD = lgpl;
-    
-	return ddRVal;	
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetExclusiveMode, pfnDdSetExclusiveMode);
+
+    if (pfnDdSetExclusiveMode == NULL)
+    {
+        DPRINT1("Warring no pfnDdSetExclusiveMode");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdSetExclusiveMode");
+    return pfnDdSetExclusiveMode(hDirectDrawLocal, puGetAvailDriverMemoryData);
+
 }
 
 
