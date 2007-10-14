@@ -1,0 +1,16 @@
+LIBRARY dxtn
+EXPORTS
+dxt1_rgb_encode@28
+dxt1_rgba_encode@28
+dxt3_rgba_encode@28
+dxt5_rgba_encode@28
+dxt1_rgba_decode_1@20
+dxt3_rgba_decode_1@20
+dxt5_rgba_decode_1@20
+fxt1_encode@28
+fxt1_decode_1@20
+fetch_2d_texel_rgb_dxt1@20
+fetch_2d_texel_rgba_dxt1@20
+fetch_2d_texel_rgba_dxt3@20
+fetch_2d_texel_rgba_dxt5@20
+tx_compress_dxtn@28

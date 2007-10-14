@@ -7,5 +7,11 @@
 	<directory name="mesa32">
 		<xi:include href="mesa32/mesa32.rbuild" />
 	</directory>
+
+	<ifnot property="NSWPAT" value="0">
+		<directory name="dxtn">
+			<xi:include href="dxtn/dxtn.rbuild" />
+		</directory>
+	</ifnot>
 </group>
 	
