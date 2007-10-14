@@ -96,6 +96,8 @@
 		<file>ddraw.c</file>
 		<file>dd.c</file>
 		<file>ddsurf.c</file>
+		<file>d3d.c</file>
+		<file>mocomp.c</file>
 		<file>stubs.c</file>
 	</directory>
 	<directory name="ntuser">

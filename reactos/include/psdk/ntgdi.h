@@ -794,7 +794,7 @@ NtGdiDdDestroyD3DBuffer(
 );
 
 W32KAPI
-DWORD
+BOOL
 APIENTRY
 NtGdiD3dContextCreate(
     IN HANDLE hDirectDrawLocal,
@@ -2013,15 +2013,6 @@ NtGdiEnumObjects(
     OUT OPTIONAL PVOID pvBuf
 );
 
-// Note from SDK:
-//
-// NtGdiResetDC
-// The exact size of the buffer at pdm is pdm->dmSize + pdm->dmDriverExtra.
-// But this can't be specified with current annotation language.
-//
-// typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;
-// 
-// :end note.
 W32KAPI
 BOOL
 APIENTRY
@@ -2029,7 +2020,7 @@ NtGdiResetDC(
     IN HDC hdc,
     IN LPDEVMODEW pdm,
     OUT PBOOL pbBanding,
-    IN OPTIONAL VOID *pDriverInfo2, // this is "typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;"
+    IN OPTIONAL VOID *pDriverInfo2,
     OUT VOID *ppUMdhpdev
 );
 
@@ -2070,11 +2061,11 @@ HDC
 APIENTRY
 NtGdiOpenDCW(
     IN OPTIONAL PUNICODE_STRING pustrDevice,
-    IN DEVMODEW *pdm,  // See note for NtGdiResetDC
+    IN DEVMODEW *pdm,
     IN PUNICODE_STRING pustrLogAddr,
     IN ULONG iType,
     IN OPTIONAL HANDLE hspool,
-    IN OPTIONAL VOID *pDriverInfo2, // this is  "typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;"
+    IN OPTIONAL VOID *pDriverInfo2,
     OUT VOID *pUMdhpdev
 );
 

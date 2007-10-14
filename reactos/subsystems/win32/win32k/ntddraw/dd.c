@@ -5,13 +5,91 @@
  * FILE:             subsys/win32k/ntddraw/dd.c
  * PROGRAMER:        Magnus Olsen (greatlord@reactos.org)
  * REVISION HISTORY:
- *       19/7-2006   Magnus Olsen
+ *       19/1-2006   Magnus Olsen
  */
 
 #include <w32k.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
+#include <reactos/drivers/directx/dxg.h>
+
+
+
+extern PDRVFN gpDxFuncs;
+
+// PDD_DESTROYDRIVER  DestroyDriver;
+// PDD_CREATESURFACE  CreateSurface;
+/* see ddsurf.c for  PDD_SETCOLORKEY  SetColorKey; */
+// PDD_SETMODE  SetMode;
+// PDD_WAITFORVERTICALBLANK  WaitForVerticalBlank;
+typedef DWORD (NTAPI *PGD_DDCANCREATESURFACE)(HANDLE hDirectDrawLocal, PDD_CANCREATESURFACEDATA puCanCreateSurfaceData);
+// PDD_CREATEPALETTE  CreatePalette;
+// PDD_GETSCANLINE  GetScanLine;
+// PDD_MAPMEMORY  MapMemory;
+
+
+
+
+
+
+#define DXG_GET_INDEX_FUNCTION(INDEX, FUNCTION) \
+    if (gpDxFuncs) \
+    { \
+        for (i = 0; i <= DXG_INDEX_DxDdIoctl; i++) \
+        { \
+            if (gpDxFuncs[i].iFunc == INDEX)  \
+            { \
+                FUNCTION = (VOID *)gpDxFuncs[i].pfn;  \
+                break;  \
+            }  \
+        } \
+    }
+
+
+DWORD
+STDCALL
+NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
+                        PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
+{
+    PGD_DDCANCREATESURFACE pfnDdCanCreateSurface = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCanCreateSurface, pfnDdCanCreateSurface);
+
+    if (pfnDdCanCreateSurface == NULL)
+    {
+        DPRINT1("Warring no pfnDdCanCreateSurface");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys DdCanCreateSurface");
+    return pfnDdCanCreateSurface(hDirectDrawLocal,puCanCreateSurfaceData);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #define DdHandleTable GdiHandleTable
 
@@ -440,88 +518,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 }
 
 
-/************************************************************************/
-/* CanCreateSurface                                                     */
-/* status : Works as intended                                           */
-/************************************************************************/
 
-DWORD STDCALL NtGdiDdCanCreateSurface(
-    HANDLE hDirectDrawLocal,
-    PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-)
-{
-    DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-    
-
-
-    if ((puCanCreateSurfaceData) && 
-        (hDirectDrawLocal))
-    {
-        DDSURFACEDESC desc;
-        DWORD descSize = 0;
-        NTSTATUS Status = FALSE;
-        PDD_DIRECTDRAW pDirectDraw = NULL;
-        DD_CANCREATESURFACEDATA CanCreateSurfaceData;
-        LPDDHAL_CANCREATESURFACEDATA pCanCreateSurfaceData = (LPDDHAL_CANCREATESURFACEDATA)puCanCreateSurfaceData;
-
-        RtlZeroMemory(&CanCreateSurfaceData,sizeof(DDSURFACEDESC));
-        RtlZeroMemory(&desc,sizeof(DDSURFACEDESC));
-
-        _SEH_TRY
-        {
-            ProbeForRead(pCanCreateSurfaceData, sizeof(DDHAL_CANCREATESURFACEDATA), 1);
-            CanCreateSurfaceData.bIsDifferentPixelFormat = pCanCreateSurfaceData->bIsDifferentPixelFormat;
-
-            if (pCanCreateSurfaceData->lpDDSurfaceDesc)
-            {
-                ProbeForRead(pCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
-                RtlCopyMemory(&desc,pCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC));
-
-                /*if it was DDSURFACEDESC2 been pass down */
-                descSize = desc.dwSize;
-                desc.dwSize = sizeof(DDSURFACEDESC);
-            }
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-
-        if ((NT_SUCCESS(Status)) && 
-            (desc.dwSize != 0))
-        {
-            pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-            if ((pDirectDraw) && 
-                (pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
-            {
-                CanCreateSurfaceData.ddRVal = DDERR_GENERIC;
-                CanCreateSurfaceData.lpDD = &pDirectDraw->Global;
-                CanCreateSurfaceData.lpDDSurfaceDesc = &desc;
-                ddRVal = pDirectDraw->DD.CanCreateSurface(&CanCreateSurfaceData);
-
-                /*if it was DDSURFACEDESC2 been pass down */
-                desc.dwSize = descSize;
-                _SEH_TRY
-                {
-                     ProbeForWrite(puCanCreateSurfaceData, sizeof(DDHAL_CANCREATESURFACEDATA), 1);
-                     puCanCreateSurfaceData->ddRVal = CanCreateSurfaceData.ddRVal;
-
-                     ProbeForWrite(puCanCreateSurfaceData->lpDDSurfaceDesc, sizeof(DDSURFACEDESC), 1);
-                     RtlCopyMemory(puCanCreateSurfaceData->lpDDSurfaceDesc,&desc, sizeof(DDSURFACEDESC));
-
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-            }
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        }
-    }
-  return ddRVal;
-}
 
 /************************************************************************/
 /* GetScanLine                                                          */
