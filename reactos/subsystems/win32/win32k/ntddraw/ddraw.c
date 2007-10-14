@@ -30,13 +30,10 @@ typedef NTSTATUS (NTAPI *PGD_DXDDSTARTUPDXGRAPHICS) (ULONG, PDRVENABLEDATA, ULON
 typedef NTSTATUS (NTAPI *PGD_DXDDCLEANUPDXGRAPHICS) (VOID);
 typedef HANDLE (NTAPI *PGD_DDCREATEDIRECTDRAWOBJECT) (HDC hdc);
 typedef DWORD (NTAPI *PGD_DDGETDRIVERSTATE)(PDD_GETDRIVERSTATEDATA);
-typedef DWORD (NTAPI *PGD_DDALPHABLT)(HANDLE, HANDLE, PDD_BLTDATA);
-typedef BOOL (NTAPI *PGD_DDATTACHSURFACE)(HANDLE, HANDLE);
 typedef DWORD (NTAPI *PGD_DDCOLORCONTROL)(HANDLE hSurface,PDD_COLORCONTROLDATA puColorControlData);
 typedef HANDLE (NTAPI *PGD_DXDDCREATESURFACEOBJECT)(HANDLE, HANDLE, PDD_SURFACE_LOCAL, PDD_SURFACE_MORE, PDD_SURFACE_GLOBAL, BOOL);
 typedef BOOL (NTAPI *PGD_DXDDDELETEDIRECTDRAWOBJECT)(HANDLE);
 typedef BOOL (NTAPI *PGD_DXDDDELETESURFACEOBJECT)(HANDLE);
-typedef DWORD (NTAPI *PGD_DXDDDESTROYD3DBUFFER)(HANDLE);
 typedef DWORD (NTAPI *PGD_DXDDFLIPTOGDISURFACE)(HANDLE, PDD_FLIPTOGDISURFACEDATA);
 typedef DWORD (NTAPI *PGD_DXDDGETAVAILDRIVERMEMORY)(HANDLE , PDD_GETAVAILDRIVERMEMORYDATA);
 typedef BOOL (NTAPI *PGD_DXDDQUERYDIRECTDRAWOBJECT)(HANDLE, DD_HALINFO*, DWORD*,  LPD3DNTHAL_CALLBACKS, LPD3DNTHAL_GLOBALDRIVERDATA,
@@ -361,8 +358,6 @@ NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
 /************************************************************************/
 /* NtGdiDdReenableDirectDrawObject                                      */
 /************************************************************************/
-
-
 BOOL
 STDCALL
 NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
@@ -387,7 +382,6 @@ NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
 /************************************************************************/
 /* NtGdiDdGetDriverInfo                                                 */
 /************************************************************************/
-
 DWORD
 STDCALL
 NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
@@ -407,8 +401,6 @@ NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
 
     DPRINT1("Calling on dxg.sys pfnDdGetDriverInfo");
     return pfnDdGetDriverInfo(hDirectDrawLocal, puGetDriverInfoData);
-
-
 }
 
 
@@ -458,6 +450,88 @@ NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
 
     DPRINT1("Calling on dxg.sys pfnDdSetExclusiveMode");
     return pfnDdSetExclusiveMode(hDirectDrawLocal, puGetAvailDriverMemoryData);
+
+}
+
+
+/************************************************************************/
+/* NtGdiDdFlipToGDISurface                                              */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdFlipToGDISurface(HANDLE hDirectDraw,
+                        PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData)
+{
+    PGD_DXDDFLIPTOGDISURFACE pfnDdFlipToGDISurface = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdFlipToGDISurface, pfnDdFlipToGDISurface);
+
+    if (pfnDdFlipToGDISurface == NULL)
+    {
+        DPRINT1("Warring no pfnDdFlipToGDISurface");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdFlipToGDISurface");
+    return pfnDdFlipToGDISurface(hDirectDrawLocal, puFlipToGDISurfaceData);
+
+}
+
+/************************************************************************/
+/* NtGdiDdGetDC                                                         */
+/************************************************************************/
+HDC
+STDCALL
+NtGdiDdGetDC(HANDLE hSurface,
+             PALETTEENTRY *puColorTable)
+{
+
+}
+
+/************************************************************************/
+/* NtGdiDdGetDxHandle                                                   */
+/************************************************************************/
+HANDLE
+STDCALL
+NtGdiDdGetDxHandle(HANDLE hDirectDraw,
+                   HANDLE hSurface,
+                   BOOL bRelease)
+{
+
+}
+
+
+/************************************************************************/
+/* NtGdiDdReleaseDC                                                     */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdReleaseDC(HANDLE hSurface)
+{
+
+}
+
+/************************************************************************/
+/* NtGdiDdResetVisrgn                                                   */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdResetVisrgn(HANDLE hSurface,
+                   HWND hwnd)
+{
+
+}
+
+/************************************************************************/
+/* NtGdiDdSetGammaRamp                                                  */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
+                    HDC hdc,
+                    LPVOID lpGammaRamp)
+{
 
 }
 
