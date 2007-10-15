@@ -19,6 +19,12 @@
 #include <string>
 #include <stdarg.h>
 
+#ifdef __CYGWIN__
+namespace std {
+	typedef basic_string<wchar_t> wstring;
+}
+#endif
+
 std::string ssprintf ( const char* fmt, ... );
 std::string ssvprintf ( const char* fmt, va_list args );
 

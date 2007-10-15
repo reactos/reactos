@@ -286,7 +286,7 @@ int strcasecmp(const char *str1, const char *str2);
 # endif
 #endif /* !defined(HAVE_STRCASECMP) */
 
-#ifndef HAVE_USLEEP
+#if !defined(HAVE_USLEEP) && !defined(__CYGWIN__)
 int usleep (unsigned int useconds);
 #endif /* !defined(HAVE_USLEEP) */
 

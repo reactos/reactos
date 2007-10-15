@@ -37,7 +37,7 @@ inline int iswdigit ( wchar_t c )
 #endif
 #endif//WIN32
 
-#if defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__APPLE__) || defined(__CYGWIN__)
 # define __isnan isnan
 # define __finite finite
 # define powl __builtin_powl
