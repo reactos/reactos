@@ -13,18 +13,27 @@
 #include <w32k.h>
 #include <debug.h>
 
-DWORD (NTAPI* PGD_DVPFLIPVIDEOPORT)(HANDLE,HANDLE,HANDLE,PDD_FLIPVPORTDATA);
-DWORD (NTAPI* PGD_DVPGETVIDEOPORTBANDWITH)(HANDLE, PDD_GETVPORTBANDWIDTHDATA);
-
 /************************************************************************/
 /* NtGdiDvpCanCreateVideoPort                                           */
 /************************************************************************/
 DWORD
 STDCALL
-NtGdiDvpCanCreateVideoPort(hDirectDraw,
+NtGdiDvpCanCreateVideoPort(HANDLE hDirectDraw,
                            PDD_CANCREATEVPORTDATA puCanCreateVPortData)
 {
+    PGD_DVPCANCREATEVIDEOPORT pfnDvpCanCreateVideoPort = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpCanCreateVideoPort, pfnDvpCanCreateVideoPort);
+
+    if (pfnDvpCanCreateVideoPort == NULL)
+    {
+        DPRINT1("Warring no pfnDvpCanCreateVideoPort");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpCanCreateVideoPort");
+    return pfnDvpCanCreateVideoPort(hDirectDraw, puCanCreateVPortData);
 }
 
 /************************************************************************/
@@ -35,7 +44,19 @@ STDCALL
 NtGdiDvpColorControl(HANDLE hVideoPort,
                      PDD_VPORTCOLORDATA puVPortColorData)
 {
+    PGD_DVPCOLORCONTROL pfnDvpColorControl = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpColorControl, pfnDvpColorControl);
+
+    if (pfnDvpColorControl == NULL)
+    {
+        DPRINT1("Warring no pfnDvpColorControl");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpColorControl");
+    return pfnDvpColorControl(hVideoPort, puVPortColorData);
 }
 
 /************************************************************************/
@@ -46,7 +67,19 @@ STDCALL
 NtGdiDvpCreateVideoPort(HANDLE hDirectDraw,
                         PDD_CREATEVPORTDATA puCreateVPortData)
 {
+    PGD_DVPCREATEVIDEOPORT pfnDvpCreateVideoPort = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpCreateVideoPort, pfnDvpCreateVideoPort);
+
+    if (pfnDvpCreateVideoPort == NULL)
+    {
+        DPRINT1("Warring no pfnDvpCreateVideoPort");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpCreateVideoPort");
+    return pfnDvpCreateVideoPort(hDirectDraw, puCreateVPortData);
 }
 
 /************************************************************************/
@@ -57,7 +90,19 @@ STDCALL
 NtGdiDvpDestroyVideoPort(HANDLE hVideoPort,
                          PDD_DESTROYVPORTDATA puDestroyVPortData)
 {
+    PGD_DVPDESTROYVIDEOPORT pfnDvpDestroyVideoPort = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpDestroyVideoPort, pfnDvpDestroyVideoPort);
+
+    if (pfnDvpDestroyVideoPort == NULL)
+    {
+        DPRINT1("Warring no pfnDvpDestroyVideoPort");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpDestroyVideoPort");
+    return pfnDvpDestroyVideoPort(hVideoPort, puDestroyVPortData);
 }
 
 /************************************************************************/
@@ -70,7 +115,7 @@ NtGdiDvpFlipVideoPort(HANDLE hVideoPort,
                       HANDLE hDDSurfaceTarget,
                       PDD_FLIPVPORTDATA puFlipVPortData)
 {
-    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort= NULL;
+    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort = NULL;
     INT i;
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpFlipVideoPort, pfnDvpFlipVideoPort);
