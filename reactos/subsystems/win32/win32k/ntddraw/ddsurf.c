@@ -44,7 +44,7 @@ NtGdiDdFlip(HANDLE hSurfaceCurrent,
             HANDLE hSurfaceTargetLeft,
             PDD_FLIPDATA puFlipData)
 {
-    PGD_DXDDDESTROYSURFACE pfnDdDdFlip = NULL;
+    PGD_DXDDFLIP pfnDdDdFlip = NULL;
     INT i;
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdFlip, pfnDdDdFlip);
@@ -96,7 +96,7 @@ NtGdiDdUnlock(HANDLE hSurface,
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnlock, pfnDdUnlock);
 
-    if (pfnDdLock == NULL)
+    if (pfnDdUnlock == NULL)
     {
         DPRINT1("Warring no pfnDdUnlock");
         return DDHAL_DRIVER_NOTHANDLED;
@@ -138,7 +138,7 @@ STDCALL
 NtGdiDdSetColorKey(HANDLE hSurface,
                    PDD_SETCOLORKEYDATA puSetColorKeyData)
 {
-    PGD_DXDDSETCOLORKEY pfnDdSetColorKey;
+    PGD_DXDDSETCOLORKEY pfnDdSetColorKey = NULL;
     INT i;
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetColorKey, pfnDdSetColorKey);
@@ -259,7 +259,7 @@ NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
                           HANDLE hSurfaceDestination,
                           PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData)
 {
-    PGD_DXDDUPDATEOVERLAY pfnDdSetOverlayPosition = NULL;
+    PGD_DXDDSETOVERLAYPOSITION pfnDdSetOverlayPosition = NULL;
     INT i;
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetOverlayPosition, pfnDdSetOverlayPosition);
@@ -331,7 +331,11 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
 /************************************************************************/
 /* NtGdiDdUnattachSurface                                               */
 /************************************************************************/
-VOID
+/* Note : msdn protypes is VOID APIENTRY NtGdiDdUnattachSurface(HANDLE hSurface, HANDLE hSurfaceAttached)
+          But it say it return either DDHAL_DRIVER_NOTHANDLED or DDHAL_DRIVER_HANDLED
+          so I guess it is a typo in MSDN for this protypes for the info talk against it self
+*/
+DWORD
 STDCALL
 NtGdiDdUnattachSurface(HANDLE hSurface,
                        HANDLE hSurfaceAttached)
