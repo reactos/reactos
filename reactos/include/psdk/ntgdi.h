@@ -698,7 +698,7 @@ NtGdiDdSetOverlayPosition(
 );
 
 W32KAPI
-VOID
+DWORD
 APIENTRY
 NtGdiDdUnattachSurface(
     IN HANDLE hSurface,
