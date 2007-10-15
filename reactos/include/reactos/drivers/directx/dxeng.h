@@ -50,8 +50,22 @@
 /* win32k.sys internal protypes for the driver functions it export      */
 /************************************************************************/
 
-/* Check see if termal server got a connections or not */
+/* Notes : Check see if termal server got a connections or not */
 BOOL DxEngNUIsTermSrv();
+
+/* Notes : it always return TRUE, and it update whole the screen (redaw current desktop) */
+BOOL DxEngRedrawDesktop();
+
+/*  Notes : return the DisplayUniqVisrgn counter from gdishare memory */
+ULONG DxEngDispUniq();
+
+/* Notes :  return the VisRgnUniq counter for win32k */
+ULONG DxEngVisRgnUniq();
+
+/* Enumate all drivers in win32k */
+HDEV *
+DxEngEnumerateHdev(HDEV *hdev);
+
 
 
 
@@ -64,22 +78,10 @@ DWORD
 DxEngScreenAccessCheck();
 
 DWORD
-DxEngRedrawDesktop();
-
-DWORD
-DxEngDispUniq();
-
-ULONG
-DxEngVisRgnUniq();
-
-DWORD
 DxEngLockShareSem();
 
 DWORD
 DxEngUnlockShareSem();
-
-DWORD
-DxEngEnumerateHdev(x);
 
 DWORD
 DxEngLockHdev(x);

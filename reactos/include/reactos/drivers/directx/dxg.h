@@ -40,7 +40,7 @@
 #define DXG_INDEX_DxDdGetBltStatus                0x1D
 #define DXG_INDEX_DxDdGetDC                       0x1E
 #define DXG_INDEX_DxDdGetDriverInfo               0x1F
-
+#define DXG_INDEX_DxDdGetDxHandle                 0x20
 #define DXG_INDEX_DxDdGetFlipStatus               0x21
 #define DXG_INDEX_DxDdGetInternalMoCompInfo       0x22
 #define DXG_INDEX_DxDdGetMoCompBuffInfo           0x23
@@ -87,7 +87,6 @@
 #define DXG_INDEX_DxDvpReleaseNotification        0x49
 
 /* not addedd yet */
-#define DXG_INDEX_DxDdGetDxHandle                 0x20
 #define DXG_INDEX_DxDdReleaseDC                   0x2C
 #define DXG_INDEX_DxDdResetVisrgn                 0x2E
 #define DXG_INDEX_DxDdSetGammaRamp                0x31
