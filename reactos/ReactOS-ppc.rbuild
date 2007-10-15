@@ -25,7 +25,7 @@
 	<define name="WORDS_BIGENDIAN" empty="true" />
 	<define name="__MSVCRT__" empty="true" />
 	<define name="__NO_CTYPE_INLINES" />
-	<define name="__DECLSPEC_SUPPORTED" />
+	<!-- <define name="__DECLSPEC_SUPPORTED" /> -->
 	<define name="__MINGW_IMPORT">extern</define>
 	<define name="_CRTIMP" empty="true" />
 	<define name="'__declspec(x)'" empty="true" />
