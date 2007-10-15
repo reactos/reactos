@@ -20,8 +20,8 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "&Големи значки",	FCIDM_SHVIEW_BIGICON
-	MENUITEM "&Малки значки",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Големи значета",	FCIDM_SHVIEW_BIGICON
+	MENUITEM "&Малки значета",	FCIDM_SHVIEW_SMALLICON
 	MENUITEM "&Списък",		FCIDM_SHVIEW_LISTVIEW
 	MENUITEM "&Подробен",		FCIDM_SHVIEW_REPORTVIEW
 END
@@ -35,13 +35,13 @@ BEGIN
 	BEGIN
 	  POPUP "Из&глед"
 	  BEGIN
-	    MENUITEM "&Големи значки",	FCIDM_SHVIEW_BIGICON
-	    MENUITEM "&Малки значки",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "&Големи значета",	FCIDM_SHVIEW_BIGICON
+	    MENUITEM "&Малки значета",	FCIDM_SHVIEW_SMALLICON
 	    MENUITEM "&Списък",		FCIDM_SHVIEW_LISTVIEW
 	    MENUITEM "&Подробен",	FCIDM_SHVIEW_REPORTVIEW
 	  END
 	  MENUITEM SEPARATOR
-	  POPUP "Подреждане на значките"
+	  POPUP "Подреждане на &значетата"
 	  BEGIN
 	    MENUITEM "По &име",	0x30	/* column 0 */
 	    MENUITEM "По &вид",	0x32	/* column 2 */
@@ -50,7 +50,7 @@ BEGIN
 	    MENUITEM SEPARATOR
 	    MENUITEM "&Самоподреждане",	FCIDM_SHVIEW_AUTOARRANGE
 	  END
-	  MENUITEM "Подравнени значки",	FCIDM_SHVIEW_SNAPTOGRID
+	  MENUITEM "Подравнени значета",	FCIDM_SHVIEW_SNAPTOGRID
 	  MENUITEM SEPARATOR
 	  MENUITEM "Опресняване",		FCIDM_SHVIEW_REFRESH
 	  MENUITEM SEPARATOR
@@ -91,7 +91,7 @@ END
 
 SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Browse for Folder"
+CAPTION "Търсене на папка"
 FONT 8, "MS Shell Dlg"
 {
  DEFPUSHBUTTON "Добре", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -114,7 +114,7 @@ FONT 10, "MS Shell Dlg"
  ICON "", 1088, 10, 10, 14, 16
  LTEXT "", 100, 30, 10, 137, 10
  LTEXT "", 101, 30, 22, 137, 10
- LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ LTEXT "РеактОС ви бе доставен от:", 98, 8, 55, 137, 10
 }
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
@@ -124,12 +124,13 @@ FONT 8, "MS Shell Dlg"
 {
  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
  LTEXT "Напишете името на приложение, папка, документ или интернет източник и РеактОС ще го отвори.", 12289, 36, 11, 182, 18
- LTEXT "&Отваряне:", 12305, 7, 39, 24, 10
- CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ LTEXT "&Отваряне:", 12305, 7, 39, 40, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 46, 37, 180, 100
  DEFPUSHBUTTON "Добре", IDOK, 62, 63, 50, 14, WS_TABSTOP
  PUSHBUTTON "Отказ", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
  PUSHBUTTON "&Обзор...", 12288, 170, 63, 50, 14, WS_TABSTOP
 }
+
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -137,66 +138,79 @@ CAPTION "Shortcut"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
  ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
- LTEXT "Target type:", 14004, 10, 30, 50, 10
+ LTEXT "Вид на целта:", 14004, 10, 30, 50, 10
  LTEXT "", 14005, 70, 30, 150, 10
- LTEXT "Target location:", 14006, 10, 40, 70, 10
+ LTEXT "Местоположение на целта:", 14006, 10, 40, 70, 10
  LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Target:", 14008, 10, 55, 45, 10
+ LTEXT "Цел:", 14008, 10, 55, 45, 10
  EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
- LTEXT "&Start in:",14010, 10, 65, 45, 10
+ LTEXT "Изпълняване в:",14010, 10, 65, 45, 10
  EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
- LTEXT "Shortcut &key:", 14014, 10, 80, 45, 10
+ LTEXT "Бърз &клавиш:", 14014, 10, 80, 45, 10
  EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
- LTEXT "Run:", 14016, 10, 90, 45, 10
+ LTEXT "Изпълняване:", 14016, 10, 90, 45, 10
  EDITTEXT 14017, 70, 90, 150, 10
- LTEXT "C&omment:", 14018, 10, 100, 45, 10
+ LTEXT "Забележка:", 14018, 10, 100, 45, 10
  EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
- PUSHBUTTON "&Find Target...", 14020, 10, 115, 60, 14, ES_LEFT
- PUSHBUTTON "&Change Icon...", 14021, 80, 115, 60, 14, ES_LEFT
- PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
+ PUSHBUTTON "&Намиране на целта", 14020, 10, 115, 70, 14, ES_LEFT
+ PUSHBUTTON "&Смяна на значето:", 14021, 80, 115, 67, 14, ES_LEFT
+ PUSHBUTTON "Раз&ширени...", 14022, 150, 115, 60, 14, ES_LEFT
+}
+
+SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 260, 150
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Допълнителни свойства"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+{
+  LTEXT "Укажете желаните допълнителни свойства за препратката.", -1, 5, 30, 246, 10
+  CHECKBOX "Изпълняване с различни правомощия", 14000, 30, 50, 150, 10
+  LTEXT "Тази възможност ви позволява да изпълните препратката като друг потребител или да продължите като себе си, като предпазвате компютъра и данните от неупълномощена дейност на приложенията.", -1, 50, 60, 200, 40
+  CHECKBOX "Изпълняване в отделен дял от паметта", 14001, 30, 100, 170, 10, WS_DISABLED
+  PUSHBUTTON "Добре", IDOK, 25, 120, 40, 15, WS_VISIBLE
+  PUSHBUTTON "Прекъсване", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 }
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Общи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
  ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
  EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
- LTEXT "Type of file:", 14004, 10, 30, 50, 10
- LTEXT "%s File", 14005, 70, 30, 150, 10
- LTEXT "Opens with:", 14006, 10, 40, 50, 10
+ LTEXT "Вид файл:", 14004, 10, 30, 50, 10
+ LTEXT "Файл:", 14005, 70, 30, 150, 10
+ LTEXT "Отваряне с:", 14006, 10, 40, 50, 10
  LTEXT "", 14007, 70, 40, 150, 10
- LTEXT "Location:", 14008, 10, 55, 45, 10
+ LTEXT "Местоположение:", 14008, 10, 55, 60, 10
  LTEXT "", 14009, 70, 55, 200, 10
- LTEXT "Size:",14010, 10, 65, 45, 10
+ LTEXT "Размер:",14010, 10, 65, 45, 10
  LTEXT "", 14011, 70, 65, 150, 10
- LTEXT "Created:", 14014, 10, 80, 45, 10
+ LTEXT "Създаден", 14014, 10, 80, 45, 10
  LTEXT "", 14015, 70, 80, 150, 10
- LTEXT "Modied:", 14016, 10, 90, 45, 10
+ LTEXT "Променен:", 14016, 10, 90, 45, 10
  LTEXT "", 14017, 70, 90, 150, 10
- LTEXT "Accessed:", 14018, 10, 100, 45, 10
+ LTEXT "Използван", 14018, 10, 100, 45, 10
  LTEXT "", 14019, 70, 100, 150, 10
- LTEXT "Attributes:", 14020, 10, 115, 45, 10
- CHECKBOX "&Read-only", 14021, 70, 115, 45, 10
- CHECKBOX "&Hidden", 14022, 130, 115, 50, 10
- CHECKBOX "&Archive", 14023, 180, 115, 45, 10
+ LTEXT "Принадлежности", 14020, 10, 115, 60, 10
+ CHECKBOX "Само за &четене", 14021, 70, 115, 65, 10
+ CHECKBOX "С&крит", 14022, 140, 115, 40, 10
+ CHECKBOX "&Сбит", 14023, 180, 115, 45, 10
 }
 
-SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
+SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 136
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
+CAPTION "Издание"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-  LTEXT "File version: ", 14000, 10, 10, 45, 10
-  LTEXT "", 14001, 70, 10, 150, 10
-  LTEXT "Description: ", 14002, 10, 20, 45, 10
+  LTEXT "Издание на файла:", 14000, 10, 10, 67, 10
+  LTEXT "", 14001, 80, 10, 150, 10
+  LTEXT "Описание:", 14002, 10, 20, 45, 10
   LTEXT "", 14003, 70, 20, 150, 10
-  LTEXT "Copyright: ", 14004, 10, 30, 45, 10
-  LTEXT "", 14005, 70, 30, 150, 10
-  GROUPBOX "Other version information: ", 14006, 10, 45, 220, 90
-  LTEXT "Item name: ", 14007, 20, 55, 50, 10
-  LTEXT "Value: ", 14008, 130, 55, 45, 10
+  LTEXT "Възпроизводствено право", 14004, 10, 30, 93, 10
+  LTEXT "", 14005, 105, 30, 150, 10
+  GROUPBOX "Други сведения за изданието", 14006, 10, 45, 220, 90
+  LTEXT "Име на предмета", 14007, 20, 55, 90, 10
+  LTEXT "Стойност:", 14008, 130, 55, 45, 10
   LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
   EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT|WS_BORDER|WS_VSCROLL|WS_GROUP|ES_MULTILINE|ES_READONLY
 
@@ -204,19 +218,19 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 
 DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Общи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
   EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
-  LTEXT "Type:", -1, 15, 55, 40, 10
+  LTEXT "Вид:", -1, 15, 55, 40, 10
   LTEXT "", 14002, 110, 55, 100, 10
 
 
-  LTEXT "File system:", -1, 15, 70, 100, 10
+  LTEXT "Файлова уредба:", -1, 15, 70, 100, 10
   LTEXT "", 14003, 110, 70, 100, 10
 
   CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
-  LTEXT "Used space:", -1, 25, 90, 120, 10
+  LTEXT "Използвано място:", -1, 25, 90, 120, 10
   LTEXT "", 14004, 110, 90, 120, 10
   LTEXT "", 14005, 200, 90, 40, 10
 
@@ -225,42 +239,71 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
   LTEXT "", 14006, 110, 105, 120, 10
   LTEXT "", 14007, 200, 105, 40, 10
 
-  LTEXT "Capacity:", -1, 25, 125, 80, 10
+  LTEXT "Обем:", -1, 25, 125, 80, 10
   LTEXT "", 14008, 110, 125, 120, 10
   LTEXT "", 14009, 200, 125, 40, 10
 
   CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-  LTEXT "Drive %s", 14010, 100, 170, 40, 10
-  PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-  CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 165, 10, WS_DISABLED
-  CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
+  LTEXT "Устройство %s", 14010, 100, 170, 40, 10
+  PUSHBUTTON "Почистване на диска", 14011, 150, 175, 80, 15, WS_TABSTOP
+  CHECKBOX "Уплътняване на устройството за спестяване на място", 14012, 1, 205, 238, 10, WS_DISABLED
+  CHECKBOX "Индексиращата услуга да индексира диска за по- бързо търсене", 14012, 1, 220, 238, 10, WS_DISABLED
 }
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Tools"
+CAPTION "Средства"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
-  GROUPBOX "Error-checking", -1, 5, 5, 230, 60
-  LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
-  PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
-  GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
-  LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
-  PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
-  GROUPBOX "Backup", -1, 5, 130, 230, 60
-  LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-  PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
+  GROUPBOX "Проверка за грешки", -1, 5, 5, 230, 60
+  LTEXT "Този избор ще провери тома за грешки.", -1, 40, 25, 160, 20
+  PUSHBUTTON "Провери веднага...", 14000, 130, 45, 90, 15, WS_TABSTOP
+  GROUPBOX "Подреждане", -1, 5, 65, 230, 60
+  LTEXT "Този избор ще подреди (дефрагментира) файловете на тома", -1, 40, 85, 160, 20
+  PUSHBUTTON "Подреди веднага...", 14001, 130, 105, 90, 15, WS_TABSTOP
+  GROUPBOX "Запасяване", -1, 5, 130, 230, 60
+  LTEXT "Този избор ще направи запасно съхранение на файловете на диска.", -1, 40, 150, 160, 20
+  PUSHBUTTON "Запаси веднага", 14002, 130, 170, 90, 15, WS_TABSTOP
 }
+
 
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Hardware"
+CAPTION "Оборудване"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 {
 }
 
+RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Изпълняване като"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+{
+/*   LTEXT "От чия потребителска сметка искате да изпълните приложението?", -1, 5, 30, 235, 16
+   CHECKBOX "Сегашен потребител %s", 14000, 5, 45, 150, 10
+   LTEXT "Protect my computer and data from unauthorized program activity", -1, 40, 65, 150, 10, WS_DISABLED
+   CHECKBOX ""Този избор може да попречи на вирусите да повредят компютъра\nили данните ви, но може и да попречи\nна редовнaта работа на приложението.", 14001, 40, 80, 150, 20, WS_DISABLED
+   CHECKBOX "Следният потребител:", 14002, 5, 100, 90, 10
+   LTEXT "Потребителско име:", -1, 15, 115, 80, 10
+   COMBOBOX 14003, 90, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+*/
+   LTEXT "Which user account do you want to use to run this program?", -1, 30, 30, 170, 10
+   CHECKBOX "Сегашен потребител %s", 14000, 5, 45, 150, 10
+   LTEXT "Protect my computer and data from unauthorized program activity", -1, 40, 65, 150, 10, WS_DISABLED
+   CHECKBOX "This option can prevent computer viruses from harming your\ncomputer or personal data, but selecting it might cause the\nprogram to function improperly.", 14001, 40, 80, 150, 10, WS_DISABLED
+   CHECKBOX "Следният потребител:", 14002, 5, 100, 90, 10
+   LTEXT "Потребителско име:", -1, 15, 115, 80, 10
+   COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+
+   PUSHBUTTON "...", 14004, 200, 115, 30, 10, WS_TABSTOP
+   LTEXT "Парола:", -1, 15, 140, 60, 10
+   EDITTEXT 14005, 90, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
+   PUSHBUTTON "...", 14006, 200, 140, 30, 10, WS_TABSTOP
+   PUSHBUTTON "Добре", 14007, 70, 170, 60, 15, WS_TABSTOP
+   PUSHBUTTON "Отказ", 14008, 140, 170, 60, 15, WS_TABSTOP
+}
 
 STRINGTABLE DISCARDABLE
 {
@@ -271,26 +314,26 @@ STRINGTABLE DISCARDABLE
 	IDS_SHV_COLUMN4		"Променен"
 	IDS_SHV_COLUMN5		"Признак"
 	IDS_SHV_COLUMN6		"Размер"
-	IDS_SHV_COLUMN7		"Size available"
+	IDS_SHV_COLUMN7		"Наличен размер"
 	IDS_SHV_COLUMN8		"Име"
 	IDS_SHV_COLUMN9		"Забележки"
 	IDS_SHV_COLUMN10	"Собственик"
 	IDS_SHV_COLUMN11	"Група"
 
         /* special folders */
-	IDS_DESKTOP		"Desktop"
-	IDS_MYCOMPUTER		"My Computer"
+	IDS_DESKTOP		"Работна площ"
+	IDS_MYCOMPUTER		"Моят компютър"
 
         /* context menus */
-	IDS_VIEW_LARGE		"&Големи значки"
-	IDS_VIEW_SMALL		"&Малки значки"
+	IDS_VIEW_LARGE		"&Големи значета"
+	IDS_VIEW_SMALL		"&Малки значета"
 	IDS_VIEW_LIST		"&Списък"
 	IDS_VIEW_DETAILS	"&Подробен"
 	IDS_SELECT		"Избор"
 	IDS_OPEN		"Отваряне"
 
 	IDS_CREATEFOLDER_DENIED "Създаването на нова папка е невъзможно: недостатъчни права."
-	IDS_CREATEFOLDER_CAPTION "Грешка при съсдаване на нова папка"
+	IDS_CREATEFOLDER_CAPTION "Грешка при създаване на нова папка"
 	IDS_DELETEITEM_CAPTION "Потвърдете изтриване на файла"
 	IDS_DELETEFOLDER_CAPTION "Потвърдете изтриване на папката"
 	IDS_DELETEITEM_TEXT "Сигурен ли сте, че искате да изтриете '%1'?"
@@ -332,7 +375,4 @@ STRINGTABLE DISCARDABLE
 	IDS_COMMON_PICTURES         "Documents\\My Pictures"
 	IDS_COMMON_VIDEO            "Documents\\My Video"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-        IDS_DRIVE_FIXED             "Lokal Disk"
-        IDS_DRIVE_CDROM             "CDROM"
-        IDS_DRIVE_NETWORK           "Network Disk"
 }

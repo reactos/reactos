@@ -15,4 +15,5 @@
 #include "lang/it-IT.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"
 

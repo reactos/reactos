@@ -42,7 +42,7 @@ BEGIN
     CONTROL         "Искане на парола при изход.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 126, 19
     GROUPBOX        "&Енергоспестяващи възможности на монитора", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
+    LTEXT           "За настройка захранването на монитора си, натиснете 'Захранване...'",
                     IDC_STATIC, 14, 166, 146 ,20
     PUSHBUTTON      "Захранване...", IDC_SCREENS_POWER_BUTTON, 176, 171, 60, 13
 END
@@ -55,7 +55,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Цветови набор", IDC_STATIC, 7, 140, 64, 9
+    LTEXT           "Разцветка", IDC_STATIC, 7, 140, 64, 9
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Още", IDC_APPEARANCE_ADVANCED, 182, 150, 56, 15
 END
@@ -103,7 +103,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Drag the monitor icons to match the physical arrangement of your monitors.",-1,3,3,240,10
+    LTEXT           "Завлачете значетата на мониторите така, че да отговарят на действителното разположение на мониторите ви.",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Екран:",1820,3,100,30,8
     LTEXT           "<няма>",IDC_SETTINGS_DEVICE,9,109,224,8
@@ -118,12 +118,12 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,148,103,9
-    PUSHBUTTON      "Раз&ширени...",IDC_SETTINGS_ADVANCED,170,165,70,14
+    PUSHBUTTON      "Раз&ширени...",IDC_SETTINGS_ADVANCED,306,165,56,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Общи"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -139,19 +139,19 @@ IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached",   ID_MENU_ATTACHED
-        MENUITEM "&Primary",    ID_MENU_PRIMARY
+        MENUITEM "При&крепен",   ID_MENU_ATTACHED
+        MENUITEM "&Първичен",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify",   ID_MENU_IDENTIFY
-        MENUITEM "P&roperties", ID_MENU_PROPERTIES
+        MENUITEM "&Разпознаване",   ID_MENU_IDENTIFY
+        MENUITEM "&Свойства", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Multiple Monitors)"
-    IDS_UNKNOWNMONITOR "(Unknown Monitor)"
-    IDS_ADVANCEDTITLEFMT "%s and %s"
+    IDS_MULTIPLEMONITORS "(Много монитори)"
+    IDS_UNKNOWNMONITOR "(Неизвестен монитор)"
+    IDS_ADVANCEDTITLEFMT "%s и %s"
 END
 
 STRINGTABLE
@@ -205,9 +205,9 @@ BEGIN
     IDS_ELEMENT_11 "Цвят на заглавията"
     IDS_ELEMENT_12 "Символно заглавие"
     IDS_ELEMENT_13 "Надписна лента"
-    IDS_ELEMENT_14 "Deactivated menu elements"
+    IDS_ELEMENT_14 "Нетекущи части от менюто"
     IDS_ELEMENT_15 "Въпросителен прозорец"
-    IDS_ELEMENT_16 "Scrollbar controls"
+    IDS_ELEMENT_16 "Управляващи плъзгачи"
     IDS_ELEMENT_17 "Подкраска на приложенията"
     IDS_ELEMENT_18 "Подзаглавия"
     IDS_ELEMENT_19 "Водоравна разредка"
