@@ -456,7 +456,7 @@ NtGdiDdFlipToGDISurface(HANDLE hDirectDraw,
     }
 
     DPRINT1("Calling on dxg.sys pfnDdFlipToGDISurface");
-    return pfnDdFlipToGDISurface(hDirectDrawLocal, puFlipToGDISurfaceData);
+    return pfnDdFlipToGDISurface(hDirectDraw, puFlipToGDISurfaceData);
 
 }
 
@@ -493,7 +493,7 @@ NtGdiDdGetDxHandle(HANDLE hDirectDraw,
                    BOOL bRelease)
 {
     
-    PGD_DDGETDXHANDLE pfnDdGetDxHandle  = NULL;
+    PGD_DDGETDXHANDLE pfnDdGetDxHandle = NULL;
     INT i;
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDxHandle, pfnDdGetDxHandle);
@@ -516,7 +516,19 @@ BOOL
 STDCALL
 NtGdiDdReleaseDC(HANDLE hSurface)
 {
+    PGD_DDRELEASEDC pfnDdReleaseDC = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdReleaseDC, pfnDdReleaseDC);
+
+    if (pfnDdReleaseDC == NULL)
+    {
+        DPRINT1("Warring no pfnDdReleaseDC");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdReleaseDC");
+    return pfnDdReleaseDC(hSurface);
 }
 
 /************************************************************************/
@@ -528,6 +540,19 @@ NtGdiDdResetVisrgn(HANDLE hSurface,
                    HWND hwnd)
 {
 
+    PGD_DDRESTVISRGN pfnDdResetVisrgn = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdResetVisrgn, pfnDdResetVisrgn);
+
+    if (pfnDdResetVisrgn == NULL)
+    {
+        DPRINT1("Warring no pfnDdResetVisrgn");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdResetVisrgn");
+    return pfnDdResetVisrgn(hSurface, hwnd);
 }
 
 /************************************************************************/
@@ -539,7 +564,19 @@ NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
                     HDC hdc,
                     LPVOID lpGammaRamp)
 {
+    PGD_DDSETGAMMARAMP pfnDdSetGammaRamp = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetGammaRamp, pfnDdSetGammaRamp);
+
+    if (pfnDdSetGammaRamp == NULL)
+    {
+        DPRINT1("Warring no pfnDdSetGammaRamp");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdSetGammaRamp");
+    return pfnDdSetGammaRamp(hDirectDraw, hdc, lpGammaRamp);
 }
 
 

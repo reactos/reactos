@@ -137,7 +137,7 @@ NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
     }
 
     DPRINT1("Calling on dxg.sys pfnDdCreateSurfaceEx");
-    return pfnDdCreateSurfaceEx(hDirectDrawLocal,puGetScanLineData);
+    return pfnDdCreateSurfaceEx(hDirectDraw,hSurface,dwSurfaceHandle);
 
 }
 
