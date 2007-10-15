@@ -469,7 +469,19 @@ STDCALL
 NtGdiDdGetDC(HANDLE hSurface,
              PALETTEENTRY *puColorTable)
 {
+    PGD_DDGETDC pfnDdGetDC  = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDC, pfnDdGetDC);
+
+    if (pfnDdGetDC == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetDC");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdGetDC");
+    return pfnDdGetDC(hSurface, puColorTable);
 }
 
 /************************************************************************/
