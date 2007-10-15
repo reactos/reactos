@@ -493,7 +493,20 @@ NtGdiDdGetDxHandle(HANDLE hDirectDraw,
                    HANDLE hSurface,
                    BOOL bRelease)
 {
+    
+    PGD_DDGETDXHANDLE pfnDdGetDxHandle  = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDxHandle, pfnDdGetDxHandle);
+
+    if (pfnDdGetDxHandle == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetDxHandle");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdGetDxHandle");
+    return pfnDdGetDxHandle(hDirectDraw, hSurface, bRelease);
 }
 
 
