@@ -4,6 +4,7 @@
 #include <ddrawint.h>
 #include <ddkernel.h>
 #include <reactos/drivers/directx/dxg.h>
+#include <reactos/drivers/directx/dxeng.h>
 
 /* From ddraw.c */
 extern PDRVFN gpDxFuncs;

@@ -99,7 +99,8 @@
 		<file>d3d.c</file>
 		<file>dvp.c</file>
 		<file>mocomp.c</file>
-		<file>stubs.c</file>
+		<file>eng.c</file>
+		<file>dxeng.c</file>
 	</directory>
 	<directory name="ntuser">
 		<file>accelerator.c</file>
