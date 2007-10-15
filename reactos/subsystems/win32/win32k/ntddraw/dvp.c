@@ -13,6 +13,8 @@
 #include <w32k.h>
 #include <debug.h>
 
+DWORD (NTAPI* PGD_DVPFLIPVIDEOPORT)(HANDLE,HANDLE,HANDLE,PDD_FLIPVPORTDATA);
+DWORD (NTAPI* PGD_DVPGETVIDEOPORTBANDWITH)(HANDLE, PDD_GETVPORTBANDWIDTHDATA);
 
 /************************************************************************/
 /* NtGdiDvpCanCreateVideoPort                                           */
@@ -58,7 +60,6 @@ NtGdiDvpDestroyVideoPort(HANDLE hVideoPort,
 
 }
 
-
 /************************************************************************/
 /* NtGdiDvpFlipVideoPort                                                */
 /************************************************************************/
@@ -69,7 +70,19 @@ NtGdiDvpFlipVideoPort(HANDLE hVideoPort,
                       HANDLE hDDSurfaceTarget,
                       PDD_FLIPVPORTDATA puFlipVPortData)
 {
+    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort= NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpFlipVideoPort, pfnDvpFlipVideoPort);
+
+    if (pfnDvpFlipVideoPort == NULL)
+    {
+        DPRINT1("Warring no pfnDvpFlipVideoPort");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpFlipVideoPort");
+    return pfnDvpFlipVideoPort(hVideoPort, hDDSurfaceCurrent, hDDSurfaceTarget, puFlipVPortData);
 }
 
 
@@ -81,7 +94,19 @@ STDCALL
 NtGdiDvpGetVideoPortBandwidth(HANDLE hVideoPort,
                               PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData)
 {
+    PGD_DVPGETVIDEOPORTBANDWITH pfnDvpGetVideoPortBandwidth = NULL;
+    INT i;
 
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortBandwidth, pfnDvpGetVideoPortBandwidth);
+
+    if (pfnDvpGetVideoPortBandwidth == NULL)
+    {
+        DPRINT1("Warring no pfnDvpGetVideoPortBandwidth");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortBandwidth");
+    return pfnDvpGetVideoPortBandwidth(hVideoPort, pfnDvpGetVideoPortBandwidth);
 }
 
 
