@@ -161,6 +161,12 @@
 			<location>http://ovh.dl.sourceforge.net/sourceforge/lgames/lmarbles-1.0.6-win32.exe</location>
 		</application>
 	</category>
+	<category name="Science" icon="11">
+	</category>
+	<category name="Edutainment" icon="12">
+	</category>
+	<category name="Engineering" icon="13">
+	</category>
 	<category name="Tools" icon="7">
 		<application name="7-Zip">
 			<regname>7-Zip 4.52</regname>

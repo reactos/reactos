@@ -170,10 +170,10 @@ BOOL ProcessXML (const char* filename, struct Category* Root)
 	Current = Root;
 	TagOpen = TRUE;
 
-	file = fopen(filename, "r");
+	file = fopen("downloader.xml", "r");
 	if(!file) 
 	{
-		file = fopen("downloader.xml", "r"); 
+		file = fopen(filename, "r");
 		if(!file) 
 		{
 			MessageBoxW(0,Strings[IDS_XMLERROR_1],0,0);
