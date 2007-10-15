@@ -205,7 +205,7 @@ NtGdiDdLockD3D(HANDLE hSurface,
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdLockD3D, pfnDdLockD3D);
 
-    if (pfnD3dValidateTextureStageState == NULL)
+    if (pfnDdLockD3D == NULL)
     {
         DPRINT1("Warring no pfnDdLockD3D");
         return DDHAL_DRIVER_NOTHANDLED;
@@ -250,7 +250,7 @@ NtGdiDdUnlockD3D(HANDLE hSurface,
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnlockD3D, pfnDdUnlockD3D);
 
-    if (pfnD3dValidateTextureStageState == NULL)
+    if (pfnDdUnlockD3D == NULL)
     {
         DPRINT1("Warring no pfnDdUnlockD3D");
         return DDHAL_DRIVER_NOTHANDLED;

@@ -151,7 +151,7 @@ NtGdiDvpGetVideoPortBandwidth(HANDLE hVideoPort,
     }
 
     DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortBandwidth");
-    return pfnDvpGetVideoPortBandwidth(hVideoPort, pfnDvpGetVideoPortBandwidth);
+    return pfnDvpGetVideoPortBandwidth(hVideoPort, puGetVPortBandwidthData);
 }
 
 
@@ -223,7 +223,7 @@ NtGdiDvpGetVideoPortLine(HANDLE hVideoPort,
     }
 
     DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortLine");
-    return pfnDvpGetVideoSignalStatus(hVideoPort, puGetVPortLineData);
+    return pfnDvpGetVideoPortLine(hVideoPort, puGetVPortLineData);
 }
 
 
@@ -240,7 +240,7 @@ NtGdiDvpGetVideoPortOutputFormats(HANDLE hVideoPort,
 
     DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDvpGetVideoPortOutputFormats, puGetVPortOutputFormatData);
 
-    if (pfnDvpGetVideoSignalStatus == NULL)
+    if (pfnDvpGetVideoPortOutputFormats == NULL)
     {
         DPRINT1("Warring no pfnDvpGetVideoPortOutputFormats");
         return DDHAL_DRIVER_NOTHANDLED;
@@ -272,7 +272,7 @@ NtGdiDvpGetVideoPortConnectInfo(HANDLE hDirectDraw,
     }
 
     DPRINT1("Calling on dxg.sys pfnDvpGetVideoPortConnectInfo");
-    return pfnDvpGetVideoPortConnectInfo(hVideoPort, puGetVPortConnectData);
+    return pfnDvpGetVideoPortConnectInfo(hDirectDraw, puGetVPortConnectData);
 }
 
 
