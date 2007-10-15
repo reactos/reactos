@@ -301,7 +301,7 @@ void GotPacket()
     {
     case 'g':
         PacketStart();
-        for (i = 0; i < 108; i++)
+        for (i = 0; i < sizeof(*RegisterSaveArea) / sizeof(int); i++)
         {
             PacketWriteHexNumber(((int *)RegisterSaveArea)[i], 8);
         }
@@ -309,7 +309,7 @@ void GotPacket()
         break;
 
     case 'G':
-        for (i = 0; i < 108; i++)
+        for (i = 0; i < sizeof(*RegisterSaveArea) / sizeof(int); i++)
         {
             ((int *)RegisterSaveArea)[i] = PacketReadHexNumber(8);
         }

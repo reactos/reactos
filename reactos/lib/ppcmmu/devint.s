@@ -2,24 +2,104 @@
         .text
         .globl mmumain
         .globl _mmumain
-        .globl oldstack
 mmumain:
-        lis 7,oldstack@ha
-        addi 7,7,oldstack@l
-        mflr 0
-         stw 1,0(7)
+        mr 0,1
         lis 1,2
+        subi 1,1,432
+        stw 0,4(1)
+        stw 2,8(1)
+	stw 3,12(1)
+	stw 4,16(1)
+	stw 5,20(1)
+	stw 6,24(1)
+	stw 7,28(1)
+	stw 8,32(1)
+	stw 9,36(1)
+        stw 10,40(1)
+	stw 11,44(1)
+	stw 12,48(1)
+	stw 13,52(1)
+	stw 14,56(1)
+	stw 15,60(1)
+	stw 16,64(1)
+	stw 17,68(1)
+	stw 18,72(1)
+	stw 19,76(1)
+	stw 20,80(1)
+        stw 21,84(1)
+        stw 22,88(1)
+	stw 23,92(1)
+	stw 24,96(1)
+	stw 25,100(1)
+	stw 26,104(1)
+	stw 27,108(1)
+	stw 28,112(1)
+	stw 29,116(1)
+	stw 30,120(1)
+	stw 31,124(1)
+	mflr 0
+	stw 0,384(1)
+	mfmsr 0
+	stw 0,388(1)
+	mfcr 0
+	stw 0,392(1)
+	mflr 0
+	stw 0,396(1)
+	mfctr 0
+	stw 0,400(1)
+	mfxer 0
+	stw 0,404(1)
+	xor 0,0,0
+	stw 0,408(1)
+	mfdsisr 0
+	stw 0,412(1)
+        mfdar 0
+        stw 0,416(1)
+        mr 7,1
+        lis 8,_mmumain@ha
+        addi 8,8,_mmumain@l
+        mtctr 8
         subi 1,1,16
-        stw 0,0(1)
-        bl _mmumain
-        lis 7,oldstack@ha
-        addi 7,7,oldstack@l
-        lwz 0,0(1)
-        lwz 1,0(7)
+	bctrl
+        addi 1,1,16
+	lwz 2,8(1)
+	/* Don't reload r3, since we'll return a result */
+	lwz 4,16(1)
+	lwz 5,20(1)
+	lwz 6,24(1)
+	lwz 7,28(1)
+	lwz 8,32(1)
+	lwz 9,36(1)
+	lwz 10,40(1)
+	lwz 11,44(1)
+	lwz 12,48(1)
+	lwz 13,52(1)
+	lwz 14,56(1)
+	lwz 15,60(1)
+	lwz 16,64(1)
+	lwz 17,68(1)
+	lwz 18,72(1)
+	lwz 19,76(1)
+	lwz 20,80(1)
+	lwz 21,84(1)
+	lwz 22,88(1)
+	lwz 23,92(1)
+	lwz 24,96(1)
+	lwz 25,100(1)
+	lwz 26,104(1)
+	lwz 27,108(1)
+	lwz 28,112(1)
+	lwz 29,116(1)
+	lwz 30,120(1)
+	lwz 31,124(1)
+	lwz 0,392(1)
+	mtcr 0
+        lwz 0,396(1)
         mtlr 0
+        lwz 0,400(1)
+        mtctr 0
+	lwz 1,4(1)
         blr
-oldstack:
-        .long 0
 
         .globl trap_start
         .globl trap_end
@@ -87,12 +167,14 @@ trap_start:
 	lis 5,trap_finish_start@ha
 	addi 5,5,trap_finish_start@l
 	mtlr 5
+        subi 1,1,16
 	bctr
 trap_end:
 	.space 4
-
+        
        	.globl trap_finish_start
 trap_finish_start:
+        addi 1,1,16
 	lwz 2,8(1)
 	lwz 3,12(1)
 	lwz 4,16(1)
@@ -140,7 +222,5 @@ trap_finish_start:
         lwz 0,416(1)
         mtdar 0
         lwz 0,0(1)
-        mtsprg1 0
-	lwz 0,0(1)
-	mfsprg1 1
+	lwz 1,4(1)
 	rfi

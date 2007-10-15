@@ -70,10 +70,10 @@ int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr);
 void SerialSetUp(int deviceType, void *deviceAddr, int baud);
 void TakeException(int n, int *tf);
 
-int _mmumain(int action, void *arg1, void *arg2, void *arg3)
+int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 {
     void (*fun)(void *) = arg1;
-    ppc_trap_frame_t *trap_frame = arg1;
+    ppc_trap_frame_t *trap_frame = (action >= 0x100) ? tf : arg1;
     int ret = 0;
 
     switch(action)
@@ -83,14 +83,14 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
 	if(!ptegreload(trap_frame, trap_frame->dar))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,arg1)) hang(action, arg1);
+	    if (!callback[action](action,tf)) hang(action, tf);
 	}
 	break;
     case 4:
 	if(!ptegreload(trap_frame, trap_frame->srr0))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,arg1)) hang(action, arg1);
+	    if (!callback[action](action,tf)) hang(action, tf);
 	}
 	break;
 
@@ -102,12 +102,12 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
     case 8:
     case 9:
     case 0xa:
-        if (!callback[action](action,arg1)) hang(action, arg1);
+        if (!callback[action](action,tf)) hang(action, tf);
         break;
 
     case 0x20:
         // Single step
-        TakeException(action, arg1);
+        TakeException(action, tf);
         break;
 
         /* MMU Functions */
@@ -161,7 +161,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3)
         SerialSetUp((int)arg1, arg2, 9600);
         break;
     case 0x201:
-        TakeException((int)arg1, (int *)arg2);
+        TakeException((int)arg1, (int *)trap_frame);
         break;
 
     default:
