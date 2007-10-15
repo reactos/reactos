@@ -29,7 +29,6 @@
 #include <vector>
 
 #include "msvc.h"
-#include "../mingw/mingw.h"
 
 using std::string;
 using std::vector;

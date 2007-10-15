@@ -187,15 +187,16 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					continue;
 				}
 			}
-			// add to another list win32api and include/wine directories
-			if ( !strncmp(incs[i]->directory->relative_path.c_str(), "include\\ddk", 11 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ) ||
+			// switch between general headers and ros headers
+			if ( !strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ) ||
+			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\ddk", 11 ) ||
 			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\GL", 10 ) ||
-				 !strncmp(incs[i]->directory->relative_path.c_str(), "include\\ddk", 11 ) ||
-				 !strncmp(incs[i]->directory->relative_path.c_str(), "include\\psdk", 12 ) ||
+			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\psdk", 12 ) ||
 			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\reactos\\wine", 20 ) )
 			{
-				includes_ros.push_back ( path );
+				if (strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ))
+					// not crt include
+					includes_ros.push_back ( path );
 			}
 			else
 			{
@@ -226,11 +227,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				baseaddr = prop.value;
 		}
 	}
-    /* include intermediate path for reactos.rc */
-    string version = intdir + "\\include\\reactos";
-    includes.push_back (version);
-	
-    string include_string;
+	/* include intermediate path for reactos.rc */
+	string version = intdir + "\\include\\reactos";
+	includes.push_back (version);
+
+	string include_string;
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
 	fprintf ( OUT, "<VisualStudioProject\r\n" );
