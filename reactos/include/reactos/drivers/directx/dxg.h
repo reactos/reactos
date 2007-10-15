@@ -53,13 +53,12 @@
 #define DXG_INDEX_DxDdQueryDirectDrawObject       0x29
 #define DXG_INDEX_DxDdQueryMoCompStatus           0x2A
 #define DXG_INDEX_DxDdReenableDirectDrawObject    0x2B
-
+#define DXG_INDEX_DxDdReleaseDC                   0x2C
 #define DXG_INDEX_DxDdRenderMoComp                0x2D
-
+#define DXG_INDEX_DxDdResetVisrgn                 0x2E
 #define DXG_INDEX_DxDdSetColorKey                 0x2F
-
 #define DXG_INDEX_DxDdSetExclusiveMode            0x30
-
+#define DXG_INDEX_DxDdSetGammaRamp                0x31
 #define DXG_INDEX_DxDdCreateSurfaceEx             0x32
 #define DXG_INDEX_DxDdSetOverlayPosition          0x33
 #define DXG_INDEX_DxDdUnattachSurface             0x34
@@ -85,12 +84,6 @@
 #define DXG_INDEX_DxDvpWaitForVideoPortSync       0x47
 #define DXG_INDEX_DxDvpAcquireNotification        0x48
 #define DXG_INDEX_DxDvpReleaseNotification        0x49
-
-/* not addedd yet */
-#define DXG_INDEX_DxDdReleaseDC                   0x2C
-#define DXG_INDEX_DxDdResetVisrgn                 0x2E
-#define DXG_INDEX_DxDdSetGammaRamp                0x31
-
 
 /***********************************************************************************/
 /* This driver functions are exported raw from Eng* it only exists in the def file */

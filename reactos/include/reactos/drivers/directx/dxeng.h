@@ -66,7 +66,9 @@ ULONG DxEngVisRgnUniq();
 HDEV *
 DxEngEnumerateHdev(HDEV *hdev);
 
-
+/* same protypes NtGdiEngGetDeviceGammaRamp, diffent is we skipp the user mode checks and seh */
+BOOL
+DxEngGetDeviceGammaRamp(HDC hDC, LPVOID lpRamp);
 
 
 /* prototypes are not done yet, I need gather all my notes 
@@ -101,8 +103,7 @@ DxEngReferenceHdev(x);
 DWORD
 DxEngUnreferenceHdev(x);
 
-DWORD
-DxEngGetDeviceGammaRamp(x,x);
+
 
 DWORD
 DxEngSetDeviceGammaRamp(x,x,x);
