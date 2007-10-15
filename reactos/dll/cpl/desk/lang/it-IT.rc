@@ -126,9 +126,9 @@ END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normal",           ID_MENU_NORMAL
-    MENUITEM "Disabled",         ID_MENU_DISABLED
-    MENUITEM "Selected",         ID_MENU_SELECTED
+    MENUITEM "Normale",           ID_MENU_NORMAL
+    MENUITEM "Disattivato",         ID_MENU_DISABLED
+    MENUITEM "Selezionato",         ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU

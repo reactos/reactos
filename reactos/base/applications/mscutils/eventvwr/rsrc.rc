@@ -11,3 +11,4 @@ IDI_ERRORICON           ICON  "res/error.ico"
 
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+#include "lang/fr-FR.rc"
