@@ -12,7 +12,7 @@ FONT 8, "MS Shell Dlg"
 
 IDD_PROF DIALOGEX 6, 6, 267, 110
 STYLE WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Proferences"
+CAPTION "Preferences"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Download folder:", -1, 6, 10, 140, 8

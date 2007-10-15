@@ -12,17 +12,17 @@ FONT 8, "MS Shell Dlg"
 
 IDD_PROF DIALOGEX 6, 6, 267, 95
 STYLE WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Proferences"
+CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Download folder:", -1, 6, 10, 140, 8
+	LTEXT "Download Ordner:", -1, 6, 10, 140, 8
 	EDITTEXT IDC_DOWNLOAD_FOLDER_EDIT, 6, 20, 205, 14, WS_VISIBLE | WS_TABSTOP
-	PUSHBUTTON "C&hoose...", IDC_CHOOSE_BUTTON, 216, 20, 45, 14
-	AUTOCHECKBOX "&Delete installation files after setup", IDC_DELINST_FILES_CHECKBOX, 8, 40, 210, 10, WS_GROUP
-	LTEXT "Update server:", -1, 6, 55, 140, 8
+	PUSHBUTTON "W&ähle...", IDC_CHOOSE_BUTTON, 216, 20, 45, 14
+	AUTOCHECKBOX "&Installationsdateien nach dem Setup löschen", IDC_DELINST_FILES_CHECKBOX, 8, 40, 210, 10, WS_GROUP
+	LTEXT "Update Server:", -1, 6, 55, 140, 8
 	EDITTEXT IDC_UPDATE_SERVER_EDIT, 6, 65, 255, 14, WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&OK", IDOK, 147, 90, 54, 15
-	PUSHBUTTON "&Cancel", IDCANCEL, 207, 90, 54, 15
+	PUSHBUTTON "&Abbrechen", IDCANCEL, 207, 90, 54, 15
 END
 
 STRINGTABLE DISCARDABLE 
@@ -49,9 +49,9 @@ BEGIN
   IDS_MAINTAINER		"Maintainer: "
   IDS_APPS_TITLE		"Anwendungen"
   IDS_CATS_TITLE		"Kategorien"
-  IDS_CHOOSE_FOLDER		"Please, choose the folder..."
-  IDS_NOTCREATE_REGKEY	"Could not create the registry key."
+  IDS_CHOOSE_FOLDER		"Bitte wählen Sie den Ordner..."
+  IDS_NOTCREATE_REGKEY	"Registryschlüssel könnte nicht erstellt werden."
   IDS_DOWNLOAD_FOLDER	"Download!"
-  IDS_UNABLECREATE_FOLDER "Unable to create a folder with this name!"
+  IDS_UNABLECREATE_FOLDER "Es konnte kein Ordner mit diesem Namen erstellt werden!"
   IDS_UPDATE_URL		"http://svn.reactos.org"
 END
