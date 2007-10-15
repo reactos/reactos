@@ -64,7 +64,7 @@ DxEngVisRgnUniq()
 }
 
 /************************************************************************/
-/* Enumate all drivers in win32k                                        */
+/* DxEngEnumerateHdev                                                   */
 /************************************************************************/
 /* Enumate all drivers in win32k */
 HDEV *
@@ -74,5 +74,19 @@ DxEngEnumerateHdev(HDEV *hdev);
     DPRINT1("We do not enumate any device from win32k ");
     return 0;
 }
+
+/************************************************************************/
+/* DxEngGetDeviceGammaRamp                                              */
+/************************************************************************/
+/* same protypes NtGdiEngGetDeviceGammaRamp, diffent is we skipp the user mode checks and seh */
+BOOL
+DxEngGetDeviceGammaRamp(HDC hDC, LPVOID lpRamp)
+{
+    /* FIXME redirect it to NtGdiEngGetDeviceGammaRamp internal call  */
+    DPRINT1("redirect it to NtGdiEngGetDeviceGammaRamp internal call ");
+    return FALSE;
+}
+
+
 
 
