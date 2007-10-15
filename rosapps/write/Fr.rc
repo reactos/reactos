@@ -1,5 +1,7 @@
 /*
- * Copyright 2007 Mikolaj Zalewski
+ * English language support
+ *
+ * Copyright (C) 2007 Mikolaj Zalewski
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,14 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-#include "resources.h"
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-#include "De.rc"
-#include "En.rc"
-#include "Fr.rc"
-#include "Ko.rc"
+STRINGTABLE
+{
+    IDS_FAILED, "Le lancement de Wordpad a échoué"
+}
