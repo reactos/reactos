@@ -4,6 +4,9 @@
 
 
 /* DXG.SYS FUNCTIONS INDEX */
+/***************************************************************************/
+/* This driver functions are exported raw from NtGdiDd* / NtDvp* / NtD3d*  */
+/***************************************************************************/
 #define DXG_INDEX_DxDxgGenericThunk               0x00
 #define DXG_INDEX_DxD3dContextCreate              0x01
 #define DXG_INDEX_DxD3dContextDestroy             0x02
@@ -20,9 +23,9 @@
 #define DXG_INDEX_DxDdCanCreateD3DBuffer          0x0D
 #define DXG_INDEX_DxDdColorControl                0x0E
 #define DXG_INDEX_DxDdCreateDirectDrawObject      0x0F
-/* DXG_INDEX_DxDdCreateD3DBuffer and  DXG_INDEX_DxDdCreateD3DBuffer2 are same */
-#define DXG_INDEX_DxDdCreateD3DBuffer             0x10
-#define DXG_INDEX_DxDdCreateD3DBuffer2            0x11
+/* DXG_INDEX_DxDdCreateSurface and  DXG_INDEX_DxDdCreateD3DBuffer2 are same */
+#define DXG_INDEX_DxDdCreateSurface               0x10
+#define DXG_INDEX_DxDdCreateD3DBuffer             0x11
 #define DXG_INDEX_DxDdCreateMoComp                0x12
 #define DXG_INDEX_DxDdCreateSurfaceObject         0x13
 #define DXG_INDEX_DxDdDeleteDirectDrawObject      0x14
@@ -30,43 +33,40 @@
 #define DXG_INDEX_DxDdDestroyMoComp               0x16
 #define DXG_INDEX_DxDdDestroySurface              0x17
 #define DXG_INDEX_DxDdDestroyD3DBuffer            0x18
-#define DXG_INDEX_DxDdFlip                        0x1A
-
-#define DXG_INDEX_DxDdGetBltStatus                0x1D
-#define DXG_INDEX_DxDdGetFlipStatus               0x21
-/* DXG_INDEX_DxDdLock and  DXG_INDEX_DxDdLockD3D are same */
-#define DXG_INDEX_DxDdLock                        0x27
-#define DXG_INDEX_DxDdSetColorKey                 0x2F
-#define DXG_INDEX_DxDdSetOverlayPosition          0x33
-/* DXG_INDEX_DxDdUnlock and  DXG_INDEX_DxDdUnlockD3D are same */
-#define DXG_INDEX_DxDdUnlock                      0x35
-#define DXG_INDEX_DxDdUpdateOverlay               0x37
-
-
 #define DXG_INDEX_DxDdEndMoCompFrame              0x19
+#define DXG_INDEX_DxDdFlip                        0x1A
 #define DXG_INDEX_DxDdFlipToGDISurface            0x1B
 #define DXG_INDEX_DxDdGetAvailDriverMemory        0x1C
+#define DXG_INDEX_DxDdGetBltStatus                0x1D
 #define DXG_INDEX_DxDdGetDC                       0x1E
 #define DXG_INDEX_DxDdGetDriverInfo               0x1F
-#define DXG_INDEX_DxDdGetDxHandle                 0x20
+
+#define DXG_INDEX_DxDdGetFlipStatus               0x21
 #define DXG_INDEX_DxDdGetInternalMoCompInfo       0x22
 #define DXG_INDEX_DxDdGetMoCompBuffInfo           0x23
 #define DXG_INDEX_DxDdGetMoCompGuids              0x24
 #define DXG_INDEX_DxDdGetMoCompFormats            0x25
 #define DXG_INDEX_DxDdGetScanLine                 0x26
+/* DXG_INDEX_DxDdLock and  DXG_INDEX_DxDdLockD3D are same */
+#define DXG_INDEX_DxDdLock                        0x27
 #define DXG_INDEX_DxDdLockD3D                     0x28
 #define DXG_INDEX_DxDdQueryDirectDrawObject       0x29
 #define DXG_INDEX_DxDdQueryMoCompStatus           0x2A
 #define DXG_INDEX_DxDdReenableDirectDrawObject    0x2B
-#define DXG_INDEX_DxDdReleaseDC                   0x2C
-#define DXG_INDEX_DxDdRenderMoComp                0x2D
-#define DXG_INDEX_DxDdResetVisrgn                 0x2E
-#define DXG_INDEX_DxDdSetExclusiveMode            0x30
-#define DXG_INDEX_DxDdSetGammaRamp                0x31
-#define DXG_INDEX_DxDdCreateSurfaceEx             0x32
 
+#define DXG_INDEX_DxDdRenderMoComp                0x2D
+
+#define DXG_INDEX_DxDdSetColorKey                 0x2F
+
+#define DXG_INDEX_DxDdSetExclusiveMode            0x30
+
+#define DXG_INDEX_DxDdCreateSurfaceEx             0x32
+#define DXG_INDEX_DxDdSetOverlayPosition          0x33
 #define DXG_INDEX_DxDdUnattachSurface             0x34
+/* DXG_INDEX_DxDdUnlock and  DXG_INDEX_DxDdUnlockD3D are same */
+#define DXG_INDEX_DxDdUnlock                      0x35
 #define DXG_INDEX_DxDdUnlockD3D                   0x36
+#define DXG_INDEX_DxDdUpdateOverlay               0x37
 #define DXG_INDEX_DxDdWaitForVerticalBlank        0x38
 #define DXG_INDEX_DxDvpCanCreateVideoPort         0x39
 #define DXG_INDEX_DxDvpColorControl               0x3A
@@ -85,8 +85,33 @@
 #define DXG_INDEX_DxDvpWaitForVideoPortSync       0x47
 #define DXG_INDEX_DxDvpAcquireNotification        0x48
 #define DXG_INDEX_DxDvpReleaseNotification        0x49
+
+/* not addedd yet */
+#define DXG_INDEX_DxDdGetDxHandle                 0x20
+#define DXG_INDEX_DxDdReleaseDC                   0x2C
+#define DXG_INDEX_DxDdResetVisrgn                 0x2E
+#define DXG_INDEX_DxDdSetGammaRamp                0x31
+
+
+/***********************************************************************************/
+/* This driver functions are exported raw from Eng* it only exists in the def file */
+/* you can not do syscallback to thuse but you can import them from win32k.sys     */
+/* for them are in the export list                                                 */
+/***********************************************************************************/
+/* not addedd yet */
 #define DXG_INDEX_DxDdHeapVidMemAllocAligned      0x4A
 #define DXG_INDEX_DxDdHeapVidMemFree              0x4B
+#define DXG_INDEX_DxDdAllocPrivateUserMem         0x54
+#define DXG_INDEX_DxDdFreePrivateUserMem          0x55
+#define DXG_INDEX_DxDdLockDirectDrawSurface       0x56
+#define DXG_INDEX_DxDdUnlockDirectDrawSurface     0x57
+#define DXG_INDEX_DxDdIoctl                       0x5B
+
+
+/***********************************************************************************/
+/* Internal use in diffent part in Windows and ReactOS                             */
+/***********************************************************************************/
+/* not inuse yet */
 #define DXG_INDEX_DxDdEnableDirectDraw            0x4C
 #define DXG_INDEX_DxDdDisableDirectDraw           0x4D
 #define DXG_INDEX_DxDdSuspendDirectDraw           0x4E
@@ -95,11 +120,7 @@
 #define DXG_INDEX_DxDdCloseProcess                0x51
 #define DXG_INDEX_DxDdGetDirectDrawBound          0x52
 #define DXG_INDEX_DxDdEnableDirectDrawRedirection 0x53
-#define DXG_INDEX_DxDdAllocPrivateUserMem         0x54
-#define DXG_INDEX_DxDdFreePrivateUserMem          0x55
-#define DXG_INDEX_DxDdLockDirectDrawSurface       0x56
-#define DXG_INDEX_DxDdUnlockDirectDrawSurface     0x57
 #define DXG_INDEX_DxDdSetAccelLevel               0x58
 #define DXG_INDEX_DxDdGetSurfaceLock              0x59
 #define DXG_INDEX_DxDdEnumLockedSurfaceRect       0x5A
-#define DXG_INDEX_DxDdIoctl                       0x5B
+
