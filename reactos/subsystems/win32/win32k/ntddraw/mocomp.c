@@ -100,7 +100,7 @@ NtGdiDdEndMoCompFrame(HANDLE hMoComp,
     }
 
     DPRINT1("Calling on dxg.sys pfnDdEndMoCompFrame");
-    return pfnDdEndMoCompFrame(hMoComp, puBeginFrameData);
+    return pfnDdEndMoCompFrame(hMoComp, puEndFrameData);
 }
 
 /************************************************************************/
