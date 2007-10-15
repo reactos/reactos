@@ -97,8 +97,7 @@ BOOL
 INTERNAL_CALL
 DD_Cleanup(PVOID ObjectBody)
 {
-    PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
-
+    // FIXME remove this line PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
     DPRINT1("DD_Cleanup\n");
 
     /* Do not known what the new cleanup code should do at moment */
@@ -175,9 +174,9 @@ NtGdiDxgGenericThunk(ULONG_PTR ulIndex,
     PGD_DXGENERICTRUNK pfnDxgGenericThunk = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDriverState, pfnDxgGenericThunk);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDxgGenericThunk, pfnDxgGenericThunk);
 
-    if (pfnDdGetDriverState == NULL)
+    if (pfnDxgGenericThunk == NULL)
     {
         DPRINT1("Warring no pfnDxgGenericThunk");
         return DDHAL_DRIVER_NOTHANDLED;
@@ -432,7 +431,7 @@ NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
     }
 
     DPRINT1("Calling on dxg.sys pfnDdSetExclusiveMode");
-    return pfnDdSetExclusiveMode(hDirectDrawLocal, puGetAvailDriverMemoryData);
+    return pfnDdSetExclusiveMode(hDirectDraw, puSetExclusiveModeData);
 
 }
 
