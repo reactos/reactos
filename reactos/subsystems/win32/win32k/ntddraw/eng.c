@@ -14,6 +14,9 @@
 #include <w32k.h>
 #include <debug.h>
 
+/************************************************************************/
+/* HeapVidMemAllocAligned                                               */
+/************************************************************************/
 FLATPTR
 STDCALL
 HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
@@ -22,10 +25,10 @@ HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
                        LPSURFACEALIGNMENT lpAlignment,
                        LPLONG lpNewPitch)
 {
-    pfnHeapVidMemAllocAligned = NULL;
+    PGD_HEAPVIDMEMALLOCALIGNED pfnHeapVidMemAllocAligned = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(, pfnHeapVidMemAllocAligned);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdHeapVidMemAllocAligned, pfnHeapVidMemAllocAligned);
 
     if (pfnHeapVidMemAllocAligned == NULL)
     {
@@ -37,15 +40,18 @@ HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
     return pfnHeapVidMemAllocAligned(lpVidMem, dwWidth, dwHeight, lpAlignment, lpNewPitch);
 }
 
+/************************************************************************/
+/* VidMemFree                                                           */
+/************************************************************************/
 VOID
 STDCALL
 VidMemFree(LPVMEMHEAP pvmh,
            FLATPTR ptr)
 {
-    pfnVidMemFree = NULL;
+    PGD_VIDMEMFREE pfnVidMemFree = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(, pfnVidMemFree);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdHeapVidMemFree, pfnVidMemFree);
 
     if (pfnVidMemFree == NULL)
     {
@@ -57,16 +63,19 @@ VidMemFree(LPVMEMHEAP pvmh,
     return pfnVidMemFree(pvmh, ptr);
 }
 
+/************************************************************************/
+/* EngAllocPrivateUserMem                                               */
+/************************************************************************/
 PVOID
 STDCALL
 EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
                        SIZE_T  cj,
                        ULONG  tag)
 {
-    pfnEngAllocPrivateUserMem = NULL;
+    PGD_ENGALLOCPRIVATEUSERMEM pfnEngAllocPrivateUserMem = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(, pfnEngAllocPrivateUserMem);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdAllocPrivateUserMem, pfnEngAllocPrivateUserMem);
 
     if (pfnEngAllocPrivateUserMem == NULL)
     {
@@ -78,15 +87,18 @@ EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
     return pfnEngAllocPrivateUserMem(psl, cj, tag);
 }
 
+/************************************************************************/
+/* EngFreePrivateUserMem                                                */
+/************************************************************************/
 VOID
 STDCALL
 EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
                       PVOID  pv)
 {
-    pfnEngFreePrivateUserMem = NULL;
+    PGD_ENGFREEPRIVATEUSERMEM pfnEngFreePrivateUserMem = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(, pfnEngFreePrivateUserMem);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdFreePrivateUserMem, pfnEngFreePrivateUserMem);
 
     if (pfnEngFreePrivateUserMem == NULL)
     {
@@ -98,35 +110,41 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
     return pfnEngFreePrivateUserMem(psl, pv);
 }
 
+/************************************************************************/
+/* EngDxIoctl                                                           */
+/************************************************************************/
 DWORD
 STDCALL
 EngDxIoctl(ULONG ulIoctl,
            PVOID pBuffer,
            ULONG ulBufferSize)
 {
-    pfnEngFreePrivateUserMem = NULL;
+    PGD_ENGDXIOCTL pfnEngDxIoctl = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(, pfnEngFreePrivateUserMem);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdIoctl, pfnEngDxIoctl);
 
-    if (pfnEngFreePrivateUserMem == NULL)
+    if (pfnEngDxIoctl == NULL)
     {
-        DPRINT1("Warring no pfnEngFreePrivateUserMem");
+        DPRINT1("Warring no pfnEngDxIoctl");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnEngFreePrivateUserMem");
+    DPRINT1("Calling on dxg.sys pfnEngDxIoctl");
     return pfnEngFreePrivateUserMem(psl, pv);
 }
 
+/************************************************************************/
+/* EngLockDirectDrawSurface                                             */
+/************************************************************************/
 PDD_SURFACE_LOCAL
 STDCALL
 EngLockDirectDrawSurface(HANDLE hSurface)
 {
-    pfnEngLockDirectDrawSurface = NULL;
+    PGD_ENGLOCKDIRECTDRAWSURFACE pfnEngLockDirectDrawSurface = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(, pfnEngLockDirectDrawSurface);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdLockDirectDrawSurface, pfnEngLockDirectDrawSurface);
 
     if (pfnEngLockDirectDrawSurface == NULL)
     {
@@ -138,14 +156,17 @@ EngLockDirectDrawSurface(HANDLE hSurface)
     return pfnEngLockDirectDrawSurface(hSurface);
 }
 
+/************************************************************************/
+/* EngUnlockDirectDrawSurface                                           */
+/************************************************************************/
 BOOL
 STDCALL
 EngUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 {
-    pfnEngUnlockDirectDrawSurface = NULL;
+    PGD_ENGUNLOCKDIRECTDRAWSURFACE pfnEngUnlockDirectDrawSurface = NULL;
     INT i;
 
-    DXG_GET_INDEX_FUNCTION(, pfnEngUnlockDirectDrawSurface);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnlockDirectDrawSurface, pfnEngUnlockDirectDrawSurface);
 
     if (pfnEngUnlockDirectDrawSurface == NULL)
     {
