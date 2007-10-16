@@ -24,7 +24,6 @@
 /* GLOBALS ******************************************************************/
 
 extern POBJECT_TYPE  CmpKeyObjectType;
-extern LIST_ENTRY CmiKeyObjectListHead;
 
 static BOOLEAN CmiRegistryInitialized = FALSE;
 
@@ -332,7 +331,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         goto Cleanup;
     }
 
-    InsertTailList(&CmiKeyObjectListHead, &KeyObject->ListEntry);
     RtlCreateUnicodeString(&KeyObject->Name, Start);
 
     KeyObject->KeyCell->Parent = KeyObject->ParentKey->KeyCellOffset;
