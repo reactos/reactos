@@ -41,14 +41,15 @@
 #define ectGREENO			7
 #define ectSAVEEDGESMASK	0x80000000
 
-/* Microsoft card dimensions */
-/*
-#define CARD_WIDTH		71
-#define CARD_HEIGHT		96
-*/
-/* MacSolitaireX's card dimensions */
-#define CARD_WIDTH		72
-#define CARD_HEIGHT		96
+#if defined(CARDSTYLE_DEFAULT)
+#	define CARD_WIDTH		72	// The original Microsoft cards are 71px wide, but ours are taken from MacSolitaireX
+#	define CARD_HEIGHT		96
+#elif defined(CARDSTYLE_BAVARIAN)
+#	define CARD_WIDTH		110
+#	define CARD_HEIGHT		198
+#else
+#	error No or unsupported cardstyle defined
+#endif
 
 #define ISREDCARD(x)	(x >= 13 && x <= 39)
 
