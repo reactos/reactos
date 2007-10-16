@@ -186,7 +186,7 @@ CmpGetValueDataFromCache(IN PKEY_OBJECT KeyObject,
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
 CmpFindValueByNameFromCache(IN PKEY_OBJECT KeyObject,
-                            IN PUNICODE_STRING Name,
+                            IN CONST UNICODE_STRING* Name,
                             OUT PCM_CACHED_VALUE **CachedValue,
                             OUT ULONG *Index,
                             OUT PCM_KEY_VALUE *Value,

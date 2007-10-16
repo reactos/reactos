@@ -762,7 +762,7 @@ VALUE_SEARCH_RETURN_TYPE
 NTAPI
 CmpFindValueByNameFromCache(
     IN PKEY_OBJECT KeyObject,
-    IN PUNICODE_STRING Name,
+    IN CONST UNICODE_STRING* Name,
     OUT PCM_CACHED_VALUE **CachedValue,
     OUT ULONG *Index,
     OUT PCM_KEY_VALUE *Value,
@@ -929,11 +929,11 @@ CmpInitializeHive(
     IN ULONG Operation,
     IN ULONG Flags,
     IN ULONG FileType,
-    IN PVOID HiveData,
+    IN PVOID HiveData OPTIONAL,
     IN HANDLE Primary,
     IN HANDLE Log,
     IN HANDLE External,
-    IN PUNICODE_STRING FileName,
+    IN CONST UNICODE_STRING* FileName OPTIONAL,
     IN ULONG CheckFlags
 );
 
@@ -953,11 +953,13 @@ CmpLinkHiveToMaster(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+/* NOTE: This function declaration is currently duplicated in both     */
+/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 NTSTATUS
 NTAPI
 CmpOpenHiveFiles(
-    IN PUNICODE_STRING BaseName,
-    IN PWCHAR Extension OPTIONAL,
+    IN CONST UNICODE_STRING* BaseName,
+    IN PCWSTR Extension OPTIONAL,
     IN PHANDLE Primary,
     IN PHANDLE Log,
     IN PULONG PrimaryDisposition,
@@ -1047,7 +1049,7 @@ CmpFreeKeyByCell(
 LONG
 NTAPI
 CmpCompareCompressedName(
-    IN PUNICODE_STRING SearchName,
+    IN CONST UNICODE_STRING* SearchName,
     IN PWCHAR CompressedName,
     IN ULONG NameLength
 );
@@ -1116,12 +1118,15 @@ CmpFlushEntireRegistry(
 //
 // Cell Index Routines
 //
+
+/* NOTE: This function declaration is currently duplicated in both     */
+/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 HCELL_INDEX
 NTAPI
 CmpFindSubKeyByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE Parent,
-    IN PUNICODE_STRING SearchName
+    IN CONST UNICODE_STRING* SearchName
 );
 
 HCELL_INDEX
@@ -1136,7 +1141,7 @@ ULONG
 NTAPI
 CmpComputeHashKey(
     IN ULONG Hash,
-    IN PUNICODE_STRING Name,
+    IN CONST UNICODE_STRING* Name,
     IN BOOLEAN AllowSeparators
 );
 

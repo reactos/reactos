@@ -169,13 +169,13 @@ CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
 
 NTSTATUS
 CmiScanKeyList(IN PKEY_OBJECT Parent,
-	       IN PUNICODE_STRING KeyName,
+	       IN CONST UNICODE_STRING* KeyName,
 	       IN ULONG Attributes,
 	       PKEY_OBJECT* ReturnedObject);
 
 NTSTATUS
 CmiLoadHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
-	    PUNICODE_STRING FileName,
+	    CONST UNICODE_STRING* FileName,
 	    ULONG Flags);
 
 NTSTATUS
@@ -200,7 +200,7 @@ CmiScanForSubKey(IN PEREGISTRY_HIVE RegistryHive,
 		 IN PCM_KEY_NODE KeyCell,
 		 OUT PCM_KEY_NODE *SubKeyCell,
 		 OUT HCELL_INDEX *BlockOffset,
-		 IN PUNICODE_STRING KeyName,
+		 IN CONST UNICODE_STRING* KeyName,
 		 IN ACCESS_MASK DesiredAccess,
 		 IN ULONG Attributes);
 
@@ -317,12 +317,14 @@ CmpFindValueByName(
     IN PUNICODE_STRING Name
 );
 
+/* NOTE: This function declaration is currently duplicated in both     */
+/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 HCELL_INDEX
 NTAPI
 CmpFindSubKeyByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE Parent,
-    IN PUNICODE_STRING SearchName
+    IN CONST UNICODE_STRING* SearchName
 );
 
 VOID
@@ -340,10 +342,12 @@ CmFindObject(
     IN PVOID ParseContext
 );
 
+/* NOTE: This function declaration is currently duplicated in both     */
+/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 NTSTATUS
 NTAPI
-CmpOpenHiveFiles(IN PUNICODE_STRING BaseName,
-                 IN PWCHAR Extension OPTIONAL,
+CmpOpenHiveFiles(IN CONST UNICODE_STRING* BaseName,
+                 IN PCWSTR Extension OPTIONAL,
                  IN PHANDLE Primary,
                  IN PHANDLE Log,
                  IN PULONG PrimaryDisposition,
@@ -355,7 +359,7 @@ CmpOpenHiveFiles(IN PUNICODE_STRING BaseName,
 
 NTSTATUS
 NTAPI
-CmpInitHiveFromFile(IN PUNICODE_STRING HiveName,
+CmpInitHiveFromFile(IN CONST UNICODE_STRING* HiveName,
                     IN ULONG HiveFlags,
                     OUT PEREGISTRY_HIVE *Hive,
                     IN OUT PBOOLEAN New,

@@ -753,9 +753,10 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
     NewKey->ParentKey = ParentKey;
 }
 
+/* Preconditions: Must be called with CmpRegistryLock held. */
 NTSTATUS
 CmiScanKeyList(PKEY_OBJECT Parent,
-               PUNICODE_STRING KeyName,
+               CONST UNICODE_STRING* KeyName,
                ULONG Attributes,
                PKEY_OBJECT* ReturnedObject)
 {
@@ -766,6 +767,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
         KeyName, &Parent->Name);
 
     /* FIXME: if list maintained in alphabetic order, use dichotomic search */
+    /* (a binary search) */
     for (Index=0; Index < Parent->SubKeyCounts; Index++)
     {
         CurKey = Parent->SubKeys[Index];

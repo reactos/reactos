@@ -25,7 +25,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
                   IN HANDLE Primary,
                   IN HANDLE Log,
                   IN HANDLE External,
-                  IN PUNICODE_STRING FileName OPTIONAL,
+                  IN CONST UNICODE_STRING* FileName OPTIONAL,
                   IN ULONG CheckFlags)
 {
 #if 0
@@ -240,8 +240,8 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
 
 NTSTATUS
 NTAPI
-CmpOpenHiveFiles(IN PUNICODE_STRING BaseName,
-                 IN PWCHAR Extension OPTIONAL,
+CmpOpenHiveFiles(IN CONST UNICODE_STRING* BaseName,
+                 IN PCWSTR Extension OPTIONAL,
                  IN PHANDLE Primary,
                  IN PHANDLE Log,
                  IN PULONG PrimaryDisposition,

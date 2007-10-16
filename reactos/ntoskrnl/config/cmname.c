@@ -107,7 +107,7 @@ CmpCompressedNameSize(IN PWCHAR Name,
 
 LONG
 NTAPI
-CmpCompareCompressedName(IN PUNICODE_STRING SearchName,
+CmpCompareCompressedName(IN CONST UNICODE_STRING* SearchName,
                          IN PWCHAR CompressedName,
                          IN ULONG NameLength)
 {

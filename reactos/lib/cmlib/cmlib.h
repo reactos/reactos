@@ -211,7 +211,7 @@ HvInitialize(
    PFILE_WRITE_ROUTINE FileWrite,
    PFILE_SET_SIZE_ROUTINE FileSetSize,
    PFILE_FLUSH_ROUTINE FileFlush,
-   IN PUNICODE_STRING FileName);
+   IN CONST UNICODE_STRING* FileName);
 
 VOID CMAPI 
 HvFree(

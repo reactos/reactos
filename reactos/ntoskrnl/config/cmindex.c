@@ -27,10 +27,10 @@ ULONG CmpMaxIndexPerHblock =
 
 /* FUNCTIONS *****************************************************************/
 
-LONG
+static LONG
 NTAPI
 CmpDoCompareKeyName(IN PHHIVE Hive,
-                    IN PUNICODE_STRING SearchName,
+                    IN CONST UNICODE_STRING* SearchName,
                     IN HCELL_INDEX Cell)
 {
     PCM_KEY_NODE Node;
@@ -63,10 +63,10 @@ CmpDoCompareKeyName(IN PHHIVE Hive,
     return (Result == 0) ? Result : ((Result > 0) ? 1 : -1);
 }
 
-LONG
+static LONG
 NTAPI
 CmpCompareInIndex(IN PHHIVE Hive,
-                  IN PUNICODE_STRING SearchName,
+                  IN CONST UNICODE_STRING* SearchName,
                   IN ULONG Count,
                   IN PCM_KEY_INDEX Index,
                   IN PHCELL_INDEX SubKey)
@@ -139,11 +139,11 @@ CmpCompareInIndex(IN PHHIVE Hive,
     return Result;
 }
 
-ULONG
+static ULONG
 NTAPI
 CmpFindSubKeyInRoot(IN PHHIVE Hive,
                     IN PCM_KEY_INDEX Index,
-                    IN PUNICODE_STRING SearchName,
+                    IN CONST UNICODE_STRING* SearchName,
                     IN PHCELL_INDEX SubKey)
 {
     ULONG High, Low = 0, i, ReturnIndex;
@@ -355,11 +355,11 @@ Return:
     return ReturnIndex;
 }
 
-ULONG
+static ULONG
 NTAPI
 CmpFindSubKeyInLeaf(IN PHHIVE Hive,
                     IN PCM_KEY_INDEX Index,
-                    IN PUNICODE_STRING SearchName,
+                    IN CONST UNICODE_STRING* SearchName,
                     IN PHCELL_INDEX SubKey)
 {
     ULONG High, Low = 0, i;
@@ -473,7 +473,7 @@ CmpFindSubKeyInLeaf(IN PHHIVE Hive,
 ULONG
 NTAPI
 CmpComputeHashKey(IN ULONG Hash,
-                  IN PUNICODE_STRING Name,
+                  IN CONST UNICODE_STRING* Name,
                   IN BOOLEAN AllowSeparators)
 {
     LPWSTR Cp;
@@ -657,11 +657,11 @@ CmpFindSubKeyByNumber(IN PHHIVE Hive,
     return HCELL_NIL;
 }
 
-HCELL_INDEX
+static HCELL_INDEX
 NTAPI
 CmpFindSubKeyByHash(IN PHHIVE Hive,
                     IN PCM_KEY_FAST_INDEX FastIndex,
-                    IN PUNICODE_STRING SearchName)
+                    IN CONST UNICODE_STRING* SearchName)
 {
     ULONG HashKey, i;
     PCM_INDEX FastEntry;
@@ -698,7 +698,7 @@ HCELL_INDEX
 NTAPI
 CmpFindSubKeyByName(IN PHHIVE Hive,
                     IN PCM_KEY_NODE Parent,
-                    IN PUNICODE_STRING SearchName)
+                    IN CONST UNICODE_STRING* SearchName)
 {
     ULONG i;
     PCM_KEY_INDEX IndexRoot;
