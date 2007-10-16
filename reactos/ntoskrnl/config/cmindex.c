@@ -30,7 +30,7 @@ ULONG CmpMaxIndexPerHblock =
 static LONG
 NTAPI
 CmpDoCompareKeyName(IN PHHIVE Hive,
-                    IN CONST UNICODE_STRING* SearchName,
+                    IN PCUNICODE_STRING SearchName,
                     IN HCELL_INDEX Cell)
 {
     PCM_KEY_NODE Node;
@@ -66,7 +66,7 @@ CmpDoCompareKeyName(IN PHHIVE Hive,
 static LONG
 NTAPI
 CmpCompareInIndex(IN PHHIVE Hive,
-                  IN CONST UNICODE_STRING* SearchName,
+                  IN PCUNICODE_STRING SearchName,
                   IN ULONG Count,
                   IN PCM_KEY_INDEX Index,
                   IN PHCELL_INDEX SubKey)
@@ -143,7 +143,7 @@ static ULONG
 NTAPI
 CmpFindSubKeyInRoot(IN PHHIVE Hive,
                     IN PCM_KEY_INDEX Index,
-                    IN CONST UNICODE_STRING* SearchName,
+                    IN PCUNICODE_STRING SearchName,
                     IN PHCELL_INDEX SubKey)
 {
     ULONG High, Low = 0, i, ReturnIndex;
@@ -359,7 +359,7 @@ static ULONG
 NTAPI
 CmpFindSubKeyInLeaf(IN PHHIVE Hive,
                     IN PCM_KEY_INDEX Index,
-                    IN CONST UNICODE_STRING* SearchName,
+                    IN PCUNICODE_STRING SearchName,
                     IN PHCELL_INDEX SubKey)
 {
     ULONG High, Low = 0, i;
@@ -473,7 +473,7 @@ CmpFindSubKeyInLeaf(IN PHHIVE Hive,
 ULONG
 NTAPI
 CmpComputeHashKey(IN ULONG Hash,
-                  IN CONST UNICODE_STRING* Name,
+                  IN PCUNICODE_STRING Name,
                   IN BOOLEAN AllowSeparators)
 {
     LPWSTR Cp;
@@ -661,7 +661,7 @@ static HCELL_INDEX
 NTAPI
 CmpFindSubKeyByHash(IN PHHIVE Hive,
                     IN PCM_KEY_FAST_INDEX FastIndex,
-                    IN CONST UNICODE_STRING* SearchName)
+                    IN PCUNICODE_STRING SearchName)
 {
     ULONG HashKey, i;
     PCM_INDEX FastEntry;
@@ -698,7 +698,7 @@ HCELL_INDEX
 NTAPI
 CmpFindSubKeyByName(IN PHHIVE Hive,
                     IN PCM_KEY_NODE Parent,
-                    IN CONST UNICODE_STRING* SearchName)
+                    IN PCUNICODE_STRING SearchName)
 {
     ULONG i;
     PCM_KEY_INDEX IndexRoot;

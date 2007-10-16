@@ -24,7 +24,7 @@
 
 NTSTATUS
 CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-            IN CONST UNICODE_STRING* FileName,
+            IN PCUNICODE_STRING FileName,
             IN ULONG Flags)
 {
     PEREGISTRY_HIVE Hive = NULL;
@@ -280,7 +280,7 @@ CmiScanForSubKey(IN PEREGISTRY_HIVE RegistryHive,
                  IN PCM_KEY_NODE KeyCell,
                  OUT PCM_KEY_NODE *SubKeyCell,
                  OUT HCELL_INDEX *BlockOffset,
-                 IN CONST UNICODE_STRING* KeyName,
+                 IN PCUNICODE_STRING KeyName,
                  IN ACCESS_MASK DesiredAccess,
                  IN ULONG Attributes)
 {

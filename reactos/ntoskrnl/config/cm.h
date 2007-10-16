@@ -762,7 +762,7 @@ VALUE_SEARCH_RETURN_TYPE
 NTAPI
 CmpFindValueByNameFromCache(
     IN PKEY_OBJECT KeyObject,
-    IN CONST UNICODE_STRING* Name,
+    IN PCUNICODE_STRING Name,
     OUT PCM_CACHED_VALUE **CachedValue,
     OUT ULONG *Index,
     OUT PCM_KEY_VALUE *Value,
@@ -933,7 +933,7 @@ CmpInitializeHive(
     IN HANDLE Primary,
     IN HANDLE Log,
     IN HANDLE External,
-    IN CONST UNICODE_STRING* FileName OPTIONAL,
+    IN PCUNICODE_STRING FileName OPTIONAL,
     IN ULONG CheckFlags
 );
 
@@ -958,7 +958,7 @@ CmpLinkHiveToMaster(
 NTSTATUS
 NTAPI
 CmpOpenHiveFiles(
-    IN CONST UNICODE_STRING* BaseName,
+    IN PCUNICODE_STRING BaseName,
     IN PCWSTR Extension OPTIONAL,
     IN PHANDLE Primary,
     IN PHANDLE Log,
@@ -1049,7 +1049,7 @@ CmpFreeKeyByCell(
 LONG
 NTAPI
 CmpCompareCompressedName(
-    IN CONST UNICODE_STRING* SearchName,
+    IN PCUNICODE_STRING SearchName,
     IN PWCHAR CompressedName,
     IN ULONG NameLength
 );
@@ -1126,7 +1126,7 @@ NTAPI
 CmpFindSubKeyByName(
     IN PHHIVE Hive,
     IN PCM_KEY_NODE Parent,
-    IN CONST UNICODE_STRING* SearchName
+    IN PCUNICODE_STRING SearchName
 );
 
 HCELL_INDEX
@@ -1141,7 +1141,7 @@ ULONG
 NTAPI
 CmpComputeHashKey(
     IN ULONG Hash,
-    IN CONST UNICODE_STRING* Name,
+    IN PCUNICODE_STRING Name,
     IN BOOLEAN AllowSeparators
 );
 

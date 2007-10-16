@@ -440,7 +440,7 @@ HvInitialize(
    PFILE_WRITE_ROUTINE FileWrite,
    PFILE_SET_SIZE_ROUTINE FileSetSize,
    PFILE_FLUSH_ROUTINE FileFlush,
-   IN const UNICODE_STRING* FileName)
+   IN PCUNICODE_STRING FileName)
 {
    NTSTATUS Status;
    PHHIVE Hive = RegistryHive;

@@ -22,7 +22,7 @@ BOOLEAN HvShutdownComplete;
 
 NTSTATUS
 NTAPI
-CmpInitHiveFromFile(IN CONST UNICODE_STRING* HiveName,
+CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
                     IN ULONG HiveFlags,
                     OUT PCMHIVE *Hive,
                     IN OUT PBOOLEAN New,

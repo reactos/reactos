@@ -756,7 +756,7 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
 /* Preconditions: Must be called with CmpRegistryLock held. */
 NTSTATUS
 CmiScanKeyList(PKEY_OBJECT Parent,
-               CONST UNICODE_STRING* KeyName,
+               PCUNICODE_STRING KeyName,
                ULONG Attributes,
                PKEY_OBJECT* ReturnedObject)
 {
