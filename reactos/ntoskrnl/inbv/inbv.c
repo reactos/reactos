@@ -5,6 +5,24 @@
 #include <debug.h>
 #include "bootvid/bootvid.h"
 
+//
+// Bitmap Header
+//
+typedef struct tagBITMAPINFOHEADER
+{
+    ULONG biSize;
+    LONG biWidth;
+    LONG biHeight;
+    USHORT biPlanes;
+    USHORT biBitCount;
+    ULONG biCompression;
+    ULONG biSizeImage;
+    LONG biXPelsPerMeter;
+    LONG biYPelsPerMeter;
+    ULONG biClrUsed;
+    ULONG biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+
 /* GLOBALS *******************************************************************/
 
 KSPIN_LOCK BootDriverLock;
@@ -593,6 +611,19 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         if (!InbvBootDriverInstalled) return;
 
         /* FIXME: TODO, display full-screen bitmap */
+        Bitmap = InbvGetResourceAddress(5);
+        if (Bitmap)
+        {
+            PBITMAPINFOHEADER BitmapInfoHeader = (PBITMAPINFOHEADER)Bitmap;
+            ULONG Top, Left;
+
+            Left = (640 - BitmapInfoHeader->biWidth) / 2;
+            if (BitmapInfoHeader->biHeight < 0)
+                Top = (480 + BitmapInfoHeader->biHeight) / 2;
+            else
+                Top = (480 - BitmapInfoHeader->biHeight) / 2;
+            InbvBitBlt(Bitmap, Left, Top);
+        }
     }
 
     /* Do we have a system thread? */
