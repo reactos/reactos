@@ -211,7 +211,8 @@ HvInitialize(
    PFILE_WRITE_ROUTINE FileWrite,
    PFILE_SET_SIZE_ROUTINE FileSetSize,
    PFILE_FLUSH_ROUTINE FileFlush,
-   IN CONST UNICODE_STRING* FileName);
+   IN const /*CONST*/ UNICODE_STRING* FileName);
+/* NOTE: Can not use CONST here, as this file is used from user-mode too */
 
 VOID CMAPI 
 HvFree(
