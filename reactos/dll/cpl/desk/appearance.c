@@ -130,7 +130,7 @@ LoadCurrentTheme(GLOBALS* g)
 }
 
 
-static VOID
+static BOOL
 LoadThemeFromReg(GLOBALS* g, INT iPreset)
 {
 	INT i;
@@ -138,6 +138,7 @@ LoadThemeFromReg(GLOBALS* g, INT iPreset)
 	TCHAR strValueName[10];
 	HKEY hkNewSchemes, hkScheme, hkSize;
 	DWORD dwType, dwLength;
+	BOOL Ret = FALSE;
 
 	if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"), 
 		0, KEY_READ, &hkNewSchemes) == ERROR_SUCCESS)
@@ -147,27 +148,52 @@ LoadThemeFromReg(GLOBALS* g, INT iPreset)
 			lstrcpyn(&strSizeName[6],g->ThemeTemplates[iPreset].strSizeName, 3);
 			if(RegOpenKeyEx(hkScheme, strSizeName, 0, KEY_READ, &hkSize) == ERROR_SUCCESS)
 			{
-				dwLength = sizeof(BOOL);
-				RegQueryValueEx(hkSize, TEXT("FlatMenus"), NULL, &dwType, (LPBYTE)&g->Theme.bFlatMenus, &dwLength);
+				Ret = TRUE;
+
+				dwLength = sizeof(DWORD);
+				if (RegQueryValueEx(hkSize, TEXT("FlatMenus"), NULL, &dwType, (LPBYTE)&g->Theme.bFlatMenus, &dwLength) != ERROR_SUCCESS ||
+				    dwType != REG_DWORD || dwLength != sizeof(DWORD))
+				{
+					/* Failed to read registry value */
+					g->Theme.bFlatMenus = FALSE;
+					Ret = FALSE;
+				}
 
 				for (i = 0; i <= 30; i++)
 				{
 					wsprintf(strValueName, TEXT("Color #%d"), i);
 					dwLength = sizeof(COLORREF);
-					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.crColor[i], &dwLength);
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.crColor[i], &dwLength) != ERROR_SUCCESS ||
+					    dwType != REG_DWORD || dwLength != sizeof(COLORREF))
+					{
+						/* Failed to read registry value, initialize with current setting for now */
+						g->Theme.crColor[i] = GetSysColor(i);
+						Ret = FALSE;
+					}
 				}
 				for (i = 0; i <= 5; i++)
 				{
 					wsprintf(strValueName, TEXT("Font #%d"), i);
 					dwLength = sizeof(LOGFONT);
 					g->Theme.lfFont[i].lfFaceName[0] = 'x';
-					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.lfFont[i], &dwLength);
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.lfFont[i], &dwLength) != ERROR_SUCCESS ||
+					    dwType != REG_BINARY || dwLength != sizeof(LOGFONT))
+					{
+						/* Failed to read registry value */
+						Ret = FALSE;
+					}
 				}
 				for (i = 0; i <= 8; i++)
 				{
 					wsprintf(strValueName, TEXT("Size #%d"), i);
-					dwLength = sizeof(DWORD);
-					RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.Size[i], &dwLength);
+					dwLength = sizeof(UINT64);
+					if (RegQueryValueEx(hkSize, strValueName, NULL, &dwType, (LPBYTE)&g->Theme.Size[i], &dwLength) != ERROR_SUCCESS ||
+					    dwType != REG_QWORD || dwLength != sizeof(UINT64))
+					{
+						/* Failed to read registry value, initialize with current setting for now */
+						g->Theme.Size[i] = GetSystemMetrics(g_SizeMetric[i]);
+						Ret = FALSE;
+					}
 				}
 				RegCloseKey(hkScheme);
 			}
@@ -175,6 +201,8 @@ LoadThemeFromReg(GLOBALS* g, INT iPreset)
 		}
 		RegCloseKey(hkNewSchemes);
 	}
+
+	return Ret;
 }
 
 

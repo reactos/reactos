@@ -34,7 +34,7 @@ typedef struct
 {
 	COLORREF crColor[NUM_COLORS];
 	LOGFONT lfFont[NUM_FONTS];
-	DWORD Size[NUM_SIZES];
+	UINT64 Size[NUM_SIZES];
 	BOOL bFlatMenus;
 	BOOL bHasChanged;
 	BOOL bIsCustom;
