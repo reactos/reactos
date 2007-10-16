@@ -204,7 +204,9 @@ SetupCopyFile(PWCHAR SourceFileName,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_OVERWRITE_IF,
-			FILE_NO_INTERMEDIATE_BUFFERING | FILE_SEQUENTIAL_ONLY,
+			FILE_NO_INTERMEDIATE_BUFFERING |
+			FILE_SEQUENTIAL_ONLY |
+			FILE_SYNCHRONOUS_IO_NONALERT,
 			NULL,
 			0);
   if(!NT_SUCCESS(Status))
@@ -243,11 +245,17 @@ SetupCopyFile(PWCHAR SourceFileName,
     }
 
   /* shorten the file back to it's real size after completing the write */
-  NtSetInformationFile(FileHandleDest,
+  Status = NtSetInformationFile(FileHandleDest,
 		       &IoStatusBlock,
 		       &FileStandard.EndOfFile,
 		       sizeof(FILE_END_OF_FILE_INFORMATION),
 		       FileEndOfFileInformation);
+
+  if(!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtSetInformationFile failed: %x\n", Status);
+    }
+
  closedest:
   NtClose(FileHandleDest);
  unmapsrcsec:
