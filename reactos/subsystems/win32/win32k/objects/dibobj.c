@@ -587,7 +587,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
             {
                 DestPalette = PALETTE_LockPalette(hDestPalette);
                 /* FIXME - DestPalette can be NULL!!!! Don't assert here!!! */
-                DPRINT1("DestPalette : %p\n", DestPalette);
+                DPRINT("DestPalette : %p\n", DestPalette);
                 ASSERT(DestPalette);
                 DestPaletteType = DestPalette->Mode;
             }
