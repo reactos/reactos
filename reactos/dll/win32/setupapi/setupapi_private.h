@@ -28,6 +28,7 @@
 #include <wchar.h>
 
 #define WIN32_NO_STATUS
+#define COBJMACROS
 #include <windows.h>
 #include <aclapi.h>
 #include <cfgmgr32.h>

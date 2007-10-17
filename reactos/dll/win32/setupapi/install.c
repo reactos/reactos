@@ -40,6 +40,16 @@ static const WCHAR ServiceBinaryKey[] = {'S','e','r','v','i','c','e','B','i','n'
 static const WCHAR ServiceTypeKey[] = {'S','e','r','v','i','c','e','T','y','p','e',0};
 static const WCHAR StartTypeKey[] = {'S','t','a','r','t','T','y','p','e',0};
 
+static const WCHAR Name[] = {'N','a','m','e',0};
+static const WCHAR CmdLine[] = {'C','m','d','L','i','n','e',0};
+static const WCHAR SubDir[] = {'S','u','b','D','i','r',0};
+static const WCHAR WorkingDir[] = {'W','o','r','k','i','n','g','D','i','r',0};
+static const WCHAR IconPath[] = {'I','c','o','n','P','a','t','h',0};
+static const WCHAR IconIndex[] = {'I','c','o','n','I','n','d','e','x',0};
+static const WCHAR HotKey[] = {'H','o','t','K','e','y',0};
+static const WCHAR InfoTip[] = {'I','n','f','o','T','i','p',0};
+static const WCHAR DisplayResource[] = {'D','i','s','p','l','a','y','R','e','s','o','u','r','c','e',0};
+
 /* info passed to callback functions dealing with files */
 struct files_callback_info
 {
@@ -83,6 +93,10 @@ struct needs_callback_info
 };
 
 typedef BOOL (*iterate_fields_func)( HINF hinf, PCWSTR field, void *arg );
+static BOOL GetLineText( HINF hinf, PCWSTR section_name, PCWSTR key_name, PWSTR *value);
+typedef HRESULT WINAPI (*COINITIALIZE)(IN LPVOID pvReserved);
+typedef HRESULT WINAPI (*COCREATEINSTANCE)(IN REFCLSID rclsid, IN LPUNKNOWN pUnkOuter, IN DWORD dwClsContext, IN REFIID riid, OUT LPVOID *ppv);
+typedef HRESULT WINAPI (*COUNINITIALIZE)(VOID);
 
 /* Unicode constants */
 static const WCHAR AddService[] = {'A','d','d','S','e','r','v','i','c','e',0};
@@ -816,10 +830,306 @@ static BOOL bitreg_callback( HINF hinf, PCWSTR field, void *arg )
     return TRUE;
 }
 
-static BOOL profile_items_callback( HINF hinf, PCWSTR field, void *arg )
+static BOOL Concatenate(int DirId, LPCWSTR SubDirPart, LPCWSTR NamePart, LPWSTR *pFullName)
 {
-    FIXME( "should do profile items %s\n", debugstr_w(field) );
+    DWORD dwRequired = 0;
+    LPCWSTR Dir;
+    LPWSTR FullName;
+
+    *pFullName = NULL;
+
+    Dir = DIRID_get_string(DirId);
+    if (Dir)
+        dwRequired += wcslen(Dir) + 1;
+    if (SubDirPart)
+        dwRequired += wcslen(SubDirPart) + 1;
+    if (NamePart)
+        dwRequired += wcslen(NamePart);
+    dwRequired = dwRequired * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+
+    FullName = MyMalloc(dwRequired);
+    if (!FullName)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    FullName[0] = UNICODE_NULL;
+
+    if (Dir)
+    {
+        wcscat(FullName, Dir);
+        if (FullName[wcslen(FullName) - 1] != '\\')
+            wcscat(FullName, BackSlash);
+    }
+    if (SubDirPart)
+    {
+        wcscat(FullName, SubDirPart);
+        if (FullName[wcslen(FullName) - 1] != '\\')
+            wcscat(FullName, BackSlash);
+    }
+    if (NamePart)
+        wcscat(FullName, NamePart);
+
+    *pFullName = FullName;
     return TRUE;
+}
+
+/***********************************************************************
+ *            profile_items_callback
+ *
+ * Called once for each ProfileItems entry in a given section.
+ */
+static BOOL
+profile_items_callback(
+    IN HINF hInf,
+    IN PCWSTR SectionName,
+    IN PVOID Arg)
+{
+    INFCONTEXT Context;
+    LPWSTR LinkSubDir = NULL, LinkName = NULL;
+    INT LinkAttributes = 0;
+    INT FileDirId = 0;
+    LPWSTR FileSubDir = NULL;
+    INT DirId = 0;
+    LPWSTR SubDirPart = NULL, NamePart = NULL;
+    LPWSTR FullLinkName = NULL, FullFileName = NULL, FullWorkingDir = NULL, FullIconName = NULL;
+    INT IconIdx = 0;
+    LPWSTR lpHotKey = NULL, lpInfoTip = NULL;
+    LPWSTR DisplayName = NULL;
+    INT DisplayResId = 0;
+    BOOL ret = FALSE;
+    DWORD Index, Required;
+
+    IShellLinkW *psl;
+    IPersistFile *ppf;
+    HMODULE hOle32 = NULL;
+    COINITIALIZE pCoInitialize;
+    COCREATEINSTANCE pCoCreateInstance;
+    COUNINITIALIZE pCoUninitialize;
+    HRESULT hr;
+
+    TRACE("hInf %p, SectionName %s, Arg %p\n",
+        hInf, debugstr_w(SectionName), Arg);
+
+    /* Read 'Name' entry */
+    if (!SetupFindFirstLineW(hInf, SectionName, Name, &Context))
+        goto cleanup;
+    if (!GetStringField(&Context, 1, &LinkName))
+        goto cleanup;
+    if (SetupGetFieldCount(&Context) >= 2)
+    {
+        if (!SetupGetIntField(&Context, 2, &LinkAttributes))
+            goto cleanup;
+    }
+
+    /* Read 'CmdLine' entry */
+    if (!SetupFindFirstLineW(hInf, SectionName, CmdLine, &Context))
+        goto cleanup;
+    Index = 1;
+    if (!SetupGetIntField(&Context, Index++, &FileDirId))
+        goto cleanup;
+    if (SetupGetFieldCount(&Context) >= 3)
+    {
+        if (!GetStringField(&Context, Index++, &FileSubDir))
+            goto cleanup;
+    }
+    if (!GetStringField(&Context, Index++, &NamePart))
+        goto cleanup;
+    if (!Concatenate(FileDirId, FileSubDir, NamePart, &FullFileName))
+        goto cleanup;
+    MyFree(NamePart);
+    NamePart = NULL;
+
+    /* Read 'SubDir' entry */
+    if ((LinkAttributes & FLG_PROFITEM_GROUP) == 0 && SetupFindFirstLineW(hInf, SectionName, SubDir, &Context))
+    {
+        if (!GetStringField(&Context, 1, &LinkSubDir))
+            goto cleanup;
+    }
+
+    /* Read 'WorkingDir' entry */
+    if (SetupFindFirstLineW(hInf, SectionName, WorkingDir, &Context))
+    {
+        if (!SetupGetIntField(&Context, 1, &DirId))
+            goto cleanup;
+        if (SetupGetFieldCount(&Context) >= 2)
+        {
+            if (!GetStringField(&Context, 2, &SubDirPart))
+                goto cleanup;
+        }
+        if (!Concatenate(DirId, SubDirPart, NULL, &FullWorkingDir))
+            goto cleanup;
+        MyFree(SubDirPart);
+        SubDirPart = NULL;
+    }
+    else
+    {
+        if (!Concatenate(FileDirId, FileSubDir, NULL, &FullWorkingDir))
+            goto cleanup;
+    }
+
+    /* Read 'IconPath' entry */
+    if (SetupFindFirstLineW(hInf, SectionName, IconPath, &Context))
+    {
+        Index = 1;
+        if (!SetupGetIntField(&Context, Index++, &DirId))
+            goto cleanup;
+        if (SetupGetFieldCount(&Context) >= 3)
+        {
+            if (!GetStringField(&Context, Index++, &SubDirPart))
+                goto cleanup;
+        }
+        if (!GetStringField(&Context, Index, &NamePart))
+            goto cleanup;
+        if (!Concatenate(DirId, SubDirPart, NamePart, &FullIconName))
+            goto cleanup;
+        MyFree(SubDirPart);
+        MyFree(NamePart);
+        SubDirPart = NamePart = NULL;
+    }
+    else
+    {
+        FullIconName = DuplicateString(FullFileName);
+        if (!FullIconName)
+            goto cleanup;
+    }
+
+    /* Read 'IconIndex' entry */
+    if (SetupFindFirstLineW(hInf, SectionName, IconIndex, &Context))
+    {
+        if (!SetupGetIntField(&Context, 1, &IconIdx))
+            goto cleanup;
+    }
+
+    /* Read 'HotKey' and 'InfoTip' entries */
+    GetLineText(hInf, SectionName, HotKey, &lpHotKey);
+    GetLineText(hInf, SectionName, InfoTip, &lpInfoTip);
+
+    /* Read 'DisplayResource' entry */
+    if (SetupFindFirstLineW(hInf, SectionName, DisplayResource, &Context))
+    {
+        if (!GetStringField(&Context, 1, &DisplayName))
+            goto cleanup;
+        if (!SetupGetIntField(&Context, 2, &DisplayResId))
+            goto cleanup;
+    }
+
+    /* Some debug */
+    TRACE("Link is %s\\%s, attributes 0x%x\n", debugstr_w(LinkSubDir), debugstr_w(LinkName), LinkAttributes);
+    TRACE("File is %s\n", debugstr_w(FullFileName));
+    TRACE("Working dir %s\n", debugstr_w(FullWorkingDir));
+    TRACE("Icon is %s, %d\n", debugstr_w(FullIconName), IconIdx);
+    TRACE("Hotkey %s\n", debugstr_w(lpHotKey));
+    TRACE("InfoTip %s\n", debugstr_w(lpInfoTip));
+    TRACE("Display %s, %d\n", DisplayName, DisplayResId);
+
+    /* Load ole32.dll */
+    hOle32 = LoadLibraryA("ole32.dll");
+    if (!hOle32)
+        goto cleanup;
+    pCoInitialize = (COINITIALIZE)GetProcAddress(hOle32, "CoInitialize");
+    if (!pCoInitialize)
+        goto cleanup;
+    pCoCreateInstance = (COCREATEINSTANCE)GetProcAddress(hOle32, "CoCreateInstance");
+    if (!pCoCreateInstance)
+        goto cleanup;
+    pCoUninitialize = (COUNINITIALIZE)GetProcAddress(hOle32, "CoUninitialize");
+    if (!pCoUninitialize)
+        goto cleanup;
+
+    /* Create shortcut */
+    hr = pCoInitialize(NULL);
+    if (!SUCCEEDED(hr))
+    {
+        if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+            SetLastError(HRESULT_CODE(hr));
+        else
+            SetLastError(E_FAIL);
+        goto cleanup;
+    }
+    hr = pCoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLinkW, (LPVOID*)&psl);
+    if (SUCCEEDED(hr))
+    {
+        /* Fill link properties */
+        if (SUCCEEDED(hr))
+            hr = IShellLinkW_SetPath(psl, FullFileName);
+        if (SUCCEEDED(hr))
+            hr = IShellLinkW_SetWorkingDirectory(psl, FullWorkingDir);
+        if (SUCCEEDED(hr))
+            hr = IShellLinkW_SetIconLocation(psl, FullIconName, IconIdx);
+        if (SUCCEEDED(hr) && lpHotKey)
+            FIXME("Need to store hotkey %s in shell link\n", debugstr_w(lpHotKey));
+        if (SUCCEEDED(hr) && lpInfoTip)
+            hr = IShellLinkW_SetDescription(psl, lpInfoTip);
+        if (SUCCEEDED(hr) && DisplayName)
+            FIXME("Need to store display name %s, %d in shell link\n", debugstr_w(DisplayName), DisplayResId);
+        if (SUCCEEDED(hr))
+        {
+            hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
+            if (SUCCEEDED(hr))
+            {
+                Required = (MAX_PATH + wcslen(LinkSubDir) + 1 + wcslen(LinkName)) * sizeof(WCHAR);
+                FullLinkName = MyMalloc(Required);
+                if (!FullLinkName)
+                    hr = E_OUTOFMEMORY;
+                else
+                {
+                    if (LinkAttributes & (FLG_PROFITEM_DELETE | FLG_PROFITEM_GROUP))
+                        FIXME("Need to handle FLG_PROFITEM_DELETE and FLG_PROFITEM_GROUP\n");
+                    if (SHGetSpecialFolderPathW(
+                        NULL,
+                        FullLinkName,
+                        LinkAttributes & FLG_PROFITEM_CURRENTUSER ? CSIDL_PROGRAMS : CSIDL_COMMON_PROGRAMS,
+                        TRUE))
+                    {
+                        if (FullLinkName[wcslen(FullLinkName) - 1] != '\\')
+                            wcscat(FullLinkName, BaskSlash);
+                        if (LinkSubDir)
+                        {
+                            wcscat(FullLinkName, LinkSubDir);
+                            if (FullLinkName[wcslen(FullLinkName) - 1] != '\\')
+                                wcscat(FullLinkName, BaskSlash);
+                        }
+                        wcscat(FullLinkName, LinkName);
+                        hr = IPersistFile_Save(ppf, FullLinkName, TRUE);
+                    }
+                    else
+                        hr = HRESULT_FROM_WIN32(GetLastError());
+                }
+                IPersistFile_Release(ppf);
+            }
+        }
+        IShellLinkW_Release(psl);
+    }
+    pCoUninitialize();
+    if (SUCCEEDED(hr))
+        ret = TRUE;
+    else
+    {
+        if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+            SetLastError(HRESULT_CODE(hr));
+        else
+            SetLastError(E_FAIL);
+    }
+
+cleanup:
+    MyFree(LinkSubDir);
+    MyFree(LinkName);
+    MyFree(FileSubDir);
+    MyFree(SubDirPart);
+    MyFree(NamePart);
+    MyFree(FullFileName);
+    MyFree(FullWorkingDir);
+    MyFree(FullIconName);
+    MyFree(FullLinkName);
+    MyFree(lpHotKey);
+    MyFree(lpInfoTip);
+    MyFree(DisplayName);
+    if (hOle32)
+        FreeLibrary(hOle32);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 static BOOL copy_inf_callback( HINF hinf, PCWSTR field, void *arg )
