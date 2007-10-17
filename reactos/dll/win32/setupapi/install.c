@@ -1083,12 +1083,12 @@ profile_items_callback(
                         TRUE))
                     {
                         if (FullLinkName[wcslen(FullLinkName) - 1] != '\\')
-                            wcscat(FullLinkName, BaskSlash);
+                            wcscat(FullLinkName, BackSlash);
                         if (LinkSubDir)
                         {
                             wcscat(FullLinkName, LinkSubDir);
                             if (FullLinkName[wcslen(FullLinkName) - 1] != '\\')
-                                wcscat(FullLinkName, BaskSlash);
+                                wcscat(FullLinkName, BackSlash);
                         }
                         wcscat(FullLinkName, LinkName);
                         hr = IPersistFile_Save(ppf, FullLinkName, TRUE);
