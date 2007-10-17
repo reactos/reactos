@@ -516,12 +516,12 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
  * @implemented
  */
 NTSTATUS STDCALL
-NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
-                        IN OUT PVOID*  UBaseAddress,
-                        IN ULONG ZeroBits,
+NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
+                        IN OUT PVOID* UBaseAddress,
+                        IN     ULONG  ZeroBits,
                         IN OUT PULONG URegionSize,
-                        IN ULONG AllocationType,
-                        IN ULONG Protect)
+                        IN     ULONG  AllocationType,
+                        IN     ULONG  Protect)
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
@@ -542,6 +542,10 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
  *                PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_GUARD,
  *                PAGE_NOACCESS
  * RETURNS: Status
+ * NOTES: Must run at IRQL PASSIVE_LEVEL? (or is APC_LEVEL cool too?)
+ *        MSDN states that ZwAllocateVirtualMemory IRQL must be PASSIVE_LEVEL,
+ *        but why wouldn't APC_LEVEL be valid (or is that only for the Zw* version
+ *        and Nt* can indeed run at APC_LEVEL?)
  */
 {
    PEPROCESS Process;
@@ -555,6 +559,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    PVOID PBaseAddress;
    ULONG PRegionSize;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+   KPROCESSOR_MODE PreviousMode;
+
+   // TMN: Someone Pick one of these. Until it's clear which
+   // level is allowed, I play it safe and check for <= APC_LEVEL
+   PAGED_CODE();
+//   ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
    DPRINT("NtAllocateVirtualMemory(*UBaseAddress %x, "
           "ZeroBits %d, *URegionSize %x, AllocationType %x, Protect %x)\n",
@@ -576,7 +586,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    }
 
    /* Check for valid Allocation Types */
-   if ((AllocationType &~ (MEM_COMMIT | MEM_RESERVE | MEM_RESET | MEM_PHYSICAL |
+   if ((AllocationType & ~(MEM_COMMIT | MEM_RESERVE | MEM_RESET | MEM_PHYSICAL |
                            MEM_TOP_DOWN | MEM_WRITE_WATCH)))
    {
       DPRINT1("Invalid Allocation Type\n");
@@ -593,7 +603,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    /* MEM_RESET is an exclusive flag, make sure that is valid too */
    if ((AllocationType & MEM_RESET) && (AllocationType != MEM_RESET))
    {
-      DPRINT1("MEM_RESET used illegaly\n");
+      DPRINT1("Invalid use of MEM_RESET\n");
       return STATUS_INVALID_PARAMETER_5;
    }
 
@@ -623,12 +633,30 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
       }
    }
 
-   PBaseAddress = *UBaseAddress;
-   PRegionSize = *URegionSize;
+   PreviousMode = KeGetPreviousMode();
+
+   _SEH_TRY
+   {
+      if (PreviousMode != KernelMode)
+      {
+         ProbeForWritePointer(UBaseAddress);
+         ProbeForWriteUlong(URegionSize);
+      }
+      PBaseAddress = *UBaseAddress;
+      PRegionSize  = *URegionSize;
+   }
+   _SEH_HANDLE
+   {
+      /* Get the exception code */
+      Status = _SEH_GetExceptionCode();
+      return(Status); /* Correct? NT5 returns STATUS_ACCESS_VIOLATION ? */
+   }
+   _SEH_END;
+
    BoundaryAddressMultiple.QuadPart = 0;
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
-   RegionSize = PAGE_ROUND_UP(PBaseAddress + PRegionSize) -
+   RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
                 PAGE_ROUND_DOWN(PBaseAddress);
 
    /* 
@@ -638,12 +666,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     */
    if (BaseAddress >= MM_HIGHEST_USER_ADDRESS)
    {
-      DPRINT1("Virtual allocation above User Space\n");
+      DPRINT1("Virtual allocation base above User Space\n");
       return STATUS_INVALID_PARAMETER_2;
    }
    if (!RegionSize)
    {
-      DPRINT1("Region size is invalid\n");
+      DPRINT1("Region size is invalid (zero)\n");
       return STATUS_INVALID_PARAMETER_4;
    }
    if (((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (ULONG_PTR)BaseAddress) < RegionSize)
@@ -657,7 +685,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     * but there may be other cases...needs more testing
     */
    if ((!BaseAddress || (AllocationType & MEM_RESERVE)) && 
-       ((Protect & PAGE_WRITECOPY) || (Protect & PAGE_EXECUTE_WRITECOPY)))
+       (Protect & (PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY)))
    {
       DPRINT1("Copy on write is not supported by VirtualAlloc\n");
       return STATUS_INVALID_PAGE_PROTECTION;
@@ -666,8 +694,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_OPERATION,
-                                      NULL,
-                                      UserMode,
+                                      PsProcessType,
+                                      PreviousMode,
                                       (PVOID*)(&Process),
                                       NULL);
    if (!NT_SUCCESS(Status))
@@ -750,10 +778,10 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                       MemoryAreaLength, Type, Protect);
 
    if ((AllocationType & MEM_COMMIT) &&
-         ((Protect & PAGE_READWRITE) ||
-          (Protect & PAGE_EXECUTE_READWRITE)))
+       (Protect & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)))
    {
-      MmReserveSwapPages(MemoryAreaLength);
+      const ULONG nPages = PAGE_ROUND_UP(MemoryAreaLength) >> PAGE_SHIFT;
+      MmReserveSwapPages(nPages);
    }
 
    *UBaseAddress = BaseAddress;
@@ -816,17 +844,11 @@ MmFreeVirtualMemory(PEPROCESS Process,
    {
       ULONG_PTR MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                                    (ULONG_PTR)MemoryArea->StartingAddress;
+      const ULONG nPages = PAGE_ROUND_UP(MemoryAreaLength) >> PAGE_SHIFT;
 
-      /* FiN TODO: Optimize loop counter! */
-      for (i = 0; i < PAGE_ROUND_UP(MemoryAreaLength) / PAGE_SIZE; i++)
+      for (i = 0; i < nPages && MemoryArea->PageOpCount != 0; ++i)
       {
          PMM_PAGEOP PageOp;
-
-         if (MemoryArea->PageOpCount == 0)
-         {
-            break;
-         }
-
          PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
                                    (PVOID)((ULONG_PTR)MemoryArea->StartingAddress + (i * PAGE_SIZE)),
                                    NULL, 0);
@@ -899,7 +921,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
           *PRegionSize,FreeType);
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
-   RegionSize = PAGE_ROUND_UP((*PBaseAddress) + (*PRegionSize)) -
+   RegionSize = PAGE_ROUND_UP((ULONG_PTR)(*PBaseAddress) + (*PRegionSize)) -
                 PAGE_ROUND_DOWN((*PBaseAddress));
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -919,9 +941,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
    if (MemoryArea == NULL)
    {
-      MmUnlockAddressSpace(AddressSpace);
-      ObDereferenceObject(Process);
-      return(STATUS_UNSUCCESSFUL);
+      Status = STATUS_UNSUCCESSFUL;
+      goto unlock_deref_and_return;
    }
 
    switch (FreeType)
@@ -931,14 +952,13 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
          if (MemoryArea->StartingAddress != BaseAddress ||
              MemoryArea->Type != MEMORY_AREA_VIRTUAL_MEMORY)
          {
-            MmUnlockAddressSpace(AddressSpace);
-            ObDereferenceObject(Process);
-            return(STATUS_UNSUCCESSFUL);
+            Status = STATUS_UNSUCCESSFUL;
+            goto unlock_deref_and_return;
          }
+
          MmFreeVirtualMemory(Process, MemoryArea);
-         MmUnlockAddressSpace(AddressSpace);
-         ObDereferenceObject(Process);
-         return(STATUS_SUCCESS);
+         Status = STATUS_SUCCESS;
+         goto unlock_deref_and_return;
 
       case MEM_DECOMMIT:
          Status =
@@ -950,13 +970,17 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                           MEM_RESERVE,
                           PAGE_NOACCESS,
                           MmModifyAttributes);
-         MmUnlockAddressSpace(AddressSpace);
-         ObDereferenceObject(Process);
-         return(Status);
+         goto unlock_deref_and_return;
    }
+
+   Status = STATUS_NOT_IMPLEMENTED;
+
+unlock_deref_and_return:
+
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
-   return(STATUS_NOT_IMPLEMENTED);
+
+   return(Status);
 }
 
 NTSTATUS
