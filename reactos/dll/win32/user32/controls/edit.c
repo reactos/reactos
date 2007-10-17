@@ -201,7 +201,9 @@ static BOOL	EDIT_MakeFit(EDITSTATE *es, UINT size);
 static BOOL	EDIT_MakeUndoFit(EDITSTATE *es, UINT size);
 static void	EDIT_MoveBackward(EDITSTATE *es, BOOL extend);
 static void	EDIT_MoveEnd(EDITSTATE *es, BOOL extend);
+static void	EDIT_MoveEndOfText(EDITSTATE *es, BOOL extend);
 static void	EDIT_MoveForward(EDITSTATE *es, BOOL extend);
+static void	EDIT_MoveStartOfText(EDITSTATE *es, BOOL extend);
 static void	EDIT_MoveHome(EDITSTATE *es, BOOL extend);
 static void	EDIT_MoveWordBackward(EDITSTATE *es, BOOL extend);
 static void	EDIT_MoveWordForward(EDITSTATE *es, BOOL extend);
@@ -2059,6 +2061,28 @@ static void EDIT_MoveEnd(EDITSTATE *es, BOOL extend)
 
 /*********************************************************************
  *
+ *	EDIT_MoveEndOfText
+ *
+ *	Handler for Ctrl+End. Move to end of text. Only for multiline.
+ *
+ */
+static void EDIT_MoveEndOfText(EDITSTATE *es, BOOL extend)
+{
+	BOOL after_wrap = FALSE;
+	INT e;
+
+	assert(es->style & ES_MULTILINE);
+
+	/* Just give it impossible high x&y to get the index of the last char */
+	e = EDIT_CharFromPos(es, 0x3fffffff, 0x3fffffff, &after_wrap);
+
+	EDIT_EM_SetSel(es, extend ? es->selection_start : e, e, after_wrap);
+	EDIT_EM_ScrollCaret(es);
+}
+
+
+/*********************************************************************
+ *
  *	EDIT_MoveForward
  *
  */
@@ -2076,6 +2100,28 @@ static void EDIT_MoveForward(EDITSTATE *es, BOOL extend)
 		}
 	}
 	EDIT_EM_SetSel(es, extend ? es->selection_start : e, e, FALSE);
+	EDIT_EM_ScrollCaret(es);
+}
+
+
+/*********************************************************************
+ *
+ *	EDIT_MoveStartOfText
+ *
+ *	Handler for Ctr+Home. Move to start of text. Only for multiline.
+ *
+ */
+static void EDIT_MoveStartOfText(EDITSTATE *es, BOOL extend)
+{
+	BOOL after_wrap = FALSE;
+
+	assert(es->style & ES_MULTILINE);
+
+	/* use CharFromPos instead of just plain zero, to get the wrap_flag */
+	EDIT_CharFromPos(es, 0, 0, &after_wrap);
+
+
+	EDIT_EM_SetSel(es, 0, extend ? es->selection_end : 0, FALSE);
 	EDIT_EM_ScrollCaret(es);
 }
 
@@ -4571,10 +4617,18 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
 			EDIT_MoveForward(es, shift);
 		break;
 	case VK_HOME:
-		EDIT_MoveHome(es, shift);
+		if (control && (es->style & ES_MULTILINE)) {
+			EDIT_MoveStartOfText(es, shift);
+		} else {
+			EDIT_MoveHome(es, shift); /* start of line */
+		}
 		break;
 	case VK_END:
-		EDIT_MoveEnd(es, shift);
+		if (control && (es->style & ES_MULTILINE)) {
+			EDIT_MoveEndOfText(es, shift);
+		} else {
+			EDIT_MoveEnd(es, shift); /* end of line */
+		}
 		break;
 	case VK_PRIOR:
 		if (es->style & ES_MULTILINE)
