@@ -30,11 +30,9 @@ Author:
 // Page-Rounding Macros
 //
 #define PAGE_ROUND_DOWN(x)                                  \
-    (((ULONG_PTR)x)&(~(PAGE_SIZE-1)))
+    (((ULONG_PTR)(x))&(~(PAGE_SIZE-1)))
 #define PAGE_ROUND_UP(x)                                    \
-    ( (((ULONG_PTR)x)%PAGE_SIZE) ?                          \
-    ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) :         \
-    ((ULONG_PTR)x) )
+    ( (((ULONG_PTR)(x)) + PAGE_SIZE-1)  & (~(PAGE_SIZE-1)) )
 #ifdef NTOS_MODE_USER
 #define ROUND_TO_PAGES(Size)                                \
     (((ULONG_PTR)(Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))

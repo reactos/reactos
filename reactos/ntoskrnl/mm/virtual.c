@@ -390,7 +390,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
    NTSTATUS Status;
 
    *NumberOfBytesToProtect =
-      PAGE_ROUND_UP((*BaseAddress) + (*NumberOfBytesToProtect)) -
+      PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) -
       PAGE_ROUND_DOWN(*BaseAddress);
    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
 

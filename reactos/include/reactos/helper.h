@@ -20,11 +20,11 @@
 #endif
 
 #ifndef PAGE_ROUND_DOWN
-#define PAGE_ROUND_DOWN(x) (((ULONG_PTR)x)&(~(PAGE_SIZE-1)))
+#define PAGE_ROUND_DOWN(x) (((ULONG_PTR)(x))&(~(PAGE_SIZE-1)))
 #endif
 
 #ifndef PAGE_ROUND_UP
-#define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
+#define PAGE_ROUND_UP(x) ( (((ULONG_PTR)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)) )
 #endif
 
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
