@@ -649,7 +649,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    {
       /* Get the exception code */
       Status = _SEH_GetExceptionCode();
-      return(Status); /* Correct? NT5 returns STATUS_ACCESS_VIOLATION ? */
+      _SEH_YIELD(return Status);
    }
    _SEH_END;
 
