@@ -267,9 +267,9 @@ cleanup:
 	RemoveStatusMessage(Session);
 	if (!ret)
 	{
-	    Session->UserToken = NULL;
-	    CloseHandle(Session->UserToken);
-    }
+		CloseHandle(Session->UserToken);
+		Session->UserToken = NULL;
+	}
 	return ret;
 }
 
@@ -869,8 +869,10 @@ SASWindowProc(
 
 			/* Save the Session pointer */
 			SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)Session);
-
-			return RegisterHotKeys(Session, hwndDlg);
+			if (!GetSetupType())
+			{
+				return RegisterHotKeys(Session, hwndDlg);
+			}
 		}
 		case WM_DESTROY:
 		{
