@@ -605,14 +605,11 @@ static const IContextMenu2Vtbl cmvt =
  *
  */
 
-HRESULT SHCreateDefaultContextMenu(      
+HRESULT WINAPI SHCreateDefaultContextMenu(
 	const DEFCONTEXTMENU *pdcm,
 	REFIID riid,
 	void **ppv)
 {
-
-
-
    return E_FAIL;
 }
 
