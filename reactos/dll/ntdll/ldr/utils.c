@@ -748,9 +748,12 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   if (NT_SUCCESS(Status) &&
       (!LoadFlags || 0 == (*LoadFlags & LOAD_LIBRARY_AS_DATAFILE)))
     {
-      RtlEnterCriticalSection(Peb->LoaderLock);
-      Status = LdrpAttachProcess();
-      RtlLeaveCriticalSection(Peb->LoaderLock);
+      if (!(Module->Flags & LDRP_PROCESS_ATTACH_CALLED))
+        {
+          RtlEnterCriticalSection(Peb->LoaderLock);
+          Status = LdrpAttachProcess();
+          RtlLeaveCriticalSection(Peb->LoaderLock);
+        }
     }
 
  if ((!Module) && (NT_SUCCESS(Status)))
