@@ -220,13 +220,8 @@ HandleLogon(
 	}
 	/* FIXME: Append variables of Session->Profile->pszEnvironment */
 
-	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
-	/* FIXME: UpdatePerUserSystemParameters(0, TRUE); */
-
-	/* Get privilege */
-	/* FIXME: who should do it? winlogon or gina? */
-	/* FIXME: reverting to lower privileges after creating user shell? */
-	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
+	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
+	UpdatePerUserSystemParameters(0, TRUE);
 
 	/* Set default language */
 	if (!SetDefaultLanguage(TRUE))
@@ -234,6 +229,11 @@ HandleLogon(
 		WARN("WL: SetDefaultLanguage() failed\n");
 		goto cleanup;
 	}
+
+	/* Get privilege */
+	/* FIXME: who should do it? winlogon or gina? */
+	/* FIXME: reverting to lower privileges after creating user shell? */
+	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
 
 	if (!Session->Gina.Functions.WlxActivateUserShell(
 		Session->Gina.Context,
@@ -255,7 +255,11 @@ HandleLogon(
 	ret = TRUE;
 
 cleanup:
-	HeapFree(GetProcessHeap(), 0, Session->Profile);
+	if (Session->Profile)
+	{
+		HeapFree(GetProcessHeap(), 0, Session->Profile->pszProfile);
+		HeapFree(GetProcessHeap(), 0, Session->Profile);
+	}
 	Session->Profile = NULL;
 	if (!ret
 	 && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
@@ -487,9 +491,9 @@ HandleLogoff(
 		return STATUS_UNSUCCESSFUL;
 	}
 
-	//UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
-	//CloseHandle(Session->UserToken);
-	//UpdatePerUserSystemParameters(0, FALSE);
+	UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
+	CloseHandle(Session->UserToken);
+	UpdatePerUserSystemParameters(0, FALSE);
 	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
 	Session->UserToken = NULL;
 	return STATUS_SUCCESS;
@@ -869,10 +873,9 @@ SASWindowProc(
 
 			/* Save the Session pointer */
 			SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)Session);
-			if (!GetSetupType())
-			{
-				return RegisterHotKeys(Session, hwndDlg);
-			}
+			if (GetSetupType() == 0)
+				return TRUE;
+			return RegisterHotKeys(Session, hwndDlg);
 		}
 		case WM_DESTROY:
 		{
