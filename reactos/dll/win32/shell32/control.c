@@ -352,6 +352,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     unsigned 	sp = 0;
     LPWSTR	extraPmts = NULL;
     int        quoted = 0;
+    BOOL	spSet = FALSE;
 
     buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
     if (!buffer) return;
@@ -366,8 +367,10 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	    if (beg) {
 	        if (*beg == '@') {
 		    sp = atoiW(beg + 1);
+		    spSet = TRUE;
 		} else if (*beg == '\0') {
 		    sp = 0;
+		    spSet = TRUE;
 		} else {
 		    extraPmts = beg;
 		}
@@ -379,6 +382,9 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	end++;
     }
     while ((ptr = StrChrW(buffer, '"')))
+	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+
+    while ((ptr = StrChrW(extraPmts, '"')))
 	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
@@ -393,6 +399,13 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	  WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
 	  sp = 0;
        }
+
+       if ((extraPmts)&&(!spSet))
+       {
+          while ((lstrcmpiW(extraPmts, applet->info[sp].szName)) && (sp < applet->count))
+            sp++;
+       }
+
        if (applet->info[sp].dwSize) {
 	  if (!applet->proc(applet->hWnd, CPL_STARTWPARMSA, sp, (LPARAM)extraPmts))
 	     applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].lData);
