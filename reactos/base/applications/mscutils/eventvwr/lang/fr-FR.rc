@@ -86,4 +86,11 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE				      "Visionneuse d'événements"
   	IDC_EVENTSTRINGIDNOTFOUND	"La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécéssaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant."
+	IDC_EVENTLOG_ERROR_TYPE 	"Error"
+	IDC_EVENTLOG_WARNING_TYPE  	"Warning"
+	IDC_EVENTLOG_INFORMATION_TYPE  	"Information"
+	IDC_EVENTLOG_AUDIT_SUCCESS  	"Audit Success"
+	IDC_EVENTLOG_AUDIT_FAILURE  	"Audit Failure"
+	IDC_EVENTLOG_SUCCESS  		"Success"
+	IDC_EVENTLOG_UNKNOWN_TYPE  	"Unknown Event"
 END

@@ -86,4 +86,11 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE				      "Ereignisanzeige"
   	IDC_EVENTSTRINGIDNOTFOUND	"Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der Lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt."
+	IDC_EVENTLOG_ERROR_TYPE 	"Fehler"
+	IDC_EVENTLOG_WARNING_TYPE  	"Warnung"
+	IDC_EVENTLOG_INFORMATION_TYPE  	"Informationen"
+	IDC_EVENTLOG_AUDIT_SUCCESS  	"Audit Erfolgreich"
+	IDC_EVENTLOG_AUDIT_FAILURE  	"Audit Fehlgeschlagen"
+	IDC_EVENTLOG_SUCCESS  		"Erfolgreich"
+	IDC_EVENTLOG_UNKNOWN_TYPE  	"Unbekanntes Ereignis"
 END

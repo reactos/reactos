@@ -41,6 +41,7 @@ static const LPSTR EVENT_SOURCE_SYSTEM		= "System";
 static const TCHAR szWindowClass[] = _T("EVENTVWR");			// the main window class name
 
 //MessageFile message buffer size
+#define EVENT_MESSAGE_EVENTTEXT_BUFFER		1024*10
 #define EVENT_MESSAGE_FILE_BUFFER			1024*10      
 #define EVENT_DLL_SEPARATOR		            ";" 
 #define EVENT_MESSAGE_FILE					"EventMessageFile"
@@ -381,27 +382,31 @@ BOOL GetEventMessage(
 	return FALSE;
 }
 
-char* GetEventType (WORD dwEventType)
+VOID
+GetEventType (WORD dwEventType, OUT LPSTR eventTypeText)
 {
     switch(dwEventType)
     {
         case EVENTLOG_ERROR_TYPE:
-            return "Error";
+            LoadString(hInst, IDC_EVENTLOG_ERROR_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_WARNING_TYPE:
-            return "Warning";
+            LoadString(hInst, IDC_EVENTLOG_WARNING_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_INFORMATION_TYPE:
-            return "Information";
+            LoadString(hInst, IDC_EVENTLOG_INFORMATION_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_AUDIT_SUCCESS:
-            return "Audit Success";
+            LoadString(hInst, IDC_EVENTLOG_AUDIT_SUCCESS, eventTypeText, MAX_LOADSTRING);
             break;
         case EVENTLOG_AUDIT_FAILURE:
-            return "Audit Failure";
+            LoadString(hInst, IDC_EVENTLOG_AUDIT_FAILURE, eventTypeText, MAX_LOADSTRING);
+            break;
+        case EVENTLOG_SUCCESS:
+            LoadString(hInst, IDC_EVENTLOG_SUCCESS, eventTypeText, MAX_LOADSTRING);
             break;
         default:
-            return "Unknown Event";
+            LoadString(hInst, IDC_EVENTLOG_UNKNOWN_TYPE, eventTypeText, MAX_LOADSTRING);
             break;
     }
 }
@@ -489,6 +494,7 @@ VOID QueryEventMessages (
 	char szLocalDate[MAX_PATH];
 	char szLocalTime[MAX_PATH];
 	char szEventID[MAX_PATH];
+	char szEventTypeText[MAX_PATH];
 	char szCategoryID[MAX_PATH];
 	char szUsername[MAX_PATH];
 	char szEventText[EVENT_MESSAGE_FILE_BUFFER];
@@ -596,9 +602,9 @@ VOID QueryEventMessages (
 
 			GetDateFormat( LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, szLocalDate, MAX_PATH );
 			GetTimeFormat( LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, szLocalTime, MAX_PATH );
-
+		
+			GetEventType (pevlr->EventType , szEventTypeText);
 			GetEventCategory (lpLogName , lpSourceName , pevlr , szCategory);
-			//GetEventMessage (lpLogName , lpSourceName , pevlr , szEventText);
 
 			wsprintf (szEventID, "%u", (DWORD)(pevlr->EventID & 0xFFFF));
 			wsprintf (szCategoryID, "%u", (DWORD)(pevlr->EventCategory));
@@ -607,31 +613,26 @@ VOID QueryEventMessages (
 			lviEventItem.iItem = 0;
 			lviEventItem.iSubItem = 0;
 			lviEventItem.lParam = (LPARAM)pevlr;
+			lviEventItem.pszText = szEventTypeText;
 
 			switch(pevlr->EventType) 
 			{
 				case EVENTLOG_ERROR_TYPE: 
-					lviEventItem.pszText = "Error";
 					lviEventItem.iImage = 2;
 					break;
 				case EVENTLOG_AUDIT_FAILURE:
-					lviEventItem.pszText = "Audit Failure";
 					lviEventItem.iImage = 2;
 					break;
 				case EVENTLOG_WARNING_TYPE:
-					lviEventItem.pszText = "Warning";
 					lviEventItem.iImage = 1;
 					break;
 				case EVENTLOG_INFORMATION_TYPE:
-					lviEventItem.pszText = "Information";
 					lviEventItem.iImage = 0;
 					break;
 				case EVENTLOG_AUDIT_SUCCESS:
-					lviEventItem.pszText = "Audit Success";
 					lviEventItem.iImage = 0;
 					break;
 				case EVENTLOG_SUCCESS:
-					lviEventItem.pszText = "Success";
 					lviEventItem.iImage = 0;
 					break;
 			}
@@ -999,7 +1000,7 @@ DisplayEvent (HWND hDlg)
 	char szSource[MAX_PATH];
 	char szCategory[MAX_PATH];
 	char szEventID[MAX_PATH];
-	char szEventText[MAX_PATH*10];
+	char szEventText[EVENT_MESSAGE_EVENTTEXT_BUFFER];
 	char szEventData[MAX_PATH];
 	BOOL bEventData = FALSE;
 	LVITEM li;
@@ -1012,7 +1013,7 @@ DisplayEvent (HWND hDlg)
     li.iItem = iIndex;
     li.iSubItem = 0;
 
-	ListView_GetItem(hwndListView, &li);
+	(void)ListView_GetItem(hwndListView, &li);
 
 	pevlr = (EVENTLOGRECORD*)li.lParam;
 

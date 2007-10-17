@@ -86,4 +86,11 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE				      "Event Viewer"
   	IDC_EVENTSTRINGIDNOTFOUND	"The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
+	IDC_EVENTLOG_ERROR_TYPE 	"Error"
+	IDC_EVENTLOG_WARNING_TYPE  	"Warning"
+	IDC_EVENTLOG_INFORMATION_TYPE  	"Information"
+	IDC_EVENTLOG_AUDIT_SUCCESS  	"Audit Success"
+	IDC_EVENTLOG_AUDIT_FAILURE  	"Audit Failure"
+	IDC_EVENTLOG_SUCCESS  		"Success"
+	IDC_EVENTLOG_UNKNOWN_TYPE  	"Unknown Event"
 END
