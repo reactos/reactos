@@ -1603,53 +1603,6 @@ ShowCommands (VOID)
 }
 #endif
 
-void
-InitTitle()
-{
-	STARTUPINFOW StartupInfo;
-	LPWSTR lpFileName;
-	WCHAR szTitle[MAX_PATH+1];
-
-	GetStartupInfoW(&StartupInfo);
-
-	if (StartupInfo.lpTitle)
-	{
-		/* Are we started from a shortcut? */
-		if (StartupInfo.dwFlags & 0x800)
-		{
-			UINT len;
-
-			/* We are started from a shortcut, use the file name only */
-			lpFileName = wcsrchr(StartupInfo.lpTitle, '\\');
-			if (lpFileName == NULL)
-			{
-				lpFileName = StartupInfo.lpTitle;
-			}
-
-			/* Drop file extension, we simply assume 3 chars extension */
-			len = wcslen(lpFileName) - 4;
-			if (len > 0)
-			{
-				len = min(len, MAX_PATH);
-				wcsncpy(szTitle, lpFileName, len);
-				szTitle[len] = 0;
-				SetConsoleTitleW(szTitle);
-				return;
-			}
-		}
-
-		/* Use lpTitle member of STARTUPINFO */
-		SetConsoleTitleW(StartupInfo.lpTitle);
-		return;
-	}
-
-	/* Set executable path as window title */
-	GetModuleFileNameW(NULL, szTitle, MAX_PATH);
-	SetConsoleTitleW(szTitle);
-	return;
-}
-
-
 /*
  * set up global initializations and process parameters
  *
@@ -1672,11 +1625,6 @@ Initialize (int argc, const TCHAR* argv[])
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx (&osvi);
 
-	/* FIXME: Doesn't work in ros yet, because of missing functionality of ShellExecute.
-	   See bug 2743. Please unif as soon as it get's fixed. */
-#if 0
-	InitTitle();
-#endif
 	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
 	 * build process. So don't link implicitly against ntdll.dll, load it
 	 * dynamically instead */
