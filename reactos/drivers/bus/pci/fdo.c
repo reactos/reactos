@@ -369,7 +369,8 @@ FdoStartDevice(
 
   AllocatedResources = IoGetCurrentIrpStackLocation(Irp)->Parameters.StartDevice.AllocatedResources;
   /* HACK due to a bug in ACPI driver, which doesn't report the bus number */
-  if (!FoundBuggyAllocatedResourcesList || !AllocatedResources || AllocatedResources->Count == 0)
+  if (!FoundBuggyAllocatedResourcesList &&
+      (!AllocatedResources || AllocatedResources->Count == 0))
   {
     FoundBuggyAllocatedResourcesList = TRUE;
     DPRINT1("No bus number resource found (bug in acpi.sys?), assuming bus number #0\n");
