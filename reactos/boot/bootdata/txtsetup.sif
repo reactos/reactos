@@ -32,6 +32,7 @@ l_intl.nls    = 2
 ntfs.sys      = 3
 ntoskrnl.exe  = 2
 scsiport.sys  = 3
+uniata.sys    = 3
 vfatfs.sys    = 3
 
 [Cabinets]
@@ -69,7 +70,7 @@ halmp.dll    = 2,hal.dll
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<hight>,<width>,<bpp>
-vga = "VGA Display (640x480x4)",,Vga,640,480,4
+;vga = "VGA Display (640x480x4)",,Vga,640,480,4
 vbe_640x480x8 = "VESA Display (640x480x8)",,VBE,640,480,8
 vbe_640x480x16 = "VESA Display (640x480x16)",,VBE,640,480,16
 vbe_640x480x32 = "VESA Display (640x480x32)",,VBE,640,480,32
