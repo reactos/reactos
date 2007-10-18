@@ -626,7 +626,7 @@ MonSelCreate(IN OUT PMONITORSELWND infoPtr)
     infoPtr->SelectedMonitor = -1;
     infoPtr->DraggingMonitor = -1;
     infoPtr->ControlExStyle = MSLM_EX_ALLOWSELECTDISABLED | MSLM_EX_HIDENUMBERONSINGLE |
-        MSLM_EX_SELECTONRIGHTCLICK;
+        MSLM_EX_SELECTONRIGHTCLICK | MSLM_EX_SELECTBYARROWKEY;
     return;
 }
 
@@ -1251,6 +1251,9 @@ MonitorSelWndProc(IN HWND hwnd,
             INT Index;
             POINT pt;
 
+            if (!infoPtr->HasFocus)
+                SetFocus(infoPtr->hSelf);
+
             pt.x = (LONG)LOWORD(lParam);
             pt.y = (LONG)HIWORD(lParam);
 
@@ -1317,6 +1320,9 @@ MonitorSelWndProc(IN HWND hwnd,
             }
 
             Ret |= DLGC_WANTARROWS;
+
+            if (infoPtr->ControlExStyle & MSLM_EX_SELECTBYNUMKEY)
+                Ret |= DLGC_WANTCHARS;
             break;
         }
 
@@ -1400,6 +1406,78 @@ MonitorSelWndProc(IN HWND hwnd,
 
                 if (OldEnabled != infoPtr->Enabled)
                     MonSelRepaint(infoPtr);
+            }
+            break;
+        }
+
+        case WM_KEYDOWN:
+        {
+            INT Index;
+
+            if (infoPtr->ControlExStyle & MSLM_EX_SELECTBYARROWKEY)
+            {
+                switch (wParam)
+                {
+                    case VK_UP:
+                    case VK_LEFT:
+                    {
+                        Index = infoPtr->SelectedMonitor;
+
+                        if (infoPtr->MonitorsCount != 0)
+                        {
+                            if (Index < 0)
+                                Index = 0;
+                            else if (Index > 0)
+                                Index--;
+                        }
+
+                        if (Index >= 0)
+                        {
+                            MonSelSetCurSelMonitor(infoPtr,
+                                                   Index,
+                                                   TRUE);
+                        }
+                        break;
+                    }
+
+                    case VK_DOWN:
+                    case VK_RIGHT:
+                    {
+                        Index = infoPtr->SelectedMonitor;
+
+                        if (infoPtr->MonitorsCount != 0)
+                        {
+                            if (Index < 0)
+                                Index = (INT)infoPtr->MonitorsCount - 1;
+                            else if (Index < (INT)infoPtr->MonitorsCount - 1)
+                                Index++;
+                        }
+
+                        if (infoPtr->SelectedMonitor < infoPtr->MonitorsCount)
+                        {
+                            MonSelSetCurSelMonitor(infoPtr,
+                                                   Index,
+                                                   TRUE);
+                        }
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+
+        case WM_CHAR:
+        {
+            if ((infoPtr->ControlExStyle & MSLM_EX_SELECTBYNUMKEY) &&
+                wParam >= '1' && wParam <= '9')
+            {
+                INT Index = (INT)(wParam - '1');
+                if (Index < (INT)infoPtr->MonitorsCount)
+                {
+                    MonSelSetCurSelMonitor(infoPtr,
+                                           Index,
+                                           TRUE);
+                }
             }
             break;
         }

@@ -7,6 +7,8 @@
 #define MSLM_EX_HIDENUMBERONSINGLE  0x4
 #define MSLM_EX_HIDENUMBERS 0x8
 #define MSLM_EX_SELECTONRIGHTCLICK  0x10
+#define MSLM_EX_SELECTBYNUMKEY  0x20
+#define MSLM_EX_SELECTBYARROWKEY    0x40
 
 /* MONSL_MONINFO Flags */
 #define MSL_MIF_DISABLED    0x1
@@ -177,6 +179,11 @@ typedef struct _MONSL_MONNMMONITORCHANGING
  *             * MSLM_EX_SELECTONRIGHTCLICK
  *                 Selects a monitor when the user right clicks
  *                 on it.
+ *             * MSLM_EX_SELECTBYNUMKEY
+ *                 Allows selecting a monitor by using the keys
+ *                 '1' to '9'.
+ *             * MSLM_EX_SELECTBYARROWKEY
+ *                 Allows selecting a monitor using the arrow keys.
  *
  *   Returns non-zero value if successful.
  */
