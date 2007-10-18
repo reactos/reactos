@@ -873,13 +873,14 @@ SASWindowProc(
 
 			/* Save the Session pointer */
 			SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)Session);
-			if (GetSetupType() == 0)
+			if (GetSetupType())
 				return TRUE;
 			return RegisterHotKeys(Session, hwndDlg);
 		}
 		case WM_DESTROY:
 		{
-			UnregisterHotKeys(Session, hwndDlg);
+			if (!GetSetupType())
+			    UnregisterHotKeys(Session, hwndDlg);
 			return TRUE;
 		}
 		case WM_SETTINGCHANGE:
