@@ -323,15 +323,17 @@ CardImageWndProc(HWND hwnd,
                   rc.right,
                   rc.bottom);
 
-        BitBlt(hdc,
-               2,
-               2,
-               __cardwidth,
-               __cardheight,
-               __hdcCardBitmaps,
-               pCardBack->hdcNum * __cardwidth,
-               0,
-               SRCCOPY);
+        StretchBlt(hdc,
+                   2,
+                   2,
+                   CARDBACK_OPTIONS_WIDTH,
+                   CARDBACK_OPTIONS_HEIGHT,
+                   __hdcCardBitmaps,
+                   pCardBack->hdcNum * __cardwidth,
+                   0,
+                   __cardwidth,
+                   __cardheight,
+                   SRCCOPY);
 
         SelectObject(hdc, hOldPen);
         SelectObject(hdc, hOldBrush);
