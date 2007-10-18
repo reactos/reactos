@@ -39,6 +39,27 @@ CBindStatusCallback_Destroy(CBindStatusCallback *This)
 }
 
 static void
+write_status(LPCTSTR lpFmt, ...)
+{
+    va_list args;
+
+    /* FIXME: Determine line length! */
+    TCHAR szTxt[80];
+    int c;
+
+    va_start(args, lpFmt);
+    _vstprintf(szTxt, lpFmt, args);
+    va_end(args);
+
+    c = _tcslen(szTxt);
+    while (c < (sizeof(szTxt) / sizeof(szTxt[0])) - 1)
+        szTxt[c++] = _T(' ');
+    szTxt[c] = _T('\0');
+
+    _tprintf(_T("\r%.79s"), szTxt);
+}
+
+static void
 CBindStatusCallback_UpdateProgress(CBindStatusCallback *This)
 {
     /* FIXME: better output */
@@ -50,12 +71,12 @@ CBindStatusCallback_UpdateProgress(CBindStatusCallback *This)
         if (Percentage > 99)
             Percentage = 99;
 
-        _tprintf(_T("\r%2d%% (%I64u bytes downloaded)"), Percentage, This->Progress);
+        write_status(_T("%2d%% (%I64u bytes downloaded)"), Percentage, This->Progress);
     }
     else
     {
         /* Unknown size */
-        _tprintf(_T("\r%I64u bytes downloaded"), This->Progress);
+        write_status(_T("%I64u bytes downloaded"), This->Progress);
     }
 }
 
@@ -214,7 +235,8 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
             break;
 
         case BINDSTATUS_ENDDOWNLOADDATA:
-            _tprintf(_T("\rFile saved.\n"));
+            write_status(_T("File saved."));
+            _tprintf(_T("\n"));
             break;
 
         case BINDSTATUS_DOWNLOADINGDATA:
@@ -415,6 +437,8 @@ download_file(IN LPCTSTR pszUrl,
 static int
 print_err(int iErr)
 {
+    write_status(_T(""));
+
     if (iErr == DWNL_E_LASTERROR)
     {
         if (GetLastError() == ERROR_SUCCESS)
