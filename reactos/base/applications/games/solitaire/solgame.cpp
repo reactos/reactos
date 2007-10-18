@@ -50,7 +50,11 @@ void NewGame(void)
     //put the other cards onto the deck
     pDeck->SetCardStack(deck);
     pDeck->Update();
-    
+
+    // For the 1-card-mode, all cards need to be completely overlapped
+    if(!(dwOptions & OPTION_THREE_CARDS))
+        pPile->SetOffsets(0, 0);
+
     SolWnd.Redraw();
 
     fGameStarted = false;
@@ -331,7 +335,8 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
     fGameStarted = true;
 
     //reset the face-up pile to represent 3 cards
-    pPile->SetOffsets(CS_DEFXOFF, 1);
+    if(dwOptions & OPTION_THREE_CARDS)
+        pPile->SetOffsets(CS_DEFXOFF, 1);
 
     if(cardstack.NumCards() == 0)
     {
@@ -350,7 +355,9 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
         temp = cardstack.Pop(numcards);
         temp.Reverse();
 
-        pile.Clear();
+        if(dwOptions & OPTION_THREE_CARDS)
+            pile.Clear();
+
         pile.Push(temp);
 
         //remove the top 3 from deck

@@ -347,15 +347,21 @@ void CardRegion::Render(HDC hdc)
         
         switch(uEmptyImage)
         {
-        default: case CS_EI_NONE:
+        default:
+        case CS_EI_NONE:
             //this wipes the RECT variable, so watch out!
             //SetRect(&rect, x, y, x+__cardwidth, y+__cardheight);
             //PaintRect(hdc, &rect, MAKE_PALETTERGB(crBackgnd));
             parentWnd.PaintCardRgn(hdc, x, y, __cardwidth, __cardheight, x, y);
             break;
             
-        case CS_EI_SUNK:    //case CS_EI_CIRC: case CS_EI_X:
+        case CS_EI_SUNK:
             DrawCard(hdc, x, y, __hdcPlaceHolder, __cardwidth, __cardheight);
+            break;
+
+        case CS_EI_CIRC:
+        case CS_EI_X:
+            CardBlt(hdc, x, y, uEmptyImage);
             break;
         }
         
@@ -466,6 +472,11 @@ void CardRegion::PrepareDragBitmaps(int numtodrag)
         case CS_EI_SUNK:
             DrawCard(hdcBackGnd, xoff, yoff, __hdcPlaceHolder, __cardwidth, __cardheight);
             break;
+
+        case CS_EI_CIRC:
+        case CS_EI_X:
+            CardBlt(hdc, xoff, yoff, uEmptyImage);
+            break;
         }
     }
 
@@ -559,7 +570,7 @@ void CardRegion::PrepareDragBitmapsThreed(int numtodrag)
     //
     // If there are no cards under this one, just draw the place holder
     //
-    if(numcards == 0)   
+    if(numcards == 0)
     {
         switch(uEmptyImage)
         {
@@ -573,7 +584,11 @@ void CardRegion::PrepareDragBitmapsThreed(int numtodrag)
         case CS_EI_SUNK:
             DrawCard(hdcBackGnd, 0, 0, __hdcPlaceHolder, __cardwidth, __cardheight);
             break;
-    
+
+        case CS_EI_CIRC:
+        case CS_EI_X:
+            CardBlt(hdc, 0, 0, uEmptyImage);
+            break;
         }
     }
 

@@ -30,7 +30,7 @@ void CreateSol()
     yRowStackCardOffset = (int)(__cardheight / 6.7);
 
     pDeck = SolWnd.CreateRegion(DECK_ID, true, X_BORDER, Y_BORDER, 2, 1);
-    pDeck->SetEmptyImage(CS_EI_SUNK);
+    pDeck->SetEmptyImage(CS_EI_CIRC);
     pDeck->SetThreedCount(6);
     pDeck->SetDragRule(CS_DRAG_NONE, 0);
     pDeck->SetDropRule(CS_DROP_NONE, 0);

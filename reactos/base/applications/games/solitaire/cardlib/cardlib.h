@@ -8,14 +8,13 @@ void CardLib_SetZoomSpeed(int);
 
 #define CS_EI_NONE	0
 #define CS_EI_SUNK	1
+#define CS_EI_CIRC	67
+#define CS_EI_X		66
 
 #define CS_DEFXOFF			12		//x-offset
 #define CS_DEFYOFF			18		//y-offset
 #define CS_NO3D				1		//default 3d counts (recommened)
 #define CS_DEF3D			10		//(best for decks)
-
-//#define CS_EI_CIRC	2
-//#define CS_EI_X		3
 
 #define CS_DRAG_NONE		0
 #define CS_DRAG_TOP			1

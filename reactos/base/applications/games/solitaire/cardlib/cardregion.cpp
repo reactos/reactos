@@ -365,7 +365,10 @@ void CardRegion::SetEmptyImage(UINT uImage)
 {
     switch(uImage)
     {
-    case CS_EI_NONE: case CS_EI_SUNK:
+    case CS_EI_NONE:
+    case CS_EI_SUNK:
+    case CS_EI_CIRC:
+    case CS_EI_X:
         uEmptyImage = uImage;
         break;
 
