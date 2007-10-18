@@ -76,8 +76,8 @@ FindClosePrinterChangeNotification@4
 FindFirstPrinterChangeNotification@16
 FindNextPrinterChangeNotification@16
 FreePrinterNotifyInfo@4
-GetDefaultPrinterA@8
-GetDefaultPrinterW@8
+GetDefaultPrinterA@8 @201
+GetDefaultPrinterW@8 @203
 GetFormA@24
 GetFormW@24
 GetJobA@24
