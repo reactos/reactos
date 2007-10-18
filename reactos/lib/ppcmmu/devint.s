@@ -5,61 +5,60 @@
 mmumain:
         mr 0,1
         lis 1,2
-        subi 1,1,432
-        stw 0,4(1)
-        stw 2,8(1)
-	stw 3,12(1)
-	stw 4,16(1)
-	stw 5,20(1)
-	stw 6,24(1)
-	stw 7,28(1)
-	stw 8,32(1)
-	stw 9,36(1)
-        stw 10,40(1)
-	stw 11,44(1)
-	stw 12,48(1)
-	stw 13,52(1)
-	stw 14,56(1)
-	stw 15,60(1)
-	stw 16,64(1)
-	stw 17,68(1)
-	stw 18,72(1)
-	stw 19,76(1)
-	stw 20,80(1)
-        stw 21,84(1)
-        stw 22,88(1)
-	stw 23,92(1)
-	stw 24,96(1)
-	stw 25,100(1)
-	stw 26,104(1)
-	stw 27,108(1)
-	stw 28,112(1)
-	stw 29,116(1)
-	stw 30,120(1)
-	stw 31,124(1)
-	mflr 0
-	stw 0,384(1)
-	mfmsr 0
-	stw 0,388(1)
-	mfcr 0
-	stw 0,392(1)
-	mflr 0
-	stw 0,396(1)
-	mfctr 0
+        subi 1,1,448
+        stw 0,20(1)
+        stw 2,24(1)
+	stw 3,28(1)
+	stw 4,32(1)
+	stw 5,36(1)
+	stw 6,40(1)
+	stw 7,44(1)
+	stw 8,48(1)
+	stw 9,52(1)
+        stw 10,56(1)
+	stw 11,60(1)
+	stw 12,64(1)
+	stw 13,68(1)
+	stw 14,72(1)
+	stw 15,76(1)
+	stw 16,80(1)
+	stw 17,84(1)
+	stw 18,88(1)
+	stw 19,92(1)
+	stw 20,96(1)
+        stw 21,100(1)
+        stw 22,104(1)
+	stw 23,108(1)
+	stw 24,112(1)
+	stw 25,116(1)
+	stw 26,120(1)
+	stw 27,124(1)
+	stw 28,128(1)
+	stw 29,132(1)
+	stw 30,136(1)
+	stw 31,140(1)
+	mfsrr0 0
 	stw 0,400(1)
-	mfxer 0
+	mfmsr 0
 	stw 0,404(1)
-	xor 0,0,0
+	mfcr 0
 	stw 0,408(1)
-	mfdsisr 0
+	mflr 0
 	stw 0,412(1)
+	mfctr 0
+	stw 0,416(1)
+	mfxer 0
+	stw 0,420(1)
+	/* xor 0,0,0 -- We can omit this since PPC doesn't have MQ */
+	stw 0,424(1)
+	mfdsisr 0
+	stw 0,428(1)
         mfdar 0
-        stw 0,416(1)
-        mr 7,1
+        stw 0,432(1)
+        addi 7,1,16
         lis 8,_mmumain@ha
         addi 8,8,_mmumain@l
         mtctr 8
-        subi 1,1,16
 	bctrl
         addi 1,1,16
 	lwz 2,8(1)
@@ -98,7 +97,9 @@ mmumain:
         mtlr 0
         lwz 0,400(1)
         mtctr 0
+	lwz 0,388(1) /* Copy out new MSR bits if needed */
 	lwz 1,4(1)
+	mtmsr 0
         blr
 
         .globl trap_start
@@ -106,68 +107,67 @@ mmumain:
 trap_start:
         mtsprg1 1
         lis 1,2
-        subi 1,1,432
-        stw 0,0(1)
+        subi 1,1,448
+        stw 0,16(1)
         mfsprg1 0
-        stw 0,4(1)
-        stw 2,8(1)
-	stw 3,12(1)
-	stw 4,16(1)
-	stw 5,20(1)
-	stw 6,24(1)
-	stw 7,28(1)
-	stw 8,32(1)
-	stw 9,36(1)
-        stw 10,40(1)
-	stw 11,44(1)
-	stw 12,48(1)
-	stw 13,52(1)
-	stw 14,56(1)
-	stw 15,60(1)
-	stw 16,64(1)
-	stw 17,68(1)
-	stw 18,72(1)
-	stw 19,76(1)
-	stw 20,80(1)
-        stw 21,84(1)
-        stw 22,88(1)
-	stw 23,92(1)
-	stw 24,96(1)
-	stw 25,100(1)
-	stw 26,104(1)
-	stw 27,108(1)
-	stw 28,112(1)
-	stw 29,116(1)
-	stw 30,120(1)
-	stw 31,124(1)
+        stw 0,20(1)
+        stw 2,24(1)
+	stw 3,28(1)
+	stw 4,32(1)
+	stw 5,36(1)
+	stw 6,40(1)
+	stw 7,44(1)
+	stw 8,48(1)
+	stw 9,52(1)
+        stw 10,56(1)
+	stw 11,60(1)
+	stw 12,64(1)
+	stw 13,68(1)
+	stw 14,72(1)
+	stw 15,76(1)
+	stw 16,80(1)
+	stw 17,84(1)
+	stw 18,88(1)
+	stw 19,92(1)
+	stw 20,96(1)
+        stw 21,100(1)
+        stw 22,104(1)
+	stw 23,108(1)
+	stw 24,112(1)
+	stw 25,116(1)
+	stw 26,120(1)
+	stw 27,124(1)
+	stw 28,128(1)
+	stw 29,132(1)
+	stw 30,136(1)
+	stw 31,140(1)
 	mfsrr0 0
-	stw 0,384(1)
-	mfsrr1 0
-	stw 0,388(1)
-	mfcr 0
-	stw 0,392(1)
-	mflr 0
-	stw 0,396(1)
-	mfctr 0
 	stw 0,400(1)
-	mfxer 0
+	mfsrr1 0
 	stw 0,404(1)
-	xor 0,0,0
+	mfcr 0
 	stw 0,408(1)
-	mfdsisr 0
+	mflr 0
 	stw 0,412(1)
+	mfctr 0
+	stw 0,416(1)
+	mfxer 0
+	stw 0,420(1)
+	/* xor 0,0,0 -- We can omit this since PPC doesn't have MQ */
+	stw 0,424(1)
+	mfdsisr 0
+	stw 0,428(1)
         mfdar 0
-        stw 0,416(1)
+        stw 0,432(1)
         bl 1f
 1:      mflr 5
-        mr 4,1
+        addi 4,1,16
         rlwinm 3,5,24,0xff
         lwz 5,36(5)
         mtctr 5
 	lis 5,trap_finish_start@ha
 	addi 5,5,trap_finish_start@l
 	mtlr 5
-        subi 1,1,16
 	bctr
 trap_end:
 	.space 4

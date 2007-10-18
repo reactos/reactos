@@ -31,6 +31,7 @@
  *
  *  Modified for 386 by Jim Kingdon, Cygnus Support.
  *  Modified for ReactOS by Casper S. Hornstrup <chorns@users.sourceforge.net>
+ *  Modified heavily for PowerPC ReactOS by arty
  *
  *  To enable debugger support, two things need to happen.  One, setting
  *  up a routine so that it is in the exception path, is necessary in order
@@ -127,12 +128,12 @@ int isxdigit(int ch)
         (ch >= '0' && ch <= '9');
 }
 
-void sync() {
+inline void sync() {
     __asm__("eieio\n\t"
 	    "sync");
 }
 
-void send(char *serport, char c) {
+inline void send(char *serport, char c) {
 	/* Wait for Clear to Send */
     while( !(serport[LSR] & 0x20) ) sync();
     
@@ -140,16 +141,22 @@ void send(char *serport, char c) {
     sync();
 }
 
-int rdy(char *serport)
+inline int rdy(char *serport)
 {
     sync();
     return (serport[LSR] & 0x20);
 }
 
-char recv(char *serport) {
+inline int chr(char *serport)
+{
+    sync();
+    return serport[LSR] & 1;
+}
+
+inline char recv(char *serport) {
     char c;
 
-    while( !(serport[LSR] & 1) ) sync();
+    while( !chr(serport) ) sync();
     
     c = serport[RCV];
     sync();
@@ -167,8 +174,6 @@ void setup(char *serport, int baud) {
 	sync();
 	serport[LCR] = 3;
 	sync();
-	serport[IER] = 1;
-	sync();
 }
 
 void SerialSetUp(int deviceType, void *deviceAddr, int baud)
@@ -178,11 +183,11 @@ void SerialSetUp(int deviceType, void *deviceAddr, int baud)
     setup(serport, baud);
 }
 
-extern void SerialInterrupt();
+extern int SerialInterrupt(int signal, ppc_trap_frame_t *tf);
 
-void Wait()
+void IntEnable()
 {
-    while(!Continue) if (rdy(serport)) SerialInterrupt();
+    serport[IER] |= 1;
 }
 
 void SerialWrite(int ch)
@@ -240,22 +245,44 @@ void PacketStart()
 
 void PacketFinish()
 {
-    int i, ch;
+    int i, ch, count = 0;
 
     PacketSent = 0;
     
     do {
-        SerialWrite('$');
-        for (i = 0; i < DataOutAddr; i++)
-        {
-            SerialWrite(DataOutBuffer[i]);
+        if (!count)
+        { 
+            SerialWrite('$');
+            for (i = 0; i < DataOutAddr; i++)
+            {
+                SerialWrite(DataOutBuffer[i]);
+            }
+            SerialWrite('#');
+            SerialWrite(hex[(DataOutCsum >> 4) & 15]);
+            SerialWrite(hex[DataOutCsum & 15]);
         }
-        SerialWrite('#');
-        SerialWrite(hex[(DataOutCsum >> 4) & 15]);
-        SerialWrite(hex[DataOutCsum & 15]);
+        while(count-- != 0)
+        {
+            if (chr(serport))
+            {
+                ch = SerialRead();
+                break;
+            }
+        }
+        
+        switch (ch)
+        {
+        default:
+            break;
 
-        while(!rdy(serport));
-        if (SerialRead() == '+') break;
+        case '-':
+            count = 0;
+            break;
+
+        case '+':
+            PacketSent = 1;
+            break;
+        }
     } while(PacketSent != 1);
 }
 
@@ -293,10 +320,13 @@ void PacketWriteError(int code)
     PacketFinish();
 }
 
+void marker() { }
+
 void GotPacket()
 {
     int i, memaddr, memsize;
-
+    
+    Continue = 0;
     switch (DataInBuffer[DataInAddr++])
     {
     case 'g':
@@ -349,10 +379,16 @@ void GotPacket()
         Continue = 1;
         break;
 
+    case 'S':
+        PacketOk();
+        Continue = 0;
+        break;
+
     case 's':
-        RegisterSaveArea->srr1 |= 16;
+        RegisterSaveArea->srr1 |= 0x400;
         PacketOk();
         Continue = 1;
+        marker();
         break;
 
     case 'q':
@@ -374,59 +410,74 @@ void GotPacket()
     }
 }
 
-void SerialInterrupt()
+int SerialInterrupt(int signal, ppc_trap_frame_t *tf)
 {
-    int ch = SerialRead();
+    int ch;
 
-    if (ch == '+')
+    if (!chr(serport)) return 0;
+
+    Signal = signal;
+    RegisterSaveArea = tf;
+    
+    do 
     {
-        PacketSent = 1;
-    }
-    else if (ch == '-')
-    {
-        PacketSent = -1;
-    }
-    else if (ch == '$')
-    {
-        DataInAddr = 0;
-        ParseState = 0;
-        ComputedCsum = 0;
-        ActualCsum = 0;
-    }
-    else if (ch == '#' && ParseState == 0)
-    {
-        ParseState = 2;
-    }
-    else if (ParseState == 0)
-    {
-        ComputedCsum += ch;
-        DataInBuffer[DataInAddr++] = ch;
-    }
-    else if (ParseState == 2)
-    {
-        ActualCsum = ch;
-        ParseState++;
-    }
-    else if (ParseState == 3)
-    {
-        ActualCsum = hex2int(ch) | (hex2int(ActualCsum) << 4);
-        ComputedCsum &= 255;
-        ParseState = -1;
-        if (ComputedCsum == ActualCsum)
+        ch = SerialRead();
+        
+        if (ch == 3) /* Break in - tehe */
         {
-            ComputedCsum = 0;
-            DataInBuffer[DataInAddr] = 0;
-            DataInAddr = 0;
             Continue = 0;
-            SerialWrite('+');
-            GotPacket();
+            PacketWriteSignal(3);
         }
-        else
+        else if (ch == '-' || ch == '+')
+        {
+            /* Nothing */
+        }
+        else if (ch == '$')
+        {
+            DataInAddr = 0;
+            ParseState = 0;
+            ComputedCsum = 0;
+            ActualCsum = 0;
+        }
+        else if (ch == '#' && ParseState == 0)
+        {
+            ParseState = 2;
+        }
+        else if (ParseState == 0)
+        {
+            ComputedCsum += ch;
+            DataInBuffer[DataInAddr++] = ch;
+        }
+        else if (ParseState == 2)
+        {
+            ActualCsum = ch;
+            ParseState++;
+        }
+        else if (ParseState == 3)
+        {
+            ActualCsum = hex2int(ch) | (hex2int(ActualCsum) << 4);
+            ComputedCsum &= 255;
+            ParseState = -1;
+            if (ComputedCsum == ActualCsum)
+            {
+                ComputedCsum = 0;
+                DataInBuffer[DataInAddr] = 0;
+                DataInAddr = 0;
+                Continue = 0;
+                SerialWrite('+');
+                GotPacket();
+            }
+            else
+                SerialWrite('-');
+        }
+        else if (ParseState == -1)
             SerialWrite('-');
     }
+    while (!Continue);
+    return 1;
 }
 
-void TakeException(int n, int *tf)
+int TakeException(int n, ppc_trap_frame_t *tf)
 {
     Signal = n;
     RegisterSaveArea = tf;
@@ -434,7 +485,8 @@ void TakeException(int n, int *tf)
         PacketWriteSignal(Signal);
     SendSignal = 0;
     Continue = 0;
-    Wait();
+    while(!Continue) SerialInterrupt(n, tf);
+    return 1;
 }
 
 /* EOF */

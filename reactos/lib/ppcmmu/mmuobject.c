@@ -68,7 +68,8 @@ MmuVsidInfo *Segs[16], *VsidHead = 0;
 extern void fmtout(const char *fmt, ...);
 int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr);
 void SerialSetUp(int deviceType, void *deviceAddr, int baud);
-void TakeException(int n, int *tf);
+int SerialInterrupt(int n, ppc_trap_frame_t *tf);
+void TakeException(int n, ppc_trap_frame_t *tf);
 
 int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 {
@@ -83,36 +84,42 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 	if(!ptegreload(trap_frame, trap_frame->dar))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,tf)) hang(action, tf);
+	    if (!callback[action](action,trap_frame)) hang(action, trap_frame);
 	}
 	break;
     case 4:
 	if(!ptegreload(trap_frame, trap_frame->srr0))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,tf)) hang(action, tf);
+	    if (!callback[action](action,trap_frame)) hang(action, trap_frame);
 	}
 	break;
 
+    case 5:
+        /* EE -- Try to get a serial interrupt if debugging enabled, then fall
+         * back to primary handler 
+         */
+        if (!SerialInterrupt(action, trap_frame)) 
+            callback[action](action, trap_frame);
+        else
+            trap_frame->srr1 |= 0x8000;
+        break;
     case 0:
     case 2:
-    case 5:
     case 6:
     case 7:
     case 8:
     case 9:
     case 0xa:
-        if (!callback[action](action,tf)) hang(action, tf);
-        break;
-
+    case 0xc:
     case 0x20:
-        // Single step
-        TakeException(action, tf);
+        if (!callback[action](action,trap_frame)) hang(action, trap_frame);
         break;
 
         /* MMU Functions */
     case 0x100:
 	initme();
+        trap_frame->srr1 |= 0x8000;
 	break;
     case 0x101:
 	ret = mmuaddpage(arg1, (int)arg2);
@@ -161,7 +168,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
         SerialSetUp((int)arg1, arg2, 9600);
         break;
     case 0x201:
-        TakeException((int)arg1, (int *)trap_frame);
+        TakeException((int)arg1, trap_frame);
         break;
 
     default:
@@ -251,7 +258,7 @@ int hang(int trapCode, ppc_trap_frame_t *trap)
         GdbAttach = 1;
         SerialSetUp(0, (void *)0x800003f8, 9600);
     }
-    TakeException(trapCode, (int *)trap);
+    while(1) SerialInterrupt(trapCode, trap);
     return 1;
 }
 
@@ -294,11 +301,17 @@ void initme()
             copy_trap_handler(i);
     }
 
+    /* Serial Interrupt */
+    callback[5] = SerialInterrupt;
+
     /* Floating point exception */
     callback[8] = fpenable;
 
     /* Ignore decrementer and EE */
     callback[9] = ignore;
+
+    /* Single Step */
+    callback[0x20] = TakeException;
 }
 
 ppc_map_t *allocpage()
