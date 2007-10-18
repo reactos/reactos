@@ -46,8 +46,8 @@ HaliQuerySystemInformation(IN     HAL_QUERY_INFORMATION_CLASS InformationClass,
 			// us it expected a single byte back. We therefore guess it expects
 			// a BOOLEAN, and we dream up the value TRUE to (we think) tell it
 			// "Sure, the framebuffer is cached".
-			DPRINT("%s: caller expects %u bytes (should be 1)\n", "HalFrameBufferCachingInformation", BufferSize);
 			BOOLEAN ToReturn = TRUE;
+			DPRINT("%s: caller expects %u bytes (should be 1)\n", "HalFrameBufferCachingInformation", BufferSize);
 			ASSERT(sizeof(BOOLEAN) == 1);
 			*ReturnedLength = sizeof(BOOLEAN);
 			RtlCopyMemory(Buffer, &ToReturn, sizeof(BOOLEAN));
