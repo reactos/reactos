@@ -136,10 +136,12 @@ private:
 	std::string GenerateLinkerParameters () const;
 	void GenerateMacro ( const char* assignmentOperation,
 	                     const std::string& macro,
-	                     const IfableData& data );
+	                     const IfableData& data,
+	                     std::set<std::string>* used_defs );
 	void GenerateMacros ( const char* op,
 	                      const IfableData& data,
-	                      const std::vector<LinkerFlag*>* linkerFlags );
+	                      const std::vector<LinkerFlag*>* linkerFlags,
+	                      std::set<std::string>& used_defs );
 	void GenerateSourceMacros ( const char* assignmentOperation,
 	                            const IfableData& data );
 	void GenerateObjectMacros ( const char* assignmentOperation,

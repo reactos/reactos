@@ -62,11 +62,10 @@ private:
 	void CreateMakefile ();
 	void CloseMakefile () const;
 	void GenerateHeader () const;
-	std::string GenerateIncludesAndDefines ( IfableData& data ) const;
 	void GenerateProjectCFlagsMacro ( const char* assignmentOperation,
-	                                  IfableData& data ) const;
+	                                  const IfableData& data ) const;
 	void GenerateGlobalCFlagsAndProperties ( const char* op,
-	                                         IfableData& data ) const;
+	                                         const IfableData& data ) const;
 	void GenerateProjectGccOptionsMacro ( const char* assignmentOperation,
 	                                      IfableData& data ) const;
 	void GenerateProjectGccOptions ( const char* assignmentOperation,

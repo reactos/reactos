@@ -372,35 +372,31 @@ MingwBackend::GenerateHeader () const
 		ProjectNode.GetProjectFilename ().c_str () );
 }
 
-string
-MingwBackend::GenerateIncludesAndDefines ( IfableData& data ) const
-{
-	set<string> used_defs;
-	string includeParameters = MingwModuleHandler::GenerateGccIncludeParametersFromVector ( data.includes );
-	string defineParameters = MingwModuleHandler::GenerateGccDefineParametersFromVector ( data.defines, used_defs );
-	return includeParameters + " " + defineParameters;
-}
-
 void
 MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
-                                           IfableData& data ) const
+                                           const IfableData& data ) const
 {
-	fprintf (
-		fMakefile,
-		"PROJECT_CFLAGS %s",
-		assignmentOperation );
-	
-	fprintf ( fMakefile,
-	          " %s",
-	          GenerateIncludesAndDefines ( data ).c_str() );
+	set<string> used_defs;
 
-	fprintf ( fMakefile, "\n" );
+	if ( data.includes.size () > 0 )
+		fprintf (
+			fMakefile,
+			"PROJECT_CFLAGS %s %s\n",
+			assignmentOperation,
+			MingwModuleHandler::GenerateGccIncludeParametersFromVector ( data.includes ).c_str ());
+
+	if ( data.defines.size () > 0 )
+		fprintf (
+			fMakefile,
+			"PROJECT_CDEFINES %s %s\n",
+			assignmentOperation,
+			MingwModuleHandler::GenerateGccDefineParametersFromVector ( data.defines, used_defs ).c_str ());
 }
 
 void
 MingwBackend::GenerateGlobalCFlagsAndProperties (
 	const char* assignmentOperation,
-	IfableData& data ) const
+	const IfableData& data ) const
 {
 	size_t i;
 
@@ -420,7 +416,7 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 
 	for ( i = 0; i < data.ifs.size(); i++ )
 	{
-		If& rIf = *data.ifs[i];
+		const If& rIf = *data.ifs[i];
 		if ( rIf.data.defines.size()
 			|| rIf.data.includes.size()
 			|| rIf.data.ifs.size() )
@@ -523,8 +519,8 @@ MingwBackend::GenerateGlobalVariables () const
 	GenerateGlobalCFlagsAndProperties ( "=", ProjectNode.non_if_data );
 	GenerateProjectGccOptions ( "=", ProjectNode.non_if_data );
 
-	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CFLAGS)\n" );
-	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CFLAGS)\n" );
+	fprintf ( fMakefile, "PROJECT_RCFLAGS := $(PROJECT_CFLAGS) $(PROJECT_CDEFINES)\n" );
+	fprintf ( fMakefile, "PROJECT_WIDLFLAGS := $(PROJECT_CFLAGS) $(PROJECT_CDEFINES)\n" );
 	fprintf ( fMakefile, "PROJECT_LFLAGS := %s\n",
 	          GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );

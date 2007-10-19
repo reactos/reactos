@@ -629,7 +629,7 @@ MingwModuleHandler::GetObjectFilenames ()
 /* static */ string
 MingwModuleHandler::GenerateGccDefineParametersFromVector (
 	const vector<Define*>& defines,
-        set<string>& used_defs)
+	set<string>& used_defs)
 {
 	string parameters;
 
@@ -640,8 +640,8 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 			continue;
 		if (parameters.length () > 0)
 			parameters += " ";
-                if (define.name.find('(') != string::npos)
-                        parameters += "$(QT)";
+		if (define.name.find('(') != string::npos)
+			parameters += "$(QT)";
 		parameters += "-D";
 		parameters += define.name;
 		if (define.value.length () > 0)
@@ -649,8 +649,8 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 			parameters += "=";
 			parameters += define.value;
 		}
-                if (define.name.find('(') != string::npos)
-                        parameters += "$(QT)";
+		if (define.name.find('(') != string::npos)
+			parameters += "$(QT)";
 		used_defs.insert(used_defs.begin(),define.name);
 	}
 	return parameters;
@@ -659,7 +659,7 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 string
 MingwModuleHandler::GenerateGccDefineParameters () const
 {
-        set<string> used_defs;
+	set<string> used_defs;
 	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines, used_defs );
 	string s = GenerateGccDefineParametersFromVector ( module.non_if_data.defines, used_defs );
 	if ( s.length () > 0 )
@@ -765,7 +765,8 @@ void
 MingwModuleHandler::GenerateMacro (
 	const char* assignmentOperation,
 	const string& macro,
-	const IfableData& data )
+	const IfableData& data,
+	set<string> *used_defs )
 {
 	size_t i;
 	bool generateAssignment;
@@ -806,7 +807,14 @@ MingwModuleHandler::GenerateMacro (
 	}
 	for ( i = 0; i < data.defines.size(); i++ )
 	{
-		Define& d = *data.defines[i];
+		const Define& d = *data.defines[i];
+		if (used_defs && used_defs->find(d.name) != used_defs->end())
+		{
+			if ( backend->configuration.Verbose )
+				printf("%s define overridden in '%s' module\n",
+					d.name.c_str (), module.name.c_str () );
+			continue;
+		}
 		fprintf (
 			fMakefile,
 			" -D%s",
@@ -816,6 +824,8 @@ MingwModuleHandler::GenerateMacro (
 				fMakefile,
 				"=%s",
 				d.value.c_str() );
+		if (used_defs)
+			used_defs->insert(used_defs->begin(), d.name);
 	}
 	if ( generateAssignment )
 	{
@@ -827,16 +837,19 @@ void
 MingwModuleHandler::GenerateMacros (
 	const char* assignmentOperation,
 	const IfableData& data,
-	const vector<LinkerFlag*>* linkerFlags )
+	const vector<LinkerFlag*>* linkerFlags,
+	set<string>& used_defs )
 {
 	size_t i;
 
 	GenerateMacro ( assignmentOperation,
 	                cflagsMacro,
-	                data );
+	                data,
+	                &used_defs );
 	GenerateMacro ( assignmentOperation,
 	                windresflagsMacro,
-	                data );
+	                data,
+	                NULL );
 
 	if ( linkerFlags != NULL )
 	{
@@ -886,7 +899,8 @@ MingwModuleHandler::GenerateMacros (
 			GenerateMacros (
 				"+=",
 				rIf.data,
-				NULL );
+				NULL,
+				used_defs );
 			fprintf (
 				fMakefile,
 				"endif\n\n" );
@@ -2020,6 +2034,8 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 void
 MingwModuleHandler::GenerateOtherMacros ()
 {
+	set<string> used_defs;
+
 	cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
 	nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
 	windresflagsMacro = ssprintf ("%s_RCFLAGS", module.name.c_str ());
@@ -2031,7 +2047,14 @@ MingwModuleHandler::GenerateOtherMacros ()
 	GenerateMacros (
 		"=",
 		module.non_if_data,
-		&module.linkerFlags );
+		&module.linkerFlags,
+		used_defs );
+
+	GenerateMacros (
+		"+=",
+		module.project.non_if_data,
+		NULL,
+		used_defs );
 
 	vector<FileLocation> s;
 	if ( module.importLibrary )
