@@ -24,6 +24,7 @@
 	<library>version</library>
 	<library>devmgr</library>
 	<library>rtl</library>
+	<library>winspool</library>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>
@@ -52,6 +53,7 @@
 	<file>shfldr_desktop.c</file>
 	<file>shfldr_fs.c</file>
 	<file>shfldr_mycomp.c</file>
+	<file>shfldr_printers.c</file>
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>
 	<file>shlfolder.c</file>

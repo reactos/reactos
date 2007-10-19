@@ -75,6 +75,7 @@ static const struct {
 	{&CLSID_FolderShortcut, &FolderShortcut_Constructor},
 	{&CLSID_MyDocuments,    &MyDocuments_Constructor},
 #endif
+    {&CLSID_Printers,       &ISF_Printers_Constructor},
 	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
 	{NULL,NULL}
 };

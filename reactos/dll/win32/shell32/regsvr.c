@@ -75,6 +75,7 @@ struct regsvr_coclass
     LPCSTR clsid_str;		/* can be NULL to omit */
     LPCSTR progid;		/* can be NULL to omit */
     UINT idDefaultIcon;         /* can be 0 to omit */
+//    CLSID const *clsid_menu; /* can be NULL to omit */
 };
 
 /* flags for regsvr_coclass.flags */
@@ -131,6 +132,7 @@ static WCHAR const mcdm_keyname[21] = {
     'a', 'u', 'l', 't', 'M', 'e', 'n', 'u', 0 };
 static WCHAR const defaulticon_keyname[] = {
     'D','e','f','a','u','l','t','I','c','o','n',0};
+static WCHAR const contextmenu_keyname[] = { 'C', 'o', 'n', 't', 'e', 'x', 't', 'M', 'e', 'n', 'u', 'H', 'a', 'n', 'd', 'l', 'e', 'r', 's', 0 };
 static char const tmodel_valuename[] = "ThreadingModel";
 static char const wfparsing_valuename[] = "WantsFORPARSING";
 static char const attributes_valuename[] = "Attributes";
@@ -375,6 +377,28 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	    RegCloseKey(progid_key);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
+    if (IsEqualIID(list->clsid, &CLSID_RecycleBin)) {//if (list->clsid_menu) {
+        HKEY shellex_key, cmenu_key, menuhandler_key;
+	    res = RegCreateKeyExW(clsid_key, shellex_keyname, 0, NULL, 0,
+				  KEY_READ | KEY_WRITE, NULL,
+				  &shellex_key, NULL);
+	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
+	    res = RegCreateKeyExW(shellex_key, contextmenu_keyname, 0, NULL, 0,
+				  KEY_READ | KEY_WRITE, NULL,
+				  &cmenu_key, NULL);
+        if (res != ERROR_SUCCESS) {
+            RegCloseKey(shellex_key);
+            goto error_close_clsid_key;
+        }
+
+	    StringFromGUID2(list->clsid, buf, 39); //clsid_menu
+	    res = RegCreateKeyExW(cmenu_key, buf, 0, NULL, 0,
+				  KEY_READ | KEY_WRITE, NULL,
+				  &menuhandler_key, NULL);
+        RegCloseKey(menuhandler_key);
+        RegCloseKey(cmenu_key);
+        RegCloseKey(shellex_key);
+    }
 
     error_close_clsid_key:
 	RegCloseKey(clsid_key);
@@ -555,6 +579,13 @@ static struct regsvr_coclass const coclass_list[] = {
         "shell32.dll",
         "Apartment"
     },
+    {   &CLSID_Printers,
+        "Printers & Fax",
+	0,
+        NULL,
+        "shell32.dll",
+        "Apartment"
+    },
     {   &CLSID_MyComputer,
 	"My Computer",
 	IDS_MYCOMPUTER,
@@ -634,6 +665,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	NULL,
 	IDI_SHELL_FULL_RECYCLE_BIN
+//    &CLSID_RecycleBin
     },
     {   &CLSID_ShellFSFolder,
 	"Shell File System Folder",

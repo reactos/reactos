@@ -175,7 +175,7 @@ static HRESULT WINAPI RecycleBin_QueryInterface(IShellFolder2 *iface, REFIID rii
             || IsEqualGUID(riid, &IID_IPersistFolder2))
         *ppvObject = &This->lpPersistFolderVtbl;
 
-    if (IsEqualGUID(riid, &IID_IContextMenu))
+    if (IsEqualIID(riid, &IID_IContextMenu))
         *ppvObject = &This->lpCmt;
 
     if (*ppvObject != NULL)
@@ -586,6 +586,12 @@ HRESULT WINAPI SHUpdateRecycleBinIcon(void)
     FIXME("stub\n");
     return S_OK;
 }
+
+/*************************************************************************
+ * BitBucket context menu
+ *
+ */
+
 static HRESULT WINAPI
 RecycleBin_IContextMenu_QueryInterface( IContextMenu* iface, REFIID riid, void** ppvObject )
 {
@@ -622,16 +628,17 @@ RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT
         return E_INVALIDARG;
 
     memset( &mii, 0, sizeof(mii) );
-    mii.cbSize = sizeof (mii);
+    mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
     mii.dwTypeData = (LPWSTR)szOpen;
     mii.cch = strlenW( mii.dwTypeData );
     mii.wID = idCmdFirst + id++;
     mii.fState = MFS_ENABLED;
     mii.fType = MFT_STRING;
+
     if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
         return E_FAIL;
-    This->iIdOpen = 0;
+    This->iIdOpen = 1;
 
     mii.fState = MFS_ENABLED;
     mii.dwTypeData = (LPWSTR)szEmpty;
@@ -642,9 +649,7 @@ RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT
         TRACE("RecycleBin_IContextMenu_QueryContextMenu failed to insert item properties");
         return E_FAIL;
     }
-    This->iIdEmpty = 1;
-    id++;
-
+    This->iIdEmpty = 2;
     mii.fState = MFS_ENABLED;
     mii.dwTypeData = (LPWSTR)szProperties;
     mii.cch = strlenW( mii.dwTypeData );
@@ -654,9 +659,7 @@ RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT
         TRACE("RecycleBin_IContextMenu_QueryContextMenu failed to insert item properties");
         return E_FAIL;
     }
-    This->iIdProperties = 2;
-    id++;
-
+    This->iIdProperties = 3;
     return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
 }
 
@@ -665,9 +668,16 @@ RecycleBin_IContextMenu_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINF
 {
     RecycleBin * This = impl_from_IContextMenu(iface);
 
-    TRACE("%p %p\n", This, lpici );
+    TRACE("%p %p verb %p\n", This, lpici, lpici->lpVerb);
 
-    return E_FAIL;
+    if ( lpici->lpVerb == MAKEINTRESOURCEA(This->iIdProperties))
+    {
+       WCHAR szDrive = 'C';
+       SH_ShowRecycleBinProperties(szDrive);
+       return S_OK;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI
