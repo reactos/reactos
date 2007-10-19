@@ -122,7 +122,6 @@ SpiGetSrbData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
               IN UCHAR Lun,
               IN UCHAR QueueTag);
 
-static KSERVICE_ROUTINE ScsiPortIsr;
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,
 	    IN PVOID ServiceContext);
