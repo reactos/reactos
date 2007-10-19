@@ -1132,27 +1132,39 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
 {
    PDC pDC;
    RECT rcScroll, rcSrc, rcDst;
+   SIZE szSrcOrg;
    INT Result;
 
    IntGdiGetClipBox(hDC, &rcScroll);
-   if (prcScroll)
-   {
-      IntGdiIntersectRect(&rcScroll, &rcScroll, prcScroll);
-   }
    if (prcClip)
    {
       IntGdiIntersectRect(&rcScroll, &rcScroll, prcClip);
    }
 
-   rcDst = rcScroll;
+   if (prcScroll)
+   {
+      IntGdiIntersectRect(&rcSrc, &rcScroll, prcScroll);
+   }
+   else
+   {
+      rcSrc = rcScroll;
+   }
+
+   rcDst = rcSrc;
    IntGdiOffsetRect(&rcDst, dx, dy);
+   if (rcDst.left < rcScroll.left)
+       szSrcOrg.cx = rcScroll.left - rcDst.left;
+   else
+       szSrcOrg.cx = 0;
+   if (rcDst.top < rcScroll.top)
+       szSrcOrg.cy = rcScroll.top - rcDst.top;
+   else
+       szSrcOrg.cy = 0;
    IntGdiIntersectRect(&rcDst, &rcDst, &rcScroll);
-   rcSrc = rcDst;
-   IntGdiOffsetRect(&rcSrc, -dx, -dy);
 
    if (!NtGdiBitBlt(hDC, rcDst.left, rcDst.top,
                     rcDst.right - rcDst.left, rcDst.bottom - rcDst.top,
-                    hDC, rcSrc.left, rcSrc.top, SRCCOPY, 0, 0))
+                    hDC, rcSrc.left + szSrcOrg.cx, rcSrc.top + szSrcOrg.cy, SRCCOPY, 0, 0))
    {
       return ERROR;
    }
