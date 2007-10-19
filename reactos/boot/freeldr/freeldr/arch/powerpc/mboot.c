@@ -635,6 +635,7 @@ FrLdrLoadModule(FILE *ModuleImage,
                 PULONG ModuleSize)
 {
     ULONG LocalModuleSize;
+    ULONG_PTR ThisModuleBase = NextModuleBase;
     PLOADER_MODULE ModuleData;
     LPSTR NameBuffer;
     LPSTR TempName;
@@ -682,7 +683,7 @@ FrLdrLoadModule(FILE *ModuleImage,
         *ModuleSize = LocalModuleSize;
     }
 
-    return NextModuleBase;
+    return ThisModuleBase;
 }
 
 PVOID
