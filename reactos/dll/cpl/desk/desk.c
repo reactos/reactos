@@ -214,6 +214,7 @@ DllMain(HINSTANCE hInstDLL, DWORD dwReason, LPVOID lpvReserved)
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+            CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
             RegisterPreviewControl(hInstDLL);
 //        case DLL_THREAD_ATTACH:
             hApplet = hInstDLL;
@@ -221,6 +222,7 @@ DllMain(HINSTANCE hInstDLL, DWORD dwReason, LPVOID lpvReserved)
 
         case DLL_PROCESS_DETACH:
             UnregisterPreviewControl(hInstDLL);
+            CoUninitialize();
             break;
     }
 
